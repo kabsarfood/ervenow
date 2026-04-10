@@ -12,7 +12,7 @@ const marketRoutes = require("../apps/market/routes");
 const servicesRoutes = require("../apps/services/routes");
 const financeRoutes = require("../apps/finance/routes");
 
-const PORT = Number(process.env.PORT) || 4000;
+const PORT = process.env.PORT || 4000;
 const publicPath = path.join(__dirname, "..", "public");
 
 const app = express();
@@ -27,6 +27,7 @@ app.use("/api/delivery", deliveryRoutes);
 app.use("/api/food", foodRoutes);
 app.use("/api/market", marketRoutes);
 app.use("/api/services", servicesRoutes);
+app.use("/api/finance", financeRoutes);
 
 app.get("/api/health", (_req, res) => {
   res.json({
@@ -63,7 +64,13 @@ app.get("/order", (_req, res) => {
   res.sendFile(path.join(publicPath, "order.html"));
 });
 
-app.listen(PORT, () => {
-  console.log(`ERWENOW Platform Core → http://localhost:${PORT}`);
-  console.log(`Gateway: /api/core | /api/delivery | /api/food | /api/market | /api/services | /api/finance`);
+const HOST = process.env.HOST || "0.0.0.0";
+
+app.listen(PORT, HOST, () => {
+  console.log("🚀 ERVENOW LIVE ON RAILWAY");
+  console.log("ERVENOW RUNNING ON", PORT);
+  console.log(`ERWENOW Platform Core → http://${HOST === "0.0.0.0" ? "localhost" : HOST}:${PORT}`);
+  console.log(
+    "Gateway: /api/core | /api/delivery | /api/food | /api/market | /api/services | /api/finance"
+  );
 });
