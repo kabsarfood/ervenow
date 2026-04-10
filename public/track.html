@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ERWENOW | تتبع الطلب</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/assets/styles.css" />
+  </head>
+  <body>
+    <div class="layout">
+      <div class="top-nav">
+        <h1 style="margin: 0">تتبع الطلب</h1>
+        <div class="btn-row">
+          <a class="btn btn-ghost" href="/dashboard">لوحة</a>
+          <a class="btn btn-ghost" href="/order">طلب جديد</a>
+          <a class="btn btn-ghost" href="/">رئيسية</a>
+        </div>
+      </div>
+
+      <p class="sub" id="authHint">سجّل الدخول لعرض تفاصيل الطلب وموقع المندوب.</p>
+
+      <div class="card">
+        <label for="oid">معرّف الطلب (UUID)</label>
+        <input id="oid" type="text" placeholder="يُملأ تلقائياً بعد إرسال الطلب" />
+        <div class="btn-row">
+          <button type="button" class="btn btn-primary" id="btn">تحديث الآن</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <strong>معاينة الخريطة</strong>
+        <p class="sub" style="margin-top: 4px; margin-bottom: 10px">Placeholder — يمكن ربط Leaflet أو خرائط أخرى لاحقاً دون تغيير الألوان العامة.</p>
+        <div class="map-placeholder" id="mapPh">منطقة الخريطة — موقع المندوب يظهر كنص أدناه حتى ربط الخريطة</div>
+        <p class="track-coords" id="coords">لا يوجد موقع بعد</p>
+        <p class="sub" style="margin: 8px 0 0; font-size: 0.85rem" id="coordsMeta"></p>
+      </div>
+
+      <div class="card">
+        <strong>تفاصيل الطلب</strong>
+        <p style="margin: 8px 0 4px"><span class="badge" id="statusBadge">—</span></p>
+        <pre id="out" style="margin-top: 8px; white-space: pre-wrap; font-size: 0.85rem"></pre>
+      </div>
+    </div>
+    <script src="/assets/api.js"></script>
+    <script>
+      var STATUS_AR = {
+        new: "جديد",
+        accepted: "تم استلام الطلب",
+        delivering: "جاري التوصيل",
+        delivered: "تم التسليم",
+      };
+
+      var pollTimer = null;
+
+      function renderOrder(order) {
+        if (!order) return;
+        var st = STATUS_AR[order.status] || order.status;
+        document.getElementById("statusBadge").textContent = st;
+        document.getElementById("out").textContent = JSON.stringify(order, null, 2);
+
+        var lat = order.driver_lat;
+        var lng = order.driver_lng;
+        var mapPh = document.getElementById("mapPh");
+        if (lat != null && lng != null && !Number.isNaN(Number(lat)) && !Number.isNaN(Number(lng))) {
+          document.getElementById("coords").textContent = "خط العرض: " + lat + " — خط الطول: " + lng;
+          mapPh.textContent = "📍 آخر موقع معروف للمندوب (سيتم رسمه على الخريطة لاحقاً)";
+          var at = order.last_location_at;
+          document.getElementById("coordsMeta").textContent = at
+            ? "آخر تحديث للموقع: " + new Date(at).toLocaleString("ar-SA")
+            : "";
+        } else {
+          document.getElementById("coords").textContent = "لا يوجد موقع مندوب بعد (يُحدَّث عند بدء التوصيل وإرسال GPS)";
+          mapPh.textContent = "في انتظار إحداثيات المندوب…";
+          document.getElementById("coordsMeta").textContent = "";
+        }
+      }
+
+      async function fetchOrder() {
+        var id = document.getElementById("oid").value.trim();
+        if (!id) return;
+        if (!window.PlatformAPI.getToken()) {
+          document.getElementById("out").textContent = "سجّل الدخول أولاً.";
+          return;
+        }
+        try {
+          var j = await window.PlatformAPI.api("/api/delivery/orders/" + id);
+          renderOrder(j.order);
+        } catch (e) {
+          document.getElementById("out").textContent = e.message;
+          document.getElementById("statusBadge").textContent = "—";
+        }
+      }
+
+      document.getElementById("btn").onclick = function () {
+        if (pollTimer) clearInterval(pollTimer);
+        pollTimer = null;
+        fetchOrder();
+        if (window.PlatformAPI.getToken()) {
+          pollTimer = setInterval(fetchOrder, 5000);
+        }
+      };
+
+      if (window.PlatformAPI.getToken()) {
+        document.getElementById("authHint").style.display = "none";
+      }
+
+      var params = new URLSearchParams(location.search);
+      var qid = params.get("id");
+      if (qid) {
+        document.getElementById("oid").value = qid;
+        if (window.PlatformAPI.getToken()) document.getElementById("btn").click();
+      }
+    </script>
+  </body>
+</html>

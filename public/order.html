@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ERWENOW | طلب جديد</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/assets/styles.css" />
+  </head>
+  <body>
+    <div class="layout">
+      <div class="top-nav">
+        <h1 style="margin: 0">طلب جديد</h1>
+        <div class="btn-row">
+          <a class="btn btn-ghost" href="/dashboard">لوحة</a>
+          <a class="btn btn-ghost" href="/login" id="orderLogout">خروج</a>
+        </div>
+      </div>
+
+      <p class="sub">اختر نوع الخدمة وأدخل عنوان التسليم. طلبات المطاعم تُنشأ عبر واجهة الطعام ثم تُربط بتوصيل تلقائياً.</p>
+
+      <div class="card">
+        <label for="svc">نوع الخدمة</label>
+        <select id="svc">
+          <option value="delivery">توصيل</option>
+          <option value="food">مطاعم</option>
+          <option value="market">متجر</option>
+          <option value="services">خدمات</option>
+        </select>
+
+        <label for="pickup">موقع الاستلام (اختياري)</label>
+        <input id="pickup" type="text" placeholder="مثال: المطعم، المتجر، عنوانك…" />
+
+        <label for="drop">موقع التسليم</label>
+        <textarea id="drop" placeholder="الحي، الشارع، المعلم…" required></textarea>
+
+        <label for="notes">ملاحظات (اختياري)</label>
+        <input id="notes" type="text" placeholder="تفاصيل إضافية للمندوب" />
+
+        <button type="button" class="btn btn-primary" id="btnSend">إرسال الطلب</button>
+        <div class="msg" id="msg" style="display: none"></div>
+      </div>
+    </div>
+
+    <script src="/assets/api.js"></script>
+    <script>
+      if (!window.PlatformAPI.getToken()) location.href = "/login";
+
+      document.getElementById("orderLogout").onclick = function (e) {
+        e.preventDefault();
+        window.PlatformAPI.setToken("");
+        location.href = "/login";
+      };
+
+      function show(text, ok) {
+        var m = document.getElementById("msg");
+        m.style.display = "block";
+        m.className = "msg " + (ok ? "ok" : "err");
+        m.textContent = text;
+      }
+
+      document.getElementById("btnSend").onclick = async function () {
+        var drop = document.getElementById("drop").value.trim();
+        if (!drop) return show("أدخل موقع التسليم", false);
+
+        var pickup = document.getElementById("pickup").value.trim();
+        var notes = document.getElementById("notes").value.trim();
+        var svc = document.getElementById("svc").value;
+
+        try {
+          var deliveryId = null;
+
+          if (svc === "food") {
+            var j = await window.PlatformAPI.api("/api/food/orders", {
+              method: "POST",
+              body: {
+                items: [{ name: "طلب سريع من المنصة", qty: 1, price: 0 }],
+                total: 0,
+                drop_address: drop,
+                pickup_address: pickup || "المطعم",
+                notes: "مطاعم" + extra,
+              },
+            });
+            deliveryId = j.delivery_order && j.delivery_order.id;
+          } else {
+            var typeLabel = { delivery: "توصيل", market: "متجر", services: "خدمات" }[svc] || svc;
+            var j2 = await window.PlatformAPI.api("/api/delivery/orders", {
+              method: "POST",
+              body: {
+                pickup_address: pickup,
+                drop_address: drop,
+                notes: "[" + typeLabel + "] " + (notes || ""),
+              },
+            });
+            deliveryId = j2.order && j2.order.id;
+          }
+
+          if (!deliveryId) throw new Error("لم يُرجع الخادم معرّف الطلب");
+
+          show("تم إنشاء الطلب. جاري التحويل للتتبع…", true);
+          setTimeout(function () {
+            location.href = "/track?id=" + encodeURIComponent(deliveryId);
+          }, 500);
+        } catch (e) {
+          show(String(e.message || e), false);
+        }
+      };
+    </script>
+  </body>
+</html>

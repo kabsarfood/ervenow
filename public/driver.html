@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ERWENOW | المندوب</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/assets/styles.css" />
+  </head>
+  <body>
+    <div class="layout">
+      <div class="top-nav">
+        <h1 style="margin: 0">مندوب التوصيل</h1>
+        <div class="btn-row">
+          <a class="btn btn-ghost" href="/dashboard">لوحة عميل</a>
+          <a class="btn btn-ghost" href="/track">تتبع</a>
+          <a class="btn btn-ghost" href="/login" id="driverLogout">خروج</a>
+        </div>
+      </div>
+      <p class="sub" id="who"></p>
+
+      <div class="card">
+        <div class="badge">الطلبات</div>
+        <div id="orders"></div>
+        <button type="button" class="btn btn-primary" id="btnRefresh">تحديث</button>
+      </div>
+
+      <div class="card">
+        <div class="badge">الموقع (كل 5 ثوانٍ لطلب نشط)</div>
+        <p class="sub" style="margin-top: 8px" id="locStatus">—</p>
+      </div>
+
+      <div class="msg err" id="err" style="display: none"></div>
+    </div>
+
+    <script src="/assets/api.js"></script>
+    <script>
+      if (!window.PlatformAPI.getToken()) {
+        location.href = "/login";
+        throw new Error("auth");
+      }
+
+      var activeOrderId = null;
+      var locTimer = null;
+      var pollTimer = null;
+
+      function err(m) {
+        var e = document.getElementById("err");
+        e.style.display = "block";
+        e.textContent = m;
+      }
+
+      async function loadMe() {
+        var j = await window.PlatformAPI.api("/api/core/me");
+        document.getElementById("who").textContent =
+          "الدور: " + (j.profile && j.profile.role) + " — " + (j.user && j.user.phone);
+        if (j.profile && j.profile.role !== "driver") {
+          err("هذه الصفحة للمندوبين. من صفحة الدخول اختر «مندوب» ثم سجّل الدخول.");
+        }
+      }
+
+      var STATUS_AR = {
+        new: "جديد — بانتظار مندوب",
+        accepted: "تم استلام الطلب",
+        delivering: "جاري التوصيل",
+        delivered: "تم التسليم",
+      };
+
+      async function loadOrders() {
+        var j = await window.PlatformAPI.api("/api/delivery/orders");
+        var box = document.getElementById("orders");
+        box.innerHTML = "";
+        (j.orders || []).forEach(function (o) {
+          var div = document.createElement("div");
+          div.className = "order-row";
+          var st = STATUS_AR[o.status] || o.status;
+          div.innerHTML =
+            "<strong>" +
+            o.id.slice(0, 8) +
+            "…</strong> <span class=\"badge\" style=\"margin-inline-start:6px\">" +
+            st +
+            "</span><br/><small>" +
+            (o.drop_address || "") +
+            "</small><br/>";
+
+          var trackA = document.createElement("a");
+          trackA.className = "btn btn-ghost";
+          trackA.href = "/track?id=" + encodeURIComponent(o.id);
+          trackA.textContent = "تتبع على الخريطة";
+          div.appendChild(trackA);
+
+          if (o.status === "new") {
+            var b = document.createElement("button");
+            b.className = "btn btn-primary";
+            b.textContent = "استلام الطلب";
+            b.onclick = async function () {
+              await window.PlatformAPI.api("/api/delivery/orders/" + o.id + "/accept", { method: "POST" });
+              loadOrders();
+            };
+            div.appendChild(b);
+          }
+
+          if (o.driver_id && o.status === "accepted") {
+            var b2 = document.createElement("button");
+            b2.className = "btn btn-ghost";
+            b2.textContent = "بدء التوصيل";
+            b2.onclick = async function () {
+              await window.PlatformAPI.api("/api/delivery/orders/" + o.id + "/status", {
+                method: "PATCH",
+                body: { status: "delivering" },
+              });
+              activeOrderId = o.id;
+              startLocationLoop();
+              loadOrders();
+            };
+            div.appendChild(b2);
+          }
+
+          if (o.driver_id && o.status === "delivering") {
+            activeOrderId = o.id;
+            var b3 = document.createElement("button");
+            b3.className = "btn btn-ghost";
+            b3.textContent = "تم التسليم";
+            b3.onclick = async function () {
+              await window.PlatformAPI.api("/api/delivery/orders/" + o.id + "/status", {
+                method: "PATCH",
+                body: { status: "delivered" },
+              });
+              activeOrderId = null;
+              stopLocationLoop();
+              loadOrders();
+            };
+            div.appendChild(b3);
+          }
+
+          box.appendChild(div);
+        });
+
+        var deliv = (j.orders || []).find(function (x) {
+          return x.status === "delivering" && x.driver_id;
+        });
+        if (deliv) {
+          activeOrderId = deliv.id;
+          startLocationLoop();
+        } else if (
+          !(j.orders || []).some(function (x) {
+            return x.status === "delivering";
+          })
+        ) {
+          stopLocationLoop();
+        }
+      }
+
+      function stopLocationLoop() {
+        if (locTimer) clearInterval(locTimer);
+        locTimer = null;
+        document.getElementById("locStatus").textContent = "لا يوجد طلب بحالة delivering";
+      }
+
+      function startLocationLoop() {
+        if (locTimer) clearInterval(locTimer);
+        if (!activeOrderId) return;
+
+        function tick() {
+          if (!activeOrderId) return;
+          navigator.geolocation.getCurrentPosition(
+            async function (pos) {
+              try {
+                await window.PlatformAPI.api("/api/delivery/orders/" + activeOrderId + "/location", {
+                  method: "POST",
+                  body: { lat: pos.coords.latitude, lng: pos.coords.longitude },
+                });
+                document.getElementById("locStatus").textContent =
+                  "آخر إرسال: " + new Date().toLocaleTimeString("ar-SA");
+              } catch (e) {
+                document.getElementById("locStatus").textContent = "خطأ إرسال الموقع: " + e.message;
+              }
+            },
+            function () {
+              document.getElementById("locStatus").textContent = "فعّل GPS في المتصفح";
+            },
+            { enableHighAccuracy: true, timeout: 8000 }
+          );
+        }
+
+        tick();
+        locTimer = setInterval(tick, 5000);
+      }
+
+      document.getElementById("btnRefresh").onclick = function () {
+        loadOrders();
+      };
+
+      document.getElementById("driverLogout").onclick = function (e) {
+        e.preventDefault();
+        if (pollTimer) clearInterval(pollTimer);
+        window.PlatformAPI.setToken("");
+        location.href = "/login";
+      };
+
+      (async function () {
+        await loadMe();
+        await loadOrders();
+        pollTimer = setInterval(loadOrders, 8000);
+      })();
+    </script>
+  </body>
+</html>
