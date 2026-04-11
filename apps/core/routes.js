@@ -141,21 +141,25 @@ router.post("/send-otp", async (req, res) => {
 
     const twilioResult = await sendOtpWhatsApp(digits, code);
     const allowDev = process.env.ALLOW_DEV_OTP === "true";
-    const twilioReady = getTwilioClient() && waFrom();
 
     if (!twilioResult.sent) {
-      console.warn("[ERWENOW] Twilio غير مضبوط — OTP للتطوير:", digits, code);
-      if (!allowDev) {
-        return fail(
-          res,
-          "تعذر إرسال واتساب. اضبط TWILIO_* في .env أو فعّل ALLOW_DEV_OTP=true للتجربة",
-          503
+      if (twilioResult.reason === "twilio_not_configured") {
+        console.warn(
+          "[ERWENOW] Twilio غير مضبوط — يُعاد الرمز في الاستجابة (devOtp). للإنتاج اضبط TWILIO_* في .env"
         );
+      } else {
+        return fail(res, "تعذر إرسال الرمز عبر واتساب", 503);
       }
     }
 
-    const payload = { message: "تم إرسال الكود" };
-    if (allowDev) payload.devOtp = code;
+    const payload = {
+      message: twilioResult.sent
+        ? "تم إرسال الكود"
+        : "تم تجهيز الرمز (واتساب غير مضبوط — استخدم رمز التجربة المعروض)",
+    };
+    if (!twilioResult.sent || allowDev) {
+      payload.devOtp = code;
+    }
 
     ok(res, payload);
   } catch (e) {

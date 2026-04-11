@@ -3,6 +3,9 @@ function ok(res, data = {}, status = 200) {
 }
 
 function fail(res, message, status = 400, extra = {}) {
+  if (process.env.NODE_ENV === "production" && status >= 500) {
+    return res.status(status).json({ ok: false, error: "Internal server error" });
+  }
   return res.status(status).json({ ok: false, error: message, ...extra });
 }
 

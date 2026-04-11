@@ -80,19 +80,46 @@
           if (!phone || !code) return show("أدخل الرقم والرمز", false);
 
           var role = document.getElementById("role").value;
-          var j = await window.PlatformAPI.api("/api/core/verify-otp", {
+          var res = await window.PlatformAPI.api("/api/core/verify-otp", {
             method: "POST",
             body: { phone: phone, code: code, role: role },
           });
 
-          if (!j.success || !j.token) return show("فشل التحقق", false);
+          if (res.ok === false || res.success === false) {
+            show("فشل التحقق", false);
+            return;
+          }
+          var token = res.token;
+          if (!token) {
+            show("فشل التحقق", false);
+            return;
+          }
 
-          window.PlatformAPI.setToken(j.token);
+          try {
+            localStorage.setItem("token", token);
+          } catch (lsErr) {
+            console.warn("localStorage token:", lsErr);
+          }
+          window.PlatformAPI.setToken(token);
 
+          console.log("OTP verified, redirecting...");
+
+          var target = role === "driver" ? "/driver" : "/dashboard";
           show("نجاح تسجيل الدخول. تحويل…", true);
+
+          try {
+            window.location.href = target;
+          } catch (navErr) {
+            console.error(navErr);
+            alert("تم التحقق لكن لم يتم التحويل");
+            return;
+          }
+
           setTimeout(function () {
-            location.href = role === "driver" ? "/driver" : "/dashboard";
-          }, 400);
+            if (window.location.pathname !== target) {
+              alert("تم التحقق لكن لم يتم التحويل — افتح يدوياً: " + target);
+            }
+          }, 1500);
         } catch (e) {
           show(String(e.message || e), false);
         }

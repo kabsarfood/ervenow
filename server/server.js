@@ -14,12 +14,44 @@ const financeRoutes = require("../apps/finance/routes");
 
 const PORT = process.env.PORT || 4000;
 const publicPath = path.join(__dirname, "..", "public");
+const isProd = process.env.NODE_ENV === "production";
+
+/** أسماء مقاطع مسموحة تبدأ بنقطة (معايير عامة مثل ACME) */
+const DOT_SEGMENT_ALLOW = new Set([".well-known"]);
+
+/**
+ * منع محاولات الوصول إلى ملفات/مجلدات حساسة (.env، .git، مسارات تبدأ بنقطة، ..)
+ */
+function blockSensitiveAccess(req, res, next) {
+  let urlPath = (req.originalUrl || req.url || "").split("?")[0];
+  try {
+    urlPath = decodeURIComponent(urlPath);
+  } catch {
+    return res.status(404).end();
+  }
+  const lower = urlPath.toLowerCase();
+  if (lower.includes(".env") || lower.includes(".git")) {
+    return res.status(404).end();
+  }
+  const segments = urlPath.split("/");
+  for (const seg of segments) {
+    if (seg === "..") return res.status(404).end();
+    if (!seg) continue;
+    if (seg.startsWith(".") && !DOT_SEGMENT_ALLOW.has(seg.toLowerCase())) {
+      return res.status(404).end();
+    }
+  }
+  next();
+}
 
 const app = express();
+app.disable("x-powered-by");
+
+app.use(blockSensitiveAccess);
 
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
-app.use(morgan("dev"));
+app.use(isProd ? morgan("tiny") : morgan("dev"));
 
 /* ——— API Gateway ——— */
 app.use("/api/core", coreRoutes);
@@ -37,8 +69,13 @@ app.get("/api/health", (_req, res) => {
   });
 });
 
-/* ——— واجهة ثابتة ——— */
-app.use(express.static(publicPath));
+/* ——— واجهة ثابتة ——— المجلد public فقط؛ لا تُقدَّم الملفات المخفية ——— */
+app.use(
+  express.static(publicPath, {
+    dotfiles: "deny",
+    index: false,
+  })
+);
 
 app.get("/", (_req, res) => {
   res.sendFile(path.join(publicPath, "index.html"));
@@ -62,6 +99,18 @@ app.get("/track", (_req, res) => {
 
 app.get("/order", (_req, res) => {
   res.sendFile(path.join(publicPath, "order.html"));
+});
+
+app.use((_req, res) => {
+  res.status(404).end();
+});
+
+app.use((err, _req, res, _next) => {
+  console.error(err);
+  if (isProd) {
+    return res.status(500).end();
+  }
+  res.status(500).json({ ok: false, error: err.message || "error" });
 });
 
 const HOST = process.env.HOST || "0.0.0.0";

@@ -54,7 +54,11 @@ async function requireAuth(req, res, next) {
     req.authUser = { id: sub, phone };
     req.appUser = { id: sub, phone, role };
     next();
-  } catch (e) {
+   } catch (e) {
+    console.error("[requireAuth]", e);
+    if (process.env.NODE_ENV === "production") {
+      return res.status(500).json({ ok: false, error: "Internal server error" });
+    }
     return res.status(500).json({ ok: false, error: e.message || "Auth error" });
   }
 }
