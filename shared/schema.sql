@@ -4,6 +4,7 @@
 --
 -- تسجيل الدخول بـ OTP واتساب (Twilio) بدون Supabase Auth:
 -- بعد إنشاء الجداول، نفّذ أيضاً: shared/migration_users_phone_auth.sql
+-- إن كان جدول users قديماً بلا updated_at: shared/migration_users_add_timestamps.sql
 
 create extension if not exists "uuid-ossp";
 

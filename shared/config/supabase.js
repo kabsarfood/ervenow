@@ -16,9 +16,14 @@ function getAnonKey() {
 function createServiceClient() {
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!key) return null;
-  return createClient(getUrl(), key, {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
+  try {
+    return createClient(getUrl(), key, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+  } catch (e) {
+    console.error("[supabase] createServiceClient:", e.message || e);
+    return null;
+  }
 }
 
 /** عميل مرتبط بـ JWT المستخدم — تُطبَّق RLS حسب المستخدم */

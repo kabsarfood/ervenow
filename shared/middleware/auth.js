@@ -4,8 +4,21 @@ const { extractBearer } = require("../utils/helpers");
 
 const ROLES = ["driver", "customer", "admin", "restaurant", "merchant", "service"];
 
+let didWarnDevJwt;
+
 function getJwtSecret() {
-  return process.env.ERVENOW_JWT_SECRET || process.env.ERWENOW_JWT_SECRET || "";
+  const fromEnv = String(process.env.ERVENOW_JWT_SECRET || process.env.ERWENOW_JWT_SECRET || "").trim();
+  if (fromEnv) return fromEnv;
+  if (process.env.NODE_ENV !== "production") {
+    if (!didWarnDevJwt) {
+      didWarnDevJwt = true;
+      console.warn(
+        "[ERVENOW] ERVENOW_JWT_SECRET غير مضبوط — استخدام مفتاح تطوير مؤقت. للإنتاج عيّن ERVENOW_JWT_SECRET في .env"
+      );
+    }
+    return "ervenow-dev-only-jwt-secret-change-me";
+  }
+  return "";
 }
 
 function requireServiceSupabase(res) {

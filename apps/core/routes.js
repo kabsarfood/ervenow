@@ -73,7 +73,7 @@ async function sendOtpWhatsApp(toDigits, code) {
 ====================== */
 function signPlatformToken(userId, phoneDigits, role) {
   const secret = getJwtSecret();
-  if (!secret) throw new Error("ERVENOW_JWT_SECRET missing");
+  if (!secret) throw new Error("ERVENOW_JWT_SECRET مطلوب في الإنتاج");
   return jwt.sign(
     { sub: userId, phone: phoneDigits, role },
     secret,
@@ -221,7 +221,7 @@ router.post("/verify-otp", async (req, res) => {
     if (!sb) {
       return fail(
         res,
-        "SUPABASE_SERVICE_ROLE_KEY مطلوب لحفظ المستخدم بعد التحقق",
+        "قاعدة البيانات غير جاهزة: اضبط SUPABASE_URL و SUPABASE_SERVICE_ROLE_KEY في ملف .env ثم أعد تشغيل الخادم",
         503
       );
     }
@@ -238,6 +238,11 @@ router.post("/verify-otp", async (req, res) => {
       );
     }
 
+    if (!userRow || userRow.id == null) {
+      console.error("[ERVENOW] verify-otp: userRow missing after upsert");
+      return fail(res, "فشل إنشاء المستخدم في قاعدة البيانات", 500);
+    }
+
     const token = signPlatformToken(userRow.id, digits, userRow.role || wantRole);
 
     ok(res, {
@@ -247,7 +252,11 @@ router.post("/verify-otp", async (req, res) => {
     });
   } catch (e) {
     console.error("[ERVENOW] verify-otp:", e);
-    fail(res, e.message || "فشل التحقق", 500);
+    const msg = e.message || String(e) || "فشل التحقق";
+    if (/JWT|ERVENOW_JWT_SECRET|secret/i.test(msg)) {
+      return fail(res, "مفتاح الجلسة غير مضبوط: عيّن ERVENOW_JWT_SECRET في .env", 503);
+    }
+    fail(res, msg, 500);
   }
 });
 

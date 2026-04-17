@@ -12,3 +12,9 @@ CREATE UNIQUE INDEX IF NOT EXISTS users_phone_unique ON public.users (phone)
   WHERE phone IS NOT NULL AND phone <> '';
 
 -- ملاحظة: إن وُجدت صفوف بدون phone، عالجها يدوياً قبل إنشاء الفهرس الفريد.
+
+-- 4) أعمدة الطوابع الزمنية (مطلوبة لـ OTP و upsert من الخادم)
+-- إن ظهرت رسالة PostgREST: "Could not find the 'updated_at' column of 'users'"
+-- نفّذ السطور التالية في SQL Editor ثم انتظر ثوانٍ أو أعد تحميل المشروع.
+ALTER TABLE public.users ADD COLUMN IF NOT EXISTS created_at timestamptz DEFAULT now();
+ALTER TABLE public.users ADD COLUMN IF NOT EXISTS updated_at timestamptz DEFAULT now();
