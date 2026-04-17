@@ -24,6 +24,12 @@ function random4() {
   return String(Math.floor(1000 + Math.random() * 9000));
 }
 
+/** رمز ثابت للتطوير (افتراضي 12345). للإنتاج مع OTP حقيقي: USE_RANDOM_OTP=true في .env */
+function getFixedLoginCode() {
+  if (process.env.USE_RANDOM_OTP === "true") return "";
+  return String(process.env.FIXED_LOGIN_CODE || "12345").trim();
+}
+
 function cleanupOtp() {
   const now = Date.now();
   for (const [k, v] of otpStore.entries()) {
@@ -110,7 +116,8 @@ async function upsertDriverByPhone(sb, phoneDigits, preferredRole) {
 }
 
 router.get("/health", (_req, res) => {
-  ok(res, { service: "core", version: "2.1.0", auth: "twilio_otp+jwt" });
+  const mode = getFixedLoginCode() ? "fixed_login_code+jwt" : "twilio_otp+jwt";
+  ok(res, { service: "core", version: "2.1.0", auth: mode });
 });
 
 router.get("/public-config", (_req, res) => {
@@ -135,29 +142,35 @@ router.post("/send-otp", async (req, res) => {
     const digits = toStorageDigits(e164);
     if (digits.length < 10) return fail(res, "رقم الجوال غير صالح");
 
-    const code = random4();
+    const fixed = getFixedLoginCode();
+    const code = fixed || random4();
     const expiresAt = Date.now() + OTP_TTL_MS;
     otpStore.set(digits, { code, expiresAt, attempts: 0 });
 
-    const twilioResult = await sendOtpWhatsApp(digits, code);
     const allowDev = process.env.ALLOW_DEV_OTP === "true";
+    let twilioResult = { sent: false, reason: "skipped_fixed_otp" };
 
-    if (!twilioResult.sent) {
-      if (twilioResult.reason === "twilio_not_configured") {
-        console.warn(
-          "[ERVENOW] Twilio غير مضبوط — يُعاد الرمز في الاستجابة (devOtp). للإنتاج اضبط TWILIO_* في .env"
-        );
-      } else {
-        return fail(res, "تعذر إرسال الرمز عبر واتساب", 503);
+    if (!fixed) {
+      twilioResult = await sendOtpWhatsApp(digits, code);
+      if (!twilioResult.sent) {
+        if (twilioResult.reason === "twilio_not_configured") {
+          console.warn(
+            "[ERVENOW] Twilio غير مضبوط — يُعاد الرمز في الاستجابة (devOtp). للإنتاج اضبط TWILIO_* في .env"
+          );
+        } else {
+          return fail(res, "تعذر إرسال الرمز عبر واتساب", 503);
+        }
       }
     }
 
     const payload = {
-      message: twilioResult.sent
-        ? "تم إرسال الكود"
-        : "تم تجهيز الرمز (واتساب غير مضبوط — استخدم رمز التجربة المعروض)",
+      message: fixed
+        ? "رمز الدخول ثابت للتطوير — أدخل الرمز في الحقل"
+        : twilioResult.sent
+          ? "تم إرسال الكود"
+          : "تم تجهيز الرمز (واتساب غير مضبوط — استخدم رمز التجربة المعروض)",
     };
-    if (!twilioResult.sent || allowDev) {
+    if (fixed || !twilioResult.sent || allowDev) {
       payload.devOtp = code;
     }
 
@@ -178,25 +191,31 @@ router.post("/verify-otp", async (req, res) => {
     if (!e164 || !codeIn) return fail(res, "الرقم والرمز مطلوبان");
 
     const digits = toStorageDigits(e164);
-    const entry = otpStore.get(digits);
+    const fixed = getFixedLoginCode();
 
-    if (!entry) return fail(res, "لا يوجد رمز نشط لهذا الرقم. اطلب رمزًا جديدًا", 400);
-    if (Date.now() > entry.expiresAt) {
+    if (fixed && codeIn === fixed) {
       otpStore.delete(digits);
-      return fail(res, "انتهت صلاحية الرمز", 400);
-    }
+    } else {
+      const entry = otpStore.get(digits);
 
-    entry.attempts += 1;
-    if (entry.attempts > OTP_MAX_ATTEMPTS) {
+      if (!entry) return fail(res, "لا يوجد رمز نشط لهذا الرقم. اطلب رمزًا جديدًا", 400);
+      if (Date.now() > entry.expiresAt) {
+        otpStore.delete(digits);
+        return fail(res, "انتهت صلاحية الرمز", 400);
+      }
+
+      entry.attempts += 1;
+      if (entry.attempts > OTP_MAX_ATTEMPTS) {
+        otpStore.delete(digits);
+        return fail(res, "تجاوزت عدد المحاولات", 429);
+      }
+
+      if (entry.code !== codeIn) {
+        return fail(res, "رمز غير صحيح", 400);
+      }
+
       otpStore.delete(digits);
-      return fail(res, "تجاوزت عدد المحاولات", 429);
     }
-
-    if (entry.code !== codeIn) {
-      return fail(res, "رمز غير صحيح", 400);
-    }
-
-    otpStore.delete(digits);
 
     const sb = createServiceClient();
     if (!sb) {

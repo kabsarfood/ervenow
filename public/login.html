@@ -12,8 +12,11 @@
   <body>
     <div class="layout">
       <p><a href="/">← الرئيسية</a></p>
-      <h1>تسجيل الدخول (OTP)</h1>
-      <p class="sub">رمز التحقق يُرسل عبر واتساب (Twilio). في وضع التطوير قد يُعرض الرمز في الاستجابة عند تفعيل ALLOW_DEV_OTP.</p>
+      <h1>تسجيل الدخول</h1>
+      <p class="sub">
+        رمز الدخول الحالي ثابت للتطوير: <strong>12345</strong> (نفس الرقم بعد «إرسال الكود» أو مباشرة). لاحقًا يُفعّل OTP عبر واتساب بتعيين
+        <code style="font-size: 0.85em">USE_RANDOM_OTP=true</code> في إعدادات الخادم.
+      </p>
 
       <div class="card">
         <label for="role">نوع الحساب</label>
@@ -32,7 +35,7 @@
         <button type="button" class="btn btn-primary" id="btnSend">إرسال الكود</button>
 
         <label for="otp" style="margin-top: 16px">رمز التحقق</label>
-        <input id="otp" type="text" inputmode="numeric" autocomplete="one-time-code" placeholder="الرمز" />
+        <input id="otp" type="text" inputmode="numeric" autocomplete="one-time-code" placeholder="12345" value="12345" />
 
         <button type="button" class="btn btn-primary" id="btnVerify">تسجيل الدخول</button>
 
