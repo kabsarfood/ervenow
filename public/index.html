@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta
       name="description"
-      content="ERWENOW — نربط المطاعم والمتاجر والعملاء والمناديب في نظام ذكي واحد."
+      content="ERVENOW — نربط المطاعم والمتاجر والعملاء والمناديب في نظام ذكي واحد."
     />
-    <title>ERWENOW | منصة التوصيل الذكية</title>
+    <title>ERVENOW | منصة التوصيل الذكية</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -861,13 +861,110 @@
         right: max(16px, env(safe-area-inset-right, 0px));
         left: auto;
       }
+
+      .app-sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 260px;
+        z-index: 1300;
+        padding: 20px 14px;
+        overflow-y: auto;
+        background: linear-gradient(180deg, #3d2213 0%, #2b170d 55%, #1a0f08 100%);
+        color: #f5e6c8;
+        border-right: 1px solid rgba(185, 135, 47, 0.25);
+        box-shadow: 6px 0 28px rgba(43, 23, 13, 0.18);
+      }
+      .app-sidebar__title {
+        font-size: 0.72rem;
+        font-weight: 800;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: rgba(248, 238, 207, 0.75);
+        margin: 0 0 14px;
+      }
+      .app-sidebar a {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 12px;
+        margin-bottom: 4px;
+        border-radius: 10px;
+        color: #f8f4ee;
+        text-decoration: none;
+        font-weight: 700;
+        font-size: 0.9rem;
+        transition: background 0.2s;
+      }
+      .app-sidebar a:hover {
+        background: rgba(185, 135, 47, 0.22);
+      }
+      .app-sidebar hr {
+        border: 0;
+        border-top: 1px solid rgba(255, 255, 255, 0.12);
+        margin: 14px 0;
+      }
+      .app-shell {
+        padding-left: 260px;
+      }
+      @media (max-width: 900px) {
+        .app-sidebar {
+          transform: translateX(-104%);
+          transition: transform 0.28s ease;
+        }
+        .app-sidebar.is-open {
+          transform: translateX(0);
+        }
+        .app-shell {
+          padding-left: 0;
+        }
+        .app-sidebar-fab {
+          position: fixed;
+          left: max(12px, env(safe-area-inset-left, 0px));
+          bottom: max(16px, env(safe-area-inset-bottom, 0px));
+          z-index: 1250;
+          width: 48px;
+          height: 48px;
+          border-radius: 14px;
+          border: 1px solid rgba(185, 135, 47, 0.45);
+          background: linear-gradient(145deg, #4a2917, #2b170d);
+          color: #f8f4ee;
+          font-size: 1.25rem;
+          cursor: pointer;
+          box-shadow: 0 10px 28px rgba(43, 23, 13, 0.35);
+        }
+      }
+      @media (min-width: 901px) {
+        .app-sidebar-fab {
+          display: none;
+        }
+      }
     </style>
   </head>
   <body class="lp-body">
+    <aside class="app-sidebar" id="appSidebar" aria-label="قائمة التنقل">
+      <p class="app-sidebar__title">ERVENOW</p>
+      <a href="/">�� الرئيسية</a>
+      <a href�� ميني ماركت</a>
+      <a href="#services">���️ مطاعم</a>
+      <a href="#services">�� صيدليات</a>
+      <a href="#� خدمات</a>
+      <hr />
+      <a href="/delivery/orders.html">�� الطلبات</a>
+      <a href="/delivery/index� التوصيل</a>
+      <a href="/delivery/map.html">�� الخريطة الحية</a>
+      <a href="/delivery/login.html">�� تسجيل مندوب</a>
+      <hr />
+      <a href="/wallet.html">&#128176; الأرباح</a>
+      <a href="/dashboard">��️ الإعدادات</a>
+    </aside>
+    <button type="button" class="app-sidebar-fab" id="appSidebarFab" aria-label="فتح القائمة">&#9776;</button>
+    <div class="app-shell">
     <header class="lp-header" id="top">
       <div class="lp-header__inner">
-        <a class="lp-brand" href="/" aria-label="ERWENOW">
-          <span class="lp-brand__name">ERWENOW</span>
+        <a class="lp-brand" href="/" aria-label="ERVENOW">
+          <span class="lp-brand__name">ERVENOW</span>
           <span class="lp-brand__tag">Platform</span>
         </a>
 
@@ -880,7 +977,7 @@
             <a href="#top">الرئيسية</a>
             <a href="#trust">الثقة</a>
             <a href="#services">الخدمات</a>
-            <a href="#why">لماذا ERWENOW</a>
+            <a href="#why">لماذا ERVENOW</a>
             <a href="#how">كيف تعمل</a>
             <a href="#contact">تواصل معنا</a>
           </nav>
@@ -984,7 +1081,7 @@
       </section>
 
       <section class="lp-section lp-wrap lp-reveal" id="why" aria-labelledby="why-title">
-        <h2 class="lp-section__title" id="why-title">لماذا ERWENOW؟</h2>
+        <h2 class="lp-section__title" id="why-title">لماذا ERVENOW؟</h2>
         <p class="lp-section__lead">منصة مصممة لتنمو مع عملك وتبقى جاهزة للمستقبل.</p>
         <div class="lp-why__grid">
           <article class="lp-why-item">
@@ -1052,12 +1149,12 @@
     <footer class="lp-footer">
       <div class="lp-footer__inner">
         <div>
-          <p class="lp-footer__brand">ERWENOW</p>
-          <p class="lp-footer__copy">© جميع الحقوق محفوظة ERWENOW<br />منصة توصيل ذكية — من الطلب إلى باب العميل.</p>
+          <p class="lp-footer__brand">ERVENOW</p>
+          <p class="lp-footer__copy">© جميع الحقوق محفوظة ERVENOW<br />منصة توصيل ذكية — من الطلب إلى باب العميل.</p>
         </div>
         <div class="lp-footer__contact">
           <span>تواصل</span>
-          <a href="mailto:support@erwenow.com">support@erwenow.com</a>
+          <a href="mailto:support@ervenow.com">support@ervenow.com</a>
           <a href="tel:+966505745650">+966 50 574 5650</a>
           <a href="https://wa.me/966505745650" target="_blank" rel="noopener noreferrer">واتساب مباشر</a>
         </div>
@@ -1113,7 +1210,26 @@
         <span class="lp-wa-float__line">عبر واتساب</span>
       </span>
     </a>
+    </div>
 
+    <script>
+      (function () {
+        var side = document.getElementById("appSidebar");
+        var fab = document.getElementById("appSidebarFab");
+        if (side && fab) {
+          fab.addEventListener("click", function () {
+            side.classList.toggle("is-open");
+          });
+          side.querySelectorAll("a").forEach(function (a) {
+            a.addEventListener("click", function () {
+              if (window.matchMedia("(max-width: 900px)").matches) {
+                side.classList.remove("is-open");
+              }
+            });
+          });
+        }
+      })();
+    </script>
     <script>
       (function () {
         var btn = document.getElementById("lpMenuBtn");

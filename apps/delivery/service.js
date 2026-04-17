@@ -69,7 +69,7 @@ async function setStatus(sb, orderId, nextStatus, appUser) {
     .single();
 
   if (!error && data && nextStatus === "delivered") {
-    onDeliveryDelivered(sb, data).catch((err) => console.error("[ERWENOW] finance hook:", err.message || err));
+    onDeliveryDelivered(sb, data).catch((err) => console.error("[ERVENOW] finance hook:", err.message || err));
   }
 
   return { data, error };

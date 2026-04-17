@@ -66,7 +66,7 @@ app.use("/api/store", storeRoutes);
 app.get("/api/health", (_req, res) => {
   res.json({
     ok: true,
-    name: "ERWENOW Platform Core",
+    name: "ERVENOW Platform Core",
     routes: ["/api/core", "/api/delivery", "/api/food", "/api/market", "/api/services", "/api/finance", "/api/store"],
   });
 });
@@ -124,7 +124,7 @@ const HOST = process.env.HOST || "0.0.0.0";
 app.listen(PORT, HOST, () => {
   console.log("🚀 ERVENOW LIVE ON RAILWAY");
   console.log("ERVENOW RUNNING ON", PORT);
-  console.log(`ERWENOW Platform Core → http://${HOST === "0.0.0.0" ? "localhost" : HOST}:${PORT}`);
+  console.log(`ERVENOW Platform Core → http://${HOST === "0.0.0.0" ? "localhost" : HOST}:${PORT}`);
   console.log(
     "Gateway: /api/core | /api/delivery | /api/food | /api/market | /api/services | /api/finance"
   );

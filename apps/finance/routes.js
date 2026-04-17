@@ -140,7 +140,11 @@ router.patch("/orders/:id/status", requireAuth, async (req, res) => {
     if (next === "delivered") {
       if (order.settled_at) return fail(res, "Already settled", 400);
       const rates = await fetchCommissionRates(req.supabase, order.country_code || "SA");
-      const vat = Number(process.env.ERWENOW_PLATFORM_VAT_ON_COMMISSION_RATE || 0);
+      const vat = Number(
+        process.env.ERVENOW_PLATFORM_VAT_ON_COMMISSION_RATE ||
+          process.env.ERWENOW_PLATFORM_VAT_ON_COMMISSION_RATE ||
+          0
+      );
       const calc = calculateCommission({
         orderTotal: Number(order.total_amount),
         deliveryFee: Number(order.delivery_fee),
@@ -329,7 +333,11 @@ router.post("/preview-commission", requireAuth, async (req, res) => {
     const body = req.body || {};
     const cc = body.country_code || "SA";
     const rates = await fetchCommissionRates(req.supabase, cc);
-    const vat = Number(process.env.ERWENOW_PLATFORM_VAT_ON_COMMISSION_RATE || 0);
+    const vat = Number(
+      process.env.ERVENOW_PLATFORM_VAT_ON_COMMISSION_RATE ||
+        process.env.ERWENOW_PLATFORM_VAT_ON_COMMISSION_RATE ||
+        0
+    );
     const calc = calculateCommission({
       orderTotal: Number(body.total_amount) || 0,
       deliveryFee: Number(body.delivery_fee) || 0,

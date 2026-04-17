@@ -18,7 +18,11 @@ async function onDeliveryDelivered(sb, deliveryOrder) {
     if (fo.settled_at) return { linked: true, skipped: "already_settled" };
 
     const rates = await fetchCommissionRates(sb, fo.country_code || "SA");
-    const vat = Number(process.env.ERWENOW_PLATFORM_VAT_ON_COMMISSION_RATE || 0);
+    const vat = Number(
+      process.env.ERVENOW_PLATFORM_VAT_ON_COMMISSION_RATE ||
+        process.env.ERWENOW_PLATFORM_VAT_ON_COMMISSION_RATE ||
+        0
+    );
 
     const calc = calculateCommission({
       orderTotal: Number(fo.total_amount),
@@ -49,7 +53,7 @@ async function onDeliveryDelivered(sb, deliveryOrder) {
 
     return { linked: true, settlement: rpcData };
   } catch (e) {
-    console.error("[ERWENOW finance] onDeliveryDelivered:", e.message || e);
+    console.error("[ERVENOW finance] onDeliveryDelivered:", e.message || e);
     return { linked: false, error: String(e.message || e) };
   }
 }

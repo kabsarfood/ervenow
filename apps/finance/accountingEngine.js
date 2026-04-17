@@ -1,5 +1,5 @@
 /**
- * ERWENOW — Accounting Engine (منطق العمولات والتسوية)
+ * ERVENOW — Accounting Engine (منطق العمولات والتسوية)
  * الرصيد الفعلي يُحدَّث فقط عبر wallet_transactions + مشغّل قاعدة البيانات.
  */
 

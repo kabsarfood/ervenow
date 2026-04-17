@@ -1,4 +1,4 @@
--- ERWENOW: دعم تسجيل الدخول بـ OTP واتساب (Twilio) بدون Supabase Auth
+-- ERVENOW: دعم تسجيل الدخول بـ OTP واتساب (Twilio) بدون Supabase Auth
 -- نفّذ مرة واحدة في SQL Editor إذا كان جدول users مرتبطاً بـ auth.users
 
 -- 1) إزالة الربط بـ auth.users (إن وُجد)

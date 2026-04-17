@@ -1,4 +1,4 @@
--- ERWENOW Platform Core — نفّذ في Supabase SQL Editor
+-- ERVENOW Platform Core — نفّذ في Supabase SQL Editor
 -- بعدها (للمحفظة والمحاسبة): shared/migration_finance_accounting.sql
 -- ثم فعّل Realtime لجدول delivery_orders (Database → Replication)
 --

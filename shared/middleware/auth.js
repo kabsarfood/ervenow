@@ -5,7 +5,7 @@ const { extractBearer } = require("../utils/helpers");
 const ROLES = ["driver", "customer", "admin", "restaurant", "merchant", "service"];
 
 function getJwtSecret() {
-  return process.env.ERWENOW_JWT_SECRET || "";
+  return process.env.ERVENOW_JWT_SECRET || process.env.ERWENOW_JWT_SECRET || "";
 }
 
 function requireServiceSupabase(res) {
@@ -29,7 +29,7 @@ async function requireAuth(req, res, next) {
 
     const secret = getJwtSecret();
     if (!secret) {
-      return res.status(503).json({ ok: false, error: "ERWENOW_JWT_SECRET غير مضبوط" });
+      return res.status(503).json({ ok: false, error: "ERVENOW_JWT_SECRET غير مضبوط" });
     }
 
     let payload;

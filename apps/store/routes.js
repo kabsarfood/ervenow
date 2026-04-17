@@ -52,7 +52,11 @@ function safeFilePart(name) {
 }
 
 async function uploadCommercialFile(sb, storeId, base64, originalName) {
-  const bucket = String(process.env.ERWENOW_STORE_FILES_BUCKET || "erwenow-store-registrations").trim();
+  const bucket = String(
+    process.env.ERVENOW_STORE_FILES_BUCKET ||
+      process.env.ERWENOW_STORE_FILES_BUCKET ||
+      "erwenow-store-registrations"
+  ).trim();
   const parsed = parseBase64File(base64);
   if (!parsed || !parsed.buffer.length) return null;
 
@@ -76,10 +80,12 @@ async function uploadCommercialFile(sb, storeId, base64, originalName) {
 async function notifyAdminWhatsApp({ name, phoneDisplay, typeLabel, mapsUrl, requestId }) {
   const client = getTwilioClient();
   const from = waFrom();
-  const adminRaw = String(process.env.ERWENOW_ADMIN_WHATSAPP || "").trim();
+  const adminRaw = String(
+    process.env.ERVENOW_ADMIN_WHATSAPP || process.env.ERWENOW_ADMIN_WHATSAPP || ""
+  ).trim();
   const adminDigits = adminRaw.replace(/\D/g, "");
   if (!client || !from || adminDigits.length < 10) {
-    console.warn("[store/register] WhatsApp: Twilio أو ERWENOW_ADMIN_WHATSAPP غير مضبوط");
+    console.warn("[store/register] WhatsApp: Twilio أو ERVENOW_ADMIN_WHATSAPP غير مضبوط");
     return false;
   }
   const to = "whatsapp:+" + adminDigits;

@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ERVENOW | المحفظة والأرباح</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet" />
+    <style>
+      :root {
+        --black: #0d0a08;
+        --surface: #1a1410;
+        --card: #231c16;
+        --gold: #c9a227;
+        --gold-dim: #8a7020;
+        --gold-glow: rgba(201, 162, 39, 0.35);
+        --text: #f5efe6;
+        --muted: #a89888;
+        --border: rgba(201, 162, 39, 0.28);
+        --radius: 14px;
+        --font: "Cairo", system-ui, sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: var(--font);
+        color: var(--text);
+        background: radial-gradient(ellipse 120% 80% at 50% -20%, rgba(201, 162, 39, 0.12), transparent 55%),
+          linear-gradient(180deg, var(--black) 0%, #120e0b 45%, var(--black) 100%);
+      }
+
+      .wrap {
+        max-width: 920px;
+        margin: 0 auto;
+        padding: 24px 16px 56px;
+      }
+
+      .top {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 16px;
+      }
+
+      .brand {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .brand strong {
+        font-size: clamp(1.2rem, 3vw, 1.55rem);
+        font-weight: 800;
+        letter-spacing: 0.04em;
+        color: var(--gold);
+      }
+
+      .brand span {
+        font-size: 0.88rem;
+        color: var(--muted);
+        font-weight: 600;
+      }
+
+      .brand-user {
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: var(--gold);
+        margin-top: 6px;
+      }
+
+      .brand-user[hidden] {
+        display: none !important;
+      }
+
+      .nav-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+      }
+
+      .nav-row a {
+        color: var(--gold);
+        text-decoration: none;
+        font-weight: 700;
+        font-size: 0.9rem;
+        padding: 8px 14px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: rgba(201, 162, 39, 0.06);
+        transition: background 0.2s, border-color 0.2s;
+      }
+
+      .nav-row a:hover {
+        background: rgba(201, 162, 39, 0.14);
+        border-color: var(--gold-dim);
+      }
+
+      .load-line {
+        color: var(--muted);
+        font-size: 0.9rem;
+        margin: 0 0 22px;
+        min-height: 1.4em;
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 12px 20px;
+        border-radius: 12px;
+        border: none;
+        font-family: inherit;
+        font-weight: 800;
+        font-size: 0.92rem;
+        cursor: pointer;
+        transition: filter 0.2s, transform 0.15s;
+      }
+
+      .btn:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      .btn:active:not(:disabled) {
+        transform: scale(0.98);
+      }
+
+      .btn-gold {
+        background: linear-gradient(135deg, #d4af37, var(--gold-dim));
+        color: #1a1208;
+        box-shadow: 0 6px 24px var(--gold-glow);
+      }
+
+      .btn-gold:hover:not(:disabled) {
+        filter: brightness(1.06);
+      }
+
+      .btn-outline {
+        background: transparent;
+        color: var(--gold);
+        border: 1px solid var(--border);
+      }
+
+      .btn-outline:hover:not(:disabled) {
+        background: rgba(201, 162, 39, 0.1);
+      }
+
+      .withdraw-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 16px;
+      }
+
+      .sub-hint {
+        margin: 0 0 14px;
+        font-size: 0.88rem;
+        color: var(--muted);
+        line-height: 1.55;
+      }
+
+      .form-grid {
+        display: grid;
+        gap: 14px;
+        margin-top: 8px;
+      }
+
+      .form-grid label span {
+        display: block;
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: var(--muted);
+        margin-bottom: 6px;
+      }
+
+      .form-grid input {
+        width: 100%;
+        padding: 12px 14px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: var(--surface);
+        color: var(--text);
+        font-family: inherit;
+        font-size: 1rem;
+        direction: ltr;
+        text-align: left;
+      }
+
+      .form-grid .opt {
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: var(--gold-dim);
+        margin-top: 4px;
+      }
+
+      .otp-block {
+        margin-top: 20px;
+        padding-top: 18px;
+        border-top: 1px solid var(--border);
+        display: none;
+      }
+
+      .otp-block.is-visible {
+        display: block;
+      }
+
+      .kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 14px;
+        margin-bottom: 22px;
+      }
+
+      .kpi {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 18px 16px;
+        box-shadow: 0 10px 32px rgba(0, 0, 0, 0.28);
+      }
+
+      .kpi .lbl {
+        font-size: 0.78rem;
+        font-weight: 700;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        margin-bottom: 8px;
+      }
+
+      .kpi .val {
+        font-size: 1.45rem;
+        font-weight: 800;
+        color: var(--gold);
+        direction: ltr;
+        text-align: right;
+      }
+
+      .kpi .unit {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--muted);
+        margin-top: 4px;
+      }
+
+      .card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 20px 18px;
+        margin-bottom: 20px;
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+      }
+
+      .card h2 {
+        margin: 0 0 16px;
+        font-size: 1.05rem;
+        font-weight: 800;
+        color: var(--gold);
+      }
+
+      .msg {
+        margin-top: 14px;
+        padding: 12px 14px;
+        border-radius: 12px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        display: none;
+      }
+
+      .msg.show {
+        display: block;
+      }
+
+      .msg.ok {
+        background: rgba(34, 163, 86, 0.15);
+        border: 1px solid rgba(34, 163, 86, 0.4);
+        color: #8ee4b0;
+      }
+
+      .msg.err {
+        background: rgba(220, 80, 80, 0.12);
+        border: 1px solid rgba(220, 80, 80, 0.35);
+        color: #f0a8a8;
+      }
+
+      .table-wrap {
+        overflow-x: auto;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.88rem;
+      }
+
+      thead th {
+        text-align: right;
+        padding: 12px 14px;
+        background: var(--surface);
+        color: var(--gold);
+        font-weight: 800;
+        border-bottom: 1px solid var(--border);
+        white-space: nowrap;
+      }
+
+      tbody td {
+        padding: 12px 14px;
+        border-bottom: 1px solid rgba(201, 162, 39, 0.12);
+        color: var(--text);
+      }
+
+      tbody tr:last-child td {
+        border-bottom: none;
+      }
+
+      tbody tr:hover td {
+        background: rgba(201, 162, 39, 0.05);
+      }
+
+      .type-pill {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-weight: 800;
+        font-size: 0.75rem;
+        direction: ltr;
+      }
+
+      .type-credit {
+        background: rgba(34, 163, 86, 0.2);
+        color: #8ee4b0;
+      }
+
+      .type-debit {
+        background: rgba(220, 120, 80, 0.18);
+        color: #f0c4a8;
+      }
+
+      .empty {
+        text-align: center;
+        padding: 28px 16px;
+        color: var(--muted);
+        font-weight: 600;
+      }
+
+      .loading {
+        color: var(--muted);
+        font-size: 0.9rem;
+        margin-bottom: 12px;
+      }
+    </style>
+    <script>
+      (function () {
+        var id = localStorage.getItem("userId");
+        if (!id || !String(id).trim()) {
+          window.location.replace("/delivery/login.html");
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <div class="wrap">
+      <header class="top">
+        <div class="brand">
+          <strong>ERVENOW</strong>
+          <span>المحفظة — رصيد وسحوبات وحركات</span>
+          <span class="brand-user" id="userNameLine" hidden></span>
+        </div>
+        <div class="nav-row">
+          <a href="/">الرئيسية</a>
+          <a href="/dashboard">لوحة العميل</a>
+          <button type="button" class="btn btn-outline" id="btnLoad">تحديث</button>
+        </div>
+      </header>
+
+      <p class="load-line" id="loadHint">جاري تحميل البيانات…</p>
+
+      <div id="kpiSection" style="display: none">
+        <div class="kpi-grid">
+          <div class="kpi">
+            <div class="lbl">الرصيد الحالي</div>
+            <div class="val" id="kpiBalance">—</div>
+            <div class="unit">ر.س</div>
+          </div>
+          <div class="kpi">
+            <div class="lbl">المبلغ المعلق</div>
+            <div class="val" id="kpiPending">—</div>
+            <div class="unit">طلبات سحب قيد المراجعة</div>
+          </div>
+          <div class="kpi">
+            <div class="lbl">المسحوب</div>
+            <div class="val" id="kpiWithdrawn">—</div>
+            <div class="unit">تم التحويل (مدفوع)</div>
+          </div>
+        </div>
+      </div>
+
+      <section class="card" id="withdrawCard" style="display: none">
+        <h2>طلب سحب</h2>
+
+        <div id="withdrawIntro">
+          <p class="sub-hint">
+            اطلب تحويل المبلغ إلى حسابك. التحقق برمز (وضع تطوير — لا يُرسل SMS حقيقي).
+          </p>
+          <button type="button" class="btn btn-gold" id="btnStartWithdraw">طلب سحب</button>
+        </div>
+
+        <div id="withdrawForm" style="display: none">
+          <p class="sub-hint" style="margin-top: 0">أدخل بيانات السحب ثم اطلب رمز التحقق.</p>
+          <div class="form-grid">
+            <label>
+              <span>المبلغ (ر.س)</span>
+              <input type="number" id="withdrawAmount" min="0" step="0.01" placeholder="مثال: 100" />
+            </label>
+            <label>
+              <span>IBAN</span>
+              <input type="text" id="withdrawIban" placeholder="SA000000 0000 0000 0000 0000" autocomplete="off" />
+              <span class="opt">اختياري</span>
+            </label>
+            <label>
+              <span>STC Pay</span>
+              <input type="tel" id="withdrawStc" inputmode="numeric" placeholder="05xxxxxxxx" autocomplete="off" />
+              <span class="opt">اختياري — رقم الجوال المرتبط بـ STC Pay</span>
+            </label>
+          </div>
+
+          <div class="withdraw-actions">
+            <button type="button" class="btn btn-gold" id="btnSendOtp">إرسال رمز التحقق</button>
+            <button type="button" class="btn btn-outline" id="btnCancelWithdraw">إلغاء</button>
+          </div>
+
+          <div class="otp-block" id="withdrawOtpBlock" aria-live="polite">
+            <label>
+              <span>أدخل رمز التحقق</span>
+              <input type="text" id="withdrawOtp" inputmode="numeric" autocomplete="one-time-code" maxlength="12" placeholder="••••" />
+            </label>
+            <div class="withdraw-actions">
+              <button type="button" class="btn btn-gold" id="btnConfirmWithdraw">تأكيد طلب السحب</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="msg" id="withdrawMsg" role="status"></div>
+      </section>
+
+      <section class="card" id="txCard" style="display: none">
+        <h2>حركات المحفظة</h2>
+        <p class="loading" id="txLoading" style="display: none">جاري تحميل العمليات…</p>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>النوع</th>
+                <th>المبلغ</th>
+                <th>الوصف</th>
+                <th>التاريخ</th>
+              </tr>
+            </thead>
+            <tbody id="txBody"></tbody>
+          </table>
+        </div>
+        <p class="empty" id="txEmpty" style="display: none">لا توجد عمليات بعد.</p>
+      </section>
+    </div>
+
+    <script>
+      const API_BASE = "http://localhost:9000";
+      const MOCK_WITHDRAW_OTP = "1234";
+
+      var pendingWithdrawOtp = null;
+
+      const elBtnLoad = document.getElementById("btnLoad");
+      const elKpiSection = document.getElementById("kpiSection");
+      const elWithdrawCard = document.getElementById("withdrawCard");
+      const elTxCard = document.getElementById("txCard");
+      const elKpiBalance = document.getElementById("kpiBalance");
+      const elKpiPending = document.getElementById("kpiPending");
+      const elKpiWithdrawn = document.getElementById("kpiWithdrawn");
+      const elTxBody = document.getElementById("txBody");
+      const elTxEmpty = document.getElementById("txEmpty");
+      const elTxLoading = document.getElementById("txLoading");
+      const elWithdrawMsg = document.getElementById("withdrawMsg");
+      const elLoadHint = document.getElementById("loadHint");
+      const elUserNameLine = document.getElementById("userNameLine");
+
+      const elWithdrawIntro = document.getElementById("withdrawIntro");
+      const elWithdrawForm = document.getElementById("withdrawForm");
+      const elBtnStartWithdraw = document.getElementById("btnStartWithdraw");
+      const elWithdrawAmount = document.getElementById("withdrawAmount");
+      const elWithdrawIban = document.getElementById("withdrawIban");
+      const elWithdrawStc = document.getElementById("withdrawStc");
+      const elBtnSendOtp = document.getElementById("btnSendOtp");
+      const elBtnCancelWithdraw = document.getElementById("btnCancelWithdraw");
+      const elWithdrawOtpBlock = document.getElementById("withdrawOtpBlock");
+      const elWithdrawOtp = document.getElementById("withdrawOtp");
+      const elBtnConfirmWithdraw = document.getElementById("btnConfirmWithdraw");
+
+      function getUserId() {
+        return String(localStorage.getItem("userId") || "").trim();
+      }
+
+      function getStoredUserName() {
+        var u =
+          localStorage.getItem("userName") ||
+          localStorage.getItem("name") ||
+          localStorage.getItem("displayName");
+        if (u) return String(u).trim();
+        var raw = localStorage.getItem("driver");
+        if (raw) {
+          try {
+            var d = JSON.parse(raw);
+            if (d && (d.name || d.full_name)) return String(d.name || d.full_name).trim();
+          } catch (e) {
+            /* ignore */
+          }
+        }
+        return "";
+      }
+
+      function applyUserDisplay() {
+        var n = getStoredUserName();
+        if (n) {
+          elUserNameLine.textContent = n;
+          elUserNameLine.removeAttribute("hidden");
+        } else {
+          elUserNameLine.textContent = "";
+          elUserNameLine.setAttribute("hidden", "");
+        }
+      }
+
+      function setMsg(el, text, kind) {
+        el.textContent = text || "";
+        el.classList.remove("ok", "err", "show");
+        if (!text) return;
+        el.classList.add(kind === "ok" ? "ok" : "err", "show");
+      }
+
+      function fmtNum(n) {
+        if (n == null || isNaN(Number(n))) return "—";
+        return Number(n).toLocaleString("ar-SA", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      }
+
+      function fmtDate(iso) {
+        if (!iso) return "—";
+        try {
+          return new Date(iso).toLocaleString("ar-SA", {
+            dateStyle: "medium",
+            timeStyle: "short",
+          });
+        } catch (e) {
+          return String(iso);
+        }
+      }
+
+      function buildBankNote() {
+        var iban = String(elWithdrawIban.value || "").trim();
+        var stc = String(elWithdrawStc.value || "").trim();
+        var parts = [];
+        if (iban) parts.push("IBAN: " + iban);
+        if (stc) parts.push("STC Pay: " + stc);
+        return parts.length ? parts.join(" | ") : null;
+      }
+
+      function resetWithdrawFlow() {
+        pendingWithdrawOtp = null;
+        elWithdrawIntro.style.display = "";
+        elWithdrawForm.style.display = "none";
+        elWithdrawOtpBlock.classList.remove("is-visible");
+        elWithdrawAmount.value = "";
+        elWithdrawIban.value = "";
+        elWithdrawStc.value = "";
+        elWithdrawOtp.value = "";
+        setMsg(elWithdrawMsg, "", "");
+      }
+
+      function openWithdrawForm() {
+        elWithdrawIntro.style.display = "none";
+        elWithdrawForm.style.display = "block";
+        elWithdrawOtpBlock.classList.remove("is-visible");
+        pendingWithdrawOtp = null;
+        elWithdrawOtp.value = "";
+        setMsg(elWithdrawMsg, "", "");
+      }
+
+      async function loadWallet(userId) {
+        const res = await fetch(API_BASE + "/api/wallet/" + encodeURIComponent(userId));
+        const data = await res.json().catch(function () {
+          return {};
+        });
+        if (!res.ok) throw new Error(data.error || "تعذر جلب المحفظة");
+        elKpiBalance.textContent = fmtNum(data.balance);
+        elKpiPending.textContent = fmtNum(data.pending);
+        elKpiWithdrawn.textContent = fmtNum(data.withdrawn);
+        elKpiSection.style.display = "";
+        elWithdrawCard.style.display = "";
+        elTxCard.style.display = "";
+      }
+
+      async function loadTransactions(userId) {
+        elTxLoading.style.display = "";
+        elTxBody.innerHTML = "";
+        elTxEmpty.style.display = "none";
+        try {
+          const res = await fetch(API_BASE + "/api/wallet/transactions/" + encodeURIComponent(userId));
+          const data = await res.json().catch(function () {
+            return {};
+          });
+          if (!res.ok) throw new Error(data.error || "تعذر جلب العمليات");
+          var list = data.wallet_transactions || [];
+          if (!list.length) {
+            elTxEmpty.style.display = "block";
+            return;
+          }
+          list.forEach(function (row) {
+            var tr = document.createElement("tr");
+            var type = String(row.type || "");
+            var pillClass = type === "credit" ? "type-credit" : "type-debit";
+            tr.innerHTML =
+              '<td><span class="type-pill ' +
+              pillClass +
+              '">' +
+              type +
+              "</span></td>" +
+              '<td style="direction:ltr;text-align:right;font-weight:800">' +
+              fmtNum(row.amount) +
+              "</td>" +
+              "<td>" +
+              (row.description ? String(row.description) : "—") +
+              "</td>" +
+              "<td>" +
+              fmtDate(row.created_at) +
+              "</td>";
+            elTxBody.appendChild(tr);
+          });
+        } finally {
+          elTxLoading.style.display = "none";
+        }
+      }
+
+      async function refreshAll() {
+        var userId = getUserId();
+        if (!userId) {
+          window.location.replace("/delivery/login.html");
+          return;
+        }
+        elLoadHint.textContent = "جاري التحميل…";
+        setMsg(elWithdrawMsg, "", "");
+        try {
+          await loadWallet(userId);
+          await loadTransactions(userId);
+          elLoadHint.textContent = "تم التحديث.";
+        } catch (e) {
+          elLoadHint.textContent = e.message || "خطأ";
+          elKpiSection.style.display = "none";
+          elWithdrawCard.style.display = "none";
+          elTxCard.style.display = "none";
+        }
+      }
+
+      elBtnLoad.addEventListener("click", function () {
+        refreshAll();
+      });
+
+      elBtnStartWithdraw.addEventListener("click", function () {
+        openWithdrawForm();
+      });
+
+      elBtnCancelWithdraw.addEventListener("click", function () {
+        resetWithdrawFlow();
+      });
+
+      elBtnSendOtp.addEventListener("click", function () {
+        var amt = elWithdrawAmount.value;
+        if (!amt || Number(amt) <= 0) {
+          setMsg(elWithdrawMsg, "أدخل مبلغاً صالحاً.", "err");
+          return;
+        }
+        pendingWithdrawOtp = MOCK_WITHDRAW_OTP;
+        console.log("[ERVENOW wallet dev] mock withdraw OTP:", pendingWithdrawOtp);
+        elWithdrawOtpBlock.classList.add("is-visible");
+        elWithdrawOtp.value = "";
+        setMsg(elWithdrawMsg, "تم إنشاء رمز تحقق (تجريبي). راجع الـ console.", "ok");
+        elWithdrawOtp.focus();
+      });
+
+      elBtnConfirmWithdraw.addEventListener("click", async function () {
+        var userId = getUserId();
+        if (!userId) {
+          window.location.replace("/delivery/login.html");
+          return;
+        }
+        if (pendingWithdrawOtp == null) {
+          setMsg(elWithdrawMsg, "اطلب رمز التحقق أولاً.", "err");
+          return;
+        }
+        var entered = String(elWithdrawOtp.value || "").trim();
+        if (entered !== pendingWithdrawOtp) {
+          setMsg(elWithdrawMsg, "رمز غير صحيح", "err");
+          return;
+        }
+
+        var amount = elWithdrawAmount.value;
+        var bank_note = buildBankNote();
+
+        elBtnConfirmWithdraw.disabled = true;
+        setMsg(elWithdrawMsg, "جاري إرسال طلب السحب…", "ok");
+        try {
+          var body = { userId: userId, amount: amount };
+          if (bank_note) body.bank_note = bank_note;
+          var res = await fetch(API_BASE + "/api/wallet/withdraw", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+          });
+          var data = await res.json().catch(function () {
+            return {};
+          });
+          if (!res.ok) throw new Error(data.error || "فشل طلب السحب");
+          setMsg(elWithdrawMsg, "تم إنشاء طلب السحب بنجاح.", "ok");
+          resetWithdrawFlow();
+          await refreshAll();
+        } catch (e) {
+          setMsg(elWithdrawMsg, e.message || "خطأ", "err");
+        } finally {
+          elBtnConfirmWithdraw.disabled = false;
+        }
+      });
+
+      applyUserDisplay();
+      refreshAll();
+    </script>
+  </body>
+</html>

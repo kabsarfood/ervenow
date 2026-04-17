@@ -3,12 +3,98 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>ERWENOW | لوحة العميل</title>
+    <title>ERVENOW | لوحة العميل</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/assets/styles.css" />
+    <style>
+      .dash-shell {
+        display: flex;
+        align-items: flex-start;
+        gap: 0;
+        min-height: 100vh;
+        direction: ltr;
+      }
+      .dash-sidebar {
+        position: sticky;
+        top: 0;
+        align-self: flex-start;
+        width: 248px;
+        min-height: 100vh;
+        flex-shrink: 0;
+        padding: 20px 14px;
+        background: linear-gradient(180deg, #3d2213 0%, #2b170d 55%, #1a0f08 100%);
+        color: #f5e6c8;
+        border-right: 1px solid rgba(185, 135, 47, 0.25);
+        box-shadow: 6px 0 28px rgba(43, 23, 13, 0.12);
+      }
+      .dash-sidebar__title {
+        font-size: 0.72rem;
+        font-weight: 800;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: rgba(248, 238, 207, 0.75);
+        margin: 0 0 14px;
+      }
+      .dash-sidebar a {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 12px;
+        margin-bottom: 4px;
+        border-radius: 10px;
+        color: #f8f4ee;
+        text-decoration: none;
+        font-weight: 700;
+        font-size: 0.88rem;
+        transition: background 0.2s;
+      }
+      .dash-sidebar a:hover {
+        background: rgba(185, 135, 47, 0.22);
+      }
+      .dash-sidebar hr {
+        border: 0;
+        border-top: 1px solid rgba(255, 255, 255, 0.12);
+        margin: 14px 0;
+      }
+      .dash-main {
+        flex: 1;
+        min-width: 0;
+        direction: rtl;
+      }
+      @media (max-width: 800px) {
+        .dash-shell {
+          flex-direction: column;
+        }
+        .dash-sidebar {
+          position: relative;
+          width: 100%;
+          min-height: 0;
+                   border-right: none;
+          border-bottom: 1px solid rgba(185, 135, 47, 0.25);
+        }
+      }
+    </style>
   </head>
   <body>
+    <div class="dash-shell">
+      <aside class="dash-sidebar" aria-label="قائمة التنقل">
+        <p class="dash-sidebar__title">ERVENOW</p>
+        <a href="/">&#127968; الرئيسية</a>
+        <a href="/#services">&#128722; ميني ماركت</a>
+        <a href="/#services">&#127869; مطاعم</a>
+        <a href="/#services">&#128138; صيدليات</a>
+        <a href="/#services">&#129522; خدمات</a>
+        <hr />
+        <a href="/delivery/orders.html">&#128230; الطلبات</a>
+        <a href="/delivery/index.html">&#128666; التوصيل</a>
+        <a href="/delivery/map.html">&#128205; الخريطة الحية</a>
+        <a href="/delivery/login.html">&#128100; تسجيل مندوب</a>
+        <hr />
+        <a href="/wallet.html">&#128176; الأرباح</a>
+        <a href="/dashboard">&#9881; الإعدادات</a>
+      </aside>
+      <div class="dash-main">
     <div class="layout">
       <div class="top-nav">
         <h1 style="margin: 0">لوحة العميل</h1>
@@ -82,7 +168,7 @@
             location.href = "/driver";
             return;
           }
-          document.getElementById("welcome").textContent = "مرحباً بك في ERWENOW";
+          document.getElementById("welcome").textContent = "مرحباً بك في ERVENOW";
           document.getElementById("profileCard").style.display = "block";
           document.getElementById("roleBadge").textContent = role;
           document.getElementById("phoneLine").textContent = me.user.phone || me.user.email || me.user.id;
@@ -121,5 +207,7 @@
 
       run();
     </script>
+      </div>
+    </div>
   </body>
 </html>

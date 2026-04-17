@@ -1,13 +1,32 @@
 (function (w) {
-  var TOKEN_KEY = "erwenow_access_token";
+  var TOKEN_KEY = "ervenow_access_token";
+  var LEGACY_TOKEN_KEY = "erwenow_access_token";
 
   w.PlatformAPI = {
     getToken: function () {
-      return localStorage.getItem(TOKEN_KEY) || "";
+      try {
+        var tok = localStorage.getItem(TOKEN_KEY);
+        if (tok) return tok;
+        var legacy = localStorage.getItem(LEGACY_TOKEN_KEY);
+        if (legacy) {
+          localStorage.setItem(TOKEN_KEY, legacy);
+          localStorage.removeItem(LEGACY_TOKEN_KEY);
+        }
+        return legacy || "";
+      } catch (e) {
+        return "";
+      }
     },
     setToken: function (t) {
-      if (t) localStorage.setItem(TOKEN_KEY, t);
-      else localStorage.removeItem(TOKEN_KEY);
+      try {
+        if (t) {
+          localStorage.setItem(TOKEN_KEY, t);
+          localStorage.removeItem(LEGACY_TOKEN_KEY);
+        } else {
+          localStorage.removeItem(TOKEN_KEY);
+          localStorage.removeItem(LEGACY_TOKEN_KEY);
+        }
+      } catch (e) {}
     },
     api: async function (path, opts) {
       opts = opts || {};

@@ -56,7 +56,7 @@ async function sendOtpWhatsApp(toDigits, code) {
   if (!client || !from) return { sent: false, reason: "twilio_not_configured" };
 
   const to = "whatsapp:+" + toDigits.replace(/^\+/, "");
-  const body = `رمز تحقق ERWENOW: ${code}\nصالح لمدة 3 دقائق. لا تشارك الرمز مع أحد.`;
+  const body = `رمز تحقق ERVENOW: ${code}\nصالح لمدة 3 دقائق. لا تشارك الرمز مع أحد.`;
 
   await client.messages.create({ from, to, body });
   return { sent: true };
@@ -67,7 +67,7 @@ async function sendOtpWhatsApp(toDigits, code) {
 ====================== */
 function signPlatformToken(userId, phoneDigits, role) {
   const secret = getJwtSecret();
-  if (!secret) throw new Error("ERWENOW_JWT_SECRET missing");
+  if (!secret) throw new Error("ERVENOW_JWT_SECRET missing");
   return jwt.sign(
     { sub: userId, phone: phoneDigits, role },
     secret,
@@ -145,7 +145,7 @@ router.post("/send-otp", async (req, res) => {
     if (!twilioResult.sent) {
       if (twilioResult.reason === "twilio_not_configured") {
         console.warn(
-          "[ERWENOW] Twilio غير مضبوط — يُعاد الرمز في الاستجابة (devOtp). للإنتاج اضبط TWILIO_* في .env"
+          "[ERVENOW] Twilio غير مضبوط — يُعاد الرمز في الاستجابة (devOtp). للإنتاج اضبط TWILIO_* في .env"
         );
       } else {
         return fail(res, "تعذر إرسال الرمز عبر واتساب", 503);
@@ -163,7 +163,7 @@ router.post("/send-otp", async (req, res) => {
 
     ok(res, payload);
   } catch (e) {
-    console.error("[ERWENOW] send-otp:", e);
+    console.error("[ERVENOW] send-otp:", e);
     fail(res, e.message || "خطأ في الإرسال", 500);
   }
 });
@@ -210,7 +210,7 @@ router.post("/verify-otp", async (req, res) => {
     const wantRole = String(req.body?.role || "customer").trim();
     const { data: userRow, error: dbErr } = await upsertDriverByPhone(sb, digits, wantRole);
     if (dbErr) {
-      console.error("[ERWENOW] verify-otp DB:", dbErr);
+      console.error("[ERVENOW] verify-otp DB:", dbErr);
       return fail(
         res,
         dbErr.message ||
@@ -227,7 +227,7 @@ router.post("/verify-otp", async (req, res) => {
       user: { id: userRow.id, phone: userRow.phone, role: userRow.role },
     });
   } catch (e) {
-    console.error("[ERWENOW] verify-otp:", e);
+    console.error("[ERVENOW] verify-otp:", e);
     fail(res, e.message || "فشل التحقق", 500);
   }
 });

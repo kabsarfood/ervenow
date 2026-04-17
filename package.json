@@ -1,7 +1,7 @@
 {
-  "name": "erwenow-platform",
+  "name": "ervenow-platform",
   "version": "2.0.0",
-  "description": "ERWENOW — Platform Core: modular gateway + apps (delivery, food, market, services)",
+  "description": "ERVENOW — Platform Core: modular gateway + apps (delivery, food, market, services)",
   "main": "server/server.js",
   "scripts": {
     "start": "node server/server.js",
