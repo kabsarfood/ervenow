@@ -8,14 +8,22 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/assets/styles.css" />
+    <style>
+      .input-readonly {
+        background: #f0ebe3;
+        cursor: default;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+      }
+    </style>
   </head>
   <body>
     <div class="layout">
       <p><a href="/">← الرئيسية</a></p>
-      <h1>تسجيل الدخول</h1>
+      <h1>تسجيل الدخول — ERVENOW</h1>
       <p class="sub">
-        رمز الدخول الحالي ثابت للتطوير: <strong>12345</strong> (نفس الرقم بعد «إرسال الكود» أو مباشرة). لاحقًا يُفعّل OTP عبر واتساب بتعيين
-        <code style="font-size: 0.85em">USE_RANDOM_OTP=true</code> في إعدادات الخادم.
+        أدخل رقم جوال سعودي <strong>يبدأ بـ 05</strong> (مثال 05XXXXXXXX). رمز الدخول الموحّد:
+        <strong>12345</strong>
       </p>
 
       <div class="card">
@@ -29,13 +37,19 @@
           <option value="admin">مسؤول (تجربة)</option>
         </select>
 
-        <label for="phone">رقم الجوال</label>
-        <input id="phone" type="tel" inputmode="tel" placeholder="05xxxxxxxx" value="0505745650" />
+        <label for="phone">رقم الجوال (05…)</label>
+        <input
+          id="phone"
+          type="tel"
+          inputmode="numeric"
+          placeholder="05xxxxxxxx"
+          value="0505745650"
+          maxlength="10"
+          autocomplete="tel-national"
+        />
 
-        <button type="button" class="btn btn-primary" id="btnSend">إرسال الكود</button>
-
-        <label for="otp" style="margin-top: 16px">رمز التحقق</label>
-        <input id="otp" type="text" inputmode="numeric" autocomplete="one-time-code" placeholder="12345" value="12345" />
+        <label for="otp" style="margin-top: 16px">رمز الدخول</label>
+        <input id="otp" type="text" inputmode="numeric" value="12345" readonly class="input-readonly" />
 
         <button type="button" class="btn btn-primary" id="btnVerify">تسجيل الدخول</button>
 
@@ -45,12 +59,20 @@
 
     <script src="/assets/api.js"></script>
     <script>
+      var LOGIN_CODE = "12345";
+
       function toE164(v) {
         var d = String(v || "").replace(/\D/g, "");
-        if (d.startsWith("966")) return "+" + d;
-        if (d.startsWith("05")) return "+966" + d.slice(1);
-        if (d.startsWith("5") && d.length === 9) return "+966" + d;
+        if (d.startsWith("9665") && d.length === 12) return "+" + d;
+        if (d.startsWith("05") && d.length === 10) return "+966" + d.slice(1);
         return null;
+      }
+
+      function isValid05(v) {
+        var p = toE164(v);
+        if (!p) return false;
+        var d = p.replace(/\D/g, "");
+        return /^9665\d{8}$/.test(d);
       }
 
       function show(text, isOk) {
@@ -60,27 +82,37 @@
         el.textContent = text;
       }
 
-      document.getElementById("btnSend").onclick = async function () {
-        try {
-          var phone = toE164(document.getElementById("phone").value);
-          if (!phone) return show("رقم غير صالح", false);
-          document.getElementById("phone").value = phone;
-          var j = await window.PlatformAPI.api("/api/core/send-otp", {
-            method: "POST",
-            body: { phone: phone },
-          });
-          var extra = j.devOtp ? " (تجربة: " + j.devOtp + ")" : "";
-          show((j.message || "تم إرسال الكود") + extra, true);
-        } catch (e) {
-          show(String(e.message || e), false);
+      function normalizeInputPhone() {
+        var el = document.getElementById("phone");
+        var d = String(el.value || "").replace(/\D/g, "");
+        if (d.startsWith("9665")) d = "0" + d.slice(3);
+        else if (d.startsWith("5") && d.length === 9) d = "0" + d;
+        if (d.length > 10) d = d.slice(0, 10);
+        el.value = d;
+        return d;
+      }
+
+      document.getElementById("phone").addEventListener("input", normalizeInputPhone);
+      document.getElementById("phone").addEventListener("blur", normalizeInputPhone);
+
+      (function preselectRole() {
+        var r = new URLSearchParams(window.location.search).get("role");
+        if (r) {
+          var sel = document.getElementById("role");
+          if (sel) sel.value = r;
         }
-      };
+      })();
 
       document.getElementById("btnVerify").onclick = async function () {
         try {
-          var phone = toE164(document.getElementById("phone").value);
-          var code = document.getElementById("otp").value.trim();
-          if (!phone || !code) return show("أدخل الرقم والرمز", false);
+          normalizeInputPhone();
+          var raw = document.getElementById("phone").value;
+          if (!isValid05(raw)) {
+            return show("أدخل رقم سعودي يبدأ بـ 05 (10 أرقام مثال 05xxxxxxxx)", false);
+          }
+          var phone = toE164(raw);
+          var code = String(document.getElementById("otp").value).trim() || LOGIN_CODE;
+          if (!phone) return show("أدخل الرقم", false);
 
           var role = document.getElementById("role").value;
           var res = await window.PlatformAPI.api("/api/core/verify-otp", {
@@ -100,12 +132,11 @@
 
           try {
             localStorage.setItem("token", token);
+            if (res.user && res.user.id) localStorage.setItem("userId", res.user.id);
           } catch (lsErr) {
             console.warn("localStorage token:", lsErr);
           }
           window.PlatformAPI.setToken(token);
-
-          console.log("OTP verified, redirecting...");
 
           var target = role === "driver" ? "/driver" : "/dashboard";
           show("نجاح تسجيل الدخول. تحويل…", true);

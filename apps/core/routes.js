@@ -1,72 +1,17 @@
-const express = require("express"); 
+const express = require("express");
 const jwt = require("jsonwebtoken");
-const twilio = require("twilio");
 const { requireAuth, getJwtSecret } = require("../../shared/middleware/auth");
 const { requireRole } = require("../../shared/middleware/roles");
 const { ok, fail } = require("../../shared/utils/helpers");
-const { toE164, toStorageDigits } = require("../../shared/utils/phone");
+const { toE164, toStorageDigits, isErvnowSaudiMobileE164 } = require("../../shared/utils/phone");
 const { createServiceClient } = require("../../shared/config/supabase");
 
 const router = express.Router();
 
-/* ======================
-   OTP in-memory
-====================== */
-const otpStore = new Map();
-const OTP_TTL_MS = 3 * 60 * 1000;
-const OTP_MAX_ATTEMPTS = 5;
-
-function otpKey(phoneDigits) {
-  return String(phoneDigits || "").replace(/\D/g, "");
-}
-
-function random4() {
-  return String(Math.floor(1000 + Math.random() * 9000));
-}
-
-/** رمز ثابت للتطوير (افتراضي 12345). للإنتاج مع OTP حقيقي: USE_RANDOM_OTP=true في .env */
-function getFixedLoginCode() {
-  if (process.env.USE_RANDOM_OTP === "true") return "";
-  return String(process.env.FIXED_LOGIN_CODE || "12345").trim();
-}
-
-function cleanupOtp() {
-  const now = Date.now();
-  for (const [k, v] of otpStore.entries()) {
-    if (v.expiresAt < now) otpStore.delete(k);
-  }
-}
-
-setInterval(cleanupOtp, 60 * 1000).unref();
-
-/* ======================
-   Twilio WhatsApp
-====================== */
-function getTwilioClient() {
-  const sid = process.env.TWILIO_ACCOUNT_SID;
-  const token = process.env.TWILIO_AUTH_TOKEN;
-  if (!sid || !token) return null;
-  return twilio(sid, token);
-}
-
-function waFrom() {
-  let n = String(process.env.TWILIO_WHATSAPP_NUMBER || "").trim();
-  if (!n) return null;
-  if (!n.startsWith("whatsapp:")) n = "whatsapp:" + n.replace(/^\+/, "+");
-  return n;
-}
-
-async function sendOtpWhatsApp(toDigits, code) {
-  const client = getTwilioClient();
-  const from = waFrom();
-  if (!client || !from) return { sent: false, reason: "twilio_not_configured" };
-
-  const to = "whatsapp:+" + toDigits.replace(/^\+/, "");
-  const body = `رمز تحقق ERVENOW: ${code}\nصالح لمدة 3 دقائق. لا تشارك الرمز مع أحد.`;
-
-  await client.messages.create({ from, to, body });
-  return { sent: true };
-}
+/** رمز دخول موحّد (بدون واتساب / بدون عشوائي). قابل للتغيير عبر ERVENOW_LOGIN_CODE */
+const ERVENOW_LOGIN_CODE = String(
+  process.env.ERVENOW_LOGIN_CODE || process.env.FIXED_LOGIN_CODE || "12345"
+).trim();
 
 /* ======================
    JWT (جلسة المنصة)
@@ -116,8 +61,7 @@ async function upsertDriverByPhone(sb, phoneDigits, preferredRole) {
 }
 
 router.get("/health", (_req, res) => {
-  const mode = getFixedLoginCode() ? "fixed_login_code+jwt" : "twilio_otp+jwt";
-  ok(res, { service: "core", version: "2.1.0", auth: mode });
+  ok(res, { service: "core", version: "2.1.0", auth: "ervenow_unified+05+jwt" });
 });
 
 router.get("/public-config", (_req, res) => {
@@ -132,49 +76,24 @@ router.get("/public-config", (_req, res) => {
   }
 });
 
+/**
+ * اختياري — للواجهات التي ما زالت تستدعي send-otp؛ لا واتساب ولا تخزين رمز.
+ */
 router.post("/send-otp", async (req, res) => {
   try {
-    cleanupOtp();
     const raw = req.body?.phone;
     const e164 = toE164(raw);
-    if (!e164) return fail(res, "رقم الجوال غير صالح");
-
-    const digits = toStorageDigits(e164);
-    if (digits.length < 10) return fail(res, "رقم الجوال غير صالح");
-
-    const fixed = getFixedLoginCode();
-    const code = fixed || random4();
-    const expiresAt = Date.now() + OTP_TTL_MS;
-    otpStore.set(digits, { code, expiresAt, attempts: 0 });
-
-    const allowDev = process.env.ALLOW_DEV_OTP === "true";
-    let twilioResult = { sent: false, reason: "skipped_fixed_otp" };
-
-    if (!fixed) {
-      twilioResult = await sendOtpWhatsApp(digits, code);
-      if (!twilioResult.sent) {
-        if (twilioResult.reason === "twilio_not_configured") {
-          console.warn(
-            "[ERVENOW] Twilio غير مضبوط — يُعاد الرمز في الاستجابة (devOtp). للإنتاج اضبط TWILIO_* في .env"
-          );
-        } else {
-          return fail(res, "تعذر إرسال الرمز عبر واتساب", 503);
-        }
-      }
+    if (!e164 || !isErvnowSaudiMobileE164(e164)) {
+      return fail(
+        res,
+        "رقم غير صالح — أدخل رقم سعودي يبدأ بـ 05 (مثال 05xxxxxxxx)",
+        400
+      );
     }
-
-    const payload = {
-      message: fixed
-        ? "رمز الدخول ثابت للتطوير — أدخل الرمز في الحقل"
-        : twilioResult.sent
-          ? "تم إرسال الكود"
-          : "تم تجهيز الرمز (واتساب غير مضبوط — استخدم رمز التجربة المعروض)",
-    };
-    if (fixed || !twilioResult.sent || allowDev) {
-      payload.devOtp = code;
-    }
-
-    ok(res, payload);
+    ok(res, {
+      message: "دخول ERVENOW: أدخل رمز 12345",
+      devOtp: ERVENOW_LOGIN_CODE,
+    });
   } catch (e) {
     console.error("[ERVENOW] send-otp:", e);
     fail(res, e.message || "خطأ في الإرسال", 500);
@@ -183,39 +102,24 @@ router.post("/send-otp", async (req, res) => {
 
 router.post("/verify-otp", async (req, res) => {
   try {
-    cleanupOtp();
     const raw = req.body?.phone;
     const codeIn = String(req.body?.code || "").trim();
 
     const e164 = toE164(raw);
-    if (!e164 || !codeIn) return fail(res, "الرقم والرمز مطلوبان");
+    if (!e164) return fail(res, "رقم الجوال غير صالح", 400);
+    if (!isErvnowSaudiMobileE164(e164)) {
+      return fail(
+        res,
+        "رقم غير صالح — يجب أن يبدأ بـ 05 (مثال 05xxxxxxxx)",
+        400
+      );
+    }
+    if (!codeIn) return fail(res, "أدخل رمز الدخول", 400);
+    if (codeIn !== ERVENOW_LOGIN_CODE) {
+      return fail(res, "رمز الدخول غير صحيح", 400);
+    }
 
     const digits = toStorageDigits(e164);
-    const fixed = getFixedLoginCode();
-
-    if (fixed && codeIn === fixed) {
-      otpStore.delete(digits);
-    } else {
-      const entry = otpStore.get(digits);
-
-      if (!entry) return fail(res, "لا يوجد رمز نشط لهذا الرقم. اطلب رمزًا جديدًا", 400);
-      if (Date.now() > entry.expiresAt) {
-        otpStore.delete(digits);
-        return fail(res, "انتهت صلاحية الرمز", 400);
-      }
-
-      entry.attempts += 1;
-      if (entry.attempts > OTP_MAX_ATTEMPTS) {
-        otpStore.delete(digits);
-        return fail(res, "تجاوزت عدد المحاولات", 429);
-      }
-
-      if (entry.code !== codeIn) {
-        return fail(res, "رمز غير صحيح", 400);
-      }
-
-      otpStore.delete(digits);
-    }
 
     const sb = createServiceClient();
     if (!sb) {
@@ -279,7 +183,12 @@ router.post("/users/sync", requireAuth, async (req, res) => {
     let phone = req.body?.phone || req.appUser.phone;
     if (phone) {
       const e164 = toE164(phone);
-      if (e164) phone = toStorageDigits(e164);
+      if (e164) {
+        if (!isErvnowSaudiMobileE164(e164)) {
+          return fail(res, "رقم الجوال يجب أن يبدأ بـ 05", 400);
+        }
+        phone = toStorageDigits(e164);
+      }
     }
 
     const row = {

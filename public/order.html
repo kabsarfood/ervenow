@@ -79,7 +79,7 @@
                 total: 0,
                 drop_address: drop,
                 pickup_address: pickup || "المطعم",
-                notes: "مطاعم" + extra,
+                notes: "مطاعم — " + (notes || ""),
               },
             });
             deliveryId = j.delivery_order && j.delivery_order.id;

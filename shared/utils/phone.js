@@ -22,4 +22,14 @@ function normalizePhone(input) {
   return e ? toStorageDigits(e) : String(input || "").replace(/\D/g, "");
 }
 
-module.exports = { toE164, toStorageDigits, normalizePhone };
+/**
+ * رقم جوال سعودي يبدأ بـ 05 محلياً (تخزين: 9665xxxxxxxx — 12 رقماً).
+ * يُستعمل لتوحيد دخول ERVENOW.
+ */
+function isErvnowSaudiMobileE164(e164) {
+  if (!e164) return false;
+  const d = toStorageDigits(e164);
+  return /^9665\d{8}$/.test(d);
+}
+
+module.exports = { toE164, toStorageDigits, normalizePhone, isErvnowSaudiMobileE164 };

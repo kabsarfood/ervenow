@@ -21,7 +21,15 @@ create table if not exists public.users (
 create unique index if not exists users_phone_unique on public.users (phone)
   where phone is not null and phone <> '';
 
--- طلبات التوصيل
+-- طلبات التوصيل — delivery_orders
+-- نفس *اسم* الجدول مُستخدَم في مشروعين:
+--   (1) ERVENOW — هذا الملف؛ تملأه فقط واجهات خادم ERVENOW (مثل POST /api/delivery/orders) عندما
+--       يشير .env لنفس مشروع Supabase.
+--   (2) kabsar-backend — مخطط منفصل في Supabase (مشروع/بيئة أخرى عادة)؛ تملأه واجهات وخدمات كبسار.
+-- الاسم متشابه لأن نفس نموذج العمل (طابور التوصيل)، لكنهما جدولان منطقياً في قاعدتين
+-- إلا إذا قررتما ربطهما (نفس URL لـ Supabase + نفس المفتاح) أو مزامنة/اتحاد لاحق.
+-- واجهة public/delivery/* في هذا الريبو تتصل غالباً بـ API كبسار (Railway) وليس بـ /api/delivery
+-- المحلية، لذلك بيانات كبسار تظهر في جدول kabsar وقد يبقى جدول ERVENOW فارغاً.
 create table if not exists public.delivery_orders (
   id uuid primary key default gen_random_uuid(),
   customer_id uuid references public.users (id),

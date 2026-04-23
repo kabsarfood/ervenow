@@ -365,7 +365,7 @@
       (function () {
         var id = localStorage.getItem("userId");
         if (!id || !String(id).trim()) {
-          window.location.replace("/delivery/login.html");
+          window.location.replace("/login");
         }
       })();
     </script>
@@ -652,7 +652,7 @@
       async function refreshAll() {
         var userId = getUserId();
         if (!userId) {
-          window.location.replace("/delivery/login.html");
+          window.location.replace("/login");
           return;
         }
         elLoadHint.textContent = "جاري التحميل…";
@@ -698,7 +698,7 @@
       elBtnConfirmWithdraw.addEventListener("click", async function () {
         var userId = getUserId();
         if (!userId) {
-          window.location.replace("/delivery/login.html");
+          window.location.replace("/login");
           return;
         }
         if (pendingWithdrawOtp == null) {
