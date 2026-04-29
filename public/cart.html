@@ -5,6 +5,37 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>ERVENOW | السلة</title>
     <link rel="stylesheet" href="/assets/styles.css" />
+    <style>
+      .cart-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 14px;
+      }
+      .cart-items .cart-item {
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        border-radius: 12px;
+        padding: 12px;
+        margin-bottom: 10px;
+        background: #fff;
+      }
+      .cart-item h4 {
+        margin: 0 0 6px;
+      }
+      .cart-meta {
+        font-size: 0.9rem;
+        color: #555;
+        line-height: 1.7;
+      }
+      .cart-total {
+        font-size: 1.1rem;
+        font-weight: 800;
+      }
+      @media (max-width: 860px) {
+        .cart-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
   </head>
   <body>
     <div class="layout">
@@ -16,10 +47,19 @@
         </div>
       </div>
 
-      <div class="card">
-        <div id="cartList"></div>
-        <div class="btn-row" style="margin-top: 10px">
-          <button class="btn btn-primary" type="button" id="checkoutBtn" onclick="checkout()">إتمام الطلب</button>
+      <div class="cart-grid">
+        <div class="card cart-items">
+          <div id="cartList"></div>
+        </div>
+        <div class="card">
+          <div class="badge">ملخص السلة</div>
+          <p class="sub" id="cartItemsCount" style="margin-top: 10px">عدد العناصر: 0</p>
+          <p class="cart-total" id="cartTotal">الإجمالي: 0.00 ريال</p>
+          <div class="btn-row" style="margin-top: 10px; flex-direction: column; align-items: stretch">
+            <button class="btn btn-primary" type="button" id="checkoutBtn" onclick="checkout()">إتمام الطلب</button>
+            <button class="btn btn-ghost" type="button" id="clearBtn" onclick="clearAllCart()">تفريغ السلة</button>
+            <a class="btn btn-ghost" href="/browse">إضافة خدمات أخرى</a>
+          </div>
         </div>
       </div>
     </div>
@@ -30,39 +70,53 @@
       function renderCart() {
         const cart = getCart();
         const el = document.getElementById("cartList");
+        const countEl = document.getElementById("cartItemsCount");
+        const totalEl = document.getElementById("cartTotal");
         if (!el) return;
 
         if (!cart.length) {
-          el.innerHTML = "<p>السلة فارغة</p>";
+          el.innerHTML = "<p>السلة فارغة حالياً</p>";
+          if (countEl) countEl.innerText = "عدد العناصر: 0";
+          if (totalEl) totalEl.innerText = "الإجمالي: 0.00 ريال";
           return;
         }
+
+        const total = cart.reduce(function (sum, item) {
+          return sum + (Number(item.price) || 0);
+        }, 0);
+        if (countEl) countEl.innerText = "عدد العناصر: " + cart.length;
+        if (totalEl) totalEl.innerText = "الإجمالي: " + total.toFixed(2) + " ريال";
 
         el.innerHTML = cart
           .map(function (item) {
             var data = item.data || {};
             return (
-              "<div class='card' style='margin-bottom:8px'>" +
-              "<b>" +
+              "<div class='cart-item'>" +
+              "<h4>" +
               (item.title || "طلب") +
-              "</b>" +
-              "<p>" +
+              "</h4>" +
+              "<div class='cart-meta'>" +
+              "<div>" +
               (item.type || "general") +
-              "</p>" +
-              "<p>الحي: " +
+              "</div>" +
+              "<div>الحي: " +
               (data.district || "—") +
-              "</p>" +
-              "<p>الموقع: " +
+              "</div>" +
+              "<div>الموقع: " +
               (data.location || "—") +
-              "</p>" +
-              "<p>الكمية: " +
+              "</div>" +
+              "<div>الكمية: " +
               (data.qty || 1) +
-              "</p>" +
-              "<p>" +
+              "</div>" +
+              "<div>السعر: " +
               (Number(item.price) || 0) +
-              " ريال</p>" +
+              " ريال</div>" +
+              "</div>" +
+              "<div class='btn-row' style='margin-top:8px'>" +
               "<button class='btn btn-ghost' type='button' onclick='removeItem(\"" +
               item.id +
               "\")'>حذف</button>" +
+              "</div>" +
               "</div>"
             );
           })
@@ -72,12 +126,20 @@
       function removeItem(id) {
         removeFromCart(id);
         renderCart();
+        showSuccess("تم حذف العنصر من السلة");
+      }
+
+      function clearAllCart() {
+        localStorage.removeItem("cart");
+        updateCartCount();
+        renderCart();
+        showSuccess("تم تفريغ السلة");
       }
 
       const checkout = safeClick(async function () {
         const cart = getCart();
         if (!cart.length) {
-          alert("السلة فارغة");
+          showError("السلة فارغة");
           return;
         }
 
@@ -111,7 +173,7 @@
           updateCartCount();
           renderCart();
         } catch (e) {
-          alert("حدث خطأ، حاول مرة أخرى");
+          showError("حدث خطأ، حاول مرة أخرى");
           return;
         } finally {
           if (btn) {

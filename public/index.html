@@ -109,8 +109,30 @@
       .lp-header__actions {
         display: flex;
         align-items: center;
+        gap: 14px;
+        flex-wrap: wrap;
+      }
+
+      #authArea {
+        display: inline-flex;
+        align-items: center;
         gap: 10px;
         flex-wrap: wrap;
+      }
+
+      #authArea > .lp-btn-outline,
+      #authArea > .lp-btn-solid {
+        margin: 0;
+      }
+
+      .cart-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 12px;
+        border-radius: 10px;
+        background: rgba(185, 135, 47, 0.12);
+        font-weight: 700;
       }
 
       .header-right {
@@ -212,6 +234,33 @@
         }
         .lp-nav a {
           padding: 12px 14px;
+        }
+        .lp-header__actions {
+          width: 100%;
+          justify-content: flex-end;
+          gap: 12px;
+        }
+        #authArea {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+        }
+      }
+
+      @media (max-width: 520px) {
+        .lp-header__actions {
+          justify-content: stretch;
+        }
+        #authArea {
+          width: 100%;
+          justify-content: space-between;
+        }
+        #authArea > .lp-btn-outline,
+        #authArea > .lp-btn-solid {
+          flex: 1 1 auto;
+          min-width: 110px;
+          text-align: center;
+          padding-inline: 12px;
         }
       }
 
@@ -386,8 +435,11 @@
 
       @media (max-width: 640px) {
         .lp-counters__grid {
-          grid-template-columns: 1fr;
-          max-width: 320px;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          max-width: 520px;
+        }
+        .lp-counters__grid .lp-counter:last-child {
+          grid-column: 1 / -1;
         }
       }
 
@@ -432,7 +484,19 @@
 
       @media (max-width: 768px) {
         .lp-trust__grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        .lp-trust__grid .lp-trust-card:last-child {
+          grid-column: 1 / -1;
+        }
+      }
+
+      @media (max-width: 520px) {
+        .lp-trust__grid {
           grid-template-columns: 1fr;
+        }
+        .lp-trust__grid .lp-trust-card:last-child {
+          grid-column: auto;
         }
       }
 
@@ -487,6 +551,12 @@
       }
 
       @media (max-width: 480px) {
+        .lp-services__grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+
+      @media (max-width: 360px) {
         .lp-services__grid {
           grid-template-columns: 1fr;
         }
@@ -548,7 +618,19 @@
 
       @media (max-width: 768px) {
         .lp-why__grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        .lp-why__grid .lp-why-item:last-child {
+          grid-column: 1 / -1;
+        }
+      }
+
+      @media (max-width: 520px) {
+        .lp-why__grid {
           grid-template-columns: 1fr;
+        }
+        .lp-why__grid .lp-why-item:last-child {
+          grid-column: auto;
         }
       }
 
@@ -610,7 +692,19 @@
 
       @media (max-width: 700px) {
         .lp-how__steps {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        .lp-how__steps .lp-step:last-child {
+          grid-column: 1 / -1;
+        }
+      }
+
+      @media (max-width: 520px) {
+        .lp-how__steps {
           grid-template-columns: 1fr;
+        }
+        .lp-how__steps .lp-step:last-child {
+          grid-column: auto;
         }
       }
 
@@ -1064,7 +1158,7 @@
               <span id="ordersBadge" class="badge">0</span>
             </a>
           </div>
-          <div onclick="goCart()" style="cursor: pointer">🛒 <span id="cartCount">0</span></div>
+          <div class="cart-btn" onclick="goCart()" style="cursor: pointer">🛒 <span id="cartCount">0</span></div>
           <div id="authArea">
             <button class="lp-btn-outline" type="button" onclick="goLogin()">دخول</button>
             <button class="lp-btn-solid" type="button" onclick="goRegister()">إنشاء حساب</button>
