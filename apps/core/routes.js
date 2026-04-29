@@ -4,9 +4,14 @@ const { requireAuth, getJwtSecret } = require("../../shared/middleware/auth");
 const { requireRole } = require("../../shared/middleware/roles");
 const { ok, fail } = require("../../shared/utils/helpers");
 const { toE164, toStorageDigits, isErvnowSaudiMobileE164 } = require("../../shared/utils/phone");
-const { createServiceClient } = require("../../shared/config/supabase");
+const { createServiceClient, getDatabaseConfigHint } = require("../../shared/config/supabase");
 
 const router = express.Router();
+
+router.use((req, res, next) => {
+  console.log("📥 CORE ROUTE HIT:", req.method, req.url);
+  next();
+});
 
 /** رمز دخول موحّد (بدون واتساب / بدون عشوائي). قابل للتغيير عبر ERVENOW_LOGIN_CODE */
 const ERVENOW_LOGIN_CODE = String(
@@ -30,9 +35,28 @@ function signPlatformToken(userId, phoneDigits, role) {
    upsert مستخدم (بدون Supabase Auth)
 ====================== */
 const ALLOWED_USER_ROLES = new Set(["customer", "driver", "restaurant", "merchant", "service", "admin"]);
+const ALLOWED_SERVICE_TYPES = new Set([
+  "plumber",
+  "electrician",
+  "nursery",
+  "ac_technician",
+  "cleaning",
+  "vehicle_transfer",
+  "internal_delivery",
+  "pickup_truck",
+  "furniture_move",
+  "gas_delivery",
+]);
 
-async function upsertDriverByPhone(sb, phoneDigits, preferredRole) {
+function normalizeServiceType(v) {
+  const s = String(v || "").trim().toLowerCase();
+  if (!s) return null;
+  return ALLOWED_SERVICE_TYPES.has(s) ? s : null;
+}
+
+async function upsertDriverByPhone(sb, phoneDigits, preferredRole, preferredServiceType) {
   const role = ALLOWED_USER_ROLES.has(preferredRole) ? preferredRole : "customer";
+  const serviceType = role === "service" ? normalizeServiceType(preferredServiceType) : null;
 
   const { data: existing, error: selErr } = await sb
     .from("users")
@@ -47,7 +71,7 @@ async function upsertDriverByPhone(sb, phoneDigits, preferredRole) {
   if (existing?.id) {
     return sb
       .from("users")
-      .update({ role, updated_at: now })
+      .update({ role, service_type: serviceType, updated_at: now })
       .eq("id", existing.id)
       .select()
       .single();
@@ -55,10 +79,14 @@ async function upsertDriverByPhone(sb, phoneDigits, preferredRole) {
 
   return sb
     .from("users")
-    .insert({ phone: phoneDigits, role, updated_at: now })
+    .insert({ phone: phoneDigits, role, service_type: serviceType, updated_at: now })
     .select()
     .single();
 }
+
+router.get("/", (_req, res) => {
+  ok(res, { service: "core", endpoints: ["/health", "/public-config", "/verify-otp", "/me"] });
+});
 
 router.get("/health", (_req, res) => {
   ok(res, { service: "core", version: "2.1.0", auth: "ervenow_unified+05+jwt" });
@@ -125,13 +153,14 @@ router.post("/verify-otp", async (req, res) => {
     if (!sb) {
       return fail(
         res,
-        "قاعدة البيانات غير جاهزة: اضبط SUPABASE_URL و SUPABASE_SERVICE_ROLE_KEY في ملف .env ثم أعد تشغيل الخادم",
+        `قاعدة البيانات غير جاهزة — ${getDatabaseConfigHint()}`,
         503
       );
     }
 
     const wantRole = String(req.body?.role || "customer").trim();
-    const { data: userRow, error: dbErr } = await upsertDriverByPhone(sb, digits, wantRole);
+    const wantServiceType = req.body?.service_type;
+    const { data: userRow, error: dbErr } = await upsertDriverByPhone(sb, digits, wantRole, wantServiceType);
     if (dbErr) {
       console.error("[ERVENOW] verify-otp DB:", dbErr);
       return fail(
@@ -152,12 +181,17 @@ router.post("/verify-otp", async (req, res) => {
     ok(res, {
       success: true,
       token,
-      user: { id: userRow.id, phone: userRow.phone, role: userRow.role },
+      user: {
+        id: userRow.id,
+        phone: userRow.phone,
+        role: userRow.role,
+        service_type: userRow.service_type || null,
+      },
     });
   } catch (e) {
     console.error("[ERVENOW] verify-otp:", e);
     const msg = e.message || String(e) || "فشل التحقق";
-    if (/JWT|ERVENOW_JWT_SECRET|secret/i.test(msg)) {
+    if (/JWT|ERVENOW_JWT_SECRET|JWT_SECRET is not set|secret/i.test(msg)) {
       return fail(res, "مفتاح الجلسة غير مضبوط: عيّن ERVENOW_JWT_SECRET في .env", 503);
     }
     fail(res, msg, 500);
@@ -177,8 +211,9 @@ router.get("/me", requireAuth, (req, res) => {
 router.post("/users/sync", requireAuth, async (req, res) => {
   try {
     const roleIn = String(req.body?.role || "").trim();
-    const allowed = ["driver", "customer", "admin", "restaurant"];
+    const allowed = ["driver", "customer", "admin", "restaurant", "merchant", "service"];
     const role = allowed.includes(roleIn) ? roleIn : req.appUser.role;
+    const serviceType = role === "service" ? normalizeServiceType(req.body?.service_type) : null;
 
     let phone = req.body?.phone || req.appUser.phone;
     if (phone) {
@@ -195,6 +230,7 @@ router.post("/users/sync", requireAuth, async (req, res) => {
       id: req.appUser.id,
       phone,
       role,
+      service_type: serviceType,
       updated_at: new Date().toISOString(),
     };
 

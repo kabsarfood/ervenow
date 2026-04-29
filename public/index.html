@@ -113,6 +113,34 @@
         flex-wrap: wrap;
       }
 
+      .header-right {
+        display: inline-flex;
+        align-items: center;
+      }
+
+      .orders-btn {
+        position: relative;
+        padding: 10px 15px;
+        background: #222;
+        color: #fff;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 700;
+      }
+
+      .orders-btn #ordersBadge {
+        position: absolute;
+        top: -5px;
+        right: -8px;
+        background: red;
+        color: white;
+        font-size: 12px;
+        padding: 3px 6px;
+        border-radius: 50%;
+        min-width: 18px;
+        text-align: center;
+      }
+
       .lp-btn-outline {
         padding: 10px 18px;
         border-radius: 12px;
@@ -1001,8 +1029,8 @@
             <a role="menuitem" href="/#services">&#127869; مطاعم</a>
             <a role="menuitem" href="/#services">&#128138; صيدليات</a>
             <div class="lp-quick-dd__sep" role="separator"></div>
-            <a role="menuitem" href="/delivery/orders.html">&#128203; الطلبات</a>
-            <a role="menuitem" href="/delivery/map.html">&#128205; الخريطة الحية</a>
+            <a role="menuitem" href="/orders">&#128203; الطلبات</a>
+            <a role="menuitem" href="/track">&#128205; الخريطة الحية</a>
             <a role="menuitem" href="/login?role=driver">&#128100; تسجيل دخول (مندوب)</a>
             <div class="lp-quick-dd__sep" role="separator"></div>
             <a role="menuitem" href="/wallet.html">&#128176; الأرباح</a>
@@ -1030,8 +1058,18 @@
         </div>
 
         <div class="lp-header__actions">
-          <a class="lp-btn-outline" href="/login">دخول</a>
-          <a class="lp-btn-solid" href="/dashboard">لوحة</a>
+          <div class="header-right">
+            <a href="/orders" class="orders-btn">
+              الطلبات
+              <span id="ordersBadge" class="badge">0</span>
+            </a>
+          </div>
+          <div onclick="goCart()" style="cursor: pointer">🛒 <span id="cartCount">0</span></div>
+          <div id="authArea">
+            <button class="lp-btn-outline" type="button" onclick="goLogin()">دخول</button>
+            <button class="lp-btn-solid" type="button" onclick="goRegister()">إنشاء حساب</button>
+            <button class="lp-btn-outline" type="button" onclick="continueAsGuest()">زائر</button>
+          </div>
         </div>
       </div>
     </header>
@@ -1040,12 +1078,17 @@
       <section class="lp-hero lp-wrap" aria-labelledby="hero-title">
         <div class="lp-hero__inner">
           <span class="lp-hero__eyebrow">تجربة موحّدة · تتبع ذكي</span>
-          <h1 id="hero-title">منصة واحدة لكل الأنظمة</h1>
+          <h1 id="hero-title">اطلب أي خدمة الآن 👇</h1>
           <p class="lp-hero__desc">
-            نربط المطاعم والمتاجر والعملاء والمناديب في نظام ذكي واحد — منصة توصيل موحّدة من الطلب حتى باب العميل.
+            حدد موقعك واطلب توصيل أو أي خدمة مباشرة
           </p>
           <div class="lp-hero__cta">
-            <a class="lp-hero__btn" href="/login">ابدأ الآن</a>
+            <a class="lp-hero__btn" href="/login?mode=register&role=customer">ابدأ الآن</a>
+            <div style="margin-top: 15px">
+              <input id="quickFrom" placeholder="📍 من وين؟" />
+              <input id="quickTo" placeholder="📍 إلى وين؟" />
+              <button onclick="quickOrder()">احسب السعر</button>
+            </div>
           </div>
         </div>
       </section>
@@ -1053,16 +1096,16 @@
       <section class="lp-counters lp-wrap lp-reveal" id="stats" aria-label="أرقام المنصة">
         <div class="lp-counters__grid">
           <div class="lp-counter">
-            <div class="lp-counter__value"><span class="js-count" data-target="120" data-suffix="+">0</span></div>
-            <p class="lp-counter__label">مندوب</p>
+            <div class="lp-counter__value"><span class="js-count" data-target="300" data-suffix="+">0</span></div>
+            <p class="lp-counter__label">طلب يومي</p>
           </div>
           <div class="lp-counter">
             <div class="lp-counter__value"><span class="js-count" data-target="45" data-suffix="+">0</span></div>
-            <p class="lp-counter__label">مطعم</p>
+            <p class="lp-counter__label">مندوب نشط</p>
           </div>
           <div class="lp-counter">
-            <div class="lp-counter__value"><span class="js-count" data-target="300" data-suffix="+">0</span></div>
-            <p class="lp-counter__label">طلب يوميًا</p>
+            <div class="lp-counter__value"><span class="js-count" data-target="120" data-suffix="+">0</span></div>
+            <p class="lp-counter__label">متجر</p>
           </div>
         </div>
       </section>
@@ -1093,33 +1136,102 @@
 
       <section class="lp-section lp-wrap lp-reveal" id="services" aria-labelledby="services-title">
         <h2 class="lp-section__title" id="services-title">خدمات المنصة</h2>
+        <p class="lp-section__lead">اختر خدمتك الآن 👇</p>
         <p class="lp-section__lead">كل ما تحتاجه لتشغيل عملياتك — من الطلب حتى باب العميل.</p>
         <div class="lp-services__grid">
-          <a class="lp-card" href="/driver">
-            <span class="lp-card__icon" aria-hidden="true">🚚</span>
-            <h3 class="lp-card__title">توصيل</h3>
-            <p class="lp-card__text">توزيع الطلبات على المناديب وتتبع لحظي حتى التسليم.</p>
-          </a>
-          <a class="lp-card" href="/login">
+          <h3 style="grid-column: 1 / -1; margin: 0">🛒 المتاجر</h3>
+          <a class="lp-card" href="/browse?type=restaurant" data-type="restaurant">
             <span class="lp-card__icon" aria-hidden="true">🍛</span>
             <h3 class="lp-card__title">مطاعم</h3>
-            <p class="lp-card__text">ربط قوائم الطعام والطلبات مع شبكة التوصيل.</p>
+            <p class="lp-card__text">طلبات طعام مع ربط تلقائي بالتوصيل.</p>
           </a>
-          <a class="lp-card" href="/login">
+          <a class="lp-card" href="/browse?type=supermarket" data-type="supermarket">
             <span class="lp-card__icon" aria-hidden="true">🛒</span>
-            <h3 class="lp-card__title">متجر</h3>
-            <p class="lp-card__text">توسعة المنتجات والتجارة ضمن نفس البنية الذكية.</p>
+            <h3 class="lp-card__title">سوبر ماركت</h3>
+            <p class="lp-card__text">مشتريات يومية سريعة عبر نفس المنصة.</p>
           </a>
-          <a class="lp-card" href="/login">
-            <span class="lp-card__icon" aria-hidden="true">🧰</span>
-            <h3 class="lp-card__title">خدمات</h3>
-            <p class="lp-card__text">حجوزات وخدمات ميدانية بإدارة مركزية واحدة.</p>
+          <a class="lp-card" href="/browse?type=pharmacy" data-type="pharmacy">
+            <span class="lp-card__icon" aria-hidden="true">💊</span>
+            <h3 class="lp-card__title">صيدليات</h3>
+            <p class="lp-card__text">طلبات الأدوية والمنتجات الصحية بسهولة.</p>
+          </a>
+          <a class="lp-card" href="/browse?type=vegetables" data-type="vegetables">
+            <span class="lp-card__icon" aria-hidden="true">🥬</span>
+            <h3 class="lp-card__title">خضار</h3>
+            <p class="lp-card__text">توريد منتجات طازجة مباشرة للعميل.</p>
+          </a>
+          <a class="lp-card" href="/browse?type=flowers_gifts" data-type="flowers_gifts">
+            <span class="lp-card__icon" aria-hidden="true">💐</span>
+            <h3 class="lp-card__title">ورود وهدايا</h3>
+            <p class="lp-card__text">هدايا وتنسيقات ورد مع توصيل مرن.</p>
+          </a>
+          <a class="lp-card" href="/browse?type=sweets" data-type="sweets">
+            <span class="lp-card__icon" aria-hidden="true">🍰</span>
+            <h3 class="lp-card__title">حلويات</h3>
+            <p class="lp-card__text">طلبات حلويات ومناسبات بسرعة.</p>
+          </a>
+          <a class="lp-card" href="/browse?type=home_business" data-type="home_business">
+            <span class="lp-card__icon" aria-hidden="true">🏠</span>
+            <h3 class="lp-card__title">أسر منتجة</h3>
+            <p class="lp-card__text">دعم المنتجات المنزلية عبر الطلب المباشر.</p>
+          </a>
+          <h3 style="grid-column: 1 / -1; margin: 0">🔧 الخدمات</h3>
+          <a class="lp-card" href="/browse?type=plumber" data-type="plumber">
+            <span class="lp-card__icon" aria-hidden="true">🔧</span>
+            <h3 class="lp-card__title">سباك</h3>
+            <p class="lp-card__text">حجز فني سباكة بخطوات بسيطة.</p>
+          </a>
+          <a class="lp-card" href="/browse?type=electrician" data-type="electrician">
+            <span class="lp-card__icon" aria-hidden="true">⚡</span>
+            <h3 class="lp-card__title">كهربائي</h3>
+            <p class="lp-card__text">خدمات الصيانة الكهربائية المنزلية.</p>
+          </a>
+          <a class="lp-card" href="/browse?type=nursery" data-type="nursery">
+            <span class="lp-card__icon" aria-hidden="true">🪴</span>
+            <h3 class="lp-card__title">مشتل</h3>
+            <p class="lp-card__text">نباتات ولوازم زراعية عند الطلب.</p>
+          </a>
+          <a class="lp-card" href="/browse?type=ac_technician" data-type="ac_technician">
+            <span class="lp-card__icon" aria-hidden="true">❄️</span>
+            <h3 class="lp-card__title">فني مكيفات</h3>
+            <p class="lp-card__text">صيانة وتنظيف المكيفات ميدانيًا.</p>
+          </a>
+          <a class="lp-card" href="/browse?type=cleaning" data-type="cleaning">
+            <span class="lp-card__icon" aria-hidden="true">🧼</span>
+            <h3 class="lp-card__title">غسيل درج</h3>
+            <p class="lp-card__text">خدمات تنظيف المباني والدرج.</p>
+          </a>
+          <h3 style="grid-column: 1 / -1; margin: 0">🚚 كدّاد</h3>
+          <a class="lp-card" href="/browse?type=vehicle_transfer" data-type="vehicle_transfer">
+            <span class="lp-card__icon" aria-hidden="true">🚗</span>
+            <h3 class="lp-card__title">نقل مركبات</h3>
+            <p class="lp-card__text">نقل مركبات داخل المدينة وخارجها.</p>
+          </a>
+          <a class="lp-card" href="/browse?type=internal_delivery" data-type="internal_delivery">
+            <span class="lp-card__icon" aria-hidden="true">📦</span>
+            <h3 class="lp-card__title">توصيل داخلي</h3>
+            <p class="lp-card__text">توصيل الطلبات داخل الأحياء بسرعة.</p>
+          </a>
+          <a class="lp-card" href="/browse?type=pickup_truck" data-type="pickup_truck">
+            <span class="lp-card__icon" aria-hidden="true">🛻</span>
+            <h3 class="lp-card__title">ونيت</h3>
+            <p class="lp-card__text">خدمة نقل بالونيت حسب الحاجة.</p>
+          </a>
+          <a class="lp-card" href="/browse?type=furniture_move" data-type="furniture_move">
+            <span class="lp-card__icon" aria-hidden="true">🛋️</span>
+            <h3 class="lp-card__title">نقل أثاث</h3>
+            <p class="lp-card__text">نقل الأثاث بمرونة وجدولة مناسبة.</p>
+          </a>
+          <a class="lp-card" href="/browse?type=gas_delivery" data-type="gas_delivery">
+            <span class="lp-card__icon" aria-hidden="true">🔥</span>
+            <h3 class="lp-card__title">توصيل غاز</h3>
+            <p class="lp-card__text">طلبات الغاز المنزلية عند الطلب.</p>
           </a>
         </div>
       </section>
 
       <section class="lp-section lp-wrap lp-reveal" id="register-store-cta" aria-labelledby="register-store-title">
-        <h2 class="lp-section__title" id="register-store-title">&#127978; سجّل متجرك وابدأ البيع الآن</h2>
+        <h2 class="lp-section__title" id="register-store-title">&#127978; 🚀 ابدأ البيع الآن على ERVENOW</h2>
         <p class="lp-section__lead">انضم إلى منصة ERVENOW وابدأ استقبال الطلبات من العملاء</p>
         <div class="lp-contact">
           <a class="lp-btn-solid" href="/register-store">سجّل الآن</a>
@@ -1256,6 +1368,8 @@
         <span class="lp-wa-float__line">عبر واتساب</span>
       </span>
     </a>
+    <audio id="newOrderSound" src="/sound.mp3" preload="none"></audio>
+    <script src="/assets/cart.js"></script>
 
     <script>
       (function () {
@@ -1357,6 +1471,126 @@
           );
           once.observe(stats);
         }
+      })();
+    </script>
+    <script>
+      function quickOrder() {
+        var from = document.getElementById("quickFrom").value;
+        var to = document.getElementById("quickTo").value;
+        if (!from || !to) {
+          alert("حدد الموقعين");
+          return;
+        }
+        window.location.href = "/dashboard?from=" + encodeURIComponent(from) + "&to=" + encodeURIComponent(to);
+      }
+
+      function goLogin() {
+        window.location.href = "/login";
+      }
+
+      function goCart() {
+        window.location.href = "/cart";
+      }
+
+      function goRegister() {
+        window.location.href = "/login?mode=register&role=customer";
+      }
+
+      function continueAsGuest() {
+        localStorage.setItem("guest", "true");
+        window.location.href = "/dashboard";
+      }
+
+      function goDashboard() {
+        window.location.href = "/dashboard";
+      }
+
+      function logout() {
+        localStorage.removeItem("token");
+        localStorage.removeItem("ervenow_access_token");
+        localStorage.removeItem("erwenow_access_token");
+        localStorage.removeItem("guest");
+        location.reload();
+      }
+
+      function checkAuth() {
+        var token =
+          localStorage.getItem("token") ||
+          localStorage.getItem("ervenow_access_token") ||
+          localStorage.getItem("erwenow_access_token");
+        var authArea = document.getElementById("authArea");
+        if (token && authArea) {
+          authArea.innerHTML =
+            '<button class="lp-btn-solid" type="button" onclick="goDashboard()">لوحتي</button>' +
+            '<button class="lp-btn-outline" type="button" onclick="logout()">خروج</button>';
+        }
+      }
+    </script>
+    <script>
+      document.querySelectorAll("[data-type]").forEach(function (el) {
+        el.addEventListener("click", function () {
+          var type = el.getAttribute("data-type");
+          window.location.href = "/browse?type=" + type;
+        });
+      });
+    </script>
+    <script>
+      (function () {
+        var TOKEN_KEY = "ervenow_access_token";
+        var LEGACY_TOKEN_KEY = "erwenow_access_token";
+        var lastCount = 0;
+
+        function getToken() {
+          try {
+            return localStorage.getItem(TOKEN_KEY) || localStorage.getItem(LEGACY_TOKEN_KEY) || localStorage.getItem("token") || "";
+          } catch (e) {
+            return "";
+          }
+        }
+
+        async function loadOrdersCount() {
+          var badge = document.getElementById("ordersBadge");
+          if (!badge) return;
+          try {
+            var token = getToken();
+            var headers = token ? { Authorization: "Bearer " + token } : {};
+            var res = await fetch("/api/delivery/orders", { headers: headers });
+            var data = await res.json().catch(function () {
+              return {};
+            });
+            if (!data.ok) return;
+
+            var count = 0;
+            if (typeof data.count === "number") {
+              count = data.count;
+            } else if (Array.isArray(data.orders)) {
+              count = data.orders.filter(function (o) {
+                var ds = o.delivery_status || o.status;
+                return ["pending", "accepted"].includes(ds);
+              }).length;
+            }
+
+            badge.innerText = String(count);
+
+            if (count > lastCount) {
+              var s = document.getElementById("newOrderSound");
+              if (s && typeof s.play === "function") {
+                s.play().catch(function () {});
+              }
+            }
+            lastCount = count;
+          } catch (e) {
+            console.log("Orders count error");
+          }
+        }
+
+        checkAuth();
+        window.addEventListener("storage", function () {
+          if (typeof updateCartCount === "function") updateCartCount();
+        });
+        if (typeof updateCartCount === "function") updateCartCount();
+        setInterval(loadOrdersCount, 5000);
+        loadOrdersCount();
       })();
     </script>
   </body>

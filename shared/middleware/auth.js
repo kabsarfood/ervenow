@@ -4,21 +4,17 @@ const { extractBearer } = require("../utils/helpers");
 
 const ROLES = ["driver", "customer", "admin", "restaurant", "merchant", "service"];
 
-let didWarnDevJwt;
-
+/**
+ * يدعم الاسم الصحيح ERVENOW_JWT_SECRET والاسم القديم ERWENOW_JWT_SECRET للتوافق.
+ */
 function getJwtSecret() {
-  const fromEnv = String(process.env.ERVENOW_JWT_SECRET || process.env.ERWENOW_JWT_SECRET || "").trim();
-  if (fromEnv) return fromEnv;
-  if (process.env.NODE_ENV !== "production") {
-    if (!didWarnDevJwt) {
-      didWarnDevJwt = true;
-      console.warn(
-        "[ERVENOW] ERVENOW_JWT_SECRET غير مضبوط — استخدام مفتاح تطوير مؤقت. للإنتاج عيّن ERVENOW_JWT_SECRET في .env"
-      );
-    }
-    return "ervenow-dev-only-jwt-secret-change-me";
+  const JWT_SECRET = String(
+    process.env.ERVENOW_JWT_SECRET || process.env.ERWENOW_JWT_SECRET || ""
+  ).trim();
+  if (!JWT_SECRET) {
+    throw new Error("JWT_SECRET is not set");
   }
-  return "";
+  return JWT_SECRET;
 }
 
 function requireServiceSupabase(res) {
@@ -41,9 +37,6 @@ async function requireAuth(req, res, next) {
     }
 
     const secret = getJwtSecret();
-    if (!secret) {
-      return res.status(503).json({ ok: false, error: "ERVENOW_JWT_SECRET غير مضبوط" });
-    }
 
     let payload;
     try {
@@ -67,8 +60,18 @@ async function requireAuth(req, res, next) {
     req.authUser = { id: sub, phone };
     req.appUser = { id: sub, phone, role };
     next();
-   } catch (e) {
+  } catch (e) {
     console.error("[requireAuth]", e);
+    if (
+      e &&
+      (e.message === "JWT_SECRET is not set" ||
+        String(e.message || "").includes("JWT_SECRET"))
+    ) {
+      return res.status(503).json({
+        ok: false,
+        error: "ERVENOW_JWT_SECRET غير مضبوط في بيئة الخادم",
+      });
+    }
     if (process.env.NODE_ENV === "production") {
       return res.status(500).json({ ok: false, error: "Internal server error" });
     }
@@ -81,8 +84,12 @@ async function optionalAuth(req, res, next) {
     const token = extractBearer(req);
     if (!token) return next();
 
-    const secret = getJwtSecret();
-    if (!secret) return next();
+    let secret;
+    try {
+      secret = getJwtSecret();
+    } catch (e) {
+      return next(e);
+    }
 
     let payload;
     try {
@@ -102,9 +109,10 @@ async function optionalAuth(req, res, next) {
       role: payload.role || "customer",
     };
     next();
-  } catch {
-    next();
+  } catch (e) {
+    next(e);
   }
 }
 
 module.exports = { requireAuth, optionalAuth, ROLES, getJwtSecret };
+

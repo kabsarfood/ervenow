@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ERVENOW | مزود الخدمة</title>
+    <link rel="stylesheet" href="/assets/styles.css" />
+  </head>
+  <body>
+    <div class="layout">
+      <div class="top-nav">
+        <h1 style="margin: 0">طلبات مزود الخدمة</h1>
+        <div class="btn-row">
+          <a class="btn btn-ghost" href="/">الرئيسية</a>
+          <a class="btn btn-ghost" href="/login" id="logoutBtn">خروج</a>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="btn-row">
+          <button class="btn btn-primary" type="button" id="refreshBtn">تحديث</button>
+        </div>
+        <p class="sub" id="summary">—</p>
+        <div id="list"></div>
+      </div>
+    </div>
+
+    <script src="/assets/api.js"></script>
+    <script src="/assets/cart.js"></script>
+    <script>
+      function payLabel(v) {
+        return String(v || "").toLowerCase() === "paid" ? "مدفوع" : "غير مدفوع";
+      }
+
+      function statusLabel(v) {
+        const s = String(v || "").toLowerCase();
+        if (s === "new") return "جديد";
+        if (s === "accepted") return "مقبول";
+        if (s === "delivering") return "قيد التنفيذ";
+        if (s === "delivered") return "تم التوصيل";
+        if (s === "cancelled") return "ملغي";
+        return s || "—";
+      }
+
+      function safeClick(fn) {
+        let locked = false;
+        return async function (...args) {
+          if (locked) return;
+          locked = true;
+          try {
+            await fn.apply(this, args);
+          } finally {
+            locked = false;
+          }
+        };
+      }
+
+      const markDelivered = safeClick(async function (id, btn) {
+        if (btn) {
+          btn.disabled = true;
+          btn.innerText = "جاري التحديث...";
+        }
+        try {
+          const token =
+            window.PlatformAPI && typeof window.PlatformAPI.getToken === "function"
+              ? window.PlatformAPI.getToken()
+              : "";
+          const res = await fetch("/api/services/bookings/" + encodeURIComponent(id) + "/status", {
+            method: "PATCH",
+            headers: Object.assign(
+              { "Content-Type": "application/json" },
+              token ? { Authorization: "Bearer " + token } : {}
+            ),
+            body: JSON.stringify({ status: "delivered" }),
+          });
+          const data = await res.json().catch(function () {
+            return {};
+          });
+          if (!res.ok || !data.ok) throw new Error(data.error || "update failed");
+          showSuccess("🚚 تم تسليم الطلب");
+          await loadBookings();
+        } catch (e) {
+          showError("❌ حدث خطأ أثناء التحديث");
+        } finally {
+          if (btn) {
+            btn.disabled = false;
+            btn.innerText = "تم التوصيل";
+          }
+        }
+      });
+
+      function render(list) {
+        const el = document.getElementById("list");
+        if (!el) return;
+        if (!list.length) {
+          el.innerHTML = "<p class='sub'>لا توجد طلبات حالياً</p>";
+          return;
+        }
+        el.innerHTML = list
+          .map(function (b) {
+            return (
+              "<div class='card' style='margin-top:8px'>" +
+              "<p><b>" +
+              (b.service_name || "خدمة") +
+              "</b></p>" +
+              "<p>رقم الخدمة: " +
+              (b.service_order_number || "—") +
+              "</p>" +
+              "<p>جوال العميل: " +
+              (b.customer_phone || "—") +
+              "</p>" +
+              "<p>الحي: " +
+              (b.district || "—") +
+              "</p>" +
+              "<p>الموقع: " +
+              (b.location || "—") +
+              "</p>" +
+              "<p>العدد: " +
+              (b.qty || 1) +
+              "</p>" +
+              "<p>الحالة المالية: " +
+              payLabel(b.payment_status) +
+              "</p>" +
+              "<p>القيمة: " +
+              Number(b.total_amount || 0).toFixed(2) +
+              " ريال</p>" +
+              "<p>عمولة المنصة (12%): " +
+              Number(b.platform_commission || 0).toFixed(2) +
+              " ريال</p>" +
+              "<p>الحالة: " +
+              statusLabel(b.status) +
+              "</p>" +
+              "<p>تقييم العميل: " +
+              (b.rating ? b.rating + "/5" : "—") +
+              "</p>" +
+              "<p>المراجعة: " +
+              (b.review || "—") +
+              "</p>" +
+              (String(b.status || "").toLowerCase() === "delivered"
+                ? ""
+                : "<button class='btn btn-primary' type='button' onclick='markDelivered(\"" +
+                  b.id +
+                  "\", this)'>تم التوصيل</button>") +
+              "</div>"
+            );
+          })
+          .join("");
+      }
+
+      async function loadBookings() {
+        try {
+          const j = await window.PlatformAPI.api("/api/services/bookings");
+          const list = Array.isArray(j.bookings) ? j.bookings : [];
+          render(list);
+          const summary = document.getElementById("summary");
+          if (summary) summary.textContent = "عدد الطلبات: " + list.length;
+        } catch (e) {
+          showError("❌ تعذر تحميل الطلبات");
+        }
+      }
+
+      document.getElementById("refreshBtn").addEventListener("click", loadBookings);
+      document.getElementById("logoutBtn").addEventListener("click", function (e) {
+        e.preventDefault();
+        window.PlatformAPI.setToken("");
+        location.href = "/login";
+      });
+
+      loadBookings();
+      setInterval(loadBookings, 5000);
+    </script>
+  </body>
+</html>

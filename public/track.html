@@ -7,6 +7,14 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/assets/styles.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+      #rateStars.disabled {
+        pointer-events: none;
+        opacity: 0.75;
+        cursor: default;
+      }
+    </style>
   </head>
   <body>
     <div class="layout">
@@ -30,75 +38,574 @@
       </div>
 
       <div class="card">
-        <strong>معاينة الخريطة</strong>
-        <p class="sub" style="margin-top: 4px; margin-bottom: 10px">Placeholder — يمكن ربط Leaflet أو خرائط أخرى لاحقاً دون تغيير الألوان العامة.</p>
-        <div class="map-placeholder" id="mapPh">منطقة الخريطة — موقع المندوب يظهر كنص أدناه حتى ربط الخريطة</div>
+        <strong>خريطة المندوب</strong>
+        <p class="sub" style="margin-top: 4px; margin-bottom: 10px">يُحدَّث الموقع تلقائياً كل بضع ثوانٍ عند الضغط على «تحديث الآن».</p>
+        <div
+          id="map"
+          class="map-placeholder"
+          style="min-height: 280px; width: 100%; border-radius: 12px; overflow: hidden"
+        >
+          <span style="padding: 12px; display: inline-block">تُنشأ الخريطة عند وصول أول إحداثيات</span>
+        </div>
         <p class="track-coords" id="coords">لا يوجد موقع بعد</p>
         <p class="sub" style="margin: 8px 0 0; font-size: 0.85rem" id="coordsMeta"></p>
+        <div class="sub" id="gpsState" style="margin-top: 8px"></div>
+        <div class="sub" id="lastUpdate" style="margin-top: 4px; font-size: 0.9rem"></div>
+        <p class="sub" style="margin: 8px 0 0; font-weight: bold" id="eta" translate="no"></p>
+      </div>
+
+      <div class="card" id="rateCard" style="display: none">
+        <strong>تقييم التوصيل</strong>
+        <p class="sub" style="margin-top: 8px">يظهر بعد اكتمال التسليم. كيف كانت تجربتك؟</p>
+        <div
+          id="rateStars"
+          style="margin: 10px 0; font-size: 1.4rem; letter-spacing: 0.2em; cursor: pointer; user-select: none"
+          role="group"
+        >
+          <span data-n="1">⭐</span>
+          <span data-n="2">⭐</span>
+          <span data-n="3">⭐</span>
+          <span data-n="4">⭐</span>
+          <span data-n="5">⭐</span>
+        </div>
+        <textarea id="rateReview" rows="3" placeholder="اكتب رأيك"></textarea>
+        <div class="btn-row" style="margin-top: 10px">
+          <button type="button" class="btn btn-primary" id="btnRate">إرسال</button>
+        </div>
+        <p class="sub" id="rateMsg" style="margin-top: 8px"></p>
+        <p class="sub" id="thanksEl" style="margin-top: 4px"></p>
       </div>
 
       <div class="card">
         <strong>تفاصيل الطلب</strong>
+        <p id="orderNumberLine" class="sub" style="margin: 6px 0 2px" translate="no">—</p>
+        <div
+          id="orderAmounts"
+          class="sub"
+          style="display: none; line-height: 1.65; margin: 8px 0; font-size: 0.95rem"
+          translate="no"
+        ></div>
+        <div class="btn-row" style="margin: 6px 0 8px">
+          <button type="button" class="btn btn-ghost" id="btnInvoice" style="display: none">
+            عرض الفاتورة (PDF)
+          </button>
+        </div>
         <p style="margin: 8px 0 4px"><span class="badge" id="statusBadge">—</span></p>
         <pre id="out" style="margin-top: 8px; white-space: pre-wrap; font-size: 0.85rem"></pre>
       </div>
     </div>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="/assets/api.js"></script>
     <script>
       var STATUS_AR = {
         new: "جديد",
+        pending: "في الانتظار",
         accepted: "تم استلام الطلب",
         delivering: "جاري التوصيل",
         delivered: "تم التسليم",
       };
 
       var pollTimer = null;
+      var trackedOrderId = null;
+      var map = null;
+      var driverMarker = null;
+      var driverIcon = null;
+      var routeLine = null;
+      var mapInitialized = false;
+      var currentOrderId = null;
+      var lastOrder = null;
+      var defaultCenter = [24.7136, 46.6753];
+      var etaRequestId = 0;
+      var dropGeocodeCache = Object.create(null);
+      var selectedRate = 0;
+      var meRole = null;
+      var meRoleFetched = false;
+
+      async function ensureMeRole() {
+        if (meRoleFetched) return;
+        if (!window.PlatformAPI.getToken()) return;
+        meRoleFetched = true;
+        try {
+          var m = await window.PlatformAPI.api("/api/core/me");
+          meRole = m.profile && m.profile.role;
+        } catch (e) {
+          meRole = null;
+        }
+        syncInvoiceButton();
+      }
+
+      function syncInvoiceButton() {
+        var btn = document.getElementById("btnInvoice");
+        if (!btn) return;
+        if (!lastOrder) {
+          btn.style.display = "none";
+          return;
+        }
+        btn.style.display = meRole === "customer" || meRole === "admin" ? "inline-block" : "none";
+      }
+
+      async function openInvoice() {
+        if (!lastOrder || !lastOrder.id) return;
+        var tok = window.PlatformAPI.getToken();
+        if (!tok) {
+          alert("سجّل الدخول أولاً");
+          return;
+        }
+        try {
+          var r = await fetch("/api/invoice/" + encodeURIComponent(lastOrder.id), {
+            headers: { Authorization: "Bearer " + tok },
+          });
+          if (!r.ok) {
+            var errText = await r.text();
+            throw new Error(errText || String(r.status));
+          }
+          var blob = await r.blob();
+          var u = URL.createObjectURL(blob);
+          window.open(u, "_blank", "noopener,noreferrer");
+          setTimeout(function () {
+            URL.revokeObjectURL(u);
+          }, 60000);
+        } catch (e) {
+          alert(e.message || String(e));
+        }
+      }
+
+      function applyRateFormSubmitted(submitted) {
+        var submitBtn = document.getElementById("btnRate");
+        var textarea = document.getElementById("rateReview");
+        var starsEl = document.getElementById("rateStars");
+        var thanksEl = document.getElementById("thanksEl");
+        if (submitted) {
+          if (submitBtn) submitBtn.disabled = true;
+          if (textarea) textarea.disabled = true;
+          if (starsEl) starsEl.classList.add("disabled");
+          if (thanksEl) thanksEl.innerText = "شكراً لتقييمك ❤️";
+        } else {
+          if (submitBtn) submitBtn.disabled = false;
+          if (textarea) textarea.disabled = false;
+          if (starsEl) starsEl.classList.remove("disabled");
+          if (thanksEl) thanksEl.innerText = "";
+        }
+      }
+
+      function paintStars(n) {
+        var row = document.getElementById("rateStars");
+        if (!row) return;
+        var spans = row.querySelectorAll("[data-n]");
+        for (var i = 0; i < spans.length; i++) {
+          var sn = parseInt(spans[i].getAttribute("data-n"), 10);
+          spans[i].style.opacity = n > 0 && sn <= n ? "1" : "0.35";
+        }
+      }
+
+      function syncRateForm(order) {
+        var card = document.getElementById("rateCard");
+        if (!card) return;
+        var deliveryStatus = order ? order.delivery_status || order.status : null;
+        if (!order || deliveryStatus !== "delivered" || meRole !== "customer") {
+          card.style.display = "none";
+          var rmH = document.getElementById("rateMsg");
+          if (rmH) rmH.textContent = "";
+          applyRateFormSubmitted(false);
+          return;
+        }
+        card.style.display = "block";
+        var r = order.rating;
+        selectedRate = r != null && r >= 1 && r <= 5 ? r : 0;
+        paintStars(selectedRate);
+        var ta = document.getElementById("rateReview");
+        if (ta) ta.value = order.review != null && order.review !== "" ? String(order.review) : "";
+        if (r != null && r >= 1 && r <= 5) {
+          applyRateFormSubmitted(true);
+        } else {
+          applyRateFormSubmitted(false);
+        }
+      }
+
+      function calcETA(lat1, lng1, lat2, lng2) {
+        var R = 6371;
+        var dLat = ((lat2 - lat1) * Math.PI) / 180;
+        var dLng = ((lng2 - lng1) * Math.PI) / 180;
+
+        var a =
+          Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+          Math.cos((lat1 * Math.PI) / 180) *
+            Math.cos((lat2 * Math.PI) / 180) *
+            Math.sin(dLng / 2) *
+            Math.sin(dLng / 2);
+
+        var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        var distance = R * c;
+
+        var speed = 40; // km/h
+        var time = distance / speed;
+
+        return Math.round(time * 60);
+      }
+
+      function applyEtaToEl(driver_lat, driver_lng, drop_lat, drop_lng) {
+        var etaEl = document.getElementById("eta");
+        if (!etaEl) return;
+        if (
+          driver_lat == null ||
+          driver_lng == null ||
+          drop_lat == null ||
+          drop_lng == null ||
+          Number.isNaN(Number(driver_lat)) ||
+          Number.isNaN(Number(driver_lng)) ||
+          Number.isNaN(Number(drop_lat)) ||
+          Number.isNaN(Number(drop_lng))
+        ) {
+          etaEl.textContent = "";
+          return;
+        }
+        var eta = calcETA(Number(driver_lat), Number(driver_lng), Number(drop_lat), Number(drop_lng));
+        if (eta < 1) eta = 1;
+        etaEl.textContent = "🚚 يصل خلال " + eta + " دقيقة";
+      }
+
+      async function updateEtaForOrder(order) {
+        var myId = ++etaRequestId;
+        var etaEl = document.getElementById("eta");
+        if (!etaEl) return;
+
+        var dlat = order.driver_lat;
+        var dlng = order.driver_lng;
+        if (dlat == null || dlng == null) {
+          etaEl.textContent = "";
+          return;
+        }
+        if (order.drop_lat != null && order.drop_lng != null) {
+          applyEtaToEl(dlat, dlng, order.drop_lat, order.drop_lng);
+          return;
+        }
+        var addr = String(order.drop_address || "").trim();
+        if (!addr) {
+          etaEl.textContent = "";
+          return;
+        }
+        if (dropGeocodeCache[addr]) {
+          var g0 = dropGeocodeCache[addr];
+          applyEtaToEl(dlat, dlng, g0.lat, g0.lng);
+          return;
+        }
+        try {
+          var url =
+            "https://nominatim.openstreetmap.org/search?q=" +
+            encodeURIComponent(addr + ", Saudi Arabia") +
+            "&format=json&limit=1";
+          var res = await fetch(url, { headers: { Accept: "application/json" } });
+          if (myId !== etaRequestId) return;
+          var arr = res.ok ? await res.json() : null;
+          if (myId !== etaRequestId) return;
+          if (!arr || !arr[0] || arr[0].lat == null || arr[0].lon == null) {
+            etaEl.textContent = "";
+            return;
+          }
+          var glat = parseFloat(arr[0].lat);
+          var glng = parseFloat(arr[0].lon);
+          if (Number.isNaN(glat) || Number.isNaN(glng)) {
+            etaEl.textContent = "";
+            return;
+          }
+          dropGeocodeCache[addr] = { lat: glat, lng: glng };
+          if (myId !== etaRequestId) return;
+          applyEtaToEl(dlat, dlng, glat, glng);
+        } catch (e) {
+          if (myId === etaRequestId) etaEl.textContent = "";
+        }
+      }
+
+      function ensureMap() {
+        if (typeof L === "undefined" || map) return;
+        var el = document.getElementById("map");
+        if (!el) return;
+        el.innerHTML = "";
+        map = L.map("map", { scrollWheelZoom: true }).setView(defaultCenter, 12);
+        mapInitialized = true;
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+          attribution: "&copy; OpenStreetMap",
+          maxZoom: 19,
+        }).addTo(map);
+        setTimeout(function () {
+          if (map) map.invalidateSize();
+        }, 200);
+      }
+
+      function updateDriverMarker(lat, lng) {
+        if (lat == null || lng == null) return;
+        var la = Number(lat);
+        var ln = Number(lng);
+        if (Number.isNaN(la) || Number.isNaN(ln)) return;
+        ensureMap();
+        if (!map) return;
+        if (!driverIcon && typeof L !== "undefined") {
+          driverIcon = L.icon({
+            iconUrl: "https://cdn-icons-png.flaticon.com/512/684/684908.png",
+            iconSize: [35, 35],
+          });
+        }
+        if (driverMarker) {
+          driverMarker.setLatLng([la, ln]);
+        } else {
+          driverMarker = L.marker([la, ln], { title: "موقع المندوب", icon: driverIcon })
+            .addTo(map)
+            .bindPopup("🚚 المندوب");
+        }
+        map.panTo([la, ln]);
+        if (map.getZoom() < 14) map.setZoom(15);
+        setTimeout(function () {
+          if (map) map.invalidateSize();
+        }, 100);
+      }
+
+      async function getRoute(a, b) {
+        var url =
+          "https://router.project-osrm.org/route/v1/driving/" +
+          a.lng +
+          "," +
+          a.lat +
+          ";" +
+          b.lng +
+          "," +
+          b.lat +
+          "?overview=full&geometries=geojson";
+        var r = await fetch(url);
+        var j = await r.json();
+        if (!j.routes || !j.routes[0]) throw new Error("تعذر حساب المسار");
+        return j.routes[0];
+      }
+
+      async function showMap(fromLL, toLL) {
+        if (!fromLL || !toLL) return;
+        ensureMap();
+        if (!map) return;
+        try {
+          var route = await getRoute(fromLL, toLL);
+          if (routeLine) {
+            try {
+              map.removeLayer(routeLine);
+            } catch (e) {}
+            routeLine = null;
+          }
+          routeLine = L.geoJSON(route.geometry, {
+            style: { color: "#2563eb", weight: 5, opacity: 0.85 },
+          }).addTo(map);
+          map.fitBounds(routeLine.getBounds(), { padding: [24, 24] });
+        } catch (e) {}
+      }
+
+      function clearDriverMarker() {
+        if (map && driverMarker) {
+          try {
+            map.removeLayer(driverMarker);
+          } catch (e) {}
+          driverMarker = null;
+        }
+        if (map && routeLine) {
+          try {
+            map.removeLayer(routeLine);
+          } catch (e) {}
+          routeLine = null;
+        }
+      }
+
+      function formatRelativeTime(ts) {
+        if (ts == null || Number.isNaN(ts)) return "—";
+        var diff = Math.floor((Date.now() - ts) / 1000);
+        if (diff < 0) diff = 0;
+        if (diff < 5) return "الآن";
+        if (diff < 60) return "قبل " + diff + " ثانية";
+        var min = Math.floor(diff / 60);
+        return "قبل " + min + " دقيقة";
+      }
 
       function renderOrder(order) {
         if (!order) return;
-        var st = STATUS_AR[order.status] || order.status;
+        if (currentOrderId != null && String(currentOrderId) !== String(order.id)) {
+          driverMarker = null;
+          mapInitialized = false;
+          clearDriverMarker();
+          if (map) {
+            try {
+              map.remove();
+            } catch (e) {}
+            map = null;
+          }
+          var mapEl = document.getElementById("map");
+          if (mapEl) {
+            mapEl.innerHTML =
+              '<span style="padding: 12px; display: inline-block">تُنشأ الخريطة عند وصول أول إحداثيات</span>';
+          }
+          dropGeocodeCache = Object.create(null);
+          etaRequestId++;
+        }
+        currentOrderId = order.id;
+
+        var deliveryStatus = order.delivery_status || order.status;
+        var st = STATUS_AR[deliveryStatus] || deliveryStatus;
         document.getElementById("statusBadge").textContent = st;
+        var on = document.getElementById("orderNumberLine");
+        if (on) {
+          on.textContent = order.order_number
+            ? "رقم الطلب: " + order.order_number
+            : "رقم العرض: " + String(order.id).slice(0, 8) + "…";
+        }
+        var amountsEl = document.getElementById("orderAmounts");
+        if (amountsEl) {
+          var otot = Number(order.order_total) || 0;
+          var dfee = Number(order.delivery_fee) || 0;
+          var sub = otot + dfee;
+          var vatN = order.vat_amount == null || order.vat_amount === "" ? null : Number(order.vat_amount);
+          var twvN =
+            order.total_with_vat == null || order.total_with_vat === ""
+              ? null
+              : Number(order.total_with_vat);
+          var twvValid = twvN != null && !Number.isNaN(twvN);
+          if (sub <= 0 && !twvValid && (vatN == null || vatN === 0)) {
+            amountsEl.style.display = "none";
+            amountsEl.textContent = "";
+          } else {
+            amountsEl.style.display = "block";
+            var showVat =
+              (twvN != null && !Number.isNaN(twvN)) || (vatN != null && !Number.isNaN(vatN) && vatN > 0);
+            if (showVat) {
+              var totalLine = twvValid ? twvN : sub + (vatN || 0);
+              amountsEl.innerHTML =
+                "المبلغ: " +
+                sub.toFixed(2) +
+                " ريال<br/>" +
+                "الضريبة (15%): " +
+                (vatN != null && !Number.isNaN(vatN) ? vatN : 0).toFixed(2) +
+                " ريال<br/>" +
+                "الإجمالي: " +
+                totalLine.toFixed(2) +
+                " ريال";
+            } else {
+              amountsEl.textContent = "المبلغ (طلب + توصيل): " + sub.toFixed(2) + " ريال";
+            }
+          }
+        }
         document.getElementById("out").textContent = JSON.stringify(order, null, 2);
 
         var lat = order.driver_lat;
         var lng = order.driver_lng;
-        var mapPh = document.getElementById("mapPh");
+        if (order.pickup_lat && order.drop_lat) {
+          var fromLL = {
+            lat: Number(order.pickup_lat),
+            lng: Number(order.pickup_lng),
+          };
+          var toLL = {
+            lat: Number(order.drop_lat),
+            lng: Number(order.drop_lng),
+          };
+          if (
+            Number.isFinite(fromLL.lat) &&
+            Number.isFinite(fromLL.lng) &&
+            Number.isFinite(toLL.lat) &&
+            Number.isFinite(toLL.lng)
+          ) {
+            void showMap(fromLL, toLL);
+          }
+        }
         if (lat != null && lng != null && !Number.isNaN(Number(lat)) && !Number.isNaN(Number(lng))) {
           document.getElementById("coords").textContent = "خط العرض: " + lat + " — خط الطول: " + lng;
-          mapPh.textContent = "📍 آخر موقع معروف للمندوب (سيتم رسمه على الخريطة لاحقاً)";
-          var at = order.last_location_at;
-          document.getElementById("coordsMeta").textContent = at
-            ? "آخر تحديث للموقع: " + new Date(at).toLocaleString("ar-SA")
-            : "";
-        } else {
-          document.getElementById("coords").textContent = "لا يوجد موقع مندوب بعد (يُحدَّث عند بدء التوصيل وإرسال GPS)";
-          mapPh.textContent = "في انتظار إحداثيات المندوب…";
+          updateDriverMarker(lat, lng);
           document.getElementById("coordsMeta").textContent = "";
+        } else {
+          clearDriverMarker();
+          document.getElementById("coords").textContent =
+            "لا يوجد موقع مندوب بعد (يُرسَل من صفحة المندوب بعد الاستلام أو أثناء التوصيل)";
+          document.getElementById("coordsMeta").textContent = "";
+        }
+
+        var etaEl0 = document.getElementById("eta");
+        if (etaEl0) etaEl0.textContent = "";
+        void updateEtaForOrder(order);
+        syncRateForm(order);
+        updateGpsStateUI(order);
+        syncInvoiceButton();
+      }
+
+      function updateGpsStateUI(order) {
+        var gpsState = document.getElementById("gpsState");
+        var lastUpdate = document.getElementById("lastUpdate");
+        if (!gpsState || !lastUpdate) return;
+        if (!order) {
+          gpsState.textContent = "";
+          lastUpdate.textContent = "";
+          return;
+        }
+
+        var hasDriverLocation =
+          order.driver_lat != null &&
+          order.driver_lng != null &&
+          !Number.isNaN(Number(order.driver_lat)) &&
+          !Number.isNaN(Number(order.driver_lng));
+
+        if (!hasDriverLocation) {
+          gpsState.innerText = "⚠️ جاري تحديد موقع المندوب...";
+          lastUpdate.textContent = "";
+        } else {
+          gpsState.innerText = "🚚 المندوب في الطريق";
+          if (order.last_location_at) {
+            var last = new Date(order.last_location_at).getTime();
+            if (!Number.isNaN(last)) {
+              var diff = Math.floor((Date.now() - last) / 1000);
+              if (diff < 0) diff = 0;
+              lastUpdate.innerText = "آخر تحديث قبل " + diff + " ثانية";
+            } else {
+              lastUpdate.textContent = "";
+            }
+          } else {
+            lastUpdate.textContent = "";
+          }
         }
       }
 
       async function fetchOrder() {
         var id = document.getElementById("oid").value.trim();
         if (!id) return;
+        trackedOrderId = id;
         if (!window.PlatformAPI.getToken()) {
           document.getElementById("out").textContent = "سجّل الدخول أولاً.";
           return;
         }
+        await ensureMeRole();
         try {
           var j = await window.PlatformAPI.api("/api/delivery/orders/" + id);
           renderOrder(j.order);
         } catch (e) {
+          lastOrder = null;
+          syncInvoiceButton();
           document.getElementById("out").textContent = e.message;
           document.getElementById("statusBadge").textContent = "—";
+          var gsE = document.getElementById("gpsState");
+          if (gsE) gsE.textContent = "";
+          var luE = document.getElementById("lastUpdate");
+          if (luE) luE.textContent = "";
         }
       }
 
-      document.getElementById("btn").onclick = function () {
+      function startTrackingPolling() {
         if (pollTimer) clearInterval(pollTimer);
-        pollTimer = null;
+        pollTimer = setInterval(async function () {
+          try {
+            if (!trackedOrderId) return;
+            var j = await window.PlatformAPI.api("/api/delivery/orders/" + encodeURIComponent(trackedOrderId));
+            if (j && j.order) {
+              renderOrder(j.order);
+            }
+          } catch (e) {
+            console.log("tracking error");
+          }
+        }, 4000);
+      }
+
+      document.getElementById("btn").onclick = function () {
         fetchOrder();
         if (window.PlatformAPI.getToken()) {
-          pollTimer = setInterval(fetchOrder, 5000);
+          startTrackingPolling();
         }
       };
 
@@ -106,12 +613,57 @@
         document.getElementById("authHint").style.display = "none";
       }
 
+      (function () {
+        var bi = document.getElementById("btnInvoice");
+        if (bi) bi.onclick = openInvoice;
+      })();
+
       var params = new URLSearchParams(location.search);
       var qid = params.get("id");
       if (qid) {
         document.getElementById("oid").value = qid;
         if (window.PlatformAPI.getToken()) document.getElementById("btn").click();
       }
+
+      (function () {
+        var row = document.getElementById("rateStars");
+        if (row) {
+          row.addEventListener("click", function (e) {
+            if (row.classList.contains("disabled")) return;
+            var t = e.target;
+            if (!t || !t.getAttribute) return;
+            var n = parseInt(t.getAttribute("data-n"), 10);
+            if (Number.isNaN(n) || n < 1) return;
+            selectedRate = n;
+            paintStars(n);
+          });
+        }
+        var btnR = document.getElementById("btnRate");
+        if (btnR) {
+          btnR.onclick = async function () {
+            var oid = document.getElementById("oid").value.trim();
+            if (!oid) return;
+            var mEl = document.getElementById("rateMsg");
+            if (selectedRate < 1) {
+              if (mEl) mEl.textContent = "اختر من ⭐ لنجمة واحدة حتى 5 نجوم.";
+              return;
+            }
+            if (mEl) mEl.textContent = "جارٍ الإرسال…";
+            try {
+              var j = await window.PlatformAPI.api("/api/delivery/orders/" + encodeURIComponent(oid) + "/rate", {
+                method: "POST",
+                body: { rating: selectedRate, review: document.getElementById("rateReview").value.trim() },
+              });
+              if (j.order) {
+                if (mEl) mEl.textContent = "";
+                renderOrder(j.order);
+              }
+            } catch (e) {
+              if (mEl) mEl.textContent = e.message || "تعذّر الإرسال";
+            }
+          };
+        }
+      })();
     </script>
   </body>
 </html>

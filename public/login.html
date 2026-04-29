@@ -20,8 +20,8 @@
   <body>
     <div class="layout">
       <p><a href="/">← الرئيسية</a></p>
-      <h1>تسجيل الدخول — ERVENOW</h1>
-      <p class="sub">
+      <h1 id="authTitle">تسجيل الدخول — ERVENOW</h1>
+      <p class="sub" id="authSubtitle">
         أدخل رقم جوال سعودي <strong>يبدأ بـ 05</strong> (مثال 05XXXXXXXX). رمز الدخول الموحّد:
         <strong>12345</strong>
       </p>
@@ -96,7 +96,21 @@
       document.getElementById("phone").addEventListener("blur", normalizeInputPhone);
 
       (function preselectRole() {
-        var r = new URLSearchParams(window.location.search).get("role");
+        var qs = new URLSearchParams(window.location.search);
+        var mode = qs.get("mode");
+        var r = qs.get("role");
+        if (mode === "register") {
+          var t = document.getElementById("authTitle");
+          var s = document.getElementById("authSubtitle");
+          var b = document.getElementById("btnVerify");
+          if (t) t.textContent = "إنشاء حساب — ERVENOW";
+          if (s) {
+            s.innerHTML =
+              'أدخل رقم جوال سعودي <strong>يبدأ بـ 05</strong> (مثال 05XXXXXXXX). سيتم إنشاء حسابك مباشرة برمز الدخول الموحّد: <strong>12345</strong>';
+          }
+          if (b) b.textContent = "إنشاء حساب";
+          if (!r) r = "customer";
+        }
         if (r) {
           var sel = document.getElementById("role");
           if (sel) sel.value = r;

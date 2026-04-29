@@ -15,12 +15,22 @@ function extractBearer(req) {
   return null;
 }
 
-const DELIVERY_STATUSES = ["new", "accepted", "delivering", "delivered"];
+/** طلب مفتوح (لم يُسند بعد) — new قديم، pending شائع في قواعد جاهزة/كبسار */
+const OPEN_DELIVERY_STATUSES = new Set(["new", "pending"]);
+
+function deliveryLifecycleIndex(s) {
+  if (s === "new" || s === "pending") return 0;
+  if (s === "accepted") return 1;
+  if (s === "delivering") return 2;
+  if (s === "delivered") return 3;
+  return -1;
+}
+
+const DELIVERY_STATUSES = ["pending", "accepted", "delivering", "delivered"];
 
 function isValidDeliveryTransition(from, to) {
-  const order = DELIVERY_STATUSES;
-  const i = order.indexOf(from);
-  const j = order.indexOf(to);
+  const i = deliveryLifecycleIndex(from);
+  const j = deliveryLifecycleIndex(to);
   if (i < 0 || j < 0) return false;
   return j === i || j === i + 1;
 }
@@ -31,4 +41,6 @@ module.exports = {
   extractBearer,
   isValidDeliveryTransition,
   DELIVERY_STATUSES,
+  OPEN_DELIVERY_STATUSES,
+  deliveryLifecycleIndex,
 };

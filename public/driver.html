@@ -19,6 +19,25 @@
         </div>
       </div>
       <p class="sub" id="who"></p>
+      <p class="sub" id="driverRatingLine" style="margin-top: 6px" translate="no">—</p>
+
+      <div class="card" id="walletCard">
+        <div class="badge">المحفظة</div>
+        <p class="sub" id="wallet">رصيدك: —</p>
+        <p class="sub" id="txPreview" style="font-size: 0.85rem; margin-top: 6px; max-height: 120px; overflow: auto; white-space: pre-wrap" translate="no">—</p>
+        <div class="btn-row" style="margin-top: 10px; flex-wrap: wrap; gap: 8px; align-items: center">
+          <input
+            type="number"
+            id="withdrawAmount"
+            min="20"
+            step="0.01"
+            placeholder="مبلغ السحب (20+)"
+            style="min-width: 140px; padding: 8px; border-radius: 8px; border: 1px solid rgba(0, 0, 0, 0.12)"
+          />
+          <button type="button" class="btn btn-primary" id="btnWithdraw">طلب سحب</button>
+        </div>
+        <p class="sub" id="walletMsg" style="margin-top: 8px"></p>
+      </div>
 
       <div class="card">
         <div class="badge">الطلبات</div>
@@ -27,7 +46,7 @@
       </div>
 
       <div class="card">
-        <div class="badge">الموقع (كل 5 ثوانٍ لطلب نشط)</div>
+        <div class="badge">الموقع (GPS — طلب مُستلَم أو جاري التوصيل)</div>
         <p class="sub" style="margin-top: 8px" id="locStatus">—</p>
       </div>
 
@@ -36,14 +55,89 @@
 
     <script src="/assets/api.js"></script>
     <script>
-      if (!window.PlatformAPI.getToken()) {
-        location.href = "/login";
+      var token = window.PlatformAPI.getToken();
+      var isLoggedIn = !!token;
+      if (!token) {
+        document.body.innerHTML =
+          '<div style="text-align:center;margin-top:50px;">' +
+          "<h2>🔒 الرجاء تسجيل الدخول كمندوب</h2>" +
+          '<a href="/login?role=driver">تسجيل الدخول</a>' +
+          "</div>";
         throw new Error("auth");
       }
 
+      var locStatus = document.getElementById("locStatus");
       var activeOrderId = null;
+      var isWatching = false;
+      var locWatchId = null;
       var locTimer = null;
+      var myUserId = null;
       var pollTimer = null;
+      var knownOrders = [];
+      var lastLat = null;
+      var lastLng = null;
+      var lastSentAt = 0;
+      var sendingLocation = false;
+      var sendingGpsError = false;
+
+      function shouldSend(lat, lng) {
+        var now = Date.now();
+
+        if (lastLat == null || lastLng == null) return true;
+
+        var moved = Math.abs(lat - lastLat) + Math.abs(lng - lastLng) > 0.0003;
+
+        var timePassed = now - lastSentAt > 15000;
+
+        return moved || timePassed;
+      }
+
+      async function sendLocation(lat, lng) {
+        if (sendingLocation) return;
+        var orderId = activeOrderId;
+        if (!orderId) return;
+        sendingLocation = true;
+        try {
+          await window.PlatformAPI.api("/api/driver/update-location", {
+            method: "POST",
+            body: { lat: lat, lng: lng, order_id: orderId },
+          });
+          lastLat = lat;
+          lastLng = lng;
+          lastSentAt = Date.now();
+          document.getElementById("locStatus").textContent =
+            "آخر إرسال: " + new Date().toLocaleTimeString("ar-SA");
+        } catch (e) {
+          document.getElementById("locStatus").textContent = "خطأ إرسال الموقع: " + (e.message || e);
+        } finally {
+          sendingLocation = false;
+        }
+      }
+
+      function onGeoError(err) {
+        console.log("GPS error:", err && err.message);
+        // لا ترسل موقعاً وهمياً — فقط حدّث الحالة و(اختيارياً) نبّه الخادم دون تغيير last known lat/lng
+        locStatus.innerText = "⚠️ تعذّر تحديد الموقع — حاول تفعيل GPS";
+        if (activeOrderId) {
+          void (async function () {
+            if (sendingGpsError) return;
+            sendingGpsError = true;
+            try {
+              await window.PlatformAPI.api(
+                "/api/delivery/orders/" + encodeURIComponent(activeOrderId) + "/location",
+                { method: "POST", body: { gps_error: true } }
+              );
+            } catch (e) {
+              console.log("report gps_error:", e && e.message);
+            } finally {
+              sendingGpsError = false;
+            }
+          })();
+        }
+        setTimeout(function () {
+          startLocationLoop();
+        }, 5000);
+      }
 
       function err(m) {
         var e = document.getElementById("err");
@@ -51,8 +145,43 @@
         e.textContent = m;
       }
 
+      function showSuccess(msg) {
+        var el = document.createElement("div");
+        el.innerText = msg;
+        el.style.position = "fixed";
+        el.style.bottom = "20px";
+        el.style.right = "20px";
+        el.style.background = "green";
+        el.style.color = "#fff";
+        el.style.padding = "10px";
+        el.style.borderRadius = "8px";
+        el.style.zIndex = "9999";
+        document.body.appendChild(el);
+        setTimeout(function () {
+          el.remove();
+        }, 2500);
+      }
+
+      function showError(msg) {
+        var el = document.createElement("div");
+        el.innerText = msg;
+        el.style.position = "fixed";
+        el.style.bottom = "20px";
+        el.style.right = "20px";
+        el.style.background = "red";
+        el.style.color = "#fff";
+        el.style.padding = "10px";
+        el.style.borderRadius = "8px";
+        el.style.zIndex = "9999";
+        document.body.appendChild(el);
+        setTimeout(function () {
+          el.remove();
+        }, 2500);
+      }
+
       async function loadMe() {
         var j = await window.PlatformAPI.api("/api/core/me");
+        if (j.user && j.user.id) myUserId = String(j.user.id);
         document.getElementById("who").textContent =
           "الدور: " + (j.profile && j.profile.role) + " — " + (j.user && j.user.phone);
         if (j.profile && j.profile.role !== "driver") {
@@ -60,28 +189,109 @@
         }
       }
 
+      function renderStars(avg) {
+        var a = Math.max(0, Math.min(5, Number(avg) || 0));
+        var full = Math.floor(a);
+        var half = a % 1 >= 0.5 && full < 5;
+        var stars = "⭐".repeat(full);
+        if (half) stars += "☆";
+        var used = full + (half ? 1 : 0);
+        stars += "✩".repeat(5 - used);
+        return stars;
+      }
+
+      async function loadWallet() {
+        var wEl = document.getElementById("wallet");
+        var prev = document.getElementById("txPreview");
+        if (!wEl) return;
+        try {
+          var r = await window.PlatformAPI.api("/api/wallet");
+          var bal = r.balance != null ? r.balance : 0;
+          var te = r.total_earned != null ? r.total_earned : 0;
+          wEl.textContent = "رصيدك: " + bal + " ريال — إجمالي المكتسب: " + te + " ريال";
+          if (prev) {
+            var t = await window.PlatformAPI.api("/api/wallet/transactions");
+            var lines = (t.transactions || []).slice(0, 12).map(function (x) {
+              var sign = x.type === "earning" ? "+" : "−";
+              return sign + x.amount + "  " + (x.note || x.type) + "  " + (x.created_at || "").slice(0, 10);
+            });
+            prev.textContent = lines.length ? lines.join("\n") : "لا عمليات بعد";
+          }
+        } catch (e) {
+          wEl.textContent = "تعذّر تحميل المحفظة";
+          if (prev) prev.textContent = "";
+        }
+      }
+
+      async function loadDriverRating() {
+        var el = document.getElementById("driverRatingLine");
+        if (!el) return;
+        try {
+          var j = await window.PlatformAPI.api("/api/driver/rating");
+          var c = j.count != null ? j.count : 0;
+          if (!c || j.avg == null) {
+            el.textContent = "لا توجد تقييمات بعد";
+            return;
+          }
+          var avgNum = Number(j.avg);
+          var avgStr = Number.isFinite(avgNum) ? avgNum.toFixed(1) : String(j.avg);
+          el.innerText = renderStars(avgNum) + "\n" + avgStr + " من 5 (" + c + " تقييم)";
+        } catch (e) {
+          el.textContent = "—";
+        }
+      }
+
       var STATUS_AR = {
         new: "جديد — بانتظار مندوب",
+        pending: "في الانتظار",
         accepted: "تم استلام الطلب",
         delivering: "جاري التوصيل",
         delivered: "تم التسليم",
       };
 
       async function loadOrders() {
-        var j = await window.PlatformAPI.api("/api/delivery/orders");
+        var j = await window.PlatformAPI.api("/api/driver/orders");
         var box = document.getElementById("orders");
         box.innerHTML = "";
-        (j.orders || []).forEach(function (o) {
+        var orders = j.orders || [];
+        var ids = orders.map(function (o) {
+          return o.id;
+        });
+        var newOrders = ids.filter(function (id) {
+          return knownOrders.indexOf(id) === -1;
+        });
+        if (newOrders.length) {
+          try {
+            new Audio("/sound.mp3").play();
+          } catch (e) {}
+        }
+        knownOrders = ids;
+        orders.forEach(function (o) {
           var div = document.createElement("div");
           div.className = "order-row";
-          var st = STATUS_AR[o.status] || o.status;
+          var deliveryStatus = o.delivery_status || o.status;
+          var st = STATUS_AR[deliveryStatus] || deliveryStatus;
+          var num = (o.order_number && String(o.order_number).trim()) || o.id.slice(0, 8) + "…";
+          var src = (o.series_source && String(o.series_source)) || "";
+          var isKabsar = /kabsar/i.test(src);
+          var sourceTag = isKabsar ? "🍛 كبسار" : "🌐 المنصة";
+          var extLine =
+            o.external_order_id != null && String(o.external_order_id) !== ""
+              ? " — " + o.external_order_id
+              : "";
+          var phone = isLoggedIn ? (o.customer_phone || "—") : "**********";
           div.innerHTML =
-            "<strong>" +
-            o.id.slice(0, 8) +
-            "…</strong> <span class=\"badge\" style=\"margin-inline-start:6px\">" +
+            "<strong><span class=\"ord-no\" translate=\"no\">" +
+            num +
+            "</span></strong> <span class=\"badge\" style=\"margin-inline-start:6px\">" +
             st +
-            "</span><br/><small>" +
+            "</span><br/><div class=\"sub order-source\" style=\"margin:4px 0 2px; font-size:0.9rem\" translate=\"no\">" +
+            sourceTag +
+            extLine +
+            "</div><br/><small>" +
             (o.drop_address || "") +
+            "</small><br/><small>هاتف العميل: " +
+            phone +
             "</small><br/>";
 
           var trackA = document.createElement("a");
@@ -90,18 +300,36 @@
           trackA.textContent = "تتبع على الخريطة";
           div.appendChild(trackA);
 
-          if (o.status === "new") {
+          if (deliveryStatus === "new" || deliveryStatus === "pending") {
             var b = document.createElement("button");
             b.className = "btn btn-primary";
             b.textContent = "استلام الطلب";
             b.onclick = async function () {
-              await window.PlatformAPI.api("/api/delivery/orders/" + o.id + "/accept", { method: "POST" });
-              loadOrders();
+              var oid = String(o.id != null ? o.id : "").trim();
+              if (!oid) {
+                err("معرّف الطلب مفقود");
+                return;
+              }
+              try {
+                var a = await window.PlatformAPI.api("/api/driver/accept/" + encodeURIComponent(oid), {
+                  method: "POST",
+                });
+                if (!a.ok || a.accepted === false) {
+                  showError((a && a.message) || "تم استلام الطلب من مندوب آخر");
+                  return;
+                }
+                activeOrderId = oid;
+                startLocationLoop();
+                showSuccess("تم قبول الطلب");
+                loadOrders();
+              } catch (e) {
+                err(e.message || String(e));
+              }
             };
             div.appendChild(b);
           }
 
-          if (o.driver_id && o.status === "accepted") {
+          if (o.driver_id && deliveryStatus === "accepted") {
             var b2 = document.createElement("button");
             b2.className = "btn btn-ghost";
             b2.textContent = "بدء التوصيل";
@@ -117,8 +345,7 @@
             div.appendChild(b2);
           }
 
-          if (o.driver_id && o.status === "delivering") {
-            activeOrderId = o.id;
+          if (o.driver_id && deliveryStatus === "delivering") {
             var b3 = document.createElement("button");
             b3.className = "btn btn-ghost";
             b3.textContent = "تم التسليم";
@@ -137,64 +364,117 @@
           box.appendChild(div);
         });
 
-        var deliv = (j.orders || []).find(function (x) {
-          return x.status === "delivering" && x.driver_id;
-        });
-        if (deliv) {
-          activeOrderId = deliv.id;
-          startLocationLoop();
-        } else if (
-          !(j.orders || []).some(function (x) {
-            return x.status === "delivering";
-          })
-        ) {
+        var trackOrder =
+          orders.find(function (x) {
+            return (
+              (x.delivery_status || x.status) === "delivering" &&
+              myUserId &&
+              x.driver_id &&
+              String(x.driver_id) === myUserId
+            );
+          }) ||
+          orders.find(function (x) {
+            return (
+              (x.delivery_status || x.status) === "accepted" &&
+              myUserId &&
+              x.driver_id &&
+              String(x.driver_id) === myUserId
+            );
+          });
+        if (trackOrder) {
+          if (String(activeOrderId) !== String(trackOrder.id)) {
+            stopLocationLoop();
+            activeOrderId = trackOrder.id;
+            startLocationLoop();
+          } else if (!isWatching) {
+            startLocationLoop();
+          }
+        } else {
+          activeOrderId = null;
           stopLocationLoop();
         }
+        void loadDriverRating();
+        void loadWallet();
       }
 
       function stopLocationLoop() {
-        if (locTimer) clearInterval(locTimer);
-        locTimer = null;
-        document.getElementById("locStatus").textContent = "لا يوجد طلب بحالة delivering";
+        if (locTimer != null) {
+          clearInterval(locTimer);
+          locTimer = null;
+        }
+        if (locWatchId != null) navigator.geolocation.clearWatch(locWatchId);
+        locWatchId = null;
+        isWatching = false;
+        lastLat = null;
+        lastLng = null;
+        lastSentAt = 0;
+        document.getElementById("locStatus").textContent = "لا يوجد طلب مُستلَم أو جاري (استلم طلباً أو ابدأ التوصيل)";
       }
 
       function startLocationLoop() {
-        if (locTimer) clearInterval(locTimer);
+        if (isWatching) return;
         if (!activeOrderId) return;
+        isWatching = true;
+        lastLat = null;
+        lastLng = null;
+        lastSentAt = 0;
 
-        function tick() {
+        locTimer = setInterval(function () {
           if (!activeOrderId) return;
           navigator.geolocation.getCurrentPosition(
             async function (pos) {
-              try {
-                await window.PlatformAPI.api("/api/delivery/orders/" + activeOrderId + "/location", {
-                  method: "POST",
-                  body: { lat: pos.coords.latitude, lng: pos.coords.longitude },
-                });
-                document.getElementById("locStatus").textContent =
-                  "آخر إرسال: " + new Date().toLocaleTimeString("ar-SA");
-              } catch (e) {
-                document.getElementById("locStatus").textContent = "خطأ إرسال الموقع: " + e.message;
-              }
+              var lat = pos.coords.latitude;
+              var lng = pos.coords.longitude;
+              if (!shouldSend(lat, lng)) return;
+              await sendLocation(lat, lng);
             },
-            function () {
-              document.getElementById("locStatus").textContent = "فعّل GPS في المتصفح";
-            },
-            { enableHighAccuracy: true, timeout: 8000 }
+            onGeoError,
+            { enableHighAccuracy: false, maximumAge: 5000, timeout: 10000 }
           );
-        }
-
-        tick();
-        locTimer = setInterval(tick, 5000);
+        }, 5000);
+        navigator.geolocation.getCurrentPosition(
+          async function (pos) {
+            var lat = pos.coords.latitude;
+            var lng = pos.coords.longitude;
+            await sendLocation(lat, lng);
+          },
+          onGeoError,
+          { enableHighAccuracy: false, maximumAge: 5000, timeout: 10000 }
+        );
+        document.getElementById("locStatus").textContent = "جارٍ تتبّع الموقع…";
       }
 
       document.getElementById("btnRefresh").onclick = function () {
         loadOrders();
       };
 
+      var btnW = document.getElementById("btnWithdraw");
+      if (btnW) {
+        btnW.onclick = async function () {
+          var a = document.getElementById("withdrawAmount");
+          var msg = document.getElementById("walletMsg");
+          var raw = a && a.value;
+          var amt = parseFloat(raw);
+          if (!Number.isFinite(amt) || amt < 20) {
+            if (msg) msg.textContent = "الحد الأدنى 20 ريال";
+            return;
+          }
+          if (msg) msg.textContent = "جارٍ الإرسال…";
+          try {
+            await window.PlatformAPI.api("/api/wallet/withdraw", { method: "POST", body: { amount: amt } });
+            if (msg) msg.textContent = "تم إرسال طلب السحب (مراجعة إدارية)";
+            if (a) a.value = "";
+            await loadWallet();
+          } catch (e) {
+            if (msg) msg.textContent = e.message || "تعذّر الطلب";
+          }
+        };
+      }
+
       document.getElementById("driverLogout").onclick = function (e) {
         e.preventDefault();
         if (pollTimer) clearInterval(pollTimer);
+        stopLocationLoop();
         window.PlatformAPI.setToken("");
         location.href = "/login";
       };

@@ -49,12 +49,15 @@ router.post("/orders", requireAuth, async (req, res) => {
       driver_id: body.driver_id || null,
       service_provider_id: body.service_provider_id || null,
       delivery_order_id: body.delivery_order_id || null,
+      external_order_id: body.external_order_id || null,
+      series_source: body.series_source || "ervenow",
       country_code: body.country_code || "SA",
       city: body.city || null,
       currency_code: body.currency_code || "SAR",
       total_amount: Number(body.total_amount) || 0,
       delivery_fee: Number(body.delivery_fee) || 0,
       status: body.status && String(body.status) === "accepted" ? "accepted" : "new",
+      delivery_status: "pending",
       breakdown: {},
     };
 

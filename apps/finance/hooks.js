@@ -1,20 +1,30 @@
 const { calculateCommission, fetchCommissionRates } = require("./accountingEngine");
 
 /**
- * عند تسليم طلب التوصيل التشغيلي: ربط صف orders المالي عبر delivery_order_id وتشغيل التسوية.
+ * عند تسليم طلب التوصيل التشغيلي: تشغيل التسوية على صف orders الموحّد.
  */
 async function onDeliveryDelivered(sb, deliveryOrder) {
   try {
-    const { data: finOrders, error: qErr } = await sb
+    const { data: byId, error: idErr } = await sb
       .from("orders")
       .select("*")
-      .eq("delivery_order_id", deliveryOrder.id)
+      .eq("id", deliveryOrder.id)
       .limit(1);
 
-    if (qErr) throw qErr;
-    if (!finOrders || !finOrders.length) return { linked: false };
+    if (idErr) throw idErr;
 
-    const fo = finOrders[0];
+    let fo = byId && byId[0];
+    if (!fo) {
+      const { data: finOrders, error: qErr } = await sb
+        .from("orders")
+        .select("*")
+        .eq("delivery_order_id", deliveryOrder.id)
+        .limit(1);
+      if (qErr) throw qErr;
+      if (!finOrders || !finOrders.length) return { linked: false };
+      fo = finOrders[0];
+    }
+
     if (fo.settled_at) return { linked: true, skipped: "already_settled" };
 
     const rates = await fetchCommissionRates(sb, fo.country_code || "SA");

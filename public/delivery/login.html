@@ -1,146 +1,15 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>ERVENOW DELIVERY | دخول المندوب</title>
-
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet" />
-
-    <link rel="stylesheet" href="/delivery/assets/app.css" />
+    <meta http-equiv="refresh" content="0;url=/login?role=driver" />
+    <title>ERVENOW — إعادة توجيه</title>
+    <script>
+      location.replace("/login?role=driver");
+    </script>
   </head>
-
   <body>
-    <div class="app layout-fullscreen">
-      <div class="topbar">
-        <div class="brand">
-          <div class="logo" aria-hidden="true"></div>
-          <div>
-            <h1>ERVENOW DELIVERY</h1>
-            <p>بوابة المندوب — رمز التحقق عبر خادم التوصيل (OTP + جلسة)</p>
-          </div>
-        </div>
-        <div class="pill">تصميم ملكي • <strong>RTL</strong> • Cairo</div>
-      </div>
-
-      <div class="grid">
-        <div class="card" id="cardLogin">
-          <div class="hd">
-            <h2>تسجيل الدخول</h2>
-            <span class="tag gold">API /api/driver</span>
-          </div>
-
-          <div class="bd">
-            <div class="subtle">
-              أدخل رقم الجوال ثم اطلب الرمز من <strong>خادم التوصيل</strong>. مع ضبط
-              <code style="font-size: 11px">TWILIO_*</code> يُرسل عبر واتساب. بدون Twilio يظهر رمز التطوير في
-              الصفحة عند <strong>ALLOW_DEV_OTP=true</strong> في <code style="font-size: 11px">.env</code>.
-            </div>
-
-            <div class="field">
-              <label class="label" for="phone">رقم الجوال</label>
-              <input class="input" id="phone" type="tel" inputmode="tel" placeholder="مثال: 05xxxxxxxx" value="0505745650" />
-            </div>
-
-            <div class="btns">
-              <button class="btn primary" id="btnSend" type="button">إرسال الكود</button>
-              <button class="btn" id="btnReset" type="button">إعادة ضبط</button>
-            </div>
-
-            <div class="field" style="margin-top: 14px">
-              <label class="label" for="password">الرقم السري</label>
-              <input id="password" type="password" placeholder="الرقم السري">
-            </div>
-
-            <div class="btns">
-              <button class="btn primary" id="btnVerify" type="button">تسجيل الدخول</button>
-            </div>
-
-            <div class="msg" id="msgLogin">جاهز.</div>
-          </div>
-        </div>
-
-        <div class="card" id="cardRegister" style="display: none">
-          <div class="hd">
-            <h2>تسجيل مندوب جديد</h2>
-            <span class="tag">Pending</span>
-          </div>
-
-          <div class="bd">
-            <div class="subtle">
-              بعد التسجيل سيتم حفظ حسابك بحالة <strong>pending</strong> ولن تتمكن من الدخول حتى يتم اعتمادك.
-            </div>
-
-            <div class="field">
-              <label class="label" for="name">الاسم الكامل</label>
-              <input class="input" id="name" type="text" placeholder="الاسم كما في الهوية" />
-            </div>
-
-            <div class="field">
-              <label class="label" for="regPhone">رقم الجوال</label>
-              <input class="input" id="regPhone" type="tel" inputmode="numeric" placeholder="05xxxxxxxx" />
-            </div>
-
-            <div class="row">
-              <div class="field">
-                <label class="label" for="iqama">رقم الهوية / الإقامة</label>
-                <input class="input" id="iqama" type="text" inputmode="numeric" placeholder="مثال: 1234567890" />
-              </div>
-
-              <div class="field">
-                <label class="label" for="vehicleType">نوع المركبة</label>
-                <select id="vehicleType">
-                  <option value="car">سيارة</option>
-                  <option value="bike">دراجة</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="row">
-              <div class="field">
-                <label class="label" for="plateNumber">رقم اللوحة</label>
-                <input class="input" id="plateNumber" type="text" placeholder="مثال: ABC-1234" />
-              </div>
-            </div>
-
-            <div class="field">
-              <label class="label" for="workZone">منطقة العمل (الرياض)</label>
-              <select id="workZone" class="input">
-                <option value="north">شمال الرياض</option>
-                <option value="west">غرب الرياض</option>
-                <option value="south">جنوب الرياض</option>
-                <option value="east">شرق الرياض</option>
-                <option value="center" selected>وسط الرياض</option>
-              </select>
-            </div>
-
-            <div class="btns">
-              <button class="btn primary" id="btnRegister" type="button">إنشاء الحساب</button>
-            </div>
-
-            <div class="msg" id="msgRegister">أكمل البيانات ثم اضغط إنشاء الحساب.</div>
-          </div>
-        </div>
-
-        <div class="card" style="margin-top: 14px">
-          <div class="bd">
-            <div class="footerNav">
-              <a class="link" href="/delivery/orders.html">الطلبات</a>
-              <a class="link" href="/driver.html">ملفي (المنصة)</a>
-            </div>
-
-            <div class="subtle" style="margin-top: 10px">
-              للتجربة: راقب <strong>Console</strong> في المتصفح لاستجابات <code>send-otp</code> و
-              <code>verify-otp</code>، وسجل السيرفر لنفس الأحداث.
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <script src="/delivery/assets/app.js"></script>
-    <script src="/delivery/assets/login.js"></script>
+    <p><a href="/login?role=driver">متابعة إلى تسجيل الدخول</a></p>
   </body>
 </html>

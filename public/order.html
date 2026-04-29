@@ -75,9 +75,11 @@
             var j = await window.PlatformAPI.api("/api/food/orders", {
               method: "POST",
               body: {
+                type: "delivery",
                 items: [{ name: "طلب سريع من المنصة", qty: 1, price: 0 }],
                 total: 0,
                 drop_address: drop,
+                address: drop,
                 pickup_address: pickup || "المطعم",
                 notes: "مطاعم — " + (notes || ""),
               },

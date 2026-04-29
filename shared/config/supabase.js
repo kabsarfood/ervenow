@@ -12,9 +12,33 @@ function getAnonKey() {
   return k;
 }
 
+/**
+ * مفتاح الخدمة: الاسم الرسمي أو بديل (بعض الاستضافات تقصر الاسم)
+ */
+function getServiceRoleKey() {
+  return String(
+    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY || ""
+  ).trim();
+}
+
+/**
+ * سبب عدم جاهزية الاتصال (للرسائل 503) — دون تسريب أسرار
+ */
+function getDatabaseConfigHint() {
+  const url = String(process.env.SUPABASE_URL || "").trim();
+  const key = getServiceRoleKey();
+  if (!url) {
+    return "اضبط متغيّر البيئة SUPABASE_URL على الخادم (رابط مشروعك من Supabase → Settings → API).";
+  }
+  if (!key) {
+    return "اضبط SUPABASE_SERVICE_ROLE_KEY على الخادم (نفس صفحة API في Supabase: secret يسمى service_role). أعد نشر/إعادة تشغيل التطبيق بعد الحفظ.";
+  }
+  return "تعذر تهيئة عميل Supabase. تحقق من صحة SUPABASE_URL ومفتاح service_role في لوحة الاستضافة (Railway / إلخ).";
+}
+
 /** عميل خادم بدون جلسة (مهام داخلية فقط عند توفر SERVICE_ROLE) */
 function createServiceClient() {
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const key = getServiceRoleKey();
   if (!key) return null;
   try {
     return createClient(getUrl(), key, {
@@ -41,4 +65,6 @@ module.exports = {
   createUserClient,
   getUrl,
   getAnonKey,
+  getDatabaseConfigHint,
+  getServiceRoleKey,
 };

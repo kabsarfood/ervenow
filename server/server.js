@@ -5,13 +5,20 @@ const path = require("path");
 const morgan = require("morgan");
 const cors = require("cors");
 
+/** من مجلد server/: المسار إلى التطبيقات هو ../apps/… (وليس ./apps لأنه تحت server/) */
 const coreRoutes = require("../apps/core/routes");
 const deliveryRoutes = require("../apps/delivery/routes");
 const foodRoutes = require("../apps/food/routes");
 const marketRoutes = require("../apps/market/routes");
 const servicesRoutes = require("../apps/services/routes");
 const financeRoutes = require("../apps/finance/routes");
+const checkoutRoutes = require("../apps/checkout/routes");
 const storeRoutes = require("../apps/store/routes");
+const driverRoutes = require("../apps/driver/routes");
+const walletRoutes = require("../apps/wallet/routes");
+const adminRoutes = require("../apps/admin/routes");
+const invoiceRoutes = require("../apps/invoice/routes");
+const { pushToErvenow } = require("../shared/utils/ervenowPush");
 
 const PORT = process.env.PORT || 4000;
 const publicPath = path.join(__dirname, "..", "public");
@@ -50,24 +57,53 @@ app.disable("x-powered-by");
 
 app.use(blockSensitiveAccess);
 
-app.use(cors({ origin: true, credentials: true }));
+app.use(
+  cors({
+    origin: true,
+    credentials: true,
+    allowedHeaders: ["Content-Type", "Authorization", "X-Source"],
+  })
+);
 app.use(express.json({ limit: "12mb" }));
 app.use(isProd ? morgan("tiny") : morgan("dev"));
 
-/* ——— API Gateway ——— */
+/* ——— API Gateway ——— (قبل الملفات الثابتة وقبل معالج 404) */
+/** تشخيص إنتاج: يتجاوز mounted router — إن نجح، التطبيق الصحيح يستمع و /api/core يصل */
+app.get("/api/core/test", (_req, res) => {
+  res.json({ ok: true, route: "core-test-working" });
+});
+
 app.use("/api/core", coreRoutes);
 app.use("/api/delivery", deliveryRoutes);
 app.use("/api/food", foodRoutes);
 app.use("/api/market", marketRoutes);
 app.use("/api/services", servicesRoutes);
 app.use("/api/finance", financeRoutes);
+app.use("/api/checkout", checkoutRoutes);
 app.use("/api/store", storeRoutes);
+app.use("/api/driver", driverRoutes);
+app.use("/api/wallet", walletRoutes);
+app.use("/api/admin", adminRoutes);
+app.use("/api/invoice", invoiceRoutes);
 
 app.get("/api/health", (_req, res) => {
   res.json({
     ok: true,
     name: "ERVENOW Platform Core",
-    routes: ["/api/core", "/api/delivery", "/api/food", "/api/market", "/api/services", "/api/finance", "/api/store"],
+    routes: [
+      "/api/core",
+      "/api/delivery",
+      "/api/driver",
+      "/api/wallet",
+      "/api/admin",
+      "/api/food",
+      "/api/market",
+      "/api/services",
+      "/api/finance",
+      "/api/checkout",
+      "/api/store",
+      "/api/invoice",
+    ],
   });
 });
 
@@ -95,6 +131,18 @@ app.get("/driver", (_req, res) => {
   res.sendFile(path.join(publicPath, "driver.html"));
 });
 
+app.get("/orders", (_req, res) => {
+  res.sendFile(path.join(publicPath, "orders.html"));
+});
+
+app.get("/admin-finance", (_req, res) => {
+  res.sendFile(path.join(publicPath, "admin-finance.html"));
+});
+
+app.get("/admin-approvals", (_req, res) => {
+  res.sendFile(path.join(publicPath, "admin-approvals.html"));
+});
+
 app.get("/dashboard", (_req, res) => {
   res.sendFile(path.join(publicPath, "dashboard.html"));
 });
@@ -105,6 +153,18 @@ app.get("/track", (_req, res) => {
 
 app.get("/order", (_req, res) => {
   res.sendFile(path.join(publicPath, "order.html"));
+});
+
+app.get("/browse", (_req, res) => {
+  res.sendFile(path.join(publicPath, "browse.html"));
+});
+
+app.get("/cart", (_req, res) => {
+  res.sendFile(path.join(publicPath, "cart.html"));
+});
+
+app.get("/services-provider", (_req, res) => {
+  res.sendFile(path.join(publicPath, "services-provider.html"));
 });
 
 app.use((_req, res) => {
@@ -119,13 +179,8 @@ app.use((err, _req, res, _next) => {
   res.status(500).json({ ok: false, error: err.message || "error" });
 });
 
-const HOST = process.env.HOST || "0.0.0.0";
-
-app.listen(PORT, HOST, () => {
-  console.log("🚀 ERVENOW LIVE ON RAILWAY");
-  console.log("ERVENOW RUNNING ON", PORT);
-  console.log(`ERVENOW Platform Core → http://${HOST === "0.0.0.0" ? "localhost" : HOST}:${PORT}`);
-  console.log(
-    "Gateway: /api/core | /api/delivery | /api/food | /api/market | /api/services | /api/finance"
-  );
+app.listen(PORT, "0.0.0.0", () => {
+  console.log("🚀 ERVENOW RUNNING ON", PORT);
 });
+
+module.exports.pushToErvenow = pushToErvenow;

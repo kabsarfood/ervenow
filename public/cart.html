@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ERVENOW | السلة</title>
+    <link rel="stylesheet" href="/assets/styles.css" />
+  </head>
+  <body>
+    <div class="layout">
+      <div class="top-nav">
+        <h2 style="margin: 0">🛒 السلة</h2>
+        <div class="btn-row">
+          <a class="btn btn-ghost" href="/">الرئيسية</a>
+          <a class="btn btn-ghost" href="/browse">التصفح</a>
+        </div>
+      </div>
+
+      <div class="card">
+        <div id="cartList"></div>
+        <div class="btn-row" style="margin-top: 10px">
+          <button class="btn btn-primary" type="button" id="checkoutBtn" onclick="checkout()">إتمام الطلب</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="/assets/api.js"></script>
+    <script src="/assets/cart.js"></script>
+    <script>
+      function renderCart() {
+        const cart = getCart();
+        const el = document.getElementById("cartList");
+        if (!el) return;
+
+        if (!cart.length) {
+          el.innerHTML = "<p>السلة فارغة</p>";
+          return;
+        }
+
+        el.innerHTML = cart
+          .map(function (item) {
+            var data = item.data || {};
+            return (
+              "<div class='card' style='margin-bottom:8px'>" +
+              "<b>" +
+              (item.title || "طلب") +
+              "</b>" +
+              "<p>" +
+              (item.type || "general") +
+              "</p>" +
+              "<p>الحي: " +
+              (data.district || "—") +
+              "</p>" +
+              "<p>الموقع: " +
+              (data.location || "—") +
+              "</p>" +
+              "<p>الكمية: " +
+              (data.qty || 1) +
+              "</p>" +
+              "<p>" +
+              (Number(item.price) || 0) +
+              " ريال</p>" +
+              "<button class='btn btn-ghost' type='button' onclick='removeItem(\"" +
+              item.id +
+              "\")'>حذف</button>" +
+              "</div>"
+            );
+          })
+          .join("");
+      }
+
+      function removeItem(id) {
+        removeFromCart(id);
+        renderCart();
+      }
+
+      const checkout = safeClick(async function () {
+        const cart = getCart();
+        if (!cart.length) {
+          alert("السلة فارغة");
+          return;
+        }
+
+        const btn = document.getElementById("checkoutBtn");
+        if (btn) {
+          btn.disabled = true;
+          btn.innerText = "جارٍ الإرسال...";
+        }
+
+        const token = window.PlatformAPI && typeof window.PlatformAPI.getToken === "function" ? window.PlatformAPI.getToken() : "";
+
+        try {
+          const res = await fetch("/api/checkout", {
+            method: "POST",
+            headers: Object.assign(
+              { "Content-Type": "application/json" },
+              token ? { Authorization: "Bearer " + token } : {}
+            ),
+            body: JSON.stringify({ items: cart }),
+          });
+          const data = await res.json().catch(function () {
+            return {};
+          });
+
+          if (!res.ok || !data.ok) {
+            throw new Error(data.message || data.error || "checkout failed");
+          }
+
+          showSuccess("تم إنشاء " + ((data.orders && data.orders.length) || 0) + " طلب");
+          localStorage.removeItem("cart");
+          updateCartCount();
+          renderCart();
+        } catch (e) {
+          alert("حدث خطأ، حاول مرة أخرى");
+          return;
+        } finally {
+          if (btn) {
+            btn.disabled = false;
+            btn.innerText = "إتمام الطلب";
+          }
+        }
+      });
+      window.checkout = checkout;
+
+      renderCart();
+    </script>
+  </body>
+</html>

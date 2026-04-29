@@ -69,6 +69,20 @@
         el.textContent = text;
       }
 
+      function normalizePhoneInput() {
+        var el = document.getElementById("phone");
+        var d = String(el.value || "").replace(/\D/g, "");
+        if (d.startsWith("9665")) d = "0" + d.slice(3);
+        else if (d.startsWith("5") && d.length === 9) d = "0" + d;
+        if (d.length > 10) d = d.slice(0, 10);
+        el.value = d;
+        return d;
+      }
+
+      function isValidSaudiPhone05(v) {
+        return /^05\d{8}$/.test(String(v || ""));
+      }
+
       document.getElementById("cr_file").onchange = function (ev) {
         var f = ev.target.files && ev.target.files[0];
         fileDataUrl = null;
@@ -81,6 +95,9 @@
         };
         r.readAsDataURL(f);
       };
+
+      document.getElementById("phone").addEventListener("input", normalizePhoneInput);
+      document.getElementById("phone").addEventListener("blur", normalizePhoneInput);
 
       document.getElementById("btnLoc").onclick = function () {
         if (!navigator.geolocation) {
@@ -102,7 +119,12 @@
       };
 
       document.getElementById("btnSend").onclick = async function () {
+        var btn = document.getElementById("btnSend");
         try {
+          btn.disabled = true;
+          btn.textContent = "جارٍ إرسال الطلب...";
+          normalizePhoneInput();
+
           var name = document.getElementById("name").value.trim();
           var phone = document.getElementById("phone").value.trim();
           var email = document.getElementById("email").value.trim();
@@ -113,6 +135,7 @@
 
           if (!name) return show("أدخل اسم المتجر", false);
           if (!phone) return show("أدخل رقم الجوال", false);
+          if (!isValidSaudiPhone05(phone)) return show("أدخل رقم سعودي صحيح يبدأ بـ 05", false);
           var crInput = document.getElementById("cr_file");
           if (crInput.files && crInput.files[0] && !fileDataUrl) {
             return show("انتظر لحظة حتى تُحمَّل صورة السجل", false);
@@ -138,9 +161,23 @@
             method: "POST",
             body: body,
           });
-          show((j.message || "تم الإرسال") + (j.id ? " — رقم الطلب: " + j.id : ""), true);
- } catch (e) {
+          show((j.message || "تم الإرسال") + (j.id ? " — رقم الطلب: " + j.id : "") + " ✅", true);
+          document.getElementById("name").value = "";
+          document.getElementById("phone").value = "";
+          document.getElementById("email").value = "";
+          document.getElementById("commercial_register").value = "";
+          document.getElementById("type").value = "restaurant";
+          document.getElementById("cr_file").value = "";
+          latEl.value = "";
+          lngEl.value = "";
+          fileDataUrl = null;
+          fileName = null;
+          locHint.textContent = "اضغط لتحديد موقع المتجر (اختياري).";
+        } catch (e) {
           show(String(e.message || e), false);
+        } finally {
+          btn.disabled = false;
+          btn.textContent = "إرسال الطلب";
         }
       };
     </script>

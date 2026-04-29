@@ -2,6 +2,13 @@ const express = require("express");
 const { requireAuth } = require("../../shared/middleware/auth");
 const { requireRole } = require("../../shared/middleware/roles");
 const { ok, fail } = require("../../shared/utils/helpers");
+const {
+  insertDeliveryOrderWithRetry,
+  calcPlatformFee,
+  calcDriverEarning,
+  calcVAT,
+} = require("../delivery/service");
+const { pushToErvenow } = require("../../shared/utils/ervenowPush");
 
 const router = express.Router();
 
@@ -62,9 +69,10 @@ router.get("/orders", requireAuth, async (req, res) => {
 router.post("/orders", requireAuth, async (req, res) => {
   try {
     const body = req.body || {};
+    const isDelivery = body.type === "delivery" || !!body.address || !!body.drop_address;
     const items = body.items || [];
     const total = Number(body.total) || 0;
-    const drop_address = body.drop_address || body.address || "";
+    const dropAddress = body.address || body.drop_address || "";
 
     const { data: foodRow, error: fe } = await req.supabase
       .from("food_orders")
@@ -84,31 +92,64 @@ router.post("/orders", requireAuth, async (req, res) => {
       ? `طلب مطعم #${foodRow.id} — ${extraNotes}`
       : `طلب مطعم #${foodRow.id}`;
 
-    const { data: delRow, error: de } = await req.supabase
-      .from("delivery_orders")
-      .insert({
-        customer_id: req.appUser.id,
-        customer_phone: req.appUser.phone,
-        pickup_address: body.pickup_address || "المطعم",
-        drop_address,
-        notes: delNotes,
-        status: "new",
-      })
-      .select()
-      .single();
+    let delRow = null;
+    if (isDelivery) {
+      const orderTotal = Math.max(0, total);
+      const deliveryFee = 0;
+      const subtotal = orderTotal + deliveryFee;
+      const vatAmount = calcVAT(subtotal);
+      const totalWithVAT = Math.round((subtotal + vatAmount) * 100) / 100;
+      const platformFee = calcPlatformFee(orderTotal);
+      const driverEarning = calcDriverEarning(deliveryFee);
 
-    if (de) return fail(res, de.message, 400);
+      const { data, error: de } = await insertDeliveryOrderWithRetry(req.supabase, (order_number) => ({
+        customer_id: req.appUser.id,
+        customer_phone: body.customer_phone || req.appUser.phone || "",
+        pickup_address: "مطعم كبسار",
+        drop_address: dropAddress,
+        notes: delNotes,
+        order_number,
+        order_total: orderTotal,
+        delivery_fee: deliveryFee,
+        delivery_status: "pending",
+        status: "new",
+        platform_fee: platformFee,
+        driver_earning: driverEarning,
+        vat_amount: vatAmount,
+        total_with_vat: totalWithVAT,
+      }));
+      if (de) return fail(res, de.message, 400);
+      delRow = data || null;
+
+      if (delRow && !delRow.delivery_status) {
+        await req.supabase
+          .from("orders")
+          .update({ delivery_status: "pending" })
+          .eq("id", delRow.id);
+      }
+
+      if (delRow) {
+        console.log("PUSHING WEBSITE ORDER TO ERVENOW");
+        await pushToErvenow({
+          orderNumber: delRow.order_number || delRow.id,
+          customerPhone: delRow.customer_phone || "",
+          address: delRow.drop_address || dropAddress || "",
+          total: delRow.order_total || 0,
+          itemsText: delRow.notes || "",
+        });
+      }
+    }
 
     const { data: linked, error: le } = await req.supabase
       .from("food_orders")
-      .update({ delivery_order_id: delRow.id })
+      .update({ delivery_order_id: delRow ? delRow.id : null })
       .eq("id", foodRow.id)
       .select()
       .single();
 
     if (le) return fail(res, le.message, 400);
 
-    ok(res, { food_order: linked, delivery_order: delRow });
+    ok(res, { food_order: linked, delivery_order: delRow, is_delivery: isDelivery });
   } catch (e) {
     fail(res, e.message, 500);
   }

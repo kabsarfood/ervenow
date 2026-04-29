@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ERVENOW | الطلبات</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/assets/styles.css" />
+    <style>
+      .orders-grid {
+        display: grid;
+        gap: 12px;
+      }
+      .order-card {
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        border-radius: 12px;
+        padding: 12px;
+        background: #fff;
+      }
+      .order-meta {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 8px;
+        margin-top: 8px;
+      }
+      .order-meta div {
+        background: rgba(0, 0, 0, 0.04);
+        border-radius: 8px;
+        padding: 8px;
+        font-size: 0.9rem;
+      }
+      .order-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 10px;
+      }
+      .pill {
+        display: inline-block;
+        padding: 3px 9px;
+        border-radius: 999px;
+        font-size: 0.78rem;
+        font-weight: 700;
+        background: rgba(185, 135, 47, 0.15);
+      }
+      .alert {
+        padding: 12px;
+        border-radius: 10px;
+        background: #fff4e8;
+        border: 1px solid #f0c991;
+        color: #7a4f1d;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="layout">
+      <div class="top-nav">
+        <h1 style="margin: 0">إدارة الطلبات</h1>
+        <div class="btn-row">
+          <a class="btn btn-ghost" href="/">الرئيسية</a>
+          <a class="btn btn-ghost" href="/track">التتبع</a>
+          <a class="btn btn-ghost" href="/login" id="logoutBtn">خروج</a>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="badge">بيانات المندوب</div>
+        <p class="sub" id="who">—</p>
+        <p class="sub" id="walletInfo">المحفظة: —</p>
+        <p class="sub" id="ratingInfo">التقييم: —</p>
+      </div>
+
+      <div class="card">
+        <div class="badge">الطلبات المتاحة</div>
+        <div class="btn-row" style="margin-top: 8px">
+          <button class="btn btn-primary" id="refreshBtn" type="button">تحديث</button>
+        </div>
+        <p class="sub" id="summary" style="margin-top: 8px">—</p>
+        <div id="ordersList" class="orders-grid"></div>
+      </div>
+
+      <div id="msg" class="alert" style="display: none"></div>
+    </div>
+
+    <audio id="newOrderSound" src="/sound.mp3" preload="none"></audio>
+
+    <script src="/assets/api.js"></script>
+    <script>
+      var token = window.PlatformAPI.getToken();
+      var meUser = null;
+      var lastPendingCount = 0;
+      var pollTimer = null;
+
+      function showMsg(t) {
+        var el = document.getElementById("msg");
+        el.style.display = "block";
+        el.textContent = t;
+      }
+
+      function srcLabel(o) {
+        var src = String(o.series_source || "").toLowerCase();
+        var mix = (String(o.pickup_address || "") + " " + String(o.notes || "")).toLowerCase();
+        if (src.includes("kabsar") || mix.includes("مطعم") || mix.includes("restaurant")) return "مطعم";
+        if (mix.includes("صيدل") || mix.includes("pharmacy")) return "صيدلية";
+        if (mix.includes("خدم") || mix.includes("service")) return "خدمات";
+        return "طلب منصة";
+      }
+
+      function statusAr(s) {
+        return (
+          {
+            new: "جديد",
+            pending: "بانتظار مندوب",
+            accepted: "تم قبوله",
+            delivering: "قيد التوصيل",
+            delivered: "تم التسليم",
+          }[s] || s || "—"
+        );
+      }
+
+      function routeToMaps(order) {
+        var dest = "";
+        if (order.drop_lat != null && order.drop_lng != null) {
+          dest = String(order.drop_lat) + "," + String(order.drop_lng);
+        } else {
+          dest = String(order.drop_address || "");
+        }
+        if (!dest) return;
+        var url = "https://www.google.com/maps/dir/?api=1&destination=" + encodeURIComponent(dest);
+        window.open(url, "_blank", "noopener,noreferrer");
+      }
+
+      async function acceptAndStart(order) {
+        try {
+          await window.PlatformAPI.api("/api/delivery/orders/" + encodeURIComponent(order.id) + "/accept", {
+            method: "POST",
+          });
+          window.open("/track?id=" + encodeURIComponent(order.id), "_blank", "noopener,noreferrer");
+          routeToMaps(order);
+          await loadOrders();
+        } catch (e) {
+          showMsg(e.message || String(e));
+        }
+      }
+
+      function renderOrders(orders) {
+        var wrap = document.getElementById("ordersList");
+        wrap.innerHTML = "";
+        if (!orders.length) {
+          wrap.innerHTML = '<p class="sub">لا توجد طلبات حالياً.</p>';
+          return;
+        }
+
+        orders.forEach(function (o) {
+          var ds = o.delivery_status || o.status;
+          var card = document.createElement("div");
+          card.className = "order-card";
+          var orderNo = (o.order_number && String(o.order_number).trim()) || String(o.id).slice(0, 8) + "…";
+          var fee = Number(o.delivery_fee) || 0;
+          var customerPhone = o.customer_phone ? String(o.customer_phone) : "غير متوفر";
+
+          card.innerHTML =
+            '<div style="display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap;">' +
+            "<strong>رقم الطلب: <span translate=\"no\">" +
+            orderNo +
+            "</span></strong>" +
+            '<span class="pill">' +
+            statusAr(ds) +
+            "</span>" +
+            "</div>" +
+            '<div class="order-meta">' +
+            "<div><strong>الجهة:</strong><br/>" +
+            srcLabel(o) +
+            "</div>" +
+            "<div><strong>الموقع:</strong><br/>" +
+            (o.drop_address || "—") +
+            "</div>" +
+            "<div><strong>سعر التوصيل:</strong><br/>" +
+            fee.toFixed(2) +
+            " ريال</div>" +
+            "<div><strong>هاتف العميل:</strong><br/>" +
+            customerPhone +
+            "</div>" +
+            "</div>";
+
+          var actions = document.createElement("div");
+          actions.className = "order-actions";
+
+          if ((ds === "pending" || ds === "new") && (!o.driver_id || String(o.driver_id) === String(meUser.id))) {
+            var acceptBtn = document.createElement("button");
+            acceptBtn.type = "button";
+            acceptBtn.className = "btn btn-primary";
+            acceptBtn.textContent = "قبول الطلب";
+            acceptBtn.onclick = function () {
+              acceptAndStart(o);
+            };
+            actions.appendChild(acceptBtn);
+          }
+
+          if (o.driver_id && String(o.driver_id) === String(meUser.id)) {
+            var mapBtn = document.createElement("button");
+            mapBtn.type = "button";
+            mapBtn.className = "btn btn-ghost";
+            mapBtn.textContent = "فتح خارطة الطريق";
+            mapBtn.onclick = function () {
+              routeToMaps(o);
+            };
+            actions.appendChild(mapBtn);
+          }
+
+          var trackBtn = document.createElement("a");
+          trackBtn.className = "btn btn-ghost";
+          trackBtn.href = "/track?id=" + encodeURIComponent(o.id);
+          trackBtn.textContent = "فتح التتبع";
+          actions.appendChild(trackBtn);
+
+          card.appendChild(actions);
+          wrap.appendChild(card);
+        });
+      }
+
+      async function loadWalletAndRating() {
+        try {
+          var w = await window.PlatformAPI.api("/api/wallet");
+          document.getElementById("walletInfo").textContent =
+            "المحفظة: " + (w.balance != null ? w.balance : 0) + " ريال";
+        } catch (e) {
+          document.getElementById("walletInfo").textContent = "المحفظة: غير متاحة";
+        }
+        try {
+          var r = await window.PlatformAPI.api("/api/driver/rating");
+          var avg = r.avg == null ? "—" : Number(r.avg).toFixed(1);
+          document.getElementById("ratingInfo").textContent =
+            "التقييم: " + avg + " (" + (r.count != null ? r.count : 0) + " تقييم)";
+        } catch (e) {
+          document.getElementById("ratingInfo").textContent = "التقييم: غير متاح";
+        }
+      }
+
+      async function loadOrders() {
+        try {
+          var j = await window.PlatformAPI.api("/api/delivery/orders");
+          var all = j.orders || [];
+          var visible = all.filter(function (o) {
+            var ds = o.delivery_status || o.status;
+            if (!["new", "pending", "accepted", "delivering"].includes(ds)) return false;
+            if (!o.driver_id) return true;
+            return meUser && String(o.driver_id) === String(meUser.id);
+          });
+
+          var pendingCount = visible.filter(function (o) {
+            var ds = o.delivery_status || o.status;
+            return ds === "pending" || ds === "new";
+          }).length;
+          document.getElementById("summary").textContent =
+            "إجمالي الطلبات المعروضة: " + visible.length + " — الجديدة: " + pendingCount;
+
+          if (pendingCount > lastPendingCount) {
+            var snd = document.getElementById("newOrderSound");
+            if (snd && typeof snd.play === "function") snd.play().catch(function () {});
+          }
+          lastPendingCount = pendingCount;
+
+          renderOrders(visible);
+        } catch (e) {
+          showMsg(e.message || "تعذّر تحميل الطلبات");
+        }
+      }
+
+      async function init() {
+        if (!token) {
+          document.body.innerHTML =
+            '<div style="text-align:center;margin-top:50px;">' +
+            "<h2>🔒 الرجاء تسجيل الدخول كمندوب</h2>" +
+            '<a href="/login?role=driver">تسجيل الدخول</a>' +
+            "</div>";
+          return;
+        }
+
+        try {
+          var me = await window.PlatformAPI.api("/api/core/me");
+          meUser = me.user || {};
+          var role = me.profile && me.profile.role;
+          if (role !== "driver" && role !== "admin") {
+            showMsg("هذه الصفحة مخصصة للمندوبين.");
+            return;
+          }
+          var title = (me.profile && me.profile.name) || meUser.phone || meUser.id || "—";
+          document.getElementById("who").textContent = "المندوب: " + title;
+
+          await loadWalletAndRating();
+          await loadOrders();
+          pollTimer = setInterval(loadOrders, 7000);
+        } catch (e) {
+          showMsg(e.message || "فشل التحقق من الحساب");
+        }
+      }
+
+      document.getElementById("refreshBtn").onclick = function () {
+        loadOrders();
+      };
+
+      document.getElementById("logoutBtn").onclick = function (e) {
+        e.preventDefault();
+        if (pollTimer) clearInterval(pollTimer);
+        window.PlatformAPI.setToken("");
+        location.href = "/login?role=driver";
+      };
+
+      init();
+    </script>
+  </body>
+</html>

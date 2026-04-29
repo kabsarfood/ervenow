@@ -51,6 +51,13 @@ function safeFilePart(name) {
   return n || "upload";
 }
 
+function isStoresTableMissing(err) {
+  if (!err) return false;
+  if (String(err.code || "") === "42P01") return true;
+  const msg = String(err.message || err.details || "");
+  return /public\.stores|schema cache|relation .*stores/i.test(msg);
+}
+
 async function uploadCommercialFile(sb, storeId, base64, originalName) {
   const bucket = String(
     process.env.ERVENOW_STORE_FILES_BUCKET ||
@@ -149,6 +156,13 @@ router.post("/register", async (req, res) => {
     const { data: inserted, error: insErr } = await sb.from("stores").insert(row).select("id").single();
     if (insErr) {
       console.error("[store/register] insert:", insErr);
+      if (isStoresTableMissing(insErr)) {
+        return fail(
+          res,
+          "جدول stores غير موجود في قاعدة البيانات. نفّذ migration_stores.sql في Supabase ثم أعد المحاولة.",
+          400
+        );
+      }
       return fail(
         res,
         insErr.message || "تعذر حفظ الطلب — نفّذ migration_stores.sql في Supabase",

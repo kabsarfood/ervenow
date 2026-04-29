@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ERVENOW | التصفح</title>
+    <link rel="stylesheet" href="/assets/styles.css" />
+    <style>
+      .browse-wrap {
+        max-width: 980px;
+        margin: 20px auto;
+      }
+      .browse-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        align-items: center;
+      }
+      .browse-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 12px;
+      }
+      .browse-empty {
+        color: var(--muted);
+      }
+      .browse-form {
+        display: grid;
+        gap: 10px;
+      }
+      .browse-cart-row {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="layout browse-wrap">
+      <div class="card browse-head">
+        <h1 style="margin: 0">نتائج التصفح</h1>
+        <a class="btn btn-ghost" href="/">العودة للرئيسية</a>
+      </div>
+
+      <div class="card" style="margin-top: 12px">
+        <p class="sub" id="typeLabel" style="margin: 0 0 10px">جاري التحميل...</p>
+        <div id="list" class="browse-grid"></div>
+        <div id="requestBox" style="display: none"></div>
+      </div>
+
+      <div class="card" style="margin-top: 12px">
+        <p class="sub" style="margin: 0 0 10px">السلة</p>
+        <div id="cartList"></div>
+        <div class="browse-cart-row">
+          <button class="btn btn-primary" type="button" onclick="goCheckout()">السداد</button>
+          <button class="btn btn-ghost" type="button" onclick="clearCart()">تفريغ السلة</button>
+        </div>
+      </div>
+    </div>
+
+    <script id="get-type">
+      const params = new URLSearchParams(window.location.search);
+      const type = params.get("type");
+    </script>
+
+    <script id="mock-data">
+      const serviceLabels = {
+        vehicle_transfer: "نقل مركبات",
+        internal_delivery: "توصيل داخلي",
+        pickup_truck: "ونيت",
+        furniture_move: "نقل أثاث",
+        gas_delivery: "توصيل غاز",
+      };
+
+      const serviceIcons = {
+        vehicle_transfer: "🚗",
+        internal_delivery: "📦",
+        pickup_truck: "🛻",
+        furniture_move: "🛋️",
+        gas_delivery: "🔥",
+      };
+
+      const requestTypes = Object.keys(serviceLabels);
+
+      const mockData = {
+        restaurant: [{ name: "مطعم كبسار 🍖" }, { name: "مطعم شعبي 🍛" }],
+        supermarket: [{ name: "سوبر ماركت الخير 🛒" }],
+        pharmacy: [{ name: "صيدلية النهدي 💊" }],
+        plumber: [{ name: "سباك محترف 🔧" }],
+        electrician: [{ name: "كهربائي سريع ⚡" }],
+        internal_delivery: [{ name: "توصيل سريع 🚚" }],
+      };
+    </script>
+
+    <script src="/assets/cart.js"></script>
+    <script id="cart">
+      function clearCart() {
+        saveCart([]);
+        renderCart();
+      }
+
+      function renderCart() {
+        const el = document.getElementById("cartList");
+        if (!el) return;
+        const items = getCart();
+        if (!items.length) {
+          el.innerHTML = '<p class="browse-empty">السلة فارغة حالياً</p>';
+          return;
+        }
+        el.innerHTML = items
+          .map(function (i) {
+            const district = i.data && i.data.district ? i.data.district : "—";
+            const qty = i.data && i.data.qty ? i.data.qty : 1;
+            return (
+              '<div class="card" style="margin-bottom:8px">' +
+              "<strong>" +
+              (i.title || "طلب") +
+              "</strong>" +
+              "<div>الحي: " +
+              district +
+              "</div>" +
+              "<div>الكمية: " +
+              qty +
+              "</div>" +
+              "</div>"
+            );
+          })
+          .join("");
+      }
+
+      function goCheckout() {
+        const cart = getCart();
+        if (!cart.length) {
+          alert("السلة فارغة");
+          return;
+        }
+        window.location.href = "/cart";
+      }
+    </script>
+
+    <script id="render">
+      function render(items) {
+        const el = document.getElementById("list");
+        if (!el) return;
+
+        if (!items.length) {
+          el.innerHTML = '<p class="browse-empty">لا يوجد نتائج حالياً</p>';
+          return;
+        }
+
+        el.innerHTML = items
+          .map(function (i) {
+            return '<div class="card">' + (i.name || "عنصر") + "</div>";
+          })
+          .join("");
+      }
+    </script>
+
+    <script id="request-form">
+      function renderRequestForm(safeType) {
+        const list = document.getElementById("list");
+        const box = document.getElementById("requestBox");
+        if (!box) return;
+        if (list) list.innerHTML = "";
+        box.style.display = "block";
+
+        const title = serviceLabels[safeType] || "خدمة";
+        const icon = serviceIcons[safeType] || "🧾";
+        const defaultItem = safeType === "gas_delivery" ? "تبديل غاز" : "طلب " + title;
+
+        let extraFields = "";
+        if (safeType === "vehicle_transfer") {
+          extraFields = `
+            <label>نوع المركبة</label>
+            <input id="reqVehicleType" placeholder="مثال: سيدان / SUV / شاحنة" />
+            <label>من حي</label>
+            <input id="reqFrom" placeholder="اكتب الحي" />
+            <label>إلى</label>
+            <select id="vtMode">
+              <option value="internal">داخل المدينة (180 ريال)</option>
+              <option value="external">نقل خارجي (1.80 ريال لكل كم)</option>
+              <option value="taqdirat">التقديرات/حوادث (550 ريال)</option>
+            </select>
+            <label>الوجهة النهائية (الصناعية / التقديرات / مدينة)</label>
+            <input id="reqTo" placeholder="اكتب الوجهة" />
+            <label>المسافة (كم) للنقل الخارجي</label>
+            <input id="reqDistanceKm" type="number" min="0" step="0.1" value="0" />
+          `;
+        } else if (safeType === "internal_delivery") {
+          extraFields = `
+            <label>اسم المرسل</label>
+            <input id="reqSenderName" placeholder="اسم المرسل" />
+            <label>جوال المرسل</label>
+            <input id="reqSenderPhone" placeholder="05XXXXXXXX" />
+            <label>رقم بطاقة المرسل</label>
+            <input id="reqSenderId" placeholder="رقم الهوية/الإقامة" />
+            <label>من</label>
+            <input id="reqFrom" placeholder="عنوان المرسل" />
+            <button class="btn btn-ghost" type="button" onclick="fillCurrentLocationTo('reqFrom')">تحميل موقعي كنقطة الانطلاق</button>
+            <label>إلى</label>
+            <input id="reqTo" placeholder="عنوان المستلم" />
+            <label>المسافة (كم)</label>
+            <input id="reqDistanceKm" type="number" min="0" step="0.1" value="0" />
+          `;
+        } else if (safeType === "pickup_truck") {
+          extraFields = `
+            <label>نوع المنتج</label>
+            <input id="reqProductType" placeholder="مثال: مكيفات / غرفة نوم / مطبخ / سلعة" />
+            <label>عدد القطع</label>
+            <input id="reqPieces" type="number" min="1" value="1" />
+            <label>من</label>
+            <input id="reqFrom" placeholder="نقطة التحميل" />
+            <label>إلى</label>
+            <input id="reqTo" placeholder="نقطة التسليم" />
+            <label>المسافة (كم)</label>
+            <input id="reqDistanceKm" type="number" min="0" step="0.1" value="0" />
+            <p class="sub" style="margin:0">التسعير: 2.30 ريال/كم + 50 ريال تحميل وتنزيل</p>
+          `;
+        } else if (safeType === "furniture_move") {
+          extraFields = `
+            <label>نوع الأثاث</label>
+            <select id="reqFurnitureType">
+              <option value="home">أثاث منزل</option>
+              <option value="apartment">أثاث شقة</option>
+            </select>
+            <label>من</label>
+            <input id="reqFrom" placeholder="مكان التحميل" />
+            <label>إلى</label>
+            <input id="reqTo" placeholder="مكان التسليم" />
+            <label>نوع المركبة المطلوبة</label>
+            <select id="reqVehicleType">
+              <option value="dyna_5t">دنا 5 طن</option>
+              <option value="dyna_jumbo">دنا جامبو</option>
+            </select>
+            <label>عدد الردود بالنقل</label>
+            <select id="reqTrips">
+              <option value="1">1 ردة (550 ريال)</option>
+              <option value="2">2 ردات (850 ريال)</option>
+              <option value="3">3 ردات (1200 ريال)</option>
+            </select>
+          `;
+        } else if (safeType === "gas_delivery") {
+          extraFields = `
+            <label>نوع الطلب</label>
+            <input id="reqItem" value="طلب تبديل غاز" />
+            <label>الحي</label>
+            <input id="reqDistrict" placeholder="اكتب الحي" />
+            <label>الموقع</label>
+            <input id="reqLocation" placeholder="إحداثيات الموقع أو العنوان" />
+            <button class="btn btn-ghost" type="button" onclick="fillCurrentLocationTo('reqLocation')">تحميل موقعك</button>
+            <label>عدد الأسطوانات</label>
+            <input id="reqQty" type="number" min="1" value="1" />
+          `;
+        } else {
+          extraFields = `
+            <label>نوع الطلب</label>
+            <input id="reqItem" value="${defaultItem}" />
+            <label>الحي</label>
+            <input id="reqDistrict" placeholder="اكتب الحي" />
+            <label>الموقع</label>
+            <input id="reqLocation" placeholder="إحداثيات الموقع أو العنوان" />
+            <button class="btn btn-ghost" type="button" onclick="fillCurrentLocationTo('reqLocation')">تحميل موقعك</button>
+            <label>العدد</label>
+            <input id="reqQty" type="number" min="1" value="1" />
+          `;
+        }
+
+        box.innerHTML = `
+          <div class="browse-form">
+            <div class="card">
+              <h3 style="margin: 0 0 10px">${icon} ${title}</h3>
+              ${extraFields}
+              <label>جوال طالب الخدمة</label>
+              <input id="reqCustomerPhone" placeholder="05XXXXXXXX" />
+              <label>القيمة الإجمالية (ريال)</label>
+              <input id="reqTotalAmount" type="number" min="0" step="0.01" value="0" />
+              <div class="browse-cart-row">
+                <button class="btn btn-ghost" type="button" onclick="calculateByType('${safeType}')">احسب السعر</button>
+                <button class="btn btn-primary" type="button" onclick="submitRequestForm('${safeType}')">أضف للسلة</button>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      function fillCurrentLocationTo(targetId) {
+        const input = document.getElementById(targetId || "reqLocation");
+        if (!input) return;
+        if (!navigator.geolocation) {
+          alert("المتصفح لا يدعم تحديد الموقع");
+          return;
+        }
+        navigator.geolocation.getCurrentPosition(
+          function (pos) {
+            const lat = pos.coords.latitude;
+            const lng = pos.coords.longitude;
+            input.value = lat.toFixed(6) + "," + lng.toFixed(6);
+          },
+          function () {
+            alert("تعذر تحميل موقعك");
+          }
+        );
+      }
+
+      function getNum(id) {
+        const el = document.getElementById(id);
+        const n = Number(el && el.value);
+        return Number.isFinite(n) ? n : 0;
+      }
+
+      function calculateByType(safeType) {
+        let total = 0;
+        if (safeType === "vehicle_transfer") {
+          const mode = (document.getElementById("vtMode") && document.getElementById("vtMode").value) || "internal";
+          if (mode === "internal") total = 180;
+          else if (mode === "taqdirat") total = 550;
+          else total = getNum("reqDistanceKm") * 1.8;
+        } else if (safeType === "internal_delivery") {
+          total = getNum("reqDistanceKm") * 2.3;
+        } else if (safeType === "pickup_truck") {
+          total = getNum("reqDistanceKm") * 2.3 + 50;
+        } else if (safeType === "furniture_move") {
+          const trips = String((document.getElementById("reqTrips") && document.getElementById("reqTrips").value) || "1");
+          if (trips === "1") total = 550;
+          else if (trips === "2") total = 850;
+          else total = 1200;
+        } else {
+          total = getNum("reqTotalAmount");
+        }
+        const out = document.getElementById("reqTotalAmount");
+        if (out) out.value = (Math.round(total * 100) / 100).toFixed(2);
+        return total;
+      }
+
+      function submitRequestForm(safeType) {
+        const item = document.getElementById("reqItem");
+        const district = document.getElementById("reqDistrict");
+        const location = document.getElementById("reqLocation");
+        const qty = document.getElementById("reqQty");
+        const customerPhone = document.getElementById("reqCustomerPhone");
+        const totalAmount = document.getElementById("reqTotalAmount");
+
+        const itemText = item ? item.value.trim() : "";
+        const districtText = district ? district.value.trim() : "";
+        const locationText = location ? location.value.trim() : "";
+        const qtyNum = Math.max(1, Number(qty && qty.value) || 1);
+        const customerPhoneText = customerPhone ? customerPhone.value.trim() : "";
+        const totalAmountNum = Math.max(0, calculateByType(safeType) || Number(totalAmount && totalAmount.value) || 0);
+
+        const fromText = (document.getElementById("reqFrom") && document.getElementById("reqFrom").value.trim()) || "";
+        const toText = (document.getElementById("reqTo") && document.getElementById("reqTo").value.trim()) || "";
+        const vehicleTypeText =
+          (document.getElementById("reqVehicleType") && document.getElementById("reqVehicleType").value.trim()) || "";
+        const distanceKm = getNum("reqDistanceKm");
+
+        let finalTitle = itemText || ("طلب " + (serviceLabels[safeType] || "خدمة"));
+        if (safeType === "vehicle_transfer") finalTitle = "نقل مركبة";
+        if (safeType === "internal_delivery") finalTitle = "توصيل داخلي";
+        if (safeType === "pickup_truck") finalTitle = "نقل ونيت";
+        if (safeType === "furniture_move") finalTitle = "نقل أثاث";
+
+        if (safeType === "gas_delivery" && !districtText) {
+          alert("أدخل الحي");
+          return;
+        }
+        if (["vehicle_transfer", "internal_delivery", "pickup_truck", "furniture_move"].includes(safeType) && (!fromText || !toText)) {
+          alert("أدخل من وإلى");
+          return;
+        }
+
+        addToCart({
+          type: safeType,
+          title: finalTitle,
+          price: totalAmountNum,
+          data: {
+            district: districtText || fromText || "",
+            location: locationText,
+            qty: qtyNum,
+            customer_phone: customerPhoneText,
+            from: fromText,
+            to: toText,
+            vehicle_type: vehicleTypeText,
+            distance_km: distanceKm,
+            mode: (document.getElementById("vtMode") && document.getElementById("vtMode").value) || "",
+            sender_name: (document.getElementById("reqSenderName") && document.getElementById("reqSenderName").value.trim()) || "",
+            sender_phone: (document.getElementById("reqSenderPhone") && document.getElementById("reqSenderPhone").value.trim()) || "",
+            sender_id: (document.getElementById("reqSenderId") && document.getElementById("reqSenderId").value.trim()) || "",
+            product_type: (document.getElementById("reqProductType") && document.getElementById("reqProductType").value.trim()) || "",
+            pieces: getNum("reqPieces") || 0,
+            furniture_type:
+              (document.getElementById("reqFurnitureType") && document.getElementById("reqFurnitureType").value) || "",
+            trips: (document.getElementById("reqTrips") && document.getElementById("reqTrips").value) || "",
+            created_at: new Date().toISOString(),
+          },
+        });
+
+        alert("تمت إضافة الطلب إلى السلة");
+      }
+    </script>
+
+    <script id="fetch-real-data">
+      async function loadData() {
+        const label = document.getElementById("typeLabel");
+        const box = document.getElementById("requestBox");
+        const safeType = String(type || "").trim();
+        if (label) {
+          label.textContent = safeType ? "النوع: " + safeType : "النوع غير محدد";
+        }
+        if (box) box.style.display = "none";
+
+        if (!safeType) {
+          render([]);
+          return;
+        }
+
+        if (requestTypes.includes(safeType)) {
+          renderRequestForm(safeType);
+          return;
+        }
+
+        try {
+          const res = await fetch("/api/store?type=" + encodeURIComponent(safeType));
+          const data = await res.json().catch(function () {
+            return {};
+          });
+
+          if (data.ok && Array.isArray(data.stores) && data.stores.length > 0) {
+            render(data.stores);
+            return;
+          }
+
+          throw new Error("no data");
+        } catch (e) {
+          render(mockData[safeType] || []);
+        }
+      }
+    </script>
+
+    <script id="init">
+      renderCart();
+      loadData();
+    </script>
+  </body>
+</html>

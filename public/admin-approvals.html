@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ERVENOW | موافقات الإدارة</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/assets/styles.css" />
+  </head>
+  <body>
+    <div class="layout">
+      <div class="top-nav">
+        <h1 style="margin: 0">موافقات الإدارة</h1>
+        <div class="btn-row">
+          <a class="btn btn-ghost" href="/">الرئيسية</a>
+          <a class="btn btn-ghost" href="/admin-finance">التقرير المالي</a>
+        </div>
+      </div>
+
+      <p class="sub">هذه الصفحة للأدمن فقط: مراجعة تسجيل المتاجر + حصر المناديب ومزودي الخدمة.</p>
+
+      <div class="card">
+        <div class="badge">طلبات تسجيل المتاجر</div>
+        <div class="btn-row" style="margin-top: 8px">
+          <button id="btnPending" class="btn btn-primary" type="button">تحميل الطلبات</button>
+        </div>
+        <pre id="storesOut" style="white-space: pre-wrap; max-height: 320px; overflow: auto; margin-top: 10px">—</pre>
+        <div class="btn-row" style="margin-top: 8px; flex-wrap: wrap">
+          <input id="storeId" placeholder="معرف الطلب (UUID)" />
+          <button id="btnApprove" class="btn btn-ghost" type="button">موافقة</button>
+          <button id="btnReject" class="btn btn-ghost" type="button">رفض</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="badge">حصر المناديب</div>
+        <button id="btnDrivers" class="btn btn-primary" type="button" style="margin-top: 8px">تحميل المناديب</button>
+        <pre id="driversOut" style="white-space: pre-wrap; max-height: 260px; overflow: auto; margin-top: 10px">—</pre>
+      </div>
+
+      <div class="card">
+        <div class="badge">مزودو الخدمة (مطاعم/صيدليات/خدمات)</div>
+        <button id="btnProviders" class="btn btn-primary" type="button" style="margin-top: 8px">تحميل المزودين</button>
+        <pre id="providersOut" style="white-space: pre-wrap; max-height: 320px; overflow: auto; margin-top: 10px">—</pre>
+      </div>
+    </div>
+
+    <script src="/assets/api.js"></script>
+    <script>
+      if (!window.PlatformAPI.getToken()) {
+        location.href = "/login?role=admin";
+      }
+
+      async function loadStores() {
+        var el = document.getElementById("storesOut");
+        el.textContent = "جارٍ التحميل…";
+        try {
+          var j = await window.PlatformAPI.api("/api/admin/store-requests");
+          el.textContent = JSON.stringify(j.requests || [], null, 2);
+        } catch (e) {
+          el.textContent = e.message || "خطأ";
+        }
+      }
+
+      async function patchStore(action) {
+        var id = document.getElementById("storeId").value.trim();
+        if (!id) return alert("اكتب معرف الطلب أولاً");
+        try {
+          await window.PlatformAPI.api("/api/admin/store-requests/" + encodeURIComponent(id), {
+            method: "PATCH",
+            body: { action: action },
+          });
+          await loadStores();
+          alert(action === "approve" ? "تمت الموافقة" : "تم الرفض");
+        } catch (e) {
+          alert(e.message || "خطأ");
+        }
+      }
+
+      async function loadDrivers() {
+        var el = document.getElementById("driversOut");
+        el.textContent = "جارٍ التحميل…";
+        try {
+          var j = await window.PlatformAPI.api("/api/admin/drivers");
+          el.textContent = JSON.stringify(j.drivers || [], null, 2);
+        } catch (e) {
+          el.textContent = e.message || "خطأ";
+        }
+      }
+
+      async function loadProviders() {
+        var el = document.getElementById("providersOut");
+        el.textContent = "جارٍ التحميل…";
+        try {
+          var j = await window.PlatformAPI.api("/api/admin/providers");
+          el.textContent = JSON.stringify({ providers: j.providers || [], stores: j.stores || [] }, null, 2);
+        } catch (e) {
+          el.textContent = e.message || "خطأ";
+        }
+      }
+
+      document.getElementById("btnPending").onclick = loadStores;
+      document.getElementById("btnApprove").onclick = function () {
+        patchStore("approve");
+      };
+      document.getElementById("btnReject").onclick = function () {
+        patchStore("reject");
+      };
+      document.getElementById("btnDrivers").onclick = loadDrivers;
+      document.getElementById("btnProviders").onclick = loadProviders;
+    </script>
+  </body>
+</html>
