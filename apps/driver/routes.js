@@ -6,6 +6,7 @@ const { getJwtSecret } = require("../../shared/middleware/auth");
 const { ok, fail } = require("../../shared/utils/helpers");
 const { toE164, toStorageDigits, isErvnowSaudiMobileE164 } = require("../../shared/utils/phone");
 const { sendWhatsApp } = require("../../shared/utils/whatsapp");
+const { notifyDriver } = require("./notify");
 
 const router = express.Router();
 const otpStore = new Map();
@@ -82,6 +83,77 @@ async function upsertDriverUser(sb, phoneDigits) {
     .single();
   if (error) throw error;
   return data;
+}
+
+function haversineKm(aLat, aLng, bLat, bLng) {
+  const toRad = (d) => (d * Math.PI) / 180;
+  const R = 6371;
+  const dLat = toRad(bLat - aLat);
+  const dLng = toRad(bLng - aLng);
+  const x =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(toRad(aLat)) * Math.cos(toRad(bLat)) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+  return 2 * R * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x));
+}
+
+function toNumberOrNaN(v) {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : NaN;
+}
+
+async function creditDriverWalletForOrder(sb, appUserId, order) {
+  const earning = Number(order?.driver_earning) > 0 ? Number(order.driver_earning) : Number(order?.delivery_fee) || 0;
+  if (!(earning > 0)) return { credited: false };
+
+  const orderId = String(order.id || "").trim();
+  if (!orderId) return { credited: false };
+
+  const { data: existingTx, error: exErr } = await sb
+    .from("ervenow_wallet_transactions")
+    .select("id")
+    .eq("user_id", appUserId)
+    .eq("type", "earning")
+    .eq("reference_id", orderId)
+    .maybeSingle();
+  if (exErr) throw exErr;
+  if (existingTx && existingTx.id) return { credited: false };
+
+  const { error: txErr } = await sb.from("ervenow_wallet_transactions").insert({
+    user_id: appUserId,
+    amount: earning,
+    type: "earning",
+    reference_id: orderId,
+    note: "توصيل طلب",
+  });
+  if (txErr) throw txErr;
+
+  const { data: walletRow, error: wSelErr } = await sb
+    .from("ervenow_wallets")
+    .select("*")
+    .eq("user_id", appUserId)
+    .maybeSingle();
+  if (wSelErr) throw wSelErr;
+
+  if (!walletRow) {
+    const { error: insErr } = await sb.from("ervenow_wallets").insert({
+      user_id: appUserId,
+      role: "driver",
+      balance: earning,
+      total_earned: earning,
+      total_withdrawn: 0,
+    });
+    if (insErr) throw insErr;
+  } else {
+    const nextBal = (Number(walletRow.balance) || 0) + earning;
+    const nextEarned = (Number(walletRow.total_earned) || 0) + earning;
+    const { error: upErr } = await sb
+      .from("ervenow_wallets")
+      .update({ balance: nextBal, total_earned: nextEarned })
+      .eq("user_id", appUserId);
+    if (upErr) throw upErr;
+  }
+
+  return { credited: true, amount: earning };
 }
 
 router.post("/send-otp", async (req, res) => {
@@ -208,15 +280,77 @@ router.get("/orders", requireAuth, requireRole("driver"), async (req, res) => {
     const drv = await ensureApprovedDriver(req, res);
     if (!drv) return;
     const driverId = req.appUser.id;
-    const { data, error } = await req.supabase
+    const { data: assignedOrders, error: asErr } = await req.supabase
       .from("orders")
       .select("*")
-      .or(
-        `and(driver_id.is.null,delivery_status.in.(new,pending)),and(driver_id.eq.${driverId},delivery_status.in.(accepted,delivering,pending))`
-      )
+      .eq("driver_id", driverId)
+      .in("delivery_status", ["accepted", "delivering", "pending"])
       .order("created_at", { ascending: false });
+    if (asErr) return fail(res, asErr.message, 400);
+
+    const { data: openOrders, error: opErr } = await req.supabase
+      .from("orders")
+      .select("*")
+      .is("driver_id", null)
+      .in("delivery_status", ["new", "pending"])
+      .order("created_at", { ascending: false });
+    if (opErr) return fail(res, opErr.message, 400);
+
+    const { data: activeDrivers, error: drErr } = await req.supabase
+      .from("drivers")
+      .select("id, lat, lng")
+      .eq("status", "approved")
+      .eq("active", true);
+    if (drErr) {
+      console.error("[driver/orders] drivers location query failed:", drErr.message);
+    }
+
+    const activeList = (activeDrivers || []).filter((d) => Number.isFinite(Number(d.lat)) && Number.isFinite(Number(d.lng)));
+    const meId = String(drv.id || "");
+    const meLat = toNumberOrNaN(drv.lat);
+    const meLng = toNumberOrNaN(drv.lng);
+
+    const visibleOpenOrders = (openOrders || []).filter((order) => {
+      const orderLat = toNumberOrNaN(order.pickup_lat);
+      const orderLng = toNumberOrNaN(order.pickup_lng);
+      if (!Number.isFinite(orderLat) || !Number.isFinite(orderLng)) return true;
+      if (!Number.isFinite(meLat) || !Number.isFinite(meLng)) return false;
+      if (!activeList.length) return true;
+
+      const nearest = activeList
+        .map((d) => ({
+          id: String(d.id || ""),
+          dist: haversineKm(orderLat, orderLng, Number(d.lat), Number(d.lng)),
+        }))
+        .sort((a, b) => a.dist - b.dist)
+        .slice(0, 3);
+      const allowed = nearest.some((d) => d.id === meId);
+      if (allowed) notifyDriver(drv, order);
+      return allowed;
+    });
+
+    const finalOrders = [...(assignedOrders || []), ...visibleOpenOrders];
+    return ok(res, { orders: finalOrders });
+  } catch (e) {
+    return fail(res, e.message, 500);
+  }
+});
+
+router.get("/wallet", requireAuth, requireRole("driver"), async (req, res) => {
+  try {
+    const drv = await ensureApprovedDriver(req, res);
+    if (!drv) return;
+    const { data, error } = await req.supabase
+      .from("ervenow_wallets")
+      .select("balance, total_earned, total_withdrawn")
+      .eq("user_id", req.appUser.id)
+      .maybeSingle();
     if (error) return fail(res, error.message, 400);
-    return ok(res, { orders: data || [] });
+    return ok(res, {
+      balance: Number(data?.balance) || 0,
+      total_earned: Number(data?.total_earned) || 0,
+      total_withdrawn: Number(data?.total_withdrawn) || 0,
+    });
   } catch (e) {
     return fail(res, e.message, 500);
   }
@@ -281,6 +415,18 @@ router.post("/update-location", requireAuth, requireRole("driver"), async (req, 
     if (orderId) q = q.eq("id", orderId);
     const { error } = await q;
     if (error) return fail(res, error.message, 400);
+    const { error: dErr } = await req.supabase
+      .from("drivers")
+      .update({
+        lat,
+        lng,
+        last_seen: nowIso(),
+        updated_at: nowIso(),
+      })
+      .eq("id", drv.id);
+    if (dErr) {
+      console.error("[driver/update-location] drivers table location update failed:", dErr.message);
+    }
     return ok(res, { updated: true });
   } catch (e) {
     return fail(res, e.message, 500);
@@ -325,6 +471,11 @@ router.post("/complete-order/:id", requireAuth, requireRole("driver"), async (re
       .maybeSingle();
     if (error) return fail(res, error.message, 400);
     if (!data) return fail(res, "order not available", 400);
+    try {
+      await creditDriverWalletForOrder(req.supabase, req.appUser.id, data);
+    } catch (e) {
+      console.error("[driver/complete-order] wallet credit error:", e && (e.message || e));
+    }
     return ok(res, { order: data });
   } catch (e) {
     return fail(res, e.message, 500);

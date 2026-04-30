@@ -24,9 +24,15 @@
         <h2 style="margin:0;color:#5b371d">لوحة المندوب</h2>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
           <button class="btn btn-primary" id="refreshBtn">تحديث</button>
+          <a class="btn btn-ghost" href="/driver-wallet">المحفظة</a>
+          <a class="btn btn-ghost" href="/orders">طلبات المنصة</a>
           <a class="btn btn-ghost" href="/track">صفحة التتبع</a>
           <button class="btn btn-ghost" id="logoutBtn">خروج</button>
         </div>
+      </div>
+      <div class="card">
+        <strong>💰 رصيدك</strong>
+        <div class="meta" id="walletLine">جارٍ تحميل المحفظة...</div>
       </div>
       <div id="ordersBox"></div>
     </div>
@@ -42,6 +48,17 @@
       var knownOrders = [];
       var poll = null;
       var activeOrderIds = [];
+      var notifyAudio = null;
+
+      function playNewOrderSound() {
+        try {
+          if (!notifyAudio) notifyAudio = new Audio("/assets/notification.mp3");
+          notifyAudio.play().catch(function () {
+            var fallback = new Audio("/sound.mp3");
+            fallback.play().catch(function () {});
+          });
+        } catch (e) {}
+      }
 
       function mkBtn(label, cls, click) {
         var b = document.createElement("button");
@@ -82,7 +99,7 @@
           var orders = j.orders || [];
           var ids = orders.map(function (o) { return o.id; });
           if (ids.some(function (id) { return knownOrders.indexOf(id) === -1; })) {
-            try { new Audio("/sound.mp3").play(); } catch (e) {}
+            playNewOrderSound();
           }
           knownOrders = ids;
           activeOrderIds = orders
@@ -158,6 +175,16 @@
         }
       }
 
+      async function loadWallet() {
+        try {
+          var j = await window.PlatformAPI.api("/api/driver/wallet");
+          document.getElementById("walletLine").innerText =
+            "الرصيد: " + (j.balance || 0) + " ريال | المكتسب: " + (j.total_earned || 0) + " ريال";
+        } catch (e) {
+          document.getElementById("walletLine").innerText = "تعذر تحميل المحفظة";
+        }
+      }
+
       function startTrackingLoop() {
         if (poll) clearInterval(poll);
         poll = setInterval(function () {
@@ -173,6 +200,7 @@
       };
 
       loadOrders();
+      loadWallet();
       sendLocationToActiveOrders();
       startTrackingLoop();
     </script>

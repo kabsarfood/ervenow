@@ -2,6 +2,7 @@ const express = require("express");
 const { optionalAuth } = require("../../shared/middleware/auth");
 const { createServiceClient } = require("../../shared/config/supabase");
 const { pushToErvenow } = require("../../shared/utils/ervenowPush");
+const { notifyNearestDrivers } = require("../driver/notify");
 
 const router = express.Router();
 
@@ -221,6 +222,12 @@ router.post("/", optionalAuth, async (req, res) => {
       results.push(data);
 
       if (type === "delivery") {
+        try {
+          await notifyNearestDrivers(sb, data);
+        } catch (notifyErr) {
+          console.error("NOTIFY NEAREST DRIVERS ERROR:", notifyErr && (notifyErr.message || notifyErr));
+        }
+
         const orderData = (data && data.data && typeof data.data === "object" ? data.data : {});
         if (orderData.pushed_to_delivery) {
           console.log("ALREADY PUSHED");

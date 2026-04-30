@@ -19,6 +19,7 @@ const walletRoutes = require("../apps/wallet/routes");
 const adminRoutes = require("../apps/admin/routes");
 const invoiceRoutes = require("../apps/invoice/routes");
 const { pushToErvenow } = require("../shared/utils/ervenowPush");
+const { startRetryNotificationsWorker } = require("../apps/driver/retryNotifications");
 
 const PORT = process.env.PORT || 4000;
 const publicPath = path.join(__dirname, "..", "public");
@@ -202,5 +203,7 @@ app.use((err, _req, res, _next) => {
 app.listen(PORT, "0.0.0.0", () => {
   console.log("🚀 ERVENOW RUNNING ON", PORT);
 });
+
+startRetryNotificationsWorker();
 
 module.exports.pushToErvenow = pushToErvenow;
