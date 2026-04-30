@@ -85,9 +85,9 @@
 
         if (lastLat == null || lastLng == null) return true;
 
-        var moved = Math.abs(lat - lastLat) + Math.abs(lng - lastLng) > 0.0003;
+        var moved = Math.abs(lat - lastLat) + Math.abs(lng - lastLng) > 0.00005;
 
-        var timePassed = now - lastSentAt > 15000;
+        var timePassed = now - lastSentAt > 5000;
 
         return moved || timePassed;
       }
@@ -269,6 +269,9 @@
         orders.forEach(function (o) {
           var div = document.createElement("div");
           div.className = "order-row";
+          var actions = document.createElement("div");
+          actions.className = "btn-row";
+          actions.style.marginTop = "8px";
           var deliveryStatus = o.delivery_status || o.status;
           var st = STATUS_AR[deliveryStatus] || deliveryStatus;
           var num = (o.order_number && String(o.order_number).trim()) || o.id.slice(0, 8) + "…";
@@ -298,7 +301,7 @@
           trackA.className = "btn btn-ghost";
           trackA.href = "/track?id=" + encodeURIComponent(o.id);
           trackA.textContent = "تتبع على الخريطة";
-          div.appendChild(trackA);
+          actions.appendChild(trackA);
 
           if (deliveryStatus === "new" || deliveryStatus === "pending") {
             var b = document.createElement("button");
@@ -326,7 +329,7 @@
                 err(e.message || String(e));
               }
             };
-            div.appendChild(b);
+            actions.appendChild(b);
           }
 
           if (o.driver_id && deliveryStatus === "accepted") {
@@ -342,7 +345,22 @@
               startLocationLoop();
               loadOrders();
             };
-            div.appendChild(b2);
+            actions.appendChild(b2);
+
+            var b2done = document.createElement("button");
+            b2done.className = "btn btn-primary";
+            b2done.textContent = "تم التسليم";
+            b2done.onclick = async function () {
+              await window.PlatformAPI.api("/api/delivery/orders/" + o.id + "/status", {
+                method: "PATCH",
+                body: { status: "delivered" },
+              });
+              activeOrderId = null;
+              stopLocationLoop();
+              showSuccess("تم إنهاء رحلة التوصيل");
+              loadOrders();
+            };
+            actions.appendChild(b2done);
           }
 
           if (o.driver_id && deliveryStatus === "delivering") {
@@ -356,11 +374,13 @@
               });
               activeOrderId = null;
               stopLocationLoop();
+              showSuccess("تم إنهاء رحلة التوصيل");
               loadOrders();
             };
-            div.appendChild(b3);
+            actions.appendChild(b3);
           }
 
+          div.appendChild(actions);
           box.appendChild(div);
         });
 

@@ -262,6 +262,15 @@
         delivering: "جاري التوصيل",
         delivered: "تم التسليم",
       };
+
+      function getReadableOrderNumber(order) {
+        if (!order || typeof order !== "object") return "—";
+        var no =
+          (order.order_number && String(order.order_number).trim()) ||
+          (order.service_order_number && String(order.service_order_number).trim()) ||
+          "";
+        return no || String(order.id || "").slice(0, 8) + "…";
+      }
       var km = 0;
       var fromLL = null;
       var toLL = null;
@@ -542,11 +551,13 @@
             row.className = "order-row";
             var deliveryStatus = o.delivery_status || o.status;
             var st = STATUS_AR[deliveryStatus] || deliveryStatus;
+            var no = getReadableOrderNumber(o);
+            var statusLine =
+              deliveryStatus === "delivered" ? "تم التسليم — طلب رقم " + no : st + " — طلب رقم " + no;
             row.innerHTML =
               "<strong>" +
-              o.id.slice(0, 8) +
-              "…</strong> — " +
-              st +
+              statusLine +
+              "</strong>" +
               "<br/><small>" +
               (o.drop_address || "—") +
               "</small><br/>";

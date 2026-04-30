@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>لوحة المندوب | ERVENOW</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet" />
+    <style>
+      body { margin: 0; font-family: Cairo, sans-serif; background: #f8f4ef; color: #2b1f16; }
+      .wrap { max-width: 960px; margin: 20px auto; padding: 14px; }
+      .top { display: flex; gap: 10px; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
+      .btn { border: 0; border-radius: 10px; padding: 9px 12px; cursor: pointer; font-family: inherit; font-weight: 700; }
+      .btn-primary { background: #5b371d; color: #fff; }
+      .btn-ghost { border: 1px solid #5b371d; background: #fff; color: #5b371d; text-decoration: none; display: inline-block; }
+      .card { background: #fff; border: 1px solid #e5d8cb; border-radius: 14px; padding: 12px; margin-bottom: 10px; }
+      .meta { color: #6e5a4a; font-size: .9rem; margin-top: 6px; }
+      .row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="top">
+        <h2 style="margin:0;color:#5b371d">لوحة المندوب</h2>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-primary" id="refreshBtn">تحديث</button>
+          <a class="btn btn-ghost" href="/track">صفحة التتبع</a>
+          <button class="btn btn-ghost" id="logoutBtn">خروج</button>
+        </div>
+      </div>
+      <div id="ordersBox"></div>
+    </div>
+
+    <script src="/assets/cart.js"></script>
+    <script src="/assets/api.js"></script>
+    <script>
+      var token = window.PlatformAPI.getToken();
+      if (!token) {
+        location.href = "/driver-login";
+      }
+
+      var knownOrders = [];
+      var poll = null;
+
+      function mkBtn(label, cls, click) {
+        var b = document.createElement("button");
+        b.className = "btn " + cls;
+        b.innerText = label;
+        b.onclick = click;
+        return b;
+      }
+
+      async function sendLocationPing(orderId) {
+        if (!navigator.geolocation) return;
+        navigator.geolocation.getCurrentPosition(function (pos) {
+          window.PlatformAPI.api("/api/driver/update-location", {
+            method: "POST",
+            body: { order_id: orderId, lat: pos.coords.latitude, lng: pos.coords.longitude },
+          }).catch(function () {});
+        });
+      }
+
+      async function loadOrders() {
+        try {
+          var j = await window.PlatformAPI.api("/api/driver/orders");
+          var orders = j.orders || [];
+          var ids = orders.map(function (o) { return o.id; });
+          if (ids.some(function (id) { return knownOrders.indexOf(id) === -1; })) {
+            try { new Audio("/sound.mp3").play(); } catch (e) {}
+          }
+          knownOrders = ids;
+
+          var box = document.getElementById("ordersBox");
+          box.innerHTML = "";
+          if (!orders.length) {
+            box.innerHTML = '<div class="card">لا توجد طلبات حالياً</div>';
+            return;
+          }
+
+          orders.forEach(function (o) {
+            var c = document.createElement("div");
+            c.className = "card";
+            c.innerHTML =
+              "<strong>" + (o.order_number || o.id) + "</strong>" +
+              '<div class="meta">الحالة: ' + (o.delivery_status || "new") + "</div>" +
+              '<div class="meta">الاستلام: ' + (o.pickup_address || "—") + "</div>" +
+              '<div class="meta">التسليم: ' + (o.drop_address || "—") + "</div>";
+            var row = document.createElement("div");
+            row.className = "row";
+
+            if ((o.delivery_status === "new" || o.delivery_status === "pending") && !o.driver_id) {
+              row.appendChild(
+                mkBtn("قبول الطلب", "btn-primary", safeClick(async function () {
+                  try {
+                    var r = await window.PlatformAPI.api("/api/driver/accept/" + o.id, { method: "POST" });
+                    if (r.accepted === false) return showError(r.message || "تم استلامه");
+                    showSuccess("تم قبول الطلب");
+                    loadOrders();
+                  } catch (e) { showError(e.message || "خطأ القبول"); }
+                }))
+              );
+            }
+
+            if (o.delivery_status === "accepted") {
+              row.appendChild(
+                mkBtn("بدء التوصيل", "btn-ghost", safeClick(async function () {
+                  try {
+                    await window.PlatformAPI.api("/api/driver/start-delivery/" + o.id, { method: "POST" });
+                    sendLocationPing(o.id);
+                    showSuccess("تم بدء التوصيل");
+                    loadOrders();
+                  } catch (e) { showError(e.message || "تعذر البدء"); }
+                }))
+              );
+            }
+
+            if (o.delivery_status === "delivering" || o.delivery_status === "accepted") {
+              row.appendChild(
+                mkBtn("إنهاء الطلب", "btn-primary", safeClick(async function () {
+                  try {
+                    await window.PlatformAPI.api("/api/driver/complete-order/" + o.id, { method: "POST" });
+                    showSuccess("تم إنهاء الطلب");
+                    loadOrders();
+                  } catch (e) { showError(e.message || "تعذر الإنهاء"); }
+                }))
+              );
+            }
+
+            c.appendChild(row);
+            box.appendChild(c);
+          });
+        } catch (e) {
+          showError(e.message || "تعذر تحميل الطلبات");
+        }
+      }
+
+      function startTrackingLoop() {
+        if (poll) clearInterval(poll);
+        poll = setInterval(function () {
+          loadOrders();
+          navigator.geolocation.getCurrentPosition(function (pos) {
+            window.PlatformAPI.api("/api/driver/update-location", {
+              method: "POST",
+              body: { lat: pos.coords.latitude, lng: pos.coords.longitude },
+            }).catch(function () {});
+          });
+        }, 5000);
+      }
+
+      document.getElementById("refreshBtn").onclick = loadOrders;
+      document.getElementById("logoutBtn").onclick = function () {
+        window.PlatformAPI.setToken("");
+        location.href = "/driver-login";
+      };
+
+      loadOrders();
+      startTrackingLoop();
+    </script>
+  </body>
+</html>

@@ -79,6 +79,7 @@
       <div class="card">
         <strong>تفاصيل الطلب</strong>
         <p id="orderNumberLine" class="sub" style="margin: 6px 0 2px" translate="no">—</p>
+        <p id="orderNumber" class="sub" style="margin: 2px 0 6px" translate="no">—</p>
         <div
           id="orderAmounts"
           class="sub"
@@ -91,7 +92,8 @@
           </button>
         </div>
         <p style="margin: 8px 0 4px"><span class="badge" id="statusBadge">—</span></p>
-        <pre id="out" style="margin-top: 8px; white-space: pre-wrap; font-size: 0.85rem"></pre>
+        <p id="status" class="sub" style="margin: 4px 0 0">—</p>
+        <pre id="out" style="display: none; margin-top: 8px; white-space: pre-wrap; font-size: 0.85rem"></pre>
       </div>
     </div>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -110,7 +112,10 @@
       var map = null;
       var driverMarker = null;
       var driverIcon = null;
+      var mapLayers = null;
+      var mapLayerControl = null;
       var routeLine = null;
+      var markerAnimRaf = null;
       var mapInitialized = false;
       var currentOrderId = null;
       var lastOrder = null;
@@ -261,7 +266,7 @@
         }
         var eta = calcETA(Number(driver_lat), Number(driver_lng), Number(drop_lat), Number(drop_lng));
         if (eta < 1) eta = 1;
-        etaEl.textContent = "🚚 يصل خلال " + eta + " دقيقة";
+        etaEl.textContent = "🚗 الوصول خلال " + eta + " دقيقة";
       }
 
       async function updateEtaForOrder(order) {
@@ -323,36 +328,102 @@
         el.innerHTML = "";
         map = L.map("map", { scrollWheelZoom: true }).setView(defaultCenter, 12);
         mapInitialized = true;
-        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        var streets = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
           attribution: "&copy; OpenStreetMap",
           maxZoom: 19,
-        }).addTo(map);
+        });
+        var terrain = L.tileLayer("https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png", {
+          attribution: "Map data: OpenStreetMap, SRTM | Map style: OpenTopoMap",
+          maxZoom: 17,
+        });
+        var satellite = L.tileLayer(
+          "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+          {
+            attribution: "Tiles &copy; Esri",
+            maxZoom: 19,
+          }
+        );
+
+        streets.addTo(map);
+        mapLayers = {
+          "🛣️ الشوارع": streets,
+          "⛰️ التضاريس": terrain,
+          "🛰️ الأقمار الصناعية": satellite,
+        };
+        mapLayerControl = L.control.layers(mapLayers, null, { position: "topright" }).addTo(map);
         setTimeout(function () {
           if (map) map.invalidateSize();
         }, 200);
       }
 
-      function updateDriverMarker(lat, lng) {
+      function detectVehicleKind(order) {
+        var kind = "";
+        if (order && order.data && typeof order.data === "object") {
+          kind = order.data.vehicle_type || order.data.vehicle || "";
+        }
+        if (!kind && order) {
+          kind = order.vehicle_type || order.driver_vehicle_type || "";
+        }
+        kind = String(kind || "").toLowerCase();
+        if (/bike|motor|motorcycle|scooter|دراجة/.test(kind)) return "bike";
+        return "car";
+      }
+
+      function animateMarkerTo(targetLat, targetLng) {
+        if (!driverMarker) return;
+        if (markerAnimRaf) {
+          cancelAnimationFrame(markerAnimRaf);
+          markerAnimRaf = null;
+        }
+        var start = driverMarker.getLatLng();
+        var startLat = Number(start.lat);
+        var startLng = Number(start.lng);
+        var endLat = Number(targetLat);
+        var endLng = Number(targetLng);
+        var duration = 900;
+        var t0 = performance.now();
+
+        function step(now) {
+          var p = Math.min((now - t0) / duration, 1);
+          var eased = 1 - Math.pow(1 - p, 3);
+          var curLat = startLat + (endLat - startLat) * eased;
+          var curLng = startLng + (endLng - startLng) * eased;
+          driverMarker.setLatLng([curLat, curLng]);
+          if (p < 1) {
+            markerAnimRaf = requestAnimationFrame(step);
+          } else {
+            markerAnimRaf = null;
+          }
+        }
+
+        markerAnimRaf = requestAnimationFrame(step);
+      }
+
+      function updateDriverMarker(lat, lng, vehicleKind) {
         if (lat == null || lng == null) return;
         var la = Number(lat);
         var ln = Number(lng);
         if (Number.isNaN(la) || Number.isNaN(ln)) return;
         ensureMap();
         if (!map) return;
-        if (!driverIcon && typeof L !== "undefined") {
+        var iconUrl =
+          vehicleKind === "bike"
+            ? "https://cdn-icons-png.flaticon.com/512/2972/2972185.png"
+            : "https://cdn-icons-png.flaticon.com/512/684/684908.png";
+        if (!driverIcon || driverIcon.options.iconUrl !== iconUrl) {
           driverIcon = L.icon({
-            iconUrl: "https://cdn-icons-png.flaticon.com/512/684/684908.png",
+            iconUrl: iconUrl,
             iconSize: [35, 35],
           });
         }
         if (driverMarker) {
-          driverMarker.setLatLng([la, ln]);
+          animateMarkerTo(la, ln);
         } else {
           driverMarker = L.marker([la, ln], { title: "موقع المندوب", icon: driverIcon })
             .addTo(map)
             .bindPopup("🚚 المندوب");
         }
-        map.panTo([la, ln]);
+        map.panTo([la, ln], { animate: true, duration: 0.8 });
         if (map.getZoom() < 14) map.setZoom(15);
         setTimeout(function () {
           if (map) map.invalidateSize();
@@ -445,11 +516,27 @@
         var deliveryStatus = order.delivery_status || order.status;
         var st = STATUS_AR[deliveryStatus] || deliveryStatus;
         document.getElementById("statusBadge").textContent = st;
+        var statusEl = document.getElementById("status");
+        if (statusEl) {
+          if (deliveryStatus === "accepted") {
+            statusEl.innerText = "🚚 المندوب في الطريق";
+          } else if (deliveryStatus === "delivering") {
+            statusEl.innerText = "📦 جاري التوصيل";
+          } else if (deliveryStatus === "delivered") {
+            statusEl.innerText = "✅ تم التسليم";
+          } else {
+            statusEl.innerText = "⏳ بانتظار المندوب";
+          }
+        }
         var on = document.getElementById("orderNumberLine");
         if (on) {
           on.textContent = order.order_number
             ? "رقم الطلب: " + order.order_number
             : "رقم العرض: " + String(order.id).slice(0, 8) + "…";
+        }
+        var orderNoEl = document.getElementById("orderNumber");
+        if (orderNoEl) {
+          orderNoEl.innerText = order.order_number || order.id;
         }
         var amountsEl = document.getElementById("orderAmounts");
         if (amountsEl) {
@@ -486,7 +573,8 @@
             }
           }
         }
-        document.getElementById("out").textContent = JSON.stringify(order, null, 2);
+        var outEl = document.getElementById("out");
+        if (outEl) outEl.textContent = "";
 
         var lat = order.driver_lat;
         var lng = order.driver_lng;
@@ -510,7 +598,7 @@
         }
         if (lat != null && lng != null && !Number.isNaN(Number(lat)) && !Number.isNaN(Number(lng))) {
           document.getElementById("coords").textContent = "خط العرض: " + lat + " — خط الطول: " + lng;
-          updateDriverMarker(lat, lng);
+          updateDriverMarker(lat, lng, detectVehicleKind(order));
           document.getElementById("coordsMeta").textContent = "";
         } else {
           clearDriverMarker();
@@ -520,8 +608,17 @@
         }
 
         var etaEl0 = document.getElementById("eta");
-        if (etaEl0) etaEl0.textContent = "";
-        void updateEtaForOrder(order);
+        if (etaEl0) {
+          if (order.distance_km) {
+            var speed = 40;
+            var minutes = Math.round((Number(order.distance_km) / speed) * 60);
+            if (minutes < 1) minutes = 1;
+            etaEl0.innerText = "🚗 الوصول خلال " + minutes + " دقيقة";
+          } else {
+            etaEl0.textContent = "";
+            void updateEtaForOrder(order);
+          }
+        }
         syncRateForm(order);
         updateGpsStateUI(order);
         syncInvoiceButton();
@@ -544,22 +641,18 @@
           !Number.isNaN(Number(order.driver_lng));
 
         if (!hasDriverLocation) {
-          gpsState.innerText = "⚠️ جاري تحديد موقع المندوب...";
+          gpsState.innerText = "📍 جاري تحديد موقع المندوب...";
           lastUpdate.textContent = "";
+          return;
+        }
+
+        gpsState.innerText = "🚚 المندوب في الطريق";
+        if (order.last_location_at) {
+          var diff = Math.floor((Date.now() - new Date(order.last_location_at)) / 1000);
+          if (diff < 0) diff = 0;
+          lastUpdate.innerText = "آخر تحديث قبل " + diff + " ثانية";
         } else {
-          gpsState.innerText = "🚚 المندوب في الطريق";
-          if (order.last_location_at) {
-            var last = new Date(order.last_location_at).getTime();
-            if (!Number.isNaN(last)) {
-              var diff = Math.floor((Date.now() - last) / 1000);
-              if (diff < 0) diff = 0;
-              lastUpdate.innerText = "آخر تحديث قبل " + diff + " ثانية";
-            } else {
-              lastUpdate.textContent = "";
-            }
-          } else {
-            lastUpdate.textContent = "";
-          }
+          lastUpdate.textContent = "";
         }
       }
 
@@ -578,7 +671,8 @@
         } catch (e) {
           lastOrder = null;
           syncInvoiceButton();
-          document.getElementById("out").textContent = e.message;
+          var outEl = document.getElementById("out");
+          if (outEl) outEl.textContent = "";
           document.getElementById("statusBadge").textContent = "—";
           var gsE = document.getElementById("gpsState");
           if (gsE) gsE.textContent = "";
@@ -599,7 +693,7 @@
           } catch (e) {
             console.log("tracking error");
           }
-        }, 4000);
+        }, 3000);
       }
 
       document.getElementById("btn").onclick = function () {

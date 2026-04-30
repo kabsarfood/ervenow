@@ -177,13 +177,139 @@ router.patch("/store-requests/:id", requireAuth, requireRole("admin"), async (re
 router.get("/drivers", requireAuth, requireRole("admin"), async (req, res) => {
   try {
     const { data, error } = await req.supabase
-      .from("users")
-      .select("id, phone, role, created_at")
-      .eq("role", "driver")
+      .from("drivers")
+      .select("*")
       .order("created_at", { ascending: false })
       .limit(500);
     if (error) return fail(res, error.message, 400);
     return ok(res, { drivers: data || [] });
+  } catch (e) {
+    return fail(res, e.message || String(e), 500);
+  }
+});
+
+router.post("/approve-driver", requireAuth, requireRole("admin"), async (req, res) => {
+  try {
+    const id = String(req.body?.id || "").trim();
+    if (!id) return fail(res, "id required", 400);
+    const { data, error } = await req.supabase
+      .from("drivers")
+      .update({ status: "approved", active: true, updated_at: new Date().toISOString() })
+      .eq("id", id)
+      .select()
+      .single();
+    if (error) return fail(res, error.message, 400);
+    return ok(res, { driver: data });
+  } catch (e) {
+    return fail(res, e.message || String(e), 500);
+  }
+});
+
+router.post("/reject-driver", requireAuth, requireRole("admin"), async (req, res) => {
+  try {
+    const id = String(req.body?.id || "").trim();
+    if (!id) return fail(res, "id required", 400);
+    const { data, error } = await req.supabase
+      .from("drivers")
+      .update({ status: "rejected", active: false, updated_at: new Date().toISOString() })
+      .eq("id", id)
+      .select()
+      .single();
+    if (error) return fail(res, error.message, 400);
+    return ok(res, { driver: data });
+  } catch (e) {
+    return fail(res, e.message || String(e), 500);
+  }
+});
+
+router.post("/block-driver", requireAuth, requireRole("admin"), async (req, res) => {
+  try {
+    const id = String(req.body?.id || "").trim();
+    if (!id) return fail(res, "id required", 400);
+    const { data, error } = await req.supabase
+      .from("drivers")
+      .update({ status: "blocked", active: false, updated_at: new Date().toISOString() })
+      .eq("id", id)
+      .select()
+      .single();
+    if (error) return fail(res, error.message, 400);
+    return ok(res, { driver: data });
+  } catch (e) {
+    return fail(res, e.message || String(e), 500);
+  }
+});
+
+router.get("/stats", requireAuth, requireRole("admin"), async (req, res) => {
+  try {
+    const start = new Date();
+    start.setHours(0, 0, 0, 0);
+    const iso = start.toISOString();
+
+    const { data: orders, error: oErr } = await req.supabase
+      .from("orders")
+      .select("id, created_at, delivery_status, order_total, platform_fee, driver_earning");
+    if (oErr) return fail(res, oErr.message, 400);
+    const { data: services, error: sErr } = await req.supabase
+      .from("service_bookings")
+      .select("id, created_at, status, total_amount, platform_commission");
+    if (sErr) return fail(res, sErr.message, 400);
+
+    const allOrders = orders || [];
+    const allServices = services || [];
+    const totalOrders = allOrders.length + allServices.length;
+    const todayOrders =
+      allOrders.filter((x) => x.created_at >= iso).length +
+      allServices.filter((x) => x.created_at >= iso).length;
+    const activeOrders =
+      allOrders.filter((x) => ["new", "pending", "accepted", "delivering"].includes(x.delivery_status || x.status))
+        .length +
+      allServices.filter((x) => ["new", "accepted", "delivering"].includes(x.status)).length;
+
+    const revenueOrders = allOrders.reduce((a, b) => a + (Number(b.order_total) || 0), 0);
+    const revenueServices = allServices.reduce((a, b) => a + (Number(b.total_amount) || 0), 0);
+    const platformOrders = allOrders.reduce((a, b) => a + (Number(b.platform_fee) || 0), 0);
+    const platformServices = allServices.reduce((a, b) => a + (Number(b.platform_commission) || 0), 0);
+    const driversEarnings = allOrders.reduce((a, b) => a + (Number(b.driver_earning) || 0), 0);
+
+    return ok(res, {
+      total_orders: totalOrders,
+      today_orders: todayOrders,
+      active_orders: activeOrders,
+      total_revenue: round2(revenueOrders + revenueServices),
+      platform_commission: round2(platformOrders + platformServices),
+      drivers_earnings: round2(driversEarnings),
+    });
+  } catch (e) {
+    return fail(res, e.message || String(e), 500);
+  }
+});
+
+router.get("/complaints", requireAuth, requireRole("admin"), async (req, res) => {
+  try {
+    const { data, error } = await req.supabase
+      .from("complaints")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(500);
+    if (error) return fail(res, error.message, 400);
+    return ok(res, { complaints: data || [] });
+  } catch (e) {
+    return fail(res, e.message || String(e), 500);
+  }
+});
+
+router.post("/resolve-complaint", requireAuth, requireRole("admin"), async (req, res) => {
+  try {
+    const id = String(req.body?.id || "").trim();
+    if (!id) return fail(res, "id required", 400);
+    const { data, error } = await req.supabase
+      .from("complaints")
+      .update({ status: "resolved" })
+      .eq("id", id)
+      .select()
+      .single();
+    if (error) return fail(res, error.message, 400);
+    return ok(res, { complaint: data });
   } catch (e) {
     return fail(res, e.message || String(e), 500);
   }

@@ -1178,11 +1178,6 @@
           </p>
           <div class="lp-hero__cta">
             <a class="lp-hero__btn" href="/login?mode=register&role=customer">ابدأ الآن</a>
-            <div style="margin-top: 15px">
-              <input id="quickFrom" placeholder="📍 من وين؟" />
-              <input id="quickTo" placeholder="📍 إلى وين؟" />
-              <button onclick="quickOrder()">احسب السعر</button>
-            </div>
           </div>
         </div>
       </section>
@@ -1568,16 +1563,6 @@
       })();
     </script>
     <script>
-      function quickOrder() {
-        var from = document.getElementById("quickFrom").value;
-        var to = document.getElementById("quickTo").value;
-        if (!from || !to) {
-          alert("حدد الموقعين");
-          return;
-        }
-        window.location.href = "/dashboard?from=" + encodeURIComponent(from) + "&to=" + encodeURIComponent(to);
-      }
-
       function goLogin() {
         window.location.href = "/login";
       }
@@ -1607,15 +1592,32 @@
         location.reload();
       }
 
-      function checkAuth() {
+      async function checkAuth() {
         var token =
           localStorage.getItem("token") ||
           localStorage.getItem("ervenow_access_token") ||
           localStorage.getItem("erwenow_access_token");
         var authArea = document.getElementById("authArea");
         if (token && authArea) {
+          var label = "حسابي";
+          try {
+            var meRes = await fetch("/api/core/me", {
+              headers: { Authorization: "Bearer " + token },
+            });
+            var me = await meRes.json().catch(function () {
+              return {};
+            });
+            var name =
+              (me.profile && (me.profile.name || me.profile.full_name || me.profile.display_name)) ||
+              (me.user && (me.user.name || me.user.full_name)) ||
+              "";
+            var phone = (me.user && me.user.phone) || (me.profile && me.profile.phone) || "";
+            label = String(name || phone || "حسابي").trim() || "حسابي";
+          } catch (e) {}
           authArea.innerHTML =
-            '<button class="lp-btn-solid" type="button" onclick="goDashboard()">لوحتي</button>' +
+            '<button class="lp-btn-solid" type="button" onclick="goDashboard()">' +
+            label +
+            "</button>" +
             '<button class="lp-btn-outline" type="button" onclick="logout()">خروج</button>';
         }
       }

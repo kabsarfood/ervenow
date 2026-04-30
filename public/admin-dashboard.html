@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>لوحة الإدارة | ERVENOW</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet" />
+    <style>
+      body { margin: 0; font-family: Cairo, sans-serif; background: #f8f4ef; color: #2b1f16; }
+      .wrap { max-width: 1080px; margin: 20px auto; padding: 14px; }
+      h1 { color: #5b371d; }
+      .grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit,minmax(280px,1fr)); }
+      .card { background: #fff; border: 1px solid #e5d8cb; border-radius: 14px; padding: 12px; }
+      .stat { font-size: 1.2rem; font-weight: 800; color: #5b371d; margin-top: 8px; }
+      .item { border: 1px solid #ecdccf; border-radius: 10px; padding: 8px; margin-bottom: 8px; }
+      .row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+      .btn { border: 0; border-radius: 9px; padding: 7px 10px; cursor: pointer; font-family: inherit; font-weight: 700; }
+      .btn-primary { background: #5b371d; color: #fff; }
+      .btn-ghost { border: 1px solid #5b371d; background: #fff; color: #5b371d; }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <h1>لوحة إدارة ERVENOW</h1>
+      <div class="grid">
+        <div class="card">
+          <strong>الإحصائيات</strong>
+          <div class="stat" id="sTotal">—</div>
+          <div id="statsMeta"></div>
+        </div>
+        <div class="card">
+          <strong>إيرادات المنصة</strong>
+          <div class="stat" id="sRevenue">—</div>
+          <div id="revMeta"></div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:12px">
+        <div class="row" style="justify-content:space-between;align-items:center">
+          <strong>إدارة المناديب</strong>
+          <button class="btn btn-primary" id="reloadDriversBtn">تحديث</button>
+        </div>
+        <div id="driversList"></div>
+      </div>
+
+      <div class="card" style="margin-top:12px">
+        <div class="row" style="justify-content:space-between;align-items:center">
+          <strong>الشكاوى</strong>
+          <button class="btn btn-primary" id="reloadComplaintsBtn">تحديث</button>
+        </div>
+        <div id="complaintsList"></div>
+      </div>
+    </div>
+
+    <script src="/assets/cart.js"></script>
+    <script src="/assets/api.js"></script>
+    <script>
+      function mkAction(label, cls, fn) {
+        var b = document.createElement("button");
+        b.className = "btn " + cls;
+        b.innerText = label;
+        b.onclick = fn;
+        return b;
+      }
+
+      async function loadStats() {
+        try {
+          var j = await window.PlatformAPI.api("/api/admin/stats");
+          document.getElementById("sTotal").innerText = "إجمالي الطلبات: " + (j.total_orders || 0);
+          document.getElementById("statsMeta").innerText =
+            "اليوم: " + (j.today_orders || 0) + " | النشطة: " + (j.active_orders || 0);
+          document.getElementById("sRevenue").innerText = (j.total_revenue || 0) + " ريال";
+          document.getElementById("revMeta").innerText =
+            "عمولة المنصة: " + (j.platform_commission || 0) + " | أرباح المناديب: " + (j.drivers_earnings || 0);
+        } catch (e) {
+          showError(e.message || "فشل تحميل الإحصائيات");
+        }
+      }
+
+      async function updateDriver(id, action) {
+        var path = "/api/admin/" + action;
+        await window.PlatformAPI.api(path, { method: "POST", body: { id: id } });
+      }
+
+      async function loadDrivers() {
+        try {
+          var j = await window.PlatformAPI.api("/api/admin/drivers");
+          var list = document.getElementById("driversList");
+          list.innerHTML = "";
+          (j.drivers || []).forEach(function (d) {
+            var item = document.createElement("div");
+            item.className = "item";
+            item.innerHTML =
+              "<strong>" + (d.name || "بدون اسم") + "</strong>" +
+              "<div>الجوال: " + (d.phone || "—") + "</div>" +
+              "<div>المركبة: " + (d.car_type || "—") + " | اللوحة: " + (d.plate_number || "—") + "</div>" +
+              "<div>الحالة: " + (d.status || "pending") + "</div>";
+            var row = document.createElement("div");
+            row.className = "row";
+            row.appendChild(mkAction("موافقة", "btn-primary", safeClick(async function () {
+              try { await updateDriver(d.id, "approve-driver"); showSuccess("تمت الموافقة"); loadDrivers(); } catch (e) { showError(e.message || "فشل"); }
+            })));
+            row.appendChild(mkAction("رفض", "btn-ghost", safeClick(async function () {
+              try { await updateDriver(d.id, "reject-driver"); showSuccess("تم الرفض"); loadDrivers(); } catch (e) { showError(e.message || "فشل"); }
+            })));
+            row.appendChild(mkAction("حظر", "btn-ghost", safeClick(async function () {
+              try { await updateDriver(d.id, "block-driver"); showSuccess("تم الحظر"); loadDrivers(); } catch (e) { showError(e.message || "فشل"); }
+            })));
+            item.appendChild(row);
+            list.appendChild(item);
+          });
+          if (!j.drivers || !j.drivers.length) list.innerHTML = '<div class="item">لا يوجد مناديب</div>';
+        } catch (e) {
+          showError(e.message || "فشل تحميل المناديب");
+        }
+      }
+
+      async function loadComplaints() {
+        try {
+          var j = await window.PlatformAPI.api("/api/admin/complaints");
+          var list = document.getElementById("complaintsList");
+          list.innerHTML = "";
+          (j.complaints || []).forEach(function (c) {
+            var item = document.createElement("div");
+            item.className = "item";
+            item.innerHTML =
+              "<div><strong>الطلب:</strong> " + (c.order_id || "—") + "</div>" +
+              "<div><strong>النص:</strong> " + (c.message || "—") + "</div>" +
+              "<div><strong>الحالة:</strong> " + (c.status || "open") + "</div>";
+            if (c.status !== "resolved") {
+              var row = document.createElement("div");
+              row.className = "row";
+              row.appendChild(mkAction("تم الحل", "btn-primary", safeClick(async function () {
+                try {
+                  await window.PlatformAPI.api("/api/admin/resolve-complaint", {
+                    method: "POST",
+                    body: { id: c.id },
+                  });
+                  showSuccess("تم إغلاق الشكوى");
+                  loadComplaints();
+                } catch (e) {
+                  showError(e.message || "فشل تحديث الشكوى");
+                }
+              })));
+              item.appendChild(row);
+            }
+            list.appendChild(item);
+          });
+          if (!j.complaints || !j.complaints.length) list.innerHTML = '<div class="item">لا توجد شكاوى</div>';
+        } catch (e) {
+          showError(e.message || "فشل تحميل الشكاوى");
+        }
+      }
+
+      document.getElementById("reloadDriversBtn").onclick = loadDrivers;
+      document.getElementById("reloadComplaintsBtn").onclick = loadComplaints;
+
+      loadStats();
+      loadDrivers();
+      loadComplaints();
+      setInterval(loadStats, 15000);
+    </script>
+  </body>
+</html>

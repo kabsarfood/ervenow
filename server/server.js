@@ -131,6 +131,14 @@ app.get("/driver", (_req, res) => {
   res.sendFile(path.join(publicPath, "driver.html"));
 });
 
+app.get("/driver-login", (_req, res) => {
+  res.sendFile(path.join(publicPath, "driver-login.html"));
+});
+
+app.get("/driver-dashboard", (_req, res) => {
+  res.sendFile(path.join(publicPath, "driver-dashboard.html"));
+});
+
 app.get("/orders", (_req, res) => {
   res.sendFile(path.join(publicPath, "orders.html"));
 });
@@ -141,6 +149,10 @@ app.get("/admin-finance", (_req, res) => {
 
 app.get("/admin-approvals", (_req, res) => {
   res.sendFile(path.join(publicPath, "admin-approvals.html"));
+});
+
+app.get("/admin-dashboard", (_req, res) => {
+  res.sendFile(path.join(publicPath, "admin-dashboard.html"));
 });
 
 app.get("/dashboard", (_req, res) => {
