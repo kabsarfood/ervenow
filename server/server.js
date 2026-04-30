@@ -139,6 +139,10 @@ app.get("/driver-dashboard", (_req, res) => {
   res.sendFile(path.join(publicPath, "driver-dashboard.html"));
 });
 
+app.get("/driver-wallet", (_req, res) => {
+  res.sendFile(path.join(publicPath, "driver-wallet.html"));
+});
+
 app.get("/orders", (_req, res) => {
   res.sendFile(path.join(publicPath, "orders.html"));
 });
