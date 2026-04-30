@@ -159,6 +159,10 @@ app.get("/dashboard", (_req, res) => {
   res.sendFile(path.join(publicPath, "dashboard.html"));
 });
 
+app.get("/start-now", (_req, res) => {
+  res.sendFile(path.join(publicPath, "start-now.html"));
+});
+
 app.get("/track", (_req, res) => {
   res.sendFile(path.join(publicPath, "track.html"));
 });

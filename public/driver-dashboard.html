@@ -41,6 +41,7 @@
 
       var knownOrders = [];
       var poll = null;
+      var activeOrderIds = [];
 
       function mkBtn(label, cls, click) {
         var b = document.createElement("button");
@@ -60,6 +61,21 @@
         });
       }
 
+      function sendLocationToActiveOrders() {
+        if (!navigator.geolocation) return;
+        if (!activeOrderIds.length) return;
+        navigator.geolocation.getCurrentPosition(function (pos) {
+          var lat = pos.coords.latitude;
+          var lng = pos.coords.longitude;
+          activeOrderIds.forEach(function (oid) {
+            window.PlatformAPI.api("/api/driver/update-location", {
+              method: "POST",
+              body: { order_id: oid, lat: lat, lng: lng },
+            }).catch(function () {});
+          });
+        });
+      }
+
       async function loadOrders() {
         try {
           var j = await window.PlatformAPI.api("/api/driver/orders");
@@ -69,6 +85,13 @@
             try { new Audio("/sound.mp3").play(); } catch (e) {}
           }
           knownOrders = ids;
+          activeOrderIds = orders
+            .filter(function (o) {
+              return o.driver_id && (o.delivery_status === "accepted" || o.delivery_status === "delivering");
+            })
+            .map(function (o) {
+              return o.id;
+            });
 
           var box = document.getElementById("ordersBox");
           box.innerHTML = "";
@@ -94,6 +117,7 @@
                   try {
                     var r = await window.PlatformAPI.api("/api/driver/accept/" + o.id, { method: "POST" });
                     if (r.accepted === false) return showError(r.message || "تم استلامه");
+                    sendLocationPing(o.id);
                     showSuccess("تم قبول الطلب");
                     loadOrders();
                   } catch (e) { showError(e.message || "خطأ القبول"); }
@@ -138,12 +162,7 @@
         if (poll) clearInterval(poll);
         poll = setInterval(function () {
           loadOrders();
-          navigator.geolocation.getCurrentPosition(function (pos) {
-            window.PlatformAPI.api("/api/driver/update-location", {
-              method: "POST",
-              body: { lat: pos.coords.latitude, lng: pos.coords.longitude },
-            }).catch(function () {});
-          });
+          sendLocationToActiveOrders();
         }, 5000);
       }
 
@@ -154,6 +173,7 @@
       };
 
       loadOrders();
+      sendLocationToActiveOrders();
       startTrackingLoop();
     </script>
   </body>

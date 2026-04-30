@@ -40,6 +40,9 @@
       <div class="card">
         <strong>خريطة المندوب</strong>
         <p class="sub" style="margin-top: 4px; margin-bottom: 10px">يُحدَّث الموقع تلقائياً كل بضع ثوانٍ عند الضغط على «تحديث الآن».</p>
+        <div class="btn-row" style="margin-bottom: 8px">
+          <button type="button" class="btn btn-ghost" id="btnVoiceToggle">🔊 التنبيه الصوتي: تشغيل</button>
+        </div>
         <div
           id="map"
           class="map-placeholder"
@@ -115,6 +118,7 @@
       var mapLayers = null;
       var mapLayerControl = null;
       var routeLine = null;
+      var dropMarker = null;
       var markerAnimRaf = null;
       var mapInitialized = false;
       var currentOrderId = null;
@@ -125,6 +129,8 @@
       var selectedRate = 0;
       var meRole = null;
       var meRoleFetched = false;
+      var speechState = { orderId: null, accepted: false, delivering: false, near: false };
+      var voiceEnabled = true;
 
       async function ensureMeRole() {
         if (meRoleFetched) return;
@@ -246,6 +252,72 @@
         var time = distance / speed;
 
         return Math.round(time * 60);
+      }
+
+      function speakArabic(message) {
+        if (!voiceEnabled) return;
+        if (!("speechSynthesis" in window)) return;
+        var text = String(message || "").trim();
+        if (!text) return;
+        try {
+          window.speechSynthesis.cancel();
+          var ut = new SpeechSynthesisUtterance(text);
+          ut.lang = "ar-SA";
+          ut.rate = 0.95;
+          ut.pitch = 1;
+          window.speechSynthesis.speak(ut);
+        } catch (e) {}
+      }
+
+      function computeEtaMinutesForOrder(order) {
+        if (!order) return null;
+        var driverLat = Number(order.driver_lat);
+        var driverLng = Number(order.driver_lng);
+        var dropLat = Number(order.drop_lat);
+        var dropLng = Number(order.drop_lng);
+        var hasDriver = Number.isFinite(driverLat) && Number.isFinite(driverLng);
+        var hasDrop = Number.isFinite(dropLat) && Number.isFinite(dropLng);
+        if (hasDriver && hasDrop) {
+          var mins = calcETA(driverLat, driverLng, dropLat, dropLng);
+          if (!Number.isFinite(mins)) return null;
+          return mins < 1 ? 1 : mins;
+        }
+        if (order.distance_km != null && order.distance_km !== "") {
+          var km = Number(order.distance_km);
+          if (!Number.isFinite(km) || km <= 0) return null;
+          var m = Math.round((km / 40) * 60);
+          return m < 1 ? 1 : m;
+        }
+        return null;
+      }
+
+      function maybeSpeakTrackingEvents(order) {
+        if (!voiceEnabled) return;
+        if (!order) return;
+        var orderId = String(order.id || "");
+        if (!orderId) return;
+        if (speechState.orderId !== orderId) {
+          speechState = { orderId: orderId, accepted: false, delivering: false, near: false };
+        }
+        var deliveryStatus = String(order.delivery_status || order.status || "");
+        if (deliveryStatus === "accepted" && !speechState.accepted) {
+          speakArabic("عميلنا العزيز تم قبول الطلب.");
+          speechState.accepted = true;
+        }
+        if (deliveryStatus === "delivering" && !speechState.delivering) {
+          speakArabic("عميلنا العزيز تم استلام الطلب والتوجه إليك.");
+          speechState.delivering = true;
+        }
+        var etaMinutes = computeEtaMinutesForOrder(order);
+        if (
+          !speechState.near &&
+          etaMinutes != null &&
+          etaMinutes <= 2 &&
+          (deliveryStatus === "accepted" || deliveryStatus === "delivering")
+        ) {
+          speakArabic("عميلنا العزيز المندوب قريب منك، دقيقتان.");
+          speechState.near = true;
+        }
       }
 
       function applyEtaToEl(driver_lat, driver_lng, drop_lat, drop_lng) {
@@ -430,6 +502,22 @@
         }, 100);
       }
 
+      function updateDropMarker(lat, lng) {
+        if (lat == null || lng == null) return;
+        var la = Number(lat);
+        var ln = Number(lng);
+        if (Number.isNaN(la) || Number.isNaN(ln)) return;
+        ensureMap();
+        if (!map) return;
+        if (dropMarker) {
+          dropMarker.setLatLng([la, ln]);
+        } else {
+          dropMarker = L.marker([la, ln], { title: "نقطة التسليم" })
+            .addTo(map)
+            .bindPopup("📍 نقطة التسليم");
+        }
+      }
+
       async function getRoute(a, b) {
         var url =
           "https://router.project-osrm.org/route/v1/driving/" +
@@ -479,6 +567,12 @@
           } catch (e) {}
           routeLine = null;
         }
+        if (map && dropMarker) {
+          try {
+            map.removeLayer(dropMarker);
+          } catch (e) {}
+          dropMarker = null;
+        }
       }
 
       function formatRelativeTime(ts) {
@@ -515,7 +609,15 @@
 
         var deliveryStatus = order.delivery_status || order.status;
         var st = STATUS_AR[deliveryStatus] || deliveryStatus;
-        document.getElementById("statusBadge").textContent = st;
+        var statusBadgeEl = document.getElementById("statusBadge");
+        statusBadgeEl.textContent = st;
+        if (deliveryStatus === "delivered") {
+          statusBadgeEl.style.background = "#15803d";
+          statusBadgeEl.style.color = "#ffffff";
+        } else {
+          statusBadgeEl.style.background = "";
+          statusBadgeEl.style.color = "";
+        }
         var statusEl = document.getElementById("status");
         if (statusEl) {
           if (deliveryStatus === "accepted") {
@@ -578,6 +680,9 @@
 
         var lat = order.driver_lat;
         var lng = order.driver_lng;
+        var dropLat = order.drop_lat == null ? null : Number(order.drop_lat);
+        var dropLng = order.drop_lng == null ? null : Number(order.drop_lng);
+        var hasDropPoint = Number.isFinite(dropLat) && Number.isFinite(dropLng);
         if (order.pickup_lat && order.drop_lat) {
           var fromLL = {
             lat: Number(order.pickup_lat),
@@ -593,12 +698,21 @@
             Number.isFinite(toLL.lat) &&
             Number.isFinite(toLL.lng)
           ) {
+            updateDropMarker(toLL.lat, toLL.lng);
             void showMap(fromLL, toLL);
           }
         }
-        if (lat != null && lng != null && !Number.isNaN(Number(lat)) && !Number.isNaN(Number(lng))) {
+        var hasDriverLocation = lat != null && lng != null && !Number.isNaN(Number(lat)) && !Number.isNaN(Number(lng));
+        if (deliveryStatus === "delivered" && hasDropPoint) {
+          updateDriverMarker(dropLat, dropLng, detectVehicleKind(order));
+          updateDropMarker(dropLat, dropLng);
+          document.getElementById("coords").textContent =
+            "📍 تم التسليم عند نقطة النهاية: " + dropLat + " ، " + dropLng;
+          document.getElementById("coordsMeta").textContent = "";
+        } else if (hasDriverLocation) {
           document.getElementById("coords").textContent = "خط العرض: " + lat + " — خط الطول: " + lng;
           updateDriverMarker(lat, lng, detectVehicleKind(order));
+          if (hasDropPoint) updateDropMarker(dropLat, dropLng);
           document.getElementById("coordsMeta").textContent = "";
         } else {
           clearDriverMarker();
@@ -609,7 +723,13 @@
 
         var etaEl0 = document.getElementById("eta");
         if (etaEl0) {
-          if (order.distance_km) {
+          var hasDriverLocation =
+            lat != null && lng != null && !Number.isNaN(Number(lat)) && !Number.isNaN(Number(lng));
+          if (deliveryStatus === "delivered") {
+            etaEl0.textContent = "";
+          } else if (!hasDriverLocation) {
+            etaEl0.textContent = "";
+          } else if (order.distance_km) {
             var speed = 40;
             var minutes = Math.round((Number(order.distance_km) / speed) * 60);
             if (minutes < 1) minutes = 1;
@@ -622,6 +742,37 @@
         syncRateForm(order);
         updateGpsStateUI(order);
         syncInvoiceButton();
+        maybeSpeakTrackingEvents(order);
+      }
+
+      function syncVoiceToggleUI() {
+        var btn = document.getElementById("btnVoiceToggle");
+        if (!btn) return;
+        btn.textContent = voiceEnabled ? "🔊 التنبيه الصوتي: تشغيل" : "🔇 التنبيه الصوتي: إيقاف";
+      }
+
+      function loadVoiceSetting() {
+        try {
+          var raw = localStorage.getItem("track_voice_enabled");
+          if (raw === "false") voiceEnabled = false;
+          else voiceEnabled = true;
+        } catch (e) {
+          voiceEnabled = true;
+        }
+        syncVoiceToggleUI();
+      }
+
+      function toggleVoiceSetting() {
+        voiceEnabled = !voiceEnabled;
+        try {
+          localStorage.setItem("track_voice_enabled", voiceEnabled ? "true" : "false");
+        } catch (e) {}
+        if (!voiceEnabled && "speechSynthesis" in window) {
+          try {
+            window.speechSynthesis.cancel();
+          } catch (e) {}
+        }
+        syncVoiceToggleUI();
       }
 
       function updateGpsStateUI(order) {
@@ -631,6 +782,19 @@
         if (!order) {
           gpsState.textContent = "";
           lastUpdate.textContent = "";
+          return;
+        }
+
+        var deliveryStatus = order.delivery_status || order.status;
+        if (deliveryStatus === "delivered") {
+          gpsState.innerText = "✅ تم تسليم الطلب";
+          if (order.last_location_at) {
+            var deliveredDiff = Math.floor((Date.now() - new Date(order.last_location_at)) / 1000);
+            if (deliveredDiff < 0) deliveredDiff = 0;
+            lastUpdate.innerText = "آخر تحديث قبل " + deliveredDiff + " ثانية";
+          } else {
+            lastUpdate.textContent = "";
+          }
           return;
         }
 
@@ -710,6 +874,11 @@
       (function () {
         var bi = document.getElementById("btnInvoice");
         if (bi) bi.onclick = openInvoice;
+      })();
+      loadVoiceSetting();
+      (function () {
+        var vb = document.getElementById("btnVoiceToggle");
+        if (vb) vb.onclick = toggleVoiceSetting;
       })();
 
       var params = new URLSearchParams(location.search);
