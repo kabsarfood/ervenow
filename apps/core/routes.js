@@ -187,7 +187,8 @@ router.post("/send-otp", async (req, res) => {
           to: digits,
           message: `رمز دخول لوحة إدارة ERVENOW: ${code}`,
         });
-      } catch (_e) {
+      } catch (waErr) {
+        console.error("[ERVENOW] admin send-otp whatsapp error:", waErr?.message || waErr);
         sent = false;
       }
       if (!sent) return fail(res, "تعذر إرسال رمز واتساب للأدمن", 503);

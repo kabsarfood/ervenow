@@ -9,7 +9,11 @@ function getTwilioClient() {
 }
 
 function waFrom() {
-  let n = String(process.env.TWILIO_WHATSAPP_NUMBER || "").trim();
+  let n = String(
+    process.env.TWILIO_WHATSAPP_NUMBER ||
+      process.env.TWILIO_WHATSAPP_FROM ||
+      ""
+  ).trim();
   if (!n) return null;
   if (!n.startsWith("whatsapp:")) n = "whatsapp:" + n.replace(/^\+/, "+");
   return n;
