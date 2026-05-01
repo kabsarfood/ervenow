@@ -2,7 +2,7 @@ const jwt = require("jsonwebtoken");
 const { createServiceClient } = require("../config/supabase");
 const { extractBearer } = require("../utils/helpers");
 
-const ROLES = ["driver", "customer", "admin", "restaurant", "merchant", "service"];
+const ROLES = ["driver", "customer", "admin", "restaurant", "merchant", "service", "user"];
 
 /**
  * يدعم الاسم الصحيح ERVENOW_JWT_SECRET والاسم القديم ERWENOW_JWT_SECRET للتوافق.
@@ -27,6 +27,20 @@ function requireServiceSupabase(res) {
     return null;
   }
   return sb;
+}
+
+function isBlockedAllowedPath(req) {
+  const fullPath = String((req.baseUrl || "") + (req.path || "")).toLowerCase();
+  if (fullPath === "/api/core/me") return true;
+  if (fullPath === "/api/delivery/complaints") return true;
+  if (fullPath === "/api/delivery/complaints/mine") return true;
+  return false;
+}
+
+function isMissingStatusColumnError(err) {
+  if (!err) return false;
+  const msg = String(err.message || err.details || "");
+  return /users\.status|column .*status.* does not exist|Could not find the .*status/i.test(msg);
 }
 
 async function requireAuth(req, res, next) {
@@ -56,9 +70,44 @@ async function requireAuth(req, res, next) {
     const sb = requireServiceSupabase(res);
     if (!sb) return;
 
+    let effectiveRole = role;
+    let effectiveStatus = "active";
+    try {
+      let dbUser = null;
+      const withStatus = await sb
+        .from("users")
+        .select("id, role, status, phone")
+        .eq("id", sub)
+        .maybeSingle();
+      if (withStatus.error && isMissingStatusColumnError(withStatus.error)) {
+        const fallback = await sb
+          .from("users")
+          .select("id, role, phone")
+          .eq("id", sub)
+          .maybeSingle();
+        if (!fallback.error) dbUser = fallback.data || null;
+      } else if (!withStatus.error) {
+        dbUser = withStatus.data || null;
+      }
+      if (dbUser) {
+        if (dbUser.role) effectiveRole = dbUser.role;
+        if (dbUser.status) effectiveStatus = dbUser.status;
+        if (dbUser.phone) req.authUser = { id: sub, phone: dbUser.phone };
+      }
+    } catch (_e) {}
+
+    if (String(effectiveStatus || "").toLowerCase() === "blocked" && !isBlockedAllowedPath(req)) {
+      return res.status(403).json({ ok: false, error: "الحساب محظور من الإدارة" });
+    }
+
+    // backward compatibility for transitional roles
+    if (String(effectiveRole || "").toLowerCase() === "user") {
+      effectiveRole = "customer";
+    }
+
     req.supabase = sb;
-    req.authUser = { id: sub, phone };
-    req.appUser = { id: sub, phone, role };
+    req.authUser = req.authUser || { id: sub, phone };
+    req.appUser = { id: sub, phone: req.authUser.phone, role: effectiveRole, status: effectiveStatus };
     next();
   } catch (e) {
     console.error("[requireAuth]", e);

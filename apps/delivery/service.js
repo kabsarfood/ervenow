@@ -1,5 +1,6 @@
 const { isValidDeliveryTransition, deliveryLifecycleIndex } = require("../../shared/utils/helpers");
 const { onDeliveryDelivered } = require("../finance/hooks");
+const { normalizePhone } = require("../../shared/utils/phone");
 
 function haversineDistanceKm(lat1, lng1, lat2, lng2) {
   const R = 6371;
@@ -56,6 +57,23 @@ function calcPlatformFee(total) {
   return Math.round(Number(total) * 0.12 * 100) / 100;
 }
 
+function normalizeVehicleType(v) {
+  const s = String(v || "").trim().toLowerCase();
+  if (["bike", "bicycle", "motorbike", "motorcycle", "دراجة", "دباب"].includes(s)) return "bike";
+  return "car";
+}
+
+function calcDeliveryBaseFee(distanceKm, vehicleType) {
+  const km = Number(distanceKm) || 0;
+  const vt = normalizeVehicleType(vehicleType);
+  if (km <= 7) return vt === "bike" ? 15 : 22;
+  return calcDeliveryFee(km);
+}
+
+function calcDeliveryPlatformFee(deliveryFee) {
+  return Math.round(Number(deliveryFee) * 0.15 * 100) / 100;
+}
+
 function calcDriverEarning(deliveryFee) {
   return Math.round(Number(deliveryFee) * 100) / 100;
 }
@@ -84,6 +102,88 @@ function parseCoord(v) {
   return Number.isFinite(n) ? n : null;
 }
 
+function isOrderPaid(order) {
+  const payStatus =
+    String(order?.payment_status || order?.data?.payment_status || "")
+      .trim()
+      .toLowerCase() || "";
+  return payStatus === "paid" || payStatus === "captured" || payStatus === "completed";
+}
+
+function calcRefundAmount(order) {
+  const totalWithVat = Number(order?.total_with_vat);
+  if (Number.isFinite(totalWithVat) && totalWithVat > 0) return Math.round(totalWithVat * 100) / 100;
+  const base = (Number(order?.order_total) || 0) + (Number(order?.delivery_fee) || 0);
+  return Math.round(base * 100) / 100;
+}
+
+async function resolveCustomerId(sb, order) {
+  if (order?.customer_id) return order.customer_id;
+  const p = normalizePhone(order?.customer_phone || "");
+  if (!p) return null;
+  const { data, error } = await sb.from("users").select("id").eq("phone", p).maybeSingle();
+  if (error) return null;
+  return data?.id || null;
+}
+
+async function refundCustomerWalletIfPaid(sb, order) {
+  if (!isOrderPaid(order)) return { refunded: false, reason: "not_paid" };
+  const customerId = await resolveCustomerId(sb, order);
+  if (!customerId) return { refunded: false, reason: "customer_not_found" };
+  const refundAmount = calcRefundAmount(order);
+  if (!(refundAmount > 0)) return { refunded: false, reason: "zero_amount" };
+
+  const refundNote = `refund_customer_cancel:${order.id}`;
+  const { data: exists, error: exErr } = await sb
+    .from("ervenow_wallet_transactions")
+    .select("id")
+    .eq("user_id", customerId)
+    .eq("type", "earning")
+    .eq("note", refundNote)
+    .maybeSingle();
+  if (exErr) {
+    return { refunded: false, reason: "wallet_tx_check_error" };
+  }
+  if (exists?.id) return { refunded: false, reason: "already_refunded" };
+
+  const { data: wallet, error: wErr } = await sb
+    .from("ervenow_wallets")
+    .select("*")
+    .eq("user_id", customerId)
+    .maybeSingle();
+  if (wErr) return { refunded: false, reason: "wallet_fetch_error" };
+
+  if (!wallet) {
+    const { error: insWErr } = await sb.from("ervenow_wallets").insert({
+      user_id: customerId,
+      role: "customer",
+      balance: refundAmount,
+      total_earned: refundAmount,
+      total_withdrawn: 0,
+    });
+    if (insWErr) return { refunded: false, reason: "wallet_create_error" };
+  } else {
+    const nextBal = (Number(wallet.balance) || 0) + refundAmount;
+    const nextEarn = (Number(wallet.total_earned) || 0) + refundAmount;
+    const { error: upWErr } = await sb
+      .from("ervenow_wallets")
+      .update({ balance: nextBal, total_earned: nextEarn })
+      .eq("user_id", customerId);
+    if (upWErr) return { refunded: false, reason: "wallet_update_error" };
+  }
+
+  const { error: txErr } = await sb.from("ervenow_wallet_transactions").insert({
+    user_id: customerId,
+    amount: refundAmount,
+    type: "earning",
+    reference_id: null,
+    note: refundNote,
+  });
+  if (txErr) return { refunded: false, reason: "wallet_tx_insert_error" };
+
+  return { refunded: true, amount: refundAmount, customer_id: customerId };
+}
+
 /**
  * إنشاء طلب توصيل من واجهة /api/delivery/orders: مسافة طريق + أجور عند توفر إحداثيات.
  */
@@ -94,16 +194,17 @@ async function createDeliveryOrderFromBody(sb, appUser, body) {
   const drop_lat = parseCoord(b.drop_lat);
   const drop_lng = parseCoord(b.drop_lng);
   const orderTotal = Math.max(0, Number(b.order_total) || 0);
-  const platformFee = calcPlatformFee(orderTotal);
+  const vehicleType = normalizeVehicleType(b.vehicle_type);
 
   let distanceKm = null;
   let deliveryFee = 0;
   if (pickup_lat != null && pickup_lng != null && drop_lat != null && drop_lng != null) {
     distanceKm = await getRoadDistanceKm(pickup_lat, pickup_lng, drop_lat, drop_lng);
-    deliveryFee = calcDeliveryFee(distanceKm);
+    deliveryFee = calcDeliveryBaseFee(distanceKm, vehicleType);
   } else if (b.delivery_fee != null && b.delivery_fee !== "") {
     deliveryFee = Math.max(0, Math.round(Number(b.delivery_fee) * 100) / 100);
   }
+  const platformFee = calcDeliveryPlatformFee(deliveryFee);
 
   const extId =
     b.external_order_id != null && String(b.external_order_id).trim() !== ""
@@ -113,7 +214,7 @@ async function createDeliveryOrderFromBody(sb, appUser, body) {
     b.series_source != null && String(b.series_source).trim() !== ""
       ? String(b.series_source).trim().slice(0, 64)
       : "ervenow";
-  const driverEarning = calcDriverEarning(deliveryFee);
+  const driverEarning = Math.max(0, Math.round((deliveryFee - platformFee) * 100) / 100);
 
   const subtotal = orderTotal + deliveryFee;
   const vatAmount = calcVAT(subtotal);
@@ -417,6 +518,38 @@ async function rateOrder(sb, orderId, appUser, rating, review) {
   return { data, error };
 }
 
+async function cancelOrderByCustomer(sb, orderId, appUser) {
+  const { data: order, error: gErr } = await sb
+    .from("orders")
+    .select("*")
+    .eq("id", orderId)
+    .single();
+  if (gErr || !order) return { data: null, error: gErr || new Error("Not found"), refund: null };
+
+  if (appUser.role !== "customer" || order.customer_id !== appUser.id) {
+    return { data: null, error: new Error("Forbidden"), refund: null };
+  }
+  const current = String(order.delivery_status || order.status || "").trim().toLowerCase();
+  if (!["new", "pending", "accepted"].includes(current)) {
+    return { data: null, error: new Error("لا يمكن إلغاء الطلب في هذه المرحلة"), refund: null };
+  }
+
+  const { data, error } = await sb
+    .from("orders")
+    .update({
+      delivery_status: "cancelled_by_customer",
+      status: "cancelled",
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", orderId)
+    .select()
+    .single();
+  if (error) return { data: null, error, refund: null };
+
+  const refund = await refundCustomerWalletIfPaid(sb, order);
+  return { data, error: null, refund };
+}
+
 module.exports = {
   listOrders,
   acceptOrder,
@@ -424,9 +557,13 @@ module.exports = {
   saveLocation,
   reportGpsError,
   rateOrder,
+  cancelOrderByCustomer,
   getRoadDistanceKm,
   calcDeliveryFee,
   calcPlatformFee,
+  calcDeliveryPlatformFee,
+  calcDeliveryBaseFee,
+  normalizeVehicleType,
   calcDriverEarning,
   calcVAT,
   getRiyadhDate,

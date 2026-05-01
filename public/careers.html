@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ERVENOW | بوابة التوظيف</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/assets/styles.css" />
+  </head>
+  <body>
+    <div class="layout">
+      <p><a href="/">← الرئيسية</a></p>
+      <h1>بوابة التوظيف</h1>
+      <p class="sub">قدّم طلبك وسيتم مراجعته من إدارة المنصة.</p>
+
+      <div class="card">
+        <label for="name">الاسم</label>
+        <input id="name" type="text" />
+        <label for="phone">رقم الجوال</label>
+        <input id="phone" type="tel" inputmode="numeric" placeholder="05xxxxxxxx" />
+        <label for="city">المدينة</label>
+        <input id="city" type="text" />
+        <label for="roleWanted">الوظيفة المطلوبة</label>
+        <input id="roleWanted" type="text" placeholder="مندوب / دعم / عمليات ..." />
+        <label for="note">نبذة</label>
+        <textarea id="note" rows="4" placeholder="خبراتك ومعلومات إضافية"></textarea>
+        <div class="btn-row">
+          <button type="button" class="btn btn-primary" id="sendBtn">إرسال الطلب</button>
+        </div>
+        <div id="msg" class="sub" style="margin-top:8px"></div>
+      </div>
+    </div>
+    <script src="/assets/api.js"></script>
+    <script>
+      function normalizePhone(v) {
+        var d = String(v || "").replace(/\D/g, "");
+        if (d.startsWith("9665")) d = "0" + d.slice(3);
+        if (d.startsWith("5") && d.length === 9) d = "0" + d;
+        return d.slice(0, 10);
+      }
+      function is05(v) {
+        return /^05\d{8}$/.test(String(v || ""));
+      }
+      document.getElementById("sendBtn").onclick = async function () {
+        var msg = document.getElementById("msg");
+        try {
+          var name = String(document.getElementById("name").value || "").trim();
+          var phone = normalizePhone(document.getElementById("phone").value);
+          var city = String(document.getElementById("city").value || "").trim();
+          var roleWanted = String(document.getElementById("roleWanted").value || "").trim();
+          var note = String(document.getElementById("note").value || "").trim();
+          if (!name) return (msg.textContent = "الاسم مطلوب");
+          if (!is05(phone)) return (msg.textContent = "رقم الجوال غير صالح");
+          await window.PlatformAPI.api("/api/admin/job-applications/public", {
+            method: "POST",
+            body: { name: name, phone: phone, city: city, role_wanted: roleWanted, note: note },
+          });
+          msg.textContent = "تم إرسال طلب التوظيف بنجاح.";
+          document.getElementById("name").value = "";
+          document.getElementById("phone").value = "";
+          document.getElementById("city").value = "";
+          document.getElementById("roleWanted").value = "";
+          document.getElementById("note").value = "";
+        } catch (e) {
+          msg.textContent = e.message || "تعذر إرسال الطلب";
+        }
+      };
+    </script>
+  </body>
+</html>

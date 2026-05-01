@@ -1,6 +1,7 @@
 (function (w) {
   var TOKEN_KEY = "ervenow_access_token";
   var LEGACY_TOKEN_KEY = "erwenow_access_token";
+  var FALLBACK_TOKEN_KEY = "token";
 
   w.PlatformAPI = {
     getToken: function () {
@@ -10,9 +11,16 @@
         var legacy = localStorage.getItem(LEGACY_TOKEN_KEY);
         if (legacy) {
           localStorage.setItem(TOKEN_KEY, legacy);
+          localStorage.setItem(FALLBACK_TOKEN_KEY, legacy);
           localStorage.removeItem(LEGACY_TOKEN_KEY);
+          return legacy;
         }
-        return legacy || "";
+        var fallback = localStorage.getItem(FALLBACK_TOKEN_KEY);
+        if (fallback) {
+          localStorage.setItem(TOKEN_KEY, fallback);
+          return fallback;
+        }
+        return "";
       } catch (e) {
         return "";
       }
@@ -21,10 +29,12 @@
       try {
         if (t) {
           localStorage.setItem(TOKEN_KEY, t);
+          localStorage.setItem(FALLBACK_TOKEN_KEY, t);
           localStorage.removeItem(LEGACY_TOKEN_KEY);
         } else {
           localStorage.removeItem(TOKEN_KEY);
           localStorage.removeItem(LEGACY_TOKEN_KEY);
+          localStorage.removeItem(FALLBACK_TOKEN_KEY);
         }
       } catch (e) {}
     },

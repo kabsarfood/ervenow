@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>دخول الإدارة | ERVENOW</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet" />
+    <style>
+      body { margin: 0; font-family: Cairo, sans-serif; background: #f8f4ef; color: #2b1f16; }
+      .wrap { max-width: 520px; margin: 48px auto; padding: 16px; }
+      .card { background: #fff; border: 1px solid #e5d8cb; border-radius: 14px; padding: 16px; }
+      h2 { margin: 0 0 10px; color: #5b371d; }
+      p { margin: 0 0 10px; color: #6e5a4a; }
+      input { width: 100%; box-sizing: border-box; margin-top: 8px; padding: 10px; border-radius: 10px; border: 1px solid #d7c6b5; font-family: inherit; }
+      .row { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+      button, a.btn { border: 0; border-radius: 10px; padding: 10px 12px; cursor: pointer; font-family: inherit; font-weight: 700; text-decoration: none; display: inline-block; }
+      .btn-primary { background: #5b371d; color: #fff; }
+      .btn-ghost { border: 1px solid #5b371d; background: #fff; color: #5b371d; }
+      #msg { margin-top: 10px; color: #6e5a4a; font-size: .92rem; }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="card">
+        <h2>🔐 دخول الأدمن</h2>
+        <p>أدخل رقم الجوال ثم رمز التحقق.</p>
+
+        <input id="phone" placeholder="رقم الجوال" />
+        <div class="row">
+          <button class="btn-primary" id="sendBtn" type="button">إرسال كود</button>
+        </div>
+
+        <input id="code" placeholder="رمز التحقق" />
+        <div class="row">
+          <button class="btn-primary" id="verifyBtn" type="button">دخول</button>
+          <a class="btn btn-ghost" href="/">الرئيسية</a>
+        </div>
+
+        <p id="msg"></p>
+      </div>
+    </div>
+
+    <script src="/assets/api.js"></script>
+    <script>
+      var ONLY_ADMIN_PHONE = "0505745650";
+
+      function normalizeAdminPhone(v) {
+        var d = String(v || "").replace(/\D/g, "");
+        if (d.startsWith("9665") && d.length === 12) return "0" + d.slice(3);
+        if (d.startsWith("5") && d.length === 9) return "0" + d;
+        return d.slice(0, 10);
+      }
+
+      function setMsg(text) {
+        document.getElementById("msg").innerText = text || "";
+      }
+
+      async function sendOtp() {
+        var phone = normalizeAdminPhone(document.getElementById("phone").value || "");
+        if (!phone) return setMsg("أدخل رقم الجوال أولاً");
+        if (phone !== ONLY_ADMIN_PHONE) return setMsg("هذا الرقم غير مصرح له بدخول الإدارة");
+        setMsg("جارٍ إرسال الكود...");
+        try {
+          var r = await fetch("/api/core/send-otp", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ phone: phone, role: "admin" }),
+          });
+          var j = await r.json().catch(function () { return {}; });
+          if (!r.ok || !j.ok) throw new Error(j.error || "تعذر إرسال الكود");
+          setMsg("تم إرسال رمز واتساب إلى رقم الأدمن");
+        } catch (e) {
+          setMsg(e.message || "فشل الإرسال");
+        }
+      }
+
+      async function verifyOtp() {
+        var phone = normalizeAdminPhone(document.getElementById("phone").value || "");
+        var code = (document.getElementById("code").value || "").trim();
+        if (!phone || !code) return setMsg("أدخل رقم الجوال والرمز");
+        if (phone !== ONLY_ADMIN_PHONE) return setMsg("هذا الرقم غير مصرح له بدخول الإدارة");
+        setMsg("جارٍ التحقق...");
+        try {
+          var res = await fetch("/api/core/verify-otp", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ phone: phone, code: code, role: "admin" }),
+          });
+          var data = await res.json().catch(function () { return {}; });
+          if (!res.ok || !data.token) throw new Error(data.error || "فشل التحقق");
+          localStorage.setItem("token", data.token);
+          if (window.PlatformAPI && typeof window.PlatformAPI.setToken === "function") {
+            window.PlatformAPI.setToken(data.token);
+          } else {
+            localStorage.setItem("ervenow_access_token", data.token);
+          }
+          window.location.href = "/admin-dashboard";
+        } catch (e) {
+          setMsg(e.message || "فشل الدخول");
+        }
+      }
+
+      document.getElementById("phone").value = ONLY_ADMIN_PHONE;
+      document.getElementById("sendBtn").onclick = sendOtp;
+      document.getElementById("verifyBtn").onclick = verifyOtp;
+    </script>
+  </body>
+</html>

@@ -6,12 +6,27 @@ const { normalizePhone } = require("../../shared/utils/phone");
 
 const router = express.Router();
 
-const STORE_TYPES = new Set(["restaurant", "pharmacy", "supermarket", "services"]);
+const STORE_TYPES = new Set([
+  "restaurant",
+  "pharmacy",
+  "supermarket",
+  "minimarket",
+  "vegetables",
+  "butcher",
+  "fish",
+  "home_business",
+  "services",
+]);
 
 const TYPE_LABEL_AR = {
   restaurant: "مطعم",
   pharmacy: "صيدلية",
   supermarket: "سوبرماركت",
+  minimarket: "ميني ماركت",
+  vegetables: "محل خضار",
+  butcher: "ملحمة",
+  fish: "بيع الأسماك",
+  home_business: "أسرة منتجة",
   services: "خدمات",
 };
 

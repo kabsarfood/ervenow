@@ -91,6 +91,8 @@
       var meUser = null;
       var lastPendingCount = 0;
       var pollTimer = null;
+      var activeOrderIds = [];
+      var locationTimer = null;
 
       function showMsg(t) {
         var el = document.getElementById("msg");
@@ -131,9 +133,76 @@
         window.open(url, "_blank", "noopener,noreferrer");
       }
 
+      async function acceptOrder(order) {
+        try {
+          await window.PlatformAPI.api("/api/driver/accept/" + encodeURIComponent(order.id), {
+            method: "POST",
+          });
+          await loadOrders();
+        } catch (e) {
+          showMsg(e.message || String(e));
+        }
+      }
+
+      async function startDelivery(order) {
+        try {
+          await window.PlatformAPI.api("/api/driver/start-delivery/" + encodeURIComponent(order.id), {
+            method: "POST",
+          });
+          await sendLocationToActiveOrders();
+          await loadOrders();
+        } catch (e) {
+          showMsg(e.message || String(e));
+        }
+      }
+
+      async function completeOrder(order) {
+        try {
+          await window.PlatformAPI.api("/api/driver/complete-order/" + encodeURIComponent(order.id), {
+            method: "POST",
+          });
+          await loadOrders();
+        } catch (e) {
+          showMsg(e.message || String(e));
+        }
+      }
+
+      async function sendLocationToActiveOrders() {
+        if (!activeOrderIds.length) return;
+        if (!navigator.geolocation) return;
+        navigator.geolocation.getCurrentPosition(
+          function (pos) {
+            var lat = pos.coords.latitude;
+            var lng = pos.coords.longitude;
+            activeOrderIds.forEach(function (id) {
+              window.PlatformAPI.api("/api/driver/update-location", {
+                method: "POST",
+                body: { order_id: id, lat: lat, lng: lng },
+              }).catch(function () {});
+            });
+          },
+          function () {},
+          { enableHighAccuracy: false, maximumAge: 8000, timeout: 10000 }
+        );
+      }
+
+      function startLocationLoop() {
+        if (locationTimer) clearInterval(locationTimer);
+        locationTimer = setInterval(function () {
+          sendLocationToActiveOrders();
+        }, 5000);
+      }
+
+      function stopLocationLoop() {
+        if (locationTimer) {
+          clearInterval(locationTimer);
+          locationTimer = null;
+        }
+      }
+
       async function acceptAndStart(order) {
         try {
-          await window.PlatformAPI.api("/api/delivery/orders/" + encodeURIComponent(order.id) + "/accept", {
+          await window.PlatformAPI.api("/api/driver/accept/" + encodeURIComponent(order.id), {
             method: "POST",
           });
           window.open("/track?id=" + encodeURIComponent(order.id), "_blank", "noopener,noreferrer");
@@ -193,12 +262,34 @@
             acceptBtn.className = "btn btn-primary";
             acceptBtn.textContent = "قبول الطلب";
             acceptBtn.onclick = function () {
-              acceptAndStart(o);
+              acceptOrder(o);
             };
             actions.appendChild(acceptBtn);
           }
 
           if (o.driver_id && String(o.driver_id) === String(meUser.id)) {
+            if (ds === "accepted") {
+              var startBtn = document.createElement("button");
+              startBtn.type = "button";
+              startBtn.className = "btn btn-primary";
+              startBtn.textContent = "استلام الطلب";
+              startBtn.onclick = function () {
+                startDelivery(o);
+              };
+              actions.appendChild(startBtn);
+            }
+
+            if (ds === "accepted" || ds === "delivering") {
+              var doneBtn = document.createElement("button");
+              doneBtn.type = "button";
+              doneBtn.className = "btn btn-ghost";
+              doneBtn.textContent = "تم التسليم";
+              doneBtn.onclick = function () {
+                completeOrder(o);
+              };
+              actions.appendChild(doneBtn);
+            }
+
             var mapBtn = document.createElement("button");
             mapBtn.type = "button";
             mapBtn.className = "btn btn-ghost";
@@ -261,6 +352,14 @@
             if (snd && typeof snd.play === "function") snd.play().catch(function () {});
           }
           lastPendingCount = pendingCount;
+          activeOrderIds = visible
+            .filter(function (o) {
+              var ds = String(o.delivery_status || o.status || "").toLowerCase();
+              return o.driver_id && String(o.driver_id) === String(meUser.id) && (ds === "accepted" || ds === "delivering");
+            })
+            .map(function (o) {
+              return o.id;
+            });
 
           renderOrders(visible);
         } catch (e) {
@@ -292,6 +391,8 @@
           await loadWalletAndRating();
           await loadOrders();
           pollTimer = setInterval(loadOrders, 7000);
+          startLocationLoop();
+          sendLocationToActiveOrders();
         } catch (e) {
           showMsg(e.message || "فشل التحقق من الحساب");
         }
@@ -304,6 +405,7 @@
       document.getElementById("logoutBtn").onclick = function (e) {
         e.preventDefault();
         if (pollTimer) clearInterval(pollTimer);
+        stopLocationLoop();
         window.PlatformAPI.setToken("");
         location.href = "/login?role=driver";
       };

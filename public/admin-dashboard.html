@@ -9,53 +9,452 @@
     <style>
       body { margin: 0; font-family: Cairo, sans-serif; background: #f8f4ef; color: #2b1f16; }
       .wrap { max-width: 1080px; margin: 20px auto; padding: 14px; }
-      h1 { color: #5b371d; }
-      .grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit,minmax(280px,1fr)); }
+      h1 { color: #5b371d; margin: 0; }
+      .topbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+      .grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit,minmax(220px,1fr)); }
       .card { background: #fff; border: 1px solid #e5d8cb; border-radius: 14px; padding: 12px; }
-      .stat { font-size: 1.2rem; font-weight: 800; color: #5b371d; margin-top: 8px; }
-      .item { border: 1px solid #ecdccf; border-radius: 10px; padding: 8px; margin-bottom: 8px; }
+      .stat { font-size: 1.35rem; font-weight: 800; color: #5b371d; margin-top: 8px; }
+      .muted { color: #6f5441; font-size: .9rem; }
+      .item { border: 1px solid #ecdccf; border-radius: 10px; padding: 8px; margin-bottom: 8px; background: #fffdfa; }
       .row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
       .btn { border: 0; border-radius: 9px; padding: 7px 10px; cursor: pointer; font-family: inherit; font-weight: 700; }
       .btn-primary { background: #5b371d; color: #fff; }
       .btn-ghost { border: 1px solid #5b371d; background: #fff; color: #5b371d; }
+      .line { margin: 6px 0; }
+      select { border: 1px solid #d8c8b8; border-radius: 10px; padding: 8px 10px; font-family: inherit; background: #fff; }
+      .search-input { min-width: 180px; border: 1px solid #d8c8b8; border-radius: 10px; padding: 7px 10px; font-family: inherit; }
+      .panel-switcher { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+      .panel-btn { border: 1px solid #5b371d; background: #fff; color: #5b371d; border-radius: 10px; padding: 8px 12px; font-family: inherit; font-weight: 700; cursor: pointer; }
+      .panel-btn.active { background: #5b371d; color: #fff; }
+      .panel-btn-close { border-color: #9a3412; color: #9a3412; }
+      .panel-btn-close:hover { background: #fff7ed; }
+      .panel-badge { display: inline-block; min-width: 20px; padding: 1px 6px; border-radius: 999px; background: #b91c1c; color: #fff; font-size: .75rem; margin-inline-start: 6px; }
+      .panel-badge.zero { background: #9ca3af; }
+      .admin-panel { display: none; margin-top: 12px; }
+      .admin-panel.active { display: block; }
+      @media (max-width: 768px) {
+        .wrap { padding: 10px; }
+        .stat { font-size: 1.15rem; }
+      }
     </style>
   </head>
   <body>
     <div class="wrap">
-      <h1>لوحة إدارة ERVENOW</h1>
-      <div class="grid">
+      <div class="topbar">
+        <h1>لوحة إدارة ERVENOW</h1>
+        <div id="filter-ui">
+          <select id="range" onchange="loadStats()">
+            <option value="today">اليوم</option>
+            <option value="week">هذا الأسبوع</option>
+            <option value="month">هذا الشهر</option>
+          </select>
+          <button type="button" class="btn btn-ghost" id="logoutAdminBtn" style="margin-inline-start:8px">خروج</button>
+        </div>
+      </div>
+      <p class="sub" id="adminWho" style="margin: 6px 0 10px">—</p>
+      <div class="grid" id="stats-cards">
         <div class="card">
-          <strong>الإحصائيات</strong>
-          <div class="stat" id="sTotal">—</div>
-          <div id="statsMeta"></div>
+          <strong>📦 الطلبات اليوم</strong>
+          <div class="stat" id="ordersToday">0</div>
         </div>
         <div class="card">
-          <strong>إيرادات المنصة</strong>
-          <div class="stat" id="sRevenue">—</div>
-          <div id="revMeta"></div>
+          <strong>🚚 الطلبات النشطة</strong>
+          <div class="stat" id="activeOrders">0</div>
+        </div>
+        <div class="card">
+          <strong>💰 إيرادات اليوم</strong>
+          <div class="stat" id="revenueToday">0</div>
+        </div>
+        <div class="card">
+          <strong>📊 إجمالي الإيرادات</strong>
+          <div class="stat" id="revenueTotal">0</div>
         </div>
       </div>
 
-      <div class="card" style="margin-top:12px">
+      <div class="panel-switcher">
+        <button type="button" class="panel-btn" data-panel="panelDrivers">
+          إدارة المناديب
+          <span class="panel-badge zero" id="badgePendingDrivers">0</span>
+        </button>
+        <button type="button" class="panel-btn" data-panel="panelOrders">
+          آخر الطلبات
+          <span class="panel-badge zero" id="badgeOrders">0</span>
+        </button>
+        <button type="button" class="panel-btn" data-panel="panelNotifications">
+          إشعارات المندوبين
+          <span class="panel-badge zero" id="badgeNotifications">0</span>
+        </button>
+        <button type="button" class="panel-btn" data-panel="panelComplaints">
+          الشكاوى
+          <span class="panel-badge zero" id="badgeComplaints">0</span>
+        </button>
+        <button type="button" class="panel-btn" data-panel="panelCustomers">
+          إدارة العملاء
+          <span class="panel-badge zero" id="badgeCustomers">0</span>
+        </button>
+        <button type="button" class="panel-btn" data-panel="panelStores">
+          بوابة المتاجر
+          <span class="panel-badge zero" id="badgeStores">0</span>
+        </button>
+        <button type="button" class="panel-btn" data-panel="panelJobs">
+          بوابة التوظيف
+          <span class="panel-badge zero" id="badgeJobs">0</span>
+        </button>
+        <button type="button" class="panel-btn" data-panel="panelAdminAccounts" id="adminAccountsPanelBtn" style="display:none">
+          إدارة الأدمنات
+        </button>
+        <button type="button" class="panel-btn panel-btn-close" id="closePanelsBtn">إغلاق كل الأقسام</button>
+      </div>
+
+      <div class="grid admin-panel" id="panelOrders">
+        <div class="card">
+          <div class="row" style="justify-content:space-between;align-items:center">
+            <h3 style="margin:0">آخر الطلبات</h3>
+            <div class="row" style="margin-top:0">
+              <input id="searchOrders" class="search-input" placeholder="بحث: اسم / جوال" />
+              <button class="btn btn-primary" id="reloadOrdersBtn">تحديث</button>
+            </div>
+          </div>
+          <div id="recentOrders"></div>
+        </div>
+      </div>
+
+      <div class="grid admin-panel" id="panelNotifications">
+        <div class="card">
+          <div class="row" style="justify-content:space-between;align-items:center">
+            <h3 style="margin:0">📡 إشعارات المندوبين</h3>
+            <div class="row" style="margin-top:0">
+              <input id="searchNotifications" class="search-input" placeholder="بحث: اسم / جوال" />
+              <button class="btn btn-primary" id="reloadNotificationsBtn">تحديث</button>
+            </div>
+          </div>
+          <div id="notifications"></div>
+        </div>
+      </div>
+
+      <div class="card admin-panel" id="panelDrivers">
         <div class="row" style="justify-content:space-between;align-items:center">
           <strong>إدارة المناديب</strong>
-          <button class="btn btn-primary" id="reloadDriversBtn">تحديث</button>
+          <div class="row" style="margin-top:0">
+            <input id="searchDrivers" class="search-input" placeholder="بحث: اسم / جوال" />
+            <button class="btn btn-primary" id="reloadDriversBtn">تحديث</button>
+          </div>
         </div>
         <div id="driversList"></div>
       </div>
 
-      <div class="card" style="margin-top:12px">
+      <div class="card admin-panel" id="panelComplaints">
         <div class="row" style="justify-content:space-between;align-items:center">
           <strong>الشكاوى</strong>
-          <button class="btn btn-primary" id="reloadComplaintsBtn">تحديث</button>
+          <div class="row" style="margin-top:0">
+            <input id="searchComplaints" class="search-input" placeholder="بحث: اسم / جوال" />
+            <button class="btn btn-primary" id="reloadComplaintsBtn">تحديث</button>
+          </div>
         </div>
         <div id="complaintsList"></div>
+      </div>
+
+      <div class="card admin-panel" id="panelCustomers">
+        <div class="row" style="justify-content:space-between;align-items:center">
+          <strong>إدارة العملاء</strong>
+          <div class="row" style="margin-top:0">
+            <input id="searchCustomers" class="search-input" placeholder="بحث: اسم / جوال" />
+            <button class="btn btn-primary" id="reloadCustomersBtn">تحديث</button>
+          </div>
+        </div>
+        <div id="customersList"></div>
+      </div>
+
+      <div class="card admin-panel" id="panelStores">
+        <div class="row" style="justify-content:space-between;align-items:center">
+          <strong>بوابة المتاجر (قبول/رفض)</strong>
+          <div class="row" style="margin-top:0">
+            <input id="searchStores" class="search-input" placeholder="بحث: اسم / جوال" />
+            <button class="btn btn-primary" id="reloadStoresBtn">تحديث</button>
+          </div>
+        </div>
+        <div id="storesList"></div>
+      </div>
+
+      <div class="card admin-panel" id="panelJobs">
+        <div class="row" style="justify-content:space-between;align-items:center">
+          <strong>بوابة التوظيف (قبول/رفض)</strong>
+          <div class="row" style="margin-top:0">
+            <input id="searchJobs" class="search-input" placeholder="بحث: اسم / جوال" />
+            <button class="btn btn-primary" id="reloadJobsBtn">تحديث</button>
+          </div>
+        </div>
+        <div id="jobsList"></div>
+      </div>
+
+      <div class="card admin-panel" id="panelAdminAccounts">
+        <div class="row" style="justify-content:space-between;align-items:center">
+          <strong>إدارة الأدمنات</strong>
+          <div class="row" style="margin-top:0">
+            <input id="searchAdminAccounts" class="search-input" placeholder="بحث: اسم / جوال" />
+            <button class="btn btn-primary" id="reloadAdminAccountsBtn" type="button">تحديث</button>
+          </div>
+        </div>
+        <div id="adminAccountsList"></div>
       </div>
     </div>
 
     <script src="/assets/cart.js"></script>
     <script src="/assets/api.js"></script>
     <script>
+      function setBadge(id, count) {
+        var el = document.getElementById(id);
+        if (!el) return;
+        var n = Number(count) || 0;
+        el.innerText = n;
+        if (n > 0) el.classList.remove("zero");
+        else el.classList.add("zero");
+      }
+
+      function showPanel(panelId) {
+        var panels = document.querySelectorAll(".admin-panel");
+        for (var i = 0; i < panels.length; i++) {
+          if (panelId && panels[i].id === panelId) panels[i].classList.add("active");
+          else panels[i].classList.remove("active");
+        }
+        var btns = document.querySelectorAll(".panel-btn");
+        for (var j = 0; j < btns.length; j++) {
+          if (panelId && btns[j].getAttribute("data-panel") === panelId) btns[j].classList.add("active");
+          else btns[j].classList.remove("active");
+        }
+      }
+
+      var adminPermissions = [];
+      var adminLevel = "full";
+      var FULL_ADMIN_IDLE_MS = 2 * 60 * 1000;
+      var fullAdminIdleTimer = null;
+      var lastAdminActivityAt = Date.now();
+      var fullAdminForcedLogout = false;
+      var cacheOrders = [];
+      var cacheNotifications = [];
+      var cacheDrivers = [];
+      var cacheComplaints = [];
+      var cacheCustomers = [];
+      var cacheStores = [];
+      var cacheJobs = [];
+      var cacheAdminAccounts = [];
+
+      function getSearch(id) {
+        var el = document.getElementById(id);
+        return String(el && el.value ? el.value : "").trim().toLowerCase();
+      }
+
+      function hasQueryMatch(q, parts) {
+        if (!q) return true;
+        var text = parts
+          .map(function (x) { return String(x || "").toLowerCase(); })
+          .join(" ");
+        return text.indexOf(q) !== -1;
+      }
+
+      function clearSessionTokens() {
+        localStorage.removeItem("ervenow_access_token");
+        localStorage.removeItem("erwenow_access_token");
+        localStorage.removeItem("token");
+      }
+
+      function forceAdminLogout(reason) {
+        if (fullAdminForcedLogout) return;
+        fullAdminForcedLogout = true;
+        if (fullAdminIdleTimer) {
+          clearTimeout(fullAdminIdleTimer);
+          fullAdminIdleTimer = null;
+        }
+        clearSessionTokens();
+        if (window.PlatformAPI && typeof window.PlatformAPI.setToken === "function") {
+          window.PlatformAPI.setToken("");
+        }
+        if (reason) {
+          alert(reason);
+        }
+        location.href = "/admin-login";
+      }
+
+      function touchAdminActivity() {
+        if (adminLevel !== "full" || fullAdminForcedLogout) return;
+        lastAdminActivityAt = Date.now();
+        if (fullAdminIdleTimer) clearTimeout(fullAdminIdleTimer);
+        fullAdminIdleTimer = setTimeout(function () {
+          forceAdminLogout("تم تسجيل الخروج تلقائياً بعد دقيقتين بدون نشاط. يرجى إعادة الدخول بالرمز.");
+        }, FULL_ADMIN_IDLE_MS);
+      }
+
+      function setupFullAdminIdleGuard() {
+        if (fullAdminIdleTimer) {
+          clearTimeout(fullAdminIdleTimer);
+          fullAdminIdleTimer = null;
+        }
+        if (adminLevel !== "full" || fullAdminForcedLogout) return;
+        lastAdminActivityAt = Date.now();
+        var events = ["click", "keydown", "mousemove", "scroll", "touchstart"];
+        events.forEach(function (eventName) {
+          document.addEventListener(eventName, touchAdminActivity, { passive: true });
+        });
+        document.addEventListener("visibilitychange", function () {
+          if (document.visibilityState === "visible") {
+            touchAdminActivity();
+            return;
+          }
+          if (Date.now() - lastAdminActivityAt >= FULL_ADMIN_IDLE_MS) {
+            forceAdminLogout("تم تسجيل الخروج تلقائياً بسبب السكون. يرجى إعادة الدخول بالرمز.");
+          }
+        });
+        touchAdminActivity();
+      }
+
+      function hasPermission(p) {
+        return adminPermissions.indexOf(p) !== -1;
+      }
+
+      function levelLabel(level) {
+        if (level === "limited1") return "أدمن 1 (مقيد)";
+        if (level === "limited2") return "أدمن 2 (مقيد)";
+        return "مدير كامل الصلاحيات";
+      }
+
+      function adminSlotLabel(slot) {
+        if (slot === "limited1") return "أدمن 1";
+        if (slot === "limited2") return "أدمن 2";
+        return "مدير";
+      }
+
+      function getAnyToken() {
+        return (
+          localStorage.getItem("ervenow_access_token") ||
+          localStorage.getItem("erwenow_access_token") ||
+          localStorage.getItem("token") ||
+          ""
+        );
+      }
+
+      async function ensureAdminAccess() {
+        var token = getAnyToken();
+        if (!token) {
+          window.location.href = "/admin-login";
+          return false;
+        }
+        if (window.PlatformAPI && typeof window.PlatformAPI.setToken === "function") {
+          window.PlatformAPI.setToken(token);
+        }
+        try {
+          var me = await fetch("/api/core/me", {
+            headers: { Authorization: "Bearer " + token },
+          });
+          var data = await me.json().catch(function () {
+            return {};
+          });
+          if (!me.ok || !data || !data.profile || data.profile.role !== "admin") {
+            window.location.href = "/admin-login";
+            return false;
+          }
+          return true;
+        } catch (e) {
+          window.location.href = "/admin-login";
+          return false;
+        }
+      }
+
+      async function loadAdminProfile() {
+        try {
+          var j = await window.PlatformAPI.api("/api/admin/me");
+          adminPermissions = Array.isArray(j.permissions) ? j.permissions : [];
+          adminLevel = j.level || "full";
+          var who = document.getElementById("adminWho");
+          if (who) {
+            who.textContent = "رقم الأدمن: " + (j.phone || "—") + " — " + levelLabel(adminLevel);
+          }
+        } catch (_e) {
+          adminPermissions = [];
+          adminLevel = "limited2";
+        }
+      }
+
+      async function adminAccountAction(slot, action) {
+        await window.PlatformAPI.api("/api/admin/admin-accounts/" + encodeURIComponent(slot) + "/action", {
+          method: "POST",
+          body: { action: action },
+        });
+      }
+
+      async function loadAdminAccounts() {
+        if (!hasPermission("admin_accounts")) return;
+        try {
+          var j = await window.PlatformAPI.api("/api/admin/admin-accounts");
+          cacheAdminAccounts = j.admins || [];
+          renderAdminAccounts();
+        } catch (e) {
+          var list = document.getElementById("adminAccountsList");
+          if (!list) return;
+          list.innerHTML = '<div class="item">تعذر تحميل إدارة الأدمنات</div>';
+        }
+      }
+
+      function renderAdminAccounts() {
+        var list = document.getElementById("adminAccountsList");
+        if (!list) return;
+        var q = getSearch("searchAdminAccounts");
+        var rows = cacheAdminAccounts.filter(function (a) {
+          return hasQueryMatch(q, [a.slot, a.phone, a.role, a.status]);
+        });
+        list.innerHTML = "";
+        rows.forEach(function (a) {
+          var item = document.createElement("div");
+          item.className = "item";
+          var phone = a.phone || "غير مضبوط";
+          var st = String(a.status || "missing");
+          item.innerHTML =
+            "<strong>" + adminSlotLabel(a.slot) + "</strong>" +
+            "<div>الرقم: " + phone + "</div>" +
+            "<div>الحالة: " + st + "</div>" +
+            "<div>الدور: " + (a.role || "—") + "</div>";
+          if (a.slot === "limited1" || a.slot === "limited2") {
+            var row = document.createElement("div");
+            row.className = "row";
+            row.appendChild(mkAction("خروج", "btn-ghost", safeClick(async function () {
+              try { await adminAccountAction(a.slot, "logout"); showSuccess("تم إخراج " + adminSlotLabel(a.slot)); loadAdminAccounts(); } catch (e) { showError(e.message || "فشل"); }
+            })));
+            row.appendChild(mkAction("حظر", "btn-ghost", safeClick(async function () {
+              try { await adminAccountAction(a.slot, "block"); showSuccess("تم حظر " + adminSlotLabel(a.slot)); loadAdminAccounts(); } catch (e) { showError(e.message || "فشل"); }
+            })));
+            row.appendChild(mkAction("تفعيل", "btn-primary", safeClick(async function () {
+              try { await adminAccountAction(a.slot, "activate"); showSuccess("تم تفعيل " + adminSlotLabel(a.slot)); loadAdminAccounts(); } catch (e) { showError(e.message || "فشل"); }
+            })));
+            item.appendChild(row);
+          }
+          list.appendChild(item);
+        });
+        if (!rows.length) list.innerHTML = '<div class="item">لا توجد بيانات أدمنات مطابقة</div>';
+      }
+
+      function applyPermissionVisibility() {
+        var panelToPermission = {
+          panelDrivers: "drivers",
+          panelOrders: "orders",
+          panelNotifications: "notifications",
+          panelComplaints: "complaints",
+          panelCustomers: "customers",
+          panelStores: "stores",
+          panelJobs: "jobs",
+          panelAdminAccounts: "admin_accounts",
+        };
+        var btns = document.querySelectorAll(".panel-btn");
+        for (var i = 0; i < btns.length; i++) {
+          var panelId = btns[i].getAttribute("data-panel");
+          var need = panelToPermission[panelId];
+          var show = !need || hasPermission(need);
+          btns[i].style.display = show ? "" : "none";
+          var panelEl = document.getElementById(panelId);
+          if (panelEl) panelEl.style.display = show ? "" : "none";
+        }
+        var adminBtn = document.getElementById("adminAccountsPanelBtn");
+        if (adminBtn) adminBtn.style.display = hasPermission("admin_accounts") ? "" : "none";
+      }
+
       function mkAction(label, cls, fn) {
         var b = document.createElement("button");
         b.className = "btn " + cls;
@@ -64,18 +463,109 @@
         return b;
       }
 
+      function fmtMoney(v) {
+        var n = Number(v || 0);
+        return n.toLocaleString("ar-SA", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " ريال";
+      }
+
+      function fmtWhen(v) {
+        try {
+          if (!v) return "—";
+          return new Date(v).toLocaleString("ar-SA");
+        } catch (_e) {
+          return String(v || "—");
+        }
+      }
+
       async function loadStats() {
         try {
-          var j = await window.PlatformAPI.api("/api/admin/stats");
-          document.getElementById("sTotal").innerText = "إجمالي الطلبات: " + (j.total_orders || 0);
-          document.getElementById("statsMeta").innerText =
-            "اليوم: " + (j.today_orders || 0) + " | النشطة: " + (j.active_orders || 0);
-          document.getElementById("sRevenue").innerText = (j.total_revenue || 0) + " ريال";
-          document.getElementById("revMeta").innerText =
-            "عمولة المنصة: " + (j.platform_commission || 0) + " | أرباح المناديب: " + (j.drivers_earnings || 0);
+          var range = document.getElementById("range").value || "today";
+          var j = await window.PlatformAPI.api("/api/admin/stats?range=" + encodeURIComponent(range));
+          document.getElementById("ordersToday").innerText = j.ordersToday || 0;
+          document.getElementById("activeOrders").innerText = j.activeOrders || 0;
+          document.getElementById("revenueToday").innerText = fmtMoney(j.revenueToday || 0);
+          document.getElementById("revenueTotal").innerText = fmtMoney(j.revenueTotal || 0);
         } catch (e) {
           showError(e.message || "فشل تحميل الإحصائيات");
         }
+      }
+
+      async function loadRecentOrders() {
+        try {
+          var j = await window.PlatformAPI.api("/api/admin/orders");
+          cacheOrders = j.orders || [];
+          setBadge("badgeOrders", cacheOrders.length);
+          renderRecentOrders();
+        } catch (e) {
+          showError(e.message || "فشل تحميل آخر الطلبات");
+        }
+      }
+
+      function renderRecentOrders() {
+        var root = document.getElementById("recentOrders");
+        if (!root) return;
+        var q = getSearch("searchOrders");
+        var rows = cacheOrders.filter(function (o) {
+          return hasQueryMatch(q, [o.order_number, o.id, o.delivery_status, o.status, o.customer_phone]);
+        });
+        if (!rows.length) {
+          root.innerHTML = '<div class="item">لا توجد طلبات مطابقة</div>';
+          return;
+        }
+        root.innerHTML = rows
+          .map(function (o) {
+            var st = o.delivery_status || o.status || "—";
+            var amount = Number(o.order_total || o.total_amount || 0);
+            return (
+              '<div class="item">' +
+              '<div class="line"><strong>' + (o.order_number || String(o.id || "").slice(0, 8)) + "</strong></div>" +
+              '<div class="line">الحالة: ' + st + "</div>" +
+              '<div class="line">المبلغ: ' + fmtMoney(amount) + "</div>" +
+              '<div class="muted">' + (o.created_at || "") + "</div>" +
+              "</div>"
+            );
+          })
+          .join("");
+      }
+
+      async function loadNotifications() {
+        try {
+          var j = await window.PlatformAPI.api("/api/admin/driver-notifications");
+          cacheNotifications = j.items || [];
+          setBadge("badgeNotifications", cacheNotifications.length);
+          renderNotifications();
+        } catch (e) {
+          showError(e.message || "فشل تحميل الإشعارات");
+        }
+      }
+
+      function renderNotifications() {
+        var root = document.getElementById("notifications");
+        if (!root) return;
+        var q = getSearch("searchNotifications");
+        var rows = cacheNotifications.filter(function (n) {
+          return hasQueryMatch(q, [n.phone, n.driver_name, n.status, n.note, n.order_id, n.order_number]);
+        });
+        if (!rows.length) {
+          root.innerHTML = '<div class="item">لا توجد إشعارات مطابقة</div>';
+          return;
+        }
+        root.innerHTML = rows
+          .map(function (n) {
+            var st = String(n.status || "").toLowerCase();
+            var stLabel = st === "sent" ? "تم الإرسال" : st === "failed" ? "فشل" : st || "—";
+            var retry = Number(n.retry_count || 0);
+            return (
+              '<div class="item">' +
+              '<div class="line"><strong>' + (n.phone || "—") + "</strong></div>" +
+              '<div class="line">الحالة: <span class="badge">' + stLabel + "</span></div>" +
+              '<div class="line">إعادات المحاولة: ' + retry + "</div>" +
+              '<div class="line">الطلب: ' + (n.order_id || n.order_number || "—") + "</div>" +
+              '<div class="muted">' + fmtWhen(n.created_at) + "</div>" +
+              "</div>"
+            );
+          })
+          .join("");
       }
 
       async function updateDriver(id, action) {
@@ -86,80 +576,347 @@
       async function loadDrivers() {
         try {
           var j = await window.PlatformAPI.api("/api/admin/drivers");
-          var list = document.getElementById("driversList");
-          list.innerHTML = "";
-          (j.drivers || []).forEach(function (d) {
-            var item = document.createElement("div");
-            item.className = "item";
-            item.innerHTML =
-              "<strong>" + (d.name || "بدون اسم") + "</strong>" +
-              "<div>الجوال: " + (d.phone || "—") + "</div>" +
-              "<div>المركبة: " + (d.car_type || "—") + " | اللوحة: " + (d.plate_number || "—") + "</div>" +
-              "<div>الحالة: " + (d.status || "pending") + "</div>";
-            var row = document.createElement("div");
-            row.className = "row";
+          cacheDrivers = j.drivers || [];
+          var pendingCount = 0;
+          cacheDrivers.forEach(function (d) {
+            if (String(d.status || "").toLowerCase() === "pending") pendingCount += 1;
+          });
+          setBadge("badgePendingDrivers", pendingCount);
+          renderDrivers();
+        } catch (e) {
+          showError(e.message || "فشل تحميل المناديب");
+        }
+      }
+
+      function renderDrivers() {
+        var list = document.getElementById("driversList");
+        if (!list) return;
+        var q = getSearch("searchDrivers");
+        var rows = cacheDrivers.filter(function (d) {
+          return hasQueryMatch(q, [d.name, d.phone, d.car_type, d.plate_number, d.status]);
+        });
+        list.innerHTML = "";
+        rows.forEach(function (d) {
+          var item = document.createElement("div");
+          item.className = "item";
+          item.innerHTML =
+            "<strong>" + (d.name || "بدون اسم") + "</strong>" +
+            "<div>الجوال: " + (d.phone || "—") + "</div>" +
+            "<div>المركبة: " + (d.car_type || "—") + " | اللوحة: " + (d.plate_number || "—") + "</div>" +
+            "<div>الحالة: " + (d.status || "pending") + "</div>";
+          var row = document.createElement("div");
+          row.className = "row";
+          var ds = String(d.status || "").toLowerCase();
+          var isApprovedActive = ds === "approved" && d.active === true;
+          var isBlocked = ds === "blocked" || d.active === false;
+          if (isApprovedActive) {
+            row.appendChild(mkAction("حظر", "btn-ghost", safeClick(async function () {
+              try { await updateDriver(d.id, "block-driver"); showSuccess("تم حظر المندوب"); loadDrivers(); } catch (e) { showError(e.message || "فشل"); }
+            })));
+          } else if (isBlocked) {
+            row.appendChild(mkAction("تفعيل", "btn-primary", safeClick(async function () {
+              try { await updateDriver(d.id, "activate-driver"); showSuccess("تم تفعيل المندوب"); loadDrivers(); } catch (e) { showError(e.message || "فشل"); }
+            })));
+          } else {
             row.appendChild(mkAction("موافقة", "btn-primary", safeClick(async function () {
               try { await updateDriver(d.id, "approve-driver"); showSuccess("تمت الموافقة"); loadDrivers(); } catch (e) { showError(e.message || "فشل"); }
             })));
             row.appendChild(mkAction("رفض", "btn-ghost", safeClick(async function () {
               try { await updateDriver(d.id, "reject-driver"); showSuccess("تم الرفض"); loadDrivers(); } catch (e) { showError(e.message || "فشل"); }
             })));
-            row.appendChild(mkAction("حظر", "btn-ghost", safeClick(async function () {
-              try { await updateDriver(d.id, "block-driver"); showSuccess("تم الحظر"); loadDrivers(); } catch (e) { showError(e.message || "فشل"); }
-            })));
-            item.appendChild(row);
-            list.appendChild(item);
-          });
-          if (!j.drivers || !j.drivers.length) list.innerHTML = '<div class="item">لا يوجد مناديب</div>';
+          }
+          item.appendChild(row);
+          list.appendChild(item);
+        });
+        if (!rows.length) list.innerHTML = '<div class="item">لا يوجد مناديب مطابقون</div>';
+      }
+
+      async function loadCustomers() {
+        try {
+          var j = await window.PlatformAPI.api("/api/admin/customers");
+          cacheCustomers = j.customers || [];
+          setBadge("badgeCustomers", cacheCustomers.length);
+          renderCustomers();
         } catch (e) {
-          showError(e.message || "فشل تحميل المناديب");
+          showError(e.message || "فشل تحميل العملاء");
         }
+      }
+
+      function renderCustomers() {
+        var list = document.getElementById("customersList");
+        if (!list) return;
+        var q = getSearch("searchCustomers");
+        var rows = cacheCustomers.filter(function (u) {
+          return hasQueryMatch(q, [u.name, u.phone, u.status, u.role]);
+        });
+        list.innerHTML = "";
+        rows.forEach(function (u) {
+          var item = document.createElement("div");
+          item.className = "item";
+          var status = String(u.status || "active").toLowerCase();
+          var blocked = status === "blocked";
+          item.innerHTML =
+            "<strong>" + (u.name || "العميل") + "</strong>" +
+            "<div>الجوال: " + (u.phone || "—") + "</div>" +
+            "<div>الحالة: " + (blocked ? "محظور" : "نشط") + "</div>";
+          var row = document.createElement("div");
+          row.className = "row";
+          row.appendChild(mkAction("حظر", "btn-ghost", safeClick(async function () {
+            try { await window.PlatformAPI.api("/api/admin/block-customer", { method: "POST", body: { id: u.id } }); showSuccess("تم حظر العميل"); loadCustomers(); } catch (e) { showError(e.message || "فشل"); }
+          })));
+          row.appendChild(mkAction("تفعيل", "btn-primary", safeClick(async function () {
+            try { await window.PlatformAPI.api("/api/admin/activate-customer", { method: "POST", body: { id: u.id } }); showSuccess("تم تفعيل العميل"); loadCustomers(); } catch (e) { showError(e.message || "فشل"); }
+          })));
+          item.appendChild(row);
+          list.appendChild(item);
+        });
+        if (!rows.length) list.innerHTML = '<div class="item">لا يوجد عملاء مطابقون</div>';
+      }
+
+      async function loadStores() {
+        try {
+          var j = await window.PlatformAPI.api("/api/admin/store-requests");
+          cacheStores = j.requests || [];
+          var pending = 0;
+          cacheStores.forEach(function (s) {
+            if (String(s.status || "").toLowerCase() === "pending") pending += 1;
+          });
+          setBadge("badgeStores", pending);
+          renderStores();
+        } catch (e) {
+          showError(e.message || "فشل تحميل بوابة المتاجر");
+        }
+      }
+
+      function renderStores() {
+        var list = document.getElementById("storesList");
+        if (!list) return;
+        var q = getSearch("searchStores");
+        var rows = cacheStores.filter(function (s) {
+          return hasQueryMatch(q, [s.name, s.phone, s.type, s.status]);
+        });
+        list.innerHTML = "";
+        rows.forEach(function (s) {
+          var item = document.createElement("div");
+          item.className = "item";
+          item.innerHTML =
+            "<strong>" + (s.name || "—") + "</strong>" +
+            "<div>الجوال: " + (s.phone || "—") + "</div>" +
+            "<div>النوع: " + (s.type || "—") + "</div>" +
+            "<div>الحالة: " + (s.status || "pending") + "</div>";
+          var row = document.createElement("div");
+          row.className = "row";
+          row.appendChild(mkAction("قبول", "btn-primary", safeClick(async function () {
+            try {
+              await window.PlatformAPI.api("/api/admin/store-requests/" + encodeURIComponent(s.id), {
+                method: "PATCH",
+                body: { action: "approve" },
+              });
+              showSuccess("تم قبول المتجر");
+              loadStores();
+            } catch (e) { showError(e.message || "فشل"); }
+          })));
+          row.appendChild(mkAction("رفض", "btn-ghost", safeClick(async function () {
+            try {
+              await window.PlatformAPI.api("/api/admin/store-requests/" + encodeURIComponent(s.id), {
+                method: "PATCH",
+                body: { action: "reject" },
+              });
+              showSuccess("تم رفض المتجر");
+              loadStores();
+            } catch (e) { showError(e.message || "فشل"); }
+          })));
+          item.appendChild(row);
+          list.appendChild(item);
+        });
+        if (!rows.length) list.innerHTML = '<div class="item">لا توجد طلبات متاجر مطابقة</div>';
+      }
+
+      async function loadJobs() {
+        try {
+          var j = await window.PlatformAPI.api("/api/admin/job-applications");
+          cacheJobs = j.applications || [];
+          var pending = 0;
+          cacheJobs.forEach(function (r) {
+            if (String(r.status || "").toLowerCase() === "pending") pending += 1;
+          });
+          setBadge("badgeJobs", pending);
+          renderJobs();
+        } catch (e) {
+          showError(e.message || "فشل تحميل بوابة التوظيف");
+        }
+      }
+
+      function renderJobs() {
+        var list = document.getElementById("jobsList");
+        if (!list) return;
+        var q = getSearch("searchJobs");
+        var rows = cacheJobs.filter(function (r) {
+          return hasQueryMatch(q, [r.name, r.phone, r.city, r.role_wanted, r.status, r.note]);
+        });
+        list.innerHTML = "";
+        rows.forEach(function (r) {
+          var item = document.createElement("div");
+          item.className = "item";
+          item.innerHTML =
+            "<strong>" + (r.name || "—") + "</strong>" +
+            "<div>الجوال: " + (r.phone || "—") + "</div>" +
+            "<div>المدينة: " + (r.city || "—") + "</div>" +
+            "<div>الوظيفة: " + (r.role_wanted || "—") + "</div>" +
+            "<div>الحالة: " + (r.status || "pending") + "</div>" +
+            "<div>نبذة: " + (r.note || "—") + "</div>";
+          var row = document.createElement("div");
+          row.className = "row";
+          row.appendChild(mkAction("قبول", "btn-primary", safeClick(async function () {
+            try {
+              await window.PlatformAPI.api("/api/admin/job-applications/" + encodeURIComponent(r.id) + "/decision", {
+                method: "POST",
+                body: { action: "approve" },
+              });
+              showSuccess("تم قبول المتقدم");
+              loadJobs();
+            } catch (e) { showError(e.message || "فشل"); }
+          })));
+          row.appendChild(mkAction("رفض", "btn-ghost", safeClick(async function () {
+            try {
+              await window.PlatformAPI.api("/api/admin/job-applications/" + encodeURIComponent(r.id) + "/decision", {
+                method: "POST",
+                body: { action: "reject" },
+              });
+              showSuccess("تم رفض المتقدم");
+              loadJobs();
+            } catch (e) { showError(e.message || "فشل"); }
+          })));
+          item.appendChild(row);
+          list.appendChild(item);
+        });
+        if (!rows.length) list.innerHTML = '<div class="item">لا توجد طلبات توظيف مطابقة</div>';
       }
 
       async function loadComplaints() {
         try {
           var j = await window.PlatformAPI.api("/api/admin/complaints");
-          var list = document.getElementById("complaintsList");
-          list.innerHTML = "";
-          (j.complaints || []).forEach(function (c) {
-            var item = document.createElement("div");
-            item.className = "item";
-            item.innerHTML =
-              "<div><strong>الطلب:</strong> " + (c.order_id || "—") + "</div>" +
-              "<div><strong>النص:</strong> " + (c.message || "—") + "</div>" +
-              "<div><strong>الحالة:</strong> " + (c.status || "open") + "</div>";
-            if (c.status !== "resolved") {
-              var row = document.createElement("div");
-              row.className = "row";
-              row.appendChild(mkAction("تم الحل", "btn-primary", safeClick(async function () {
-                try {
-                  await window.PlatformAPI.api("/api/admin/resolve-complaint", {
-                    method: "POST",
-                    body: { id: c.id },
-                  });
-                  showSuccess("تم إغلاق الشكوى");
-                  loadComplaints();
-                } catch (e) {
-                  showError(e.message || "فشل تحديث الشكوى");
-                }
-              })));
-              item.appendChild(row);
-            }
-            list.appendChild(item);
+          cacheComplaints = j.complaints || [];
+          var openCount = 0;
+          cacheComplaints.forEach(function (c) {
+            if (String(c.status || "").toLowerCase() !== "resolved") openCount += 1;
           });
-          if (!j.complaints || !j.complaints.length) list.innerHTML = '<div class="item">لا توجد شكاوى</div>';
+          setBadge("badgeComplaints", openCount);
+          renderComplaints();
         } catch (e) {
           showError(e.message || "فشل تحميل الشكاوى");
         }
       }
 
+      function renderComplaints() {
+        var list = document.getElementById("complaintsList");
+        if (!list) return;
+        var q = getSearch("searchComplaints");
+        var rows = cacheComplaints.filter(function (c) {
+          return hasQueryMatch(q, [c.name, c.phone, c.order_id, c.message, c.status]);
+        });
+        list.innerHTML = "";
+        rows.forEach(function (c) {
+          var item = document.createElement("div");
+          item.className = "item";
+          item.innerHTML =
+            "<div><strong>الطلب:</strong> " + (c.order_id || "—") + "</div>" +
+            "<div><strong>النص:</strong> " + (c.message || "—") + "</div>" +
+            "<div><strong>الحالة:</strong> " + (c.status || "open") + "</div>";
+          if (c.status !== "resolved") {
+            var row = document.createElement("div");
+            row.className = "row";
+            row.appendChild(mkAction("تم الحل", "btn-primary", safeClick(async function () {
+              try {
+                await window.PlatformAPI.api("/api/admin/resolve-complaint", {
+                  method: "POST",
+                  body: { id: c.id },
+                });
+                showSuccess("تم إغلاق الشكوى");
+                loadComplaints();
+              } catch (e) {
+                showError(e.message || "فشل تحديث الشكوى");
+              }
+            })));
+            item.appendChild(row);
+          }
+          list.appendChild(item);
+        });
+        if (!rows.length) list.innerHTML = '<div class="item">لا توجد شكاوى مطابقة</div>';
+      }
+
       document.getElementById("reloadDriversBtn").onclick = loadDrivers;
       document.getElementById("reloadComplaintsBtn").onclick = loadComplaints;
+      document.getElementById("reloadOrdersBtn").onclick = loadRecentOrders;
+      document.getElementById("reloadNotificationsBtn").onclick = loadNotifications;
+      document.getElementById("reloadCustomersBtn").onclick = loadCustomers;
+      document.getElementById("reloadStoresBtn").onclick = loadStores;
+      document.getElementById("reloadJobsBtn").onclick = loadJobs;
+      var reloadAdminAccountsBtn = document.getElementById("reloadAdminAccountsBtn");
+      if (reloadAdminAccountsBtn) reloadAdminAccountsBtn.onclick = loadAdminAccounts;
+      var searchBind = [
+        ["searchOrders", renderRecentOrders],
+        ["searchNotifications", renderNotifications],
+        ["searchDrivers", renderDrivers],
+        ["searchComplaints", renderComplaints],
+        ["searchCustomers", renderCustomers],
+        ["searchStores", renderStores],
+        ["searchJobs", renderJobs],
+        ["searchAdminAccounts", renderAdminAccounts],
+      ];
+      searchBind.forEach(function (pair) {
+        var el = document.getElementById(pair[0]);
+        if (!el) return;
+        el.addEventListener("input", pair[1]);
+      });
+      var logoutAdminBtn = document.getElementById("logoutAdminBtn");
+      if (logoutAdminBtn) {
+        logoutAdminBtn.onclick = function () {
+          forceAdminLogout("");
+        };
+      }
+      var panelButtons = document.querySelectorAll(".panel-btn");
+      for (var i = 0; i < panelButtons.length; i++) {
+        panelButtons[i].addEventListener("click", function () {
+          var panelId = this.getAttribute("data-panel");
+          if (!panelId) return;
+          var isActive = this.classList.contains("active");
+          showPanel(isActive ? "" : panelId);
+        });
+      }
+      var closeBtn = document.getElementById("closePanelsBtn");
+      if (closeBtn) {
+        closeBtn.addEventListener("click", function () {
+          showPanel("");
+        });
+      }
 
-      loadStats();
-      loadDrivers();
-      loadComplaints();
-      setInterval(loadStats, 15000);
+      (async function () {
+        var ok = await ensureAdminAccess();
+        if (!ok) return;
+        await loadAdminProfile();
+        setupFullAdminIdleGuard();
+        applyPermissionVisibility();
+        showPanel("");
+        if (hasPermission("dashboard")) loadStats();
+        if (hasPermission("orders")) loadRecentOrders();
+        if (hasPermission("notifications")) loadNotifications();
+        if (hasPermission("drivers")) loadDrivers();
+        if (hasPermission("complaints")) loadComplaints();
+        if (hasPermission("customers")) loadCustomers();
+        if (hasPermission("stores")) loadStores();
+        if (hasPermission("jobs")) loadJobs();
+        if (hasPermission("admin_accounts")) loadAdminAccounts();
+        setInterval(function () { if (hasPermission("dashboard")) loadStats(); }, 15000);
+        setInterval(function () { if (hasPermission("orders")) loadRecentOrders(); }, 20000);
+        setInterval(function () { if (hasPermission("notifications")) loadNotifications(); }, 20000);
+        setInterval(function () { if (hasPermission("drivers")) loadDrivers(); }, 20000);
+        setInterval(function () { if (hasPermission("complaints")) loadComplaints(); }, 25000);
+        setInterval(function () { if (hasPermission("customers")) loadCustomers(); }, 25000);
+        setInterval(function () { if (hasPermission("stores")) loadStores(); }, 25000);
+        setInterval(function () { if (hasPermission("jobs")) loadJobs(); }, 25000);
+        setInterval(function () { if (hasPermission("admin_accounts")) loadAdminAccounts(); }, 30000);
+      })();
     </script>
   </body>
 </html>

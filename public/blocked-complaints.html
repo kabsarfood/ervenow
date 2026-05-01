@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ERVENOW | مركز الشكاوى</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/assets/styles.css" />
+    <style>
+      .warn {
+        background: #fff7ed;
+        border: 1px solid #fdba74;
+        color: #7c2d12;
+        border-radius: 12px;
+        padding: 12px;
+        margin-bottom: 12px;
+      }
+      .complaint-item {
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        border-radius: 10px;
+        padding: 10px;
+        margin-bottom: 8px;
+        background: #fff;
+      }
+      .complaint-status {
+        font-size: 0.85rem;
+        font-weight: 700;
+        border-radius: 999px;
+        padding: 2px 8px;
+        display: inline-block;
+      }
+      .complaint-status.open { background: #fee2e2; color: #b91c1c; }
+      .complaint-status.resolved { background: #dcfce7; color: #15803d; }
+    </style>
+  </head>
+  <body>
+    <div class="layout">
+      <div class="top-nav">
+        <h1 style="margin: 0">مركز الشكاوى</h1>
+        <div class="btn-row">
+          <a class="btn btn-ghost" href="/login">تسجيل الدخول</a>
+        </div>
+      </div>
+
+      <div class="warn">
+        حسابك محظور حالياً من المنصة. يمكنك استخدام هذه الصفحة لرفع شكوى وسيتم مراجعتها من الإدارة.
+      </div>
+
+      <div class="card">
+        <label for="orderId">رقم/معرّف الطلب (اختياري)</label>
+        <input id="orderId" type="text" placeholder="مثال: ES-01-001 أو UUID" />
+        <label for="message">نص الشكوى</label>
+        <textarea id="message" rows="4" placeholder="اكتب تفاصيل المشكلة"></textarea>
+        <div class="btn-row">
+          <button type="button" class="btn btn-primary" id="sendBtn">إرسال الشكوى</button>
+          <button type="button" class="btn btn-ghost" id="reloadBtn">تحديث</button>
+          <button type="button" class="btn btn-ghost" id="logoutBtn">خروج</button>
+        </div>
+        <div id="msg" class="sub" style="margin-top: 8px"></div>
+      </div>
+
+      <div class="card">
+        <strong>شكاواي</strong>
+        <div id="complaintsBox" style="margin-top: 10px"></div>
+      </div>
+    </div>
+
+    <script src="/assets/cart.js"></script>
+    <script src="/assets/api.js"></script>
+    <script>
+      function statusAr(s) {
+        var v = String(s || "open").toLowerCase();
+        if (v === "resolved") return "تمت المعالجة";
+        return "مفتوحة";
+      }
+
+      async function ensureBlockedAccess() {
+        var token = window.PlatformAPI.getToken();
+        if (!token) {
+          location.href = "/login";
+          return false;
+        }
+        try {
+          var me = await window.PlatformAPI.api("/api/core/me");
+          var role = String(me && me.profile && me.profile.role || "");
+          if (role !== "blocked") {
+            location.href = role === "admin" ? "/admin-dashboard" : role === "driver" ? "/driver" : "/dashboard";
+            return false;
+          }
+          return true;
+        } catch (_e) {
+          location.href = "/login";
+          return false;
+        }
+      }
+
+      async function loadMine() {
+        var box = document.getElementById("complaintsBox");
+        box.innerHTML = "جارٍ التحميل...";
+        try {
+          var j = await window.PlatformAPI.api("/api/delivery/complaints/mine");
+          var rows = j.complaints || [];
+          if (!rows.length) {
+            box.innerHTML = '<div class="sub">لا توجد شكاوى حتى الآن.</div>';
+            return;
+          }
+          box.innerHTML = rows
+            .map(function (c) {
+              var st = String(c.status || "open").toLowerCase();
+              return (
+                '<div class="complaint-item">' +
+                '<div style="display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap">' +
+                '<strong>' + (c.order_id || "بدون رقم طلب") + "</strong>" +
+                '<span class="complaint-status ' + st + '">' + statusAr(st) + "</span>" +
+                "</div>" +
+                '<div style="margin-top:6px">' + String(c.message || "") + "</div>" +
+                '<div class="sub" style="margin-top:6px">' + String(c.created_at || "") + "</div>" +
+                "</div>"
+              );
+            })
+            .join("");
+        } catch (e) {
+          box.innerHTML = '<div class="sub">تعذر تحميل الشكاوى</div>';
+        }
+      }
+
+      async function sendComplaint() {
+        var msgEl = document.getElementById("msg");
+        var message = String(document.getElementById("message").value || "").trim();
+        var orderId = String(document.getElementById("orderId").value || "").trim();
+        if (!message) {
+          msgEl.textContent = "اكتب نص الشكوى أولاً";
+          return;
+        }
+        msgEl.textContent = "جارٍ الإرسال...";
+        try {
+          await window.PlatformAPI.api("/api/delivery/complaints", {
+            method: "POST",
+            body: { message: message, order_id: orderId || null },
+          });
+          document.getElementById("message").value = "";
+          msgEl.textContent = "تم إرسال الشكوى بنجاح.";
+          await loadMine();
+        } catch (e) {
+          msgEl.textContent = e.message || "تعذر إرسال الشكوى";
+        }
+      }
+
+      document.getElementById("sendBtn").onclick = function () {
+        sendComplaint();
+      };
+      document.getElementById("reloadBtn").onclick = function () {
+        loadMine();
+      };
+      document.getElementById("logoutBtn").onclick = function () {
+        window.PlatformAPI.setToken("");
+        location.href = "/login";
+      };
+
+      (async function () {
+        var ok = await ensureBlockedAccess();
+        if (!ok) return;
+        await loadMine();
+      })();
+    </script>
+  </body>
+</html>

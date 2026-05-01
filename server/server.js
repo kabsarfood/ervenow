@@ -20,6 +20,7 @@ const adminRoutes = require("../apps/admin/routes");
 const invoiceRoutes = require("../apps/invoice/routes");
 const { pushToErvenow } = require("../shared/utils/ervenowPush");
 const { startRetryNotificationsWorker } = require("../apps/driver/retryNotifications");
+const { createServiceClient } = require("../shared/config/supabase");
 
 const PORT = process.env.PORT || 4000;
 const publicPath = path.join(__dirname, "..", "public");
@@ -55,6 +56,26 @@ function blockSensitiveAccess(req, res, next) {
 
 const app = express();
 app.disable("x-powered-by");
+
+function isMissingUsersStatusColumnError(err) {
+  if (!err) return false;
+  const msg = String(err.message || err.details || "");
+  return /users\.status|column .*status.* does not exist|Could not find the .*status/i.test(msg);
+}
+
+async function assertRequiredSchema() {
+  const sb = createServiceClient();
+  if (!sb) return;
+  const probe = await sb.from("users").select("id, status").limit(1);
+  if (probe.error && isMissingUsersStatusColumnError(probe.error)) {
+    throw new Error(
+      "Missing required column public.users.status. Run shared/migration_users_status.sql before starting server."
+    );
+  }
+  if (probe.error) {
+    console.warn("[schema-check] users status probe warning:", probe.error.message || probe.error);
+  }
+}
 
 app.use(blockSensitiveAccess);
 
@@ -128,6 +149,10 @@ app.get("/register-store", (_req, res) => {
   res.sendFile(path.join(publicPath, "register-store.html"));
 });
 
+app.get("/careers", (_req, res) => {
+  res.sendFile(path.join(publicPath, "careers.html"));
+});
+
 app.get("/driver", (_req, res) => {
   res.sendFile(path.join(publicPath, "driver.html"));
 });
@@ -160,6 +185,10 @@ app.get("/admin-dashboard", (_req, res) => {
   res.sendFile(path.join(publicPath, "admin-dashboard.html"));
 });
 
+app.get("/admin-login", (_req, res) => {
+  res.sendFile(path.join(publicPath, "admin-login.html"));
+});
+
 app.get("/dashboard", (_req, res) => {
   res.sendFile(path.join(publicPath, "dashboard.html"));
 });
@@ -188,6 +217,10 @@ app.get("/services-provider", (_req, res) => {
   res.sendFile(path.join(publicPath, "services-provider.html"));
 });
 
+app.get("/blocked-complaints", (_req, res) => {
+  res.sendFile(path.join(publicPath, "blocked-complaints.html"));
+});
+
 app.use((_req, res) => {
   res.status(404).end();
 });
@@ -200,10 +233,17 @@ app.use((err, _req, res, _next) => {
   res.status(500).json({ ok: false, error: err.message || "error" });
 });
 
-app.listen(PORT, "0.0.0.0", () => {
-  console.log("🚀 ERVENOW RUNNING ON", PORT);
-});
-
-startRetryNotificationsWorker();
+(async function boot() {
+  try {
+    await assertRequiredSchema();
+    app.listen(PORT, "0.0.0.0", () => {
+      console.log("🚀 ERVENOW RUNNING ON", PORT);
+    });
+    startRetryNotificationsWorker();
+  } catch (e) {
+    console.error("[boot] schema check failed:", e && (e.message || e));
+    process.exit(1);
+  }
+})();
 
 module.exports.pushToErvenow = pushToErvenow;

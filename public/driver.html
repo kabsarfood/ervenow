@@ -7,6 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/assets/styles.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   </head>
   <body>
     <div class="layout">
@@ -39,11 +40,13 @@
       <div class="card">
         <div class="badge">الموقع (GPS — طلب مُستلَم أو جاري التوصيل)</div>
         <p class="sub" style="margin-top: 8px" id="locStatus">—</p>
+        <div id="driverLiveMap" style="min-height: 280px; border-radius: 12px; border: 1px solid rgba(0,0,0,.12); margin-top: 10px"></div>
       </div>
 
       <div class="msg err" id="err" style="display: none"></div>
     </div>
 
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="/assets/api.js"></script>
     <script>
       var token = window.PlatformAPI.getToken();
@@ -70,6 +73,169 @@
       var lastSentAt = 0;
       var sendingLocation = false;
       var sendingGpsError = false;
+      var presenceTimer = null;
+      var map = null;
+      var driverMarker = null;
+      var pickupMarker = null;
+      var dropMarker = null;
+      var routeLine = null;
+      var lastRouteKey = "";
+      var layerSatellite = null;
+      var layerTerrain = null;
+
+      function initDriverMap() {
+        if (map || typeof L === "undefined") return;
+        map = L.map("driverLiveMap").setView([24.7136, 46.6753], 12);
+        layerSatellite = L.tileLayer(
+          "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+          {
+            attribution: "Tiles &copy; Esri",
+            maxZoom: 19,
+          }
+        );
+        layerTerrain = L.tileLayer("https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png", {
+          attribution: "&copy; OpenStreetMap contributors, SRTM | OpenTopoMap",
+          maxZoom: 17,
+        });
+        layerSatellite.addTo(map);
+        L.control.layers(
+          {
+            "أقمار صناعية": layerSatellite,
+            "تضاريس": layerTerrain,
+          },
+          null,
+          { position: "topright" }
+        ).addTo(map);
+      }
+
+      function updateDriverMarker(lat, lng) {
+        initDriverMap();
+        if (!map) return;
+        var la = Number(lat);
+        var ln = Number(lng);
+        if (!Number.isFinite(la) || !Number.isFinite(ln)) return;
+        if (!driverMarker) {
+          driverMarker = L.marker([la, ln], { title: "موقع المندوب" }).addTo(map).bindPopup("📍 موقعك الحالي");
+        } else {
+          driverMarker.setLatLng([la, ln]);
+        }
+        map.setView([la, ln], Math.max(14, map.getZoom()), { animate: true });
+      }
+
+      function clearOrderEndpoints() {
+        if (!map) return;
+        if (pickupMarker) {
+          map.removeLayer(pickupMarker);
+          pickupMarker = null;
+        }
+        if (dropMarker) {
+          map.removeLayer(dropMarker);
+          dropMarker = null;
+        }
+        if (routeLine) {
+          map.removeLayer(routeLine);
+          routeLine = null;
+        }
+        lastRouteKey = "";
+      }
+
+      function endpointIcon(label, bg) {
+        return L.divIcon({
+          className: "driver-endpoint-icon",
+          html:
+            '<div style="padding:4px 8px;border-radius:10px;background:' +
+            bg +
+            ';color:#fff;font-weight:800;font-size:12px;white-space:nowrap;">' +
+            label +
+            "</div>",
+          iconSize: [72, 24],
+          iconAnchor: [36, 12],
+        });
+      }
+
+      function updateOrderEndpoints(order) {
+        initDriverMap();
+        if (!map || !order) return;
+        var pLat = Number(order.pickup_lat);
+        var pLng = Number(order.pickup_lng);
+        var dLat = Number(order.drop_lat);
+        var dLng = Number(order.drop_lng);
+
+        if (Number.isFinite(pLat) && Number.isFinite(pLng)) {
+          if (!pickupMarker) {
+            pickupMarker = L.marker([pLat, pLng], {
+              title: "بداية",
+              icon: endpointIcon("بداية", "#0f766e"),
+            })
+              .addTo(map)
+              .bindPopup("🟢 بداية التوصيل (الاستلام)");
+          } else {
+            pickupMarker.setLatLng([pLat, pLng]);
+          }
+        }
+
+        if (Number.isFinite(dLat) && Number.isFinite(dLng)) {
+          if (!dropMarker) {
+            dropMarker = L.marker([dLat, dLng], {
+              title: "نهاية",
+              icon: endpointIcon("نهاية", "#b91c1c"),
+            })
+              .addTo(map)
+              .bindPopup("🔴 نهاية التوصيل (التسليم)");
+          } else {
+            dropMarker.setLatLng([dLat, dLng]);
+          }
+        }
+      }
+
+      async function getRoute(a, b) {
+        var url =
+          "https://router.project-osrm.org/route/v1/driving/" +
+          a.lng +
+          "," +
+          a.lat +
+          ";" +
+          b.lng +
+          "," +
+          b.lat +
+          "?overview=full&geometries=geojson";
+        var r = await fetch(url);
+        var j = await r.json();
+        if (!j.routes || !j.routes[0]) throw new Error("تعذر حساب المسار");
+        return j.routes[0];
+      }
+
+      async function updateRouteLine(order) {
+        initDriverMap();
+        if (!map || !order) return;
+        var pLat = Number(order.pickup_lat);
+        var pLng = Number(order.pickup_lng);
+        var dLat = Number(order.drop_lat);
+        var dLng = Number(order.drop_lng);
+        if (!Number.isFinite(pLat) || !Number.isFinite(pLng) || !Number.isFinite(dLat) || !Number.isFinite(dLng)) {
+          if (routeLine) {
+            map.removeLayer(routeLine);
+            routeLine = null;
+          }
+          lastRouteKey = "";
+          return;
+        }
+
+        var routeKey = [pLat.toFixed(6), pLng.toFixed(6), dLat.toFixed(6), dLng.toFixed(6)].join("|");
+        if (routeLine && lastRouteKey === routeKey) return;
+        try {
+          var route = await getRoute({ lat: pLat, lng: pLng }, { lat: dLat, lng: dLng });
+          if (routeLine) map.removeLayer(routeLine);
+          routeLine = L.geoJSON(route.geometry, {
+            style: { color: "#2563eb", weight: 4, opacity: 0.85 },
+          }).addTo(map);
+          lastRouteKey = routeKey;
+          if (pickupMarker && dropMarker) {
+            var group = L.featureGroup([pickupMarker, dropMarker, routeLine]);
+            map.fitBounds(group.getBounds(), { padding: [24, 24] });
+          }
+        } catch (e) {}
+      }
 
       function shouldSend(lat, lng) {
         var now = Date.now();
@@ -83,21 +249,26 @@
         return moved || timePassed;
       }
 
-      async function sendLocation(lat, lng) {
+      async function sendLocation(lat, lng, explicitOrderId) {
         if (sendingLocation) return;
-        var orderId = activeOrderId;
-        if (!orderId) return;
+        var orderId = explicitOrderId != null ? explicitOrderId : activeOrderId;
         sendingLocation = true;
         try {
+          var body = { lat: lat, lng: lng };
+          if (orderId) body.order_id = orderId;
           await window.PlatformAPI.api("/api/driver/update-location", {
             method: "POST",
-            body: { lat: lat, lng: lng, order_id: orderId },
+            body: body,
           });
+          updateDriverMarker(lat, lng);
           lastLat = lat;
           lastLng = lng;
           lastSentAt = Date.now();
-          document.getElementById("locStatus").textContent =
-            "آخر إرسال: " + new Date().toLocaleTimeString("ar-SA");
+          if (activeOrderId) {
+            document.getElementById("locStatus").textContent = "آخر إرسال: " + new Date().toLocaleTimeString("ar-SA");
+          } else {
+            document.getElementById("locStatus").textContent = "تم تحديث موقعك للمنصة: " + new Date().toLocaleTimeString("ar-SA");
+          }
         } catch (e) {
           document.getElementById("locStatus").textContent = "خطأ إرسال الموقع: " + (e.message || e);
         } finally {
@@ -370,6 +541,8 @@
             );
           });
         if (trackOrder) {
+          updateOrderEndpoints(trackOrder);
+          void updateRouteLine(trackOrder);
           if (String(activeOrderId) !== String(trackOrder.id)) {
             stopLocationLoop();
             activeOrderId = trackOrder.id;
@@ -378,6 +551,7 @@
             startLocationLoop();
           }
         } else {
+          clearOrderEndpoints();
           activeOrderId = null;
           stopLocationLoop();
         }
@@ -395,7 +569,7 @@
         lastLat = null;
         lastLng = null;
         lastSentAt = 0;
-        document.getElementById("locStatus").textContent = "لا يوجد طلب مُستلَم أو جاري (استلم طلباً أو ابدأ التوصيل)";
+        document.getElementById("locStatus").textContent = "لا يوجد طلب مُستلَم. موقعك ما زال يُحدَّث للمنصة.";
       }
 
       function startLocationLoop() {
@@ -431,6 +605,28 @@
         document.getElementById("locStatus").textContent = "جارٍ تتبّع الموقع…";
       }
 
+      function startPresenceLocationLoop() {
+        if (presenceTimer != null) return;
+        presenceTimer = setInterval(function () {
+          navigator.geolocation.getCurrentPosition(
+            async function (pos) {
+              var lat = pos.coords.latitude;
+              var lng = pos.coords.longitude;
+              await sendLocation(lat, lng, null);
+            },
+            function () {},
+            { enableHighAccuracy: false, maximumAge: 10000, timeout: 12000 }
+          );
+        }, 15000);
+        navigator.geolocation.getCurrentPosition(
+          async function (pos) {
+            await sendLocation(pos.coords.latitude, pos.coords.longitude, null);
+          },
+          function () {},
+          { enableHighAccuracy: false, maximumAge: 10000, timeout: 12000 }
+        );
+      }
+
       document.getElementById("btnRefresh").onclick = function () {
         loadOrders();
       };
@@ -444,9 +640,11 @@
       };
 
       (async function () {
+        initDriverMap();
         await loadMe();
         await loadOrders();
         pollTimer = setInterval(loadOrders, 8000);
+        startPresenceLocationLoop();
       })();
     </script>
   </body>

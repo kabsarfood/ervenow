@@ -136,6 +136,14 @@
         border: 1px solid rgba(0, 0, 0, 0.12);
         overflow: hidden;
       }
+      #pickupDropMap.map-selecting {
+        box-shadow: 0 0 0 3px rgba(185, 135, 47, 0.35);
+      }
+      .map-action-btn.is-active {
+        background: linear-gradient(180deg, #3d2213 0%, #2b170d 100%);
+        color: #f8f4ee;
+        border-color: rgba(185, 135, 47, 0.45);
+      }
       .delivery-dropdown[open] #pickupDropMap {
         min-height: 360px;
       }
@@ -180,7 +188,7 @@
       <div class="card">
         <strong style="display: block; margin-bottom: 12px">خدمات المنصة</strong>
         <div class="grid-apps">
-          <details class="delivery-dropdown" open id="deliveryDetails">
+          <details class="delivery-dropdown" id="deliveryDetails">
             <summary>
               <div class="app-tile" style="cursor: pointer" id="tileDelivery" data-service="delivery">
                 <strong>توصيل</strong>
@@ -190,11 +198,32 @@
             <div class="delivery-panel">
               <h2 style="margin: 6px 0 10px; font-size: 1.15rem">🚚 طلب توصيل</h2>
               <div class="delivery-form">
+                <select id="vehicleType" onchange="recalculatePricePreview()">
+                  <option value="bike">دراجة نارية (0 - 7 كم = 15 ريال)</option>
+                  <option value="car" selected>سيارة (0 - 7 كم = 22 ريال)</option>
+                </select>
                 <input id="from" placeholder="📍 موقع الاستلام" oninput="handleLocationInputChange()" />
                 <input id="to" placeholder="📍 موقع التسليم" oninput="handleLocationInputChange()" />
                 <div class="btn-row">
-                  <button class="btn btn-ghost" type="button" onclick="selectMode('from')">📍 تحديد موقع الاستلام</button>
-                  <button class="btn btn-ghost" type="button" onclick="selectMode('to')">📍 تحديد موقع التسليم</button>
+                  <button
+                    class="btn btn-ghost map-action-btn"
+                    id="btnSelectFrom"
+                    type="button"
+                    onclick="selectMode('from')"
+                  >
+                    📍 تحديد موقع الاستلام من الخريطة
+                  </button>
+                  <button
+                    class="btn btn-ghost map-action-btn"
+                    id="btnSelectTo"
+                    type="button"
+                    onclick="selectMode('to')"
+                  >
+                    📍 تحديد موقع المستلم من الخريطة
+                  </button>
+                  <button class="btn btn-ghost map-action-btn" id="btnUseMyLocation" type="button" onclick="setPickupFromCurrentLocation()">
+                    🧭 استخدام موقعي الحالي للاستلام
+                  </button>
                 </div>
                 <div id="pickupDropMap"></div>
                 <div class="btn-row">
@@ -206,6 +235,8 @@
                 <div class="delivery-stats">
                   <p id="distance" class="sub">المسافة: —</p>
                   <p id="price" class="sub">السعر: —</p>
+                  <p id="platformFeeLine" class="sub">عمولة المنصة (15%): —</p>
+                  <p id="driverNetLine" class="sub">صافي المندوب: —</p>
                 </div>
                 <p id="result" class="sub" style="margin: 0"></p>
               </div>
@@ -261,6 +292,7 @@
         accepted: "تم الاستلام",
         delivering: "جاري التوصيل",
         delivered: "تم التسليم",
+        cancelled_by_customer: "أُلغي من العميل",
       };
 
       function getReadableOrderNumber(order) {
@@ -279,31 +311,75 @@
       var map = null;
       var markerFrom = null;
       var markerTo = null;
+      var markerUser = null;
       var routeLine = null;
-      var baseStreet = null;
       var baseTerrain = null;
+      var baseSatellite = null;
+      var clientLocation = null;
+      var selectButtons = { from: "btnSelectFrom", to: "btnSelectTo" };
+
+      function getSelectedVehicleType() {
+        var el = document.getElementById("vehicleType");
+        var v = (el && el.value) || "car";
+        return v === "bike" ? "bike" : "car";
+      }
+
+      function calcDeliveryPricing(kmValue) {
+        var kmNum = Number(kmValue) || 0;
+        var vehicleType = getSelectedVehicleType();
+        var fee = kmNum <= 7 ? (vehicleType === "bike" ? 15 : 22) : kmNum * 2.3;
+        fee = Math.round(fee * 100) / 100;
+        var platformFee = Math.round(fee * 0.15 * 100) / 100;
+        var driverNet = Math.round((fee - platformFee) * 100) / 100;
+        return { fee: fee, platformFee: platformFee, driverNet: driverNet };
+      }
+
+      function renderPricingStats(kmValue) {
+        var p = calcDeliveryPricing(kmValue);
+        document.getElementById("price").innerText = "السعر: " + p.fee.toFixed(2) + " ريال";
+        document.getElementById("platformFeeLine").innerText = "عمولة المنصة (15%): " + p.platformFee.toFixed(2) + " ريال";
+        document.getElementById("driverNetLine").innerText = "صافي المندوب: " + p.driverNet.toFixed(2) + " ريال";
+      }
+
+      function recalculatePricePreview() {
+        if (km > 0) renderPricingStats(km);
+      }
 
       function initMap() {
         if (map || typeof L === "undefined") return;
         map = L.map("pickupDropMap").setView([24.7136, 46.6753], 11);
-        baseStreet = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-          attribution: "&copy; OpenStreetMap",
-          maxZoom: 19,
-        });
         baseTerrain = L.tileLayer("https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png", {
           attribution: "&copy; OpenStreetMap contributors, SRTM | OpenTopoMap",
           maxZoom: 17,
         });
-        baseTerrain.addTo(map);
+        baseSatellite = L.tileLayer(
+          "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+          {
+            attribution: "Tiles &copy; Esri",
+            maxZoom: 19,
+          }
+        );
+        baseSatellite.addTo(map);
         L.control.layers(
           {
+            "أقمار صناعية": baseSatellite,
             "تضاريس": baseTerrain,
-            "شارع": baseStreet,
           },
           null,
           { position: "topright" }
         ).addTo(map);
         map.on("click", onMapClick);
+        tryInitClientLocation();
+      }
+
+      function refreshMapSize() {
+        if (!map) return;
+        setTimeout(function () {
+          if (map) map.invalidateSize();
+        }, 120);
+        setTimeout(function () {
+          if (map) map.invalidateSize();
+        }, 320);
       }
 
       function showMap() {
@@ -315,6 +391,73 @@
         var btn = document.getElementById("createBtn");
         if (!btn) return;
         btn.disabled = !(km > 0 && fromLL && toLL);
+      }
+
+      function updateSelectButtonsUi() {
+        Object.keys(selectButtons).forEach(function (k) {
+          var id = selectButtons[k];
+          var el = document.getElementById(id);
+          if (!el) return;
+          if (selectType === k) el.classList.add("is-active");
+          else el.classList.remove("is-active");
+        });
+        var mapEl = document.getElementById("pickupDropMap");
+        if (mapEl) {
+          if (selectType) mapEl.classList.add("map-selecting");
+          else mapEl.classList.remove("map-selecting");
+        }
+      }
+
+      function setClientLocationMarker(lat, lng) {
+        if (!map) return;
+        if (markerUser) {
+          markerUser.setLatLng([lat, lng]);
+        } else {
+          markerUser = L.circleMarker([lat, lng], {
+            radius: 7,
+            weight: 2,
+            color: "#2563eb",
+            fillColor: "#60a5fa",
+            fillOpacity: 0.9,
+          })
+            .addTo(map)
+            .bindPopup("📍 موقعك الحالي");
+        }
+      }
+
+      async function reverseGeocode(lat, lng) {
+        try {
+          var url =
+            "https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=" +
+            encodeURIComponent(lat) +
+            "&lon=" +
+            encodeURIComponent(lng) +
+            "&accept-language=ar";
+          var r = await fetch(url, {
+            headers: { "Accept-Language": "ar" },
+          });
+          var j = await r.json();
+          return String(j && j.display_name ? j.display_name : "").trim();
+        } catch (e) {
+          return "";
+        }
+      }
+
+      function tryInitClientLocation() {
+        if (!navigator.geolocation || clientLocation) return;
+        navigator.geolocation.getCurrentPosition(
+          function (pos) {
+            var lat = pos.coords.latitude;
+            var lng = pos.coords.longitude;
+            clientLocation = { lat: lat, lng: lng };
+            if (map) {
+              map.setView([lat, lng], 14);
+              setClientLocationMarker(lat, lng);
+            }
+          },
+          function () {},
+          { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+        );
       }
 
       function handleLocationInputChange() {
@@ -336,14 +479,48 @@
         }
         document.getElementById("distance").innerText = "المسافة: —";
         document.getElementById("price").innerText = "السعر: —";
+        document.getElementById("platformFeeLine").innerText = "عمولة المنصة (15%): —";
+        document.getElementById("driverNetLine").innerText = "صافي المندوب: —";
         document.getElementById("result").innerText = "";
+        selectType = null;
+        updateSelectButtonsUi();
         enableCreate();
       }
 
       function selectMode(type) {
         selectType = type;
+        updateSelectButtonsUi();
         document.getElementById("result").innerText =
           type === "from" ? "📍 اختر موقع الاستلام من الخريطة" : "📍 اختر موقع التسليم من الخريطة";
+      }
+
+      async function setPickupFromCurrentLocation() {
+        initMap();
+        if (!navigator.geolocation) {
+          document.getElementById("result").innerText = "❌ متصفحك لا يدعم تحديد الموقع.";
+          return;
+        }
+        document.getElementById("result").innerText = "📡 جارٍ تحديد موقعك الحالي...";
+        navigator.geolocation.getCurrentPosition(
+          async function (pos) {
+            var lat = pos.coords.latitude;
+            var lng = pos.coords.longitude;
+            clientLocation = { lat: lat, lng: lng };
+            fromLL = { lat: lat, lng: lng };
+            setClientLocationMarker(lat, lng);
+            if (markerFrom) map.removeLayer(markerFrom);
+            markerFrom = L.marker([lat, lng]).addTo(map).bindPopup("📍 الاستلام");
+            map.setView([lat, lng], 15);
+            var address = await reverseGeocode(lat, lng);
+            document.getElementById("from").value = address || lat.toFixed(6) + "," + lng.toFixed(6);
+            document.getElementById("result").innerText = "✅ تم تحديد موقع الاستلام من موقعك الحالي.";
+            enableCreate();
+          },
+          function () {
+            document.getElementById("result").innerText = "❌ تعذر الوصول إلى موقعك. فعّل إذن الموقع.";
+          },
+          { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
+        );
       }
 
       async function onMapClick(e) {
@@ -353,27 +530,29 @@
 
         if (selectType === "from") {
           fromLL = { lat: lat, lng: lng };
-          document.getElementById("from").value = lat.toFixed(6) + "," + lng.toFixed(6);
+          var fromAddress = await reverseGeocode(lat, lng);
+          document.getElementById("from").value = fromAddress || lat.toFixed(6) + "," + lng.toFixed(6);
           if (markerFrom) map.removeLayer(markerFrom);
           markerFrom = L.marker([lat, lng]).addTo(map).bindPopup("📍 الاستلام");
         }
 
         if (selectType === "to") {
           toLL = { lat: lat, lng: lng };
-          document.getElementById("to").value = lat.toFixed(6) + "," + lng.toFixed(6);
+          var toAddress = await reverseGeocode(lat, lng);
+          document.getElementById("to").value = toAddress || lat.toFixed(6) + "," + lng.toFixed(6);
           if (markerTo) map.removeLayer(markerTo);
           markerTo = L.marker([lat, lng]).addTo(map).bindPopup("📍 التسليم");
         }
 
         selectType = null;
+        updateSelectButtonsUi();
 
         if (fromLL && toLL) {
           try {
             var route = await getRoute(fromLL, toLL);
             km = route.distance / 1000;
-            var price = km * 2.3;
             document.getElementById("distance").innerText = "المسافة: " + km.toFixed(2) + " كم";
-            document.getElementById("price").innerText = "السعر: " + price.toFixed(2) + " ريال";
+            renderPricingStats(km);
             if (routeLine) map.removeLayer(routeLine);
             routeLine = L.geoJSON(route.geometry, {
               style: { color: "blue", weight: 5 },
@@ -445,9 +624,8 @@
           var route = await getRoute(fromLL, toLL);
           km = route.distance / 1000;
 
-          var price = km * 2.3;
           document.getElementById("distance").innerText = "المسافة: " + km.toFixed(2) + " كم";
-          document.getElementById("price").innerText = "السعر: " + price.toFixed(2) + " ريال";
+          renderPricingStats(km);
           document.getElementById("result").innerText = "";
           if (map) {
             if (markerFrom) map.removeLayer(markerFrom);
@@ -483,13 +661,17 @@
           btn.disabled = true;
           btn.innerText = "جارٍ إنشاء الطلب...";
 
+          var pricing = calcDeliveryPricing(km);
           var data = await window.PlatformAPI.api("/api/delivery/orders", {
             method: "POST",
             body: {
               pickup_address: from,
               drop_address: to,
               order_total: 0,
-              delivery_fee: +(km * 2.3).toFixed(2),
+              delivery_fee: pricing.fee,
+              platform_fee: pricing.platformFee,
+              driver_earning: pricing.driverNet,
+              vehicle_type: getSelectedVehicleType(),
               pickup_lat: fromLL ? fromLL.lat : null,
               pickup_lng: fromLL ? fromLL.lng : null,
               drop_lat: toLL ? toLL.lat : null,
@@ -509,6 +691,8 @@
             toLL = null;
             document.getElementById("distance").innerText = "المسافة: —";
             document.getElementById("price").innerText = "السعر: —";
+            document.getElementById("platformFeeLine").innerText = "عمولة المنصة (15%): —";
+            document.getElementById("driverNetLine").innerText = "صافي المندوب: —";
             enableCreate();
             run();
             setTimeout(function () {
@@ -566,6 +750,24 @@
             a.href = "/track?id=" + encodeURIComponent(o.id);
             a.textContent = "تتبع";
             row.appendChild(a);
+            if (["new", "pending", "accepted"].includes(String(deliveryStatus || "").toLowerCase())) {
+              var c = document.createElement("button");
+              c.type = "button";
+              c.className = "btn btn-ghost";
+              c.textContent = "إلغاء الطلب";
+              c.onclick = async function () {
+                if (!confirm("هل تريد إلغاء هذا الطلب؟")) return;
+                try {
+                  await window.PlatformAPI.api("/api/delivery/orders/" + encodeURIComponent(o.id) + "/cancel", {
+                    method: "POST",
+                  });
+                  run();
+                } catch (e) {
+                  document.getElementById("welcome").textContent = e.message || "تعذر إلغاء الطلب";
+                }
+              };
+              row.appendChild(c);
+            }
             box.appendChild(row);
           });
         } catch (e) {
@@ -577,10 +779,15 @@
         var deliveryDetails = document.getElementById("deliveryDetails");
         if (deliveryDetails) {
           deliveryDetails.addEventListener("toggle", function () {
-            if (deliveryDetails.open) setActiveServiceCard("delivery");
-            else setActiveServiceCard("");
+            if (deliveryDetails.open) {
+              setActiveServiceCard("delivery");
+              initMap();
+              refreshMapSize();
+            } else {
+              setActiveServiceCard("");
+            }
           });
-          if (deliveryDetails.open) setActiveServiceCard("delivery");
+          setActiveServiceCard("");
         }
 
         ["tileRestaurants", "tileMarket", "tileServices"].forEach(function (id) {
@@ -593,7 +800,9 @@
       })();
 
       run();
-      initMap();
+      window.addEventListener("resize", function () {
+        refreshMapSize();
+      });
     </script>
       </div>
     </div>

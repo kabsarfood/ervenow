@@ -152,7 +152,11 @@
           }
           window.PlatformAPI.setToken(token);
 
-          var target = role === "driver" ? "/driver" : "/dashboard";
+          var actualRole = String((res.user && res.user.role) || role || "").toLowerCase();
+          var target = "/dashboard";
+          if (actualRole === "blocked") target = "/blocked-complaints";
+          else if (actualRole === "admin") target = "/admin-dashboard";
+          else if (actualRole === "driver") target = "/driver";
           show("نجاح تسجيل الدخول. تحويل…", true);
 
           try {

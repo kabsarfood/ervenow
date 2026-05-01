@@ -1,7 +1,6 @@
 const express = require("express");
 const jwt = require("jsonwebtoken");
 const { requireAuth } = require("../../shared/middleware/auth");
-const { requireRole } = require("../../shared/middleware/roles");
 const { getJwtSecret } = require("../../shared/middleware/auth");
 const { ok, fail } = require("../../shared/utils/helpers");
 const { toE164, toStorageDigits, isErvnowSaudiMobileE164 } = require("../../shared/utils/phone");
@@ -24,6 +23,12 @@ function allowDevOtp() {
 
 function nowIso() {
   return new Date().toISOString();
+}
+
+function isMissingStatusColumnError(err) {
+  if (!err) return false;
+  const msg = String(err.message || err.details || "");
+  return /users\.status|column .*status.* does not exist|Could not find the .*status/i.test(msg);
 }
 
 function signDriverToken(userId, phoneDigits) {
@@ -60,29 +65,64 @@ async function ensureApprovedDriver(req, res) {
 }
 
 async function upsertDriverUser(sb, phoneDigits) {
-  const { data: existing, error: selErr } = await sb
+  let existing = null;
+  let selErr = null;
+  const firstSel = await sb
     .from("users")
     .select("*")
     .eq("phone", phoneDigits)
     .maybeSingle();
+  if (firstSel.error && isMissingStatusColumnError(firstSel.error)) {
+    const fallbackSel = await sb
+      .from("users")
+      .select("id, role, phone, updated_at")
+      .eq("phone", phoneDigits)
+      .maybeSingle();
+    existing = fallbackSel.data || null;
+    selErr = fallbackSel.error || null;
+  } else {
+    existing = firstSel.data || null;
+    selErr = firstSel.error || null;
+  }
   if (selErr) throw selErr;
   if (existing && existing.id) {
-    const { data, error } = await sb
+    if (
+      String(existing.status || "").toLowerCase() === "blocked" ||
+      String(existing.role || "").toLowerCase() === "blocked"
+    ) {
+      throw new Error("الحساب محظور من الإدارة");
+    }
+    const withStatusUpdate = await sb
+      .from("users")
+      .update({ role: "driver", status: "active", updated_at: nowIso() })
+      .eq("id", existing.id)
+      .select()
+      .single();
+    if (!withStatusUpdate.error) return withStatusUpdate.data;
+    if (!isMissingStatusColumnError(withStatusUpdate.error)) throw withStatusUpdate.error;
+    const fallbackUpdate = await sb
       .from("users")
       .update({ role: "driver", updated_at: nowIso() })
       .eq("id", existing.id)
       .select()
       .single();
-    if (error) throw error;
-    return data;
+    if (fallbackUpdate.error) throw fallbackUpdate.error;
+    return fallbackUpdate.data;
   }
-  const { data, error } = await sb
+  const withStatusInsert = await sb
+    .from("users")
+    .insert({ phone: phoneDigits, role: "driver", status: "active", updated_at: nowIso() })
+    .select()
+    .single();
+  if (!withStatusInsert.error) return withStatusInsert.data;
+  if (!isMissingStatusColumnError(withStatusInsert.error)) throw withStatusInsert.error;
+  const fallbackInsert = await sb
     .from("users")
     .insert({ phone: phoneDigits, role: "driver", updated_at: nowIso() })
     .select()
     .single();
-  if (error) throw error;
-  return data;
+  if (fallbackInsert.error) throw fallbackInsert.error;
+  return fallbackInsert.data;
 }
 
 function haversineKm(aLat, aLng, bLat, bLng) {
@@ -275,7 +315,7 @@ router.post("/register", async (req, res) => {
   }
 });
 
-router.get("/orders", requireAuth, requireRole("driver"), async (req, res) => {
+router.get("/orders", requireAuth, async (req, res) => {
   try {
     const drv = await ensureApprovedDriver(req, res);
     if (!drv) return;
@@ -336,7 +376,7 @@ router.get("/orders", requireAuth, requireRole("driver"), async (req, res) => {
   }
 });
 
-router.get("/wallet", requireAuth, requireRole("driver"), async (req, res) => {
+router.get("/wallet", requireAuth, async (req, res) => {
   try {
     const drv = await ensureApprovedDriver(req, res);
     if (!drv) return;
@@ -356,7 +396,7 @@ router.get("/wallet", requireAuth, requireRole("driver"), async (req, res) => {
   }
 });
 
-router.post("/accept/:id", requireAuth, requireRole("driver"), async (req, res) => {
+router.post("/accept/:id", requireAuth, async (req, res) => {
   try {
     const drv = await ensureApprovedDriver(req, res);
     if (!drv) return;
@@ -390,7 +430,7 @@ router.post("/accept/:id", requireAuth, requireRole("driver"), async (req, res) 
   }
 });
 
-router.post("/update-location", requireAuth, requireRole("driver"), async (req, res) => {
+router.post("/update-location", requireAuth, async (req, res) => {
   try {
     const drv = await ensureApprovedDriver(req, res);
     if (!drv) return;
@@ -433,7 +473,7 @@ router.post("/update-location", requireAuth, requireRole("driver"), async (req, 
   }
 });
 
-router.post("/start-delivery/:id", requireAuth, requireRole("driver"), async (req, res) => {
+router.post("/start-delivery/:id", requireAuth, async (req, res) => {
   try {
     const drv = await ensureApprovedDriver(req, res);
     if (!drv) return;
@@ -455,7 +495,7 @@ router.post("/start-delivery/:id", requireAuth, requireRole("driver"), async (re
   }
 });
 
-router.post("/complete-order/:id", requireAuth, requireRole("driver"), async (req, res) => {
+router.post("/complete-order/:id", requireAuth, async (req, res) => {
   try {
     const drv = await ensureApprovedDriver(req, res);
     if (!drv) return;
@@ -482,7 +522,7 @@ router.post("/complete-order/:id", requireAuth, requireRole("driver"), async (re
   }
 });
 
-router.get("/rating", requireAuth, requireRole("driver"), async (req, res) => {
+router.get("/rating", requireAuth, async (req, res) => {
   try {
     const drv = await ensureApprovedDriver(req, res);
     if (!drv) return;

@@ -5,8 +5,11 @@ const { requireRole } = require("../../shared/middleware/roles");
 const { ok, fail } = require("../../shared/utils/helpers");
 const { toE164, toStorageDigits, isErvnowSaudiMobileE164 } = require("../../shared/utils/phone");
 const { createServiceClient, getDatabaseConfigHint } = require("../../shared/config/supabase");
+const { sendWhatsApp } = require("../../shared/utils/whatsapp");
 
 const router = express.Router();
+const adminOtpStore = new Map();
+const ADMIN_OTP_TTL_MS = 5 * 60 * 1000;
 
 router.use((req, res, next) => {
   console.log("📥 CORE ROUTE HIT:", req.method, req.url);
@@ -17,6 +20,24 @@ router.use((req, res, next) => {
 const ERVENOW_LOGIN_CODE = String(
   process.env.ERVENOW_LOGIN_CODE || process.env.FIXED_LOGIN_CODE || "12345"
 ).trim();
+const ADMIN_LOGIN_PHONE_RAW = String(
+  process.env.ERVENOW_ADMIN_LOGIN_PHONE || "0505745650"
+).trim();
+
+function toStoragePhoneDigits(input) {
+  const e = toE164(input);
+  return e ? toStorageDigits(e) : String(input || "").replace(/\D/g, "");
+}
+
+const ERVENOW_ADMIN_LOGIN_PHONE = toStoragePhoneDigits(ADMIN_LOGIN_PHONE_RAW);
+
+function genOtp() {
+  return String(Math.floor(10000 + Math.random() * 90000));
+}
+
+function isAllowedAdminPhoneDigits(phoneDigits) {
+  return String(phoneDigits || "").replace(/\D/g, "") === ERVENOW_ADMIN_LOGIN_PHONE;
+}
 
 /* ======================
    JWT (جلسة المنصة)
@@ -54,21 +75,47 @@ function normalizeServiceType(v) {
   return ALLOWED_SERVICE_TYPES.has(s) ? s : null;
 }
 
+function isMissingStatusColumnError(err) {
+  if (!err) return false;
+  const msg = String(err.message || err.details || "");
+  return /users\.status|column .*status.* does not exist|Could not find the .*status/i.test(msg);
+}
+
 async function upsertDriverByPhone(sb, phoneDigits, preferredRole, preferredServiceType) {
   const role = ALLOWED_USER_ROLES.has(preferredRole) ? preferredRole : "customer";
   const serviceType = role === "service" ? normalizeServiceType(preferredServiceType) : null;
 
-  const { data: existing, error: selErr } = await sb
+  let existing = null;
+  let selErr = null;
+  const firstSel = await sb
     .from("users")
-    .select("id")
+    .select("id, role, status, phone, service_type, updated_at")
     .eq("phone", phoneDigits)
     .maybeSingle();
+  if (firstSel.error && isMissingStatusColumnError(firstSel.error)) {
+    const fallbackSel = await sb
+      .from("users")
+      .select("id, role, phone, service_type, updated_at")
+      .eq("phone", phoneDigits)
+      .maybeSingle();
+    existing = fallbackSel.data || null;
+    selErr = fallbackSel.error || null;
+  } else {
+    existing = firstSel.data || null;
+    selErr = firstSel.error || null;
+  }
 
   if (selErr) return { data: null, error: selErr };
 
   const now = new Date().toISOString();
 
   if (existing?.id) {
+    if (
+      String(existing.status || "").toLowerCase() === "blocked" ||
+      String(existing.role || "").toLowerCase() === "blocked"
+    ) {
+      return { data: existing, error: null };
+    }
     return sb
       .from("users")
       .update({ role, service_type: serviceType, updated_at: now })
@@ -77,6 +124,13 @@ async function upsertDriverByPhone(sb, phoneDigits, preferredRole, preferredServ
       .single();
   }
 
+  const withStatusInsert = await sb
+    .from("users")
+    .insert({ phone: phoneDigits, role, status: "active", service_type: serviceType, updated_at: now })
+    .select()
+    .single();
+  if (!withStatusInsert.error) return withStatusInsert;
+  if (!isMissingStatusColumnError(withStatusInsert.error)) return withStatusInsert;
   return sb
     .from("users")
     .insert({ phone: phoneDigits, role, service_type: serviceType, updated_at: now })
@@ -110,6 +164,7 @@ router.get("/public-config", (_req, res) => {
 router.post("/send-otp", async (req, res) => {
   try {
     const raw = req.body?.phone;
+    const roleIn = String(req.body?.role || "").trim().toLowerCase();
     const e164 = toE164(raw);
     if (!e164 || !isErvnowSaudiMobileE164(e164)) {
       return fail(
@@ -118,6 +173,27 @@ router.post("/send-otp", async (req, res) => {
         400
       );
     }
+
+    const digits = toStorageDigits(e164);
+    if (roleIn === "admin") {
+      if (!isAllowedAdminPhoneDigits(digits)) {
+        return fail(res, "غير مصرح لهذا الرقم بدخول لوحة الإدارة", 403);
+      }
+      const code = genOtp();
+      adminOtpStore.set(digits, { code, expiresAt: Date.now() + ADMIN_OTP_TTL_MS });
+      let sent = false;
+      try {
+        sent = await sendWhatsApp({
+          to: digits,
+          message: `رمز دخول لوحة إدارة ERVENOW: ${code}`,
+        });
+      } catch (_e) {
+        sent = false;
+      }
+      if (!sent) return fail(res, "تعذر إرسال رمز واتساب للأدمن", 503);
+      return ok(res, { ok: true, message: "تم إرسال الرمز عبر واتساب" });
+    }
+
     ok(res, {
       message: "دخول ERVENOW: أدخل رمز 12345",
       devOtp: ERVENOW_LOGIN_CODE,
@@ -132,6 +208,7 @@ router.post("/verify-otp", async (req, res) => {
   try {
     const raw = req.body?.phone;
     const codeIn = String(req.body?.code || "").trim();
+    const wantRole = String(req.body?.role || "customer").trim();
 
     const e164 = toE164(raw);
     if (!e164) return fail(res, "رقم الجوال غير صالح", 400);
@@ -143,11 +220,22 @@ router.post("/verify-otp", async (req, res) => {
       );
     }
     if (!codeIn) return fail(res, "أدخل رمز الدخول", 400);
-    if (codeIn !== ERVENOW_LOGIN_CODE) {
-      return fail(res, "رمز الدخول غير صحيح", 400);
-    }
 
     const digits = toStorageDigits(e164);
+    if (wantRole === "admin") {
+      if (!isAllowedAdminPhoneDigits(digits)) {
+        return fail(res, "غير مصرح لهذا الرقم بدخول لوحة الإدارة", 403);
+      }
+      const saved = adminOtpStore.get(digits);
+      const valid =
+        !!saved &&
+        String(saved.code || "") === codeIn &&
+        Number(saved.expiresAt || 0) > Date.now();
+      if (!valid) return fail(res, "رمز واتساب غير صحيح أو منتهي", 400);
+      adminOtpStore.delete(digits);
+    } else if (codeIn !== ERVENOW_LOGIN_CODE) {
+      return fail(res, "رمز الدخول غير صحيح", 400);
+    }
 
     const sb = createServiceClient();
     if (!sb) {
@@ -158,7 +246,6 @@ router.post("/verify-otp", async (req, res) => {
       );
     }
 
-    const wantRole = String(req.body?.role || "customer").trim();
     const wantServiceType = req.body?.service_type;
     const { data: userRow, error: dbErr } = await upsertDriverByPhone(sb, digits, wantRole, wantServiceType);
     if (dbErr) {

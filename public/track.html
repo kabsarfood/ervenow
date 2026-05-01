@@ -14,6 +14,108 @@
         opacity: 0.75;
         cursor: default;
       }
+
+      #orderNumber,
+      #orderNumberLine,
+      #coords {
+        overflow-wrap: anywhere;
+        word-break: break-word;
+      }
+
+      @media (max-width: 1024px) {
+        .layout {
+          max-width: 760px;
+          padding: 18px 14px 36px;
+        }
+
+        .card {
+          padding: 16px;
+        }
+
+        #map {
+          min-height: 300px !important;
+        }
+
+        .top-nav .btn-row {
+          width: 100%;
+          justify-content: flex-start;
+        }
+      }
+
+      @media (max-width: 768px) {
+        .layout {
+          padding: 16px 12px 30px;
+        }
+
+        .top-nav {
+          align-items: stretch;
+        }
+
+        .top-nav h1 {
+          font-size: 1.2rem;
+        }
+
+        .top-nav .btn-row {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 8px;
+          width: 100%;
+          margin-top: 0;
+        }
+
+        .top-nav .btn-row .btn {
+          width: 100%;
+          padding: 10px 12px;
+          font-size: 0.9rem;
+        }
+
+        .card .btn-row {
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 8px;
+        }
+
+        .card .btn-row .btn {
+          width: 100%;
+        }
+
+        #oid {
+          font-size: 0.95rem;
+        }
+
+        #map {
+          min-height: 260px !important;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .layout {
+          padding: 14px 10px 26px;
+        }
+
+        .card {
+          padding: 12px;
+        }
+
+        #rateStars {
+          font-size: 1.2rem !important;
+          letter-spacing: 0.12em !important;
+        }
+
+        #map {
+          min-height: 230px !important;
+        }
+
+        .leaflet-control-layers {
+          font-size: 12px;
+        }
+
+        .leaflet-control-zoom a {
+          width: 28px;
+          height: 28px;
+          line-height: 28px;
+        }
+      }
     </style>
   </head>
   <body>
@@ -30,8 +132,8 @@
       <p class="sub" id="authHint">سجّل الدخول لعرض تفاصيل الطلب وموقع المندوب.</p>
 
       <div class="card">
-        <label for="oid">معرّف الطلب (UUID)</label>
-        <input id="oid" type="text" placeholder="يُملأ تلقائياً بعد إرسال الطلب" />
+        <label for="oid">رقم الطلب / معرّف الطلب</label>
+        <input id="oid" type="text" placeholder="مثال: ES-DD-001 أو UUID" />
         <div class="btn-row">
           <button type="button" class="btn btn-primary" id="btn">تحديث الآن</button>
         </div>
@@ -93,6 +195,9 @@
           <button type="button" class="btn btn-ghost" id="btnInvoice" style="display: none">
             عرض الفاتورة (PDF)
           </button>
+          <button type="button" class="btn btn-ghost" id="btnCancelOrder" style="display: none">
+            إلغاء الطلب
+          </button>
         </div>
         <p style="margin: 8px 0 4px"><span class="badge" id="statusBadge">—</span></p>
         <p id="status" class="sub" style="margin: 4px 0 0">—</p>
@@ -108,6 +213,7 @@
         accepted: "تم استلام الطلب",
         delivering: "جاري التوصيل",
         delivered: "تم التسليم",
+        cancelled_by_customer: "أُلغي بواسطة العميل",
       };
 
       var pollTimer = null;
@@ -118,7 +224,10 @@
       var mapLayers = null;
       var mapLayerControl = null;
       var routeLine = null;
+      var pickupMarker = null;
       var dropMarker = null;
+      var pickupIcon = null;
+      var dropIcon = null;
       var markerAnimRaf = null;
       var mapInitialized = false;
       var currentOrderId = null;
@@ -153,6 +262,17 @@
           return;
         }
         btn.style.display = meRole === "customer" || meRole === "admin" ? "inline-block" : "none";
+      }
+
+      function syncCancelButton(order) {
+        var btn = document.getElementById("btnCancelOrder");
+        if (!btn) return;
+        if (!order || meRole !== "customer") {
+          btn.style.display = "none";
+          return;
+        }
+        var ds = String(order.delivery_status || order.status || "").toLowerCase();
+        btn.style.display = ["new", "pending", "accepted"].includes(ds) ? "inline-block" : "none";
       }
 
       async function openInvoice() {
@@ -393,6 +513,53 @@
         }
       }
 
+      async function resolveAddressToLatLng(address) {
+        var addr = String(address || "").trim();
+        if (!addr) return null;
+        if (dropGeocodeCache[addr]) return dropGeocodeCache[addr];
+        try {
+          var url =
+            "https://nominatim.openstreetmap.org/search?q=" +
+            encodeURIComponent(addr + ", Saudi Arabia") +
+            "&format=json&limit=1";
+          var res = await fetch(url, { headers: { Accept: "application/json" } });
+          var arr = res.ok ? await res.json() : null;
+          if (!arr || !arr[0] || arr[0].lat == null || arr[0].lon == null) return null;
+          var glat = parseFloat(arr[0].lat);
+          var glng = parseFloat(arr[0].lon);
+          if (Number.isNaN(glat) || Number.isNaN(glng)) return null;
+          var ll = { lat: glat, lng: glng };
+          dropGeocodeCache[addr] = ll;
+          return ll;
+        } catch (e) {
+          return null;
+        }
+      }
+
+      async function renderTripRoute(order) {
+        if (!order) return;
+        var fromLL = null;
+        var toLL = null;
+        var pLat = Number(order.pickup_lat);
+        var pLng = Number(order.pickup_lng);
+        var dLat = Number(order.drop_lat);
+        var dLng = Number(order.drop_lng);
+        if (Number.isFinite(pLat) && Number.isFinite(pLng)) {
+          fromLL = { lat: pLat, lng: pLng };
+        } else if (order.pickup_address) {
+          fromLL = await resolveAddressToLatLng(order.pickup_address);
+        }
+        if (Number.isFinite(dLat) && Number.isFinite(dLng)) {
+          toLL = { lat: dLat, lng: dLng };
+        } else if (order.drop_address) {
+          toLL = await resolveAddressToLatLng(order.drop_address);
+        }
+        if (!fromLL || !toLL) return;
+        updatePickupMarker(fromLL.lat, fromLL.lng);
+        updateDropMarker(toLL.lat, toLL.lng);
+        await showMap(fromLL, toLL);
+      }
+
       function ensureMap() {
         if (typeof L === "undefined" || map) return;
         var el = document.getElementById("map");
@@ -400,10 +567,6 @@
         el.innerHTML = "";
         map = L.map("map", { scrollWheelZoom: true }).setView(defaultCenter, 12);
         mapInitialized = true;
-        var streets = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-          attribution: "&copy; OpenStreetMap",
-          maxZoom: 19,
-        });
         var terrain = L.tileLayer("https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png", {
           attribution: "Map data: OpenStreetMap, SRTM | Map style: OpenTopoMap",
           maxZoom: 17,
@@ -416,11 +579,10 @@
           }
         );
 
-        streets.addTo(map);
+        satellite.addTo(map);
         mapLayers = {
-          "🛣️ الشوارع": streets,
-          "⛰️ التضاريس": terrain,
           "🛰️ الأقمار الصناعية": satellite,
+          "⛰️ التضاريس": terrain,
         };
         mapLayerControl = L.control.layers(mapLayers, null, { position: "topright" }).addTo(map);
         setTimeout(function () {
@@ -509,12 +671,48 @@
         if (Number.isNaN(la) || Number.isNaN(ln)) return;
         ensureMap();
         if (!map) return;
+        if (!dropIcon) {
+          dropIcon = L.divIcon({
+            className: "custom-end-marker",
+            html:
+              '<span style="display:inline-block;width:14px;height:14px;border-radius:50%;background:#16a34a;border:2px solid #ffffff;box-shadow:0 0 0 2px rgba(22,163,74,0.25)"></span>',
+            iconSize: [18, 18],
+            iconAnchor: [9, 9],
+            popupAnchor: [0, -8],
+          });
+        }
         if (dropMarker) {
           dropMarker.setLatLng([la, ln]);
         } else {
-          dropMarker = L.marker([la, ln], { title: "نقطة التسليم" })
+          dropMarker = L.marker([la, ln], { title: "نقطة التسليم", icon: dropIcon })
             .addTo(map)
-            .bindPopup("📍 نقطة التسليم");
+            .bindPopup("🟢 نقطة النهاية");
+        }
+      }
+
+      function updatePickupMarker(lat, lng) {
+        if (lat == null || lng == null) return;
+        var la = Number(lat);
+        var ln = Number(lng);
+        if (Number.isNaN(la) || Number.isNaN(ln)) return;
+        ensureMap();
+        if (!map) return;
+        if (!pickupIcon) {
+          pickupIcon = L.divIcon({
+            className: "custom-start-marker",
+            html:
+              '<span style="display:inline-block;width:14px;height:14px;border-radius:50%;background:#2563eb;border:2px solid #ffffff;box-shadow:0 0 0 2px rgba(37,99,235,0.25)"></span>',
+            iconSize: [18, 18],
+            iconAnchor: [9, 9],
+            popupAnchor: [0, -8],
+          });
+        }
+        if (pickupMarker) {
+          pickupMarker.setLatLng([la, ln]);
+        } else {
+          pickupMarker = L.marker([la, ln], { title: "نقطة الاستلام", icon: pickupIcon })
+            .addTo(map)
+            .bindPopup("🔵 نقطة البداية");
         }
       }
 
@@ -548,19 +746,20 @@
             routeLine = null;
           }
           routeLine = L.geoJSON(route.geometry, {
-            style: { color: "#2563eb", weight: 5, opacity: 0.85 },
+            style: { color: "#ef4444", weight: 5, opacity: 0.9 },
           }).addTo(map);
           map.fitBounds(routeLine.getBounds(), { padding: [24, 24] });
         } catch (e) {}
       }
 
-      function clearDriverMarker() {
+      function clearDriverMarker(clearRoute) {
         if (map && driverMarker) {
           try {
             map.removeLayer(driverMarker);
           } catch (e) {}
           driverMarker = null;
         }
+        if (clearRoute === false) return;
         if (map && routeLine) {
           try {
             map.removeLayer(routeLine);
@@ -572,6 +771,12 @@
             map.removeLayer(dropMarker);
           } catch (e) {}
           dropMarker = null;
+        }
+        if (map && pickupMarker) {
+          try {
+            map.removeLayer(pickupMarker);
+          } catch (e) {}
+          pickupMarker = null;
         }
       }
 
@@ -626,6 +831,8 @@
             statusEl.innerText = "📦 جاري التوصيل";
           } else if (deliveryStatus === "delivered") {
             statusEl.innerText = "✅ تم التسليم";
+          } else if (deliveryStatus === "cancelled_by_customer") {
+            statusEl.innerText = "🚫 تم إلغاء الطلب من العميل";
           } else {
             statusEl.innerText = "⏳ بانتظار المندوب";
           }
@@ -683,25 +890,7 @@
         var dropLat = order.drop_lat == null ? null : Number(order.drop_lat);
         var dropLng = order.drop_lng == null ? null : Number(order.drop_lng);
         var hasDropPoint = Number.isFinite(dropLat) && Number.isFinite(dropLng);
-        if (order.pickup_lat && order.drop_lat) {
-          var fromLL = {
-            lat: Number(order.pickup_lat),
-            lng: Number(order.pickup_lng),
-          };
-          var toLL = {
-            lat: Number(order.drop_lat),
-            lng: Number(order.drop_lng),
-          };
-          if (
-            Number.isFinite(fromLL.lat) &&
-            Number.isFinite(fromLL.lng) &&
-            Number.isFinite(toLL.lat) &&
-            Number.isFinite(toLL.lng)
-          ) {
-            updateDropMarker(toLL.lat, toLL.lng);
-            void showMap(fromLL, toLL);
-          }
-        }
+        void renderTripRoute(order);
         var hasDriverLocation = lat != null && lng != null && !Number.isNaN(Number(lat)) && !Number.isNaN(Number(lng));
         if (deliveryStatus === "delivered" && hasDropPoint) {
           updateDriverMarker(dropLat, dropLng, detectVehicleKind(order));
@@ -715,7 +904,7 @@
           if (hasDropPoint) updateDropMarker(dropLat, dropLng);
           document.getElementById("coordsMeta").textContent = "";
         } else {
-          clearDriverMarker();
+          clearDriverMarker(false);
           document.getElementById("coords").textContent =
             "لا يوجد موقع مندوب بعد (يُرسَل من صفحة المندوب بعد الاستلام أو أثناء التوصيل)";
           document.getElementById("coordsMeta").textContent = "";
@@ -742,6 +931,7 @@
         syncRateForm(order);
         updateGpsStateUI(order);
         syncInvoiceButton();
+        syncCancelButton(order);
         maybeSpeakTrackingEvents(order);
       }
 
@@ -830,8 +1020,12 @@
         }
         await ensureMeRole();
         try {
-          var j = await window.PlatformAPI.api("/api/delivery/orders/" + id);
-          renderOrder(j.order);
+          var j = await window.PlatformAPI.api("/api/delivery/orders/" + encodeURIComponent(id));
+          if (j && j.order) {
+            trackedOrderId = j.order.order_number || j.order.id || id;
+            document.getElementById("oid").value = trackedOrderId;
+            renderOrder(j.order);
+          }
         } catch (e) {
           lastOrder = null;
           syncInvoiceButton();
@@ -875,6 +1069,29 @@
         var bi = document.getElementById("btnInvoice");
         if (bi) bi.onclick = openInvoice;
       })();
+      (function () {
+        var bc = document.getElementById("btnCancelOrder");
+        if (!bc) return;
+        bc.onclick = async function () {
+          if (!lastOrder || !lastOrder.id) return;
+          if (!confirm("هل أنت متأكد من إلغاء الطلب؟")) return;
+          try {
+            var j = await window.PlatformAPI.api("/api/delivery/orders/" + encodeURIComponent(lastOrder.id) + "/cancel", {
+              method: "POST",
+            });
+            if (j.order) {
+              renderOrder(j.order);
+              var rm = document.getElementById("rateMsg");
+              if (rm && j.refund && j.refund.refunded) {
+                rm.textContent = "✅ تم الإلغاء وإرجاع المبلغ إلى محفظتك.";
+              }
+            }
+          } catch (e) {
+            var rm2 = document.getElementById("rateMsg");
+            if (rm2) rm2.textContent = e.message || "تعذر إلغاء الطلب";
+          }
+        };
+      })();
       loadVoiceSetting();
       (function () {
         var vb = document.getElementById("btnVoiceToggle");
@@ -904,7 +1121,7 @@
         var btnR = document.getElementById("btnRate");
         if (btnR) {
           btnR.onclick = async function () {
-            var oid = document.getElementById("oid").value.trim();
+            var oid = lastOrder && lastOrder.id ? String(lastOrder.id) : document.getElementById("oid").value.trim();
             if (!oid) return;
             var mEl = document.getElementById("rateMsg");
             if (selectedRate < 1) {

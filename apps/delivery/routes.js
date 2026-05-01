@@ -11,10 +11,22 @@ const {
   saveLocation,
   reportGpsError,
   rateOrder,
+  cancelOrderByCustomer,
   createDeliveryOrderFromBody,
 } = require("./service");
 
 const router = express.Router();
+
+router.use((req, res, next) => {
+  res.set("Cache-Control", "no-store");
+  next();
+});
+
+function isUuidLike(v) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+    String(v || "").trim()
+  );
+}
 
 async function getUserPhoneById(sb, userId) {
   if (!userId) return null;
@@ -52,7 +64,12 @@ router.get("/orders", optionalAuth, async (req, res) => {
 
 router.get("/orders/:id", requireAuth, async (req, res) => {
   try {
-    const { data, error } = await req.supabase.from("orders").select("*").eq("id", req.params.id).single();
+    const key = String(req.params.id || "").trim();
+    if (!key) return fail(res, "id required", 400);
+    let q = req.supabase.from("orders").select("*");
+    if (isUuidLike(key)) q = q.eq("id", key);
+    else q = q.eq("order_number", key);
+    const { data, error } = await q.single();
     if (error) return fail(res, error.message, 404);
     const o = data;
     if (req.appUser.role === "admin") {
@@ -162,6 +179,38 @@ router.post("/orders/:id/rate", requireAuth, requireRole("customer"), async (req
   }
 });
 
+router.post("/orders/:id/cancel", requireAuth, requireRole("customer"), async (req, res) => {
+  try {
+    const orderId = String(req.params.id || "").trim();
+    const { data, error, refund } = await cancelOrderByCustomer(req.supabase, orderId, req.appUser);
+    if (error) return fail(res, error.message, 400);
+
+    if (data && data.driver_id) {
+      try {
+        const driverPhone = await getUserPhoneById(req.supabase, data.driver_id);
+        if (driverPhone) {
+          const orderLabel = data.order_number || String(data.id || orderId);
+          const msg = `🚫 تم إلغاء الطلب من العميل
+
+رقم الطلب: ${orderLabel}
+من: ${String(data.pickup_address || "-")}
+إلى: ${String(data.drop_address || "-")}`.trim();
+          await sendWhatsApp({ to: driverPhone, message: msg });
+        }
+      } catch (notifyErr) {
+        console.error("[delivery/cancel] driver WhatsApp:", notifyErr && (notifyErr.message || notifyErr));
+      }
+    }
+
+    return ok(res, {
+      order: data,
+      refund: refund || null,
+    });
+  } catch (e) {
+    return fail(res, e.message, 500);
+  }
+});
+
 router.patch("/orders/:id/status", requireAuth, async (req, res) => {
   try {
     const nextStatus = String(req.body?.status || "").trim();
@@ -190,6 +239,41 @@ router.post("/orders/:id/location", requireAuth, requireRole("driver"), async (r
     ok(res, { order: data });
   } catch (e) {
     fail(res, e.message, 500);
+  }
+});
+
+router.post("/complaints", requireAuth, async (req, res) => {
+  try {
+    const message = String(req.body?.message || "").trim();
+    const orderId = String(req.body?.order_id || "").trim() || null;
+    if (!message) return fail(res, "message required", 400);
+
+    const row = {
+      user_id: req.appUser.id,
+      order_id: orderId,
+      message,
+      status: "open",
+    };
+    const { data, error } = await req.supabase.from("complaints").insert(row).select("*").single();
+    if (error) return fail(res, error.message, 400);
+    return ok(res, { complaint: data });
+  } catch (e) {
+    return fail(res, e.message, 500);
+  }
+});
+
+router.get("/complaints/mine", requireAuth, async (req, res) => {
+  try {
+    const { data, error } = await req.supabase
+      .from("complaints")
+      .select("*")
+      .eq("user_id", req.appUser.id)
+      .order("created_at", { ascending: false })
+      .limit(200);
+    if (error) return fail(res, error.message, 400);
+    return ok(res, { complaints: data || [] });
+  } catch (e) {
+    return fail(res, e.message, 500);
   }
 });
 
