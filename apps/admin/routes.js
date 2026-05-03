@@ -2,6 +2,8 @@ const express = require("express");
 const { requireAuth } = require("../../shared/middleware/auth");
 const { requireRole } = require("../../shared/middleware/roles");
 const { ok, fail } = require("../../shared/utils/helpers");
+const { sendWhatsApp } = require("../../shared/utils/whatsapp");
+const { driverApprovedBody } = require("../../shared/messages/driverWhatsApp");
 const { getRiyadhDate } = require("../delivery/service");
 
 const router = express.Router();
@@ -616,6 +618,16 @@ router.post("/approve-driver", requireAuth, requireRole("admin"), requireAdminPe
       await syncUserStatusByPhone(req.supabase, data?.phone, "active");
     } catch (e) {
       console.error("[admin/approve-driver] user role sync:", e && (e.message || e));
+    }
+    try {
+      if (data?.phone) {
+        await sendWhatsApp({
+          to: data.phone,
+          message: driverApprovedBody(data.name),
+        });
+      }
+    } catch (waErr) {
+      console.error("[admin/approve-driver] WhatsApp:", waErr && (waErr.message || String(waErr)));
     }
     return ok(res, { driver: data });
   } catch (e) {

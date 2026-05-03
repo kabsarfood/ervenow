@@ -5,6 +5,7 @@ const { getJwtSecret } = require("../../shared/middleware/auth");
 const { ok, fail } = require("../../shared/utils/helpers");
 const { toE164, toStorageDigits, isErvnowSaudiMobileE164 } = require("../../shared/utils/phone");
 const { sendWhatsApp } = require("../../shared/utils/whatsapp");
+const { driverPendingRegistrationBody } = require("../../shared/messages/driverWhatsApp");
 const { createServiceClient } = require("../../shared/config/supabase");
 const { notifyDriver } = require("./notify");
 const { bumpDeliveryOrdersListEpoch } = require("../../shared/utils/deliveryOrdersListCache");
@@ -310,6 +311,14 @@ router.post("/register", async (req, res) => {
       .select()
       .single();
     if (error) return fail(res, error.message, 400);
+    try {
+      await sendWhatsApp({
+        to: phone,
+        message: driverPendingRegistrationBody(name),
+      });
+    } catch (waErr) {
+      console.error("[driver/register] WhatsApp:", waErr && (waErr.message || String(waErr)));
+    }
     return ok(res, {
       driver: data,
       message: "تم تسجيلك — بانتظار الموافقة",
