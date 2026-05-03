@@ -107,7 +107,14 @@ async function requireAuth(req, res, next) {
         dbUser = withStatus.data || null;
       }
       if (dbUser) {
-        if (dbUser.role) effectiveRole = dbUser.role;
+        const dbRole = String(dbUser.role || "").toLowerCase();
+        const tokRole = String(role || "").toLowerCase();
+        /* مندوب: التوكن يصدر بدور driver بينما users.role قد يتأخر عن المزامنة — لا تُسقط صلاحيات المحفظة/السحب */
+        if (tokRole === "driver" && (!dbUser.role || dbRole === "customer" || dbRole === "user")) {
+          effectiveRole = "driver";
+        } else if (dbUser.role) {
+          effectiveRole = dbUser.role;
+        }
         if (dbUser.status) effectiveStatus = dbUser.status;
         if (dbUser.phone) req.authUser = { id: sub, phone: dbUser.phone };
         if (dbUser.name != null && String(dbUser.name).trim()) displayName = String(dbUser.name).trim();

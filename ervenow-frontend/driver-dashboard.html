@@ -237,8 +237,14 @@
           var j = await window.PlatformAPI.api("/api/driver/wallet");
           document.getElementById("walletLine").innerText =
             "الرصيد: " + (j.balance || 0) + " ريال | المكتسب: " + (j.total_earned || 0) + " ريال";
-        } catch (e) {
-          document.getElementById("walletLine").innerText = "تعذر تحميل المحفظة";
+        } catch (e1) {
+          try {
+            var w = await window.PlatformAPI.api("/api/wallet");
+            document.getElementById("walletLine").innerText =
+              "الرصيد: " + (w.balance || 0) + " ريال | المكتسب: " + (w.total_earned || 0) + " ريال";
+          } catch (e2) {
+            document.getElementById("walletLine").innerText = "تعذر تحميل المحفظة";
+          }
         }
       }
 

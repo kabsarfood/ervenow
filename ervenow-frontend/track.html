@@ -15,6 +15,11 @@
         cursor: default;
       }
 
+      .ervenow-driver-marker {
+        background: transparent !important;
+        border: none !important;
+      }
+
       #orderNumber,
       #orderNumberLine,
       #coords {
@@ -221,7 +226,6 @@
       var trackedOrderId = null;
       var map = null;
       var driverMarker = null;
-      var driverIcon = null;
       var mapLayers = null;
       var mapLayerControl = null;
       var routeLine = null;
@@ -241,8 +245,13 @@
       var meRoleFetched = false;
       var speechState = { orderId: null, accepted: false, delivering: false, near: false };
       var voiceEnabled = true;
-      var iconCache = {};
       var currentDriverType = "car";
+      var lastTripRouteKey = "";
+      var smoothDriverLat = null;
+      var smoothDriverLng = null;
+      var localPendingRating = 0;
+      var audioCtx = null;
+      var lastRateFormKey = "";
 
       async function ensureMeRole() {
         if (meRoleFetched) return;
@@ -341,15 +350,25 @@
           var rmH = document.getElementById("rateMsg");
           if (rmH) rmH.textContent = "";
           applyRateFormSubmitted(false);
+          localPendingRating = 0;
           return;
         }
         card.style.display = "block";
-        var r = order.rating;
-        selectedRate = r != null && r >= 1 && r <= 5 ? r : 0;
+        var serverR = order.rating != null && order.rating >= 1 && order.rating <= 5 ? Number(order.rating) : null;
+        if (serverR != null) {
+          selectedRate = serverR;
+          localPendingRating = 0;
+        } else if (localPendingRating >= 1 && localPendingRating <= 5) {
+          selectedRate = localPendingRating;
+        } else {
+          selectedRate = 0;
+        }
         paintStars(selectedRate);
         var ta = document.getElementById("rateReview");
-        if (ta) ta.value = order.review != null && order.review !== "" ? String(order.review) : "";
-        if (r != null && r >= 1 && r <= 5) {
+        if (ta && order.review != null && String(order.review).trim() !== "") {
+          ta.value = String(order.review);
+        }
+        if (serverR != null) {
           applyRateFormSubmitted(true);
         } else {
           applyRateFormSubmitted(false);
@@ -392,6 +411,37 @@
         } catch (e) {}
       }
 
+      function unlockAudioContext() {
+        try {
+          if (!audioCtx) {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          }
+          if (audioCtx && audioCtx.state === "suspended") {
+            audioCtx.resume();
+          }
+        } catch (e) {}
+      }
+
+      function playTrackingBeep() {
+        if (!voiceEnabled) return;
+        unlockAudioContext();
+        if (!audioCtx) return;
+        try {
+          var o = audioCtx.createOscillator();
+          var g = audioCtx.createGain();
+          o.type = "sine";
+          o.frequency.value = 920;
+          g.gain.setValueAtTime(0.001, audioCtx.currentTime);
+          g.gain.exponentialRampToValueAtTime(0.12, audioCtx.currentTime + 0.02);
+          o.connect(g);
+          g.connect(audioCtx.destination);
+          var t = audioCtx.currentTime;
+          o.start(t);
+          g.gain.exponentialRampToValueAtTime(0.001, t + 0.18);
+          o.stop(t + 0.2);
+        } catch (e) {}
+      }
+
       function computeEtaMinutesForOrder(order) {
         if (!order) return null;
         var driverLat = Number(order.driver_lat);
@@ -415,7 +465,6 @@
       }
 
       function maybeSpeakTrackingEvents(order) {
-        if (!voiceEnabled) return;
         if (!order) return;
         var orderId = String(order.id || "");
         if (!orderId) return;
@@ -424,11 +473,19 @@
         }
         var deliveryStatus = String(order.delivery_status || order.status || "");
         if (deliveryStatus === "accepted" && !speechState.accepted) {
-          speakArabic("زائرنا العزيز، تم قبول الطلب.");
+          if (voiceEnabled) {
+            unlockAudioContext();
+            playTrackingBeep();
+            speakArabic("زائرنا العزيز، تم قبول الطلب.");
+          }
           speechState.accepted = true;
         }
         if (deliveryStatus === "delivering" && !speechState.delivering) {
-          speakArabic("زائرنا العزيز، تم استلام الطلب والتوجه إليك.");
+          if (voiceEnabled) {
+            unlockAudioContext();
+            playTrackingBeep();
+            speakArabic("زائرنا العزيز، تم استلام الطلب والتوجه إليك.");
+          }
           speechState.delivering = true;
         }
         var etaMinutes = computeEtaMinutesForOrder(order);
@@ -438,7 +495,11 @@
           etaMinutes <= 2 &&
           (deliveryStatus === "accepted" || deliveryStatus === "delivering")
         ) {
-          speakArabic("زائرنا العزيز، المندوب قريب منك خلال دقيقتين.");
+          if (voiceEnabled) {
+            unlockAudioContext();
+            playTrackingBeep();
+            speakArabic("زائرنا العزيز، المندوب قريب منك خلال دقيقتين.");
+          }
           speechState.near = true;
         }
       }
@@ -594,35 +655,50 @@
       }
 
       function detectVehicleKind(order) {
-        var kind = "";
-        if (order && order.data && typeof order.data === "object") {
-          kind = order.data.vehicle_type || order.data.vehicle || "";
+        var raw = "";
+        if (order && order.driver_car_type) raw = String(order.driver_car_type);
+        if (!raw && order && order.data && typeof order.data === "object") {
+          raw = String(order.data.vehicle_type || order.data.vehicle || "");
         }
-        if (!kind && order) {
-          kind = order.vehicle_type || order.driver_vehicle_type || "";
-        }
-        kind = String(kind || "").toLowerCase();
-        if (/bike|motor|motorcycle|scooter|دراجة/.test(kind)) return "bike";
+        if (!raw && order) raw = String(order.vehicle_type || order.driver_vehicle_type || "");
+        var s = raw.toLowerCase();
+        if (
+          /دراجة|سيكل|سكلت|بيسكل|دراجه|موتور|دباب|سكوتر|scooter|bike|bicycle|cycle|motor|motorcycle|moped|🏍|🛵/.test(
+            s
+          )
+        )
+          return "bike";
+        if (/شاحنة|دينا|van|truck|pickup|نقل|🚚/.test(s)) return "truck";
         return "car";
       }
 
-      function getDriverIcon(type) {
-        var t = type === "bike" ? "bike" : "car";
-        if (iconCache[t]) return iconCache[t];
-        var primary = t === "bike" ? "/assets/bike.png" : "/assets/car.png";
-        var fallback =
-          t === "bike"
-            ? "https://cdn-icons-png.flaticon.com/512/2972/2972185.png"
-            : "https://cdn-icons-png.flaticon.com/512/684/684908.png";
-        iconCache[t] = L.icon({ iconUrl: fallback, iconSize: [40, 40] });
-        var probe = new Image();
-        probe.onload = function () {
-          iconCache[t] = L.icon({ iconUrl: primary, iconSize: [40, 40] });
-          if (driverMarker && currentDriverType === t) driverMarker.setIcon(iconCache[t]);
-        };
-        probe.onerror = function () {};
-        probe.src = primary;
-        return iconCache[t];
+      function makeVehicleDivIcon(kind) {
+        var emoji = "🚗";
+        if (kind === "bike") emoji = "🛵";
+        else if (kind === "truck") emoji = "🚚";
+        return L.divIcon({
+          className: "ervenow-driver-marker",
+          html:
+            '<div style="font-size:30px;line-height:1;text-align:center;transform:translateZ(0);filter:drop-shadow(0 2px 4px rgba(0,0,0,.4))">' +
+            emoji +
+            "</div>",
+          iconSize: [36, 36],
+          iconAnchor: [18, 18],
+          popupAnchor: [0, -20],
+        });
+      }
+
+      function haversineKmQuick(aLat, aLng, bLat, bLng) {
+        var R = 6371;
+        var dLat = ((bLat - aLat) * Math.PI) / 180;
+        var dLng = ((bLng - aLng) * Math.PI) / 180;
+        var x =
+          Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+          Math.cos((aLat * Math.PI) / 180) *
+            Math.cos((bLat * Math.PI) / 180) *
+            Math.sin(dLng / 2) *
+            Math.sin(dLng / 2);
+        return 2 * R * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x));
       }
 
       function animateMarkerTo(targetLat, targetLng) {
@@ -636,7 +712,7 @@
         var startLng = Number(start.lng);
         var endLat = Number(targetLat);
         var endLng = Number(targetLng);
-        var duration = 900;
+        var duration = 1400;
         var t0 = performance.now();
 
         function step(now) {
@@ -655,26 +731,42 @@
         markerAnimRaf = requestAnimationFrame(step);
       }
 
-      function updateDriverMarker(lat, lng) {
+      function updateDriverMarker(lat, lng, opts) {
+        opts = opts || {};
         if (lat == null || lng == null) return;
         var la = Number(lat);
         var ln = Number(lng);
         if (Number.isNaN(la) || Number.isNaN(ln)) return;
+        if (smoothDriverLat != null && smoothDriverLng != null) {
+          var jump = haversineKmQuick(smoothDriverLat, smoothDriverLng, la, ln);
+          if (jump > 2.5) {
+            la = smoothDriverLat * 0.5 + la * 0.5;
+            ln = smoothDriverLng * 0.5 + ln * 0.5;
+          } else {
+            la = smoothDriverLat * 0.45 + la * 0.55;
+            ln = smoothDriverLng * 0.45 + ln * 0.55;
+          }
+        }
+        smoothDriverLat = la;
+        smoothDriverLng = ln;
         ensureMap();
         if (!map) return;
-        if (!driverIcon) driverIcon = getDriverIcon("car");
+        var icon = makeVehicleDivIcon(currentDriverType);
         if (driverMarker) {
+          driverMarker.setIcon(icon);
           animateMarkerTo(la, ln);
         } else {
-          driverMarker = L.marker([la, ln], { title: "موقع المندوب", icon: driverIcon })
+          driverMarker = L.marker([la, ln], { title: "موقع المندوب", icon: icon })
             .addTo(map)
-            .bindPopup("🚚 المندوب");
+            .bindPopup("المندوب");
+          map.setView([la, ln], Math.max(map.getZoom(), 14));
         }
-        map.panTo([la, ln], { animate: true, duration: 0.8 });
-        if (map.getZoom() < 14) map.setZoom(15);
+        if (opts.refocusMap) {
+          map.panTo([la, ln], { animate: true, duration: 0.5 });
+        }
         setTimeout(function () {
           if (map) map.invalidateSize();
-        }, 100);
+        }, 80);
       }
 
       function updateDropMarker(lat, lng) {
@@ -771,6 +863,8 @@
             map.removeLayer(driverMarker);
           } catch (e) {}
           driverMarker = null;
+          smoothDriverLat = null;
+          smoothDriverLng = null;
         }
         if (clearRoute === false) return;
         if (map && routeLine) {
@@ -822,8 +916,14 @@
           }
           dropGeocodeCache = Object.create(null);
           etaRequestId++;
+          lastTripRouteKey = "";
+          smoothDriverLat = null;
+          smoothDriverLng = null;
+          localPendingRating = 0;
+          lastRateFormKey = "";
         }
         currentOrderId = order.id;
+        lastOrder = order;
 
         var deliveryStatus = order.delivery_status || order.status;
         var st = STATUS_AR[deliveryStatus] || deliveryStatus;
@@ -900,23 +1000,37 @@
 
         var lat = order.driver_lat;
         var lng = order.driver_lng;
+        var hadDriverMarker = !!driverMarker;
         var vehicleType = detectVehicleKind(order);
         currentDriverType = vehicleType;
-        driverIcon = getDriverIcon(vehicleType);
         var dropLat = order.drop_lat == null ? null : Number(order.drop_lat);
         var dropLng = order.drop_lng == null ? null : Number(order.drop_lng);
         var hasDropPoint = Number.isFinite(dropLat) && Number.isFinite(dropLng);
-        void renderTripRoute(order);
+        var tripKey =
+          String(order.id || "") +
+          "|" +
+          [
+            order.pickup_lat,
+            order.pickup_lng,
+            String(order.pickup_address || ""),
+            order.drop_lat,
+            order.drop_lng,
+            String(order.drop_address || ""),
+          ].join("~");
+        if (tripKey !== lastTripRouteKey) {
+          lastTripRouteKey = tripKey;
+          void renderTripRoute(order);
+        }
         var hasDriverLocation = lat != null && lng != null && !Number.isNaN(Number(lat)) && !Number.isNaN(Number(lng));
         if (deliveryStatus === "delivered" && hasDropPoint) {
-          updateDriverMarker(dropLat, dropLng);
+          updateDriverMarker(dropLat, dropLng, { refocusMap: !hadDriverMarker });
           updateDropMarker(dropLat, dropLng);
           document.getElementById("coords").textContent =
             "📍 تم التسليم عند نقطة النهاية: " + dropLat + " ، " + dropLng;
           document.getElementById("coordsMeta").textContent = "";
         } else if (order.driver_lat && order.driver_lng && hasDriverLocation) {
           document.getElementById("coords").textContent = "خط العرض: " + lat + " — خط الطول: " + lng;
-          updateDriverMarker(lat, lng);
+          updateDriverMarker(lat, lng, { refocusMap: !hadDriverMarker });
           if (hasDropPoint) updateDropMarker(dropLat, dropLng);
           document.getElementById("coordsMeta").textContent = "";
         } else {
@@ -944,7 +1058,18 @@
             void updateEtaForOrder(order);
           }
         }
-        syncRateForm(order);
+        var rateKey =
+          String(order.id || "") +
+          "|" +
+          String(order.delivery_status || order.status || "") +
+          "|" +
+          String(order.rating == null ? "" : order.rating) +
+          "|" +
+          String(order.review || "");
+        if (rateKey !== lastRateFormKey || localPendingRating > 0) {
+          lastRateFormKey = rateKey;
+          syncRateForm(order);
+        }
         updateGpsStateUI(order);
         syncInvoiceButton();
         syncCancelButton(order);
@@ -973,6 +1098,9 @@
         try {
           localStorage.setItem("track_voice_enabled", voiceEnabled ? "true" : "false");
         } catch (e) {}
+        if (voiceEnabled) {
+          unlockAudioContext();
+        }
         if (!voiceEnabled && "speechSynthesis" in window) {
           try {
             window.speechSynthesis.cancel();
@@ -1061,6 +1189,7 @@
       }
 
       document.getElementById("btn").onclick = function () {
+        unlockAudioContext();
         fetchOrder();
         if (window.PlatformAPI.getToken()) {
           startTrackingPolling();
@@ -1101,7 +1230,11 @@
       loadVoiceSetting();
       (function () {
         var vb = document.getElementById("btnVoiceToggle");
-        if (vb) vb.onclick = toggleVoiceSetting;
+        if (vb)
+          vb.onclick = function () {
+            unlockAudioContext();
+            toggleVoiceSetting();
+          };
       })();
 
       var params = new URLSearchParams(location.search);
@@ -1120,6 +1253,7 @@
             if (!t || !t.getAttribute) return;
             var n = parseInt(t.getAttribute("data-n"), 10);
             if (Number.isNaN(n) || n < 1) return;
+            localPendingRating = n;
             selectedRate = n;
             paintStars(n);
           });
@@ -1142,6 +1276,7 @@
               });
               if (j.order) {
                 if (mEl) mEl.textContent = "";
+                localPendingRating = 0;
                 renderOrder(j.order);
               }
             } catch (e) {

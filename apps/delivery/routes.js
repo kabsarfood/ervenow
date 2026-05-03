@@ -47,6 +47,20 @@ async function getUserPhoneById(sb, userId) {
   return String(data.phone);
 }
 
+/** يُرفق نوع مركبة المندوب من جدول drivers (للخريطة / التتبع) */
+async function attachDriverCarType(sb, order) {
+  if (!order || !order.driver_id) return order;
+  try {
+    const phone = await getUserPhoneById(sb, order.driver_id);
+    if (!phone) return order;
+    const digits = phone.replace(/\D/g, "");
+    if (digits.length < 9) return order;
+    const { data: drv, error } = await sb.from("drivers").select("car_type").eq("phone", digits).maybeSingle();
+    if (!error && drv && drv.car_type) order.driver_car_type = String(drv.car_type).trim();
+  } catch (_e) {}
+  return order;
+}
+
 router.get("/health", (_req, res) => ok(res, { service: "delivery" }));
 
 router.get("/orders", optionalAuth, async (req, res) => {
@@ -98,6 +112,7 @@ router.get("/orders/:id", requireAuth, async (req, res) => {
     const { data, error } = await q.single();
     if (error) return fail(res, error.message, 404);
     const o = data;
+    await attachDriverCarType(req.supabase, o);
     if (req.appUser.role === "admin") {
       return ok(res, { order: o });
     }
