@@ -78,6 +78,64 @@ function getCorsAllowedOrigins() {
 
 const corsAllowedOrigins = getCorsAllowedOrigins();
 
+/** يطابق ervenow.com مع www.ervenow.com */
+function stripLeadingWww(host) {
+  const h = String(host || "").trim().toLowerCase();
+  return h.startsWith("www.") ? h.slice(4) : h;
+}
+
+/** مفاتيح مضيف الطلب (مع www موحّد) — Host و X-Forwarded-Host إن وُجد */
+function requestHostKeys(req) {
+  const raw = String(req.headers.host || "")
+    .split(":")[0]
+    .toLowerCase();
+  const xf = String(req.headers["x-forwarded-host"] || "")
+    .split(",")[0]
+    .trim()
+    .split(":")[0]
+    .toLowerCase();
+  return [...new Set([xf, raw].filter(Boolean))].map(stripLeadingWww);
+}
+
+/** Origin يخص نفس النشرة: يطابق Host (أو المضيف المعاد توجيهه) بعد تطبيع www */
+function isSameDeploymentOrigin(originHeader, req) {
+  try {
+    const o = new URL(originHeader);
+    const originKey = stripLeadingWww(o.hostname);
+    const keys = requestHostKeys(req);
+    return keys.some((k) => k && k === originKey);
+  } catch {
+    return false;
+  }
+}
+
+function corsDynamic(req, res, next) {
+  return cors({
+    origin(originHeader, callback) {
+      // طلبات بدون Origin (curl، تطبيقات، بعض السيناريوهات الداخلية)
+      if (!originHeader) return callback(null, true);
+
+      // نفس الموقع الظاهر في ERVENOW_PUBLIC_URL (مقارنة origin وليس السلسلة الخام — قد يحتوي المسار)
+      try {
+        const site = String(process.env.ERVENOW_PUBLIC_URL || "").trim().replace(/\/$/, "");
+        if (site.startsWith("http") && new URL(site).origin === new URL(originHeader).origin) {
+          return callback(null, true);
+        }
+      } catch (_) {}
+
+      // نفس النشرة: Origin يطابق Host / X-Forwarded-Host (مع www)
+      if (isSameDeploymentOrigin(originHeader, req)) return callback(null, true);
+
+      // القائمة: localhost الافتراضي + CORS_ORIGINS + مشتقات ERVENOW_PUBLIC_URL (www/apex)
+      if (corsAllowedOrigins.includes(originHeader)) return callback(null, true);
+
+      return callback(new Error("CORS blocked"));
+    },
+    credentials: true,
+    allowedHeaders: ["Content-Type", "Authorization", "X-Source", "Idempotency-Key"],
+  })(req, res, next);
+}
+
 /** أسماء مقاطع مسموحة تبدأ بنقطة (معايير عامة مثل ACME) */
 const DOT_SEGMENT_ALLOW = new Set([".well-known"]);
 
@@ -144,17 +202,7 @@ async function assertRequiredSchema() {
 
 app.use(blockSensitiveAccess);
 
-app.use(
-  cors({
-    origin(origin, callback) {
-      if (!origin) return callback(null, true);
-      if (corsAllowedOrigins.includes(origin)) return callback(null, true);
-      return callback(new Error("CORS blocked"));
-    },
-    credentials: true,
-    allowedHeaders: ["Content-Type", "Authorization", "X-Source", "Idempotency-Key"],
-  })
-);
+app.use(corsDynamic);
 app.use(express.json({ limit: "12mb" }));
 app.use(isProd ? morgan("tiny") : morgan("dev"));
 
