@@ -48,6 +48,18 @@ function getDlqQueue() {
   return dlqInstance;
 }
 
+/** فحص اتصال Redis (صحة الطابور). بدون REDIS_URL يُعاد skipped */
+async function pingRedis() {
+  const conn = getConnection();
+  if (!conn) return { skipped: true, ok: false };
+  try {
+    const pong = await conn.ping();
+    return { skipped: false, ok: pong === "PONG" };
+  } catch (e) {
+    return { skipped: false, ok: false, message: e && e.message };
+  }
+}
+
 /**
  * إضافة مهمة توصيل. بدون REDIS_URL يُنفَّذ المعالج inline (setImmediate) للتطوير المحلي.
  */
@@ -84,5 +96,6 @@ module.exports = {
   getConnection,
   getQueue,
   getDlqQueue,
+  pingRedis,
   DEFAULT_JOB_OPTS,
 };

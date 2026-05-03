@@ -174,7 +174,7 @@ router.get("/bookings", requireAuth, async (req, res) => {
     return res.json({ ok: true, bookings: data || [] });
   } catch (e) {
     console.error(e);
-    return res.status(500).json({ ok: false });
+    return res.status(500).json({ ok: false, error: "INTERNAL_ERROR" });
   }
 });
 

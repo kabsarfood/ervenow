@@ -1,0 +1,259 @@
+/* صفحة التتبع — المرحلة 2 (هوية بني ملكي + خلفية سكري) */
+
+.track-body {
+  margin: 0;
+  min-height: 100vh;
+  background:
+    radial-gradient(1200px 800px at 20% 10%, rgba(118, 75, 40, 0.08), transparent 55%),
+    radial-gradient(900px 600px at 80% 30%, rgba(235, 222, 197, 0.45), transparent 55%),
+    linear-gradient(135deg, var(--bg1), var(--bg2));
+}
+
+.track-shell {
+  width: 100%;
+  max-width: min(1200px, 100%);
+  margin: 0 auto;
+  padding: clamp(12px, 2.2vw, 24px) clamp(10px, 2vw, 28px) clamp(24px, 4vw, 40px);
+  box-sizing: border-box;
+}
+
+.track-header {
+  padding: 18px 18px 16px;
+  border-radius: 22px;
+  border: 1px solid rgba(61, 34, 19, 0.14);
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.95), rgba(248, 241, 229, 0.88)),
+    linear-gradient(135deg, rgba(74, 41, 23, 0.06), transparent 55%);
+  box-shadow: var(--shadow);
+  margin-bottom: 14px;
+}
+
+.track-header__brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.track-header__kabsar {
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  color: var(--gold2);
+}
+
+.track-header__title {
+  margin: 2px 0 0;
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--brown2);
+}
+
+.track-header__hint {
+  margin: 10px 0 0;
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.track-main {
+  margin-bottom: 16px;
+}
+
+.track-msg {
+  padding: 14px 16px;
+  border-radius: 16px;
+  font-weight: 700;
+  font-size: 14px;
+  text-align: center;
+  border: 1px solid rgba(61, 34, 19, 0.12);
+  background: rgba(255, 255, 255, 0.85);
+  color: var(--muted);
+}
+
+.track-msg--bad {
+  color: #8f2940;
+  border-color: rgba(198, 40, 75, 0.25);
+  background: rgba(198, 40, 75, 0.06);
+}
+
+.track-content {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+@media (min-width: 860px) {
+  .track-content {
+    flex-direction: row;
+    align-items: stretch;
+  }
+
+  .track-panel {
+    flex: 0 0 300px;
+  }
+
+  .track-map-wrap {
+    flex: 1;
+    min-width: 0;
+  }
+}
+
+.track-panel {
+  padding: 16px;
+  border-radius: 20px;
+  border: 1px solid var(--stroke);
+  background: linear-gradient(180deg, var(--card), var(--card2));
+  box-shadow: var(--shadow);
+}
+
+.track-panel__row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+
+.track-panel__row:last-of-type {
+  margin-bottom: 16px;
+}
+
+.track-label {
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.track-value {
+  font-size: 15px;
+  color: var(--brown2);
+}
+
+.track-status-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 800;
+  background: rgba(248, 241, 229, 0.95);
+  border: 1px solid rgba(61, 34, 19, 0.14);
+  color: var(--brown2);
+}
+
+.track-status-pill.is-onroad {
+  background: rgba(185, 135, 47, 0.15);
+  border-color: rgba(185, 135, 47, 0.35);
+}
+
+.track-status-pill.is-delivering {
+  background: rgba(74, 41, 23, 0.1);
+}
+
+.track-status-pill.is-delivered {
+  background: rgba(27, 143, 85, 0.12);
+  border-color: rgba(27, 143, 85, 0.3);
+  color: #146b42;
+}
+
+.track-status-pill.is-preparing {
+  background: rgba(185, 135, 47, 0.12);
+}
+
+.track-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.track-actions .btn {
+  text-align: center;
+  text-decoration: none;
+  justify-content: center;
+  display: inline-flex;
+  align-items: center;
+}
+
+.track-map-wrap {
+  border-radius: 20px;
+  overflow: hidden;
+  border: 1px solid var(--stroke);
+  box-shadow: var(--shadow);
+  background: #fffdf9;
+}
+
+.track-map {
+  height: 320px;
+  width: 100%;
+  z-index: 1;
+}
+
+@media (min-width: 860px) {
+  .track-map {
+    height: 420px;
+  }
+}
+
+.track-map-legend {
+  margin: 0;
+  padding: 10px 14px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  border-top: 1px solid rgba(61, 34, 19, 0.1);
+  background: rgba(255, 253, 248, 0.95);
+}
+
+.track-legend-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  vertical-align: middle;
+  margin-left: 4px;
+}
+
+.track-legend-dot--cust {
+  background: #b9872f;
+  box-shadow: 0 0 0 2px rgba(185, 135, 47, 0.25);
+}
+
+.track-legend-dot--drv {
+  background: #4a2917;
+  box-shadow: 0 0 0 2px rgba(74, 41, 23, 0.2);
+}
+
+.track-legend-gap {
+  display: inline-block;
+  width: 16px;
+}
+
+.track-footer {
+  margin-top: 8px;
+  padding: 16px 18px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #4a2917, #2b170d);
+  color: #f5e6c8;
+  border: 1px solid rgba(185, 135, 47, 0.28);
+  box-shadow: 0 14px 36px rgba(43, 23, 13, 0.2);
+  font-size: 13px;
+  font-weight: 600;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+
+.track-footer__sep {
+  opacity: 0.45;
+}
+
+.order-no-bidi {
+  unicode-bidi: isolate;
+  display: inline-block;
+  letter-spacing: 0.02em;
+}
+
+.leaflet-marker-icon.track-marker-emoji {
+  background: transparent !important;
+  border: none !important;
+}

@@ -97,7 +97,7 @@ router.get("/orders/:id", requireAuth, async (req, res) => {
   }
 });
 
-router.post("/orders", deliveryOrdersCreateLimiter, requireAuth, async (req, res) => {
+router.post("/orders", requireAuth, deliveryOrdersCreateLimiter, async (req, res) => {
   try {
     const body = { ...(req.body || {}) };
     delete body.idempotency_key;

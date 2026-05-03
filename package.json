@@ -7,6 +7,7 @@
     "start": "node server/server.js",
     "dev": "node server/server.js",
     "worker:delivery": "node workers/deliveryWorker.js",
+    "frontend:sync": "node scripts/sync-ervenow-frontend.js",
     "load:test": "npx artillery run tests/load/artillery.yml"
   },
   "engines": {

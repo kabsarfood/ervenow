@@ -22,12 +22,30 @@ const { pushToErvenow } = require("../shared/utils/ervenowPush");
 const { startRetryNotificationsWorker } = require("../apps/driver/retryNotifications");
 const { createServiceClient } = require("../shared/config/supabase");
 const { register, metrics } = require("../shared/utils/metrics");
+const { logger } = require("../shared/utils/logger");
+const { pingRedis } = require("../queues/deliveryQueue");
 
 const PORT = process.env.PORT || 4000;
 const publicPath = path.join(__dirname, "..", "public");
 const isProd = process.env.NODE_ENV === "production";
-const serveStatic =
-  process.env.SERVE_STATIC !== "0" && String(process.env.SERVE_STATIC || "").toLowerCase() !== "false";
+/** API-only على Railway: لا تضع SERVE_STATIC=1 إلا إذا أردت تقديم public/ من Express محليًا */
+const serveStatic = process.env.SERVE_STATIC === "1";
+
+function getCorsAllowedOrigins() {
+  const raw = String(process.env.CORS_ORIGINS || "").trim();
+  if (!raw) {
+    return [
+      "http://localhost:3000",
+      "http://127.0.0.1:3000",
+      "http://localhost:5173",
+      "http://localhost:5500",
+      "http://127.0.0.1:5500",
+    ];
+  }
+  return raw.split(",").map((s) => s.trim()).filter(Boolean);
+}
+
+const corsAllowedOrigins = getCorsAllowedOrigins();
 
 /** أسماء مقاطع مسموحة تبدأ بنقطة (معايير عامة مثل ACME) */
 const DOT_SEGMENT_ALLOW = new Set([".well-known"]);
@@ -76,7 +94,20 @@ async function assertRequiredSchema() {
     );
   }
   if (probe.error) {
-    console.warn("[schema-check] users status probe warning:", probe.error.message || probe.error);
+    const err = probe.error;
+    const msg = err.message || String(err);
+    const cause = err.cause;
+    const causeMsg = cause && (cause.message || cause.code || String(cause));
+    if (/fetch failed/i.test(msg) || causeMsg) {
+      console.warn(
+        "[schema-check] تعذّر الاتصال بـ Supabase أثناء الفحص:",
+        msg,
+        causeMsg ? `(سبب: ${causeMsg})` : "",
+        "— تحقق من SUPABASE_URL والإنترنت؛ على Windows جرّب أيضاً تعطيل VPN/جدار ناري للاختبار."
+      );
+    } else {
+      console.warn("[schema-check] users status probe warning:", msg);
+    }
   }
 }
 
@@ -84,7 +115,11 @@ app.use(blockSensitiveAccess);
 
 app.use(
   cors({
-    origin: true,
+    origin(origin, callback) {
+      if (!origin) return callback(null, true);
+      if (corsAllowedOrigins.includes(origin)) return callback(null, true);
+      return callback(new Error("CORS blocked"));
+    },
     credentials: true,
     allowedHeaders: ["Content-Type", "Authorization", "X-Source", "Idempotency-Key"],
   })
@@ -99,6 +134,16 @@ app.use((req, res, next) => {
   res.on("finish", () => {
     try {
       metrics.observeApiRequest(req.method, req.path || req.url, res.statusCode, Date.now() - t0);
+      logger.info(
+        {
+          route: (req.originalUrl || req.url || "").split("?")[0],
+          method: req.method,
+          status: res.statusCode,
+          ms: Date.now() - t0,
+          userId: req.appUser && req.appUser.id ? req.appUser.id : undefined,
+        },
+        "http_request"
+      );
     } catch (_) {
       /* ignore */
     }
@@ -118,7 +163,7 @@ if (String(process.env.METRICS_ENABLED || "").trim() === "1") {
       res.setHeader("Content-Type", register.contentType);
       res.end(await register.metrics());
     } catch (_e) {
-      res.status(500).end();
+      res.status(500).json({ ok: false, error: "INTERNAL_ERROR" });
     }
   });
 }
@@ -157,7 +202,44 @@ app.get("/api/health", (_req, res) => {
   });
 });
 
-/* ——— واجهة ثابتة ——— عطّلها في الإنتاج عبر SERVE_STATIC=0 وقدّمها من CDN/nginx ——— */
+/** فحص عميق للمراقبة والنشر — لا يعرّي أسرارًا */
+app.get("/api/health/full", async (_req, res) => {
+  const result = { ok: true, services: {} };
+
+  const sb = createServiceClient();
+  if (!sb) {
+    result.services.supabase = "fail";
+    result.ok = false;
+  } else {
+    const probe = await sb.from("users").select("id").limit(1);
+    result.services.supabase = probe.error ? "fail" : "ok";
+    if (probe.error) result.ok = false;
+  }
+
+  const redisPing = await pingRedis();
+  if (redisPing.skipped) {
+    result.services.redis = "skipped";
+  } else {
+    result.services.redis = redisPing.ok ? "ok" : "fail";
+    if (!redisPing.ok) result.ok = false;
+  }
+
+  res.status(result.ok ? 200 : 503).json(result);
+});
+
+/** عند SERVE_STATIC=0 كان الجذر `/` يُرجع 404 فيكسر فحص الصحة الافتراضي على Railway ويُربك المتصفح */
+if (!serveStatic) {
+  app.get("/", (_req, res) => {
+    res.json({
+      ok: true,
+      service: "ervenow-api",
+      health: "/api/health",
+      note: "SERVE_STATIC=0 — الواجهة من CDN/nginx أو خدمة منفصلة",
+    });
+  });
+}
+
+/* ——— واجهة ثابتة ——— فقط عند SERVE_STATIC=1 ——— */
 if (serveStatic) {
   app.use(
     express.static(publicPath, {
@@ -270,9 +352,12 @@ app.use((_req, res) => {
 });
 
 app.use((err, _req, res, _next) => {
-  console.error(err);
+  if (err && String(err.message || "") === "CORS blocked") {
+    return res.status(403).json({ ok: false, error: "CORS_BLOCKED" });
+  }
+  logger.error({ err: err && (err.message || String(err)) }, "express_error");
   if (isProd) {
-    return res.status(500).end();
+    return res.status(500).json({ ok: false, error: "INTERNAL_ERROR" });
   }
   res.status(500).json({ ok: false, error: err.message || "error" });
 });
@@ -282,6 +367,11 @@ app.use((err, _req, res, _next) => {
     await assertRequiredSchema();
     app.listen(PORT, "0.0.0.0", () => {
       console.log("🚀 ERVENOW RUNNING ON", PORT);
+      if (!serveStatic && isProd && !String(process.env.CORS_ORIGINS || "").trim()) {
+        console.warn(
+          "[boot] أنصح بتعريف CORS_ORIGINS على Railway (نطاق Vercel مفصول بفواصل) وإلا المتصفح قد يمنع طلبات API."
+        );
+      }
     });
     startRetryNotificationsWorker();
   } catch (e) {
@@ -290,4 +380,4 @@ app.use((err, _req, res, _next) => {
   }
 })();
 
-module.exports.pushToErvenow = pushToErvenow;
+module.exports = { pushToErvenow };

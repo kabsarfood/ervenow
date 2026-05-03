@@ -1,0 +1,367 @@
+/* صفحة طلب العميل — المرحلة 6 */
+
+.order-page .order-hero {
+  padding: 18px 18px 16px;
+  border-radius: 22px;
+  border: 1px solid rgba(61, 34, 19, 0.14);
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.95), rgba(248, 241, 229, 0.88)),
+    linear-gradient(135deg, rgba(74, 41, 23, 0.06), transparent 55%);
+  box-shadow: var(--shadow);
+  margin-bottom: 14px;
+}
+
+.order-page .order-hero h1 {
+  margin: 4px 0 0;
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--brown2);
+}
+
+.order-type-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 14px 0 8px;
+}
+
+.order-type-btn {
+  flex: 1;
+  min-width: 140px;
+  padding: 14px 12px;
+  border-radius: 16px;
+  border: 2px solid rgba(61, 34, 19, 0.14);
+  background: rgba(255, 253, 248, 0.95);
+  font-family: inherit;
+  font-weight: 800;
+  font-size: 14px;
+  color: var(--brown2);
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.order-type-btn:hover {
+  border-color: rgba(185, 135, 47, 0.45);
+  transform: translateY(-1px);
+}
+
+.order-type-btn.is-active {
+  border-color: rgba(74, 41, 23, 0.55);
+  background: linear-gradient(135deg, rgba(74, 41, 23, 0.12), rgba(248, 241, 229, 0.9));
+  box-shadow: 0 8px 22px rgba(43, 23, 13, 0.1);
+}
+
+.loc-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin: 10px 0;
+}
+
+.loc-row .btn {
+  flex: 0 0 auto;
+}
+
+.loc-preview {
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 600;
+  flex: 1;
+  min-width: 0;
+  word-break: break-all;
+}
+
+.loc-preview--block {
+  display: block;
+  margin-top: 8px;
+}
+
+.loc-row--btns {
+  margin-bottom: 4px;
+}
+
+.loc-paste {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 10px 0 6px;
+  align-items: stretch;
+}
+
+.loc-paste__input {
+  flex: 1;
+  min-width: 200px;
+  margin: 0;
+}
+
+.loc-paste__btn {
+  flex-shrink: 0;
+}
+
+.map-modal[hidden] {
+  display: none !important;
+}
+
+.map-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+.map-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(20, 12, 8, 0.55);
+}
+
+.map-modal__panel {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 520px;
+  max-height: min(90vh, 640px);
+  display: flex;
+  flex-direction: column;
+  border-radius: 20px;
+  background: var(--card-bg, #fffdf9);
+  border: 1px solid rgba(61, 34, 19, 0.18);
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.2);
+  padding: 14px 16px 16px;
+}
+
+.map-modal__title {
+  margin: 0 0 6px;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--brown2);
+}
+
+.map-modal__hint {
+  margin: 0 0 10px;
+  font-size: 12px;
+}
+
+.map-modal__map {
+  height: 280px;
+  width: 100%;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid rgba(61, 34, 19, 0.12);
+}
+
+.map-modal__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 14px;
+  justify-content: flex-end;
+}
+
+.order-success {
+  text-align: center;
+  padding: 24px 16px;
+  border-radius: 20px;
+  border: 1px solid rgba(27, 143, 85, 0.35);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(236, 252, 242, 0.92));
+}
+
+.order-success h2 {
+  margin: 0 0 10px;
+  font-size: 18px;
+  color: #146b42;
+}
+
+.order-success .order-no {
+  font-size: 15px;
+  font-weight: 800;
+  direction: ltr;
+  unicode-bidi: isolate;
+  color: var(--brown2);
+}
+
+.order-success-number {
+  margin: 6px 0 0;
+  min-height: 1.5em;
+}
+
+textarea.input {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.order-page .card[hidden] {
+  display: none !important;
+}
+
+.field-hint {
+  margin: 0 0 8px;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.order-price-box {
+  margin: 16px 0;
+  padding: 14px 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(185, 135, 47, 0.35);
+  background: linear-gradient(145deg, rgba(255, 252, 245, 0.98), rgba(248, 241, 229, 0.75));
+}
+
+.order-price-box__title {
+  font-weight: 800;
+  font-size: 14px;
+  color: var(--brown2);
+  margin-bottom: 8px;
+}
+
+.order-price-box__line {
+  margin: 4px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--brown2);
+}
+
+.order-price-box__fee {
+  font-size: 16px;
+  font-weight: 800;
+  color: #146b42;
+}
+
+.order-price-box__peak {
+  margin: 8px 0;
+  font-size: 13px;
+  font-weight: 800;
+  color: #b45309;
+}
+
+.order-price-box__note {
+  margin: 10px 0 0;
+  font-size: 12px;
+}
+
+.payment-options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.payment-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 2px solid rgba(61, 34, 19, 0.12);
+  background: rgba(255, 253, 248, 0.95);
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--brown2);
+  line-height: 1.4;
+}
+
+.payment-option:has(input:checked) {
+  border-color: rgba(74, 41, 23, 0.45);
+  background: linear-gradient(135deg, rgba(74, 41, 23, 0.08), rgba(248, 241, 229, 0.85));
+}
+
+.payment-option input {
+  margin-top: 3px;
+  flex-shrink: 0;
+}
+
+.success-summary {
+  margin: 12px 0 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--brown2);
+  line-height: 1.5;
+}
+
+.success-payment-hint {
+  margin: 10px 0 0;
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.55;
+  max-width: 340px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* ——— استجابة كاملة: طلب العميل ——— */
+.order-page {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.order-page .order-hero {
+  padding: clamp(14px, 3vw, 18px);
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.order-page .order-hero h1 {
+  font-size: clamp(16px, 4vw, 18px);
+  word-break: break-word;
+}
+
+.order-type-btn {
+  min-height: 44px;
+  font-size: clamp(13px, 3.2vw, 14px);
+}
+
+.loc-paste__input {
+  min-width: 0;
+  width: 100%;
+}
+
+.loc-row {
+  width: 100%;
+  max-width: 100%;
+}
+
+.loc-row .btn {
+  min-height: 44px;
+  flex: 1 1 auto;
+  min-width: min(100%, 160px);
+}
+
+@media (max-width: 600px) {
+  .loc-row.loc-row--btns {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .loc-row.loc-row--btns .btn {
+    width: 100%;
+    min-width: 0;
+  }
+  .loc-paste {
+    flex-direction: column;
+  }
+  .loc-paste__btn {
+    width: 100%;
+  }
+  .map-modal__panel {
+    max-height: min(92vh, 720px);
+    margin: auto;
+  }
+  .map-modal__map {
+    height: min(50vh, 280px);
+  }
+}
+
+@media (max-width: 900px) {
+  .order-price-box__line,
+  .order-price-box__title {
+    font-size: clamp(13px, 3.2vw, 14px);
+  }
+}

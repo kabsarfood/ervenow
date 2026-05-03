@@ -1,0 +1,9 @@
+# Railway — تشغيل خادم ERVENOW (من جذر المستودع حيث package.json)
+[build]
+builder = "nixpacks"
+
+[deploy]
+startCommand = "npm start"
+healthcheckPath = "/api/health"
+healthcheckTimeout = 300
+# عرّف على Railway: SERVE_STATIC=0 و CORS_ORIGINS=نطاق_Vercel

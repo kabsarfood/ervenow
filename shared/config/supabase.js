@@ -1,5 +1,54 @@
 const { createClient } = require("@supabase/supabase-js");
 
+try {
+  const dns = require("dns");
+  if (typeof dns.setDefaultResultOrder === "function") {
+    dns.setDefaultResultOrder("ipv4first");
+  }
+} catch (_) {
+  /* ignore */
+}
+
+/**
+ * إعادة محاولة خفيفة لـ fetch (Undici) عند أخطاء شبكة عابرة — شائعة مع Supabase على بعض شبكات Windows.
+ */
+function wrapFetchWithRetry(baseFetch) {
+  const attempts = Math.max(1, Math.min(5, Number(process.env.SUPABASE_FETCH_RETRIES) || 3));
+  return async function supabaseFetch(input, init) {
+    let lastErr;
+    for (let i = 0; i < attempts; i += 1) {
+      try {
+        return await baseFetch(input, init);
+      } catch (err) {
+        lastErr = err;
+        const code = err && err.cause && err.cause.code;
+        const retryable =
+          code === "ECONNRESET" ||
+          code === "ETIMEDOUT" ||
+          code === "ENOTFOUND" ||
+          code === "UND_ERR_CONNECT_TIMEOUT" ||
+          (err.message && /fetch failed/i.test(String(err.message)));
+        if (retryable && i < attempts - 1) {
+          await new Promise((r) => setTimeout(r, 200 * (i + 1)));
+          continue;
+        }
+        throw err;
+      }
+    }
+    throw lastErr;
+  };
+}
+
+function getSupabaseClientOptions() {
+  const base = globalThis.fetch;
+  if (typeof base !== "function") return {};
+  return {
+    global: {
+      fetch: wrapFetchWithRetry(base),
+    },
+  };
+}
+
 function getUrl() {
   const u = process.env.SUPABASE_URL;
   if (!u) throw new Error("SUPABASE_URL is required");
@@ -43,6 +92,7 @@ function createServiceClient() {
   try {
     return createClient(getUrl(), key, {
       auth: { persistSession: false, autoRefreshToken: false },
+      ...getSupabaseClientOptions(),
     });
   } catch (e) {
     console.error("[supabase] createServiceClient:", e.message || e);
@@ -52,10 +102,13 @@ function createServiceClient() {
 
 /** عميل مرتبط بـ JWT المستخدم — تُطبَّق RLS حسب المستخدم */
 function createUserClient(accessToken) {
+  const extra = getSupabaseClientOptions();
+  const globalOpts = {
+    ...(extra.global || {}),
+    headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
+  };
   return createClient(getUrl(), getAnonKey(), {
-    global: {
-      headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
-    },
+    global: globalOpts,
     auth: { persistSession: false, autoRefreshToken: false },
   });
 }

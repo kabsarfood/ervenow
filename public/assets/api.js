@@ -3,6 +3,38 @@
   var LEGACY_TOKEN_KEY = "erwenow_access_token";
   var FALLBACK_TOKEN_KEY = "token";
 
+  function readApiBase() {
+    if (w.__ERVENOW_API_BASE__ != null && String(w.__ERVENOW_API_BASE__).trim() !== "") {
+      return String(w.__ERVENOW_API_BASE__).trim().replace(/\/$/, "");
+    }
+    try {
+      if (typeof document !== "undefined") {
+        var m = document.querySelector('meta[name="ervenow-api-base"]');
+        if (m && m.getAttribute("content")) {
+          return m.getAttribute("content").trim().replace(/\/$/, "");
+        }
+      }
+    } catch (e) {}
+    return "";
+  }
+
+  /**
+   * @param {string} url
+   * @param {RequestInit} [options]
+   */
+  function apiFetch(url, options) {
+    options = options || {};
+    var ms = Number(w.__ERVENOW_FETCH_TIMEOUT_MS) || 5000;
+    var ctrl = new AbortController();
+    var tid = setTimeout(function () {
+      ctrl.abort();
+    }, ms);
+    var merged = Object.assign({}, options, { signal: ctrl.signal });
+    return fetch(url, merged).finally(function () {
+      clearTimeout(tid);
+    });
+  }
+
   w.PlatformAPI = {
     getToken: function () {
       try {
@@ -38,20 +70,23 @@
         }
       } catch (e) {}
     },
+    apiUrl: function (path) {
+      var base = readApiBase();
+      var p = path.indexOf("/") === 0 ? path : "/" + path;
+      return base ? base + p : p;
+    },
+    apiFetch: apiFetch,
     api: async function (path, opts) {
       opts = opts || {};
       var headers = Object.assign({ "Content-Type": "application/json" }, opts.headers || {});
       var tok = w.PlatformAPI.getToken();
       if (tok) headers.Authorization = "Bearer " + tok;
-      var url = path.indexOf("/") === 0 ? path : "/" + path;
+      var url = w.PlatformAPI.apiUrl(path);
       var body = opts.body;
       if (body && typeof body === "object" && !(body instanceof FormData)) {
         body = JSON.stringify(body);
       }
-      var r = await fetch(
-        url,
-        Object.assign({}, opts, { headers: headers, body: body })
-      );
+      var r = await apiFetch(url, Object.assign({}, opts, { headers: headers, body: body }));
       var j = await r.json().catch(function () {
         return {};
       });

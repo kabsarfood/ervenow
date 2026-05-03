@@ -1,0 +1,28 @@
+ERVENOW — نشر الواجهة (Vercel) + API (Railway)
+================================================
+
+1) Railway (API فقط)
+   - SERVE_STATIC=0
+   - NODE_ENV=production
+   - CORS_ORIGINS=https://your-app.vercel.app,http://localhost:3000
+     (بدون مسافات بعد الفاصلة؛ أضف كل نطاقات الواجهة)
+
+2) المفتاح في الواجهة
+   عدّل الملف: assets/api-config.js
+   ضع رابط Railway الكامل بدون شرطة أخيرة، مثال:
+   window.__ERVENOW_API_BASE__ = "https://xxxx.up.railway.app";
+
+   أو عرّف meta في أي صفحة:
+   <meta name="ervenow-api-base" content="https://xxxx.up.railway.app" />
+
+3) Vercel
+   - أنشئ مشروعًا من مجلد ervenow-frontend (هذا المجلد بعد المزامنة)
+   - Framework: Other / Static
+   - تحقق: GET https://your-api.../api/health
+
+4) Worker (خدمة ثانية على Railway)
+   - Start Command: npm run worker:delivery
+   - نفس المتغيرات + REDIS_URL من Redis Railway
+
+مزامنة المحتوى من المستودع:
+   npm run frontend:sync

@@ -130,7 +130,7 @@ function labelByType(type) {
   return map[type] || type || "خدمة";
 }
 
-router.post("/", checkoutLimiter, requireAuth, async (req, res) => {
+router.post("/", requireAuth, checkoutLimiter, async (req, res) => {
   const perfStart = Date.now();
   const idemKey = normalizeIdempotencyKey(req);
   let idemClaimed = false;
@@ -353,7 +353,7 @@ router.post("/", checkoutLimiter, requireAuth, async (req, res) => {
     } catch (_) {
       /* ignore */
     }
-    return res.status(500).json({ ok: false });
+    return res.status(500).json({ ok: false, error: "INTERNAL_ERROR" });
   }
 });
 
