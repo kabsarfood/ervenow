@@ -40,18 +40,40 @@ try {
 const hidePublicUi = String(process.env.HIDE_PUBLIC_UI || "").trim() === "1";
 const servePublicUi = serveStatic || (hasPublicIndex && !hidePublicUi);
 
+/** أصول تُستنتج من ERVENOW_PUBLIC_URL (نفس نطاق الموقع + www) لتفادي «Failed to fetch» عند نسيان CORS_ORIGINS */
+function originsFromPublicSiteUrl() {
+  const s = String(process.env.ERVENOW_PUBLIC_URL || "").trim().replace(/\/$/, "");
+  if (!s.startsWith("http")) return [];
+  try {
+    const u = new URL(s);
+    const origin = u.origin;
+    const host = u.hostname.toLowerCase();
+    const out = [origin];
+    if (host === "localhost" || host === "127.0.0.1" || host.endsWith(".local")) return out;
+    if (host.startsWith("www.")) {
+      const apex = `${u.protocol}//${host.slice(4)}`;
+      if (apex !== origin) out.push(apex);
+    } else {
+      out.push(`${u.protocol}//www.${host}`);
+    }
+    return out;
+  } catch {
+    return [];
+  }
+}
+
 function getCorsAllowedOrigins() {
   const raw = String(process.env.CORS_ORIGINS || "").trim();
-  if (!raw) {
-    return [
-      "http://localhost:3000",
-      "http://127.0.0.1:3000",
-      "http://localhost:5173",
-      "http://localhost:5500",
-      "http://127.0.0.1:5500",
-    ];
-  }
-  return raw.split(",").map((s) => s.trim()).filter(Boolean);
+  const localDefaults = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://localhost:5173",
+    "http://localhost:5500",
+    "http://127.0.0.1:5500",
+  ];
+  const fromEnv = raw ? raw.split(",").map((s) => s.trim()).filter(Boolean) : [];
+  const inferred = originsFromPublicSiteUrl();
+  return [...new Set([...localDefaults, ...fromEnv, ...inferred])];
 }
 
 const corsAllowedOrigins = getCorsAllowedOrigins();
@@ -388,9 +410,9 @@ app.use((err, _req, res, _next) => {
           "[boot] تقديم الواجهة من public/ رغم SERVE_STATIC≠1 — للـ API فقط على / عيّن HIDE_PUBLIC_UI=1"
         );
       }
-      if (!serveStatic && isProd && !String(process.env.CORS_ORIGINS || "").trim()) {
+      if (!serveStatic && isProd && !String(process.env.CORS_ORIGINS || "").trim() && !originsFromPublicSiteUrl().length) {
         console.warn(
-          "[boot] أنصح بتعريف CORS_ORIGINS على Railway (نطاق Vercel مفصول بفواصل) وإلا المتصفح قد يمنع طلبات API."
+          "[boot] عرّف CORS_ORIGINS أو ERVENOW_PUBLIC_URL (يُضاف أصل الموقع تلقائياً للـ CORS) وإلا المتصفح قد يمنع طلبات API من نطاق آخر."
         );
       }
     });

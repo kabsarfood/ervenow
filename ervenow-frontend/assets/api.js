@@ -4,7 +4,8 @@
   var FALLBACK_TOKEN_KEY = "token";
 
   function readApiBase() {
-    if (w.__ERVENOW_API_BASE__ != null && String(w.__ERVENOW_API_BASE__).trim() !== "") {
+    /* نفس المنشأ: __ERVENOW_API_BASE__ = "" → مسارات نسبية /api/... */
+    if (w.__ERVENOW_API_BASE__ != null) {
       return String(w.__ERVENOW_API_BASE__).trim().replace(/\/$/, "");
     }
     try {
@@ -86,7 +87,21 @@
       if (body && typeof body === "object" && !(body instanceof FormData)) {
         body = JSON.stringify(body);
       }
-      var r = await apiFetch(url, Object.assign({}, opts, { headers: headers, body: body }));
+      var r;
+      try {
+        r = await apiFetch(url, Object.assign({}, opts, { headers: headers, body: body }));
+      } catch (e) {
+        var em = String((e && e.message) || e || "");
+        if (e && e.name === "AbortError") {
+          throw new Error("انتهت مهلة الاتصال بالخادم — أعد المحاولة أو تحقّق أن الخادم يعمل.");
+        }
+        if (/Failed to fetch|NetworkError|networkerror|Load failed|fetch/i.test(em)) {
+          throw new Error(
+            "تعذّر الاتصال بالخادم. إن كانت الواجهة على نطاق مختلف عن الـ API: أضف نطاق الواجهة إلى CORS_ORIGINS على الخادم، أو عيّن ERVENOW_PUBLIC_URL ليطابق رابط الموقع الظاهر للزائر."
+          );
+        }
+        throw e;
+      }
       var j = await r.json().catch(function () {
         return {};
       });
