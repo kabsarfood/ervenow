@@ -1,5 +1,7 @@
 const twilio = require("twilio");
 const { toE164 } = require("../../shared/utils/phone");
+const { roughDistanceKm } = require("../../shared/utils/geo");
+const { routeKmWithRoughFallback } = require("../../shared/utils/routeDistance");
 
 const seen = new Map();
 const TTL_MS = 60 * 1000;
@@ -49,8 +51,16 @@ async function sendWhatsApp(to, body) {
   });
 }
 
-function distance(a, b) {
-  return Math.sqrt(Math.pow(a.lat - b.lat, 2) + Math.pow(a.lng - b.lng, 2));
+function roughKmToPickup(driver, order) {
+  const orderLat = Number(order?.pickup_lat);
+  const orderLng = Number(order?.pickup_lng);
+  const dLat = Number(driver.lat);
+  const dLng = Number(driver.lng);
+  if (!Number.isFinite(orderLat) || !Number.isFinite(orderLng) || !Number.isFinite(dLat) || !Number.isFinite(dLng)) {
+    return Infinity;
+  }
+  const r = roughDistanceKm(dLat, dLng, orderLat, orderLng);
+  return Number.isFinite(r) ? r : Infinity;
 }
 
 async function getNearestDrivers(sb, order) {
@@ -67,13 +77,25 @@ async function getNearestDrivers(sb, order) {
     .not("lng", "is", null);
   if (error || !drivers?.length) return [];
 
-  return drivers
-    .map((d) => ({
-      ...d,
-      dist: distance({ lat: Number(d.lat), lng: Number(d.lng) }, { lat: orderLat, lng: orderLng }),
-    }))
-    .sort((a, b) => a.dist - b.dist)
-    .slice(0, 3);
+  const ROUGH_TOP_N = 30;
+  const OSRM_TOP_N = 10;
+
+  const roughSorted = [...drivers].sort((a, b) => roughKmToPickup(a, order) - roughKmToPickup(b, order));
+  const top30 = roughSorted.slice(0, ROUGH_TOP_N);
+  const top10 = top30.slice(0, OSRM_TOP_N);
+
+  const refined = await Promise.all(
+    top10.map(async (d) => {
+      const dLat = Number(d.lat);
+      const dLng = Number(d.lng);
+      const km = await routeKmWithRoughFallback(dLat, dLng, orderLat, orderLng);
+      const dist = Number.isFinite(km) ? km : Infinity;
+      return { ...d, dist };
+    })
+  );
+
+  refined.sort((a, b) => a.dist - b.dist);
+  return refined.slice(0, 3);
 }
 
 function canNotify(orderId, driverId) {

@@ -1,0 +1,86 @@
+# ضبط target والتوكنات من البيئة، مثال (PowerShell):
+#   $env:CUSTOMER_TOKEN="eyJ..."
+#   $env:DRIVER_TOKEN="eyJ..."
+#   npx artillery run tests/load/artillery.yml
+#
+# بدون توكن، سيناريوهات الـ checkout / السائق تعيد 401 وهذا متوقع.
+
+config:
+  target: "http://127.0.0.1:4000"
+  phases:
+    - duration: 30
+      arrivalRate: 5
+      name: "Warm up"
+    - duration: 60
+      arrivalRate: 25
+      name: "Sustained load"
+    - duration: 30
+      arrivalRate: 40
+      name: "Stress edge"
+  variables:
+    customerToken: "{{ $processEnvironment.CUSTOMER_TOKEN }}"
+    driverToken: "{{ $processEnvironment.DRIVER_TOKEN }}"
+
+scenarios:
+  - name: "Health + store list (public)"
+    flow:
+      - get:
+          url: "/api/health"
+      - get:
+          url: "/api/store?type=supermarket"
+          headers:
+            Accept: "application/json"
+
+  - name: "Delivery health"
+    flow:
+      - get:
+          url: "/api/delivery/health"
+
+  - name: "Checkout (auth + Idempotency-Key)"
+    flow:
+      - post:
+          url: "/api/checkout"
+          headers:
+            Authorization: "Bearer {{ customerToken }}"
+            Content-Type: "application/json"
+            Idempotency-Key: "artillery-{{ $randomString() }}"
+          json:
+            items:
+              - type: "delivery"
+                title: "Load test delivery"
+                price: 10
+                data:
+                  pickup_address: "A"
+                  drop_address: "B"
+                  pickup_lat: 24.7136
+                  pickup_lng: 46.6753
+                  drop_lat: 24.7236
+                  drop_lng: 46.6853
+
+  - name: "Driver — delivery orders list + wallet"
+    flow:
+      - get:
+          url: "/api/delivery/orders"
+          headers:
+            Authorization: "Bearer {{ driverToken }}"
+      - get:
+          url: "/api/driver/wallet"
+          headers:
+            Authorization: "Bearer {{ driverToken }}"
+
+  - name: "Delivery — create order (customer)"
+    flow:
+      - post:
+          url: "/api/delivery/orders"
+          headers:
+            Authorization: "Bearer {{ customerToken }}"
+            Content-Type: "application/json"
+            Idempotency-Key: "artillery-delivery-{{ $randomString() }}"
+          json:
+            pickup_address: "Load A"
+            drop_address: "Load B"
+            pickup_lat: 24.7136
+            pickup_lng: 46.6753
+            drop_lat: 24.7236
+            drop_lng: 46.6853
+            order_total: 25

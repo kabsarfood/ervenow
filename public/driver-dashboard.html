@@ -6,6 +6,7 @@
     <title>لوحة المندوب | ERVENOW</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
       body { margin: 0; font-family: Cairo, sans-serif; background: #f8f4ef; color: #2b1f16; }
       .wrap { max-width: 960px; margin: 20px auto; padding: 14px; }
@@ -16,6 +17,8 @@
       .card { background: #fff; border: 1px solid #e5d8cb; border-radius: 14px; padding: 12px; margin-bottom: 10px; }
       .meta { color: #6e5a4a; font-size: .9rem; margin-top: 6px; }
       .row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+      #driverMap { min-height: 300px; width: 100%; border-radius: 12px; overflow: hidden; border: 1px solid #e5d8cb; }
+      @media (max-width: 768px) { #driverMap { min-height: 240px; } }
     </style>
   </head>
   <body>
@@ -34,9 +37,15 @@
         <strong>💰 رصيدك</strong>
         <div class="meta" id="walletLine">جارٍ تحميل المحفظة...</div>
       </div>
+      <div class="card">
+        <strong>🗺️ خريطة التوصيل (المندوب / زائر المنصة)</strong>
+        <p class="meta">تظهر هنا حركة موقعك مباشرة وموقع زائر المنصة للطلب الجاري.</p>
+        <div id="driverMap"></div>
+      </div>
       <div id="ordersBox"></div>
     </div>
 
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="/assets/cart.js"></script>
     <script src="/assets/api.js"></script>
     <script>
@@ -48,7 +57,58 @@
       var knownOrders = [];
       var poll = null;
       var activeOrderIds = [];
+      var activeOrder = null;
       var notifyAudio = null;
+      var driverMap = null;
+      var myMarker = null;
+      var customerMarker = null;
+      var watchId = null;
+
+      function ensureDriverMap() {
+        if (driverMap || typeof L === "undefined") return;
+        driverMap = L.map("driverMap").setView([24.7136, 46.6753], 12);
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+          attribution: "&copy; OpenStreetMap contributors",
+        }).addTo(driverMap);
+      }
+
+      function updateMyMarker(lat, lng) {
+        ensureDriverMap();
+        if (!driverMap) return;
+        var ll = [Number(lat), Number(lng)];
+        if (!Number.isFinite(ll[0]) || !Number.isFinite(ll[1])) return;
+        if (!myMarker) {
+          myMarker = L.marker(ll, { title: "موقعي" }).addTo(driverMap).bindPopup("🚚 موقعك");
+        } else {
+          myMarker.setLatLng(ll);
+        }
+        if (!customerMarker) driverMap.setView(ll, 14);
+      }
+
+      function updateCustomerMarker(order) {
+        ensureDriverMap();
+        if (!driverMap) return;
+        if (!order) {
+          if (customerMarker) {
+            driverMap.removeLayer(customerMarker);
+            customerMarker = null;
+          }
+          return;
+        }
+        var lat = Number(order.drop_lat);
+        var lng = Number(order.drop_lng);
+        if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+        var ll = [lat, lng];
+        if (!customerMarker) {
+          customerMarker = L.marker(ll, { title: "موقع زائر المنصة" }).addTo(driverMap).bindPopup("👤 زائر المنصة");
+        } else {
+          customerMarker.setLatLng(ll);
+        }
+        var bounds = L.latLngBounds([]);
+        if (myMarker) bounds.extend(myMarker.getLatLng());
+        bounds.extend(customerMarker.getLatLng());
+        if (bounds.isValid()) driverMap.fitBounds(bounds.pad(0.25));
+      }
 
       function playNewOrderSound() {
         try {
@@ -68,28 +128,21 @@
         return b;
       }
 
-      async function sendLocationPing(orderId) {
+      function startLocationTracking() {
         if (!navigator.geolocation) return;
-        navigator.geolocation.getCurrentPosition(function (pos) {
-          window.PlatformAPI.api("/api/driver/update-location", {
-            method: "POST",
-            body: { order_id: orderId, lat: pos.coords.latitude, lng: pos.coords.longitude },
-          }).catch(function () {});
-        });
-      }
-
-      function sendLocationToActiveOrders() {
-        if (!navigator.geolocation) return;
-        if (!activeOrderIds.length) return;
-        navigator.geolocation.getCurrentPosition(function (pos) {
+        if (watchId != null) {
+          try { navigator.geolocation.clearWatch(watchId); } catch (_e) {}
+        }
+        watchId = navigator.geolocation.watchPosition(function (pos) {
           var lat = pos.coords.latitude;
           var lng = pos.coords.longitude;
-          activeOrderIds.forEach(function (oid) {
-            window.PlatformAPI.api("/api/driver/update-location", {
-              method: "POST",
-              body: { order_id: oid, lat: lat, lng: lng },
-            }).catch(function () {});
-          });
+          updateMyMarker(lat, lng);
+          var body = { lat: lat, lng: lng };
+          if (activeOrder && activeOrder.id) body.order_id = activeOrder.id;
+          window.PlatformAPI.api("/api/driver/update-location", {
+            method: "POST",
+            body: body,
+          }).catch(function () {});
         });
       }
 
@@ -109,6 +162,11 @@
             .map(function (o) {
               return o.id;
             });
+          activeOrder =
+            orders.find(function (o) {
+              return o.driver_id && (o.delivery_status === "accepted" || o.delivery_status === "delivering");
+            }) || null;
+          updateCustomerMarker(activeOrder);
 
           var box = document.getElementById("ordersBox");
           box.innerHTML = "";
@@ -134,7 +192,6 @@
                   try {
                     var r = await window.PlatformAPI.api("/api/driver/accept/" + o.id, { method: "POST" });
                     if (r.accepted === false) return showError(r.message || "تم استلامه");
-                    sendLocationPing(o.id);
                     showSuccess("تم قبول الطلب");
                     loadOrders();
                   } catch (e) { showError(e.message || "خطأ القبول"); }
@@ -147,7 +204,6 @@
                 mkBtn("بدء التوصيل", "btn-ghost", safeClick(async function () {
                   try {
                     await window.PlatformAPI.api("/api/driver/start-delivery/" + o.id, { method: "POST" });
-                    sendLocationPing(o.id);
                     showSuccess("تم بدء التوصيل");
                     loadOrders();
                   } catch (e) { showError(e.message || "تعذر البدء"); }
@@ -189,20 +245,22 @@
         if (poll) clearInterval(poll);
         poll = setInterval(function () {
           loadOrders();
-          sendLocationToActiveOrders();
         }, 5000);
       }
 
       document.getElementById("refreshBtn").onclick = loadOrders;
       document.getElementById("logoutBtn").onclick = function () {
+        try {
+          localStorage.removeItem("userPhone");
+        } catch (err) {}
         window.PlatformAPI.setToken("");
         location.href = "/driver-login";
       };
 
       loadOrders();
       loadWallet();
-      sendLocationToActiveOrders();
       startTrackingLoop();
+      startLocationTracking();
     </script>
   </body>
 </html>

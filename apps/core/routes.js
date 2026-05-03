@@ -8,18 +8,14 @@ const { createServiceClient, getDatabaseConfigHint } = require("../../shared/con
 const { sendWhatsApp } = require("../../shared/utils/whatsapp");
 
 const router = express.Router();
-const adminOtpStore = new Map();
-const ADMIN_OTP_TTL_MS = 5 * 60 * 1000;
+const otpStore = new Map();
+const OTP_TTL_MS = 5 * 60 * 1000;
 
 router.use((req, res, next) => {
   console.log("📥 CORE ROUTE HIT:", req.method, req.url);
   next();
 });
 
-/** رمز دخول موحّد (بدون واتساب / بدون عشوائي). قابل للتغيير عبر ERVENOW_LOGIN_CODE */
-const ERVENOW_LOGIN_CODE = String(
-  process.env.ERVENOW_LOGIN_CODE || process.env.FIXED_LOGIN_CODE || "12345"
-).trim();
 const ADMIN_LOGIN_PHONE_RAW = String(
   process.env.ERVENOW_ADMIN_LOGIN_PHONE || "0505745650"
 ).trim();
@@ -33,6 +29,10 @@ const ERVENOW_ADMIN_LOGIN_PHONE = toStoragePhoneDigits(ADMIN_LOGIN_PHONE_RAW);
 
 function genOtp() {
   return String(Math.floor(10000 + Math.random() * 90000));
+}
+
+function otpKey(role, phoneDigits) {
+  return String(role || "customer").toLowerCase() + ":" + String(phoneDigits || "");
 }
 
 function isAllowedAdminPhoneDigits(phoneDigits) {
@@ -81,23 +81,45 @@ function isMissingStatusColumnError(err) {
   return /users\.status|column .*status.* does not exist|Could not find the .*status/i.test(msg);
 }
 
-async function upsertDriverByPhone(sb, phoneDigits, preferredRole, preferredServiceType) {
+function isMissingNameColumnError(err) {
+  if (!err) return false;
+  const msg = String(err.message || err.details || "");
+  return /users\.name|column .*name.* does not exist|Could not find the .*name/i.test(msg);
+}
+
+async function upsertDriverByPhone(sb, phoneDigits, preferredRole, preferredServiceType, displayName) {
   const role = ALLOWED_USER_ROLES.has(preferredRole) ? preferredRole : "customer";
   const serviceType = role === "service" ? normalizeServiceType(preferredServiceType) : null;
+  const trimmedName =
+    role === "customer" && displayName ? String(displayName).trim().slice(0, 200) : "";
 
   let existing = null;
   let selErr = null;
-  const firstSel = await sb
+  let firstSel = await sb
     .from("users")
-    .select("id, role, status, phone, service_type, updated_at")
+    .select("id, role, status, phone, service_type, updated_at, name")
     .eq("phone", phoneDigits)
     .maybeSingle();
-  if (firstSel.error && isMissingStatusColumnError(firstSel.error)) {
-    const fallbackSel = await sb
+  if (firstSel.error && isMissingNameColumnError(firstSel.error)) {
+    firstSel = await sb
       .from("users")
-      .select("id, role, phone, service_type, updated_at")
+      .select("id, role, status, phone, service_type, updated_at")
       .eq("phone", phoneDigits)
       .maybeSingle();
+  }
+  if (firstSel.error && isMissingStatusColumnError(firstSel.error)) {
+    let fallbackSel = await sb
+      .from("users")
+      .select("id, role, phone, service_type, updated_at, name")
+      .eq("phone", phoneDigits)
+      .maybeSingle();
+    if (fallbackSel.error && isMissingNameColumnError(fallbackSel.error)) {
+      fallbackSel = await sb
+        .from("users")
+        .select("id, role, phone, service_type, updated_at")
+        .eq("phone", phoneDigits)
+        .maybeSingle();
+    }
     existing = fallbackSel.data || null;
     selErr = fallbackSel.error || null;
   } else {
@@ -116,26 +138,58 @@ async function upsertDriverByPhone(sb, phoneDigits, preferredRole, preferredServ
     ) {
       return { data: existing, error: null };
     }
-    return sb
-      .from("users")
-      .update({ role, service_type: serviceType, updated_at: now })
-      .eq("id", existing.id)
-      .select()
-      .single();
+    const patch = { role, service_type: serviceType, updated_at: now };
+    if (trimmedName && role === "customer" && !String(existing.name || "").trim()) {
+      patch.name = trimmedName;
+    }
+    let upd = await sb.from("users").update(patch).eq("id", existing.id).select().single();
+    if (upd.error && isMissingNameColumnError(upd.error) && patch.name != null) {
+      delete patch.name;
+      upd = await sb.from("users").update(patch).eq("id", existing.id).select().single();
+    }
+    return upd;
   }
 
+  const insertRow = {
+    phone: phoneDigits,
+    role,
+    service_type: serviceType,
+    updated_at: now,
+    ...(trimmedName && role === "customer" ? { name: trimmedName } : {}),
+  };
   const withStatusInsert = await sb
     .from("users")
-    .insert({ phone: phoneDigits, role, status: "active", service_type: serviceType, updated_at: now })
+    .insert({ ...insertRow, status: "active" })
     .select()
     .single();
   if (!withStatusInsert.error) return withStatusInsert;
+  if (
+    isMissingNameColumnError(withStatusInsert.error) &&
+    trimmedName &&
+    role === "customer"
+  ) {
+    const { name: _drop, ...insertNoName } = insertRow;
+    const retry = await sb
+      .from("users")
+      .insert({ ...insertNoName, status: "active" })
+      .select()
+      .single();
+    if (!retry.error) return retry;
+    if (!isMissingStatusColumnError(retry.error)) return retry;
+    return sb.from("users").insert(insertNoName).select().single();
+  }
   if (!isMissingStatusColumnError(withStatusInsert.error)) return withStatusInsert;
-  return sb
-    .from("users")
-    .insert({ phone: phoneDigits, role, service_type: serviceType, updated_at: now })
-    .select()
-    .single();
+  const noStatus = await sb.from("users").insert(insertRow).select().single();
+  if (!noStatus.error) return noStatus;
+  if (
+    isMissingNameColumnError(noStatus.error) &&
+    trimmedName &&
+    role === "customer"
+  ) {
+    const { name: _d, ...insertNoName } = insertRow;
+    return sb.from("users").insert(insertNoName).select().single();
+  }
+  return noStatus;
 }
 
 router.get("/", (_req, res) => {
@@ -158,9 +212,6 @@ router.get("/public-config", (_req, res) => {
   }
 });
 
-/**
- * اختياري — للواجهات التي ما زالت تستدعي send-otp؛ لا واتساب ولا تخزين رمز.
- */
 router.post("/send-otp", async (req, res) => {
   try {
     const raw = req.body?.phone;
@@ -175,30 +226,34 @@ router.post("/send-otp", async (req, res) => {
     }
 
     const digits = toStorageDigits(e164);
+    const role = roleIn || "customer";
     if (roleIn === "admin") {
       if (!isAllowedAdminPhoneDigits(digits)) {
         return fail(res, "غير مصرح لهذا الرقم بدخول لوحة الإدارة", 403);
       }
-      const code = genOtp();
-      adminOtpStore.set(digits, { code, expiresAt: Date.now() + ADMIN_OTP_TTL_MS });
-      let sent = false;
-      try {
-        sent = await sendWhatsApp({
-          to: digits,
-          message: `رمز دخول لوحة إدارة ERVENOW: ${code}`,
-        });
-      } catch (waErr) {
-        console.error("[ERVENOW] admin send-otp whatsapp error:", waErr?.message || waErr);
-        sent = false;
-      }
-      if (!sent) return fail(res, "تعذر إرسال رمز واتساب للأدمن", 503);
-      return ok(res, { ok: true, message: "تم إرسال الرمز عبر واتساب" });
     }
-
-    ok(res, {
-      message: "دخول ERVENOW: أدخل رمز 12345",
-      devOtp: ERVENOW_LOGIN_CODE,
-    });
+    const code = genOtp();
+    const key = otpKey(role, digits);
+    otpStore.set(key, { code, expiresAt: Date.now() + OTP_TTL_MS });
+    let sent = false;
+    try {
+      sent = await sendWhatsApp({
+        to: digits,
+        message: role === "admin"
+          ? `رمز دخول لوحة إدارة ERVENOW: ${code}`
+          : `رمز دخول ERVENOW: ${code}`,
+      });
+    } catch (waErr) {
+      console.error("[ERVENOW] send-otp whatsapp error:", waErr?.message || waErr);
+      sent = false;
+    }
+    if (!sent) return fail(res, "تعذر إرسال رمز واتساب", 503);
+    const payload = {
+      ok: true,
+      message: "تم إرسال الرمز عبر واتساب",
+      sent: true,
+    };
+    ok(res, payload);
   } catch (e) {
     console.error("[ERVENOW] send-otp:", e);
     fail(res, e.message || "خطأ في الإرسال", 500);
@@ -209,7 +264,7 @@ router.post("/verify-otp", async (req, res) => {
   try {
     const raw = req.body?.phone;
     const codeIn = String(req.body?.code || "").trim();
-    const wantRole = String(req.body?.role || "customer").trim();
+    const wantRole = String(req.body?.role || "customer").trim().toLowerCase();
 
     const e164 = toE164(raw);
     if (!e164) return fail(res, "رقم الجوال غير صالح", 400);
@@ -227,16 +282,16 @@ router.post("/verify-otp", async (req, res) => {
       if (!isAllowedAdminPhoneDigits(digits)) {
         return fail(res, "غير مصرح لهذا الرقم بدخول لوحة الإدارة", 403);
       }
-      const saved = adminOtpStore.get(digits);
-      const valid =
-        !!saved &&
-        String(saved.code || "") === codeIn &&
-        Number(saved.expiresAt || 0) > Date.now();
-      if (!valid) return fail(res, "رمز واتساب غير صحيح أو منتهي", 400);
-      adminOtpStore.delete(digits);
-    } else if (codeIn !== ERVENOW_LOGIN_CODE) {
-      return fail(res, "رمز الدخول غير صحيح", 400);
     }
+
+    const key = otpKey(wantRole, digits);
+    const saved = otpStore.get(key);
+    const valid =
+      !!saved &&
+      String(saved.code || "") === codeIn &&
+      Number(saved.expiresAt || 0) > Date.now();
+    if (!valid) return fail(res, "رمز واتساب غير صحيح أو منتهي", 400);
+    if (valid) otpStore.delete(key);
 
     const sb = createServiceClient();
     if (!sb) {
@@ -248,7 +303,14 @@ router.post("/verify-otp", async (req, res) => {
     }
 
     const wantServiceType = req.body?.service_type;
-    const { data: userRow, error: dbErr } = await upsertDriverByPhone(sb, digits, wantRole, wantServiceType);
+    const displayName = wantRole === "customer" ? String(req.body?.name || "").trim() : "";
+    const { data: userRow, error: dbErr } = await upsertDriverByPhone(
+      sb,
+      digits,
+      wantRole,
+      wantServiceType,
+      displayName
+    );
     if (dbErr) {
       console.error("[ERVENOW] verify-otp DB:", dbErr);
       return fail(
@@ -274,6 +336,7 @@ router.post("/verify-otp", async (req, res) => {
         phone: userRow.phone,
         role: userRow.role,
         service_type: userRow.service_type || null,
+        name: userRow.name || null,
       },
     });
   } catch (e) {
@@ -291,6 +354,7 @@ router.get("/me", requireAuth, (req, res) => {
     user: {
       id: req.authUser.id,
       phone: req.authUser.phone,
+      name: req.appUser.name || null,
     },
     profile: req.appUser,
   });

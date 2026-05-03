@@ -47,6 +47,13 @@
         </div>
       </div>
 
+      <div class="card" id="guestCartBanner" style="display: none; margin-bottom: 12px; background: #fff8ee; border-color: #e8d4bc">
+        <p class="sub" style="margin: 0">
+          لإتمام الطلب سجّل <strong>اسمك</strong> وجوالك ورمز واتساب — دون انتظار موافقة.
+          <a href="/login?mode=register&amp;role=customer&amp;next=%2Fcart" style="font-weight: 800; color: #5b371d">تسجيل الآن</a>
+        </p>
+      </div>
+
       <div class="cart-grid">
         <div class="card cart-items">
           <div id="cartList"></div>
@@ -62,11 +69,75 @@
           </div>
         </div>
       </div>
+
+      <div class="card" id="storeDeliveryCard" style="display: none; margin-top: 12px">
+        <div class="badge">موقع التوصيل (طلبات المتاجر)</div>
+        <p class="sub">
+          نحتاج موقعك لحساب المسافة (<strong>أجرة التوصيل = كم × 2.3 ريال تقريباً</strong>) والتأكد أن المتجر يغطي منطقتك.
+        </p>
+        <label for="customer_address">عنوان التوصيل (نصّي)</label>
+        <textarea id="customer_address" rows="2" placeholder="الحي، الشارع، رقم الوحدة…"></textarea>
+        <button type="button" class="btn btn-ghost" id="btnGeo" style="margin-top: 10px">تحديد موقعي GPS</button>
+        <p class="sub" id="geoStatus" style="margin-top: 8px"></p>
+      </div>
     </div>
 
+    <script src="/assets/guestBrowse.js"></script>
     <script src="/assets/api.js"></script>
     <script src="/assets/cart.js"></script>
     <script>
+      function refreshGuestCartBanner() {
+        var b = document.getElementById("guestCartBanner");
+        if (!b || !window.ErvenowGuestBrowse) return;
+        var tok =
+          (window.PlatformAPI && PlatformAPI.getToken && PlatformAPI.getToken()) ||
+          localStorage.getItem("token") ||
+          "";
+        b.style.display = !tok && ErvenowGuestBrowse.isActive() ? "block" : "none";
+      }
+
+      var pendingGeo = { lat: null, lng: null };
+
+      function cartNeedsStoreGeo(cart) {
+        return (cart || []).some(function (i) {
+          return i && i.data && i.data.store_id;
+        });
+      }
+
+      function refreshStoreDeliveryCard() {
+        var cart = getCart();
+        var el = document.getElementById("storeDeliveryCard");
+        var geoEl = document.getElementById("geoStatus");
+        if (!el) return;
+        var need = cartNeedsStoreGeo(cart);
+        el.style.display = need ? "block" : "none";
+        if (!need) {
+          pendingGeo.lat = null;
+          pendingGeo.lng = null;
+          if (geoEl) geoEl.textContent = "";
+        }
+      }
+
+      document.getElementById("btnGeo").onclick = function () {
+        var st = document.getElementById("geoStatus");
+        if (!navigator.geolocation) {
+          if (st) st.textContent = "المتصفح لا يدعم الموقع.";
+          return;
+        }
+        if (st) st.textContent = "جاري تحديد الموقع…";
+        navigator.geolocation.getCurrentPosition(
+          function (p) {
+            pendingGeo.lat = p.coords.latitude;
+            pendingGeo.lng = p.coords.longitude;
+            if (st) st.textContent = "تم حفظ موقع التوصيل.";
+          },
+          function () {
+            if (st) st.textContent = "تعذر الوصول للموقع — تأكد من الإذن.";
+          },
+          { enableHighAccuracy: false, timeout: 12000, maximumAge: 0 }
+        );
+      };
+
       function renderCart() {
         const cart = getCart();
         const el = document.getElementById("cartList");
@@ -78,6 +149,8 @@
           el.innerHTML = "<p>السلة فارغة حالياً</p>";
           if (countEl) countEl.innerText = "عدد العناصر: 0";
           if (totalEl) totalEl.innerText = "الإجمالي: 0.00 ريال";
+          refreshGuestCartBanner();
+          refreshStoreDeliveryCard();
           return;
         }
 
@@ -90,6 +163,9 @@
         el.innerHTML = cart
           .map(function (item) {
             var data = item.data || {};
+            var hidePhones = window.ErvenowGuestBrowse && ErvenowGuestBrowse.isAnonymousGuest();
+            var districtShown = hidePhones ? "—" : data.district || "—";
+            var locShown = hidePhones ? "—" : data.location || "—";
             return (
               "<div class='cart-item'>" +
               "<h4>" +
@@ -100,10 +176,10 @@
               (item.type || "general") +
               "</div>" +
               "<div>الحي: " +
-              (data.district || "—") +
+              districtShown +
               "</div>" +
               "<div>الموقع: " +
-              (data.location || "—") +
+              locShown +
               "</div>" +
               "<div>الكمية: " +
               (data.qty || 1) +
@@ -121,6 +197,8 @@
             );
           })
           .join("");
+        refreshGuestCartBanner();
+        refreshStoreDeliveryCard();
       }
 
       function removeItem(id) {
@@ -144,25 +222,53 @@
         }
 
         const btn = document.getElementById("checkoutBtn");
+        const token =
+          (window.PlatformAPI && typeof window.PlatformAPI.getToken === "function" && window.PlatformAPI.getToken()) ||
+          localStorage.getItem("token") ||
+          "";
+
+        if (!token || !String(token).trim()) {
+          window.location.href =
+            "/login?mode=register&role=customer&next=" + encodeURIComponent("/cart");
+          return;
+        }
+
         if (btn) {
           btn.disabled = true;
           btn.innerText = "جارٍ الإرسال...";
         }
 
-        const token = window.PlatformAPI && typeof window.PlatformAPI.getToken === "function" ? window.PlatformAPI.getToken() : "";
-
         try {
+          var payload = { items: cart };
+          if (cartNeedsStoreGeo(cart)) {
+            if (pendingGeo.lat == null || pendingGeo.lng == null) {
+              showError("اضغط «تحديد موقعي GPS» لإتمام طلب المتجر والتحقق من نطاق التوصيل");
+              return;
+            }
+            payload.customer_lat = pendingGeo.lat;
+            payload.customer_lng = pendingGeo.lng;
+            payload.customer_address =
+              (document.getElementById("customer_address") && document.getElementById("customer_address").value.trim()) ||
+              "";
+          }
+
           const res = await fetch("/api/checkout", {
             method: "POST",
             headers: Object.assign(
               { "Content-Type": "application/json" },
-              token ? { Authorization: "Bearer " + token } : {}
+              { Authorization: "Bearer " + token }
             ),
-            body: JSON.stringify({ items: cart }),
+            body: JSON.stringify(payload),
           });
           const data = await res.json().catch(function () {
             return {};
           });
+
+          if (res.status === 401) {
+            window.location.href =
+              "/login?mode=register&role=customer&next=" + encodeURIComponent("/cart");
+            return;
+          }
 
           if (!res.ok || !data.ok) {
             throw new Error(data.message || data.error || "checkout failed");
@@ -173,7 +279,7 @@
           updateCartCount();
           renderCart();
         } catch (e) {
-          showError("حدث خطأ، حاول مرة أخرى");
+          showError(String((e && e.message) || "حدث خطأ، حاول مرة أخرى"));
           return;
         } finally {
           if (btn) {

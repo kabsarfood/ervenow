@@ -14,6 +14,11 @@ const {
   cancelOrderByCustomer,
   createDeliveryOrderFromBody,
 } = require("./service");
+const { enqueueDeliveryJob } = require("../../queues/deliveryQueue");
+const { deliveryOrdersCreateLimiter } = require("../../shared/middleware/apiRateLimits");
+const { normalizeIdempotencyKey } = require("../../shared/utils/idempotency");
+const { isAllowedDeliveryStatusTransition } = require("../../shared/utils/deliveryStateMachine");
+const { logger } = require("../../shared/utils/logger");
 
 const router = express.Router();
 
@@ -92,9 +97,22 @@ router.get("/orders/:id", requireAuth, async (req, res) => {
   }
 });
 
-router.post("/orders", requireAuth, async (req, res) => {
+router.post("/orders", deliveryOrdersCreateLimiter, requireAuth, async (req, res) => {
   try {
     const body = { ...(req.body || {}) };
+    delete body.idempotency_key;
+    const idemKey = normalizeIdempotencyKey(req);
+    if (idemKey) {
+      const { data: existing, error: idemErr } = await req.supabase
+        .from("orders")
+        .select("*")
+        .eq("customer_id", req.appUser.id)
+        .eq("idempotency_key", idemKey)
+        .maybeSingle();
+      if (idemErr) return fail(res, idemErr.message, 400);
+      if (existing) return ok(res, { order: existing, duplicated: false, idempotentReplay: true });
+      body.idempotency_key = idemKey;
+    }
     const src = req.get("X-Source");
     if ((body.series_source == null || String(body.series_source).trim() === "") && src) {
       body.series_source = String(src).trim();
@@ -117,6 +135,23 @@ router.post("/orders", requireAuth, async (req, res) => {
 
     const { data, error } = await createDeliveryOrderFromBody(req.supabase, req.appUser, body);
     if (error) return fail(res, error.message, 400);
+    if (data) {
+      try {
+        await enqueueDeliveryJob("new-order", {
+          orderId: data.id,
+          pickup:
+            data.pickup_lat != null && data.pickup_lng != null
+              ? { lat: Number(data.pickup_lat), lng: Number(data.pickup_lng) }
+              : null,
+          dropoff:
+            data.drop_lat != null && data.drop_lng != null
+              ? { lat: Number(data.drop_lat), lng: Number(data.drop_lng) }
+              : null,
+        });
+      } catch (qe) {
+        logger.error({ err: qe && (qe.message || String(qe)), orderId: data.id }, "[delivery/orders] enqueue");
+      }
+    }
     return ok(res, { order: data, duplicated: false });
   } catch (e) {
     fail(res, e.message, 500);
@@ -144,7 +179,7 @@ router.post("/orders/:id/accept", requireAuth, requireRole("driver"), async (req
         try {
           await sendWhatsApp({ to: data.customer_phone, message: customerMessage });
         } catch (e) {
-          console.error("[delivery/accept] customer WhatsApp:", e && (e.message || e));
+          logger.error({ err: e && (e.message || String(e)), orderId: data.id }, "[delivery/accept] customer WhatsApp");
         }
       }
 
@@ -156,7 +191,7 @@ router.post("/orders/:id/accept", requireAuth, requireRole("driver"), async (req
         try {
           await sendWhatsApp({ to: providerPhone, message: providerMessage });
         } catch (e) {
-          console.error("[delivery/accept] provider WhatsApp:", e && (e.message || e));
+          logger.error({ err: e && (e.message || String(e)), orderId: data.id }, "[delivery/accept] provider WhatsApp");
         }
       }
     }
@@ -167,7 +202,7 @@ router.post("/orders/:id/accept", requireAuth, requireRole("driver"), async (req
   }
 });
 
-router.post("/orders/:id/rate", requireAuth, requireRole("customer"), async (req, res) => {
+router.post("/orders/:id/rate", requireAuth, requireRole("customer", "admin"), async (req, res) => {
   try {
     const orderId = String(req.params.id || "").trim();
     const b = req.body || {};
@@ -179,7 +214,7 @@ router.post("/orders/:id/rate", requireAuth, requireRole("customer"), async (req
   }
 });
 
-router.post("/orders/:id/cancel", requireAuth, requireRole("customer"), async (req, res) => {
+router.post("/orders/:id/cancel", requireAuth, requireRole("customer", "admin"), async (req, res) => {
   try {
     const orderId = String(req.params.id || "").trim();
     const { data, error, refund } = await cancelOrderByCustomer(req.supabase, orderId, req.appUser);
@@ -190,7 +225,7 @@ router.post("/orders/:id/cancel", requireAuth, requireRole("customer"), async (r
         const driverPhone = await getUserPhoneById(req.supabase, data.driver_id);
         if (driverPhone) {
           const orderLabel = data.order_number || String(data.id || orderId);
-          const msg = `🚫 تم إلغاء الطلب من العميل
+          const msg = `🚫 تم إلغاء الطلب من زائر المنصة
 
 رقم الطلب: ${orderLabel}
 من: ${String(data.pickup_address || "-")}
@@ -198,7 +233,10 @@ router.post("/orders/:id/cancel", requireAuth, requireRole("customer"), async (r
           await sendWhatsApp({ to: driverPhone, message: msg });
         }
       } catch (notifyErr) {
-        console.error("[delivery/cancel] driver WhatsApp:", notifyErr && (notifyErr.message || notifyErr));
+        logger.error(
+          { err: notifyErr && (notifyErr.message || String(notifyErr)), orderId },
+          "[delivery/cancel] driver WhatsApp"
+        );
       }
     }
 
@@ -215,7 +253,18 @@ router.patch("/orders/:id/status", requireAuth, async (req, res) => {
   try {
     const nextStatus = String(req.body?.status || "").trim();
     if (!nextStatus) return fail(res, "status required");
-    const { data, error } = await setStatus(req.supabase, req.params.id, nextStatus, req.appUser);
+    const orderId = String(req.params.id || "").trim();
+    const { data: cur, error: curErr } = await req.supabase
+      .from("orders")
+      .select("delivery_status,status")
+      .eq("id", orderId)
+      .maybeSingle();
+    if (curErr || !cur) return fail(res, curErr?.message || "Not found", 404);
+    const current = cur.delivery_status || cur.status || "pending";
+    if (!isAllowedDeliveryStatusTransition(current, nextStatus)) {
+      return fail(res, `Invalid transition ${current} → ${nextStatus}`, 400);
+    }
+    const { data, error } = await setStatus(req.supabase, orderId, nextStatus, req.appUser);
     if (error) return fail(res, error.message, 400);
     ok(res, { order: data });
   } catch (e) {

@@ -55,7 +55,7 @@
         document.body.innerHTML =
           '<div style="text-align:center;margin-top:50px;">' +
           "<h2>🔒 الرجاء تسجيل الدخول كمندوب</h2>" +
-          '<a href="/login?role=driver">تسجيل الدخول</a>' +
+          '<a href="/driver-login">تسجيل الدخول</a>' +
           "</div>";
         throw new Error("auth");
       }
@@ -432,7 +432,7 @@
             extLine +
             "</div><br/><small>" +
             (o.drop_address || "") +
-            "</small><br/><small>هاتف العميل: " +
+            "</small><br/><small>هاتف زائر المنصة: " +
             phone +
             "</small><br/>";
 

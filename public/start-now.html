@@ -70,6 +70,10 @@
   <body>
     <div class="wrap">
       <h1>اطلب أي خدمة الآن</h1>
+      <p id="guestStartNote" style="display: none; margin: 0 0 14px; padding: 10px 12px; background: #fff8ee; border: 1px solid #e8d4bc; border-radius: 10px; color: #5b371d">
+        وضع زائر: تصفّح العروض دون ظهور أسماء أو أرقام المحلات. لإتمام الطلب سجّل من صفحة التسجيل برمز واتساب.
+      </p>
+
       <p>اختر الخدمة المناسبة:</p>
 
       <div class="grid">
@@ -86,6 +90,14 @@
         <a class="btn btn-primary" href="/">🏠 الرئيسية</a>
       </div>
     </div>
+
+    <script src="/assets/guestBrowse.js"></script>
+    <script>
+      (function () {
+        var n = document.getElementById("guestStartNote");
+        if (n && window.ErvenowGuestBrowse && ErvenowGuestBrowse.isAnonymousGuest()) n.style.display = "block";
+      })();
+    </script>
 
     <script>
       (function () {

@@ -380,7 +380,7 @@
         </div>
         <div class="nav-row">
           <a href="/">الرئيسية</a>
-          <a href="/dashboard">لوحة العميل</a>
+          <a href="/dashboard">لوحة زائر المنصة</a>
           <button type="button" class="btn btn-outline" id="btnLoad">تحديث</button>
         </div>
       </header>
@@ -511,6 +511,11 @@
         return String(localStorage.getItem("userId") || "").trim();
       }
 
+      function getStoredPhone() {
+        var p = localStorage.getItem("userPhone");
+        return p ? String(p).trim() : "";
+      }
+
       function getStoredUserName() {
         var u =
           localStorage.getItem("userName") ||
@@ -530,7 +535,7 @@
       }
 
       function applyUserDisplay() {
-        var n = getStoredUserName();
+        var n = getStoredPhone() || getStoredUserName();
         if (n) {
           elUserNameLine.textContent = n;
           elUserNameLine.removeAttribute("hidden");

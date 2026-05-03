@@ -96,7 +96,7 @@ async function distributeFunds(supabase, orderId) {
   return data;
 }
 
-/** استرجاع: عكس التسوية (إن وُجدت) + إيداع للعميل */
+/** استرجاع: عكس التسوية (إن وُجدت) + إيداع لزائر المنصة */
 async function handleRefund(supabase, orderId, reason, customerCredit = null) {
   const { data, error } = await supabase.rpc("erwenow_finance_refund_order", {
     p_order_id: orderId,

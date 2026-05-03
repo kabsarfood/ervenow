@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ERVENOW | المتجر</title>
+    <link rel="stylesheet" href="/assets/styles.css" />
+    <style>
+      .store-hero {
+        display: grid;
+        gap: 16px;
+        grid-template-columns: 1fr;
+        align-items: start;
+      }
+      @media (min-width: 720px) {
+        .store-hero {
+          grid-template-columns: 160px 1fr;
+        }
+      }
+      .store-logo {
+        width: 100%;
+        max-width: 180px;
+        border-radius: 12px;
+        object-fit: cover;
+        aspect-ratio: 1;
+        background: #f0ebe3;
+      }
+      .prod-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 12px;
+      }
+      .prod-card img {
+        width: 100%;
+        height: 140px;
+        object-fit: cover;
+        border-radius: 10px;
+        background: #f5f1ea;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="layout">
+      <p><a href="/">← الرئيسية</a> · <a id="browseBack" href="/browse">التصفح</a></p>
+      <div id="hero" class="card store-hero" style="display: none">
+        <img id="logoImg" class="store-logo" alt="" loading="lazy" style="display: none" />
+        <div>
+          <h1 id="storeName" style="margin: 0 0 8px">—</h1>
+          <p class="sub" id="storeMeta">—</p>
+          <p class="sub" id="storeOrderCount" style="margin-top: 6px; display: none"></p>
+          <p class="sub" id="storeDistance" style="margin-top: 6px; display: none"></p>
+          <p class="sub" id="storeLoc" style="margin-top: 8px"></p>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2 style="margin: 0 0 12px">المنتجات</h2>
+        <div id="products" class="prod-grid"></div>
+        <div class="row" style="margin-top: 12px; gap: 8px; flex-wrap: wrap">
+          <button type="button" class="btn btn-ghost" id="btnMore" style="display: none">تحميل المزيد</button>
+        </div>
+      </div>
+
+      <div class="card" id="reviewCard">
+        <h2 style="margin: 0 0 12px">التقييمات</h2>
+        <div id="reviews"></div>
+        <div id="reviewFormWrap" style="margin-top: 16px; display: none">
+          <label for="ratingSel">أضف تقييماً</label>
+          <select id="ratingSel">
+            <option value="5">5 ★</option>
+            <option value="4">4 ★</option>
+            <option value="3">3 ★</option>
+            <option value="2">2 ★</option>
+            <option value="1">1 ★</option>
+          </select>
+          <label for="reviewComment" style="margin-top: 8px">تعليق (اختياري)</label>
+          <textarea id="reviewComment" rows="2"></textarea>
+          <button type="button" class="btn btn-primary" id="btnReview" style="margin-top: 10px">إرسال التقييم</button>
+        </div>
+        <p class="sub" id="reviewLoginHint" style="margin-top: 12px; display: none">
+          <a href="/login?role=customer">سجّل الدخول كزائر المنصة</a> لإضافة تقييم.
+        </p>
+      </div>
+
+      <div class="msg" id="msg" style="display: none"></div>
+    </div>
+
+    <script src="/assets/cart.js"></script>
+    <script src="/assets/api.js"></script>
+    <script>
+      var params = new URLSearchParams(window.location.search);
+      var storeId = params.get("id");
+      var offset = 0;
+      var limit = 12;
+      var total = 0;
+      var storeMeta = { name: "", type: "supermarket" };
+      var lastProducts = [];
+
+      function getUserGeo() {
+        return new Promise(function (resolve) {
+          if (!navigator.geolocation) return resolve(null);
+          navigator.geolocation.getCurrentPosition(
+            function (p) {
+              resolve({ lat: p.coords.latitude, lng: p.coords.longitude });
+            },
+            function () {
+              resolve(null);
+            },
+            { enableHighAccuracy: false, timeout: 9000, maximumAge: 120000 }
+          );
+        });
+      }
+
+      function addProductToCart(p) {
+        if (!storeId || !p) return;
+        addToCart({
+          type: storeMeta.type || "supermarket",
+          title: (storeMeta.name || "متجر") + " — " + String(p.name || "منتج"),
+          price: Number(p.price) || 0,
+          data: { store_id: storeId, product_id: p.id, qty: 1 },
+        });
+        show("تمت الإضافة إلى السلة", true);
+      }
+
+      function show(text, ok) {
+        var el = document.getElementById("msg");
+        el.style.display = "block";
+        el.className = "msg " + (ok ? "ok" : "err");
+        el.textContent = text;
+      }
+
+      function esc(s) {
+        return String(s || "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/"/g, "&quot;");
+      }
+
+      async function loadStore() {
+        if (!storeId) {
+          show("معرّف المتجر غير موجود في الرابط (?id=)", false);
+          return;
+        }
+        var geo = await getUserGeo();
+        var geoQs = "";
+        if (geo) {
+          geoQs =
+            "?user_lat=" +
+            encodeURIComponent(geo.lat) +
+            "&user_lng=" +
+            encodeURIComponent(geo.lng);
+        }
+        var headers = {};
+        var t = window.PlatformAPI.getToken();
+        if (t) headers.Authorization = "Bearer " + t;
+        var res = await fetch("/api/store/public/" + encodeURIComponent(storeId) + geoQs, { headers: headers });
+        var data = await res.json().catch(function () {
+          return {};
+        });
+        if (!res.ok || !data.store) {
+          show(data.error || "تعذر تحميل المتجر", false);
+          return;
+        }
+        var s = data.store;
+        storeMeta.name = s.name || s.label || "";
+        storeMeta.type = s.type || "supermarket";
+
+        document.getElementById("hero").style.display = "grid";
+        document.getElementById("storeName").textContent = s.label || s.name || "متجر";
+        var ratingLine =
+          s.masked || data.browse_masked
+            ? "التقييم والطلبات متاحة بعد تسجيل الدخول"
+            : "★ " +
+              (Number(s.average_rating) || 0).toFixed(1) +
+              " (" +
+              (Number(s.rating_count) || 0) +
+              " تقييم)";
+        document.getElementById("storeMeta").textContent = ratingLine;
+
+        var oc = document.getElementById("storeOrderCount");
+        if (!s.masked && !data.browse_masked) {
+          oc.style.display = "block";
+          oc.textContent = "عدد الطلبات: " + (Number(s.total_orders) || 0);
+        } else {
+          oc.style.display = "none";
+        }
+
+        var distEl = document.getElementById("storeDistance");
+        if (geo && s.distance_km != null && Number.isFinite(Number(s.distance_km))) {
+          var km = Number(s.distance_km);
+          var eta = s.delivery_eta_minutes != null ? Number(s.delivery_eta_minutes) : Math.max(10, Math.round(km * 4));
+          var cover =
+            s.within_delivery_radius === false
+              ? " — خارج نطاق التوصيل الحالي"
+              : "";
+          distEl.style.display = "block";
+          distEl.textContent =
+            "يبعد عنك تقريباً: " + km.toFixed(1) + " كم — التوصيل المتوقع خلال نحو " + eta + " دقيقة" + cover;
+        } else {
+          distEl.style.display = "none";
+        }
+
+        document.getElementById("storeLoc").textContent =
+          s.address || s.location_text || (geo ? "فعّل إذن الموقع لعرض المسافة التقريبية" : "");
+
+        if (!s.masked && s.logo_url) {
+          var img = document.getElementById("logoImg");
+          img.src = s.logo_url;
+          img.style.display = "block";
+        }
+        if (window.PlatformAPI.getToken()) {
+          document.getElementById("reviewFormWrap").style.display = "block";
+          document.getElementById("reviewLoginHint").style.display = "none";
+        } else {
+          document.getElementById("reviewLoginHint").style.display = "block";
+        }
+      }
+
+      function renderProducts(rows, append) {
+        var box = document.getElementById("products");
+        rows = rows || [];
+        if (!append) {
+          lastProducts = rows.slice();
+          box.innerHTML = "";
+        } else {
+          lastProducts = lastProducts.concat(rows);
+        }
+
+        if (!lastProducts.length) {
+          box.innerHTML = '<p class="sub">لا منتجات بعد</p>';
+          return;
+        }
+
+        var html = rows
+          .map(function (p) {
+            var img = p.image_url
+              ? '<img src="' + esc(p.image_url) + '" alt="" loading="lazy" />'
+              : '<div style="height:140px;border-radius:10px;background:#f0ebe3"></div>';
+            return (
+              '<div class="card prod-card">' +
+              img +
+              "<strong>" +
+              esc(p.name) +
+              "</strong>" +
+              '<p class="sub">' +
+              esc(p.description || "") +
+              "</p>" +
+              "<div><strong>" +
+              (Number(p.price) || 0).toFixed(2) +
+              ' ريال</strong></div><button type="button" class="btn btn-primary btn-add-cart" style="margin-top:10px;width:100%" data-pid="' +
+              esc(p.id) +
+              '">إضافة للسلة</button></div>'
+            );
+          })
+          .join("");
+
+        if (append) box.innerHTML += html;
+        else box.innerHTML = html;
+      }
+
+      document.getElementById("products").addEventListener("click", function (ev) {
+        var btn = ev.target.closest(".btn-add-cart");
+        if (!btn) return;
+        var pid = btn.getAttribute("data-pid");
+        var p = lastProducts.find(function (x) {
+          return String(x.id) === String(pid);
+        });
+        addProductToCart(p);
+      });
+
+      async function loadProducts(append) {
+        if (!storeId) return;
+        var qs =
+          "/api/store/products?store_id=" +
+          encodeURIComponent(storeId) +
+          "&limit=" +
+          limit +
+          "&offset=" +
+          offset;
+        var res = await fetch(qs);
+        var data = await res.json().catch(function () {
+          return {};
+        });
+        if (!data.products) {
+          renderProducts([], append);
+          return;
+        }
+        total = data.total || 0;
+        renderProducts(data.products, append);
+        offset += data.products.length;
+        document.getElementById("btnMore").style.display = offset < total ? "inline-block" : "none";
+      }
+
+      async function loadReviews() {
+        if (!storeId) return;
+        var res = await fetch("/api/store/reviews?store_id=" + encodeURIComponent(storeId) + "&limit=30");
+        var data = await res.json().catch(function () {
+          return {};
+        });
+        var box = document.getElementById("reviews");
+        var rows = data.reviews || [];
+        if (!rows.length) {
+          box.innerHTML = '<p class="sub">لا تقييمات بعد</p>';
+          return;
+        }
+        box.innerHTML = rows
+          .map(function (r) {
+            return (
+              '<div class="card" style="padding:10px;margin-bottom:8px">' +
+              "<strong>★ " +
+              esc(r.rating) +
+              "</strong>" +
+              '<p class="sub" style="margin:6px 0 0">' +
+              esc(r.comment || "—") +
+              "</p></div>"
+            );
+          })
+          .join("");
+      }
+
+      document.getElementById("btnMore").onclick = function () {
+        loadProducts(true);
+      };
+
+      document.getElementById("btnReview").onclick = async function () {
+        try {
+          var rating = Number(document.getElementById("ratingSel").value);
+          var comment = document.getElementById("reviewComment").value.trim();
+          await window.PlatformAPI.api("/api/store/reviews", {
+            method: "POST",
+            body: { store_id: storeId, rating: rating, comment: comment || undefined },
+          });
+          show("شكراً — تم حفظ التقييم", true);
+          document.getElementById("reviewComment").value = "";
+          await loadStore();
+          await loadReviews();
+        } catch (e) {
+          show(String(e.message || e), false);
+        }
+      };
+
+      (async function () {
+        try {
+          var bt = sessionStorage.getItem("ervenow_browse_type");
+          if (bt) {
+            document.getElementById("browseBack").href = "/browse?type=" + encodeURIComponent(bt);
+          }
+        } catch (e) {}
+        try {
+          await loadStore();
+          offset = 0;
+          await loadProducts(false);
+          await loadReviews();
+        } catch (e) {
+          show(String(e.message || e), false);
+        }
+      })();
+    </script>
+  </body>
+</html>

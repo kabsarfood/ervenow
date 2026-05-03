@@ -1,8 +1,21 @@
 const express = require("express");
-const { optionalAuth } = require("../../shared/middleware/auth");
+const { requireAuth } = require("../../shared/middleware/auth");
 const { createServiceClient } = require("../../shared/config/supabase");
-const { pushToErvenow } = require("../../shared/utils/ervenowPush");
-const { notifyNearestDrivers } = require("../driver/notify");
+const { enqueueDeliveryJob } = require("../../queues/deliveryQueue");
+const { routeKmWithRoughFallback } = require("../../shared/utils/routeDistance");
+const {
+  allocateUniqueOrderNumber,
+  allocateUniqueServiceOrderNumber,
+} = require("../../shared/utils/generateOrderNumber");
+const { perfLog } = require("../../shared/utils/perfLog");
+const { checkoutLimiter } = require("../../shared/middleware/apiRateLimits");
+const { normalizeIdempotencyKey } = require("../../shared/utils/idempotency");
+const {
+  claimOrReplayCheckout,
+  finalizeCheckoutIdempotency,
+  releaseCheckoutIdempotency,
+} = require("../../shared/utils/checkoutIdempotency");
+const { logger } = require("../../shared/utils/logger");
 
 const router = express.Router();
 
@@ -66,6 +79,10 @@ function normalizedGroup(typeRaw) {
       "flowers_gifts",
       "sweets",
       "home_business",
+      "minimarket",
+      "butcher",
+      "fish",
+      "other",
     ].includes(type)
   ) {
     return "store";
@@ -113,24 +130,10 @@ function labelByType(type) {
   return map[type] || type || "خدمة";
 }
 
-async function buildNextServiceOrderNumber(sb) {
-  const now = new Date();
-  const day = String(now.getDate()).padStart(2, "0");
-  const start = new Date(now);
-  start.setHours(0, 0, 0, 0);
-  const end = new Date(now);
-  end.setHours(23, 59, 59, 999);
-  const { count, error } = await sb
-    .from("service_bookings")
-    .select("id", { count: "exact", head: true })
-    .gte("created_at", start.toISOString())
-    .lte("created_at", end.toISOString());
-  if (error) throw error;
-  const seq = (count || 0) + 1;
-  return `ES-${day}-${String(seq).padStart(3, "0")}`;
-}
-
-router.post("/", optionalAuth, async (req, res) => {
+router.post("/", checkoutLimiter, requireAuth, async (req, res) => {
+  const perfStart = Date.now();
+  const idemKey = normalizeIdempotencyKey(req);
+  let idemClaimed = false;
   try {
     const sb = req.supabase || createServiceClient();
     if (!sb) {
@@ -140,6 +143,20 @@ router.post("/", optionalAuth, async (req, res) => {
     const items = Array.isArray(req.body?.items) ? req.body.items : [];
     if (!items.length) {
       return res.status(400).json({ ok: false, message: "cart empty" });
+    }
+
+    if (idemKey) {
+      try {
+        const idem = await claimOrReplayCheckout(sb, req.appUser.id, idemKey);
+        if (idem.replay) return res.json(idem.replay);
+        if (idem.conflict) {
+          return res.status(409).json({ ok: false, message: "checkout already in progress for this key" });
+        }
+        idemClaimed = Boolean(idem.claimed);
+      } catch (idemErr) {
+        logger.error({ err: idemErr && (idemErr.message || String(idemErr)) }, "[checkout] idempotency");
+        return res.status(503).json({ ok: false, message: "idempotency unavailable" });
+      }
     }
 
     const grouped = {
@@ -155,8 +172,6 @@ router.post("/", optionalAuth, async (req, res) => {
     });
 
     const results = [];
-    const now = Date.now();
-    let seq = 0;
 
     for (const type of Object.keys(grouped)) {
       const groupItems = grouped[type];
@@ -167,13 +182,10 @@ router.post("/", optionalAuth, async (req, res) => {
           const data = it && typeof it.data === "object" && it.data ? it.data : {};
           const serviceType = String(it.type || "service").trim().toLowerCase();
           const total = Number(it.price) || Number(data.total_amount) || 0;
-          const serviceOrderNumber = await buildNextServiceOrderNumber(sb);
           const serviceRow = {
-            service_order_number: serviceOrderNumber,
-            customer_id: req.appUser?.id || null,
-            customer_phone:
-              req.appUser?.phone ||
-              String(data.customer_phone || it.customer_phone || "").trim(),
+            service_order_number: null,
+            customer_id: req.appUser.id,
+            customer_phone: String(req.appUser.phone || data.customer_phone || it.customer_phone || "").trim(),
             service_type: serviceType,
             service_name: String(it.title || labelByType(serviceType)).trim(),
             district: String(data.district || "").trim(),
@@ -185,11 +197,20 @@ router.post("/", optionalAuth, async (req, res) => {
             status: "new",
           };
 
-          const { data: serviceData, error: sErr } = await sb
-            .from("service_bookings")
-            .insert(serviceRow)
-            .select()
-            .single();
+          let serviceData = null;
+          let sErr = null;
+          for (let insAttempt = 0; insAttempt < 5; insAttempt += 1) {
+            serviceRow.service_order_number = await allocateUniqueServiceOrderNumber(sb, "SV");
+            const ins = await sb.from("service_bookings").insert(serviceRow).select().single();
+            serviceData = ins.data;
+            sErr = ins.error;
+            if (!sErr) break;
+            const msg = String(sErr.message || sErr.details || "");
+            const dup =
+              String(sErr.code || "") === "23505" ||
+              /duplicate key|unique constraint/i.test(msg);
+            if (!dup || insAttempt === 4) throw sErr;
+          }
           if (sErr) throw sErr;
           results.push(serviceData);
         }
@@ -197,19 +218,30 @@ router.post("/", optionalAuth, async (req, res) => {
       }
 
       const total = groupItems.reduce((sum, i) => sum + (Number(i && i.price) || 0), 0);
-      seq += 1;
+
+      const storeIds = new Set(
+        groupItems.map((i) => String((i.data && i.data.store_id) || "").trim()).filter(Boolean)
+      );
+      if (storeIds.size > 1) {
+        return res.status(400).json({ ok: false, message: "يجب أن تكون منتجات السلة من متجر واحد" });
+      }
+      const singleStoreId = storeIds.size === 1 ? [...storeIds][0] : null;
+
+      const orderPrefix = type === "store" ? "ES" : "ED";
 
       const row = {
-        order_number: "EW-" + now + "-" + seq,
         series_source: "ERVENOW",
         delivery_status: "pending",
         status: "new",
         order_total: total,
         total_amount: total,
-        customer_id: req.appUser?.id || null,
-        customer_phone:
-          req.appUser?.phone ||
-          String(groupItems[0]?.data?.customer_phone || groupItems[0]?.customer_phone || "").trim(),
+        customer_id: req.appUser.id,
+        customer_phone: String(
+          req.appUser.phone ||
+            groupItems[0]?.data?.customer_phone ||
+            groupItems[0]?.customer_phone ||
+            ""
+        ).trim(),
         breakdown: {
           items: groupItems,
           type,
@@ -217,83 +249,110 @@ router.post("/", optionalAuth, async (req, res) => {
         notes: `Checkout group: ${type}`,
       };
 
-      const { data, error } = await sb.from("orders").insert(row).select().single();
-      if (error) throw error;
+      if (singleStoreId) {
+        const custLat = Number(req.body.customer_lat);
+        const custLng = Number(req.body.customer_lng);
+        if (!Number.isFinite(custLat) || !Number.isFinite(custLng)) {
+          return res.status(400).json({ ok: false, message: "حدد موقع التوصيل (GPS) لطلبات المتجر" });
+        }
+        const { data: storeRow, error: storeErr } = await sb
+          .from("stores")
+          .select("*")
+          .eq("id", singleStoreId)
+          .eq("status", "approved")
+          .maybeSingle();
+        if (storeErr || !storeRow || storeRow.lat == null || storeRow.lng == null) {
+          return res.status(400).json({ ok: false, message: "متجر غير متاح أو بلا موقع مسجّل" });
+        }
+        const slat = Number(storeRow.lat);
+        const slng = Number(storeRow.lng);
+        const km = await routeKmWithRoughFallback(slat, slng, custLat, custLng);
+        const radius = Number(storeRow.delivery_radius_km) > 0 ? Number(storeRow.delivery_radius_km) : 5;
+        if (!Number.isFinite(km) || km > radius) {
+          return res.status(400).json({ ok: false, message: "هذا المتجر لا يغطي منطقتك" });
+        }
+        const deliveryFee = Math.round(km * 2.3 * 100) / 100;
+        const dropAddress =
+          String(
+            req.body.customer_address ||
+              groupItems[0]?.data?.drop_address ||
+              groupItems[0]?.data?.location ||
+              ""
+          ).trim() || "عنوان التوصيل";
+        row.pickup_address = String(storeRow.address || storeRow.name || "").trim() || String(storeRow.name || "");
+        row.pickup_lat = slat;
+        row.pickup_lng = slng;
+        row.drop_address = dropAddress;
+        row.drop_lat = custLat;
+        row.drop_lng = custLng;
+        row.delivery_fee = deliveryFee;
+        row.distance_km = Math.round(km * 100) / 100;
+        row.order_total = total;
+        row.total_amount = Math.round((total + deliveryFee) * 100) / 100;
+        row.driver_earning = deliveryFee;
+        row.platform_fee = Math.round(total * 0.12 * 100) / 100;
+        row.notes = `متجر: ${storeRow.name || singleStoreId}`;
+        row.store_id = singleStoreId;
+      }
+
+      let data = null;
+      let insertErr = null;
+      for (let insAttempt = 0; insAttempt < 5; insAttempt += 1) {
+        row.order_number = await allocateUniqueOrderNumber(sb, orderPrefix);
+        const ins = await sb.from("orders").insert(row).select().single();
+        data = ins.data;
+        insertErr = ins.error;
+        if (!insertErr) break;
+        const msg = String(insertErr.message || insertErr.details || "");
+        const dup =
+          String(insertErr.code || "") === "23505" ||
+          /duplicate key|unique constraint/i.test(msg);
+        if (!dup || insAttempt === 4) throw insertErr;
+      }
+      if (insertErr) throw insertErr;
       results.push(data);
 
-      if (type === "delivery") {
+      if (type === "delivery" || singleStoreId) {
         try {
-          await notifyNearestDrivers(sb, data);
-        } catch (notifyErr) {
-          console.error("NOTIFY NEAREST DRIVERS ERROR:", notifyErr && (notifyErr.message || notifyErr));
-        }
-
-        const orderData = (data && data.data && typeof data.data === "object" ? data.data : {});
-        if (orderData.pushed_to_delivery) {
-          console.log("ALREADY PUSHED");
-          continue;
-        }
-
-        const firstItem = groupItems[0] || {};
-        const firstData = (firstItem && typeof firstItem.data === "object" && firstItem.data) || {};
-        const itemsText = groupItems
-          .map((it) => String((it && it.title) || "طلب توصيل"))
-          .join(" | ");
-        try {
-          await pushToErvenow({
-            id: data.id,
-            orderNumber: data.order_number,
-            customerPhone:
-              data.customer_phone ||
-              req.appUser?.phone ||
-              String(firstData.customer_phone || "").trim(),
-            address: String(firstData.to || firstData.drop_address || firstData.location || "").trim(),
-            lat: firstData.drop_lat,
-            lng: firstData.drop_lng,
-            items: groupItems,
-            itemsText,
-            total: total,
+          await enqueueDeliveryJob("checkout-dispatch", {
+            orderId: data.id,
+            groupItems,
+            total,
+            appUserPhone: req.appUser?.phone || "",
           });
-          await sb
-            .from("orders")
-            .update({
-              data: {
-                ...orderData,
-                pushed_to_delivery: true,
-                pushed_to_delivery_at: new Date().toISOString(),
-              },
-              updated_at: new Date().toISOString(),
-            })
-            .eq("id", data.id);
-          console.log("PUSHED ONCE ONLY");
-        } catch (e) {
-          console.error("PUSH ERROR:", e && (e.message || e));
-          try {
-            await sb.from("ervenow_push_queue").insert({
-              payload: {
-                id: data.id,
-                orderNumber: data.order_number,
-                customerPhone:
-                  data.customer_phone ||
-                  req.appUser?.phone ||
-                  String(firstData.customer_phone || "").trim(),
-                address: String(firstData.to || firstData.drop_address || firstData.location || "").trim(),
-                items: groupItems,
-                total,
-              },
-              target_url: "delivery",
-              status: "pending",
-            });
-          } catch (qErr) {
-            console.error("PUSH QUEUE ERROR:", qErr && (qErr.message || qErr));
-          }
+        } catch (queueErr) {
+          logger.error(
+            { err: queueErr && (queueErr.message || String(queueErr)), orderId: data.id },
+            "[checkout] enqueue checkout-dispatch"
+          );
         }
       }
     }
 
-    return res.json({ ok: true, orders: results });
+    perfLog("checkout", {
+      routeTime: Date.now() - perfStart,
+      osrmStatus: "queued_dispatch",
+      ordersCount: results.length,
+    });
+    const responseBody = { ok: true, orders: results };
+    if (idemKey) {
+      try {
+        await finalizeCheckoutIdempotency(sb, req.appUser.id, idemKey, responseBody);
+      } catch (finErr) {
+        logger.error({ err: finErr && (finErr.message || String(finErr)) }, "[checkout] idempotency finalize");
+      }
+    }
+    return res.json(responseBody);
   } catch (e) {
-    console.error("CHECKOUT ERROR:", e);
+    logger.error({ err: e && (e.message || String(e)) }, "CHECKOUT_ERROR");
+    try {
+      const sb = req.supabase || createServiceClient();
+      if (idemKey && idemClaimed && sb) {
+        await releaseCheckoutIdempotency(sb, req.appUser.id, idemKey);
+      }
+    } catch (_) {
+      /* ignore */
+    }
     return res.status(500).json({ ok: false });
   }
 });

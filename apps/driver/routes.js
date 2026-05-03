@@ -5,20 +5,27 @@ const { getJwtSecret } = require("../../shared/middleware/auth");
 const { ok, fail } = require("../../shared/utils/helpers");
 const { toE164, toStorageDigits, isErvnowSaudiMobileE164 } = require("../../shared/utils/phone");
 const { sendWhatsApp } = require("../../shared/utils/whatsapp");
+const { createServiceClient } = require("../../shared/config/supabase");
 const { notifyDriver } = require("./notify");
 
 const router = express.Router();
+
+router.use((req, res, next) => {
+  const sb = createServiceClient();
+  if (!sb) {
+    return res.status(503).json({
+      ok: false,
+      error: "SUPABASE_SERVICE_ROLE_KEY مطلوب للمصادقة عبر المنصة",
+    });
+  }
+  req.supabase = sb;
+  next();
+});
 const otpStore = new Map();
 const OTP_TTL_MS = 5 * 60 * 1000;
 
 function genOtp() {
   return String(Math.floor(10000 + Math.random() * 90000));
-}
-
-function allowDevOtp() {
-  return String(process.env.ALLOW_DEV_OTP || "")
-    .trim()
-    .toLowerCase() === "true";
 }
 
 function nowIso() {
@@ -216,9 +223,7 @@ router.post("/send-otp", async (req, res) => {
       sent = false;
     }
 
-    const payload = { ok: true, sent };
-    if (allowDevOtp()) payload.dev_otp = code;
-    return res.json(payload);
+    return res.json({ ok: true, sent });
   } catch (e) {
     return fail(res, e.message, 500);
   }
@@ -233,12 +238,11 @@ router.post("/verify-otp", async (req, res) => {
     const digits = toStorageDigits(e164);
 
     const saved = otpStore.get(digits);
-    const isDev = allowDevOtp() && !!saved && saved.code === code;
     const valid =
       !!saved &&
       saved.code === code &&
       Number(saved.expiresAt) > Date.now();
-    if (!valid && !isDev) return fail(res, "رمز غير صحيح أو منتهي", 400);
+    if (!valid) return fail(res, "رمز غير صحيح أو منتهي", 400);
     otpStore.delete(digits);
 
     const { data: drv, error: dErr } = await req.supabase
@@ -511,6 +515,16 @@ router.post("/complete-order/:id", requireAuth, async (req, res) => {
       .maybeSingle();
     if (error) return fail(res, error.message, 400);
     if (!data) return fail(res, "order not available", 400);
+    if (data.store_id) {
+      try {
+        const { error: rpcErr } = await req.supabase.rpc("increment_store_orders", { store_id: data.store_id });
+        if (rpcErr) {
+          console.error("[driver/complete-order] increment_store_orders:", rpcErr.message || rpcErr);
+        }
+      } catch (e) {
+        console.error("[driver/complete-order] increment_store_orders:", e && (e.message || e));
+      }
+    }
     try {
       await creditDriverWalletForOrder(req.supabase, req.appUser.id, data);
     } catch (e) {

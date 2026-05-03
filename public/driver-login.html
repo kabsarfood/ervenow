@@ -3,58 +3,107 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>بوابة المندوب | ERVENOW</title>
+    <title>دخول المندوب | ERVENOW</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet" />
     <style>
-      body { margin: 0; font-family: Cairo, sans-serif; background: #f8f4ef; color: #2b1f16; }
-      .wrap { max-width: 980px; margin: 24px auto; padding: 16px; display: grid; gap: 16px; grid-template-columns: repeat(auto-fit,minmax(300px,1fr)); }
-      .card { background: #fff; border: 1px solid #e5d8cb; border-radius: 16px; padding: 18px; box-shadow: 0 8px 20px rgba(84,52,31,.08); }
-      h1,h2 { margin: 0 0 10px; color: #5b371d; }
-      p { margin: 0 0 12px; color: #6e5a4a; }
-      label { display: block; margin: 8px 0 4px; font-weight: 700; }
-      input,select,button { width: 100%; box-sizing: border-box; border-radius: 10px; border: 1px solid #d9c8b7; padding: 11px; font-family: inherit; }
-      button { background: #5b371d; color: #fff; border: 0; cursor: pointer; font-weight: 700; margin-top: 10px; }
-      button:disabled { opacity: .6; cursor: not-allowed; }
-      .ghost { background: #fff; color: #5b371d; border: 1px solid #5b371d; }
-      .row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+      body {
+        margin: 0;
+        font-family: Cairo, sans-serif;
+        background: #f8f4ef;
+        color: #2b1f16;
+      }
+      .wrap {
+        max-width: 520px;
+        margin: 28px auto;
+        padding: 16px;
+      }
+      .card {
+        background: #fff;
+        border: 1px solid #e5d8cb;
+        border-radius: 16px;
+        padding: 20px;
+        box-shadow: 0 8px 20px rgba(84, 52, 31, 0.08);
+      }
+      h1 {
+        margin: 0 0 10px;
+        color: #5b371d;
+      }
+      p {
+        margin: 0 0 12px;
+        color: #6e5a4a;
+      }
+      a {
+        color: #5b371d;
+        font-weight: 700;
+      }
+      label {
+        display: block;
+        margin: 10px 0 4px;
+        font-weight: 700;
+      }
+      input,
+      button {
+        width: 100%;
+        box-sizing: border-box;
+        border-radius: 10px;
+        border: 1px solid #d9c8b7;
+        padding: 11px;
+        font-family: inherit;
+      }
+      button {
+        background: #5b371d;
+        color: #fff;
+        border: 0;
+        cursor: pointer;
+        font-weight: 700;
+        margin-top: 12px;
+      }
+      button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+      .row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+      .note {
+        font-size: 0.92rem;
+        background: #fff8ee;
+        border: 1px solid #e8d4bc;
+        border-radius: 10px;
+        padding: 10px 12px;
+        margin-bottom: 14px;
+      }
     </style>
   </head>
   <body>
     <div class="wrap">
-      <div class="card">
-        <h1>تسجيل دخول المندوب</h1>
-        <p>ادخل رقم الجوال ثم استلم رمز OTP.</p>
-        <label>رقم الجوال</label>
-        <input id="loginPhone" placeholder="05xxxxxxxx" />
-        <label>رمز الدخول</label>
-        <input id="loginCode" placeholder="12345" />
-        <div class="row">
-          <button id="sendOtpBtn">إرسال الكود</button>
-          <button id="verifyBtn">تسجيل الدخول</button>
-        </div>
-        <p id="devOtpLine"></p>
+      <p style="margin: 0 0 14px"><a href="/">← الرئيسية</a></p>
+
+      <div class="note">
+        🔒 <strong>للمندوبين المعتمدين من الإدارة فقط.</strong> لا يوجد تسجيل جديد من هذه الصفحة — بعد الموافقة على طلبك يمكنك إدخال الجوال ورمز واتساب هنا.
       </div>
 
       <div class="card">
-        <h2>تسجيل مندوب جديد</h2>
-        <p>سيتم إنشاء حسابك بحالة pending حتى موافقة الإدارة.</p>
-        <label>الاسم الكامل</label>
-        <input id="regName" />
-        <label>رقم الجوال</label>
-        <input id="regPhone" placeholder="05xxxxxxxx" />
-        <label>رقم الهوية / الإقامة</label>
-        <input id="regIqama" />
-        <label>نوع المركبة</label>
-        <select id="regCarType">
-          <option value="">اختر</option>
-          <option value="car">سيارة</option>
-          <option value="bike">دراجة</option>
-          <option value="motorcycle">دباب</option>
-        </select>
-        <label>رقم اللوحة</label>
-        <input id="regPlate" />
-        <button id="registerBtn">تسجيل المندوب</button>
+        <h1>تسجيل دخول المندوب</h1>
+        <p>أدخل رقم الجوال ثم رمز واتساب. صلاحية الرمز 5 دقائق.</p>
+
+        <label for="loginPhone">رقم الجوال</label>
+        <input id="loginPhone" type="tel" inputmode="numeric" maxlength="10" placeholder="05xxxxxxxx" />
+
+        <label for="loginCode">رمز الدخول</label>
+        <input id="loginCode" type="text" inputmode="numeric" placeholder="رمز واتساب" />
+
+        <div class="row">
+          <button id="sendOtpBtn" type="button">إرسال الكود</button>
+          <button id="verifyBtn" type="button">تسجيل الدخول</button>
+        </div>
+
+        <p style="margin-top: 16px; margin-bottom: 0">
+          لم تُعتمد بعد؟ <a href="/login?mode=register&role=customer">طلب الانضمام كمندوب</a>
+        </p>
       </div>
     </div>
 
@@ -63,24 +112,44 @@
     <script>
       function getVal(id) {
         var el = document.getElementById(id);
-        return (el && el.value || "").trim();
+        return ((el && el.value) || "").trim();
+      }
+
+      function normalizePhoneInput() {
+        var el = document.getElementById("loginPhone");
+        if (!el) return "";
+        var d = String(el.value || "").replace(/\D/g, "");
+        if (d.startsWith("9665")) d = "0" + d.slice(3);
+        else if (d.startsWith("5") && d.length === 9) d = "0" + d;
+        el.value = d.slice(0, 10);
+        return el.value;
+      }
+
+      document.getElementById("loginPhone").addEventListener("input", normalizePhoneInput);
+      document.getElementById("loginPhone").addEventListener("blur", normalizePhoneInput);
+
+      function mapOtpError(msg) {
+        var m = String(msg || "");
+        if (m.indexOf("منتهي") !== -1 || m.indexOf("غير صحيح") !== -1) {
+          return "رمز واتساب غير صحيح أو منتهي. صلاحية الرمز 5 دقائق.";
+        }
+        return m;
       }
 
       var sendOtp = safeClick(async function () {
+        normalizePhoneInput();
         var btn = document.getElementById("sendOtpBtn");
         var old = btn.innerText;
         btn.disabled = true;
         btn.innerText = "جارٍ الإرسال...";
         try {
-          var j = await window.PlatformAPI.api("/api/driver/send-otp", {
+          await window.PlatformAPI.api("/api/driver/send-otp", {
             method: "POST",
             body: { phone: getVal("loginPhone") },
           });
-          showSuccess("تم إرسال الرمز");
-          var line = document.getElementById("devOtpLine");
-          line.innerText = j.dev_otp ? "رمز التطوير: " + j.dev_otp : "";
+          showSuccess("تم إرسال الرمز عبر واتساب. صلاحية الرمز 5 دقائق.");
         } catch (e) {
-          showError(e.message || "فشل إرسال الرمز");
+          showError(mapOtpError(e.message || "فشل إرسال الرمز"));
         } finally {
           btn.disabled = false;
           btn.innerText = old;
@@ -88,6 +157,7 @@
       });
 
       var verifyOtp = safeClick(async function () {
+        normalizePhoneInput();
         var btn = document.getElementById("verifyBtn");
         var old = btn.innerText;
         btn.disabled = true;
@@ -99,37 +169,16 @@
           });
           if (!j.token) throw new Error("لم يتم إصدار جلسة");
           window.PlatformAPI.setToken(j.token);
+          try {
+            var dp = getVal("loginPhone");
+            if (dp) localStorage.setItem("userPhone", dp);
+          } catch (lsErr) {}
           showSuccess("تم تسجيل الدخول");
           setTimeout(function () {
             location.href = "/driver-dashboard";
           }, 500);
         } catch (e) {
-          showError(e.message || "فشل تسجيل الدخول");
-        } finally {
-          btn.disabled = false;
-          btn.innerText = old;
-        }
-      });
-
-      var registerDriver = safeClick(async function () {
-        var btn = document.getElementById("registerBtn");
-        var old = btn.innerText;
-        btn.disabled = true;
-        btn.innerText = "جارٍ التسجيل...";
-        try {
-          await window.PlatformAPI.api("/api/driver/register", {
-            method: "POST",
-            body: {
-              name: getVal("regName"),
-              phone: getVal("regPhone"),
-              iqama: getVal("regIqama"),
-              car_type: getVal("regCarType"),
-              plate_number: getVal("regPlate"),
-            },
-          });
-          showSuccess("تم تسجيلك — بانتظار الموافقة");
-        } catch (e) {
-          showError(e.message || "فشل التسجيل");
+          showError(mapOtpError(e.message || "فشل تسجيل الدخول"));
         } finally {
           btn.disabled = false;
           btn.innerText = old;
@@ -138,7 +187,6 @@
 
       document.getElementById("sendOtpBtn").onclick = sendOtp;
       document.getElementById("verifyBtn").onclick = verifyOtp;
-      document.getElementById("registerBtn").onclick = registerDriver;
     </script>
   </body>
 </html>

@@ -213,7 +213,7 @@
         accepted: "تم استلام الطلب",
         delivering: "جاري التوصيل",
         delivered: "تم التسليم",
-        cancelled_by_customer: "أُلغي بواسطة العميل",
+        cancelled_by_customer: "أُلغي بواسطة زائر المنصة",
       };
 
       var pollTimer = null;
@@ -240,6 +240,8 @@
       var meRoleFetched = false;
       var speechState = { orderId: null, accepted: false, delivering: false, near: false };
       var voiceEnabled = true;
+      var iconCache = {};
+      var currentDriverType = "car";
 
       async function ensureMeRole() {
         if (meRoleFetched) return;
@@ -421,11 +423,11 @@
         }
         var deliveryStatus = String(order.delivery_status || order.status || "");
         if (deliveryStatus === "accepted" && !speechState.accepted) {
-          speakArabic("عميلنا العزيز تم قبول الطلب.");
+          speakArabic("زائرنا العزيز، تم قبول الطلب.");
           speechState.accepted = true;
         }
         if (deliveryStatus === "delivering" && !speechState.delivering) {
-          speakArabic("عميلنا العزيز تم استلام الطلب والتوجه إليك.");
+          speakArabic("زائرنا العزيز، تم استلام الطلب والتوجه إليك.");
           speechState.delivering = true;
         }
         var etaMinutes = computeEtaMinutesForOrder(order);
@@ -435,7 +437,7 @@
           etaMinutes <= 2 &&
           (deliveryStatus === "accepted" || deliveryStatus === "delivering")
         ) {
-          speakArabic("عميلنا العزيز المندوب قريب منك، دقيقتان.");
+          speakArabic("زائرنا العزيز، المندوب قريب منك خلال دقيقتين.");
           speechState.near = true;
         }
       }
@@ -603,6 +605,25 @@
         return "car";
       }
 
+      function getDriverIcon(type) {
+        var t = type === "bike" ? "bike" : "car";
+        if (iconCache[t]) return iconCache[t];
+        var primary = t === "bike" ? "/assets/bike.png" : "/assets/car.png";
+        var fallback =
+          t === "bike"
+            ? "https://cdn-icons-png.flaticon.com/512/2972/2972185.png"
+            : "https://cdn-icons-png.flaticon.com/512/684/684908.png";
+        iconCache[t] = L.icon({ iconUrl: fallback, iconSize: [40, 40] });
+        var probe = new Image();
+        probe.onload = function () {
+          iconCache[t] = L.icon({ iconUrl: primary, iconSize: [40, 40] });
+          if (driverMarker && currentDriverType === t) driverMarker.setIcon(iconCache[t]);
+        };
+        probe.onerror = function () {};
+        probe.src = primary;
+        return iconCache[t];
+      }
+
       function animateMarkerTo(targetLat, targetLng) {
         if (!driverMarker) return;
         if (markerAnimRaf) {
@@ -633,23 +654,14 @@
         markerAnimRaf = requestAnimationFrame(step);
       }
 
-      function updateDriverMarker(lat, lng, vehicleKind) {
+      function updateDriverMarker(lat, lng) {
         if (lat == null || lng == null) return;
         var la = Number(lat);
         var ln = Number(lng);
         if (Number.isNaN(la) || Number.isNaN(ln)) return;
         ensureMap();
         if (!map) return;
-        var iconUrl =
-          vehicleKind === "bike"
-            ? "https://cdn-icons-png.flaticon.com/512/2972/2972185.png"
-            : "https://cdn-icons-png.flaticon.com/512/684/684908.png";
-        if (!driverIcon || driverIcon.options.iconUrl !== iconUrl) {
-          driverIcon = L.icon({
-            iconUrl: iconUrl,
-            iconSize: [35, 35],
-          });
-        }
+        if (!driverIcon) driverIcon = getDriverIcon("car");
         if (driverMarker) {
           animateMarkerTo(la, ln);
         } else {
@@ -832,7 +844,7 @@
           } else if (deliveryStatus === "delivered") {
             statusEl.innerText = "✅ تم التسليم";
           } else if (deliveryStatus === "cancelled_by_customer") {
-            statusEl.innerText = "🚫 تم إلغاء الطلب من العميل";
+            statusEl.innerText = "🚫 تم إلغاء الطلب من زائر المنصة";
           } else {
             statusEl.innerText = "⏳ بانتظار المندوب";
           }
@@ -887,20 +899,23 @@
 
         var lat = order.driver_lat;
         var lng = order.driver_lng;
+        var vehicleType = detectVehicleKind(order);
+        currentDriverType = vehicleType;
+        driverIcon = getDriverIcon(vehicleType);
         var dropLat = order.drop_lat == null ? null : Number(order.drop_lat);
         var dropLng = order.drop_lng == null ? null : Number(order.drop_lng);
         var hasDropPoint = Number.isFinite(dropLat) && Number.isFinite(dropLng);
         void renderTripRoute(order);
         var hasDriverLocation = lat != null && lng != null && !Number.isNaN(Number(lat)) && !Number.isNaN(Number(lng));
         if (deliveryStatus === "delivered" && hasDropPoint) {
-          updateDriverMarker(dropLat, dropLng, detectVehicleKind(order));
+          updateDriverMarker(dropLat, dropLng);
           updateDropMarker(dropLat, dropLng);
           document.getElementById("coords").textContent =
             "📍 تم التسليم عند نقطة النهاية: " + dropLat + " ، " + dropLng;
           document.getElementById("coordsMeta").textContent = "";
-        } else if (hasDriverLocation) {
+        } else if (order.driver_lat && order.driver_lng && hasDriverLocation) {
           document.getElementById("coords").textContent = "خط العرض: " + lat + " — خط الطول: " + lng;
-          updateDriverMarker(lat, lng, detectVehicleKind(order));
+          updateDriverMarker(lat, lng);
           if (hasDropPoint) updateDropMarker(dropLat, dropLng);
           document.getElementById("coordsMeta").textContent = "";
         } else {
@@ -1041,17 +1056,7 @@
 
       function startTrackingPolling() {
         if (pollTimer) clearInterval(pollTimer);
-        pollTimer = setInterval(async function () {
-          try {
-            if (!trackedOrderId) return;
-            var j = await window.PlatformAPI.api("/api/delivery/orders/" + encodeURIComponent(trackedOrderId));
-            if (j && j.order) {
-              renderOrder(j.order);
-            }
-          } catch (e) {
-            console.log("tracking error");
-          }
-        }, 3000);
+        pollTimer = setInterval(fetchOrder, 3000);
       }
 
       document.getElementById("btn").onclick = function () {

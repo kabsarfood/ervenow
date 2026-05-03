@@ -21,10 +21,13 @@ const invoiceRoutes = require("../apps/invoice/routes");
 const { pushToErvenow } = require("../shared/utils/ervenowPush");
 const { startRetryNotificationsWorker } = require("../apps/driver/retryNotifications");
 const { createServiceClient } = require("../shared/config/supabase");
+const { register, metrics } = require("../shared/utils/metrics");
 
 const PORT = process.env.PORT || 4000;
 const publicPath = path.join(__dirname, "..", "public");
 const isProd = process.env.NODE_ENV === "production";
+const serveStatic =
+  process.env.SERVE_STATIC !== "0" && String(process.env.SERVE_STATIC || "").toLowerCase() !== "false";
 
 /** أسماء مقاطع مسموحة تبدأ بنقطة (معايير عامة مثل ACME) */
 const DOT_SEGMENT_ALLOW = new Set([".well-known"]);
@@ -83,17 +86,42 @@ app.use(
   cors({
     origin: true,
     credentials: true,
-    allowedHeaders: ["Content-Type", "Authorization", "X-Source"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Source", "Idempotency-Key"],
   })
 );
 app.use(express.json({ limit: "12mb" }));
 app.use(isProd ? morgan("tiny") : morgan("dev"));
+
+app.use((req, res, next) => {
+  const p = req.path || "";
+  if (p === "/api/internal/metrics") return next();
+  const t0 = Date.now();
+  res.on("finish", () => {
+    try {
+      metrics.observeApiRequest(req.method, req.path || req.url, res.statusCode, Date.now() - t0);
+    } catch (_) {
+      /* ignore */
+    }
+  });
+  next();
+});
 
 /* ——— API Gateway ——— (قبل الملفات الثابتة وقبل معالج 404) */
 /** تشخيص إنتاج: يتجاوز mounted router — إن نجح، التطبيق الصحيح يستمع و /api/core يصل */
 app.get("/api/core/test", (_req, res) => {
   res.json({ ok: true, route: "core-test-working" });
 });
+
+if (String(process.env.METRICS_ENABLED || "").trim() === "1") {
+  app.get("/api/internal/metrics", async (_req, res) => {
+    try {
+      res.setHeader("Content-Type", register.contentType);
+      res.end(await register.metrics());
+    } catch (_e) {
+      res.status(500).end();
+    }
+  });
+}
 
 app.use("/api/core", coreRoutes);
 app.use("/api/delivery", deliveryRoutes);
@@ -129,97 +157,113 @@ app.get("/api/health", (_req, res) => {
   });
 });
 
-/* ——— واجهة ثابتة ——— المجلد public فقط؛ لا تُقدَّم الملفات المخفية ——— */
-app.use(
-  express.static(publicPath, {
-    dotfiles: "deny",
-    index: false,
-  })
-);
+/* ——— واجهة ثابتة ——— عطّلها في الإنتاج عبر SERVE_STATIC=0 وقدّمها من CDN/nginx ——— */
+if (serveStatic) {
+  app.use(
+    express.static(publicPath, {
+      dotfiles: "deny",
+      index: false,
+    })
+  );
 
-app.get("/", (_req, res) => {
-  res.sendFile(path.join(publicPath, "index.html"));
-});
+  app.get("/", (_req, res) => {
+    res.sendFile(path.join(publicPath, "index.html"));
+  });
 
-app.get("/login", (_req, res) => {
-  res.sendFile(path.join(publicPath, "login.html"));
-});
+  app.get("/login", (_req, res) => {
+    res.sendFile(path.join(publicPath, "login.html"));
+  });
 
-app.get("/register-store", (_req, res) => {
-  res.sendFile(path.join(publicPath, "register-store.html"));
-});
+  app.get("/register-store", (_req, res) => {
+    res.sendFile(path.join(publicPath, "register-store.html"));
+  });
 
-app.get("/careers", (_req, res) => {
-  res.sendFile(path.join(publicPath, "careers.html"));
-});
+  app.get("/careers", (_req, res) => {
+    res.sendFile(path.join(publicPath, "careers.html"));
+  });
 
-app.get("/driver", (_req, res) => {
-  res.sendFile(path.join(publicPath, "driver.html"));
-});
+  app.get("/driver", (_req, res) => {
+    res.sendFile(path.join(publicPath, "driver.html"));
+  });
 
-app.get("/driver-login", (_req, res) => {
-  res.sendFile(path.join(publicPath, "driver-login.html"));
-});
+  app.get("/driver-login", (_req, res) => {
+    res.sendFile(path.join(publicPath, "driver-login.html"));
+  });
 
-app.get("/driver-dashboard", (_req, res) => {
-  res.sendFile(path.join(publicPath, "driver-dashboard.html"));
-});
+  app.get("/driver-register", (_req, res) => {
+    res.sendFile(path.join(publicPath, "driver-register.html"));
+  });
 
-app.get("/driver-wallet", (_req, res) => {
-  res.sendFile(path.join(publicPath, "driver-wallet.html"));
-});
+  app.get("/driver-dashboard", (_req, res) => {
+    res.sendFile(path.join(publicPath, "driver-dashboard.html"));
+  });
 
-app.get("/orders", (_req, res) => {
-  res.sendFile(path.join(publicPath, "orders.html"));
-});
+  app.get("/driver-wallet", (_req, res) => {
+    res.sendFile(path.join(publicPath, "driver-wallet.html"));
+  });
 
-app.get("/admin-finance", (_req, res) => {
-  res.sendFile(path.join(publicPath, "admin-finance.html"));
-});
+  app.get("/orders", (_req, res) => {
+    res.sendFile(path.join(publicPath, "orders.html"));
+  });
 
-app.get("/admin-approvals", (_req, res) => {
-  res.sendFile(path.join(publicPath, "admin-approvals.html"));
-});
+  app.get("/admin-finance", (_req, res) => {
+    res.sendFile(path.join(publicPath, "admin-finance.html"));
+  });
 
-app.get("/admin-dashboard", (_req, res) => {
-  res.sendFile(path.join(publicPath, "admin-dashboard.html"));
-});
+  app.get("/admin-approvals", (_req, res) => {
+    res.sendFile(path.join(publicPath, "admin-approvals.html"));
+  });
 
-app.get("/admin-login", (_req, res) => {
-  res.sendFile(path.join(publicPath, "admin-login.html"));
-});
+  app.get("/admin-dashboard", (_req, res) => {
+    res.sendFile(path.join(publicPath, "admin-dashboard.html"));
+  });
 
-app.get("/dashboard", (_req, res) => {
-  res.sendFile(path.join(publicPath, "dashboard.html"));
-});
+  app.get("/admin-login", (_req, res) => {
+    res.sendFile(path.join(publicPath, "admin-login.html"));
+  });
 
-app.get("/start-now", (_req, res) => {
-  res.sendFile(path.join(publicPath, "start-now.html"));
-});
+  app.get("/dashboard", (_req, res) => {
+    res.sendFile(path.join(publicPath, "dashboard.html"));
+  });
 
-app.get("/track", (_req, res) => {
-  res.sendFile(path.join(publicPath, "track.html"));
-});
+  app.get("/start-now", (_req, res) => {
+    res.sendFile(path.join(publicPath, "start-now.html"));
+  });
 
-app.get("/order", (_req, res) => {
-  res.sendFile(path.join(publicPath, "order.html"));
-});
+  app.get("/track", (_req, res) => {
+    res.sendFile(path.join(publicPath, "track.html"));
+  });
 
-app.get("/browse", (_req, res) => {
-  res.sendFile(path.join(publicPath, "browse.html"));
-});
+  app.get("/order", (_req, res) => {
+    res.sendFile(path.join(publicPath, "order.html"));
+  });
 
-app.get("/cart", (_req, res) => {
-  res.sendFile(path.join(publicPath, "cart.html"));
-});
+  app.get("/browse", (_req, res) => {
+    res.sendFile(path.join(publicPath, "browse.html"));
+  });
 
-app.get("/services-provider", (_req, res) => {
-  res.sendFile(path.join(publicPath, "services-provider.html"));
-});
+  app.get("/store", (_req, res) => {
+    res.sendFile(path.join(publicPath, "store.html"));
+  });
 
-app.get("/blocked-complaints", (_req, res) => {
-  res.sendFile(path.join(publicPath, "blocked-complaints.html"));
-});
+  app.get("/store-dashboard", (_req, res) => {
+    res.sendFile(path.join(publicPath, "store-dashboard.html"));
+  });
+
+  app.get("/cart", (_req, res) => {
+    res.sendFile(path.join(publicPath, "cart.html"));
+  });
+
+  app.get("/services-provider", (_req, res) => {
+    res.sendFile(path.join(publicPath, "services-provider.html"));
+  });
+
+  app.get("/blocked-complaints", (_req, res) => {
+    res.sendFile(path.join(publicPath, "blocked-complaints.html"));
+  });
+} else {
+  console.warn("[boot] SERVE_STATIC disabled — serve public/ via CDN/nginx only");
+}
 
 app.use((_req, res) => {
   res.status(404).end();

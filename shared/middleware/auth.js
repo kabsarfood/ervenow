@@ -43,6 +43,12 @@ function isMissingStatusColumnError(err) {
   return /users\.status|column .*status.* does not exist|Could not find the .*status/i.test(msg);
 }
 
+function isMissingNameColumnError(err) {
+  if (!err) return false;
+  const msg = String(err.message || err.details || "");
+  return /users\.name|column .*name.* does not exist|Could not find the .*name/i.test(msg);
+}
+
 async function requireAuth(req, res, next) {
   try {
     const token = extractBearer(req);
@@ -72,19 +78,30 @@ async function requireAuth(req, res, next) {
 
     let effectiveRole = role;
     let effectiveStatus = "active";
+    let displayName = null;
     try {
       let dbUser = null;
-      const withStatus = await sb
+      let withStatus = await sb
         .from("users")
-        .select("id, role, status, phone")
+        .select("id, role, status, phone, name")
         .eq("id", sub)
         .maybeSingle();
-      if (withStatus.error && isMissingStatusColumnError(withStatus.error)) {
-        const fallback = await sb
+      if (withStatus.error && isMissingNameColumnError(withStatus.error)) {
+        withStatus = await sb
           .from("users")
-          .select("id, role, phone")
+          .select("id, role, status, phone")
           .eq("id", sub)
           .maybeSingle();
+      }
+      if (withStatus.error && isMissingStatusColumnError(withStatus.error)) {
+        let fallback = await sb
+          .from("users")
+          .select("id, role, phone, name")
+          .eq("id", sub)
+          .maybeSingle();
+        if (fallback.error && isMissingNameColumnError(fallback.error)) {
+          fallback = await sb.from("users").select("id, role, phone").eq("id", sub).maybeSingle();
+        }
         if (!fallback.error) dbUser = fallback.data || null;
       } else if (!withStatus.error) {
         dbUser = withStatus.data || null;
@@ -93,6 +110,7 @@ async function requireAuth(req, res, next) {
         if (dbUser.role) effectiveRole = dbUser.role;
         if (dbUser.status) effectiveStatus = dbUser.status;
         if (dbUser.phone) req.authUser = { id: sub, phone: dbUser.phone };
+        if (dbUser.name != null && String(dbUser.name).trim()) displayName = String(dbUser.name).trim();
       }
     } catch (_e) {}
 
@@ -107,7 +125,13 @@ async function requireAuth(req, res, next) {
 
     req.supabase = sb;
     req.authUser = req.authUser || { id: sub, phone };
-    req.appUser = { id: sub, phone: req.authUser.phone, role: effectiveRole, status: effectiveStatus };
+    req.appUser = {
+      id: sub,
+      phone: req.authUser.phone,
+      role: effectiveRole,
+      status: effectiveStatus,
+      ...(displayName ? { name: displayName } : {}),
+    };
     next();
   } catch (e) {
     console.error("[requireAuth]", e);

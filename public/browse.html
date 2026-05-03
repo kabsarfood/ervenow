@@ -43,8 +43,19 @@
         <a class="btn btn-ghost" href="/">العودة للرئيسية</a>
       </div>
 
+      <p class="sub" id="guestBrowseNote" style="display: none; margin: 0 0 10px; padding: 10px 12px; background: #fff8ee; border: 1px solid #e8d4bc; border-radius: 10px">
+        أنت تتصفّح كزائر: تظهر العروض دون أسماء أو أرقام المحلات. لإتمام أي طلب سجّل اسمك وجوالك ورمز واتساب (بدون انتظار موافقة).
+      </p>
+
       <div class="card" style="margin-top: 12px">
         <p class="sub" id="typeLabel" style="margin: 0 0 10px">جاري التحميل...</p>
+        <div id="storeSortWrap" style="display: none; margin-bottom: 12px; gap: 10px; align-items: center; flex-wrap: wrap">
+          <label for="storeSort" class="sub" style="margin: 0">ترتيب المتاجر</label>
+          <select id="storeSort">
+            <option value="rating">الأعلى تقييماً ثم الأكثر طلباً</option>
+            <option value="orders">الأكثر طلباً ثم الأعلى تقييماً</option>
+          </select>
+        </div>
         <div id="list" class="browse-grid"></div>
         <div id="requestBox" style="display: none"></div>
       </div>
@@ -84,15 +95,19 @@
       const requestTypes = Object.keys(serviceLabels);
 
       const mockData = {
-        restaurant: [{ name: "مطعم كبسار 🍖" }, { name: "مطعم شعبي 🍛" }],
-        supermarket: [{ name: "سوبر ماركت الخير 🛒" }],
-        pharmacy: [{ name: "صيدلية النهدي 💊" }],
-        plumber: [{ name: "سباك محترف 🔧" }],
-        electrician: [{ name: "كهربائي سريع ⚡" }],
-        internal_delivery: [{ name: "توصيل سريع 🚚" }],
+        restaurant: [
+          { label: "محل مشارك — عرض ١", promo: "وجبات وأسعار مناسبة" },
+          { label: "محل مشارك — عرض ٢", promo: "خصومات على أصناف مختارة" },
+        ],
+        supermarket: [{ label: "متجر مشارك — عرض ١", promo: "عروض اليوم" }],
+        pharmacy: [{ label: "صيدلية مشاركة — عرض ١", promo: "توصيل للأحياء المغطاة" }],
+        plumber: [{ label: "مقدّم خدمة — عرض ١", promo: "حجز فني متاح بعد التسجيل" }],
+        electrician: [{ label: "مقدّم خدمة — عرض ١", promo: "صيانة منزلية" }],
+        internal_delivery: [{ label: "خدمة توصيل — عرض ١", promo: "أسعار حسب المسافة" }],
       };
     </script>
 
+    <script src="/assets/guestBrowse.js"></script>
     <script src="/assets/cart.js"></script>
     <script id="cart">
       function clearCart() {
@@ -110,7 +125,9 @@
         }
         el.innerHTML = items
           .map(function (i) {
-            const district = i.data && i.data.district ? i.data.district : "—";
+            var hidePhones = window.ErvenowGuestBrowse && ErvenowGuestBrowse.isAnonymousGuest();
+            var district = i.data && i.data.district ? i.data.district : "—";
+            if (hidePhones) district = "—";
             const qty = i.data && i.data.qty ? i.data.qty : 1;
             return (
               '<div class="card" style="margin-bottom:8px">' +
@@ -135,11 +152,41 @@
           alert("السلة فارغة");
           return;
         }
+        var tok =
+          (typeof localStorage !== "undefined" &&
+            (localStorage.getItem("token") ||
+              localStorage.getItem("ervenow_access_token") ||
+              localStorage.getItem("erwenow_access_token"))) ||
+          "";
+        if (!tok || !String(tok).trim()) {
+          window.location.href =
+            "/login?mode=register&role=customer&next=" + encodeURIComponent("/cart");
+          return;
+        }
         window.location.href = "/cart";
       }
     </script>
 
     <script id="render">
+      function browseGuestNotice() {
+        var el = document.getElementById("guestBrowseNote");
+        if (!el || !window.ErvenowGuestBrowse) return;
+        el.style.display = ErvenowGuestBrowse.isAnonymousGuest() ? "block" : "none";
+      }
+
+      function goRegisterForOrder() {
+        var next = "/browse" + window.location.search;
+        window.location.href =
+          "/login?mode=register&role=customer&next=" + encodeURIComponent(next);
+      }
+
+      function browseEscapeHtml(s) {
+        return String(s || "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/"/g, "&quot;");
+      }
+
       function render(items) {
         const el = document.getElementById("list");
         if (!el) return;
@@ -151,7 +198,40 @@
 
         el.innerHTML = items
           .map(function (i) {
-            return '<div class="card">' + (i.name || "عنصر") + "</div>";
+            if (i.masked) {
+              var promo = i.promo ? '<div class="sub" style="margin-top:6px">' + i.promo + "</div>" : "";
+              var head = i.label || i.name || "عرض";
+              return '<div class="card"><strong>' + browseEscapeHtml(head) + "</strong>" + promo + "</div>";
+            }
+            var img = i.logo_url
+              ? '<img src="' +
+                browseEscapeHtml(i.logo_url) +
+                '" loading="lazy" alt="" style="width:100%;max-height:140px;object-fit:cover;border-radius:10px;background:#f0ebe3"/>'
+              : "";
+            var stars = "★ " + (Number(i.average_rating) || 0).toFixed(1);
+            var orders = "طلبات: " + (Number(i.total_orders) || 0);
+            var bt = String(typeof type !== "undefined" ? type : "").trim();
+            var link = i.id
+              ? '<a class="btn btn-primary" style="margin-top:10px;display:inline-block" href="/store?id=' +
+                encodeURIComponent(i.id) +
+                "\" onclick=\"try{sessionStorage.setItem('ervenow_browse_type','" +
+                bt.replace(/\\/g, "\\\\").replace(/'/g, "\\'") +
+                '\')}catch(e){}">عرض المتجر</a>'
+              : "";
+            return (
+              '<div class="card">' +
+              img +
+              '<strong style="display:block;margin-top:8px">' +
+              browseEscapeHtml(i.name || "متجر") +
+              "</strong>" +
+              '<div class="sub" style="margin-top:6px">' +
+              stars +
+              " · " +
+              orders +
+              "</div>" +
+              link +
+              "</div>"
+            );
           })
           .join("");
       }
@@ -163,6 +243,20 @@
         const box = document.getElementById("requestBox");
         if (!box) return;
         if (list) list.innerHTML = "";
+
+        if (window.ErvenowGuestBrowse && ErvenowGuestBrowse.isAnonymousGuest()) {
+          box.style.display = "block";
+          box.innerHTML =
+            '<div class="card browse-form">' +
+            "<p><strong>" +
+            (serviceLabels[safeType] || "خدمة") +
+            "</strong></p>" +
+            "<p class=\"sub\">لإضافة هذا النوع إلى السلة وتأكيد الطلب، سجّل اسمك وجوالك ورمز واتساب — دون انتظار موافقة.</p>" +
+            '<button type="button" class="btn btn-primary" onclick="goRegisterForOrder()">تسجيل ومتابعة الطلب</button>' +
+            "</div>";
+          return;
+        }
+
         box.style.display = "block";
 
         const title = serviceLabels[safeType] || "خدمة";
@@ -334,6 +428,10 @@
       }
 
       function submitRequestForm(safeType) {
+        if (window.ErvenowGuestBrowse && ErvenowGuestBrowse.isAnonymousGuest()) {
+          goRegisterForOrder();
+          return;
+        }
         const item = document.getElementById("reqItem");
         const district = document.getElementById("reqDistrict");
         const location = document.getElementById("reqLocation");
@@ -400,10 +498,27 @@
     </script>
 
     <script id="fetch-real-data">
+      function wireStoreSortOnce() {
+        var sortSel = document.getElementById("storeSort");
+        if (!sortSel || sortSel.dataset.wired) return;
+        sortSel.dataset.wired = "1";
+        sortSel.addEventListener("change", function () {
+          var u = new URLSearchParams(window.location.search);
+          u.set("sort", sortSel.value);
+          history.replaceState({}, "", window.location.pathname + "?" + u.toString());
+          loadData();
+        });
+      }
+
       async function loadData() {
         const label = document.getElementById("typeLabel");
         const box = document.getElementById("requestBox");
+        const sortWrap = document.getElementById("storeSortWrap");
+        const sortSel = document.getElementById("storeSort");
         const safeType = String(type || "").trim();
+        if (sortWrap) sortWrap.style.display = "none";
+        wireStoreSortOnce();
+
         if (label) {
           label.textContent = safeType ? "النوع: " + safeType : "النوع غير محدد";
         }
@@ -420,12 +535,53 @@
         }
 
         try {
-          const res = await fetch("/api/store?type=" + encodeURIComponent(safeType));
+          browseGuestNotice();
+          const headers = {};
+          try {
+            const t =
+              localStorage.getItem("token") ||
+              localStorage.getItem("ervenow_access_token") ||
+              localStorage.getItem("erwenow_access_token");
+            if (t) headers.Authorization = "Bearer " + t;
+          } catch (e2) {}
+
+          var qsSort = new URLSearchParams(window.location.search).get("sort") === "orders" ? "orders" : "rating";
+          if (sortSel) sortSel.value = qsSort;
+
+          var geoQs = "";
+          try {
+            if (navigator.geolocation) {
+              var pos = await new Promise(function (resolve) {
+                navigator.geolocation.getCurrentPosition(
+                  function (p) {
+                    resolve(p);
+                  },
+                  function () {
+                    resolve(null);
+                  },
+                  { enableHighAccuracy: false, timeout: 9000, maximumAge: 120000 }
+                );
+              });
+              if (pos && pos.coords) {
+                geoQs =
+                  "&user_lat=" +
+                  encodeURIComponent(pos.coords.latitude) +
+                  "&user_lng=" +
+                  encodeURIComponent(pos.coords.longitude);
+              }
+            }
+          } catch (geoErr) {}
+
+          const res = await fetch(
+            "/api/store?type=" + encodeURIComponent(safeType) + "&sort=" + encodeURIComponent(qsSort) + geoQs,
+            { headers }
+          );
           const data = await res.json().catch(function () {
             return {};
           });
 
           if (data.ok && Array.isArray(data.stores) && data.stores.length > 0) {
+            if (sortWrap) sortWrap.style.display = "flex";
             render(data.stores);
             return;
           }
@@ -438,6 +594,7 @@
     </script>
 
     <script id="init">
+      browseGuestNotice();
       renderCart();
       loadData();
     </script>

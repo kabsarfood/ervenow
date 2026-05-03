@@ -248,7 +248,7 @@
             "<div><strong>سعر التوصيل:</strong><br/>" +
             fee.toFixed(2) +
             " ريال</div>" +
-            "<div><strong>هاتف العميل:</strong><br/>" +
+            "<div><strong>هاتف زائر المنصة:</strong><br/>" +
             customerPhone +
             "</div>" +
             "</div>";
@@ -372,7 +372,7 @@
           document.body.innerHTML =
             '<div style="text-align:center;margin-top:50px;">' +
             "<h2>🔒 الرجاء تسجيل الدخول كمندوب</h2>" +
-            '<a href="/login?role=driver">تسجيل الدخول</a>' +
+            '<a href="/driver-login">تسجيل الدخول</a>' +
             "</div>";
           return;
         }
@@ -385,7 +385,7 @@
             showMsg("هذه الصفحة مخصصة للمندوبين.");
             return;
           }
-          var title = (me.profile && me.profile.name) || meUser.phone || meUser.id || "—";
+          var title = meUser.phone || (me.profile && me.profile.name) || meUser.id || "—";
           document.getElementById("who").textContent = "المندوب: " + title;
 
           await loadWalletAndRating();
@@ -406,8 +406,11 @@
         e.preventDefault();
         if (pollTimer) clearInterval(pollTimer);
         stopLocationLoop();
+        try {
+          localStorage.removeItem("userPhone");
+        } catch (err) {}
         window.PlatformAPI.setToken("");
-        location.href = "/login?role=driver";
+        location.href = "/driver-login";
       };
 
       init();

@@ -21,7 +21,7 @@ router.get("/health", (_req, res) => {
 });
 
 /**
- * PDF فاتورة — العميل صاحب الطلب أو admin فقط.
+ * PDF فاتورة — زائر المنصة صاحب الطلب أو admin فقط.
  */
 router.get("/:id", requireAuth, async (req, res) => {
   try {

@@ -1,6 +1,8 @@
 const { isValidDeliveryTransition, deliveryLifecycleIndex } = require("../../shared/utils/helpers");
 const { onDeliveryDelivered } = require("../finance/hooks");
 const { normalizePhone } = require("../../shared/utils/phone");
+const { getOsrmRouteKmOrHaversine } = require("../../shared/utils/osrmClient");
+const { logger } = require("../../shared/utils/logger");
 
 function haversineDistanceKm(lat1, lng1, lat2, lng2) {
   const R = 6371;
@@ -199,7 +201,7 @@ async function createDeliveryOrderFromBody(sb, appUser, body) {
   let distanceKm = null;
   let deliveryFee = 0;
   if (pickup_lat != null && pickup_lng != null && drop_lat != null && drop_lng != null) {
-    distanceKm = await getRoadDistanceKm(pickup_lat, pickup_lng, drop_lat, drop_lng);
+    distanceKm = haversineDistanceKm(pickup_lat, pickup_lng, drop_lat, drop_lng);
     deliveryFee = calcDeliveryBaseFee(distanceKm, vehicleType);
   } else if (b.delivery_fee != null && b.delivery_fee !== "") {
     deliveryFee = Math.max(0, Math.round(Number(b.delivery_fee) * 100) / 100);
@@ -214,6 +216,10 @@ async function createDeliveryOrderFromBody(sb, appUser, body) {
     b.series_source != null && String(b.series_source).trim() !== ""
       ? String(b.series_source).trim().slice(0, 64)
       : "ervenow";
+  const idemRaw =
+    b.idempotency_key != null && String(b.idempotency_key).trim() !== ""
+      ? String(b.idempotency_key).trim().slice(0, 256)
+      : null;
   const driverEarning = Math.max(0, Math.round((deliveryFee - platformFee) * 100) / 100);
 
   const subtotal = orderTotal + deliveryFee;
@@ -241,6 +247,7 @@ async function createDeliveryOrderFromBody(sb, appUser, body) {
     total_with_vat: totalWithVAT,
     external_order_id: extId,
     series_source: srcSeries,
+    ...(idemRaw ? { idempotency_key: idemRaw } : {}),
   }));
 }
 
@@ -307,10 +314,10 @@ async function insertVatRecordForOrder(sb, insertedOrder) {
       { onConflict: "order_id" }
     );
     if (error) {
-      console.error("VAT UPSERT ERROR:", error.message || String(error));
+      logger.error({ err: error.message || String(error) }, "VAT UPSERT ERROR");
     }
   } catch (e) {
-    console.error("VAT UPSERT ERROR:", e && e.message != null ? e.message : String(e));
+    logger.error({ err: e && e.message != null ? e.message : String(e) }, "VAT UPSERT ERROR");
   }
 }
 
@@ -343,9 +350,6 @@ async function insertDeliveryOrderWithRetry(sb, buildRow) {
 }
 
 async function listOrders(sb, appUser) {
-  if (appUser.role === "admin") {
-    return sb.from("orders").select("*").order("created_at", { ascending: false });
-  }
   if (appUser.role === "driver") {
     /* المندوب: pending المتاحة + طلباته المقبولة/قيد التوصيل */
     return sb
@@ -354,13 +358,15 @@ async function listOrders(sb, appUser) {
       .or(
         `and(driver_id.is.null,delivery_status.eq.pending),and(driver_id.eq.${appUser.id},delivery_status.in.(pending,accepted,delivering))`
       )
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+      .limit(150);
   }
   return sb
     .from("orders")
     .select("*")
     .eq("customer_id", appUser.id)
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .limit(100);
 }
 
 async function acceptOrder(sb, orderId, driverId) {
@@ -384,6 +390,7 @@ async function acceptOrder(sb, orderId, driverId) {
       updated_at: new Date().toISOString(),
     })
     .eq("id", orderId)
+    .is("driver_id", null)
     .in("delivery_status", ["new", "pending"])
     .select()
     .single();
@@ -417,9 +424,11 @@ async function setStatus(sb, orderId, nextStatus, appUser) {
     .single();
 
   if (!error && data && nextStatus === "delivered") {
-    onDeliveryDelivered(sb, data).catch((err) => console.error("[ERVENOW] finance hook:", err.message || err));
+    onDeliveryDelivered(sb, data).catch((err) =>
+      logger.error({ err: err.message || String(err) }, "[ERVENOW] finance hook")
+    );
     sb.rpc("ervenow_credit_driver_for_delivery", { p_order_id: data.id }).then(({ error: rpcErr }) => {
-      if (rpcErr) console.error("[ervenow] ervenow_credit_driver_for_delivery:", rpcErr.message || rpcErr);
+      if (rpcErr) logger.error({ err: rpcErr.message || String(rpcErr) }, "[ervenow] ervenow_credit_driver_for_delivery");
     });
   }
 
@@ -494,7 +503,10 @@ async function rateOrder(sb, orderId, appUser, rating, review) {
     .single();
 
   if (gErr || !order) return { data: null, error: gErr || new Error("Not found") };
-  if (appUser.role !== "customer" || order.customer_id !== appUser.id) {
+  const canRateVisitor =
+    order.customer_id === appUser.id &&
+    (appUser.role === "customer" || appUser.role === "admin");
+  if (!canRateVisitor) {
     return { data: null, error: new Error("Forbidden") };
   }
   const current = order.delivery_status || order.status;
@@ -526,7 +538,10 @@ async function cancelOrderByCustomer(sb, orderId, appUser) {
     .single();
   if (gErr || !order) return { data: null, error: gErr || new Error("Not found"), refund: null };
 
-  if (appUser.role !== "customer" || order.customer_id !== appUser.id) {
+  const canCancelVisitor =
+    order.customer_id === appUser.id &&
+    (appUser.role === "customer" || appUser.role === "admin");
+  if (!canCancelVisitor) {
     return { data: null, error: new Error("Forbidden"), refund: null };
   }
   const current = String(order.delivery_status || order.status || "").trim().toLowerCase();
@@ -550,6 +565,59 @@ async function cancelOrderByCustomer(sb, orderId, appUser) {
   return { data, error: null, refund };
 }
 
+/**
+ * بعد إنشاء الطلب بمسافة هافرساين سريعة: يعيد حساب المسافة بـ OSRM (محكوم) ويحدّث الأجور والضريبة.
+ */
+async function refineDeliveryOrderPricingFromOsrm(sb, orderId) {
+  const id = String(orderId || "").trim();
+  if (!id || !sb) return { ok: false };
+
+  const { data: order, error } = await sb.from("orders").select("*").eq("id", id).maybeSingle();
+  if (error || !order) return { ok: false };
+
+  const pickup_lat = parseCoord(order.pickup_lat);
+  const pickup_lng = parseCoord(order.pickup_lng);
+  const drop_lat = parseCoord(order.drop_lat);
+  const drop_lng = parseCoord(order.drop_lng);
+  if (pickup_lat == null || pickup_lng == null || drop_lat == null || drop_lng == null) {
+    return { ok: true, skipped: true };
+  }
+
+  const vehicleType = normalizeVehicleType(order?.data?.vehicle_type);
+  const distanceKm = await getOsrmRouteKmOrHaversine(
+    { lat: pickup_lat, lng: pickup_lng },
+    { lat: drop_lat, lng: drop_lng }
+  );
+  if (!Number.isFinite(distanceKm)) return { ok: false };
+
+  const deliveryFee = calcDeliveryBaseFee(distanceKm, vehicleType);
+  const platformFee = calcDeliveryPlatformFee(deliveryFee);
+  const driverEarning = Math.max(0, Math.round((deliveryFee - platformFee) * 100) / 100);
+  const orderTotal = Math.max(0, Number(order.order_total) || 0);
+  const subtotal = orderTotal + deliveryFee;
+  const vatAmount = calcVAT(subtotal);
+  const totalWithVAT = Math.round((subtotal + vatAmount) * 100) / 100;
+
+  const { data: updated, error: uErr } = await sb
+    .from("orders")
+    .update({
+      distance_km: distanceKm,
+      delivery_fee: deliveryFee,
+      platform_fee: platformFee,
+      driver_earning: driverEarning,
+      vat_amount: vatAmount,
+      total_with_vat: totalWithVAT,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", id)
+    .select()
+    .single();
+
+  if (uErr || !updated) return { ok: false, error: uErr };
+  await insertVatRecordForOrder(sb, updated);
+  return { ok: true, order: updated };
+}
+
 module.exports = {
   listOrders,
   acceptOrder,
@@ -571,4 +639,5 @@ module.exports = {
   createDeliveryOrderFromBody,
   buildNextDeliveryOrderNumber,
   insertDeliveryOrderWithRetry,
+  refineDeliveryOrderPricingFromOsrm,
 };

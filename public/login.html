@@ -15,6 +15,8 @@
         font-weight: 700;
         letter-spacing: 0.06em;
       }
+      .driver-register-fields { display: none; margin-top: 12px; }
+      #customerRegisterHint { display: none; margin-top: -6px; }
     </style>
   </head>
   <body>
@@ -22,20 +24,49 @@
       <p><a href="/">← الرئيسية</a></p>
       <h1 id="authTitle">تسجيل الدخول — ERVENOW</h1>
       <p class="sub" id="authSubtitle">
-        أدخل رقم جوال سعودي <strong>يبدأ بـ 05</strong> (مثال 05XXXXXXXX). رمز الدخول الموحّد:
-        <strong>12345</strong>
+        أدخل رقم جوال سعودي <strong>يبدأ بـ 05</strong> (مثال 05XXXXXXXX) ثم اطلب رمز الدخول عبر واتساب.
+      </p>
+      <p class="sub" style="margin-top:-8px">رمز واتساب صالح لمدة 5 دقائق.</p>
+      <p class="sub" id="customerRegisterHint">
+        أدخل <strong>اسمك</strong> ليظهر في أعلى الصفحة الرئيسية بدل رقم الجوال.
       </p>
 
       <div class="card">
         <label for="role">نوع الحساب</label>
         <select id="role">
-          <option value="customer">عميل</option>
-          <option value="driver">مندوب</option>
+          <option value="customer">زائر المنصة</option>
+          <option value="driver">مندوب توصيل</option>
           <option value="restaurant">مطعم</option>
           <option value="merchant">تاجر (متجر)</option>
           <option value="service">مقدّم خدمة</option>
-          <option value="admin">مسؤول (تجربة)</option>
         </select>
+
+        <div id="customerRegisterFields" class="driver-register-fields">
+          <label for="customerName">الاسم</label>
+          <input id="customerName" type="text" maxlength="100" placeholder="اسمك كما يظهر في المنصة" autocomplete="name" />
+        </div>
+
+        <div id="driverRegisterFields" class="driver-register-fields">
+          <p class="sub" style="margin-top: 0">
+            بيانات الطلب للمراجعة. بعد موافقة الإدارة سجّل الدخول من
+            <a href="/driver-login">بوابة المندوب</a>.
+          </p>
+          <label for="driverRegName">الاسم الكامل</label>
+          <input id="driverRegName" type="text" maxlength="120" placeholder="اسم المندوب" autocomplete="name" />
+
+          <label for="driverRegIqama" style="margin-top: 12px">رقم الهوية / الإقامة</label>
+          <input id="driverRegIqama" type="text" placeholder="رقم الإقامة أو البطاقة" />
+
+          <label for="driverRegCarType" style="margin-top: 12px">نوع المركبة</label>
+          <select id="driverRegCarType">
+            <option value="">اختر</option>
+            <option value="car">سيارة</option>
+            <option value="bike">دراجة</option>
+          </select>
+
+          <label for="driverRegPlate" style="margin-top: 12px">رقم اللوحة</label>
+          <input id="driverRegPlate" type="text" placeholder="رقم اللوحة" />
+        </div>
 
         <label for="phone">رقم الجوال (05…)</label>
         <input
@@ -43,24 +74,25 @@
           type="tel"
           inputmode="numeric"
           placeholder="05xxxxxxxx"
-          value="0505745650"
           maxlength="10"
           autocomplete="tel-national"
         />
 
         <label for="otp" style="margin-top: 16px">رمز الدخول</label>
-        <input id="otp" type="text" inputmode="numeric" value="12345" readonly class="input-readonly" />
+        <input id="otp" type="text" inputmode="numeric" placeholder="أدخل رمز واتساب" />
 
-        <button type="button" class="btn btn-primary" id="btnVerify">تسجيل الدخول</button>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
+          <button type="button" class="btn btn-ghost" id="btnSendOtp" style="flex:1 1 180px">إرسال الكود</button>
+          <button type="button" class="btn btn-primary" id="btnVerify" style="flex:1 1 180px">تسجيل الدخول</button>
+        </div>
 
         <div class="msg" id="msg" style="display: none"></div>
       </div>
     </div>
 
+    <script src="/assets/guestBrowse.js"></script>
     <script src="/assets/api.js"></script>
     <script>
-      var LOGIN_CODE = "12345";
-
       function toE164(v) {
         var d = String(v || "").replace(/\D/g, "");
         if (d.startsWith("9665") && d.length === 12) return "+" + d;
@@ -82,6 +114,67 @@
         el.textContent = text;
       }
 
+      function isRegisterMode() {
+        return new URLSearchParams(window.location.search).get("mode") === "register";
+      }
+
+      function isCustomerRegisterMode() {
+        return isRegisterMode() && document.getElementById("role").value === "customer";
+      }
+
+      function isDriverRegisterMode() {
+        return isRegisterMode() && document.getElementById("role").value === "driver";
+      }
+
+      function assertDriverOnlyInRegisterMode() {
+        if (document.getElementById("role").value !== "driver") return true;
+        if (isRegisterMode()) return true;
+        show(
+          "دخول المندوبين المعتمدين من صفحة «دخول المندوب». لتقديم طلب انضمام جديد استخدم رابط إنشاء الحساب واختر «مندوب توصيل».",
+          false
+        );
+        return false;
+      }
+
+      function syncCustomerRegisterUi() {
+        var customerBox = document.getElementById("customerRegisterFields");
+        var driverBox = document.getElementById("driverRegisterFields");
+        var hint = document.getElementById("customerRegisterHint");
+        if (customerBox) customerBox.style.display = isCustomerRegisterMode() ? "block" : "none";
+        if (driverBox) driverBox.style.display = isDriverRegisterMode() ? "block" : "none";
+        if (hint) hint.style.display = isCustomerRegisterMode() ? "block" : "none";
+      }
+
+      function safeInternalNext(raw) {
+        var s = String(raw || "").trim();
+        if (!s.startsWith("/") || s.startsWith("//")) return null;
+        return s.split("#")[0];
+      }
+
+      function resolvePostLoginTarget(actualRole, roleFallback) {
+        try {
+          if (window.ErvenowGuestBrowse) ErvenowGuestBrowse.setActive(false);
+          else localStorage.removeItem("ervenow_guest_browse");
+        } catch (e) {}
+        var qs = new URLSearchParams(window.location.search);
+        var next = safeInternalNext(qs.get("next"));
+        var ar = String(actualRole || roleFallback || "").toLowerCase();
+        if (next && ar !== "blocked") return next;
+
+        var target = "/dashboard";
+        if (ar === "blocked") target = "/blocked-complaints";
+        else if (ar === "admin") target = "/";
+        return target;
+      }
+
+      function mapOtpError(msg) {
+        var m = String(msg || "");
+        if (m.indexOf("منتهي") !== -1 || m.indexOf("غير صحيح") !== -1) {
+          return "رمز واتساب غير صحيح أو منتهي. صلاحية الرمز 5 دقائق.";
+        }
+        return m;
+      }
+
       function normalizeInputPhone() {
         var el = document.getElementById("phone");
         var d = String(el.value || "").replace(/\D/g, "");
@@ -99,6 +192,14 @@
         var qs = new URLSearchParams(window.location.search);
         var mode = qs.get("mode");
         var r = qs.get("role");
+        if (r && String(r).toLowerCase() === "admin") {
+          window.location.replace("/admin-login");
+          return;
+        }
+        if (r && String(r).toLowerCase() === "driver" && mode !== "register") {
+          window.location.replace("/driver-login");
+          return;
+        }
         if (mode === "register") {
           var t = document.getElementById("authTitle");
           var s = document.getElementById("authSubtitle");
@@ -106,7 +207,7 @@
           if (t) t.textContent = "إنشاء حساب — ERVENOW";
           if (s) {
             s.innerHTML =
-              'أدخل رقم جوال سعودي <strong>يبدأ بـ 05</strong> (مثال 05XXXXXXXX). سيتم إنشاء حسابك مباشرة برمز الدخول الموحّد: <strong>12345</strong>';
+              'أدخل رقم جوال سعودي <strong>يبدأ بـ 05</strong> (مثال 05XXXXXXXX). سيصلك رمز واتساب لتأكيد وإنشاء الحساب.';
           }
           if (b) b.textContent = "إنشاء حساب";
           if (!r) r = "customer";
@@ -115,7 +216,9 @@
           var sel = document.getElementById("role");
           if (sel) sel.value = r;
         }
+        syncCustomerRegisterUi();
       })();
+      document.getElementById("role").addEventListener("change", syncCustomerRegisterUi);
 
       document.getElementById("btnVerify").onclick = async function () {
         try {
@@ -124,14 +227,33 @@
           if (!isValid05(raw)) {
             return show("أدخل رقم سعودي يبدأ بـ 05 (10 أرقام مثال 05xxxxxxxx)", false);
           }
+          if (!assertDriverOnlyInRegisterMode()) return;
           var phone = toE164(raw);
-          var code = String(document.getElementById("otp").value).trim() || LOGIN_CODE;
+          var code = String(document.getElementById("otp").value).trim();
           if (!phone) return show("أدخل الرقم", false);
+          if (!code) return show("أدخل رمز واتساب أولاً", false);
 
           var role = document.getElementById("role").value;
+          var extra = {};
+          if (isCustomerRegisterMode()) {
+            var custName = String(document.getElementById("customerName").value || "").trim();
+            if (!custName) return show("أدخل الاسم كما تود ظهوره في المنصة", false);
+            extra.name = custName;
+          }
+          var driverRegPayload = null;
+          if (isDriverRegisterMode()) {
+            var dName = String(document.getElementById("driverRegName").value || "").trim();
+            var iqama = String(document.getElementById("driverRegIqama").value || "").trim();
+            var carType = String(document.getElementById("driverRegCarType").value || "").trim();
+            var plate = String(document.getElementById("driverRegPlate").value || "").trim();
+            if (!dName || !iqama || !carType || !plate) {
+              return show("أكمل بيانات المندوب: الاسم، الهوية/الإقامة، نوع المركبة، ورقم اللوحة", false);
+            }
+            driverRegPayload = { name: dName, iqama: iqama, car_type: carType, plate_number: plate };
+          }
           var res = await window.PlatformAPI.api("/api/core/verify-otp", {
             method: "POST",
-            body: { phone: phone, code: code, role: role },
+            body: Object.assign({ phone: phone, code: code, role: role }, extra),
           });
 
           if (res.ok === false || res.success === false) {
@@ -147,16 +269,46 @@
           try {
             localStorage.setItem("token", token);
             if (res.user && res.user.id) localStorage.setItem("userId", res.user.id);
+            try {
+              normalizeInputPhone();
+              var disp = String(document.getElementById("phone").value || "").trim();
+              if (disp) localStorage.setItem("userPhone", disp);
+            } catch (phErr) {}
           } catch (lsErr) {
             console.warn("localStorage token:", lsErr);
           }
           window.PlatformAPI.setToken(token);
 
+          if (driverRegPayload) {
+            try {
+              await window.PlatformAPI.api("/api/driver/register", {
+                method: "POST",
+                body: Object.assign({ phone: phone }, driverRegPayload),
+              });
+            } catch (regErr) {
+              show(
+                String(regErr.message || regErr || "تم التحقق لكن تعذّر حفظ طلب المندوب — أعد المحاولة أو تواصل مع الدعم"),
+                false
+              );
+              return;
+            }
+            try {
+              localStorage.removeItem("token");
+              localStorage.removeItem("userId");
+              localStorage.removeItem("userPhone");
+            } catch (lsErr) {
+              console.warn("localStorage:", lsErr);
+            }
+            window.PlatformAPI.setToken("");
+            show("تم استلام طلبك — بانتظار موافقة الإدارة. بعد الموافقة سجّل الدخول من «دخول المندوب».", true);
+            setTimeout(function () {
+              window.location.href = "/driver-login";
+            }, 1400);
+            return;
+          }
+
           var actualRole = String((res.user && res.user.role) || role || "").toLowerCase();
-          var target = "/dashboard";
-          if (actualRole === "blocked") target = "/blocked-complaints";
-          else if (actualRole === "admin") target = "/admin-dashboard";
-          else if (actualRole === "driver") target = "/driver";
+          var target = resolvePostLoginTarget(actualRole, role);
           show("نجاح تسجيل الدخول. تحويل…", true);
 
           try {
@@ -173,7 +325,31 @@
             }
           }, 1500);
         } catch (e) {
-          show(String(e.message || e), false);
+          show(mapOtpError(String(e.message || e)), false);
+        }
+      };
+
+      document.getElementById("btnSendOtp").onclick = async function () {
+        try {
+          normalizeInputPhone();
+          var raw = document.getElementById("phone").value;
+          if (!isValid05(raw)) {
+            return show("أدخل رقم سعودي يبدأ بـ 05 (10 أرقام مثال 05xxxxxxxx)", false);
+          }
+          if (!assertDriverOnlyInRegisterMode()) return;
+          var phone = toE164(raw);
+          var role = document.getElementById("role").value;
+          show("جارٍ إرسال رمز واتساب...", true);
+          var sent = await window.PlatformAPI.api("/api/core/send-otp", {
+            method: "POST",
+            body: { phone: phone, role: role },
+          });
+          if (sent.ok === false) {
+            return show("تعذر إرسال رمز واتساب", false);
+          }
+          show("تم إرسال الرمز عبر واتساب. صلاحية الرمز 5 دقائق.", true);
+        } catch (e) {
+          show(mapOtpError(String(e.message || e)), false);
         }
       };
     </script>

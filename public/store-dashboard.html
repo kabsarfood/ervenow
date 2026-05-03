@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ERVENOW | لوحة المتجر</title>
+    <link rel="stylesheet" href="/assets/styles.css" />
+  </head>
+  <body>
+    <div class="layout">
+      <p><a href="/">← الرئيسية</a></p>
+      <h1>لوحة المتجر</h1>
+      <p class="sub" id="hint">
+        سجّل الدخول من
+        <a href="/login?role=merchant">تسجيل الدخول</a>
+        واختر «تاجر (متجر)» بنفس رقم الجوال المستخدم في تسجيل المتجر.
+      </p>
+
+      <div class="card" id="storeCard" style="display: none">
+        <h2 style="margin: 0 0 8px" id="storeTitle">—</h2>
+        <p class="sub" id="storeSub">—</p>
+        <p class="sub"><a class="btn btn-ghost" id="publicLink" href="#" target="_blank" rel="noopener">صفحة المتجر العامة</a></p>
+      </div>
+
+      <div class="card" id="formCard" style="display: none">
+        <h2 style="margin: 0 0 12px">إضافة / تعديل منتج</h2>
+        <input type="hidden" id="editId" />
+        <label for="pName">اسم المنتج</label>
+        <input id="pName" type="text" />
+        <label for="pDesc" style="margin-top: 10px">الوصف</label>
+        <textarea id="pDesc" rows="2"></textarea>
+        <label for="pPrice" style="margin-top: 10px">السعر (ريال)</label>
+        <input id="pPrice" type="number" min="0" step="0.01" />
+        <label for="pSort" style="margin-top: 10px">ترتيب العرض</label>
+        <input id="pSort" type="number" step="1" value="0" />
+        <label for="pImg" style="margin-top: 10px">صورة (اختياري — يُضغط تلقائياً)</label>
+        <input id="pImg" type="file" accept="image/*" />
+        <div class="row" style="margin-top: 12px; gap: 8px; flex-wrap: wrap">
+          <button type="button" class="btn btn-primary" id="btnSave">حفظ</button>
+          <button type="button" class="btn btn-ghost" id="btnReset">مسح النموذج</button>
+        </div>
+      </div>
+
+      <div class="card" id="listCard" style="display: none">
+        <h2 style="margin: 0 0 12px">منتجاتك</h2>
+        <div id="plist"></div>
+      </div>
+
+      <div class="msg" id="msg" style="display: none"></div>
+    </div>
+
+    <script src="/assets/compressImage.js"></script>
+    <script src="/assets/api.js"></script>
+    <script>
+      var storeId = null;
+
+      function show(text, ok) {
+        var el = document.getElementById("msg");
+        el.style.display = "block";
+        el.className = "msg " + (ok ? "ok" : "err");
+        el.textContent = text;
+      }
+
+      function esc(s) {
+        return String(s || "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/"/g, "&quot;");
+      }
+
+      async function boot() {
+        if (!window.PlatformAPI.getToken()) {
+          return;
+        }
+        try {
+          var j = await window.PlatformAPI.api("/api/store/my-store");
+          var s = j.store;
+          storeId = s.id;
+          document.getElementById("storeCard").style.display = "block";
+          document.getElementById("formCard").style.display = "block";
+          document.getElementById("listCard").style.display = "block";
+          document.getElementById("hint").style.display = "none";
+          document.getElementById("storeTitle").textContent = s.name || "متجرك";
+          document.getElementById("storeSub").textContent =
+            "التقييم: " + (Number(s.average_rating) || 0).toFixed(1) + " — الطلبات المسجّلة: " + (Number(s.total_orders) || 0);
+          var pub = document.getElementById("publicLink");
+          pub.href = "/store?id=" + encodeURIComponent(storeId);
+          await loadProducts();
+        } catch (e) {
+          show(String(e.message || e), false);
+        }
+      }
+
+      async function loadProducts() {
+        var data = await window.PlatformAPI.api(
+          "/api/store/products?store_id=" + encodeURIComponent(storeId) + "&limit=60&offset=0"
+        );
+        var rows = data.products || [];
+        var box = document.getElementById("plist");
+        if (!rows.length) {
+          box.innerHTML = '<p class="sub">لا منتجات بعد</p>';
+          return;
+        }
+        box.innerHTML = rows
+          .map(function (p) {
+            var thumb = p.image_url
+              ? '<img src="' + esc(p.image_url) + '" alt="" loading="lazy" style="width:72px;height:72px;object-fit:cover;border-radius:8px" />'
+              : "";
+            return (
+              '<div class="card" style="padding:10px;margin-bottom:8px;display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap">' +
+              thumb +
+              "<div style=\"flex:1;min-width:160px\">" +
+              "<strong>" +
+              esc(p.name) +
+              "</strong>" +
+              '<p class="sub">' +
+              esc(p.description || "") +
+              "</p>" +
+              "<div>" +
+              (Number(p.price) || 0).toFixed(2) +
+              " ريال</div></div>" +
+              '<div class="row" style="gap:6px">' +
+              '<button type="button" class="btn btn-ghost btn-edit" data-id="' +
+              esc(p.id) +
+              '">تعديل</button>' +
+              '<button type="button" class="btn btn-ghost btn-del" data-id="' +
+              esc(p.id) +
+              '">حذف</button>' +
+              "</div></div>"
+            );
+          })
+          .join("");
+
+        box.querySelectorAll(".btn-edit").forEach(function (btn) {
+          btn.onclick = function () {
+            var id = btn.getAttribute("data-id");
+            var p = rows.find(function (x) {
+              return String(x.id) === String(id);
+            });
+            if (!p) return;
+            document.getElementById("editId").value = p.id;
+            document.getElementById("pName").value = p.name || "";
+            document.getElementById("pDesc").value = p.description || "";
+            document.getElementById("pPrice").value = p.price != null ? p.price : "";
+            document.getElementById("pSort").value = p.sort_order != null ? p.sort_order : 0;
+            document.getElementById("pImg").value = "";
+            window.scrollTo({ top: document.getElementById("formCard").offsetTop - 20, behavior: "smooth" });
+          };
+        });
+        box.querySelectorAll(".btn-del").forEach(function (btn) {
+          btn.onclick = async function () {
+            var id = btn.getAttribute("data-id");
+            if (!confirm("إخفاء المنتج من المتجر؟")) return;
+            try {
+              await window.PlatformAPI.api("/api/store/products/" + encodeURIComponent(id), { method: "DELETE" });
+              show("تم الحذف", true);
+              await loadProducts();
+            } catch (e) {
+              show(String(e.message || e), false);
+            }
+          };
+        });
+      }
+
+      document.getElementById("btnReset").onclick = function () {
+        document.getElementById("editId").value = "";
+        document.getElementById("pName").value = "";
+        document.getElementById("pDesc").value = "";
+        document.getElementById("pPrice").value = "";
+        document.getElementById("pSort").value = "0";
+        document.getElementById("pImg").value = "";
+      };
+
+      document.getElementById("btnSave").onclick = async function () {
+        if (!storeId) return show("لا يوجد متجر مرتبط", false);
+        var name = document.getElementById("pName").value.trim();
+        var price = Number(document.getElementById("pPrice").value);
+        if (!name) return show("أدخل اسم المنتج", false);
+        if (!Number.isFinite(price) || price < 0) return show("أدخل سعراً صالحاً", false);
+        var body = {
+          store_id: storeId,
+          name: name,
+          description: document.getElementById("pDesc").value.trim() || undefined,
+          price: price,
+          sort_order: Number(document.getElementById("pSort").value) || 0,
+        };
+        var fileInput = document.getElementById("pImg");
+        var f = fileInput.files && fileInput.files[0];
+        if (f) {
+          try {
+            body.image_base64 = await window.compressImageToDataUrl(f, 0.72, 1280);
+            body.image_file_name = f.name || "product.jpg";
+          } catch (ce) {
+            return show(String(ce.message || ce), false);
+          }
+        }
+        try {
+          var editId = document.getElementById("editId").value.trim();
+          if (editId) {
+            await window.PlatformAPI.api("/api/store/products/" + encodeURIComponent(editId), {
+              method: "PUT",
+              body: body,
+            });
+            show("تم التحديث", true);
+          } else {
+            await window.PlatformAPI.api("/api/store/products", { method: "POST", body: body });
+            show("تمت الإضافة", true);
+          }
+          document.getElementById("btnReset").click();
+          await loadProducts();
+        } catch (e) {
+          show(String(e.message || e), false);
+        }
+      };
+
+      boot();
+    </script>
+  </body>
+</html>

@@ -5,53 +5,72 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>ERVENOW | تسجيل متجر</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/assets/styles.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+      #map {
+        height: 300px;
+        border-radius: 12px;
+        border: 1px solid rgba(0, 0, 0, 0.12);
+        margin-top: 8px;
+      }
+    </style>
   </head>
   <body>
     <div class="layout">
       <p><a href="/">← الرئيسية</a></p>
       <h1>تسجيل متجر جديد</h1>
-      <p class="sub">أرسل طلبك للمراجعة — سيتم التواصل معك بعد الموافقة.</p>
+      <p class="sub">
+        <strong>موقع المتجر إجباري:</strong> انقر على الخريطة لتحديد موقع المحل بدقة. بعد الموافقة سجّل الدخول كـ «تاجر» بنفس الجوال لإدارة المنتجات.
+      </p>
 
       <div class="card">
-        <h2 style="margin: 0 0 12px; font-size: 1.1rem">معلومات أساسية</h2>
         <label for="name">اسم المتجر</label>
         <input id="name" type="text" autocomplete="organization" />
 
-        <label for="phone">رقم الجوال</label>
-        <input id="phone" type="tel" inputmode="tel" placeholder="05xxxxxxxx" />
-
-        <label for="email">البريد الإلكتروني</label>
-        <input id="email" type="email" autocomplete="email" />
-
-        <h2 style="margin: 20px 0 12px; font-size: 1.1rem">معلومات قانونية</h2>
-        <label for="commercial_register">السجل التجاري (نص)</label>
-        <input id="commercial_register" type="text" />
-
-        <label for="cr_file">صورة السجل التجاري</label>
-        <input id="cr_file" type="file" accept="image/*" />
-
-        <h2 style="margin: 20px 0 12px; font-size: 1.1rem">نوع النشاط</h2>
-        <label for="type">النوع</label>
+        <label for="type" style="margin-top: 12px">نوع النشاط</label>
         <select id="type">
           <option value="restaurant">مطعم</option>
           <option value="pharmacy">صيدلية</option>
           <option value="supermarket">سوبرماركت</option>
-          <option value="minimarket">ميني ماركت</option>
-          <option value="vegetables">محل خضار</option>
-          <option value="butcher">ملحمة</option>
-          <option value="fish">بيع الأسماك</option>
-          <option value="home_business">أسرة منتجة</option>
-          <option value="services">خدمات</option>
+          <option value="other">غيره</option>
         </select>
 
-        <h2 style="margin: 20px 0 12px; font-size: 1.1rem">الموقع</h2>
-        <p class="sub" id="loc_hint" style="margin-top: 0">اضغط لتحديد موقع المتجر (اختياري).</p>
-        <button type="button" class="btn btn-primary" id="btnLoc">تحديد الموقع</button>
+        <label for="phone" style="margin-top: 12px">رقم الجوال</label>
+        <input id="phone" type="tel" inputmode="tel" placeholder="05xxxxxxxx" maxlength="10" />
+
+        <label style="margin-top: 16px">موقع المتجر على الخريطة — انقر لتحديد النقطة</label>
+        <div id="map"></div>
+        <p class="sub" id="mapHint" style="margin-top: 6px">اسحب الدبوس أو انقر على الخريطة.</p>
         <input type="hidden" id="lat" />
         <input type="hidden" id="lng" />
+
+        <label for="address" style="margin-top: 12px">العنوان التفصيلي</label>
+        <textarea id="address" rows="3" placeholder="يُعبأ تلقائياً من الخريطة ويمكنك تعديله"></textarea>
+
+        <label for="delivery_radius_km" style="margin-top: 12px">نطاق التوصيل من موقع المتجر</label>
+        <select id="delivery_radius_km">
+          <option value="5">5 كم</option>
+          <option value="10">10 كم</option>
+          <option value="15">15 كم</option>
+          <option value="20">20 كم</option>
+          <option value="30">30 كم</option>
+        </select>
+
+        <label for="logo_file" style="margin-top: 16px">صورة الشعار</label>
+        <input id="logo_file" type="file" accept="image/*" />
+        <p class="sub" style="margin-top: 4px">يُضغط تلقائياً قبل الرفع.</p>
+
+        <details style="margin-top: 16px" class="sub">
+          <summary>حقول اختيارية (سجل تجاري)</summary>
+          <label for="email" style="margin-top: 8px">البريد</label>
+          <input id="email" type="email" />
+          <label for="commercial_register" style="margin-top: 8px">السجل التجاري (نص)</label>
+          <input id="commercial_register" type="text" />
+          <label for="cr_file" style="margin-top: 8px">صورة السجل</label>
+          <input id="cr_file" type="file" accept="image/*" />
+        </details>
 
         <button type="button" class="btn btn-primary" id="btnSend" style="margin-top: 20px">إرسال الطلب</button>
 
@@ -59,13 +78,17 @@
       </div>
     </div>
 
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="/assets/compressImage.js"></script>
     <script src="/assets/api.js"></script>
     <script>
       var latEl = document.getElementById("lat");
       var lngEl = document.getElementById("lng");
-      var locHint = document.getElementById("loc_hint");
-      var fileDataUrl = null;
-      var fileName = null;
+      var mapHint = document.getElementById("map_hint");
+      var crDataUrl = null;
+      var crFileName = null;
+      var map = null;
+      var marker = null;
 
       function show(text, isOk) {
         var el = document.getElementById("msg");
@@ -88,15 +111,44 @@
         return /^05\d{8}$/.test(String(v || ""));
       }
 
+      function setCoords(lat, lng, reverseLookup) {
+        latEl.value = String(lat);
+        lngEl.value = String(lng);
+        if (marker && map) {
+          marker.setLatLng([lat, lng]);
+          map.panTo([lat, lng]);
+        }
+        if (reverseLookup) reverseGeocode(lat, lng);
+      }
+
+      function reverseGeocode(lat, lng) {
+        var addrEl = document.getElementById("address");
+        var url =
+          "https://nominatim.openstreetmap.org/reverse?format=json&lat=" +
+          encodeURIComponent(lat) +
+          "&lon=" +
+          encodeURIComponent(lng) +
+          "&accept-language=ar";
+        fetch(url, { headers: { Accept: "application/json" } })
+          .then(function (r) {
+            return r.json();
+          })
+          .then(function (j) {
+            var d = j && j.display_name ? String(j.display_name).trim() : "";
+            if (d && (!addrEl.value || addrEl.value.length < 8)) addrEl.value = d;
+          })
+          .catch(function () {});
+      }
+
       document.getElementById("cr_file").onchange = function (ev) {
         var f = ev.target.files && ev.target.files[0];
-        fileDataUrl = null;
-        fileName = null;
+        crDataUrl = null;
+        crFileName = null;
         if (!f) return;
-        fileName = f.name || "upload";
+        crFileName = f.name || "upload";
         var r = new FileReader();
         r.onload = function () {
-          fileDataUrl = r.result;
+          crDataUrl = r.result;
         };
         r.readAsDataURL(f);
       };
@@ -104,24 +156,24 @@
       document.getElementById("phone").addEventListener("input", normalizePhoneInput);
       document.getElementById("phone").addEventListener("blur", normalizePhoneInput);
 
-      document.getElementById("btnLoc").onclick = function () {
-        if (!navigator.geolocation) {
-          locHint.textContent = "المتصفح لا يدعم تحديد الموقع.";
-          return;
-        }
-        locHint.textContent = "جاري تحديد الموقع…";
-        navigator.geolocation.getCurrentPosition(
-          function (pos) {
-            latEl.value = String(pos.coords.latitude);
-            lngEl.value = String(pos.coords.longitude);
-            locHint.textContent = "تم حفظ الإحداثيات.";
-          },
-          function () {
-            locHint.textContent = "تعذر تحديد الموقع — يمكنك المتابعة بدون موقع.";
-          },
-          { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
-        );
-      };
+      function initMap() {
+        var start = [24.7136, 46.6753];
+        map = L.map("map").setView(start, 12);
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+          maxZoom: 19,
+          attribution: "&copy; OpenStreetMap",
+        }).addTo(map);
+        marker = L.marker(start, { draggable: true }).addTo(map);
+        setCoords(start[0], start[1], true);
+
+        map.on("click", function (e) {
+          setCoords(e.latlng.lat, e.latlng.lng, true);
+        });
+        marker.on("dragend", function () {
+          var p = marker.getLatLng();
+          setCoords(p.lat, p.lng, true);
+        });
+      }
 
       document.getElementById("btnSend").onclick = async function () {
         var btn = document.getElementById("btnSend");
@@ -132,52 +184,59 @@
 
           var name = document.getElementById("name").value.trim();
           var phone = document.getElementById("phone").value.trim();
-          var email = document.getElementById("email").value.trim();
-          var commercial_register = document.getElementById("commercial_register").value.trim();
           var type = document.getElementById("type").value;
+          var address = document.getElementById("address").value.trim();
           var lat = latEl.value.trim();
           var lng = lngEl.value.trim();
+          var radius = Number(document.getElementById("delivery_radius_km").value);
+          var email = document.getElementById("email").value.trim();
+          var commercial_register = document.getElementById("commercial_register").value.trim();
 
           if (!name) return show("أدخل اسم المتجر", false);
           if (!phone) return show("أدخل رقم الجوال", false);
           if (!isValidSaudiPhone05(phone)) return show("أدخل رقم سعودي صحيح يبدأ بـ 05", false);
+          if (!lat || !lng) return show("حدد موقع المتجر على الخريطة بالنقر", false);
+          if (!address || address.length < 4) return show("أدخل عنواناً واضحاً للمتجر (أو انتظر اقتراح الخريطة)", false);
+
+          var logoInput = document.getElementById("logo_file");
+          var logoFile = logoInput.files && logoInput.files[0];
+          var logoDataUrl = null;
+          if (logoFile) {
+            try {
+              logoDataUrl = await window.compressImageToDataUrl(logoFile, 0.72, 1280);
+            } catch (ce) {
+              return show(String(ce.message || ce || "تعذر معالجة الشعار"), false);
+            }
+          }
+
           var crInput = document.getElementById("cr_file");
-          if (crInput.files && crInput.files[0] && !fileDataUrl) {
-            return show("انتظر لحظة حتى تُحمَّل صورة السجل", false);
+          if (crInput.files && crInput.files[0] && !crDataUrl) {
+            return show("انتظر حتى تُحمّل صورة السجل", false);
           }
 
           var body = {
             name: name,
             phone: phone,
+            type: type,
+            lat: Number(lat),
+            lng: Number(lng),
+            address: address,
+            delivery_radius_km: Number.isFinite(radius) ? radius : 5,
             email: email || undefined,
             commercial_register: commercial_register || undefined,
-            type: type,
+            logoFileBase64: logoDataUrl || undefined,
+            logoFileName: logoFile ? logoFile.name : undefined,
           };
-          if (lat && lng) {
-            body.lat = Number(lat);
-            body.lng = Number(lng);
-          }
-          if (fileDataUrl) {
-            body.commercialRegisterFileBase64 = fileDataUrl;
-            body.commercialRegisterFileName = fileName;
+          if (crDataUrl) {
+            body.commercialRegisterFileBase64 = crDataUrl;
+            body.commercialRegisterFileName = crFileName;
           }
 
           var j = await window.PlatformAPI.api("/api/store/register", {
             method: "POST",
             body: body,
           });
-          show((j.message || "تم الإرسال") + (j.id ? " — رقم الطلب: " + j.id : "") + " ✅", true);
-          document.getElementById("name").value = "";
-          document.getElementById("phone").value = "";
-          document.getElementById("email").value = "";
-          document.getElementById("commercial_register").value = "";
-          document.getElementById("type").value = "restaurant";
-          document.getElementById("cr_file").value = "";
-          latEl.value = "";
-          lngEl.value = "";
-          fileDataUrl = null;
-          fileName = null;
-          locHint.textContent = "اضغط لتحديد موقع المتجر (اختياري).";
+          show((j.message || "تم الإرسال — الحالة: pending") + (j.id ? " — رقم الطلب: " + j.id : "") + " ✅", true);
         } catch (e) {
           show(String(e.message || e), false);
         } finally {
@@ -185,6 +244,8 @@
           btn.textContent = "إرسال الطلب";
         }
       };
+
+      initMap();
     </script>
   </body>
 </html>

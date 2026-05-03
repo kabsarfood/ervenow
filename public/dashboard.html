@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>ERVENOW | لوحة العميل</title>
+    <title>ERVENOW | لوحة زائر المنصة</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/assets/styles.css" />
@@ -162,7 +162,7 @@
         <a href="/order">&#128230; طلب جديد</a>
         <a href="/">&#128666; التوصيل</a>
         <a href="/track">&#128205; تتبع الطلب</a>
-        <a href="/login?role=driver">&#128100; تسجيل دخول (مندوب)</a>
+        <a href="/driver-login">&#128100; تسجيل دخول (مندوب)</a>
         <hr />
         <a href="/wallet.html">&#128176; الأرباح</a>
         <a href="/dashboard">&#9881; الإعدادات</a>
@@ -170,7 +170,7 @@
       <div class="dash-main">
     <div class="layout">
       <div class="top-nav">
-        <h1 style="margin: 0">لوحة العميل</h1>
+        <h1 style="margin: 0">لوحة زائر المنصة</h1>
         <div class="btn-row">
           <a class="btn btn-ghost" href="/">الرئيسية</a>
           <a class="btn btn-ghost" href="/track">تتبع طلب</a>
@@ -282,6 +282,9 @@
 
       document.getElementById("logout").onclick = function (e) {
         e.preventDefault();
+        try {
+          localStorage.removeItem("userPhone");
+        } catch (err) {}
         window.PlatformAPI.setToken("");
         location.href = "/login";
       };
@@ -292,7 +295,7 @@
         accepted: "تم الاستلام",
         delivering: "جاري التوصيل",
         delivered: "تم التسليم",
-        cancelled_by_customer: "أُلغي من العميل",
+        cancelled_by_customer: "أُلغي من زائر المنصة",
       };
 
       function getReadableOrderNumber(order) {
@@ -717,7 +720,15 @@
             location.href = "/driver";
             return;
           }
-          document.getElementById("welcome").textContent = "مرحباً بك في ERVENOW";
+          if (role === "admin") {
+            document.getElementById("welcome").textContent =
+              "مرحباً — يمكنك تصفّح المنصة وإنشاء الطلبات كما يراها زائر المنصة، ثم العودة إلى لوحة الإدارة من الرئيسية.";
+            document.querySelectorAll('.dash-sidebar a[href="/wallet.html"]').forEach(function (a) {
+              a.style.display = "none";
+            });
+          } else {
+            document.getElementById("welcome").textContent = "مرحباً بك في ERVENOW";
+          }
           document.getElementById("profileCard").style.display = "block";
           document.getElementById("roleBadge").textContent = role;
           document.getElementById("phoneLine").textContent = me.user.phone || me.user.email || me.user.id;

@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>طلب الانضمام كمندوب | ERVENOW</title>
+    <link rel="stylesheet" href="/assets/styles.css" />
+  </head>
+  <body>
+    <div class="layout">
+      <p><a href="/">← الرئيسية</a> · <a href="/driver-login">دخول المندوبين المعتمدين</a></p>
+      <h1>طلب الانضمام — مندوب توصيل</h1>
+      <p class="sub">
+        أرسل بياناتك للمراجعة. بعد موافقة الإدارة يمكنك تسجيل الدخول من
+        <a href="/driver-login">بوابة المندوب</a> برمز واتساب فقط.
+      </p>
+
+      <div class="card">
+        <label for="regName">الاسم الكامل</label>
+        <input id="regName" type="text" placeholder="اسم المندوب" />
+
+        <label for="regPhone" style="margin-top: 12px">رقم الجوال (05…)</label>
+        <input id="regPhone" type="tel" inputmode="numeric" maxlength="10" placeholder="05xxxxxxxx" />
+
+        <label for="regIqama" style="margin-top: 12px">رقم الهوية / الإقامة</label>
+        <input id="regIqama" type="text" placeholder="رقم الإقامة أو البطاقة" />
+
+        <label for="regCarType" style="margin-top: 12px">نوع المركبة</label>
+        <select id="regCarType">
+          <option value="">اختر</option>
+          <option value="car">سيارة</option>
+          <option value="bike">دراجة</option>
+        </select>
+
+        <label for="regPlate" style="margin-top: 12px">رقم اللوحة</label>
+        <input id="regPlate" type="text" placeholder="رقم اللوحة" />
+
+        <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px">
+          <button type="button" class="btn btn-primary" id="registerBtn">إرسال الطلب</button>
+        </div>
+
+        <div class="msg" id="msg" style="display: none; margin-top: 12px"></div>
+      </div>
+    </div>
+
+    <script src="/assets/api.js"></script>
+    <script>
+      function show(text, ok) {
+        var el = document.getElementById("msg");
+        el.style.display = "block";
+        el.className = "msg " + (ok ? "ok" : "err");
+        el.textContent = text;
+      }
+
+      function normalizePhone(v) {
+        var d = String(v || "").replace(/\D/g, "");
+        if (d.startsWith("9665")) d = "0" + d.slice(3);
+        else if (d.startsWith("5") && d.length === 9) d = "0" + d;
+        return d.slice(0, 10);
+      }
+
+      document.getElementById("registerBtn").onclick = async function () {
+        var name = String(document.getElementById("regName").value || "").trim();
+        var phoneRaw = normalizePhone(document.getElementById("regPhone").value);
+        var iqama = String(document.getElementById("regIqama").value || "").trim();
+        var carType = String(document.getElementById("regCarType").value || "").trim();
+        var plate = String(document.getElementById("regPlate").value || "").trim();
+
+        if (!name || !iqama || !carType || !plate) {
+          return show("أكمل جميع الحقول", false);
+        }
+        if (!/^05\d{8}$/.test(phoneRaw)) {
+          return show("أدخل جوال سعودي يبدأ بـ 05 (10 أرقام)", false);
+        }
+
+        var btn = document.getElementById("registerBtn");
+        btn.disabled = true;
+        try {
+          var e164 = "+966" + phoneRaw.slice(1);
+          await window.PlatformAPI.api("/api/driver/register", {
+            method: "POST",
+            body: {
+              name: name,
+              phone: e164,
+              iqama: iqama,
+              car_type: carType,
+              plate_number: plate,
+            },
+          });
+          show("تم استلام طلبك — بانتظار موافقة الإدارة. بعد الموافقة استخدم «دخول المندوبين» برمز واتساب.", true);
+        } catch (e) {
+          show(String(e.message || e || "تعذّر الإرسال"), false);
+        } finally {
+          btn.disabled = false;
+        }
+      };
+    </script>
+  </body>
+</html>

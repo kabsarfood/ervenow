@@ -11,6 +11,8 @@
       .wrap { max-width: 1080px; margin: 20px auto; padding: 14px; }
       h1 { color: #5b371d; margin: 0; }
       .topbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+      #filter-ui { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+      #filter-ui > a.btn { text-decoration: none; }
       .grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit,minmax(220px,1fr)); }
       .card { background: #fff; border: 1px solid #e5d8cb; border-radius: 14px; padding: 12px; }
       .stat { font-size: 1.35rem; font-weight: 800; color: #5b371d; margin-top: 8px; }
@@ -43,12 +45,13 @@
       <div class="topbar">
         <h1>لوحة إدارة ERVENOW</h1>
         <div id="filter-ui">
+          <a href="/" class="btn btn-ghost">← الرئيسية</a>
           <select id="range" onchange="loadStats()">
             <option value="today">اليوم</option>
             <option value="week">هذا الأسبوع</option>
             <option value="month">هذا الشهر</option>
           </select>
-          <button type="button" class="btn btn-ghost" id="logoutAdminBtn" style="margin-inline-start:8px">خروج</button>
+          <button type="button" class="btn btn-ghost" id="logoutAdminBtn">خروج</button>
         </div>
       </div>
       <p class="sub" id="adminWho" style="margin: 6px 0 10px">—</p>
@@ -89,7 +92,7 @@
           <span class="panel-badge zero" id="badgeComplaints">0</span>
         </button>
         <button type="button" class="panel-btn" data-panel="panelCustomers">
-          إدارة العملاء
+          إدارة زوار المنصة
           <span class="panel-badge zero" id="badgeCustomers">0</span>
         </button>
         <button type="button" class="panel-btn" data-panel="panelStores">
@@ -156,7 +159,7 @@
 
       <div class="card admin-panel" id="panelCustomers">
         <div class="row" style="justify-content:space-between;align-items:center">
-          <strong>إدارة العملاء</strong>
+          <strong>إدارة زوار المنصة</strong>
           <div class="row" style="margin-top:0">
             <input id="searchCustomers" class="search-input" placeholder="بحث: اسم / جوال" />
             <button class="btn btn-primary" id="reloadCustomersBtn">تحديث</button>
@@ -366,7 +369,7 @@
           adminLevel = j.level || "full";
           var who = document.getElementById("adminWho");
           if (who) {
-            who.textContent = "رقم الأدمن: " + (j.phone || "—") + " — " + levelLabel(adminLevel);
+            who.textContent = "مالك المنصة — " + levelLabel(adminLevel);
           }
         } catch (_e) {
           adminPermissions = [];
@@ -656,16 +659,16 @@
           var status = String(u.status || "active").toLowerCase();
           var blocked = status === "blocked";
           item.innerHTML =
-            "<strong>" + (u.name || "العميل") + "</strong>" +
+            "<strong>" + (u.name || "زائر المنصة") + "</strong>" +
             "<div>الجوال: " + (u.phone || "—") + "</div>" +
             "<div>الحالة: " + (blocked ? "محظور" : "نشط") + "</div>";
           var row = document.createElement("div");
           row.className = "row";
           row.appendChild(mkAction("حظر", "btn-ghost", safeClick(async function () {
-            try { await window.PlatformAPI.api("/api/admin/block-customer", { method: "POST", body: { id: u.id } }); showSuccess("تم حظر العميل"); loadCustomers(); } catch (e) { showError(e.message || "فشل"); }
+            try { await window.PlatformAPI.api("/api/admin/block-customer", { method: "POST", body: { id: u.id } }); showSuccess("تم حظر حساب زائر المنصة"); loadCustomers(); } catch (e) { showError(e.message || "فشل"); }
           })));
           row.appendChild(mkAction("تفعيل", "btn-primary", safeClick(async function () {
-            try { await window.PlatformAPI.api("/api/admin/activate-customer", { method: "POST", body: { id: u.id } }); showSuccess("تم تفعيل العميل"); loadCustomers(); } catch (e) { showError(e.message || "فشل"); }
+            try { await window.PlatformAPI.api("/api/admin/activate-customer", { method: "POST", body: { id: u.id } }); showSuccess("تم تفعيل حساب زائر المنصة"); loadCustomers(); } catch (e) { showError(e.message || "فشل"); }
           })));
           item.appendChild(row);
           list.appendChild(item);

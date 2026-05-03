@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
     <title>دخول الإدارة | ERVENOW</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet" />
@@ -23,10 +23,11 @@
   <body>
     <div class="wrap">
       <div class="card">
-        <h2>🔐 دخول الأدمن</h2>
-        <p>أدخل رقم الجوال ثم رمز التحقق.</p>
+        <h2>🔐 دخول الإدارة</h2>
+        <p>مسار داخلي — أدخل رقم الجوال المصرّح ثم رمز واتساب.</p>
+        <p>صلاحية الرمز 5 دقائق.</p>
 
-        <input id="phone" placeholder="رقم الجوال" />
+        <input id="phone" type="tel" inputmode="numeric" autocomplete="tel-national" maxlength="14" placeholder="05xxxxxxxx" />
         <div class="row">
           <button class="btn-primary" id="sendBtn" type="button">إرسال كود</button>
         </div>
@@ -43,8 +44,6 @@
 
     <script src="/assets/api.js"></script>
     <script>
-      var ONLY_ADMIN_PHONE = "0505745650";
-
       function normalizeAdminPhone(v) {
         var d = String(v || "").replace(/\D/g, "");
         if (d.startsWith("9665") && d.length === 12) return "0" + d.slice(3);
@@ -52,26 +51,39 @@
         return d.slice(0, 10);
       }
 
+      function isValid05(v) {
+        var d = normalizeAdminPhone(v);
+        return /^05\d{8}$/.test(d);
+      }
+
       function setMsg(text) {
         document.getElementById("msg").innerText = text || "";
+      }
+
+      function mapOtpError(msg) {
+        var m = String(msg || "");
+        if (m.indexOf("منتهي") !== -1 || m.indexOf("غير صحيح") !== -1) {
+          return "رمز واتساب غير صحيح أو منتهي. صلاحية الرمز 5 دقائق.";
+        }
+        return m;
       }
 
       async function sendOtp() {
         var phone = normalizeAdminPhone(document.getElementById("phone").value || "");
         if (!phone) return setMsg("أدخل رقم الجوال أولاً");
-        if (phone !== ONLY_ADMIN_PHONE) return setMsg("هذا الرقم غير مصرح له بدخول الإدارة");
+        if (!isValid05(phone)) return setMsg("أدخل رقم سعودي يبدأ بـ 05 (10 أرقام)");
         setMsg("جارٍ إرسال الكود...");
         try {
           var r = await fetch("/api/core/send-otp", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ phone: phone, role: "admin" }),
+            body: JSON.stringify({ phone: "+966" + phone.slice(1), role: "admin" }),
           });
           var j = await r.json().catch(function () { return {}; });
           if (!r.ok || !j.ok) throw new Error(j.error || "تعذر إرسال الكود");
-          setMsg("تم إرسال رمز واتساب إلى رقم الأدمن");
+          setMsg("تم إرسال رمز واتساب إلى رقم الأدمن. صلاحية الرمز 5 دقائق.");
         } catch (e) {
-          setMsg(e.message || "فشل الإرسال");
+          setMsg(mapOtpError(e.message || "فشل الإرسال"));
         }
       }
 
@@ -79,13 +91,13 @@
         var phone = normalizeAdminPhone(document.getElementById("phone").value || "");
         var code = (document.getElementById("code").value || "").trim();
         if (!phone || !code) return setMsg("أدخل رقم الجوال والرمز");
-        if (phone !== ONLY_ADMIN_PHONE) return setMsg("هذا الرقم غير مصرح له بدخول الإدارة");
+        if (!isValid05(phone)) return setMsg("أدخل رقم سعودي يبدأ بـ 05 (10 أرقام)");
         setMsg("جارٍ التحقق...");
         try {
           var res = await fetch("/api/core/verify-otp", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ phone: phone, code: code, role: "admin" }),
+            body: JSON.stringify({ phone: "+966" + phone.slice(1), code: code, role: "admin" }),
           });
           var data = await res.json().catch(function () { return {}; });
           if (!res.ok || !data.token) throw new Error(data.error || "فشل التحقق");
@@ -97,11 +109,10 @@
           }
           window.location.href = "/admin-dashboard";
         } catch (e) {
-          setMsg(e.message || "فشل الدخول");
+          setMsg(mapOtpError(e.message || "فشل الدخول"));
         }
       }
 
-      document.getElementById("phone").value = ONLY_ADMIN_PHONE;
       document.getElementById("sendBtn").onclick = sendOtp;
       document.getElementById("verifyBtn").onclick = verifyOtp;
     </script>
