@@ -11,11 +11,6 @@ const router = express.Router();
 const otpStore = new Map();
 const OTP_TTL_MS = 5 * 60 * 1000;
 
-router.use((req, res, next) => {
-  console.log("📥 CORE ROUTE HIT:", req.method, req.url);
-  next();
-});
-
 const ADMIN_LOGIN_PHONE_RAW = String(
   process.env.ERVENOW_ADMIN_LOGIN_PHONE || "0505745650"
 ).trim();
@@ -27,6 +22,26 @@ function toStoragePhoneDigits(input) {
 
 const ERVENOW_ADMIN_LOGIN_PHONE = toStoragePhoneDigits(ADMIN_LOGIN_PHONE_RAW);
 
+/** أرقام مسموح لها OTP لوحة الإدارة — LOGIN + قوائم الأدمن (نفس منطق apps/admin) */
+function adminOtpDigitsFromEnvList(rawList) {
+  const out = [];
+  for (const part of String(rawList || "").split(",")) {
+    const raw = String(part || "").trim();
+    if (!raw) continue;
+    const e = toE164(raw);
+    if (!e || !isErvnowSaudiMobileE164(e)) continue;
+    out.push(toStorageDigits(e));
+  }
+  return out;
+}
+
+const ADMIN_OTP_ALLOWED_DIGITS = new Set([
+  ERVENOW_ADMIN_LOGIN_PHONE,
+  ...adminOtpDigitsFromEnvList(process.env.ERVENOW_ADMIN_FULL_PHONES),
+  ...adminOtpDigitsFromEnvList(process.env.ERVENOW_ADMIN_LIMITED1_PHONES),
+  ...adminOtpDigitsFromEnvList(process.env.ERVENOW_ADMIN_LIMITED2_PHONES),
+]);
+
 function genOtp() {
   return String(Math.floor(10000 + Math.random() * 90000));
 }
@@ -36,7 +51,8 @@ function otpKey(role, phoneDigits) {
 }
 
 function isAllowedAdminPhoneDigits(phoneDigits) {
-  return String(phoneDigits || "").replace(/\D/g, "") === ERVENOW_ADMIN_LOGIN_PHONE;
+  const d = String(phoneDigits || "").replace(/\D/g, "");
+  return ADMIN_OTP_ALLOWED_DIGITS.has(d);
 }
 
 /* ======================
@@ -247,7 +263,20 @@ router.post("/send-otp", async (req, res) => {
       console.error("[ERVENOW] send-otp whatsapp error:", waErr?.message || waErr);
       sent = false;
     }
-    if (!sent) return fail(res, "تعذر إرسال رمز واتساب", 503);
+    if (!sent) {
+      const twilioReady = !!(
+        process.env.TWILIO_ACCOUNT_SID &&
+        process.env.TWILIO_AUTH_TOKEN &&
+        (process.env.TWILIO_WHATSAPP_NUMBER || process.env.TWILIO_WHATSAPP_FROM)
+      );
+      return fail(
+        res,
+        twilioReady
+          ? "تعذر إرسال رمز واتساب (تحقق من Twilio ورقم المستلم في Sandbox إن وُجد)"
+          : "تعذر إرسال رمز واتساب — غير مضبوط على الخادم: TWILIO_ACCOUNT_SID و TWILIO_AUTH_TOKEN و TWILIO_WHATSAPP_NUMBER",
+        503
+      );
+    }
     const payload = {
       ok: true,
       message: "تم إرسال الرمز عبر واتساب",

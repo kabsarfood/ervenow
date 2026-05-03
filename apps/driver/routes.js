@@ -302,7 +302,6 @@ router.post("/register", async (req, res) => {
       plate_number: plate,
       status: "pending",
       active: false,
-      updated_at: nowIso(),
     };
 
     const { data, error } = await req.supabase
@@ -467,7 +466,6 @@ router.post("/update-location", requireAuth, async (req, res) => {
         lat,
         lng,
         last_seen: nowIso(),
-        updated_at: nowIso(),
       })
       .eq("id", drv.id);
     if (dErr) {

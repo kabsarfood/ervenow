@@ -2,41 +2,281 @@
 <html lang="ar" dir="rtl">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>لوحة الإدارة | ERVENOW</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet" />
+    <meta name="theme-color" content="#5b371d" />
     <style>
-      body { margin: 0; font-family: Cairo, sans-serif; background: #f8f4ef; color: #2b1f16; }
-      .wrap { max-width: 1080px; margin: 20px auto; padding: 14px; }
-      h1 { color: #5b371d; margin: 0; }
-      .topbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
-      #filter-ui { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+      :root {
+        --a-bg: #f4ede4;
+        --a-card: #fffdfb;
+        --a-border: #e5d8cb;
+        --a-text: #2b1f16;
+        --a-muted: #6f5441;
+        --a-accent: #5b371d;
+        --a-radius: 14px;
+        --a-touch: 48px;
+        --safe-t: env(safe-area-inset-top, 0px);
+        --safe-x: env(safe-area-inset-left, 0px);
+        --safe-r: env(safe-area-inset-right, 0px);
+        --safe-b: env(safe-area-inset-bottom, 0px);
+      }
+      * { box-sizing: border-box; }
+      html { font-size: clamp(14px, 2.4vw, 17px); }
+      body {
+        margin: 0;
+        font-family: Cairo, system-ui, sans-serif;
+        background: var(--a-bg);
+        color: var(--a-text);
+        min-height: 100dvh;
+        padding: calc(10px + var(--safe-t)) calc(12px + var(--safe-r)) calc(16px + var(--safe-b)) calc(12px + var(--safe-x));
+      }
+      .wrap {
+        max-width: 1120px;
+        margin: 0 auto;
+      }
+      h1 {
+        color: var(--a-accent);
+        margin: 0;
+        font-size: clamp(1.15rem, 4vw, 1.45rem);
+        font-weight: 800;
+      }
+      .topbar {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+        margin-bottom: 14px;
+      }
+      @media (min-width: 720px) {
+        .topbar {
+          flex-direction: row;
+          justify-content: space-between;
+          align-items: center;
+        }
+      }
+      #filter-ui {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 10px;
+      }
+      #filter-ui .btn,
+      #filter-ui select {
+        min-height: var(--a-touch);
+      }
+      #filter-ui select {
+        flex: 1 1 140px;
+        min-width: 0;
+      }
+      .sub {
+        margin: 6px 0 12px;
+        color: var(--a-muted);
+        font-size: 0.95rem;
+        line-height: 1.45;
+      }
+      .grid {
+        display: grid;
+        gap: 12px;
+        grid-template-columns: 1fr;
+      }
+      @media (min-width: 520px) {
+        .grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+      @media (min-width: 900px) {
+        .grid {
+          grid-template-columns: repeat(4, 1fr);
+        }
+      }
+      .card {
+        background: var(--a-card);
+        border: 1px solid var(--a-border);
+        border-radius: var(--a-radius);
+        padding: 14px 14px 16px;
+      }
+      .stat {
+        font-size: clamp(1.2rem, 4.5vw, 1.45rem);
+        font-weight: 800;
+        color: var(--a-accent);
+        margin-top: 8px;
+      }
+      .muted { color: var(--a-muted); font-size: 0.9rem; }
+      .item {
+        border: 1px solid #ecdccf;
+        border-radius: 12px;
+        padding: 12px 12px;
+        margin-bottom: 10px;
+        background: #fffdfa;
+        font-size: 0.95rem;
+        line-height: 1.45;
+      }
+      .row {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 8px;
+        align-items: center;
+      }
+      .btn {
+        border: 0;
+        border-radius: 12px;
+        padding: 0 14px;
+        min-height: var(--a-touch);
+        cursor: pointer;
+        font-family: inherit;
+        font-weight: 700;
+        font-size: 0.95rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .btn-primary { background: var(--a-accent); color: #fff; }
+      .btn-ghost {
+        border: 2px solid var(--a-accent);
+        background: #fff;
+        color: var(--a-accent);
+        text-decoration: none;
+      }
       #filter-ui > a.btn { text-decoration: none; }
-      .grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit,minmax(220px,1fr)); }
-      .card { background: #fff; border: 1px solid #e5d8cb; border-radius: 14px; padding: 12px; }
-      .stat { font-size: 1.35rem; font-weight: 800; color: #5b371d; margin-top: 8px; }
-      .muted { color: #6f5441; font-size: .9rem; }
-      .item { border: 1px solid #ecdccf; border-radius: 10px; padding: 8px; margin-bottom: 8px; background: #fffdfa; }
-      .row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
-      .btn { border: 0; border-radius: 9px; padding: 7px 10px; cursor: pointer; font-family: inherit; font-weight: 700; }
-      .btn-primary { background: #5b371d; color: #fff; }
-      .btn-ghost { border: 1px solid #5b371d; background: #fff; color: #5b371d; }
       .line { margin: 6px 0; }
-      select { border: 1px solid #d8c8b8; border-radius: 10px; padding: 8px 10px; font-family: inherit; background: #fff; }
-      .search-input { min-width: 180px; border: 1px solid #d8c8b8; border-radius: 10px; padding: 7px 10px; font-family: inherit; }
-      .panel-switcher { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
-      .panel-btn { border: 1px solid #5b371d; background: #fff; color: #5b371d; border-radius: 10px; padding: 8px 12px; font-family: inherit; font-weight: 700; cursor: pointer; }
-      .panel-btn.active { background: #5b371d; color: #fff; }
-      .panel-btn-close { border-color: #9a3412; color: #9a3412; }
+      select {
+        border: 1px solid #d8c8b8;
+        border-radius: 12px;
+        padding: 0 12px;
+        min-height: var(--a-touch);
+        font-family: inherit;
+        background: #fff;
+        font-size: 0.95rem;
+      }
+      .search-input {
+        flex: 1 1 100%;
+        min-width: 0;
+        width: 100%;
+        border: 1px solid #d8c8b8;
+        border-radius: 12px;
+        padding: 0 12px;
+        min-height: var(--a-touch);
+        font-family: inherit;
+        font-size: 1rem;
+      }
+      @media (min-width: 560px) {
+        .search-input {
+          flex: 1 1 160px;
+          width: auto;
+        }
+      }
+      .panel-switcher {
+        display: flex;
+        flex-wrap: nowrap;
+        gap: 8px;
+        margin: 14px 0 8px;
+        overflow-x: auto;
+        overflow-y: hidden;
+        padding: 4px 2px 10px;
+        -webkit-overflow-scrolling: touch;
+        scroll-snap-type: x proximity;
+        scrollbar-width: thin;
+      }
+      .panel-switcher::-webkit-scrollbar {
+        height: 6px;
+      }
+      .panel-switcher::-webkit-scrollbar-thumb {
+        background: #c4a990;
+        border-radius: 99px;
+      }
+      .panel-btn {
+        flex: 0 0 auto;
+        scroll-snap-align: start;
+        border: 2px solid var(--a-accent);
+        background: #fff;
+        color: var(--a-accent);
+        border-radius: 999px;
+        padding: 10px 16px;
+        min-height: var(--a-touch);
+        font-family: inherit;
+        font-weight: 700;
+        font-size: 0.88rem;
+        cursor: pointer;
+        white-space: nowrap;
+      }
+      .panel-btn.active {
+        background: var(--a-accent);
+        color: #fff;
+        border-color: var(--a-accent);
+      }
+      .panel-btn-close {
+        border-color: #9a3412;
+        color: #9a3412;
+        background: #fff;
+      }
       .panel-btn-close:hover { background: #fff7ed; }
-      .panel-badge { display: inline-block; min-width: 20px; padding: 1px 6px; border-radius: 999px; background: #b91c1c; color: #fff; font-size: .75rem; margin-inline-start: 6px; }
+      .panel-badge {
+        display: inline-block;
+        min-width: 22px;
+        padding: 2px 7px;
+        border-radius: 999px;
+        background: #b91c1c;
+        color: #fff;
+        font-size: 0.72rem;
+        margin-inline-start: 6px;
+        vertical-align: middle;
+      }
       .panel-badge.zero { background: #9ca3af; }
-      .admin-panel { display: none; margin-top: 12px; }
+      .admin-panel {
+        display: none;
+        margin-top: 12px;
+        animation: fadeIn 0.2s ease;
+      }
       .admin-panel.active { display: block; }
-      @media (max-width: 768px) {
-        .wrap { padding: 10px; }
-        .stat { font-size: 1.15rem; }
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(4px); }
+        to { opacity: 1; transform: none; }
+      }
+      .panel-toolbar {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+        margin-bottom: 12px;
+      }
+      @media (min-width: 640px) {
+        .panel-toolbar {
+          flex-direction: row;
+          justify-content: space-between;
+          align-items: center;
+        }
+      }
+      .panel-title {
+        margin: 0;
+        font-size: 1.05rem;
+        font-weight: 800;
+        color: var(--a-accent);
+        line-height: 1.35;
+      }
+      .panel-toolbar-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        width: 100%;
+      }
+      @media (min-width: 480px) {
+        .panel-toolbar-actions {
+          flex-direction: row;
+          flex-wrap: wrap;
+          align-items: center;
+          width: auto;
+          max-width: 100%;
+        }
+        .panel-toolbar-actions .btn {
+          flex: 0 0 auto;
+        }
+      }
+      .item .btn {
+        min-height: 44px;
+        margin-top: 4px;
       }
     </style>
   </head>
@@ -54,7 +294,7 @@
           <button type="button" class="btn btn-ghost" id="logoutAdminBtn">خروج</button>
         </div>
       </div>
-      <p class="sub" id="adminWho" style="margin: 6px 0 10px">—</p>
+      <p class="sub" id="adminWho">—</p>
       <div class="grid" id="stats-cards">
         <div class="card">
           <strong>📦 الطلبات اليوم</strong>
@@ -111,9 +351,9 @@
 
       <div class="grid admin-panel" id="panelOrders">
         <div class="card">
-          <div class="row" style="justify-content:space-between;align-items:center">
-            <h3 style="margin:0">آخر الطلبات</h3>
-            <div class="row" style="margin-top:0">
+          <div class="panel-toolbar">
+            <h3 class="panel-title">آخر الطلبات</h3>
+            <div class="panel-toolbar-actions">
               <input id="searchOrders" class="search-input" placeholder="بحث: اسم / جوال" />
               <button class="btn btn-primary" id="reloadOrdersBtn">تحديث</button>
             </div>
@@ -124,9 +364,9 @@
 
       <div class="grid admin-panel" id="panelNotifications">
         <div class="card">
-          <div class="row" style="justify-content:space-between;align-items:center">
-            <h3 style="margin:0">📡 إشعارات المندوبين</h3>
-            <div class="row" style="margin-top:0">
+          <div class="panel-toolbar">
+            <h3 class="panel-title">📡 إشعارات المندوبين</h3>
+            <div class="panel-toolbar-actions">
               <input id="searchNotifications" class="search-input" placeholder="بحث: اسم / جوال" />
               <button class="btn btn-primary" id="reloadNotificationsBtn">تحديث</button>
             </div>
@@ -136,9 +376,9 @@
       </div>
 
       <div class="card admin-panel" id="panelDrivers">
-        <div class="row" style="justify-content:space-between;align-items:center">
-          <strong>إدارة المناديب</strong>
-          <div class="row" style="margin-top:0">
+        <div class="panel-toolbar">
+          <strong class="panel-title">إدارة المناديب</strong>
+          <div class="panel-toolbar-actions">
             <input id="searchDrivers" class="search-input" placeholder="بحث: اسم / جوال" />
             <button class="btn btn-primary" id="reloadDriversBtn">تحديث</button>
           </div>
@@ -147,9 +387,9 @@
       </div>
 
       <div class="card admin-panel" id="panelComplaints">
-        <div class="row" style="justify-content:space-between;align-items:center">
-          <strong>الشكاوى</strong>
-          <div class="row" style="margin-top:0">
+        <div class="panel-toolbar">
+          <strong class="panel-title">الشكاوى</strong>
+          <div class="panel-toolbar-actions">
             <input id="searchComplaints" class="search-input" placeholder="بحث: اسم / جوال" />
             <button class="btn btn-primary" id="reloadComplaintsBtn">تحديث</button>
           </div>
@@ -158,9 +398,9 @@
       </div>
 
       <div class="card admin-panel" id="panelCustomers">
-        <div class="row" style="justify-content:space-between;align-items:center">
-          <strong>إدارة زوار المنصة</strong>
-          <div class="row" style="margin-top:0">
+        <div class="panel-toolbar">
+          <strong class="panel-title">إدارة زوار المنصة</strong>
+          <div class="panel-toolbar-actions">
             <input id="searchCustomers" class="search-input" placeholder="بحث: اسم / جوال" />
             <button class="btn btn-primary" id="reloadCustomersBtn">تحديث</button>
           </div>
@@ -169,9 +409,9 @@
       </div>
 
       <div class="card admin-panel" id="panelStores">
-        <div class="row" style="justify-content:space-between;align-items:center">
-          <strong>بوابة المتاجر (قبول/رفض)</strong>
-          <div class="row" style="margin-top:0">
+        <div class="panel-toolbar">
+          <strong class="panel-title">بوابة المتاجر (قبول/رفض)</strong>
+          <div class="panel-toolbar-actions">
             <input id="searchStores" class="search-input" placeholder="بحث: اسم / جوال" />
             <button class="btn btn-primary" id="reloadStoresBtn">تحديث</button>
           </div>
@@ -180,9 +420,9 @@
       </div>
 
       <div class="card admin-panel" id="panelJobs">
-        <div class="row" style="justify-content:space-between;align-items:center">
-          <strong>بوابة التوظيف (قبول/رفض)</strong>
-          <div class="row" style="margin-top:0">
+        <div class="panel-toolbar">
+          <strong class="panel-title">بوابة التوظيف (قبول/رفض)</strong>
+          <div class="panel-toolbar-actions">
             <input id="searchJobs" class="search-input" placeholder="بحث: اسم / جوال" />
             <button class="btn btn-primary" id="reloadJobsBtn">تحديث</button>
           </div>
@@ -191,9 +431,9 @@
       </div>
 
       <div class="card admin-panel" id="panelAdminAccounts">
-        <div class="row" style="justify-content:space-between;align-items:center">
-          <strong>إدارة الأدمنات</strong>
-          <div class="row" style="margin-top:0">
+        <div class="panel-toolbar">
+          <strong class="panel-title">إدارة الأدمنات</strong>
+          <div class="panel-toolbar-actions">
             <input id="searchAdminAccounts" class="search-input" placeholder="بحث: اسم / جوال" />
             <button class="btn btn-primary" id="reloadAdminAccountsBtn" type="button">تحديث</button>
           </div>

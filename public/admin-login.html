@@ -2,47 +2,234 @@
 <html lang="ar" dir="rtl">
   <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="robots" content="noindex, nofollow" />
+    <meta name="theme-color" content="#3d2914" />
     <title>دخول الإدارة | ERVENOW</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet" />
     <style>
-      body { margin: 0; font-family: Cairo, sans-serif; background: #f8f4ef; color: #2b1f16; }
-      .wrap { max-width: 520px; margin: 48px auto; padding: 16px; }
-      .card { background: #fff; border: 1px solid #e5d8cb; border-radius: 14px; padding: 16px; }
-      h2 { margin: 0 0 10px; color: #5b371d; }
-      p { margin: 0 0 10px; color: #6e5a4a; }
-      input { width: 100%; box-sizing: border-box; margin-top: 8px; padding: 10px; border-radius: 10px; border: 1px solid #d7c6b5; font-family: inherit; }
-      .row { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
-      button, a.btn { border: 0; border-radius: 10px; padding: 10px 12px; cursor: pointer; font-family: inherit; font-weight: 700; text-decoration: none; display: inline-block; }
-      .btn-primary { background: #5b371d; color: #fff; }
-      .btn-ghost { border: 1px solid #5b371d; background: #fff; color: #5b371d; }
-      #msg { margin-top: 10px; color: #6e5a4a; font-size: .92rem; }
+      :root {
+        --admin-bg: linear-gradient(165deg, #2a1810 0%, #4a2e1a 45%, #6b4423 100%);
+        --admin-card: rgba(255, 252, 248, 0.97);
+        --admin-border: rgba(91, 55, 29, 0.18);
+        --admin-text: #1f140c;
+        --admin-muted: #5c4a3d;
+        --admin-accent: #5b371d;
+        --admin-accent2: #7a4d28;
+        --admin-radius: 18px;
+        --admin-touch: 52px;
+        --safe-t: env(safe-area-inset-top, 0px);
+        --safe-b: env(safe-area-inset-bottom, 0px);
+      }
+      * { box-sizing: border-box; }
+      html { font-size: clamp(15px, 2.8vw, 18px); }
+      body {
+        margin: 0;
+        min-height: 100dvh;
+        font-family: Cairo, system-ui, sans-serif;
+        background: var(--admin-bg);
+        color: var(--admin-text);
+        display: flex;
+        align-items: stretch;
+        justify-content: center;
+        padding: calc(12px + var(--safe-t)) 16px calc(20px + var(--safe-b));
+      }
+      .shell {
+        width: 100%;
+        max-width: 440px;
+        margin: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+      }
+      .brand {
+        text-align: center;
+        color: #f5ebe0;
+        padding: 0.25rem 0;
+      }
+      .brand-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 64px;
+        height: 64px;
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.12);
+        font-size: 1.75rem;
+        margin-bottom: 0.35rem;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+      }
+      .brand h1 {
+        margin: 0;
+        font-size: 1.35rem;
+        font-weight: 800;
+        letter-spacing: 0.02em;
+      }
+      .brand p {
+        margin: 0.35rem 0 0;
+        font-size: 0.88rem;
+        opacity: 0.88;
+        font-weight: 600;
+      }
+      .card {
+        background: var(--admin-card);
+        border: 1px solid var(--admin-border);
+        border-radius: var(--admin-radius);
+        padding: 1.35rem 1.25rem 1.5rem;
+        box-shadow: 0 18px 50px rgba(0, 0, 0, 0.22);
+      }
+      .card h2 {
+        margin: 0 0 0.35rem;
+        font-size: 1.2rem;
+        font-weight: 800;
+        color: var(--admin-accent);
+      }
+      .hint {
+        margin: 0 0 1rem;
+        font-size: 0.92rem;
+        line-height: 1.55;
+        color: var(--admin-muted);
+      }
+      .field {
+        margin-bottom: 1rem;
+      }
+      .field label {
+        display: block;
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: var(--admin-accent2);
+        margin-bottom: 0.4rem;
+      }
+      .field input {
+        width: 100%;
+        min-height: var(--admin-touch);
+        padding: 0.65rem 1rem;
+        border-radius: 14px;
+        border: 2px solid #e5d8cb;
+        font-family: inherit;
+        font-size: 1.05rem;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        transition: border-color 0.15s, box-shadow 0.15s;
+      }
+      .field input:focus {
+        outline: none;
+        border-color: var(--admin-accent);
+        box-shadow: 0 0 0 3px rgba(91, 55, 29, 0.15);
+      }
+      .actions {
+        display: flex;
+        flex-direction: column;
+        gap: 0.65rem;
+        margin-top: 0.25rem;
+      }
+      .actions-row {
+        display: flex;
+        flex-direction: column;
+        gap: 0.65rem;
+        margin-top: 0.5rem;
+      }
+      @media (min-width: 400px) {
+        .actions-row {
+          flex-direction: row;
+          align-items: stretch;
+        }
+        .actions-row .btn-ghost {
+          flex: 0 0 auto;
+          min-width: 42%;
+        }
+        .actions-row .btn-primary {
+          flex: 1;
+        }
+      }
+      .btn-primary,
+      .btn-ghost {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: var(--admin-touch);
+        padding: 0 1.1rem;
+        border-radius: 14px;
+        font-family: inherit;
+        font-size: 1rem;
+        font-weight: 800;
+        cursor: pointer;
+        text-decoration: none;
+        border: none;
+        transition: transform 0.08s, opacity 0.15s;
+      }
+      .btn-primary:active,
+      .btn-ghost:active {
+        transform: scale(0.98);
+      }
+      .btn-primary {
+        background: linear-gradient(180deg, #6d4528, var(--admin-accent));
+        color: #fff;
+        box-shadow: 0 4px 14px rgba(91, 55, 29, 0.35);
+      }
+      .btn-primary:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+        transform: none;
+      }
+      .btn-ghost {
+        background: #fff;
+        color: var(--admin-accent);
+        border: 2px solid var(--admin-accent);
+      }
+      #msg {
+        margin-top: 1rem;
+        min-height: 1.25em;
+        font-size: 0.92rem;
+        line-height: 1.5;
+        font-weight: 600;
+        color: var(--admin-muted);
+      }
+      #msg.err {
+        color: #b91c1c;
+      }
+      #msg.ok {
+        color: #15803d;
+      }
     </style>
   </head>
   <body>
-    <div class="wrap">
+    <div class="shell">
+      <header class="brand">
+        <div class="brand-badge" aria-hidden="true">🔐</div>
+        <h1>ERVENOW</h1>
+        <p>لوحة مالك المنصة</p>
+      </header>
       <div class="card">
-        <h2>🔐 دخول الإدارة</h2>
-        <p>مسار داخلي — أدخل رقم الجوال المصرّح ثم رمز واتساب.</p>
-        <p>صلاحية الرمز 5 دقائق.</p>
+        <h2>تسجيل الدخول</h2>
+        <p class="hint">أدخل الجوال المصرّح ثم رمز واتساب. صلاحية الرمز <strong>5 دقائق</strong>.</p>
 
-        <input id="phone" type="tel" inputmode="numeric" autocomplete="tel-national" maxlength="14" placeholder="05xxxxxxxx" />
-        <div class="row">
-          <button class="btn-primary" id="sendBtn" type="button">إرسال كود</button>
+        <div class="field">
+          <label for="phone">رقم الجوال</label>
+          <input id="phone" type="tel" inputmode="numeric" autocomplete="tel-national" maxlength="10" placeholder="05xxxxxxxx" />
+        </div>
+        <div class="actions">
+          <button class="btn-primary" id="sendBtn" type="button">إرسال رمز واتساب</button>
         </div>
 
-        <input id="code" placeholder="رمز التحقق" />
-        <div class="row">
-          <button class="btn-primary" id="verifyBtn" type="button">دخول</button>
-          <a class="btn btn-ghost" href="/">الرئيسية</a>
+        <div class="field" style="margin-top: 1.15rem">
+          <label for="code">رمز التحقق</label>
+          <input id="code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="8" placeholder="أدخل الرمز" />
+        </div>
+        <div class="actions-row">
+          <button class="btn-primary" id="verifyBtn" type="button">دخول لوحة الإدارة</button>
+          <a class="btn-ghost" href="/">الرئيسية</a>
         </div>
 
-        <p id="msg"></p>
+        <p id="msg" role="status" aria-live="polite"></p>
       </div>
     </div>
 
     <script src="/assets/api-config.js"></script>
+    <script>
+      window.__ERVENOW_FETCH_TIMEOUT_MS = 20000;
+    </script>
     <script src="/assets/api.js"></script>
     <script>
       function normalizeAdminPhone(v) {
@@ -57,8 +244,12 @@
         return /^05\d{8}$/.test(d);
       }
 
-      function setMsg(text) {
-        document.getElementById("msg").innerText = text || "";
+      function setMsg(text, kind) {
+        var el = document.getElementById("msg");
+        el.classList.remove("err", "ok");
+        if (kind === "err") el.classList.add("err");
+        else if (kind === "ok") el.classList.add("ok");
+        el.innerText = text || "";
       }
 
       function mapOtpError(msg) {
@@ -71,37 +262,33 @@
 
       async function sendOtp() {
         var phone = normalizeAdminPhone(document.getElementById("phone").value || "");
-        if (!phone) return setMsg("أدخل رقم الجوال أولاً");
-        if (!isValid05(phone)) return setMsg("أدخل رقم سعودي يبدأ بـ 05 (10 أرقام)");
-        setMsg("جارٍ إرسال الكود...");
+        if (!phone) return setMsg("أدخل رقم الجوال أولاً", "err");
+        if (!isValid05(phone)) return setMsg("أدخل رقم سعودي يبدأ بـ 05 (10 أرقام)", "err");
+        setMsg("جارٍ إرسال الكود…", "");
         try {
-          var r = await fetch(window.PlatformAPI.apiUrl("/api/core/send-otp"), {
+          var j = await window.PlatformAPI.api("/api/core/send-otp", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ phone: "+966" + phone.slice(1), role: "admin" }),
+            body: { phone: "+966" + phone.slice(1), role: "admin" },
           });
-          var j = await r.json().catch(function () { return {}; });
-          if (!r.ok || !j.ok) throw new Error(j.error || "تعذر إرسال الكود");
-          setMsg("تم إرسال رمز واتساب إلى رقم الأدمن. صلاحية الرمز 5 دقائق.");
+          if (!j || j.ok === false) throw new Error((j && j.error) || "تعذر إرسال الكود");
+          setMsg("تم إرسال رمز واتساب. تحقق من الرسائل.", "ok");
         } catch (e) {
-          setMsg(mapOtpError(e.message || "فشل الإرسال"));
+          setMsg(mapOtpError(e.message || "فشل الإرسال"), "err");
         }
       }
 
       async function verifyOtp() {
         var phone = normalizeAdminPhone(document.getElementById("phone").value || "");
         var code = (document.getElementById("code").value || "").trim();
-        if (!phone || !code) return setMsg("أدخل رقم الجوال والرمز");
-        if (!isValid05(phone)) return setMsg("أدخل رقم سعودي يبدأ بـ 05 (10 أرقام)");
-        setMsg("جارٍ التحقق...");
+        if (!phone || !code) return setMsg("أدخل رقم الجوال والرمز", "err");
+        if (!isValid05(phone)) return setMsg("أدخل رقم سعودي يبدأ بـ 05 (10 أرقام)", "err");
+        setMsg("جارٍ التحقق…", "");
         try {
-          var res = await fetch(window.PlatformAPI.apiUrl("/api/core/verify-otp"), {
+          var data = await window.PlatformAPI.api("/api/core/verify-otp", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ phone: "+966" + phone.slice(1), code: code, role: "admin" }),
+            body: { phone: "+966" + phone.slice(1), code: code, role: "admin" },
           });
-          var data = await res.json().catch(function () { return {}; });
-          if (!res.ok || !data.token) throw new Error(data.error || "فشل التحقق");
+          if (!data || !data.token) throw new Error((data && data.error) || "فشل التحقق");
           localStorage.setItem("token", data.token);
           if (window.PlatformAPI && typeof window.PlatformAPI.setToken === "function") {
             window.PlatformAPI.setToken(data.token);
@@ -110,12 +297,15 @@
           }
           window.location.href = "/admin-dashboard";
         } catch (e) {
-          setMsg(mapOtpError(e.message || "فشل الدخول"));
+          setMsg(mapOtpError(e.message || "فشل الدخول"), "err");
         }
       }
 
       document.getElementById("sendBtn").onclick = sendOtp;
       document.getElementById("verifyBtn").onclick = verifyOtp;
+      document.getElementById("phone").addEventListener("blur", function () {
+        document.getElementById("phone").value = normalizeAdminPhone(document.getElementById("phone").value);
+      });
     </script>
   </body>
 </html>
