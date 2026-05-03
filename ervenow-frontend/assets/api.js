@@ -18,6 +18,23 @@
     return "";
   }
 
+  /**
+   * @param {string} url
+   * @param {RequestInit} [options]
+   */
+  function apiFetch(url, options) {
+    options = options || {};
+    var ms = Number(w.__ERVENOW_FETCH_TIMEOUT_MS) || 5000;
+    var ctrl = new AbortController();
+    var tid = setTimeout(function () {
+      ctrl.abort();
+    }, ms);
+    var merged = Object.assign({}, options, { signal: ctrl.signal });
+    return fetch(url, merged).finally(function () {
+      clearTimeout(tid);
+    });
+  }
+
   w.PlatformAPI = {
     getToken: function () {
       try {
@@ -53,12 +70,12 @@
         }
       } catch (e) {}
     },
-    /** مسار مطلق للـ API (يدعم فصل الواجهة عن Railway) */
     apiUrl: function (path) {
       var base = readApiBase();
       var p = path.indexOf("/") === 0 ? path : "/" + path;
       return base ? base + p : p;
     },
+    apiFetch: apiFetch,
     api: async function (path, opts) {
       opts = opts || {};
       var headers = Object.assign({ "Content-Type": "application/json" }, opts.headers || {});
@@ -69,7 +86,7 @@
       if (body && typeof body === "object" && !(body instanceof FormData)) {
         body = JSON.stringify(body);
       }
-      var r = await fetch(url, Object.assign({}, opts, { headers: headers, body: body }));
+      var r = await apiFetch(url, Object.assign({}, opts, { headers: headers, body: body }));
       var j = await r.json().catch(function () {
         return {};
       });

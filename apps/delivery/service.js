@@ -349,24 +349,30 @@ async function insertDeliveryOrderWithRetry(sb, buildRow) {
   };
 }
 
+/** أعمدة قائمة الطلبات فقط — أخف من select("*") ويُبقي واجهات dashboard/driver/orders تعمل */
+const ORDERS_LIST_COLUMNS =
+  "id,customer_id,driver_id,status,delivery_status,order_number,created_at,updated_at," +
+  "pickup_address,drop_address,pickup_lat,pickup_lng,drop_lat,drop_lng," +
+  "series_source,external_order_id,customer_phone,delivery_fee";
+
 async function listOrders(sb, appUser) {
   if (appUser.role === "driver") {
     /* المندوب: pending المتاحة + طلباته المقبولة/قيد التوصيل */
     return sb
       .from("orders")
-      .select("*")
+      .select(ORDERS_LIST_COLUMNS)
       .or(
         `and(driver_id.is.null,delivery_status.eq.pending),and(driver_id.eq.${appUser.id},delivery_status.in.(pending,accepted,delivering))`
       )
       .order("created_at", { ascending: false })
-      .limit(150);
+      .limit(50);
   }
   return sb
     .from("orders")
-    .select("*")
+    .select(ORDERS_LIST_COLUMNS)
     .eq("customer_id", appUser.id)
     .order("created_at", { ascending: false })
-    .limit(100);
+    .limit(50);
 }
 
 async function acceptOrder(sb, orderId, driverId) {

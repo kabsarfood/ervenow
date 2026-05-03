@@ -1,0 +1,6 @@
+{
+  "name": "ervenow-frontend",
+  "private": true,
+  "version": "1.0.0",
+  "description": "ERVENOW static UI — deploy root on Vercel (no nested public/)"
+}

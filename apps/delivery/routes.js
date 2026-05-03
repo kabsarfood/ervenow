@@ -19,6 +19,13 @@ const { deliveryOrdersCreateLimiter } = require("../../shared/middleware/apiRate
 const { normalizeIdempotencyKey } = require("../../shared/utils/idempotency");
 const { isAllowedDeliveryStatusTransition } = require("../../shared/utils/deliveryStateMachine");
 const { logger } = require("../../shared/utils/logger");
+const { cacheGetJson, cacheSetJson } = require("../../shared/utils/redisCache");
+const {
+  readListEpoch,
+  bumpDeliveryOrdersListEpoch,
+  buildOrdersListCacheKey,
+  LIST_CACHE_TTL_MS,
+} = require("../../shared/utils/deliveryOrdersListCache");
 
 const router = express.Router();
 
@@ -47,21 +54,35 @@ router.get("/orders", optionalAuth, async (req, res) => {
     const sb = req.supabase || createServiceClient();
     if (!sb) return fail(res, getDatabaseConfigHint(), 503);
 
-    if (!req.appUser) {
-      const { count, error } = await sb
-        .from("orders")
-        .select("*", { count: "exact", head: true })
-        .in("delivery_status", ["pending", "accepted"]);
-      if (error) return fail(res, error.message, 400);
-      return res.json({
-        ok: true,
-        count: count || 0,
-      });
+    const epoch = await readListEpoch();
+    const cacheKey = buildOrdersListCacheKey(req, epoch);
+    const cached = await cacheGetJson(cacheKey);
+    if (cached) {
+      return res.json(cached);
     }
 
+    if (!req.appUser) {
+      const t1 = Date.now();
+      const { count, error } = await sb
+        .from("orders")
+        .select("id", { count: "exact", head: true })
+        .in("delivery_status", ["pending", "accepted"]);
+      const t2 = Date.now();
+      console.log("DB TIME:", t2 - t1);
+      if (error) return fail(res, error.message, 400);
+      const payload = { ok: true, count: count || 0 };
+      await cacheSetJson(cacheKey, payload, LIST_CACHE_TTL_MS);
+      return res.json(payload);
+    }
+
+    const t1 = Date.now();
     const { data, error } = await listOrders(sb, req.appUser);
+    const t2 = Date.now();
+    console.log("DB TIME:", t2 - t1);
     if (error) return fail(res, error.message, 400);
-    ok(res, { orders: data || [] });
+    const payload = { ok: true, orders: data || [] };
+    await cacheSetJson(cacheKey, payload, LIST_CACHE_TTL_MS);
+    return res.json(payload);
   } catch (e) {
     fail(res, e.message, 500);
   }
@@ -151,6 +172,7 @@ router.post("/orders", requireAuth, deliveryOrdersCreateLimiter, async (req, res
       } catch (qe) {
         logger.error({ err: qe && (qe.message || String(qe)), orderId: data.id }, "[delivery/orders] enqueue");
       }
+      await bumpDeliveryOrdersListEpoch();
     }
     return ok(res, { order: data, duplicated: false });
   } catch (e) {
@@ -165,6 +187,7 @@ router.post("/orders/:id/accept", requireAuth, requireRole("driver"), async (req
     if (error) return fail(res, error.message, 400);
 
     if (data) {
+      await bumpDeliveryOrdersListEpoch();
       const base = String(process.env.ERVENOW_PUBLIC_URL || "").replace(/\/$/, "");
       const trackUrl = `${base || ""}/track?id=${encodeURIComponent(data.id)}`;
       const orderLabel = data.order_number || String(data.id);
@@ -208,6 +231,7 @@ router.post("/orders/:id/rate", requireAuth, requireRole("customer", "admin"), a
     const b = req.body || {};
     const { data, error } = await rateOrder(req.supabase, orderId, req.appUser, b.rating, b.review);
     if (error) return fail(res, error.message, 400);
+    if (data) await bumpDeliveryOrdersListEpoch();
     ok(res, { order: data });
   } catch (e) {
     fail(res, e.message, 500);
@@ -219,6 +243,7 @@ router.post("/orders/:id/cancel", requireAuth, requireRole("customer", "admin"),
     const orderId = String(req.params.id || "").trim();
     const { data, error, refund } = await cancelOrderByCustomer(req.supabase, orderId, req.appUser);
     if (error) return fail(res, error.message, 400);
+    if (data) await bumpDeliveryOrdersListEpoch();
 
     if (data && data.driver_id) {
       try {
@@ -266,6 +291,7 @@ router.patch("/orders/:id/status", requireAuth, async (req, res) => {
     }
     const { data, error } = await setStatus(req.supabase, orderId, nextStatus, req.appUser);
     if (error) return fail(res, error.message, 400);
+    if (data) await bumpDeliveryOrdersListEpoch();
     ok(res, { order: data });
   } catch (e) {
     fail(res, e.message, 500);

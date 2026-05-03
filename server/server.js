@@ -2,6 +2,7 @@ require("dotenv").config({ path: require("path").join(__dirname, "..", ".env") }
 
 const express = require("express");
 const path = require("path");
+const fs = require("fs");
 const morgan = require("morgan");
 const cors = require("cors");
 
@@ -28,8 +29,16 @@ const { pingRedis } = require("../queues/deliveryQueue");
 const PORT = process.env.PORT || 4000;
 const publicPath = path.join(__dirname, "..", "public");
 const isProd = process.env.NODE_ENV === "production";
-/** API-only على Railway: لا تضع SERVE_STATIC=1 إلا إذا أردت تقديم public/ من Express محليًا */
+/** SERVE_STATIC=1 يفرض تقديم الواجهة. عند SERVE_STATIC=0 يُقدَّم public/ تلقائياً إن وُجد index.html (حل نطاق يشير للـ API مثل ervenow.com). عطّل الواجهة بـ HIDE_PUBLIC_UI=1 */
 const serveStatic = process.env.SERVE_STATIC === "1";
+let hasPublicIndex = false;
+try {
+  hasPublicIndex = fs.existsSync(path.join(publicPath, "index.html"));
+} catch (_) {
+  hasPublicIndex = false;
+}
+const hidePublicUi = String(process.env.HIDE_PUBLIC_UI || "").trim() === "1";
+const servePublicUi = serveStatic || (hasPublicIndex && !hidePublicUi);
 
 function getCorsAllowedOrigins() {
   const raw = String(process.env.CORS_ORIGINS || "").trim();
@@ -227,30 +236,30 @@ app.get("/api/health/full", async (_req, res) => {
   res.status(result.ok ? 200 : 503).json(result);
 });
 
-/** عند SERVE_STATIC=0 كان الجذر `/` يُرجع 404 فيكسر فحص الصحة الافتراضي على Railway ويُربك المتصفح */
-if (!serveStatic) {
+/** عند عدم تقديم الواجهة يبقى الجذر JSON لمراقبة Railway دون كسر الفحص */
+if (!servePublicUi) {
   app.get("/", (_req, res) => {
     res.json({
       ok: true,
       service: "ervenow-api",
       health: "/api/health",
-      note: "SERVE_STATIC=0 — الواجهة من CDN/nginx أو خدمة منفصلة",
+      note: "API-only — لا يوجد public/index.html أو مفعّل HIDE_PUBLIC_UI=1",
     });
   });
 }
 
-/* ——— واجهة ثابتة ——— فقط عند SERVE_STATIC=1 ——— */
-if (serveStatic) {
+/* ——— واجهة ثابتة ——— عند SERVE_STATIC=1 أو عند وجود public/ وعدم HIDE_PUBLIC_UI ——— */
+if (servePublicUi) {
+  app.get("/", (_req, res) => {
+    res.sendFile(path.join(publicPath, "index.html"));
+  });
+
   app.use(
     express.static(publicPath, {
       dotfiles: "deny",
       index: false,
     })
   );
-
-  app.get("/", (_req, res) => {
-    res.sendFile(path.join(publicPath, "index.html"));
-  });
 
   app.get("/login", (_req, res) => {
     res.sendFile(path.join(publicPath, "login.html"));
@@ -343,8 +352,15 @@ if (serveStatic) {
   app.get("/blocked-complaints", (_req, res) => {
     res.sendFile(path.join(publicPath, "blocked-complaints.html"));
   });
+  app.get("/wallet", (_req, res) => {
+    res.sendFile(path.join(publicPath, "wallet.html"));
+  });
 } else {
-  console.warn("[boot] SERVE_STATIC disabled — serve public/ via CDN/nginx only");
+  if (hasPublicIndex && hidePublicUi) {
+    console.warn("[boot] HIDE_PUBLIC_UI=1 — الجذر / يعيد JSON فقط (وضع API)");
+  } else {
+    console.warn("[boot] لا يوجد public/index.html — وضع API فقط");
+  }
 }
 
 app.use((_req, res) => {
@@ -367,6 +383,11 @@ app.use((err, _req, res, _next) => {
     await assertRequiredSchema();
     app.listen(PORT, "0.0.0.0", () => {
       console.log("🚀 ERVENOW RUNNING ON", PORT);
+      if (servePublicUi && !serveStatic) {
+        console.log(
+          "[boot] تقديم الواجهة من public/ رغم SERVE_STATIC≠1 — للـ API فقط على / عيّن HIDE_PUBLIC_UI=1"
+        );
+      }
       if (!serveStatic && isProd && !String(process.env.CORS_ORIGINS || "").trim()) {
         console.warn(
           "[boot] أنصح بتعريف CORS_ORIGINS على Railway (نطاق Vercel مفصول بفواصل) وإلا المتصفح قد يمنع طلبات API."

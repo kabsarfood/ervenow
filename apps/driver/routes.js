@@ -7,6 +7,7 @@ const { toE164, toStorageDigits, isErvnowSaudiMobileE164 } = require("../../shar
 const { sendWhatsApp } = require("../../shared/utils/whatsapp");
 const { createServiceClient } = require("../../shared/config/supabase");
 const { notifyDriver } = require("./notify");
+const { bumpDeliveryOrdersListEpoch } = require("../../shared/utils/deliveryOrdersListCache");
 
 const router = express.Router();
 
@@ -428,6 +429,7 @@ router.post("/accept/:id", requireAuth, async (req, res) => {
         message: "تم استلام الطلب من مندوب آخر",
       });
     }
+    await bumpDeliveryOrdersListEpoch();
     return ok(res, { accepted: true, order: data });
   } catch (e) {
     return fail(res, e.message, 500);

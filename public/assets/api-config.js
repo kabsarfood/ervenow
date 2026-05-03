@@ -1,11 +1,11 @@
 /**
- * رابط خادم API على Railway (بدون / أخيرة). للواجهة على Vercel ضع الرابط هنا مثلًا:
- *   window.__ERVENOW_API_BASE__ = "https://your-service.up.railway.app";
+ * رابط API على Railway للواجهة المنفصلة (Vercel).
+ * استبدل YOUR-PROJECT بالنطاق الحقيقي لمشروعك، مثل: my-app.up.railway.app
  *
- * إذا تركتها "" يُفترض أن الطلبات من نفس النطاق (Express يقدّم الواجهة والـ API معًا).
+ * بديل: ضع ERVENOW_PUBLIC_API_BASE في ملف .env ثم شغّل npm run frontend:sync
+ * (يُكتب الرابط تلقائياً في ervenow-frontend/assets/api-config.js عند وجود المتغير).
  */
-(function (w) {
-  if (w.__ERVENOW_API_BASE__ == null || String(w.__ERVENOW_API_BASE__).trim() === "") {
-    w.__ERVENOW_API_BASE__ = "";
-  }
-})(typeof window !== "undefined" ? window : globalThis);
+(function () {
+  if (typeof window === "undefined") return;
+  window.__ERVENOW_API_BASE__ = "https://YOUR-PROJECT.up.railway.app";
+})();
