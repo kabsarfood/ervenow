@@ -431,6 +431,94 @@ router.get("/daily-report", requireAuth, requireRole("admin"), requireAdminPermi
   }
 });
 
+/** ملخص محفظة ERVENOW (ervenow_wallets): إيداعات مناديب اليوم، عمولة المنصة من طلبات مُسلَّمة (أنشئت اليوم)، وإيراد الطلبات نفس نافذة التقرير اليومي */
+router.get("/wallet-ervenow-summary", requireAuth, requireRole("admin"), requireAdminPermission("finance"), async (req, res) => {
+  try {
+    const start = new Date();
+    start.setHours(0, 0, 0, 0);
+    const iso = start.toISOString();
+
+    const { data: txs, error: txErr } = await req.supabase
+      .from("ervenow_wallet_transactions")
+      .select("amount, type, status, created_at")
+      .gte("created_at", iso);
+    if (txErr) return fail(res, txErr.message, 400);
+
+    let totalDriverEarningsCreditedToday = 0;
+    let totalWithdrawsCompletedToday = 0;
+    for (const t of txs || []) {
+      if (t.status && t.status !== "completed") continue;
+      const amt = Number(t.amount) || 0;
+      if (t.type === "earning") totalDriverEarningsCreditedToday += amt;
+      if (t.type === "withdraw") totalWithdrawsCompletedToday += amt;
+    }
+
+    const { data: orders, error: oErr } = await req.supabase
+      .from("orders")
+      .select("platform_fee, total_with_vat, delivery_status, status")
+      .gte("created_at", iso);
+    if (oErr) return fail(res, oErr.message, 400);
+
+    let platformCommissionDeliveredToday = 0;
+    let dailyRevenueOrdersCreatedToday = 0;
+    for (const o of orders || []) {
+      if (isCancelledOrder(o)) continue;
+      dailyRevenueOrdersCreatedToday += Number(o.total_with_vat) || 0;
+      if (String(o.delivery_status || "").toLowerCase() === "delivered") {
+        platformCommissionDeliveredToday += Number(o.platform_fee) || 0;
+      }
+    }
+
+    ok(res, {
+      window_start: iso,
+      total_driver_earnings_credited_today: round2(totalDriverEarningsCreditedToday),
+      total_withdraws_completed_value_today: round2(totalWithdrawsCompletedToday),
+      platform_commission_delivered_orders_created_today: round2(platformCommissionDeliveredToday),
+      daily_revenue_orders_created_today: round2(dailyRevenueOrdersCreatedToday),
+    });
+  } catch (e) {
+    fail(res, e.message, 500);
+  }
+});
+
+/** تدقيق: رصيد ervenow_wallets مقابل مجموع الحركات المكتملة (ervenow_wallet_ledger_balance) */
+router.get("/wallet-integrity-check", requireAuth, requireRole("admin"), requireAdminPermission("finance"), async (req, res) => {
+  try {
+    const limit = Math.min(500, Math.max(1, Number(req.query.limit) || 200));
+    const { data: wallets, error: wErr } = await req.supabase
+      .from("ervenow_wallets")
+      .select("user_id, balance, updated_at")
+      .order("updated_at", { ascending: false })
+      .limit(limit);
+    if (wErr) return fail(res, wErr.message, 400);
+
+    const mismatches = [];
+    for (const row of wallets || []) {
+      const uid = row.user_id;
+      const { data: ledgerBal, error: lbErr } = await req.supabase.rpc("ervenow_wallet_ledger_balance", {
+        p_user_id: uid,
+      });
+      if (lbErr) {
+        mismatches.push({ user_id: uid, error: lbErr.message });
+        continue;
+      }
+      const b0 = round2(Number(row.balance) || 0);
+      const b1 = round2(Number(ledgerBal) || 0);
+      if (Math.abs(b0 - b1) > 0.02) {
+        mismatches.push({ user_id: uid, stored_balance: b0, ledger_sum: b1, delta: round2(b0 - b1) });
+      }
+    }
+    ok(res, {
+      checked: (wallets || []).length,
+      mismatches,
+      consistent: mismatches.length === 0,
+      note: "operational: ervenow_wallets.balance vs ervenow_wallet_ledger_balance(user_id)",
+    });
+  } catch (e) {
+    fail(res, e.message, 500);
+  }
+});
+
 router.get("/withdraws", requireAuth, requireRole("admin"), requireAdminPermission("finance"), async (req, res) => {
   try {
     const { data, error } = await req.supabase
@@ -448,50 +536,24 @@ router.get("/withdraws", requireAuth, requireRole("admin"), requireAdminPermissi
 router.post("/withdraws/:id/approve", requireAuth, requireRole("admin"), requireAdminPermission("finance"), async (req, res) => {
   try {
     const id = String(req.params.id || "").trim();
-    const { data: reqRow, error: gErr } = await req.supabase.from("ervenow_withdraw_requests").select("*").eq("id", id).single();
-    if (gErr || !reqRow) return fail(res, "Not found", 404);
-    if (reqRow.status !== "pending") {
-      return fail(res, "الطلب ليس قيد المراجعة", 400);
-    }
+    if (!id) return fail(res, "معرّف طلب السحب مطلوب", 400);
 
-    const uid = reqRow.user_id;
-    const amount = Number(reqRow.amount);
-    if (!(amount > 0)) return fail(res, "مبلغ غير صالح", 400);
-
-    const { data: w } = await req.supabase.from("ervenow_wallets").select("*").eq("user_id", uid).maybeSingle();
-    const bal = Number(w?.balance) || 0;
-    if (amount > bal) {
-      return fail(res, "رصيد المستخدم أقل من المبلغ", 400);
-    }
-
-    const newBal = round2(bal - amount);
-    const tw = round2(Number(w?.total_withdrawn) || 0) + amount;
-
-    const { error: uW } = await req.supabase
-      .from("ervenow_wallets")
-      .update({
-        balance: newBal,
-        total_withdrawn: tw,
-      })
-      .eq("user_id", uid);
-    if (uW) return fail(res, uW.message, 400);
-
-    const { error: txE } = await req.supabase.from("ervenow_wallet_transactions").insert({
-      user_id: uid,
-      amount,
-      type: "withdraw",
-      reference_id: id,
-      note: "سحب (موافقة إدارية)",
+    const { data: rpcData, error: rpcErr } = await req.supabase.rpc("ervenow_wallet_withdraw_atomic", {
+      p_withdraw_request_id: id,
     });
-    if (txE) return fail(res, txE.message, 400);
+    if (rpcErr) return fail(res, rpcErr.message || String(rpcErr), 400);
 
-    const { error: uR } = await req.supabase
-      .from("ervenow_withdraw_requests")
-      .update({ status: "approved", processed_at: new Date().toISOString(), note: (reqRow.note || "") + " | OK" })
-      .eq("id", id);
-    if (uR) return fail(res, uR.message, 400);
+    const row = typeof rpcData === "object" && rpcData !== null && !Array.isArray(rpcData) ? rpcData : {};
+    if (row.ok === true || row.ok === "true") {
+      return ok(res, { ok: true, reason: row.reason || "debited", amount: row.amount });
+    }
 
-    ok(res, { ok: true });
+    const reason = String(row.reason || "unknown");
+    if (reason === "request_not_found") return fail(res, "طلب السحب غير موجود", 404);
+    if (reason === "not_pending") return fail(res, "الطلب ليس قيد المراجعة", 400);
+    if (reason === "invalid_amount") return fail(res, "مبلغ غير صالح", 400);
+    if (reason === "insufficient_balance") return fail(res, "رصيد المستخدم أقل من المبلغ", 400);
+    return fail(res, reason, 400);
   } catch (e) {
     fail(res, e.message, 500);
   }

@@ -1,3 +1,7 @@
+/**
+ * محاسبة مالية عامة — جداول `wallets` / `wallet_transactions` (finance).
+ * مسار دفع المناديب في الواجهة هو `ervenow_wallets` / `ervenow_wallet_transactions` وليس هذا الملف.
+ */
 function walletOwnerTypeForRole(role) {
   if (role === "driver") return "driver";
   if (role === "merchant" || role === "restaurant") return "merchant";

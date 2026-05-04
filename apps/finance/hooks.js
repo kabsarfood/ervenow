@@ -1,7 +1,8 @@
 const { calculateCommission, fetchCommissionRates } = require("./accountingEngine");
 
 /**
- * عند تسليم طلب التوصيل التشغيلي: تشغيل التسوية على صف orders الموحّد.
+ * تسوية محاسبية عند التسليم: `erwenow_finance_settle_order` → public.wallets / wallet_transactions (دفتر المحاسبة).
+ * منفصلة عن محفظة التشغيل ervenow_* (أجر المندوب يُودَع عبر ervenow_wallet_apply_driver_order_earning في مسار آخر).
  */
 async function onDeliveryDelivered(sb, deliveryOrder) {
   try {

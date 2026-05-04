@@ -1,5 +1,7 @@
 const { isValidDeliveryTransition, deliveryLifecycleIndex } = require("../../shared/utils/helpers");
+const { applyDriverOrderEarning } = require("../../shared/utils/ervenowWalletCredit");
 const { onDeliveryDelivered } = require("../finance/hooks");
+/* محفظتان: ervenow_* = تشغيل (مندوب/سحب/استرجاع عميل) | wallets + wallet_transactions = محاسبة (تسوية تسليم) */
 const { normalizePhone } = require("../../shared/utils/phone");
 const { getOsrmRouteKmOrHaversine } = require("../../shared/utils/osrmClient");
 const { logger } = require("../../shared/utils/logger");
@@ -135,55 +137,22 @@ async function refundCustomerWalletIfPaid(sb, order) {
   const refundAmount = calcRefundAmount(order);
   if (!(refundAmount > 0)) return { refunded: false, reason: "zero_amount" };
 
-  const refundNote = `refund_customer_cancel:${order.id}`;
-  const { data: exists, error: exErr } = await sb
-    .from("ervenow_wallet_transactions")
-    .select("id")
-    .eq("user_id", customerId)
-    .eq("type", "earning")
-    .eq("note", refundNote)
-    .maybeSingle();
-  if (exErr) {
-    return { refunded: false, reason: "wallet_tx_check_error" };
-  }
-  if (exists?.id) return { refunded: false, reason: "already_refunded" };
+  const orderId = String(order.id || "").trim();
+  if (!orderId) return { refunded: false, reason: "no_order_id" };
 
-  const { data: wallet, error: wErr } = await sb
-    .from("ervenow_wallets")
-    .select("*")
-    .eq("user_id", customerId)
-    .maybeSingle();
-  if (wErr) return { refunded: false, reason: "wallet_fetch_error" };
-
-  if (!wallet) {
-    const { error: insWErr } = await sb.from("ervenow_wallets").insert({
-      user_id: customerId,
-      role: "customer",
-      balance: refundAmount,
-      total_earned: refundAmount,
-      total_withdrawn: 0,
-    });
-    if (insWErr) return { refunded: false, reason: "wallet_create_error" };
-  } else {
-    const nextBal = (Number(wallet.balance) || 0) + refundAmount;
-    const nextEarn = (Number(wallet.total_earned) || 0) + refundAmount;
-    const { error: upWErr } = await sb
-      .from("ervenow_wallets")
-      .update({ balance: nextBal, total_earned: nextEarn })
-      .eq("user_id", customerId);
-    if (upWErr) return { refunded: false, reason: "wallet_update_error" };
-  }
-
-  const { error: txErr } = await sb.from("ervenow_wallet_transactions").insert({
-    user_id: customerId,
-    amount: refundAmount,
-    type: "earning",
-    reference_id: null,
-    note: refundNote,
+  const { data: rpcData, error: rpcErr } = await sb.rpc("ervenow_wallet_customer_refund_atomic", {
+    p_order_id: orderId,
+    p_customer_id: customerId,
+    p_amount: refundAmount,
   });
-  if (txErr) return { refunded: false, reason: "wallet_tx_insert_error" };
-
-  return { refunded: true, amount: refundAmount, customer_id: customerId };
+  if (rpcErr) {
+    return { refunded: false, reason: "refund_rpc_error", detail: String(rpcErr.message || rpcErr) };
+  }
+  const row = typeof rpcData === "object" && rpcData !== null && !Array.isArray(rpcData) ? rpcData : {};
+  if (row.ok === true || row.ok === "true") {
+    return { refunded: true, amount: refundAmount, customer_id: customerId, reason: row.reason || "refunded" };
+  }
+  return { refunded: false, reason: String(row.reason || "refund_failed"), wallet: row };
 }
 
 /**
@@ -439,11 +408,18 @@ async function setStatus(sb, orderId, nextStatus, appUser) {
 
   if (!error && data && nextStatus === "delivered") {
     onDeliveryDelivered(sb, data).catch((err) =>
-      logger.error({ err: err.message || String(err) }, "[ERVENOW] finance hook")
+      logger.error({ err: err.message || String(err) }, "[ERVENOW] accounting settle (wallets ledger)")
     );
-    sb.rpc("ervenow_credit_driver_for_delivery", { p_order_id: data.id }).then(({ error: rpcErr }) => {
-      if (rpcErr) logger.error({ err: rpcErr.message || String(rpcErr) }, "[ervenow] ervenow_credit_driver_for_delivery");
-    });
+    if (data.driver_id) {
+      try {
+        const cr = await applyDriverOrderEarning(sb, data.driver_id, data);
+        if (!cr || cr.ok !== true) {
+          logger.warn({ orderId: data.id, result: cr }, "[ervenow] operational driver earning");
+        }
+      } catch (err) {
+        logger.error({ err: err.message || String(err), orderId: data.id }, "[ervenow] operational driver earning");
+      }
+    }
   }
 
   return { data, error };

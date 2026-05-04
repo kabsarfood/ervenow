@@ -1,3 +1,8 @@
+/**
+ * /api/wallet — طبقة التشغيل: ervenow_wallets / ervenow_wallet_transactions (سحب، رصيد مندوب، إلخ)
+ * طبقة المحاسبة: public.wallets + wallet_transactions (تسوية عند التسليم عبر erwenow_finance_settle_order)
+ * مسارات ledger الداخلية: POST /ledger/deposit | /ledger/pay | /ledger/refund
+ */
 const express = require("express");
 const { requireAuth } = require("../../shared/middleware/auth");
 const { requireRole } = require("../../shared/middleware/roles");
@@ -11,13 +16,13 @@ const WITHDRAW_OTP_TTL_MS = 5 * 60 * 1000;
 const WITHDRAW_OTP_LOCK_MS = 5 * 60 * 1000;
 const WITHDRAW_OTP_MAX_ATTEMPTS = 3;
 
-/** آيبان سعودي: SA + 22 رقماً (24 حرفاً إجمالاً) */
+/** قراءة رصيد التشغيل + سجل الحركات */
+const WALLET_READ_ROLES = ["driver", "restaurant", "merchant", "service", "customer", "admin"];
+const PAYOUT_ROLES = ["driver", "restaurant", "merchant", "service"];
+
 function isValidIBAN(iban) {
   return /^SA\d{22}$/i.test(iban);
 }
-
-/** مندوب، متجر، مقدم خدمة — محفظة سحب ERVENOW (ervenow_wallets) */
-const PAYOUT_ROLES = ["driver", "restaurant", "merchant", "service"];
 
 function round2(n) {
   return Math.round(Number(n) * 100) / 100;
@@ -63,35 +68,130 @@ async function validateWithdrawRequest(req, amount) {
   return { ibanRaw, bal };
 }
 
-router.get("/", requireAuth, requireRole(...PAYOUT_ROLES), async (req, res) => {
+async function operationalWalletPayload(req) {
+  const { data, error } = await req.supabase
+    .from("ervenow_wallets")
+    .select("balance, total_earned, total_withdrawn, role")
+    .eq("user_id", req.appUser.id)
+    .maybeSingle();
+  if (error) throw error;
+  const w = data || { balance: 0, total_earned: 0, total_withdrawn: 0, role: req.appUser.role };
+  return {
+    balance: round2(w.balance) || 0,
+    total_earned: round2(w.total_earned) || 0,
+    total_withdrawn: round2(w.total_withdrawn) || 0,
+    wallet_mode: "operational",
+    layer: "ervenow_wallets",
+  };
+}
+
+router.get("/me", requireAuth, requireRole(...WALLET_READ_ROLES), async (req, res) => {
   try {
-    const { data, error } = await req.supabase
-      .from("ervenow_wallets")
-      .select("*")
-      .eq("user_id", req.appUser.id)
-      .maybeSingle();
-    if (error) return fail(res, error.message, 400);
-    const w = data || { balance: 0, total_earned: 0, total_withdrawn: 0, role: req.appUser.role };
-    ok(res, {
-      balance: round2(w.balance) || 0,
-      total_earned: round2(w.total_earned) || 0,
-      total_withdrawn: round2(w.total_withdrawn) || 0,
-    });
+    const payload = await operationalWalletPayload(req);
+    ok(res, payload);
   } catch (e) {
     fail(res, e.message, 500);
   }
 });
 
-router.get("/transactions", requireAuth, requireRole(...PAYOUT_ROLES), async (req, res) => {
+router.get("/", requireAuth, requireRole(...WALLET_READ_ROLES), async (req, res) => {
+  try {
+    const payload = await operationalWalletPayload(req);
+    ok(res, payload);
+  } catch (e) {
+    fail(res, e.message, 500);
+  }
+});
+
+router.get("/transactions", requireAuth, requireRole(...WALLET_READ_ROLES), async (req, res) => {
   try {
     const { data, error } = await req.supabase
       .from("ervenow_wallet_transactions")
-      .select("id, amount, type, reference_id, note, created_at")
+      .select("id, amount, type, status, reference_id, note, created_at")
       .eq("user_id", req.appUser.id)
       .order("created_at", { ascending: false })
       .limit(100);
     if (error) return fail(res, error.message, 400);
-    ok(res, { transactions: data || [] });
+    ok(res, { transactions: data || [], wallet_mode: "operational" });
+  } catch (e) {
+    fail(res, e.message, 500);
+  }
+});
+
+router.post("/ledger/deposit", requireAuth, requireRole("admin"), async (req, res) => {
+  try {
+    const userId = String(req.body?.user_id || req.body?.target_user_id || "").trim();
+    const amount = Number(req.body?.amount);
+    const roleHint = String(req.body?.role || "customer").trim();
+    if (!userId) return fail(res, "user_id مطلوب", 400);
+    if (!Number.isFinite(amount) || amount <= 0) return fail(res, "مبلغ غير صالح", 400);
+    const reference_id =
+      String(req.body?.reference_id || "").trim() || `admin_deposit:${Date.now()}:${userId.slice(0, 8)}`;
+    const description = String(req.body?.description || "إيداع إداري (ledger)").trim();
+
+    const { data, error } = await req.supabase.rpc("ervenow_ledger_deposit", {
+      p_user_id: userId,
+      p_role: roleHint,
+      p_amount: amount,
+      p_reference_id: reference_id,
+      p_description: description,
+    });
+    if (error) return fail(res, error.message, 400);
+    const row = typeof data === "object" && data !== null && !Array.isArray(data) ? data : {};
+    if (row.ok === true || row.ok === "true") return ok(res, { result: row, wallet_mode: "ledger" });
+    return fail(res, String(row.reason || "deposit_failed"), 400);
+  } catch (e) {
+    fail(res, e.message, 500);
+  }
+});
+
+router.post("/ledger/pay", requireAuth, requireRole("customer"), async (req, res) => {
+  try {
+    const orderId = String(req.body?.order_id || "").trim();
+    const amount = Number(req.body?.amount);
+    if (!orderId) return fail(res, "order_id مطلوب", 400);
+    if (!Number.isFinite(amount) || amount <= 0) return fail(res, "مبلغ غير صالح", 400);
+    const description = String(req.body?.description || "دفع من محفظة ledger").trim();
+
+    const { data, error } = await req.supabase.rpc("ervenow_ledger_pay", {
+      p_user_id: req.appUser.id,
+      p_amount: amount,
+      p_order_id: orderId,
+      p_description: description,
+    });
+    if (error) return fail(res, error.message, 400);
+    const row = typeof data === "object" && data !== null && !Array.isArray(data) ? data : {};
+    if (row.ok === true || row.ok === "true") return ok(res, { result: row, wallet_mode: "ledger" });
+    if (String(row.reason) === "insufficient_balance") {
+      return fail(res, "الرصيد غير كافٍ", 400, { balance: row.balance });
+    }
+    return fail(res, String(row.reason || "pay_failed"), 400);
+  } catch (e) {
+    fail(res, e.message, 500);
+  }
+});
+
+router.post("/ledger/refund", requireAuth, requireRole("admin"), async (req, res) => {
+  try {
+    const userId = String(req.body?.user_id || "").trim();
+    const amount = Number(req.body?.amount);
+    const reference_id = String(req.body?.reference_id || "").trim();
+    const description = String(req.body?.description || "استرجاع إداري (ledger)").trim();
+    if (!userId) return fail(res, "user_id مطلوب", 400);
+    if (!Number.isFinite(amount) || amount <= 0) return fail(res, "مبلغ غير صالح", 400);
+    if (!reference_id) return fail(res, "reference_id مطلوب", 400);
+
+    const { data, error } = await req.supabase.rpc("ervenow_ledger_refund", {
+      p_user_id: userId,
+      p_amount: amount,
+      p_reference_id: reference_id,
+      p_description: description,
+      p_role: String(req.body?.role || "customer").trim(),
+    });
+    if (error) return fail(res, error.message, 400);
+    const row = typeof data === "object" && data !== null && !Array.isArray(data) ? data : {};
+    if (row.ok === true || row.ok === "true") return ok(res, { result: row, wallet_mode: "ledger" });
+    return fail(res, String(row.reason || "refund_failed"), 400);
   } catch (e) {
     fail(res, e.message, 500);
   }
@@ -114,11 +214,7 @@ router.post("/withdraw", requireAuth, requireRole(...PAYOUT_ROLES), async (req, 
       return fail(res, "IBAN غير صالح — يُقبل آيبان سعودي SA متبوعاً بـ 22 رقماً", 400);
     }
 
-    const { data: w } = await req.supabase.from("ervenow_wallets").select("balance").eq("user_id", req.appUser.id).maybeSingle();
-    const bal = Number(w?.balance) || 0;
-    if (amount > bal) {
-      return fail(res, "الرصيد غير كافٍ", 400);
-    }
+    await validateWithdrawRequest(req, amount);
 
     const { error: insE } = await req.supabase.from("ervenow_withdraw_requests").insert({
       user_id: req.appUser.id,

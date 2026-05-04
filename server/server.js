@@ -1,8 +1,11 @@
 require("dotenv").config({ path: require("path").join(__dirname, "..", ".env") });
 
 const express = require("express");
+const http = require("http");
 const path = require("path");
 const fs = require("fs");
+const { Server } = require("socket.io");
+const { attachTrackingSocket } = require("../shared/lib/trackingSocket");
 const morgan = require("morgan");
 const cors = require("cors");
 
@@ -451,7 +454,19 @@ app.use((err, _req, res, _next) => {
 (async function boot() {
   try {
     await assertRequiredSchema();
-    app.listen(PORT, "0.0.0.0", () => {
+    const server = http.createServer(app);
+    const socketCorsOrigins = corsAllowedOrigins.length ? corsAllowedOrigins : true;
+    const io = new Server(server, {
+      path: "/socket.io/",
+      cors: {
+        origin: socketCorsOrigins,
+        methods: ["GET", "HEAD", "POST"],
+        credentials: true,
+      },
+    });
+    attachTrackingSocket(io);
+
+    server.listen(PORT, "0.0.0.0", () => {
       console.log("🚀 ERVENOW RUNNING ON", PORT);
       if (servePublicUi && !serveStatic) {
         console.log(
@@ -465,6 +480,7 @@ app.use((err, _req, res, _next) => {
       }
     });
     startRetryNotificationsWorker();
+    console.log("[boot] Socket.IO tracking: /socket.io/");
   } catch (e) {
     console.error("[boot] schema check failed:", e && (e.message || e));
     process.exit(1);

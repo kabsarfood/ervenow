@@ -9,6 +9,7 @@ const { driverPendingRegistrationBody } = require("../../shared/messages/driverW
 const { createServiceClient } = require("../../shared/config/supabase");
 const { notifyDriver } = require("./notify");
 const { bumpDeliveryOrdersListEpoch } = require("../../shared/utils/deliveryOrdersListCache");
+const { setStatus } = require("../delivery/service");
 
 const router = express.Router();
 
@@ -148,61 +149,6 @@ function haversineKm(aLat, aLng, bLat, bLng) {
 function toNumberOrNaN(v) {
   const n = Number(v);
   return Number.isFinite(n) ? n : NaN;
-}
-
-async function creditDriverWalletForOrder(sb, appUserId, order) {
-  const earning = Number(order?.driver_earning) > 0 ? Number(order.driver_earning) : Number(order?.delivery_fee) || 0;
-  if (!(earning > 0)) return { credited: false };
-
-  const orderId = String(order.id || "").trim();
-  if (!orderId) return { credited: false };
-
-  const { data: existingTx, error: exErr } = await sb
-    .from("ervenow_wallet_transactions")
-    .select("id")
-    .eq("user_id", appUserId)
-    .eq("type", "earning")
-    .eq("reference_id", orderId)
-    .maybeSingle();
-  if (exErr) throw exErr;
-  if (existingTx && existingTx.id) return { credited: false };
-
-  const { error: txErr } = await sb.from("ervenow_wallet_transactions").insert({
-    user_id: appUserId,
-    amount: earning,
-    type: "earning",
-    reference_id: orderId,
-    note: "توصيل طلب",
-  });
-  if (txErr) throw txErr;
-
-  const { data: walletRow, error: wSelErr } = await sb
-    .from("ervenow_wallets")
-    .select("*")
-    .eq("user_id", appUserId)
-    .maybeSingle();
-  if (wSelErr) throw wSelErr;
-
-  if (!walletRow) {
-    const { error: insErr } = await sb.from("ervenow_wallets").insert({
-      user_id: appUserId,
-      role: "driver",
-      balance: earning,
-      total_earned: earning,
-      total_withdrawn: 0,
-    });
-    if (insErr) throw insErr;
-  } else {
-    const nextBal = (Number(walletRow.balance) || 0) + earning;
-    const nextEarned = (Number(walletRow.total_earned) || 0) + earning;
-    const { error: upErr } = await sb
-      .from("ervenow_wallets")
-      .update({ balance: nextBal, total_earned: nextEarned })
-      .eq("user_id", appUserId);
-    if (upErr) throw upErr;
-  }
-
-  return { credited: true, amount: earning };
 }
 
 router.post("/send-otp", async (req, res) => {
@@ -403,6 +349,7 @@ router.get("/wallet", requireAuth, async (req, res) => {
       balance: Number(data?.balance) || 0,
       total_earned: Number(data?.total_earned) || 0,
       total_withdrawn: Number(data?.total_withdrawn) || 0,
+      wallet_mode: "operational",
     });
   } catch (e) {
     return fail(res, e.message, 500);
@@ -514,15 +461,8 @@ router.post("/complete-order/:id", requireAuth, async (req, res) => {
     if (!drv) return;
     const id = String(req.params.id || "").trim();
     if (!id) return fail(res, "order id required", 400);
-    const { data, error } = await req.supabase
-      .from("orders")
-      .update({ delivery_status: "delivered", updated_at: nowIso() })
-      .eq("id", id)
-      .eq("driver_id", req.appUser.id)
-      .in("delivery_status", ["accepted", "delivering"])
-      .select()
-      .maybeSingle();
-    if (error) return fail(res, error.message, 400);
+    const { data, error } = await setStatus(req.supabase, id, "delivered", req.appUser);
+    if (error) return fail(res, error.message || "order not available", 400);
     if (!data) return fail(res, "order not available", 400);
     if (data.store_id) {
       try {
@@ -534,11 +474,7 @@ router.post("/complete-order/:id", requireAuth, async (req, res) => {
         console.error("[driver/complete-order] increment_store_orders:", e && (e.message || e));
       }
     }
-    try {
-      await creditDriverWalletForOrder(req.supabase, req.appUser.id, data);
-    } catch (e) {
-      console.error("[driver/complete-order] wallet credit error:", e && (e.message || e));
-    }
+    await bumpDeliveryOrdersListEpoch();
     return ok(res, { order: data });
   } catch (e) {
     return fail(res, e.message, 500);

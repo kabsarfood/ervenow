@@ -32,7 +32,10 @@ function isValidDeliveryTransition(from, to) {
   const i = deliveryLifecycleIndex(from);
   const j = deliveryLifecycleIndex(to);
   if (i < 0 || j < 0) return false;
-  return j === i || j === i + 1;
+  if (j === i || j === i + 1) return true;
+  // واجهة المندوب: تسليم مباشر من «مقبول» دون المرور بـ «قيد التوصيل»
+  if (to === "delivered" && from === "accepted") return true;
+  return false;
 }
 
 module.exports = {
