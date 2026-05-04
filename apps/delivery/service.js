@@ -353,16 +353,24 @@ async function insertDeliveryOrderWithRetry(sb, buildRow) {
 const ORDERS_LIST_COLUMNS =
   "id,customer_id,driver_id,status,delivery_status,order_number,created_at,updated_at," +
   "pickup_address,drop_address,pickup_lat,pickup_lng,drop_lat,drop_lng," +
-  "series_source,external_order_id,customer_phone,delivery_fee";
+  "series_source,external_order_id,customer_phone,delivery_fee,distance_km";
 
 async function listOrders(sb, appUser) {
+  if (appUser.role === "admin") {
+    return sb
+      .from("orders")
+      .select(ORDERS_LIST_COLUMNS)
+      .in("delivery_status", ["new", "pending", "accepted", "delivering"])
+      .order("created_at", { ascending: false })
+      .limit(100);
+  }
   if (appUser.role === "driver") {
-    /* المندوب: pending المتاحة + طلباته المقبولة/قيد التوصيل */
+    /* المندوب: طلبات مفتوحة (new/pending) + طلباته المسندة */
     return sb
       .from("orders")
       .select(ORDERS_LIST_COLUMNS)
       .or(
-        `and(driver_id.is.null,delivery_status.eq.pending),and(driver_id.eq.${appUser.id},delivery_status.in.(pending,accepted,delivering))`
+        `and(driver_id.is.null,delivery_status.in.(new,pending)),and(driver_id.eq.${appUser.id},delivery_status.in.(new,pending,accepted,delivering))`
       )
       .order("created_at", { ascending: false })
       .limit(50);

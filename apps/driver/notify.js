@@ -129,17 +129,23 @@ async function notifyNearestDrivers(sb, order) {
     } catch (logErr) {
       console.error("NOTIFY LOG INSERT ERROR:", logErr && (logErr.message || logErr));
     }
+    const base = String(process.env.ERVENOW_PUBLIC_URL || "").replace(/\/$/, "");
+    const orderNo =
+      (order?.order_number && String(order.order_number).trim()) ||
+      (order?.id ? String(order.id).slice(0, 8) + "…" : "—");
+    const kmRaw = Number(order?.distance_km);
+    const kmStr = Number.isFinite(kmRaw) && kmRaw > 0 ? kmRaw.toFixed(1) + " كم" : "—";
+    const fee = Number(order?.delivery_fee) || Number(order?.driver_earning) || 0;
+    const trackPath = order?.id ? `/track?id=${encodeURIComponent(order.id)}` : "/orders";
+    const orderLink = base ? `${base}${trackPath.startsWith("/") ? trackPath : "/" + trackPath}` : trackPath;
     const msg =
-      "🚚 طلب جديد\n" +
-      "من: " +
-      String(order?.pickup_address || "-") +
-      "\n" +
-      "إلى: " +
-      String(order?.drop_address || "-") +
-      "\n" +
-      "الأجر: " +
-      (Number(order?.driver_earning) || Number(order?.delivery_fee) || 0) +
-      " ريال";
+      `أهلاً بكم في ERVENOW\n\n` +
+      `طلب جديد في المنصة\n` +
+      `رقم الطلب: ${orderNo}\n` +
+      `المسافة: ${kmStr}\n` +
+      `سعر التوصيل: ${fee} ريال\n\n` +
+      `رابط الطلب:\n${orderLink}\n\n` +
+      `افتح الرابط من جوالك لمتابعة الطلب أو من صفحة «إدارة الطلبات» بعد تسجيل الدخول كمندوب.`;
     try {
       await sendWhatsApp(d.phone, msg);
       if (row && row.id) {

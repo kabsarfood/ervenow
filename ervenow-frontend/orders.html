@@ -2,47 +2,144 @@
 <html lang="ar" dir="rtl">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>ERVENOW | الطلبات</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>ERVENOW | إدارة الطلبات</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/assets/styles.css" />
     <style>
-      .orders-grid {
-        display: grid;
-        gap: 12px;
+      .drv-orders {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 12px 14px 28px;
+        padding-bottom: max(28px, env(safe-area-inset-bottom));
       }
-      .order-card {
-        border: 1px solid rgba(0, 0, 0, 0.1);
-        border-radius: 12px;
-        padding: 12px;
-        background: #fff;
+      .drv-top {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 14px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid rgba(91, 55, 29, 0.15);
       }
-      .order-meta {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      .drv-phone {
+        font-weight: 800;
+        font-size: 1rem;
+        color: #3d2213;
+        letter-spacing: 0.02em;
+      }
+      .drv-actions {
+        display: flex;
+        flex-wrap: wrap;
         gap: 8px;
-        margin-top: 8px;
+        align-items: center;
       }
-      .order-meta div {
-        background: rgba(0, 0, 0, 0.04);
-        border-radius: 8px;
-        padding: 8px;
+      .drv-actions .btn {
+        padding: 8px 12px;
+        font-size: 0.88rem;
+      }
+      .drv-section {
+        margin-top: 18px;
+      }
+      .drv-section h2 {
+        margin: 0 0 10px;
+        font-size: 1.05rem;
+        color: #3d2213;
+      }
+      .drv-summary {
+        font-size: 0.88rem;
+        color: #6e5a4a;
+        margin-bottom: 10px;
+      }
+      .drv-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        background: #fff;
+        border: 1px solid rgba(91, 55, 29, 0.12);
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 1px 0 rgba(0, 0, 0, 0.04);
+      }
+      .drv-table thead th {
+        text-align: right;
+        font-size: 0.78rem;
+        font-weight: 800;
+        color: #5b371d;
+        background: #faf6f0;
+        padding: 10px 12px;
+        border-bottom: 1px solid rgba(91, 55, 29, 0.1);
+      }
+      .drv-table tbody td {
+        padding: 12px;
+        vertical-align: middle;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.06);
         font-size: 0.9rem;
       }
-      .order-actions {
-        display: flex;
-        gap: 8px;
-        flex-wrap: wrap;
-        margin-top: 10px;
+      .drv-table tbody tr:last-child td {
+        border-bottom: 0;
       }
-      .pill {
-        display: inline-block;
-        padding: 3px 9px;
-        border-radius: 999px;
-        font-size: 0.78rem;
-        font-weight: 700;
-        background: rgba(185, 135, 47, 0.15);
+      .drv-num {
+        font-weight: 800;
+        color: #1a120c;
+      }
+      .drv-actions-cell {
+        white-space: nowrap;
+      }
+      .drv-actions-cell .btn {
+        padding: 8px 14px;
+        font-size: 0.85rem;
+      }
+      .drv-empty {
+        padding: 20px 14px;
+        text-align: center;
+        color: #6e5a4a;
+        background: #fffdf9;
+        border: 1px dashed rgba(91, 55, 29, 0.2);
+        border-radius: 12px;
+        font-size: 0.92rem;
+      }
+      .drv-cards-mobile {
+        display: none;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .drv-mcard {
+        background: #fff;
+        border: 1px solid rgba(91, 55, 29, 0.12);
+        border-radius: 12px;
+        padding: 12px;
+      }
+      .drv-mrow {
+        display: flex;
+        justify-content: space-between;
+        gap: 8px;
+        margin-bottom: 6px;
+        font-size: 0.9rem;
+      }
+      .drv-mrow:last-of-type {
+        margin-bottom: 10px;
+      }
+      .drv-mrow span:first-child {
+        color: #6e5a4a;
+        font-size: 0.82rem;
+      }
+      @media (max-width: 640px) {
+        .drv-table-wrap {
+          display: none;
+        }
+        .drv-cards-mobile {
+          display: flex;
+        }
+        .drv-top {
+          flex-direction: column;
+          align-items: stretch;
+        }
+        .drv-actions {
+          justify-content: flex-start;
+        }
       }
       .alert {
         padding: 12px;
@@ -50,40 +147,45 @@
         background: #fff4e8;
         border: 1px solid #f0c991;
         color: #7a4f1d;
+        margin-top: 12px;
       }
     </style>
   </head>
   <body>
-    <div class="layout">
-      <div class="top-nav">
-        <h1 style="margin: 0">إدارة الطلبات</h1>
-        <div class="btn-row">
-          <a class="btn btn-ghost" href="/">الرئيسية</a>
+    <div class="layout drv-orders">
+      <div class="drv-top">
+        <div class="drv-phone" id="phoneLine" translate="no">—</div>
+        <div class="drv-actions">
+          <button class="btn btn-primary" id="refreshBtn" type="button">تحديث</button>
+          <a class="btn btn-ghost" href="/driver-wallet">المحفظة</a>
           <a class="btn btn-ghost" href="/track">التتبع</a>
+          <a class="btn btn-ghost" href="/">الرئيسية</a>
           <a class="btn btn-ghost" href="/login" id="logoutBtn">خروج</a>
         </div>
       </div>
 
-      <div class="card">
-        <div class="badge">بيانات المندوب</div>
-        <p class="sub" id="who">—</p>
-        <p class="sub" id="walletInfo">المحفظة: —</p>
-        <p class="sub" id="ratingInfo">التقييم: —</p>
+      <div class="top-nav" style="margin-bottom: 4px; padding-bottom: 0; border: none">
+        <h1 style="margin: 0; font-size: 1.25rem">إدارة الطلبات</h1>
       </div>
 
-      <div class="card">
-        <div class="badge">الطلبات المتاحة</div>
-        <div class="btn-row" style="margin-top: 8px">
-          <button class="btn btn-primary" id="refreshBtn" type="button">تحديث</button>
-        </div>
-        <p class="sub" id="summary" style="margin-top: 8px">—</p>
-        <div id="ordersList" class="orders-grid"></div>
+      <div class="drv-section" id="secAvailable">
+        <h2>الطلبات المتاحة</h2>
+        <p class="drv-summary" id="summaryAvailable">—</p>
+        <div class="drv-table-wrap" id="wrapAvailable"></div>
+        <div class="drv-cards-mobile" id="cardsAvailable"></div>
+      </div>
+
+      <div class="drv-section" id="secMine">
+        <h2>طلباتي النشطة</h2>
+        <p class="drv-summary" id="summaryMine">—</p>
+        <div class="drv-table-wrap" id="wrapMine"></div>
+        <div class="drv-cards-mobile" id="cardsMine"></div>
       </div>
 
       <div id="msg" class="alert" style="display: none"></div>
     </div>
 
-    <audio id="newOrderSound" src="/sound.mp3" preload="none"></audio>
+    <audio id="newOrderSound" src="/sound.mp3" preload="auto"></audio>
 
     <script src="/assets/api-config.js"></script>
     <script src="/assets/api.js"></script>
@@ -94,6 +196,7 @@
       var pollTimer = null;
       var activeOrderIds = [];
       var locationTimer = null;
+      var notifAsked = false;
 
       function showMsg(t) {
         var el = document.getElementById("msg");
@@ -101,25 +204,38 @@
         el.textContent = t;
       }
 
-      function srcLabel(o) {
-        var src = String(o.series_source || "").toLowerCase();
-        var mix = (String(o.pickup_address || "") + " " + String(o.notes || "")).toLowerCase();
-        if (src.includes("kabsar") || mix.includes("مطعم") || mix.includes("restaurant")) return "مطعم";
-        if (mix.includes("صيدل") || mix.includes("pharmacy")) return "صيدلية";
-        if (mix.includes("خدم") || mix.includes("service")) return "خدمات";
-        return "طلب منصة";
+      function haversineKm(lat1, lng1, lat2, lng2) {
+        var R = 6371;
+        var dLat = ((lat2 - lat1) * Math.PI) / 180;
+        var dLng = ((lng2 - lng1) * Math.PI) / 180;
+        var a =
+          Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+          Math.cos((lat1 * Math.PI) / 180) *
+            Math.cos((lat2 * Math.PI) / 180) *
+            Math.sin(dLng / 2) *
+            Math.sin(dLng / 2);
+        return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
       }
 
-      function statusAr(s) {
-        return (
-          {
-            new: "جديد",
-            pending: "بانتظار مندوب",
-            accepted: "تم قبوله",
-            delivering: "قيد التوصيل",
-            delivered: "تم التسليم",
-          }[s] || s || "—"
-        );
+      function orderKm(o) {
+        var dk = Number(o.distance_km);
+        if (Number.isFinite(dk) && dk > 0) return Math.round(dk * 10) / 10;
+        var a = Number(o.pickup_lat),
+          b = Number(o.pickup_lng),
+          c = Number(o.drop_lat),
+          d = Number(o.drop_lng);
+        if (Number.isFinite(a) && Number.isFinite(b) && Number.isFinite(c) && Number.isFinite(d)) {
+          return Math.round(haversineKm(a, b, c, d) * 10) / 10;
+        }
+        return null;
+      }
+
+      function orderFee(o) {
+        return Math.round((Number(o.delivery_fee) || 0) * 100) / 100;
+      }
+
+      function orderNo(o) {
+        return (o.order_number && String(o.order_number).trim()) || String(o.id).slice(0, 8) + "…";
       }
 
       function routeToMaps(order) {
@@ -134,11 +250,44 @@
         window.open(url, "_blank", "noopener,noreferrer");
       }
 
+      function playNewOrderSound() {
+        var snd = document.getElementById("newOrderSound");
+        if (!snd || typeof snd.play !== "function") return;
+        try {
+          snd.currentTime = 0;
+          snd.play().catch(function () {});
+        } catch (e) {}
+      }
+
+      function notifyBrowserNewOrder(count) {
+        if (!("Notification" in window)) return;
+        if (Notification.permission === "granted") {
+          try {
+            new Notification("ERVENOW", {
+              body: "طلب جديد في المنصة — المتاح الآن: " + count,
+              tag: "ervenow-order",
+            });
+          } catch (e) {}
+          return;
+        }
+        if (!notifAsked && Notification.permission === "default") {
+          notifAsked = true;
+          Notification.requestPermission().then(function (p) {
+            if (p === "granted") notifyBrowserNewOrder(count);
+          });
+        }
+      }
+
       async function acceptOrder(order) {
         try {
-          await window.PlatformAPI.api("/api/driver/accept/" + encodeURIComponent(order.id), {
+          var j = await window.PlatformAPI.api("/api/driver/accept/" + encodeURIComponent(order.id), {
             method: "POST",
           });
+          if (j.accepted === false) {
+            showMsg(j.message || "تم استلام الطلب من مندوب آخر");
+            await loadOrders();
+            return;
+          }
           await loadOrders();
         } catch (e) {
           showMsg(e.message || String(e));
@@ -201,133 +350,182 @@
         }
       }
 
-      async function acceptAndStart(order) {
-        try {
-          await window.PlatformAPI.api("/api/driver/accept/" + encodeURIComponent(order.id), {
-            method: "POST",
-          });
-          window.open("/track?id=" + encodeURIComponent(order.id), "_blank", "noopener,noreferrer");
-          routeToMaps(order);
-          await loadOrders();
-        } catch (e) {
-          showMsg(e.message || String(e));
-        }
-      }
-
-      function renderOrders(orders) {
-        var wrap = document.getElementById("ordersList");
-        wrap.innerHTML = "";
-        if (!orders.length) {
-          wrap.innerHTML = '<p class="sub">لا توجد طلبات حالياً.</p>';
-          return;
-        }
-
-        orders.forEach(function (o) {
-          var ds = o.delivery_status || o.status;
-          var card = document.createElement("div");
-          card.className = "order-card";
-          var orderNo = (o.order_number && String(o.order_number).trim()) || String(o.id).slice(0, 8) + "…";
-          var fee = Number(o.delivery_fee) || 0;
-          var customerPhone = o.customer_phone ? String(o.customer_phone) : "غير متوفر";
-
-          card.innerHTML =
-            '<div style="display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap;">' +
-            "<strong>رقم الطلب: <span translate=\"no\">" +
-            orderNo +
-            "</span></strong>" +
-            '<span class="pill">' +
-            statusAr(ds) +
-            "</span>" +
-            "</div>" +
-            '<div class="order-meta">' +
-            "<div><strong>الجهة:</strong><br/>" +
-            srcLabel(o) +
-            "</div>" +
-            "<div><strong>الموقع:</strong><br/>" +
-            (o.drop_address || "—") +
-            "</div>" +
-            "<div><strong>سعر التوصيل:</strong><br/>" +
-            fee.toFixed(2) +
-            " ريال</div>" +
-            "<div><strong>هاتف زائر المنصة:</strong><br/>" +
-            customerPhone +
-            "</div>" +
-            "</div>";
-
-          var actions = document.createElement("div");
-          actions.className = "order-actions";
-
-          if ((ds === "pending" || ds === "new") && (!o.driver_id || String(o.driver_id) === String(meUser.id))) {
-            var acceptBtn = document.createElement("button");
-            acceptBtn.type = "button";
-            acceptBtn.className = "btn btn-primary";
-            acceptBtn.textContent = "قبول الطلب";
-            acceptBtn.onclick = function () {
-              acceptOrder(o);
-            };
-            actions.appendChild(acceptBtn);
+      function splitOrders(visible, meId) {
+        var available = [];
+        var mine = [];
+        (visible || []).forEach(function (o) {
+          var ds = String(o.delivery_status || o.status || "").toLowerCase();
+          var open = (ds === "new" || ds === "pending") && !o.driver_id;
+          if (open) {
+            available.push(o);
+            return;
           }
-
-          if (o.driver_id && String(o.driver_id) === String(meUser.id)) {
-            if (ds === "accepted") {
-              var startBtn = document.createElement("button");
-              startBtn.type = "button";
-              startBtn.className = "btn btn-primary";
-              startBtn.textContent = "استلام الطلب";
-              startBtn.onclick = function () {
-                startDelivery(o);
-              };
-              actions.appendChild(startBtn);
-            }
-
-            if (ds === "accepted" || ds === "delivering") {
-              var doneBtn = document.createElement("button");
-              doneBtn.type = "button";
-              doneBtn.className = "btn btn-ghost";
-              doneBtn.textContent = "تم التسليم";
-              doneBtn.onclick = function () {
-                completeOrder(o);
-              };
-              actions.appendChild(doneBtn);
-            }
-
-            var mapBtn = document.createElement("button");
-            mapBtn.type = "button";
-            mapBtn.className = "btn btn-ghost";
-            mapBtn.textContent = "فتح خارطة الطريق";
-            mapBtn.onclick = function () {
-              routeToMaps(o);
-            };
-            actions.appendChild(mapBtn);
+          if (o.driver_id && meId && String(o.driver_id) === String(meId)) {
+            mine.push(o);
           }
-
-          var trackBtn = document.createElement("a");
-          trackBtn.className = "btn btn-ghost";
-          trackBtn.href = "/track?id=" + encodeURIComponent(o.id);
-          trackBtn.textContent = "فتح التتبع";
-          actions.appendChild(trackBtn);
-
-          card.appendChild(actions);
-          wrap.appendChild(card);
         });
+        return { available: available, mine: mine };
       }
 
-      async function loadWalletAndRating() {
-        try {
-          var w = await window.PlatformAPI.api("/api/wallet");
-          document.getElementById("walletInfo").textContent =
-            "المحفظة: " + (w.balance != null ? w.balance : 0) + " ريال";
-        } catch (e) {
-          document.getElementById("walletInfo").textContent = "المحفظة: غير متاحة";
+      function renderTable(tbodyRowsHtml) {
+        return (
+          '<table class="drv-table" role="grid">' +
+          "<thead><tr>" +
+          "<th>طلب رقم</th>" +
+          "<th>المسافة</th>" +
+          "<th>السعر</th>" +
+          "<th></th>" +
+          "</tr></thead><tbody>" +
+          tbodyRowsHtml +
+          "</tbody></table>"
+        );
+      }
+
+      function renderOrderRows(orders, mode) {
+        var meId = meUser && meUser.id;
+        if (!orders.length) {
+          return { table: "", cards: '<div class="drv-empty">لا توجد طلبات.</div>' };
         }
-        try {
-          var r = await window.PlatformAPI.api("/api/driver/rating");
-          var avg = r.avg == null ? "—" : Number(r.avg).toFixed(1);
-          document.getElementById("ratingInfo").textContent =
-            "التقييم: " + avg + " (" + (r.count != null ? r.count : 0) + " تقييم)";
-        } catch (e) {
-          document.getElementById("ratingInfo").textContent = "التقييم: غير متاح";
+        var tableRows = "";
+        var cards = "";
+        orders.forEach(function (o) {
+          var ds = String(o.delivery_status || o.status || "").toLowerCase();
+          var num = orderNo(o);
+          var km = orderKm(o);
+          var kmStr = km != null ? km + " كم" : "—";
+          var fee = orderFee(o);
+          var feeStr = fee.toFixed(2) + " ريال";
+
+          var actionsHtml = "";
+          if (mode === "available") {
+            actionsHtml =
+              '<button type="button" class="btn btn-primary btn-accept" data-id="' +
+              encodeURIComponent(o.id) +
+              '">قبول الطلب</button>';
+          } else {
+            if (ds === "accepted") {
+              actionsHtml +=
+                '<button type="button" class="btn btn-primary btn-start" data-id="' +
+                encodeURIComponent(o.id) +
+                '">استلام الطلب</button> ';
+            }
+            if (ds === "accepted" || ds === "delivering") {
+              actionsHtml +=
+                '<button type="button" class="btn btn-ghost btn-done" data-id="' +
+                encodeURIComponent(o.id) +
+                '">تم التسليم</button> ';
+            }
+            actionsHtml +=
+              '<a class="btn btn-ghost" href="/track?id=' +
+              encodeURIComponent(o.id) +
+              '">تتبع</a> ' +
+              '<button type="button" class="btn btn-ghost btn-map" data-id="' +
+              encodeURIComponent(o.id) +
+              '">خريطة</button>';
+          }
+
+          tableRows +=
+            "<tr>" +
+            '<td><span class="drv-num" translate="no">' +
+            num +
+            "</span></td>" +
+            "<td translate=\"no\">" +
+            kmStr +
+            "</td>" +
+            "<td translate=\"no\">" +
+            feeStr +
+            "</td>" +
+            '<td class="drv-actions-cell">' +
+            actionsHtml +
+            "</td>" +
+            "</tr>";
+
+          cards +=
+            '<div class="drv-mcard" data-oid="' +
+            encodeURIComponent(o.id) +
+            '">' +
+            '<div class="drv-mrow"><span>طلب رقم</span><span class="drv-num" translate="no">' +
+            num +
+            "</span></div>" +
+            '<div class="drv-mrow"><span>المسافة</span><span translate="no">' +
+            kmStr +
+            "</span></div>" +
+            '<div class="drv-mrow"><span>السعر</span><span translate="no">' +
+            feeStr +
+            "</span></div>" +
+            '<div class="drv-actions-cell" style="margin-top:4px">' +
+            actionsHtml +
+            "</div></div>";
+        });
+
+        return { table: renderTable(tableRows), cards: cards };
+      }
+
+      function wireOrderButtons(wrapEl, cardsEl, orders, mode) {
+        function findOrder(id) {
+          var u = decodeURIComponent(id);
+          for (var i = 0; i < orders.length; i++) {
+            if (String(orders[i].id) === u) return orders[i];
+          }
+          return null;
         }
+        function bind(container) {
+          if (!container) return;
+          container.querySelectorAll(".btn-accept").forEach(function (btn) {
+            btn.onclick = function () {
+              var id = btn.getAttribute("data-id");
+              var o = findOrder(id);
+              if (o) acceptOrder(o);
+            };
+          });
+          container.querySelectorAll(".btn-start").forEach(function (btn) {
+            btn.onclick = function () {
+              var o = findOrder(btn.getAttribute("data-id"));
+              if (o) startDelivery(o);
+            };
+          });
+          container.querySelectorAll(".btn-done").forEach(function (btn) {
+            btn.onclick = function () {
+              var o = findOrder(btn.getAttribute("data-id"));
+              if (o) completeOrder(o);
+            };
+          });
+          container.querySelectorAll(".btn-map").forEach(function (btn) {
+            btn.onclick = function () {
+              var o = findOrder(btn.getAttribute("data-id"));
+              if (o) routeToMaps(o);
+            };
+          });
+        }
+        bind(wrapEl);
+        bind(cardsEl);
+      }
+
+      function renderOrders(visible) {
+        var meId = meUser && meUser.id;
+        var sp = splitOrders(visible, meId);
+        var av = sp.available;
+        var mine = sp.mine;
+
+        document.getElementById("summaryAvailable").textContent =
+          "المتاحة للقبول: " + av.length + (av.length ? "" : " — لا توجد طلبات مفتوحة حالياً");
+        document.getElementById("summaryMine").textContent =
+          mine.length ? "عدد طلباتك الجارية: " + mine.length : "لا توجد طلبات مسندة إليك حالياً";
+
+        var ra = renderOrderRows(av, "available");
+        var wa = document.getElementById("wrapAvailable");
+        var ca = document.getElementById("cardsAvailable");
+        wa.innerHTML = av.length ? ra.table : '<div class="drv-empty">لا توجد طلبات متاحة.</div>';
+        ca.innerHTML = av.length ? ra.cards : "";
+
+        var rm = renderOrderRows(mine, "mine");
+        var wm = document.getElementById("wrapMine");
+        var cm = document.getElementById("cardsMine");
+        wm.innerHTML = mine.length ? rm.table : '<div class="drv-empty">لا شيء هنا بعد قبول طلب.</div>';
+        cm.innerHTML = mine.length ? rm.cards : "";
+
+        wireOrderButtons(wa, ca, av, "available");
+        wireOrderButtons(wm, cm, mine, "mine");
       }
 
       async function loadOrders() {
@@ -335,28 +533,32 @@
           var j = await window.PlatformAPI.api("/api/delivery/orders");
           var all = j.orders || [];
           var visible = all.filter(function (o) {
-            var ds = o.delivery_status || o.status;
+            var ds = String(o.delivery_status || o.status || "").toLowerCase();
             if (!["new", "pending", "accepted", "delivering"].includes(ds)) return false;
             if (!o.driver_id) return true;
             return meUser && String(o.driver_id) === String(meUser.id);
           });
 
           var pendingCount = visible.filter(function (o) {
-            var ds = o.delivery_status || o.status;
-            return ds === "pending" || ds === "new";
+            var ds = String(o.delivery_status || o.status || "").toLowerCase();
+            return (ds === "pending" || ds === "new") && !o.driver_id;
           }).length;
-          document.getElementById("summary").textContent =
-            "إجمالي الطلبات المعروضة: " + visible.length + " — الجديدة: " + pendingCount;
 
           if (pendingCount > lastPendingCount) {
-            var snd = document.getElementById("newOrderSound");
-            if (snd && typeof snd.play === "function") snd.play().catch(function () {});
+            playNewOrderSound();
+            notifyBrowserNewOrder(pendingCount);
           }
           lastPendingCount = pendingCount;
+
           activeOrderIds = visible
             .filter(function (o) {
               var ds = String(o.delivery_status || o.status || "").toLowerCase();
-              return o.driver_id && String(o.driver_id) === String(meUser.id) && (ds === "accepted" || ds === "delivering");
+              return (
+                o.driver_id &&
+                meUser &&
+                String(o.driver_id) === String(meUser.id) &&
+                (ds === "accepted" || ds === "delivering")
+              );
             })
             .map(function (o) {
               return o.id;
@@ -371,8 +573,8 @@
       async function init() {
         if (!token) {
           document.body.innerHTML =
-            '<div style="text-align:center;margin-top:50px;">' +
-            "<h2>🔒 الرجاء تسجيل الدخول كمندوب</h2>" +
+            '<div style="text-align:center;margin-top:50px;font-family:Cairo,sans-serif">' +
+            "<h2>الرجاء تسجيل الدخول كمندوب</h2>" +
             '<a href="/driver-login">تسجيل الدخول</a>' +
             "</div>";
           return;
@@ -386,12 +588,11 @@
             showMsg("هذه الصفحة مخصصة للمندوبين.");
             return;
           }
-          var title = meUser.phone || (me.profile && me.profile.name) || meUser.id || "—";
-          document.getElementById("who").textContent = "المندوب: " + title;
+          var phone = meUser.phone || (me.profile && me.profile.name) || meUser.id || "—";
+          document.getElementById("phoneLine").textContent = phone;
 
-          await loadWalletAndRating();
           await loadOrders();
-          pollTimer = setInterval(loadOrders, 7000);
+          pollTimer = setInterval(loadOrders, 6000);
           startLocationLoop();
           sendLocationToActiveOrders();
         } catch (e) {
@@ -399,9 +600,16 @@
         }
       }
 
-      document.getElementById("refreshBtn").onclick = function () {
+      document.getElementById("refreshBtn").addEventListener("click", function () {
+        try {
+          var snd = document.getElementById("newOrderSound");
+          if (snd) {
+            snd.currentTime = 0;
+            snd.play().catch(function () {});
+          }
+        } catch (e) {}
         loadOrders();
-      };
+      });
 
       document.getElementById("logoutBtn").onclick = function (e) {
         e.preventDefault();
