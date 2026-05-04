@@ -98,6 +98,22 @@ function isCancelledOrder(row) {
   return s === "cancelled" || s === "cancelled_by_customer" || s === "canceled" || s === "canceled_by_customer";
 }
 
+/** مبلغ الفاتورة للعرض والإيراد: total_with_vat أولاً (طلبات توصيل)، ثم تجميع، ثم total_amount / order_total */
+function orderBillableAmount(row) {
+  if (!row || typeof row !== "object") return 0;
+  const twv = Number(row.total_with_vat);
+  if (Number.isFinite(twv) && twv > 0) return Math.round(twv * 100) / 100;
+  const ot = Number(row.order_total) || 0;
+  const df = Number(row.delivery_fee) || 0;
+  const vat = Number(row.vat_amount) || 0;
+  const composed = ot + df + vat;
+  if (Number.isFinite(composed) && composed > 0) return Math.round(composed * 100) / 100;
+  const ta = Number(row.total_amount);
+  if (Number.isFinite(ta) && ta > 0) return Math.round(ta * 100) / 100;
+  if (Number.isFinite(ot) && ot > 0) return Math.round(ot * 100) / 100;
+  return 0;
+}
+
 function isStoresTableMissing(err) {
   if (!err) return false;
   if (String(err.code || "") === "42P01") return true;
@@ -859,11 +875,10 @@ router.get("/stats", requireAuth, requireRole("admin"), requireAdminPermission("
     const todayIso = startToday.toISOString();
     const rangeIso = rangeMeta.start.toISOString();
 
-    const orders = await safeSelectRows(
-      req.supabase,
-      "orders",
-      "id, created_at, delivery_status, status, order_total, total_amount, platform_fee, driver_earning"
-    );
+    const orders = await safeSelectRowsWithFallback(req.supabase, "orders", [
+      "id, created_at, delivery_status, status, order_total, total_amount, delivery_fee, vat_amount, total_with_vat, platform_fee, driver_earning",
+      "id, created_at, delivery_status, status, order_total, total_amount, platform_fee, driver_earning",
+    ]);
     const services = await safeSelectRowsWithFallback(req.supabase, "service_bookings", [
       "id, created_at, status, total_amount, total, platform_commission",
       "id, created_at, status, total_amount, total",
@@ -887,7 +902,7 @@ router.get("/stats", requireAuth, requireRole("admin"), requireAdminPermission("
 
     const revenueOrders = allOrders.reduce((a, b) => {
       if (isCancelledOrder(b)) return a;
-      return a + (Number(b.order_total) || Number(b.total_amount) || 0);
+      return a + orderBillableAmount(b);
     }, 0);
     const revenueServices = allServices.reduce((a, b) => {
       const amount = amountFromRow(b);
@@ -905,7 +920,7 @@ router.get("/stats", requireAuth, requireRole("admin"), requireAdminPermission("
     const revenueOrdersToday = allOrders.reduce((a, b) => {
       if (isCancelledOrder(b)) return a;
       if (!(b.created_at >= todayIso)) return a;
-      return a + (Number(b.order_total) || Number(b.total_amount) || 0);
+      return a + orderBillableAmount(b);
     }, 0);
     const revenueServicesToday = allServices.reduce((a, b) => {
       if (!(b.created_at >= todayIso)) return a;
@@ -934,13 +949,36 @@ router.get("/stats", requireAuth, requireRole("admin"), requireAdminPermission("
 
 router.get("/orders", requireAuth, requireRole("admin"), requireAdminPermission("orders"), async (req, res) => {
   try {
-    const { data, error } = await req.supabase
+    const selectFull =
+      "id, order_number, delivery_status, status, created_at, order_total, total_amount, delivery_fee, vat_amount, total_with_vat";
+    let { data, error } = await req.supabase
       .from("orders")
-      .select("id, order_number, delivery_status, status, created_at, order_total, total_amount")
+      .select(selectFull)
       .order("created_at", { ascending: false })
       .limit(20);
+    if (error && isSchemaMissingError(error)) {
+      const r2 = await req.supabase
+        .from("orders")
+        .select("id, order_number, delivery_status, status, created_at, order_total, total_amount")
+        .order("created_at", { ascending: false })
+        .limit(20);
+      data = r2.data;
+      error = r2.error;
+    }
     if (error) return fail(res, error.message, 400);
-    return ok(res, { orders: data || [] });
+    const rows = (data || []).map((o) => {
+      if (!isCancelledOrder(o)) {
+        const twv = o.total_with_vat;
+        if (twv == null || twv === "" || Number(twv) === 0) {
+          console.warn("⚠️ Missing total_with_vat", o.id);
+        }
+      }
+      return {
+        ...o,
+        amount_display: orderBillableAmount(o),
+      };
+    });
+    return ok(res, { orders: rows });
   } catch (e) {
     return fail(res, e.message || String(e), 500);
   }

@@ -10,6 +10,13 @@ const { createServiceClient } = require("../../shared/config/supabase");
 const { notifyDriver } = require("./notify");
 const { bumpDeliveryOrdersListEpoch } = require("../../shared/utils/deliveryOrdersListCache");
 const { setStatus } = require("../delivery/service");
+const {
+  sendOTP,
+  sendOrderAcceptedToCustomer,
+  sendCustomerDeliveringNotice,
+  sendDriverArrived,
+} = require("../../shared/services/whatsappService");
+const { attachSiteSessionCookie } = require("../../shared/middleware/publicSiteOtpGate");
 
 const router = express.Router();
 
@@ -163,9 +170,9 @@ router.post("/send-otp", async (req, res) => {
 
     let sent = false;
     try {
-      sent = await sendWhatsApp({
-        to: digits,
+      sent = await sendOTP(digits, code, {
         message: `رمز دخول المندوب ERVENOW: ${code}`,
+        type: "otp_driver",
       });
     } catch (e) {
       sent = false;
@@ -206,6 +213,7 @@ router.post("/verify-otp", async (req, res) => {
 
     const user = await upsertDriverUser(req.supabase, digits);
     const token = signDriverToken(user.id, digits);
+    attachSiteSessionCookie(req, res, token);
     return ok(res, {
       token,
       driver: {
@@ -385,6 +393,9 @@ router.post("/accept/:id", requireAuth, async (req, res) => {
       });
     }
     await bumpDeliveryOrdersListEpoch();
+    if (data.customer_phone) {
+      await sendOrderAcceptedToCustomer(data, req.appUser.phone);
+    }
     return ok(res, { accepted: true, order: data });
   } catch (e) {
     return fail(res, e.message, 500);
@@ -449,6 +460,10 @@ router.post("/start-delivery/:id", requireAuth, async (req, res) => {
       .maybeSingle();
     if (error) return fail(res, error.message, 400);
     if (!data) return fail(res, "order not available", 400);
+    if (data.customer_phone) {
+      await sendCustomerDeliveringNotice(data);
+    }
+    await bumpDeliveryOrdersListEpoch();
     return ok(res, { order: data });
   } catch (e) {
     return fail(res, e.message, 500);
@@ -464,6 +479,9 @@ router.post("/complete-order/:id", requireAuth, async (req, res) => {
     const { data, error } = await setStatus(req.supabase, id, "delivered", req.appUser);
     if (error) return fail(res, error.message || "order not available", 400);
     if (!data) return fail(res, "order not available", 400);
+    if (data.customer_phone) {
+      await sendDriverArrived(data);
+    }
     if (data.store_id) {
       try {
         const { error: rpcErr } = await req.supabase.rpc("increment_store_orders", { store_id: data.store_id });

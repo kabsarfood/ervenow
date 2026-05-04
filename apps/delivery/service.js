@@ -5,6 +5,7 @@ const { onDeliveryDelivered } = require("../finance/hooks");
 const { normalizePhone } = require("../../shared/utils/phone");
 const { getOsrmRouteKmOrHaversine } = require("../../shared/utils/osrmClient");
 const { logger } = require("../../shared/utils/logger");
+const { normalizeOrderFinancialsForInsert } = require("../../shared/utils/orderTotals");
 
 function haversineDistanceKm(lat1, lng1, lat2, lng2) {
   const R = 6371;
@@ -303,7 +304,7 @@ async function insertDeliveryOrderWithRetry(sb, buildRow) {
 
     await new Promise((r) => setTimeout(r, delay + jitter));
     const order_number = await buildNextDeliveryOrderNumber(sb);
-    const row = buildRow(order_number);
+    const row = normalizeOrderFinancialsForInsert(buildRow(order_number));
     const { data, error } = await sb.from("orders").insert(row).select().single();
     if (!error) {
       if (data) await insertVatRecordForOrder(sb, data);

@@ -16,6 +16,7 @@ const {
   releaseCheckoutIdempotency,
 } = require("../../shared/utils/checkoutIdempotency");
 const { logger } = require("../../shared/utils/logger");
+const { normalizeOrderFinancialsForInsert } = require("../../shared/utils/orderTotals");
 
 const router = express.Router();
 
@@ -299,7 +300,8 @@ router.post("/", requireAuth, checkoutLimiter, async (req, res) => {
       let insertErr = null;
       for (let insAttempt = 0; insAttempt < 5; insAttempt += 1) {
         row.order_number = await allocateUniqueOrderNumber(sb, orderPrefix);
-        const ins = await sb.from("orders").insert(row).select().single();
+        const insertRow = normalizeOrderFinancialsForInsert(row);
+        const ins = await sb.from("orders").insert(insertRow).select().single();
         data = ins.data;
         insertErr = ins.error;
         if (!insertErr) break;

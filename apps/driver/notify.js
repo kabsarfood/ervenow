@@ -1,7 +1,6 @@
 const twilio = require("twilio");
-const { toE164 } = require("../../shared/utils/phone");
-const { roughDistanceKm } = require("../../shared/utils/geo");
-const { routeKmWithRoughFallback } = require("../../shared/utils/routeDistance");
+const { toE164, normalizePhone } = require("../../shared/utils/phone");
+const { sendNewOrderToDriver } = require("../../shared/services/whatsappService");
 
 const seen = new Map();
 const TTL_MS = 60 * 1000;
@@ -120,7 +119,7 @@ async function notifyNearestDrivers(sb, order) {
         .insert({
           order_id: order.id,
           driver_id: d.id,
-          phone: d.phone,
+          phone: normalizePhone(d.phone) || String(d.phone || "").replace(/\D/g, ""),
           status: "pending",
         })
         .select()
@@ -129,26 +128,9 @@ async function notifyNearestDrivers(sb, order) {
     } catch (logErr) {
       console.error("NOTIFY LOG INSERT ERROR:", logErr && (logErr.message || logErr));
     }
-    const base = String(process.env.ERVENOW_PUBLIC_URL || "").replace(/\/$/, "");
-    const orderNo =
-      (order?.order_number && String(order.order_number).trim()) ||
-      (order?.id ? String(order.id).slice(0, 8) + "…" : "—");
-    const kmRaw = Number(order?.distance_km);
-    const kmStr = Number.isFinite(kmRaw) && kmRaw > 0 ? kmRaw.toFixed(1) + " كم" : "—";
-    const fee = Number(order?.delivery_fee) || Number(order?.driver_earning) || 0;
-    const trackPath = order?.id ? `/track?id=${encodeURIComponent(order.id)}` : "/orders";
-    const orderLink = base ? `${base}${trackPath.startsWith("/") ? trackPath : "/" + trackPath}` : trackPath;
-    const msg =
-      `أهلاً بكم في ERVENOW\n\n` +
-      `طلب جديد في المنصة\n` +
-      `رقم الطلب: ${orderNo}\n` +
-      `المسافة: ${kmStr}\n` +
-      `سعر التوصيل: ${fee} ريال\n\n` +
-      `رابط الطلب:\n${orderLink}\n\n` +
-      `افتح الرابط من جوالك لمتابعة الطلب أو من صفحة «إدارة الطلبات» بعد تسجيل الدخول كمندوب.`;
     try {
-      await sendWhatsApp(d.phone, msg);
-      if (row && row.id) {
+      const sentOk = await sendNewOrderToDriver(d, order);
+      if (sentOk && row && row.id) {
         await sb
           .from("driver_notifications")
           .update({
@@ -158,9 +140,17 @@ async function notifyNearestDrivers(sb, order) {
             error: null,
           })
           .eq("id", row.id);
+        sent += 1;
+      } else if (row && row.id) {
+        await sb
+          .from("driver_notifications")
+          .update({
+            status: "failed",
+            error: sentOk ? "unknown" : "WA send skipped or failed",
+            attempts: Number(row.attempts || 0) + 1,
+          })
+          .eq("id", row.id);
       }
-      sent += 1;
-      console.log("WA SENT:", d.phone);
     } catch (e) {
       if (row && row.id) {
         try {

@@ -758,7 +758,14 @@
         root.innerHTML = rows
           .map(function (o) {
             var st = o.delivery_status || o.status || "—";
-            var amount = Number(o.order_total || o.total_amount || 0);
+            var amount = Number(
+              o.amount_display ||
+                o.total_with_vat ||
+                (Number(o.order_total || 0) + Number(o.delivery_fee || 0) + Number(o.vat_amount || 0)) ||
+                o.order_total ||
+                o.total_amount ||
+                0
+            );
             return (
               '<div class="item">' +
               '<div class="line"><strong>' + (o.order_number || String(o.id || "").slice(0, 8)) + "</strong></div>" +

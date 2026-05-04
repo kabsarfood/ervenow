@@ -16,6 +16,7 @@ const {
   markWithdrawalPaid,
   rejectWithdrawal,
 } = require("./walletService");
+const { normalizeOrderFinancialsForInsert } = require("../../shared/utils/orderTotals");
 
 const router = express.Router();
 
@@ -43,7 +44,7 @@ router.post("/orders", requireAuth, async (req, res) => {
     const customerId =
       req.appUser.role === "admin" && body.customer_id ? body.customer_id : req.appUser.id;
 
-    const row = {
+    const row = normalizeOrderFinancialsForInsert({
       customer_id: customerId,
       merchant_id: body.merchant_id || null,
       driver_id: body.driver_id || null,
@@ -59,7 +60,7 @@ router.post("/orders", requireAuth, async (req, res) => {
       status: body.status && String(body.status) === "accepted" ? "accepted" : "new",
       delivery_status: "pending",
       breakdown: {},
-    };
+    });
 
     const { data, error } = await req.supabase.from("orders").insert(row).select().single();
     if (error) return fail(res, error.message, 400);

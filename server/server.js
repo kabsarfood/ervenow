@@ -22,6 +22,8 @@ const driverRoutes = require("../apps/driver/routes");
 const walletRoutes = require("../apps/wallet/routes");
 const adminRoutes = require("../apps/admin/routes");
 const invoiceRoutes = require("../apps/invoice/routes");
+const whatsappRoutes = require("../apps/whatsapp/routes");
+const { publicSiteOtpGate } = require("../shared/middleware/publicSiteOtpGate");
 const { pushToErvenow } = require("../shared/utils/ervenowPush");
 const { startRetryNotificationsWorker } = require("../apps/driver/retryNotifications");
 const { createServiceClient } = require("../shared/config/supabase");
@@ -262,6 +264,10 @@ app.use("/api/driver", driverRoutes);
 app.use("/api/wallet", walletRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/invoice", invoiceRoutes);
+app.use("/api/whatsapp", whatsappRoutes);
+
+/** بوابة واجهة الموقع (OTP) — بعد كل مسارات API */
+app.use(publicSiteOtpGate);
 
 app.get("/api/health", (_req, res) => {
   res.json({
@@ -280,6 +286,7 @@ app.get("/api/health", (_req, res) => {
       "/api/checkout",
       "/api/store",
       "/api/invoice",
+      "/api/whatsapp",
     ],
   });
 });

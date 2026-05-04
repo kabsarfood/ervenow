@@ -5,7 +5,8 @@ const { requireRole } = require("../../shared/middleware/roles");
 const { ok, fail } = require("../../shared/utils/helpers");
 const { toE164, toStorageDigits, isErvnowSaudiMobileE164 } = require("../../shared/utils/phone");
 const { createServiceClient, getDatabaseConfigHint } = require("../../shared/config/supabase");
-const { sendWhatsApp } = require("../../shared/utils/whatsapp");
+const { sendOTP } = require("../../shared/services/whatsappService");
+const { attachSiteSessionCookie, clearSiteSessionCookie } = require("../../shared/middleware/publicSiteOtpGate");
 
 const router = express.Router();
 const otpStore = new Map();
@@ -228,6 +229,14 @@ router.get("/public-config", (_req, res) => {
   }
 });
 
+/** إنهاء جلسة البوابة (كوكي HttpOnly) — يُستخدم عند تعطيل البوابة لاحقاً أو تسجيل خروج من الواجهة */
+router.get("/site-gate-logout", (req, res) => {
+  clearSiteSessionCookie(req, res);
+  const next = String(req.query.next || "").trim();
+  const safe = next.startsWith("/") && !next.startsWith("//") ? next : "/login";
+  res.redirect(302, safe);
+});
+
 router.post("/send-otp", async (req, res) => {
   try {
     const raw = req.body?.phone;
@@ -253,11 +262,12 @@ router.post("/send-otp", async (req, res) => {
     otpStore.set(key, { code, expiresAt: Date.now() + OTP_TTL_MS });
     let sent = false;
     try {
-      sent = await sendWhatsApp({
-        to: digits,
-        message: role === "admin"
-          ? `رمز دخول لوحة إدارة ERVENOW: ${code}`
-          : `رمز دخول ERVENOW: ${code}`,
+      sent = await sendOTP(digits, code, {
+        message:
+          role === "admin"
+            ? `رمز دخول لوحة إدارة ERVENOW: ${code}`
+            : `رمز دخول ERVENOW: ${code}`,
+        type: role === "admin" ? "otp_admin" : "otp_login",
       });
     } catch (waErr) {
       console.error("[ERVENOW] send-otp whatsapp error:", waErr?.message || waErr);
@@ -356,6 +366,7 @@ router.post("/verify-otp", async (req, res) => {
     }
 
     const token = signPlatformToken(userRow.id, digits, userRow.role || wantRole);
+    attachSiteSessionCookie(req, res, token);
 
     ok(res, {
       success: true,

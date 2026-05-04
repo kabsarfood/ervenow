@@ -19,6 +19,11 @@ const { deliveryOrdersCreateLimiter } = require("../../shared/middleware/apiRate
 const { normalizeIdempotencyKey } = require("../../shared/utils/idempotency");
 const { isAllowedDeliveryStatusTransition } = require("../../shared/utils/deliveryStateMachine");
 const { logger } = require("../../shared/utils/logger");
+const {
+  sendOrderAcceptedToCustomer,
+  sendCustomerDeliveringNotice,
+  sendDriverArrived,
+} = require("../../shared/services/whatsappService");
 const { cacheGetJson, cacheSetJson } = require("../../shared/utils/redisCache");
 const {
   readListEpoch,
@@ -203,22 +208,11 @@ router.post("/orders/:id/accept", requireAuth, requireRole("driver"), async (req
 
     if (data) {
       await bumpDeliveryOrdersListEpoch();
-      const base = String(process.env.ERVENOW_PUBLIC_URL || "").replace(/\/$/, "");
-      const trackUrl = `${base || ""}/track?id=${encodeURIComponent(data.id)}`;
       const orderLabel = data.order_number || String(data.id);
       const driverInfo = req.appUser.phone || req.appUser.id;
 
       if (data.customer_phone) {
-        const customerMessage = `🚚 تم استلام طلبك
-
-رقم الطلب: ${orderLabel}
-المندوب: ${driverInfo}
-تابع الطلب: ${trackUrl}`.trim();
-        try {
-          await sendWhatsApp({ to: data.customer_phone, message: customerMessage });
-        } catch (e) {
-          logger.error({ err: e && (e.message || String(e)), orderId: data.id }, "[delivery/accept] customer WhatsApp");
-        }
+        await sendOrderAcceptedToCustomer(data, driverInfo);
       }
 
       const providerPhone =
@@ -306,7 +300,17 @@ router.patch("/orders/:id/status", requireAuth, async (req, res) => {
     }
     const { data, error } = await setStatus(req.supabase, orderId, nextStatus, req.appUser);
     if (error) return fail(res, error.message, 400);
-    if (data) await bumpDeliveryOrdersListEpoch();
+    if (data) {
+      await bumpDeliveryOrdersListEpoch();
+      const ds = String(nextStatus || "").toLowerCase();
+      if (data.customer_phone) {
+        if (ds === "delivering") {
+          await sendCustomerDeliveringNotice(data);
+        } else if (ds === "delivered") {
+          await sendDriverArrived(data);
+        }
+      }
+    }
     ok(res, { order: data });
   } catch (e) {
     fail(res, e.message, 500);
