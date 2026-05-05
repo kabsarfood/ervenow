@@ -295,6 +295,17 @@
           } else {
             localStorage.setItem("ervenow_access_token", data.token);
           }
+          try {
+            var maxAgeSec = 7 * 24 * 60 * 60;
+            var c =
+              "auth_token=" +
+              encodeURIComponent(data.token) +
+              "; path=/; max-age=" +
+              maxAgeSec +
+              "; SameSite=Lax";
+            if (location.protocol === "https:") c += "; Secure";
+            document.cookie = c;
+          } catch (cookieErr) {}
           window.location.href = "/admin-dashboard";
         } catch (e) {
           setMsg(mapOtpError(e.message || "فشل الدخول"), "err");

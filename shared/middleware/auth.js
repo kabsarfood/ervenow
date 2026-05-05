@@ -118,6 +118,13 @@ async function requireAuth(req, res, next) {
         if (dbUser.status) effectiveStatus = dbUser.status;
         if (dbUser.phone) req.authUser = { id: sub, phone: dbUser.phone };
         if (dbUser.name != null && String(dbUser.name).trim()) displayName = String(dbUser.name).trim();
+
+        const normPhone = (x) => String(x || "").replace(/\D/g, "");
+        const pTok = normPhone(phone);
+        const pDb = normPhone(dbUser.phone);
+        if (pTok && pDb && pTok !== pDb) {
+          return res.status(401).json({ ok: false, error: "Invalid or expired session" });
+        }
       }
     } catch (_e) {}
 

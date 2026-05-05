@@ -5,6 +5,7 @@ const { ok, fail } = require("../../shared/utils/helpers");
 const { sendWhatsApp } = require("../../shared/utils/whatsapp");
 const { driverApprovedBody } = require("../../shared/messages/driverWhatsApp");
 const { getRiyadhDate } = require("../delivery/service");
+const { readState, writeState } = require("../../shared/utils/siteMaintenanceStore");
 
 const router = express.Router();
 
@@ -308,6 +309,24 @@ async function syncUserStatusByPhone(sb, phone, status) {
   }
   throw first.error;
 }
+
+router.get("/site-maintenance", requireAuth, requireRole("admin"), requireAdminPermission("dashboard"), async (_req, res) => {
+  try {
+    return ok(res, { enabled: readState() });
+  } catch (e) {
+    return fail(res, e.message || String(e), 500);
+  }
+});
+
+router.post("/site-maintenance", requireAuth, requireRole("admin"), requireAdminPermission("dashboard"), async (req, res) => {
+  try {
+    const enabled = !!req.body?.enabled;
+    writeState(enabled);
+    return ok(res, { enabled: readState() });
+  } catch (e) {
+    return fail(res, e.message || String(e), 500);
+  }
+});
 
 router.get("/me", requireAuth, requireRole("admin"), async (req, res) => {
   try {

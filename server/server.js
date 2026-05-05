@@ -23,7 +23,8 @@ const walletRoutes = require("../apps/wallet/routes");
 const adminRoutes = require("../apps/admin/routes");
 const invoiceRoutes = require("../apps/invoice/routes");
 const whatsappRoutes = require("../apps/whatsapp/routes");
-const { publicSiteOtpGate } = require("../shared/middleware/publicSiteOtpGate");
+const { createPublicSiteOtpGate, isPrivateOtpGate } = require("../shared/middleware/publicSiteOtpGate");
+const { createSiteMaintenanceMiddleware } = require("../shared/middleware/siteMaintenanceGate");
 const { pushToErvenow } = require("../shared/utils/ervenowPush");
 const { startRetryNotificationsWorker } = require("../apps/driver/retryNotifications");
 const { createServiceClient } = require("../shared/config/supabase");
@@ -44,6 +45,12 @@ try {
 }
 const hidePublicUi = String(process.env.HIDE_PUBLIC_UI || "").trim() === "1";
 const servePublicUi = serveStatic || (hasPublicIndex && !hidePublicUi);
+
+/**
+ * وضع خاص مؤقت — بوابة OTP لكل صفحات الواجهة (HTML):
+ * عيّن ERVENOW_PRIVATE_OTP_GATE=1 أو FORCE_PRIVATE_OTP_GATE في shared/middleware/publicSiteOtpGate.js
+ * يعادل «PRIVATE_MODE» بدون تفعيل البوابة القديمة النطاقية فقط.
+ */
 
 /** أصول تُستنتج من ERVENOW_PUBLIC_URL (نفس نطاق الموقع + www) لتفادي «Failed to fetch» عند نسيان CORS_ORIGINS */
 function originsFromPublicSiteUrl() {
@@ -266,8 +273,11 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/invoice", invoiceRoutes);
 app.use("/api/whatsapp", whatsappRoutes);
 
-/** بوابة واجهة الموقع (OTP) — بعد كل مسارات API */
-app.use(publicSiteOtpGate);
+/** بوابة واجهة الموقع (OTP) — بعد كل مسارات API؛ لا تعيق GET /api/* ولا /socket.io ولا /assets */
+app.use(createPublicSiteOtpGate(servePublicUi));
+
+/** صفحة «تحت التطوير» للزوار عند التفعيل من لوحة الإدارة — لا يعطل مسارات /api/* أو لوحات الأدمن */
+app.use(createSiteMaintenanceMiddleware(servePublicUi));
 
 app.get("/api/health", (_req, res) => {
   res.json({
@@ -475,6 +485,9 @@ app.use((err, _req, res, _next) => {
 
     server.listen(PORT, "0.0.0.0", () => {
       console.log("🚀 ERVENOW RUNNING ON", PORT);
+      if (servePublicUi && isPrivateOtpGate()) {
+        console.log("[boot] ERVENOW_PRIVATE_OTP_GATE — الواجهة محمية برمز واتساب حتى تُعطّل المتغير");
+      }
       if (servePublicUi && !serveStatic) {
         console.log(
           "[boot] تقديم الواجهة من public/ رغم SERVE_STATIC≠1 — للـ API فقط على / عيّن HIDE_PUBLIC_UI=1"

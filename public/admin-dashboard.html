@@ -290,6 +290,9 @@
             <option value="week">هذا الأسبوع</option>
             <option value="month">هذا الشهر</option>
           </select>
+          <button type="button" class="btn btn-ghost" id="siteMaintenanceBtn" title="وضع الصيانة للزوار">
+            تعطيل الموقع
+          </button>
           <button type="button" class="btn btn-ghost" id="logoutAdminBtn">خروج</button>
         </div>
       </div>
@@ -481,6 +484,7 @@
       var cacheStores = [];
       var cacheJobs = [];
       var cacheAdminAccounts = [];
+      var siteMaintenanceEnabled = false;
 
       function getSearch(id) {
         var el = document.getElementById(id);
@@ -614,6 +618,56 @@
         } catch (_e) {
           adminPermissions = [];
           adminLevel = "limited2";
+        }
+      }
+
+      function updateSiteMaintenanceBtn(enabled) {
+        siteMaintenanceEnabled = !!enabled;
+        var b = document.getElementById("siteMaintenanceBtn");
+        if (!b) return;
+        if (siteMaintenanceEnabled) {
+          b.className = "btn btn-primary";
+          b.textContent = "تشغيل الموقع للزوار";
+          b.title = "إيقاف صفحة «تحت التطوير» وإعادة الموقع للزوار";
+        } else {
+          b.className = "btn btn-ghost";
+          b.textContent = "تعطيل الموقع";
+          b.title = "إظهار «تحت التطوير» لجميع زوار الموقع";
+        }
+      }
+
+      async function loadSiteMaintenanceState() {
+        var btn = document.getElementById("siteMaintenanceBtn");
+        if (!hasPermission("dashboard")) {
+          if (btn) btn.style.display = "none";
+          return;
+        }
+        if (btn) btn.style.display = "";
+        try {
+          var j = await window.PlatformAPI.api("/api/admin/site-maintenance");
+          updateSiteMaintenanceBtn(j.enabled);
+        } catch (_e) {
+          if (btn) btn.style.display = "none";
+        }
+      }
+
+      async function toggleSiteMaintenance() {
+        touchAdminActivity();
+        try {
+          var next = !siteMaintenanceEnabled;
+          if (next && !confirm("سيتم إظهار رسالة «تحت التطوير» لجميع زوار الموقع. لوحة الإدارة تبقى متاحة. متابعة؟")) {
+            return;
+          }
+          var j = await window.PlatformAPI.api("/api/admin/site-maintenance", {
+            method: "POST",
+            body: { enabled: next },
+          });
+          updateSiteMaintenanceBtn(j.enabled);
+          showSuccess(
+            j.enabled ? "الموقع معطّل للزوار — يظهر «تحت التطوير»" : "تم تفعيل الموقع للزوار"
+          );
+        } catch (e) {
+          showError(e.message || "فشل تحديث وضع الموقع");
         }
       }
 
@@ -1125,6 +1179,12 @@
           forceAdminLogout("");
         };
       }
+      var siteMaintenanceBtn = document.getElementById("siteMaintenanceBtn");
+      if (siteMaintenanceBtn) {
+        siteMaintenanceBtn.onclick = function () {
+          toggleSiteMaintenance();
+        };
+      }
       var panelButtons = document.querySelectorAll(".panel-btn");
       for (var i = 0; i < panelButtons.length; i++) {
         panelButtons[i].addEventListener("click", function () {
@@ -1145,6 +1205,7 @@
         var ok = await ensureAdminAccess();
         if (!ok) return;
         await loadAdminProfile();
+        await loadSiteMaintenanceState();
         setupFullAdminIdleGuard();
         applyPermissionVisibility();
         showPanel("");

@@ -171,6 +171,17 @@
           if (!j.token) throw new Error("لم يتم إصدار جلسة");
           window.PlatformAPI.setToken(j.token);
           try {
+            var maxAgeSec = 7 * 24 * 60 * 60;
+            var c =
+              "auth_token=" +
+              encodeURIComponent(j.token) +
+              "; path=/; max-age=" +
+              maxAgeSec +
+              "; SameSite=Lax";
+            if (location.protocol === "https:") c += "; Secure";
+            document.cookie = c;
+          } catch (cookieErr) {}
+          try {
             var dp = getVal("loginPhone");
             if (dp) localStorage.setItem("userPhone", dp);
           } catch (lsErr) {}
