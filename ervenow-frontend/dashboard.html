@@ -21,6 +21,42 @@
       .delivery-form input {
         width: 100%;
       }
+      .delivery-locs {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px 14px;
+        align-items: start;
+      }
+      @media (max-width: 640px) {
+        .delivery-locs {
+          grid-template-columns: 1fr;
+        }
+      }
+      .delivery-loc-block {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        min-width: 0;
+      }
+      .delivery-loc-label {
+        display: block;
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: rgba(45, 30, 20, 0.88);
+        margin: 0;
+      }
+      .delivery-loc-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 2px;
+      }
+      .delivery-loc-actions .btn {
+        flex: 1 1 calc(50% - 4px);
+        min-width: 0;
+        font-size: 0.86rem;
+        padding: 8px 10px;
+      }
       .delivery-stats {
         display: flex;
         flex-wrap: wrap;
@@ -259,33 +295,65 @@
                   <option value="bike">دراجة نارية (0 - 7 كم = 15 ريال)</option>
                   <option value="car" selected>سيارة (0 - 7 كم = 22 ريال)</option>
                 </select>
-                <input id="from" placeholder="📍 موقع الاستلام" oninput="handleLocationInputChange()" />
-                <input id="to" placeholder="📍 موقع المستلم (التسليم)" oninput="handleLocationInputChange()" />
-                <div class="btn-row">
-                  <button
-                    class="btn btn-ghost map-action-btn"
-                    id="btnSelectFrom"
-                    type="button"
-                    onclick="selectMode('from')"
-                  >
-                    📍 موقع الاستلام
-                  </button>
-                  <button
-                    class="btn btn-ghost map-action-btn"
-                    id="btnSelectTo"
-                    type="button"
-                    onclick="selectMode('to')"
-                  >
-                    📍 موقع التسليم
-                  </button>
-                </div>
-                <div class="btn-row" style="margin-top: 8px">
-                  <button class="btn btn-ghost map-action-btn" type="button" onclick="openGoogleMapsFor('from')">
-                    🗺 Google Maps — الاستلام
-                  </button>
-                  <button class="btn btn-ghost map-action-btn" type="button" onclick="openGoogleMapsFor('to')">
-                    🗺 Google Maps — التسليم
-                  </button>
+                <div class="delivery-locs">
+                  <div class="delivery-loc-block">
+                    <label class="delivery-loc-label" for="from">من — الاستلام</label>
+                    <input
+                      id="from"
+                      type="text"
+                      autocomplete="street-address"
+                      placeholder="عنوان أو lat,lng"
+                      oninput="handleLocationInputChange()"
+                    />
+                    <div class="delivery-loc-actions">
+                      <button
+                        class="btn btn-ghost map-action-btn"
+                        id="btnSelectFrom"
+                        type="button"
+                        onclick="selectMode('from')"
+                        title="تحديد على الخريطة"
+                      >
+                        🗺 خريطة
+                      </button>
+                      <button
+                        class="btn btn-ghost map-action-btn"
+                        type="button"
+                        onclick="openGoogleMapsFor('from')"
+                        title="فتح في Google Maps"
+                      >
+                        🗺 Google
+                      </button>
+                    </div>
+                  </div>
+                  <div class="delivery-loc-block">
+                    <label class="delivery-loc-label" for="to">إلى — التسليم</label>
+                    <input
+                      id="to"
+                      type="text"
+                      autocomplete="street-address"
+                      placeholder="عنوان أو lat,lng"
+                      oninput="handleLocationInputChange()"
+                    />
+                    <div class="delivery-loc-actions">
+                      <button
+                        class="btn btn-ghost map-action-btn"
+                        id="btnSelectTo"
+                        type="button"
+                        onclick="selectMode('to')"
+                        title="تحديد على الخريطة"
+                      >
+                        🗺 خريطة
+                      </button>
+                      <button
+                        class="btn btn-ghost map-action-btn"
+                        type="button"
+                        onclick="openGoogleMapsFor('to')"
+                        title="فتح في Google Maps"
+                      >
+                        🗺 Google
+                      </button>
+                    </div>
+                  </div>
                 </div>
                 <div id="pickupDropMap"></div>
                 <div class="btn-row">
@@ -545,7 +613,7 @@
         selectType = type;
         updateSelectButtonsUi();
         document.getElementById("result").innerText =
-          type === "from" ? "📍 انقر على الخريطة لتحديد موقع الاستلام" : "📍 انقر على الخريطة لتحديد موقع التسليم";
+          type === "from" ? "📍 اختر نقطة الاستلام على الخريطة" : "📍 اختر نقطة التسليم على الخريطة";
       }
 
       function openGoogleMapsFor(kind) {
@@ -566,7 +634,9 @@
         var res = document.getElementById("result");
         if (res) {
           res.innerText =
-            "🗺 بعد التأكد من الموقع في خرائط Google، انسخ العنوان أو الإحداثيات (lat,lng) والصقها في الحقل أعلاه ثم اضغط «احسب المسافة».";
+            "🗺 انسخ من Google إلى خانة «" +
+            (isFrom ? "الاستلام" : "التسليم") +
+            "» ثم اضغط «احسب المسافة».";
         }
       }
 
