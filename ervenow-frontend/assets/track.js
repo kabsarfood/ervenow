@@ -41,6 +41,16 @@
     w.__ervApplyDriverRotation(marker, brg);
   }
 
+  /** يفضّل اتجاه GPS إن وُجد — أقل اهتزازاً من احتساب السمت نحو الهدف فقط */
+  function applyDriverRotationFromData(marker, data, latTo, lngTo) {
+    if (!marker || !w.__ervApplyDriverRotation) return;
+    if (data && data.heading != null && Number.isFinite(Number(data.heading))) {
+      w.__ervApplyDriverRotation(marker, Number(data.heading));
+      return;
+    }
+    applyDriverRotationToward(marker, latTo, lngTo);
+  }
+
   function cancelDriverMotion() {
     if (w.driverAnim != null) {
       clearInterval(w.driverAnim);
@@ -72,21 +82,21 @@
     cancelDriverMotion();
 
     var start = performance.now();
-    var maxMs = 3200;
-    /** معامل الاستيفاء لكل إطار — أسرع عند البعد الكبير */
+    var maxMs = 2200;
+    /** استيفاء أسرع مع ثبات — يعتمد على السرعة القادمة من السوكت عند توفرها */
     function pickAlpha(distM) {
-      var base = speed > 3 ? 0.2 : 0.13;
-      if (distM > 200) return Math.min(0.48, base * 2.4);
-      if (distM > 60) return Math.min(0.35, base * 1.8);
-      return base;
+      var base = speed > 6 ? 0.3 : speed > 2 ? 0.22 : 0.17;
+      if (distM > 160) return Math.min(0.58, base * 2.1);
+      if (distM > 40) return Math.min(0.45, base * 1.55);
+      return Math.min(0.34, base * 1.2);
     }
 
     function step(now) {
       var cur = marker.getLatLng();
       var distM = haversineMeters(cur.lat, cur.lng, tLat, tLng);
-      if (distM < 1.2 || now - start > maxMs) {
+      if (distM < 0.85 || now - start > maxMs) {
         marker.setLatLng([tLat, tLng]);
-        applyDriverRotationToward(marker, tLat, tLng);
+        applyDriverRotationFromData(marker, data, tLat, tLng);
         drRafId = null;
         return;
       }
@@ -94,7 +104,7 @@
       var nLat = cur.lat + (tLat - cur.lat) * a;
       var nLng = cur.lng + (tLng - cur.lng) * a;
       marker.setLatLng([nLat, nLng]);
-      applyDriverRotationToward(marker, tLat, tLng);
+      applyDriverRotationFromData(marker, data, tLat, tLng);
       drRafId = requestAnimationFrame(step);
     }
 
@@ -116,7 +126,7 @@
     var startLL = marker.getLatLng();
     var sLat = Number(startLL.lat);
     var sLng = Number(startLL.lng);
-    var dur = Number(durationMs) > 0 ? Number(durationMs) : 420;
+    var dur = Number(durationMs) > 0 ? Number(durationMs) : 280;
     var t0 = performance.now();
 
     function step(now) {
@@ -157,6 +167,6 @@
       endLat = Number(newLatLng.lat);
       endLng = Number(newLatLng.lng);
     }
-    smoothLerpTo(marker, endLat, endLng, 400);
+    smoothLerpTo(marker, endLat, endLng, 280);
   };
 })(typeof window !== "undefined" ? window : this);

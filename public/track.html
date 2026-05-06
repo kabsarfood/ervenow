@@ -140,6 +140,11 @@
         filter: hue-rotate(10deg) brightness(1.05);
       }
 
+      #map.leaflet-container {
+        transform: translateZ(0);
+        contain: layout paint;
+      }
+
       #trackSocketBanner {
         display: none;
         position: fixed;
@@ -350,6 +355,7 @@
       var lastAutoZoomAt = 0;
       var nearDropMotionFrozen = false;
       var routeCheckpointLayer = null;
+      var lastDriverIconKey = "";
 
       async function ensureMeRole() {
         if (meRoleFetched) return;
@@ -1322,7 +1328,14 @@
         var el = document.getElementById("map");
         if (!el) return;
         el.innerHTML = "";
-        map = L.map("map", { scrollWheelZoom: true }).setView(defaultCenter, 12);
+        map = L.map("map", {
+          scrollWheelZoom: true,
+          zoomAnimation: true,
+          fadeAnimation: true,
+          inertia: true,
+          inertiaDeceleration: 2800,
+          inertiaMaxSpeed: 2200,
+        }).setView(defaultCenter, 12);
         mapInitialized = true;
         var terrain = L.tileLayer("https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png", {
           attribution: "Map data: OpenStreetMap, SRTM | Map style: OpenTopoMap",
@@ -1408,6 +1421,17 @@
         return ((θ * 180) / Math.PI + 360) % 360;
       }
 
+      function scheduleMapInvalidateSize() {
+        if (!map) return;
+        if (scheduleMapInvalidateSize._t != null) return;
+        scheduleMapInvalidateSize._t = setTimeout(function () {
+          scheduleMapInvalidateSize._t = null;
+          try {
+            map.invalidateSize(true);
+          } catch (e) {}
+        }, 220);
+      }
+
       function animateMarkerTo(targetLat, targetLng) {
         if (!driverMarker) return;
         if (markerAnimRaf) {
@@ -1419,7 +1443,7 @@
           window.driverAnim = null;
         }
         if (window.ErvTrackDriverMotion && typeof window.ErvTrackDriverMotion.smoothLerpTo === "function") {
-          window.ErvTrackDriverMotion.smoothLerpTo(driverMarker, targetLat, targetLng, 420);
+          window.ErvTrackDriverMotion.smoothLerpTo(driverMarker, targetLat, targetLng, 280);
           return;
         }
         if (typeof animateErvDriverMarker === "function") {
@@ -1431,7 +1455,7 @@
         var startLng = Number(start.lng);
         var endLat = Number(targetLat);
         var endLng = Number(targetLng);
-        var duration = 1400;
+        var duration = 900;
         var t0 = performance.now();
 
         function step(now) {
@@ -1501,18 +1525,15 @@
         ensureMap();
         if (!map) return;
 
-        var icon = makeVehicleDivIcon(currentDriverType, bearingDegVal);
-        if (driverMarker) {
-          driverMarker.setIcon(icon);
-          attachDriverMarkerRotationApi(driverMarker);
-          if (typeof driverMarker.setRotationAngle === "function") {
-            driverMarker.setRotationAngle(bearingDegVal);
-          }
-          if (!opts.skipPositionMotion) {
-            animateMarkerTo(la, ln);
-          }
-        } else {
-          driverMarker = L.marker([la, ln], { title: "موقع المندوب", icon: icon })
+        var iconSnapDeg = Math.round(bearingDegVal / 6) * 6;
+        var iconKey = currentDriverType + "|" + iconSnapDeg;
+        var skipIconRebuild =
+          driverMarker && opts.skipPositionMotion === true && iconKey === lastDriverIconKey && !opts.forceIconRefresh;
+
+        if (!driverMarker) {
+          lastDriverIconKey = iconKey;
+          var iconNew = makeVehicleDivIcon(currentDriverType, bearingDegVal);
+          driverMarker = L.marker([la, ln], { title: "موقع المندوب", icon: iconNew })
             .addTo(map)
             .bindPopup("المندوب");
           attachDriverMarkerRotationApi(driverMarker);
@@ -1520,6 +1541,19 @@
             driverMarker.setRotationAngle(bearingDegVal);
           }
           map.setView([la, ln], Math.max(map.getZoom(), 14));
+        } else if (!skipIconRebuild) {
+          lastDriverIconKey = iconKey;
+          var icon = makeVehicleDivIcon(currentDriverType, bearingDegVal);
+          driverMarker.setIcon(icon);
+          attachDriverMarkerRotationApi(driverMarker);
+        }
+        if (driverMarker) {
+          if (typeof driverMarker.setRotationAngle === "function") {
+            driverMarker.setRotationAngle(bearingDegVal);
+          }
+          if (!opts.skipPositionMotion) {
+            animateMarkerTo(la, ln);
+          }
         }
         if (lastOrder && (lastOrder.delivery_status || lastOrder.status) !== "delivered") {
           var lastP = driverTrailPoints[driverTrailPoints.length - 1];
@@ -1529,10 +1563,8 @@
         }
         if (opts.refocusMap) {
           map.panTo([la, ln], { animate: true, duration: 0.5 });
+          scheduleMapInvalidateSize();
         }
-        setTimeout(function () {
-          if (map) map.invalidateSize();
-        }, 80);
         runDeliveryTrackingAlerts();
       }
 
@@ -1653,6 +1685,7 @@
           smoothDriverLat = null;
           smoothDriverLng = null;
           lastDriverBearingDeg = 0;
+          lastDriverIconKey = "";
         }
         if (clearRoute === false) return;
         clearRouteCheckpoints();
@@ -1694,6 +1727,7 @@
           lastOsrmEtaKey = "";
           lastOsrmEtaFetchAt = 0;
           driverMarker = null;
+          lastDriverIconKey = "";
           mapInitialized = false;
           clearDriverMarker();
           if (map) {

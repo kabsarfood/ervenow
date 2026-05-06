@@ -68,13 +68,28 @@
         var pickup = document.getElementById("pickup").value.trim();
         var notes = document.getElementById("notes").value.trim();
         var svc = document.getElementById("svc").value;
+        var btn = document.getElementById("btnSend");
+
+        function onRetry(ev) {
+          var d = ev.detail || {};
+          if (!btn.disabled || String(d.path || "").indexOf("/api/") === -1) return;
+          show("جارٍ الإرسال… (محاولة " + d.attempt + " من " + d.maxAttempts + ")", true);
+        }
+        window.addEventListener("ervenow-api-retry", onRetry);
 
         try {
+          btn.disabled = true;
+          show("جارٍ الإرسال…", true);
           var deliveryId = null;
+          var idemKey =
+            window.crypto && window.crypto.randomUUID
+              ? window.crypto.randomUUID()
+              : "idem-" + Date.now() + "-" + Math.random().toString(36).slice(2, 12);
 
           if (svc === "food") {
             var j = await window.PlatformAPI.api("/api/food/orders", {
               method: "POST",
+              idempotencyKey: idemKey,
               body: {
                 type: "delivery",
                 items: [{ name: "طلب سريع من المنصة", qty: 1, price: 0 }],
@@ -90,6 +105,7 @@
             var typeLabel = { delivery: "توصيل", market: "متجر", services: "خدمات" }[svc] || svc;
             var j2 = await window.PlatformAPI.api("/api/delivery/orders", {
               method: "POST",
+              idempotencyKey: idemKey,
               body: {
                 pickup_address: pickup,
                 drop_address: drop,
@@ -107,6 +123,9 @@
           }, 500);
         } catch (e) {
           show(String(e.message || e), false);
+        } finally {
+          window.removeEventListener("ervenow-api-retry", onRetry);
+          btn.disabled = false;
         }
       };
     </script>

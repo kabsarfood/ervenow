@@ -8,6 +8,89 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/assets/styles.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+      .driver-nav-dock {
+        display: none;
+        position: fixed;
+        inset-inline: 0;
+        bottom: 0;
+        z-index: 10050;
+        padding: 12px 14px calc(14px + env(safe-area-inset-bottom, 0px));
+        background: linear-gradient(180deg, transparent, rgba(15, 23, 42, 0.96));
+      }
+      .driver-nav-dock.is-visible {
+        display: block;
+      }
+      .driver-nav-dock-inner {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        max-width: 520px;
+        margin: 0 auto;
+      }
+      .driver-order-chip {
+        text-align: center;
+        font-size: 0.88rem;
+        font-weight: 700;
+        color: rgba(255, 255, 255, 0.92);
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+      }
+      .driver-main-action {
+        font-family: inherit;
+        font-size: 1.18rem;
+        font-weight: 800;
+        line-height: 1.2;
+        padding: 22px 16px;
+        min-height: 62px;
+        width: 100%;
+        border: none;
+        border-radius: 16px;
+        cursor: pointer;
+        box-shadow: 0 4px 18px rgba(0, 0, 0, 0.28);
+      }
+      .driver-main-action:active:not(:disabled) {
+        transform: scale(0.99);
+      }
+      .driver-main-action:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+      }
+      .driver-main-action.mode-pending {
+        background: linear-gradient(180deg, #22c55e, #15803d);
+        color: #fff;
+      }
+      .driver-main-action.mode-nav {
+        background: linear-gradient(180deg, #38bdf8, #1d4ed8);
+        color: #fff;
+      }
+      .driver-main-action.mode-finish {
+        background: linear-gradient(180deg, #fbbf24, #b45309);
+        color: #1c1917;
+      }
+      body.driver-nav-dock-active .layout {
+        padding-bottom: calc(130px + env(safe-area-inset-bottom, 0px));
+      }
+      body.driver-ultra-mode #walletCard,
+      body.driver-ultra-mode #driverRatingLine {
+        display: none !important;
+      }
+      body.driver-ultra-mode .top-nav h1 {
+        font-size: 1.05rem;
+      }
+      body.driver-ultra-mode .top-nav .btn-row a:not(#driverLogout) {
+        display: none;
+      }
+      body.driver-ultra-mode #ordersCard .card > .badge:first-child + #orders {
+        max-height: 100px;
+        overflow: auto;
+      }
+      body.driver-ultra-mode #driverMapCard {
+        min-height: 52vh;
+      }
+      body.driver-ultra-mode #driverLiveMap {
+        min-height: 46vh !important;
+      }
+    </style>
   </head>
   <body>
     <div class="layout">
@@ -31,19 +114,26 @@
         </div>
       </div>
 
-      <div class="card">
+      <div class="card" id="ordersCard">
         <div class="badge">الطلبات</div>
         <div id="orders"></div>
         <button type="button" class="btn btn-primary" id="btnRefresh">تحديث</button>
       </div>
 
-      <div class="card">
-        <div class="badge">الموقع (GPS — طلب مُستلَم أو جاري التوصيل)</div>
+      <div class="card" id="driverMapCard">
+        <div class="badge">الخريطة</div>
         <p class="sub" style="margin-top: 8px" id="locStatus">—</p>
         <div id="driverLiveMap" style="min-height: 280px; border-radius: 12px; border: 1px solid rgba(0,0,0,.12); margin-top: 10px"></div>
       </div>
 
       <div class="msg err" id="err" style="display: none"></div>
+    </div>
+
+    <div id="driverMapNavDock" class="driver-nav-dock" role="region" aria-label="إجراء التوصيل">
+      <div class="driver-nav-dock-inner">
+        <div class="driver-order-chip" id="driverOrderChip"></div>
+        <button type="button" class="driver-main-action" id="driverMainAction" disabled>—</button>
+      </div>
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -61,10 +151,12 @@
         throw new Error("auth");
       }
 
+      var PROXIMITY_M = 30;
+      var NEAR_DROP_MANUAL_M = 45;
+
       var locStatus = document.getElementById("locStatus");
       var activeOrderId = null;
       var isWatching = false;
-      var locWatchId = null;
       var locTimer = null;
       var myUserId = null;
       var pollTimer = null;
@@ -83,6 +175,68 @@
       var lastRouteKey = "";
       var layerSatellite = null;
       var layerTerrain = null;
+
+      var navOrderRef = null;
+      var pendingOrderRef = null;
+      var proximityTimer = null;
+      var autoGateOrderId = null;
+      var autoPickupSent = false;
+      var autoDeliverSent = false;
+      /** pending | accepted | picked (خرج للتسليم) | delivering (إتمام) */
+      var driverMainActionKind = "";
+
+      function haversineM(lat1, lng1, lat2, lng2) {
+        var R = 6371000;
+        var r1 = (lat1 * Math.PI) / 180;
+        var r2 = (lat2 * Math.PI) / 180;
+        var dLat = ((lat2 - lat1) * Math.PI) / 180;
+        var dLng = ((lng2 - lng1) * Math.PI) / 180;
+        var s =
+          Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+          Math.cos(r1) * Math.cos(r2) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+        return 2 * R * Math.asin(Math.min(1, Math.sqrt(s)));
+      }
+
+      function speakArabic(text) {
+        try {
+          if (!text || !window.speechSynthesis) return;
+          window.speechSynthesis.cancel();
+          var u = new SpeechSynthesisUtterance(String(text));
+          u.lang = "ar-SA";
+          u.rate = 0.95;
+          var voices = window.speechSynthesis.getVoices();
+          var ar = voices.find(function (v) {
+            return /ar/i.test(v.lang || "");
+          });
+          if (ar) u.voice = ar;
+          window.speechSynthesis.speak(u);
+        } catch (e) {}
+      }
+
+      if (window.speechSynthesis && speechSynthesis.getVoices().length === 0) {
+        speechSynthesis.addEventListener("voiceschanged", function () {}, { once: true });
+      }
+
+      function openGoogleMapsDir(lat, lng) {
+        var la = Number(lat);
+        var ln = Number(lng);
+        if (!Number.isFinite(la) || !Number.isFinite(ln)) return;
+        var dest = encodeURIComponent(la + "," + ln);
+        window.open("https://www.google.com/maps/dir/?api=1&destination=" + dest, "_blank", "noopener,noreferrer");
+      }
+
+      function resetAutoGatesForOrder(oid) {
+        if (String(autoGateOrderId) !== String(oid)) {
+          autoGateOrderId = oid;
+          autoPickupSent = false;
+          autoDeliverSent = false;
+        }
+      }
+
+      function setUltraMode(on) {
+        if (on) document.body.classList.add("driver-ultra-mode");
+        else document.body.classList.remove("driver-ultra-mode");
+      }
 
       function initDriverMap() {
         if (map || typeof L === "undefined") return;
@@ -121,6 +275,9 @@
           driverMarker.setLatLng([la, ln]);
         }
         map.setView([la, ln], Math.max(14, map.getZoom()), { animate: true });
+        try {
+          map.invalidateSize();
+        } catch (e) {}
       }
 
       function clearOrderEndpoints() {
@@ -240,13 +397,9 @@
 
       function shouldSend(lat, lng) {
         var now = Date.now();
-
         if (lastLat == null || lastLng == null) return true;
-
         var moved = Math.abs(lat - lastLat) + Math.abs(lng - lastLng) > 0.00005;
-
         var timePassed = now - lastSentAt > 5000;
-
         return moved || timePassed;
       }
 
@@ -266,20 +419,97 @@
           lastLng = lng;
           lastSentAt = Date.now();
           if (activeOrderId) {
-            document.getElementById("locStatus").textContent = "آخر إرسال: " + new Date().toLocaleTimeString("ar-SA");
+            locStatus.textContent = "آخر إرسال: " + new Date().toLocaleTimeString("ar-SA");
           } else {
-            document.getElementById("locStatus").textContent = "تم تحديث موقعك للمنصة: " + new Date().toLocaleTimeString("ar-SA");
+            locStatus.textContent = "تم تحديث موقعك للمنصة: " + new Date().toLocaleTimeString("ar-SA");
           }
+          checkProximityAuto(lat, lng);
+          refreshDockUI();
         } catch (e) {
-          document.getElementById("locStatus").textContent = "خطأ إرسال الموقع: " + (e.message || e);
+          locStatus.textContent = "خطأ إرسال الموقع: " + (e.message || e);
         } finally {
           sendingLocation = false;
         }
       }
 
+      async function patchOrderStatus(orderId, status) {
+        await window.PlatformAPI.api("/api/delivery/orders/" + encodeURIComponent(orderId) + "/status", {
+          method: "PATCH",
+          body: { status: status },
+        });
+      }
+
+      async function checkProximityAuto(lat, lng) {
+        var o = navOrderRef;
+        if (!o || !o.id) return;
+        resetAutoGatesForOrder(o.id);
+        var st = String(o.delivery_status || o.status || "").toLowerCase();
+
+        var pLat = Number(o.pickup_lat);
+        var pLng = Number(o.pickup_lng);
+        var dLat = Number(o.drop_lat);
+        var dLng = Number(o.drop_lng);
+
+        if (st === "accepted" && !autoPickupSent && Number.isFinite(pLat) && Number.isFinite(pLng)) {
+          var dp = haversineM(lat, lng, pLat, pLng);
+          if (dp <= PROXIMITY_M) {
+            autoPickupSent = true;
+            try {
+              await patchOrderStatus(o.id, "delivering");
+              speakArabic("أنت قريب من الاستلام. تم تسجيل بدء التوصيل تلقائياً.");
+              showSuccess("تم بدء التوصيل (قرب نقطة الاستلام)");
+              await loadOrders();
+            } catch (e) {
+              autoPickupSent = false;
+              showError(e.message || "تعذر تحديث الحالة");
+            }
+          }
+        }
+
+        if (st === "delivering" && !autoDeliverSent && Number.isFinite(dLat) && Number.isFinite(dLng)) {
+          var dd = haversineM(lat, lng, dLat, dLng);
+          if (dd <= PROXIMITY_M) {
+            autoDeliverSent = true;
+            try {
+              await patchOrderStatus(o.id, "delivered");
+              speakArabic("أنت قريب من موقع التسليم. تم إنهاء الطلب تلقائياً.");
+              showSuccess("تم التسليم");
+              activeOrderId = null;
+              stopLocationLoop();
+              stopProximityLoop();
+              await loadOrders();
+            } catch (e) {
+              autoDeliverSent = false;
+              showError(e.message || "تعذر إتمام التسليم");
+            }
+          }
+        }
+      }
+
+      function startProximityLoop() {
+        if (proximityTimer != null) return;
+        proximityTimer = setInterval(function () {
+          if (!navOrderRef || !activeOrderId) return;
+          navigator.geolocation.getCurrentPosition(
+            function (pos) {
+              checkProximityAuto(pos.coords.latitude, pos.coords.longitude);
+              refreshDockUI();
+            },
+            function () {},
+            { enableHighAccuracy: true, maximumAge: 4000, timeout: 12000 }
+          );
+        }, 5000);
+      }
+
+      function stopProximityLoop() {
+        if (proximityTimer != null) {
+          clearInterval(proximityTimer);
+          proximityTimer = null;
+        }
+      }
+
       function onGeoError(err) {
         console.log("GPS error:", err && err.message);
-        // لا ترسل موقعاً وهمياً — فقط حدّث الحالة و(اختيارياً) نبّه الخادم دون تغيير last known lat/lng
         locStatus.innerText = "⚠️ تعذّر تحديد الموقع — حاول تفعيل GPS";
         if (activeOrderId) {
           void (async function () {
@@ -318,7 +548,7 @@
         el.style.color = "#fff";
         el.style.padding = "10px";
         el.style.borderRadius = "8px";
-        el.style.zIndex = "9999";
+        el.style.zIndex = "99999";
         document.body.appendChild(el);
         setTimeout(function () {
           el.remove();
@@ -335,7 +565,7 @@
         el.style.color = "#fff";
         el.style.padding = "10px";
         el.style.borderRadius = "8px";
-        el.style.zIndex = "9999";
+        el.style.zIndex = "99999";
         document.body.appendChild(el);
         setTimeout(function () {
           el.remove();
@@ -389,6 +619,108 @@
         delivered: "تم التسليم",
       };
 
+      function getDistToPickup(o) {
+        if (lastLat == null || lastLng == null || !o) return null;
+        var pLat = Number(o.pickup_lat);
+        var pLng = Number(o.pickup_lng);
+        if (!Number.isFinite(pLat) || !Number.isFinite(pLng)) return null;
+        return haversineM(lastLat, lastLng, pLat, pLng);
+      }
+
+      function getDistToDrop(o) {
+        if (lastLat == null || lastLng == null || !o) return null;
+        var dLat = Number(o.drop_lat);
+        var dLng = Number(o.drop_lng);
+        if (!Number.isFinite(dLat) || !Number.isFinite(dLng)) return null;
+        return haversineM(lastLat, lastLng, dLat, dLng);
+      }
+
+      function refreshDockUI() {
+        var dock = document.getElementById("driverMapNavDock");
+        var chip = document.getElementById("driverOrderChip");
+        var main = document.getElementById("driverMainAction");
+        if (!dock || !main) return;
+
+        var po = pendingOrderRef;
+        var to = navOrderRef;
+        var showDock = !!(po || to);
+        if (!showDock) {
+          dock.classList.remove("is-visible");
+          document.body.classList.remove("driver-nav-dock-active");
+          main.disabled = true;
+          main.textContent = "—";
+          main.className = "driver-main-action";
+          driverMainActionKind = "";
+          if (chip) chip.textContent = "";
+          return;
+        }
+
+        dock.classList.add("is-visible");
+        document.body.classList.add("driver-nav-dock-active");
+
+        if (po && !to) {
+          var num0 = (po.order_number && String(po.order_number).trim()) || String(po.id).slice(0, 8) + "…";
+          if (chip) chip.textContent = "طلب مفتوح: " + num0;
+          main.disabled = false;
+          main.textContent = "قبول الطلب";
+          main.className = "driver-main-action mode-pending";
+          driverMainActionKind = "pending";
+          return;
+        }
+
+        if (to) {
+          resetAutoGatesForOrder(to.id);
+          var num = (to.order_number && String(to.order_number).trim()) || String(to.id).slice(0, 8) + "…";
+          var st = String(to.delivery_status || to.status || "").toLowerCase();
+          if (chip) chip.textContent = "الطلب " + num + " — " + (STATUS_AR[st] || st);
+
+          var dPickup = getDistToPickup(to);
+          var dDrop = getDistToDrop(to);
+
+          if (st === "accepted") {
+            main.disabled =
+              !Number.isFinite(Number(to.pickup_lat)) || !Number.isFinite(Number(to.pickup_lng));
+            main.textContent = "الذهاب للاستلام";
+            main.className = "driver-main-action mode-nav";
+            driverMainActionKind = "accepted";
+          } else if (st === "delivering") {
+            var nearDrop = dDrop != null && dDrop <= NEAR_DROP_MANUAL_M;
+            if (nearDrop) {
+              main.disabled = false;
+              main.textContent = "تم التسليم";
+              main.className = "driver-main-action mode-finish";
+              driverMainActionKind = "delivering";
+            } else {
+              main.disabled =
+                !Number.isFinite(Number(to.drop_lat)) || !Number.isFinite(Number(to.drop_lng));
+              main.textContent = "الذهاب للتسليم";
+              main.className = "driver-main-action mode-nav";
+              driverMainActionKind = "picked";
+            }
+          } else {
+            main.disabled = true;
+            main.textContent = "—";
+            main.className = "driver-main-action";
+            driverMainActionKind = "";
+          }
+
+          if (dPickup != null && st === "accepted") {
+            locStatus.textContent =
+              "المسافة لنقطة الاستلام: ≈ " + Math.round(dPickup) + " م — عند " + PROXIMITY_M + "م يُكمَى بدء التوصيل تلقائياً.";
+          } else if (dDrop != null && st === "delivering") {
+            locStatus.textContent =
+              "المسافة للتسليم: ≈ " + Math.round(dDrop) + " م — عند " + PROXIMITY_M + "م يُكمَى التسليم تلقائياً.";
+          }
+        }
+      }
+
+      function updateNavDockCombined(trackOrder, pendingOrder) {
+        navOrderRef = trackOrder && trackOrder.id != null ? trackOrder : null;
+        pendingOrderRef = pendingOrder && pendingOrder.id != null ? pendingOrder : null;
+        setUltraMode(!!navOrderRef);
+        refreshDockUI();
+      }
+
       async function loadOrders() {
         var j = await window.PlatformAPI.api("/api/driver/orders");
         var box = document.getElementById("orders");
@@ -406,12 +738,15 @@
           } catch (e) {}
         }
         knownOrders = ids;
+
+        var pendingOrder = orders.find(function (o) {
+          var s = String(o.delivery_status || o.status || "").toLowerCase();
+          return (s === "new" || s === "pending") && !o.driver_id;
+        });
+
         orders.forEach(function (o) {
           var div = document.createElement("div");
           div.className = "order-row";
-          var actions = document.createElement("div");
-          actions.className = "btn-row";
-          actions.style.marginTop = "8px";
           var deliveryStatus = o.delivery_status || o.status;
           var st = STATUS_AR[deliveryStatus] || deliveryStatus;
           var num = (o.order_number && String(o.order_number).trim()) || o.id.slice(0, 8) + "…";
@@ -435,92 +770,10 @@
             (o.drop_address || "") +
             "</small><br/><small>هاتف زائر المنصة: " +
             phone +
-            "</small><br/>";
-
-          var trackA = document.createElement("a");
-          trackA.className = "btn btn-ghost";
-          trackA.href = "/track?id=" + encodeURIComponent(o.id);
-          trackA.textContent = "تتبع على الخريطة";
-          actions.appendChild(trackA);
-
-          if (deliveryStatus === "new" || deliveryStatus === "pending") {
-            var b = document.createElement("button");
-            b.className = "btn btn-primary";
-            b.textContent = "استلام الطلب";
-            b.onclick = async function () {
-              var oid = String(o.id != null ? o.id : "").trim();
-              if (!oid) {
-                err("معرّف الطلب مفقود");
-                return;
-              }
-              try {
-                var a = await window.PlatformAPI.api("/api/driver/accept/" + encodeURIComponent(oid), {
-                  method: "POST",
-                });
-                if (!a.ok || a.accepted === false) {
-                  showError((a && a.message) || "تم استلام الطلب من مندوب آخر");
-                  return;
-                }
-                activeOrderId = oid;
-                startLocationLoop();
-                showSuccess("تم قبول الطلب");
-                loadOrders();
-              } catch (e) {
-                err(e.message || String(e));
-              }
-            };
-            actions.appendChild(b);
-          }
-
-          if (o.driver_id && deliveryStatus === "accepted") {
-            var b2 = document.createElement("button");
-            b2.className = "btn btn-ghost";
-            b2.textContent = "بدء التوصيل";
-            b2.onclick = async function () {
-              await window.PlatformAPI.api("/api/delivery/orders/" + o.id + "/status", {
-                method: "PATCH",
-                body: { status: "delivering" },
-              });
-              activeOrderId = o.id;
-              startLocationLoop();
-              loadOrders();
-            };
-            actions.appendChild(b2);
-
-            var b2done = document.createElement("button");
-            b2done.className = "btn btn-primary";
-            b2done.textContent = "تم التسليم";
-            b2done.onclick = async function () {
-              await window.PlatformAPI.api("/api/delivery/orders/" + o.id + "/status", {
-                method: "PATCH",
-                body: { status: "delivered" },
-              });
-              activeOrderId = null;
-              stopLocationLoop();
-              showSuccess("تم إنهاء رحلة التوصيل");
-              loadOrders();
-            };
-            actions.appendChild(b2done);
-          }
-
-          if (o.driver_id && deliveryStatus === "delivering") {
-            var b3 = document.createElement("button");
-            b3.className = "btn btn-ghost";
-            b3.textContent = "تم التسليم";
-            b3.onclick = async function () {
-              await window.PlatformAPI.api("/api/delivery/orders/" + o.id + "/status", {
-                method: "PATCH",
-                body: { status: "delivered" },
-              });
-              activeOrderId = null;
-              stopLocationLoop();
-              showSuccess("تم إنهاء رحلة التوصيل");
-              loadOrders();
-            };
-            actions.appendChild(b3);
-          }
-
-          div.appendChild(actions);
+            "</small><br/>" +
+            '<a class="btn btn-ghost" style="margin-top:8px;display:inline-block" href="/track?id=' +
+            encodeURIComponent(o.id) +
+            '">تتبع</a>';
           box.appendChild(div);
         });
 
@@ -541,6 +794,9 @@
               String(x.driver_id) === myUserId
             );
           });
+
+        updateNavDockCombined(trackOrder, pendingOrder);
+
         if (trackOrder) {
           updateOrderEndpoints(trackOrder);
           void updateRouteLine(trackOrder);
@@ -548,13 +804,16 @@
             stopLocationLoop();
             activeOrderId = trackOrder.id;
             startLocationLoop();
+            startProximityLoop();
           } else if (!isWatching) {
             startLocationLoop();
+            startProximityLoop();
           }
         } else {
           clearOrderEndpoints();
           activeOrderId = null;
           stopLocationLoop();
+          stopProximityLoop();
         }
         void loadDriverRating();
       }
@@ -564,13 +823,11 @@
           clearInterval(locTimer);
           locTimer = null;
         }
-        if (locWatchId != null) navigator.geolocation.clearWatch(locWatchId);
-        locWatchId = null;
         isWatching = false;
         lastLat = null;
         lastLng = null;
         lastSentAt = 0;
-        document.getElementById("locStatus").textContent = "لا يوجد طلب مُستلَم. موقعك ما زال يُحدَّث للمنصة.";
+        locStatus.textContent = "لا يوجد طلب مُستلَم. موقعك ما زال يُحدَّث للمنصة.";
       }
 
       function startLocationLoop() {
@@ -603,7 +860,7 @@
           onGeoError,
           { enableHighAccuracy: false, maximumAge: 5000, timeout: 10000 }
         );
-        document.getElementById("locStatus").textContent = "جارٍ تتبّع الموقع…";
+        locStatus.textContent = "جارٍ تتبّع الموقع…";
       }
 
       function startPresenceLocationLoop() {
@@ -628,6 +885,60 @@
         );
       }
 
+      document.getElementById("driverMainAction").onclick = async function () {
+        var po = pendingOrderRef;
+        var to = navOrderRef;
+        var kind = driverMainActionKind;
+
+        if (kind === "pending" && po && !to) {
+          var oid = String(po.id != null ? po.id : "").trim();
+          if (!oid) return err("معرّف الطلب مفقود");
+          try {
+            var a = await window.PlatformAPI.api("/api/driver/accept/" + encodeURIComponent(oid), {
+              method: "POST",
+            });
+            if (!a.ok || a.accepted === false) {
+              showError((a && a.message) || "تم استلام الطلب من مندوب آخر");
+              return;
+            }
+            speakArabic("تم قبول الطلب.");
+            showSuccess("تم قبول الطلب");
+            await loadOrders();
+          } catch (e) {
+            err(e.message || String(e));
+          }
+          return;
+        }
+
+        if (!to) return;
+
+        if (kind === "accepted") {
+          speakArabic("اتجه إلى نقطة الاستلام.");
+          openGoogleMapsDir(to.pickup_lat, to.pickup_lng);
+          return;
+        }
+
+        if (kind === "picked") {
+          speakArabic("اتجه إلى نقطة التسليم.");
+          openGoogleMapsDir(to.drop_lat, to.drop_lng);
+          return;
+        }
+
+        if (kind === "delivering") {
+          try {
+            await patchOrderStatus(to.id, "delivered");
+            speakArabic("تم تسجيل التسليم.");
+            showSuccess("تم إنهاء رحلة التوصيل");
+            activeOrderId = null;
+            stopLocationLoop();
+            stopProximityLoop();
+            await loadOrders();
+          } catch (e) {
+            showError(e.message || "تعذر إتمام التسليم");
+          }
+        }
+      };
+
       document.getElementById("btnRefresh").onclick = function () {
         loadOrders();
       };
@@ -636,6 +947,7 @@
         e.preventDefault();
         if (pollTimer) clearInterval(pollTimer);
         stopLocationLoop();
+        stopProximityLoop();
         window.PlatformAPI.setToken("");
         location.href = "/login";
       };

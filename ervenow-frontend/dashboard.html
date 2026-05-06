@@ -779,8 +779,13 @@
           btn.innerText = "جارٍ إنشاء الطلب...";
 
           var pricing = calcDeliveryPricing(km);
+          var idemKey =
+            window.crypto && window.crypto.randomUUID
+              ? window.crypto.randomUUID()
+              : "idem-" + Date.now() + "-" + Math.random().toString(36).slice(2, 12);
           var data = await window.PlatformAPI.api("/api/delivery/orders", {
             method: "POST",
+            idempotencyKey: idemKey,
             body: {
               pickup_address: from,
               drop_address: to,
@@ -948,6 +953,23 @@
       run();
       window.addEventListener("resize", function () {
         refreshMapSize();
+      });
+
+      window.addEventListener("ervenow-api-retry", function (ev) {
+        var d = ev.detail || {};
+        var btn = document.getElementById("createBtn");
+        var result = document.getElementById("result");
+        if (!btn || !btn.disabled || !result) return;
+        if (String(d.path || "").indexOf("/api/delivery/orders") === -1) return;
+        result.innerText =
+          "جارٍ إنشاء الطلب… (إعادة محاولة " + d.attempt + " من " + d.maxAttempts + ")";
+      });
+      window.addEventListener("ervenow-offline-queued", function () {
+        var result = document.getElementById("result");
+        if (result) {
+          result.innerText =
+            "⚠ لا يوجد اتصال: اُحتفظ بالطلب محلياً وسيُرسل تلقائياً عند عودة الشبكة.";
+        }
       });
     </script>
     </div>
