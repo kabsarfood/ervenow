@@ -1,7 +1,11 @@
 -- =============================================================================
 -- موقع المتجر الإلزامي + عنوان + نطاق التوصيل
 -- نفّذ بعد migration_stores.sql و migration_store_marketplace.sql
+-- (أعمدة lat/lng: إن واجهت schema cache نفّذ أيضاً migration_stores_lat_lng.sql)
 -- =============================================================================
+
+ALTER TABLE public.stores ADD COLUMN IF NOT EXISTS lat double precision;
+ALTER TABLE public.stores ADD COLUMN IF NOT EXISTS lng double precision;
 
 ALTER TABLE public.stores ADD COLUMN IF NOT EXISTS address text;
 ALTER TABLE public.stores ADD COLUMN IF NOT EXISTS delivery_radius_km numeric NOT NULL DEFAULT 5;

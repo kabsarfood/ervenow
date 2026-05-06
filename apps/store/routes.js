@@ -903,7 +903,7 @@ router.post("/register", async (req, res) => {
     ({ data: insertedRow, error: insErr } = await sb.from("stores").insert(row).select("id").single());
     if (
       insErr &&
-      /location_text|address|delivery_radius_km|is_active|category|commercial_registration|\bemail\b|file_url|column .* does not exist|schema cache/i.test(
+      /location_text|address|delivery_radius_km|is_active|category|commercial_registration|\bemail\b|file_url|\blat\b|\blng\b|column .* does not exist|schema cache/i.test(
         String(insErr.message || "")
       )
     ) {
@@ -915,10 +915,17 @@ router.post("/register", async (req, res) => {
       delete row.commercial_registration;
       delete row.email;
       delete row.file_url;
+      delete row.lat;
+      delete row.lng;
       ({ data: insertedRow, error: insErr } = await sb.from("stores").insert(row).select("id").single());
     }
     if (insErr) {
-      console.error("[store/register] insert:", insErr);
+      console.error("[store/register] insert FULL:", {
+        message: insErr?.message,
+        details: insErr?.details,
+        code: insErr?.code,
+        hint: insErr?.hint,
+      });
       if (isStoresTableMissing(insErr)) {
         return fail(res, insErr.message || String(insErr), 400);
       }
