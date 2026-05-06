@@ -121,9 +121,73 @@
           line-height: 28px;
         }
       }
+
+      @keyframes ervenow-near-pulse {
+        0%,
+        100% {
+          filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.45));
+        }
+        50% {
+          filter: drop-shadow(0 3px 12px rgba(239, 68, 68, 0.65));
+        }
+      }
+
+      .ervenow-driver-marker.ervenow-near {
+        animation: ervenow-near-pulse 1s ease-in-out infinite;
+      }
+
+      .ervenow-arriving {
+        filter: hue-rotate(10deg) brightness(1.05);
+      }
+
+      #trackSocketBanner {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 10050;
+        background: rgba(180, 83, 9, 0.94);
+        color: #fff;
+        text-align: center;
+        padding: 10px 14px;
+        font-size: 0.95rem;
+        font-weight: 600;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+      }
+
+      #ervenowTrackToast {
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%) translateY(120%);
+        z-index: 10060;
+        max-width: min(92vw, 420px);
+        padding: 12px 18px;
+        border-radius: 14px;
+        background: rgba(30, 20, 12, 0.94);
+        color: #fff8ee;
+        font-size: 0.95rem;
+        font-weight: 600;
+        text-align: center;
+        box-shadow: 0 12px 36px rgba(0, 0, 0, 0.28);
+        opacity: 0;
+        pointer-events: none;
+        transition: transform 0.35s ease, opacity 0.35s ease;
+      }
+      #ervenowTrackToast.is-visible {
+        transform: translateX(-50%) translateY(0);
+        opacity: 1;
+        pointer-events: auto;
+      }
+      #ervenowTrackToast.ervenow-track-toast--warn {
+        background: linear-gradient(135deg, #9a3412, #7c2d12);
+      }
     </style>
   </head>
   <body>
+    <div id="trackSocketBanner" role="status" translate="no">⚠️ الاتصال ضعيف، يتم تحديث الموقع من السيرفر…</div>
+    <div id="ervenowTrackToast" aria-live="polite"></div>
     <div class="layout">
       <div class="top-nav">
         <h1 style="margin: 0">تتبع الطلب</h1>
@@ -146,10 +210,16 @@
 
       <div class="card">
         <strong>خريطة المندوب</strong>
-        <p class="sub" style="margin-top: 4px; margin-bottom: 10px">يُحدَّث الموقع تلقائياً كل بضع ثوانٍ عند الضغط على «تحديث الآن».</p>
+        <p class="sub" style="margin-top: 4px; margin-bottom: 10px">
+          يُحدَّث الموقع لحظياً عبر الاتصال المباشر، مع تحديث تفاصيل الطلب كل بضع ثوانٍ.
+        </p>
         <div class="btn-row" style="margin-bottom: 8px">
           <button type="button" class="btn btn-ghost" id="btnVoiceToggle">🔊 التنبيه الصوتي: تشغيل</button>
+          <button type="button" class="btn btn-ghost" id="btnMapFullscreen">⛶ تكبير</button>
+          <button type="button" class="btn btn-ghost" id="btnOpenDirections">📍 اتجاهات</button>
+          <button type="button" class="btn btn-ghost" id="callDriverBtn" style="display: none">📞 اتصال بالمندوب</button>
         </div>
+        <div class="sub" id="driverInfo" style="margin-bottom: 6px; font-weight: 600" translate="no"></div>
         <div
           id="map"
           class="map-placeholder"
@@ -162,6 +232,9 @@
         <div class="sub" id="gpsState" style="margin-top: 8px"></div>
         <div class="sub" id="lastUpdate" style="margin-top: 4px; font-size: 0.9rem"></div>
         <p class="sub" style="margin: 8px 0 0; font-weight: bold" id="eta" translate="no"></p>
+        <div class="sub" id="etaCountdown" style="margin-top: 4px; font-weight: 600; letter-spacing: 0.04em" translate="no"></div>
+        <div class="sub" id="remainingDistance" style="margin-top: 6px; font-weight: 600" translate="no">—</div>
+        <p class="sub" style="margin: 4px 0 0; font-size: 0.9rem" id="driverSpeed" translate="no"></p>
       </div>
 
       <div class="card" id="rateCard" style="display: none">
@@ -210,6 +283,8 @@
       </div>
     </div>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="/assets/track.js"></script>
+    <script src="https://cdn.socket.io/4.8.1/socket.io.min.js" crossorigin="anonymous"></script>
     <script src="/assets/api-config.js"></script>
     <script src="/assets/api.js"></script>
     <script>
@@ -217,6 +292,7 @@
         new: "جديد",
         pending: "في الانتظار",
         accepted: "تم استلام الطلب",
+        picked: "تم الاستلام من نقطة الالتقاط",
         delivering: "جاري التوصيل",
         delivered: "تم التسليم",
         cancelled_by_customer: "أُلغي بواسطة زائر المنصة",
@@ -243,7 +319,14 @@
       var selectedRate = 0;
       var meRole = null;
       var meRoleFetched = false;
-      var speechState = { orderId: null, accepted: false, delivering: false, near: false };
+      var speechState = {
+        orderId: null,
+        delivering: false,
+      };
+      var trackSocket = null;
+      var trackSocketListenersAttached = false;
+      var socketJoinedOrderId = null;
+      var lastDriverBearingDeg = 0;
       var voiceEnabled = true;
       var currentDriverType = "car";
       var lastTripRouteKey = "";
@@ -252,6 +335,21 @@
       var localPendingRating = 0;
       var audioCtx = null;
       var lastRateFormKey = "";
+      var driverTrailPoints = [];
+      var driverTrailLine = null;
+      var lastOsrmEtaKey = "";
+      var lastOsrmEtaFetchAt = 0;
+      var osrmEtaMinIntervalMs = 11000;
+      var lastOsrmEtaSeconds = null;
+      var notifiedNearArrival = false;
+      var notifiedAccepted = false;
+      var notifiedArrived = false;
+      var notifiedOnWay = false;
+      var onWayTimeoutId = null;
+      var etaCountdownInterval = null;
+      var lastAutoZoomAt = 0;
+      var nearDropMotionFrozen = false;
+      var routeCheckpointLayer = null;
 
       async function ensureMeRole() {
         if (meRoleFetched) return;
@@ -411,6 +509,596 @@
         } catch (e) {}
       }
 
+      function playTrackOrderSound(src, fallbackSpeak) {
+        if (!voiceEnabled) return;
+        unlockAudioContext();
+        var fallbackText = String(fallbackSpeak || "").trim();
+        try {
+          var a = new Audio(String(src || "").trim());
+          a.volume = 0.92;
+          var usedFallback = false;
+          function doFallback() {
+            if (usedFallback) return;
+            usedFallback = true;
+            if (fallbackText) speakArabic(fallbackText);
+          }
+          a.addEventListener(
+            "error",
+            function () {
+              doFallback();
+            },
+            { once: true }
+          );
+          var p = a.play();
+          if (p && typeof p.catch === "function") {
+            p.catch(function () {
+              doFallback();
+            });
+          }
+          setTimeout(function () {
+            if (a.error && fallbackText) doFallback();
+          }, 500);
+        } catch (e) {
+          if (fallbackText) speakArabic(fallbackText);
+        }
+      }
+
+      function __ervApplyDriverRotation(marker, bearingDeg) {
+        if (!marker) return;
+        var deg = Number(bearingDeg);
+        if (!Number.isFinite(deg)) return;
+        var icon = marker._icon;
+        if (!icon) return;
+        var core = icon.querySelector(".ervenow-marker-core");
+        if (!core) return;
+        core.style.transform = "translateZ(0) rotate(" + deg + "deg)";
+        core.style.transformOrigin = "center center";
+      }
+
+      function attachDriverMarkerRotationApi(marker) {
+        if (!marker || marker.setRotationAngle) return;
+        marker.setRotationAngle = function (deg) {
+          __ervApplyDriverRotation(this, deg);
+        };
+      }
+
+      if (typeof window !== "undefined") {
+        window.__ervApplyDriverRotation = __ervApplyDriverRotation;
+      }
+
+      function orderSnapshotForTracking() {
+        if (!lastOrder) return null;
+        if (driverMarker && map && typeof driverMarker.getLatLng === "function") {
+          try {
+            var ll = driverMarker.getLatLng();
+            return Object.assign({}, lastOrder, { driver_lat: ll.lat, driver_lng: ll.lng });
+          } catch (e) {}
+        }
+        return lastOrder;
+      }
+
+      function getDriverToDropMeters(order) {
+        if (!order) return null;
+        var dLat = Number(order.driver_lat);
+        var dLng = Number(order.driver_lng);
+        var toLat = Number(order.drop_lat);
+        var toLng = Number(order.drop_lng);
+        if (!Number.isFinite(dLat) || !Number.isFinite(dLng) || !Number.isFinite(toLat) || !Number.isFinite(toLng)) {
+          return null;
+        }
+        return haversineKmQuick(dLat, dLng, toLat, toLng) * 1000;
+      }
+
+      function updateRemainingDistanceEl(distM) {
+        var el = document.getElementById("remainingDistance");
+        if (!el) return;
+        if (distM == null || !Number.isFinite(distM)) {
+          el.textContent = "—";
+          return;
+        }
+        el.textContent = (distM / 1000).toFixed(1) + " كم";
+      }
+
+      function syncDriverNearPulseClass(active) {
+        if (!driverMarker || typeof driverMarker.getElement !== "function") return;
+        var root = driverMarker.getElement();
+        if (!root) return;
+        if (active) root.classList.add("ervenow-near");
+        else root.classList.remove("ervenow-near");
+      }
+
+      function clearOnWayTimeout() {
+        if (onWayTimeoutId != null) {
+          clearTimeout(onWayTimeoutId);
+          onWayTimeoutId = null;
+        }
+      }
+
+      function clearEtaCountdown() {
+        if (etaCountdownInterval != null) {
+          clearInterval(etaCountdownInterval);
+          etaCountdownInterval = null;
+        }
+        var el = document.getElementById("etaCountdown");
+        if (el) el.textContent = "";
+      }
+
+      function startEtaCountdown(initialSeconds) {
+        clearEtaCountdown();
+        var el = document.getElementById("etaCountdown");
+        if (!el) return;
+        var seconds = Math.floor(Number(initialSeconds));
+        if (!Number.isFinite(seconds) || seconds <= 0) return;
+        function renderOne() {
+          var min = Math.floor(seconds / 60);
+          var sec = seconds % 60;
+          el.textContent = min + ":" + (sec < 10 ? "0" + sec : String(sec));
+        }
+        renderOne();
+        etaCountdownInterval = setInterval(function () {
+          seconds--;
+          if (seconds < 0) {
+            clearEtaCountdown();
+            return;
+          }
+          renderOne();
+        }, 1000);
+      }
+
+      function syncMapArrivingClass(distM) {
+        if (!map || typeof map.getContainer !== "function") return;
+        var container = map.getContainer();
+        if (!container) return;
+        if (distM != null && Number.isFinite(distM) && distM > 0 && distM <= 1000) {
+          container.classList.add("ervenow-arriving");
+        } else {
+          container.classList.remove("ervenow-arriving");
+        }
+      }
+
+      function maskPhone(phone) {
+        if (!phone) return "";
+        var p = String(phone).replace(/\D/g, "");
+        if (!p) return "";
+        return p.slice(0, 2) + "****" + p.slice(-4);
+      }
+
+      function syncDriverCallAndInfo(order) {
+        var infoEl = document.getElementById("driverInfo");
+        var btn = document.getElementById("callDriverBtn");
+        if (!infoEl || !btn) return;
+        if (!order || !order.driver_id) {
+          infoEl.textContent = "";
+          btn.style.display = "none";
+          btn.onclick = null;
+          return;
+        }
+        var rawPhone = order.driver_phone != null ? String(order.driver_phone).trim() : "";
+        if (rawPhone) {
+          infoEl.textContent = "📞 " + maskPhone(rawPhone);
+          btn.style.display = "inline-block";
+          btn.onclick = function () {
+            window.location.href = "tel:" + rawPhone.replace(/^tel:/i, "");
+          };
+        } else {
+          infoEl.textContent = "";
+          btn.style.display = "none";
+          btn.onclick = null;
+        }
+      }
+
+      function trackingEligible(ds) {
+        return ["accepted", "delivering", "picked"].includes(ds);
+      }
+
+      function evaluateArrivedAtDropoff(order, distM) {
+        if (!order || notifiedArrived) return;
+        var ds = String(order.delivery_status || order.status || "").toLowerCase();
+        if (ds === "delivered" || ds === "cancelled_by_customer" || ds === "cancelled") return;
+        if (!trackingEligible(ds)) return;
+        if (distM == null || !Number.isFinite(distM) || distM > 50) return;
+        notifiedArrived = true;
+        syncDriverNearPulseClass(false);
+        if (navigator.vibrate) {
+          try {
+            navigator.vibrate([200, 100, 200]);
+          } catch (e) {}
+        }
+        if (voiceEnabled) {
+          unlockAudioContext();
+          playTrackOrderSound("/sounds/arrived.mp3", "المندوب في الخارج");
+        }
+        showTrackToast("🚚 المندوب وصل إلى موقعك", "ervenow-track-toast--warn");
+      }
+
+      function evaluateNearArrivalAlert(order, distM) {
+        if (!order || notifiedNearArrival) return;
+        var ds = String(order.delivery_status || order.status || "").toLowerCase();
+        if (ds === "delivered" || ds === "cancelled_by_customer" || ds === "cancelled") return;
+        if (!trackingEligible(ds)) return;
+        if (distM != null && Number.isFinite(distM) && distM <= 50) return;
+        var dLat = Number(order.driver_lat);
+        var dLng = Number(order.driver_lng);
+        var toLat = Number(order.drop_lat);
+        var toLng = Number(order.drop_lng);
+        if (!Number.isFinite(dLat) || !Number.isFinite(dLng) || !Number.isFinite(toLat) || !Number.isFinite(toLng)) {
+          return;
+        }
+        var distMUse = distM != null && Number.isFinite(distM) ? distM : haversineKmQuick(dLat, dLng, toLat, toLng) * 1000;
+        var etaSec = lastOsrmEtaSeconds;
+        if (etaSec == null || !Number.isFinite(etaSec)) {
+          etaSec = estimateEtaSecondsFallback(order);
+        }
+        var nearByDist = distMUse <= 1000;
+        var nearByTime = etaSec != null && Number.isFinite(etaSec) && etaSec <= 120;
+        if (!nearByDist && !nearByTime) return;
+        notifiedNearArrival = true;
+        if (navigator.vibrate) {
+          try {
+            navigator.vibrate([200, 100, 200]);
+          } catch (e) {}
+        }
+        if (voiceEnabled) {
+          unlockAudioContext();
+          playTrackOrderSound("/sounds/near.mp3", "المندوب قريب منك وفي الطريق إليك");
+        }
+        showTrackToast("🚚 المندوب قريب منك", "ervenow-track-toast--warn");
+      }
+
+      function runDeliveryTrackingAlerts() {
+        var order = orderSnapshotForTracking();
+        if (!order) {
+          updateRemainingDistanceEl(null);
+          syncDriverNearPulseClass(false);
+          syncMapArrivingClass(null);
+          return;
+        }
+        var ds = String(order.delivery_status || order.status || "").toLowerCase();
+        if (ds === "delivered" || ds === "cancelled_by_customer" || ds === "cancelled") {
+          updateRemainingDistanceEl(null);
+          syncDriverNearPulseClass(false);
+          syncMapArrivingClass(null);
+          return;
+        }
+        var distM = getDriverToDropMeters(order);
+        updateRemainingDistanceEl(distM);
+        if (!trackingEligible(ds)) {
+          syncDriverNearPulseClass(false);
+          syncMapArrivingClass(null);
+          return;
+        }
+        syncMapArrivingClass(distM);
+        if (distM != null && Number.isFinite(distM)) {
+          if (distM > 45) {
+            nearDropMotionFrozen = false;
+          }
+          if (distM <= 20 && !nearDropMotionFrozen) {
+            nearDropMotionFrozen = true;
+            if (window.ErvTrackDriverMotion && typeof window.ErvTrackDriverMotion.cancel === "function") {
+              window.ErvTrackDriverMotion.cancel();
+            }
+          }
+          evaluateArrivedAtDropoff(order, distM);
+          evaluateNearArrivalAlert(order, distM);
+          syncDriverNearPulseClass(distM <= 1000 && distM > 0);
+        } else {
+          evaluateNearArrivalAlert(order, null);
+          syncDriverNearPulseClass(false);
+        }
+      }
+
+      function maybeAutoZoomDriverDrop() {
+        if (!map || !driverMarker || !lastOrder) return;
+        var now = Date.now();
+        if (now - lastAutoZoomAt < 11000) return;
+        var dlat = Number(lastOrder.drop_lat);
+        var dlng = Number(lastOrder.drop_lng);
+        if (!Number.isFinite(dlat) || !Number.isFinite(dlng)) return;
+        var ds = String(lastOrder.delivery_status || lastOrder.status || "").toLowerCase();
+        if (ds === "delivered") return;
+        var ll = driverMarker.getLatLng();
+        try {
+          var b = L.latLngBounds(L.latLng(ll.lat, ll.lng), L.latLng(dlat, dlng));
+          map.fitBounds(b, { padding: [52, 52], maxZoom: 16, animate: true, duration: 0.35 });
+          lastAutoZoomAt = now;
+        } catch (e) {}
+      }
+
+      function leaveTrackOrderRoom() {
+        if (trackSocket && socketJoinedOrderId) {
+          try {
+            trackSocket.emit("leave:order", socketJoinedOrderId);
+          } catch (e) {}
+          socketJoinedOrderId = null;
+        }
+      }
+
+      function restartTrackingPoll() {
+        if (pollTimer) {
+          clearInterval(pollTimer);
+          pollTimer = null;
+        }
+        if (!window.PlatformAPI || !window.PlatformAPI.getToken()) return;
+        var ms = trackSocket && trackSocket.connected ? 3000 : 5000;
+        pollTimer = setInterval(fetchOrder, ms);
+      }
+
+      function showTrackSocketBanner() {
+        var el = document.getElementById("trackSocketBanner");
+        if (el) el.style.display = "block";
+      }
+
+      function hideTrackSocketBanner() {
+        var el = document.getElementById("trackSocketBanner");
+        if (el) el.style.display = "none";
+      }
+
+      function showTrackToast(message, kind) {
+        var el = document.getElementById("ervenowTrackToast");
+        if (!el) return;
+        el.textContent = String(message || "");
+        el.className = "ervenow-track-toast is-visible" + (kind ? " " + String(kind) : "");
+        if (showTrackToast._t) clearTimeout(showTrackToast._t);
+        showTrackToast._t = setTimeout(function () {
+          el.classList.remove("is-visible");
+        }, 5200);
+      }
+
+      function estimateEtaSecondsFallback(order) {
+        var dLat = Number(order.driver_lat);
+        var dLng = Number(order.driver_lng);
+        var toLat = Number(order.drop_lat);
+        var toLng = Number(order.drop_lng);
+        if (!Number.isFinite(dLat) || !Number.isFinite(dLng) || !Number.isFinite(toLat) || !Number.isFinite(toLng)) {
+          return null;
+        }
+        var km = haversineKmQuick(dLat, dLng, toLat, toLng);
+        if (!(km > 0)) return null;
+        return Math.round((km / 40) * 3600);
+      }
+
+      function buildRouteCheckpointsFromGeometry(geometry) {
+        var out = [];
+        if (!geometry || geometry.type !== "LineString" || !Array.isArray(geometry.coordinates)) return out;
+        var ring = geometry.coordinates;
+        if (ring.length < 2) return out;
+        var acc = 0;
+        var nextMark = 500;
+        for (var i = 1; i < ring.length; i++) {
+          var p0 = ring[i - 1];
+          var p1 = ring[i];
+          var segLen = haversineKmQuick(p0[1], p0[0], p1[1], p1[0]) * 1000;
+          if (!(segLen > 0)) continue;
+          while (acc + segLen >= nextMark) {
+            var along = nextMark - acc;
+            var t = along / segLen;
+            var lat = p0[1] + (p1[1] - p0[1]) * t;
+            var lng = p0[0] + (p1[0] - p0[0]) * t;
+            out.push([lat, lng]);
+            nextMark += 500;
+          }
+          acc += segLen;
+        }
+        return out;
+      }
+
+      function clearRouteCheckpoints() {
+        if (map && routeCheckpointLayer) {
+          try {
+            map.removeLayer(routeCheckpointLayer);
+          } catch (e) {}
+          routeCheckpointLayer = null;
+        }
+      }
+
+      function appendDriverTrailPoint(lat, lng) {
+        if (!map) return;
+        var la = Number(lat);
+        var ln = Number(lng);
+        if (!Number.isFinite(la) || !Number.isFinite(ln)) return;
+        driverTrailPoints.push([la, ln]);
+        while (driverTrailPoints.length > 120) driverTrailPoints.shift();
+        if (!driverTrailLine) {
+          driverTrailLine = L.polyline(driverTrailPoints, {
+            color: "#6d28d9",
+            weight: 4,
+            opacity: 0.55,
+            dashArray: "6 12",
+            lineCap: "round",
+            lineJoin: "round",
+          }).addTo(map);
+        } else {
+          driverTrailLine.setLatLngs(driverTrailPoints);
+        }
+      }
+
+      function clearDriverTrail() {
+        driverTrailPoints = [];
+        if (map && driverTrailLine) {
+          try {
+            map.removeLayer(driverTrailLine);
+          } catch (e) {}
+          driverTrailLine = null;
+        }
+      }
+
+      async function fetchOsrmDurationSeconds(fromLat, fromLng, toLat, toLng) {
+        var url =
+          "https://router.project-osrm.org/route/v1/driving/" +
+          fromLng +
+          "," +
+          fromLat +
+          ";" +
+          toLng +
+          "," +
+          toLat +
+          "?overview=false";
+        var r = await fetch(url);
+        if (!r.ok) return null;
+        var j = await r.json();
+        if (!j.routes || !j.routes[0] || j.routes[0].duration == null) return null;
+        return Number(j.routes[0].duration);
+      }
+
+      async function refreshOsrmEtaThrottled(order) {
+        var etaEl = document.getElementById("eta");
+        if (!etaEl || !order) return;
+        try {
+          var ds = order.delivery_status || order.status;
+          if (ds === "delivered") return;
+          var dlat = Number(order.driver_lat);
+          var dlng = Number(order.driver_lng);
+          if (!Number.isFinite(dlat) || !Number.isFinite(dlng)) return;
+          var toLat = Number(order.drop_lat);
+          var toLng = Number(order.drop_lng);
+          if (!Number.isFinite(toLat) || !Number.isFinite(toLng)) {
+            void updateEtaForOrder(order);
+            return;
+          }
+          var distKm0 = haversineKmQuick(dlat, dlng, toLat, toLng);
+          var distM0 = distKm0 * 1000;
+          if (distM0 < 50) {
+            var speedMs = 40 / 3.6;
+            var etaSec = distM0 / speedMs;
+            lastOsrmEtaSeconds = Math.round(etaSec);
+            var minLocal = Math.max(1, Math.ceil(etaSec / 60));
+            etaEl.textContent = "🚗 الوصول خلال " + minLocal + " دقيقة";
+            var nowShort = Date.now();
+            lastOsrmEtaFetchAt = nowShort;
+            lastOsrmEtaKey =
+              dlat.toFixed(4) + "," + dlng.toFixed(4) + ";" + toLat.toFixed(4) + "," + toLng.toFixed(4);
+            return;
+          }
+          var now = Date.now();
+          var key =
+            dlat.toFixed(4) + "," + dlng.toFixed(4) + ";" + toLat.toFixed(4) + "," + toLng.toFixed(4);
+          if (now - lastOsrmEtaFetchAt < osrmEtaMinIntervalMs && key === lastOsrmEtaKey) return;
+          lastOsrmEtaFetchAt = now;
+          lastOsrmEtaKey = key;
+          try {
+            var sec = await fetchOsrmDurationSeconds(dlat, dlng, toLat, toLng);
+            if (sec == null || !Number.isFinite(sec)) {
+              lastOsrmEtaSeconds = estimateEtaSecondsFallback(order);
+              applyEtaToEl(dlat, dlng, toLat, toLng);
+              return;
+            }
+            lastOsrmEtaSeconds = Math.round(sec);
+            var min = Math.max(1, Math.ceil(sec / 60));
+            etaEl.textContent = "🚗 الوصول خلال " + min + " دقيقة (مسار)";
+          } catch (e) {
+            lastOsrmEtaSeconds = estimateEtaSecondsFallback(order);
+            applyEtaToEl(dlat, dlng, toLat, toLng);
+          }
+        } finally {
+          if (order && lastOrder && String(lastOrder.id) === String(order.id)) {
+            runDeliveryTrackingAlerts();
+            var dsF = String(order.delivery_status || order.status || "").toLowerCase();
+            if (dsF === "delivered" || dsF === "cancelled" || dsF === "cancelled_by_customer") {
+              clearEtaCountdown();
+            } else if (lastOsrmEtaSeconds != null && Number.isFinite(lastOsrmEtaSeconds) && lastOsrmEtaSeconds > 0) {
+              startEtaCountdown(lastOsrmEtaSeconds);
+            }
+          }
+        }
+      }
+
+      function attachTrackSocketListeners() {
+        if (trackSocketListenersAttached || !trackSocket) return;
+        trackSocketListenersAttached = true;
+        trackSocket.on("connect", function () {
+          hideTrackSocketBanner();
+          restartTrackingPoll();
+          if (socketJoinedOrderId) {
+            try {
+              trackSocket.emit("join:order", socketJoinedOrderId);
+            } catch (e) {}
+          }
+        });
+        trackSocket.on("disconnect", function () {
+          showTrackSocketBanner();
+          restartTrackingPoll();
+        });
+        trackSocket.on("driver:update", function (data) {
+          if (!data || lastOrder == null || !lastOrder.id) return;
+          if (String(socketJoinedOrderId) !== String(lastOrder.id)) return;
+          if (data.lat == null || data.lng == null) return;
+          var la = Number(data.lat);
+          var ln = Number(data.lng);
+          if (!Number.isFinite(la) || !Number.isFinite(ln)) return;
+
+          lastOrder.driver_lat = la;
+          lastOrder.driver_lng = ln;
+          lastOrder.last_location_at = data.ts ? new Date(data.ts).toISOString() : new Date().toISOString();
+
+          var spdEl = document.getElementById("driverSpeed");
+          if (spdEl) {
+            if (data.speed != null && Number.isFinite(Number(data.speed))) {
+              var ms = Number(data.speed);
+              if (Math.abs(ms) < 0.2) spdEl.textContent = "";
+              else spdEl.textContent = "⚡ تقريباً " + Math.round(Math.abs(ms) * 3.6) + " كم/س";
+            } else {
+              spdEl.textContent = "";
+            }
+          }
+
+          var hOpt = null;
+          if (data.heading != null && Number.isFinite(Number(data.heading))) {
+            hOpt = Number(data.heading);
+          }
+          if (!driverMarker) {
+            if (window.ErvTrackDriverMotion && typeof window.ErvTrackDriverMotion.reset === "function") {
+              window.ErvTrackDriverMotion.reset();
+            }
+            updateDriverMarker(la, ln, { refocusMap: false, heading: hOpt });
+          } else {
+            if (window.ErvTrackDriverMotion && typeof window.ErvTrackDriverMotion.feed === "function") {
+              window.ErvTrackDriverMotion.feed(driverMarker, {
+                lat: la,
+                lng: ln,
+                ts: data.ts != null ? Number(data.ts) : Date.now(),
+                speed: data.speed,
+                heading: data.heading,
+              });
+            }
+            updateDriverMarker(la, ln, { refocusMap: false, heading: hOpt, skipPositionMotion: true });
+          }
+          void refreshOsrmEtaThrottled(lastOrder);
+          runDeliveryTrackingAlerts();
+          maybeAutoZoomDriverDrop();
+          updateGpsStateUI(lastOrder);
+          var cEl = document.getElementById("coords");
+          if (cEl) cEl.textContent = "خط العرض: " + la + " — خط الطول: " + ln;
+          var cm = document.getElementById("coordsMeta");
+          if (cm) cm.textContent = "";
+        });
+      }
+
+      function ensureTrackSocketForOrder(uuid) {
+        if (typeof io === "undefined") return;
+        if (!window.PlatformAPI.getToken()) return;
+        var id = uuid != null ? String(uuid).trim() : "";
+        if (!id) {
+          leaveTrackOrderRoom();
+          return;
+        }
+        if (!trackSocket) {
+          var tok = window.PlatformAPI.getToken();
+          trackSocket = io({
+            path: "/socket.io/",
+            transports: ["websocket", "polling"],
+            auth: { token: tok || "" },
+          });
+          attachTrackSocketListeners();
+        }
+        if (socketJoinedOrderId !== id) {
+          leaveTrackOrderRoom();
+          socketJoinedOrderId = id;
+          try {
+            trackSocket.emit("join:order", id);
+          } catch (e) {}
+        }
+      }
+
       function unlockAudioContext() {
         try {
           if (!audioCtx) {
@@ -469,39 +1157,44 @@
         var orderId = String(order.id || "");
         if (!orderId) return;
         if (speechState.orderId !== orderId) {
-          speechState = { orderId: orderId, accepted: false, delivering: false, near: false };
+          speechState = {
+            orderId: orderId,
+            delivering: false,
+          };
+          notifiedNearArrival = false;
+          notifiedAccepted = false;
+          notifiedArrived = false;
+          notifiedOnWay = false;
+          lastOsrmEtaSeconds = null;
+          nearDropMotionFrozen = false;
+          clearOnWayTimeout();
+          clearEtaCountdown();
         }
         var deliveryStatus = String(order.delivery_status || order.status || "");
-        if (deliveryStatus === "accepted" && !speechState.accepted) {
+        if (deliveryStatus === "accepted" && !notifiedAccepted) {
+          notifiedAccepted = true;
           if (voiceEnabled) {
             unlockAudioContext();
-            playTrackingBeep();
-            speakArabic("زائرنا العزيز، تم قبول الطلب.");
+            playTrackOrderSound("/sounds/accepted.mp3", "تم استلام طلبك");
+            speakArabic("تم استلام طلبك وجاري التوصيل");
           }
-          speechState.accepted = true;
+          showTrackToast("🚚 المندوب استلم الطلب");
+          clearOnWayTimeout();
+          onWayTimeoutId = setTimeout(function () {
+            onWayTimeoutId = null;
+            if (!lastOrder || String(lastOrder.id || "") !== orderId) return;
+            var st = String(lastOrder.delivery_status || lastOrder.status || "");
+            if (!["accepted", "delivering", "picked"].includes(st)) return;
+            if (notifiedOnWay) return;
+            notifiedOnWay = true;
+            showTrackToast("🚚 المندوب في الطريق إليك");
+            if (voiceEnabled) speakArabic("المندوب في الطريق إليك");
+          }, 4000);
         }
         if (deliveryStatus === "delivering" && !speechState.delivering) {
-          if (voiceEnabled) {
-            unlockAudioContext();
-            playTrackingBeep();
-            speakArabic("زائرنا العزيز، تم استلام الطلب والتوجه إليك.");
-          }
           speechState.delivering = true;
         }
-        var etaMinutes = computeEtaMinutesForOrder(order);
-        if (
-          !speechState.near &&
-          etaMinutes != null &&
-          etaMinutes <= 2 &&
-          (deliveryStatus === "accepted" || deliveryStatus === "delivering")
-        ) {
-          if (voiceEnabled) {
-            unlockAudioContext();
-            playTrackingBeep();
-            speakArabic("زائرنا العزيز، المندوب قريب منك خلال دقيقتين.");
-          }
-          speechState.near = true;
-        }
+        runDeliveryTrackingAlerts();
       }
 
       function applyEtaToEl(driver_lat, driver_lng, drop_lat, drop_lng) {
@@ -672,19 +1365,23 @@
         return "car";
       }
 
-      function makeVehicleDivIcon(kind) {
+      function makeVehicleDivIcon(kind, rotationDeg) {
+        var rot = Number(rotationDeg);
+        if (!Number.isFinite(rot)) rot = 0;
         var emoji = "🚗";
         if (kind === "bike") emoji = "🛵";
         else if (kind === "truck") emoji = "🚚";
         return L.divIcon({
           className: "ervenow-driver-marker",
           html:
-            '<div style="font-size:30px;line-height:1;text-align:center;transform:translateZ(0);filter:drop-shadow(0 2px 4px rgba(0,0,0,.4))">' +
+            '<div class="ervenow-marker-core" style="font-size:44px;line-height:1;text-align:center;transform:translateZ(0) rotate(' +
+            rot +
+            'deg);transform-origin:center center;filter:drop-shadow(0 2px 6px rgba(0,0,0,.45))">' +
             emoji +
             "</div>",
-          iconSize: [36, 36],
-          iconAnchor: [18, 18],
-          popupAnchor: [0, -20],
+          iconSize: [52, 52],
+          iconAnchor: [26, 26],
+          popupAnchor: [0, -26],
         });
       }
 
@@ -701,11 +1398,33 @@
         return 2 * R * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x));
       }
 
+      function bearingDeg(lat1, lon1, lat2, lon2) {
+        var φ1 = (lat1 * Math.PI) / 180;
+        var φ2 = (lat2 * Math.PI) / 180;
+        var Δλ = ((lon2 - lon1) * Math.PI) / 180;
+        var y = Math.sin(Δλ) * Math.cos(φ2);
+        var x = Math.cos(φ1) * Math.sin(φ2) - Math.sin(φ1) * Math.cos(φ2) * Math.cos(Δλ);
+        var θ = Math.atan2(y, x);
+        return ((θ * 180) / Math.PI + 360) % 360;
+      }
+
       function animateMarkerTo(targetLat, targetLng) {
         if (!driverMarker) return;
         if (markerAnimRaf) {
           cancelAnimationFrame(markerAnimRaf);
           markerAnimRaf = null;
+        }
+        if (window.driverAnim != null) {
+          clearInterval(window.driverAnim);
+          window.driverAnim = null;
+        }
+        if (window.ErvTrackDriverMotion && typeof window.ErvTrackDriverMotion.smoothLerpTo === "function") {
+          window.ErvTrackDriverMotion.smoothLerpTo(driverMarker, targetLat, targetLng, 420);
+          return;
+        }
+        if (typeof animateErvDriverMarker === "function") {
+          animateErvDriverMarker(driverMarker, [targetLat, targetLng]);
+          return;
         }
         var start = driverMarker.getLatLng();
         var startLat = Number(start.lat);
@@ -734,32 +1453,79 @@
       function updateDriverMarker(lat, lng, opts) {
         opts = opts || {};
         if (lat == null || lng == null) return;
-        var la = Number(lat);
-        var ln = Number(lng);
-        if (Number.isNaN(la) || Number.isNaN(ln)) return;
-        if (smoothDriverLat != null && smoothDriverLng != null) {
+        var rawLa = Number(lat);
+        var rawLn = Number(lng);
+        if (Number.isNaN(rawLa) || Number.isNaN(rawLn)) return;
+
+        if (!opts.skipPositionMotion) {
+          if (window.ErvTrackDriverMotion && typeof window.ErvTrackDriverMotion.reset === "function") {
+            window.ErvTrackDriverMotion.reset();
+          }
+        }
+
+        var bearingDegVal = lastDriverBearingDeg;
+        if (opts.heading != null && Number.isFinite(Number(opts.heading))) {
+          bearingDegVal = Number(opts.heading);
+          lastDriverBearingDeg = bearingDegVal;
+        } else {
+          var fromLat = null;
+          var fromLng = null;
+          if (driverMarker) {
+            var p0 = driverMarker.getLatLng();
+            fromLat = p0.lat;
+            fromLng = p0.lng;
+          } else if (smoothDriverLat != null && smoothDriverLng != null) {
+            fromLat = smoothDriverLat;
+            fromLng = smoothDriverLng;
+          }
+          if (fromLat != null && fromLng != null) {
+            var stepKm = haversineKmQuick(fromLat, fromLng, rawLa, rawLn);
+            if (stepKm > 0.00025) {
+              bearingDegVal = bearingDeg(fromLat, fromLng, rawLa, rawLn);
+              lastDriverBearingDeg = bearingDegVal;
+            }
+          }
+        }
+
+        var la = rawLa;
+        var ln = rawLn;
+        if (!opts.skipPositionMotion && smoothDriverLat != null && smoothDriverLng != null) {
           var jump = haversineKmQuick(smoothDriverLat, smoothDriverLng, la, ln);
-          if (jump > 2.5) {
-            la = smoothDriverLat * 0.5 + la * 0.5;
-            ln = smoothDriverLng * 0.5 + ln * 0.5;
-          } else {
-            la = smoothDriverLat * 0.45 + la * 0.55;
-            ln = smoothDriverLng * 0.45 + ln * 0.55;
+          if (jump > 12) {
+            la = smoothDriverLat * 0.35 + la * 0.65;
+            ln = smoothDriverLng * 0.35 + ln * 0.65;
           }
         }
         smoothDriverLat = la;
         smoothDriverLng = ln;
         ensureMap();
         if (!map) return;
-        var icon = makeVehicleDivIcon(currentDriverType);
+
+        var icon = makeVehicleDivIcon(currentDriverType, bearingDegVal);
         if (driverMarker) {
           driverMarker.setIcon(icon);
-          animateMarkerTo(la, ln);
+          attachDriverMarkerRotationApi(driverMarker);
+          if (typeof driverMarker.setRotationAngle === "function") {
+            driverMarker.setRotationAngle(bearingDegVal);
+          }
+          if (!opts.skipPositionMotion) {
+            animateMarkerTo(la, ln);
+          }
         } else {
           driverMarker = L.marker([la, ln], { title: "موقع المندوب", icon: icon })
             .addTo(map)
             .bindPopup("المندوب");
+          attachDriverMarkerRotationApi(driverMarker);
+          if (typeof driverMarker.setRotationAngle === "function") {
+            driverMarker.setRotationAngle(bearingDegVal);
+          }
           map.setView([la, ln], Math.max(map.getZoom(), 14));
+        }
+        if (lastOrder && (lastOrder.delivery_status || lastOrder.status) !== "delivered") {
+          var lastP = driverTrailPoints[driverTrailPoints.length - 1];
+          if (!lastP || haversineKmQuick(lastP[0], lastP[1], la, ln) > 0.00002) {
+            appendDriverTrailPoint(la, ln);
+          }
         }
         if (opts.refocusMap) {
           map.panTo([la, ln], { animate: true, duration: 0.5 });
@@ -767,6 +1533,7 @@
         setTimeout(function () {
           if (map) map.invalidateSize();
         }, 80);
+        runDeliveryTrackingAlerts();
       }
 
       function updateDropMarker(lat, lng) {
@@ -853,11 +1620,31 @@
           routeLine = L.geoJSON(route.geometry, {
             style: { color: "#ef4444", weight: 5, opacity: 0.9 },
           }).addTo(map);
-          map.fitBounds(routeLine.getBounds(), { padding: [24, 24] });
+          clearRouteCheckpoints();
+          var cpts = buildRouteCheckpointsFromGeometry(route.geometry);
+          if (cpts.length) {
+            routeCheckpointLayer = L.layerGroup();
+            for (var ci = 0; ci < cpts.length; ci++) {
+              L.circleMarker(cpts[ci], {
+                radius: 4,
+                color: "#c2410c",
+                weight: 2,
+                fillColor: "#fb923c",
+                fillOpacity: 0.88,
+              }).addTo(routeCheckpointLayer);
+            }
+            routeCheckpointLayer.addTo(map);
+          }
+          map.fitBounds(routeLine.getBounds(), { padding: [28, 28] });
         } catch (e) {}
       }
 
       function clearDriverMarker(clearRoute) {
+        if (window.ErvTrackDriverMotion && typeof window.ErvTrackDriverMotion.reset === "function") {
+          window.ErvTrackDriverMotion.reset();
+        }
+        clearDriverTrail();
+        syncDriverNearPulseClass(false);
         if (map && driverMarker) {
           try {
             map.removeLayer(driverMarker);
@@ -865,8 +1652,10 @@
           driverMarker = null;
           smoothDriverLat = null;
           smoothDriverLng = null;
+          lastDriverBearingDeg = 0;
         }
         if (clearRoute === false) return;
+        clearRouteCheckpoints();
         if (map && routeLine) {
           try {
             map.removeLayer(routeLine);
@@ -900,6 +1689,10 @@
       function renderOrder(order) {
         if (!order) return;
         if (currentOrderId != null && String(currentOrderId) !== String(order.id)) {
+          leaveTrackOrderRoom();
+          clearDriverTrail();
+          lastOsrmEtaKey = "";
+          lastOsrmEtaFetchAt = 0;
           driverMarker = null;
           mapInitialized = false;
           clearDriverMarker();
@@ -917,6 +1710,14 @@
           dropGeocodeCache = Object.create(null);
           etaRequestId++;
           lastTripRouteKey = "";
+          notifiedNearArrival = false;
+          notifiedAccepted = false;
+          notifiedArrived = false;
+          notifiedOnWay = false;
+          lastOsrmEtaSeconds = null;
+          nearDropMotionFrozen = false;
+          clearOnWayTimeout();
+          clearEtaCountdown();
           smoothDriverLat = null;
           smoothDriverLng = null;
           localPendingRating = 0;
@@ -1019,6 +1820,10 @@
           ].join("~");
         if (tripKey !== lastTripRouteKey) {
           lastTripRouteKey = tripKey;
+          notifiedNearArrival = false;
+          notifiedArrived = false;
+          nearDropMotionFrozen = false;
+          lastOsrmEtaSeconds = null;
           void renderTripRoute(order);
         }
         var hasDriverLocation = lat != null && lng != null && !Number.isNaN(Number(lat)) && !Number.isNaN(Number(lng));
@@ -1035,6 +1840,7 @@
           document.getElementById("coordsMeta").textContent = "";
         } else {
           clearDriverMarker(false);
+          clearDriverTrail();
           document.getElementById("coords").textContent =
             "لا يوجد موقع مندوب بعد (يُرسَل من صفحة المندوب بعد الاستلام أو أثناء التوصيل)";
           document.getElementById("coordsMeta").textContent = "";
@@ -1046,8 +1852,14 @@
             lat != null && lng != null && !Number.isNaN(Number(lat)) && !Number.isNaN(Number(lng));
           if (deliveryStatus === "delivered") {
             etaEl0.textContent = "";
+            clearEtaCountdown();
+            var sp0 = document.getElementById("driverSpeed");
+            if (sp0) sp0.textContent = "";
           } else if (!hasDriverLocation) {
             etaEl0.textContent = "";
+          } else if (hasDropPoint) {
+            etaEl0.textContent = "";
+            void refreshOsrmEtaThrottled(order);
           } else if (order.distance_km) {
             var speed = 40;
             var minutes = Math.round((Number(order.distance_km) / speed) * 60);
@@ -1073,7 +1885,14 @@
         updateGpsStateUI(order);
         syncInvoiceButton();
         syncCancelButton(order);
+        syncDriverCallAndInfo(order);
         maybeSpeakTrackingEvents(order);
+        var dsSocket = order.delivery_status || order.status;
+        if (dsSocket === "delivered" || dsSocket === "cancelled_by_customer") {
+          leaveTrackOrderRoom();
+        } else if (order.id) {
+          ensureTrackSocketForOrder(order.id);
+        }
       }
 
       function syncVoiceToggleUI() {
@@ -1172,6 +1991,10 @@
           }
         } catch (e) {
           lastOrder = null;
+          leaveTrackOrderRoom();
+          hideTrackSocketBanner();
+          var spE = document.getElementById("driverSpeed");
+          if (spE) spE.textContent = "";
           syncInvoiceButton();
           var outEl = document.getElementById("out");
           if (outEl) outEl.textContent = "";
@@ -1184,8 +2007,7 @@
       }
 
       function startTrackingPolling() {
-        if (pollTimer) clearInterval(pollTimer);
-        pollTimer = setInterval(fetchOrder, 3000);
+        restartTrackingPoll();
       }
 
       document.getElementById("btn").onclick = function () {
@@ -1235,6 +2057,43 @@
             unlockAudioContext();
             toggleVoiceSetting();
           };
+      })();
+      (function () {
+        var bf = document.getElementById("btnMapFullscreen");
+        if (bf) {
+          bf.onclick = function () {
+            var el = document.getElementById("map");
+            if (!el) return;
+            if (el.requestFullscreen) el.requestFullscreen();
+            else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+            else if (el.msRequestFullscreen) el.msRequestFullscreen();
+            setTimeout(function () {
+              if (map) map.invalidateSize();
+            }, 350);
+          };
+        }
+        var bd = document.getElementById("btnOpenDirections");
+        if (bd) {
+          bd.onclick = function () {
+            var lat;
+            var lng;
+            if (lastOrder && lastOrder.driver_lat != null && lastOrder.driver_lng != null) {
+              lat = Number(lastOrder.driver_lat);
+              lng = Number(lastOrder.driver_lng);
+            }
+            if ((!Number.isFinite(lat) || !Number.isFinite(lng)) && driverMarker) {
+              var ll = driverMarker.getLatLng();
+              lat = ll.lat;
+              lng = ll.lng;
+            }
+            if ((!Number.isFinite(lat) || !Number.isFinite(lng)) && lastOrder) {
+              lat = Number(lastOrder.drop_lat);
+              lng = Number(lastOrder.drop_lng);
+            }
+            if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+            window.open("https://www.google.com/maps?q=" + lat + "," + lng, "_blank", "noopener,noreferrer");
+          };
+        }
       })();
 
       var params = new URLSearchParams(location.search);

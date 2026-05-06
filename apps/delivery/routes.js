@@ -34,6 +34,32 @@ const {
 
 const router = express.Router();
 
+/** بعد draft → pending: نفس منطق النشر الأصلي (سلة → checkout-dispatch، وإلا new-order). */
+function enqueueJobForPublishedOrder(order) {
+  if (!order?.id) return Promise.resolve();
+  const b = order.breakdown && typeof order.breakdown === "object" ? order.breakdown : {};
+  const groupItems = Array.isArray(b.items) ? b.items : [];
+  if (groupItems.length) {
+    return enqueueDeliveryJob("checkout-dispatch", {
+      orderId: order.id,
+      groupItems,
+      total: Number(order.order_total) || 0,
+      appUserPhone: String(order.customer_phone || ""),
+    });
+  }
+  return enqueueDeliveryJob("new-order", {
+    orderId: order.id,
+    pickup:
+      order.pickup_lat != null && order.pickup_lng != null
+        ? { lat: Number(order.pickup_lat), lng: Number(order.pickup_lng) }
+        : null,
+    dropoff:
+      order.drop_lat != null && order.drop_lng != null
+        ? { lat: Number(order.drop_lat), lng: Number(order.drop_lng) }
+        : null,
+  });
+}
+
 router.use((req, res, next) => {
   res.set("Cache-Control", "no-store");
   next();
@@ -58,6 +84,7 @@ async function attachDriverCarType(sb, order) {
   try {
     const phone = await getUserPhoneById(sb, order.driver_id);
     if (!phone) return order;
+    order.driver_phone = String(phone).trim();
     const digits = phone.replace(/\D/g, "");
     if (digits.length < 9) return order;
     const { data: drv, error } = await sb.from("drivers").select("car_type").eq("phone", digits).maybeSingle();
@@ -177,20 +204,24 @@ router.post("/orders", requireAuth, deliveryOrdersCreateLimiter, async (req, res
     const { data, error } = await createDeliveryOrderFromBody(req.supabase, req.appUser, body);
     if (error) return fail(res, error.message, 400);
     if (data) {
-      try {
-        await enqueueDeliveryJob("new-order", {
-          orderId: data.id,
-          pickup:
-            data.pickup_lat != null && data.pickup_lng != null
-              ? { lat: Number(data.pickup_lat), lng: Number(data.pickup_lng) }
-              : null,
-          dropoff:
-            data.drop_lat != null && data.drop_lng != null
-              ? { lat: Number(data.drop_lat), lng: Number(data.drop_lng) }
-              : null,
-        });
-      } catch (qe) {
-        logger.error({ err: qe && (qe.message || String(qe)), orderId: data.id }, "[delivery/orders] enqueue");
+      const ds = String(data.delivery_status || "").toLowerCase();
+      const publishable = ds === "pending" || ds === "new";
+      if (publishable) {
+        try {
+          await enqueueDeliveryJob("new-order", {
+            orderId: data.id,
+            pickup:
+              data.pickup_lat != null && data.pickup_lng != null
+                ? { lat: Number(data.pickup_lat), lng: Number(data.pickup_lng) }
+                : null,
+            dropoff:
+              data.drop_lat != null && data.drop_lng != null
+                ? { lat: Number(data.drop_lat), lng: Number(data.drop_lng) }
+                : null,
+          });
+        } catch (qe) {
+          logger.error({ err: qe && (qe.message || String(qe)), orderId: data.id }, "[delivery/orders] enqueue");
+        }
       }
       await bumpDeliveryOrdersListEpoch();
     }
@@ -303,6 +334,17 @@ router.patch("/orders/:id/status", requireAuth, async (req, res) => {
     if (data) {
       await bumpDeliveryOrdersListEpoch();
       const ds = String(nextStatus || "").toLowerCase();
+      const prevDs = String(current || "").toLowerCase();
+      if (prevDs === "draft" && ds === "pending") {
+        try {
+          await enqueueJobForPublishedOrder(data);
+        } catch (qe) {
+          logger.error(
+            { err: qe && (qe.message || String(qe)), orderId: data.id },
+            "[delivery/status] enqueue after draft→pending"
+          );
+        }
+      }
       if (data.customer_phone) {
         if (ds === "delivering") {
           await sendCustomerDeliveringNotice(data);

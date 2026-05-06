@@ -86,17 +86,152 @@
       .delivery-dropdown[open] #pickupDropMap {
         min-height: 360px;
       }
+
+      /* شريط علوي + قائمة طلبات منسدلة (كمبيوتر وجوال) */
+      .top-nav-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+        justify-content: flex-end;
+        flex: 1 1 auto;
+        min-width: 0;
+      }
+      .top-nav-actions > a.btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .orders-dropdown {
+        position: relative;
+        flex: 0 1 auto;
+      }
+      .orders-dropdown > summary {
+        list-style: none;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        user-select: none;
+        margin: 0;
+        white-space: nowrap;
+      }
+      .orders-dropdown > summary::-webkit-details-marker {
+        display: none;
+      }
+      .orders-dropdown__chevron {
+        display: inline-block;
+        transition: transform 0.2s ease;
+        font-size: 0.7rem;
+        opacity: 0.85;
+      }
+      .orders-dropdown[open] .orders-dropdown__chevron {
+        transform: rotate(180deg);
+      }
+      .orders-dropdown__panel {
+        position: absolute;
+        top: calc(100% + 8px);
+        right: 0;
+        left: auto;
+        width: min(100vw - 32px, 420px);
+        max-height: min(70vh, 520px);
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        background: #fff;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        border-radius: 14px;
+        box-shadow: 0 16px 44px rgba(45, 26, 14, 0.16);
+        z-index: 60;
+        padding: 12px 14px 14px;
+      }
+      .orders-dropdown__head {
+        margin-bottom: 8px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+      }
+      .orders-dropdown__hint {
+        margin: 6px 0 0;
+        font-size: 0.82rem;
+        line-height: 1.35;
+      }
+      .orders-dropdown__list .order-row {
+        padding: 10px 0;
+      }
+      .orders-dropdown__foot {
+        margin: 12px 0 0;
+        padding-top: 10px;
+        border-top: 1px solid rgba(0, 0, 0, 0.06);
+        text-align: center;
+      }
+      .orders-dropdown__switch {
+        color: var(--muted, #6b5c52);
+        font-size: 0.85rem;
+        text-decoration: none;
+      }
+      .orders-dropdown__switch:hover {
+        text-decoration: underline;
+        color: var(--brown, #3d2213);
+      }
+      @media (max-width: 720px) {
+        .top-nav {
+          flex-direction: column;
+          align-items: stretch;
+          gap: 12px;
+        }
+        .top-nav > h1 {
+          text-align: center;
+        }
+        .top-nav-actions {
+          justify-content: center;
+          width: 100%;
+        }
+        .top-nav-actions > a.btn {
+          flex: 1 1 auto;
+          justify-content: center;
+          text-align: center;
+        }
+        .orders-dropdown {
+          width: 100%;
+          flex: 1 1 100%;
+        }
+        .orders-dropdown > summary {
+          width: 100%;
+          justify-content: center;
+        }
+        .orders-dropdown__panel {
+          right: 0;
+          left: 0;
+          width: 100%;
+          max-width: none;
+          max-height: min(65vh, 480px);
+        }
+      }
     </style>
   </head>
   <body>
     <div class="dash-main">
     <div class="layout">
       <div class="top-nav">
-        <h1 style="margin: 0">لوحة زائر المنصة</h1>
-        <div class="btn-row">
+        <h1 style="margin: 0; flex: 1; min-width: 0">لوحة زائر المنصة</h1>
+        <div class="top-nav-actions">
           <a class="btn btn-ghost" href="/">الرئيسية</a>
           <a class="btn btn-ghost" href="/track">تتبع طلب</a>
-          <a class="btn btn-ghost" href="/login" id="logout">خروج</a>
+          <details class="orders-dropdown" id="ordersDropdown">
+            <summary class="btn btn-ghost orders-dropdown__summary" id="ordersSummary">
+              <span>طلباتي الأخيرة</span>
+              <span class="orders-dropdown__chevron" aria-hidden="true">▾</span>
+            </summary>
+            <div class="orders-dropdown__panel" id="ordersDropdownPanel">
+              <div class="orders-dropdown__head">
+                <strong>طلباتي الأخيرة</strong>
+                <p class="sub orders-dropdown__hint">آخر الطلبات — الجديدة والمكتملة. اضغط العنوان مرة أخرى أو خارج القائمة للإغلاق.</p>
+              </div>
+              <div id="ordersList" class="orders-dropdown__list"></div>
+              <p class="sub orders-dropdown__foot">
+                <a href="/login" class="orders-dropdown__switch" id="switchAccount">تبديل الحساب</a>
+              </p>
+            </div>
+          </details>
         </div>
       </div>
 
@@ -125,7 +260,7 @@
                   <option value="car" selected>سيارة (0 - 7 كم = 22 ريال)</option>
                 </select>
                 <input id="from" placeholder="📍 موقع الاستلام" oninput="handleLocationInputChange()" />
-                <input id="to" placeholder="📍 موقع التسليم" oninput="handleLocationInputChange()" />
+                <input id="to" placeholder="📍 موقع المستلم (التسليم)" oninput="handleLocationInputChange()" />
                 <div class="btn-row">
                   <button
                     class="btn btn-ghost map-action-btn"
@@ -133,7 +268,7 @@
                     type="button"
                     onclick="selectMode('from')"
                   >
-                    📍 تحديد موقع الاستلام من الخريطة
+                    📍 موقع الاستلام
                   </button>
                   <button
                     class="btn btn-ghost map-action-btn"
@@ -141,10 +276,15 @@
                     type="button"
                     onclick="selectMode('to')"
                   >
-                    📍 تحديد موقع المستلم من الخريطة
+                    📍 موقع التسليم
                   </button>
-                  <button class="btn btn-ghost map-action-btn" id="btnUseMyLocation" type="button" onclick="setPickupFromCurrentLocation()">
-                    🧭 استخدام موقعي الحالي للاستلام
+                </div>
+                <div class="btn-row" style="margin-top: 8px">
+                  <button class="btn btn-ghost map-action-btn" type="button" onclick="openGoogleMapsFor('from')">
+                    🗺 Google Maps — الاستلام
+                  </button>
+                  <button class="btn btn-ghost map-action-btn" type="button" onclick="openGoogleMapsFor('to')">
+                    🗺 Google Maps — التسليم
                   </button>
                 </div>
                 <div id="pickupDropMap"></div>
@@ -181,11 +321,6 @@
           <a class="btn btn-primary" href="/order" style="flex: 1; text-align: center; max-width: 100%">اطلب الآن</a>
         </div>
       </div>
-
-      <div class="card">
-        <strong>طلباتي الأخيرة</strong>
-        <div id="ordersList" style="margin-top: 12px"></div>
-      </div>
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -203,19 +338,12 @@
         });
       }
 
-      document.getElementById("logout").onclick = function (e) {
-        e.preventDefault();
-        try {
-          localStorage.removeItem("userPhone");
-        } catch (err) {}
-        window.PlatformAPI.setToken("");
-        location.href = "/login";
-      };
-
       var STATUS_AR = {
+        draft: "مسودة",
         new: "جديد",
         pending: "في الانتظار",
         accepted: "تم الاستلام",
+        picked: "تم الاستلام من المتجر",
         delivering: "جاري التوصيل",
         delivered: "تم التسليم",
         cancelled_by_customer: "أُلغي من زائر المنصة",
@@ -417,36 +545,29 @@
         selectType = type;
         updateSelectButtonsUi();
         document.getElementById("result").innerText =
-          type === "from" ? "📍 اختر موقع الاستلام من الخريطة" : "📍 اختر موقع التسليم من الخريطة";
+          type === "from" ? "📍 انقر على الخريطة لتحديد موقع الاستلام" : "📍 انقر على الخريطة لتحديد موقع التسليم";
       }
 
-      async function setPickupFromCurrentLocation() {
+      function openGoogleMapsFor(kind) {
         initMap();
-        if (!navigator.geolocation) {
-          document.getElementById("result").innerText = "❌ متصفحك لا يدعم تحديد الموقع.";
-          return;
+        var isFrom = kind === "from";
+        var ll = isFrom ? fromLL : toLL;
+        var input = document.getElementById(isFrom ? "from" : "to");
+        var val = input ? String(input.value || "").trim() : "";
+        var url;
+        if (ll && Number.isFinite(ll.lat) && Number.isFinite(ll.lng)) {
+          url = "https://www.google.com/maps?q=" + encodeURIComponent(ll.lat + "," + ll.lng);
+        } else if (val) {
+          url = "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(val);
+        } else {
+          url = "https://www.google.com/maps";
         }
-        document.getElementById("result").innerText = "📡 جارٍ تحديد موقعك الحالي...";
-        navigator.geolocation.getCurrentPosition(
-          async function (pos) {
-            var lat = pos.coords.latitude;
-            var lng = pos.coords.longitude;
-            clientLocation = { lat: lat, lng: lng };
-            fromLL = { lat: lat, lng: lng };
-            setClientLocationMarker(lat, lng);
-            if (markerFrom) map.removeLayer(markerFrom);
-            markerFrom = L.marker([lat, lng]).addTo(map).bindPopup("📍 الاستلام");
-            map.setView([lat, lng], 15);
-            var address = await reverseGeocode(lat, lng);
-            document.getElementById("from").value = address || lat.toFixed(6) + "," + lng.toFixed(6);
-            document.getElementById("result").innerText = "✅ تم تحديد موقع الاستلام من موقعك الحالي.";
-            enableCreate();
-          },
-          function () {
-            document.getElementById("result").innerText = "❌ تعذر الوصول إلى موقعك. فعّل إذن الموقع.";
-          },
-          { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
-        );
+        window.open(url, "_blank", "noopener,noreferrer");
+        var res = document.getElementById("result");
+        if (res) {
+          res.innerText =
+            "🗺 بعد التأكد من الموقع في خرائط Google، انسخ العنوان أو الإحداثيات (lat,lng) والصقها في الحقل أعلاه ثم اضغط «احسب المسافة».";
+        }
       }
 
       async function onMapClick(e) {
@@ -708,18 +829,42 @@
 
       (function initServiceCardsUi() {
         var deliveryDetails = document.getElementById("deliveryDetails");
+        var ordersDropdown = document.getElementById("ordersDropdown");
+        if (ordersDropdown) {
+          ordersDropdown.addEventListener("toggle", function () {
+            if (ordersDropdown.open && deliveryDetails && deliveryDetails.open) {
+              deliveryDetails.open = false;
+            }
+          });
+        }
+        var switchAccount = document.getElementById("switchAccount");
+        if (switchAccount) {
+          switchAccount.addEventListener("click", function () {
+            try {
+              localStorage.removeItem("userPhone");
+            } catch (err) {}
+            window.PlatformAPI.setToken("");
+          });
+        }
         if (deliveryDetails) {
           deliveryDetails.addEventListener("toggle", function () {
             if (deliveryDetails.open) {
               setActiveServiceCard("delivery");
               initMap();
               refreshMapSize();
+              if (ordersDropdown && ordersDropdown.open) ordersDropdown.open = false;
             } else {
               setActiveServiceCard("");
             }
           });
           setActiveServiceCard("");
         }
+
+        document.addEventListener("click", function (e) {
+          if (!ordersDropdown || !ordersDropdown.open) return;
+          if (e.target.closest("#ordersDropdown")) return;
+          ordersDropdown.open = false;
+        });
 
         ["tileRestaurants", "tileMarket", "tileServices"].forEach(function (id) {
           var el = document.getElementById(id);

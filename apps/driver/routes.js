@@ -291,7 +291,7 @@ router.get("/orders", requireAuth, async (req, res) => {
       .from("orders")
       .select("*")
       .eq("driver_id", driverId)
-      .in("delivery_status", ["accepted", "delivering", "pending"])
+      .in("delivery_status", ["accepted", "delivering", "picked"])
       .order("created_at", { ascending: false });
     if (asErr) return fail(res, asErr.message, 400);
 
@@ -423,7 +423,7 @@ router.post("/update-location", requireAuth, async (req, res) => {
         updated_at: new Date().toISOString(),
       })
       .eq("driver_id", driverId)
-      .in("delivery_status", ["accepted", "delivering"]);
+      .in("delivery_status", ["accepted", "picked", "delivering"]);
     if (orderId) q = q.eq("id", orderId);
     const { error } = await q;
     if (error) return fail(res, error.message, 400);
@@ -455,7 +455,7 @@ router.post("/start-delivery/:id", requireAuth, async (req, res) => {
       .update({ delivery_status: "delivering", updated_at: nowIso() })
       .eq("id", id)
       .eq("driver_id", req.appUser.id)
-      .in("delivery_status", ["accepted", "pending"])
+      .in("delivery_status", ["accepted", "picked"])
       .select()
       .maybeSingle();
     if (error) return fail(res, error.message, 400);

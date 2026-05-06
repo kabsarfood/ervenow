@@ -18,6 +18,7 @@ const servicesRoutes = require("../apps/services/routes");
 const financeRoutes = require("../apps/finance/routes");
 const checkoutRoutes = require("../apps/checkout/routes");
 const storeRoutes = require("../apps/store/routes");
+const orderRoutes = require("../apps/order/routes");
 const driverRoutes = require("../apps/driver/routes");
 const walletRoutes = require("../apps/wallet/routes");
 const adminRoutes = require("../apps/admin/routes");
@@ -266,6 +267,7 @@ app.use("/api/market", marketRoutes);
 app.use("/api/services", servicesRoutes);
 app.use("/api/finance", financeRoutes);
 app.use("/api/checkout", checkoutRoutes);
+app.use("/api/order", orderRoutes);
 app.use("/api/store", storeRoutes);
 app.use("/api/driver", driverRoutes);
 app.use("/api/wallet", walletRoutes);
@@ -294,6 +296,7 @@ app.get("/api/health", (_req, res) => {
       "/api/services",
       "/api/finance",
       "/api/checkout",
+      "/api/order",
       "/api/store",
       "/api/invoice",
       "/api/whatsapp",

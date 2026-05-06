@@ -18,6 +18,12 @@ async function runCheckoutDispatch(sb, ctx) {
     return;
   }
 
+  const dsGate = String(order.delivery_status || "").toLowerCase();
+  if (dsGate === "draft") {
+    perfLog("checkout-dispatch", { orderId, routeTime: Date.now() - t0, osrmStatus: "draft_skip" });
+    return;
+  }
+
   let osrmStatus = "ok";
   try {
     await notifyNearestDrivers(sb, order);

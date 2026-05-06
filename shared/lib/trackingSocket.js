@@ -106,7 +106,7 @@ function attachTrackingSocket(io) {
         if (error || !row) return;
         if (String(row.driver_id || "") !== String(driverUserId)) return;
         const ds = String(row.delivery_status || "");
-        if (!["accepted", "delivering"].includes(ds)) return;
+        if (!["accepted", "delivering", "picked"].includes(ds)) return;
       } catch {
         return;
       }

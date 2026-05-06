@@ -15,26 +15,44 @@ function extractBearer(req) {
   return null;
 }
 
-/** طلب مفتوح (لم يُسند بعد) — new قديم، pending شائع في قواعد جاهزة/كبسار */
+/** طلب مفتوح (لم يُسند بعد) — new قديم، pending شائع؛ draft لا يُعرض للمناديب */
 const OPEN_DELIVERY_STATUSES = new Set(["new", "pending"]);
 
 function deliveryLifecycleIndex(s) {
-  if (s === "new" || s === "pending") return 0;
-  if (s === "accepted") return 1;
-  if (s === "delivering") return 2;
-  if (s === "delivered") return 3;
+  const x = String(s || "")
+    .trim()
+    .toLowerCase();
+  if (x === "draft") return -2;
+  if (x === "new" || x === "pending") return 0;
+  if (x === "accepted") return 1;
+  if (x === "picked") return 2;
+  if (x === "delivering") return 3;
+  if (x === "delivered") return 4;
   return -1;
 }
 
-const DELIVERY_STATUSES = ["pending", "accepted", "delivering", "delivered"];
+const DELIVERY_STATUSES = ["draft", "pending", "accepted", "picked", "delivering", "delivered"];
 
 function isValidDeliveryTransition(from, to) {
-  const i = deliveryLifecycleIndex(from);
-  const j = deliveryLifecycleIndex(to);
+  const f = String(from || "")
+    .trim()
+    .toLowerCase();
+  const t = String(to || "")
+    .trim()
+    .toLowerCase();
+  if (!t) return false;
+  // تأكيد الدفع: مسودة → جاهز للنشر للمناديب
+  if (f === "draft" && t === "pending") return true;
+  if (f === "draft") return t === "draft";
+
+  const i = deliveryLifecycleIndex(f);
+  const j = deliveryLifecycleIndex(t);
   if (i < 0 || j < 0) return false;
   if (j === i || j === i + 1) return true;
+  // تخطّي picked: مقبول → قيد التوصيل
+  if (f === "accepted" && t === "delivering") return true;
   // واجهة المندوب: تسليم مباشر من «مقبول» دون المرور بـ «قيد التوصيل»
-  if (to === "delivered" && from === "accepted") return true;
+  if (t === "delivered" && f === "accepted") return true;
   return false;
 }
 

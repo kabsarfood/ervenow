@@ -26,6 +26,7 @@ async function processDeliveryJob(name, data) {
       order.pickup_lat != null &&
       order.pickup_lng != null &&
       ["pending", "new"].includes(ds) &&
+      ds !== "draft" &&
       !order.driver_id
     ) {
       await notifyNearestDrivers(sb, order);

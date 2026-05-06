@@ -2,12 +2,14 @@ const { isValidDeliveryTransition } = require("./helpers");
 
 /**
  * Explicit allowed map (documentation + defense in depth).
- * Aligns with deliveryLifecycleIndex: new/pending → accepted → delivering → delivered.
+ * Aligns with helpers.isValidDeliveryTransition: draft → pending؛ new/pending → accepted → picked? → delivering → delivered.
  */
 const ALLOWED_DELIVERY_TRANSITIONS = {
+  draft: ["draft", "pending"],
   new: ["new", "pending", "accepted"],
   pending: ["pending", "accepted"],
-  accepted: ["accepted", "delivering"],
+  accepted: ["accepted", "picked", "delivering", "delivered"],
+  picked: ["picked", "delivering", "delivered"],
   delivering: ["delivering", "delivered"],
   delivered: ["delivered"],
 };

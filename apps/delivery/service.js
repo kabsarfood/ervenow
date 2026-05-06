@@ -115,6 +115,14 @@ function isOrderPaid(order) {
   return payStatus === "paid" || payStatus === "captured" || payStatus === "completed";
 }
 
+/** يدعم جسم الطلب (payment_status / paid) لمسار POST /api/order/create */
+function isPaidFromRequestBody(body) {
+  const b = body && typeof body === "object" ? body : {};
+  if (b.paid === true || b.paid === "true" || b.paid === 1) return true;
+  const payStatus = String(b.payment_status || "").trim().toLowerCase();
+  return payStatus === "paid" || payStatus === "captured" || payStatus === "completed";
+}
+
 function calcRefundAmount(order) {
   const totalWithVat = Number(order?.total_with_vat);
   if (Number.isFinite(totalWithVat) && totalWithVat > 0) return Math.round(totalWithVat * 100) / 100;
@@ -158,8 +166,10 @@ async function refundCustomerWalletIfPaid(sb, order) {
 
 /**
  * إنشاء طلب توصيل من واجهة /api/delivery/orders: مسافة طريق + أجور عند توفر إحداثيات.
+ * @param {{ initialDeliveryStatus?: string, payment_status?: string | null }} [opts]
  */
-async function createDeliveryOrderFromBody(sb, appUser, body) {
+async function createDeliveryOrderFromBody(sb, appUser, body, opts) {
+  const options = opts && typeof opts === "object" ? opts : {};
   const b = body && typeof body === "object" ? body : {};
   const pickup_lat = parseCoord(b.pickup_lat);
   const pickup_lng = parseCoord(b.pickup_lng);
@@ -196,6 +206,19 @@ async function createDeliveryOrderFromBody(sb, appUser, body) {
   const vatAmount = calcVAT(subtotal);
   const totalWithVAT = Math.round((subtotal + vatAmount) * 100) / 100;
 
+  const initialDs = String(options.initialDeliveryStatus || "pending").trim().toLowerCase();
+  const delivery_status = initialDs === "draft" ? "draft" : "pending";
+
+  const storeIdRaw = b.store_id != null ? String(b.store_id).trim() : "";
+  const store_id = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(storeIdRaw)
+    ? storeIdRaw
+    : null;
+
+  const payment_status =
+    options.payment_status != null && String(options.payment_status).trim() !== ""
+      ? String(options.payment_status).trim()
+      : null;
+
   return insertDeliveryOrderWithRetry(sb, (order_number) => ({
     customer_id: appUser.id,
     customer_phone: b.customer_phone != null && String(b.customer_phone).trim() !== "" ? String(b.customer_phone) : appUser.phone || "",
@@ -203,7 +226,8 @@ async function createDeliveryOrderFromBody(sb, appUser, body) {
     drop_address: String(b.drop_address || "").trim(),
     notes: String(b.notes || "").trim(),
     order_number,
-    delivery_status: "pending",
+    delivery_status,
+    status: "new",
     pickup_lat,
     pickup_lng,
     drop_lat,
@@ -217,6 +241,8 @@ async function createDeliveryOrderFromBody(sb, appUser, body) {
     total_with_vat: totalWithVAT,
     external_order_id: extId,
     series_source: srcSeries,
+    ...(store_id ? { store_id } : {}),
+    ...(payment_status ? { payment_status } : {}),
     ...(idemRaw ? { idempotency_key: idemRaw } : {}),
   }));
 }
@@ -330,7 +356,7 @@ async function listOrders(sb, appUser) {
     return sb
       .from("orders")
       .select(ORDERS_LIST_COLUMNS)
-      .in("delivery_status", ["new", "pending", "accepted", "delivering"])
+      .in("delivery_status", ["draft", "new", "pending", "accepted", "picked", "delivering"])
       .order("created_at", { ascending: false })
       .limit(100);
   }
@@ -340,7 +366,7 @@ async function listOrders(sb, appUser) {
       .from("orders")
       .select(ORDERS_LIST_COLUMNS)
       .or(
-        `and(driver_id.is.null,delivery_status.in.(new,pending)),and(driver_id.eq.${appUser.id},delivery_status.in.(new,pending,accepted,delivering))`
+        `and(driver_id.is.null,delivery_status.in.(new,pending)),and(driver_id.eq.${appUser.id},delivery_status.in.(new,pending,accepted,picked,delivering))`
       )
       .order("created_at", { ascending: false })
       .limit(50);
@@ -536,7 +562,7 @@ async function cancelOrderByCustomer(sb, orderId, appUser) {
     return { data: null, error: new Error("Forbidden"), refund: null };
   }
   const current = String(order.delivery_status || order.status || "").trim().toLowerCase();
-  if (!["new", "pending", "accepted"].includes(current)) {
+  if (!["draft", "new", "pending", "accepted"].includes(current)) {
     return { data: null, error: new Error("لا يمكن إلغاء الطلب في هذه المرحلة"), refund: null };
   }
 
@@ -565,6 +591,9 @@ async function refineDeliveryOrderPricingFromOsrm(sb, orderId) {
 
   const { data: order, error } = await sb.from("orders").select("*").eq("id", id).maybeSingle();
   if (error || !order) return { ok: false };
+
+  const ds0 = String(order.delivery_status || "").toLowerCase();
+  if (ds0 === "draft") return { ok: true, skipped: true, reason: "draft" };
 
   const pickup_lat = parseCoord(order.pickup_lat);
   const pickup_lng = parseCoord(order.pickup_lng);
@@ -617,6 +646,7 @@ module.exports = {
   reportGpsError,
   rateOrder,
   cancelOrderByCustomer,
+  isPaidFromRequestBody,
   getRoadDistanceKm,
   calcDeliveryFee,
   calcPlatformFee,
