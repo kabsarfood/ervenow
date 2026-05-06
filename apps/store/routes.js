@@ -128,7 +128,7 @@ function isStoresTableMissing(err) {
   if (!err) return false;
   if (String(err.code || "") === "42P01") return true;
   const msg = String(err.message || err.details || "");
-  return /public\.stores|schema cache|relation .*stores/i.test(msg);
+  return /relation .*stores/i.test(msg);
 }
 
 function isStoreProductsMissing(err) {
@@ -919,11 +919,7 @@ router.post("/register", async (req, res) => {
     if (insErr) {
       console.error("[store/register] insert:", insErr);
       if (isStoresTableMissing(insErr)) {
-        return fail(
-          res,
-          "جدول stores غير موجود في قاعدة البيانات. نفّذ migration_stores.sql في Supabase ثم أعد المحاولة.",
-          400
-        );
+        return fail(res, insErr.message || String(insErr), 400);
       }
       return fail(res, insErr.message || "تعذر حفظ الطلب — راجع قيود قاعدة البيانات", 400);
     }

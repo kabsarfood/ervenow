@@ -119,7 +119,7 @@ function isStoresTableMissing(err) {
   if (!err) return false;
   if (String(err.code || "") === "42P01") return true;
   const msg = String(err.message || err.details || "");
-  return /public\.stores|schema cache|relation .*stores/i.test(msg);
+  return /relation .*stores/i.test(msg);
 }
 
 async function linkStoreOwnerAfterApprove(sb, store) {
@@ -611,10 +611,7 @@ router.get("/store-requests", requireAuth, requireRole("admin"), requireAdminPer
     if (statusQ) q = q.eq("status", statusQ);
     const { data, error } = await q;
     if (error) {
-      if (isStoresTableMissing(error)) {
-        return fail(res, "جدول stores غير موجود. نفّذ migration_stores.sql أولاً.", 400);
-      }
-      return fail(res, error.message, 400);
+      return fail(res, error.message || String(error), 400);
     }
     return ok(res, { requests: data || [] });
   } catch (e) {
@@ -635,10 +632,7 @@ router.patch("/store-requests/:id", requireAuth, requireRole("admin"), requireAd
     if (status === "rejected") updatePayload.is_active = false;
     const { data, error } = await updateStoreWithOptionalActive(req.supabase, id, updatePayload);
     if (error) {
-      if (isStoresTableMissing(error)) {
-        return fail(res, "جدول stores غير موجود. نفّذ migration_stores.sql أولاً.", 400);
-      }
-      return fail(res, error.message, 400);
+      return fail(res, error.message || String(error), 400);
     }
     if (status === "approved") await linkStoreOwnerAfterApprove(req.supabase, data);
     return ok(res, { request: data });
@@ -657,10 +651,7 @@ router.post("/approve-store", requireAuth, requireRole("admin"), requireAdminPer
       updated_at: new Date().toISOString(),
     });
     if (error) {
-      if (isStoresTableMissing(error)) {
-        return fail(res, "جدول stores غير موجود. نفّذ migration_stores.sql أولاً.", 400);
-      }
-      return fail(res, error.message, 400);
+      return fail(res, error.message || String(error), 400);
     }
     await linkStoreOwnerAfterApprove(req.supabase, data);
     return ok(res, { store: data });
@@ -679,10 +670,7 @@ router.post("/reject-store", requireAuth, requireRole("admin"), requireAdminPerm
       updated_at: new Date().toISOString(),
     });
     if (error) {
-      if (isStoresTableMissing(error)) {
-        return fail(res, "جدول stores غير موجود. نفّذ migration_stores.sql أولاً.", 400);
-      }
-      return fail(res, error.message, 400);
+      return fail(res, error.message || String(error), 400);
     }
     return ok(res, { store: data });
   } catch (e) {
@@ -700,10 +688,7 @@ router.patch("/store/:id/approve", requireAuth, requireRole("admin"), requireAdm
       updated_at: new Date().toISOString(),
     });
     if (error) {
-      if (isStoresTableMissing(error)) {
-        return fail(res, "جدول stores غير موجود. نفّذ migration_stores.sql أولاً.", 400);
-      }
-      return fail(res, error.message, 400);
+      return fail(res, error.message || String(error), 400);
     }
     await linkStoreOwnerAfterApprove(req.supabase, data);
     return ok(res, { store: data });
