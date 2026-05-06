@@ -436,6 +436,9 @@
           <span class="stores-brand__eyebrow">ERVENOW</span>
           <h1 class="stores-brand__title">اكتشف المتاجر</h1>
           <p class="stores-brand__sub">متاجر معتمدة — بحث، فلاتر، وتجربة قريبة من تطبيقات التوصيل الكبرى</p>
+          <p class="stores-brand__hint" style="margin: 8px 0 0; font-size: 0.82rem; color: #8a7264; font-weight: 600; max-width: 520px; line-height: 1.5">
+            يظهر المتجر هنا بعد <strong>موافقة الإدارة</strong> وتفعيله. التسجيل وحده لا يكفي — راجع لوحة الإدارة أو انتظر الموافقة.
+          </p>
         </div>
         <div class="stores-header__actions">
           <a class="btn btn-ghost" href="/">الرئيسية</a>
@@ -627,11 +630,16 @@
               '<a class="btn btn-ghost" href="/">الرئيسية</a>' +
               "</div></div>";
           } else if (kind === "none") {
+            var geoHint =
+              detail === true
+                ? "<p style=\"margin-top:12px;font-weight:600;color:#5c4638\">عند تفعيل <strong>الموقع</strong> نعرض فقط المتاجر التي يصلها التوصيل إلى موقعك الحالي. إن لم يظهر أي متجر، جرّب إعادة التحميل و<strong>رفض</strong> مشاركة الموقع لعرض كل المتاجر المعتمدة (بدون فلترة بالمسافة).</p>"
+                : "";
             body =
               '<div class="stores-empty" role="status">' +
               '<div class="stores-empty__icon" aria-hidden="true">🏪</div>' +
               "<h2>لا متاجر معروضة بعد</h2>" +
-              "<p>لم نجد متاجر مفعّلة حالياً. يمكنك العودة لاحقاً أو استكشاف الخدمات من الصفحة الرئيسية.</p>" +
+              "<p>لم نجد متاجر مفعّلة تطابق العرض الحالي. إن كنت قد سجّلت متجراً، فغالباً ما زال <strong>بانتظار الموافقة</strong> أو خارج نطاق التوصيل عند تفعيل الموقع.</p>" +
+              geoHint +
               '<div class="stores-empty__actions">' +
               '<a class="btn btn-primary" href="/">الصفحة الرئيسية</a>' +
               '<a class="btn btn-ghost" href="/register-store.html">تسجيل متجر</a>' +
@@ -805,7 +813,7 @@
             if (searchEl) searchEl.disabled = false;
 
             if (!allStores.length) {
-              renderEmptyBlock("none");
+              renderEmptyBlock("none", !!data.geo_filtered);
               return;
             }
 

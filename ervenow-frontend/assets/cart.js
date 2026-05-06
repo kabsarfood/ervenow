@@ -11,8 +11,27 @@ function saveCart(cart) {
   updateCartCount();
 }
 
+/** معرفات المتاجر الموجودة في السلة (سلة واحدة — لا خلط بين متاجر) */
+function getCartStoreIds() {
+  const ids = new Set();
+  getCart().forEach(function (i) {
+    var sid = i && i.data && i.data.store_id;
+    if (sid) ids.add(String(sid));
+  });
+  return ids;
+}
+
 function addToCart(item) {
   const cart = getCart();
+  var newSid = item && item.data && item.data.store_id ? String(item.data.store_id).trim() : "";
+  if (newSid) {
+    var existingIds = getCartStoreIds();
+    if (existingIds.size > 0 && !existingIds.has(newSid)) {
+      alert("لا يمكن خلط منتجات من متجرين مختلفين. أفرغ السلة أو أتمّم الطلب أولاً.");
+      return;
+    }
+  }
+
   const exists = cart.find(
     (i) =>
       i.type === item.type &&

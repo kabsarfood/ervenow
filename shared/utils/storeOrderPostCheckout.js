@@ -41,8 +41,10 @@ async function runStoreCheckoutSideEffects({ order, groupItems, storeRow }) {
     return;
   }
 
-  const net =
-    Math.round((Number(order.order_total || 0) - Number(order.platform_fee || 0)) * 100) / 100;
+  const orderTotal = Number(order.order_total || 0);
+  const commissionRate = 0.12;
+  const goodsPlatformFee = Math.round(orderTotal * commissionRate * 100) / 100;
+  const net = Math.round((orderTotal - goodsPlatformFee) * 100) / 100;
   const pay = String(order.payment_status || "").trim().toLowerCase();
   if (pay === "paid" && net > 0) {
     const { error: rpcErr } = await svc.rpc("store_wallet_credit_for_order", {

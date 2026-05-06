@@ -667,11 +667,20 @@ router.post("/products", requireAuth, requireMerchantRole, async (req, res) => {
       imageUrl = await uploadToStoreBucket(sb, storeId, "products", req.body.image_base64, req.body.image_file_name || "product.jpg");
     }
 
+    let offer_price =
+      req.body?.offer_price != null && req.body.offer_price !== "" ? Number(req.body.offer_price) : null;
+    if (offer_price != null) {
+      if (!Number.isFinite(offer_price) || offer_price < 0) return fail(res, "سعر العرض غير صالح", 400);
+      if (offer_price > price) return fail(res, "سعر العرض يجب أن يكون أقل أو يساوي السعر الأساسي", 400);
+      if (offer_price === 0) offer_price = null;
+    }
+
     const row = {
       store_id: storeId,
       name,
       description,
       price,
+      ...(offer_price != null ? { offer_price } : {}),
       image_url: imageUrl,
       active: true,
       sort_order: Number.isFinite(sortOrder) ? sortOrder : 0,
@@ -698,7 +707,11 @@ router.put("/products/:id", requireAuth, requireMerchantRole, async (req, res) =
     const productId = String(req.params.id || "").trim();
     if (!productId) return fail(res, "معرّف المنتج مطلوب", 400);
 
-    const { data: existing, error: exErr } = await sb.from("store_products").select("store_id").eq("id", productId).maybeSingle();
+    const { data: existing, error: exErr } = await sb
+      .from("store_products")
+      .select("store_id,price,offer_price")
+      .eq("id", productId)
+      .maybeSingle();
     if (exErr || !existing) return fail(res, "المنتج غير موجود", 404);
 
     const own = await assertMerchantOwnsStore(sb, existing.store_id, req.appUser);
@@ -721,6 +734,19 @@ router.put("/products/:id", requireAuth, requireMerchantRole, async (req, res) =
       if (Number.isFinite(s)) patch.sort_order = s;
     }
     if (req.body?.active != null) patch.active = !!req.body.active;
+    if (req.body?.offer_price !== undefined) {
+      if (req.body.offer_price === null || req.body.offer_price === "") {
+        patch.offer_price = null;
+      } else {
+        const op = Number(req.body.offer_price);
+        if (!Number.isFinite(op) || op < 0) return fail(res, "سعر العرض غير صالح", 400);
+        const base = patch.price != null ? Number(patch.price) : Number(existing?.price);
+        if (Number.isFinite(base) && op > base) {
+          return fail(res, "سعر العرض يجب أن يكون أقل أو يساوي السعر الأساسي", 400);
+        }
+        patch.offer_price = op === 0 ? null : op;
+      }
+    }
     if (req.body?.image_base64) {
       const url = await uploadToStoreBucket(
         sb,
@@ -730,6 +756,23 @@ router.put("/products/:id", requireAuth, requireMerchantRole, async (req, res) =
         req.body.image_file_name || "product.jpg"
       );
       if (url) patch.image_url = url;
+    }
+
+    const resolvedPrice = patch.price != null ? Number(patch.price) : Number(existing.price) || 0;
+    const resolvedOffer =
+      patch.offer_price !== undefined
+        ? patch.offer_price
+        : existing.offer_price != null
+          ? Number(existing.offer_price)
+          : null;
+    if (
+      resolvedOffer != null &&
+      Number.isFinite(resolvedOffer) &&
+      resolvedOffer > 0 &&
+      Number.isFinite(resolvedPrice) &&
+      resolvedOffer > resolvedPrice
+    ) {
+      patch.offer_price = null;
     }
 
     const { data, error } = await sb.from("store_products").update(patch).eq("id", productId).select("*").single();
@@ -1083,8 +1126,112 @@ router.get("/merchant-dashboard", requireAuth, requireMerchantRole, async (req, 
   }
 });
 
+router.get("/withdrawals", requireAuth, requireMerchantRole, async (req, res) => {
+  try {
+    const sb = createServiceClient();
+    if (!sb) return fail(res, "الخادم غير مهيأ لقاعدة البيانات", 503);
+    const digits = normalizePhone(req.appUser.phone);
+    const { data: st, error: sErr } = await sb
+      .from("stores")
+      .select("id")
+      .eq("phone", digits)
+      .eq("status", "approved")
+      .maybeSingle();
+    if (sErr) return fail(res, sErr.message, 400);
+    if (!st) return fail(res, "لا يوجد متجر معتمد لجوالك.", 404);
+
+    const { data, error } = await sb
+      .from("store_withdrawals")
+      .select("id,store_id,amount,status,created_at,updated_at")
+      .eq("store_id", st.id)
+      .order("created_at", { ascending: false })
+      .limit(100);
+    if (error) {
+      if (isStoreWithdrawalsMissing(error)) return ok(res, { withdrawals: [], note: "migration_store_withdrawals.sql" });
+      return fail(res, error.message, 400);
+    }
+    return ok(res, { withdrawals: data || [] });
+  } catch (e) {
+    console.error("[store/withdrawals/list]", e);
+    return fail(res, e.message || "خطأ في الخادم", 500);
+  }
+});
+
+router.post("/withdrawals", requireAuth, requireMerchantRole, async (req, res) => {
+  try {
+    const sb = createServiceClient();
+    if (!sb) return fail(res, "الخادم غير مهيأ لقاعدة البيانات", 503);
+    const amount = Math.round(Number(req.body?.amount) * 100) / 100;
+    if (!Number.isFinite(amount) || amount < 10) {
+      return fail(res, "المبلغ يجب أن يكون 10 ريال أو أكثر", 400);
+    }
+
+    const digits = normalizePhone(req.appUser.phone);
+    const { data: st, error: sErr } = await sb
+      .from("stores")
+      .select("id")
+      .eq("phone", digits)
+      .eq("status", "approved")
+      .maybeSingle();
+    if (sErr) return fail(res, sErr.message, 400);
+    if (!st) return fail(res, "لا يوجد متجر معتمد لجوالك.", 404);
+    const sid = st.id;
+
+    const { data: wRow, error: wErr } = await sb.from("store_wallets").select("balance").eq("store_id", sid).maybeSingle();
+    if (wErr && !isStoreFinancialMissing(wErr)) return fail(res, wErr.message, 400);
+    const balance = Number(wRow?.balance) || 0;
+
+    const { data: pendRows, error: pErr } = await sb
+      .from("store_withdrawals")
+      .select("amount")
+      .eq("store_id", sid)
+      .eq("status", "pending");
+    if (pErr && !isStoreWithdrawalsMissing(pErr)) return fail(res, pErr.message, 400);
+    const reserved = (pendRows || []).reduce((a, r) => a + (Number(r.amount) || 0), 0);
+    const available = Math.round((balance - reserved) * 100) / 100;
+    if (amount > available) {
+      return fail(res, `المبلغ المتاح للطلب: ${available.toFixed(2)} ريال (بعد خصم طلبات السحب قيد المراجعة)`, 400);
+    }
+
+    const { data: ins, error: insErr } = await sb
+      .from("store_withdrawals")
+      .insert({
+        store_id: sid,
+        amount,
+        status: "pending",
+        updated_at: new Date().toISOString(),
+      })
+      .select("id,store_id,amount,status,created_at")
+      .single();
+    if (insErr) {
+      if (isStoreWithdrawalsMissing(insErr)) {
+        return fail(res, "جدول طلبات السحب غير جاهز — نفّذ migration_store_withdrawals.sql", 400);
+      }
+      return fail(res, insErr.message, 400);
+    }
+    return ok(res, { withdrawal: ins });
+  } catch (e) {
+    console.error("[store/withdrawals/post]", e);
+    return fail(res, e.message || "خطأ في الخادم", 500);
+  }
+});
+
 /** GET /api/store/:id — نفس استجابة /public/:id (يُسجّل آخراً حتى لا يتعارض مع /products وغيره) */
-const STORE_GET_BY_ID_RESERVED = new Set(["products", "reviews", "register", "public", "my-store", "merchant-dashboard"]);
+const STORE_GET_BY_ID_RESERVED = new Set([
+  "products",
+  "reviews",
+  "register",
+  "public",
+  "my-store",
+  "merchant-dashboard",
+  "withdrawals",
+]);
+
+function isStoreWithdrawalsMissing(err) {
+  if (!err) return false;
+  const msg = String(err.message || err.details || "");
+  return /store_withdrawals|schema cache|relation .*store_withdrawals/i.test(msg);
+}
 router.get("/:id", optionalAuth, async (req, res, next) => {
   const raw = String(req.params.id || "").trim();
   if (!raw || STORE_GET_BY_ID_RESERVED.has(raw.toLowerCase())) return next();

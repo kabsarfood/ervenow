@@ -604,6 +604,68 @@ router.post("/withdraws/:id/approve", requireAuth, requireRole("admin"), require
   }
 });
 
+router.get("/store-withdrawals", requireAuth, requireRole("admin"), requireAdminPermission("finance"), async (req, res) => {
+  try {
+    const statusQ = String(req.query.status || "").trim().toLowerCase();
+    let q = req.supabase
+      .from("store_withdrawals")
+      .select("id,store_id,amount,status,created_at,updated_at")
+      .order("created_at", { ascending: false })
+      .limit(200);
+    if (statusQ === "pending" || statusQ === "approved" || statusQ === "rejected") {
+      q = q.eq("status", statusQ);
+    }
+    const { data, error } = await q;
+    if (error) {
+      const msg = String(error.message || "");
+      if (/store_withdrawals|schema cache|relation .*store_withdrawals/i.test(msg)) {
+        return ok(res, { withdrawals: [], note: "migration_store_withdrawals.sql" });
+      }
+      return fail(res, error.message, 400);
+    }
+    ok(res, { withdrawals: data || [] });
+  } catch (e) {
+    fail(res, e.message, 500);
+  }
+});
+
+router.post(
+  "/store-withdrawals/:id/approve",
+  requireAuth,
+  requireRole("admin"),
+  requireAdminPermission("finance"),
+  async (req, res) => {
+    try {
+      const id = String(req.params.id || "").trim();
+      if (!id) return fail(res, "معرّف طلب السحب مطلوب", 400);
+
+      const { data: rpcData, error: rpcErr } = await req.supabase.rpc("store_wallet_approve_withdrawal", {
+        p_withdrawal_id: id,
+      });
+      if (rpcErr) {
+        const msg = String(rpcErr.message || rpcErr.details || "");
+        if (/function .*does not exist|schema cache/i.test(msg)) {
+          return fail(res, "نفّذ migration_store_withdrawals.sql في قاعدة البيانات", 400);
+        }
+        return fail(res, rpcErr.message || String(rpcErr), 400);
+      }
+
+      const row = typeof rpcData === "object" && rpcData !== null && !Array.isArray(rpcData) ? rpcData : {};
+      if (row.ok === true || row.ok === "true") {
+        return ok(res, { ok: true, reason: row.reason || "approved", amount: row.amount });
+      }
+
+      const reason = String(row.reason || "unknown");
+      if (reason === "not_found") return fail(res, "طلب السحب غير موجود", 404);
+      if (reason === "not_pending") return fail(res, "الطلب ليس قيد المراجعة", 400);
+      if (reason === "insufficient_balance") return fail(res, "رصيد المتجر غير كافٍ", 400);
+      return fail(res, reason, 400);
+    } catch (e) {
+      fail(res, e.message, 500);
+    }
+  }
+);
+
 router.get("/store-requests", requireAuth, requireRole("admin"), requireAdminPermission("stores"), async (req, res) => {
   try {
     const statusQ = String(req.query.status || "").trim().toLowerCase();

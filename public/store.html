@@ -304,6 +304,14 @@
         letter-spacing: -0.03em;
       }
 
+      .prod-card__price--old {
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: #9a8a7e;
+        text-decoration: line-through;
+        margin-inline-end: 8px;
+      }
+
       .prod-card__price small {
         font-size: 0.76rem;
         font-weight: 700;
@@ -531,6 +539,14 @@
         return TYPE_AR[t] || t || "—";
       }
 
+      function effectiveUnitPrice(p) {
+        if (!p) return 0;
+        var base = Number(p.price) || 0;
+        var off = p.offer_price != null && p.offer_price !== "" ? Number(p.offer_price) : NaN;
+        if (Number.isFinite(off) && off > 0 && off < base) return off;
+        return base;
+      }
+
       var defaultBanner =
         "data:image/svg+xml," +
         encodeURIComponent(
@@ -575,7 +591,7 @@
           showStoreToast("هذا المنتج غير متوفر حالياً", false);
           return;
         }
-        var unit = Number(p.price) || 0;
+        var unit = effectiveUnitPrice(p);
         var title = (storeMeta.name || "متجر") + " — " + String(p.name || "منتج");
         var cart = getCart();
         var idx = cart.findIndex(function (i) {
@@ -719,13 +735,25 @@
         var html = rows
           .map(function (p) {
             var available = p.active !== false;
-            var badgeOk = available ? '<span class="prod-badge prod-badge--ok">متوفر</span>' : "";
-            var badgeOut = !available ? '<span class="prod-badge prod-badge--out">نفد المخزون</span>' : "";
             var im = p.image_url
               ? '<img src="' + esc(p.image_url) + '" alt="' + esc(p.name) + '" loading="lazy" decoding="async" />'
               : '<div class="prod-card__placeholder" aria-hidden="true"></div>';
-            var unit = (Number(p.price) || 0).toFixed(2);
             var cardClass = "prod-card" + (available ? "" : " prod-card--unavailable");
+            var unit = effectiveUnitPrice(p);
+            var base = Number(p.price) || 0;
+            var hasOffer = unit < base && base > 0;
+            var badgeOffer = hasOffer
+              ? '<span class="prod-badge prod-badge--ok" style="background:linear-gradient(135deg,#b9872f,#8a6a1f)">عرض</span>'
+              : "";
+            var badgeOk = available ? '<span class="prod-badge prod-badge--ok">متوفر</span>' : "";
+            var badgeOut = !available ? '<span class="prod-badge prod-badge--out">نفد المخزون</span>' : "";
+            var priceHtml = hasOffer
+              ? '<span class="prod-card__price--old">' +
+                base.toFixed(2) +
+                '</span><span class="prod-card__price">' +
+                unit.toFixed(2) +
+                '<small>ريال</small></span>'
+              : '<div class="prod-card__price">' + unit.toFixed(2) + '<small>ريال</small></div>';
             var rawDesc = (p.description || "").trim();
             var descBlock = rawDesc
               ? '<p class="prod-card__desc">' + esc(rawDesc) + "</p>"
@@ -737,6 +765,7 @@
               '<div class="prod-card__media">' +
               '<div class="prod-card__badges">' +
               badgeOut +
+              badgeOffer +
               badgeOk +
               "</div>" +
               im +
@@ -747,9 +776,8 @@
               "</h3>" +
               descBlock +
               '<div class="prod-card__price-row">' +
-              '<div class="prod-card__price">' +
-              unit +
-              '<small>ريال</small></div></div>' +
+              priceHtml +
+              "</div>" +
               '<div class="prod-qty">' +
               '<button type="button" class="prod-qty-btn prod-qty-minus" aria-label="تقليل الكمية">−</button>' +
               '<input type="number" class="prod-qty-input" min="1" max="99" value="1" inputmode="numeric" aria-label="الكمية" />' +

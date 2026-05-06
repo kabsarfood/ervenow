@@ -214,7 +214,22 @@ async function createDeliveryOrderFromBody(sb, appUser, body, opts) {
   } else if (b.delivery_fee != null && b.delivery_fee !== "") {
     deliveryFee = Math.max(0, Math.round(Number(b.delivery_fee) * 100) / 100);
   }
-  const platformFee = calcDeliveryPlatformFee(deliveryFee);
+  const deliveryPlatformFee = calcDeliveryPlatformFee(deliveryFee);
+  let platformFee = deliveryPlatformFee;
+  let driverEarning = Math.max(0, Math.round((deliveryFee - deliveryPlatformFee) * 100) / 100);
+
+  const storeIdRaw = b.store_id != null ? String(b.store_id).trim() : "";
+  const store_id = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(storeIdRaw)
+    ? storeIdRaw
+    : null;
+
+  /* طلب متجر بقيمة بضاعة: عمولة المنصة على المبيعات 12% (كما في checkout) + عمولة التوصيل */
+  const storeGoodsPlatform =
+    store_id && orderTotal > 0 ? Math.round(orderTotal * 0.12 * 100) / 100 : 0;
+  if (store_id && orderTotal > 0) {
+    platformFee = Math.round((deliveryPlatformFee + storeGoodsPlatform) * 100) / 100;
+    driverEarning = Math.round(deliveryFee * 100) / 100;
+  }
 
   const extId =
     b.external_order_id != null && String(b.external_order_id).trim() !== ""
@@ -228,7 +243,6 @@ async function createDeliveryOrderFromBody(sb, appUser, body, opts) {
     b.idempotency_key != null && String(b.idempotency_key).trim() !== ""
       ? String(b.idempotency_key).trim().slice(0, 256)
       : null;
-  const driverEarning = Math.max(0, Math.round((deliveryFee - platformFee) * 100) / 100);
 
   const subtotal = orderTotal + deliveryFee;
   const vatAmount = calcVAT(subtotal);
@@ -236,11 +250,6 @@ async function createDeliveryOrderFromBody(sb, appUser, body, opts) {
 
   const initialDs = String(options.initialDeliveryStatus || "pending").trim().toLowerCase();
   const delivery_status = initialDs === "draft" ? "draft" : "pending";
-
-  const storeIdRaw = b.store_id != null ? String(b.store_id).trim() : "";
-  const store_id = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(storeIdRaw)
-    ? storeIdRaw
-    : null;
 
   let store_name = null;
   let store_address = null;
