@@ -143,6 +143,14 @@ function isPaidFromRequestBody(body) {
   return payStatus === "paid" || payStatus === "captured" || payStatus === "completed";
 }
 
+/** mada | stcpay | cash — لاستخدام لاحق مع بوابة الدفع */
+function normalizeOrderPaymentMethod(body) {
+  const b = body && typeof body === "object" ? body : {};
+  const m = String(b.payment_method || "").trim().toLowerCase();
+  if (m === "mada" || m === "stcpay" || m === "cash") return m;
+  return null;
+}
+
 function calcRefundAmount(order) {
   const totalWithVat = Number(order?.total_with_vat);
   if (Number.isFinite(totalWithVat) && totalWithVat > 0) return Math.round(totalWithVat * 100) / 100;
@@ -249,6 +257,8 @@ async function createDeliveryOrderFromBody(sb, appUser, body, opts) {
       ? String(options.payment_status).trim()
       : null;
 
+  const payment_method = normalizeOrderPaymentMethod(b);
+
   return insertDeliveryOrderWithRetry(sb, (order_number) => ({
     customer_id: appUser.id,
     customer_phone: b.customer_phone != null && String(b.customer_phone).trim() !== "" ? String(b.customer_phone) : appUser.phone || "",
@@ -279,6 +289,7 @@ async function createDeliveryOrderFromBody(sb, appUser, body, opts) {
         }
       : {}),
     ...(payment_status ? { payment_status } : {}),
+    ...(payment_method ? { payment_method } : {}),
     ...(idemRaw ? { idempotency_key: idemRaw } : {}),
   }));
 }
@@ -685,6 +696,7 @@ module.exports = {
   rateOrder,
   cancelOrderByCustomer,
   isPaidFromRequestBody,
+  normalizeOrderPaymentMethod,
   getRoadDistanceKm,
   calcDeliveryFee,
   calcPlatformFee,

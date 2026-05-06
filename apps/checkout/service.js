@@ -6,8 +6,9 @@ const {
 const { normalizeOrderFinancialsForInsert } = require("../../shared/utils/orderTotals");
 const { enqueueDeliveryJob } = require("../../queues/deliveryQueue");
 const { logger } = require("../../shared/utils/logger");
+const { runStoreCheckoutSideEffects } = require("../../shared/utils/storeOrderPostCheckout");
 const { isOrderPaymentGateRequired } = require("../../shared/utils/orderPaymentGate");
-const { isPaidFromRequestBody } = require("../delivery/service");
+const { isPaidFromRequestBody, normalizeOrderPaymentMethod } = require("../delivery/service");
 
 function normalizedGroup(typeRaw) {
   const type = String(typeRaw || "")
@@ -84,9 +85,11 @@ function labelByType(type) {
 async function runCheckoutInsert(sb, appUser, body, options) {
   const opts = options && typeof options === "object" ? options : {};
   const usePaymentGate = Boolean(opts.applyPaymentGate) && isOrderPaymentGateRequired();
-  const isPaid = usePaymentGate ? isPaidFromRequestBody(body) : true;
-  const openDeliveryStatus = isPaid ? "pending" : "draft";
-  const payment_status = isPaid ? "paid" : "unpaid";
+  const paymentConfirmed = usePaymentGate ? isPaidFromRequestBody(body) : false;
+  const allowDispatchPipeline = usePaymentGate ? paymentConfirmed : true;
+  const openDeliveryStatus = allowDispatchPipeline ? "pending" : "draft";
+  const payment_status = paymentConfirmed ? "paid" : "pending";
+  const payment_method = normalizeOrderPaymentMethod(body);
 
   const items = Array.isArray(body?.items) ? body.items : [];
   if (!items.length) {
@@ -160,6 +163,7 @@ async function runCheckoutInsert(sb, appUser, body, options) {
       return { ok: false, message: "يجب أن تكون منتجات السلة من متجر واحد", status: 400 };
     }
     const singleStoreId = storeIds.size === 1 ? [...storeIds][0] : null;
+    let storeRowForCheckout = null;
 
     const orderPrefix = type === "store" ? "ES" : "ED";
 
@@ -176,9 +180,11 @@ async function runCheckoutInsert(sb, appUser, body, options) {
       breakdown: {
         items: groupItems,
         type,
+        total,
       },
       notes: `Checkout group: ${type}`,
       payment_status,
+      ...(payment_method ? { payment_method } : {}),
     };
 
     if (singleStoreId) {
@@ -228,7 +234,10 @@ async function runCheckoutInsert(sb, appUser, body, options) {
       row.store_name = String(storeRow.name || "").trim() || null;
       row.store_address =
         String(storeRow.address || storeRow.location_text || "").trim() || null;
+      storeRowForCheckout = storeRow;
     }
+
+    row.breakdown = Object.assign({}, row.breakdown, singleStoreId ? { store_id: singleStoreId } : {});
 
     let data = null;
     let insertErr = null;
@@ -247,6 +256,17 @@ async function runCheckoutInsert(sb, appUser, body, options) {
     }
     if (insertErr) throw insertErr;
     results.push(data);
+
+    if (type === "store" && data?.store_id && storeRowForCheckout) {
+      try {
+        await runStoreCheckoutSideEffects({ order: data, groupItems, storeRow: storeRowForCheckout });
+      } catch (sideErr) {
+        logger.error(
+          { err: sideErr && (sideErr.message || String(sideErr)), orderId: data.id },
+          "[checkout/service] store post-checkout"
+        );
+      }
+    }
 
     const shouldDispatch = (type === "delivery" || singleStoreId) && openDeliveryStatus === "pending";
     if (shouldDispatch) {

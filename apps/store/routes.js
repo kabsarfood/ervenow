@@ -990,8 +990,101 @@ router.post("/register", async (req, res) => {
   }
 });
 
+function isStoreFinancialMissing(err) {
+  if (!err) return false;
+  const msg = String(err.message || err.details || "");
+  return /store_wallets|store_transactions|schema cache|function.*store_wallet_credit|relation .*store_wallets|relation .*store_transactions/i.test(
+    msg
+  );
+}
+
+router.get("/merchant-dashboard", requireAuth, requireMerchantRole, async (req, res) => {
+  try {
+    const sb = createServiceClient();
+    if (!sb) return fail(res, "الخادم غير مهيأ لقاعدة البيانات", 503);
+    const digits = normalizePhone(req.appUser.phone);
+    const extStore = "id,name,phone,status,total_orders";
+    let st = null;
+    let sErr = null;
+    ({ data: st, error: sErr } = await sb.from("stores").select(extStore).eq("phone", digits).eq("status", "approved").maybeSingle());
+    if (sErr && /column|does not exist|schema cache/i.test(String(sErr.message || ""))) {
+      ({ data: st, error: sErr } = await sb
+        .from("stores")
+        .select("id,name,phone,status")
+        .eq("phone", digits)
+        .eq("status", "approved")
+        .maybeSingle());
+    }
+    if (sErr) return fail(res, sErr.message, 400);
+    if (!st) return fail(res, "لا يوجد متجر معتمد لجوالك.", 404);
+
+    const sid = st.id;
+    const [oRes, wRes, txRes, pCountRes] = await Promise.all([
+      sb
+        .from("orders")
+        .select(
+          "id,order_number,order_total,total_with_vat,delivery_fee,platform_fee,status,delivery_status,created_at,breakdown,customer_phone,drop_address,store_id,payment_status,payment_method"
+        )
+        .eq("store_id", sid)
+        .order("created_at", { ascending: false })
+        .limit(100),
+      sb.from("store_wallets").select("balance,currency_code").eq("store_id", sid).maybeSingle(),
+      sb
+        .from("store_transactions")
+        .select("id,amount,type,description,created_at,order_id")
+        .eq("store_id", sid)
+        .order("created_at", { ascending: false })
+        .limit(40),
+      sb.from("store_products").select("id", { count: "exact", head: true }).eq("store_id", sid).eq("active", true),
+    ]);
+
+    let orders = [];
+    if (oRes.error) {
+      if (!isStoresTableMissing(oRes.error)) console.warn("[merchant-dashboard] orders", oRes.error.message || oRes.error);
+    } else {
+      orders = oRes.data || [];
+    }
+
+    let wallet = { balance: 0, currency_code: "SAR" };
+    if (!wRes.error && wRes.data) {
+      wallet = { balance: Number(wRes.data.balance) || 0, currency_code: wRes.data.currency_code || "SAR" };
+    } else if (wRes.error && !isStoreFinancialMissing(wRes.error)) {
+      console.warn("[merchant-dashboard] wallet", wRes.error.message || wRes.error);
+    }
+
+    let transactions = [];
+    if (!txRes.error && txRes.data) transactions = txRes.data;
+    else if (txRes.error && !isStoreFinancialMissing(txRes.error)) {
+      console.warn("[merchant-dashboard] tx", txRes.error.message || txRes.error);
+    }
+
+    let products_active_count = 0;
+    if (!pCountRes.error && typeof pCountRes.count === "number") products_active_count = pCountRes.count;
+    else if (pCountRes.error && !isStoreProductsMissing(pCountRes.error)) {
+      console.warn("[merchant-dashboard] products count", pCountRes.error.message || pCountRes.error);
+    }
+
+    const revenue_orders_sum = orders.reduce((a, r) => a + (Number(r.order_total) || 0), 0);
+
+    return ok(res, {
+      store: { id: st.id, name: st.name, phone: st.phone },
+      wallet,
+      transactions,
+      orders,
+      aggregates: {
+        orders_count: orders.length,
+        products_active_count,
+        revenue_orders_sum,
+      },
+    });
+  } catch (e) {
+    console.error("[merchant-dashboard]", e);
+    return fail(res, e.message || "خطأ في الخادم", 500);
+  }
+});
+
 /** GET /api/store/:id — نفس استجابة /public/:id (يُسجّل آخراً حتى لا يتعارض مع /products وغيره) */
-const STORE_GET_BY_ID_RESERVED = new Set(["products", "reviews", "register", "public", "my-store"]);
+const STORE_GET_BY_ID_RESERVED = new Set(["products", "reviews", "register", "public", "my-store", "merchant-dashboard"]);
 router.get("/:id", optionalAuth, async (req, res, next) => {
   const raw = String(req.params.id || "").trim();
   if (!raw || STORE_GET_BY_ID_RESERVED.has(raw.toLowerCase())) return next();

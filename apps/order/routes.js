@@ -18,7 +18,7 @@ const router = express.Router();
 
 /**
  * POST /api/order/create — مسار موحد: سلة أو توصيل.
- * افتراضياً (بدون ERVENOW_REQUIRE_ORDER_PAYMENT=1): لا يُشترط دفع — الطلب pending ويُحسب في التقارير/المحفظة عند التسليم كالسابق.
+ * افتراضياً: payment_status=pending على orders، والتوصيل يبقى نشطاً؛ إيداع محفظة المتجر فقط عند payment_status=paid.
  */
 router.post("/create", requireAuth, deliveryOrdersCreateLimiter, async (req, res) => {
   try {
@@ -60,9 +60,10 @@ router.post("/create", requireAuth, deliveryOrdersCreateLimiter, async (req, res
       if (existing) return ok(res, { order: existing, duplicated: true, mode: "delivery" });
     }
 
-    const isPaid = isOrderPaymentGateRequired() ? isPaidFromRequestBody(cleanBody) : true;
-    const initialDeliveryStatus = isPaid ? "pending" : "draft";
-    const payment_status = isPaid ? "paid" : "unpaid";
+    const usePaymentGate = isOrderPaymentGateRequired();
+    const paymentConfirmed = usePaymentGate ? isPaidFromRequestBody(cleanBody) : false;
+    const initialDeliveryStatus = usePaymentGate ? (paymentConfirmed ? "pending" : "draft") : "pending";
+    const payment_status = paymentConfirmed ? "paid" : "pending";
 
     const { data, error } = await createDeliveryOrderFromBody(sb, req.appUser, cleanBody, {
       initialDeliveryStatus,
@@ -94,7 +95,7 @@ router.post("/create", requireAuth, deliveryOrdersCreateLimiter, async (req, res
       duplicated: false,
       mode: "delivery",
       delivery_status: data?.delivery_status,
-      paid: isPaid,
+      paid: paymentConfirmed,
     });
   } catch (e) {
     fail(res, e.message || "order create failed", 500);

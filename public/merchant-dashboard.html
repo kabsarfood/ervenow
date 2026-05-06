@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ERVENOW | لوحة الطلبات والإيرادات</title>
+    <link rel="stylesheet" href="/assets/styles.css" />
+    <style>
+      .md-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 14px;
+        margin-bottom: 20px;
+      }
+      .md-stat {
+        border-radius: 16px;
+        padding: 16px 18px;
+        background: linear-gradient(145deg, #fffefb, #faf6f0);
+        border: 1px solid rgba(61, 34, 19, 0.08);
+        box-shadow: 0 8px 28px rgba(42, 24, 16, 0.06);
+      }
+      .md-stat strong {
+        display: block;
+        font-size: 1.45rem;
+        font-weight: 800;
+        color: #3d2213;
+        margin-top: 4px;
+      }
+      .md-stat span {
+        font-size: 0.88rem;
+        color: #6b5347;
+        font-weight: 700;
+      }
+      .md-table-wrap {
+        overflow-x: auto;
+        border-radius: 14px;
+        border: 1px solid rgba(61, 34, 19, 0.08);
+      }
+      table.md-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.9rem;
+      }
+      .md-table th,
+      .md-table td {
+        padding: 10px 12px;
+        text-align: right;
+        border-bottom: 1px solid rgba(61, 34, 19, 0.06);
+      }
+      .md-table th {
+        background: #f5f0ea;
+        font-weight: 800;
+        color: #3d2213;
+      }
+      .md-table tr:last-child td {
+        border-bottom: none;
+      }
+      .md-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin: 12px 0 18px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="layout">
+      <p><a href="/">← الرئيسية</a> · <a href="/store-dashboard">لوحة المنتجات</a></p>
+      <h1>لوحة الطلبات والإيرادات</h1>
+      <p class="sub" id="hint">
+        سجّل الدخول كتاجر (نفس جوال المتجر المعتمد).
+        <a href="/login?role=merchant">تسجيل الدخول</a>
+      </p>
+
+      <div id="main" style="display: none">
+        <div class="card" style="margin-bottom: 14px">
+          <h2 style="margin: 0 0 6px" id="storeName">—</h2>
+          <p class="sub" id="storePhone">—</p>
+          <div class="md-actions">
+            <a class="btn btn-primary" href="/store-dashboard">إدارة المنتجات</a>
+            <a class="btn btn-ghost" id="publicStoreLink" href="#" target="_blank" rel="noopener">صفحة المتجر</a>
+          </div>
+        </div>
+
+        <div class="md-grid">
+          <div class="md-stat">
+            <span>رصيد المحفظة</span>
+            <strong id="statWallet">0.00</strong>
+            <span class="sub">ريال</span>
+          </div>
+          <div class="md-stat">
+            <span>طلبات في القائمة</span>
+            <strong id="statOrders">0</strong>
+          </div>
+          <div class="md-stat">
+            <span>منتجات نشطة</span>
+            <strong id="statProducts">0</strong>
+          </div>
+          <div class="md-stat">
+            <span>مجموع سلال الطلبات (مرجع)</span>
+            <strong id="statRevenue">0.00</strong>
+            <span class="sub">ريال — من جدول الطلبات</span>
+          </div>
+        </div>
+
+        <div class="card" style="margin-bottom: 16px">
+          <h2 style="margin: 0 0 12px">آخر الطلبات</h2>
+          <div class="md-table-wrap">
+            <table class="md-table" id="ordersTable">
+              <thead>
+                <tr>
+                  <th>التاريخ</th>
+                  <th>رقم الطلب</th>
+                  <th>الحالة</th>
+                  <th>الدفع</th>
+                  <th>التوصيل</th>
+                  <th>السلة</th>
+                  <th>الإجمالي</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <p class="sub" id="ordersEmpty" style="display: none; margin-top: 10px">لا طلبات بعد.</p>
+        </div>
+
+        <div class="card" style="margin-bottom: 16px">
+          <h2 style="margin: 0 0 12px">سجل الإيداعات</h2>
+          <div class="md-table-wrap">
+            <table class="md-table" id="txTable">
+              <thead>
+                <tr>
+                  <th>التاريخ</th>
+                  <th>المبلغ</th>
+                  <th>الوصف</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <p class="sub" id="txEmpty" style="display: none; margin-top: 10px">لا حركات بعد — نفّذ migration_store_wallet.sql ثم أول طلب.</p>
+        </div>
+      </div>
+
+      <div class="msg" id="msg" style="display: none"></div>
+    </div>
+
+    <script src="/assets/api-config.js"></script>
+    <script src="/assets/api.js"></script>
+    <script>
+      function show(text, ok) {
+        var el = document.getElementById("msg");
+        el.style.display = "block";
+        el.className = "msg " + (ok ? "ok" : "err");
+        el.textContent = text;
+      }
+
+      function esc(s) {
+        return String(s || "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/"/g, "&quot;");
+      }
+
+      function fmtDate(iso) {
+        if (!iso) return "—";
+        try {
+          var d = new Date(iso);
+          return isNaN(d.getTime()) ? "—" : d.toLocaleString("ar-SA", { dateStyle: "short", timeStyle: "short" });
+        } catch (e) {
+          return "—";
+        }
+      }
+
+      async function boot() {
+        if (!window.PlatformAPI || !window.PlatformAPI.getToken || !window.PlatformAPI.getToken()) {
+          return;
+        }
+        try {
+          var data = await window.PlatformAPI.api("/api/store/merchant-dashboard");
+          document.getElementById("hint").style.display = "none";
+          document.getElementById("main").style.display = "block";
+
+          var s = data.store || {};
+          document.getElementById("storeName").textContent = s.name || "—";
+          document.getElementById("storePhone").textContent = s.phone ? "الجوال: " + s.phone : "";
+          var pub = document.getElementById("publicStoreLink");
+          if (s.id) pub.href = "/store?id=" + encodeURIComponent(s.id);
+
+          var w = data.wallet || {};
+          document.getElementById("statWallet").textContent = (Number(w.balance) || 0).toFixed(2);
+          var agg = data.aggregates || {};
+          document.getElementById("statOrders").textContent = String(agg.orders_count || 0);
+          document.getElementById("statProducts").textContent = String(agg.products_active_count || 0);
+          document.getElementById("statRevenue").textContent = (Number(agg.revenue_orders_sum) || 0).toFixed(2);
+
+          var orders = data.orders || [];
+          var ob = document.querySelector("#ordersTable tbody");
+          ob.innerHTML = "";
+          if (!orders.length) {
+            document.getElementById("ordersEmpty").style.display = "block";
+          } else {
+            document.getElementById("ordersEmpty").style.display = "none";
+            orders.forEach(function (o) {
+              var tr = document.createElement("tr");
+              tr.innerHTML =
+                "<td>" +
+                esc(fmtDate(o.created_at)) +
+                "</td><td>" +
+                esc(o.order_number || o.id) +
+                "</td><td>" +
+                esc(o.status || "—") +
+                "</td><td>" +
+                esc(String(o.payment_status || "—")) +
+                (o.payment_method ? " <span class=\"sub\">(" + esc(o.payment_method) + ")</span>" : "") +
+                "</td><td>" +
+                esc(o.delivery_status || "—") +
+                "</td><td>" +
+                (Number(o.order_total) || 0).toFixed(2) +
+                "</td><td>" +
+                (Number(o.total_with_vat != null ? o.total_with_vat : o.total_amount) || 0).toFixed(2) +
+                "</td>";
+              ob.appendChild(tr);
+            });
+          }
+
+          var txs = data.transactions || [];
+          var tb = document.querySelector("#txTable tbody");
+          tb.innerHTML = "";
+          if (!txs.length) {
+            document.getElementById("txEmpty").style.display = "block";
+          } else {
+            document.getElementById("txEmpty").style.display = "none";
+            txs.forEach(function (t) {
+              var tr = document.createElement("tr");
+              tr.innerHTML =
+                "<td>" +
+                esc(fmtDate(t.created_at)) +
+                "</td><td><strong>" +
+                (Number(t.amount) || 0).toFixed(2) +
+                "</strong> ريال</td><td>" +
+                esc(t.description || "—") +
+                "</td>";
+              tb.appendChild(tr);
+            });
+          }
+        } catch (e) {
+          show(String((e && e.message) || e || "تعذر التحميل"), false);
+        }
+      }
+
+      boot();
+    </script>
+  </body>
+</html>

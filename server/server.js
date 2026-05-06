@@ -428,12 +428,20 @@ if (servePublicUi) {
     res.sendFile(path.join(publicPath, "browse.html"));
   });
 
+  app.get("/stores", (_req, res) => {
+    res.sendFile(path.join(publicPath, "stores.html"));
+  });
+
   app.get("/store", (_req, res) => {
     res.sendFile(path.join(publicPath, "store.html"));
   });
 
   app.get("/store-dashboard", (_req, res) => {
     res.sendFile(path.join(publicPath, "store-dashboard.html"));
+  });
+
+  app.get("/merchant-dashboard", (_req, res) => {
+    res.sendFile(path.join(publicPath, "merchant-dashboard.html"));
   });
 
   app.get("/cart", (_req, res) => {

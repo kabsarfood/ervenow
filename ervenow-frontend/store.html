@@ -15,7 +15,7 @@
       }
 
       .store-shell {
-        max-width: 920px;
+        max-width: 1040px;
         margin: 0 auto;
         padding: 20px 16px 56px;
       }
@@ -128,30 +128,301 @@
         box-shadow: var(--sp-shadow-soft);
       }
 
+      .store-section-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-bottom: 18px;
+      }
+
+      .store-section-head h2 {
+        margin: 0;
+        font-size: clamp(1.2rem, 3vw, 1.45rem);
+        font-weight: 800;
+        color: #3d2213;
+      }
+
+      .store-cart-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none;
+        font-weight: 800;
+        font-size: 0.95rem;
+        color: #5b371d;
+        padding: 10px 14px;
+        border-radius: 14px;
+        background: rgba(201, 162, 39, 0.12);
+        border: 1px solid rgba(91, 55, 29, 0.12);
+        transition: background 0.2s, transform 0.15s;
+      }
+
+      .store-cart-link:hover {
+        background: rgba(201, 162, 39, 0.22);
+      }
+
+      #cartCount {
+        min-width: 1.5em;
+        text-align: center;
+        font-variant-numeric: tabular-nums;
+      }
+
       .prod-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-        gap: 14px;
+        grid-template-columns: repeat(auto-fill, minmax(min(100%, 270px), 1fr));
+        gap: clamp(16px, 2.2vw, 24px);
+      }
+
+      @media (min-width: 900px) {
+        .prod-grid {
+          grid-template-columns: repeat(3, 1fr);
+        }
+      }
+
+      @media (max-width: 480px) {
+        .prod-grid {
+          grid-template-columns: 1fr;
+        }
       }
 
       .prod-card {
-        border-radius: 16px;
+        border-radius: 20px;
         overflow: hidden;
-        box-shadow: 0 6px 22px rgba(42, 24, 16, 0.06);
-        transition: box-shadow 0.2s, transform 0.2s;
+        display: flex;
+        flex-direction: column;
+        background: #fffefb;
+        border: 1px solid rgba(61, 34, 19, 0.07);
+        box-shadow: 0 10px 36px rgba(42, 24, 16, 0.07);
+        transition: box-shadow 0.25s, transform 0.2s;
+        height: 100%;
       }
 
       .prod-card:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 12px 36px rgba(42, 24, 16, 0.1);
+        transform: translateY(-4px);
+        box-shadow: 0 20px 48px rgba(42, 24, 16, 0.11);
       }
 
-      .prod-card img {
+      .prod-card--unavailable {
+        opacity: 0.88;
+        filter: grayscale(0.2);
+      }
+
+      .prod-card__media {
+        position: relative;
+        aspect-ratio: 4 / 3;
+        min-height: 168px;
+        background: linear-gradient(145deg, #f0ebe3, #e8dfd4);
+      }
+
+      .prod-card__media img {
         width: 100%;
-        height: 140px;
+        height: 100%;
         object-fit: cover;
-        border-radius: 0;
-        background: #f5f1ea;
+        display: block;
+      }
+
+      .prod-card__placeholder {
+        width: 100%;
+        height: 100%;
+        min-height: 140px;
+        background: linear-gradient(160deg, #ebe4dc 0%, #ddd4cb 45%, #e8e1d8 100%);
+      }
+
+      .prod-card__desc--empty {
+        color: #9a8a7e;
+        font-style: italic;
+      }
+
+      .prod-card__badges {
+        position: absolute;
+        top: 10px;
+        inset-inline-start: 10px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        z-index: 1;
+      }
+
+      .prod-badge {
+        font-size: 0.72rem;
+        font-weight: 800;
+        padding: 5px 10px;
+        border-radius: 999px;
+      }
+
+      .prod-badge--ok {
+        background: linear-gradient(135deg, #1a6b3c, #239954);
+        color: #fff;
+        box-shadow: 0 4px 12px rgba(26, 107, 60, 0.35);
+      }
+
+      .prod-badge--out {
+        background: #8b2942;
+        color: #fff;
+      }
+
+      .prod-card__body {
+        padding: 16px 16px 18px;
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        gap: 6px;
+      }
+
+      .prod-card__title {
+        margin: 0;
+        font-size: 1.06rem;
+        font-weight: 800;
+        line-height: 1.35;
+        color: #2c1810;
+        letter-spacing: -0.02em;
+      }
+
+      .prod-card__desc {
+        margin: 0;
+        font-size: 0.86rem;
+        color: #6b5347;
+        line-height: 1.5;
+        min-height: 2.58em;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+
+      .prod-card__price-row {
+        margin-top: auto;
+        padding-top: 8px;
+      }
+
+      .prod-card__price {
+        font-size: 1.38rem;
+        font-weight: 800;
+        color: #a67c00;
+        letter-spacing: -0.03em;
+      }
+
+      .prod-card__price small {
+        font-size: 0.76rem;
+        font-weight: 700;
+        color: #7a6558;
+        margin-inline-start: 4px;
+      }
+
+      .prod-qty {
+        display: flex;
+        align-items: stretch;
+        justify-content: center;
+        margin-top: 14px;
+        border-radius: 14px;
+        border: 1px solid rgba(61, 34, 19, 0.12);
+        overflow: hidden;
+        background: #faf7f2;
+      }
+
+      .prod-qty-btn {
+        width: 46px;
+        min-height: 46px;
+        border: none;
+        background: transparent;
+        font-size: 1.35rem;
+        font-weight: 700;
+        color: #3d2213;
+        cursor: pointer;
+        line-height: 1;
+        transition: background 0.15s;
+        font-family: inherit;
+      }
+
+      .prod-qty-btn:hover {
+        background: rgba(61, 34, 19, 0.06);
+      }
+
+      .prod-qty-btn:focus-visible {
+        outline: none;
+        box-shadow: inset 0 0 0 2px #c9a227;
+      }
+
+      .prod-qty-input {
+        width: 52px;
+        text-align: center;
+        border: none;
+        background: transparent;
+        font-weight: 800;
+        font-size: 1rem;
+        color: #2c1810;
+        font-family: inherit;
+        padding: 8px 0;
+        -moz-appearance: textfield;
+      }
+
+      .prod-qty-input::-webkit-outer-spin-button,
+      .prod-qty-input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+      }
+
+      .btn-add-cart {
+        margin-top: 12px;
+        width: 100%;
+        padding: 14px 16px;
+        border: none;
+        border-radius: 14px;
+        font-family: inherit;
+        font-size: 0.98rem;
+        font-weight: 800;
+        cursor: pointer;
+        color: #fffdf8;
+        background: linear-gradient(135deg, #3d2213, #6b3d22);
+        box-shadow: 0 8px 24px rgba(61, 34, 19, 0.22);
+        transition: transform 0.15s, box-shadow 0.2s, filter 0.15s;
+      }
+
+      .btn-add-cart:hover:not(:disabled) {
+        transform: translateY(-1px);
+        filter: brightness(1.04);
+        box-shadow: 0 12px 28px rgba(61, 34, 19, 0.28);
+      }
+
+      .btn-add-cart:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+        filter: grayscale(0.2);
+      }
+
+      .store-toast {
+        position: fixed;
+        bottom: 24px;
+        left: 50%;
+        transform: translate(-50%, 120px);
+        z-index: 10050;
+        max-width: min(92vw, 400px);
+        padding: 14px 20px;
+        border-radius: 16px;
+        font-weight: 700;
+        font-size: 0.95rem;
+        text-align: center;
+        box-shadow: 0 16px 48px rgba(0, 0, 0, 0.2);
+        opacity: 0;
+        pointer-events: none;
+        transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.28s;
+      }
+
+      .store-toast.store-toast--show {
+        opacity: 1;
+        transform: translate(-50%, 0);
+      }
+
+      .store-toast--ok {
+        background: linear-gradient(135deg, #1a6b3c, #1e7d44);
+        color: #fff;
+      }
+
+      .store-toast--err {
+        background: linear-gradient(135deg, #7a1e2e, #a32940);
+        color: #fff;
       }
     </style>
   </head>
@@ -181,8 +452,11 @@
         </div>
       </div>
 
-      <div class="card store-section" style="margin-bottom: 16px">
-        <h2 style="margin: 0 0 14px">المنتجات</h2>
+      <div class="card store-section" style="margin-bottom: 16px; padding: 18px 18px 20px">
+        <div class="store-section-head">
+          <h2>المنتجات</h2>
+          <a href="/cart" class="store-cart-link" id="storeCartLink">🛒 السلة <span id="cartCount">0</span></a>
+        </div>
         <div id="products" class="prod-grid"></div>
         <div class="row" style="margin-top: 14px; gap: 8px; flex-wrap: wrap">
           <button type="button" class="btn btn-ghost" id="btnMore" style="display: none">تحميل المزيد</button>
@@ -212,6 +486,8 @@
 
       <div class="msg" id="msg" style="display: none"></div>
     </div>
+
+    <div id="storeToast" class="store-toast" role="status" aria-live="polite"></div>
 
     <script src="/assets/cart.js"></script>
     <script src="/assets/api-config.js"></script>
@@ -276,15 +552,54 @@
         });
       }
 
-      function addProductToCart(p) {
-        if (!storeId || !p) return;
-        addToCart({
-          type: storeMeta.type || "supermarket",
-          title: (storeMeta.name || "متجر") + " — " + String(p.name || "منتج"),
-          price: Number(p.price) || 0,
-          data: { store_id: storeId, product_id: p.id, qty: 1 },
+      var storeToastTimer = null;
+
+      function showStoreToast(text, ok) {
+        var el = document.getElementById("storeToast");
+        if (!el) return;
+        el.textContent = text;
+        el.className = "store-toast " + (ok ? "store-toast--ok" : "store-toast--err");
+        requestAnimationFrame(function () {
+          el.classList.add("store-toast--show");
         });
-        show("تمت الإضافة إلى السلة", true);
+        clearTimeout(storeToastTimer);
+        storeToastTimer = setTimeout(function () {
+          el.classList.remove("store-toast--show");
+        }, 3200);
+      }
+
+      function addProductToCart(p, qty) {
+        if (!storeId || !p) return;
+        qty = Math.max(1, Math.min(99, parseInt(qty, 10) || 1));
+        if (p.active === false) {
+          showStoreToast("هذا المنتج غير متوفر حالياً", false);
+          return;
+        }
+        var unit = Number(p.price) || 0;
+        var title = (storeMeta.name || "متجر") + " — " + String(p.name || "منتج");
+        var cart = getCart();
+        var idx = cart.findIndex(function (i) {
+          var d = i && i.data;
+          return d && String(d.store_id) === String(storeId) && String(d.product_id) === String(p.id);
+        });
+        if (idx >= 0) {
+          var cur = cart[idx];
+          var newQty = Math.min(99, (Number(cur.data && cur.data.qty) || 1) + qty);
+          cart[idx] = Object.assign({}, cur, {
+            price: unit * newQty,
+            data: Object.assign({}, cur.data || {}, { store_id: storeId, product_id: p.id, qty: newQty }),
+          });
+          saveCart(cart);
+        } else {
+          addToCart({
+            type: storeMeta.type || "supermarket",
+            title: title,
+            price: unit * qty,
+            data: { store_id: storeId, product_id: p.id, qty: qty },
+          });
+        }
+        if (typeof updateCartCount === "function") updateCartCount();
+        showStoreToast(idx >= 0 ? "تم تحديث الكمية في السلة" : "تمت الإضافة إلى السلة", true);
       }
 
       function show(text, ok) {
@@ -403,23 +718,49 @@
 
         var html = rows
           .map(function (p) {
+            var available = p.active !== false;
+            var badgeOk = available ? '<span class="prod-badge prod-badge--ok">متوفر</span>' : "";
+            var badgeOut = !available ? '<span class="prod-badge prod-badge--out">نفد المخزون</span>' : "";
             var im = p.image_url
-              ? '<img src="' + esc(p.image_url) + '" alt="" loading="lazy" decoding="async" />'
-              : '<div style="height:140px;background:#f0ebe3"></div>';
+              ? '<img src="' + esc(p.image_url) + '" alt="' + esc(p.name) + '" loading="lazy" decoding="async" />'
+              : '<div class="prod-card__placeholder" aria-hidden="true"></div>';
+            var unit = (Number(p.price) || 0).toFixed(2);
+            var cardClass = "prod-card" + (available ? "" : " prod-card--unavailable");
+            var rawDesc = (p.description || "").trim();
+            var descBlock = rawDesc
+              ? '<p class="prod-card__desc">' + esc(rawDesc) + "</p>"
+              : '<p class="prod-card__desc prod-card__desc--empty">بدون وصف</p>';
             return (
-              '<div class="card prod-card">' +
+              '<article class="' +
+              cardClass +
+              '">' +
+              '<div class="prod-card__media">' +
+              '<div class="prod-card__badges">' +
+              badgeOut +
+              badgeOk +
+              "</div>" +
               im +
-              "<strong>" +
+              "</div>" +
+              '<div class="prod-card__body">' +
+              '<h3 class="prod-card__title">' +
               esc(p.name) +
-              "</strong>" +
-              '<p class="sub">' +
-              esc(p.description || "") +
-              "</p>" +
-              "<div><strong>" +
-              (Number(p.price) || 0).toFixed(2) +
-              ' ريال</strong></div><button type="button" class="btn btn-primary btn-add-cart" style="margin-top:10px;width:100%" data-pid="' +
+              "</h3>" +
+              descBlock +
+              '<div class="prod-card__price-row">' +
+              '<div class="prod-card__price">' +
+              unit +
+              '<small>ريال</small></div></div>' +
+              '<div class="prod-qty">' +
+              '<button type="button" class="prod-qty-btn prod-qty-minus" aria-label="تقليل الكمية">−</button>' +
+              '<input type="number" class="prod-qty-input" min="1" max="99" value="1" inputmode="numeric" aria-label="الكمية" />' +
+              '<button type="button" class="prod-qty-btn prod-qty-plus" aria-label="زيادة الكمية">+</button>' +
+              "</div>" +
+              '<button type="button" class="btn-add-cart" data-pid="' +
               esc(p.id) +
-              '">إضافة للسلة</button></div>'
+              '"' +
+              (available ? "" : " disabled") +
+              ">إضافة للسلة</button>" +
+              "</div></article>"
             );
           })
           .join("");
@@ -429,13 +770,30 @@
       }
 
       document.getElementById("products").addEventListener("click", function (ev) {
+        var card = ev.target.closest(".prod-card");
+        var minus = ev.target.closest(".prod-qty-minus");
+        var plus = ev.target.closest(".prod-qty-plus");
+        if (minus || plus) {
+          if (!card) return;
+          ev.preventDefault();
+          var qInp = card.querySelector(".prod-qty-input");
+          if (!qInp) return;
+          var v = parseInt(String(qInp.value), 10) || 1;
+          if (minus) qInp.value = String(Math.max(1, v - 1));
+          if (plus) qInp.value = String(Math.min(99, v + 1));
+          return;
+        }
         var btn = ev.target.closest(".btn-add-cart");
-        if (!btn) return;
+        if (!btn || btn.disabled) return;
+        if (!card) return;
         var pid = btn.getAttribute("data-pid");
         var p = lastProducts.find(function (x) {
           return String(x.id) === String(pid);
         });
-        addProductToCart(p);
+        var inp = card.querySelector(".prod-qty-input");
+        var qty = parseInt(inp && inp.value, 10) || 1;
+        addProductToCart(p, qty);
+        if (inp) inp.value = "1";
       });
 
       async function loadProducts(append) {
