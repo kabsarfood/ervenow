@@ -849,7 +849,7 @@ router.post("/register", async (req, res) => {
     const name = String(b.name || "").trim();
     const phoneRaw = String(b.phone || "").trim();
     const email = String(b.email || "").trim() || null;
-    const commercial_register = String(b.commercial_register || "").trim() || null;
+    const commercial_registration = String(b.commercial_registration || "").trim() || null;
     const location_text = String(b.location_text || "").trim() || null;
     const address = String(b.address || "").trim();
     const type = String(b.type || b.category || "").trim().toLowerCase();
@@ -884,8 +884,7 @@ router.post("/register", async (req, res) => {
       name,
       phone: phoneDigits,
       email,
-      commercial_register,
-      commercial_registration: commercial_register,
+      commercial_registration,
       file_url: null,
       lat,
       lng,
@@ -926,8 +925,14 @@ router.post("/register", async (req, res) => {
 
     const requestId = insertedRow.id;
 
-    if (b.commercialRegisterFileBase64) {
-      const fileUrl = await uploadToStoreBucket(sb, requestId, "cr", b.commercialRegisterFileBase64, b.commercialRegisterFileName);
+    if (b.commercialRegistrationFileBase64) {
+      const fileUrl = await uploadToStoreBucket(
+        sb,
+        requestId,
+        "cr",
+        b.commercialRegistrationFileBase64,
+        b.commercialRegistrationFileName
+      );
       if (fileUrl) await sb.from("stores").update({ file_url: fileUrl }).eq("id", requestId);
     }
 

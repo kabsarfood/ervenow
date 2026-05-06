@@ -118,8 +118,8 @@
             <summary>سجل تجاري وبريد</summary>
             <label for="email" style="margin-top: 8px">البريد</label>
             <input id="email" type="email" />
-            <label for="commercial_register" style="margin-top: 8px">السجل التجاري (نص)</label>
-            <input id="commercial_register" type="text" />
+            <label for="commercial_registration" style="margin-top: 8px">السجل التجاري (نص)</label>
+            <input id="commercial_registration" type="text" name="commercial_registration" />
             <label for="cr_file" style="margin-top: 8px">صورة السجل</label>
             <input id="cr_file" type="file" accept="image/*" />
           </details>
@@ -261,7 +261,7 @@
           var lng = lngEl.value.trim();
           var radius = Number(document.getElementById("delivery_radius_km").value);
           var email = document.getElementById("email").value.trim();
-          var commercial_register = document.getElementById("commercial_register").value.trim();
+          var commercial_registration = document.getElementById("commercial_registration").value.trim();
 
           if (!name) {
             show("أدخل اسم المتجر", false);
@@ -311,13 +311,13 @@
             address: address,
             delivery_radius_km: Number.isFinite(radius) ? radius : 5,
             email: email || undefined,
-            commercial_register: commercial_register || undefined,
+            commercial_registration: commercial_registration || undefined,
             logoFileBase64: logoDataUrl || undefined,
             logoFileName: logoFile ? logoFile.name : undefined,
           };
           if (crDataUrl) {
-            body.commercialRegisterFileBase64 = crDataUrl;
-            body.commercialRegisterFileName = crFileName;
+            body.commercialRegistrationFileBase64 = crDataUrl;
+            body.commercialRegistrationFileName = crFileName;
           }
 
           var j = await window.PlatformAPI.api("/api/store/register", {
