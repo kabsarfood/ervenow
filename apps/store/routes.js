@@ -903,7 +903,7 @@ router.post("/register", async (req, res) => {
     ({ data: insertedRow, error: insErr } = await sb.from("stores").insert(row).select("id").single());
     if (
       insErr &&
-      /location_text|address|delivery_radius_km|is_active|category|commercial_registration|column .* does not exist|schema cache/i.test(
+      /location_text|address|delivery_radius_km|is_active|category|commercial_registration|\bemail\b|file_url|column .* does not exist|schema cache/i.test(
         String(insErr.message || "")
       )
     ) {
@@ -913,6 +913,8 @@ router.post("/register", async (req, res) => {
       delete row.is_active;
       delete row.category;
       delete row.commercial_registration;
+      delete row.email;
+      delete row.file_url;
       ({ data: insertedRow, error: insErr } = await sb.from("stores").insert(row).select("id").single());
     }
     if (insErr) {

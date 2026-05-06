@@ -54,9 +54,9 @@
         <ol class="sub" style="margin: 12px 0 0; padding-inline-start: 1.25rem; line-height: 1.7">
           <li>افتح <strong>Supabase</strong> → مشروعك → <strong>SQL Editor</strong>.</li>
           <li>نفّذ بالترتيب: <code>shared/migration_stores.sql</code> ثم <code>shared/migration_store_marketplace.sql</code> و
-            <code>shared/migration_store_location_delivery.sql</code> ثم <code>shared/migration_stores_platform.sql</code> (نشاط
-            المتجر في المنصة).</li>
-          <li>أعد تحميل الصفحة.</li>
+            <code>shared/migration_store_location_delivery.sql</code> ثم <code>shared/migration_stores_platform.sql</code> ثم عند الحاجة
+            <code>shared/migration_stores_email.sql</code> (عمود البريد + تقليل أخطاء schema cache).</li>
+          <li>بعد أي <code>ALTER TABLE</code>: من Supabase → <strong>Settings → API</strong> استخدم <strong>Reload schema</strong> إن وُجد، ثم أعد تحميل الصفحة.</li>
         </ol>
       </details>
 
