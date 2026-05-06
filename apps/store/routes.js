@@ -143,6 +143,14 @@ function isStoreReviewsMissing(err) {
   return /store_reviews|schema cache|relation .*store_reviews/i.test(msg);
 }
 
+/** يظهر في قوائم المتاجر العامة: معتمد وغير معطّل صراحةً */
+function storeRowIsListedActive(r) {
+  if (!r) return false;
+  if (String(r.status || "").toLowerCase() !== "approved") return false;
+  if (Object.prototype.hasOwnProperty.call(r, "is_active") && r.is_active === false) return false;
+  return true;
+}
+
 function simpleHash(s) {
   const str = String(s || "");
   let h = 0;
@@ -246,6 +254,7 @@ function publicStoreRow(row) {
     name: row.name,
     phone: row.phone,
     type: row.type,
+    category: row.category || row.type || null,
     lat: row.lat,
     lng: row.lng,
     address: row.address || row.location_text || null,
@@ -256,6 +265,7 @@ function publicStoreRow(row) {
     rating_count: Number(row.rating_count) || 0,
     total_orders: Number(row.total_orders) || 0,
   };
+  if (row.is_active != null) o.is_active = !!row.is_active;
   if (row.distance_km != null && Number.isFinite(Number(row.distance_km))) {
     o.distance_km = Number(row.distance_km);
   }
@@ -273,6 +283,9 @@ async function loadApprovedStore(sb, storeId) {
   if (error) return { error: error.message || "خطأ قاعدة البيانات" };
   if (!data) return { error: "المتجر غير موجود" };
   if (String(data.status || "").toLowerCase() !== "approved") return { error: "المتجر غير معتمد" };
+  if (Object.prototype.hasOwnProperty.call(data, "is_active") && data.is_active === false) {
+    return { error: "المتجر غير نشط حالياً" };
+  }
   return { store: data };
 }
 
@@ -325,7 +338,8 @@ router.get("/my-store", requireAuth, requireMerchantRole, async (req, res) => {
     const sb = createServiceClient();
     if (!sb) return fail(res, "الخادم غير مهيأ لقاعدة البيانات", 503);
     const digits = normalizePhone(req.appUser.phone);
-    const extendedSel = "id,name,phone,type,status,logo_url,lat,lng,location_text,address,delivery_radius_km,average_rating,rating_count,total_orders";
+    const extendedSel =
+      "id,name,phone,type,status,is_active,logo_url,lat,lng,location_text,address,delivery_radius_km,average_rating,rating_count,total_orders";
     let row = null;
     let err = null;
     ({ data: row, error: err } = await sb.from("stores").select(extendedSel).eq("phone", digits).eq("status", "approved").maybeSingle());
@@ -339,6 +353,9 @@ router.get("/my-store", requireAuth, requireMerchantRole, async (req, res) => {
     }
     if (err) return fail(res, err.message, 400);
     if (!row) return fail(res, "لا يوجد متجر معتمد مرتبط بجوالك. سجّل الدخول كتاجر (تاجر/متجر) بنفس رقم التسجيل.", 404);
+    if (Object.prototype.hasOwnProperty.call(row, "is_active") && row.is_active === false) {
+      return fail(res, "المتجر معتمد لكن غير مفعّل للظهور — تواصل مع الإدارة.", 403);
+    }
     return ok(res, { store: publicStoreRow(row) });
   } catch (e) {
     console.error("[store/my-store]", e);
@@ -351,10 +368,82 @@ router.get("/", optionalAuth, async (req, res) => {
     const sb = createServiceClient();
     if (!sb) return fail(res, "الخادم غير مهيأ لقاعدة البيانات", 503);
 
+    const storesListRoot = req.baseUrl === "/api/stores";
     const browseType = String(req.query.type || "").trim().toLowerCase();
     const sortParam = String(req.query.sort || "rating").trim().toLowerCase();
     const userPos = parseUserGeoQuery(req.query);
     const wantTypes = browseTypesForStoreQuery(browseType);
+
+    if (storesListRoot) {
+      const mask = !req.appUser;
+      const geoKey = userPos ? `${userPos.lat.toFixed(4)}:${userPos.lng.toFixed(4)}` : "nogeo";
+      const cacheKey = `storelist-all:${sortParam}|${mask ? "g" : "u"}|${geoKey}`;
+      const redisListKey = `storelist:v1:${cacheKey}`;
+      const redisHit = await cacheGetJson(redisListKey);
+      if (redisHit && redisHit.stores) {
+        res.set("Cache-Control", "public, max-age=30");
+        return ok(res, redisHit);
+      }
+      const now = Date.now();
+      if (listCache.payload && listCache.key === cacheKey && now - listCache.at < LIST_CACHE_TTL_MS) {
+        res.set("Cache-Control", "public, max-age=30");
+        return ok(res, listCache.payload);
+      }
+      const extendedSelAll =
+        "id,name,phone,type,category,lat,lng,status,is_active,logo_url,location_text,address,delivery_radius_km,average_rating,rating_count,total_orders,created_at";
+      const baseSelAll = "id,name,phone,type,lat,lng,status,created_at";
+      let rowsAll = [];
+      let errAll = null;
+      ({ data: rowsAll, error: errAll } = await sb
+        .from("stores")
+        .select(extendedSelAll)
+        .eq("status", "approved")
+        .order("created_at", { ascending: false })
+        .limit(200));
+      if (errAll && /column|does not exist|schema cache/i.test(String(errAll.message || ""))) {
+        ({ data: rowsAll, error: errAll } = await sb
+          .from("stores")
+          .select(baseSelAll)
+          .eq("status", "approved")
+          .order("created_at", { ascending: false })
+          .limit(200));
+      }
+      if (errAll) {
+        if (isStoresTableMissing(errAll)) return ok(res, { ok: true, stores: [], browse_masked: mask });
+        return fail(res, errAll.message, 400);
+      }
+      let rows = (rowsAll || []).filter((r) => storeRowIsListedActive(r));
+      if (userPos) {
+        rows = filterAndSortStoresByUser(rows, userPos.lat, userPos.lng);
+      } else {
+        rows = sortStoresForBrowse(rows, sortParam);
+      }
+      const stores = rows.map((row, i) => {
+        if (mask) {
+          const m = maskStoreRowForGuest(row, i);
+          m.id = row.id;
+          m.category = row.category || row.type || null;
+          if (userPos && row.distance_km != null && Number.isFinite(Number(row.distance_km))) {
+            m.distance_km = Number(row.distance_km);
+          }
+          return m;
+        }
+        return publicStoreRow(row);
+      });
+      const payload = {
+        ok: true,
+        stores,
+        browse_masked: mask,
+        sort: sortParam,
+        geo_filtered: !!userPos,
+        list_mode: "active_only",
+      };
+      listCache = { key: cacheKey, at: now, payload };
+      await cacheSetJson(redisListKey, payload, LIST_CACHE_TTL_MS);
+      res.set("Cache-Control", "public, max-age=30");
+      return ok(res, payload);
+    }
+
     if (!browseType || !wantTypes.length) {
       return ok(res, { ok: true, stores: [] });
     }
@@ -376,7 +465,7 @@ router.get("/", optionalAuth, async (req, res) => {
     }
 
     const extendedSel =
-      "id,name,phone,type,lat,lng,status,logo_url,location_text,address,delivery_radius_km,average_rating,rating_count,total_orders,created_at";
+      "id,name,phone,type,category,lat,lng,status,is_active,logo_url,location_text,address,delivery_radius_km,average_rating,rating_count,total_orders,created_at";
     const baseSel = "id,name,phone,type,lat,lng,status,created_at";
 
     let rows = [];
@@ -409,7 +498,7 @@ router.get("/", optionalAuth, async (req, res) => {
       const id = String(r.id || "");
       if (!id || seen.has(id)) return false;
       seen.add(id);
-      return String(r.status || "").toLowerCase() === "approved";
+      return storeRowIsListedActive(r);
     });
 
     if (userPos) {
@@ -444,7 +533,7 @@ router.get("/", optionalAuth, async (req, res) => {
   }
 });
 
-router.get("/public/:id", optionalAuth, async (req, res) => {
+async function getPublicStoreById(req, res) {
   try {
     const sb = createServiceClient();
     if (!sb) return fail(res, "الخادم غير مهيأ لقاعدة البيانات", 503);
@@ -452,7 +541,7 @@ router.get("/public/:id", optionalAuth, async (req, res) => {
     if (!id) return fail(res, "معرّف المتجر مطلوب", 400);
 
     const extendedSel =
-      "id,name,phone,type,lat,lng,status,logo_url,location_text,address,delivery_radius_km,average_rating,rating_count,total_orders";
+      "id,name,phone,type,category,lat,lng,status,is_active,logo_url,location_text,address,delivery_radius_km,average_rating,rating_count,total_orders";
     let row = null;
     let err = null;
     ({ data: row, error: err } = await sb.from("stores").select(extendedSel).eq("id", id).maybeSingle());
@@ -461,6 +550,9 @@ router.get("/public/:id", optionalAuth, async (req, res) => {
     }
     if (err && !isStoresTableMissing(err)) return fail(res, err.message, 400);
     if (!row || String(row.status || "").toLowerCase() !== "approved") {
+      return fail(res, "المتجر غير متاح", 404);
+    }
+    if (Object.prototype.hasOwnProperty.call(row, "is_active") && row.is_active === false) {
       return fail(res, "المتجر غير متاح", 404);
     }
 
@@ -517,7 +609,9 @@ router.get("/public/:id", optionalAuth, async (req, res) => {
     console.error("[store/public]", e);
     return fail(res, e.message || "خطأ في الخادم", 500);
   }
-});
+}
+
+router.get("/public/:id", optionalAuth, getPublicStoreById);
 
 router.get("/products", optionalAuth, async (req, res) => {
   try {
@@ -758,7 +852,7 @@ router.post("/register", async (req, res) => {
     const commercial_register = String(b.commercial_register || "").trim() || null;
     const location_text = String(b.location_text || "").trim() || null;
     const address = String(b.address || "").trim();
-    const type = String(b.type || "").trim().toLowerCase();
+    const type = String(b.type || b.category || "").trim().toLowerCase();
 
     let lat = b.lat;
     let lng = b.lng;
@@ -791,12 +885,15 @@ router.post("/register", async (req, res) => {
       phone: phoneDigits,
       email,
       commercial_register,
+      commercial_registration: commercial_register,
       file_url: null,
       lat,
       lng,
       address,
       delivery_radius_km,
       type,
+      category: type,
+      is_active: false,
       status: "pending",
     };
 
@@ -807,11 +904,16 @@ router.post("/register", async (req, res) => {
     ({ data: insertedRow, error: insErr } = await sb.from("stores").insert(row).select("id").single());
     if (
       insErr &&
-      /location_text|address|delivery_radius_km|column .* does not exist|schema cache/i.test(String(insErr.message || ""))
+      /location_text|address|delivery_radius_km|is_active|category|commercial_registration|column .* does not exist|schema cache/i.test(
+        String(insErr.message || "")
+      )
     ) {
       delete row.location_text;
       delete row.address;
       delete row.delivery_radius_km;
+      delete row.is_active;
+      delete row.category;
+      delete row.commercial_registration;
       ({ data: insertedRow, error: insErr } = await sb.from("stores").insert(row).select("id").single());
     }
     if (insErr) {
@@ -863,15 +965,27 @@ router.post("/register", async (req, res) => {
     }
 
     return ok(res, {
+      ok: true,
       success: true,
       id: requestId,
       status: "pending",
-      message: "تم استلام طلبك وسيتم مراجعته قريباً",
+      is_active: false,
+      headline: "تم تسجيل المتجر",
+      subline: "بانتظار الموافقة",
+      message: "✅ تم تسجيل المتجر\n⏳ بانتظار الموافقة",
     });
   } catch (e) {
     console.error("[store/register]", e);
     return fail(res, e.message || "خطأ في الخادم", 500);
   }
+});
+
+/** GET /api/store/:id — نفس استجابة /public/:id (يُسجّل آخراً حتى لا يتعارض مع /products وغيره) */
+const STORE_GET_BY_ID_RESERVED = new Set(["products", "reviews", "register", "public", "my-store"]);
+router.get("/:id", optionalAuth, async (req, res, next) => {
+  const raw = String(req.params.id || "").trim();
+  if (!raw || STORE_GET_BY_ID_RESERVED.has(raw.toLowerCase())) return next();
+  return getPublicStoreById(req, res);
 });
 
 module.exports = router;

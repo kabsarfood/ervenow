@@ -225,6 +225,9 @@ async function runCheckoutInsert(sb, appUser, body, options) {
       row.platform_fee = Math.round(total * 0.12 * 100) / 100;
       row.notes = `متجر: ${storeRow.name || singleStoreId}`;
       row.store_id = singleStoreId;
+      row.store_name = String(storeRow.name || "").trim() || null;
+      row.store_address =
+        String(storeRow.address || storeRow.location_text || "").trim() || null;
     }
 
     let data = null;

@@ -115,6 +115,26 @@ function isOrderPaid(order) {
   return payStatus === "paid" || payStatus === "captured" || payStatus === "completed";
 }
 
+/** جلب اسم وعنوان المتجر المعتمد لحفظه مع الطلب */
+async function resolveStoreSnapshotForOrder(sb, storeId) {
+  const id = String(storeId || "").trim();
+  if (!id) return null;
+  const { data, error } = await sb
+    .from("stores")
+    .select("name,address,location_text,status,is_active")
+    .eq("id", id)
+    .maybeSingle();
+  if (error || !data) return null;
+  if (String(data.status || "").toLowerCase() !== "approved") return null;
+  if (Object.prototype.hasOwnProperty.call(data, "is_active") && data.is_active === false) return null;
+  const name = String(data.name || "").trim();
+  const addr = String(data.address || data.location_text || "").trim();
+  return {
+    store_name: name || null,
+    store_address: addr || null,
+  };
+}
+
 /** يدعم جسم الطلب (payment_status / paid) لمسار POST /api/order/create */
 function isPaidFromRequestBody(body) {
   const b = body && typeof body === "object" ? body : {};
@@ -214,6 +234,16 @@ async function createDeliveryOrderFromBody(sb, appUser, body, opts) {
     ? storeIdRaw
     : null;
 
+  let store_name = null;
+  let store_address = null;
+  if (store_id) {
+    const snap = await resolveStoreSnapshotForOrder(sb, store_id);
+    if (snap) {
+      store_name = snap.store_name;
+      store_address = snap.store_address;
+    }
+  }
+
   const payment_status =
     options.payment_status != null && String(options.payment_status).trim() !== ""
       ? String(options.payment_status).trim()
@@ -241,7 +271,13 @@ async function createDeliveryOrderFromBody(sb, appUser, body, opts) {
     total_with_vat: totalWithVAT,
     external_order_id: extId,
     series_source: srcSeries,
-    ...(store_id ? { store_id } : {}),
+    ...(store_id
+      ? {
+          store_id,
+          ...(store_name ? { store_name } : {}),
+          ...(store_address ? { store_address } : {}),
+        }
+      : {}),
     ...(payment_status ? { payment_status } : {}),
     ...(idemRaw ? { idempotency_key: idemRaw } : {}),
   }));
@@ -349,7 +385,8 @@ async function insertDeliveryOrderWithRetry(sb, buildRow) {
 const ORDERS_LIST_COLUMNS =
   "id,customer_id,driver_id,status,delivery_status,order_number,created_at,updated_at," +
   "pickup_address,drop_address,pickup_lat,pickup_lng,drop_lat,drop_lng," +
-  "series_source,external_order_id,customer_phone,delivery_fee,distance_km";
+  "series_source,external_order_id,customer_phone,delivery_fee,distance_km," +
+  "store_id,store_name,store_address";
 
 async function listOrders(sb, appUser) {
   if (appUser.role === "admin") {
@@ -639,6 +676,7 @@ async function refineDeliveryOrderPricingFromOsrm(sb, orderId) {
 }
 
 module.exports = {
+  resolveStoreSnapshotForOrder,
   listOrders,
   acceptOrder,
   setStatus,

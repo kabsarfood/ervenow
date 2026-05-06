@@ -12,7 +12,20 @@ CREATE TABLE IF NOT EXISTS public.stores (
   file_url text,
   lat double precision,
   lng double precision,
-  type text NOT NULL CHECK (type IN ('restaurant', 'pharmacy', 'supermarket', 'services')),
+  type text NOT NULL CHECK (
+    type IN (
+      'restaurant',
+      'pharmacy',
+      'supermarket',
+      'minimarket',
+      'vegetables',
+      'butcher',
+      'fish',
+      'home_business',
+      'services',
+      'other'
+    )
+  ),
   status text NOT NULL DEFAULT 'pending',
   created_at timestamptz NOT NULL DEFAULT now()
 );

@@ -744,6 +744,13 @@
           return (s === "new" || s === "pending") && !o.driver_id;
         });
 
+        function escHtml(s) {
+          return String(s || "")
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/"/g, "&quot;");
+        }
+
         orders.forEach(function (o) {
           var div = document.createElement("div");
           div.className = "order-row";
@@ -758,6 +765,19 @@
               ? " — " + o.external_order_id
               : "";
           var phone = isLoggedIn ? (o.customer_phone || "—") : "**********";
+          var storeBlock = "";
+          if (o.store_name || o.store_id) {
+            storeBlock =
+              '<div class="sub order-store-name" style="margin:8px 0 2px;font-weight:800;font-size:0.95rem" translate="no">🏪 ' +
+              escHtml(o.store_name || "متجر") +
+              "</div>";
+            if (o.store_address) {
+              storeBlock +=
+                '<div class="sub order-store-addr" style="margin:0 0 6px;font-size:0.85rem" translate="no">📍 ' +
+                escHtml(o.store_address) +
+                "</div>";
+            }
+          }
           div.innerHTML =
             "<strong><span class=\"ord-no\" translate=\"no\">" +
             num +
@@ -766,7 +786,9 @@
             "</span><br/><div class=\"sub order-source\" style=\"margin:4px 0 2px; font-size:0.9rem\" translate=\"no\">" +
             sourceTag +
             extLine +
-            "</div><br/><small>" +
+            "</div>" +
+            storeBlock +
+            "<br/><small>" +
             (o.drop_address || "") +
             "</small><br/><small>هاتف زائر المنصة: " +
             phone +

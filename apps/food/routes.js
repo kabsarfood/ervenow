@@ -7,6 +7,7 @@ const {
   calcPlatformFee,
   calcDriverEarning,
   calcVAT,
+  resolveStoreSnapshotForOrder,
 } = require("../delivery/service");
 const { pushToErvenow } = require("../../shared/utils/ervenowPush");
 
@@ -102,10 +103,23 @@ router.post("/orders", requireAuth, async (req, res) => {
       const platformFee = calcPlatformFee(orderTotal);
       const driverEarning = calcDriverEarning(deliveryFee);
 
+      const storeIdRaw = body.store_id != null ? String(body.store_id).trim() : "";
+      const store_id = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(storeIdRaw)
+        ? storeIdRaw
+        : null;
+      let storeSnap = null;
+      if (store_id) {
+        storeSnap = await resolveStoreSnapshotForOrder(req.supabase, store_id);
+      }
+      const pickupDefault = storeSnap?.store_name ? String(storeSnap.store_name) : "مطعم كبسار";
+      const pickupAddr =
+        String(body.pickup_address || "").trim() ||
+        (storeSnap && storeSnap.store_address ? storeSnap.store_address : pickupDefault);
+
       const { data, error: de } = await insertDeliveryOrderWithRetry(req.supabase, (order_number) => ({
         customer_id: req.appUser.id,
         customer_phone: body.customer_phone || req.appUser.phone || "",
-        pickup_address: "مطعم كبسار",
+        pickup_address: pickupAddr,
         drop_address: dropAddress,
         notes: delNotes,
         order_number,
@@ -117,6 +131,13 @@ router.post("/orders", requireAuth, async (req, res) => {
         driver_earning: driverEarning,
         vat_amount: vatAmount,
         total_with_vat: totalWithVAT,
+        ...(store_id
+          ? {
+              store_id,
+              ...(storeSnap?.store_name ? { store_name: storeSnap.store_name } : {}),
+              ...(storeSnap?.store_address ? { store_address: storeSnap.store_address } : {}),
+            }
+          : {}),
       }));
       if (de) return fail(res, de.message, 400);
       delRow = data || null;

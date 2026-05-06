@@ -9,11 +9,35 @@
     <link rel="stylesheet" href="/assets/styles.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
+      .reg-section {
+        margin-top: 20px;
+        padding-top: 16px;
+        border-top: 1px solid rgba(0, 0, 0, 0.08);
+      }
+      .reg-section:first-of-type {
+        margin-top: 0;
+        padding-top: 0;
+        border-top: none;
+      }
+      .reg-section h2 {
+        margin: 0 0 12px;
+        font-size: 1.05rem;
+        font-weight: 800;
+      }
       #map {
         height: 300px;
         border-radius: 12px;
         border: 1px solid rgba(0, 0, 0, 0.12);
         margin-top: 8px;
+      }
+      .map-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 10px;
+      }
+      #msg.msg.ok {
+        white-space: pre-line;
       }
     </style>
   </head>
@@ -22,57 +46,86 @@
       <p><a href="/">← الرئيسية</a></p>
       <h1>تسجيل متجر جديد</h1>
       <p class="sub">
-        <strong>موقع المتجر إجباري:</strong> انقر على الخريطة لتحديد موقع المحل بدقة. بعد الموافقة سجّل الدخول كـ «تاجر» بنفس الجوال لإدارة المنتجات.
+        <strong>موقع المتجر إجباري.</strong> بعد موافقة الإدارة سجّل الدخول كـ «تاجر» بنفس الجوال لإدارة المنتجات.
       </p>
 
+      <details class="card" style="margin-bottom: 16px; padding: 12px 14px">
+        <summary style="cursor: pointer; font-weight: 700">ظهرت رسالة «جدول stores غير موجود»؟ (للمشرف)</summary>
+        <ol class="sub" style="margin: 12px 0 0; padding-inline-start: 1.25rem; line-height: 1.7">
+          <li>افتح <strong>Supabase</strong> → مشروعك → <strong>SQL Editor</strong>.</li>
+          <li>نفّذ بالترتيب: <code>shared/migration_stores.sql</code> ثم <code>shared/migration_store_marketplace.sql</code> و
+            <code>shared/migration_store_location_delivery.sql</code> ثم <code>shared/migration_stores_platform.sql</code> (نشاط
+            المتجر في المنصة).</li>
+          <li>أعد تحميل الصفحة.</li>
+        </ol>
+      </details>
+
       <div class="card">
-        <label for="name">اسم المتجر</label>
-        <input id="name" type="text" autocomplete="organization" />
+        <section class="reg-section" aria-labelledby="h-store-data">
+          <h2 id="h-store-data">1 — بيانات المتجر</h2>
+          <label for="name">اسم المتجر</label>
+          <input id="name" type="text" autocomplete="organization" />
 
-        <label for="type" style="margin-top: 12px">نوع النشاط</label>
-        <select id="type">
-          <option value="restaurant">مطعم</option>
-          <option value="pharmacy">صيدلية</option>
-          <option value="supermarket">سوبرماركت</option>
-          <option value="other">غيره</option>
-        </select>
+          <label for="type" style="margin-top: 12px">فئة النشاط</label>
+          <select id="type">
+            <option value="restaurant">مطعم</option>
+            <option value="pharmacy">صيدلية</option>
+            <option value="supermarket">سوبرماركت</option>
+            <option value="other">غيره</option>
+          </select>
 
-        <label for="phone" style="margin-top: 12px">رقم الجوال</label>
-        <input id="phone" type="tel" inputmode="tel" placeholder="05xxxxxxxx" maxlength="10" />
+          <label for="phone" style="margin-top: 12px">رقم الجوال</label>
+          <input id="phone" type="tel" inputmode="tel" placeholder="05xxxxxxxx" maxlength="10" />
+        </section>
 
-        <label style="margin-top: 16px">موقع المتجر على الخريطة — انقر لتحديد النقطة</label>
-        <div id="map"></div>
-        <p class="sub" id="mapHint" style="margin-top: 6px">اسحب الدبوس أو انقر على الخريطة.</p>
-        <input type="hidden" id="lat" />
-        <input type="hidden" id="lng" />
+        <section class="reg-section" aria-labelledby="h-map">
+          <h2 id="h-map">2 — الموقع على الخريطة</h2>
+          <p class="sub" style="margin-top: 0">انقر على الخريطة أو اسحب الدبوس. لا يُقبل الإرسال بدون تحديد نقطة.</p>
+          <div id="map"></div>
+          <div class="map-actions">
+            <button type="button" class="btn btn-ghost" id="btnMyLocation">استخدم موقعي</button>
+          </div>
+          <p class="sub" id="mapHint" style="margin-top: 6px">لم يُحدد موقع بعد.</p>
+          <input type="hidden" id="lat" />
+          <input type="hidden" id="lng" />
 
-        <label for="address" style="margin-top: 12px">العنوان التفصيلي</label>
-        <textarea id="address" rows="3" placeholder="يُعبأ تلقائياً من الخريطة ويمكنك تعديله"></textarea>
+          <label for="address" style="margin-top: 12px">العنوان التفصيلي</label>
+          <textarea id="address" rows="3" placeholder="يُقترح من الخريطة ويمكنك تعديله"></textarea>
+        </section>
 
-        <label for="delivery_radius_km" style="margin-top: 12px">نطاق التوصيل من موقع المتجر</label>
-        <select id="delivery_radius_km">
-          <option value="5">5 كم</option>
-          <option value="10">10 كم</option>
-          <option value="15">15 كم</option>
-          <option value="20">20 كم</option>
-          <option value="30">30 كم</option>
-        </select>
+        <section class="reg-section" aria-labelledby="h-radius">
+          <h2 id="h-radius">3 — نطاق التوصيل</h2>
+          <label for="delivery_radius_km">من موقع المتجر (كم)</label>
+          <select id="delivery_radius_km">
+            <option value="5">5 كم</option>
+            <option value="10">10 كم</option>
+            <option value="15">15 كم</option>
+            <option value="20">20 كم</option>
+            <option value="30">30 كم</option>
+          </select>
+        </section>
 
-        <label for="logo_file" style="margin-top: 16px">صورة الشعار</label>
-        <input id="logo_file" type="file" accept="image/*" />
-        <p class="sub" style="margin-top: 4px">يُضغط تلقائياً قبل الرفع.</p>
+        <section class="reg-section" aria-labelledby="h-logo">
+          <h2 id="h-logo">4 — شعار المتجر</h2>
+          <label for="logo_file">صورة الشعار (اختياري)</label>
+          <input id="logo_file" type="file" accept="image/*" />
+          <p class="sub" style="margin-top: 4px">يُضغط تلقائياً قبل الرفع.</p>
+        </section>
 
-        <details style="margin-top: 16px" class="sub">
-          <summary>حقول اختيارية (سجل تجاري)</summary>
-          <label for="email" style="margin-top: 8px">البريد</label>
-          <input id="email" type="email" />
-          <label for="commercial_register" style="margin-top: 8px">السجل التجاري (نص)</label>
-          <input id="commercial_register" type="text" />
-          <label for="cr_file" style="margin-top: 8px">صورة السجل</label>
-          <input id="cr_file" type="file" accept="image/*" />
-        </details>
+        <section class="reg-section" aria-labelledby="h-opt">
+          <h2 id="h-opt">5 — بيانات اختيارية</h2>
+          <details class="sub">
+            <summary>سجل تجاري وبريد</summary>
+            <label for="email" style="margin-top: 8px">البريد</label>
+            <input id="email" type="email" />
+            <label for="commercial_register" style="margin-top: 8px">السجل التجاري (نص)</label>
+            <input id="commercial_register" type="text" />
+            <label for="cr_file" style="margin-top: 8px">صورة السجل</label>
+            <input id="cr_file" type="file" accept="image/*" />
+          </details>
+        </section>
 
-        <button type="button" class="btn btn-primary" id="btnSend" style="margin-top: 20px">إرسال الطلب</button>
+        <button type="button" class="btn btn-primary" id="btnSend" style="margin-top: 24px">إرسال الطلب</button>
 
         <div class="msg" id="msg" style="display: none"></div>
       </div>
@@ -85,7 +138,7 @@
     <script>
       var latEl = document.getElementById("lat");
       var lngEl = document.getElementById("lng");
-      var mapHint = document.getElementById("map_hint");
+      var mapHint = document.getElementById("mapHint");
       var crDataUrl = null;
       var crFileName = null;
       var map = null;
@@ -115,6 +168,7 @@
       function setCoords(lat, lng, reverseLookup) {
         latEl.value = String(lat);
         lngEl.value = String(lng);
+        if (mapHint) mapHint.textContent = "تم تحديد الموقع على الخريطة.";
         if (marker && map) {
           marker.setLatLng([lat, lng]);
           map.panTo([lat, lng]);
@@ -176,6 +230,22 @@
         });
       }
 
+      document.getElementById("btnMyLocation").onclick = function () {
+        if (!navigator.geolocation) {
+          show("المتصفح لا يدعم تحديد الموقع.", false);
+          return;
+        }
+        navigator.geolocation.getCurrentPosition(
+          function (pos) {
+            setCoords(pos.coords.latitude, pos.coords.longitude, true);
+          },
+          function () {
+            show("تعذر الحصول على موقعك — فعّل أذونات الموقع للمتصفح.", false);
+          },
+          { enableHighAccuracy: true, maximumAge: 8000, timeout: 20000 }
+        );
+      };
+
       document.getElementById("btnSend").onclick = async function () {
         var btn = document.getElementById("btnSend");
         try {
@@ -193,11 +263,26 @@
           var email = document.getElementById("email").value.trim();
           var commercial_register = document.getElementById("commercial_register").value.trim();
 
-          if (!name) return show("أدخل اسم المتجر", false);
-          if (!phone) return show("أدخل رقم الجوال", false);
-          if (!isValidSaudiPhone05(phone)) return show("أدخل رقم سعودي صحيح يبدأ بـ 05", false);
-          if (!lat || !lng) return show("حدد موقع المتجر على الخريطة بالنقر", false);
-          if (!address || address.length < 4) return show("أدخل عنواناً واضحاً للمتجر (أو انتظر اقتراح الخريطة)", false);
+          if (!name) {
+            show("أدخل اسم المتجر", false);
+            return;
+          }
+          if (!phone) {
+            show("أدخل رقم الجوال", false);
+            return;
+          }
+          if (!isValidSaudiPhone05(phone)) {
+            show("أدخل رقم سعودي صحيح يبدأ بـ 05", false);
+            return;
+          }
+          if (!lat || !lng) {
+            show("حدد موقع المتجر على الخريطة أو اضغط «استخدم موقعي».", false);
+            return;
+          }
+          if (!address || address.length < 4) {
+            show("أدخل عنواناً واضحاً للمتجر (أو انتظر اقتراح الخريطة).", false);
+            return;
+          }
 
           var logoInput = document.getElementById("logo_file");
           var logoFile = logoInput.files && logoInput.files[0];
@@ -206,13 +291,15 @@
             try {
               logoDataUrl = await window.compressImageToDataUrl(logoFile, 0.72, 1280);
             } catch (ce) {
-              return show(String(ce.message || ce || "تعذر معالجة الشعار"), false);
+              show(String(ce.message || ce || "تعذر معالجة الشعار"), false);
+              return;
             }
           }
 
           var crInput = document.getElementById("cr_file");
           if (crInput.files && crInput.files[0] && !crDataUrl) {
-            return show("انتظر حتى تُحمّل صورة السجل", false);
+            show("انتظر حتى تُحمّل صورة السجل", false);
+            return;
           }
 
           var body = {
@@ -237,7 +324,12 @@
             method: "POST",
             body: body,
           });
-          show((j.message || "تم الإرسال — الحالة: pending") + (j.id ? " — رقم الطلب: " + j.id : "") + " ✅", true);
+          var okMsg =
+            j.message ||
+            (j.headline && j.subline ? j.headline + "\n" + j.subline : "") ||
+            "✅ تم تسجيل المتجر\n⏳ بانتظار الموافقة";
+          if (j.id) okMsg += "\n\nمعرّف الطلب: " + j.id;
+          show(okMsg, true);
         } catch (e) {
           show(String(e.message || e), false);
         } finally {

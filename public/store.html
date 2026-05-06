@@ -4,65 +4,193 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>ERVENOW | المتجر</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/assets/styles.css" />
     <style>
-      .store-hero {
-        display: grid;
-        gap: 16px;
-        grid-template-columns: 1fr;
-        align-items: start;
+      :root {
+        --sp-radius: 22px;
+        --sp-shadow: 0 14px 48px rgba(42, 24, 16, 0.1);
+        --sp-shadow-soft: 0 8px 32px rgba(42, 24, 16, 0.07);
       }
-      @media (min-width: 720px) {
-        .store-hero {
-          grid-template-columns: 160px 1fr;
-        }
+
+      .store-shell {
+        max-width: 920px;
+        margin: 0 auto;
+        padding: 20px 16px 56px;
       }
-      .store-logo {
+
+      .store-breadcrumb {
+        margin-bottom: 16px;
+        font-weight: 700;
+      }
+
+      .store-breadcrumb a {
+        text-decoration: none;
+      }
+
+      .store-header-wrap {
+        margin-bottom: 20px;
+      }
+
+      .store-header {
+        border-radius: var(--sp-radius);
+        overflow: hidden;
+        background: #fffcfa;
+        border: 1px solid rgba(61, 34, 19, 0.08);
+        box-shadow: var(--sp-shadow);
+      }
+
+      .store-header__banner {
+        position: relative;
         width: 100%;
-        max-width: 180px;
-        border-radius: 12px;
-        object-fit: cover;
-        aspect-ratio: 1;
-        background: #f0ebe3;
+        aspect-ratio: 21 / 9;
+        min-height: 140px;
+        background: linear-gradient(120deg, #efe6dc, #f4ebe3 45%, #e8d9cc);
       }
+
+      .store-header__banner img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+
+      .store-header__content {
+        padding: 20px 20px 22px;
+      }
+
+      .store-header__content h1 {
+        margin: 0 0 8px;
+        font-size: clamp(1.35rem, 4vw, 1.85rem);
+        font-weight: 800;
+        line-height: 1.25;
+        letter-spacing: -0.02em;
+      }
+
+      .store-header__cat {
+        margin: 0 0 10px;
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: #7a6558;
+      }
+
+      .store-header__dist {
+        margin: 0 0 8px;
+        font-size: 0.92rem;
+        font-weight: 800;
+        color: #b9872f;
+      }
+
+      .store-header__rating {
+        margin: 0 0 18px;
+        font-size: 0.88rem;
+        color: #5c4638;
+      }
+
+      .store-order-btn {
+        width: 100%;
+        max-width: 360px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        padding: 14px 22px;
+        border: none;
+        border-radius: 16px;
+        font-family: inherit;
+        font-size: 1.05rem;
+        font-weight: 800;
+        cursor: pointer;
+        color: #fffdf8;
+        background: linear-gradient(135deg, #3d2213, #6b3d22);
+        box-shadow: 0 10px 32px rgba(61, 34, 19, 0.28);
+        transition: transform 0.2s, box-shadow 0.2s, filter 0.2s;
+      }
+
+      .store-order-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 14px 40px rgba(61, 34, 19, 0.32);
+        filter: brightness(1.05);
+      }
+
+      .store-order-btn:active {
+        transform: translateY(0);
+      }
+
+      .store-order-btn:focus-visible {
+        outline: 3px solid #c9a227;
+        outline-offset: 3px;
+      }
+
+      .store-section {
+        border-radius: var(--sp-radius);
+        box-shadow: var(--sp-shadow-soft);
+      }
+
       .prod-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-        gap: 12px;
+        gap: 14px;
       }
+
+      .prod-card {
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 6px 22px rgba(42, 24, 16, 0.06);
+        transition: box-shadow 0.2s, transform 0.2s;
+      }
+
+      .prod-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 36px rgba(42, 24, 16, 0.1);
+      }
+
       .prod-card img {
         width: 100%;
         height: 140px;
         object-fit: cover;
-        border-radius: 10px;
+        border-radius: 0;
         background: #f5f1ea;
       }
     </style>
   </head>
   <body>
-    <div class="layout">
-      <p><a href="/">← الرئيسية</a> · <a id="browseBack" href="/browse">التصفح</a></p>
-      <div id="hero" class="card store-hero" style="display: none">
-        <img id="logoImg" class="store-logo" alt="" loading="lazy" style="display: none" />
-        <div>
-          <h1 id="storeName" style="margin: 0 0 8px">—</h1>
-          <p class="sub" id="storeMeta">—</p>
-          <p class="sub" id="storeOrderCount" style="margin-top: 6px; display: none"></p>
-          <p class="sub" id="storeDistance" style="margin-top: 6px; display: none"></p>
-          <p class="sub" id="storeLoc" style="margin-top: 8px"></p>
+    <div class="store-shell">
+      <p class="store-breadcrumb">
+        <a href="/">← الرئيسية</a>
+        ·
+        <a id="browseBack" href="/stores">المتاجر</a>
+        ·
+        <a href="/browse">تصفح حسب النوع</a>
+      </p>
+
+      <div id="storeHeaderWrap" class="store-header-wrap" style="display: none">
+        <div class="store-header">
+          <div class="store-header__banner">
+            <img id="storeBannerImg" src="" alt="" width="920" height="394" decoding="async" fetchpriority="high" />
+          </div>
+          <div class="store-header__content">
+            <h1 id="storeTitle">—</h1>
+            <p id="storeCategory" class="store-header__cat">—</p>
+            <p id="storeDistLine" class="store-header__dist">📍 — كم</p>
+            <p id="storeRatingLine" class="store-header__rating">—</p>
+            <p class="sub" id="storeAddressLine" style="margin: 0 0 14px"></p>
+            <button type="button" class="store-order-btn" id="orderBtn">🚚 اطلب توصيل</button>
+          </div>
         </div>
       </div>
 
-      <div class="card">
-        <h2 style="margin: 0 0 12px">المنتجات</h2>
+      <div class="card store-section" style="margin-bottom: 16px">
+        <h2 style="margin: 0 0 14px">المنتجات</h2>
         <div id="products" class="prod-grid"></div>
-        <div class="row" style="margin-top: 12px; gap: 8px; flex-wrap: wrap">
+        <div class="row" style="margin-top: 14px; gap: 8px; flex-wrap: wrap">
           <button type="button" class="btn btn-ghost" id="btnMore" style="display: none">تحميل المزيد</button>
         </div>
       </div>
 
-      <div class="card" id="reviewCard">
-        <h2 style="margin: 0 0 12px">التقييمات</h2>
+      <div class="card store-section" id="reviewCard">
+        <h2 style="margin: 0 0 14px">التقييمات</h2>
         <div id="reviews"></div>
         <div id="reviewFormWrap" style="margin-top: 16px; display: none">
           <label for="ratingSel">أضف تقييماً</label>
@@ -94,8 +222,44 @@
       var offset = 0;
       var limit = 12;
       var total = 0;
-      var storeMeta = { name: "", type: "supermarket" };
+      var storeMeta = { name: "", type: "supermarket", id: "" };
       var lastProducts = [];
+
+      var TYPE_AR = {
+        restaurant: "مطعم",
+        pharmacy: "صيدلية",
+        supermarket: "سوبر ماركت",
+        minimarket: "بقالة",
+        vegetables: "خضار وفواكه",
+        butcher: "لحوم",
+        fish: "أسماك",
+        home_business: "منتج منزلي",
+        flowers_gifts: "ورد وهدايا",
+        sweets: "حلويات",
+        services: "خدمات",
+        other: "أخرى",
+        plumber: "سباكة",
+        electrician: "كهرباء",
+        cleaning: "تنظيف",
+        nursery: "تنسيق حدائق",
+        ac_technician: "تكييف",
+        vehicle_transfer: "نقل مركبات",
+        internal_delivery: "توصيل",
+        pickup_truck: "ونيت",
+        furniture_move: "نقل أثاث",
+        gas_delivery: "غاز",
+      };
+
+      function typeLabelAr(type) {
+        var t = String(type || "").toLowerCase();
+        return TYPE_AR[t] || t || "—";
+      }
+
+      var defaultBanner =
+        "data:image/svg+xml," +
+        encodeURIComponent(
+          '<svg xmlns="http://www.w3.org/2000/svg" width="920" height="394" viewBox="0 0 920 394"><defs><linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#efe6dc"/><stop offset="100%" stop-color="#e5d8cc"/></linearGradient></defs><rect fill="url(#g)" width="920" height="394"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="#c9a227" font-family="sans-serif" font-size="28" font-weight="700">ERVENOW</text></svg>'
+        );
 
       function getUserGeo() {
         return new Promise(function (resolve) {
@@ -152,9 +316,12 @@
             encodeURIComponent(geo.lng);
         }
         var headers = {};
-        var t = window.PlatformAPI.getToken();
+        var t = window.PlatformAPI && window.PlatformAPI.getToken && window.PlatformAPI.getToken();
         if (t) headers.Authorization = "Bearer " + t;
-        var res = await fetch(window.PlatformAPI.apiUrl("/api/store/public/" + encodeURIComponent(storeId) + geoQs), { headers: headers });
+
+        var url =
+          window.PlatformAPI.apiUrl("/api/store/" + encodeURIComponent(storeId) + geoQs);
+        var res = await fetch(url, { headers: headers });
         var data = await res.json().catch(function () {
           return {};
         });
@@ -162,54 +329,56 @@
           show(data.error || "تعذر تحميل المتجر", false);
           return;
         }
-        var s = data.store;
-        storeMeta.name = s.name || s.label || "";
-        storeMeta.type = s.type || "supermarket";
+        var store = data.store;
+        storeMeta.id = store.id || storeId;
+        storeMeta.name = store.name || store.label || "";
+        storeMeta.type = store.type || "supermarket";
 
-        document.getElementById("hero").style.display = "grid";
-        document.getElementById("storeName").textContent = s.label || s.name || "متجر";
+        document.getElementById("storeHeaderWrap").style.display = "block";
+
+        var title = store.label || store.name || "متجر";
+        document.getElementById("storeTitle").textContent = title;
+
+        var cat = typeLabelAr(store.category || store.type);
+        document.getElementById("storeCategory").textContent = cat;
+
+        var distText =
+          store.distance_km != null && Number.isFinite(Number(store.distance_km))
+            ? "📍 " + Number(store.distance_km).toFixed(1) + " كم"
+            : "📍 — كم";
+        document.getElementById("storeDistLine").textContent = distText;
+
         var ratingLine =
-          s.masked || data.browse_masked
-            ? "التقييم والطلبات متاحة بعد تسجيل الدخول"
+          store.masked || data.browse_masked
+            ? "التقييم والطلبات تظهر بالكامل بعد تسجيل الدخول."
             : "★ " +
-              (Number(s.average_rating) || 0).toFixed(1) +
+              (Number(store.average_rating) || 0).toFixed(1) +
               " (" +
-              (Number(s.rating_count) || 0) +
-              " تقييم)";
-        document.getElementById("storeMeta").textContent = ratingLine;
+              (Number(store.rating_count) || 0) +
+              " تقييم) · " +
+              (Number(store.total_orders) || 0) +
+              " طلب";
+        document.getElementById("storeRatingLine").textContent = ratingLine;
 
-        var oc = document.getElementById("storeOrderCount");
-        if (!s.masked && !data.browse_masked) {
-          oc.style.display = "block";
-          oc.textContent = "عدد الطلبات: " + (Number(s.total_orders) || 0);
+        document.getElementById("storeAddressLine").textContent =
+          store.address || store.location_text || "";
+
+        var imgEl = document.getElementById("storeBannerImg");
+        imgEl.onerror = function () {
+          imgEl.onerror = null;
+          imgEl.src = defaultBanner;
+        };
+        if (store.logo_url) {
+          imgEl.src = store.logo_url;
         } else {
-          oc.style.display = "none";
+          imgEl.src = defaultBanner;
         }
 
-        var distEl = document.getElementById("storeDistance");
-        if (geo && s.distance_km != null && Number.isFinite(Number(s.distance_km))) {
-          var km = Number(s.distance_km);
-          var eta = s.delivery_eta_minutes != null ? Number(s.delivery_eta_minutes) : Math.max(10, Math.round(km * 4));
-          var cover =
-            s.within_delivery_radius === false
-              ? " — خارج نطاق التوصيل الحالي"
-              : "";
-          distEl.style.display = "block";
-          distEl.textContent =
-            "يبعد عنك تقريباً: " + km.toFixed(1) + " كم — التوصيل المتوقع خلال نحو " + eta + " دقيقة" + cover;
-        } else {
-          distEl.style.display = "none";
-        }
+        document.getElementById("orderBtn").onclick = function () {
+          window.location.href = "/order.html?store_id=" + encodeURIComponent(storeMeta.id || storeId);
+        };
 
-        document.getElementById("storeLoc").textContent =
-          s.address || s.location_text || (geo ? "فعّل إذن الموقع لعرض المسافة التقريبية" : "");
-
-        if (!s.masked && s.logo_url) {
-          var img = document.getElementById("logoImg");
-          img.src = s.logo_url;
-          img.style.display = "block";
-        }
-        if (window.PlatformAPI.getToken()) {
+        if (window.PlatformAPI && window.PlatformAPI.getToken && window.PlatformAPI.getToken()) {
           document.getElementById("reviewFormWrap").style.display = "block";
           document.getElementById("reviewLoginHint").style.display = "none";
         } else {
@@ -228,18 +397,18 @@
         }
 
         if (!lastProducts.length) {
-          box.innerHTML = '<p class="sub">لا منتجات بعد</p>';
+          box.innerHTML = '<p class="sub">لا منتجات بعد — يمكن الطلب العام عبر زر التوصيل أعلاه.</p>';
           return;
         }
 
         var html = rows
           .map(function (p) {
-            var img = p.image_url
-              ? '<img src="' + esc(p.image_url) + '" alt="" loading="lazy" />'
-              : '<div style="height:140px;border-radius:10px;background:#f0ebe3"></div>';
+            var im = p.image_url
+              ? '<img src="' + esc(p.image_url) + '" alt="" loading="lazy" decoding="async" />'
+              : '<div style="height:140px;background:#f0ebe3"></div>';
             return (
               '<div class="card prod-card">' +
-              img +
+              im +
               "<strong>" +
               esc(p.name) +
               "</strong>" +
@@ -272,12 +441,14 @@
       async function loadProducts(append) {
         if (!storeId) return;
         var qs =
-          "/api/store/products?store_id=" +
-          encodeURIComponent(storeId) +
-          "&limit=" +
-          limit +
-          "&offset=" +
-          offset;
+          window.PlatformAPI.apiUrl(
+            "/api/store/products?store_id=" +
+              encodeURIComponent(storeId) +
+              "&limit=" +
+              limit +
+              "&offset=" +
+              offset
+          );
         var res = await fetch(qs);
         var data = await res.json().catch(function () {
           return {};
@@ -294,7 +465,9 @@
 
       async function loadReviews() {
         if (!storeId) return;
-        var res = await fetch(window.PlatformAPI.apiUrl("/api/store/reviews?store_id=" + encodeURIComponent(storeId) + "&limit=30"));
+        var res = await fetch(
+          window.PlatformAPI.apiUrl("/api/store/reviews?store_id=" + encodeURIComponent(storeId) + "&limit=30")
+        );
         var data = await res.json().catch(function () {
           return {};
         });
@@ -307,7 +480,7 @@
         box.innerHTML = rows
           .map(function (r) {
             return (
-              '<div class="card" style="padding:10px;margin-bottom:8px">' +
+              '<div class="card" style="padding:12px;margin-bottom:8px;border-radius:14px">' +
               "<strong>★ " +
               esc(r.rating) +
               "</strong>" +

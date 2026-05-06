@@ -144,6 +144,16 @@ async function linkStoreOwnerAfterApprove(sb, store) {
   }
 }
 
+async function updateStoreWithOptionalActive(sb, id, patch) {
+  const p = { ...patch };
+  let { data, error } = await sb.from("stores").update(p).eq("id", id).select("*").single();
+  if (error && /is_active|column|schema cache/i.test(String(error.message || ""))) {
+    delete p.is_active;
+    ({ data, error } = await sb.from("stores").update(p).eq("id", id).select("*").single());
+  }
+  return { data, error };
+}
+
 function isSchemaMissingError(err) {
   if (!err) return false;
   const code = String(err.code || "");
@@ -621,12 +631,9 @@ router.patch("/store-requests/:id", requireAuth, requireRole("admin"), requireAd
     if (!status) return fail(res, "action must be approve or reject", 400);
 
     const updatePayload = { status, updated_at: new Date().toISOString() };
-    const { data, error } = await req.supabase
-      .from("stores")
-      .update(updatePayload)
-      .eq("id", id)
-      .select("*")
-      .single();
+    if (status === "approved") updatePayload.is_active = true;
+    if (status === "rejected") updatePayload.is_active = false;
+    const { data, error } = await updateStoreWithOptionalActive(req.supabase, id, updatePayload);
     if (error) {
       if (isStoresTableMissing(error)) {
         return fail(res, "جدول stores غير موجود. نفّذ migration_stores.sql أولاً.", 400);
@@ -644,12 +651,11 @@ router.post("/approve-store", requireAuth, requireRole("admin"), requireAdminPer
   try {
     const id = String(req.body?.id || "").trim();
     if (!id) return fail(res, "id required", 400);
-    const { data, error } = await req.supabase
-      .from("stores")
-      .update({ status: "approved", updated_at: new Date().toISOString() })
-      .eq("id", id)
-      .select("*")
-      .single();
+    const { data, error } = await updateStoreWithOptionalActive(req.supabase, id, {
+      status: "approved",
+      is_active: true,
+      updated_at: new Date().toISOString(),
+    });
     if (error) {
       if (isStoresTableMissing(error)) {
         return fail(res, "جدول stores غير موجود. نفّذ migration_stores.sql أولاً.", 400);
@@ -667,18 +673,39 @@ router.post("/reject-store", requireAuth, requireRole("admin"), requireAdminPerm
   try {
     const id = String(req.body?.id || "").trim();
     if (!id) return fail(res, "id required", 400);
-    const { data, error } = await req.supabase
-      .from("stores")
-      .update({ status: "rejected", updated_at: new Date().toISOString() })
-      .eq("id", id)
-      .select("*")
-      .single();
+    const { data, error } = await updateStoreWithOptionalActive(req.supabase, id, {
+      status: "rejected",
+      is_active: false,
+      updated_at: new Date().toISOString(),
+    });
     if (error) {
       if (isStoresTableMissing(error)) {
         return fail(res, "جدول stores غير موجود. نفّذ migration_stores.sql أولاً.", 400);
       }
       return fail(res, error.message, 400);
     }
+    return ok(res, { store: data });
+  } catch (e) {
+    return fail(res, e.message || String(e), 500);
+  }
+});
+
+router.patch("/store/:id/approve", requireAuth, requireRole("admin"), requireAdminPermission("stores"), async (req, res) => {
+  try {
+    const id = String(req.params.id || "").trim();
+    if (!id) return fail(res, "id required", 400);
+    const { data, error } = await updateStoreWithOptionalActive(req.supabase, id, {
+      status: "approved",
+      is_active: true,
+      updated_at: new Date().toISOString(),
+    });
+    if (error) {
+      if (isStoresTableMissing(error)) {
+        return fail(res, "جدول stores غير موجود. نفّذ migration_stores.sql أولاً.", 400);
+      }
+      return fail(res, error.message, 400);
+    }
+    await linkStoreOwnerAfterApprove(req.supabase, data);
     return ok(res, { store: data });
   } catch (e) {
     return fail(res, e.message || String(e), 500);

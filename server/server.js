@@ -269,6 +269,7 @@ app.use("/api/finance", financeRoutes);
 app.use("/api/checkout", checkoutRoutes);
 app.use("/api/order", orderRoutes);
 app.use("/api/store", storeRoutes);
+app.use("/api/stores", storeRoutes);
 app.use("/api/driver", driverRoutes);
 app.use("/api/wallet", walletRoutes);
 app.use("/api/admin", adminRoutes);
@@ -298,6 +299,7 @@ app.get("/api/health", (_req, res) => {
       "/api/checkout",
       "/api/order",
       "/api/store",
+      "/api/stores",
       "/api/invoice",
       "/api/whatsapp",
     ],

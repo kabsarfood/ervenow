@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ERVENOW | اكتشف المتاجر</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/assets/styles.css" />
+    <style>
+      :root {
+        --stores-ink: #2a1810;
+        --stores-cream: #fdfbf7;
+        --stores-card: #fffcfa;
+        --stores-gold: #c9a227;
+        --stores-gold-soft: rgba(201, 162, 39, 0.2);
+        --stores-shadow: 0 10px 40px rgba(42, 24, 16, 0.09);
+        --stores-shadow-hover: 0 22px 56px rgba(42, 24, 16, 0.14);
+        --stores-radius: 20px;
+        --stores-radius-sm: 14px;
+      }
+
+      .stores-page {
+        min-height: 100vh;
+        margin: 0;
+        font-family: "Cairo", var(--font, system-ui, sans-serif);
+        color: var(--stores-ink);
+        background:
+          radial-gradient(1200px 600px at 100% -10%, rgba(255, 180, 140, 0.18), transparent 55%),
+          radial-gradient(900px 500px at -5% 40%, rgba(61, 34, 19, 0.05), transparent 50%),
+          linear-gradient(180deg, #faf4ee 0%, var(--stores-cream) 42%, #f2e9e0 100%);
+      }
+
+      .stores-header {
+        position: sticky;
+        top: 0;
+        z-index: 40;
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        background: linear-gradient(180deg, rgba(255, 252, 248, 0.94), rgba(255, 252, 248, 0.82));
+        border-bottom: 1px solid rgba(61, 34, 19, 0.07);
+        box-shadow: 0 1px 0 rgba(255, 255, 255, 0.65) inset;
+      }
+
+      .stores-header__inner {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 18px 20px 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        flex-wrap: wrap;
+      }
+
+      .stores-brand {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+
+      .stores-brand__eyebrow {
+        font-size: 0.7rem;
+        font-weight: 800;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--stores-gold);
+      }
+
+      .stores-brand__title {
+        margin: 0;
+        font-size: clamp(1.35rem, 3.5vw, 1.8rem);
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        line-height: 1.2;
+      }
+
+      .stores-brand__sub {
+        margin: 0;
+        font-size: 0.88rem;
+        color: #6b5344;
+        font-weight: 500;
+      }
+
+      .stores-header__actions .btn {
+        border-radius: 12px;
+        font-weight: 700;
+      }
+
+      .stores-toolbar {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 0 20px 20px;
+      }
+
+      .stores-search-wrap {
+        position: relative;
+        margin-bottom: 14px;
+      }
+
+      .stores-search-wrap svg {
+        position: absolute;
+        right: 16px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 20px;
+        height: 20px;
+        opacity: 0.45;
+        pointer-events: none;
+      }
+
+      .stores-search {
+        width: 100%;
+        padding: 14px 48px 14px 18px;
+        font-family: inherit;
+        font-size: 1rem;
+        font-weight: 600;
+        border: 1px solid rgba(61, 34, 19, 0.1);
+        border-radius: var(--stores-radius);
+        background: rgba(255, 255, 255, 0.92);
+        box-shadow: var(--stores-shadow);
+        color: var(--stores-ink);
+        transition: border-color 0.2s, box-shadow 0.2s;
+      }
+
+      .stores-search::placeholder {
+        color: #9a8475;
+        font-weight: 500;
+      }
+
+      .stores-search:focus {
+        outline: none;
+        border-color: rgba(201, 162, 39, 0.5);
+        box-shadow: var(--stores-shadow-hover), 0 0 0 3px var(--stores-gold-soft);
+      }
+
+      .stores-filters {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+      }
+
+      .stores-filter {
+        cursor: pointer;
+        font-family: inherit;
+        font-size: 0.88rem;
+        font-weight: 700;
+        padding: 10px 16px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.72);
+        color: #5c4638;
+        border: 1px solid rgba(61, 34, 19, 0.08);
+        transition: transform 0.2s, box-shadow 0.2s, background 0.2s, color 0.2s;
+      }
+
+      .stores-filter:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(42, 24, 16, 0.08);
+        color: var(--stores-ink);
+      }
+
+      .stores-filter.is-active {
+        background: linear-gradient(135deg, #3d2213, #5c3220);
+        color: #fff8ee;
+        border-color: transparent;
+        box-shadow: 0 10px 28px rgba(61, 34, 19, 0.28);
+      }
+
+      .stores-main {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 0 20px 64px;
+      }
+
+      .stores-note {
+        display: none;
+        margin: 0 0 16px;
+        padding: 12px 16px;
+        border-radius: var(--stores-radius-sm);
+        background: rgba(255, 248, 238, 0.96);
+        border: 1px solid rgba(201, 162, 39, 0.22);
+        font-size: 0.9rem;
+        color: #5c4638;
+        line-height: 1.55;
+      }
+
+      .stores-panel {
+        min-height: 200px;
+      }
+
+      .stores-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
+        gap: 18px;
+      }
+
+      /* ——— Skeleton ——— */
+      @keyframes stores-shimmer {
+        100% {
+          transform: translateX(100%);
+        }
+      }
+
+      .stores-grid--skeleton .store-skel {
+        border-radius: var(--stores-radius);
+        background: rgba(255, 255, 255, 0.85);
+        border: 1px solid rgba(61, 34, 19, 0.06);
+        box-shadow: var(--stores-shadow);
+        overflow: hidden;
+        min-height: 260px;
+      }
+
+      .store-skel__banner {
+        height: 132px;
+        position: relative;
+        overflow: hidden;
+        background: linear-gradient(110deg, #ede5dc 0%, #f5efe8 45%, #ede5dc 90%);
+      }
+
+      .store-skel__banner::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        transform: translateX(-100%);
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(255, 255, 255, 0.55),
+          transparent
+        );
+        animation: stores-shimmer 1.35s ease-in-out infinite;
+      }
+
+      .store-skel__body {
+        padding: 14px 14px 16px;
+      }
+
+      .store-skel__line {
+        height: 12px;
+        border-radius: 8px;
+        background: #e8dfd6;
+        margin-bottom: 10px;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .store-skel__line--short {
+        width: 55%;
+      }
+
+      .store-skel__line--btn {
+        height: 40px;
+        margin-top: 14px;
+        border-radius: 12px;
+      }
+
+      /* ——— Store card ——— */
+      .store-card {
+        display: flex;
+        flex-direction: column;
+        border-radius: var(--stores-radius);
+        background: var(--stores-card);
+        border: 1px solid rgba(61, 34, 19, 0.06);
+        box-shadow: var(--stores-shadow);
+        overflow: hidden;
+        transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.32s ease, border-color 0.25s;
+      }
+
+      .store-card:hover {
+        transform: translateY(-8px);
+        box-shadow: var(--stores-shadow-hover);
+        border-color: rgba(201, 162, 39, 0.22);
+      }
+
+      .store-card:hover .store-card__media img {
+        transform: scale(1.05);
+      }
+
+      .store-card__media {
+        position: relative;
+        width: 100%;
+        aspect-ratio: 16 / 10;
+        overflow: hidden;
+        background: linear-gradient(145deg, #efe6dc, #f7f1ea);
+      }
+
+      .store-card__media img.store-logo {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+        transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+      }
+
+      .store-info {
+        padding: 14px 14px 16px;
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        gap: 0;
+      }
+
+      .store-info h3 {
+        margin: 0 0 6px;
+        font-size: 1rem;
+        font-weight: 800;
+        line-height: 1.35;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+
+      .store-info .store-type {
+        margin: 0 0 10px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: #7a6558;
+      }
+
+      .store-meta {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 6px 10px;
+        font-size: 0.78rem;
+        font-weight: 700;
+        color: var(--stores-gold);
+        margin-bottom: 4px;
+      }
+
+      .store-meta__dot {
+        opacity: 0.45;
+        font-weight: 400;
+      }
+
+      .store-meta.is-muted {
+        color: #9a8475;
+        font-weight: 600;
+      }
+
+      .store-card__cta {
+        margin-top: auto;
+        padding-top: 12px;
+      }
+
+      .store-card__btn {
+        width: 100%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 11px 14px;
+        border: none;
+        border-radius: 12px;
+        font-family: inherit;
+        font-size: 0.88rem;
+        font-weight: 800;
+        cursor: pointer;
+        color: #fffdf8;
+        background: linear-gradient(135deg, #3d2213, #6b3d22);
+        box-shadow: 0 6px 20px rgba(61, 34, 19, 0.22);
+        transition: transform 0.2s, box-shadow 0.2s, filter 0.2s;
+      }
+
+      .store-card__btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 10px 28px rgba(61, 34, 19, 0.28);
+        filter: brightness(1.04);
+      }
+
+      .store-card__btn:active {
+        transform: translateY(0);
+      }
+
+      .store-card__btn:focus-visible {
+        outline: 3px solid var(--stores-gold);
+        outline-offset: 2px;
+      }
+
+      /* ——— Empty / error ——— */
+      .stores-empty {
+        grid-column: 1 / -1;
+        text-align: center;
+        padding: 48px 28px;
+        border-radius: var(--stores-radius);
+        background: rgba(255, 255, 255, 0.88);
+        border: 1px solid rgba(61, 34, 19, 0.08);
+        box-shadow: var(--stores-shadow);
+      }
+
+      .stores-empty__icon {
+        font-size: 2.75rem;
+        line-height: 1;
+        margin-bottom: 14px;
+        filter: grayscale(0.15);
+      }
+
+      .stores-empty h2 {
+        margin: 0 0 10px;
+        font-size: 1.15rem;
+        font-weight: 800;
+      }
+
+      .stores-empty p {
+        margin: 0 auto 20px;
+        max-width: 360px;
+        color: #6b5344;
+        font-weight: 600;
+        line-height: 1.6;
+        font-size: 0.95rem;
+      }
+
+      .stores-empty__actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        justify-content: center;
+      }
+
+      .stores-empty__actions .btn {
+        border-radius: 12px;
+        font-weight: 700;
+      }
+    </style>
+  </head>
+  <body class="stores-page">
+    <header class="stores-header">
+      <div class="stores-header__inner">
+        <div class="stores-brand">
+          <span class="stores-brand__eyebrow">ERVENOW</span>
+          <h1 class="stores-brand__title">اكتشف المتاجر</h1>
+          <p class="stores-brand__sub">متاجر معتمدة — بحث، فلاتر، وتجربة قريبة من تطبيقات التوصيل الكبرى</p>
+        </div>
+        <div class="stores-header__actions">
+          <a class="btn btn-ghost" href="/">الرئيسية</a>
+        </div>
+      </div>
+    </header>
+
+    <div class="stores-toolbar">
+      <div class="stores-search-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false">
+          <circle cx="11" cy="11" r="7" />
+          <path d="M20 20l-4.3-4.3" stroke-linecap="round" />
+        </svg>
+        <input
+          type="search"
+          class="stores-search"
+          id="storeSearch"
+          placeholder="ابحث باسم المتجر…"
+          autocomplete="off"
+          enterkeyhint="search"
+          disabled
+        />
+      </div>
+      <div class="stores-filters" id="categoryFilters" role="tablist" aria-label="تصنيف المتاجر">
+        <button type="button" class="stores-filter is-active" data-filter="all" role="tab" aria-selected="true">الكل</button>
+        <button type="button" class="stores-filter" data-filter="restaurant" role="tab" aria-selected="false">مطاعم</button>
+        <button type="button" class="stores-filter" data-filter="pharmacy" role="tab" aria-selected="false">صيدليات</button>
+        <button type="button" class="stores-filter" data-filter="market" role="tab" aria-selected="false">أسواق</button>
+        <button type="button" class="stores-filter" data-filter="service" role="tab" aria-selected="false">خدمات</button>
+      </div>
+    </div>
+
+    <main class="stores-main">
+      <p class="stores-note" id="guestNote">
+        أنت تتصفّح كزائر: قد تظهر أسماء المحلات بشكل مختصر حتى تسجّل الدخول. البحث يعمل على الاسم الظاهر.
+      </p>
+
+      <div class="stores-panel">
+        <div id="container" class="stores-grid stores-grid--skeleton" aria-busy="true" aria-label="جاري تحميل المتاجر"></div>
+      </div>
+    </main>
+
+    <script src="/assets/api-config.js"></script>
+    <script src="/assets/api.js"></script>
+    <script>
+      function esc(s) {
+        return String(s || "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+      }
+
+      function openStore(id) {
+        window.location.href = "/store.html?id=" + encodeURIComponent(id);
+      }
+
+      function etaMinutesFromKm(km) {
+        var n = Number(km);
+        if (!Number.isFinite(n) || n < 0) return null;
+        return Math.max(10, Math.round(n * 4));
+      }
+
+      var TYPE_AR = {
+        restaurant: "مطعم",
+        pharmacy: "صيدلية",
+        supermarket: "سوبر ماركت",
+        minimarket: "بقالة",
+        vegetables: "خضار وفواكه",
+        butcher: "لحوم",
+        fish: "أسماك",
+        home_business: "منتج منزلي",
+        flowers_gifts: "ورد وهدايا",
+        sweets: "حلويات",
+        services: "خدمات",
+        other: "أخرى",
+        plumber: "سباكة",
+        electrician: "كهرباء",
+        cleaning: "تنظيف",
+        nursery: "تنسيق حدائق",
+        ac_technician: "تكييف",
+        vehicle_transfer: "نقل مركبات",
+        internal_delivery: "توصيل",
+        pickup_truck: "ونيت",
+        furniture_move: "نقل أثاث",
+        gas_delivery: "غاز",
+      };
+
+      function typeLabelAr(type) {
+        var t = String(type || "").toLowerCase();
+        return TYPE_AR[t] || t || "—";
+      }
+
+      var MARKET_TYPES = {
+        supermarket: 1,
+        minimarket: 1,
+        vegetables: 1,
+        butcher: 1,
+        fish: 1,
+        sweets: 1,
+        flowers_gifts: 1,
+        home_business: 1,
+      };
+
+      function storeBucket(store) {
+        var t = String(store.type || store.category || "").toLowerCase();
+        if (t === "restaurant") return "restaurant";
+        if (t === "pharmacy") return "pharmacy";
+        if (MARKET_TYPES[t]) return "market";
+        return "service";
+      }
+
+      function displayName(store) {
+        if (store.masked) return String(store.label || "");
+        return String(store.name || store.label || "");
+      }
+
+      function matchesSearch(store, query) {
+        var q = String(query || "").trim().toLowerCase();
+        if (!q) return true;
+        var name = displayName(store).toLowerCase();
+        return name.indexOf(q) !== -1;
+      }
+
+      function getUserGeo() {
+        return new Promise(function (resolve) {
+          if (!navigator.geolocation) return resolve(null);
+          navigator.geolocation.getCurrentPosition(
+            function (p) {
+              resolve({ lat: p.coords.latitude, lng: p.coords.longitude });
+            },
+            function () {
+              resolve(null);
+            },
+            { enableHighAccuracy: false, timeout: 9000, maximumAge: 120000 }
+          );
+        });
+      }
+
+      (function () {
+        var container = document.getElementById("container");
+        var guestNote = document.getElementById("guestNote");
+        var searchEl = document.getElementById("storeSearch");
+        var filterWrap = document.getElementById("categoryFilters");
+        var defaultLogo =
+          "data:image/svg+xml," +
+          encodeURIComponent(
+            '<svg xmlns="http://www.w3.org/2000/svg" width="320" height="200" viewBox="0 0 320 200"><defs><linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#f0ebe3"/><stop offset="100%" stop-color="#e5dcd2"/></linearGradient></defs><rect fill="url(#g)" width="320" height="200"/><text x="50%" y="52%" dominant-baseline="middle" text-anchor="middle" fill="#c9a227" font-family="sans-serif" font-size="18" font-weight="700">ERVENOW</text></svg>'
+          );
+
+        var allStores = [];
+        var activeFilter = "all";
+        var SKELETON_COUNT = 8;
+
+        function renderSkeleton() {
+          container.className = "stores-grid stores-grid--skeleton";
+          container.setAttribute("aria-busy", "true");
+          var html = "";
+          for (var i = 0; i < SKELETON_COUNT; i++) {
+            html +=
+              '<div class="store-skel">' +
+              '<div class="store-skel__banner"></div>' +
+              '<div class="store-skel__body">' +
+              '<div class="store-skel__line"></div>' +
+              '<div class="store-skel__line store-skel__line--short"></div>' +
+              '<div class="store-skel__line"></div>' +
+              '<div class="store-skel__line store-skel__line--btn"></div>' +
+              "</div></div>";
+          }
+          container.innerHTML = html;
+        }
+
+        function renderEmptyBlock(kind, detail) {
+          container.className = "stores-grid";
+          container.removeAttribute("aria-busy");
+          var body = "";
+          if (kind === "error") {
+            var errLine =
+              detail && String(detail).trim()
+                ? "<p>" + esc(String(detail).trim()) + "</p>"
+                : "<p>تحقق من الشبكة أو أعد المحاولة بعد قليل.</p>";
+            body =
+              '<div class="stores-empty" role="alert">' +
+              '<div class="stores-empty__icon" aria-hidden="true">📡</div>' +
+              "<h2>تعذر التحميل</h2>" +
+              errLine +
+              '<div class="stores-empty__actions">' +
+              '<button type="button" class="btn btn-primary" id="btnRetry">إعادة المحاولة</button>' +
+              '<a class="btn btn-ghost" href="/">الرئيسية</a>' +
+              "</div></div>";
+          } else if (kind === "none") {
+            body =
+              '<div class="stores-empty" role="status">' +
+              '<div class="stores-empty__icon" aria-hidden="true">🏪</div>' +
+              "<h2>لا متاجر معروضة بعد</h2>" +
+              "<p>لم نجد متاجر مفعّلة حالياً. يمكنك العودة لاحقاً أو استكشاف الخدمات من الصفحة الرئيسية.</p>" +
+              '<div class="stores-empty__actions">' +
+              '<a class="btn btn-primary" href="/">الصفحة الرئيسية</a>' +
+              '<a class="btn btn-ghost" href="/register-store.html">تسجيل متجر</a>' +
+              "</div></div>";
+          } else {
+            body =
+              '<div class="stores-empty" role="status">' +
+              '<div class="stores-empty__icon" aria-hidden="true">🔎</div>' +
+              "<h2>لا نتائج</h2>" +
+              "<p>جرّب كلمات أخرى، أو امسح البحث، أو اختر تصنيف &laquo;الكل&raquo;.</p>" +
+              '<div class="stores-empty__actions">' +
+              '<button type="button" class="btn btn-primary" id="btnClearFilters">مسح البحث والفلتر</button>' +
+              "</div></div>";
+          }
+          container.innerHTML = body;
+          var retry = document.getElementById("btnRetry");
+          if (retry) retry.addEventListener("click", function () {
+            load();
+          });
+          var clearBtn = document.getElementById("btnClearFilters");
+          if (clearBtn) {
+            clearBtn.addEventListener("click", function () {
+              if (searchEl) searchEl.value = "";
+              var allBtn = filterWrap.querySelector('[data-filter="all"]');
+              if (allBtn) setFilter(allBtn);
+              else {
+                activeFilter = "all";
+                renderList();
+              }
+            });
+          }
+        }
+
+        function applyFilters() {
+          var q = searchEl ? searchEl.value : "";
+          return allStores.filter(function (s) {
+            if (!s || !s.id) return false;
+            if (activeFilter !== "all" && storeBucket(s) !== activeFilter) return false;
+            return matchesSearch(s, q);
+          });
+        }
+
+        function renderList() {
+          var list = applyFilters();
+          container.className = "stores-grid";
+          container.removeAttribute("aria-busy");
+          container.innerHTML = "";
+
+          if (!list.length) {
+            renderEmptyBlock("filtered");
+            return;
+          }
+
+          list.forEach(function (store) {
+            var name = displayName(store) || "متجر";
+            var act = typeLabelAr(store.type || store.category);
+            var km = store.distance_km != null && Number.isFinite(Number(store.distance_km)) ? Number(store.distance_km) : null;
+            var metaHtml = "";
+            if (km != null) {
+              var eta = etaMinutesFromKm(km);
+              metaHtml =
+                '<div class="store-meta">' +
+                "<span>📍 " +
+                esc(km.toFixed(1)) +
+                " كم</span>" +
+                '<span class="store-meta__dot" aria-hidden="true">·</span>' +
+                "<span>⏱ نحو " +
+                esc(String(eta)) +
+                " د توصيل</span>" +
+                "</div>";
+            } else {
+              metaHtml =
+                '<div class="store-meta is-muted"><span>فعّل الموقع لعرض المسافة والوقت التقريبي</span></div>';
+            }
+
+            var logo = store.logo_url || "/default.png";
+            var card = document.createElement("article");
+            card.className = "store-card";
+            card.setAttribute("itemscope", "");
+            card.setAttribute("itemtype", "https://schema.org/Store");
+            card.innerHTML =
+              '<div class="store-card__media">' +
+              '<img class="store-logo" src="' +
+              esc(logo) +
+              '" alt="" loading="lazy" decoding="async" fetchpriority="low" />' +
+              "</div>" +
+              '<div class="store-info">' +
+              "<h3 itemprop=\"name\">" +
+              esc(name) +
+              "</h3>" +
+              '<p class="store-type">' +
+              esc(act) +
+              "</p>" +
+              metaHtml +
+              '<div class="store-card__cta">' +
+              '<button type="button" class="store-card__btn">عرض المتجر</button>' +
+              "</div>" +
+              "</div>";
+
+            var img = card.querySelector(".store-logo");
+            if (img) {
+              img.addEventListener("error", function () {
+                img.src = defaultLogo;
+              });
+              if (!store.logo_url) img.src = defaultLogo;
+            }
+            var btn = card.querySelector(".store-card__btn");
+            if (btn) {
+              btn.addEventListener("click", function () {
+                openStore(store.id);
+              });
+            }
+            container.appendChild(card);
+          });
+        }
+
+        function setFilter(btn) {
+          activeFilter = btn.getAttribute("data-filter") || "all";
+          var buttons = filterWrap.querySelectorAll(".stores-filter");
+          for (var i = 0; i < buttons.length; i++) {
+            var b = buttons[i];
+            var on = b === btn;
+            b.classList.toggle("is-active", on);
+            b.setAttribute("aria-selected", on ? "true" : "false");
+          }
+          renderList();
+        }
+
+        filterWrap.addEventListener("click", function (e) {
+          var t = e.target;
+          if (t && t.getAttribute && t.getAttribute("data-filter")) setFilter(t);
+        });
+
+        if (searchEl) {
+          searchEl.addEventListener("input", function () {
+            if (allStores.length) renderList();
+          });
+        }
+
+        async function load() {
+          renderSkeleton();
+          if (searchEl) searchEl.disabled = true;
+          try {
+            var geo = await getUserGeo();
+            var qs = "";
+            if (geo) {
+              qs =
+                "?user_lat=" +
+                encodeURIComponent(geo.lat) +
+                "&user_lng=" +
+                encodeURIComponent(geo.lng);
+            }
+            var headers = {};
+            var tok = window.PlatformAPI && PlatformAPI.getToken && PlatformAPI.getToken();
+            if (tok) headers.Authorization = "Bearer " + tok;
+
+            var res = await fetch(window.PlatformAPI.apiUrl("/api/stores" + qs), { headers: headers });
+            var data = await res.json().catch(function () {
+              return {};
+            });
+
+            if (!res.ok || !data.ok) {
+              if (searchEl) searchEl.disabled = false;
+              renderEmptyBlock("error", data.error || "الخادم لم يرد بشكل صحيح.");
+              return;
+            }
+
+            if (data.browse_masked) guestNote.style.display = "block";
+            allStores = Array.isArray(data.stores) ? data.stores : [];
+
+            if (searchEl) searchEl.disabled = false;
+
+            if (!allStores.length) {
+              renderEmptyBlock("none");
+              return;
+            }
+
+            renderList();
+          } catch (err) {
+            if (searchEl) searchEl.disabled = false;
+            renderEmptyBlock("error", "تعذر إكمال الطلب. تحقق من الاتصال ثم أعد المحاولة.");
+          }
+        }
+
+        load();
+      })();
+    </script>
+  </body>
+</html>

@@ -7,6 +7,33 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/assets/styles.css" />
+    <style>
+      .order-store-card {
+        border-radius: 18px;
+        box-shadow: 0 10px 36px rgba(42, 24, 16, 0.08);
+        border: 1px solid rgba(61, 34, 19, 0.08);
+      }
+      .order-store-card__row {
+        display: flex;
+        gap: 12px;
+        align-items: flex-start;
+      }
+      .order-store-card__icon {
+        font-size: 1.75rem;
+        line-height: 1;
+      }
+      #orderStoreName {
+        display: block;
+        font-size: 1.1rem;
+        font-weight: 800;
+        margin-bottom: 4px;
+      }
+      #orderStoreLoc {
+        margin: 0;
+        font-weight: 600;
+        color: var(--muted, #5c4638);
+      }
+    </style>
   </head>
   <body>
     <div class="layout">
@@ -18,7 +45,17 @@
         </div>
       </div>
 
-      <p class="sub">اختر نوع الخدمة وأدخل عنوان التسليم. طلبات المطاعم تُنشأ عبر واجهة الطعام ثم تُربط بتوصيل تلقائياً.</p>
+      <p class="sub">اختر نوع الخدمة وأدخل عنوان التسليم. عند فتح الصفحة من متجر، يُربط الطلب تلقائياً بذلك المتجر.</p>
+
+      <div class="card order-store-card" id="orderStoreCard" style="display: none">
+        <div class="order-store-card__row">
+          <span class="order-store-card__icon" aria-hidden="true">🏪</span>
+          <div>
+            <strong id="orderStoreName"></strong>
+            <p id="orderStoreLoc"></p>
+          </div>
+        </div>
+      </div>
 
       <div class="card">
         <label for="svc">نوع الخدمة</label>
@@ -48,6 +85,9 @@
     <script>
       if (!window.PlatformAPI.getToken()) location.href = "/login";
 
+      var params = new URLSearchParams(window.location.search);
+      var urlStoreId = params.get("store_id");
+
       document.getElementById("orderLogout").onclick = function (e) {
         e.preventDefault();
         window.PlatformAPI.setToken("");
@@ -60,6 +100,61 @@
         m.className = "msg " + (ok ? "ok" : "err");
         m.textContent = text;
       }
+
+      function getUserGeo() {
+        return new Promise(function (resolve) {
+          if (!navigator.geolocation) return resolve(null);
+          navigator.geolocation.getCurrentPosition(
+            function (p) {
+              resolve({ lat: p.coords.latitude, lng: p.coords.longitude });
+            },
+            function () {
+              resolve(null);
+            },
+            { enableHighAccuracy: false, timeout: 8000, maximumAge: 120000 }
+          );
+        });
+      }
+
+      async function loadOrderStoreContext() {
+        if (!urlStoreId) return;
+        var geoQs = "";
+        try {
+          var geo = await getUserGeo();
+          if (geo) {
+            geoQs =
+              "?user_lat=" +
+              encodeURIComponent(geo.lat) +
+              "&user_lng=" +
+              encodeURIComponent(geo.lng);
+          }
+        } catch (e) {}
+        var headers = {};
+        var t = window.PlatformAPI.getToken();
+        if (t) headers.Authorization = "Bearer " + t;
+        try {
+          var res = await fetch(
+            window.PlatformAPI.apiUrl("/api/store/" + encodeURIComponent(urlStoreId) + geoQs),
+            { headers: headers }
+          );
+          var data = await res.json().catch(function () {
+            return {};
+          });
+          if (!res.ok || !data.store) return;
+          var s = data.store;
+          var name = s.label || s.name || "متجر";
+          var loc = s.address || s.location_text || "—";
+          document.getElementById("orderStoreCard").style.display = "block";
+          document.getElementById("orderStoreName").textContent = name;
+          document.getElementById("orderStoreLoc").textContent = "📍 " + loc;
+          var pickupEl = document.getElementById("pickup");
+          if (pickupEl && !String(pickupEl.value || "").trim() && loc && loc !== "—") {
+            pickupEl.value = loc;
+          }
+        } catch (e) {}
+      }
+
+      loadOrderStoreContext();
 
       document.getElementById("btnSend").onclick = async function () {
         var drop = document.getElementById("drop").value.trim();
@@ -86,19 +181,27 @@
               ? window.crypto.randomUUID()
               : "idem-" + Date.now() + "-" + Math.random().toString(36).slice(2, 12);
 
+          var bodyExtra = {};
+          if (urlStoreId && String(urlStoreId).trim()) {
+            bodyExtra.store_id = String(urlStoreId).trim();
+          }
+
           if (svc === "food") {
             var j = await window.PlatformAPI.api("/api/food/orders", {
               method: "POST",
               idempotencyKey: idemKey,
-              body: {
-                type: "delivery",
-                items: [{ name: "طلب سريع من المنصة", qty: 1, price: 0 }],
-                total: 0,
-                drop_address: drop,
-                address: drop,
-                pickup_address: pickup || "المطعم",
-                notes: "مطاعم — " + (notes || ""),
-              },
+              body: Object.assign(
+                {
+                  type: "delivery",
+                  items: [{ name: "طلب سريع من المنصة", qty: 1, price: 0 }],
+                  total: 0,
+                  drop_address: drop,
+                  address: drop,
+                  pickup_address: pickup || "المطعم",
+                  notes: "مطاعم — " + (notes || ""),
+                },
+                bodyExtra
+              ),
             });
             deliveryId = j.delivery_order && j.delivery_order.id;
           } else {
@@ -106,11 +209,14 @@
             var j2 = await window.PlatformAPI.api("/api/delivery/orders", {
               method: "POST",
               idempotencyKey: idemKey,
-              body: {
-                pickup_address: pickup,
-                drop_address: drop,
-                notes: "[" + typeLabel + "] " + (notes || ""),
-              },
+              body: Object.assign(
+                {
+                  pickup_address: pickup,
+                  drop_address: drop,
+                  notes: "[" + typeLabel + "] " + (notes || ""),
+                },
+                bodyExtra
+              ),
             });
             deliveryId = j2.order && j2.order.id;
           }
