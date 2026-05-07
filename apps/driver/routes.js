@@ -17,6 +17,7 @@ const {
   sendDriverArrived,
 } = require("../../shared/services/whatsappService");
 const { attachSiteSessionCookie } = require("../../shared/middleware/publicSiteOtpGate");
+const { parseOptionalPayoutPayload, payoutRowForDriversOrStores } = require("../../shared/utils/payoutFields");
 
 const router = express.Router();
 
@@ -249,6 +250,13 @@ router.post("/register", async (req, res) => {
     if (!plate) return fail(res, "رقم اللوحة مطلوب", 400);
     const phone = toStorageDigits(e164);
 
+    let extraPayout = {};
+    try {
+      extraPayout = payoutRowForDriversOrStores(parseOptionalPayoutPayload({ payout: b.payout }));
+    } catch (pe) {
+      return fail(res, pe.message || "بيانات الدفع غير صالحة", 400);
+    }
+
     const row = {
       name,
       phone,
@@ -257,6 +265,7 @@ router.post("/register", async (req, res) => {
       plate_number: plate,
       status: "pending",
       active: false,
+      ...extraPayout,
     };
 
     const { data, error } = await req.supabase

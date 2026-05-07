@@ -84,11 +84,6 @@
 
         <div class="md-grid">
           <div class="md-stat">
-            <span>رصيد المحفظة</span>
-            <strong id="statWallet">0.00</strong>
-            <span class="sub">ريال</span>
-          </div>
-          <div class="md-stat">
             <span>طلبات في القائمة</span>
             <strong id="statOrders">0</strong>
           </div>
@@ -187,8 +182,6 @@
           var pub = document.getElementById("publicStoreLink");
           if (s.id) pub.href = "/store?id=" + encodeURIComponent(s.id);
 
-          var w = data.wallet || {};
-          document.getElementById("statWallet").textContent = (Number(w.balance) || 0).toFixed(2);
           var agg = data.aggregates || {};
           document.getElementById("statOrders").textContent = String(agg.orders_count || 0);
           document.getElementById("statProducts").textContent = String(agg.products_active_count || 0);

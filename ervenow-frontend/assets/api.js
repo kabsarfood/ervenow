@@ -349,4 +349,17 @@
       scheduleFlushOffline();
     }, 1200);
   }
+
+  (function loadApplyBranding() {
+    try {
+      var d = w.document;
+      if (!d) return;
+      if (d.querySelector("script[data-ervenow-branding=\"1\"]")) return;
+      var s = d.createElement("script");
+      s.src = "/assets/applyBranding.js";
+      s.async = true;
+      s.setAttribute("data-ervenow-branding", "1");
+      (d.head || d.documentElement).appendChild(s);
+    } catch (e) {}
+  })();
 })(window);

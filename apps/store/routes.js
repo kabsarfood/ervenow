@@ -6,6 +6,7 @@ const { normalizePhone } = require("../../shared/utils/phone");
 const { roughDistanceKm } = require("../../shared/utils/geo");
 const { routeKmWithRoughFallback, deliveryEtaMinutesFromKm } = require("../../shared/utils/routeDistance");
 const { cacheGetJson, cacheSetJson } = require("../../shared/utils/redisCache");
+const { parseOptionalPayoutPayload, payoutRowForDriversOrStores } = require("../../shared/utils/payoutFields");
 
 let twilioFactory = null;
 try {
@@ -103,7 +104,7 @@ async function uploadToStoreBucket(sb, storeId, subfolder, base64, originalName)
   return pub && pub.publicUrl ? pub.publicUrl : null;
 }
 
-async function notifyAdminWhatsApp({ name, phoneDisplay, typeLabel, mapsUrl, requestId }) {
+async function notifyAdminWhatsApp({ name, phoneDisplay, typeLabel, mapsUrl, requestId, payoutSummary }) {
   const client = getTwilioClient();
   const from = waFrom();
   const adminRaw = String(process.env.ERVENOW_ADMIN_WHATSAPP || process.env.ERWENOW_ADMIN_WHATSAPP || "").trim();
@@ -113,13 +114,14 @@ async function notifyAdminWhatsApp({ name, phoneDisplay, typeLabel, mapsUrl, req
     return false;
   }
   const to = "whatsapp:+" + adminDigits;
-  const body =
+  let body =
     `طلب تسجيل متجر جديد\n` +
     `الاسم: ${name}\n` +
     `الجوال: ${phoneDisplay}\n` +
     `النوع: ${typeLabel}\n` +
     `الموقع: ${mapsUrl}\n` +
     `رقم الطلب: ${requestId}`;
+  if (payoutSummary) body += `\n\nبيانات دفع (ملخص):\n${payoutSummary}`;
   await client.messages.create({ from, to, body });
   return true;
 }
@@ -923,6 +925,13 @@ router.post("/register", async (req, res) => {
 
     const phoneDisplay = phoneRaw || phoneDigits;
 
+    let payoutCols = {};
+    try {
+      payoutCols = payoutRowForDriversOrStores(parseOptionalPayoutPayload({ payout: b.payout }));
+    } catch (pe) {
+      return fail(res, pe.message || "بيانات الدفع غير صالحة", 400);
+    }
+
     const row = {
       name,
       phone: phoneDigits,
@@ -937,6 +946,7 @@ router.post("/register", async (req, res) => {
       category: type,
       is_active: false,
       status: "pending",
+      ...payoutCols,
     };
 
     if (location_text) row.location_text = location_text;
@@ -946,7 +956,7 @@ router.post("/register", async (req, res) => {
     ({ data: insertedRow, error: insErr } = await sb.from("stores").insert(row).select("id").single());
     if (
       insErr &&
-      /location_text|address|delivery_radius_km|is_active|category|commercial_registration|\bemail\b|file_url|\blat\b|\blng\b|column .* does not exist|schema cache/i.test(
+      /location_text|address|delivery_radius_km|is_active|category|commercial_registration|\bemail\b|file_url|\blat\b|\blng\b|bank_country|bank_name|\biban\b|stc_pay|payout_crypto|column .* does not exist|schema cache/i.test(
         String(insErr.message || "")
       )
     ) {
@@ -960,6 +970,11 @@ router.post("/register", async (req, res) => {
       delete row.file_url;
       delete row.lat;
       delete row.lng;
+      delete row.bank_country_code;
+      delete row.bank_name;
+      delete row.iban;
+      delete row.stc_pay_phone;
+      delete row.payout_crypto_interest;
       ({ data: insertedRow, error: insErr } = await sb.from("stores").insert(row).select("id").single());
     }
     if (insErr) {
@@ -1005,6 +1020,12 @@ router.post("/register", async (req, res) => {
 
     const typeLabel = TYPE_LABEL_AR[type] || type;
 
+    const payoutSummaryParts = [];
+    if (payoutCols.iban) payoutSummaryParts.push("آيبان: تم الإرفاق");
+    if (payoutCols.stc_pay_phone) payoutSummaryParts.push("STC Pay: تم الإرفاق");
+    if (payoutCols.payout_crypto_interest) payoutSummaryParts.push("اهتمام بالعملات المشفرة: نعم");
+    const payoutSummary = payoutSummaryParts.length ? payoutSummaryParts.join("\n") : "";
+
     try {
       await notifyAdminWhatsApp({
         name,
@@ -1012,6 +1033,7 @@ router.post("/register", async (req, res) => {
         typeLabel,
         mapsUrl,
         requestId,
+        payoutSummary,
       });
     } catch (waErr) {
       console.error("[store/register] WhatsApp:", waErr.message || waErr);

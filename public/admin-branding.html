@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>الهوية البصرية | ERVENOW</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet" />
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family: Cairo, sans-serif;
+        background: #ece8e2;
+        color: #2b1f16;
+        min-height: 100dvh;
+        display: flex;
+      }
+      .layout {
+        display: flex;
+        width: 100%;
+        min-height: 100dvh;
+      }
+      .sidebar {
+        width: 260px;
+        flex-shrink: 0;
+        background: linear-gradient(180deg, #3d2615 0%, #2a1a0f 100%);
+        color: #fff8ee;
+        padding: 20px 0;
+        border-inline-end: 1px solid rgba(212, 167, 106, 0.2);
+      }
+      .sidebar h2 {
+        margin: 0 18px 16px;
+        font-size: 0.95rem;
+        font-weight: 800;
+        color: #d4a76a;
+        letter-spacing: 0.04em;
+      }
+      .sidebar a {
+        display: block;
+        padding: 10px 18px;
+        color: rgba(255, 254, 248, 0.88);
+        text-decoration: none;
+        font-weight: 700;
+        font-size: 0.9rem;
+        border-inline-start: 3px solid transparent;
+      }
+      .sidebar a:hover {
+        background: rgba(255, 255, 255, 0.06);
+      }
+      .sidebar a.active {
+        background: rgba(212, 167, 106, 0.12);
+        border-color: #d4a76a;
+        color: #fff;
+      }
+      .sidebar .sub {
+        margin: 8px 18px 0;
+        font-size: 0.72rem;
+        color: rgba(255, 248, 230, 0.55);
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+      }
+      .main {
+        flex: 1;
+        min-width: 0;
+        padding: 20px 24px 40px;
+      }
+      .crumbs {
+        font-size: 0.82rem;
+        color: #6e5a4a;
+        margin-bottom: 8px;
+      }
+      .crumbs a {
+        color: #5b371d;
+        font-weight: 700;
+        text-decoration: none;
+      }
+      h1 {
+        margin: 0 0 18px;
+        font-size: 1.45rem;
+        font-weight: 800;
+        color: #3d2213;
+      }
+      .card {
+        background: #fff;
+        border-radius: 16px;
+        border: 1px solid rgba(61, 34, 19, 0.1);
+        padding: 20px 22px;
+        margin-bottom: 18px;
+        box-shadow: 0 8px 28px rgba(45, 26, 14, 0.06);
+      }
+      .card h3 {
+        margin: 0 0 12px;
+        font-size: 1.05rem;
+        font-weight: 800;
+        color: #5b371d;
+      }
+      .card .hint {
+        font-size: 0.85rem;
+        color: #6e5a4a;
+        margin: 0 0 14px;
+        line-height: 1.6;
+      }
+      .row-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        align-items: start;
+      }
+      @media (max-width: 900px) {
+        .layout {
+          flex-direction: column;
+        }
+        .sidebar {
+          width: 100%;
+          display: flex;
+          flex-wrap: wrap;
+          gap: 4px;
+          padding: 12px;
+        }
+        .sidebar h2 {
+          width: 100%;
+          margin: 0 0 8px;
+        }
+        .sidebar a {
+          flex: 1 1 auto;
+          text-align: center;
+          border-inline-start: 0;
+          border-bottom: 3px solid transparent;
+        }
+        .sidebar a.active {
+          border-color: #d4a76a;
+        }
+        .row-2 {
+          grid-template-columns: 1fr;
+        }
+      }
+      .dropzone {
+        border: 2px dashed rgba(91, 55, 29, 0.35);
+        border-radius: 14px;
+        padding: 28px 16px;
+        text-align: center;
+        background: #fffdf9;
+        cursor: pointer;
+        transition: border-color 0.2s, background 0.2s;
+      }
+      .dropzone.drag {
+        border-color: #5b371d;
+        background: #fff4e6;
+      }
+      .dropzone p {
+        margin: 8px 0 0;
+        font-size: 0.88rem;
+        color: #6e5a4a;
+      }
+      .logo-preview {
+        border: 1px solid rgba(61, 34, 19, 0.12);
+        border-radius: 12px;
+        padding: 16px;
+        text-align: center;
+        background: #faf7f2;
+        min-height: 140px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .logo-preview img {
+        max-width: 100%;
+        max-height: 120px;
+        object-fit: contain;
+      }
+      label {
+        display: block;
+        font-weight: 700;
+        font-size: 0.85rem;
+        margin: 10px 0 4px;
+        color: #3d2213;
+      }
+      input[type="color"] {
+        width: 52px;
+        height: 40px;
+        padding: 0;
+        border: 1px solid rgba(61, 34, 19, 0.2);
+        border-radius: 8px;
+        cursor: pointer;
+        vertical-align: middle;
+      }
+      .color-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-bottom: 10px;
+      }
+      .color-row input[type="text"] {
+        flex: 1;
+        min-width: 120px;
+        padding: 8px 10px;
+        border-radius: 10px;
+        border: 1px solid #d9c8b7;
+        font-family: ui-monospace, monospace;
+        font-size: 0.9rem;
+      }
+      .btn {
+        border: 0;
+        border-radius: 10px;
+        padding: 10px 18px;
+        font-family: inherit;
+        font-weight: 800;
+        cursor: pointer;
+        font-size: 0.9rem;
+      }
+      .btn-primary {
+        background: #5b371d;
+        color: #fff;
+      }
+      .btn-outline {
+        background: #fff;
+        color: #5b371d;
+        border: 1px solid #5b371d;
+      }
+      .btn-row {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 14px;
+      }
+      .preview-wrap {
+        border-radius: 14px;
+        overflow: hidden;
+        border: 1px solid rgba(61, 34, 19, 0.12);
+        background: var(--pv-bg, #f8f5f0);
+        color: var(--pv-text, #2b1f16);
+      }
+      .pv-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 10px 14px;
+        background: rgba(255, 255, 255, 0.65);
+        border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+        flex-wrap: wrap;
+      }
+      .pv-logo {
+        max-height: 34px;
+        max-width: 140px;
+        object-fit: contain;
+      }
+      .pv-nav {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        font-size: 0.78rem;
+        font-weight: 700;
+        color: var(--pv-sec, #8b5e34);
+      }
+      .pv-hero {
+        padding: 22px 16px 28px;
+        text-align: center;
+      }
+      .pv-hero h4 {
+        margin: 0 0 8px;
+        font-size: 1.15rem;
+        font-weight: 800;
+        color: var(--pv-primary, #5b371d);
+      }
+      .pv-hero p {
+        margin: 0 0 14px;
+        font-size: 0.85rem;
+        opacity: 0.9;
+      }
+      .pv-btn {
+        display: inline-block;
+        padding: 10px 22px;
+        border-radius: 12px;
+        background: var(--pv-primary, #5b371d);
+        color: #fff;
+        font-weight: 800;
+        font-size: 0.88rem;
+      }
+      .pv-card {
+        margin: 12px 14px 16px;
+        padding: 12px;
+        border-radius: 12px;
+        background: #fff;
+        border: 1px solid rgba(0, 0, 0, 0.06);
+        text-align: right;
+      }
+      .pv-card strong {
+        color: var(--pv-primary, #5b371d);
+      }
+      .info-tip {
+        display: flex;
+        gap: 10px;
+        align-items: flex-start;
+        padding: 12px 14px;
+        border-radius: 12px;
+        background: #fff8ee;
+        border: 1px solid #e8d4bc;
+        font-size: 0.86rem;
+        color: #5c4a3d;
+        line-height: 1.55;
+      }
+      .msg {
+        display: none;
+        margin-top: 12px;
+        padding: 10px 12px;
+        border-radius: 10px;
+        font-weight: 700;
+      }
+      .msg.ok {
+        display: block;
+        background: #ecfdf3;
+        color: #166534;
+        border: 1px solid #bbf7d0;
+      }
+      .msg.err {
+        display: block;
+        background: #fef2f2;
+        color: #b91c1c;
+        border: 1px solid #fecaca;
+      }
+    </style>
+    <script src="/assets/api-config.js"></script>
+    <script src="/assets/api.js"></script>
+  </head>
+  <body>
+    <div class="layout">
+      <aside class="sidebar">
+        <h2>ERVENOW</h2>
+        <p class="sub">لوحة الإدارة</p>
+        <a href="/admin-dashboard">الرئيسية</a>
+        <a href="/admin-finance">المالية</a>
+        <a href="/admin-approvals">الموافقات</a>
+        <a href="/admin/branding" class="active">🎨 الهوية البصرية</a>
+        <a href="/">الموقع العام</a>
+        <a href="#" id="logoutLink">خروج</a>
+      </aside>
+      <div class="main">
+        <div class="crumbs">
+          <a href="/">الرئيسية</a> › <a href="/admin-dashboard">لوحة الإدارة</a> › الهوية البصرية
+        </div>
+        <h1>الهوية البصرية للمنصة</h1>
+
+        <div class="card" id="cardLogo">
+          <h3>شعار المنصة</h3>
+          <p class="hint">PNG / JPG / SVG / WEBP — حتى 2 ميجابايت — يُفضّل 512×512 بكسل.</p>
+          <div class="row-2">
+            <div>
+              <div class="logo-preview" id="logoPreviewBox">
+                <img id="logoPreviewImg" alt="معاينة الشعار" style="display: none" />
+                <span id="logoPreviewPlaceholder" style="color: #9a8b7e; font-weight: 700">معاينة الشعار</span>
+              </div>
+            </div>
+            <div>
+              <div class="dropzone" id="dropzone" tabindex="0" role="button" aria-label="منطقة رفع الشعار">
+                <div style="font-size: 1.8rem">☁️</div>
+                <strong>اسحب الملف هنا أو انقر للاختيار</strong>
+                <p>يُحفظ في المسار العام للموقع ويُحدَّث رابط الشعار في قاعدة البيانات.</p>
+                <input type="file" id="logoFile" accept=".png,.jpg,.jpeg,.svg,.webp,image/png,image/jpeg,image/svg+xml,image/webp" style="display: none" />
+              </div>
+              <div class="btn-row">
+                <button type="button" class="btn btn-outline" id="btnPickLogo">اختر ملفاً</button>
+                <button type="button" class="btn btn-primary" id="btnSaveLogo">حفظ الشعار</button>
+              </div>
+            </div>
+          </div>
+          <div class="msg" id="msgLogo"></div>
+        </div>
+
+        <div class="card" id="cardColors">
+          <h3>الألوان الأساسية للمنصة</h3>
+          <p class="hint">تُطبَّق على الموقع العام عبر متغيرات CSS (--brown، --gold، --bg، إلخ).</p>
+
+          <div class="color-row">
+            <label style="margin: 0; flex: 1 1 140px">اللون الأساسي</label>
+            <input type="color" id="cPrimaryPick" />
+            <input type="text" id="cPrimary" maxlength="7" placeholder="#5b371d" dir="ltr" />
+          </div>
+          <div class="color-row">
+            <label style="margin: 0; flex: 1 1 140px">اللون الثانوي</label>
+            <input type="color" id="cSecondaryPick" />
+            <input type="text" id="cSecondary" maxlength="7" dir="ltr" />
+          </div>
+          <div class="color-row">
+            <label style="margin: 0; flex: 1 1 140px">لون التمييز</label>
+            <input type="color" id="cAccentPick" />
+            <input type="text" id="cAccent" maxlength="7" dir="ltr" />
+          </div>
+          <div class="color-row">
+            <label style="margin: 0; flex: 1 1 140px">لون الخلفية</label>
+            <input type="color" id="cBgPick" />
+            <input type="text" id="cBg" maxlength="7" dir="ltr" />
+          </div>
+          <div class="color-row">
+            <label style="margin: 0; flex: 1 1 140px">لون النص</label>
+            <input type="color" id="cTextPick" />
+            <input type="text" id="cText" maxlength="7" dir="ltr" />
+          </div>
+
+          <div class="btn-row">
+            <button type="button" class="btn btn-primary" id="btnSaveColors">حفظ الألوان</button>
+            <button type="button" class="btn btn-outline" id="btnResetColors">إعادة تعيين الألوان</button>
+          </div>
+          <div class="msg" id="msgColors"></div>
+        </div>
+
+        <div class="card">
+          <h3>معاينة التغييرات</h3>
+          <p class="hint">تتحدّث مباشرة عند تعديل الألوان أو معاينة الشعار قبل الحفظ.</p>
+          <div class="preview-wrap" id="livePreview">
+            <div class="pv-header">
+              <img class="pv-logo" id="pvLogo" alt="" style="display: none" />
+              <span id="pvBrandText" style="font-weight: 800; color: var(--pv-primary)">ERVENOW</span>
+              <div class="pv-nav">
+                <span>الرئيسية</span>
+                <span>المتاجر</span>
+                <span>العروض</span>
+              </div>
+            </div>
+            <div class="pv-hero">
+              <h4>كل احتياجاتك… الآن</h4>
+              <p>مثال لقسم رئيسي وزر دعوة للحركة كما يظهر للزائر.</p>
+              <span class="pv-btn">اطلب الآن</span>
+            </div>
+            <div class="pv-card">
+              <strong>متجر تجريبي</strong>
+              <div style="font-size: 0.82rem; margin-top: 6px; color: var(--pv-sec)">توصيل سريع · دفع آمن</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="info-tip">
+          <span aria-hidden="true" style="font-size: 1.2rem">ℹ️</span>
+          <div>
+            استخدم شعاراً واضحاً وألواناً متناسقة لتحسين تجربة المستخدم. بعد الحفظ تُحدَّث الصفحة الرئيسية والصفحات التي تستخدم
+            <code>styles.css</code> تلقائياً عند التحميل.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      (function () {
+        var pendingLogoDataUrl = null;
+        var settings = {};
+
+        function getToken() {
+          return (
+            localStorage.getItem("ervenow_access_token") ||
+            localStorage.getItem("erwenow_access_token") ||
+            localStorage.getItem("token") ||
+            ""
+          );
+        }
+
+        function show(elId, text, ok) {
+          var el = document.getElementById(elId);
+          if (!el) return;
+          el.className = "msg " + (ok ? "ok" : "err");
+          el.textContent = text || "";
+        }
+
+        function hideMsg(elId) {
+          var el = document.getElementById(elId);
+          if (el) {
+            el.className = "msg";
+            el.textContent = "";
+          }
+        }
+
+        function syncPickers() {
+          ["Primary", "Secondary", "Accent", "Bg", "Text"].forEach(function (k) {
+            var hex = document.getElementById("c" + k).value.trim();
+            var pick = document.getElementById("c" + k + "Pick");
+            if (pick && /^#[0-9A-Fa-f]{6}$/.test(hex)) pick.value = hex;
+          });
+        }
+
+        function wirePicker(idBase) {
+          var inp = document.getElementById("c" + idBase);
+          var pick = document.getElementById("c" + idBase + "Pick");
+          if (!inp || !pick) return;
+          pick.addEventListener("input", function () {
+            inp.value = pick.value.toUpperCase();
+            updateLivePreview();
+          });
+          inp.addEventListener("input", function () {
+            var v = inp.value.trim();
+            if (/^#[0-9A-Fa-f]{6}$/i.test(v)) {
+              pick.value = v;
+              updateLivePreview();
+            }
+          });
+        }
+
+        function updateLivePreview() {
+          var root = document.getElementById("livePreview");
+          if (!root) return;
+          var p = document.getElementById("cPrimary").value.trim() || "#5b371d";
+          var s = document.getElementById("cSecondary").value.trim() || "#8b5e34";
+          var a = document.getElementById("cAccent").value.trim() || "#d4a76a";
+          var b = document.getElementById("cBg").value.trim() || "#f8f5f0";
+          var t = document.getElementById("cText").value.trim() || "#2b1f16";
+          root.style.setProperty("--pv-primary", p);
+          root.style.setProperty("--pv-sec", s);
+          root.style.setProperty("--pv-accent", a);
+          root.style.setProperty("--pv-bg", b);
+          root.style.setProperty("--pv-text", t);
+          var pvBtn = root.querySelector(".pv-btn");
+          if (pvBtn) pvBtn.style.background = p;
+
+          var pvLogo = document.getElementById("pvLogo");
+          var pvBrand = document.getElementById("pvBrandText");
+          var src = pendingLogoDataUrl || (settings.logo_url && String(settings.logo_url).trim()) || "";
+          if (src) {
+            pvLogo.src = src;
+            pvLogo.style.display = "block";
+            if (pvBrand) pvBrand.style.display = "none";
+          } else {
+            pvLogo.removeAttribute("src");
+            pvLogo.style.display = "none";
+            if (pvBrand) pvBrand.style.display = "";
+          }
+        }
+
+        function setLogoPreviewFromUrl(url) {
+          var img = document.getElementById("logoPreviewImg");
+          var ph = document.getElementById("logoPreviewPlaceholder");
+          if (!url) {
+            if (img) {
+              img.style.display = "none";
+              img.removeAttribute("src");
+            }
+            if (ph) ph.style.display = "";
+            return;
+          }
+          if (img) {
+            img.src = url;
+            img.style.display = "block";
+          }
+          if (ph) ph.style.display = "none";
+        }
+
+        function readFileAsDataUrl(file) {
+          return new Promise(function (resolve, reject) {
+            var r = new FileReader();
+            r.onload = function () {
+              resolve(r.result);
+            };
+            r.onerror = function () {
+              reject(new Error("تعذر قراءة الملف"));
+            };
+            r.readAsDataURL(file);
+          });
+        }
+
+        async function handleLogoFile(file) {
+          if (!file) return;
+          var max = 2 * 1024 * 1024;
+          if (file.size > max) {
+            show("msgLogo", "الملف أكبر من 2 ميجابايت", false);
+            return;
+          }
+          var okTypes = /image\/(png|jpeg|jpg|svg\+xml|webp)/i;
+          if (!okTypes.test(file.type) && !/\.(png|jpe?g|svg|webp)$/i.test(file.name)) {
+            show("msgLogo", "صيغة غير مدعومة — استخدم PNG أو JPG أو SVG أو WEBP", false);
+            return;
+          }
+          hideMsg("msgLogo");
+          var dataUrl = await readFileAsDataUrl(file);
+          pendingLogoDataUrl = dataUrl;
+          setLogoPreviewFromUrl(dataUrl);
+          updateLivePreview();
+        }
+
+        async function loadSettings() {
+          var j = await window.PlatformAPI.api("/api/admin/platform-settings");
+          settings = j.settings || {};
+          document.getElementById("cPrimary").value = settings.primary_color || "#5b371d";
+          document.getElementById("cSecondary").value = settings.secondary_color || "#8b5e34";
+          document.getElementById("cAccent").value = settings.accent_color || "#d4a76a";
+          document.getElementById("cBg").value = settings.background_color || "#f8f5f0";
+          document.getElementById("cText").value = settings.text_color || "#2b1f16";
+          syncPickers();
+          if (settings.logo_url) setLogoPreviewFromUrl(settings.logo_url);
+          pendingLogoDataUrl = null;
+          updateLivePreview();
+        }
+
+        async function boot() {
+          var token = getToken();
+          if (!token) {
+            location.href = "/admin-login";
+            return;
+          }
+          window.PlatformAPI.setToken(token);
+          try {
+            var me = await fetch(window.PlatformAPI.apiUrl("/api/core/me"), {
+              headers: { Authorization: "Bearer " + token },
+            });
+            var md = await me.json().catch(function () {
+              return {};
+            });
+            if (!me.ok || !md.profile || md.profile.role !== "admin") {
+              location.href = "/admin-login";
+              return;
+            }
+          } catch (e) {
+            location.href = "/admin-login";
+            return;
+          }
+          await loadSettings();
+        }
+
+        document.getElementById("logoutLink").onclick = function (e) {
+          e.preventDefault();
+          try {
+            localStorage.removeItem("ervenow_access_token");
+            localStorage.removeItem("erwenow_access_token");
+            localStorage.removeItem("token");
+          } catch (x) {}
+          window.PlatformAPI.setToken("");
+          location.href = "/admin-login";
+        };
+
+        ["Primary", "Secondary", "Accent", "Bg", "Text"].forEach(function (k) {
+          wirePicker(k);
+        });
+
+        document.getElementById("btnPickLogo").onclick = function () {
+          document.getElementById("logoFile").click();
+        };
+        document.getElementById("logoFile").onchange = function (ev) {
+          var f = ev.target.files && ev.target.files[0];
+          if (f) handleLogoFile(f);
+        };
+
+        var dz = document.getElementById("dropzone");
+        dz.addEventListener("click", function () {
+          document.getElementById("logoFile").click();
+        });
+        dz.addEventListener("dragover", function (e) {
+          e.preventDefault();
+          dz.classList.add("drag");
+        });
+        dz.addEventListener("dragleave", function () {
+          dz.classList.remove("drag");
+        });
+        dz.addEventListener("drop", function (e) {
+          e.preventDefault();
+          dz.classList.remove("drag");
+          var f = e.dataTransfer.files && e.dataTransfer.files[0];
+          if (f) handleLogoFile(f);
+        });
+
+        document.getElementById("btnSaveLogo").onclick = async function () {
+          hideMsg("msgLogo");
+          if (!pendingLogoDataUrl) {
+            show("msgLogo", "اختر ملف شعار أولاً", false);
+            return;
+          }
+          try {
+            var j = await window.PlatformAPI.api("/api/admin/platform-settings", {
+              method: "POST",
+              body: {
+                logoFileBase64: pendingLogoDataUrl,
+                logoFileName: (document.getElementById("logoFile").files[0] && document.getElementById("logoFile").files[0].name) || "logo.png",
+              },
+            });
+            settings = j.settings || settings;
+            pendingLogoDataUrl = null;
+            if (settings.logo_url) setLogoPreviewFromUrl(settings.logo_url);
+            show("msgLogo", j.message || "تم حفظ الشعار", true);
+            updateLivePreview();
+          } catch (err) {
+            show("msgLogo", String(err.message || err), false);
+          }
+        };
+
+        document.getElementById("btnSaveColors").onclick = async function () {
+          hideMsg("msgColors");
+          try {
+            var body = {
+              primary_color: document.getElementById("cPrimary").value.trim(),
+              secondary_color: document.getElementById("cSecondary").value.trim(),
+              accent_color: document.getElementById("cAccent").value.trim(),
+              background_color: document.getElementById("cBg").value.trim(),
+              text_color: document.getElementById("cText").value.trim(),
+            };
+            var j = await window.PlatformAPI.api("/api/admin/platform-settings", { method: "POST", body: body });
+            settings = j.settings || settings;
+            show("msgColors", j.message || "تم حفظ الألوان", true);
+            updateLivePreview();
+          } catch (err) {
+            show("msgColors", String(err.message || err), false);
+          }
+        };
+
+        document.getElementById("btnResetColors").onclick = async function () {
+          hideMsg("msgColors");
+          try {
+            var j = await window.PlatformAPI.api("/api/admin/platform-settings", {
+              method: "POST",
+              body: { resetColors: true },
+            });
+            settings = j.settings || settings;
+            document.getElementById("cPrimary").value = settings.primary_color || "#5b371d";
+            document.getElementById("cSecondary").value = settings.secondary_color || "#8b5e34";
+            document.getElementById("cAccent").value = settings.accent_color || "#d4a76a";
+            document.getElementById("cBg").value = settings.background_color || "#f8f5f0";
+            document.getElementById("cText").value = settings.text_color || "#2b1f16";
+            syncPickers();
+            show("msgColors", j.message || "تمت إعادة التعيين", true);
+            updateLivePreview();
+          } catch (err) {
+            show("msgColors", String(err.message || err), false);
+          }
+        };
+
+        boot();
+      })();
+    </script>
+  </body>
+</html>

@@ -400,6 +400,10 @@ if (servePublicUi) {
     res.sendFile(path.join(publicPath, "admin-approvals.html"));
   });
 
+  app.get("/admin/branding", (_req, res) => {
+    res.sendFile(path.join(publicPath, "admin-branding.html"));
+  });
+
   app.get("/admin-dashboard", (_req, res) => {
     res.sendFile(path.join(publicPath, "admin-dashboard.html"));
   });

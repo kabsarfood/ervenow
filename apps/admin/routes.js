@@ -1,4 +1,5 @@
 const express = require("express");
+const path = require("path");
 const { requireAuth } = require("../../shared/middleware/auth");
 const { requireRole } = require("../../shared/middleware/roles");
 const { ok, fail } = require("../../shared/utils/helpers");
@@ -6,6 +7,10 @@ const { sendWhatsApp } = require("../../shared/utils/whatsapp");
 const { driverApprovedBody } = require("../../shared/messages/driverWhatsApp");
 const { getRiyadhDate } = require("../delivery/service");
 const { readState, writeState } = require("../../shared/utils/siteMaintenanceStore");
+const { createServiceClient } = require("../../shared/config/supabase");
+const platformBranding = require("../../shared/utils/platformBrandingStore");
+
+const ADMIN_PUBLIC_ROOT = path.join(__dirname, "../../public");
 
 const router = express.Router();
 
@@ -335,6 +340,34 @@ router.post("/site-maintenance", requireAuth, requireRole("admin"), requireAdmin
     return ok(res, { enabled: readState() });
   } catch (e) {
     return fail(res, e.message || String(e), 500);
+  }
+});
+
+router.get("/platform-settings", requireAuth, requireRole("admin"), requireAdminPermission("dashboard"), async (_req, res) => {
+  try {
+    const sb = createServiceClient();
+    if (!sb) return fail(res, "قاعدة البيانات غير جاهزة", 503);
+    const settings = await platformBranding.loadBranding(sb);
+    return ok(res, { settings });
+  } catch (e) {
+    return fail(res, e.message || String(e), 500);
+  }
+});
+
+router.post("/platform-settings", requireAuth, requireRole("admin"), requireAdminPermission("dashboard"), async (req, res) => {
+  try {
+    const sb = createServiceClient();
+    if (!sb) return fail(res, "قاعدة البيانات غير جاهزة", 503);
+    const b = req.body || {};
+    if (b.resetColors === true || b.resetColors === "true") {
+      const settings = await platformBranding.resetColorsToDefaults(sb);
+      return ok(res, { settings, message: "تمت إعادة الألوان للوضع الافتراضي" });
+    }
+    const raw = b.settings && typeof b.settings === "object" ? b.settings : b;
+    const settings = await platformBranding.applyBrandingPatch(sb, raw, { publicRoot: ADMIN_PUBLIC_ROOT });
+    return ok(res, { settings, message: "تم حفظ إعدادات الهوية" });
+  } catch (e) {
+    return fail(res, e.message || String(e), 400);
   }
 });
 

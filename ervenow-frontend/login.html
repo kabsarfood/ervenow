@@ -17,6 +17,24 @@
       }
       .driver-register-fields { display: none; margin-top: 12px; }
       #customerRegisterHint { display: none; margin-top: -6px; }
+      .payout-reg {
+        margin-top: 14px;
+        padding: 12px;
+        border-radius: 12px;
+        border: 1px solid rgba(91, 55, 29, 0.15);
+        background: #fffdf8;
+      }
+      .payout-reg h3 {
+        margin: 0 0 10px;
+        font-size: 0.95rem;
+        font-weight: 800;
+        color: #5b371d;
+      }
+      .payout-reg .sub-hint {
+        margin: 0 0 10px;
+        font-size: 0.82rem;
+        color: #6e5a4a;
+      }
     </style>
   </head>
   <body>
@@ -68,6 +86,37 @@
           <input id="driverRegPlate" type="text" placeholder="رقم اللوحة" />
         </div>
 
+        <div id="payoutRegisterBlock" class="driver-register-fields payout-reg" style="display: none">
+          <h3>بيانات استلام المستحقات (اختياري)</h3>
+          <p class="sub-hint">
+            تُستخدم لاحقاً لتحويل أرباحك بعد التفعيل. يمكنك ترك الحقول فارغة وتعبئتها لاحقاً من لوحة الحساب.
+          </p>
+          <label for="payoutCountry">دولة الحساب البنكي</label>
+          <select id="payoutCountry">
+            <option value="SA">السعودية — قائمة بنوك المملكة</option>
+            <option value="XX">خارج السعودية — اسم البنك والآيبان يدوياً</option>
+          </select>
+
+          <label for="payoutBankSelect" style="margin-top: 12px">اسم البنك (السعودية)</label>
+          <select id="payoutBankSelect"></select>
+
+          <div id="payoutBankOtherWrap" style="margin-top: 12px; display: none">
+            <label for="payoutBankOther" id="payoutBankOtherLabel">اسم البنك</label>
+            <input id="payoutBankOther" type="text" maxlength="200" placeholder="اكتب اسم البنك كما في الشهادة" />
+          </div>
+
+          <label for="payoutIban" style="margin-top: 12px">رقم الآيبان (IBAN)</label>
+          <input id="payoutIban" type="text" inputmode="text" maxlength="34" placeholder="SA — ثم 22 رقماً للسعودية" dir="ltr" style="text-align: left" />
+
+          <label for="payoutStc" style="margin-top: 12px">STC Pay (اختياري)</label>
+          <input id="payoutStc" type="tel" inputmode="numeric" maxlength="10" placeholder="05xxxxxxxx" />
+
+          <label style="margin-top: 12px; display: flex; align-items: center; gap: 8px; font-weight: 700; cursor: pointer">
+            <input id="payoutCrypto" type="checkbox" />
+            <span>أرغب في إتاحة استلام مستقبلي بالعملات المشفرة عند تفعيل الخدمة في المنصة</span>
+          </label>
+        </div>
+
         <label for="phone">رقم الجوال (05…)</label>
         <input
           id="phone"
@@ -91,6 +140,7 @@
     </div>
 
     <script src="/assets/guestBrowse.js"></script>
+    <script src="/assets/payoutRegistration.js"></script>
     <script src="/assets/api-config.js"></script>
     <script src="/assets/api.js"></script>
     <script>
@@ -137,6 +187,19 @@
         return false;
       }
 
+      function isMerchantRestaurantRegisterMode() {
+        if (!isRegisterMode()) return false;
+        var r = document.getElementById("role").value;
+        return r === "merchant" || r === "restaurant" || r === "service";
+      }
+
+      function syncPayoutRegisterBlock() {
+        var el = document.getElementById("payoutRegisterBlock");
+        if (!el) return;
+        var show = isDriverRegisterMode() || isMerchantRestaurantRegisterMode();
+        el.style.display = show ? "block" : "none";
+      }
+
       function syncCustomerRegisterUi() {
         var customerBox = document.getElementById("customerRegisterFields");
         var driverBox = document.getElementById("driverRegisterFields");
@@ -144,6 +207,7 @@
         if (customerBox) customerBox.style.display = isCustomerRegisterMode() ? "block" : "none";
         if (driverBox) driverBox.style.display = isDriverRegisterMode() ? "block" : "none";
         if (hint) hint.style.display = isCustomerRegisterMode() ? "block" : "none";
+        syncPayoutRegisterBlock();
       }
 
       function safeInternalNext(raw) {
@@ -221,6 +285,33 @@
       })();
       document.getElementById("role").addEventListener("change", syncCustomerRegisterUi);
 
+      (function initPayoutRegistrationUi() {
+        if (!window.ERVENOW_PAYOUT_UI) return;
+        var bankSel = document.getElementById("payoutBankSelect");
+        ERVENOW_PAYOUT_UI.fillBankSelect(bankSel, true);
+        ERVENOW_PAYOUT_UI.wireCountryBankUi({
+          countryEl: document.getElementById("payoutCountry"),
+          bankSelect: bankSel,
+          bankOtherWrap: document.getElementById("payoutBankOtherWrap"),
+          bankOtherInput: document.getElementById("payoutBankOther"),
+          ibanWrap: null,
+          bankOtherLabel: document.getElementById("payoutBankOtherLabel"),
+        });
+      })();
+
+      function collectRegisterPayoutPayload() {
+        if (!window.ERVENOW_PAYOUT_UI) return null;
+        if (!isDriverRegisterMode() && !isMerchantRestaurantRegisterMode()) return null;
+        return ERVENOW_PAYOUT_UI.buildPayoutPayload({
+          countryEl: document.getElementById("payoutCountry"),
+          bankSelect: document.getElementById("payoutBankSelect"),
+          bankOtherInput: document.getElementById("payoutBankOther"),
+          ibanInput: document.getElementById("payoutIban"),
+          stcInput: document.getElementById("payoutStc"),
+          cryptoCheckbox: document.getElementById("payoutCrypto"),
+        });
+      }
+
       document.getElementById("btnVerify").onclick = async function () {
         try {
           normalizeInputPhone();
@@ -252,9 +343,29 @@
             }
             driverRegPayload = { name: dName, iqama: iqama, car_type: carType, plate_number: plate };
           }
+
+          var payoutPayload = null;
+          try {
+            payoutPayload = collectRegisterPayoutPayload();
+          } catch (pe) {
+            return show(String(pe.message || pe), false);
+          }
+          if (driverRegPayload && payoutPayload) {
+            driverRegPayload.payout = payoutPayload;
+          }
+
+          var verifyBody = Object.assign({ phone: phone, code: code, role: role }, extra);
+          if (
+            payoutPayload &&
+            isRegisterMode() &&
+            (role === "merchant" || role === "restaurant" || role === "service")
+          ) {
+            verifyBody.payout = payoutPayload;
+          }
+
           var res = await window.PlatformAPI.api("/api/core/verify-otp", {
             method: "POST",
-            body: Object.assign({ phone: phone, code: code, role: role }, extra),
+            body: verifyBody,
           });
 
           if (res.ok === false || res.success === false) {
@@ -279,6 +390,20 @@
             console.warn("localStorage token:", lsErr);
           }
           window.PlatformAPI.setToken(token);
+
+          try {
+            var maxAgeSec = 7 * 24 * 60 * 60;
+            var cookie =
+              "auth_token=" +
+              encodeURIComponent(token) +
+              "; path=/; max-age=" +
+              maxAgeSec +
+              "; SameSite=Lax";
+            if (location.protocol === "https:") cookie += "; Secure";
+            document.cookie = cookie;
+          } catch (cookieErr) {
+            console.warn("auth_token cookie:", cookieErr);
+          }
 
           if (driverRegPayload) {
             try {

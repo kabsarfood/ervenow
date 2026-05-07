@@ -46,7 +46,11 @@ const vercelJson = {
   $schema: "https://openapi.vercel.sh/vercel.json",
   cleanUrls: true,
   trailingSlash: false,
-  routes: [{ handle: "filesystem" }, { src: "/(.*)", dest: "/index.html" }],
+  routes: [
+    { handle: "filesystem" },
+    { src: "/admin/branding", dest: "/admin-branding.html" },
+    { src: "/(.*)", dest: "/index.html" },
+  ],
 };
 fs.writeFileSync(path.join(dst, "vercel.json"), JSON.stringify(vercelJson, null, 2));
 

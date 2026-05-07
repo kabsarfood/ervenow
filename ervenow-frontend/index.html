@@ -180,6 +180,48 @@
         text-align: center;
       }
 
+      /* رصيد المنصة — ثابت في الهيدر (عرض محجوز يقلل القفز عند التحديث) */
+      .lp-header-wallet {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        min-width: 6.5rem;
+        padding: 8px 12px;
+        border-radius: 12px;
+        border: 1px solid rgba(185, 135, 47, 0.45);
+        background: linear-gradient(145deg, rgba(255, 254, 251, 0.98), rgba(248, 241, 229, 0.95));
+        text-decoration: none;
+        color: var(--brown);
+        font-weight: 800;
+        font-size: 0.82rem;
+        box-sizing: border-box;
+        box-shadow: 0 2px 10px rgba(45, 26, 14, 0.06);
+      }
+      .lp-header-wallet__inner {
+        display: inline-flex;
+        align-items: baseline;
+        gap: 6px;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+      .lp-header-wallet__label {
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: var(--muted);
+      }
+      .lp-header-wallet__val {
+        font-variant-numeric: tabular-nums;
+        min-width: 3.25em;
+        text-align: center;
+        letter-spacing: 0.02em;
+      }
+      .lp-header-wallet__cur {
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: var(--gold);
+      }
+
       .lp-btn-outline {
         padding: 10px 18px;
         border-radius: 12px;
@@ -1194,11 +1236,18 @@
             <a role="menuitem" href="/track">&#128205; الخريطة الحية</a>
             <a role="menuitem" href="/driver-login">&#128100; تسجيل دخول (مندوب)</a>
             <div class="lp-quick-dd__sep" role="separator"></div>
-            <a role="menuitem" id="lpQuickWalletLink" href="/wallet.html">&#128176; الأرباح</a>
             <a role="menuitem" href="/dashboard">&#9881; الإعدادات</a>
           </div>
         </div>
         <a class="lp-brand" href="/" aria-label="ERVENOW">
+          <img
+            id="ervBrandLogo"
+            alt=""
+            width="0"
+            height="0"
+            decoding="async"
+            style="display: none; max-height: 38px; width: auto; vertical-align: middle"
+          />
           <span class="lp-brand__name">ERVENOW</span>
           <span class="lp-brand__tag">Platform</span>
         </a>
@@ -1220,6 +1269,13 @@
         </div>
 
         <div class="lp-header__actions">
+          <a class="lp-header-wallet" id="lpHeaderWallet" href="/wallet.html" hidden>
+            <span class="lp-header-wallet__inner">
+              <span class="lp-header-wallet__label">رصيدك</span>
+              <span class="lp-header-wallet__val" id="lpHeaderWalletAmount">—</span>
+              <span class="lp-header-wallet__cur">ر.س</span>
+            </span>
+          </a>
           <div class="header-right">
             <a href="/orders" class="orders-btn" id="lpHeaderOrdersLink">
               الطلبات
@@ -1694,6 +1750,67 @@
         );
       }
 
+      function fmtMoney(n) {
+        var x = Number(n);
+        if (!Number.isFinite(x)) x = 0;
+        try {
+          return x.toLocaleString("ar-SA", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        } catch (e) {
+          return x.toFixed(2);
+        }
+      }
+
+      async function refreshHeaderWallet(token, role) {
+        var box = document.getElementById("lpHeaderWallet");
+        var amountEl = document.getElementById("lpHeaderWalletAmount");
+        var labelEl = box && box.querySelector(".lp-header-wallet__label");
+        if (!box || !amountEl) return;
+        role = String(role || "").toLowerCase();
+        if (!token) {
+          if (window.ErvenowGuestBrowse && ErvenowGuestBrowse.isAnonymousGuest()) {
+            box.hidden = false;
+            box.setAttribute("href", "/login");
+            if (labelEl) labelEl.textContent = "رصيد زائر";
+            amountEl.textContent = fmtMoney(0);
+            return;
+          }
+          box.hidden = true;
+          return;
+        }
+        if (role === "admin") {
+          box.hidden = true;
+          return;
+        }
+        box.hidden = false;
+        if (labelEl) labelEl.textContent = "رصيدك";
+        var href = "/wallet.html";
+        if (role === "driver") href = "/driver-wallet";
+        if (role === "merchant" || role === "restaurant") href = "/merchant-dashboard";
+        box.setAttribute("href", href);
+        amountEl.textContent = "…";
+        try {
+          var bal = 0;
+          if (role === "driver") {
+            var j = await window.PlatformAPI.api("/api/driver/wallet");
+            bal = Number(j.balance) || 0;
+          } else if (role === "merchant" || role === "restaurant") {
+            try {
+              var md = await window.PlatformAPI.api("/api/store/merchant-dashboard");
+              bal = Number((md.wallet && md.wallet.balance) || 0);
+            } catch (em) {
+              var w2 = await window.PlatformAPI.api("/api/wallet");
+              bal = Number(w2.balance) || 0;
+            }
+          } else {
+            var w = await window.PlatformAPI.api("/api/wallet");
+            bal = Number(w.balance) || 0;
+          }
+          amountEl.textContent = fmtMoney(bal);
+        } catch (e) {
+          amountEl.textContent = "—";
+        }
+      }
+
       function applyStartMenuAuthState(isLoggedIn) {
         document.querySelectorAll("[data-guest-only='true']").forEach(function (el) {
           el.style.display = isLoggedIn ? "none" : "";
@@ -1708,11 +1825,10 @@
         applyStartMenuAuthState(!!token);
         var headerOrders = document.getElementById("lpHeaderOrdersLink");
         var quickOrders = document.getElementById("lpQuickOrdersLink");
-        var quickWallet = document.getElementById("lpQuickWalletLink");
         if (!token) {
           if (headerOrders) headerOrders.setAttribute("href", "/orders");
           if (quickOrders) quickOrders.setAttribute("href", "/orders");
-          if (quickWallet) quickWallet.style.display = "";
+          await refreshHeaderWallet("", "");
         }
         var authArea = document.getElementById("authArea");
         if (token && authArea) {
@@ -1732,9 +1848,6 @@
             }
             if (quickOrders && (role === "admin" || role === "customer")) {
               quickOrders.setAttribute("href", "/dashboard");
-            }
-            if (quickWallet) {
-              quickWallet.style.display = role === "admin" ? "none" : "";
             }
 
             if (role === "admin") {
@@ -1766,12 +1879,14 @@
                 "</button>" +
                 '<button class="lp-btn-outline" type="button" onclick="logout()">خروج</button>';
             }
+            await refreshHeaderWallet(token, role);
           } catch (e) {
             authArea.innerHTML =
               '<button class="lp-btn-solid" type="button" onclick="goDashboard()">' +
               label +
               "</button>" +
               '<button class="lp-btn-outline" type="button" onclick="logout()">خروج</button>';
+            await refreshHeaderWallet(token, "");
           }
         }
       }

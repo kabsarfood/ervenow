@@ -7,6 +7,10 @@
       "handle": "filesystem"
     },
     {
+      "src": "/admin/branding",
+      "dest": "/admin-branding.html"
+    },
+    {
       "src": "/(.*)",
       "dest": "/index.html"
     }

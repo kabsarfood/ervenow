@@ -34,10 +34,6 @@
         </div>
       </div>
       <div class="card">
-        <strong>💰 رصيدك</strong>
-        <div class="meta" id="walletLine">جارٍ تحميل المحفظة...</div>
-      </div>
-      <div class="card">
         <strong>🗺️ خريطة التوصيل (المندوب / زائر المنصة)</strong>
         <p class="meta">تظهر هنا حركة موقعك مباشرة وموقع زائر المنصة للطلب الجاري.</p>
         <div id="driverMap"></div>
@@ -46,9 +42,11 @@
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.socket.io/4.8.1/socket.io.min.js" crossorigin="anonymous"></script>
     <script src="/assets/cart.js"></script>
     <script src="/assets/api-config.js"></script>
     <script src="/assets/api.js"></script>
+    <script src="/driver/assets/app.js"></script>
     <script>
       var token = window.PlatformAPI.getToken();
       if (!token) {
@@ -130,13 +128,7 @@
       }
 
       function startLocationTracking() {
-        if (!navigator.geolocation) return;
-        if (watchId != null) {
-          try { navigator.geolocation.clearWatch(watchId); } catch (_e) {}
-        }
-        watchId = navigator.geolocation.watchPosition(function (pos) {
-          var lat = pos.coords.latitude;
-          var lng = pos.coords.longitude;
+        window.__ERVENOW_ON_GEO_POSITION__ = function (lat, lng, _pos) {
           updateMyMarker(lat, lng);
           var body = { lat: lat, lng: lng };
           if (activeOrder && activeOrder.id) body.order_id = activeOrder.id;
@@ -144,7 +136,37 @@
             method: "POST",
             body: body,
           }).catch(function () {});
-        });
+        };
+        if (typeof startDriverGeolocationSocketPipe === "function") {
+          if (watchId != null) {
+            try {
+              navigator.geolocation.clearWatch(watchId);
+            } catch (_e) {}
+            watchId = null;
+          }
+          startDriverGeolocationSocketPipe();
+        } else if (navigator.geolocation) {
+          if (watchId != null) {
+            try {
+              navigator.geolocation.clearWatch(watchId);
+            } catch (_e2) {}
+          }
+          watchId = navigator.geolocation.watchPosition(
+            function (pos) {
+              var la = pos.coords.latitude;
+              var ln = pos.coords.longitude;
+              updateMyMarker(la, ln);
+              var body = { lat: la, lng: ln };
+              if (activeOrder && activeOrder.id) body.order_id = activeOrder.id;
+              window.PlatformAPI.api("/api/driver/update-location", {
+                method: "POST",
+                body: body,
+              }).catch(function () {});
+            },
+            null,
+            { enableHighAccuracy: true, maximumAge: 2000 }
+          );
+        }
       }
 
       async function loadOrders() {
@@ -167,6 +189,8 @@
             orders.find(function (o) {
               return o.driver_id && (o.delivery_status === "accepted" || o.delivery_status === "delivering");
             }) || null;
+          window.__ERVENOW_TRACK_ORDER_ID =
+            activeOrder && activeOrder.id ? String(activeOrder.id) : null;
           updateCustomerMarker(activeOrder);
 
           var box = document.getElementById("ordersBox");
@@ -232,22 +256,6 @@
         }
       }
 
-      async function loadWallet() {
-        try {
-          var j = await window.PlatformAPI.api("/api/driver/wallet");
-          document.getElementById("walletLine").innerText =
-            "الرصيد: " + (j.balance || 0) + " ريال | المكتسب: " + (j.total_earned || 0) + " ريال";
-        } catch (e1) {
-          try {
-            var w = await window.PlatformAPI.api("/api/wallet");
-            document.getElementById("walletLine").innerText =
-              "الرصيد: " + (w.balance || 0) + " ريال | المكتسب: " + (w.total_earned || 0) + " ريال";
-          } catch (e2) {
-            document.getElementById("walletLine").innerText = "تعذر تحميل المحفظة";
-          }
-        }
-      }
-
       function startTrackingLoop() {
         if (poll) clearInterval(poll);
         poll = setInterval(function () {
@@ -265,7 +273,6 @@
       };
 
       loadOrders();
-      loadWallet();
       startTrackingLoop();
       startLocationTracking();
     </script>

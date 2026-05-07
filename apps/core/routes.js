@@ -7,6 +7,7 @@ const { toE164, toStorageDigits, isErvnowSaudiMobileE164 } = require("../../shar
 const { createServiceClient, getDatabaseConfigHint } = require("../../shared/config/supabase");
 const { sendOTP } = require("../../shared/services/whatsappService");
 const { attachSiteSessionCookie, clearSiteSessionCookie } = require("../../shared/middleware/publicSiteOtpGate");
+const { parseOptionalPayoutPayload, payoutRowForUsers } = require("../../shared/utils/payoutFields");
 
 const router = express.Router();
 const otpStore = new Map();
@@ -229,6 +230,19 @@ router.get("/public-config", (_req, res) => {
   }
 });
 
+const platformBranding = require("../../shared/utils/platformBrandingStore");
+
+router.get("/platform-branding", async (_req, res) => {
+  try {
+    const sb = createServiceClient();
+    const settings = await platformBranding.loadBranding(sb);
+    res.set("Cache-Control", "public, max-age=30");
+    return ok(res, { settings });
+  } catch (e) {
+    return fail(res, e.message || String(e), 500);
+  }
+});
+
 /** إنهاء جلسة البوابة (كوكي HttpOnly) — يُستخدم عند تعطيل البوابة لاحقاً أو تسجيل خروج من الواجهة */
 router.get("/site-gate-logout", (req, res) => {
   clearSiteSessionCookie(req, res);
@@ -316,6 +330,13 @@ router.post("/verify-otp", async (req, res) => {
     }
     if (!codeIn) return fail(res, "أدخل رمز الدخول", 400);
 
+    let payoutParsed = {};
+    try {
+      payoutParsed = parseOptionalPayoutPayload(req.body);
+    } catch (pe) {
+      return fail(res, pe.message || "بيانات الحساب البنكي غير صالحة", 400);
+    }
+
     const digits = toStorageDigits(e164);
     if (wantRole === "admin") {
       if (!isAllowedAdminPhoneDigits(digits)) {
@@ -363,6 +384,18 @@ router.post("/verify-otp", async (req, res) => {
     if (!userRow || userRow.id == null) {
       console.error("[ERVENOW] verify-otp: userRow missing after upsert");
       return fail(res, "فشل إنشاء المستخدم في قاعدة البيانات", 500);
+    }
+
+    const payoutPatch = payoutRowForUsers(payoutParsed);
+    const payoutRoles = new Set(["merchant", "restaurant", "service"]);
+    if (payoutRoles.has(String(wantRole).toLowerCase()) && Object.keys(payoutPatch).length) {
+      const pRes = await sb
+        .from("users")
+        .update({ ...payoutPatch, updated_at: new Date().toISOString() })
+        .eq("id", userRow.id);
+      if (pRes.error && !/column|does not exist|schema cache/i.test(String(pRes.error.message || ""))) {
+        console.warn("[ERVENOW] verify-otp payout update:", pRes.error.message);
+      }
     }
 
     const token = signPlatformToken(userRow.id, digits, userRow.role || wantRole);

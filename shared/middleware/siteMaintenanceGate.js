@@ -1,6 +1,6 @@
 const { readState } = require("../utils/siteMaintenanceStore");
 
-const ADMIN_UI_PREFIXES = ["/admin-login", "/admin-dashboard", "/admin-finance", "/admin-approvals"];
+const ADMIN_UI_PREFIXES = ["/admin-login", "/admin-dashboard", "/admin-finance", "/admin-approvals", "/admin/branding"];
 
 const MAINTENANCE_HTML = `<!DOCTYPE html>
 <html lang="ar" dir="rtl">

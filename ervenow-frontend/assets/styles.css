@@ -17,7 +17,7 @@ body {
   margin: 0;
   font-family: var(--font);
   background: var(--bg);
-  color: var(--brown);
+  color: var(--erv-text, var(--brown));
   line-height: 1.5;
   min-height: 100vh;
 }
