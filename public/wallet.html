@@ -810,8 +810,13 @@
     </style>
     <script>
       (function () {
-        var id = localStorage.getItem("userId");
-        if (!id || !String(id).trim()) {
+        try {
+          var t =
+            localStorage.getItem("ervenow_access_token") ||
+            localStorage.getItem("token") ||
+            localStorage.getItem("erwenow_access_token");
+          if (!t || !String(t).trim()) window.location.replace("/login");
+        } catch (e) {
           window.location.replace("/login");
         }
       })();
@@ -864,10 +869,10 @@
               <h3>ملخص سريع</h3>
               <div class="wallet-metric">
                 <div class="wallet-metric__label">
-                  <span class="wallet-metric__icon" aria-hidden="true">⏳</span>
-                  معلّق للتحويل
+                  <span class="wallet-metric__icon" aria-hidden="true">📈</span>
+                  إجمالي المكتسب
                 </div>
-                <div class="wallet-metric__val" id="kpiPending">—</div>
+                <div class="wallet-metric__val" id="kpiEarned">—</div>
               </div>
               <div class="wallet-metric">
                 <div class="wallet-metric__label">
@@ -895,22 +900,12 @@
 
           <div id="withdrawForm">
             <p class="wallet-hint" style="margin-top: 0">
-              أدخل بيانات السحب ثم اطلب رمز التحقق. (وضع تطوير — لا يُرسل SMS حقيقي.)
+              يُشترط تسجيل <strong>IBAN سعودي صالح</strong> في ملفك قبل السحب. يُرسل رمز تحقق إلى جوالك ثم تؤكّد الطلب.
             </p>
             <div class="wallet-form-grid">
               <label>
-                <span>المبلغ (ر.س)</span>
-                <input type="number" id="withdrawAmount" min="0" step="0.01" placeholder="مثال: 100" />
-              </label>
-              <label>
-                <span>IBAN</span>
-                <input type="text" id="withdrawIban" placeholder="SA000000 0000 0000 0000 0000" autocomplete="off" />
-                <span class="opt">اختياري</span>
-              </label>
-              <label>
-                <span>STC Pay</span>
-                <input type="tel" id="withdrawStc" inputmode="numeric" placeholder="05xxxxxxxx" autocomplete="off" />
-                <span class="opt">اختياري — رقم الجوال المرتبط بـ STC Pay</span>
+                <span>المبلغ (ر.س) — الحد الأدنى 20</span>
+                <input type="number" id="withdrawAmount" min="20" step="0.01" placeholder="مثال: 100" />
               </label>
             </div>
 
@@ -919,9 +914,11 @@
               <button type="button" class="wallet-btn wallet-btn--ghost" id="btnCancelWithdraw">إلغاء</button>
             </div>
 
+            <p class="wallet-hint" id="withdrawOtpHint" style="display: none; margin-top: 0.75rem"></p>
+
             <div class="otp-block" id="withdrawOtpBlock" aria-live="polite">
               <label>
-                <span>أدخل رمز التحقق</span>
+                <span>رمز التحقق من جوالك</span>
                 <input type="text" id="withdrawOtp" inputmode="numeric" autocomplete="one-time-code" maxlength="12" placeholder="••••" />
               </label>
               <div class="wallet-row-actions">
@@ -992,18 +989,20 @@
     <script src="/assets/api-config.js"></script>
     <script src="/assets/api.js"></script>
     <script>
-      const MOCK_WITHDRAW_OTP = "1234";
+      if (!window.PlatformAPI || !window.PlatformAPI.getToken()) {
+        window.location.replace("/login");
+      }
 
-      var pendingWithdrawOtp = null;
       var lastBalanceNum = null;
       var balanceMasked = false;
+      var otpLockTimer = null;
 
       const elBtnLoad = document.getElementById("btnLoad");
       const elKpiSection = document.getElementById("kpiSection");
       const elWithdrawCard = document.getElementById("withdrawCard");
       const elTxCard = document.getElementById("txCard");
       const elKpiBalance = document.getElementById("kpiBalance");
-      const elKpiPending = document.getElementById("kpiPending");
+      const elKpiEarned = document.getElementById("kpiEarned");
       const elKpiWithdrawn = document.getElementById("kpiWithdrawn");
       const elKpiTxCount = document.getElementById("kpiTxCount");
       const elTxBody = document.getElementById("txBody");
@@ -1011,6 +1010,7 @@
       const elTxEmpty = document.getElementById("txEmpty");
       const elTxLoading = document.getElementById("txLoading");
       const elWithdrawMsg = document.getElementById("withdrawMsg");
+      const elWithdrawOtpHint = document.getElementById("withdrawOtpHint");
       const elLoadHint = document.getElementById("loadHint");
       const elUserNameLine = document.getElementById("userNameLine");
       const elBtnBalanceEye = document.getElementById("btnBalanceEye");
@@ -1021,17 +1021,11 @@
       const elWithdrawForm = document.getElementById("withdrawForm");
       const elBtnStartWithdraw = document.getElementById("btnStartWithdraw");
       const elWithdrawAmount = document.getElementById("withdrawAmount");
-      const elWithdrawIban = document.getElementById("withdrawIban");
-      const elWithdrawStc = document.getElementById("withdrawStc");
       const elBtnSendOtp = document.getElementById("btnSendOtp");
       const elBtnCancelWithdraw = document.getElementById("btnCancelWithdraw");
       const elWithdrawOtpBlock = document.getElementById("withdrawOtpBlock");
       const elWithdrawOtp = document.getElementById("withdrawOtp");
       const elBtnConfirmWithdraw = document.getElementById("btnConfirmWithdraw");
-
-      function getUserId() {
-        return String(localStorage.getItem("userId") || "").trim();
-      }
 
       function getStoredPhone() {
         var p = localStorage.getItem("userPhone");
@@ -1091,6 +1085,15 @@
         }
       }
 
+      function txTypeLabel(type) {
+        var t = String(type || "").toLowerCase();
+        if (t === "earning") return "إيداع";
+        if (t === "withdraw") return "سحب";
+        if (t === "credit") return "إيداع";
+        if (t === "debit") return "خصم";
+        return t || "—";
+      }
+
       function renderBalanceDisplay() {
         if (lastBalanceNum == null || isNaN(Number(lastBalanceNum))) {
           elKpiBalance.textContent = "—";
@@ -1103,73 +1106,99 @@
         }
       }
 
-      function buildBankNote() {
-        var iban = String(elWithdrawIban.value || "").trim();
-        var stc = String(elWithdrawStc.value || "").trim();
-        var parts = [];
-        if (iban) parts.push("IBAN: " + iban);
-        if (stc) parts.push("STC Pay: " + stc);
-        return parts.length ? parts.join(" | ") : null;
-      }
-
       function resetWithdrawFlow() {
-        pendingWithdrawOtp = null;
         elWithdrawOtpBlock.classList.remove("is-visible");
         elWithdrawAmount.value = "";
-        elWithdrawIban.value = "";
-        elWithdrawStc.value = "";
         elWithdrawOtp.value = "";
         setMsg(elWithdrawMsg, "", "");
+        elWithdrawOtpHint.style.display = "none";
+        elWithdrawOtpHint.textContent = "";
         elWithdrawCard.style.display = "none";
+        setConfirmLock(0);
       }
 
       function openWithdrawForm() {
         elWithdrawCard.style.display = "";
         elWithdrawForm.style.display = "block";
         elWithdrawOtpBlock.classList.remove("is-visible");
-        pendingWithdrawOtp = null;
         elWithdrawOtp.value = "";
         setMsg(elWithdrawMsg, "");
+        elWithdrawOtpHint.style.display = "none";
+        elWithdrawOtpHint.textContent = "";
         elWithdrawCard.scrollIntoView({ behavior: "smooth", block: "start" });
       }
 
-      async function loadWallet(userId) {
-        const res = await fetch(window.PlatformAPI.apiUrl("/api/wallet/" + encodeURIComponent(userId)));
-        const data = await res.json().catch(function () {
-          return {};
-        });
-        if (!res.ok) throw new Error(data.error || "تعذر جلب المحفظة");
+      function setConfirmLock(seconds) {
+        var btn = elBtnConfirmWithdraw;
+        if (!btn) return;
+        if (otpLockTimer) {
+          clearInterval(otpLockTimer);
+          otpLockTimer = null;
+        }
+        var remain = Number(seconds) || 0;
+        if (remain <= 0) {
+          btn.disabled = false;
+          btn.textContent = "تأكيد طلب السحب";
+          return;
+        }
+        btn.disabled = true;
+        btn.textContent = "مؤقتاً (" + remain + "ث)";
+        otpLockTimer = setInterval(function () {
+          remain -= 1;
+          if (remain <= 0) {
+            clearInterval(otpLockTimer);
+            otpLockTimer = null;
+            btn.disabled = false;
+            btn.textContent = "تأكيد طلب السحب";
+            return;
+          }
+          btn.textContent = "مؤقتاً (" + remain + "ث)";
+        }, 1000);
+      }
+
+      function extractLockSeconds(message) {
+        var msg = String(message || "");
+        var m1 = msg.match(/lock_seconds["':\s]*([0-9]+)/i);
+        if (m1 && m1[1]) return Number(m1[1]);
+        var m2 = msg.match(/([0-9]+)\s*ثانية/);
+        if (m2 && m2[1]) return Number(m2[1]);
+        return 0;
+      }
+
+      async function loadWallet() {
+        var data = await window.PlatformAPI.api("/api/wallet");
         lastBalanceNum = data.balance;
         balanceMasked = false;
         elBtnBalanceEye.setAttribute("aria-pressed", "true");
         renderBalanceDisplay();
-        elKpiPending.textContent = fmtNum(data.pending);
-        elKpiWithdrawn.textContent = fmtNum(data.withdrawn);
+        elKpiEarned.textContent = fmtNum(data.total_earned);
+        elKpiWithdrawn.textContent = fmtNum(data.total_withdrawn);
         elKpiSection.style.display = "";
         elTxCard.style.display = "";
         elWithdrawCard.style.display = "none";
       }
 
       function appendTxRow(row) {
-        var type = String(row.type || "");
-        var isCredit = type === "credit";
+        var type = String(row.type || "").toLowerCase();
+        var isIn = type === "earning" || type === "credit";
         var raw = row.amount != null && !isNaN(Number(row.amount)) ? Number(row.amount) : 0;
         var absStr = fmtNum(Math.abs(raw));
-        var signClass = isCredit ? "wallet-tx-amt--pos" : "wallet-tx-amt--neg";
-        var line = isCredit ? "+" + absStr + " ر.س" : "−" + absStr + " ر.س";
+        var signClass = isIn ? "wallet-tx-amt--pos" : "wallet-tx-amt--neg";
+        var line = isIn ? "+" + absStr + " ر.س" : "−" + absStr + " ر.س";
         var iconWrap = document.createElement("div");
-        iconWrap.className = "wallet-tx-icon " + (isCredit ? "wallet-tx-icon--in" : "wallet-tx-icon--out");
+        iconWrap.className = "wallet-tx-icon " + (isIn ? "wallet-tx-icon--in" : "wallet-tx-icon--out");
         iconWrap.setAttribute("aria-hidden", "true");
-        iconWrap.textContent = isCredit ? "🛒" : "🏦";
+        iconWrap.textContent = isIn ? "🛒" : "🏦";
 
         var main = document.createElement("div");
         main.className = "wallet-tx-main";
         var title = document.createElement("div");
         title.className = "wallet-tx-title";
-        title.textContent = row.description ? String(row.description) : type || "عملية";
+        var note = row.note != null ? String(row.note) : "";
+        title.textContent = note || txTypeLabel(row.type);
         var meta = document.createElement("div");
         meta.className = "wallet-tx-meta";
-        meta.textContent = fmtDate(row.created_at);
+        meta.textContent = fmtDate(row.created_at) + (row.status ? " · " + String(row.status) : "");
         main.appendChild(title);
         main.appendChild(meta);
 
@@ -1185,18 +1214,14 @@
         elTxList.appendChild(wrap);
       }
 
-      async function loadTransactions(userId) {
+      async function loadTransactions() {
         elTxLoading.style.display = "";
         elTxBody.innerHTML = "";
         elTxList.innerHTML = "";
         elTxEmpty.style.display = "none";
         try {
-          const res = await fetch(window.PlatformAPI.apiUrl("/api/wallet/transactions/" + encodeURIComponent(userId)));
-          const data = await res.json().catch(function () {
-            return {};
-          });
-          if (!res.ok) throw new Error(data.error || "تعذر جلب العمليات");
-          var list = data.wallet_transactions || [];
+          var data = await window.PlatformAPI.api("/api/wallet/transactions");
+          var list = data.transactions || [];
           elKpiTxCount.textContent = String(list.length);
           if (!list.length) {
             elTxEmpty.style.display = "block";
@@ -1205,18 +1230,20 @@
           list.forEach(function (row) {
             var tr = document.createElement("tr");
             var type = String(row.type || "");
-            var pillClass = type === "credit" ? "type-credit" : "type-debit";
+            var tLower = type.toLowerCase();
+            var pillClass = tLower === "earning" || tLower === "credit" ? "type-credit" : "type-debit";
+            var note = row.note != null ? String(row.note) : "—";
             tr.innerHTML =
               '<td><span class="type-pill ' +
               pillClass +
               '">' +
-              type +
+              txTypeLabel(type) +
               "</span></td>" +
               '<td style="direction:ltr;text-align:right;font-weight:800">' +
               fmtNum(row.amount) +
               "</td>" +
               "<td>" +
-              (row.description ? String(row.description) : "—") +
+              note +
               "</td>" +
               "<td>" +
               fmtDate(row.created_at) +
@@ -1230,8 +1257,7 @@
       }
 
       async function refreshAll() {
-        var userId = getUserId();
-        if (!userId) {
+        if (!window.PlatformAPI.getToken()) {
           window.location.replace("/login");
           return;
         }
@@ -1239,8 +1265,8 @@
         elLoadHint.textContent = "جاري التحميل…";
         setMsg(elWithdrawMsg, "", "");
         try {
-          await loadWallet(userId);
-          await loadTransactions(userId);
+          await loadWallet();
+          await loadTransactions();
           elLoadHint.textContent = "تم التحديث.";
         } catch (e) {
           elLoadHint.textContent = e.message || "خطأ";
@@ -1282,60 +1308,61 @@
         elTxCard.scrollIntoView({ behavior: "smooth", block: "start" });
       });
 
-      elBtnSendOtp.addEventListener("click", function () {
-        var amt = elWithdrawAmount.value;
-        if (!amt || Number(amt) <= 0) {
-          setMsg(elWithdrawMsg, "أدخل مبلغاً صالحاً.", "err");
+      elBtnSendOtp.addEventListener("click", async function () {
+        var amt = Number(elWithdrawAmount.value);
+        if (!Number.isFinite(amt) || amt < 20) {
+          setMsg(elWithdrawMsg, "الحد الأدنى للسحب 20 ريال.", "err");
           return;
         }
-        pendingWithdrawOtp = MOCK_WITHDRAW_OTP;
-        console.log("[ERVENOW wallet dev] mock withdraw OTP:", pendingWithdrawOtp);
-        elWithdrawOtpBlock.classList.add("is-visible");
-        elWithdrawOtp.value = "";
-        setMsg(elWithdrawMsg, "تم إنشاء رمز تحقق (تجريبي). راجع الـ console.", "ok");
-        elWithdrawOtp.focus();
+        try {
+          var r = await window.PlatformAPI.api("/api/wallet/withdraw/send-otp", {
+            method: "POST",
+            body: { amount: amt },
+          });
+          elWithdrawOtpBlock.classList.add("is-visible");
+          elWithdrawOtp.value = "";
+          if (r && r.dev_otp) {
+            elWithdrawOtpHint.style.display = "block";
+            elWithdrawOtpHint.textContent = "رمز التطوير: " + r.dev_otp;
+          } else {
+            elWithdrawOtpHint.style.display = "block";
+            elWithdrawOtpHint.textContent = "تم إرسال رمز التحقق إلى جوالك المسجّل.";
+          }
+          setMsg(elWithdrawMsg, r && r.message ? String(r.message) : "تم إرسال رمز التحقق.", "ok");
+          elWithdrawOtp.focus();
+        } catch (e) {
+          var lockSec = extractLockSeconds(e.message);
+          if (lockSec > 0) setConfirmLock(lockSec);
+          setMsg(elWithdrawMsg, e.message || "تعذر إرسال الرمز", "err");
+        }
       });
 
       elBtnConfirmWithdraw.addEventListener("click", async function () {
-        var userId = getUserId();
-        if (!userId) {
-          window.location.replace("/login");
+        var code = String(elWithdrawOtp.value || "").trim();
+        if (!code) {
+          setMsg(elWithdrawMsg, "اكتب رمز التحقق.", "err");
           return;
         }
-        if (pendingWithdrawOtp == null) {
-          setMsg(elWithdrawMsg, "اطلب رمز التحقق أولاً.", "err");
-          return;
-        }
-        var entered = String(elWithdrawOtp.value || "").trim();
-        if (entered !== pendingWithdrawOtp) {
-          setMsg(elWithdrawMsg, "رمز غير صحيح", "err");
-          return;
-        }
-
-        var amount = elWithdrawAmount.value;
-        var bank_note = buildBankNote();
-
         elBtnConfirmWithdraw.disabled = true;
-        setMsg(elWithdrawMsg, "جاري إرسال طلب السحب…", "ok");
+        setMsg(elWithdrawMsg, "جاري التأكيد…", "ok");
+        var lockedAfterErr = false;
         try {
-          var body = { userId: userId, amount: amount };
-          if (bank_note) body.bank_note = bank_note;
-          var res = await fetch(window.PlatformAPI.apiUrl("/api/wallet/withdraw"), {
+          await window.PlatformAPI.api("/api/wallet/withdraw/confirm-otp", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(body),
+            body: { code: code },
           });
-          var data = await res.json().catch(function () {
-            return {};
-          });
-          if (!res.ok) throw new Error(data.error || "فشل طلب السحب");
-          setMsg(elWithdrawMsg, "تم إنشاء طلب السحب بنجاح.", "ok");
+          setMsg(elWithdrawMsg, "تم إرسال طلب السحب للإدارة.", "ok");
           resetWithdrawFlow();
           await refreshAll();
         } catch (e) {
-          setMsg(elWithdrawMsg, e.message || "خطأ", "err");
+          var lockSec2 = extractLockSeconds(e.message);
+          if (lockSec2 > 0) {
+            setConfirmLock(lockSec2);
+            lockedAfterErr = true;
+          }
+          setMsg(elWithdrawMsg, e.message || "تعذر تأكيد الرمز", "err");
         } finally {
-          elBtnConfirmWithdraw.disabled = false;
+          if (!lockedAfterErr) elBtnConfirmWithdraw.disabled = false;
         }
       });
 

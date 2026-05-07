@@ -1073,6 +1073,51 @@ router.get("/stats", requireAuth, requireRole("admin"), requireAdminPermission("
   }
 });
 
+/** لقطة أرصدة المنصة والسيولة (محاسبة + تشغيل + متاجر) — أدمن بصلاحية finance فقط */
+router.get("/platform-treasury", requireAuth, requireRole("admin"), requireAdminPermission("finance"), async (_req, res) => {
+  try {
+    const sb = createServiceClient();
+    if (!sb) return fail(res, "قاعدة البيانات غير جاهزة", 503);
+    const { data, error } = await sb.rpc("admin_platform_treasury_summary");
+    if (error) {
+      const msg = error.message || String(error);
+      if (/does not exist|42883|admin_platform_treasury|schema cache/i.test(msg)) {
+        return fail(
+          res,
+          "لم تُنفَّذ دالة قاعدة البيانات — نفّذ shared/migration_admin_platform_treasury.sql على Supabase",
+          503
+        );
+      }
+      return fail(res, msg, 400);
+    }
+    let raw = data;
+    if (typeof raw === "string") {
+      try {
+        raw = JSON.parse(raw);
+      } catch {
+        raw = {};
+      }
+    }
+    if (raw == null || typeof raw !== "object" || Array.isArray(raw)) raw = {};
+    const safe = (v) => {
+      const x = Number(v);
+      return Number.isFinite(x) ? round2(x) : 0;
+    };
+    const treasury = {
+      platform_accounting_balance: safe(raw.platform_accounting_balance),
+      ervenow_operational_balance_sum: safe(raw.ervenow_operational_balance_sum),
+      store_wallets_balance_sum: safe(raw.store_wallets_balance_sum),
+      pending_withdraw_requests_sum: safe(raw.pending_withdraw_requests_sum),
+      ervenow_wallets_count: Number(raw.ervenow_wallets_count) || 0,
+      store_wallets_count: Number(raw.store_wallets_count) || 0,
+      circulating_reference_total: safe(raw.circulating_reference_total),
+    };
+    return ok(res, { treasury });
+  } catch (e) {
+    return fail(res, e.message || String(e), 500);
+  }
+});
+
 router.get("/orders", requireAuth, requireRole("admin"), requireAdminPermission("orders"), async (req, res) => {
   try {
     const selectFull =

@@ -315,6 +315,43 @@
           <strong>📊 إجمالي الإيرادات</strong>
           <div class="stat" id="revenueTotal">0</div>
         </div>
+        <div class="card" id="cardPlatformCommission" style="display: none">
+          <strong>💎 عمولة المنصة (تقدير من الطلبات)</strong>
+          <div class="stat" id="platformCommissionStat">0</div>
+        </div>
+      </div>
+
+      <div class="card" id="treasuryPanel" style="display: none; margin-bottom: 14px">
+        <strong>🏛 محفظة المنصة والسيولة في النظام</strong>
+        <p class="sub" style="margin: 8px 0 12px">
+          أرقام مرجعية من قاعدة البيانات: رصيد محفظة المنصة المحاسبية + مجموع محافظ التشغيل (مندوبون وغيرهم) + مجموع
+          محافظ المتاجر. الطبقات مختلفة ولا تعادل رصيداً بنكياً واحداً.
+        </p>
+        <p class="sub" id="treasuryHint" style="display: none; color: #a63; font-weight: 700"></p>
+        <div class="grid" style="margin-top: 4px">
+          <div class="card">
+            <strong>محاسبة المنصة (wallets)</strong>
+            <div class="stat" id="trPlatformAcc">—</div>
+          </div>
+          <div class="card">
+            <strong>مجموع التشغيل (ervenow)</strong>
+            <div class="stat" id="trErvSum">—</div>
+            <div class="muted" style="font-size: 0.82rem; margin-top: 4px"><span id="trErvCnt">0</span> محفظة</div>
+          </div>
+          <div class="card">
+            <strong>مجموع متاجر (store_wallets)</strong>
+            <div class="stat" id="trStoreSum">—</div>
+            <div class="muted" style="font-size: 0.82rem; margin-top: 4px"><span id="trStoreCnt">0</span> متجر</div>
+          </div>
+          <div class="card">
+            <strong>سحوبات معلّقة</strong>
+            <div class="stat" id="trPendingWd">—</div>
+          </div>
+          <div class="card">
+            <strong>إجمالي مرجعي (محاسبة + تشغيل + متاجر)</strong>
+            <div class="stat" id="trTotalRef">—</div>
+          </div>
+        </div>
       </div>
 
       <div class="panel-switcher">
@@ -751,6 +788,11 @@
         }
         var adminBtn = document.getElementById("adminAccountsPanelBtn");
         if (adminBtn) adminBtn.style.display = hasPermission("admin_accounts") ? "" : "none";
+        var fin = hasPermission("finance");
+        var tp = document.getElementById("treasuryPanel");
+        if (tp) tp.style.display = fin ? "block" : "none";
+        var cc = document.getElementById("cardPlatformCommission");
+        if (cc) cc.style.display = fin ? "" : "none";
       }
 
       function mkAction(label, cls, fn) {
@@ -783,8 +825,39 @@
           document.getElementById("activeOrders").innerText = j.activeOrders || 0;
           document.getElementById("revenueToday").innerText = fmtMoney(j.revenueToday || 0);
           document.getElementById("revenueTotal").innerText = fmtMoney(j.revenueTotal || 0);
+          var pc = document.getElementById("platformCommissionStat");
+          if (pc && j.platform_commission != null) pc.innerText = fmtMoney(j.platform_commission);
+          if (hasPermission("finance")) await loadTreasury();
         } catch (e) {
           showError(e.message || "فشل تحميل الإحصائيات");
+        }
+      }
+
+      async function loadTreasury() {
+        var hint = document.getElementById("treasuryHint");
+        var panel = document.getElementById("treasuryPanel");
+        if (!panel || !hasPermission("finance")) return;
+        if (hint) {
+          hint.style.display = "none";
+          hint.textContent = "";
+        }
+        try {
+          var j = await window.PlatformAPI.api("/api/admin/platform-treasury");
+          var t = j.treasury || {};
+          document.getElementById("trPlatformAcc").innerText = fmtMoney(t.platform_accounting_balance);
+          document.getElementById("trErvSum").innerText = fmtMoney(t.ervenow_operational_balance_sum);
+          document.getElementById("trStoreSum").innerText = fmtMoney(t.store_wallets_balance_sum);
+          document.getElementById("trPendingWd").innerText = fmtMoney(t.pending_withdraw_requests_sum);
+          document.getElementById("trTotalRef").innerText = fmtMoney(t.circulating_reference_total);
+          var ec = document.getElementById("trErvCnt");
+          if (ec) ec.innerText = String(t.ervenow_wallets_count != null ? t.ervenow_wallets_count : 0);
+          var sc = document.getElementById("trStoreCnt");
+          if (sc) sc.innerText = String(t.store_wallets_count != null ? t.store_wallets_count : 0);
+        } catch (e) {
+          if (hint) {
+            hint.style.display = "block";
+            hint.textContent = e.message || "تعذر تحميل محفظة المنصة — تحقق من الهجرة أو الصلاحيات";
+          }
         }
       }
 
