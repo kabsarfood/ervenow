@@ -24,6 +24,8 @@
         border-radius: 16px;
         padding: 20px;
         box-shadow: 0 8px 20px rgba(84, 52, 31, 0.08);
+        /* يمنع قفز التخطيط عند ظهور/اختفاء أزرار مختلفة */
+        min-height: 280px;
       }
       h1 {
         margin: 0 0 10px;
@@ -57,16 +59,20 @@
         border: 0;
         cursor: pointer;
         font-weight: 700;
-        margin-top: 12px;
+        margin-top: 0;
       }
       button:disabled {
         opacity: 0.6;
         cursor: not-allowed;
       }
-      .row {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 8px;
+      .driver-actions {
+        margin-top: 12px;
+        min-height: 50px;
+      }
+      @media (max-width: 520px) {
+        input {
+          font-size: 16px;
+        }
       }
       .note {
         font-size: 0.92rem;
@@ -96,9 +102,9 @@
         <label for="loginCode">رمز الدخول</label>
         <input id="loginCode" type="text" inputmode="numeric" placeholder="رمز واتساب" />
 
-        <div class="row">
+        <div class="driver-actions" id="driverActions">
           <button id="sendOtpBtn" type="button">إرسال الكود</button>
-          <button id="verifyBtn" type="button">تسجيل الدخول</button>
+          <button id="verifyBtn" type="button" hidden>تسجيل الدخول</button>
         </div>
 
         <p style="margin-top: 16px; margin-bottom: 0">
@@ -126,8 +132,46 @@
         return el.value;
       }
 
-      document.getElementById("loginPhone").addEventListener("input", normalizePhoneInput);
-      document.getElementById("loginPhone").addEventListener("blur", normalizePhoneInput);
+      var otpSent = false;
+      var lastSentPhone = "";
+
+      function phoneOk() {
+        return /^05\d{8}$/.test(getVal("loginPhone"));
+      }
+
+      function updateLoginStep() {
+        var sendBtn = document.getElementById("sendOtpBtn");
+        var verifyBtn = document.getElementById("verifyBtn");
+        if (!sendBtn || !verifyBtn) return;
+        if (otpSent) {
+          sendBtn.hidden = true;
+          verifyBtn.hidden = false;
+        } else {
+          sendBtn.hidden = false;
+          verifyBtn.hidden = true;
+          sendBtn.disabled = !phoneOk();
+        }
+      }
+
+      document.getElementById("loginPhone").addEventListener("input", function () {
+        normalizePhoneInput();
+        if (otpSent && getVal("loginPhone") !== lastSentPhone) {
+          otpSent = false;
+          lastSentPhone = "";
+          try {
+            document.getElementById("loginCode").value = "";
+          } catch (e) {}
+        }
+        updateLoginStep();
+      });
+      document.getElementById("loginPhone").addEventListener("blur", function () {
+        normalizePhoneInput();
+        updateLoginStep();
+      });
+
+      document.getElementById("loginCode").addEventListener("input", function () {
+        if (otpSent) updateLoginStep();
+      });
 
       function mapOtpError(msg) {
         var m = String(msg || "");
@@ -139,6 +183,10 @@
 
       var sendOtp = safeClick(async function () {
         normalizePhoneInput();
+        if (!phoneOk()) {
+          showError("أدخل رقم جوال سعودي يبدأ بـ 05 ومكوّن من 10 أرقام");
+          return;
+        }
         var btn = document.getElementById("sendOtpBtn");
         var old = btn.innerText;
         btn.disabled = true;
@@ -148,12 +196,19 @@
             method: "POST",
             body: { phone: getVal("loginPhone") },
           });
+          otpSent = true;
+          lastSentPhone = getVal("loginPhone");
+          updateLoginStep();
           showSuccess("تم إرسال الرمز عبر واتساب. صلاحية الرمز 5 دقائق.");
+          try {
+            document.getElementById("loginCode").focus();
+          } catch (e) {}
         } catch (e) {
           showError(mapOtpError(e.message || "فشل إرسال الرمز"));
         } finally {
           btn.disabled = false;
           btn.innerText = old;
+          updateLoginStep();
         }
       });
 
@@ -170,6 +225,17 @@
           });
           if (!j.token) throw new Error("لم يتم إصدار جلسة");
           window.PlatformAPI.setToken(j.token);
+          try {
+            var maxAgeSec = 7 * 24 * 60 * 60;
+            var c =
+              "auth_token=" +
+              encodeURIComponent(j.token) +
+              "; path=/; max-age=" +
+              maxAgeSec +
+              "; SameSite=Lax";
+            if (location.protocol === "https:") c += "; Secure";
+            document.cookie = c;
+          } catch (cookieErr) {}
           try {
             var dp = getVal("loginPhone");
             if (dp) localStorage.setItem("userPhone", dp);
@@ -188,6 +254,7 @@
 
       document.getElementById("sendOtpBtn").onclick = sendOtp;
       document.getElementById("verifyBtn").onclick = verifyOtp;
+      updateLoginStep();
     </script>
   </body>
 </html>
