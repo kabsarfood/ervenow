@@ -16,7 +16,7 @@ const {
 } = require("./service");
 const { enqueueDeliveryJob } = require("../../queues/deliveryQueue");
 const { deliveryOrdersCreateLimiter } = require("../../shared/middleware/apiRateLimits");
-const { normalizeIdempotencyKey } = require("../../shared/utils/idempotency");
+const { normalizeIdempotencyKey, isOrdersIdempotencyColumnMissingError } = require("../../shared/utils/idempotency");
 const { isAllowedDeliveryStatusTransition } = require("../../shared/utils/deliveryStateMachine");
 const { logger } = require("../../shared/utils/logger");
 const {
@@ -177,9 +177,17 @@ router.post("/orders", requireAuth, deliveryOrdersCreateLimiter, async (req, res
         .eq("customer_id", req.appUser.id)
         .eq("idempotency_key", idemKey)
         .maybeSingle();
-      if (idemErr) return fail(res, idemErr.message, 400);
-      if (existing) return ok(res, { order: existing, duplicated: false, idempotentReplay: true });
-      body.idempotency_key = idemKey;
+      if (idemErr) {
+        if (!isOrdersIdempotencyColumnMissingError(idemErr)) return fail(res, idemErr.message, 400);
+        logger.warn(
+          { err: idemErr.message },
+          "[delivery/orders] orders.idempotency_key missing — run shared/migration_orders_idempotency_key.sql; continuing without idempotency lookup"
+        );
+      } else if (existing) {
+        return ok(res, { order: existing, duplicated: false, idempotentReplay: true });
+      } else {
+        body.idempotency_key = idemKey;
+      }
     }
     const src = req.get("X-Source");
     if ((body.series_source == null || String(body.series_source).trim() === "") && src) {

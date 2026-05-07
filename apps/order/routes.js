@@ -2,7 +2,7 @@ const express = require("express");
 const { requireAuth } = require("../../shared/middleware/auth");
 const { createServiceClient } = require("../../shared/config/supabase");
 const { ok, fail } = require("../../shared/utils/helpers");
-const { normalizeIdempotencyKey } = require("../../shared/utils/idempotency");
+const { normalizeIdempotencyKey, isOrdersIdempotencyColumnMissingError } = require("../../shared/utils/idempotency");
 const { deliveryOrdersCreateLimiter } = require("../../shared/middleware/apiRateLimits");
 const { enqueueDeliveryJob } = require("../../queues/deliveryQueue");
 const { bumpDeliveryOrdersListEpoch } = require("../../shared/utils/deliveryOrdersListCache");
@@ -47,9 +47,17 @@ router.post("/create", requireAuth, deliveryOrdersCreateLimiter, async (req, res
         .eq("customer_id", req.appUser.id)
         .eq("idempotency_key", idemKey)
         .maybeSingle();
-      if (idemErr) return fail(res, idemErr.message, 400);
-      if (existing) return ok(res, { order: existing, duplicated: false, idempotentReplay: true, mode: "delivery" });
-      cleanBody.idempotency_key = idemKey;
+      if (idemErr) {
+        if (!isOrdersIdempotencyColumnMissingError(idemErr)) return fail(res, idemErr.message, 400);
+        logger.warn(
+          { err: idemErr.message },
+          "[order/create] orders.idempotency_key missing — run shared/migration_orders_idempotency_key.sql; continuing without idempotency lookup"
+        );
+      } else if (existing) {
+        return ok(res, { order: existing, duplicated: false, idempotentReplay: true, mode: "delivery" });
+      } else {
+        cleanBody.idempotency_key = idemKey;
+      }
     }
 
     const extRaw = cleanBody.external_order_id;
