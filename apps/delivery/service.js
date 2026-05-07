@@ -6,7 +6,7 @@ const { normalizePhone } = require("../../shared/utils/phone");
 const { getOsrmRouteKmOrHaversine } = require("../../shared/utils/osrmClient");
 const { logger } = require("../../shared/utils/logger");
 const { normalizeOrderFinancialsForInsert } = require("../../shared/utils/orderTotals");
-const { isOrdersIdempotencyColumnMissingError } = require("../../shared/utils/idempotency");
+const { isOrdersIdempotencyColumnMissingError, isOrdersStoreColumnMissingError } = require("../../shared/utils/idempotency");
 
 function haversineDistanceKm(lat1, lng1, lat2, lng2) {
   const R = 6371;
@@ -412,39 +412,56 @@ async function insertDeliveryOrderWithRetry(sb, buildRow) {
   };
 }
 
-/** أعمدة قائمة الطلبات فقط — أخف من select("*") ويُبقي واجهات dashboard/driver/orders تعمل */
-const ORDERS_LIST_COLUMNS =
+/** أعمدة قائمة الطلبات — النسخة الكاملة (يتطلب أعمدة المتجر في قاعدة البيانات) */
+const ORDERS_LIST_COLUMNS_FULL =
   "id,customer_id,driver_id,status,delivery_status,order_number,created_at,updated_at," +
   "pickup_address,drop_address,pickup_lat,pickup_lng,drop_lat,drop_lng," +
   "series_source,external_order_id,customer_phone,delivery_fee,distance_km," +
   "store_id,store_name,store_address";
 
+/** احتياط عند غياب أعمدة المتجر */
+const ORDERS_LIST_COLUMNS_MINIMAL =
+  "id,customer_id,driver_id,status,delivery_status,order_number,created_at,updated_at," +
+  "pickup_address,drop_address,pickup_lat,pickup_lng,drop_lat,drop_lng," +
+  "series_source,external_order_id,customer_phone,delivery_fee,distance_km";
+
 async function listOrders(sb, appUser) {
-  if (appUser.role === "admin") {
+  const runSelect = (cols) => {
+    if (appUser.role === "admin") {
+      return sb
+        .from("orders")
+        .select(cols)
+        .in("delivery_status", ["draft", "new", "pending", "accepted", "picked", "delivering"])
+        .order("created_at", { ascending: false })
+        .limit(100);
+    }
+    if (appUser.role === "driver") {
+      return sb
+        .from("orders")
+        .select(cols)
+        .or(
+          `and(driver_id.is.null,delivery_status.in.(new,pending)),and(driver_id.eq.${appUser.id},delivery_status.in.(new,pending,accepted,picked,delivering))`
+        )
+        .order("created_at", { ascending: false })
+        .limit(50);
+    }
     return sb
       .from("orders")
-      .select(ORDERS_LIST_COLUMNS)
-      .in("delivery_status", ["draft", "new", "pending", "accepted", "picked", "delivering"])
-      .order("created_at", { ascending: false })
-      .limit(100);
-  }
-  if (appUser.role === "driver") {
-    /* المندوب: طلبات مفتوحة (new/pending) + طلباته المسندة */
-    return sb
-      .from("orders")
-      .select(ORDERS_LIST_COLUMNS)
-      .or(
-        `and(driver_id.is.null,delivery_status.in.(new,pending)),and(driver_id.eq.${appUser.id},delivery_status.in.(new,pending,accepted,picked,delivering))`
-      )
+      .select(cols)
+      .eq("customer_id", appUser.id)
       .order("created_at", { ascending: false })
       .limit(50);
+  };
+
+  let r = await runSelect(ORDERS_LIST_COLUMNS_FULL);
+  if (r.error && isOrdersStoreColumnMissingError(r.error)) {
+    logger.warn(
+      { err: r.error.message },
+      "[delivery] orders list: store columns missing — retry with minimal select; run store migration on DB"
+    );
+    r = await runSelect(ORDERS_LIST_COLUMNS_MINIMAL);
   }
-  return sb
-    .from("orders")
-    .select(ORDERS_LIST_COLUMNS)
-    .eq("customer_id", appUser.id)
-    .order("created_at", { ascending: false })
-    .limit(50);
+  return r;
 }
 
 async function acceptOrder(sb, orderId, driverId) {

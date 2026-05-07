@@ -196,20 +196,28 @@
         border-top: 1px solid rgba(0, 0, 0, 0.06);
         text-align: center;
       }
-      .orders-dropdown__switch {
-        color: var(--muted, #6b5c52);
-        font-size: 0.85rem;
-        text-decoration: none;
-      }
       .orders-dropdown__switch:hover {
         text-decoration: underline;
         color: var(--brown, #3d2213);
+      }
+
+      #dashStatus {
+        margin: 0 0 12px;
+        min-height: 1.2em;
+        font-weight: 600;
+        color: #a63;
       }
       @media (max-width: 720px) {
         .top-nav {
           flex-direction: column;
           align-items: stretch;
           gap: 12px;
+          margin-bottom: 14px;
+          padding: clamp(16px, 3vw, 24px);
+          background: linear-gradient(135deg, rgba(91, 55, 29, 0.08) 0%, rgba(248, 245, 240, 1) 45%, #fff 100%);
+          border: 1px solid rgba(91, 55, 29, 0.12);
+          border-radius: 16px;
+          overflow: hidden;
         }
         .top-nav > h1 {
           text-align: center;
@@ -239,6 +247,139 @@
           max-height: min(65vh, 480px);
         }
       }
+      .dash-hero__grid {
+        display: grid;
+        grid-template-columns: 1fr minmax(140px, 38%);
+        gap: clamp(14px, 3vw, 22px);
+        align-items: center;
+      }
+      @media (max-width: 720px) {
+        .dash-hero__grid {
+          grid-template-columns: 1fr;
+        }
+      }
+      .dash-hero__title {
+        margin: 0 0 10px;
+        font-size: clamp(1.25rem, 4vw, 1.75rem);
+        font-weight: 800;
+        color: var(--brown, #3d2213);
+        line-height: 1.25;
+      }
+      .dash-hero__lead {
+        margin: 0;
+        font-size: clamp(0.92rem, 2.4vw, 1.02rem);
+        line-height: 1.65;
+        color: rgba(45, 30, 20, 0.88);
+      }
+      .dash-hero__art {
+        border-radius: 14px;
+        overflow: hidden;
+        box-shadow: 0 10px 32px rgba(45, 28, 14, 0.12);
+        aspect-ratio: 16 / 10;
+        max-height: 220px;
+      }
+      .dash-hero__art img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+
+      .horiz-scroll-wrap {
+        margin-top: 10px;
+        margin-inline: calc(-1 * clamp(8px, 2vw, 14px));
+        padding: 4px clamp(8px, 2vw, 14px) 8px;
+        overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: thin;
+      }
+      .horiz-scroll {
+        display: flex;
+        gap: 10px;
+        flex-wrap: nowrap;
+        width: max-content;
+        min-width: 100%;
+        padding-bottom: 4px;
+      }
+      .spot-chip {
+        flex: 0 0 auto;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 10px 16px;
+        border-radius: 999px;
+        font-weight: 800;
+        font-size: 0.88rem;
+        text-decoration: none;
+        color: var(--brown, #3d2213);
+        background: #fff;
+        border: 1px solid rgba(91, 55, 29, 0.18);
+        box-shadow: 0 2px 10px rgba(45, 28, 14, 0.06);
+        white-space: nowrap;
+        min-height: 44px;
+      }
+      .spot-chip:active {
+        transform: scale(0.98);
+      }
+
+      .cat-block {
+        margin-bottom: 18px;
+      }
+      .cat-block h3 {
+        margin: 0 0 10px;
+        font-size: 1.05rem;
+        font-weight: 800;
+        color: var(--brown, #3d2213);
+      }
+      .cat-grid {
+        display: grid;
+        gap: 10px;
+        grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
+      }
+      @media (max-width: 400px) {
+        .cat-grid {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+      .cat-card {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        padding: 12px 12px 14px;
+        border-radius: 14px;
+        border: 1px solid rgba(91, 55, 29, 0.12);
+        background: #fffdfa;
+        text-decoration: none;
+        color: inherit;
+        min-height: 92px;
+        transition: box-shadow 0.2s ease, border-color 0.2s ease, transform 0.12s ease;
+      }
+      .cat-card:active {
+        transform: scale(0.99);
+      }
+      @media (hover: hover) and (pointer: fine) {
+        .cat-card:hover {
+          border-color: rgba(185, 135, 47, 0.45);
+          box-shadow: 0 8px 22px rgba(45, 28, 14, 0.1);
+        }
+      }
+      .cat-card__icon {
+        font-size: 1.45rem;
+        line-height: 1;
+      }
+      .cat-card strong {
+        font-size: 0.92rem;
+        font-weight: 800;
+        color: var(--brown, #3d2213);
+      }
+      .cat-card span {
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: rgba(45, 30, 20, 0.72);
+        line-height: 1.35;
+      }
+
     </style>
   </head>
   <body>
@@ -248,27 +389,83 @@
         <h1 style="margin: 0; flex: 1; min-width: 0">لوحة زائر المنصة</h1>
         <div class="top-nav-actions">
           <a class="btn btn-ghost" href="/">الرئيسية</a>
-          <a class="btn btn-ghost" href="/track">تتبع طلب</a>
-          <details class="orders-dropdown" id="ordersDropdown">
-            <summary class="btn btn-ghost orders-dropdown__summary" id="ordersSummary">
-              <span>طلباتي الأخيرة</span>
-              <span class="orders-dropdown__chevron" aria-hidden="true">▾</span>
-            </summary>
-            <div class="orders-dropdown__panel" id="ordersDropdownPanel">
-              <div class="orders-dropdown__head">
-                <strong>طلباتي الأخيرة</strong>
-                <p class="sub orders-dropdown__hint">آخر الطلبات — الجديدة والمكتملة. اضغط العنوان مرة أخرى أو خارج القائمة للإغلاق.</p>
-              </div>
-              <div id="ordersList" class="orders-dropdown__list"></div>
-              <p class="sub orders-dropdown__foot">
-                <a href="/login" class="orders-dropdown__switch" id="switchAccount">تبديل الحساب</a>
-              </p>
-            </div>
-          </details>
+          <a class="btn btn-ghost" href="/login" id="switchAccount">تسجيل الدخول / تبديل الحساب</a>
         </div>
       </div>
 
-      <p class="sub" id="welcome">جارٍ التحميل…</p>
+      <p class="sub" id="dashStatus" style="display: none" aria-live="polite"></p>
+
+      <section class="card dash-hero" aria-labelledby="dashHeroTitle">
+        <div class="dash-hero__grid">
+          <div>
+            <h2 class="dash-hero__title" id="dashHeroTitle">أهلاً بكم في منصة ارفينو</h2>
+            <p class="dash-hero__lead">
+              كل ما تحتاجونه موجود في هذه الصفحة: متاجر، مطاعم، خدمات منزلية، وتوصيل. تصفّح الأقسام واختر ما يناسبك،
+              ثم تابع الطلب من صفحة الطلب أو المتجر.
+            </p>
+          </div>
+          <div class="dash-hero__art">
+            <img
+              src="https://images.unsplash.com/photo-1526367790999-0150786686a2?auto=format&fit=crop&w=800&q=80"
+              alt="تسوق وتوصيل"
+              width="400"
+              height="250"
+              loading="lazy"
+              decoding="async"
+            />
+          </div>
+        </div>
+      </section>
+
+      <div class="card">
+        <strong style="display: block; margin-bottom: 6px">مطاعم وعروض وسريع</strong>
+        <p class="sub" style="margin: 0 0 8px">مرّر الشريط أفقياً واضغط للانتقال مباشرة</p>
+        <div class="horiz-scroll-wrap">
+          <div class="horiz-scroll" role="list">
+            <a class="spot-chip" role="listitem" href="/stores">🍽️ مطاعم</a>
+            <a class="spot-chip" role="listitem" href="/browse">🔥 عروض</a>
+            <a class="spot-chip" role="listitem" href="/stores">🛒 متاجر قريبة</a>
+            <a class="spot-chip" role="listitem" href="/order">🚚 طلب توصيل</a>
+            <a class="spot-chip" role="listitem" href="/services-provider.html">🔧 خدمات منزلية</a>
+            <a class="spot-chip" role="listitem" href="/start-now.html">✨ ابدأ الآن</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="cat-block">
+          <h3>🛒 المتاجر</h3>
+          <div class="cat-grid">
+            <a class="cat-card" href="/stores"><span class="cat-card__icon" aria-hidden="true">🍛</span><strong>مطاعم</strong><span>طلبات طعام مع ربط تلقائي بالتوصيل.</span></a>
+            <a class="cat-card" href="/stores"><span class="cat-card__icon" aria-hidden="true">🛒</span><strong>سوبر ماركت</strong><span>مشتريات يومية سريعة عبر نفس المنصة.</span></a>
+            <a class="cat-card" href="/stores"><span class="cat-card__icon" aria-hidden="true">💊</span><strong>صيدليات</strong><span>الأدوية والمنتجات الصحية بسهولة.</span></a>
+            <a class="cat-card" href="/stores"><span class="cat-card__icon" aria-hidden="true">🥬</span><strong>خضار</strong><span>توريد طازج مباشرة لزائر المنصة.</span></a>
+            <a class="cat-card" href="/stores"><span class="cat-card__icon" aria-hidden="true">💐</span><strong>ورود وهدايا</strong><span>هدايا وتنسيقات ورد مع توصيل مرن.</span></a>
+            <a class="cat-card" href="/stores"><span class="cat-card__icon" aria-hidden="true">🍰</span><strong>حلويات</strong><span>حلويات ومناسبات بسرعة.</span></a>
+            <a class="cat-card" href="/stores"><span class="cat-card__icon" aria-hidden="true">🏠</span><strong>أسر منتجة</strong><span>دعم المنتجات المنزلية عبر الطلب المباشر.</span></a>
+          </div>
+        </div>
+        <div class="cat-block">
+          <h3>🔧 الخدمات</h3>
+          <div class="cat-grid">
+            <a class="cat-card" href="/services-provider.html"><span class="cat-card__icon" aria-hidden="true">🔧</span><strong>سباك</strong><span>حجز فني سباكة بخطوات بسيطة.</span></a>
+            <a class="cat-card" href="/services-provider.html"><span class="cat-card__icon" aria-hidden="true">⚡</span><strong>كهربائي</strong><span>صيانة كهربائية منزلية.</span></a>
+            <a class="cat-card" href="/services-provider.html"><span class="cat-card__icon" aria-hidden="true">🪴</span><strong>مشتل</strong><span>نباتات ولوازم زراعية عند الطلب.</span></a>
+            <a class="cat-card" href="/services-provider.html"><span class="cat-card__icon" aria-hidden="true">❄️</span><strong>فني مكيفات</strong><span>صيانة وتنظيف ميداني.</span></a>
+            <a class="cat-card" href="/services-provider.html"><span class="cat-card__icon" aria-hidden="true">🧼</span><strong>غسيل درج</strong><span>تنظيف مباني ودرج.</span></a>
+          </div>
+        </div>
+        <div class="cat-block" style="margin-bottom: 0">
+          <h3>🚚 كدّاد</h3>
+          <div class="cat-grid">
+            <a class="cat-card" href="/order"><span class="cat-card__icon" aria-hidden="true">🚗</span><strong>نقل مركبات</strong><span>نقل داخل المدينة وخارجها.</span></a>
+            <a class="cat-card" href="/order"><span class="cat-card__icon" aria-hidden="true">📦</span><strong>توصيل داخلي</strong><span>توصيل داخل الأحياء بسرعة.</span></a>
+            <a class="cat-card" href="/order"><span class="cat-card__icon" aria-hidden="true">🛻</span><strong>ونيت</strong><span>نقل بالونيت حسب الحاجة.</span></a>
+            <a class="cat-card" href="/order"><span class="cat-card__icon" aria-hidden="true">🛋️</span><strong>نقل أثاث</strong><span>نقل أثاث بمرونة وجدولة.</span></a>
+            <a class="cat-card" href="/order"><span class="cat-card__icon" aria-hidden="true">🔥</span><strong>توصيل غاز</strong><span>طلبات غاز منزلية عند الطلب.</span></a>
+          </div>
+        </div>
+      </div>
 
       <div class="card" id="profileCard" style="display: none">
         <span class="badge" id="roleBadge"></span>
@@ -276,13 +473,13 @@
       </div>
 
       <div class="card">
-        <strong style="display: block; margin-bottom: 12px">خدمات المنصة</strong>
+        <strong style="display: block; margin-bottom: 12px">🚚 طلب توصيل من نقطة إلى أخرى</strong>
         <div class="grid-apps">
           <details class="delivery-dropdown" id="deliveryDetails">
             <summary>
               <div class="app-tile" style="cursor: pointer" id="tileDelivery" data-service="delivery">
-                <strong>توصيل</strong>
-                <span>طلبات من نقطة إلى أخرى عبر المندوب</span>
+                <strong>افتح نموذج التوصيل</strong>
+                <span>احسب المسافة وأنشئ الطلب من الخريطة</span>
               </div>
             </summary>
             <div class="delivery-panel">
@@ -369,18 +566,6 @@
               </div>
             </div>
           </details>
-          <div class="app-tile" style="cursor: pointer" id="tileRestaurants" data-service="restaurants">
-            <strong>مطاعم</strong>
-            <span>طلبات طعام مع ربط تلقائي بتوصيل</span>
-          </div>
-          <div class="app-tile" style="cursor: pointer" id="tileMarket" data-service="market">
-            <strong>متجر</strong>
-            <span>تسوق وتوصيل (قريباً على نفس المسار)</span>
-          </div>
-          <div class="app-tile" style="cursor: pointer" id="tileServices" data-service="services">
-            <strong>خدمات</strong>
-            <span>خدمات إضافية عبر نفس نظام الطلبات</span>
-          </div>
         </div>
         <div class="btn-row" style="margin-top: 20px">
           <a class="btn btn-primary" href="/order" style="flex: 1; text-align: center; max-width: 100%">اطلب الآن</a>
@@ -403,25 +588,6 @@
         });
       }
 
-      var STATUS_AR = {
-        draft: "مسودة",
-        new: "جديد",
-        pending: "في الانتظار",
-        accepted: "تم الاستلام",
-        picked: "تم الاستلام من المتجر",
-        delivering: "جاري التوصيل",
-        delivered: "تم التسليم",
-        cancelled_by_customer: "أُلغي من زائر المنصة",
-      };
-
-      function getReadableOrderNumber(order) {
-        if (!order || typeof order !== "object") return "—";
-        var no =
-          (order.order_number && String(order.order_number).trim()) ||
-          (order.service_order_number && String(order.service_order_number).trim()) ||
-          "";
-        return no || String(order.id || "").slice(0, 8) + "…";
-      }
       var km = 0;
       var fromLL = null;
       var toLL = null;
@@ -829,6 +995,7 @@
       }
 
       async function run() {
+        var dash = document.getElementById("dashStatus");
         try {
           var me = await window.PlatformAPI.api("/api/core/me");
           var role = (me.profile && me.profile.role) || "customer";
@@ -836,79 +1003,28 @@
             location.href = "/driver";
             return;
           }
-          if (role === "admin") {
-            document.getElementById("welcome").textContent =
-              "مرحباً — يمكنك تصفّح المنصة وإنشاء الطلبات كما يراها زائر المنصة، ثم العودة إلى لوحة الإدارة من الرئيسية.";
-          } else {
-            document.getElementById("welcome").textContent = "مرحباً بك في ERVENOW";
+          if (dash) {
+            dash.style.display = "none";
+            dash.textContent = "";
+          }
+          if (role === "admin" && dash) {
+            dash.style.display = "block";
+            dash.textContent =
+              "تنبيه للأدمن: يمكنك تصفّح المنصة كزائر ثم العودة للوحة الإدارة من الرئيسية.";
           }
           document.getElementById("profileCard").style.display = "block";
           document.getElementById("roleBadge").textContent = role;
           document.getElementById("phoneLine").textContent = me.user.phone || me.user.email || me.user.id;
-
-          var del = await window.PlatformAPI.api("/api/delivery/orders");
-          var box = document.getElementById("ordersList");
-          box.innerHTML = "";
-          var list = (del.orders || []).slice(0, 8);
-          if (!list.length) {
-            box.innerHTML = "<p class=\"sub\" style=\"margin:0\">لا توجد طلبات بعد. اضغط «اطلب الآن».</p>";
-            return;
-          }
-          list.forEach(function (o) {
-            var row = document.createElement("div");
-            row.className = "order-row";
-            var deliveryStatus = o.delivery_status || o.status;
-            var st = STATUS_AR[deliveryStatus] || deliveryStatus;
-            var no = getReadableOrderNumber(o);
-            var statusLine =
-              deliveryStatus === "delivered" ? "تم التسليم — طلب رقم " + no : st + " — طلب رقم " + no;
-            row.innerHTML =
-              "<strong>" +
-              statusLine +
-              "</strong>" +
-              "<br/><small>" +
-              (o.drop_address || "—") +
-              "</small><br/>";
-            var a = document.createElement("a");
-            a.className = "btn btn-ghost";
-            a.href = "/track?id=" + encodeURIComponent(o.id);
-            a.textContent = "تتبع";
-            row.appendChild(a);
-            if (["new", "pending", "accepted"].includes(String(deliveryStatus || "").toLowerCase())) {
-              var c = document.createElement("button");
-              c.type = "button";
-              c.className = "btn btn-ghost";
-              c.textContent = "إلغاء الطلب";
-              c.onclick = async function () {
-                if (!confirm("هل تريد إلغاء هذا الطلب؟")) return;
-                try {
-                  await window.PlatformAPI.api("/api/delivery/orders/" + encodeURIComponent(o.id) + "/cancel", {
-                    method: "POST",
-                  });
-                  run();
-                } catch (e) {
-                  document.getElementById("welcome").textContent = e.message || "تعذر إلغاء الطلب";
-                }
-              };
-              row.appendChild(c);
-            }
-            box.appendChild(row);
-          });
         } catch (e) {
-          document.getElementById("welcome").textContent = e.message;
+          if (dash) {
+            dash.style.display = "block";
+            dash.textContent = e.message || "تعذر تحميل الحساب";
+          }
         }
       }
 
       (function initServiceCardsUi() {
         var deliveryDetails = document.getElementById("deliveryDetails");
-        var ordersDropdown = document.getElementById("ordersDropdown");
-        if (ordersDropdown) {
-          ordersDropdown.addEventListener("toggle", function () {
-            if (ordersDropdown.open && deliveryDetails && deliveryDetails.open) {
-              deliveryDetails.open = false;
-            }
-          });
-        }
         var switchAccount = document.getElementById("switchAccount");
         if (switchAccount) {
           switchAccount.addEventListener("click", function () {
@@ -924,27 +1040,12 @@
               setActiveServiceCard("delivery");
               initMap();
               refreshMapSize();
-              if (ordersDropdown && ordersDropdown.open) ordersDropdown.open = false;
             } else {
               setActiveServiceCard("");
             }
           });
           setActiveServiceCard("");
         }
-
-        document.addEventListener("click", function (e) {
-          if (!ordersDropdown || !ordersDropdown.open) return;
-          if (e.target.closest("#ordersDropdown")) return;
-          ordersDropdown.open = false;
-        });
-
-        ["tileRestaurants", "tileMarket", "tileServices"].forEach(function (id) {
-          var el = document.getElementById(id);
-          if (!el) return;
-          el.addEventListener("click", function () {
-            setActiveServiceCard(el.getAttribute("data-service"));
-          });
-        });
       })();
 
       run();

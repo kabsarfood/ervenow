@@ -171,6 +171,67 @@
         box-shadow: 0 10px 28px rgba(61, 34, 19, 0.28);
       }
 
+      .stores-cuisine-wrap {
+        margin-top: 4px;
+      }
+      .stores-cuisine-wrap[hidden] {
+        display: none !important;
+      }
+      .stores-cuisine-title {
+        margin: 0 0 10px;
+        font-size: 0.82rem;
+        font-weight: 800;
+        color: #5c4638;
+      }
+      .stores-cuisine-scroll {
+        display: flex;
+        gap: 10px;
+        overflow-x: auto;
+        padding: 4px 2px 12px;
+        margin: 0 -4px;
+        -webkit-overflow-scrolling: touch;
+        scroll-snap-type: x proximity;
+        scrollbar-width: thin;
+      }
+      .stores-cuisine-chip {
+        flex: 0 0 auto;
+        scroll-snap-align: start;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 6px;
+        min-width: 88px;
+        max-width: 104px;
+        min-height: 88px;
+        padding: 10px 8px 12px;
+        border-radius: 16px;
+        border: 1px solid rgba(61, 34, 19, 0.1);
+        background: rgba(255, 255, 255, 0.92);
+        font-family: inherit;
+        cursor: pointer;
+        font-weight: 800;
+        font-size: 0.72rem;
+        color: #4a382e;
+        line-height: 1.3;
+        text-align: center;
+        transition: transform 0.15s ease, box-shadow 0.2s ease, border-color 0.2s ease, background 0.2s ease, color 0.2s ease;
+      }
+      .stores-cuisine-chip:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 22px rgba(42, 24, 16, 0.1);
+      }
+      .stores-cuisine-chip__icon {
+        font-size: 1.4rem;
+        line-height: 1;
+      }
+      .stores-cuisine-chip.is-active {
+        background: linear-gradient(135deg, #3d2213, #5c3220);
+        color: #fff8ee;
+        border-color: transparent;
+        box-shadow: 0 12px 28px rgba(61, 34, 19, 0.28);
+      }
+
       .stores-main {
         max-width: 1100px;
         margin: 0 auto;
@@ -469,6 +530,11 @@
         <button type="button" class="stores-filter" data-filter="market" role="tab" aria-selected="false">أسواق</button>
         <button type="button" class="stores-filter" data-filter="service" role="tab" aria-selected="false">خدمات</button>
       </div>
+
+      <div class="stores-cuisine-wrap" id="storesCuisineWrap" hidden>
+        <p class="stores-cuisine-title">مطابخ المطاعم</p>
+        <div class="stores-cuisine-scroll" id="storesCuisineBar" role="tablist" aria-label="تصنيف المطعم"></div>
+      </div>
     </div>
 
     <main class="stores-main">
@@ -500,6 +566,31 @@
         var n = Number(km);
         if (!Number.isFinite(n) || n < 0) return null;
         return Math.max(10, Math.round(n * 4));
+      }
+
+      var RESTAURANT_CUISINES = [];
+
+      function loadRestaurantCuisinesFromApi() {
+        if (!window.PlatformAPI || !PlatformAPI.apiUrl) return Promise.resolve();
+        return fetch(PlatformAPI.apiUrl("/api/categories?type=restaurant"))
+          .then(function (r) {
+            return r.json();
+          })
+          .then(function (data) {
+            var list = (data && data.categories) || [];
+            RESTAURANT_CUISINES = list.map(function (c) {
+              return { slug: c.slug, icon: c.icon || "▫", label: c.label_ar || c.slug };
+            });
+          })
+          .catch(function () {
+            RESTAURANT_CUISINES = [];
+          });
+      }
+
+      function storeMatchesCuisineChip(store, slug) {
+        if (!slug) return true;
+        if (String(store.type || "").toLowerCase() !== "restaurant") return false;
+        return String(store.category || "").trim().toLowerCase() === String(slug).trim().toLowerCase();
       }
 
       var TYPE_AR = {
@@ -591,7 +682,69 @@
 
         var allStores = [];
         var activeFilter = "all";
+        var activeCuisine = null;
         var SKELETON_COUNT = 8;
+        var cuisineWrap = document.getElementById("storesCuisineWrap");
+        var cuisineBar = document.getElementById("storesCuisineBar");
+
+        function syncCuisineStripVisibility() {
+          if (!cuisineWrap) return;
+          var show = activeFilter === "all" || activeFilter === "restaurant";
+          cuisineWrap.hidden = !show;
+        }
+
+        function renderCuisineBarActive() {
+          if (!cuisineBar) return;
+          var chips = cuisineBar.querySelectorAll(".stores-cuisine-chip");
+          for (var i = 0; i < chips.length; i++) {
+            var c = chips[i];
+            var slug = c.getAttribute("data-cuisine") || "";
+            var on = (!activeCuisine && !slug) || (activeCuisine && slug === activeCuisine);
+            c.classList.toggle("is-active", on);
+            c.setAttribute("aria-selected", on ? "true" : "false");
+          }
+        }
+
+        function buildCuisineBar() {
+          if (!cuisineBar) return;
+          var html =
+            '<button type="button" class="stores-cuisine-chip is-active" data-cuisine="" role="tab" aria-selected="true">' +
+            '<span class="stores-cuisine-chip__icon" aria-hidden="true">▦</span><span>الكل</span></button>';
+          for (var i = 0; i < RESTAURANT_CUISINES.length; i++) {
+            var it = RESTAURANT_CUISINES[i];
+            html +=
+              '<button type="button" class="stores-cuisine-chip" data-cuisine="' +
+              esc(it.slug) +
+              '" role="tab" aria-selected="false">' +
+              '<span class="stores-cuisine-chip__icon" aria-hidden="true">' +
+              esc(it.icon) +
+              "</span><span>" +
+              esc(it.label) +
+              "</span></button>";
+          }
+          cuisineBar.innerHTML = html;
+        }
+
+        function setCuisineFromChip(btn) {
+          var slug = btn.getAttribute("data-cuisine");
+          activeCuisine = slug ? String(slug) : null;
+          if (activeCuisine) {
+            activeFilter = "restaurant";
+            var rb = filterWrap.querySelector('[data-filter="restaurant"]');
+            if (rb) {
+              var buttons = filterWrap.querySelectorAll(".stores-filter");
+              for (var i = 0; i < buttons.length; i++) {
+                var b = buttons[i];
+                var on = b === rb;
+                b.classList.toggle("is-active", on);
+                b.setAttribute("aria-selected", on ? "true" : "false");
+              }
+            }
+          }
+          renderCuisineBarActive();
+          syncCuisineStripVisibility();
+          load();
+        }
 
         function renderSkeleton() {
           container.className = "stores-grid stores-grid--skeleton";
@@ -695,7 +848,7 @@
 
           list.forEach(function (store) {
             var name = displayName(store) || "متجر";
-            var act = typeLabelAr(store.type || store.category);
+            var act = store.category_label_ar || typeLabelAr(store.type || store.category);
             var km = store.distance_km != null && Number.isFinite(Number(store.distance_km)) ? Number(store.distance_km) : null;
             var metaHtml = "";
             if (km != null) {
@@ -757,6 +910,7 @@
         }
 
         function setFilter(btn) {
+          activeCuisine = null;
           activeFilter = btn.getAttribute("data-filter") || "all";
           var buttons = filterWrap.querySelectorAll(".stores-filter");
           for (var i = 0; i < buttons.length; i++) {
@@ -765,7 +919,9 @@
             b.classList.toggle("is-active", on);
             b.setAttribute("aria-selected", on ? "true" : "false");
           }
-          renderList();
+          renderCuisineBarActive();
+          syncCuisineStripVisibility();
+          load();
         }
 
         filterWrap.addEventListener("click", function (e) {
@@ -784,14 +940,20 @@
           if (searchEl) searchEl.disabled = true;
           try {
             var geo = await getUserGeo();
-            var qs = "";
+            var parts = [];
             if (geo) {
-              qs =
-                "?user_lat=" +
-                encodeURIComponent(geo.lat) +
-                "&user_lng=" +
-                encodeURIComponent(geo.lng);
+              parts.push("user_lat=" + encodeURIComponent(geo.lat));
+              parts.push("user_lng=" + encodeURIComponent(geo.lng));
             }
+            if (activeCuisine) {
+              parts.push("category=" + encodeURIComponent(activeCuisine));
+            } else {
+              if (activeFilter === "restaurant") parts.push("type=restaurant");
+              else if (activeFilter === "pharmacy") parts.push("type=pharmacy");
+              else if (activeFilter === "market") parts.push("type=market");
+              else if (activeFilter === "service") parts.push("type=service");
+            }
+            var qs = parts.length ? "?" + parts.join("&") : "";
             var headers = {};
             var tok = window.PlatformAPI && PlatformAPI.getToken && PlatformAPI.getToken();
             if (tok) headers.Authorization = "Bearer " + tok;
@@ -809,6 +971,11 @@
 
             if (data.browse_masked) guestNote.style.display = "block";
             allStores = Array.isArray(data.stores) ? data.stores : [];
+            if (activeCuisine) {
+              allStores = allStores.filter(function (s) {
+                return storeMatchesCuisineChip(s, activeCuisine);
+              });
+            }
 
             if (searchEl) searchEl.disabled = false;
 
@@ -824,7 +991,18 @@
           }
         }
 
-        load();
+        loadRestaurantCuisinesFromApi().then(function () {
+          buildCuisineBar();
+          syncCuisineStripVisibility();
+          if (cuisineBar) {
+            cuisineBar.addEventListener("click", function (e) {
+              var t = e.target.closest(".stores-cuisine-chip");
+              if (!t) return;
+              setCuisineFromChip(t);
+            });
+          }
+          load();
+        });
       })();
     </script>
   </body>

@@ -9,6 +9,7 @@ const { getRiyadhDate } = require("../delivery/service");
 const { readState, writeState } = require("../../shared/utils/siteMaintenanceStore");
 const { createServiceClient } = require("../../shared/config/supabase");
 const platformBranding = require("../../shared/utils/platformBrandingStore");
+const { normalizeScopeType, normalizeSlugInput, isCategoriesTableMissing } = require("../../shared/categoriesDb");
 
 const ADMIN_PUBLIC_ROOT = path.join(__dirname, "../../public");
 
@@ -1282,6 +1283,161 @@ router.get("/job-applications", requireAuth, requireRole("admin"), requireAdminP
     return fail(res, e.message || String(e), 500);
   }
 });
+
+router.get(
+  "/categories",
+  requireAuth,
+  requireRole("admin"),
+  requireAdminPermission("stores"),
+  async (req, res) => {
+    try {
+      const scope = normalizeScopeType(req.query.type);
+      if (!scope) return fail(res, "أرسل type=restaurant أو type=market", 400);
+      const sb = createServiceClient();
+      if (!sb) return fail(res, "الخادم غير مهيأ لقاعدة البيانات", 503);
+      const { data, error } = await sb
+        .from("categories")
+        .select("id,type,slug,label_ar,icon,sort_order,is_active,created_at,updated_at")
+        .eq("type", scope)
+        .order("sort_order", { ascending: true })
+        .order("label_ar", { ascending: true });
+      if (error) {
+        if (isCategoriesTableMissing(error)) {
+          return ok(res, { ok: true, categories: [], note: "نفّذ shared/migration_categories.sql في Supabase" });
+        }
+        return fail(res, error.message, 400);
+      }
+      return ok(res, { ok: true, categories: data || [] });
+    } catch (e) {
+      console.error("[admin/categories/list]", e);
+      return fail(res, e.message || "خطأ في الخادم", 500);
+    }
+  }
+);
+
+router.post(
+  "/categories",
+  requireAuth,
+  requireRole("admin"),
+  requireAdminPermission("stores"),
+  async (req, res) => {
+    try {
+      const body = req.body || {};
+      const type = normalizeScopeType(body.type);
+      const slug = normalizeSlugInput(body.slug);
+      const label_ar = String(body.label_ar || "").trim();
+      if (!type || !slug || !label_ar) return fail(res, "type و slug و label_ar مطلوبة", 400);
+      const icon =
+        body.icon != null && String(body.icon).trim() !== "" ? String(body.icon).trim().slice(0, 16) : null;
+      let sort_order = Number(body.sort_order);
+      if (!Number.isFinite(sort_order)) sort_order = 0;
+      const is_active = body.is_active !== false;
+      const sb = createServiceClient();
+      if (!sb) return fail(res, "الخادم غير مهيأ لقاعدة البيانات", 503);
+      const now = new Date().toISOString();
+      const { data, error } = await sb
+        .from("categories")
+        .insert({ type, slug, label_ar, icon, sort_order, is_active, updated_at: now })
+        .select("*")
+        .single();
+      if (error) {
+        if (isCategoriesTableMissing(error)) {
+          return fail(res, "جدول categories غير موجود — نفّذ shared/migration_categories.sql", 400);
+        }
+        if (String(error.code) === "23505") return fail(res, "slug موجود مسبقاً لهذا النوع", 409);
+        return fail(res, error.message, 400);
+      }
+      return ok(res, { ok: true, category: data });
+    } catch (e) {
+      console.error("[admin/categories/create]", e);
+      return fail(res, e.message || "خطأ في الخادم", 500);
+    }
+  }
+);
+
+router.put(
+  "/categories/:id",
+  requireAuth,
+  requireRole("admin"),
+  requireAdminPermission("stores"),
+  async (req, res) => {
+    try {
+      const id = String(req.params.id || "").trim();
+      if (!id) return fail(res, "id مطلوب", 400);
+      const body = req.body || {};
+      const patch = { updated_at: new Date().toISOString() };
+      if (body.label_ar !== undefined) {
+        const la = String(body.label_ar || "").trim();
+        if (!la) return fail(res, "label_ar لا يمكن أن يكون فارغاً", 400);
+        patch.label_ar = la;
+      }
+      if (body.icon !== undefined) {
+        patch.icon = body.icon === null || body.icon === "" ? null : String(body.icon).trim().slice(0, 16);
+      }
+      if (body.sort_order != null) {
+        const n = Number(body.sort_order);
+        if (Number.isFinite(n)) patch.sort_order = n;
+      }
+      if (body.is_active !== undefined) patch.is_active = !!body.is_active;
+      if (body.slug != null) {
+        const s = normalizeSlugInput(body.slug);
+        if (!s) return fail(res, "slug غير صالح (أحرف صغيرة وأرقام و _ و -)", 400);
+        patch.slug = s;
+      }
+      if (body.type != null) {
+        const t = normalizeScopeType(body.type);
+        if (!t) return fail(res, "type غير صالح", 400);
+        patch.type = t;
+      }
+      const meaningfulKeys = Object.keys(patch).filter((k) => k !== "updated_at");
+      if (!meaningfulKeys.length) return fail(res, "لا يوجد حقول للتحديث", 400);
+      const sb = createServiceClient();
+      if (!sb) return fail(res, "الخادم غير مهيأ لقاعدة البيانات", 503);
+      const { data, error } = await sb.from("categories").update(patch).eq("id", id).select("*").maybeSingle();
+      if (error) {
+        if (isCategoriesTableMissing(error)) return fail(res, "جدول categories غير موجود", 400);
+        if (String(error.code) === "23505") return fail(res, "slug موجود مسبقاً لهذا النوع", 409);
+        return fail(res, error.message, 400);
+      }
+      if (!data) return fail(res, "القسم غير موجود", 404);
+      return ok(res, { ok: true, category: data });
+    } catch (e) {
+      console.error("[admin/categories/update]", e);
+      return fail(res, e.message || "خطأ في الخادم", 500);
+    }
+  }
+);
+
+router.delete(
+  "/categories/:id",
+  requireAuth,
+  requireRole("admin"),
+  requireAdminPermission("stores"),
+  async (req, res) => {
+    try {
+      const id = String(req.params.id || "").trim();
+      if (!id) return fail(res, "id مطلوب", 400);
+      const sb = createServiceClient();
+      if (!sb) return fail(res, "الخادم غير مهيأ لقاعدة البيانات", 503);
+      const now = new Date().toISOString();
+      const { data, error } = await sb
+        .from("categories")
+        .update({ is_active: false, updated_at: now })
+        .eq("id", id)
+        .select("id,is_active")
+        .maybeSingle();
+      if (error) {
+        if (isCategoriesTableMissing(error)) return fail(res, "جدول categories غير موجود", 400);
+        return fail(res, error.message, 400);
+      }
+      if (!data) return fail(res, "القسم غير موجود", 404);
+      return ok(res, { ok: true, id: data.id, is_active: data.is_active, note: "تم التعطيل (حذف ناعم)" });
+    } catch (e) {
+      console.error("[admin/categories/delete]", e);
+      return fail(res, e.message || "خطأ في الخادم", 500);
+    }
+  }
+);
 
 router.post(
   "/job-applications/:id/decision",

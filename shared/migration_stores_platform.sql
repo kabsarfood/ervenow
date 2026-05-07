@@ -22,5 +22,5 @@ SET is_active = true
 WHERE lower(trim(status)) = 'approved';
 
 COMMENT ON COLUMN public.stores.is_active IS 'يظهر المتجر في قوائم المنصة عند الموافقة وtrue';
-COMMENT ON COLUMN public.stores.category IS 'فئة العرض — تطابق type عادةً';
+COMMENT ON COLUMN public.stores.category IS 'للمطاعم: slug التصنيف (shawarma_grill، kabsa، …)؛ لغير المطاعم غالباً يساوي type';
 COMMENT ON COLUMN public.stores.commercial_registration IS 'السجل التجاري (نسخة معرضة؛ قد يطابق commercial_register)';

@@ -55,7 +55,8 @@
           <li>افتح <strong>Supabase</strong> → مشروعك → <strong>SQL Editor</strong>.</li>
           <li>نفّذ بالترتيب: <code>shared/migration_stores.sql</code> ثم <code>shared/migration_store_marketplace.sql</code> و
             <code>shared/migration_store_location_delivery.sql</code> ثم <code>shared/migration_stores_platform.sql</code> ثم عند الحاجة
-            <code>shared/migration_stores_email.sql</code> (عمود البريد + تقليل أخطاء schema cache).</li>
+            <code>shared/migration_stores_email.sql</code> (عمود البريد + تقليل أخطاء schema cache) ثم
+            <code>shared/migration_categories.sql</code> لأقسام المطاعم والبقالة الديناميكية.</li>
           <li>بعد أي <code>ALTER TABLE</code>: من Supabase → <strong>Settings → API</strong> استخدم <strong>Reload schema</strong> إن وُجد، ثم أعد تحميل الصفحة.</li>
         </ol>
       </details>
@@ -73,6 +74,20 @@
             <option value="supermarket">سوبرماركت</option>
             <option value="other">غيره</option>
           </select>
+
+          <div id="restaurantCategoryWrap" style="display: none; margin-top: 12px">
+            <label for="restaurant_category">نوع المطعم</label>
+            <select id="restaurant_category">
+              <option value="">— اختر التصنيف —</option>
+          </select>
+          </div>
+
+          <div id="marketCategoryWrap" style="display: none; margin-top: 12px">
+            <label for="store_category">قسم البقالة الرئيسي</label>
+            <select id="store_category">
+              <option value="">— اختر التصنيف —</option>
+            </select>
+          </div>
 
           <label for="phone" style="margin-top: 12px">رقم الجوال</label>
           <input id="phone" type="tel" inputmode="tel" placeholder="05xxxxxxxx" maxlength="10" />
@@ -238,6 +253,64 @@
       document.getElementById("phone").addEventListener("input", normalizePhoneInput);
       document.getElementById("phone").addEventListener("blur", normalizePhoneInput);
 
+      function syncRestaurantCategoryField() {
+        var wrapR = document.getElementById("restaurantCategoryWrap");
+        var wrapM = document.getElementById("marketCategoryWrap");
+        var selR = document.getElementById("restaurant_category");
+        var selM = document.getElementById("store_category");
+        var type = document.getElementById("type").value;
+        if (wrapR && selR) {
+          wrapR.style.display = type === "restaurant" ? "block" : "none";
+          if (type !== "restaurant") selR.selectedIndex = 0;
+        }
+        if (wrapM && selM) {
+          wrapM.style.display = type === "supermarket" ? "block" : "none";
+          if (type !== "supermarket") selM.selectedIndex = 0;
+        }
+      }
+      async function fillCategorySelects() {
+        try {
+          var base =
+            window.PlatformAPI && PlatformAPI.apiUrl
+              ? function (p) {
+                  return PlatformAPI.apiUrl(p);
+                }
+              : function (p) {
+                  return p;
+                };
+          var r1 = await fetch(base("/api/categories?type=restaurant"));
+          var j1 = await r1.json();
+          var selR = document.getElementById("restaurant_category");
+          if (selR && j1.categories) {
+            selR.innerHTML = '<option value="">— اختر التصنيف —</option>';
+            j1.categories.forEach(function (c) {
+              var o = document.createElement("option");
+              o.value = c.slug;
+              o.textContent = (c.icon ? c.icon + " " : "") + (c.label_ar || c.slug);
+              selR.appendChild(o);
+            });
+          }
+          var r2 = await fetch(base("/api/categories?type=market"));
+          var j2 = await r2.json();
+          var selM = document.getElementById("store_category");
+          if (selM && j2.categories) {
+            selM.innerHTML = '<option value="">— اختر التصنيف —</option>';
+            j2.categories.forEach(function (c) {
+              var o = document.createElement("option");
+              o.value = c.slug;
+              o.textContent = (c.icon ? c.icon + " " : "") + (c.label_ar || c.slug);
+              selM.appendChild(o);
+            });
+          }
+        } catch (e) {
+          console.warn("[register-store] categories", e);
+        }
+      }
+
+      document.getElementById("type").addEventListener("change", syncRestaurantCategoryField);
+      syncRestaurantCategoryField();
+      fillCategorySelects();
+
       document.getElementById("storePayoutStc").addEventListener("input", function () {
         var el = document.getElementById("storePayoutStc");
         var d = String(el.value || "").replace(/\D/g, "");
@@ -305,6 +378,9 @@
           var name = document.getElementById("name").value.trim();
           var phone = document.getElementById("phone").value.trim();
           var type = document.getElementById("type").value;
+          var restaurant_category = document.getElementById("restaurant_category")
+            ? document.getElementById("restaurant_category").value
+            : "";
           var address = document.getElementById("address").value.trim();
           var lat = latEl.value.trim();
           var lng = lngEl.value.trim();
@@ -331,6 +407,19 @@
           if (!address || address.length < 4) {
             show("أدخل عنواناً واضحاً للمتجر (أو انتظر اقتراح الخريطة).", false);
             return;
+          }
+          if (type === "restaurant") {
+            if (!restaurant_category) {
+              show("اختر نوع المطعم من القائمة (شاورما، كبسة، …).", false);
+              return;
+            }
+          }
+          if (type === "supermarket") {
+            var sc = document.getElementById("store_category") ? document.getElementById("store_category").value : "";
+            if (!sc) {
+              show("اختر قسم البقالة من القائمة.", false);
+              return;
+            }
           }
 
           var logoInput = document.getElementById("logo_file");
@@ -364,6 +453,13 @@
             logoFileBase64: logoDataUrl || undefined,
             logoFileName: logoFile ? logoFile.name : undefined,
           };
+          if (type === "restaurant" && restaurant_category) {
+            body.restaurant_category = restaurant_category;
+          }
+          if (type === "supermarket") {
+            var scVal = document.getElementById("store_category") ? document.getElementById("store_category").value : "";
+            if (scVal) body.category = scVal;
+          }
           if (crDataUrl) {
             body.commercialRegistrationFileBase64 = crDataUrl;
             body.commercialRegistrationFileName = crFileName;

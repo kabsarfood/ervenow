@@ -49,6 +49,7 @@ const vercelJson = {
   routes: [
     { handle: "filesystem" },
     { src: "/admin/branding", dest: "/admin-branding.html" },
+    { src: "/admin/categories", dest: "/admin-categories.html" },
     { src: "/(.*)", dest: "/index.html" },
   ],
 };

@@ -148,7 +148,7 @@
 
         if (!cart.length) {
           el.innerHTML = "<p>السلة فارغة حالياً</p>";
-          if (countEl) countEl.innerText = "عدد العناصر: 0";
+          if (countEl) countEl.innerText = "عدد القطع: 0";
           if (totalEl) totalEl.innerText = "الإجمالي: 0.00 ريال";
           refreshGuestCartBanner();
           refreshStoreDeliveryCard();
@@ -158,7 +158,10 @@
         const total = cart.reduce(function (sum, item) {
           return sum + (Number(item.price) || 0);
         }, 0);
-        if (countEl) countEl.innerText = "عدد العناصر: " + cart.length;
+        const totalQty = cart.reduce(function (sum, item) {
+          return sum + (Number(item.data && item.data.qty) || 1);
+        }, 0);
+        if (countEl) countEl.innerText = "عدد القطع: " + totalQty;
         if (totalEl) totalEl.innerText = "الإجمالي: " + total.toFixed(2) + " ريال";
 
         el.innerHTML = cart
@@ -185,9 +188,13 @@
               "<div>الكمية: " +
               (data.qty || 1) +
               "</div>" +
-              "<div>السعر: " +
-              (Number(item.price) || 0) +
-              " ريال</div>" +
+              "<div>السعر الإجمالي: " +
+              (Number(item.price) || 0).toFixed(2) +
+              " ريال" +
+              (data.unit_price != null && Number.isFinite(Number(data.unit_price))
+                ? " <span style=\"opacity:0.85\">(وحدة " + Number(data.unit_price).toFixed(2) + ")</span>"
+                : "") +
+              "</div>" +
               "</div>" +
               "<div class='btn-row' style='margin-top:8px'>" +
               "<button class='btn btn-ghost' type='button' onclick='removeItem(\"" +

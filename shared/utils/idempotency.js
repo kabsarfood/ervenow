@@ -10,6 +10,14 @@ function isOrdersIdempotencyColumnMissingError(err) {
   return /idempotency_key/i.test(msg) && /does not exist|undefined_column|42703|schema cache/i.test(msg);
 }
 
+/** أعمدة متجر على orders غير موجودة في قاعدة قديمة */
+function isOrdersStoreColumnMissingError(err) {
+  const msg = String((err && (err.message || err.details)) || err || "");
+  const code = err && err.code != null ? String(err.code) : "";
+  if (code === "42703" && /store_/i.test(msg)) return true;
+  return /store_id|store_name|store_address/i.test(msg) && /does not exist|undefined_column|42703|schema cache/i.test(msg);
+}
+
 /**
  * Reads Idempotency-Key header (case-insensitive via Express).
  * @returns {string|null}
@@ -22,4 +30,9 @@ function normalizeIdempotencyKey(req) {
   return s.slice(0, MAX_LEN);
 }
 
-module.exports = { normalizeIdempotencyKey, MAX_LEN, isOrdersIdempotencyColumnMissingError };
+module.exports = {
+  normalizeIdempotencyKey,
+  MAX_LEN,
+  isOrdersIdempotencyColumnMissingError,
+  isOrdersStoreColumnMissingError,
+};

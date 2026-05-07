@@ -38,6 +38,22 @@
         <input id="pOffer" type="number" min="0" step="0.01" placeholder="مثال: 9.99" />
         <label for="pSort" style="margin-top: 10px">ترتيب العرض</label>
         <input id="pSort" type="number" step="1" value="0" />
+        <label for="pCategory" style="margin-top: 10px">قسم المنتج (سوبرماركت / بقالة)</label>
+        <select id="pCategory">
+          <option value="">— بدون قسم —</option>
+          <option value="vegetables">خضار وفواكه</option>
+          <option value="meat">لحوم</option>
+          <option value="dairy">ألبان</option>
+          <option value="bakery">مخبوزات</option>
+          <option value="drinks">مشروبات</option>
+          <option value="snacks">سناكات</option>
+          <option value="frozen">مجمدات</option>
+          <option value="cleaning">منظفات</option>
+        </select>
+        <label for="pStock" style="margin-top: 10px">المخزون (فراغ = بدون حد صريح)</label>
+        <input id="pStock" type="number" min="0" step="1" placeholder="مثال: 20" />
+        <label for="pRating" style="margin-top: 10px">تقييم عرض المنتج 0–5 (اختياري)</label>
+        <input id="pRating" type="number" min="0" max="5" step="0.1" placeholder="مثال: 4.5" />
         <label for="pImg" style="margin-top: 10px">صورة (اختياري — يُضغط تلقائياً)</label>
         <input id="pImg" type="file" accept="image/*" />
         <div class="row" style="margin-top: 12px; gap: 8px; flex-wrap: wrap">
@@ -139,6 +155,8 @@
               (p.offer_price != null && Number(p.offer_price) > 0 && Number(p.offer_price) < Number(p.price)
                 ? " · عرض: " + Number(p.offer_price).toFixed(2)
                 : "") +
+              (p.category ? " · قسم: " + esc(p.category) : "") +
+              (p.stock != null && p.stock !== "" ? " · مخزون: " + esc(String(p.stock)) : "") +
               "</div></div>" +
               '<div class="row" style="gap:6px">' +
               '<button type="button" class="btn btn-ghost btn-edit" data-id="' +
@@ -167,6 +185,11 @@
             document.getElementById("pOffer").value =
               op != null && op !== "" && Number(op) > 0 ? op : "";
             document.getElementById("pSort").value = p.sort_order != null ? p.sort_order : 0;
+            document.getElementById("pCategory").value = p.category ? String(p.category) : "";
+            document.getElementById("pStock").value =
+              p.stock != null && p.stock !== "" && Number.isFinite(Number(p.stock)) ? String(p.stock) : "";
+            document.getElementById("pRating").value =
+              p.rating != null && p.rating !== "" && Number.isFinite(Number(p.rating)) ? String(p.rating) : "";
             document.getElementById("pImg").value = "";
             window.scrollTo({ top: document.getElementById("formCard").offsetTop - 20, behavior: "smooth" });
           };
@@ -193,6 +216,9 @@
         document.getElementById("pPrice").value = "";
         document.getElementById("pOffer").value = "";
         document.getElementById("pSort").value = "0";
+        document.getElementById("pCategory").value = "";
+        document.getElementById("pStock").value = "";
+        document.getElementById("pRating").value = "";
         document.getElementById("pImg").value = "";
       };
 
@@ -210,6 +236,21 @@
           price: price,
           sort_order: Number(document.getElementById("pSort").value) || 0,
         };
+        var catSel = document.getElementById("pCategory").value.trim();
+        if (editId) {
+          body.category = catSel || null;
+        } else if (catSel) {
+          body.category = catSel;
+        }
+        var stRaw = document.getElementById("pStock").value.trim();
+        if (stRaw !== "") {
+          body.stock = Math.floor(Number(stRaw));
+        } else if (editId) {
+          body.stock = null;
+        }
+        var rtRaw = document.getElementById("pRating").value.trim();
+        if (rtRaw !== "") body.rating = Number(rtRaw);
+        else if (editId) body.rating = null;
         var offerRaw = document.getElementById("pOffer").value.trim();
         if (offerRaw !== "") {
           var op = Number(offerRaw);

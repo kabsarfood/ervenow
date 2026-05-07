@@ -35,6 +35,6 @@ CREATE INDEX IF NOT EXISTS idx_store_products_store ON public.store_products (st
 
 CREATE INDEX IF NOT EXISTS idx_store_products_active ON public.store_products (store_id, active);
 
-COMMENT ON TABLE public.store_products IS 'منتجات المتاجر المعتمدة — لوحة التاجر';
+COMMENT ON TABLE public.store_products IS 'منتجات المتاجر المعتمدة — لوحة التاجر. أعمدة السوبرماركت: migration_store_products_market.sql';
 
 NOTIFY pgrst, 'reload schema';

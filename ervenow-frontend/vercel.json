@@ -11,6 +11,10 @@
       "dest": "/admin-branding.html"
     },
     {
+      "src": "/admin/categories",
+      "dest": "/admin-categories.html"
+    },
+    {
       "src": "/(.*)",
       "dest": "/index.html"
     }

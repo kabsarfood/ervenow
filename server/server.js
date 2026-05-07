@@ -22,6 +22,7 @@ const orderRoutes = require("../apps/order/routes");
 const driverRoutes = require("../apps/driver/routes");
 const walletRoutes = require("../apps/wallet/routes");
 const adminRoutes = require("../apps/admin/routes");
+const categoriesRoutes = require("../apps/categories/routes");
 const invoiceRoutes = require("../apps/invoice/routes");
 const whatsappRoutes = require("../apps/whatsapp/routes");
 const { createPublicSiteOtpGate, isPrivateOtpGate } = require("../shared/middleware/publicSiteOtpGate");
@@ -270,6 +271,7 @@ app.use("/api/checkout", checkoutRoutes);
 app.use("/api/order", orderRoutes);
 app.use("/api/store", storeRoutes);
 app.use("/api/stores", storeRoutes);
+app.use("/api/categories", categoriesRoutes);
 app.use("/api/driver", driverRoutes);
 app.use("/api/wallet", walletRoutes);
 app.use("/api/admin", adminRoutes);
@@ -300,6 +302,7 @@ app.get("/api/health", (_req, res) => {
       "/api/order",
       "/api/store",
       "/api/stores",
+      "/api/categories",
       "/api/invoice",
       "/api/whatsapp",
     ],
@@ -402,6 +405,10 @@ if (servePublicUi) {
 
   app.get("/admin/branding", (_req, res) => {
     res.sendFile(path.join(publicPath, "admin-branding.html"));
+  });
+
+  app.get("/admin/categories", (_req, res) => {
+    res.sendFile(path.join(publicPath, "admin-categories.html"));
   });
 
   app.get("/admin-dashboard", (_req, res) => {

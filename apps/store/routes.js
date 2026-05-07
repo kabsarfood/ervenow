@@ -7,6 +7,17 @@ const { roughDistanceKm } = require("../../shared/utils/geo");
 const { routeKmWithRoughFallback, deliveryEtaMinutesFromKm } = require("../../shared/utils/routeDistance");
 const { cacheGetJson, cacheSetJson } = require("../../shared/utils/redisCache");
 const { parseOptionalPayoutPayload, payoutRowForDriversOrStores } = require("../../shared/utils/payoutFields");
+const {
+  restaurantCategoryLabelAr,
+  restaurantCategoryDisplayAr,
+  restaurantRowMatchesCuisineFilter,
+} = require("../../shared/restaurantCategories");
+const { normalizeProductCategory, isMarketStoreType, productCategoryLabelAr } = require("../../shared/marketProductCategories");
+const {
+  resolvePublicCategorySlug,
+  fetchMergedRestaurantCategorySlugs,
+  fetchCategoryLabelMap,
+} = require("../../shared/categoriesDb");
 
 let twilioFactory = null;
 try {
@@ -104,7 +115,7 @@ async function uploadToStoreBucket(sb, storeId, subfolder, base64, originalName)
   return pub && pub.publicUrl ? pub.publicUrl : null;
 }
 
-async function notifyAdminWhatsApp({ name, phoneDisplay, typeLabel, mapsUrl, requestId, payoutSummary }) {
+async function notifyAdminWhatsApp({ name, phoneDisplay, typeLabel, mapsUrl, requestId, payoutSummary, cuisineLine }) {
   const client = getTwilioClient();
   const from = waFrom();
   const adminRaw = String(process.env.ERVENOW_ADMIN_WHATSAPP || process.env.ERWENOW_ADMIN_WHATSAPP || "").trim();
@@ -119,6 +130,7 @@ async function notifyAdminWhatsApp({ name, phoneDisplay, typeLabel, mapsUrl, req
     `الاسم: ${name}\n` +
     `الجوال: ${phoneDisplay}\n` +
     `النوع: ${typeLabel}\n` +
+    (cuisineLine ? `${cuisineLine}\n` : "") +
     `الموقع: ${mapsUrl}\n` +
     `رقم الطلب: ${requestId}`;
   if (payoutSummary) body += `\n\nبيانات دفع (ملخص):\n${payoutSummary}`;
@@ -238,25 +250,55 @@ function filterAndSortStoresByUser(rows, userLat, userLng) {
   return withDist;
 }
 
-function maskStoreRowForGuest(row, index) {
+function categoryLabelForStoreRow(row, labelOpts) {
+  const catRaw = row.category != null ? String(row.category).trim() : "";
+  const t = String(row.type || "")
+    .trim()
+    .toLowerCase();
+  const restMap = labelOpts && labelOpts.restaurantLabels;
+  const marketMap = labelOpts && labelOpts.marketLabels;
+  if (t === "restaurant") {
+    const k = catRaw.toLowerCase();
+    if (restMap && restMap.has(k)) return restMap.get(k);
+    return restaurantCategoryDisplayAr(catRaw, row.type);
+  }
+  if (isMarketStoreType(row.type)) {
+    const k = catRaw.toLowerCase();
+    if (marketMap && marketMap.has(k)) return marketMap.get(k);
+    const pc = normalizeProductCategory(catRaw);
+    if (pc) return productCategoryLabelAr(pc);
+    return TYPE_LABEL_AR[t] || null;
+  }
+  return restaurantCategoryDisplayAr(catRaw, row.type) || TYPE_LABEL_AR[t] || null;
+}
+
+function maskStoreRowForGuest(row, index, labelOpts) {
   const h = simpleHash(row.id || index);
   const num = 1000 + (h % 9000);
+  const catRaw = row.category != null ? String(row.category).trim() : "";
+  const cuisine = categoryLabelForStoreRow(row, labelOpts);
   return {
     masked: true,
     label: `محل مشارك — ${num}`,
     promo: GUEST_PROMOS[h % GUEST_PROMOS.length],
     type: row.type || null,
+    category: catRaw || row.type || null,
+    category_label_ar: cuisine || TYPE_LABEL_AR[row.type] || null,
+    ...(isMarketStoreType(row.type) ? { supports_product_categories: true } : {}),
   };
 }
 
-function publicStoreRow(row) {
+function publicStoreRow(row, labelOpts) {
+  const catRaw = row.category != null ? String(row.category).trim() : "";
+  const categoryDisplay = categoryLabelForStoreRow(row, labelOpts);
   const o = {
     masked: false,
     id: row.id,
     name: row.name,
     phone: row.phone,
     type: row.type,
-    category: row.category || row.type || null,
+    category: catRaw || row.type || null,
+    category_label_ar: categoryDisplay || TYPE_LABEL_AR[row.type] || null,
     lat: row.lat,
     lng: row.lng,
     address: row.address || row.location_text || null,
@@ -271,6 +313,7 @@ function publicStoreRow(row) {
   if (row.distance_km != null && Number.isFinite(Number(row.distance_km))) {
     o.distance_km = Number(row.distance_km);
   }
+  if (isMarketStoreType(row.type)) o.supports_product_categories = true;
   return o;
 }
 
@@ -341,7 +384,7 @@ router.get("/my-store", requireAuth, requireMerchantRole, async (req, res) => {
     if (!sb) return fail(res, "الخادم غير مهيأ لقاعدة البيانات", 503);
     const digits = normalizePhone(req.appUser.phone);
     const extendedSel =
-      "id,name,phone,type,status,is_active,logo_url,lat,lng,location_text,address,delivery_radius_km,average_rating,rating_count,total_orders";
+      "id,name,phone,type,category,status,is_active,logo_url,lat,lng,location_text,address,delivery_radius_km,average_rating,rating_count,total_orders";
     let row = null;
     let err = null;
     ({ data: row, error: err } = await sb.from("stores").select(extendedSel).eq("phone", digits).eq("status", "approved").maybeSingle());
@@ -379,7 +422,23 @@ router.get("/", optionalAuth, async (req, res) => {
     if (storesListRoot) {
       const mask = !req.appUser;
       const geoKey = userPos ? `${userPos.lat.toFixed(4)}:${userPos.lng.toFixed(4)}` : "nogeo";
-      const cacheKey = `storelist-all:${sortParam}|${mask ? "g" : "u"}|${geoKey}`;
+      const mergedRestaurant = await fetchMergedRestaurantCategorySlugs(sb);
+      const rawCatFilter = String(req.query.category || "")
+        .trim()
+        .toLowerCase();
+      const categoryFilter = rawCatFilter && mergedRestaurant.has(rawCatFilter) ? rawCatFilter : null;
+      const listTypeRaw = String(req.query.type || "").trim().toLowerCase();
+      const marketTypesList = [
+        "supermarket",
+        "minimarket",
+        "vegetables",
+        "butcher",
+        "fish",
+        "home_business",
+        "sweets",
+        "flowers_gifts",
+      ];
+      const cacheKey = `storelist-all:${sortParam}|${mask ? "g" : "u"}|${geoKey}|c:${categoryFilter || "none"}|t:${listTypeRaw || "all"}`;
       const redisListKey = `storelist:v1:${cacheKey}`;
       const redisHit = await cacheGetJson(redisListKey);
       if (redisHit && redisHit.stores) {
@@ -396,33 +455,67 @@ router.get("/", optionalAuth, async (req, res) => {
       const baseSelAll = "id,name,phone,type,lat,lng,status,created_at";
       let rowsAll = [];
       let errAll = null;
-      ({ data: rowsAll, error: errAll } = await sb
-        .from("stores")
-        .select(extendedSelAll)
-        .eq("status", "approved")
-        .order("created_at", { ascending: false })
-        .limit(200));
+      let qList = sb.from("stores").select(extendedSelAll).eq("status", "approved");
+      if (categoryFilter) {
+        qList = qList.eq("type", "restaurant").eq("category", categoryFilter);
+      } else if (listTypeRaw === "market") {
+        qList = qList.in("type", marketTypesList);
+      } else if (listTypeRaw === "service") {
+        qList = qList.in("type", ["services", "other"]);
+      } else if (listTypeRaw && STORE_TYPES.has(listTypeRaw)) {
+        qList = qList.eq("type", listTypeRaw);
+      }
+      ({ data: rowsAll, error: errAll } = await qList.order("created_at", { ascending: false }).limit(200));
       if (errAll && /column|does not exist|schema cache/i.test(String(errAll.message || ""))) {
-        ({ data: rowsAll, error: errAll } = await sb
-          .from("stores")
-          .select(baseSelAll)
-          .eq("status", "approved")
-          .order("created_at", { ascending: false })
-          .limit(200));
+        let qMin = sb.from("stores").select(baseSelAll).eq("status", "approved");
+        if (categoryFilter) {
+          qMin = qMin.eq("type", "restaurant").eq("category", categoryFilter);
+        } else if (listTypeRaw === "market") {
+          qMin = qMin.in("type", marketTypesList);
+        } else if (listTypeRaw === "service") {
+          qMin = qMin.in("type", ["services", "other"]);
+        } else if (listTypeRaw && STORE_TYPES.has(listTypeRaw)) {
+          qMin = qMin.eq("type", listTypeRaw);
+        }
+        ({ data: rowsAll, error: errAll } = await qMin.order("created_at", { ascending: false }).limit(200));
       }
       if (errAll) {
         if (isStoresTableMissing(errAll)) return ok(res, { ok: true, stores: [], browse_masked: mask });
         return fail(res, errAll.message, 400);
       }
       let rows = (rowsAll || []).filter((r) => storeRowIsListedActive(r));
+      if (categoryFilter) {
+        rows = rows.filter((r) => restaurantRowMatchesCuisineFilter(r, categoryFilter, mergedRestaurant));
+      }
       if (userPos) {
         rows = filterAndSortStoresByUser(rows, userPos.lat, userPos.lng);
       } else {
         rows = sortStoresForBrowse(rows, sortParam);
       }
+      const restSlugs = [
+        ...new Set(
+          rows
+            .filter((r) => String(r.type || "").trim().toLowerCase() === "restaurant")
+            .map((r) => String(r.category || "").trim().toLowerCase())
+            .filter(Boolean)
+        ),
+      ];
+      const marketSlugs = [
+        ...new Set(
+          rows
+            .filter((r) => isMarketStoreType(r.type))
+            .map((r) => String(r.category || "").trim().toLowerCase())
+            .filter(Boolean)
+        ),
+      ];
+      const [restaurantLabels, marketLabels] = await Promise.all([
+        fetchCategoryLabelMap(sb, "restaurant", restSlugs),
+        fetchCategoryLabelMap(sb, "market", marketSlugs),
+      ]);
+      const labelOpts = { restaurantLabels, marketLabels };
       const stores = rows.map((row, i) => {
         if (mask) {
-          const m = maskStoreRowForGuest(row, i);
+          const m = maskStoreRowForGuest(row, i, labelOpts);
           m.id = row.id;
           m.category = row.category || row.type || null;
           if (userPos && row.distance_km != null && Number.isFinite(Number(row.distance_km))) {
@@ -430,7 +523,7 @@ router.get("/", optionalAuth, async (req, res) => {
           }
           return m;
         }
-        return publicStoreRow(row);
+        return publicStoreRow(row, labelOpts);
       });
       const payload = {
         ok: true,
@@ -509,15 +602,37 @@ router.get("/", optionalAuth, async (req, res) => {
       rows = sortStoresForBrowse(rows, sortParam);
     }
 
+    const restSlugs2 = [
+      ...new Set(
+        rows
+          .filter((r) => String(r.type || "").trim().toLowerCase() === "restaurant")
+          .map((r) => String(r.category || "").trim().toLowerCase())
+          .filter(Boolean)
+      ),
+    ];
+    const marketSlugs2 = [
+      ...new Set(
+        rows
+          .filter((r) => isMarketStoreType(r.type))
+          .map((r) => String(r.category || "").trim().toLowerCase())
+          .filter(Boolean)
+      ),
+    ];
+    const [restaurantLabels2, marketLabels2] = await Promise.all([
+      fetchCategoryLabelMap(sb, "restaurant", restSlugs2),
+      fetchCategoryLabelMap(sb, "market", marketSlugs2),
+    ]);
+    const labelOpts2 = { restaurantLabels: restaurantLabels2, marketLabels: marketLabels2 };
+
     const stores = rows.map((row, i) => {
       if (mask) {
-        const m = maskStoreRowForGuest(row, i);
+        const m = maskStoreRowForGuest(row, i, labelOpts2);
         if (userPos && row.distance_km != null && Number.isFinite(Number(row.distance_km))) {
           m.distance_km = Number(row.distance_km);
         }
         return m;
       }
-      return publicStoreRow(row);
+      return publicStoreRow(row, labelOpts2);
     });
     const payload = {
       stores,
@@ -558,6 +673,15 @@ async function getPublicStoreById(req, res) {
       return fail(res, "المتجر غير متاح", 404);
     }
 
+    const restMap =
+      String(row.type || "").toLowerCase() === "restaurant"
+        ? await fetchCategoryLabelMap(sb, "restaurant", [row.category])
+        : new Map();
+    const marketMap = isMarketStoreType(row.type)
+      ? await fetchCategoryLabelMap(sb, "market", [row.category])
+      : new Map();
+    const rowLabelOpts = { restaurantLabels: restMap, marketLabels: marketMap };
+
     const mask = !req.appUser;
     const qLat = Number(req.query.user_lat ?? req.query.userLat);
     const qLng = Number(req.query.user_lng ?? req.query.userLng);
@@ -592,7 +716,7 @@ async function getPublicStoreById(req, res) {
       });
     }
 
-    const fake = maskStoreRowForGuest(row, 0);
+    const fake = maskStoreRowForGuest(row, 0, rowLabelOpts);
     const maskedPayload = { store: { ...fake, id: row.id, product_count: productCount }, browse_masked: true };
     if (Number.isFinite(qLat) && Number.isFinite(qLng) && row.lat != null && row.lng != null) {
       const slat = Number(row.lat);
@@ -627,21 +751,35 @@ router.get("/products", optionalAuth, async (req, res) => {
 
     const limit = Math.min(60, Math.max(1, Number(req.query.limit) || 24));
     const offset = Math.max(0, Number(req.query.offset) || 0);
+    const catFilter = normalizeProductCategory(req.query.category);
 
-    const { data, error, count } = await sb
-      .from("store_products")
-      .select("*", { count: "exact" })
-      .eq("store_id", storeId)
-      .eq("active", true)
-      .order("sort_order", { ascending: true })
-      .order("created_at", { ascending: false })
-      .range(offset, offset + limit - 1);
+    const base = () =>
+      sb
+        .from("store_products")
+        .select("*", { count: "exact" })
+        .eq("store_id", storeId)
+        .eq("active", true)
+        .order("sort_order", { ascending: true })
+        .order("created_at", { ascending: false });
+
+    let q = base();
+    if (catFilter) q = q.eq("category", catFilter);
+    let { data, error, count } = await q.range(offset, offset + limit - 1);
+
+    if (error && catFilter && /category|column|does not exist|schema cache/i.test(String(error.message || ""))) {
+      ({ data, error, count } = await base().range(offset, offset + limit - 1));
+      if (!error && data) {
+        const filtered = (data || []).filter((r) => String(r.category || "").trim().toLowerCase() === catFilter);
+        data = filtered;
+        count = filtered.length;
+      }
+    }
 
     if (error) {
       if (isStoreProductsMissing(error)) return ok(res, { products: [], total: 0, note: "نفّذ migration_store_marketplace.sql" });
       return fail(res, error.message, 400);
     }
-    return ok(res, { products: data || [], total: count ?? (data || []).length, limit, offset });
+    return ok(res, { products: data || [], total: count ?? (data || []).length, limit, offset, category: catFilter || null });
   } catch (e) {
     console.error("[store/products/get]", e);
     return fail(res, e.message || "خطأ في الخادم", 500);
@@ -677,19 +815,51 @@ router.post("/products", requireAuth, requireMerchantRole, async (req, res) => {
       if (offer_price === 0) offer_price = null;
     }
 
+    let productCategory = null;
+    if (req.body?.category != null && String(req.body.category).trim() !== "") {
+      productCategory = normalizeProductCategory(req.body.category);
+      if (!productCategory) return fail(res, "قسم المنتج غير صالح", 400);
+    }
+
+    let stockVal = null;
+    if (req.body?.stock !== undefined && req.body?.stock !== null && req.body?.stock !== "") {
+      stockVal = Math.floor(Number(req.body.stock));
+      if (!Number.isFinite(stockVal) || stockVal < 0) return fail(res, "المخزون غير صالح", 400);
+    }
+
+    let ratingVal = null;
+    if (req.body?.rating !== undefined && req.body?.rating !== null && req.body?.rating !== "") {
+      ratingVal = Number(req.body.rating);
+      if (!Number.isFinite(ratingVal) || ratingVal < 0 || ratingVal > 5) return fail(res, "التقييم بين 0 و 5", 400);
+      ratingVal = Math.round(ratingVal * 100) / 100;
+    }
+
     const row = {
       store_id: storeId,
       name,
       description,
       price,
       ...(offer_price != null ? { offer_price } : {}),
+      ...(productCategory ? { category: productCategory } : {}),
+      ...(stockVal != null ? { stock: stockVal } : {}),
+      ...(ratingVal != null ? { rating: ratingVal } : {}),
       image_url: imageUrl,
       active: true,
       sort_order: Number.isFinite(sortOrder) ? sortOrder : 0,
       updated_at: new Date().toISOString(),
     };
 
-    const { data, error } = await sb.from("store_products").insert(row).select("*").single();
+    let { data, error } = await sb.from("store_products").insert(row).select("*").single();
+    if (
+      error &&
+      /category|stock|rating|column .* does not exist|schema cache/i.test(String(error.message || ""))
+    ) {
+      const rowMin = { ...row };
+      delete rowMin.category;
+      delete rowMin.stock;
+      delete rowMin.rating;
+      ({ data, error } = await sb.from("store_products").insert(rowMin).select("*").single());
+    }
     if (error) {
       if (isStoreProductsMissing(error)) return fail(res, "جدول المنتجات غير جاهز — نفّذ migration_store_marketplace.sql", 400);
       return fail(res, error.message, 400);
@@ -736,6 +906,33 @@ router.put("/products/:id", requireAuth, requireMerchantRole, async (req, res) =
       if (Number.isFinite(s)) patch.sort_order = s;
     }
     if (req.body?.active != null) patch.active = !!req.body.active;
+    if (req.body?.category !== undefined) {
+      if (req.body.category === null || req.body.category === "") {
+        patch.category = null;
+      } else {
+        const c = normalizeProductCategory(req.body.category);
+        if (!c) return fail(res, "قسم المنتج غير صالح", 400);
+        patch.category = c;
+      }
+    }
+    if (req.body?.stock !== undefined) {
+      if (req.body.stock === null || req.body.stock === "") {
+        patch.stock = null;
+      } else {
+        const st = Math.floor(Number(req.body.stock));
+        if (!Number.isFinite(st) || st < 0) return fail(res, "المخزون غير صالح", 400);
+        patch.stock = st;
+      }
+    }
+    if (req.body?.rating !== undefined) {
+      if (req.body.rating === null || req.body.rating === "") {
+        patch.rating = null;
+      } else {
+        const rt = Number(req.body.rating);
+        if (!Number.isFinite(rt) || rt < 0 || rt > 5) return fail(res, "التقييم بين 0 و 5", 400);
+        patch.rating = Math.round(rt * 100) / 100;
+      }
+    }
     if (req.body?.offer_price !== undefined) {
       if (req.body.offer_price === null || req.body.offer_price === "") {
         patch.offer_price = null;
@@ -777,7 +974,17 @@ router.put("/products/:id", requireAuth, requireMerchantRole, async (req, res) =
       patch.offer_price = null;
     }
 
-    const { data, error } = await sb.from("store_products").update(patch).eq("id", productId).select("*").single();
+    let { data, error } = await sb.from("store_products").update(patch).eq("id", productId).select("*").single();
+    if (
+      error &&
+      /category|stock|rating|column .* does not exist|schema cache/i.test(String(error.message || ""))
+    ) {
+      const patchMin = { ...patch };
+      delete patchMin.category;
+      delete patchMin.stock;
+      delete patchMin.rating;
+      ({ data, error } = await sb.from("store_products").update(patchMin).eq("id", productId).select("*").single());
+    }
     if (error) return fail(res, error.message, 400);
     listCache = { key: "", at: 0, payload: null };
     return ok(res, { product: data });
@@ -897,7 +1104,9 @@ router.post("/register", async (req, res) => {
     const commercial_registration = String(b.commercial_registration || "").trim() || null;
     const location_text = String(b.location_text || "").trim() || null;
     const address = String(b.address || "").trim();
-    const type = String(b.type || b.category || "").trim().toLowerCase();
+    const type = String(b.type || "").trim().toLowerCase();
+    const restaurantCategoryRaw = String(b.restaurant_category || b.restaurantCategory || "").trim().toLowerCase();
+    const storeCategorySlug = String(b.category || b.store_category || "").trim().toLowerCase();
 
     let lat = b.lat;
     let lng = b.lng;
@@ -923,6 +1132,22 @@ router.post("/register", async (req, res) => {
     if (!phoneDigits || phoneDigits.length < 10) return fail(res, "رقم الجوال غير صالح", 400);
     if (!STORE_TYPES.has(type)) return fail(res, "نوع النشاط غير صالح", 400);
 
+    let categoryValue = type;
+    if (type === "restaurant") {
+      const slugSrc = restaurantCategoryRaw || storeCategorySlug;
+      const resolved = await resolvePublicCategorySlug(sb, "restaurant", slugSrc);
+      if (!resolved) {
+        return fail(res, "اختر نوع المطعم (تصنيف المأكولات) من القائمة المعتمدة", 400);
+      }
+      categoryValue = resolved;
+    } else if (type === "supermarket") {
+      const resolved = await resolvePublicCategorySlug(sb, "market", storeCategorySlug);
+      if (!resolved) {
+        return fail(res, "اختر قسم البقالة من القائمة المعتمدة", 400);
+      }
+      categoryValue = resolved;
+    }
+
     const phoneDisplay = phoneRaw || phoneDigits;
 
     let payoutCols = {};
@@ -943,7 +1168,7 @@ router.post("/register", async (req, res) => {
       address,
       delivery_radius_km,
       type,
-      category: type,
+      category: categoryValue,
       is_active: false,
       status: "pending",
       ...payoutCols,
@@ -1019,6 +1244,13 @@ router.post("/register", async (req, res) => {
         : address;
 
     const typeLabel = TYPE_LABEL_AR[type] || type;
+    let cuisineLine = "";
+    if (type === "restaurant" && categoryValue) {
+      const lab = restaurantCategoryLabelAr(categoryValue) || categoryValue;
+      cuisineLine = `تصنيف المطعم: ${lab}`;
+    } else if (type === "supermarket" && categoryValue) {
+      cuisineLine = `قسم البقالة: ${categoryValue}`;
+    }
 
     const payoutSummaryParts = [];
     if (payoutCols.iban) payoutSummaryParts.push("آيبان: تم الإرفاق");
@@ -1034,6 +1266,7 @@ router.post("/register", async (req, res) => {
         mapsUrl,
         requestId,
         payoutSummary,
+        cuisineLine: cuisineLine || undefined,
       });
     } catch (waErr) {
       console.error("[store/register] WhatsApp:", waErr.message || waErr);

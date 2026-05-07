@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ERVENOW | إدارة الأقسام</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/assets/styles.css" />
+    <style>
+      .cat-toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+        margin-bottom: 14px;
+      }
+      .cat-table-wrap {
+        overflow-x: auto;
+      }
+      table.cat-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.92rem;
+      }
+      .cat-table th,
+      .cat-table td {
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        padding: 8px 10px;
+        text-align: right;
+      }
+      .cat-table th {
+        background: rgba(0, 0, 0, 0.03);
+        font-weight: 700;
+      }
+      .cat-table tr.inactive {
+        opacity: 0.55;
+      }
+      .cat-form-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        gap: 10px;
+        margin-top: 10px;
+      }
+      .cat-form-grid label {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        font-weight: 600;
+        font-size: 0.88rem;
+      }
+      .cat-form-grid input,
+      .cat-form-grid select {
+        font: inherit;
+        padding: 8px 10px;
+        border-radius: 8px;
+        border: 1px solid rgba(0, 0, 0, 0.12);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="layout">
+      <div class="top-nav">
+        <h1 style="margin: 0">إدارة الأقسام</h1>
+        <div class="btn-row">
+          <a class="btn btn-ghost" href="/">الرئيسية</a>
+          <a class="btn btn-ghost" href="/admin-dashboard">لوحة الإدارة</a>
+          <a class="btn btn-ghost" href="/admin-approvals">الموافقات</a>
+        </div>
+      </div>
+
+      <p class="sub">
+        أقسام المطاعم (<code>type=restaurant</code>) وأقسام البقالة للتسجيل والعرض (<code>type=market</code>). يحتاج الجدول:
+        <code>shared/migration_categories.sql</code>
+      </p>
+
+      <div class="card">
+        <div class="cat-toolbar">
+          <label>
+            النطاق
+            <select id="scopeType">
+              <option value="restaurant">مطاعم</option>
+              <option value="market">بقالة / أسواق</option>
+            </select>
+          </label>
+          <button type="button" class="btn btn-primary" id="btnReload">تحديث القائمة</button>
+        </div>
+        <div id="listMsg" class="sub" style="min-height: 1.2em"></div>
+        <div class="cat-table-wrap">
+          <table class="cat-table" id="catTable" aria-label="الأقسام">
+            <thead>
+              <tr>
+                <th>ترتيب</th>
+                <th>slug</th>
+                <th>الاسم</th>
+                <th>أيقونة</th>
+                <th>نشط</th>
+                <th>إجراءات</th>
+              </tr>
+            </thead>
+            <tbody id="catTbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <strong>إضافة قسم</strong>
+        <div class="cat-form-grid">
+          <label> slug (إنجليزي) <input id="newSlug" dir="ltr" placeholder="my_kitchen" autocomplete="off" /></label>
+          <label> الاسم بالعربية <input id="newLabel" placeholder="مثال: مشاوي" /></label>
+          <label> أيقونة (اختياري) <input id="newIcon" placeholder="🌯" maxlength="8" /></label>
+          <label> ترتيب <input id="newSort" type="number" value="0" /></label>
+        </div>
+        <div class="btn-row" style="margin-top: 12px">
+          <button type="button" class="btn btn-primary" id="btnAdd">إضافة</button>
+        </div>
+        <p class="sub" id="formMsg" style="margin-top: 8px"></p>
+      </div>
+
+      <div class="card" id="editCard" style="display: none">
+        <strong>تعديل القسم</strong>
+        <input type="hidden" id="editId" />
+        <div class="cat-form-grid">
+          <label> slug <input id="editSlug" dir="ltr" /></label>
+          <label> الاسم <input id="editLabel" /></label>
+          <label> أيقونة <input id="editIcon" maxlength="8" /></label>
+          <label> ترتيب <input id="editSort" type="number" /></label>
+          <label> نشط <select id="editActive"><option value="true">نعم</option><option value="false">لا</option></select></label>
+        </div>
+        <div class="btn-row" style="margin-top: 12px">
+          <button type="button" class="btn btn-primary" id="btnSaveEdit">حفظ التعديل</button>
+          <button type="button" class="btn btn-ghost" id="btnCancelEdit">إلغاء</button>
+        </div>
+        <p class="sub" id="editMsg"></p>
+      </div>
+    </div>
+
+    <script src="/assets/api-config.js"></script>
+    <script src="/assets/api.js"></script>
+    <script>
+      if (!window.PlatformAPI.getToken()) {
+        location.href = "/admin-login";
+      }
+
+      var scopeEl = document.getElementById("scopeType");
+      var tbody = document.getElementById("catTbody");
+      var listMsg = document.getElementById("listMsg");
+      var formMsg = document.getElementById("formMsg");
+      var editCard = document.getElementById("editCard");
+      var editMsg = document.getElementById("editMsg");
+
+      function scope() {
+        return scopeEl.value || "restaurant";
+      }
+
+      async function loadList() {
+        listMsg.textContent = "جارٍ التحميل…";
+        tbody.innerHTML = "";
+        try {
+          var j = await window.PlatformAPI.api("/api/admin/categories?type=" + encodeURIComponent(scope()));
+          var rows = j.categories || [];
+          listMsg.textContent = rows.length ? "" : "لا توجد صفوف (أو الجدول غير منشأ).";
+          for (var i = 0; i < rows.length; i++) {
+            var r = rows[i];
+            var tr = document.createElement("tr");
+            if (!r.is_active) tr.className = "inactive";
+            tr.innerHTML =
+              "<td>" +
+              (r.sort_order != null ? String(r.sort_order) : "") +
+              "</td>" +
+              "<td dir=\"ltr\">" +
+              esc(r.slug) +
+              "</td>" +
+              "<td>" +
+              esc(r.label_ar) +
+              "</td>" +
+              "<td>" +
+              esc(r.icon || "") +
+              "</td>" +
+              "<td>" +
+              (r.is_active ? "نعم" : "لا") +
+              "</td>" +
+              "<td><button type=\"button\" class=\"btn btn-ghost btn-sm\" data-edit=\"" +
+              esc(r.id) +
+              "\">تعديل</button> " +
+              "<button type=\"button\" class=\"btn btn-ghost btn-sm\" data-del=\"" +
+              esc(r.id) +
+              "\">تعطيل</button></td>";
+            tbody.appendChild(tr);
+          }
+          wireRowButtons();
+        } catch (e) {
+          listMsg.textContent = e.message || "خطأ";
+        }
+      }
+
+      function esc(s) {
+        return String(s || "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+      }
+
+      function wireRowButtons() {
+        var edits = tbody.querySelectorAll("[data-edit]");
+        for (var i = 0; i < edits.length; i++) {
+          edits[i].onclick = onEditClick;
+        }
+        var dels = tbody.querySelectorAll("[data-del]");
+        for (var j = 0; j < dels.length; j++) {
+          dels[j].onclick = onDeleteClick;
+        }
+      }
+
+      function onEditClick(ev) {
+        var id = ev.target.getAttribute("data-edit");
+        if (!id) return;
+        var tr = ev.target.closest("tr");
+        if (!tr) return;
+        var cells = tr.querySelectorAll("td");
+        document.getElementById("editId").value = id;
+        document.getElementById("editSlug").value = cells[1].textContent.trim();
+        document.getElementById("editLabel").value = cells[2].textContent.trim();
+        document.getElementById("editIcon").value = cells[3].textContent.trim();
+        document.getElementById("editSort").value = cells[0].textContent.trim() || "0";
+        document.getElementById("editActive").value = cells[4].textContent.trim() === "نعم" ? "true" : "false";
+        editCard.style.display = "block";
+        editMsg.textContent = "";
+        editCard.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }
+
+      async function onDeleteClick(ev) {
+        var id = ev.target.getAttribute("data-del");
+        if (!id || !confirm("تعطيل هذا القسم؟ (حذف ناعم)")) return;
+        try {
+          await window.PlatformAPI.api("/api/admin/categories/" + encodeURIComponent(id), { method: "DELETE" });
+          await loadList();
+        } catch (e) {
+          alert(e.message || "خطأ");
+        }
+      }
+
+      document.getElementById("btnReload").onclick = loadList;
+      scopeEl.onchange = loadList;
+
+      document.getElementById("btnAdd").onclick = async function () {
+        formMsg.textContent = "";
+        var slug = document.getElementById("newSlug").value.trim().toLowerCase();
+        var label_ar = document.getElementById("newLabel").value.trim();
+        var icon = document.getElementById("newIcon").value.trim();
+        var sort_order = Number(document.getElementById("newSort").value);
+        if (!slug || !label_ar) {
+          formMsg.textContent = "أدخل slug والاسم.";
+          return;
+        }
+        try {
+          await window.PlatformAPI.api("/api/admin/categories", {
+            method: "POST",
+            body: {
+              type: scope(),
+              slug: slug,
+              label_ar: label_ar,
+              icon: icon || undefined,
+              sort_order: Number.isFinite(sort_order) ? sort_order : 0,
+              is_active: true,
+            },
+          });
+          document.getElementById("newSlug").value = "";
+          document.getElementById("newLabel").value = "";
+          document.getElementById("newIcon").value = "";
+          document.getElementById("newSort").value = "0";
+          await loadList();
+          formMsg.textContent = "تمت الإضافة.";
+        } catch (e) {
+          formMsg.textContent = e.message || "خطأ";
+        }
+      };
+
+      document.getElementById("btnCancelEdit").onclick = function () {
+        editCard.style.display = "none";
+      };
+
+      document.getElementById("btnSaveEdit").onclick = async function () {
+        editMsg.textContent = "";
+        var id = document.getElementById("editId").value.trim();
+        if (!id) return;
+        var body = {
+          slug: document.getElementById("editSlug").value.trim().toLowerCase(),
+          label_ar: document.getElementById("editLabel").value.trim(),
+          icon: document.getElementById("editIcon").value.trim(),
+          sort_order: Number(document.getElementById("editSort").value),
+          is_active: document.getElementById("editActive").value === "true",
+        };
+        try {
+          await window.PlatformAPI.api("/api/admin/categories/" + encodeURIComponent(id), {
+            method: "PUT",
+            body: body,
+          });
+          editMsg.textContent = "تم الحفظ.";
+          await loadList();
+        } catch (e) {
+          editMsg.textContent = e.message || "خطأ";
+        }
+      };
+
+      loadList();
+    </script>
+  </body>
+</html>
