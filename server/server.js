@@ -399,6 +399,10 @@ if (servePublicUi) {
     res.sendFile(path.join(publicPath, "admin-finance.html"));
   });
 
+  app.get("/admin/withdrawals", (_req, res) => {
+    res.sendFile(path.join(publicPath, "admin-withdrawals.html"));
+  });
+
   app.get("/admin-approvals", (_req, res) => {
     res.sendFile(path.join(publicPath, "admin-approvals.html"));
   });

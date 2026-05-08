@@ -579,7 +579,7 @@
           .then(function (data) {
             var list = (data && data.categories) || [];
             RESTAURANT_CUISINES = list.map(function (c) {
-              return { slug: c.slug, icon: c.icon || "▫", label: c.label_ar || c.slug };
+              return { slug: c.slug, icon: c.icon || "▫", label: c.name_ar || c.label_ar || c.slug };
             });
           })
           .catch(function () {

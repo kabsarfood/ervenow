@@ -1,7 +1,7 @@
 /**
- * /api/wallet — طبقة التشغيل: ervenow_wallets / ervenow_wallet_transactions (سحب، رصيد مندوب، إلخ)
+ * /api/wallet — طبقة التشغيل: ervenow_wallets / ervenow_wallet_transactions
+ * الرصيد ومجاميع الإيراد/السحب من sum(amount) عبر RPC ervenow_wallet_operational_summary بعد تنفيذ migration_wallet_operational_ledger.sql
  * طبقة المحاسبة: public.wallets + wallet_transactions (تسوية عند التسليم عبر erwenow_finance_settle_order)
- * مسارات ledger الداخلية: POST /ledger/deposit | /ledger/pay | /ledger/refund
  */
 const express = require("express");
 const { requireAuth } = require("../../shared/middleware/auth");
@@ -69,6 +69,22 @@ async function validateWithdrawRequest(req, amount) {
 }
 
 async function operationalWalletPayload(req) {
+  const { data: rpcData, error: rpcErr } = await req.supabase.rpc("ervenow_wallet_operational_summary", {
+    p_user_id: req.appUser.id,
+  });
+  if (!rpcErr && rpcData && typeof rpcData === "object" && !Array.isArray(rpcData)) {
+    const b = Number(rpcData.balance);
+    const te = Number(rpcData.total_earned);
+    const tw = Number(rpcData.total_withdrawn);
+    return {
+      balance: round2(Number.isFinite(b) ? b : 0),
+      total_earned: round2(Number.isFinite(te) ? te : 0),
+      total_withdrawn: round2(Number.isFinite(tw) ? tw : 0),
+      wallet_mode: "operational",
+      layer: "ervenow_wallet_transactions",
+    };
+  }
+
   const { data, error } = await req.supabase
     .from("ervenow_wallets")
     .select("balance, total_earned, total_withdrawn, role")
@@ -82,6 +98,7 @@ async function operationalWalletPayload(req) {
     total_withdrawn: round2(w.total_withdrawn) || 0,
     wallet_mode: "operational",
     layer: "ervenow_wallets",
+    note: rpcErr ? "نفّذ shared/migration_wallet_operational_ledger.sql لرصيد من sum(الحركات)" : undefined,
   };
 }
 

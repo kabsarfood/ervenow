@@ -389,7 +389,7 @@
         <h1 style="margin: 0; flex: 1; min-width: 0">لوحة زائر المنصة</h1>
         <div class="top-nav-actions">
           <a class="btn btn-ghost" href="/">الرئيسية</a>
-          <a class="btn btn-ghost" href="/login" id="switchAccount">تسجيل الدخول / تبديل الحساب</a>
+          <a class="btn btn-primary" href="/login?role=customer" id="switchAccount">تسجيل الدخول</a>
         </div>
       </div>
 
@@ -577,7 +577,13 @@
     <script src="/assets/api-config.js"></script>
     <script src="/assets/api.js"></script>
     <script>
-      if (!window.PlatformAPI.getToken()) location.href = "/login";
+      function dashHasToken() {
+        try {
+          return !!(window.PlatformAPI && PlatformAPI.getToken && PlatformAPI.getToken());
+        } catch (e) {
+          return false;
+        }
+      }
 
       function setActiveServiceCard(serviceKey) {
         var tiles = document.querySelectorAll(".grid-apps .app-tile[data-service]");
@@ -675,7 +681,7 @@
       function enableCreate() {
         var btn = document.getElementById("createBtn");
         if (!btn) return;
-        btn.disabled = !(km > 0 && fromLL && toLL);
+        btn.disabled = !(km > 0 && fromLL && toLL && dashHasToken());
       }
 
       function updateSelectButtonsUi() {
@@ -929,6 +935,10 @@
         var btn = document.getElementById("createBtn");
         var result = document.getElementById("result");
         try {
+          if (!dashHasToken()) {
+            result.innerText = "❌ سجّل الدخول أولاً لإنشاء طلب التوصيل.";
+            return;
+          }
           var from = document.getElementById("from").value.trim();
           var to = document.getElementById("to").value.trim();
           if (!from || !to) {
@@ -996,6 +1006,22 @@
 
       async function run() {
         var dash = document.getElementById("dashStatus");
+        var switchAccount = document.getElementById("switchAccount");
+        if (!dashHasToken()) {
+          if (document.getElementById("profileCard")) document.getElementById("profileCard").style.display = "none";
+          if (dash) {
+            dash.style.display = "block";
+            dash.textContent =
+              "أنت تتصفّح كزائر — يمكنك استكشاف الأقسام وحساب المسافة. لتنفيذ طلب توصيل سجّل الدخول من الزر أعلاه.";
+          }
+          if (switchAccount) {
+            switchAccount.textContent = "تسجيل الدخول";
+            switchAccount.className = "btn btn-primary";
+            switchAccount.setAttribute("href", "/login?role=customer");
+          }
+          enableCreate();
+          return;
+        }
         try {
           var me = await window.PlatformAPI.api("/api/core/me");
           var role = (me.profile && me.profile.role) || "customer";
@@ -1015,23 +1041,31 @@
           document.getElementById("profileCard").style.display = "block";
           document.getElementById("roleBadge").textContent = role;
           document.getElementById("phoneLine").textContent = me.user.phone || me.user.email || me.user.id;
+          if (switchAccount) {
+            switchAccount.textContent = "تسجيل الخروج / تبديل الحساب";
+            switchAccount.className = "btn btn-ghost";
+            switchAccount.setAttribute("href", "/login?role=customer");
+          }
         } catch (e) {
           if (dash) {
             dash.style.display = "block";
             dash.textContent = e.message || "تعذر تحميل الحساب";
           }
         }
+        enableCreate();
       }
 
       (function initServiceCardsUi() {
         var deliveryDetails = document.getElementById("deliveryDetails");
         var switchAccount = document.getElementById("switchAccount");
         if (switchAccount) {
-          switchAccount.addEventListener("click", function () {
+          switchAccount.addEventListener("click", function (e) {
+            e.preventDefault();
             try {
               localStorage.removeItem("userPhone");
             } catch (err) {}
-            window.PlatformAPI.setToken("");
+            if (window.PlatformAPI && PlatformAPI.setToken) window.PlatformAPI.setToken("");
+            window.location.href = "/login?role=customer";
           });
         }
         if (deliveryDetails) {

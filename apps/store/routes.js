@@ -7,6 +7,7 @@ const { roughDistanceKm } = require("../../shared/utils/geo");
 const { routeKmWithRoughFallback, deliveryEtaMinutesFromKm } = require("../../shared/utils/routeDistance");
 const { cacheGetJson, cacheSetJson } = require("../../shared/utils/redisCache");
 const { parseOptionalPayoutPayload, payoutRowForDriversOrStores } = require("../../shared/utils/payoutFields");
+const { sanitizeDriverOrStoreRowForApi } = require("../../shared/utils/bankApiSafe");
 const {
   restaurantCategoryLabelAr,
   restaurantCategoryDisplayAr,
@@ -384,7 +385,7 @@ router.get("/my-store", requireAuth, requireMerchantRole, async (req, res) => {
     if (!sb) return fail(res, "الخادم غير مهيأ لقاعدة البيانات", 503);
     const digits = normalizePhone(req.appUser.phone);
     const extendedSel =
-      "id,name,phone,type,category,status,is_active,logo_url,lat,lng,location_text,address,delivery_radius_km,average_rating,rating_count,total_orders";
+      "id,name,phone,type,category,status,is_active,logo_url,lat,lng,location_text,address,delivery_radius_km,average_rating,rating_count,total_orders,bank_name,bank_country_code,bank_last4,bank_verified,stc_pay_phone,payout_crypto_interest";
     let row = null;
     let err = null;
     ({ data: row, error: err } = await sb.from("stores").select(extendedSel).eq("phone", digits).eq("status", "approved").maybeSingle());
@@ -401,7 +402,22 @@ router.get("/my-store", requireAuth, requireMerchantRole, async (req, res) => {
     if (Object.prototype.hasOwnProperty.call(row, "is_active") && row.is_active === false) {
       return fail(res, "المتجر معتمد لكن غير مفعّل للظهور — تواصل مع الإدارة.", 403);
     }
-    return ok(res, { store: publicStoreRow(row) });
+    const base = publicStoreRow(row);
+    const bankSafe = sanitizeDriverOrStoreRowForApi(row);
+    return ok(res, {
+      store: {
+        ...base,
+        payout_bank: {
+          bank_name: bankSafe.bank_name || null,
+          bank_last4: bankSafe.bank_last4 || null,
+          bank_country_code: bankSafe.bank_country_code || null,
+          bank_iban_masked: bankSafe.bank_iban_masked || null,
+          stc_pay_phone: bankSafe.stc_pay_phone || null,
+          payout_crypto_interest: !!bankSafe.payout_crypto_interest,
+          bank_verified: !!bankSafe.bank_verified,
+        },
+      },
+    });
   } catch (e) {
     console.error("[store/my-store]", e);
     return fail(res, e.message || "خطأ في الخادم", 500);
@@ -1151,8 +1167,10 @@ router.post("/register", async (req, res) => {
     const phoneDisplay = phoneRaw || phoneDigits;
 
     let payoutCols = {};
+    let parsedPayout = {};
     try {
-      payoutCols = payoutRowForDriversOrStores(parseOptionalPayoutPayload({ payout: b.payout }));
+      parsedPayout = parseOptionalPayoutPayload({ payout: b.payout });
+      payoutCols = payoutRowForDriversOrStores(parsedPayout);
     } catch (pe) {
       return fail(res, pe.message || "بيانات الدفع غير صالحة", 400);
     }
@@ -1181,7 +1199,7 @@ router.post("/register", async (req, res) => {
     ({ data: insertedRow, error: insErr } = await sb.from("stores").insert(row).select("id").single());
     if (
       insErr &&
-      /location_text|address|delivery_radius_km|is_active|category|commercial_registration|\bemail\b|file_url|\blat\b|\blng\b|bank_country|bank_name|\biban\b|stc_pay|payout_crypto|column .* does not exist|schema cache/i.test(
+      /location_text|address|delivery_radius_km|is_active|category|commercial_registration|\bemail\b|file_url|\blat\b|\blng\b|bank_country|bank_name|bank_iban|bank_account|bank_swift|bank_last4|bank_verified|bank_added|bank_account_name|\biban\b|stc_pay|payout_crypto|column .* does not exist|schema cache/i.test(
         String(insErr.message || "")
       )
     ) {
@@ -1198,6 +1216,13 @@ router.post("/register", async (req, res) => {
       delete row.bank_country_code;
       delete row.bank_name;
       delete row.iban;
+      delete row.bank_iban;
+      delete row.bank_account_number;
+      delete row.bank_swift_code;
+      delete row.bank_account_name;
+      delete row.bank_last4;
+      delete row.bank_verified;
+      delete row.bank_added_at;
       delete row.stc_pay_phone;
       delete row.payout_crypto_interest;
       ({ data: insertedRow, error: insErr } = await sb.from("stores").insert(row).select("id").single());
@@ -1253,9 +1278,9 @@ router.post("/register", async (req, res) => {
     }
 
     const payoutSummaryParts = [];
-    if (payoutCols.iban) payoutSummaryParts.push("آيبان: تم الإرفاق");
-    if (payoutCols.stc_pay_phone) payoutSummaryParts.push("STC Pay: تم الإرفاق");
-    if (payoutCols.payout_crypto_interest) payoutSummaryParts.push("اهتمام بالعملات المشفرة: نعم");
+    if (parsedPayout.iban) payoutSummaryParts.push("آيبان: تم الإرفاق");
+    if (parsedPayout.stc_pay_phone) payoutSummaryParts.push("STC Pay: تم الإرفاق");
+    if (parsedPayout.payout_crypto_interest) payoutSummaryParts.push("اهتمام بالعملات المشفرة: نعم");
     const payoutSummary = payoutSummaryParts.length ? payoutSummaryParts.join("\n") : "";
 
     try {

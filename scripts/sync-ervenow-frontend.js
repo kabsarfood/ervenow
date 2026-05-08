@@ -50,6 +50,7 @@ const vercelJson = {
     { handle: "filesystem" },
     { src: "/admin/branding", dest: "/admin-branding.html" },
     { src: "/admin/categories", dest: "/admin-categories.html" },
+    { src: "/admin/withdrawals", dest: "/admin-withdrawals.html" },
     { src: "/(.*)", dest: "/index.html" },
   ],
 };

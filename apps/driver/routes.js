@@ -18,6 +18,7 @@ const {
 } = require("../../shared/services/whatsappService");
 const { attachSiteSessionCookie } = require("../../shared/middleware/publicSiteOtpGate");
 const { parseOptionalPayoutPayload, payoutRowForDriversOrStores } = require("../../shared/utils/payoutFields");
+const { sanitizeDriverOrStoreRowForApi } = require("../../shared/utils/bankApiSafe");
 
 const router = express.Router();
 
@@ -217,13 +218,19 @@ router.post("/verify-otp", async (req, res) => {
     attachSiteSessionCookie(req, res, token);
     return ok(res, {
       token,
-      driver: {
+      driver: sanitizeDriverOrStoreRowForApi({
         id: drv.id,
         name: drv.name,
         phone: drv.phone,
         car_type: drv.car_type,
         status: drv.status,
-      },
+        bank_name: drv.bank_name,
+        bank_country_code: drv.bank_country_code,
+        bank_last4: drv.bank_last4,
+        bank_verified: drv.bank_verified,
+        stc_pay_phone: drv.stc_pay_phone,
+        payout_crypto_interest: drv.payout_crypto_interest,
+      }),
       profile: {
         id: user.id,
         role: "driver",
@@ -252,7 +259,8 @@ router.post("/register", async (req, res) => {
 
     let extraPayout = {};
     try {
-      extraPayout = payoutRowForDriversOrStores(parseOptionalPayoutPayload({ payout: b.payout }));
+      const parsed = parseOptionalPayoutPayload({ payout: b.payout });
+      extraPayout = payoutRowForDriversOrStores(parsed);
     } catch (pe) {
       return fail(res, pe.message || "بيانات الدفع غير صالحة", 400);
     }
@@ -283,7 +291,7 @@ router.post("/register", async (req, res) => {
       console.error("[driver/register] WhatsApp:", waErr && (waErr.message || String(waErr)));
     }
     return ok(res, {
-      driver: data,
+      driver: sanitizeDriverOrStoreRowForApi(data),
       message: "تم تسجيلك — بانتظار الموافقة",
     });
   } catch (e) {

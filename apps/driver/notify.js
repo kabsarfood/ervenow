@@ -69,7 +69,7 @@ async function getNearestDrivers(sb, order) {
 
   const { data: drivers, error } = await sb
     .from("drivers")
-    .select("*")
+    .select("id, phone, name, lat, lng, car_type, status, active")
     .eq("status", "approved")
     .eq("active", true)
     .not("lat", "is", null)

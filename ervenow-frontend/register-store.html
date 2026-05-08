@@ -286,7 +286,7 @@
             j1.categories.forEach(function (c) {
               var o = document.createElement("option");
               o.value = c.slug;
-              o.textContent = (c.icon ? c.icon + " " : "") + (c.label_ar || c.slug);
+              o.textContent = (c.icon ? c.icon + " " : "") + (c.name_ar || c.label_ar || c.slug);
               selR.appendChild(o);
             });
           }
@@ -298,7 +298,7 @@
             j2.categories.forEach(function (c) {
               var o = document.createElement("option");
               o.value = c.slug;
-              o.textContent = (c.icon ? c.icon + " " : "") + (c.label_ar || c.slug);
+              o.textContent = (c.icon ? c.icon + " " : "") + (c.name_ar || c.label_ar || c.slug);
               selM.appendChild(o);
             });
           }

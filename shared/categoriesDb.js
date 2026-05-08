@@ -2,6 +2,10 @@ const { RESTAURANT_CATEGORY_KEYS } = require("./restaurantCategories");
 const { PRODUCT_CATEGORY_KEYS } = require("./marketProductCategories");
 
 const ALLOWED_SCOPE_TYPES = new Set(["restaurant", "market"]);
+/** scope في جدول categories: مطاعم = store، أقسام منتجات السوق = product */
+const CATEGORY_SCOPE_STORE = "store";
+const CATEGORY_SCOPE_PRODUCT = "product";
+const ALLOWED_CATEGORY_SCOPES = new Set([CATEGORY_SCOPE_STORE, CATEGORY_SCOPE_PRODUCT]);
 
 function isCategoriesTableMissing(err) {
   if (!err) return false;
@@ -24,10 +28,26 @@ function normalizeSlugInput(v) {
   return s;
 }
 
+function normalizeCategoryScope(v, typeHint) {
+  const s = String(v || "")
+    .trim()
+    .toLowerCase();
+  if (ALLOWED_CATEGORY_SCOPES.has(s)) return s;
+  const t = normalizeScopeType(typeHint);
+  if (t === "market") return CATEGORY_SCOPE_PRODUCT;
+  if (t === "restaurant") return CATEGORY_SCOPE_STORE;
+  return null;
+}
+
 async function fetchMergedRestaurantCategorySlugs(sb) {
   const base = new Set(RESTAURANT_CATEGORY_KEYS.map((k) => String(k).toLowerCase()));
   if (!sb) return base;
-  const { data, error } = await sb.from("categories").select("slug").eq("type", "restaurant").eq("is_active", true);
+  const { data, error } = await sb
+    .from("categories")
+    .select("slug")
+    .eq("type", "restaurant")
+    .eq("scope", CATEGORY_SCOPE_STORE)
+    .eq("is_active", true);
   if (error) {
     if (isCategoriesTableMissing(error)) return base;
     return base;
@@ -41,7 +61,12 @@ async function fetchMergedRestaurantCategorySlugs(sb) {
 async function fetchMergedMarketCategorySlugs(sb) {
   const base = new Set(PRODUCT_CATEGORY_KEYS.map((k) => String(k).toLowerCase()));
   if (!sb) return base;
-  const { data, error } = await sb.from("categories").select("slug").eq("type", "market").eq("is_active", true);
+  const { data, error } = await sb
+    .from("categories")
+    .select("slug")
+    .eq("type", "market")
+    .eq("scope", CATEGORY_SCOPE_PRODUCT)
+    .eq("is_active", true);
   if (error) {
     if (isCategoriesTableMissing(error)) return base;
     return base;
@@ -62,28 +87,34 @@ async function resolvePublicCategorySlug(sb, scopeType, rawSlug) {
   return merged.has(s) ? s : null;
 }
 
-/** خريطة slug → label_ar لصفوف مطاعم (عرض في القوائم) */
+/** خريطة slug → name_ar لعرض البطاقات */
 async function fetchCategoryLabelMap(sb, scopeType, slugs) {
   const map = new Map();
   const uniq = [...new Set((slugs || []).map((x) => String(x || "").trim().toLowerCase()).filter(Boolean))];
   if (!uniq.length || !sb) return map;
+  const scopeCol =
+    scopeType === "market" ? CATEGORY_SCOPE_PRODUCT : CATEGORY_SCOPE_STORE;
   const { data, error } = await sb
     .from("categories")
-    .select("slug,label_ar")
+    .select("slug,name_ar")
     .eq("type", scopeType)
+    .eq("scope", scopeCol)
     .in("slug", uniq);
   if (error || !data) return map;
   data.forEach((r) => {
-    if (r && r.slug) map.set(String(r.slug).toLowerCase(), r.label_ar || r.slug);
+    if (r && r.slug) map.set(String(r.slug).toLowerCase(), r.name_ar || r.slug);
   });
   return map;
 }
 
 module.exports = {
   ALLOWED_SCOPE_TYPES,
+  CATEGORY_SCOPE_STORE,
+  CATEGORY_SCOPE_PRODUCT,
   isCategoriesTableMissing,
   normalizeScopeType,
   normalizeSlugInput,
+  normalizeCategoryScope,
   fetchMergedRestaurantCategorySlugs,
   fetchMergedMarketCategorySlugs,
   resolvePublicCategorySlug,

@@ -9,7 +9,15 @@ const { getRiyadhDate } = require("../delivery/service");
 const { readState, writeState } = require("../../shared/utils/siteMaintenanceStore");
 const { createServiceClient } = require("../../shared/config/supabase");
 const platformBranding = require("../../shared/utils/platformBrandingStore");
-const { normalizeScopeType, normalizeSlugInput, isCategoriesTableMissing } = require("../../shared/categoriesDb");
+const { sanitizeDriverOrStoreRowForApi, sanitizeDriverOrStoreListForApi } = require("../../shared/utils/bankApiSafe");
+const {
+  normalizeScopeType,
+  normalizeSlugInput,
+  normalizeCategoryScope,
+  isCategoriesTableMissing,
+  CATEGORY_SCOPE_STORE,
+  CATEGORY_SCOPE_PRODUCT,
+} = require("../../shared/categoriesDb");
 
 const ADMIN_PUBLIC_ROOT = path.join(__dirname, "../../public");
 
@@ -638,6 +646,176 @@ router.post("/withdraws/:id/approve", requireAuth, requireRole("admin"), require
   }
 });
 
+/** نوع السحب للموافقة/الرفض الموحّد: driver | store (جسم أو ?kind=) */
+function parseWithdrawalKind(req) {
+  const b = req.body && typeof req.body === "object" ? req.body : {};
+  const q = String(req.query.kind || "").trim().toLowerCase();
+  const k = String(b.kind || q || "").trim().toLowerCase();
+  if (k === "driver" || k === "drivers") return "driver";
+  if (k === "store" || k === "stores") return "store";
+  return null;
+}
+
+/** يُرفق phone للمستخدم لعرض أفضل في لوحة السحب (بدون تعديل DB). */
+async function attachUserPhonesForWithdrawals(sb, rows) {
+  const list = Array.isArray(rows) ? rows : [];
+  const ids = [...new Set(list.map((r) => r && r.user_id).filter(Boolean))];
+  if (!ids.length) return list;
+  const { data: users, error } = await sb.from("users").select("id, phone").in("id", ids);
+  if (error || !users) return list;
+  const map = new Map(users.map((u) => [String(u.id), u.phone]));
+  return list.map((r) => ({ ...r, user_phone: map.get(String(r.user_id)) || null }));
+}
+
+async function attachStoreNamesForWithdrawals(sb, rows) {
+  const list = Array.isArray(rows) ? rows : [];
+  const ids = [...new Set(list.map((r) => r && r.store_id).filter(Boolean))];
+  if (!ids.length) return list;
+  const { data: stores, error } = await sb.from("stores").select("id, name, phone").in("id", ids);
+  if (error || !stores) return list;
+  const map = new Map(stores.map((s) => [String(s.id), { name: s.name, phone: s.phone }]));
+  return list.map((r) => {
+    const s = map.get(String(r.store_id));
+    return { ...r, store_name: s ? s.name : null, store_phone: s ? s.phone : null };
+  });
+}
+
+router.get("/withdrawals/drivers", requireAuth, requireRole("admin"), requireAdminPermission("finance"), async (req, res) => {
+  try {
+    const statusQ = String(req.query.status || "").trim().toLowerCase();
+    let q = req.supabase
+      .from("ervenow_withdraw_requests")
+      .select("id, user_id, amount, status, iban, note, created_at, processed_at")
+      .order("created_at", { ascending: false })
+      .limit(200);
+    if (statusQ === "pending" || statusQ === "approved" || statusQ === "rejected" || statusQ === "paid") {
+      q = q.eq("status", statusQ);
+    }
+    const { data, error } = await q;
+    if (error) return fail(res, error.message, 400);
+    const enriched = await attachUserPhonesForWithdrawals(req.supabase, data || []);
+    return ok(res, { withdrawals: enriched, kind: "driver" });
+  } catch (e) {
+    return fail(res, e.message || String(e), 500);
+  }
+});
+
+router.get("/withdrawals/stores", requireAuth, requireRole("admin"), requireAdminPermission("finance"), async (req, res) => {
+  try {
+    const statusQ = String(req.query.status || "").trim().toLowerCase();
+    let q = req.supabase
+      .from("store_withdrawals")
+      .select("id, store_id, amount, status, created_at, updated_at")
+      .order("created_at", { ascending: false })
+      .limit(200);
+    if (statusQ === "pending" || statusQ === "approved" || statusQ === "rejected") {
+      q = q.eq("status", statusQ);
+    }
+    const { data, error } = await q;
+    if (error) {
+      const msg = String(error.message || "");
+      if (/store_withdrawals|schema cache|relation .*store_withdrawals/i.test(msg)) {
+        return ok(res, { withdrawals: [], kind: "store", note: "migration_store_withdrawals.sql" });
+      }
+      return fail(res, error.message, 400);
+    }
+    const enriched = await attachStoreNamesForWithdrawals(req.supabase, data || []);
+    return ok(res, { withdrawals: enriched, kind: "store" });
+  } catch (e) {
+    return fail(res, e.message || String(e), 500);
+  }
+});
+
+router.post("/withdrawals/:id/approve", requireAuth, requireRole("admin"), requireAdminPermission("finance"), async (req, res) => {
+  try {
+    const id = String(req.params.id || "").trim();
+    if (!id) return fail(res, "معرّف طلب السحب مطلوب", 400);
+    const kind = parseWithdrawalKind(req);
+    if (!kind) {
+      return fail(res, "حدّد نوع الطلب: أرسل في الجسم { \"kind\": \"driver\" } أو { \"kind\": \"store\" } (أو ?kind=)", 400);
+    }
+    if (kind === "driver") {
+      const { data: rpcData, error: rpcErr } = await req.supabase.rpc("ervenow_wallet_withdraw_atomic", {
+        p_withdraw_request_id: id,
+      });
+      if (rpcErr) return fail(res, rpcErr.message || String(rpcErr), 400);
+      const row = typeof rpcData === "object" && rpcData !== null && !Array.isArray(rpcData) ? rpcData : {};
+      if (row.ok === true || row.ok === "true") {
+        return ok(res, { ok: true, kind: "driver", reason: row.reason || "debited", amount: row.amount });
+      }
+      const reason = String(row.reason || "unknown");
+      if (reason === "request_not_found") return fail(res, "طلب السحب غير موجود", 404);
+      if (reason === "not_pending") return fail(res, "الطلب ليس قيد المراجعة", 400);
+      if (reason === "invalid_amount") return fail(res, "مبلغ غير صالح", 400);
+      if (reason === "insufficient_balance") return fail(res, "رصيد المستخدم أقل من المبلغ", 400);
+      return fail(res, reason, 400);
+    }
+    const { data: rpcData, error: rpcErr } = await req.supabase.rpc("store_wallet_approve_withdrawal", {
+      p_withdrawal_id: id,
+    });
+    if (rpcErr) {
+      const msg = String(rpcErr.message || rpcErr.details || "");
+      if (/function .*does not exist|schema cache/i.test(msg)) {
+        return fail(res, "نفّذ migration_store_withdrawals.sql في قاعدة البيانات", 400);
+      }
+      return fail(res, rpcErr.message || String(rpcErr), 400);
+    }
+    const row = typeof rpcData === "object" && rpcData !== null && !Array.isArray(rpcData) ? rpcData : {};
+    if (row.ok === true || row.ok === "true") {
+      return ok(res, { ok: true, kind: "store", reason: row.reason || "approved", amount: row.amount });
+    }
+    const reason = String(row.reason || "unknown");
+    if (reason === "not_found") return fail(res, "طلب السحب غير موجود", 404);
+    if (reason === "not_pending") return fail(res, "الطلب ليس قيد المراجعة", 400);
+    if (reason === "insufficient_balance") return fail(res, "رصيد المتجر غير كافٍ", 400);
+    return fail(res, reason, 400);
+  } catch (e) {
+    return fail(res, e.message || String(e), 500);
+  }
+});
+
+router.post("/withdrawals/:id/reject", requireAuth, requireRole("admin"), requireAdminPermission("finance"), async (req, res) => {
+  try {
+    const id = String(req.params.id || "").trim();
+    if (!id) return fail(res, "معرّف طلب السحب مطلوب", 400);
+    const kind = parseWithdrawalKind(req);
+    if (!kind) {
+      return fail(res, "حدّد نوع الطلب: أرسل في الجسم { \"kind\": \"driver\" } أو { \"kind\": \"store\" } (أو ?kind=)", 400);
+    }
+    const now = new Date().toISOString();
+    if (kind === "driver") {
+      const { data, error } = await req.supabase
+        .from("ervenow_withdraw_requests")
+        .update({ status: "rejected", processed_at: now })
+        .eq("id", id)
+        .eq("status", "pending")
+        .select("id, status")
+        .maybeSingle();
+      if (error) return fail(res, error.message, 400);
+      if (!data) return fail(res, "الطلب غير موجود أو ليس قيد المراجعة", 400);
+      return ok(res, { ok: true, kind: "driver", id: data.id, status: data.status });
+    }
+    const { data, error } = await req.supabase
+      .from("store_withdrawals")
+      .update({ status: "rejected", updated_at: now })
+      .eq("id", id)
+      .eq("status", "pending")
+      .select("id, status")
+      .maybeSingle();
+    if (error) {
+      const msg = String(error.message || "");
+      if (/store_withdrawals|schema cache|relation/i.test(msg)) {
+        return fail(res, "جدول سحوبات المتاجر غير جاهز", 400);
+      }
+      return fail(res, error.message, 400);
+    }
+    if (!data) return fail(res, "الطلب غير موجود أو ليس قيد المراجعة", 400);
+    return ok(res, { ok: true, kind: "store", id: data.id, status: data.status });
+  } catch (e) {
+    return fail(res, e.message || String(e), 500);
+  }
+});
+
 router.get("/store-withdrawals", requireAuth, requireRole("admin"), requireAdminPermission("finance"), async (req, res) => {
   try {
     const statusQ = String(req.query.status || "").trim().toLowerCase();
@@ -709,7 +887,7 @@ router.get("/store-requests", requireAuth, requireRole("admin"), requireAdminPer
     if (error) {
       return fail(res, error.message || String(error), 400);
     }
-    return ok(res, { requests: data || [] });
+    return ok(res, { requests: sanitizeDriverOrStoreListForApi(data || []) });
   } catch (e) {
     return fail(res, e.message || String(e), 500);
   }
@@ -731,7 +909,7 @@ router.patch("/store-requests/:id", requireAuth, requireRole("admin"), requireAd
       return fail(res, error.message || String(error), 400);
     }
     if (status === "approved") await linkStoreOwnerAfterApprove(req.supabase, data);
-    return ok(res, { request: data });
+    return ok(res, { request: sanitizeDriverOrStoreRowForApi(data) });
   } catch (e) {
     return fail(res, e.message || String(e), 500);
   }
@@ -750,7 +928,7 @@ router.post("/approve-store", requireAuth, requireRole("admin"), requireAdminPer
       return fail(res, error.message || String(error), 400);
     }
     await linkStoreOwnerAfterApprove(req.supabase, data);
-    return ok(res, { store: data });
+    return ok(res, { store: sanitizeDriverOrStoreRowForApi(data) });
   } catch (e) {
     return fail(res, e.message || String(e), 500);
   }
@@ -768,7 +946,7 @@ router.post("/reject-store", requireAuth, requireRole("admin"), requireAdminPerm
     if (error) {
       return fail(res, error.message || String(error), 400);
     }
-    return ok(res, { store: data });
+    return ok(res, { store: sanitizeDriverOrStoreRowForApi(data) });
   } catch (e) {
     return fail(res, e.message || String(e), 500);
   }
@@ -787,7 +965,7 @@ router.patch("/store/:id/approve", requireAuth, requireRole("admin"), requireAdm
       return fail(res, error.message || String(error), 400);
     }
     await linkStoreOwnerAfterApprove(req.supabase, data);
-    return ok(res, { store: data });
+    return ok(res, { store: sanitizeDriverOrStoreRowForApi(data) });
   } catch (e) {
     return fail(res, e.message || String(e), 500);
   }
@@ -801,7 +979,7 @@ router.get("/drivers", requireAuth, requireRole("admin"), requireAdminPermission
       .order("created_at", { ascending: false })
       .limit(500);
     if (error) return fail(res, error.message, 400);
-    return ok(res, { drivers: data || [] });
+    return ok(res, { drivers: sanitizeDriverOrStoreListForApi(data || []) });
   } catch (e) {
     return fail(res, e.message || String(e), 500);
   }
@@ -834,7 +1012,7 @@ router.post("/approve-driver", requireAuth, requireRole("admin"), requireAdminPe
     } catch (waErr) {
       console.error("[admin/approve-driver] WhatsApp:", waErr && (waErr.message || String(waErr)));
     }
-    return ok(res, { driver: data });
+    return ok(res, { driver: sanitizeDriverOrStoreRowForApi(data) });
   } catch (e) {
     return fail(res, e.message || String(e), 500);
   }
@@ -851,7 +1029,7 @@ router.post("/reject-driver", requireAuth, requireRole("admin"), requireAdminPer
       .select()
       .single();
     if (error) return fail(res, error.message, 400);
-    return ok(res, { driver: data });
+    return ok(res, { driver: sanitizeDriverOrStoreRowForApi(data) });
   } catch (e) {
     return fail(res, e.message || String(e), 500);
   }
@@ -873,7 +1051,7 @@ router.post("/block-driver", requireAuth, requireRole("admin"), requireAdminPerm
     } catch (e) {
       console.error("[admin/block-driver] user status sync:", e && (e.message || e));
     }
-    return ok(res, { driver: data });
+    return ok(res, { driver: sanitizeDriverOrStoreRowForApi(data) });
   } catch (e) {
     return fail(res, e.message || String(e), 500);
   }
@@ -896,7 +1074,7 @@ router.post("/activate-driver", requireAuth, requireRole("admin"), requireAdminP
     } catch (e) {
       console.error("[admin/activate-driver] user role sync:", e && (e.message || e));
     }
-    return ok(res, { driver: data });
+    return ok(res, { driver: sanitizeDriverOrStoreRowForApi(data) });
   } catch (e) {
     return fail(res, e.message || String(e), 500);
   }
@@ -1325,10 +1503,22 @@ router.post(
       const body = req.body || {};
       const type = normalizeScopeType(body.type);
       const slug = normalizeSlugInput(body.slug);
-      const label_ar = String(body.label_ar || "").trim();
-      if (!type || !slug || !label_ar) return fail(res, "type و slug و label_ar مطلوبة", 400);
+      const name_ar = String(body.name_ar || body.label_ar || "").trim();
+      const catScope = normalizeCategoryScope(body.scope, type);
+      if (!type || !slug || !name_ar) return fail(res, "type و slug و name_ar (أو label_ar) مطلوبة", 400);
+      if (!catScope) return fail(res, "scope غير صالح — استخدم store أو product", 400);
+      if (type === "restaurant" && catScope !== CATEGORY_SCOPE_STORE) {
+        return fail(res, "أقسام المطاعم يجب أن تكون scope=store", 400);
+      }
+      if (type === "market" && catScope !== CATEGORY_SCOPE_PRODUCT) {
+        return fail(res, "أقسام البقالة يجب أن تكون scope=product", 400);
+      }
       const icon =
         body.icon != null && String(body.icon).trim() !== "" ? String(body.icon).trim().slice(0, 16) : null;
+      const image_url =
+        body.image_url != null && String(body.image_url).trim() !== ""
+          ? String(body.image_url).trim().slice(0, 2048)
+          : null;
       let sort_order = Number(body.sort_order);
       if (!Number.isFinite(sort_order)) sort_order = 0;
       const is_active = body.is_active !== false;
@@ -1337,14 +1527,24 @@ router.post(
       const now = new Date().toISOString();
       const { data, error } = await sb
         .from("categories")
-        .insert({ type, slug, label_ar, icon, sort_order, is_active, updated_at: now })
+        .insert({
+          type,
+          scope: catScope,
+          slug,
+          name_ar,
+          icon,
+          image_url,
+          sort_order,
+          is_active,
+          updated_at: now,
+        })
         .select("*")
         .single();
       if (error) {
         if (isCategoriesTableMissing(error)) {
           return fail(res, "جدول categories غير موجود — نفّذ shared/migration_categories.sql", 400);
         }
-        if (String(error.code) === "23505") return fail(res, "slug موجود مسبقاً لهذا النوع", 409);
+        if (String(error.code) === "23505") return fail(res, "slug موجود مسبقاً", 409);
         return fail(res, error.message, 400);
       }
       return ok(res, { ok: true, category: data });
@@ -1366,10 +1566,21 @@ router.put(
       if (!id) return fail(res, "id مطلوب", 400);
       const body = req.body || {};
       const patch = { updated_at: new Date().toISOString() };
-      if (body.label_ar !== undefined) {
-        const la = String(body.label_ar || "").trim();
-        if (!la) return fail(res, "label_ar لا يمكن أن يكون فارغاً", 400);
-        patch.label_ar = la;
+      if (body.name_ar !== undefined || body.label_ar !== undefined) {
+        const la = String((body.name_ar != null ? body.name_ar : body.label_ar) || "").trim();
+        if (!la) return fail(res, "name_ar لا يمكن أن يكون فارغاً", 400);
+        patch.name_ar = la;
+      }
+      if (body.scope !== undefined) {
+        const sc = normalizeCategoryScope(body.scope, body.type || patch.type);
+        if (!sc) return fail(res, "scope غير صالح", 400);
+        patch.scope = sc;
+      }
+      if (body.image_url !== undefined) {
+        patch.image_url =
+          body.image_url === null || body.image_url === ""
+            ? null
+            : String(body.image_url).trim().slice(0, 2048);
       }
       if (body.icon !== undefined) {
         patch.icon = body.icon === null || body.icon === "" ? null : String(body.icon).trim().slice(0, 16);
@@ -1396,7 +1607,7 @@ router.put(
       const { data, error } = await sb.from("categories").update(patch).eq("id", id).select("*").maybeSingle();
       if (error) {
         if (isCategoriesTableMissing(error)) return fail(res, "جدول categories غير موجود", 400);
-        if (String(error.code) === "23505") return fail(res, "slug موجود مسبقاً لهذا النوع", 409);
+        if (String(error.code) === "23505") return fail(res, "slug موجود مسبقاً", 409);
         return fail(res, error.message, 400);
       }
       if (!data) return fail(res, "القسم غير موجود", 404);
