@@ -6,12 +6,27 @@ const { ok, fail } = require("../../shared/utils/helpers");
 const { toE164, toStorageDigits, isErvnowSaudiMobileE164 } = require("../../shared/utils/phone");
 const { createServiceClient, getDatabaseConfigHint } = require("../../shared/config/supabase");
 const { sendOTP } = require("../../shared/services/whatsappService");
+const {
+  OTP_SCOPE,
+  otpBackendMode,
+  startOtpChallenge,
+  verifyOtpChallenge,
+  invalidateOtpChallenge,
+} = require("../../shared/services/otpChallengeService");
 const { attachSiteSessionCookie, clearSiteSessionCookie } = require("../../shared/middleware/publicSiteOtpGate");
 const { parseOptionalPayoutPayload, payoutRowForUsers } = require("../../shared/utils/payoutFields");
+const { assertPayoutIbanGloballyAvailable } = require("../../shared/utils/payoutUniqueness");
 
 const router = express.Router();
-const otpStore = new Map();
 const OTP_TTL_MS = 5 * 60 * 1000;
+
+function clientIp(req) {
+  const xf = String(req.headers["x-forwarded-for"] || "")
+    .split(",")[0]
+    .trim();
+  if (xf) return xf.slice(0, 128);
+  return req.ip ? String(req.ip).slice(0, 128) : null;
+}
 
 const ADMIN_LOGIN_PHONE_RAW = String(
   process.env.ERVENOW_ADMIN_LOGIN_PHONE || "0505745650"
@@ -273,7 +288,23 @@ router.post("/send-otp", async (req, res) => {
     }
     const code = genOtp();
     const key = otpKey(role, digits);
-    otpStore.set(key, { code, expiresAt: Date.now() + OTP_TTL_MS });
+    const mode = otpBackendMode();
+    const sbOtp = mode === "supabase" ? createServiceClient() : null;
+    const started = await startOtpChallenge({
+      sb: sbOtp,
+      mode,
+      scope: OTP_SCOPE.CORE_LOGIN,
+      subjectKey: key,
+      code,
+      ttlMs: OTP_TTL_MS,
+      ip: clientIp(req),
+    });
+    if (!started.ok) {
+      const st = started.cooldownSeconds ? 429 : 400;
+      return fail(res, started.error || "تعذر إعداد رمز التحقق", st, {
+        cooldown_seconds: started.cooldownSeconds,
+      });
+    }
     let sent = false;
     try {
       sent = await sendOTP(digits, code, {
@@ -288,6 +319,12 @@ router.post("/send-otp", async (req, res) => {
       sent = false;
     }
     if (!sent) {
+      await invalidateOtpChallenge({
+        sb: sbOtp,
+        mode,
+        scope: OTP_SCOPE.CORE_LOGIN,
+        subjectKey: key,
+      });
       const twilioReady = !!(
         process.env.TWILIO_ACCOUNT_SID &&
         process.env.TWILIO_AUTH_TOKEN &&
@@ -345,13 +382,21 @@ router.post("/verify-otp", async (req, res) => {
     }
 
     const key = otpKey(wantRole, digits);
-    const saved = otpStore.get(key);
-    const valid =
-      !!saved &&
-      String(saved.code || "") === codeIn &&
-      Number(saved.expiresAt || 0) > Date.now();
-    if (!valid) return fail(res, "رمز واتساب غير صحيح أو منتهي", 400);
-    if (valid) otpStore.delete(key);
+    const mode = otpBackendMode();
+    const sbOtp = mode === "supabase" ? createServiceClient() : null;
+    const checked = await verifyOtpChallenge({
+      sb: sbOtp,
+      mode,
+      scope: OTP_SCOPE.CORE_LOGIN,
+      subjectKey: key,
+      code: codeIn,
+    });
+    if (!checked.ok) {
+      const lockCase = /قفل|محاولات كثيرة/i.test(String(checked.error || ""));
+      return fail(res, checked.error || "رمز واتساب غير صحيح أو منتهي", lockCase ? 429 : 400, {
+        attempts_remaining: checked.attemptsRemaining,
+      });
+    }
 
     const sb = createServiceClient();
     if (!sb) {
@@ -389,6 +434,16 @@ router.post("/verify-otp", async (req, res) => {
     const payoutPatch = payoutRowForUsers(payoutParsed);
     const payoutRoles = new Set(["merchant", "restaurant", "service"]);
     if (payoutRoles.has(String(wantRole).toLowerCase()) && Object.keys(payoutPatch).length) {
+      if (payoutParsed.iban) {
+        try {
+          await assertPayoutIbanGloballyAvailable(sb, payoutParsed.iban, {
+            excludeUserId: userRow.id,
+            ownerPhonesDigits: [digits],
+          });
+        } catch (pe) {
+          return fail(res, pe.message || "الآيبان مستخدم لحساب آخر", 400);
+        }
+      }
       const pRes = await sb
         .from("users")
         .update({ ...payoutPatch, updated_at: new Date().toISOString() })

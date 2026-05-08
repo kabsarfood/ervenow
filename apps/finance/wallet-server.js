@@ -1,3 +1,9 @@
+/**
+ * ⚠️ تحذير أمني (ERVENOW CORE STABILIZATION)
+ * هذا الملف خادم Express **منفصل** بمسارات محفظة **بدون مصادقة JWT**.
+ * لا تُعرضه على الإنترنت العام. للإنتاج: احذفه، أو أضف مصادقة قوية + شبكة داخلية فقط.
+ * راجع docs/STABILIZATION-PLAN.md و docs/production-readiness-checklist.md
+ */
 const express = require("express");
 const cors = require("cors");
 const app = express();

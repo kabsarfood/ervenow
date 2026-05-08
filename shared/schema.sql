@@ -1,4 +1,8 @@
 -- ERVENOW Platform Core — نفّذ في Supabase SQL Editor
+--
+-- CORE STABILIZATION: جرد الجداول القديمة ومسار التوصيل الحالي — راجع docs/legacy-inventory.md
+-- مسار التوصيل في تطبيق Node الحالي: public.orders (وليس delivery_orders).
+--
 -- فواتير PDF: shared/migration_delivery_orders_invoice.sql
 -- تفريد فاتورة/VAT: shared/migration_finance_production_hardening.sql
 -- تاريخ الرياض للـ VAT: shared/migration_vat_riyadh_production.sql

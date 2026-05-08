@@ -11,6 +11,13 @@ const { notifyDriver } = require("./notify");
 const { bumpDeliveryOrdersListEpoch } = require("../../shared/utils/deliveryOrdersListCache");
 const { setStatus } = require("../delivery/service");
 const {
+  OTP_SCOPE,
+  otpBackendMode,
+  startOtpChallenge,
+  verifyOtpChallenge,
+  invalidateOtpChallenge,
+} = require("../../shared/services/otpChallengeService");
+const {
   sendOTP,
   sendOrderAcceptedToCustomer,
   sendCustomerDeliveringNotice,
@@ -19,6 +26,12 @@ const {
 const { attachSiteSessionCookie } = require("../../shared/middleware/publicSiteOtpGate");
 const { parseOptionalPayoutPayload, payoutRowForDriversOrStores } = require("../../shared/utils/payoutFields");
 const { sanitizeDriverOrStoreRowForApi } = require("../../shared/utils/bankApiSafe");
+const {
+  assertPayoutIbanGloballyAvailable,
+  iqamaDigitsNormalized,
+  ibanFingerprintFromPlain,
+  stripIban,
+} = require("../../shared/utils/payoutUniqueness");
 
 const router = express.Router();
 
@@ -33,8 +46,16 @@ router.use((req, res, next) => {
   req.supabase = sb;
   next();
 });
-const otpStore = new Map();
+
 const OTP_TTL_MS = 5 * 60 * 1000;
+
+function clientIp(req) {
+  const xf = String(req.headers["x-forwarded-for"] || "")
+    .split(",")[0]
+    .trim();
+  if (xf) return xf.slice(0, 128);
+  return req.ip ? String(req.ip).slice(0, 128) : null;
+}
 
 function genOtp() {
   return String(Math.floor(10000 + Math.random() * 90000));
@@ -168,7 +189,21 @@ router.post("/send-otp", async (req, res) => {
     }
     const digits = toStorageDigits(e164);
     const code = genOtp();
-    otpStore.set(digits, { code, expiresAt: Date.now() + OTP_TTL_MS });
+    const mode = otpBackendMode();
+    const started = await startOtpChallenge({
+      sb: req.supabase,
+      mode,
+      scope: OTP_SCOPE.DRIVER_LOGIN,
+      subjectKey: digits,
+      code,
+      ttlMs: OTP_TTL_MS,
+      ip: clientIp(req),
+    });
+    if (!started.ok) {
+      return fail(res, started.error || "تعذر إعداد رمز التحقق", started.cooldownSeconds ? 429 : 400, {
+        cooldown_seconds: started.cooldownSeconds,
+      });
+    }
 
     let sent = false;
     try {
@@ -178,6 +213,15 @@ router.post("/send-otp", async (req, res) => {
       });
     } catch (e) {
       sent = false;
+    }
+
+    if (!sent) {
+      await invalidateOtpChallenge({
+        sb: req.supabase,
+        mode: otpBackendMode(),
+        scope: OTP_SCOPE.DRIVER_LOGIN,
+        subjectKey: digits,
+      });
     }
 
     return res.json({ ok: true, sent });
@@ -194,13 +238,18 @@ router.post("/verify-otp", async (req, res) => {
     if (!code) return fail(res, "أدخل رمز الدخول", 400);
     const digits = toStorageDigits(e164);
 
-    const saved = otpStore.get(digits);
-    const valid =
-      !!saved &&
-      saved.code === code &&
-      Number(saved.expiresAt) > Date.now();
-    if (!valid) return fail(res, "رمز غير صحيح أو منتهي", 400);
-    otpStore.delete(digits);
+    const mode = otpBackendMode();
+    const checked = await verifyOtpChallenge({
+      sb: req.supabase,
+      mode,
+      scope: OTP_SCOPE.DRIVER_LOGIN,
+      subjectKey: digits,
+      code,
+    });
+    if (!checked.ok) {
+      const lockCase = /قفل|محاولات كثيرة/i.test(String(checked.error || ""));
+      return fail(res, checked.error || "رمز غير صحيح أو منتهي", lockCase ? 429 : 400);
+    }
 
     const { data: drv, error: dErr } = await req.supabase
       .from("drivers")
@@ -258,17 +307,41 @@ router.post("/register", async (req, res) => {
     const phone = toStorageDigits(e164);
 
     let extraPayout = {};
+    let parsed = {};
     try {
-      const parsed = parseOptionalPayoutPayload({ payout: b.payout });
+      parsed = parseOptionalPayoutPayload({ payout: b.payout });
+      if (parsed.iban) {
+        await assertPayoutIbanGloballyAvailable(req.supabase, parsed.iban, {
+          ownerPhonesDigits: [phone],
+        });
+      }
       extraPayout = payoutRowForDriversOrStores(parsed);
     } catch (pe) {
       return fail(res, pe.message || "بيانات الدفع غير صالحة", 400);
+    }
+
+    const iqama_digits = iqamaDigitsNormalized(iqama);
+    if (iqama_digits) {
+      const { data: iqDup, error: iqErr } = await req.supabase
+        .from("drivers")
+        .select("phone")
+        .eq("iqama_digits", iqama_digits)
+        .neq("phone", phone)
+        .maybeSingle();
+      const iqMsg = String(iqErr?.message || iqErr?.details || "");
+      if (iqErr && !/iqama_digits|column|schema cache|does not exist/i.test(iqMsg)) {
+        return fail(res, iqErr.message, 400);
+      }
+      if (!iqErr && iqDup) {
+        return fail(res, "رقم الهوية / الإقامة مسجّل لمندوب آخر — لا يمكن استخدام نفس الرقم", 400);
+      }
     }
 
     const row = {
       name,
       phone,
       iqama,
+      iqama_digits: iqama_digits || null,
       car_type: carType,
       plate_number: plate,
       status: "pending",
@@ -281,7 +354,37 @@ router.post("/register", async (req, res) => {
       .upsert(row, { onConflict: "phone" })
       .select()
       .single();
-    if (error) return fail(res, error.message, 400);
+    if (error) {
+      const em = String(error.message || error.details || "");
+      if (/unique|duplicate|23505|uq_drivers_iqama|iqama_digits/i.test(em)) {
+        return fail(res, "رقم الهوية / الإقامة مستخدم مسبقاً أو بيانات مكررة", 400);
+      }
+      if (/unique|duplicate|23505|phone/i.test(em)) {
+        return fail(res, "رقم الجوال مسجّل مسبقاً كمندوب", 400);
+      }
+      return fail(res, error.message, 400);
+    }
+
+    if (parsed.iban) {
+      try {
+        const { data: ur, error: urErr } = await req.supabase.from("users").select("id").eq("phone", phone).maybeSingle();
+        if (!urErr && ur?.id) {
+          const fp = ibanFingerprintFromPlain(parsed.iban);
+          await req.supabase
+            .from("users")
+            .update({
+              iban: stripIban(parsed.iban),
+              bank_name: parsed.bank_name || null,
+              bank_country_code: parsed.bank_country_code || "SA",
+              payout_iban_fingerprint: fp,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", ur.id);
+        }
+      } catch (syncErr) {
+        console.warn("[driver/register] sync user payout:", syncErr && (syncErr.message || syncErr));
+      }
+    }
     try {
       await sendWhatsApp({
         to: phone,

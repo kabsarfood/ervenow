@@ -4,6 +4,7 @@
  */
 
 const { encrypt, assertBankSecretConfigured } = require("../../server/utils/crypto");
+const { ibanFingerprintFromPlain } = require("./payoutUniqueness");
 
 function stripSpaces(s) {
   return String(s || "").replace(/\s+/g, "").trim();
@@ -126,6 +127,7 @@ function payoutRowForDriversOrStores(parsed) {
   if (parsed.iban) {
     const plain = stripSpaces(parsed.iban).toUpperCase();
     row.bank_iban = encrypt(plain);
+    row.payout_iban_fingerprint = ibanFingerprintFromPlain(plain);
   }
   if (parsed.bank_account_number) {
     row.bank_account_number = encrypt(stripSpaces(parsed.bank_account_number));
@@ -152,7 +154,10 @@ function payoutRowForUsers(parsed) {
     payout_crypto_interest: !!parsed.payout_crypto_interest,
   };
   if (parsed.bank_name != null) row.bank_name = parsed.bank_name;
-  if (parsed.iban != null) row.iban = parsed.iban;
+  if (parsed.iban != null) {
+    row.iban = parsed.iban;
+    row.payout_iban_fingerprint = ibanFingerprintFromPlain(parsed.iban);
+  }
   if (parsed.stc_pay_phone != null) row.stc_pay_phone = parsed.stc_pay_phone;
   return row;
 }

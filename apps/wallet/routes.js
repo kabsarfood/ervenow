@@ -8,13 +8,19 @@ const { requireAuth } = require("../../shared/middleware/auth");
 const { requireRole } = require("../../shared/middleware/roles");
 const { ok, fail } = require("../../shared/utils/helpers");
 const { sendWhatsApp } = require("../../shared/utils/whatsapp");
+const { stripIban, ibanFingerprintFromPlain } = require("../../shared/utils/payoutUniqueness");
+const {
+  OTP_SCOPE,
+  otpBackendMode,
+  startOtpChallenge,
+  verifyOtpChallenge,
+  invalidateOtpChallenge,
+} = require("../../shared/services/otpChallengeService");
+const { insertAuditEvent } = require("../../shared/services/auditLog");
 
 const router = express.Router();
 const MIN_WITHDRAW = 20;
-const withdrawOtpStore = new Map();
 const WITHDRAW_OTP_TTL_MS = 5 * 60 * 1000;
-const WITHDRAW_OTP_LOCK_MS = 5 * 60 * 1000;
-const WITHDRAW_OTP_MAX_ATTEMPTS = 3;
 
 /** قراءة رصيد التشغيل + سجل الحركات */
 const WALLET_READ_ROLES = ["driver", "restaurant", "merchant", "service", "customer", "admin"];
@@ -28,10 +34,6 @@ function round2(n) {
   return Math.round(Number(n) * 100) / 100;
 }
 
-function nowMs() {
-  return Date.now();
-}
-
 function genOtp() {
   return String(Math.floor(10000 + Math.random() * 90000));
 }
@@ -42,10 +44,12 @@ function allowDevOtp() {
     .toLowerCase() === "true";
 }
 
-function getRemainingLockSeconds(state) {
-  if (!state || !state.lockUntil) return 0;
-  const remain = Math.ceil((Number(state.lockUntil) - nowMs()) / 1000);
-  return remain > 0 ? remain : 0;
+function clientIp(req) {
+  const xf = String(req.headers["x-forwarded-for"] || "")
+    .split(",")[0]
+    .trim();
+  if (xf) return xf.slice(0, 128);
+  return req.ip ? String(req.ip).slice(0, 128) : null;
 }
 
 async function validateWithdrawRequest(req, amount) {
@@ -53,12 +57,30 @@ async function validateWithdrawRequest(req, amount) {
     throw new Error(`الحد الأدنى للسحب ${MIN_WITHDRAW} ريال`);
   }
 
-  const { data: u, error: uErr } = await req.supabase.from("users").select("iban").eq("id", req.appUser.id).single();
+  const { data: u, error: uErr } = await req.supabase
+    .from("users")
+    .select("iban, payout_iban_fingerprint")
+    .eq("id", req.appUser.id)
+    .single();
   if (uErr) throw new Error(uErr.message);
   const ibanRaw = u && u.iban != null ? String(u.iban).trim().replace(/\s+/g, "") : "";
   if (!ibanRaw) throw new Error("لا يوجد حساب بنكي (IBAN) مسجّل");
   if (!isValidIBAN(ibanRaw)) {
     throw new Error("IBAN غير صالح — يُقبل آيبان سعودي SA متبوعاً بـ 22 رقماً");
+  }
+
+  const submitted = stripIban(req.body?.iban);
+  if (!submitted) {
+    throw new Error("أدخل الآيبان مطابقاً لما سجّلته في الحساب لتأكيد طلب السحب");
+  }
+  if (stripIban(submitted) !== stripIban(ibanRaw)) {
+    throw new Error("الآيبان المُدخل لا يطابق بيانات الحساب المسجّلة");
+  }
+  if (u.payout_iban_fingerprint) {
+    const fp = ibanFingerprintFromPlain(submitted);
+    if (fp && fp !== u.payout_iban_fingerprint) {
+      throw new Error("الآيبان لا يطابق بيانات الحساب المسجّلة (تحقق من التطابق الكامل)");
+    }
   }
 
   const { data: w } = await req.supabase.from("ervenow_wallets").select("balance").eq("user_id", req.appUser.id).maybeSingle();
@@ -221,17 +243,7 @@ router.post("/withdraw", requireAuth, requireRole(...PAYOUT_ROLES), async (req, 
       return fail(res, `الحد الأدنى للسحب ${MIN_WITHDRAW} ريال`, 400);
     }
 
-    const { data: u, error: uErr } = await req.supabase.from("users").select("iban").eq("id", req.appUser.id).single();
-    if (uErr) return fail(res, uErr.message, 400);
-    const ibanRaw = u && u.iban != null ? String(u.iban).trim().replace(/\s+/g, "") : "";
-    if (!ibanRaw) {
-      return fail(res, "لا يوجد حساب بنكي (IBAN) مسجّل", 400);
-    }
-    if (!isValidIBAN(ibanRaw)) {
-      return fail(res, "IBAN غير صالح — يُقبل آيبان سعودي SA متبوعاً بـ 22 رقماً", 400);
-    }
-
-    await validateWithdrawRequest(req, amount);
+    const { ibanRaw } = await validateWithdrawRequest(req, amount);
 
     const { error: insE } = await req.supabase.from("ervenow_withdraw_requests").insert({
       user_id: req.appUser.id,
@@ -240,6 +252,15 @@ router.post("/withdraw", requireAuth, requireRole(...PAYOUT_ROLES), async (req, 
       status: "pending",
     });
     if (insE) return fail(res, insE.message, 400);
+    await insertAuditEvent(req.supabase, {
+      scope: "wallet",
+      action: "withdraw_request_created",
+      actor_type: "user",
+      actor_id: req.appUser.id,
+      subject_type: "ervenow_withdraw_requests",
+      ip: clientIp(req),
+      metadata: { amount, path: "direct" },
+    });
     ok(res, { message: "تم إرسال طلب السحب" });
   } catch (e) {
     fail(res, e.message, 500);
@@ -251,27 +272,28 @@ router.post("/withdraw/send-otp", requireAuth, requireRole(...PAYOUT_ROLES), asy
     const amount = Number(req.body?.amount);
     const { ibanRaw } = await validateWithdrawRequest(req, amount);
 
-    const current = withdrawOtpStore.get(req.appUser.id);
-    const lockSeconds = getRemainingLockSeconds(current);
-    if (lockSeconds > 0) {
-      return fail(res, `تم قفل المحاولة مؤقتًا لمدة ${lockSeconds} ثانية`, 429, {
-        lock_seconds: lockSeconds,
-        attempts_remaining: 0,
-      });
-    }
-
     const phone = String(req.appUser?.phone || "").trim();
     if (!phone) return fail(res, "رقم جوال المندوب غير متوفر", 400);
 
     const code = genOtp();
-    withdrawOtpStore.set(req.appUser.id, {
+    const mode = otpBackendMode();
+    const subjectKey = String(req.appUser.id);
+    const started = await startOtpChallenge({
+      sb: req.supabase,
+      mode,
+      scope: OTP_SCOPE.WALLET_WITHDRAW,
+      subjectKey,
       code,
-      amount,
-      iban: ibanRaw,
-      expiresAt: nowMs() + WITHDRAW_OTP_TTL_MS,
-      failedAttempts: 0,
-      lockUntil: 0,
+      ttlMs: WITHDRAW_OTP_TTL_MS,
+      ip: clientIp(req),
+      extras: { amount, iban: ibanRaw },
     });
+    if (!started.ok) {
+      return fail(res, started.error || "تعذر إعداد رمز التحقق", started.cooldownSeconds ? 429 : 400, {
+        lock_seconds: started.cooldownSeconds,
+        cooldown_seconds: started.cooldownSeconds,
+      });
+    }
 
     let sent = false;
     try {
@@ -281,6 +303,15 @@ router.post("/withdraw/send-otp", requireAuth, requireRole(...PAYOUT_ROLES), asy
       });
     } catch (e) {
       sent = false;
+    }
+
+    if (!sent) {
+      await invalidateOtpChallenge({
+        sb: req.supabase,
+        mode: otpBackendMode(),
+        scope: OTP_SCOPE.WALLET_WITHDRAW,
+        subjectKey: String(req.appUser.id),
+      });
     }
 
     const payload = {
@@ -300,48 +331,46 @@ router.post("/withdraw/confirm-otp", requireAuth, requireRole(...PAYOUT_ROLES), 
     const code = String(req.body?.code || "").trim();
     if (!code) return fail(res, "رمز التحقق مطلوب", 400);
 
-    const pending = withdrawOtpStore.get(req.appUser.id);
-    const lockSeconds = getRemainingLockSeconds(pending);
-    if (lockSeconds > 0) {
-      return fail(res, `تم قفل زر التأكيد مؤقتًا لمدة ${lockSeconds} ثانية`, 429, {
-        lock_seconds: lockSeconds,
-        attempts_remaining: 0,
-      });
-    }
-    if (!pending || pending.expiresAt <= nowMs()) {
-      withdrawOtpStore.delete(req.appUser.id);
-      return fail(res, "انتهت صلاحية رمز السحب", 400);
-    }
-    if (pending.code !== code) {
-      pending.failedAttempts = Number(pending.failedAttempts || 0) + 1;
-      if (pending.failedAttempts >= WITHDRAW_OTP_MAX_ATTEMPTS) {
-        pending.lockUntil = nowMs() + WITHDRAW_OTP_LOCK_MS;
-        const remain = getRemainingLockSeconds(pending);
-        withdrawOtpStore.set(req.appUser.id, pending);
-        return fail(res, `تم قفل زر التأكيد ${remain} ثانية بسبب 3 محاولات خاطئة`, 429, {
-          lock_seconds: remain,
-          attempts_remaining: 0,
-        });
-      }
-      withdrawOtpStore.set(req.appUser.id, pending);
-      return fail(res, "رمز التحقق غير صحيح", 400, {
-        attempts_remaining: Math.max(0, WITHDRAW_OTP_MAX_ATTEMPTS - pending.failedAttempts),
+    const mode = otpBackendMode();
+    const checked = await verifyOtpChallenge({
+      sb: req.supabase,
+      mode,
+      scope: OTP_SCOPE.WALLET_WITHDRAW,
+      subjectKey: String(req.appUser.id),
+      code,
+    });
+    if (!checked.ok) {
+      const lockCase = /قفل|محاولات كثيرة/i.test(String(checked.error || ""));
+      return fail(res, checked.error || "رمز التحقق غير صحيح", lockCase ? 429 : 400, {
+        attempts_remaining: checked.attemptsRemaining,
       });
     }
 
-    const amount = Number(pending.amount);
-    const { ibanRaw } = await validateWithdrawRequest(req, amount);
+    const meta = checked.metadata || {};
+    const amount = Number(req.body?.amount) || Number(meta.amount);
+    const mergedBody = { ...(req.body || {}), iban: req.body?.iban || meta.iban, amount };
+    const mergedReq = { ...req, body: mergedBody };
+    const { ibanRaw } = await validateWithdrawRequest(mergedReq, amount);
 
     const { error: insE } = await req.supabase.from("ervenow_withdraw_requests").insert({
       user_id: req.appUser.id,
       amount,
-      iban: ibanRaw || pending.iban,
+      iban: ibanRaw,
       status: "pending",
       note: "OTP verified",
     });
     if (insE) return fail(res, insE.message, 400);
 
-    withdrawOtpStore.delete(req.appUser.id);
+    await insertAuditEvent(req.supabase, {
+      scope: "wallet",
+      action: "withdraw_request_created",
+      actor_type: "user",
+      actor_id: req.appUser.id,
+      subject_type: "ervenow_withdraw_requests",
+      ip: clientIp(req),
+      metadata: { amount, path: "otp_confirm" },
+    });
+
     return ok(res, { message: "تم إرسال طلب السحب بنجاح بعد التحقق" });
   } catch (e) {
     return fail(res, e.message, 400);

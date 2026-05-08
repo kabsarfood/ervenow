@@ -9,6 +9,13 @@ const { cacheGetJson, cacheSetJson } = require("../../shared/utils/redisCache");
 const { parseOptionalPayoutPayload, payoutRowForDriversOrStores } = require("../../shared/utils/payoutFields");
 const { sanitizeDriverOrStoreRowForApi } = require("../../shared/utils/bankApiSafe");
 const {
+  assertPayoutIbanGloballyAvailable,
+  assertStorePhoneNotDuplicateForRegister,
+  stripIban,
+  ibanFingerprintFromPlain,
+} = require("../../shared/utils/payoutUniqueness");
+const { decrypt } = require("../../server/utils/crypto");
+const {
   restaurantCategoryLabelAr,
   restaurantCategoryDisplayAr,
   restaurantRowMatchesCuisineFilter,
@@ -1170,6 +1177,12 @@ router.post("/register", async (req, res) => {
     let parsedPayout = {};
     try {
       parsedPayout = parseOptionalPayoutPayload({ payout: b.payout });
+      await assertStorePhoneNotDuplicateForRegister(sb, phoneDigits);
+      if (parsedPayout.iban) {
+        await assertPayoutIbanGloballyAvailable(sb, parsedPayout.iban, {
+          ownerPhonesDigits: [phoneDigits],
+        });
+      }
       payoutCols = payoutRowForDriversOrStores(parsedPayout);
     } catch (pe) {
       return fail(res, pe.message || "بيانات الدفع غير صالحة", 400);
@@ -1224,6 +1237,7 @@ router.post("/register", async (req, res) => {
       delete row.bank_verified;
       delete row.bank_added_at;
       delete row.stc_pay_phone;
+      delete row.payout_iban_fingerprint;
       delete row.payout_crypto_interest;
       ({ data: insertedRow, error: insErr } = await sb.from("stores").insert(row).select("id").single());
     }
@@ -1234,6 +1248,13 @@ router.post("/register", async (req, res) => {
         code: insErr?.code,
         hint: insErr?.hint,
       });
+      const em = String(insErr.message || insErr.details || "");
+      if (/unique|duplicate|23505|uq_stores_phone|stores_phone/i.test(em)) {
+        return fail(res, "رقم الجوال مسجّل مسبقاً لمتجر قيد المراجعة أو معتمد", 400);
+      }
+      if (/unique|duplicate|23505|payout_iban|fingerprint/i.test(em)) {
+        return fail(res, "هذا الآيبان مسجّل لمتجر أو حساب آخر", 400);
+      }
       if (isStoresTableMissing(insErr)) {
         return fail(res, insErr.message || String(insErr), 400);
       }
@@ -1456,6 +1477,41 @@ router.post("/withdrawals", requireAuth, requireMerchantRole, async (req, res) =
     if (sErr) return fail(res, sErr.message, 400);
     if (!st) return fail(res, "لا يوجد متجر معتمد لجوالك.", 404);
     const sid = st.id;
+
+    const submitted = stripIban(req.body?.iban);
+    if (!submitted) {
+      return fail(res, "أدخل الآيبان مطابقاً لما سجّلته عند تسجيل المتجر لتأكيد طلب السحب", 400);
+    }
+
+    const { data: stBank, error: stBankErr } = await sb
+      .from("stores")
+      .select("bank_iban, payout_iban_fingerprint")
+      .eq("id", sid)
+      .maybeSingle();
+    if (stBankErr) return fail(res, stBankErr.message, 400);
+    if (!stBank?.bank_iban && !stBank?.payout_iban_fingerprint) {
+      return fail(
+        res,
+        "لا يوجد آيبان مسجّل للمتجر — سجّل بيانات الحساب في طلب فتح المتجر أو تواصل مع الإدارة",
+        400
+      );
+    }
+
+    let ibanMatches = false;
+    if (stBank.payout_iban_fingerprint) {
+      ibanMatches = stBank.payout_iban_fingerprint === ibanFingerprintFromPlain(submitted);
+    }
+    if (!ibanMatches && stBank.bank_iban) {
+      try {
+        const plain = decrypt(stBank.bank_iban);
+        ibanMatches = stripIban(plain) === submitted;
+      } catch (_de) {
+        return fail(res, "تعذر التحقق من الآيبان — تحقق من إعدادات الخادم", 500);
+      }
+    }
+    if (!ibanMatches) {
+      return fail(res, "الآيبان لا يطابق بيانات المتجر المسجّلة", 400);
+    }
 
     const { data: wRow, error: wErr } = await sb.from("store_wallets").select("balance").eq("store_id", sid).maybeSingle();
     if (wErr && !isStoreFinancialMissing(wErr)) return fail(res, wErr.message, 400);

@@ -69,9 +69,11 @@
 
       <div class="card" id="withdrawCard" style="display: none">
         <h2 style="margin: 0 0 12px">سحب الأرباح</h2>
-        <p class="sub">يُرسل الطلب للإدارة. عند الموافقة يُخصم من رصيد محفظة المتجر.</p>
+        <p class="sub">يُرسل الطلب للإدارة. عند الموافقة يُخصم من رصيد محفظة المتجر. أدخل <strong>نفس الآيبان</strong> المسجّل عند فتح المتجر.</p>
         <label for="wAmount">المبلغ (ريال)</label>
         <input id="wAmount" type="number" min="10" step="0.01" placeholder="10 كحد أدنى" />
+        <label for="wIban" style="display: block; margin-top: 8px">تأكيد الآيبان</label>
+        <input id="wIban" type="text" placeholder="SA…" translate="no" style="width: 100%; max-width: 420px" />
         <button type="button" class="btn btn-primary" id="btnWithdraw" style="margin-top: 10px">تقديم طلب سحب</button>
         <div id="wList" style="margin-top: 14px"></div>
       </div>
@@ -322,10 +324,13 @@
       document.getElementById("btnWithdraw").onclick = async function () {
         var amt = Number(document.getElementById("wAmount").value);
         if (!Number.isFinite(amt) || amt < 10) return show("أدخل مبلغاً 10 ريال فأكثر", false);
+        var ib = String(document.getElementById("wIban").value || "").trim();
+        if (!ib) return show("أدخل الآيبان مطابقاً لما سجّلته عند تسجيل المتجر", false);
         try {
-          await window.PlatformAPI.api("/api/store/withdrawals", { method: "POST", body: { amount: amt } });
+          await window.PlatformAPI.api("/api/store/withdrawals", { method: "POST", body: { amount: amt, iban: ib } });
           show("تم تقديم طلب السحب", true);
           document.getElementById("wAmount").value = "";
+          document.getElementById("wIban").value = "";
           await loadWithdrawals();
         } catch (e) {
           show(String(e.message || e), false);
