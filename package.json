@@ -8,7 +8,9 @@
     "dev": "node server/server.js",
     "worker:delivery": "node workers/deliveryWorker.js",
     "frontend:sync": "node scripts/sync-ervenow-frontend.js",
-    "load:test": "npx artillery run tests/load/artillery.yml"
+    "load:test": "npx artillery run tests/load/artillery.yml",
+    "test": "jest",
+    "test:ci": "jest --ci"
   },
   "engines": {
     "node": ">=20"
@@ -32,6 +34,7 @@
     "twilio": "^5.13.1"
   },
   "devDependencies": {
-    "artillery": "^2.0.31"
+    "artillery": "^2.0.31",
+    "jest": "^29.7.0"
   }
 }

@@ -391,6 +391,10 @@ if (servePublicUi) {
     res.sendFile(path.join(publicPath, "driver-wallet.html"));
   });
 
+  app.get("/driver-app", (_req, res) => {
+    res.sendFile(path.join(publicPath, "driver-app.html"));
+  });
+
   app.get("/orders", (_req, res) => {
     res.sendFile(path.join(publicPath, "orders.html"));
   });

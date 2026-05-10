@@ -23,6 +23,12 @@ const {
   sendCustomerDeliveringNotice,
   sendDriverArrived,
 } = require("../../shared/services/whatsappService");
+const {
+  broadcastDriverUpdate,
+  broadcastOrderPatch,
+  broadcastOrderLive,
+  orderPatchFromRow,
+} = require("../../shared/lib/trackingSocket");
 const { attachSiteSessionCookie } = require("../../shared/middleware/publicSiteOtpGate");
 const { parseOptionalPayoutPayload, payoutRowForDriversOrStores } = require("../../shared/utils/payoutFields");
 const { sanitizeDriverOrStoreRowForApi } = require("../../shared/utils/bankApiSafe");
@@ -516,6 +522,7 @@ router.post("/accept/:id", requireAuth, async (req, res) => {
     if (data.customer_phone) {
       await sendOrderAcceptedToCustomer(data, req.appUser.phone);
     }
+    broadcastOrderPatch(orderId, orderPatchFromRow(data));
     return ok(res, { accepted: true, order: data });
   } catch (e) {
     return fail(res, e.message, 500);
@@ -545,8 +552,14 @@ router.post("/update-location", requireAuth, async (req, res) => {
       .eq("driver_id", driverId)
       .in("delivery_status", ["accepted", "picked", "delivering"]);
     if (orderId) q = q.eq("id", orderId);
-    const { error } = await q;
+    const { data: updatedRows, error } = await q.select("id");
     if (error) return fail(res, error.message, 400);
+    const rows = Array.isArray(updatedRows) ? updatedRows : updatedRows ? [updatedRows] : [];
+    for (const row of rows) {
+      if (row && row.id) {
+        broadcastDriverUpdate(row.id, driverId, { lat, lng, ts: Date.now() });
+      }
+    }
     const { error: dErr } = await req.supabase
       .from("drivers")
       .update({
@@ -584,7 +597,31 @@ router.post("/start-delivery/:id", requireAuth, async (req, res) => {
       await sendCustomerDeliveringNotice(data);
     }
     await bumpDeliveryOrdersListEpoch();
+    broadcastOrderPatch(id, orderPatchFromRow(data));
     return ok(res, { order: data });
+  } catch (e) {
+    return fail(res, e.message, 500);
+  }
+});
+
+router.post("/ping-arrival/:id", requireAuth, async (req, res) => {
+  try {
+    const drv = await ensureApprovedDriver(req, res);
+    if (!drv) return;
+    const oid = String(req.params.id || "").trim();
+    if (!oid) return fail(res, "order id required", 400);
+    const { data: row, error } = await req.supabase
+      .from("orders")
+      .select("id, driver_id, delivery_status")
+      .eq("id", oid)
+      .maybeSingle();
+    if (error || !row) return fail(res, error?.message || "Not found", 404);
+    if (String(row.driver_id || "") !== String(req.appUser.id)) return fail(res, "Forbidden", 403);
+    if (String(row.delivery_status || "").toLowerCase() !== "delivering") {
+      return fail(res, "يجب أن يكون الطلب في حالة «جاري التوصيل»", 400);
+    }
+    broadcastOrderLive(oid, { arrivalPing: true, ts: Date.now() });
+    return ok(res, { ok: true });
   } catch (e) {
     return fail(res, e.message, 500);
   }
@@ -613,6 +650,7 @@ router.post("/complete-order/:id", requireAuth, async (req, res) => {
       }
     }
     await bumpDeliveryOrdersListEpoch();
+    broadcastOrderPatch(id, orderPatchFromRow(data));
     return ok(res, { order: data });
   } catch (e) {
     return fail(res, e.message, 500);

@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ERVENOW | لوحة المندوب — التتبع الحي</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/assets/styles.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+      .da-tabs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin: 12px 0 18px;
+      }
+      .da-tabs a {
+        text-decoration: none;
+      }
+      .da-tabs .btn.is-active {
+        box-shadow: inset 0 0 0 2px rgba(37, 99, 235, 0.35);
+      }
+      #daMap {
+        min-height: 280px;
+        border-radius: 12px;
+        border: 1px solid rgba(0, 0, 0, 0.12);
+        margin-top: 10px;
+      }
+      .da-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 14px;
+      }
+      .da-actions .btn {
+        flex: 1 1 140px;
+      }
+      .da-sub {
+        margin-top: 8px;
+        font-size: 0.92rem;
+        color: rgba(15, 23, 42, 0.75);
+      }
+      .da-panel {
+        display: none;
+      }
+      .da-panel.is-visible {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="layout">
+      <div class="top-nav">
+        <h1 style="margin: 0">لوحة المندوب — التتبع الحي</h1>
+        <div class="btn-row">
+          <a class="btn btn-ghost" href="/driver">الطلبات الكلاسيكية</a>
+          <a class="btn btn-ghost" href="/driver-wallet">المحفظة</a>
+          <a class="btn btn-ghost" href="/login" id="daLogout">خروج</a>
+        </div>
+      </div>
+
+      <div class="da-tabs">
+        <a class="btn btn-ghost da-tab" href="#orders" data-panel="orders">الطلبات</a>
+        <a class="btn btn-ghost da-tab" href="#track" data-panel="track">التتبع الحي</a>
+        <a class="btn btn-ghost da-tab" href="#wallet" data-panel="wallet">المحفظة</a>
+      </div>
+
+      <div id="daErr" class="msg err" style="display: none"></div>
+
+      <div class="da-panel" id="daPanelOrders">
+        <div class="card">
+          <div class="badge">طلباتي النشطة</div>
+          <p class="sub" style="margin-top: 8px">اختر طلباً للانتقال إلى التتبع الحي وإرسال الموقع.</p>
+          <div id="daOrders"></div>
+          <button type="button" class="btn btn-primary" id="daBtnRefreshOrders">تحديث</button>
+        </div>
+      </div>
+
+      <div class="da-panel" id="daPanelTrack">
+        <div class="card">
+          <div class="badge">الخريطة والموقع</div>
+          <p class="sub da-sub" id="daLocStatus">—</p>
+          <p class="sub da-sub" id="daOrderStatus">—</p>
+          <div id="daMap"></div>
+          <div class="da-actions">
+            <button type="button" class="btn btn-primary" id="daBtnStart">بدء التوصيل</button>
+            <button type="button" class="btn btn-ghost" id="daBtnArrived">وصلت للعنوان</button>
+            <button type="button" class="btn btn-primary" id="daBtnDelivered" style="background: #15803d; border-color: #15803d">
+              تم التسليم
+            </button>
+          </div>
+          <p class="sub" style="margin-top: 12px; font-size: 0.85rem">
+            يُرسل الموقع إلى الخادم كل ~2.5 ثانية أثناء التفعيل، مع بث لحظي لصفحة تتبع العميل.
+          </p>
+        </div>
+      </div>
+
+      <div class="da-panel" id="daPanelWallet">
+        <div class="card">
+          <div class="badge">المحفظة</div>
+          <p class="sub" style="margin-top: 8px">إدارة الرصيد والسحوبات من صفحة المحفظة.</p>
+          <a class="btn btn-primary" href="/driver-wallet">فتح محفظة المندوب</a>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.socket.io/4.8.1/socket.io.min.js" crossorigin="anonymous"></script>
+    <script src="/assets/api-config.js"></script>
+    <script src="/assets/api.js"></script>
+    <script>
+      var token = window.PlatformAPI.getToken();
+      if (!token) {
+        document.body.innerHTML =
+          '<div style="text-align:center;margin-top:50px;font-family:Cairo,sans-serif">' +
+          "<h2>🔒 سجّل الدخول كمندوب</h2>" +
+          '<a href="/driver-login">تسجيل الدخول</a>' +
+          "</div>";
+        throw new Error("auth");
+      }
+
+      var daMap = null;
+      var daMarker = null;
+      var daPickup = null;
+      var daDrop = null;
+      var daLine = null;
+      var daSocket = null;
+      var daWatchId = null;
+      var daSendTimer = null;
+      var daLastLat = null;
+      var daLastLng = null;
+      var daLastSpeed = null;
+      var daLastHeading = null;
+      var daActiveOrder = null;
+      var daMeRole = null;
+
+      var daLocStatus = document.getElementById("daLocStatus");
+      var daOrderStatus = document.getElementById("daOrderStatus");
+      var daErr = document.getElementById("daErr");
+
+      function showErr(msg) {
+        if (!daErr) return;
+        daErr.style.display = msg ? "block" : "none";
+        daErr.textContent = msg || "";
+      }
+
+      function parseHashPanel() {
+        var h = (location.hash || "").replace(/^#/, "").trim().toLowerCase();
+        if (h === "track" || h === "wallet") return h;
+        return "orders";
+      }
+
+      function setActivePanel(id) {
+        document.querySelectorAll(".da-panel").forEach(function (el) {
+          el.classList.toggle("is-visible", el.id === "daPanel" + id.charAt(0).toUpperCase() + id.slice(1));
+        });
+        document.querySelectorAll(".da-tab").forEach(function (a) {
+          var p = a.getAttribute("data-panel");
+          a.classList.toggle("is-active", p === id);
+        });
+      }
+
+      function syncHashUi() {
+        setActivePanel(parseHashPanel());
+      }
+      window.addEventListener("hashchange", syncHashUi);
+
+      document.querySelectorAll(".da-tab").forEach(function (a) {
+        a.addEventListener("click", function () {
+          var p = a.getAttribute("data-panel");
+          if (p) location.hash = "#" + p;
+        });
+      });
+
+      function initMap() {
+        if (daMap || typeof L === "undefined") return;
+        daMap = L.map("daMap").setView([24.7136, 46.6753], 12);
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+          maxZoom: 19,
+          attribution: "&copy; OpenStreetMap",
+        }).addTo(daMap);
+      }
+
+      function clearRoute() {
+        if (!daMap) return;
+        if (daPickup) {
+          daMap.removeLayer(daPickup);
+          daPickup = null;
+        }
+        if (daDrop) {
+          daMap.removeLayer(daDrop);
+          daDrop = null;
+        }
+        if (daLine) {
+          daMap.removeLayer(daLine);
+          daLine = null;
+        }
+      }
+
+      function renderOrderOnMap(order) {
+        initMap();
+        if (!daMap || !order) return;
+        clearRoute();
+        var pLat = Number(order.pickup_lat);
+        var pLng = Number(order.pickup_lng);
+        var dLat = Number(order.drop_lat);
+        var dLng = Number(order.drop_lng);
+        if (Number.isFinite(pLat) && Number.isFinite(pLng)) {
+          daPickup = L.marker([pLat, pLng]).addTo(daMap).bindPopup("استلام");
+        }
+        if (Number.isFinite(dLat) && Number.isFinite(dLng)) {
+          daDrop = L.marker([dLat, dLng]).addTo(daMap).bindPopup("تسليم");
+        }
+        var bounds = [];
+        if (Number.isFinite(pLat) && Number.isFinite(pLng)) bounds.push([pLat, pLng]);
+        if (Number.isFinite(dLat) && Number.isFinite(dLng)) bounds.push([dLat, dLng]);
+        if (bounds.length === 2) {
+          daLine = L.polyline(bounds, { color: "#2563eb", weight: 4, opacity: 0.85 }).addTo(daMap);
+          daMap.fitBounds(bounds, { padding: [36, 36], maxZoom: 15 });
+        } else if (bounds.length === 1) {
+          daMap.setView(bounds[0], 14);
+        }
+      }
+
+      function updateSelfMarker(lat, lng) {
+        initMap();
+        if (!daMap) return;
+        var la = Number(lat);
+        var ln = Number(lng);
+        if (!Number.isFinite(la) || !Number.isFinite(ln)) return;
+        if (!daMarker) {
+          daMarker = L.circleMarker([la, ln], { radius: 10, color: "#0f766e", fillColor: "#14b8a6", fillOpacity: 0.9 })
+            .addTo(daMap)
+            .bindPopup("موقعك");
+        } else {
+          daMarker.setLatLng([la, ln]);
+        }
+        try {
+          daMap.invalidateSize();
+        } catch (e) {}
+      }
+
+      function ensureSocket() {
+        if (typeof io === "undefined") return null;
+        if (daSocket) return daSocket;
+        daSocket = io({
+          path: "/socket.io/",
+          transports: ["websocket", "polling"],
+          auth: { token: token },
+        });
+        return daSocket;
+      }
+
+      function joinOrderRoom(orderId) {
+        var s = ensureSocket();
+        if (!s || !orderId) return;
+        try {
+          s.emit("join:order", String(orderId).trim());
+        } catch (e) {}
+      }
+
+      function pushLocationSocket(orderId) {
+        if (daLastLat == null || daLastLng == null) return;
+        var s = ensureSocket();
+        if (!s || !orderId) return;
+        try {
+          s.emit("driver:location", {
+            orderId: String(orderId).trim(),
+            lat: daLastLat,
+            lng: daLastLng,
+            speed: daLastSpeed,
+            heading: daLastHeading,
+          });
+        } catch (e) {}
+      }
+
+      async function pushLocationRest(orderId) {
+        if (daLastLat == null || daLastLng == null) return;
+        try {
+          await window.PlatformAPI.api("/api/driver/update-location", {
+            method: "POST",
+            body: { lat: daLastLat, lng: daLastLng, order_id: String(orderId).trim() },
+          });
+        } catch (e) {
+          daLocStatus.textContent = "تعذّر إرسال الموقع: " + (e.message || e);
+        }
+      }
+
+      function stopTrackingLoops() {
+        if (daSendTimer) {
+          clearInterval(daSendTimer);
+          daSendTimer = null;
+        }
+        if (daWatchId != null && navigator.geolocation) {
+          try {
+            navigator.geolocation.clearWatch(daWatchId);
+          } catch (e) {}
+          daWatchId = null;
+        }
+      }
+
+      function startTrackingLoops(orderId) {
+        stopTrackingLoops();
+        if (!orderId || !navigator.geolocation) {
+          daLocStatus.textContent = "المتصفح لا يدعم تحديد الموقع.";
+          return;
+        }
+        joinOrderRoom(orderId);
+        daLocStatus.textContent = "جاري مراقبة الموقع…";
+        daWatchId = navigator.geolocation.watchPosition(
+          function (pos) {
+            daLastLat = pos.coords.latitude;
+            daLastLng = pos.coords.longitude;
+            daLastSpeed = pos.coords.speed != null ? Number(pos.coords.speed) : null;
+            daLastHeading = pos.coords.heading != null ? Number(pos.coords.heading) : null;
+            updateSelfMarker(daLastLat, daLastLng);
+            daLocStatus.textContent = "📍 الموقع نشط — يُرسل للخادم كل ~2.5 ث";
+          },
+          function () {
+            daLocStatus.textContent = "تعذّر قراءة GPS — تحقق من أذونات الموقع.";
+          },
+          { enableHighAccuracy: true, maximumAge: 4000, timeout: 20000 }
+        );
+        daSendTimer = setInterval(function () {
+          if (!daActiveOrder || !daActiveOrder.id) return;
+          var st = String(daActiveOrder.delivery_status || daActiveOrder.status || "").toLowerCase();
+          if (!["accepted", "picked", "delivering"].includes(st)) return;
+          void pushLocationRest(daActiveOrder.id);
+          pushLocationSocket(daActiveOrder.id);
+        }, 2500);
+      }
+
+      function refreshActionButtons() {
+        var o = daActiveOrder;
+        var st = o ? String(o.delivery_status || o.status || "").toLowerCase() : "";
+        var startBtn = document.getElementById("daBtnStart");
+        var arrBtn = document.getElementById("daBtnArrived");
+        var delBtn = document.getElementById("daBtnDelivered");
+        if (!startBtn || !arrBtn || !delBtn) return;
+        startBtn.disabled = !o || !["accepted", "picked"].includes(st);
+        arrBtn.disabled = !o || st !== "delivering";
+        delBtn.disabled = !o || st !== "delivering";
+      }
+
+      async function loadOrderById(id) {
+        showErr("");
+        var j = await window.PlatformAPI.api("/api/delivery/orders/" + encodeURIComponent(id));
+        if (!j || !j.order) throw new Error("الطلب غير موجود");
+        daActiveOrder = j.order;
+        daOrderStatus.textContent =
+          "الحالة: " + (daActiveOrder.delivery_status || daActiveOrder.status || "—");
+        renderOrderOnMap(daActiveOrder);
+        refreshActionButtons();
+        startTrackingLoops(daActiveOrder.id);
+      }
+
+      async function refreshOrdersList() {
+        var box = document.getElementById("daOrders");
+        if (!box) return;
+        box.innerHTML = "جاري التحميل…";
+        try {
+          var j = await window.PlatformAPI.api("/api/driver/orders");
+          var orders = j.orders || [];
+          box.innerHTML = "";
+          if (!orders.length) {
+            box.textContent = "لا توجد طلبات حالياً.";
+            return;
+          }
+          orders.forEach(function (o) {
+            var st = String(o.delivery_status || o.status || "");
+            var row = document.createElement("div");
+            row.className = "order-row";
+            row.style.marginBottom = "10px";
+            var num = o.order_number || String(o.id).slice(0, 8) + "…";
+            row.innerHTML =
+              "<strong>" +
+              num +
+              '</strong> <span class="badge">' +
+              st +
+              '</span><br/><button type="button" class="btn btn-ghost" style="margin-top:6px">فتح في التتبع الحي</button>';
+            var btn = row.querySelector("button");
+            btn.onclick = function () {
+              location.hash = "#track";
+              syncHashUi();
+              void loadOrderById(o.id).catch(function (e) {
+                showErr(e.message || String(e));
+              });
+            };
+            box.appendChild(row);
+          });
+        } catch (e) {
+          box.textContent = "";
+          showErr(e.message || String(e));
+        }
+      }
+
+      var br = document.getElementById("daBtnRefreshOrders");
+      if (br) {
+        br.onclick = function () {
+          void refreshOrdersList();
+        };
+      }
+
+      document.getElementById("daBtnStart").onclick = async function () {
+        if (!daActiveOrder || !daActiveOrder.id) return;
+        showErr("");
+        try {
+          var j = await window.PlatformAPI.api("/api/driver/start-delivery/" + encodeURIComponent(daActiveOrder.id), {
+            method: "POST",
+          });
+          if (j.order) {
+            daActiveOrder = j.order;
+            daOrderStatus.textContent = "الحالة: " + (daActiveOrder.delivery_status || "");
+            refreshActionButtons();
+          }
+        } catch (e) {
+          showErr(e.message || String(e));
+        }
+      };
+
+      document.getElementById("daBtnArrived").onclick = async function () {
+        if (!daActiveOrder || !daActiveOrder.id) return;
+        showErr("");
+        try {
+          await window.PlatformAPI.api("/api/driver/ping-arrival/" + encodeURIComponent(daActiveOrder.id), {
+            method: "POST",
+          });
+          daLocStatus.textContent = "✅ تم إبلاغ العميل بالوصول (إن كان متصلاً بالتتبع).";
+        } catch (e) {
+          showErr(e.message || String(e));
+        }
+      };
+
+      document.getElementById("daBtnDelivered").onclick = async function () {
+        if (!daActiveOrder || !daActiveOrder.id) return;
+        if (!confirm("تأكيد تم تسليم الطلب للعميل؟")) return;
+        showErr("");
+        try {
+          var j = await window.PlatformAPI.api("/api/driver/complete-order/" + encodeURIComponent(daActiveOrder.id), {
+            method: "POST",
+          });
+          if (j.order) {
+            daActiveOrder = j.order;
+            daOrderStatus.textContent = "الحالة: " + (daActiveOrder.delivery_status || "");
+            stopTrackingLoops();
+            refreshActionButtons();
+          }
+        } catch (e) {
+          showErr(e.message || String(e));
+        }
+      };
+
+      (async function boot() {
+        try {
+          var me = await window.PlatformAPI.api("/api/core/me");
+          daMeRole = me && me.profile && me.profile.role;
+          if (String(daMeRole || "").toLowerCase() !== "driver") {
+            document.body.innerHTML =
+              '<div style="text-align:center;margin-top:50px;font-family:Cairo,sans-serif"><h2>هذه اللوحة للمناديب فقط</h2><a href="/track">صفحة التتبع للعميل</a></div>';
+            return;
+          }
+        } catch (e) {
+          showErr(e.message || String(e));
+        }
+
+        syncHashUi();
+        void refreshOrdersList();
+
+        var params = new URLSearchParams(location.search);
+        var qOrder = (params.get("order") || params.get("id") || "").trim();
+        if (qOrder) {
+          location.hash = "#track";
+          syncHashUi();
+          void loadOrderById(qOrder).catch(function (e) {
+            showErr(e.message || String(e));
+            location.hash = "#orders";
+            syncHashUi();
+          });
+        }
+      })();
+    </script>
+  </body>
+</html>

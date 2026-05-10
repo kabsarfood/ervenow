@@ -2,11 +2,28 @@
  * ⚠️ تحذير أمني (ERVENOW CORE STABILIZATION)
  * هذا الملف خادم Express **منفصل** بمسارات محفظة **بدون مصادقة JWT**.
  * لا تُعرضه على الإنترنت العام. للإنتاج: احذفه، أو أضف مصادقة قوية + شبكة داخلية فقط.
- * راجع docs/STABILIZATION-PLAN.md و docs/production-readiness-checklist.md
+ * راجع docs/STABILIZATION-PLAN.md و docs/production-readiness-checklist.md و docs/SOURCE-OF-TRUTH.md
+ *
+ * ——— التشغيل الافتراضي الآمن ———
+ * * ليس مربوطاً بـ `npm start` (المنصة الرئيسية: server/server.js على PORT).
+ * * في **production**: لا يبدأ الاستماع إلا إذا عُيّن `ERVENOW_WALLET_STANDALONE_SERVER=1` صراحةً.
+ * * عند التفعيل في production يُستمع افتراضياً على 127.0.0.1 فقط ما لم يُضبط `ERVENOW_WALLET_STANDALONE_HOST`.
  */
 const express = require("express");
 const cors = require("cors");
 const app = express();
+
+const isProd = String(process.env.NODE_ENV || "").trim().toLowerCase() === "production";
+const explicitEnable = String(process.env.ERVENOW_WALLET_STANDALONE_SERVER || "").trim() === "1";
+
+if (isProd && !explicitEnable) {
+  console.warn(
+    "[wallet-server] Refusing to listen: NODE_ENV=production without ERVENOW_WALLET_STANDALONE_SERVER=1. " +
+      "المسار الرسمي للمحفظة: المنصة على PORT + /api/wallet/* (JWT). " +
+      "للتشغيل اليدوي المحلي فقط: ERVENOW_WALLET_STANDALONE_SERVER=1"
+  );
+  process.exit(0);
+}
 
 app.use(cors({ origin: true }));
 app.use(express.json());
@@ -105,8 +122,11 @@ app.post("/api/wallet/withdraw", async (req, res) => {
   }
 });
 
-const PORT = 9000;
+const PORT = Number(process.env.ERVENOW_WALLET_STANDALONE_PORT || process.env.WALLET_SERVER_PORT || 9000) || 9000;
+const HOST =
+  String(process.env.ERVENOW_WALLET_STANDALONE_HOST || "").trim() ||
+  (isProd && explicitEnable ? "127.0.0.1" : "0.0.0.0");
 
-app.listen(PORT, () => {
-  console.log("\u{1F525} WALLET API RUNNING ON 9000");
+app.listen(PORT, HOST, () => {
+  console.log(`[wallet-server] listening on http://${HOST}:${PORT} (no JWT — internal/dev tool only)`);
 });

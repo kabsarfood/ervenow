@@ -2,17 +2,11 @@ const express = require("express");
 const { requireAuth } = require("../../shared/middleware/auth");
 const { createServiceClient } = require("../../shared/config/supabase");
 const { ok, fail } = require("../../shared/utils/helpers");
-const { normalizeIdempotencyKey, isOrdersIdempotencyColumnMissingError } = require("../../shared/utils/idempotency");
+const { normalizeIdempotencyKey } = require("../../shared/utils/idempotency");
 const { deliveryOrdersCreateLimiter } = require("../../shared/middleware/apiRateLimits");
-const { enqueueDeliveryJob } = require("../../queues/deliveryQueue");
 const { bumpDeliveryOrdersListEpoch } = require("../../shared/utils/deliveryOrdersListCache");
-const { logger } = require("../../shared/utils/logger");
-const { isOrderPaymentGateRequired } = require("../../shared/utils/orderPaymentGate");
 const { runCheckoutInsert } = require("../checkout/service");
-const {
-  createDeliveryOrderFromBody,
-  isPaidFromRequestBody,
-} = require("../delivery/service");
+const { runUnifiedDeliveryOnlyCreate } = require("./deliveryOrderCreateShared");
 
 const router = express.Router();
 
@@ -37,73 +31,23 @@ router.post("/create", requireAuth, deliveryOrdersCreateLimiter, async (req, res
       return ok(res, { orders: out.orders, mode: "cart" });
     }
 
-    const idemKey = normalizeIdempotencyKey(req);
-    const cleanBody = { ...body };
-    delete cleanBody.idempotency_key;
-    if (idemKey) {
-      const { data: existing, error: idemErr } = await sb
-        .from("orders")
-        .select("*")
-        .eq("customer_id", req.appUser.id)
-        .eq("idempotency_key", idemKey)
-        .maybeSingle();
-      if (idemErr) {
-        if (!isOrdersIdempotencyColumnMissingError(idemErr)) return fail(res, idemErr.message, 400);
-        logger.warn(
-          { err: idemErr.message },
-          "[order/create] orders.idempotency_key missing — run shared/migration_orders_idempotency_key.sql; continuing without idempotency lookup"
-        );
-      } else if (existing) {
-        return ok(res, { order: existing, duplicated: false, idempotentReplay: true, mode: "delivery" });
-      } else {
-        cleanBody.idempotency_key = idemKey;
-      }
-    }
-
-    const extRaw = cleanBody.external_order_id;
-    if (extRaw != null && String(extRaw).trim() !== "") {
-      const ext = String(extRaw).trim();
-      const { data: existing, error: exErr } = await sb.from("orders").select("*").eq("external_order_id", ext).maybeSingle();
-      if (exErr) return fail(res, exErr.message, 400);
-      if (existing) return ok(res, { order: existing, duplicated: true, mode: "delivery" });
-    }
-
-    const usePaymentGate = isOrderPaymentGateRequired();
-    const paymentConfirmed = usePaymentGate ? isPaidFromRequestBody(cleanBody) : false;
-    const initialDeliveryStatus = usePaymentGate ? (paymentConfirmed ? "pending" : "draft") : "pending";
-    const payment_status = paymentConfirmed ? "paid" : "pending";
-
-    const { data, error } = await createDeliveryOrderFromBody(sb, req.appUser, cleanBody, {
-      initialDeliveryStatus,
-      payment_status,
+    const unified = await runUnifiedDeliveryOnlyCreate({
+      sb,
+      appUser: req.appUser,
+      body,
+      idempotencyKey: normalizeIdempotencyKey(req),
+      xSourceHeader: null,
+      entryPoint: "order",
     });
-    if (error) return fail(res, error.message, 400);
-
-    if (data && initialDeliveryStatus === "pending") {
-      try {
-        await enqueueDeliveryJob("new-order", {
-          orderId: data.id,
-          pickup:
-            data.pickup_lat != null && data.pickup_lng != null
-              ? { lat: Number(data.pickup_lat), lng: Number(data.pickup_lng) }
-              : null,
-          dropoff:
-            data.drop_lat != null && data.drop_lng != null
-              ? { lat: Number(data.drop_lat), lng: Number(data.drop_lng) }
-              : null,
-        });
-      } catch (qe) {
-        logger.error({ err: qe && (qe.message || String(qe)), orderId: data.id }, "[order/create] enqueue new-order");
-      }
-      await bumpDeliveryOrdersListEpoch();
-    }
+    if (!unified.ok) return fail(res, unified.message, unified.status);
 
     return ok(res, {
-      order: data,
-      duplicated: false,
+      order: unified.order,
+      duplicated: unified.duplicated,
+      idempotentReplay: unified.idempotentReplay,
       mode: "delivery",
-      delivery_status: data?.delivery_status,
-      paid: paymentConfirmed,
+      delivery_status: unified.delivery_status,
+      paid: unified.paid,
     });
   } catch (e) {
     fail(res, e.message || "order create failed", 500);

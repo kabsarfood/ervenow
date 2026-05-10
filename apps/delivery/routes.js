@@ -16,7 +16,7 @@ const {
 } = require("./service");
 const { enqueueDeliveryJob } = require("../../queues/deliveryQueue");
 const { deliveryOrdersCreateLimiter } = require("../../shared/middleware/apiRateLimits");
-const { normalizeIdempotencyKey, isOrdersIdempotencyColumnMissingError } = require("../../shared/utils/idempotency");
+const { normalizeIdempotencyKey } = require("../../shared/utils/idempotency");
 const { isAllowedDeliveryStatusTransition } = require("../../shared/utils/deliveryStateMachine");
 const { logger } = require("../../shared/utils/logger");
 const {
@@ -31,6 +31,12 @@ const {
   buildOrdersListCacheKey,
   LIST_CACHE_TTL_MS,
 } = require("../../shared/utils/deliveryOrdersListCache");
+const { runUnifiedDeliveryOnlyCreate } = require("../order/deliveryOrderCreateShared");
+const {
+  broadcastDriverUpdate,
+  broadcastOrderPatch,
+  orderPatchFromRow,
+} = require("../../shared/lib/trackingSocket");
 
 const router = express.Router();
 
@@ -169,71 +175,24 @@ router.post("/orders", requireAuth, deliveryOrdersCreateLimiter, async (req, res
   try {
     const body = { ...(req.body || {}) };
     delete body.idempotency_key;
-    const idemKey = normalizeIdempotencyKey(req);
-    if (idemKey) {
-      const { data: existing, error: idemErr } = await req.supabase
-        .from("orders")
-        .select("*")
-        .eq("customer_id", req.appUser.id)
-        .eq("idempotency_key", idemKey)
-        .maybeSingle();
-      if (idemErr) {
-        if (!isOrdersIdempotencyColumnMissingError(idemErr)) return fail(res, idemErr.message, 400);
-        logger.warn(
-          { err: idemErr.message },
-          "[delivery/orders] orders.idempotency_key missing — run shared/migration_orders_idempotency_key.sql; continuing without idempotency lookup"
-        );
-      } else if (existing) {
-        return ok(res, { order: existing, duplicated: false, idempotentReplay: true });
-      } else {
-        body.idempotency_key = idemKey;
-      }
-    }
-    const src = req.get("X-Source");
-    if ((body.series_source == null || String(body.series_source).trim() === "") && src) {
-      body.series_source = String(src).trim();
-    }
-    if (body.series_source == null || String(body.series_source).trim() === "") {
-      body.series_source = "ervenow";
-    }
 
-    const extRaw = body.external_order_id;
-    if (extRaw != null && String(extRaw).trim() !== "") {
-      const ext = String(extRaw).trim();
-      const { data: existing, error: exErr } = await req.supabase
-        .from("orders")
-        .select("*")
-        .eq("external_order_id", ext)
-        .maybeSingle();
-      if (exErr) return fail(res, exErr.message, 400);
-      if (existing) return ok(res, { order: existing, duplicated: true });
-    }
+    const unified = await runUnifiedDeliveryOnlyCreate({
+      sb: req.supabase,
+      appUser: req.appUser,
+      body,
+      idempotencyKey: normalizeIdempotencyKey(req),
+      xSourceHeader: req.get("X-Source"),
+      entryPoint: "delivery",
+    });
+    if (!unified.ok) return fail(res, unified.message, unified.status);
 
-    const { data, error } = await createDeliveryOrderFromBody(req.supabase, req.appUser, body);
-    if (error) return fail(res, error.message, 400);
-    if (data) {
-      const ds = String(data.delivery_status || "").toLowerCase();
-      const publishable = ds === "pending" || ds === "new";
-      if (publishable) {
-        try {
-          await enqueueDeliveryJob("new-order", {
-            orderId: data.id,
-            pickup:
-              data.pickup_lat != null && data.pickup_lng != null
-                ? { lat: Number(data.pickup_lat), lng: Number(data.pickup_lng) }
-                : null,
-            dropoff:
-              data.drop_lat != null && data.drop_lng != null
-                ? { lat: Number(data.drop_lat), lng: Number(data.drop_lng) }
-                : null,
-          });
-        } catch (qe) {
-          logger.error({ err: qe && (qe.message || String(qe)), orderId: data.id }, "[delivery/orders] enqueue");
-        }
-      }
-      await bumpDeliveryOrdersListEpoch();
+    if (unified.idempotentReplay) {
+      return ok(res, { order: unified.order, duplicated: false, idempotentReplay: true });
     }
-    return ok(res, { order: data, duplicated: false });
+    if (unified.duplicated) {
+      return ok(res, { order: unified.order, duplicated: true });
+    }
+    return ok(res, { order: unified.order, duplicated: false });
   } catch (e) {
     fail(res, e.message, 500);
   }
@@ -265,6 +224,10 @@ router.post("/orders/:id/accept", requireAuth, requireRole("driver"), async (req
           logger.error({ err: e && (e.message || String(e)), orderId: data.id }, "[delivery/accept] provider WhatsApp");
         }
       }
+    }
+
+    if (data && data.id) {
+      broadcastOrderPatch(String(data.id), orderPatchFromRow(data));
     }
 
     ok(res, { order: data });
@@ -361,6 +324,9 @@ router.patch("/orders/:id/status", requireAuth, async (req, res) => {
         }
       }
     }
+    if (data && data.id) {
+      broadcastOrderPatch(String(data.id), orderPatchFromRow(data));
+    }
     ok(res, { order: data });
   } catch (e) {
     fail(res, e.message, 500);
@@ -380,6 +346,9 @@ router.post("/orders/:id/location", requireAuth, requireRole("driver"), async (r
     if (Number.isNaN(lat) || Number.isNaN(lng)) return fail(res, "lat/lng required");
     const { data, error } = await saveLocation(req.supabase, req.params.id, req.appUser, lat, lng);
     if (error) return fail(res, error.message, 400);
+    if (data && data.id) {
+      broadcastDriverUpdate(String(data.id), req.appUser.id, { lat, lng, ts: Date.now() });
+    }
     ok(res, { order: data });
   } catch (e) {
     fail(res, e.message, 500);

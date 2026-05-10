@@ -136,6 +136,50 @@
         animation: ervenow-near-pulse 1s ease-in-out infinite;
       }
 
+      .ervenow-marker-core {
+        transition: transform 0.48s cubic-bezier(0.22, 1, 0.36, 1);
+        will-change: transform;
+      }
+
+      @keyframes erv-arrival-ring {
+        0%,
+        100% {
+          box-shadow: 0 0 0 0 rgba(250, 204, 21, 0.35), 0 0 0 0 rgba(250, 204, 21, 0);
+        }
+        50% {
+          box-shadow: 0 0 0 10px rgba(250, 204, 21, 0.12), 0 0 22px 4px rgba(250, 204, 21, 0.55);
+        }
+      }
+
+      #map.ervenow-arrival-ping .ervenow-driver-marker {
+        border-radius: 50%;
+        animation: erv-arrival-ring 1.35s ease-in-out infinite;
+      }
+
+      #map.ervenow-arrival-ping .ervenow-marker-core {
+        filter: drop-shadow(0 0 14px rgba(250, 204, 21, 0.95)) drop-shadow(0 2px 6px rgba(0, 0, 0, 0.45));
+      }
+
+      .erv-track-prog-wrap {
+        margin-top: 10px;
+      }
+
+      .erv-track-prog-bar {
+        height: 8px;
+        border-radius: 999px;
+        background: rgba(15, 23, 42, 0.1);
+        overflow: hidden;
+        border: 1px solid rgba(15, 23, 42, 0.08);
+      }
+
+      .erv-track-prog-fill {
+        height: 100%;
+        width: 0%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, #22c55e, #16a34a);
+        transition: width 0.65s cubic-bezier(0.22, 1, 0.36, 1);
+      }
+
       .ervenow-arriving {
         filter: hue-rotate(10deg) brightness(1.05);
       }
@@ -238,6 +282,10 @@
         <div class="sub" id="lastUpdate" style="margin-top: 4px; font-size: 0.9rem"></div>
         <p class="sub" style="margin: 8px 0 0; font-weight: bold" id="eta" translate="no"></p>
         <div class="sub" id="etaCountdown" style="margin-top: 4px; font-weight: 600; letter-spacing: 0.04em" translate="no"></div>
+        <div id="trackRouteProgressWrap" class="erv-track-prog-wrap" style="display: none" aria-hidden="true">
+          <div class="erv-track-prog-bar"><div class="erv-track-prog-fill" id="trackRouteProgressFill"></div></div>
+          <p class="sub" id="trackRouteProgressLabel" style="margin-top: 5px; font-size: 0.88rem; font-weight: 600" translate="no"></p>
+        </div>
         <div class="sub" id="remainingDistance" style="margin-top: 6px; font-weight: 600" translate="no">—</div>
         <p class="sub" style="margin: 4px 0 0; font-size: 0.9rem" id="driverSpeed" translate="no"></p>
       </div>
@@ -310,6 +358,8 @@
       var mapLayers = null;
       var mapLayerControl = null;
       var routeLine = null;
+      /** { pts: [{lat,lng}], cum: number[], totalM } لحساب نسبة التقدم على المسار */
+      var trackRouteProgressMeta = null;
       var pickupMarker = null;
       var dropMarker = null;
       var pickupIcon = null;
@@ -356,6 +406,10 @@
       var nearDropMotionFrozen = false;
       var routeCheckpointLayer = null;
       var lastDriverIconKey = "";
+      /** حتى متى نعرض شارة «وصل للعنوان» بعد order:live (arrivalPing). */
+      var arrivalPingUntil = 0;
+      var liveEtaTickerInterval = null;
+      var lastDeliveredNotifyKey = "";
 
       async function ensureMeRole() {
         if (meRoleFetched) return;
@@ -551,14 +605,21 @@
 
       function __ervApplyDriverRotation(marker, bearingDeg) {
         if (!marker) return;
-        var deg = Number(bearingDeg);
-        if (!Number.isFinite(deg)) return;
+        var target = Number(bearingDeg);
+        if (!Number.isFinite(target)) return;
         var icon = marker._icon;
         if (!icon) return;
         var core = icon.querySelector(".ervenow-marker-core");
         if (!core) return;
-        core.style.transform = "translateZ(0) rotate(" + deg + "deg)";
+        var prev = marker._ervRotAccum;
+        if (!Number.isFinite(prev)) {
+          marker._ervRotAccum = target;
+        } else {
+          var delta = ((target - prev + 540) % 360) - 180;
+          marker._ervRotAccum = prev + delta;
+        }
         core.style.transformOrigin = "center center";
+        core.style.transform = "translateZ(0) rotate(" + marker._ervRotAccum + "deg)";
       }
 
       function attachDriverMarkerRotationApi(marker) {
@@ -593,6 +654,171 @@
           return null;
         }
         return haversineKmQuick(dLat, dLng, toLat, toLng) * 1000;
+      }
+
+      function stopLiveEtaTicker() {
+        if (liveEtaTickerInterval != null) {
+          clearInterval(liveEtaTickerInterval);
+          liveEtaTickerInterval = null;
+        }
+      }
+
+      function formatLiveEtaFromSeconds(sec) {
+        sec = Math.floor(Number(sec));
+        if (!Number.isFinite(sec) || sec < 0) return "—";
+        if (sec < 50) return "أقل من دقيقة";
+        var m = Math.floor(sec / 60);
+        var s = sec % 60;
+        if (m >= 90) return "حوالي " + Math.round(m / 60) + " ساعة";
+        if (sec < 360) return m + ":" + (s < 10 ? "0" + s : String(s));
+        return "حوالي " + m + " دقيقة";
+      }
+
+      /** صياغة عربية للدقائق (للـ ETA). */
+      function formatMinutesArabicForEta(totalSec) {
+        totalSec = Math.floor(Number(totalSec));
+        if (!Number.isFinite(totalSec) || totalSec < 0) return "";
+        if (totalSec < 50) return "الوصول خلال أقل من دقيقة";
+        var m = Math.floor(totalSec / 60);
+        if (m === 1) return "الوصول خلال دقيقة واحدة";
+        if (m === 2) return "الوصول خلال دقيقتين";
+        if (m >= 3 && m <= 10) return "الوصول خلال " + m + " دقائق";
+        return "الوصول خلال " + m + " دقيقة";
+      }
+
+      function formatMinutesArabicPhraseFromMinutes(mins) {
+        var m = Math.floor(Number(mins));
+        if (!Number.isFinite(m) || m < 1) return "الوصول خلال أقل من دقيقة";
+        if (m === 1) return "الوصول خلال دقيقة واحدة";
+        if (m === 2) return "الوصول خلال دقيقتين";
+        if (m >= 3 && m <= 10) return "الوصول خلال " + m + " دقائق";
+        return "الوصول خلال " + m + " دقيقة";
+      }
+
+      function formatArrivalPhraseFromSeconds(sec) {
+        sec = Math.floor(Number(sec));
+        if (!Number.isFinite(sec) || sec < 0) return "";
+        if (sec < 40) return "وصل تقريبًا — لحظات قليلة";
+        return formatMinutesArabicForEta(sec);
+      }
+
+      function tickLiveEta() {
+        var etaEl = document.getElementById("eta");
+        var cdEl = document.getElementById("etaCountdown");
+        if (!lastOrder || !lastOrder.id) {
+          stopLiveEtaTicker();
+          return;
+        }
+        var ds0 = String(lastOrder.delivery_status || lastOrder.status || "").toLowerCase();
+        if (ds0 === "delivered" || ds0 === "cancelled" || ds0 === "cancelled_by_customer") {
+          stopLiveEtaTicker();
+          if (cdEl) cdEl.textContent = "";
+          return;
+        }
+        if (!trackingEligible(ds0)) {
+          stopLiveEtaTicker();
+          return;
+        }
+
+        var snap = orderSnapshotForTracking();
+        var distM = getDriverToDropMeters(snap);
+        if (distM == null || !Number.isFinite(distM)) return;
+
+        var speedMs = 40 / 3.6;
+        var sec = Math.round(distM / speedMs);
+        if (distM < 120) sec = Math.max(0, Math.round(distM / 6));
+
+        if (etaEl) {
+          var km = distM / 1000;
+          var phrase = formatArrivalPhraseFromSeconds(sec);
+          etaEl.textContent =
+            phrase +
+            " · المتبقي على الخط ≈ " +
+            (km < 10 ? km.toFixed(2) : km.toFixed(1)) +
+            " كم";
+        }
+        if (cdEl) {
+          if (sec > 0 && sec < 7200) {
+            cdEl.textContent = sec < 120 ? "أقل من دقيقتين" : formatMinutesArabicForEta(sec).replace(/^الوصول خلال /, "متبقي: ");
+          } else {
+            cdEl.textContent = "";
+          }
+        }
+        applyTrackingStatusUx();
+        syncTrackRouteProgressUi();
+      }
+
+      function startLiveEtaTicker() {
+        stopLiveEtaTicker();
+        clearEtaCountdown();
+        if (!lastOrder || !lastOrder.id) return;
+        var ds0 = String(lastOrder.delivery_status || lastOrder.status || "").toLowerCase();
+        if (ds0 === "delivered" || ds0 === "cancelled" || ds0 === "cancelled_by_customer") return;
+        if (!trackingEligible(ds0)) return;
+        var snap = orderSnapshotForTracking();
+        if (getDriverToDropMeters(snap) == null) return;
+        tickLiveEta();
+        liveEtaTickerInterval = setInterval(tickLiveEta, 1000);
+      }
+
+      function applyTrackingStatusUx() {
+        var statusBadgeEl = document.getElementById("statusBadge");
+        var statusEl = document.getElementById("status");
+        if (!statusBadgeEl || !lastOrder) return;
+        var ds = String(lastOrder.delivery_status || lastOrder.status || "").toLowerCase();
+        var distM = getDriverToDropMeters(orderSnapshotForTracking());
+        var now = Date.now();
+        var badge = "";
+        var subLine = "";
+
+        statusBadgeEl.style.background = "";
+        statusBadgeEl.style.color = "";
+
+        if (ds === "delivered") {
+          badge = "✅ تم التسليم";
+          subLine = "تم تسليم الطلب بنجاح";
+          statusBadgeEl.style.background = "#15803d";
+          statusBadgeEl.style.color = "#ffffff";
+        } else if (ds === "cancelled_by_customer" || ds === "cancelled") {
+          badge = "🚫 أُلغي";
+          subLine = "لم يعد هذا الطلب قيد التوصيل";
+        } else if (now < arrivalPingUntil && (ds === "delivering" || ds === "picked")) {
+          badge = "🔔 وصل للعنوان";
+          subLine = "وصل تقريبًا — المندوب عند نقطة التسليم";
+          statusBadgeEl.style.background = "#92400e";
+          statusBadgeEl.style.color = "#ffffff";
+        } else if (distM != null && distM <= 150 && trackingEligible(ds)) {
+          badge = "📍 قريب منك";
+          subLine = "وصل تقريبًا";
+          statusBadgeEl.style.background = "#1d4ed8";
+          statusBadgeEl.style.color = "#ffffff";
+        } else if (distM != null && distM <= 900 && trackingEligible(ds)) {
+          badge = "📍 قريب منك";
+          subLine = "المندوب قريب منك";
+          statusBadgeEl.style.background = "#1d4ed8";
+          statusBadgeEl.style.color = "#ffffff";
+        } else if (distM != null && distM <= 2500 && trackingEligible(ds)) {
+          badge = "🚚 في الطريق";
+          subLine = "دقيقة واحدة أو أكثر قليلاً وتصل";
+        } else if (trackingEligible(ds)) {
+          badge = "🚚 في الطريق";
+          subLine = "المندوب في الطريق إليك";
+        } else if (ds === "new" || ds === "pending") {
+          badge = "⏳ بانتظار المندوب";
+          subLine = "جاري البحث عن أقرب مندوب";
+        } else {
+          badge = STATUS_AR[lastOrder.delivery_status || lastOrder.status] || String(lastOrder.delivery_status || lastOrder.status || "—");
+        }
+        statusBadgeEl.textContent = badge;
+        if (statusEl) statusEl.textContent = subLine || badge;
+        var mapBox = document.getElementById("map");
+        if (mapBox) {
+          mapBox.classList.toggle(
+            "ervenow-arrival-ping",
+            now < arrivalPingUntil && (ds === "delivering" || ds === "picked")
+          );
+        }
+        syncTrackRouteProgressUi();
       }
 
       function updateRemainingDistanceEl(distM) {
@@ -796,7 +1022,7 @@
       function maybeAutoZoomDriverDrop() {
         if (!map || !driverMarker || !lastOrder) return;
         var now = Date.now();
-        if (now - lastAutoZoomAt < 11000) return;
+        if (now - lastAutoZoomAt < 8200) return;
         var dlat = Number(lastOrder.drop_lat);
         var dlng = Number(lastOrder.drop_lng);
         if (!Number.isFinite(dlat) || !Number.isFinite(dlng)) return;
@@ -805,7 +1031,20 @@
         var ll = driverMarker.getLatLng();
         try {
           var b = L.latLngBounds(L.latLng(ll.lat, ll.lng), L.latLng(dlat, dlng));
-          map.fitBounds(b, { padding: [52, 52], maxZoom: 16, animate: true, duration: 0.35 });
+          var pLat = Number(lastOrder.pickup_lat);
+          var pLng = Number(lastOrder.pickup_lng);
+          if (Number.isFinite(pLat) && Number.isFinite(pLng)) {
+            b.extend(L.latLng(pLat, pLng));
+          }
+          if (routeLine) {
+            try {
+              b.extend(routeLine.getBounds());
+            } catch (eR) {}
+          }
+          var distM = getDriverToDropMeters(orderSnapshotForTracking());
+          var pad = distM != null && distM < 1500 ? 72 : distM != null && distM < 5000 ? 58 : 48;
+          var maxZ = distM != null && distM > 8000 ? 13 : distM != null && distM > 3500 ? 14 : 16;
+          map.fitBounds(b, { padding: [pad, pad], maxZoom: maxZ, animate: true, duration: 0.45 });
           lastAutoZoomAt = now;
         } catch (e) {}
       }
@@ -968,7 +1207,7 @@
             var etaSec = distM0 / speedMs;
             lastOsrmEtaSeconds = Math.round(etaSec);
             var minLocal = Math.max(1, Math.ceil(etaSec / 60));
-            etaEl.textContent = "🚗 الوصول خلال " + minLocal + " دقيقة";
+            etaEl.textContent = formatMinutesArabicPhraseFromMinutes(minLocal) + " — قريب جداً";
             var nowShort = Date.now();
             lastOsrmEtaFetchAt = nowShort;
             lastOsrmEtaKey =
@@ -990,7 +1229,7 @@
             }
             lastOsrmEtaSeconds = Math.round(sec);
             var min = Math.max(1, Math.ceil(sec / 60));
-            etaEl.textContent = "🚗 الوصول خلال " + min + " دقيقة (مسار)";
+            etaEl.textContent = formatMinutesArabicPhraseFromMinutes(min) + " (مسار)";
           } catch (e) {
             lastOsrmEtaSeconds = estimateEtaSecondsFallback(order);
             applyEtaToEl(dlat, dlng, toLat, toLng);
@@ -1001,8 +1240,9 @@
             var dsF = String(order.delivery_status || order.status || "").toLowerCase();
             if (dsF === "delivered" || dsF === "cancelled" || dsF === "cancelled_by_customer") {
               clearEtaCountdown();
-            } else if (lastOsrmEtaSeconds != null && Number.isFinite(lastOsrmEtaSeconds) && lastOsrmEtaSeconds > 0) {
-              startEtaCountdown(lastOsrmEtaSeconds);
+              stopLiveEtaTicker();
+            } else if (trackingEligible(dsF)) {
+              startLiveEtaTicker();
             }
           }
         }
@@ -1070,12 +1310,57 @@
           }
           void refreshOsrmEtaThrottled(lastOrder);
           runDeliveryTrackingAlerts();
+          applyTrackingStatusUx();
           maybeAutoZoomDriverDrop();
           updateGpsStateUI(lastOrder);
           var cEl = document.getElementById("coords");
           if (cEl) cEl.textContent = "خط العرض: " + la + " — خط الطول: " + ln;
           var cm = document.getElementById("coordsMeta");
           if (cm) cm.textContent = "";
+        });
+        trackSocket.on("order:patch", function (msg) {
+          if (!msg || !msg.patch || lastOrder == null || !lastOrder.id) return;
+          if (String(msg.orderId || "") !== String(lastOrder.id)) return;
+          try {
+            var prevDs = String(lastOrder.delivery_status || lastOrder.status || "");
+            Object.assign(lastOrder, msg.patch);
+            var newDs = String(lastOrder.delivery_status || lastOrder.status || "");
+            if (prevDs !== newDs) {
+              if (newDs === "delivered") {
+                var dkey = String(lastOrder.id || "") + "|delivered";
+                if (lastDeliveredNotifyKey !== dkey) {
+                  lastDeliveredNotifyKey = dkey;
+                  if (voiceEnabled) {
+                    unlockAudioContext();
+                    playTrackOrderSound("/sounds/arrived.mp3", "تم تسليم طلبك بنجاح");
+                  }
+                  showTrackToast("✅ تم التسليم", "ervenow-track-toast--warn");
+                }
+              } else if (newDs === "delivering") {
+                playTrackingBeep();
+                showTrackToast("📦 جاري التوصيل إلى عنوانك");
+              } else if (newDs === "accepted") {
+                /* الصوت والـ toast من maybeSpeakTrackingEvents داخل renderOrder */
+              } else {
+                playTrackingBeep();
+              }
+            }
+            renderOrder(lastOrder);
+            runDeliveryTrackingAlerts();
+          } catch (e) {}
+        });
+        trackSocket.on("order:live", function (msg) {
+          if (!msg || lastOrder == null || !lastOrder.id) return;
+          if (String(msg.orderId || "") !== String(lastOrder.id)) return;
+          if (msg.arrivalPing) {
+            arrivalPingUntil = Date.now() + 52000;
+            unlockAudioContext();
+            if (voiceEnabled) {
+              playTrackOrderSound("/sounds/arrived.mp3", "المندوب يبلّغ وصوله إلى عنوان التسليم");
+            }
+            showTrackToast("🔔 المندوب بلّغ: وصلت إلى عنوان التسليم", "ervenow-track-toast--warn");
+            applyTrackingStatusUx();
+          }
         });
       }
 
@@ -1221,7 +1506,7 @@
         }
         var eta = calcETA(Number(driver_lat), Number(driver_lng), Number(drop_lat), Number(drop_lng));
         if (eta < 1) eta = 1;
-        etaEl.textContent = "🚗 الوصول خلال " + eta + " دقيقة";
+        etaEl.textContent = formatMinutesArabicPhraseFromMinutes(eta);
       }
 
       async function updateEtaForOrder(order) {
@@ -1411,6 +1696,91 @@
         return 2 * R * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x));
       }
 
+      function buildTrackRouteProgressMeta(geometry) {
+        trackRouteProgressMeta = null;
+        if (!geometry || geometry.type !== "LineString" || !Array.isArray(geometry.coordinates)) return;
+        var c = geometry.coordinates;
+        if (c.length < 2) return;
+        var pts = [];
+        for (var i = 0; i < c.length; i++) {
+          var lng = Number(c[i][0]);
+          var lat = Number(c[i][1]);
+          if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+          pts.push({ lat: lat, lng: lng });
+        }
+        var cum = [0];
+        var total = 0;
+        for (var j = 1; j < pts.length; j++) {
+          var dm = haversineKmQuick(pts[j - 1].lat, pts[j - 1].lng, pts[j].lat, pts[j].lng) * 1000;
+          total += dm;
+          cum.push(total);
+        }
+        if (!(total > 10)) return;
+        trackRouteProgressMeta = { pts: pts, cum: cum, totalM: total };
+      }
+
+      function computeAlongRouteMetersFromLatLng(lat, lng, meta) {
+        if (!meta || !meta.pts || meta.pts.length < 2 || !meta.cum) return 0;
+        var bestAlong = 0;
+        var bestDist = Infinity;
+        for (var i = 1; i < meta.pts.length; i++) {
+          var p0 = meta.pts[i - 1];
+          var p1 = meta.pts[i];
+          var segM = haversineKmQuick(p0.lat, p0.lng, p1.lat, p1.lng) * 1000;
+          if (!(segM > 0.001)) continue;
+          var latR = (Math.PI / 180) * p0.lat;
+          var kx = Math.cos(latR);
+          var ax = (lng - p0.lng) * 111320 * kx;
+          var ay = (lat - p0.lat) * 110540;
+          var bx = (p1.lng - p0.lng) * 111320 * kx;
+          var by = (p1.lat - p0.lat) * 110540;
+          var bb = bx * bx + by * by;
+          var t = bb < 1e-8 ? 0 : Math.max(0, Math.min(1, (ax * bx + ay * by) / bb));
+          var px = t * bx;
+          var py = t * by;
+          var dx = ax - px;
+          var dy = ay - py;
+          var dM = Math.sqrt(dx * dx + dy * dy);
+          var along = meta.cum[i - 1] + t * segM;
+          if (dM < bestDist) {
+            bestDist = dM;
+            bestAlong = along;
+          }
+        }
+        return bestAlong;
+      }
+
+      function syncTrackRouteProgressUi() {
+        var wrap = document.getElementById("trackRouteProgressWrap");
+        var fill = document.getElementById("trackRouteProgressFill");
+        var lab = document.getElementById("trackRouteProgressLabel");
+        if (!wrap || !fill || !lab) return;
+        if (!lastOrder) {
+          wrap.style.display = "none";
+          return;
+        }
+        var dsX = String(lastOrder.delivery_status || lastOrder.status || "").toLowerCase();
+        if (dsX === "delivered" || dsX === "cancelled" || dsX === "cancelled_by_customer" || !trackingEligible(dsX)) {
+          wrap.style.display = "none";
+          return;
+        }
+        if (!trackRouteProgressMeta || !driverMarker || typeof driverMarker.getLatLng !== "function") {
+          wrap.style.display = "none";
+          return;
+        }
+        try {
+          var ll = driverMarker.getLatLng();
+          var along = computeAlongRouteMetersFromLatLng(ll.lat, ll.lng, trackRouteProgressMeta);
+          var tot = trackRouteProgressMeta.totalM;
+          var pct = tot > 0 ? Math.min(100, Math.max(0, (along / tot) * 100)) : 0;
+          fill.style.width = pct.toFixed(1) + "%";
+          lab.textContent = "التقدّم على المسار ≈ " + Math.round(pct) + "%";
+          wrap.style.display = "block";
+        } catch (e) {
+          wrap.style.display = "none";
+        }
+      }
+
       function bearingDeg(lat1, lon1, lat2, lon2) {
         var φ1 = (lat1 * Math.PI) / 180;
         var φ2 = (lat2 * Math.PI) / 180;
@@ -1443,7 +1813,7 @@
           window.driverAnim = null;
         }
         if (window.ErvTrackDriverMotion && typeof window.ErvTrackDriverMotion.smoothLerpTo === "function") {
-          window.ErvTrackDriverMotion.smoothLerpTo(driverMarker, targetLat, targetLng, 280);
+          window.ErvTrackDriverMotion.smoothLerpTo(driverMarker, targetLat, targetLng, 520);
           return;
         }
         if (typeof animateErvDriverMarker === "function") {
@@ -1455,7 +1825,7 @@
         var startLng = Number(start.lng);
         var endLat = Number(targetLat);
         var endLng = Number(targetLng);
-        var duration = 900;
+        var duration = 1100;
         var t0 = performance.now();
 
         function step(now) {
@@ -1652,6 +2022,7 @@
           routeLine = L.geoJSON(route.geometry, {
             style: { color: "#ef4444", weight: 5, opacity: 0.9 },
           }).addTo(map);
+          buildTrackRouteProgressMeta(route.geometry);
           clearRouteCheckpoints();
           var cpts = buildRouteCheckpointsFromGeometry(route.geometry);
           if (cpts.length) {
@@ -1667,7 +2038,8 @@
             }
             routeCheckpointLayer.addTo(map);
           }
-          map.fitBounds(routeLine.getBounds(), { padding: [28, 28] });
+          map.fitBounds(routeLine.getBounds(), { padding: [44, 44], maxZoom: 16, animate: true, duration: 0.4 });
+          syncTrackRouteProgressUi();
         } catch (e) {}
       }
 
@@ -1695,6 +2067,11 @@
           } catch (e) {}
           routeLine = null;
         }
+        trackRouteProgressMeta = null;
+        var wrapPr = document.getElementById("trackRouteProgressWrap");
+        if (wrapPr) wrapPr.style.display = "none";
+        var mapElAr = document.getElementById("map");
+        if (mapElAr) mapElAr.classList.remove("ervenow-arrival-ping");
         if (map && dropMarker) {
           try {
             map.removeLayer(dropMarker);
@@ -1752,6 +2129,9 @@
           nearDropMotionFrozen = false;
           clearOnWayTimeout();
           clearEtaCountdown();
+          stopLiveEtaTicker();
+          arrivalPingUntil = 0;
+          lastDeliveredNotifyKey = "";
           smoothDriverLat = null;
           smoothDriverLng = null;
           localPendingRating = 0;
@@ -1761,30 +2141,7 @@
         lastOrder = order;
 
         var deliveryStatus = order.delivery_status || order.status;
-        var st = STATUS_AR[deliveryStatus] || deliveryStatus;
-        var statusBadgeEl = document.getElementById("statusBadge");
-        statusBadgeEl.textContent = st;
-        if (deliveryStatus === "delivered") {
-          statusBadgeEl.style.background = "#15803d";
-          statusBadgeEl.style.color = "#ffffff";
-        } else {
-          statusBadgeEl.style.background = "";
-          statusBadgeEl.style.color = "";
-        }
-        var statusEl = document.getElementById("status");
-        if (statusEl) {
-          if (deliveryStatus === "accepted") {
-            statusEl.innerText = "🚚 المندوب في الطريق";
-          } else if (deliveryStatus === "delivering") {
-            statusEl.innerText = "📦 جاري التوصيل";
-          } else if (deliveryStatus === "delivered") {
-            statusEl.innerText = "✅ تم التسليم";
-          } else if (deliveryStatus === "cancelled_by_customer") {
-            statusEl.innerText = "🚫 تم إلغاء الطلب من زائر المنصة";
-          } else {
-            statusEl.innerText = "⏳ بانتظار المندوب";
-          }
-        }
+
         var on = document.getElementById("orderNumberLine");
         if (on) {
           on.textContent = order.order_number
@@ -1880,6 +2237,11 @@
           document.getElementById("coordsMeta").textContent = "";
         }
 
+        applyTrackingStatusUx();
+
+        var hasDriverLocationForLive =
+          lat != null && lng != null && !Number.isNaN(Number(lat)) && !Number.isNaN(Number(lng));
+
         var etaEl0 = document.getElementById("eta");
         if (etaEl0) {
           var hasDriverLocation =
@@ -1887,10 +2249,12 @@
           if (deliveryStatus === "delivered") {
             etaEl0.textContent = "";
             clearEtaCountdown();
+            stopLiveEtaTicker();
             var sp0 = document.getElementById("driverSpeed");
             if (sp0) sp0.textContent = "";
           } else if (!hasDriverLocation) {
             etaEl0.textContent = "";
+            stopLiveEtaTicker();
           } else if (hasDropPoint) {
             etaEl0.textContent = "";
             void refreshOsrmEtaThrottled(order);
@@ -1898,7 +2262,7 @@
             var speed = 40;
             var minutes = Math.round((Number(order.distance_km) / speed) * 60);
             if (minutes < 1) minutes = 1;
-            etaEl0.innerText = "🚗 الوصول خلال " + minutes + " دقيقة";
+            etaEl0.innerText = formatMinutesArabicPhraseFromMinutes(minutes);
           } else {
             etaEl0.textContent = "";
             void updateEtaForOrder(order);
@@ -1926,6 +2290,13 @@
           leaveTrackOrderRoom();
         } else if (order.id) {
           ensureTrackSocketForOrder(order.id);
+        }
+
+        var dsLive = String(order.delivery_status || order.status || "").toLowerCase();
+        if (trackingEligible(dsLive) && hasDriverLocationForLive && hasDropPoint) {
+          startLiveEtaTicker();
+        } else {
+          stopLiveEtaTicker();
         }
       }
 
@@ -2027,12 +2398,21 @@
           lastOrder = null;
           leaveTrackOrderRoom();
           hideTrackSocketBanner();
+          stopLiveEtaTicker();
+          arrivalPingUntil = 0;
+          trackRouteProgressMeta = null;
+          var wrapPx = document.getElementById("trackRouteProgressWrap");
+          if (wrapPx) wrapPx.style.display = "none";
+          var mapPingOff = document.getElementById("map");
+          if (mapPingOff) mapPingOff.classList.remove("ervenow-arrival-ping");
           var spE = document.getElementById("driverSpeed");
           if (spE) spE.textContent = "";
           syncInvoiceButton();
           var outEl = document.getElementById("out");
           if (outEl) outEl.textContent = "";
           document.getElementById("statusBadge").textContent = "—";
+          var stE = document.getElementById("status");
+          if (stE) stE.textContent = "—";
           var gsE = document.getElementById("gpsState");
           if (gsE) gsE.textContent = "";
           var luE = document.getElementById("lastUpdate");
@@ -2130,12 +2510,26 @@
         }
       })();
 
-      var params = new URLSearchParams(location.search);
-      var qid = params.get("id");
-      if (qid) {
-        document.getElementById("oid").value = qid;
-        if (window.PlatformAPI.getToken()) document.getElementById("btn").click();
-      }
+      (async function bootTrackQueryAndRole() {
+        var params = new URLSearchParams(location.search);
+        var qid = (params.get("id") || params.get("order") || "").trim();
+        var tok = window.PlatformAPI.getToken();
+        if (tok) {
+          try {
+            var m = await window.PlatformAPI.api("/api/core/me");
+            var r = m && m.profile && m.profile.role;
+            if (String(r || "").toLowerCase() === "driver") {
+              var dest = "/driver-app" + (qid ? "?order=" + encodeURIComponent(qid) : "");
+              window.location.replace(dest);
+              return;
+            }
+          } catch (e) {}
+        }
+        if (qid) {
+          document.getElementById("oid").value = qid;
+          if (tok) document.getElementById("btn").click();
+        }
+      })();
 
       (function () {
         var row = document.getElementById("rateStars");

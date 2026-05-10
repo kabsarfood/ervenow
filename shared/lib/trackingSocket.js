@@ -15,8 +15,86 @@ function safeOrderRoomId(orderId) {
   return "order:" + s;
 }
 
-/** حد أدنى 2 ثانية بين بث موقع نفس المندوب (يقلّل spam). */
+/** حد أدنى ~2 ثانية بين بث موقع نفس المندوب (REST + Socket يشتركان في نفس العداد). */
 const driverLocationLastBroadcast = new Map();
+
+/** مرجع io يُضبط من server بعد التشغيل — لبث driver:update و order:patch من مسارات REST. */
+let trackingIo = null;
+
+function setTrackingIo(io) {
+  trackingIo = io || null;
+}
+
+/**
+ * @param {string} driverUserId
+ * @param {string} [orderId] — عند تعدّد الطلبات لنفس المندوب يُحسب الحدّ لكل غرفة على حدة
+ * @returns {boolean} true إذا سُمح بالبث الآن
+ */
+function consumeDriverLocationThrottle(driverUserId, orderId) {
+  const id = String(driverUserId == null ? "" : driverUserId).trim();
+  if (!id) return true;
+  const oid = orderId != null ? String(orderId).trim() : "";
+  const key = oid ? id + ":" + oid : id;
+  const nowMs = Date.now();
+  const lastMs = driverLocationLastBroadcast.get(key) || 0;
+  if (nowMs - lastMs < 2000) return false;
+  driverLocationLastBroadcast.set(key, nowMs);
+  return true;
+}
+
+function orderPatchFromRow(row) {
+  if (!row || row.id == null) return {};
+  const keys = [
+    "id",
+    "delivery_status",
+    "status",
+    "updated_at",
+    "last_location_at",
+    "driver_lat",
+    "driver_lng",
+    "driver_id",
+    "order_number",
+    "pickup_lat",
+    "pickup_lng",
+    "drop_lat",
+    "drop_lng",
+    "pickup_address",
+    "drop_address",
+  ];
+  const pick = {};
+  for (const k of keys) {
+    if (row[k] !== undefined) pick[k] = row[k];
+  }
+  return pick;
+}
+
+function broadcastDriverUpdate(orderId, driverUserId, payload) {
+  if (!trackingIo) return;
+  const room = safeOrderRoomId(orderId);
+  if (!room) return;
+  if (driverUserId != null && !consumeDriverLocationThrottle(driverUserId, orderId)) return;
+  const p =
+    payload && typeof payload === "object"
+      ? { ...payload, ts: payload.ts != null ? Number(payload.ts) : Date.now() }
+      : { ts: Date.now() };
+  trackingIo.to(room).emit("driver:update", p);
+}
+
+function broadcastOrderPatch(orderId, patch) {
+  if (!trackingIo) return;
+  const room = safeOrderRoomId(orderId);
+  if (!room) return;
+  const oid = String(orderId || "").trim();
+  trackingIo.to(room).emit("order:patch", { orderId: oid, patch: patch || {} });
+}
+
+function broadcastOrderLive(orderId, payload) {
+  if (!trackingIo) return;
+  const room = safeOrderRoomId(orderId);
+  if (!room) return;
+  const oid = String(orderId || "").trim();
+  trackingIo.to(room).emit("order:live", { orderId: oid, ...(payload && typeof payload === "object" ? payload : {}) });
+}
 
 async function fetchOrderForTracking(sb, orderId) {
   const id = String(orderId || "").trim();
@@ -31,6 +109,7 @@ async function fetchOrderForTracking(sb, orderId) {
 }
 
 function attachTrackingSocket(io) {
+  trackingIo = io;
   io.use((socket, next) => {
     const raw =
       (socket.handshake.auth && socket.handshake.auth.token) ||
@@ -111,10 +190,7 @@ function attachTrackingSocket(io) {
         return;
       }
 
-      const nowMs = Date.now();
-      const lastMs = driverLocationLastBroadcast.get(driverUserId) || 0;
-      if (nowMs - lastMs < 2000) return;
-      driverLocationLastBroadcast.set(driverUserId, nowMs);
+      if (!consumeDriverLocationThrottle(driverUserId, orderId)) return;
 
       const speed = data.speed;
       const heading = data.heading;
@@ -133,4 +209,12 @@ function attachTrackingSocket(io) {
   });
 }
 
-module.exports = { attachTrackingSocket };
+module.exports = {
+  attachTrackingSocket,
+  /** @deprecated يُضبط تلقائياً داخل attachTrackingSocket — للتوافق مع نداءات قديمة */
+  setTrackingIo,
+  orderPatchFromRow,
+  broadcastDriverUpdate,
+  broadcastOrderPatch,
+  broadcastOrderLive,
+};
