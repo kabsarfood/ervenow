@@ -1,8 +1,9 @@
 -- ERVENOW: حقول حساب بنكي كاملة + توافق PostgREST (schema cache)
 -- نفّذ في Supabase SQL Editor بعد: shared/migration_drivers.sql و migration_payout_registration.sql
 -- يضيف الأعمدة الناقصة (مثل bank_country_code إن لم تُنفَّذ الهجرة السابقة) وحقول التخزين الآمن bank_*
+-- للدفعة الكاملة (users+drivers+stores) مع IF EXISTS: migration_bank_payout_columns_all_idempotent.sql
 
-ALTER TABLE public.drivers
+ALTER TABLE IF EXISTS public.drivers
   ADD COLUMN IF NOT EXISTS bank_account_name text,
   ADD COLUMN IF NOT EXISTS bank_name text,
   ADD COLUMN IF NOT EXISTS bank_iban text,
@@ -16,7 +17,7 @@ ALTER TABLE public.drivers
 COMMENT ON COLUMN public.drivers.bank_last4 IS 'آخر 4 أحرف/أرقام للعرض فقط (بدون تخزين الآيبان كاملاً)';
 COMMENT ON COLUMN public.drivers.bank_iban IS 'آيبان مشفّر (تطبيق الخادم — AES-256-CBC)';
 
-ALTER TABLE public.stores
+ALTER TABLE IF EXISTS public.stores
   ADD COLUMN IF NOT EXISTS bank_account_name text,
   ADD COLUMN IF NOT EXISTS bank_name text,
   ADD COLUMN IF NOT EXISTS bank_iban text,
