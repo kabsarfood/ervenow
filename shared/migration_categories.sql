@@ -29,14 +29,15 @@ COMMENT ON TABLE public.categories IS 'أقسام العرض والإدارة: t
 -- مطاعم (scope = store → يطابق stores.category للمطاعم)
 INSERT INTO public.categories (type, scope, slug, name_ar, sort_order, is_active)
 VALUES
-  ('restaurant', 'store', 'shawarma_grill', 'شاورما ومشاوي', 10, true),
-  ('restaurant', 'store', 'kabsa', 'كبسة', 20, true),
-  ('restaurant', 'store', 'burger_broasted', 'برقر وبروستد', 30, true),
-  ('restaurant', 'store', 'bukhari_mandi', 'بخاري ومندي', 40, true),
-  ('restaurant', 'store', 'seafood', 'مأكولات بحرية', 50, true),
-  ('restaurant', 'store', 'breakfast_bakery', 'فطور ومخابز', 60, true),
-  ('restaurant', 'store', 'dessert_cafe', 'حلويات وقهوة', 70, true),
-  ('restaurant', 'store', 'juice_drinks', 'عصائر ومشروبات', 80, true)
+  ('restaurant', 'store', 'kabsa_bukhari', 'مطاعم كبسة وبخاري', 10, true),
+  ('restaurant', 'store', 'shawarma_grill', 'مطاعم شاورما ومشاوي', 20, true),
+  ('restaurant', 'store', 'seafood', 'مطاعم سمك', 30, true),
+  ('restaurant', 'store', 'burger', 'مطاعم برقر', 40, true),
+  ('restaurant', 'store', 'broasted', 'مطاعم بروستد', 50, true),
+  ('restaurant', 'store', 'pizza', 'مطاعم بيتزا', 60, true),
+  ('restaurant', 'store', 'cafe', 'مقاهي', 70, true),
+  ('restaurant', 'store', 'sweets', 'حلويات', 80, true),
+  ('restaurant', 'store', 'home_producers', 'أسر منتجة', 90, true)
 ON CONFLICT (slug) DO NOTHING;
 
 -- سوبرماركت / منتجات (scope = product → يطابق store_products.category)

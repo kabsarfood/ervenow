@@ -77,10 +77,10 @@
           </select>
 
           <div id="restaurantCategoryWrap" style="display: none; margin-top: 12px">
-            <label for="restaurant_category">نوع المطعم</label>
+            <label for="restaurant_category">تصنيف المطعم</label>
             <select id="restaurant_category">
               <option value="">— اختر التصنيف —</option>
-          </select>
+            </select>
           </div>
 
           <div id="marketCategoryWrap" style="display: none; margin-top: 12px">
@@ -269,7 +269,35 @@
           if (type !== "supermarket") selM.selectedIndex = 0;
         }
       }
+
+      var fillCategorySelectsInFlight = false;
+
+      function dedupeCategoriesBySlug(list) {
+        var map = new Map();
+        (list || []).forEach(function (c) {
+          if (!c || c.slug == null || String(c.slug).trim() === "") return;
+          var slug = String(c.slug).trim().toLowerCase();
+          if (!slug || map.has(slug)) return;
+          map.set(slug, c);
+        });
+        return Array.from(map.values());
+      }
+
+      function populateCategorySelect(sel, categories) {
+        if (!sel) return;
+        var list = dedupeCategoriesBySlug(categories);
+        sel.innerHTML = '<option value="">— اختر التصنيف —</option>';
+        list.forEach(function (c) {
+          var o = document.createElement("option");
+          o.value = c.slug;
+          o.textContent = (c.icon ? c.icon + " " : "") + (c.name_ar || c.label_ar || c.slug);
+          sel.appendChild(o);
+        });
+      }
+
       async function fillCategorySelects() {
+        if (fillCategorySelectsInFlight) return;
+        fillCategorySelectsInFlight = true;
         try {
           var base =
             window.PlatformAPI && PlatformAPI.apiUrl
@@ -279,38 +307,32 @@
               : function (p) {
                   return p;
                 };
-          var r1 = await fetch(base("/api/categories?type=restaurant"));
+          var r1 = await fetch(base("/api/categories?type=restaurant&list=canonical&sort=manual"));
           var j1 = await r1.json();
           var selR = document.getElementById("restaurant_category");
           if (selR) {
             var catsR = Array.isArray(j1 && j1.categories) ? j1.categories : [];
-            selR.innerHTML = '<option value="">— اختر التصنيف —</option>';
-            catsR.forEach(function (c) {
-              var o = document.createElement("option");
-              o.value = c.slug;
-              o.textContent = (c.icon ? c.icon + " " : "") + (c.name_ar || c.label_ar || c.slug);
-              selR.appendChild(o);
-            });
+            populateCategorySelect(selR, catsR);
           }
-          var r2 = await fetch(base("/api/categories?type=market"));
+          var r2 = await fetch(base("/api/categories?type=market&list=canonical&sort=manual"));
           var j2 = await r2.json();
           var selM = document.getElementById("store_category");
           if (selM) {
             var catsM = Array.isArray(j2 && j2.categories) ? j2.categories : [];
-            selM.innerHTML = '<option value="">— اختر التصنيف —</option>';
-            catsM.forEach(function (c) {
-              var o = document.createElement("option");
-              o.value = c.slug;
-              o.textContent = (c.icon ? c.icon + " " : "") + (c.name_ar || c.label_ar || c.slug);
-              selM.appendChild(o);
-            });
+            populateCategorySelect(selM, catsM);
           }
         } catch (e) {
           console.warn("[register-store] categories", e);
+        } finally {
+          fillCategorySelectsInFlight = false;
         }
       }
 
-      document.getElementById("type").addEventListener("change", syncRestaurantCategoryField);
+      document.getElementById("type").addEventListener("change", function () {
+        syncRestaurantCategoryField();
+        var t = document.getElementById("type").value;
+        if (t === "restaurant" || t === "supermarket") void fillCategorySelects();
+      });
       syncRestaurantCategoryField();
       fillCategorySelects();
 

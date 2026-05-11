@@ -1,43 +1,71 @@
 /**
  * تصنيفات مطاعم ERVENOW — قيمة عمود stores.category عندما يكون type = 'restaurant'
  * (لا تُستخدم كـ type للمتجر؛ type يبقى restaurant)
+ *
+ * القائمة الافتراضية للعرض والتسجيل = RESTAURANT_CATEGORY_KEYS (ترتيب العرض).
+ * LEGACY_* للمتاجر المسجّلة سابقاً بـ slugs قديمة — تبقى صالحة للتحقق والعرض.
  */
 
-const RESTAURANT_CATEGORY_KEYS = [
-  "shawarma_grill",
+const LEGACY_RESTAURANT_CATEGORY_SLUGS = [
   "bukhari_mandi",
   "burger_broasted",
-  "seafood",
   "kabsa",
   "breakfast_bakery",
   "dessert_cafe",
   "juice_drinks",
 ];
 
+/** ترتيب العرض الافتراضي (قوائم API + تسجيل متجر) */
+const RESTAURANT_CATEGORY_KEYS = [
+  "kabsa_bukhari",
+  "shawarma_grill",
+  "seafood",
+  "burger",
+  "broasted",
+  "pizza",
+  "cafe",
+  "sweets",
+  "home_producers",
+];
+
 const RESTAURANT_CATEGORY_LABEL_AR = {
-  shawarma_grill: "شاورما ومشاوي",
-  bukhari_mandi: "بخاري ومندي",
-  burger_broasted: "برقر وبروستد",
-  seafood: "مأكولات بحرية",
-  kabsa: "كبسة",
-  breakfast_bakery: "فطور ومخابز",
-  dessert_cafe: "حلويات وقهوة",
-  juice_drinks: "عصائر ومشروبات",
+  kabsa_bukhari: "مطاعم كبسة وبخاري",
+  shawarma_grill: "مطاعم شاورما ومشاوي",
+  seafood: "مطاعم سمك",
+  burger: "مطاعم برقر",
+  broasted: "مطاعم بروستد",
+  pizza: "مطاعم بيتزا",
+  cafe: "مقاهي",
+  sweets: "حلويات",
+  home_producers: "أسر منتجة",
+  /* قيم قديمة — تبقى معترفاً بها */
+  bukhari_mandi: "بخاري ومندي (تصنيف سابق)",
+  burger_broasted: "برقر وبروستد (تصنيف سابق)",
+  kabsa: "كبسة (تصنيف سابق)",
+  breakfast_bakery: "فطور ومخابز (تصنيف سابق)",
+  dessert_cafe: "حلويات وقهوة (تصنيف سابق)",
+  juice_drinks: "عصائر ومشروبات (تصنيف سابق)",
 };
 
-/** أيقونات افتراضية عند غياب icon في قاعدة البيانات */
 const RESTAURANT_CATEGORY_ICONS = {
+  kabsa_bukhari: "🍚",
   shawarma_grill: "🌯",
+  seafood: "🐟",
+  burger: "🍔",
+  broasted: "🍗",
+  pizza: "🍕",
+  cafe: "☕",
+  sweets: "🍰",
+  home_producers: "🏠",
   bukhari_mandi: "🍚",
   burger_broasted: "🍔",
-  seafood: "🦐",
   kabsa: "🍗",
   breakfast_bakery: "🥐",
   dessert_cafe: "🍰",
   juice_drinks: "🥤",
 };
 
-const RESTAURANT_CATEGORY_SET = new Set(RESTAURANT_CATEGORY_KEYS);
+const RESTAURANT_CATEGORY_SET = new Set([...RESTAURANT_CATEGORY_KEYS, ...LEGACY_RESTAURANT_CATEGORY_SLUGS]);
 
 function isRestaurantCategoryKey(value) {
   const s = String(value || "")
@@ -108,6 +136,7 @@ function restaurantRowMatchesCuisineFilter(row, cuisineSlug, allowedSlugs) {
 
 module.exports = {
   RESTAURANT_CATEGORY_KEYS,
+  LEGACY_RESTAURANT_CATEGORY_SLUGS,
   RESTAURANT_CATEGORY_LABEL_AR,
   RESTAURANT_CATEGORY_ICONS,
   RESTAURANT_CATEGORY_SET,

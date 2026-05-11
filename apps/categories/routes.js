@@ -20,6 +20,31 @@ const {
 
 const router = express.Router();
 
+/** قائمة التسجيل: نفس ترتيب RESTAURANT_CATEGORY_KEYS / PRODUCT_CATEGORY_KEYS فقط (بدون slugs قديمة إضافية من DB). */
+function applyCanonicalRestaurantList(categories) {
+  const m = new Map(
+    (categories || []).map((x) => {
+      const s = String(x.slug || "")
+        .trim()
+        .toLowerCase();
+      return [s, x];
+    })
+  );
+  return RESTAURANT_CATEGORY_KEYS.map((slug) => m.get(slug)).filter(Boolean);
+}
+
+function applyCanonicalMarketList(categories) {
+  const m = new Map(
+    (categories || []).map((x) => {
+      const s = String(x.slug || "")
+        .trim()
+        .toLowerCase();
+      return [s, x];
+    })
+  );
+  return PRODUCT_CATEGORY_KEYS.map((slug) => m.get(slug)).filter(Boolean);
+}
+
 /** sort=smart (افتراضي): الأكثر usage أولاً ثم sort_order. sort=manual: الترتيب الثابت فقط */
 function parseSortMode(raw) {
   const s = String(raw || "")
@@ -163,7 +188,8 @@ router.get("/", async (req, res) => {
   try {
     const scope = normalizeScopeType(req.query.type);
     if (!scope) return fail(res, "أرسل type=restaurant أو type=market", 400);
-    const sortMode = parseSortMode(req.query.sort);
+    const listCanonical = String(req.query.list || "").trim().toLowerCase() === "canonical";
+    const sortMode = listCanonical ? "manual" : parseSortMode(req.query.sort);
     const sb = createServiceClient();
     if (!sb) return fail(res, "الخادم غير مهيأ لقاعدة البيانات", 503);
 
@@ -173,13 +199,17 @@ router.get("/", async (req, res) => {
     if (error) {
       if (isCategoriesTableMissing(error)) {
         const merged = scope === "market" ? mergeMarketCategories([]) : mergeRestaurantCategories([]);
-        const categories = sortMergedCategories(merged, sortMode);
+        let categories = sortMergedCategories(merged, sortMode);
+        if (listCanonical) {
+          categories = scope === "market" ? applyCanonicalMarketList(categories) : applyCanonicalRestaurantList(categories);
+        }
         return ok(res, {
           ok: true,
           type: scope,
           categories,
           meta: {
             sort: sortMode,
+            list: listCanonical ? "canonical" : "full",
             usage_tracking: false,
             has_usage_columns: false,
           },
@@ -201,13 +231,17 @@ router.get("/", async (req, res) => {
       last_used_at: hasUsageColumns ? r.last_used_at : null,
     }));
     const merged = scope === "market" ? mergeMarketCategories(raw) : mergeRestaurantCategories(raw);
-    const categories = sortMergedCategories(merged, sortMode);
+    let categories = sortMergedCategories(merged, sortMode);
+    if (listCanonical) {
+      categories = scope === "market" ? applyCanonicalMarketList(categories) : applyCanonicalRestaurantList(categories);
+    }
     return ok(res, {
       ok: true,
       type: scope,
       categories,
       meta: {
         sort: sortMode,
+        list: listCanonical ? "canonical" : "full",
         usage_tracking: hasUsageColumns,
         has_usage_columns: hasUsageColumns,
       },
