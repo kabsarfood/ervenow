@@ -26,6 +26,7 @@ const {
   fetchMergedRestaurantCategorySlugs,
   fetchCategoryLabelMap,
 } = require("../../shared/categoriesDb");
+const { incrementCategoryUsage } = require("../../shared/categoryUsage");
 
 let twilioFactory = null;
 try {
@@ -887,6 +888,7 @@ router.post("/products", requireAuth, requireMerchantRole, async (req, res) => {
       if (isStoreProductsMissing(error)) return fail(res, "جدول المنتجات غير جاهز — نفّذ migration_store_marketplace.sql", 400);
       return fail(res, error.message, 400);
     }
+    if (productCategory) void incrementCategoryUsage("market", productCategory);
     listCache = { key: "", at: 0, payload: null };
     return ok(res, { product: data });
   } catch (e) {
@@ -904,7 +906,7 @@ router.put("/products/:id", requireAuth, requireMerchantRole, async (req, res) =
 
     const { data: existing, error: exErr } = await sb
       .from("store_products")
-      .select("store_id,price,offer_price")
+      .select("store_id,price,offer_price,category")
       .eq("id", productId)
       .maybeSingle();
     if (exErr || !existing) return fail(res, "المنتج غير موجود", 404);
@@ -1010,6 +1012,14 @@ router.put("/products/:id", requireAuth, requireMerchantRole, async (req, res) =
     }
     if (error) return fail(res, error.message, 400);
     listCache = { key: "", at: 0, payload: null };
+    if (patch.category !== undefined) {
+      const prevCat = existing.category != null ? String(existing.category).trim().toLowerCase() : "";
+      const newCat =
+        patch.category === null || patch.category === ""
+          ? ""
+          : String(patch.category).trim().toLowerCase();
+      if (newCat && newCat !== prevCat) void incrementCategoryUsage("market", newCat);
+    }
     return ok(res, { product: data });
   } catch (e) {
     console.error("[store/products/put]", e);

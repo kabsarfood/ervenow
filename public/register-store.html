@@ -56,7 +56,8 @@
           <li>نفّذ بالترتيب: <code>shared/migration_stores.sql</code> ثم <code>shared/migration_store_marketplace.sql</code> و
             <code>shared/migration_store_location_delivery.sql</code> ثم <code>shared/migration_stores_platform.sql</code> ثم عند الحاجة
             <code>shared/migration_stores_email.sql</code> (عمود البريد + تقليل أخطاء schema cache) ثم
-            <code>shared/migration_categories.sql</code> لأقسام المطاعم والبقالة الديناميكية.</li>
+            <code>shared/migration_categories.sql</code> لأقسام المطاعم والبقالة الديناميكية، ثم عند الحاجة
+            <code>shared/migration_category_usage.sql</code> لتتبع الاستخدام والترتيب الذكي.</li>
           <li>بعد أي <code>ALTER TABLE</code>: من Supabase → <strong>Settings → API</strong> استخدم <strong>Reload schema</strong> إن وُجد، ثم أعد تحميل الصفحة.</li>
         </ol>
       </details>
@@ -281,9 +282,10 @@
           var r1 = await fetch(base("/api/categories?type=restaurant"));
           var j1 = await r1.json();
           var selR = document.getElementById("restaurant_category");
-          if (selR && j1.categories) {
+          if (selR) {
+            var catsR = Array.isArray(j1 && j1.categories) ? j1.categories : [];
             selR.innerHTML = '<option value="">— اختر التصنيف —</option>';
-            j1.categories.forEach(function (c) {
+            catsR.forEach(function (c) {
               var o = document.createElement("option");
               o.value = c.slug;
               o.textContent = (c.icon ? c.icon + " " : "") + (c.name_ar || c.label_ar || c.slug);
@@ -293,9 +295,10 @@
           var r2 = await fetch(base("/api/categories?type=market"));
           var j2 = await r2.json();
           var selM = document.getElementById("store_category");
-          if (selM && j2.categories) {
+          if (selM) {
+            var catsM = Array.isArray(j2 && j2.categories) ? j2.categories : [];
             selM.innerHTML = '<option value="">— اختر التصنيف —</option>';
-            j2.categories.forEach(function (c) {
+            catsM.forEach(function (c) {
               var o = document.createElement("option");
               o.value = c.slug;
               o.textContent = (c.icon ? c.icon + " " : "") + (c.name_ar || c.label_ar || c.slug);

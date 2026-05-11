@@ -18,6 +18,7 @@ const {
   CATEGORY_SCOPE_STORE,
   CATEGORY_SCOPE_PRODUCT,
 } = require("../../shared/categoriesDb");
+const { recordStoreCategoryUsageOnApprove } = require("../../shared/categoryUsage");
 
 const ADMIN_PUBLIC_ROOT = path.join(__dirname, "../../public");
 
@@ -909,6 +910,7 @@ router.patch("/store-requests/:id", requireAuth, requireRole("admin"), requireAd
       return fail(res, error.message || String(error), 400);
     }
     if (status === "approved") await linkStoreOwnerAfterApprove(req.supabase, data);
+    if (status === "approved") recordStoreCategoryUsageOnApprove(data);
     return ok(res, { request: sanitizeDriverOrStoreRowForApi(data) });
   } catch (e) {
     return fail(res, e.message || String(e), 500);
@@ -928,6 +930,7 @@ router.post("/approve-store", requireAuth, requireRole("admin"), requireAdminPer
       return fail(res, error.message || String(error), 400);
     }
     await linkStoreOwnerAfterApprove(req.supabase, data);
+    recordStoreCategoryUsageOnApprove(data);
     return ok(res, { store: sanitizeDriverOrStoreRowForApi(data) });
   } catch (e) {
     return fail(res, e.message || String(e), 500);
@@ -965,6 +968,7 @@ router.patch("/store/:id/approve", requireAuth, requireRole("admin"), requireAdm
       return fail(res, error.message || String(error), 400);
     }
     await linkStoreOwnerAfterApprove(req.supabase, data);
+    recordStoreCategoryUsageOnApprove(data);
     return ok(res, { store: sanitizeDriverOrStoreRowForApi(data) });
   } catch (e) {
     return fail(res, e.message || String(e), 500);
@@ -1475,15 +1479,31 @@ router.get(
       if (!sb) return fail(res, "الخادم غير مهيأ لقاعدة البيانات", 503);
       const { data, error } = await sb
         .from("categories")
-        .select("id,type,slug,label_ar,icon,sort_order,is_active,created_at,updated_at")
+        .select("id,type,scope,slug,name_ar,icon,image_url,sort_order,is_active,usage_count,last_used_at,created_at,updated_at")
         .eq("type", scope)
+        .order("usage_count", { ascending: false })
         .order("sort_order", { ascending: true })
-        .order("label_ar", { ascending: true });
+        .order("name_ar", { ascending: true });
       if (error) {
         if (isCategoriesTableMissing(error)) {
           return ok(res, { ok: true, categories: [], note: "نفّذ shared/migration_categories.sql في Supabase" });
         }
-        return fail(res, error.message, 400);
+        if (!/usage_count|last_used_at|column|schema cache/i.test(String(error.message || ""))) {
+          return fail(res, error.message, 400);
+        }
+        const r2 = await sb
+          .from("categories")
+          .select("id,type,scope,slug,name_ar,icon,image_url,sort_order,is_active,created_at,updated_at")
+          .eq("type", scope)
+          .order("sort_order", { ascending: true })
+          .order("name_ar", { ascending: true });
+        if (r2.error) {
+          if (isCategoriesTableMissing(r2.error)) {
+            return ok(res, { ok: true, categories: [], note: "نفّذ shared/migration_categories.sql في Supabase" });
+          }
+          return fail(res, r2.error.message, 400);
+        }
+        return ok(res, { ok: true, categories: r2.data || [] });
       }
       return ok(res, { ok: true, categories: data || [] });
     } catch (e) {
@@ -1514,7 +1534,7 @@ router.post(
         return fail(res, "أقسام البقالة يجب أن تكون scope=product", 400);
       }
       const icon =
-        body.icon != null && String(body.icon).trim() !== "" ? String(body.icon).trim().slice(0, 16) : null;
+        body.icon != null && String(body.icon).trim() !== "" ? String(body.icon).trim().slice(0, 32) : null;
       const image_url =
         body.image_url != null && String(body.image_url).trim() !== ""
           ? String(body.image_url).trim().slice(0, 2048)
@@ -1583,7 +1603,7 @@ router.put(
             : String(body.image_url).trim().slice(0, 2048);
       }
       if (body.icon !== undefined) {
-        patch.icon = body.icon === null || body.icon === "" ? null : String(body.icon).trim().slice(0, 16);
+        patch.icon = body.icon === null || body.icon === "" ? null : String(body.icon).trim().slice(0, 32);
       }
       if (body.sort_order != null) {
         const n = Number(body.sort_order);

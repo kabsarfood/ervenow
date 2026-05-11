@@ -25,6 +25,18 @@ const RESTAURANT_CATEGORY_LABEL_AR = {
   juice_drinks: "عصائر ومشروبات",
 };
 
+/** أيقونات افتراضية عند غياب icon في قاعدة البيانات */
+const RESTAURANT_CATEGORY_ICONS = {
+  shawarma_grill: "🌯",
+  bukhari_mandi: "🍚",
+  burger_broasted: "🍔",
+  seafood: "🦐",
+  kabsa: "🍗",
+  breakfast_bakery: "🥐",
+  dessert_cafe: "🍰",
+  juice_drinks: "🥤",
+};
+
 const RESTAURANT_CATEGORY_SET = new Set(RESTAURANT_CATEGORY_KEYS);
 
 function isRestaurantCategoryKey(value) {
@@ -97,6 +109,7 @@ function restaurantRowMatchesCuisineFilter(row, cuisineSlug, allowedSlugs) {
 module.exports = {
   RESTAURANT_CATEGORY_KEYS,
   RESTAURANT_CATEGORY_LABEL_AR,
+  RESTAURANT_CATEGORY_ICONS,
   RESTAURANT_CATEGORY_SET,
   isRestaurantCategoryKey,
   normalizeRestaurantCategory,

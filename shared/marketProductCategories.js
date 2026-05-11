@@ -24,6 +24,17 @@ const PRODUCT_CATEGORY_LABEL_AR = {
   cleaning: "منظفات",
 };
 
+const PRODUCT_CATEGORY_ICONS = {
+  vegetables: "🥬",
+  meat: "🥩",
+  dairy: "🥛",
+  bakery: "🥖",
+  drinks: "🧃",
+  snacks: "🍿",
+  frozen: "🧊",
+  cleaning: "🧽",
+};
+
 const PRODUCT_CATEGORY_SET = new Set(PRODUCT_CATEGORY_KEYS);
 
 /** أنواع متاجر تعرض شريط أقسام المنتجات في store.html */
@@ -60,6 +71,7 @@ function isMarketStoreType(storeType) {
 module.exports = {
   PRODUCT_CATEGORY_KEYS,
   PRODUCT_CATEGORY_LABEL_AR,
+  PRODUCT_CATEGORY_ICONS,
   PRODUCT_CATEGORY_SET,
   normalizeProductCategory,
   productCategoryLabelAr,
