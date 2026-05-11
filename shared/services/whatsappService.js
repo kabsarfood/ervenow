@@ -48,6 +48,67 @@ function buildPickupMapsUrl(order) {
   return `https://maps.google.com/?q=${lat},${lng}`;
 }
 
+function buildDropMapsUrl(order) {
+  const lat = Number(order?.drop_lat);
+  const lng = Number(order?.drop_lng);
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return "";
+  return `https://maps.google.com/?q=${lat},${lng}`;
+}
+
+/**
+ * بعد قبول المندوب للطلب — واتساب (Twilio) مع روابط سريعة؛ لا يُرمى خطأ للمتصل عند الفشل.
+ * fallback: رسالة مختصرة إن فشل الإرسال الأول.
+ */
+async function sendOrderAcceptedToDriverWhatsApp(order, driverPhone) {
+  const rawTo = driverPhone != null && String(driverPhone).trim() !== "" ? driverPhone : order?.driver_phone;
+  const digits = normalizePhone(String(rawTo || "").trim());
+  if (!digits || digits.length < 10 || !order?.id) return false;
+
+  const base = (publicBaseUrl() || "https://ervenow.com").replace(/\/$/, "");
+  const idRaw = String(order.id).trim();
+  const idEnc = encodeURIComponent(idRaw);
+  const orderNumber =
+    (order.order_number && String(order.order_number).trim()) || idRaw.slice(0, 8) + "…";
+  const pickup = buildPickupMapsUrl(order) || "—";
+  const drop = buildDropMapsUrl(order) || "—";
+  const appUrl = `${base}/driver-app.html?order=${idEnc}`;
+  const pingUrl = `${base}/api/driver/ping-arrival/${idEnc}`;
+  const completeUrl = `${base}/api/driver/complete-order/${idEnc}`;
+
+  const full =
+    `━━━━━━━━━━━━━━━━\n` +
+    `🌟 ERVENOW — تم قبول الطلب\n` +
+    `━━━━━━━━━━━━━━━━\n\n` +
+    `📦 الطلب\n` +
+    `رقم الطلب: ${orderNumber}\n\n` +
+    `━━━━━━━━━━━━━━━━\n` +
+    `📍 الاستلام (خرائط Google)\n` +
+    `${pickup}\n\n` +
+    `━━━━━━━━━━━━━━━━\n` +
+    `📍 التسليم (خرائط Google)\n` +
+    `${drop}\n\n` +
+    `━━━━━━━━━━━━━━━━\n` +
+    `⚡ ابدأ من هنا\n` +
+    `▶️ فتح تطبيق المندوب:\n${appUrl}\n\n` +
+    `━━━━━━━━━━━━━━━━\n` +
+    `🛠 بعد تسجيل الدخول في التطبيق\n` +
+    `• إبلاغ الوصول (POST):\n${pingUrl}\n\n` +
+    `• إتمام التسليم (POST):\n${completeUrl}\n\n` +
+    `— فريق ERVENOW`;
+
+  let ok = await sendWhatsApp({ to: digits, message: full });
+  if (!ok) {
+    const short =
+      `ERVENOW | طلب ${orderNumber}\n\n` +
+      `▶️ التطبيق:\n${appUrl}\n\n` +
+      `📍 استلام:\n${pickup}\n\n` +
+      `📍 تسليم:\n${drop}`;
+    ok = await sendWhatsApp({ to: digits, message: short });
+  }
+  if (ok) logWaSent(digits, "order_accepted_driver");
+  return ok;
+}
+
 /**
  * 🚚 طلب جديد للمندوب (قالب احترافي — يُستدعى من إشعار المناديب)
  */
@@ -148,6 +209,8 @@ module.exports = {
   publicBaseUrl,
   buildDriverOrderDeepLink,
   buildPickupMapsUrl,
+  buildDropMapsUrl,
+  sendOrderAcceptedToDriverWhatsApp,
   logWaSent,
   buildSupportMenuBody,
   sendOTP,

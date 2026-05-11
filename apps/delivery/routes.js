@@ -23,6 +23,7 @@ const {
   sendOrderAcceptedToCustomer,
   sendCustomerDeliveringNotice,
   sendDriverArrived,
+  sendOrderAcceptedToDriverWhatsApp,
 } = require("../../shared/services/whatsappService");
 const { cacheGetJson, cacheSetJson } = require("../../shared/utils/redisCache");
 const {
@@ -208,6 +209,14 @@ router.post("/orders/:id/accept", requireAuth, requireRole("driver"), async (req
       await bumpDeliveryOrdersListEpoch();
       const orderLabel = data.order_number || String(data.id);
       const driverInfo = req.appUser.phone || req.appUser.id;
+
+      if (req.appUser.phone) {
+        try {
+          await sendOrderAcceptedToDriverWhatsApp(data, req.appUser.phone);
+        } catch (e) {
+          logger.error({ err: e && (e.message || String(e)), orderId: data.id }, "[delivery/accept] driver WhatsApp Twilio");
+        }
+      }
 
       if (data.customer_phone) {
         await sendOrderAcceptedToCustomer(data, driverInfo);

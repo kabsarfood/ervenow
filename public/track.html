@@ -20,6 +20,41 @@
         border: none !important;
       }
 
+      .ervenow-marker-core {
+        will-change: transform;
+        transition: transform 0.32s cubic-bezier(0.33, 1, 0.36, 1);
+      }
+
+      #mapShell {
+        position: relative;
+        width: 100%;
+        min-height: 280px;
+        border-radius: 12px;
+        overflow: hidden;
+      }
+
+      #btnMapFollowDriver {
+        position: absolute;
+        left: 50%;
+        bottom: 10px;
+        transform: translateX(-50%);
+        z-index: 10001;
+        padding: 8px 16px;
+        font-size: 0.8rem;
+        font-weight: 700;
+        font-family: inherit;
+        cursor: pointer;
+        border: none;
+        border-radius: 999px;
+        background: rgba(15, 23, 42, 0.9);
+        color: #f1f5f9;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.22);
+      }
+
+      #btnMapFollowDriver:hover {
+        background: rgba(30, 41, 59, 0.95);
+      }
+
       #orderNumber,
       #orderNumberLine,
       #coords {
@@ -136,11 +171,6 @@
         animation: ervenow-near-pulse 1s ease-in-out infinite;
       }
 
-      .ervenow-marker-core {
-        transition: transform 0.48s cubic-bezier(0.22, 1, 0.36, 1);
-        will-change: transform;
-      }
-
       @keyframes erv-arrival-ring {
         0%,
         100% {
@@ -253,14 +283,14 @@
         <label for="oid">رقم الطلب / معرّف الطلب</label>
         <input id="oid" type="text" placeholder="مثال: ES-DD-001 أو UUID" />
         <div class="btn-row">
-          <button type="button" class="btn btn-primary" id="btn">تحديث الآن</button>
+          <button type="button" class="btn btn-primary" id="btn">تحميل الطلب</button>
         </div>
       </div>
 
       <div class="card">
         <strong>خريطة المندوب</strong>
         <p class="sub" style="margin-top: 4px; margin-bottom: 10px">
-          يُحدَّث الموقع لحظياً عبر الاتصال المباشر، مع تحديث تفاصيل الطلب كل بضع ثوانٍ.
+          موقع المندوب يُحدَّث لحظياً عبر الاتصال المباشر (نفس مصدر تطبيق المندوب). تفاصيل الحالة تصل عبر نفس القناة دون استطلاع دوري.
         </p>
         <div class="btn-row" style="margin-bottom: 8px">
           <button type="button" class="btn btn-ghost" id="btnVoiceToggle">🔊 التنبيه الصوتي: تشغيل</button>
@@ -269,12 +299,15 @@
           <button type="button" class="btn btn-ghost" id="callDriverBtn" style="display: none">📞 اتصال بالمندوب</button>
         </div>
         <div class="sub" id="driverInfo" style="margin-bottom: 6px; font-weight: 600" translate="no"></div>
-        <div
-          id="map"
-          class="map-placeholder"
-          style="min-height: 280px; width: 100%; border-radius: 12px; overflow: hidden"
-        >
-          <span style="padding: 12px; display: inline-block">تُنشأ الخريطة عند وصول أول إحداثيات</span>
+        <div id="mapShell">
+          <div
+            id="map"
+            class="map-placeholder"
+            style="min-height: 280px; width: 100%; border-radius: 0; overflow: hidden"
+          >
+            <span style="padding: 12px; display: inline-block">تُنشأ الخريطة عند وصول أول إحداثيات</span>
+          </div>
+          <button type="button" id="btnMapFollowDriver" translate="no">متابعة المندوب</button>
         </div>
         <p class="track-coords" id="coords">لا يوجد موقع بعد</p>
         <p class="sub" style="margin: 8px 0 0; font-size: 0.85rem" id="coordsMeta"></p>
@@ -351,7 +384,8 @@
         cancelled_by_customer: "أُلغي بواسطة زائر المنصة",
       };
 
-      var pollTimer = null;
+      /** بعد أول driver:update لا نُرجع موضع المندوب لإحداثيات REST القديمة */
+      var trackSocketHasDriverStream = false;
       var trackedOrderId = null;
       var map = null;
       var driverMarker = null;
@@ -409,7 +443,25 @@
       /** حتى متى نعرض شارة «وصل للعنوان» بعد order:live (arrivalPing). */
       var arrivalPingUntil = 0;
       var liveEtaTickerInterval = null;
+      var liveRouteRefreshInterval = null;
       var lastDeliveredNotifyKey = "";
+      /** سرعة مندوب من آخر driver:update (م/ث) */
+      var lastSocketSpeedMs = null;
+      var lastLiveRouteFetchAt = 0;
+      var lastLiveRouteAnchorLat = null;
+      var lastLiveRouteAnchorLng = null;
+      var liveRouteInflight = false;
+      var liveRouteDebounceT = null;
+      /** throttle لطلبات OSRM للمسار الحي — لا نعيد الرسم كل ثانية */
+      var liveRouteRefreshMinMs = 7200;
+      var liveRouteMoveThresholdM = 72;
+      var liveRouteAbsoluteMinGapMs = 5200;
+      var liveRouteHardThrottleMs = 6500;
+      var liveRouteGeometryRequestId = 0;
+      /** إسقاط عرض الماركر على المسار — أقصى بعد جانبي عن الخط (م). */
+      var MAP_SNAP_MAX_OFF_ROUTE_M = 108;
+      /** متابعة تلقائية للمندوب؛ يُعلّق عند سحب/تكبير يدوي للخريطة */
+      var mapAutoFollowSuspendedByUser = false;
 
       async function ensureMeRole() {
         if (meRoleFetched) return;
@@ -629,6 +681,59 @@
         };
       }
 
+      function wrapDriverMarkerSetLatLngForRouteSnap(marker) {
+        if (!marker || marker._ervRouteSnapWrap) return;
+        marker._ervRouteSnapWrap = true;
+        var _orig = marker.setLatLng;
+        marker.setLatLng = function () {
+          var args = Array.prototype.slice.call(arguments);
+          if (!args.length) return _orig.apply(this, args);
+          var ll = L.latLng(args[0]);
+          if (!ll || !Number.isFinite(ll.lat) || !Number.isFinite(ll.lng)) return _orig.apply(this, args);
+          var pr = projectOntoRouteMeta(ll.lat, ll.lng, trackRouteProgressMeta);
+          if (pr && pr.distM <= MAP_SNAP_MAX_OFF_ROUTE_M) {
+            args[0] = L.latLng(pr.lat, pr.lng);
+          }
+          return _orig.apply(this, args);
+        };
+      }
+
+      function syncMapFollowChipUi() {
+        var b = document.getElementById("btnMapFollowDriver");
+        if (!b) return;
+        if (!map || !driverMarker) {
+          b.style.display = "none";
+          return;
+        }
+        b.style.display = mapAutoFollowSuspendedByUser ? "block" : "none";
+      }
+
+      function resumeMapFollowDriver() {
+        mapAutoFollowSuspendedByUser = false;
+        syncMapFollowChipUi();
+        if (map && driverMarker && typeof driverMarker.getLatLng === "function") {
+          try {
+            var ll = driverMarker.getLatLng();
+            map.panTo(ll, { animate: true, duration: 0.45, easeLinearity: 0.42 });
+          } catch (e) {}
+        }
+      }
+
+      function maybeAutoFollowDriverAt(lat, lng) {
+        if (!map || !driverMarker || mapAutoFollowSuspendedByUser) return;
+        if (lat == null || lng == null) return;
+        var la = Number(lat);
+        var ln = Number(lng);
+        if (!Number.isFinite(la) || !Number.isFinite(ln)) return;
+        try {
+          var c = map.getCenter();
+          var dM = haversineKmQuick(c.lat, c.lng, la, ln) * 1000;
+          if (dM > 95) {
+            map.panTo([la, ln], { animate: true, duration: 0.4, easeLinearity: 0.45 });
+          }
+        } catch (e) {}
+      }
+
       if (typeof window !== "undefined") {
         window.__ervApplyDriverRotation = __ervApplyDriverRotation;
       }
@@ -656,10 +761,44 @@
         return haversineKmQuick(dLat, dLng, toLat, toLng) * 1000;
       }
 
+      function pickEstimatedSpeedMsLastOrder() {
+        var sp = lastSocketSpeedMs;
+        if (sp != null && Number.isFinite(Number(sp)) && Math.abs(Number(sp)) > 0.35) {
+          return Math.min(24, Math.max(2.2, Math.abs(Number(sp))));
+        }
+        var kind = detectVehicleKind(lastOrder);
+        if (kind === "bike") return 7.2;
+        if (kind === "truck") return 8.6;
+        return 10.5;
+      }
+
+      /** متبقي للتسليم: يفضّل طول المسار المتبقي على OSRM إن وُجد، وإلا خطّ الطيور */
+      function getRemainingMetersForEta(snap) {
+        if (!snap) return null;
+        var distBird = getDriverToDropMeters(snap);
+        if (distBird == null || !Number.isFinite(distBird)) return null;
+        if (trackRouteProgressMeta && driverMarker && typeof driverMarker.getLatLng === "function") {
+          try {
+            var ll = driverMarker.getLatLng();
+            var along = computeAlongRouteMetersFromLatLng(ll.lat, ll.lng, trackRouteProgressMeta);
+            var tot = trackRouteProgressMeta.totalM;
+            var rem = tot - along;
+            if (Number.isFinite(rem) && rem > 25 && rem < tot + 400) {
+              return Math.max(15, rem);
+            }
+          } catch (e) {}
+        }
+        return distBird;
+      }
+
       function stopLiveEtaTicker() {
         if (liveEtaTickerInterval != null) {
           clearInterval(liveEtaTickerInterval);
           liveEtaTickerInterval = null;
+        }
+        if (liveRouteRefreshInterval != null) {
+          clearInterval(liveRouteRefreshInterval);
+          liveRouteRefreshInterval = null;
         }
       }
 
@@ -721,25 +860,27 @@
         }
 
         var snap = orderSnapshotForTracking();
-        var distM = getDriverToDropMeters(snap);
+        var distM = getRemainingMetersForEta(snap);
         if (distM == null || !Number.isFinite(distM)) return;
 
-        var speedMs = 40 / 3.6;
-        var sec = Math.round(distM / speedMs);
-        if (distM < 120) sec = Math.max(0, Math.round(distM / 6));
+        var vEff = pickEstimatedSpeedMsLastOrder();
+        var secFast = Math.round(distM / vEff);
+        if (distM < 130) secFast = Math.max(0, Math.round(distM / Math.max(2.8, vEff * 0.5)));
+
+        var secSlow = lastOsrmEtaSeconds;
+        var sec = secFast;
+        if (secSlow != null && Number.isFinite(secSlow) && secSlow > 0) {
+          sec = Math.round(secFast * 0.56 + secSlow * 0.44);
+          if (sec < secFast * 0.92) sec = Math.round(secFast * 0.92);
+          if (sec > Math.max(secFast, secSlow) * 1.12) sec = Math.round(Math.max(secFast, secSlow) * 1.12);
+        }
 
         if (etaEl) {
-          var km = distM / 1000;
-          var phrase = formatArrivalPhraseFromSeconds(sec);
-          etaEl.textContent =
-            phrase +
-            " · المتبقي على الخط ≈ " +
-            (km < 10 ? km.toFixed(2) : km.toFixed(1)) +
-            " كم";
+          etaEl.textContent = formatMinutesArabicForEta(sec);
         }
         if (cdEl) {
           if (sec > 0 && sec < 7200) {
-            cdEl.textContent = sec < 120 ? "أقل من دقيقتين" : formatMinutesArabicForEta(sec).replace(/^الوصول خلال /, "متبقي: ");
+            cdEl.textContent = formatMinutesArabicForEta(sec);
           } else {
             cdEl.textContent = "";
           }
@@ -759,6 +900,10 @@
         if (getDriverToDropMeters(snap) == null) return;
         tickLiveEta();
         liveEtaTickerInterval = setInterval(tickLiveEta, 1000);
+        if (liveRouteRefreshInterval != null) clearInterval(liveRouteRefreshInterval);
+        liveRouteRefreshInterval = setInterval(function () {
+          void refreshLiveDriverRouteIfDue(false);
+        }, 7800);
       }
 
       function applyTrackingStatusUx() {
@@ -787,15 +932,20 @@
           subLine = "وصل تقريبًا — المندوب عند نقطة التسليم";
           statusBadgeEl.style.background = "#92400e";
           statusBadgeEl.style.color = "#ffffff";
-        } else if (distM != null && distM <= 150 && trackingEligible(ds)) {
-          badge = "📍 قريب منك";
-          subLine = "وصل تقريبًا";
+        } else if (distM != null && distM <= 100 && trackingEligible(ds)) {
+          badge = "📍 وصل تقريبًا";
+          subLine = "المندوب على بُعد أقل من 100 م";
           statusBadgeEl.style.background = "#1d4ed8";
           statusBadgeEl.style.color = "#ffffff";
-        } else if (distM != null && distM <= 900 && trackingEligible(ds)) {
-          badge = "📍 قريب منك";
-          subLine = "المندوب قريب منك";
+        } else if (distM != null && distM <= 300 && trackingEligible(ds)) {
+          badge = "📍 قريب جدًا";
+          subLine = "المندوب على بُعد أقل من 300 م";
           statusBadgeEl.style.background = "#1d4ed8";
+          statusBadgeEl.style.color = "#ffffff";
+        } else if (distM != null && distM <= 800 && trackingEligible(ds)) {
+          badge = "📍 قريب";
+          subLine = "المندوب يقترب من عنوانك";
+          statusBadgeEl.style.background = "#2563eb";
           statusBadgeEl.style.color = "#ffffff";
         } else if (distM != null && distM <= 2500 && trackingEligible(ds)) {
           badge = "🚚 في الطريق";
@@ -881,7 +1031,7 @@
         if (!map || typeof map.getContainer !== "function") return;
         var container = map.getContainer();
         if (!container) return;
-        if (distM != null && Number.isFinite(distM) && distM > 0 && distM <= 1000) {
+        if (distM != null && Number.isFinite(distM) && distM > 0 && distM <= 300) {
           container.classList.add("ervenow-arriving");
         } else {
           container.classList.remove("ervenow-arriving");
@@ -961,7 +1111,7 @@
         if (etaSec == null || !Number.isFinite(etaSec)) {
           etaSec = estimateEtaSecondsFallback(order);
         }
-        var nearByDist = distMUse <= 1000;
+        var nearByDist = distMUse <= 800;
         var nearByTime = etaSec != null && Number.isFinite(etaSec) && etaSec <= 120;
         if (!nearByDist && !nearByTime) return;
         notifiedNearArrival = true;
@@ -1012,7 +1162,7 @@
           }
           evaluateArrivedAtDropoff(order, distM);
           evaluateNearArrivalAlert(order, distM);
-          syncDriverNearPulseClass(distM <= 1000 && distM > 0);
+          syncDriverNearPulseClass(distM <= 800 && distM > 0);
         } else {
           evaluateNearArrivalAlert(order, null);
           syncDriverNearPulseClass(false);
@@ -1021,6 +1171,7 @@
 
       function maybeAutoZoomDriverDrop() {
         if (!map || !driverMarker || !lastOrder) return;
+        if (mapAutoFollowSuspendedByUser) return;
         var now = Date.now();
         if (now - lastAutoZoomAt < 8200) return;
         var dlat = Number(lastOrder.drop_lat);
@@ -1050,22 +1201,22 @@
       }
 
       function leaveTrackOrderRoom() {
+        trackSocketHasDriverStream = false;
+        lastSocketSpeedMs = null;
+        lastLiveRouteFetchAt = 0;
+        lastLiveRouteAnchorLat = null;
+        lastLiveRouteAnchorLng = null;
+        liveRouteGeometryRequestId++;
+        if (liveRouteDebounceT) {
+          clearTimeout(liveRouteDebounceT);
+          liveRouteDebounceT = null;
+        }
         if (trackSocket && socketJoinedOrderId) {
           try {
             trackSocket.emit("leave:order", socketJoinedOrderId);
           } catch (e) {}
           socketJoinedOrderId = null;
         }
-      }
-
-      function restartTrackingPoll() {
-        if (pollTimer) {
-          clearInterval(pollTimer);
-          pollTimer = null;
-        }
-        if (!window.PlatformAPI || !window.PlatformAPI.getToken()) return;
-        var ms = trackSocket && trackSocket.connected ? 3000 : 5000;
-        pollTimer = setInterval(fetchOrder, ms);
       }
 
       function showTrackSocketBanner() {
@@ -1142,13 +1293,13 @@
         var ln = Number(lng);
         if (!Number.isFinite(la) || !Number.isFinite(ln)) return;
         driverTrailPoints.push([la, ln]);
-        while (driverTrailPoints.length > 120) driverTrailPoints.shift();
+        while (driverTrailPoints.length > 28) driverTrailPoints.shift();
         if (!driverTrailLine) {
           driverTrailLine = L.polyline(driverTrailPoints, {
-            color: "#6d28d9",
-            weight: 4,
-            opacity: 0.55,
-            dashArray: "6 12",
+            color: "#64748b",
+            weight: 3,
+            opacity: 0.22,
+            dashArray: "5 14",
             lineCap: "round",
             lineJoin: "round",
           }).addTo(map);
@@ -1188,16 +1339,20 @@
       async function refreshOsrmEtaThrottled(order) {
         var etaEl = document.getElementById("eta");
         if (!etaEl || !order) return;
+        function skipOsrmEtaText() {
+          return liveEtaTickerInterval != null;
+        }
         try {
-          var ds = order.delivery_status || order.status;
+          var snap = orderSnapshotForTracking() || order;
+          var ds = snap.delivery_status || snap.status;
           if (ds === "delivered") return;
-          var dlat = Number(order.driver_lat);
-          var dlng = Number(order.driver_lng);
+          var dlat = Number(snap.driver_lat);
+          var dlng = Number(snap.driver_lng);
           if (!Number.isFinite(dlat) || !Number.isFinite(dlng)) return;
-          var toLat = Number(order.drop_lat);
-          var toLng = Number(order.drop_lng);
+          var toLat = Number(snap.drop_lat);
+          var toLng = Number(snap.drop_lng);
           if (!Number.isFinite(toLat) || !Number.isFinite(toLng)) {
-            void updateEtaForOrder(order);
+            if (!skipOsrmEtaText()) void updateEtaForOrder(snap);
             return;
           }
           var distKm0 = haversineKmQuick(dlat, dlng, toLat, toLng);
@@ -1206,8 +1361,10 @@
             var speedMs = 40 / 3.6;
             var etaSec = distM0 / speedMs;
             lastOsrmEtaSeconds = Math.round(etaSec);
-            var minLocal = Math.max(1, Math.ceil(etaSec / 60));
-            etaEl.textContent = formatMinutesArabicPhraseFromMinutes(minLocal) + " — قريب جداً";
+            if (!skipOsrmEtaText()) {
+              var minLocal = Math.max(1, Math.ceil(etaSec / 60));
+              etaEl.textContent = formatMinutesArabicPhraseFromMinutes(minLocal);
+            }
             var nowShort = Date.now();
             lastOsrmEtaFetchAt = nowShort;
             lastOsrmEtaKey =
@@ -1223,16 +1380,18 @@
           try {
             var sec = await fetchOsrmDurationSeconds(dlat, dlng, toLat, toLng);
             if (sec == null || !Number.isFinite(sec)) {
-              lastOsrmEtaSeconds = estimateEtaSecondsFallback(order);
-              applyEtaToEl(dlat, dlng, toLat, toLng);
+              lastOsrmEtaSeconds = estimateEtaSecondsFallback(snap);
+              if (!skipOsrmEtaText()) applyEtaToEl(dlat, dlng, toLat, toLng);
               return;
             }
             lastOsrmEtaSeconds = Math.round(sec);
-            var min = Math.max(1, Math.ceil(sec / 60));
-            etaEl.textContent = formatMinutesArabicPhraseFromMinutes(min) + " (مسار)";
+            if (!skipOsrmEtaText()) {
+              var min = Math.max(1, Math.ceil(sec / 60));
+              etaEl.textContent = formatMinutesArabicPhraseFromMinutes(min);
+            }
           } catch (e) {
-            lastOsrmEtaSeconds = estimateEtaSecondsFallback(order);
-            applyEtaToEl(dlat, dlng, toLat, toLng);
+            lastOsrmEtaSeconds = estimateEtaSecondsFallback(snap);
+            if (!skipOsrmEtaText()) applyEtaToEl(dlat, dlng, toLat, toLng);
           }
         } finally {
           if (order && lastOrder && String(lastOrder.id) === String(order.id)) {
@@ -1253,7 +1412,6 @@
         trackSocketListenersAttached = true;
         trackSocket.on("connect", function () {
           hideTrackSocketBanner();
-          restartTrackingPoll();
           if (socketJoinedOrderId) {
             try {
               trackSocket.emit("join:order", socketJoinedOrderId);
@@ -1262,7 +1420,6 @@
         });
         trackSocket.on("disconnect", function () {
           showTrackSocketBanner();
-          restartTrackingPoll();
         });
         trackSocket.on("driver:update", function (data) {
           if (!data || lastOrder == null || !lastOrder.id) return;
@@ -1272,6 +1429,10 @@
           var ln = Number(data.lng);
           if (!Number.isFinite(la) || !Number.isFinite(ln)) return;
 
+          trackSocketHasDriverStream = true;
+          if (data.speed != null && Number.isFinite(Number(data.speed))) {
+            lastSocketSpeedMs = Number(data.speed);
+          }
           lastOrder.driver_lat = la;
           lastOrder.driver_lng = ln;
           lastOrder.last_location_at = data.ts ? new Date(data.ts).toISOString() : new Date().toISOString();
@@ -1291,11 +1452,13 @@
           if (data.heading != null && Number.isFinite(Number(data.heading))) {
             hOpt = Number(data.heading);
           }
+          var createdDriverMarker = false;
           if (!driverMarker) {
             if (window.ErvTrackDriverMotion && typeof window.ErvTrackDriverMotion.reset === "function") {
               window.ErvTrackDriverMotion.reset();
             }
             updateDriverMarker(la, ln, { refocusMap: false, heading: hOpt });
+            createdDriverMarker = true;
           } else {
             if (window.ErvTrackDriverMotion && typeof window.ErvTrackDriverMotion.feed === "function") {
               window.ErvTrackDriverMotion.feed(driverMarker, {
@@ -1309,6 +1472,7 @@
             updateDriverMarker(la, ln, { refocusMap: false, heading: hOpt, skipPositionMotion: true });
           }
           void refreshOsrmEtaThrottled(lastOrder);
+          scheduleLiveRouteRefresh(createdDriverMarker);
           runDeliveryTrackingAlerts();
           applyTrackingStatusUx();
           maybeAutoZoomDriverDrop();
@@ -1376,7 +1540,7 @@
           var tok = window.PlatformAPI.getToken();
           trackSocket = io({
             path: "/socket.io/",
-            transports: ["websocket", "polling"],
+            transports: ["websocket"],
             auth: { token: tok || "" },
           });
           attachTrackSocketListeners();
@@ -1622,9 +1786,9 @@
           inertiaMaxSpeed: 2200,
         }).setView(defaultCenter, 12);
         mapInitialized = true;
-        var terrain = L.tileLayer("https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png", {
-          attribution: "Map data: OpenStreetMap, SRTM | Map style: OpenTopoMap",
-          maxZoom: 17,
+        var osmStreet = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+          maxZoom: 19,
         });
         var satellite = L.tileLayer(
           "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
@@ -1634,12 +1798,22 @@
           }
         );
 
-        satellite.addTo(map);
+        osmStreet.addTo(map);
         mapLayers = {
-          "🛰️ الأقمار الصناعية": satellite,
-          "⛰️ التضاريس": terrain,
+          "🗺️ خريطة عادية": osmStreet,
+          "🛰️ أقمار صناعية": satellite,
         };
         mapLayerControl = L.control.layers(mapLayers, null, { position: "topright" }).addTo(map);
+        map.on("dragstart", function () {
+          mapAutoFollowSuspendedByUser = true;
+          syncMapFollowChipUi();
+        });
+        map.on("zoomstart", function (ev) {
+          if (ev && ev.originalEvent) {
+            mapAutoFollowSuspendedByUser = true;
+            syncMapFollowChipUi();
+          }
+        });
         setTimeout(function () {
           if (map) map.invalidateSize();
         }, 200);
@@ -1748,6 +1922,38 @@
           }
         }
         return bestAlong;
+      }
+
+      function projectOntoRouteMeta(lat, lng, meta) {
+        if (!meta || !meta.pts || meta.pts.length < 2) return null;
+        var bestDist = Infinity;
+        var bestLat = lat;
+        var bestLng = lng;
+        for (var i = 1; i < meta.pts.length; i++) {
+          var p0 = meta.pts[i - 1];
+          var p1 = meta.pts[i];
+          var segM = haversineKmQuick(p0.lat, p0.lng, p1.lat, p1.lng) * 1000;
+          if (!(segM > 0.001)) continue;
+          var latR = (Math.PI / 180) * p0.lat;
+          var kx = Math.cos(latR);
+          var ax = (lng - p0.lng) * 111320 * kx;
+          var ay = (lat - p0.lat) * 110540;
+          var bx = (p1.lng - p0.lng) * 111320 * kx;
+          var by = (p1.lat - p0.lat) * 110540;
+          var bb = bx * bx + by * by;
+          var t = bb < 1e-8 ? 0 : Math.max(0, Math.min(1, (ax * bx + ay * by) / bb));
+          var px = t * bx;
+          var py = t * by;
+          var dx = ax - px;
+          var dy = ay - py;
+          var dM = Math.sqrt(dx * dx + dy * dy);
+          if (dM < bestDist) {
+            bestDist = dM;
+            bestLat = p0.lat + t * (p1.lat - p0.lat);
+            bestLng = p0.lng + t * (p1.lng - p0.lng);
+          }
+        }
+        return { lat: bestLat, lng: bestLng, distM: bestDist };
       }
 
       function syncTrackRouteProgressUi() {
@@ -1907,6 +2113,7 @@
             .addTo(map)
             .bindPopup("المندوب");
           attachDriverMarkerRotationApi(driverMarker);
+          wrapDriverMarkerSetLatLngForRouteSnap(driverMarker);
           if (typeof driverMarker.setRotationAngle === "function") {
             driverMarker.setRotationAngle(bearingDegVal);
           }
@@ -1916,6 +2123,7 @@
           var icon = makeVehicleDivIcon(currentDriverType, bearingDegVal);
           driverMarker.setIcon(icon);
           attachDriverMarkerRotationApi(driverMarker);
+          wrapDriverMarkerSetLatLngForRouteSnap(driverMarker);
         }
         if (driverMarker) {
           if (typeof driverMarker.setRotationAngle === "function") {
@@ -1927,7 +2135,7 @@
         }
         if (lastOrder && (lastOrder.delivery_status || lastOrder.status) !== "delivered") {
           var lastP = driverTrailPoints[driverTrailPoints.length - 1];
-          if (!lastP || haversineKmQuick(lastP[0], lastP[1], la, ln) > 0.00002) {
+          if (!lastP || haversineKmQuick(lastP[0], lastP[1], la, ln) > 0.038) {
             appendDriverTrailPoint(la, ln);
           }
         }
@@ -1935,6 +2143,13 @@
           map.panTo([la, ln], { animate: true, duration: 0.5 });
           scheduleMapInvalidateSize();
         }
+        if (driverMarker) {
+          try {
+            var llF = driverMarker.getLatLng();
+            maybeAutoFollowDriverAt(llF.lat, llF.lng);
+          } catch (eF) {}
+        }
+        syncMapFollowChipUi();
         runDeliveryTrackingAlerts();
       }
 
@@ -1990,6 +2205,21 @@
         }
       }
 
+      /** تحويل geometry من OSRM (GeoJSON [lng,lat]) إلى مصفوفة Leaflet [lat,lng]. */
+      function osrmGeometryToLatLngs(geometry) {
+        var out = [];
+        if (!geometry || geometry.type !== "LineString" || !Array.isArray(geometry.coordinates)) return out;
+        var ring = geometry.coordinates;
+        for (var i = 0; i < ring.length; i++) {
+          var c = ring[i];
+          if (!c || c.length < 2) continue;
+          var lng = Number(c[0]);
+          var lat = Number(c[1]);
+          if (Number.isFinite(lat) && Number.isFinite(lng)) out.push([lat, lng]);
+        }
+        return out;
+      }
+
       async function getRoute(a, b) {
         var url =
           "https://router.project-osrm.org/route/v1/driving/" +
@@ -2002,45 +2232,162 @@
           b.lat +
           "?overview=full&geometries=geojson";
         var r = await fetch(url);
+        if (!r.ok) throw new Error("تعذر الاتصال بخدمة المسار");
         var j = await r.json();
-        if (!j.routes || !j.routes[0]) throw new Error("تعذر حساب المسار");
+        if (j.code && j.code !== "Ok") throw new Error("تعذر حساب المسار");
+        if (!j.routes || !j.routes[0] || !j.routes[0].geometry) throw new Error("تعذر حساب المسار");
         return j.routes[0];
+      }
+
+      function buildOsrmRouteFeatureGroup(latlngs) {
+        var shadowPl = L.polyline(latlngs, {
+          color: "#0c4a6e",
+          weight: 12,
+          opacity: 0.2,
+          lineCap: "round",
+          lineJoin: "round",
+          interactive: false,
+          smoothFactor: 1.15,
+        });
+        var mainPl = L.polyline(latlngs, {
+          color: "#2563eb",
+          weight: 6,
+          opacity: 0.96,
+          lineCap: "round",
+          lineJoin: "round",
+          smoothFactor: 1.15,
+        });
+        var fg = L.featureGroup([shadowPl, mainPl]);
+        fg.__ervOsrmRoute = true;
+        fg.__ervShadow = shadowPl;
+        fg.__ervMain = mainPl;
+        return fg;
+      }
+
+      async function applyOsrmRouteBetween(fromLL, toLL, opts) {
+        opts = opts || {};
+        ensureMap();
+        if (!map || !fromLL || !toLL) return false;
+        var route = await getRoute(fromLL, toLL);
+        var geo = route.geometry;
+        var latlngs = osrmGeometryToLatLngs(geo);
+        if (latlngs.length < 2) return false;
+
+        var canSmooth = routeLine && routeLine.__ervOsrmRoute === true && routeLine.__ervShadow && routeLine.__ervMain;
+        if (canSmooth) {
+          routeLine.__ervShadow.setLatLngs(latlngs);
+          routeLine.__ervMain.setLatLngs(latlngs);
+        } else {
+          if (routeLine) {
+            try {
+              map.removeLayer(routeLine);
+            } catch (eRm) {}
+            routeLine = null;
+          }
+          routeLine = buildOsrmRouteFeatureGroup(latlngs).addTo(map);
+        }
+
+        buildTrackRouteProgressMeta(geo);
+        clearRouteCheckpoints();
+        var cpts = buildRouteCheckpointsFromGeometry(geo);
+        if (cpts.length) {
+          routeCheckpointLayer = L.layerGroup();
+          for (var ci = 0; ci < cpts.length; ci++) {
+            L.circleMarker(cpts[ci], {
+              radius: 4,
+              color: "#1d4ed8",
+              weight: 2,
+              fillColor: "#93c5fd",
+              fillOpacity: 0.88,
+            }).addTo(routeCheckpointLayer);
+          }
+          routeCheckpointLayer.addTo(map);
+        }
+        if (opts.fitBounds !== false && routeLine) {
+          map.fitBounds(routeLine.getBounds(), { padding: [44, 44], maxZoom: 16, animate: true, duration: 0.4 });
+        }
+        syncTrackRouteProgressUi();
+        return true;
       }
 
       async function showMap(fromLL, toLL) {
         if (!fromLL || !toLL) return;
-        ensureMap();
-        if (!map) return;
         try {
-          var route = await getRoute(fromLL, toLL);
-          if (routeLine) {
-            try {
-              map.removeLayer(routeLine);
-            } catch (e) {}
-            routeLine = null;
-          }
-          routeLine = L.geoJSON(route.geometry, {
-            style: { color: "#ef4444", weight: 5, opacity: 0.9 },
-          }).addTo(map);
-          buildTrackRouteProgressMeta(route.geometry);
-          clearRouteCheckpoints();
-          var cpts = buildRouteCheckpointsFromGeometry(route.geometry);
-          if (cpts.length) {
-            routeCheckpointLayer = L.layerGroup();
-            for (var ci = 0; ci < cpts.length; ci++) {
-              L.circleMarker(cpts[ci], {
-                radius: 4,
-                color: "#c2410c",
-                weight: 2,
-                fillColor: "#fb923c",
-                fillOpacity: 0.88,
-              }).addTo(routeCheckpointLayer);
-            }
-            routeCheckpointLayer.addTo(map);
-          }
-          map.fitBounds(routeLine.getBounds(), { padding: [44, 44], maxZoom: 16, animate: true, duration: 0.4 });
-          syncTrackRouteProgressUi();
+          await applyOsrmRouteBetween(fromLL, toLL, { fitBounds: true });
         } catch (e) {}
+      }
+
+      function scheduleLiveRouteRefresh(forceImmediate) {
+        if (forceImmediate) {
+          if (liveRouteDebounceT) {
+            clearTimeout(liveRouteDebounceT);
+            liveRouteDebounceT = null;
+          }
+          void refreshLiveDriverRouteIfDue(true);
+          return;
+        }
+        if (liveRouteDebounceT) clearTimeout(liveRouteDebounceT);
+        liveRouteDebounceT = setTimeout(function () {
+          liveRouteDebounceT = null;
+          void refreshLiveDriverRouteIfDue(false);
+        }, 480);
+      }
+
+      async function refreshLiveDriverRouteIfDue(forced) {
+        if (!map || !lastOrder) return;
+        var oid = lastOrder.id;
+        var ds = String(lastOrder.delivery_status || lastOrder.status || "").toLowerCase();
+        if (ds === "delivered" || ds === "cancelled" || ds === "cancelled_by_customer" || !trackingEligible(ds)) {
+          return;
+        }
+
+        var toLat = Number(lastOrder.drop_lat);
+        var toLng = Number(lastOrder.drop_lng);
+        if (!Number.isFinite(toLat) || !Number.isFinite(toLng)) return;
+
+        var fromLat;
+        var fromLng;
+        if (driverMarker && typeof driverMarker.getLatLng === "function") {
+          var ll0 = driverMarker.getLatLng();
+          fromLat = Number(ll0.lat);
+          fromLng = Number(ll0.lng);
+        } else {
+          fromLat = Number(lastOrder.driver_lat);
+          fromLng = Number(lastOrder.driver_lng);
+        }
+        if (!Number.isFinite(fromLat) || !Number.isFinite(fromLng)) return;
+
+        var now = Date.now();
+        var movedM = 0;
+        if (lastLiveRouteAnchorLat != null && lastLiveRouteAnchorLng != null) {
+          movedM = haversineKmQuick(lastLiveRouteAnchorLat, lastLiveRouteAnchorLng, fromLat, fromLng) * 1000;
+        }
+
+        if (!forced && liveRouteInflight) return;
+        if (!forced) {
+          if (lastLiveRouteFetchAt > 0 && now - lastLiveRouteFetchAt < liveRouteHardThrottleMs && movedM < liveRouteMoveThresholdM) {
+            return;
+          }
+          if (movedM < 95 && now - lastLiveRouteFetchAt < liveRouteAbsoluteMinGapMs) return;
+          if (movedM < liveRouteMoveThresholdM && now - lastLiveRouteFetchAt < liveRouteRefreshMinMs) return;
+        }
+
+        liveRouteInflight = true;
+        var myReq = ++liveRouteGeometryRequestId;
+        try {
+          await applyOsrmRouteBetween({ lat: fromLat, lng: fromLng }, { lat: toLat, lng: toLng }, {
+            fitBounds: false,
+          });
+          if (liveRouteGeometryRequestId !== myReq) return;
+          if (lastOrder && String(lastOrder.id) === String(oid)) {
+            lastLiveRouteFetchAt = Date.now();
+            lastLiveRouteAnchorLat = fromLat;
+            lastLiveRouteAnchorLng = fromLng;
+          }
+        } catch (eL) {
+        } finally {
+          liveRouteInflight = false;
+        }
       }
 
       function clearDriverMarker(clearRoute) {
@@ -2059,6 +2406,15 @@
           lastDriverBearingDeg = 0;
           lastDriverIconKey = "";
         }
+        lastSocketSpeedMs = null;
+        lastLiveRouteFetchAt = 0;
+        lastLiveRouteAnchorLat = null;
+        lastLiveRouteAnchorLng = null;
+        liveRouteGeometryRequestId++;
+        if (liveRouteDebounceT) {
+          clearTimeout(liveRouteDebounceT);
+          liveRouteDebounceT = null;
+        }
         if (clearRoute === false) return;
         clearRouteCheckpoints();
         if (map && routeLine) {
@@ -2072,6 +2428,7 @@
         if (wrapPr) wrapPr.style.display = "none";
         var mapElAr = document.getElementById("map");
         if (mapElAr) mapElAr.classList.remove("ervenow-arrival-ping");
+        syncMapFollowChipUi();
         if (map && dropMarker) {
           try {
             map.removeLayer(dropMarker);
@@ -2118,6 +2475,7 @@
             mapEl.innerHTML =
               '<span style="padding: 12px; display: inline-block">تُنشأ الخريطة عند وصول أول إحداثيات</span>';
           }
+          mapAutoFollowSuspendedByUser = false;
           dropGeocodeCache = Object.create(null);
           etaRequestId++;
           lastTripRouteKey = "";
@@ -2137,8 +2495,35 @@
           localPendingRating = 0;
           lastRateFormKey = "";
         }
+        var prevOrderId = currentOrderId;
         currentOrderId = order.id;
+        var mergedFromSocketMarker = null;
+        if (
+          trackSocketHasDriverStream &&
+          driverMarker &&
+          typeof driverMarker.getLatLng === "function" &&
+          prevOrderId != null &&
+          String(prevOrderId) === String(order.id)
+        ) {
+          var llM = driverMarker.getLatLng();
+          var mla = Number(llM.lat);
+          var mln = Number(llM.lng);
+          if (Number.isFinite(mla) && Number.isFinite(mln)) {
+            mergedFromSocketMarker = {
+              la: mla,
+              ln: mln,
+              lu: lastOrder && lastOrder.last_location_at,
+            };
+          }
+        }
         lastOrder = order;
+        if (mergedFromSocketMarker) {
+          lastOrder.driver_lat = mergedFromSocketMarker.la;
+          lastOrder.driver_lng = mergedFromSocketMarker.ln;
+          if (mergedFromSocketMarker.lu != null && mergedFromSocketMarker.lu !== "") {
+            lastOrder.last_location_at = mergedFromSocketMarker.lu;
+          }
+        }
 
         var deliveryStatus = order.delivery_status || order.status;
 
@@ -2190,8 +2575,8 @@
         var outEl = document.getElementById("out");
         if (outEl) outEl.textContent = "";
 
-        var lat = order.driver_lat;
-        var lng = order.driver_lng;
+        var lat = lastOrder.driver_lat;
+        var lng = lastOrder.driver_lng;
         var hadDriverMarker = !!driverMarker;
         var vehicleType = detectVehicleKind(order);
         currentDriverType = vehicleType;
@@ -2216,6 +2601,12 @@
           nearDropMotionFrozen = false;
           lastOsrmEtaSeconds = null;
           void renderTripRoute(order);
+          if (
+            trackSocketHasDriverStream &&
+            trackingEligible(String(order.delivery_status || order.status || "").toLowerCase())
+          ) {
+            scheduleLiveRouteRefresh(true);
+          }
         }
         var hasDriverLocation = lat != null && lng != null && !Number.isNaN(Number(lat)) && !Number.isNaN(Number(lng));
         if (deliveryStatus === "delivered" && hasDropPoint) {
@@ -2225,10 +2616,31 @@
             "📍 تم التسليم عند نقطة النهاية: " + dropLat + " ، " + dropLng;
           document.getElementById("coordsMeta").textContent = "";
         } else if (order.driver_lat && order.driver_lng && hasDriverLocation) {
-          document.getElementById("coords").textContent = "خط العرض: " + lat + " — خط الطول: " + lng;
-          updateDriverMarker(lat, lng, { refocusMap: !hadDriverMarker });
-          if (hasDropPoint) updateDropMarker(dropLat, dropLng);
-          document.getElementById("coordsMeta").textContent = "";
+          var dsMapOnly = String(order.delivery_status || order.status || "").toLowerCase();
+          var mapFromSocketOnly =
+            trackSocket &&
+            trackSocket.connected &&
+            trackSocketHasDriverStream &&
+            driverMarker != null &&
+            trackingEligible(dsMapOnly);
+          if (mapFromSocketOnly) {
+            if (hasDropPoint) updateDropMarker(dropLat, dropLng);
+            var cElSock = document.getElementById("coords");
+            if (cElSock) {
+              cElSock.textContent =
+                "خط العرض: " +
+                String(lastOrder.driver_lat) +
+                " — خط الطول: " +
+                String(lastOrder.driver_lng) +
+                " (مباشر)";
+            }
+            document.getElementById("coordsMeta").textContent = "";
+          } else {
+            document.getElementById("coords").textContent = "خط العرض: " + lat + " — خط الطول: " + lng;
+            updateDriverMarker(lat, lng, { refocusMap: !hadDriverMarker });
+            if (hasDropPoint) updateDropMarker(dropLat, dropLng);
+            document.getElementById("coordsMeta").textContent = "";
+          }
         } else {
           clearDriverMarker(false);
           clearDriverTrail();
@@ -2420,16 +2832,9 @@
         }
       }
 
-      function startTrackingPolling() {
-        restartTrackingPoll();
-      }
-
       document.getElementById("btn").onclick = function () {
         unlockAudioContext();
         fetchOrder();
-        if (window.PlatformAPI.getToken()) {
-          startTrackingPolling();
-        }
       };
 
       if (window.PlatformAPI.getToken()) {
@@ -2473,10 +2878,19 @@
           };
       })();
       (function () {
+        var bfFollow = document.getElementById("btnMapFollowDriver");
+        if (bfFollow) {
+          bfFollow.onclick = function () {
+            resumeMapFollowDriver();
+          };
+        }
+      })();
+      (function () {
         var bf = document.getElementById("btnMapFullscreen");
         if (bf) {
           bf.onclick = function () {
-            var el = document.getElementById("map");
+            var shell = document.getElementById("mapShell");
+            var el = shell || document.getElementById("map");
             if (!el) return;
             if (el.requestFullscreen) el.requestFullscreen();
             else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();

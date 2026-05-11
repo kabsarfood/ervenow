@@ -82,13 +82,13 @@
     cancelDriverMotion();
 
     var start = performance.now();
-    var maxMs = 2200;
+    var maxMs = 3200;
     /** استيفاء أسرع مع ثبات — يعتمد على السرعة القادمة من السوكت عند توفرها */
     function pickAlpha(distM) {
-      var base = speed > 6 ? 0.3 : speed > 2 ? 0.22 : 0.17;
-      if (distM > 160) return Math.min(0.58, base * 2.1);
-      if (distM > 40) return Math.min(0.45, base * 1.55);
-      return Math.min(0.34, base * 1.2);
+      var base = speed > 6 ? 0.34 : speed > 2 ? 0.24 : 0.19;
+      if (distM > 180) return Math.min(0.62, base * 2.05);
+      if (distM > 55) return Math.min(0.48, base * 1.5);
+      return Math.min(0.38, base * 1.25);
     }
 
     function step(now) {
