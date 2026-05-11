@@ -6,7 +6,7 @@ const { normalizePhone } = require("../../shared/utils/phone");
 const { getOsrmRouteKmOrHaversine } = require("../../shared/utils/osrmClient");
 const { logger } = require("../../shared/utils/logger");
 const { normalizeOrderFinancialsForInsert } = require("../../shared/utils/orderTotals");
-const { isOrdersIdempotencyColumnMissingError, isOrdersStoreColumnMissingError } = require("../../shared/utils/idempotency");
+const { isOrdersStoreColumnMissingError, insertOrdersResilient } = require("../../shared/utils/idempotency");
 
 function haversineDistanceKm(lat1, lng1, lat2, lng2) {
   const R = 6371;
@@ -387,18 +387,8 @@ async function insertDeliveryOrderWithRetry(sb, buildRow) {
 
     await new Promise((r) => setTimeout(r, delay + jitter));
     const order_number = await buildNextDeliveryOrderNumber(sb);
-    let row = normalizeOrderFinancialsForInsert(buildRow(order_number));
-    let { data, error } = await sb.from("orders").insert(row).select().single();
-    if (error && isOrdersIdempotencyColumnMissingError(error) && row.idempotency_key != null) {
-      logger.warn(
-        { err: error.message },
-        "[delivery] insert: orders.idempotency_key missing — retrying insert without key; run shared/migration_orders_idempotency_key.sql"
-      );
-      const { idempotency_key: _dropIdem, ...rowNoIdem } = row;
-      const second = await sb.from("orders").insert(rowNoIdem).select().single();
-      data = second.data;
-      error = second.error;
-    }
+    const row = normalizeOrderFinancialsForInsert(buildRow(order_number));
+    const { data, error } = await insertOrdersResilient(sb, row);
     if (!error) {
       if (data) await insertVatRecordForOrder(sb, data);
       return { data, error: null };

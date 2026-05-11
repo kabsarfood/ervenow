@@ -9,6 +9,7 @@ const { logger } = require("../../shared/utils/logger");
 const { runStoreCheckoutSideEffects } = require("../../shared/utils/storeOrderPostCheckout");
 const { isOrderPaymentGateRequired } = require("../../shared/utils/orderPaymentGate");
 const { isPaidFromRequestBody, normalizeOrderPaymentMethod } = require("../delivery/service");
+const { insertOrdersResilient } = require("../../shared/utils/idempotency");
 
 function normalizedGroup(typeRaw) {
   const type = String(typeRaw || "")
@@ -244,7 +245,7 @@ async function runCheckoutInsert(sb, appUser, body, options) {
     for (let insAttempt = 0; insAttempt < 5; insAttempt += 1) {
       row.order_number = await allocateUniqueOrderNumber(sb, orderPrefix);
       const insertRow = normalizeOrderFinancialsForInsert(row);
-      const ins = await sb.from("orders").insert(insertRow).select().single();
+      const ins = await insertOrdersResilient(sb, insertRow);
       data = ins.data;
       insertErr = ins.error;
       if (!insertErr) break;

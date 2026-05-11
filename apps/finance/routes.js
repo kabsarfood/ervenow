@@ -17,6 +17,7 @@ const {
   rejectWithdrawal,
 } = require("./walletService");
 const { normalizeOrderFinancialsForInsert } = require("../../shared/utils/orderTotals");
+const { insertOrdersResilient } = require("../../shared/utils/idempotency");
 
 const router = express.Router();
 
@@ -62,7 +63,7 @@ router.post("/orders", requireAuth, async (req, res) => {
       breakdown: {},
     });
 
-    const { data, error } = await req.supabase.from("orders").insert(row).select().single();
+    const { data, error } = await insertOrdersResilient(req.supabase, row);
     if (error) return fail(res, error.message, 400);
     return ok(res, { order: data });
   } catch (e) {

@@ -4,6 +4,7 @@
 -- =============================================================================
 
 ALTER TABLE public.orders
+  ADD COLUMN IF NOT EXISTS payment_status text,
   ADD COLUMN IF NOT EXISTS payment_method text;
 
 COMMENT ON COLUMN public.orders.payment_status IS
