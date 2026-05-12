@@ -171,17 +171,64 @@
         box-shadow: 0 10px 28px rgba(61, 34, 19, 0.28);
       }
 
-      .stores-cuisine-wrap {
-        margin-top: 4px;
+      .stores-geo-opt {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin: 10px 0 0;
+        padding: 10px 14px;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.55);
+        border: 1px solid rgba(61, 34, 19, 0.07);
+        font-size: 0.86rem;
+        font-weight: 600;
+        color: #5c4638;
+        cursor: pointer;
+        user-select: none;
       }
-      .stores-cuisine-wrap[hidden] {
+      .stores-geo-opt input {
+        width: 18px;
+        height: 18px;
+        accent-color: #5c3220;
+        cursor: pointer;
+        flex-shrink: 0;
+      }
+
+      /* تصنيفات المطاعم — داخل قسم بصري واحد تحت فلاتر النشاط */
+      .stores-restaurant-cuisine-block {
+        margin-top: 12px;
+        padding: 14px 16px 12px;
+        border-radius: var(--stores-radius-sm);
+        background: linear-gradient(180deg, rgba(255, 252, 248, 0.98) 0%, rgba(255, 245, 235, 0.88) 100%);
+        border: 1px solid rgba(61, 34, 19, 0.1);
+        box-shadow: 0 6px 22px rgba(42, 24, 16, 0.06);
+      }
+      .stores-restaurant-cuisine-block[hidden] {
         display: none !important;
       }
-      .stores-cuisine-title {
-        margin: 0 0 10px;
-        font-size: 0.82rem;
+      .stores-restaurant-cuisine-block__head {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 10px;
+      }
+      .stores-restaurant-cuisine-block__emoji {
+        font-size: 1.65rem;
+        line-height: 1;
+        flex-shrink: 0;
+      }
+      .stores-restaurant-cuisine-block__title {
+        margin: 0;
+        font-size: 0.95rem;
         font-weight: 800;
-        color: #5c4638;
+        color: var(--stores-ink);
+      }
+      .stores-restaurant-cuisine-block__sub {
+        margin: 4px 0 0;
+        font-size: 0.74rem;
+        font-weight: 600;
+        color: #7a6558;
+        line-height: 1.45;
       }
       .stores-cuisine-scroll {
         display: flex;
@@ -531,15 +578,27 @@
         <button type="button" class="stores-filter" data-filter="service" role="tab" aria-selected="false">خدمات</button>
       </div>
 
-      <div class="stores-cuisine-wrap" id="storesCuisineWrap" hidden>
-        <p class="stores-cuisine-title">مطابخ المطاعم</p>
+      <label class="stores-geo-opt" for="storesGeoFilter">
+        <input type="checkbox" id="storesGeoFilter" />
+        <span>تصفية حسب قرب موقعي (ضمن نطاق توصيل كل متجر)</span>
+      </label>
+
+      <div class="stores-restaurant-cuisine-block" id="storesRestaurantCuisineBlock" hidden>
+        <div class="stores-restaurant-cuisine-block__head">
+          <span class="stores-restaurant-cuisine-block__emoji" aria-hidden="true">🍽️</span>
+          <div>
+            <p class="stores-restaurant-cuisine-block__title">المطاعم</p>
+            <p class="stores-restaurant-cuisine-block__sub">تصنيفات المطابخ — اختر تصفية المطاعم في القائمة أدناه.</p>
+          </div>
+        </div>
         <div class="stores-cuisine-scroll" id="storesCuisineBar" role="tablist" aria-label="تصنيف المطعم"></div>
       </div>
     </div>
 
     <main class="stores-main">
       <p class="stores-note" id="guestNote">
-        أنت تتصفّح كزائر: قد تظهر أسماء المحلات بشكل مختصر حتى تسجّل الدخول. البحث يعمل على الاسم الظاهر.
+        أنت تتصفّح كزائر: قد تظهر أسماء المحلات بشكل مختصر حتى تسجّل الدخول. البحث يعمل على الاسم الظاهر. بشكل افتراضي تُعرض
+        <strong>كل المتاجر المعتمدة</strong>؛ إن فعّلت «تصفية حسب قرب موقعي» فقط تُعرض المتاجر التي يصلها التوصيل من موقعك الحالي ضمن نطاق كل متجر.
       </p>
 
       <div class="stores-panel">
@@ -572,7 +631,7 @@
 
       function loadRestaurantCuisinesFromApi() {
         if (!window.PlatformAPI || !PlatformAPI.apiUrl) return Promise.resolve();
-        return fetch(PlatformAPI.apiUrl("/api/categories?type=restaurant"))
+        return fetch(PlatformAPI.apiUrl("/api/categories?type=restaurant&list=canonical&sort=manual"))
           .then(function (r) {
             return r.json();
           })
@@ -684,12 +743,25 @@
         var activeFilter = "all";
         var activeCuisine = null;
         var SKELETON_COUNT = 8;
-        var cuisineWrap = document.getElementById("storesCuisineWrap");
+        var cuisineWrap = document.getElementById("storesRestaurantCuisineBlock");
         var cuisineBar = document.getElementById("storesCuisineBar");
+        var geoFilterEl = document.getElementById("storesGeoFilter");
+        try {
+          if (geoFilterEl && sessionStorage.getItem("ervenow_stores_geo") === "1") geoFilterEl.checked = true;
+        } catch (e) {}
+        if (geoFilterEl) {
+          geoFilterEl.addEventListener("change", function () {
+            try {
+              sessionStorage.setItem("ervenow_stores_geo", geoFilterEl.checked ? "1" : "0");
+            } catch (e2) {}
+            load();
+          });
+        }
 
         function syncCuisineStripVisibility() {
           if (!cuisineWrap) return;
-          var show = activeFilter === "all" || activeFilter === "restaurant";
+          /* التصنيفات الفرعية للمطاعم تظهر فقط بعد اختيار تبويب «مطاعم» — لا تُعرض مع «الكل» لتقليل التشتت */
+          var show = activeFilter === "restaurant";
           cuisineWrap.hidden = !show;
         }
 
@@ -939,7 +1011,8 @@
           renderSkeleton();
           if (searchEl) searchEl.disabled = true;
           try {
-            var geo = await getUserGeo();
+            var geo = null;
+            if (geoFilterEl && geoFilterEl.checked) geo = await getUserGeo();
             var parts = [];
             if (geo) {
               parts.push("user_lat=" + encodeURIComponent(geo.lat));
