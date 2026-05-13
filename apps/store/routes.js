@@ -412,6 +412,15 @@ router.get("/my-store", requireAuth, requireMerchantRole, async (req, res) => {
     }
     const base = publicStoreRow(row);
     const bankSafe = sanitizeDriverOrStoreRowForApi(row);
+
+    let merchant_hub = null;
+    const hubRes = await sb.from("store_merchant_hub").select("bio,banner_url,updated_at").eq("store_id", row.id).maybeSingle();
+    if (!hubRes.error && hubRes.data) {
+      merchant_hub = hubRes.data;
+    } else if (hubRes.error && !isStoreMerchantHubMissing(hubRes.error)) {
+      console.warn("[store/my-store] merchant_hub", hubRes.error.message || hubRes.error);
+    }
+
     return ok(res, {
       store: {
         ...base,
@@ -425,6 +434,7 @@ router.get("/my-store", requireAuth, requireMerchantRole, async (req, res) => {
           bank_verified: !!bankSafe.bank_verified,
         },
       },
+      merchant_hub,
     });
   } catch (e) {
     console.error("[store/my-store]", e);
@@ -1352,19 +1362,25 @@ function isStoreFinancialMissing(err) {
   );
 }
 
+function isStoreMerchantHubMissing(err) {
+  if (!err) return false;
+  const msg = String(err.message || err.details || "");
+  return /store_merchant_hub|schema cache|relation .*store_merchant_hub/i.test(msg);
+}
+
 router.get("/merchant-dashboard", requireAuth, requireMerchantRole, async (req, res) => {
   try {
     const sb = createServiceClient();
     if (!sb) return fail(res, "الخادم غير مهيأ لقاعدة البيانات", 503);
     const digits = normalizePhone(req.appUser.phone);
-    const extStore = "id,name,phone,status,total_orders";
+    const extStore = "id,name,phone,status,total_orders,type,category,logo_url";
     let st = null;
     let sErr = null;
     ({ data: st, error: sErr } = await sb.from("stores").select(extStore).eq("phone", digits).eq("status", "approved").maybeSingle());
     if (sErr && /column|does not exist|schema cache/i.test(String(sErr.message || ""))) {
       ({ data: st, error: sErr } = await sb
         .from("stores")
-        .select("id,name,phone,status")
+        .select("id,name,phone,status,type,category,logo_url")
         .eq("phone", digits)
         .eq("status", "approved")
         .maybeSingle());
@@ -1421,7 +1437,15 @@ router.get("/merchant-dashboard", requireAuth, requireMerchantRole, async (req, 
     const revenue_orders_sum = orders.reduce((a, r) => a + (Number(r.order_total) || 0), 0);
 
     return ok(res, {
-      store: { id: st.id, name: st.name, phone: st.phone },
+      store: {
+        id: st.id,
+        name: st.name,
+        phone: st.phone,
+        type: st.type || null,
+        category: st.category || null,
+        logo_url: st.logo_url || null,
+        total_orders: st.total_orders != null ? Number(st.total_orders) : null,
+      },
       wallet,
       transactions,
       orders,
@@ -1433,6 +1457,63 @@ router.get("/merchant-dashboard", requireAuth, requireMerchantRole, async (req, 
     });
   } catch (e) {
     console.error("[merchant-dashboard]", e);
+    return fail(res, e.message || "خطأ في الخادم", 500);
+  }
+});
+
+router.patch("/merchant-hub", requireAuth, requireMerchantRole, async (req, res) => {
+  try {
+    const sb = createServiceClient();
+    if (!sb) return fail(res, "الخادم غير مهيأ لقاعدة البيانات", 503);
+    const digits = normalizePhone(req.appUser.phone);
+    const { data: st, error: sErr } = await sb.from("stores").select("id").eq("phone", digits).eq("status", "approved").maybeSingle();
+    if (sErr) return fail(res, sErr.message, 400);
+    if (!st) return fail(res, "لا يوجد متجر معتمد لجوالك.", 404);
+
+    const b = req.body || {};
+    let bioNext;
+    if (Object.prototype.hasOwnProperty.call(b, "bio")) {
+      const t = String(b.bio ?? "").trim();
+      bioNext = t || null;
+    }
+
+    let bannerNext;
+    if (b.banner_base64 && typeof b.banner_base64 === "string" && String(b.banner_base64).length > 40) {
+      const fn = String(b.banner_file_name || "banner.jpg");
+      const url = await uploadToStoreBucket(sb, st.id, "banner", b.banner_base64, fn);
+      if (url) bannerNext = url;
+    }
+
+    const { data: ex, error: exErr } = await sb.from("store_merchant_hub").select("bio,banner_url").eq("store_id", st.id).maybeSingle();
+    if (exErr) {
+      if (isStoreMerchantHubMissing(exErr)) {
+        return fail(res, "جدول store_merchant_hub غير جاهز — نفّذ shared/migration_store_merchant_hub.sql", 400);
+      }
+      return fail(res, exErr.message, 400);
+    }
+
+    const merged = {
+      store_id: st.id,
+      bio: bioNext !== undefined ? bioNext : ex?.bio ?? null,
+      banner_url: bannerNext !== undefined ? bannerNext : ex?.banner_url ?? null,
+      updated_at: new Date().toISOString(),
+    };
+
+    const { data: saved, error: upErr } = await sb
+      .from("store_merchant_hub")
+      .upsert(merged, { onConflict: "store_id" })
+      .select("bio,banner_url,updated_at,created_at")
+      .single();
+    if (upErr) {
+      if (isStoreMerchantHubMissing(upErr)) {
+        return fail(res, "جدول store_merchant_hub غير جاهز — نفّذ shared/migration_store_merchant_hub.sql", 400);
+      }
+      return fail(res, upErr.message, 400);
+    }
+    listCache = { key: "", at: 0, payload: null };
+    return ok(res, { ok: true, merchant_hub: saved || merged });
+  } catch (e) {
+    console.error("[store/merchant-hub/patch]", e);
     return fail(res, e.message || "خطأ في الخادم", 500);
   }
 });
@@ -1570,6 +1651,7 @@ const STORE_GET_BY_ID_RESERVED = new Set([
   "public",
   "my-store",
   "merchant-dashboard",
+  "merchant-hub",
   "withdrawals",
 ]);
 

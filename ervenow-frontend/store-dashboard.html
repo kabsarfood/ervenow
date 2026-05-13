@@ -3,77 +3,298 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>ERVENOW | لوحة المتجر</title>
+    <title>ERVENOW | بوابة المتجر</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/assets/styles.css" />
+    <style>
+      :root {
+        --portal-ink: #2a1810;
+        --portal-gold: #c9a227;
+        --portal-card: rgba(255, 252, 248, 0.96);
+        --portal-radius: 18px;
+      }
+      body.portal-page {
+        margin: 0;
+        font-family: "Cairo", system-ui, sans-serif;
+        background: linear-gradient(165deg, #faf4ee 0%, #f0e6dc 45%, #ebe2d8 100%);
+        color: var(--portal-ink);
+        min-height: 100vh;
+      }
+      .portal-shell {
+        max-width: 920px;
+        margin: 0 auto;
+        padding: 20px 18px 48px;
+      }
+      .portal-back {
+        margin-bottom: 14px;
+        font-weight: 600;
+      }
+      .portal-back a {
+        color: #5c4030;
+      }
+      .portal-hero {
+        position: relative;
+        border-radius: var(--portal-radius);
+        overflow: hidden;
+        min-height: 168px;
+        background: linear-gradient(135deg, #3d2213, #6b4423 55%, #8b5a2b);
+        box-shadow: 0 16px 48px rgba(42, 24, 16, 0.22);
+        margin-bottom: 18px;
+      }
+      .portal-hero__bg {
+        position: absolute;
+        inset: 0;
+        background-size: cover;
+        background-position: center;
+        opacity: 0.35;
+      }
+      .portal-hero__shade {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(180deg, rgba(42, 24, 16, 0.15) 0%, rgba(26, 14, 8, 0.75) 100%);
+      }
+      .portal-hero__inner {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        align-items: flex-end;
+        gap: 16px;
+        padding: 22px 20px 20px;
+        flex-wrap: wrap;
+      }
+      .portal-logo {
+        width: 88px;
+        height: 88px;
+        border-radius: 20px;
+        object-fit: cover;
+        border: 3px solid rgba(255, 248, 238, 0.95);
+        box-shadow: 0 8px 28px rgba(0, 0, 0, 0.25);
+        background: #fff8ee;
+      }
+      .portal-hero__text h1 {
+        margin: 0 0 6px;
+        font-size: 1.45rem;
+        font-weight: 800;
+        color: #fff8ee;
+        text-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
+      }
+      .portal-badges {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 8px;
+      }
+      .portal-badge {
+        font-size: 0.78rem;
+        font-weight: 700;
+        padding: 6px 12px;
+        border-radius: 999px;
+        background: rgba(255, 248, 238, 0.2);
+        color: #fff0d4;
+        border: 1px solid rgba(255, 248, 238, 0.28);
+      }
+      .portal-badge--gold {
+        background: rgba(201, 162, 39, 0.35);
+        border-color: rgba(255, 220, 160, 0.45);
+      }
+      .portal-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 12px;
+      }
+      .portal-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 14px;
+        margin-bottom: 18px;
+      }
+      .portal-card {
+        border-radius: var(--portal-radius);
+        background: var(--portal-card);
+        border: 1px solid rgba(61, 34, 19, 0.08);
+        box-shadow: 0 10px 36px rgba(42, 24, 16, 0.08);
+        padding: 18px 18px 16px;
+      }
+      .portal-card h2 {
+        margin: 0 0 12px;
+        font-size: 1.05rem;
+        font-weight: 800;
+        color: #3d2213;
+      }
+      .portal-wallet-balance {
+        font-size: 2rem;
+        font-weight: 800;
+        color: #3d2213;
+        letter-spacing: -0.02em;
+      }
+      .portal-wallet-cur {
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: #7a6558;
+        margin-inline-start: 6px;
+      }
+      .portal-tx {
+        margin-top: 12px;
+        max-height: 180px;
+        overflow-y: auto;
+        font-size: 0.86rem;
+      }
+      .portal-tx-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 8px 0;
+        border-bottom: 1px solid rgba(61, 34, 19, 0.06);
+      }
+      .portal-tx-row:last-child {
+        border-bottom: none;
+      }
+      .portal-stat {
+        font-size: 0.88rem;
+        color: #5c4638;
+        font-weight: 600;
+      }
+      .portal-stat strong {
+        display: block;
+        font-size: 1.35rem;
+        color: #3d2213;
+        margin-top: 4px;
+      }
+      .portal-panel {
+        margin-bottom: 18px;
+      }
+      .portal-panel .card {
+        border-radius: var(--portal-radius);
+        border: 1px solid rgba(61, 34, 19, 0.08);
+        box-shadow: 0 8px 28px rgba(42, 24, 16, 0.06);
+      }
+      #walletAnchor {
+        scroll-margin-top: 16px;
+      }
+    </style>
   </head>
-  <body>
-    <div class="layout">
-      <p><a href="/">← الرئيسية</a></p>
-      <h1>لوحة المتجر</h1>
-      <p style="margin: 8px 0 12px">
-        <a class="btn btn-primary" href="/merchant-dashboard" style="display: inline-block">📊 الطلبات والإيرادات</a>
-      </p>
-      <p class="sub" id="hint">
+  <body class="portal-page">
+    <div class="portal-shell">
+      <p class="portal-back"><a href="/">← الرئيسية</a> · <a href="/merchant-dashboard">تفاصيل الطلبات والإيرادات</a></p>
+
+      <p class="sub" id="hint" style="margin-bottom: 16px">
         سجّل الدخول من
         <a href="/login?role=merchant">تسجيل الدخول</a>
-        واختر «تاجر (متجر)» بنفس رقم الجوال المستخدم في تسجيل المتجر.
+        واختر «تاجر (متجر)» بنفس رقم الجوال المستخدم في تسجيل المتجر بعد موافقة الإدارة.
       </p>
 
-      <div class="card" id="storeCard" style="display: none">
-        <h2 style="margin: 0 0 8px" id="storeTitle">—</h2>
-        <p class="sub" id="storeSub">—</p>
-        <p class="sub"><a class="btn btn-ghost" id="publicLink" href="#" target="_blank" rel="noopener">صفحة المتجر العامة</a></p>
-      </div>
+      <div id="portalMain" style="display: none">
+        <header class="portal-hero" id="portalHero">
+          <div class="portal-hero__bg" id="heroBanner" hidden></div>
+          <div class="portal-hero__shade"></div>
+          <div class="portal-hero__inner">
+            <img class="portal-logo" id="heroLogo" src="" alt="" width="88" height="88" />
+            <div class="portal-hero__text">
+              <h1 id="heroName">—</h1>
+              <div class="portal-badges">
+                <span class="portal-badge portal-badge--gold" id="heroType">—</span>
+                <span class="portal-badge" id="heroCategory">—</span>
+              </div>
+              <div class="portal-actions">
+                <a class="btn btn-primary" id="publicLink" href="#" target="_blank" rel="noopener">صفحة المتجر للعملاء</a>
+              </div>
+            </div>
+          </div>
+        </header>
 
-      <div class="card" id="formCard" style="display: none">
-        <h2 style="margin: 0 0 12px">إضافة / تعديل منتج</h2>
-        <input type="hidden" id="editId" />
-        <label for="pName">اسم المنتج</label>
-        <input id="pName" type="text" />
-        <label for="pDesc" style="margin-top: 10px">الوصف</label>
-        <textarea id="pDesc" rows="2"></textarea>
-        <label for="pPrice" style="margin-top: 10px">السعر (ريال)</label>
-        <input id="pPrice" type="number" min="0" step="0.01" />
-        <label for="pOffer" style="margin-top: 10px">سعر العرض (اختياري — أقل من السعر)</label>
-        <input id="pOffer" type="number" min="0" step="0.01" placeholder="مثال: 9.99" />
-        <label for="pSort" style="margin-top: 10px">ترتيب العرض</label>
-        <input id="pSort" type="number" step="1" value="0" />
-        <label for="pCategory" style="margin-top: 10px">قسم المنتج (سوبرماركت / بقالة)</label>
-        <select id="pCategory">
-          <option value="">— بدون قسم —</option>
-          <option value="vegetables">خضار وفواكه</option>
-          <option value="meat">لحوم</option>
-          <option value="dairy">ألبان</option>
-          <option value="bakery">مخبوزات</option>
-          <option value="drinks">مشروبات</option>
-          <option value="snacks">سناكات</option>
-          <option value="frozen">مجمدات</option>
-          <option value="cleaning">منظفات</option>
-        </select>
-        <label for="pStock" style="margin-top: 10px">المخزون (فراغ = بدون حد صريح)</label>
-        <input id="pStock" type="number" min="0" step="1" placeholder="مثال: 20" />
-        <label for="pRating" style="margin-top: 10px">تقييم عرض المنتج 0–5 (اختياري)</label>
-        <input id="pRating" type="number" min="0" max="5" step="0.1" placeholder="مثال: 4.5" />
-        <label for="pImg" style="margin-top: 10px">صورة (اختياري — يُضغط تلقائياً)</label>
-        <input id="pImg" type="file" accept="image/*" />
-        <div class="row" style="margin-top: 12px; gap: 8px; flex-wrap: wrap">
-          <button type="button" class="btn btn-primary" id="btnSave">حفظ</button>
-          <button type="button" class="btn btn-ghost" id="btnReset">مسح النموذج</button>
+        <div class="portal-grid">
+          <div class="portal-card" id="walletAnchor">
+            <h2>المحفظة المالية</h2>
+            <p class="sub" style="margin: 0 0 8px">رصيد محفظة المتجر في المنصة (إيرادات بعد التسوية حسب إعداداتكم).</p>
+            <div>
+              <span class="portal-wallet-balance" id="walletBal">—</span>
+              <span class="portal-wallet-cur" id="walletCur">ريال</span>
+            </div>
+            <p class="sub" id="walletErr" style="display: none; margin-top: 8px"></p>
+            <div class="portal-tx" id="walletTx"></div>
+          </div>
+          <div class="portal-card">
+            <h2>ملخص سريع</h2>
+            <p class="portal-stat">طلبات مسجّلة <strong id="statOrders">—</strong></p>
+            <p class="portal-stat" style="margin-top: 10px">منتجات نشطة <strong id="statProducts">—</strong></p>
+            <p class="portal-stat" style="margin-top: 10px">إجمالي سلال الطلبات (مرجع) <strong id="statRev">—</strong></p>
+          </div>
         </div>
-      </div>
 
-      <div class="card" id="listCard" style="display: none">
-        <h2 style="margin: 0 0 12px">منتجاتك</h2>
-        <div id="plist"></div>
-      </div>
+        <div class="portal-panel">
+          <div class="card" id="profileCard">
+            <h2 style="margin: 0 0 10px">بروفايل المتجر في لوحة التحكم</h2>
+            <p class="sub" style="margin-top: 0">
+              يُحفظ في جدول <code>store_merchant_hub</code> في Supabase (نبذة + صورة غلاف للوحة التاجر فقط — لا يُعرض تلقائياً للعميل إلا إذا ربطتموه لاحقاً بواجهة المتجر).
+            </p>
+            <label for="hubBio">نبذة عن المتجر</label>
+            <textarea id="hubBio" rows="3" placeholder="مثال: وجبات منزلية طازجة، توصيل سريع…"></textarea>
+            <label for="hubBanner" style="margin-top: 12px">صورة غلاف (اختياري)</label>
+            <input id="hubBanner" type="file" accept="image/*" />
+            <div class="row" style="margin-top: 12px">
+              <button type="button" class="btn btn-primary" id="btnSaveHub">حفظ البروفايل</button>
+            </div>
+          </div>
+        </div>
 
-      <div class="card" id="withdrawCard" style="display: none">
-        <h2 style="margin: 0 0 12px">سحب الأرباح</h2>
-        <p class="sub">يُرسل الطلب للإدارة. عند الموافقة يُخصم من رصيد محفظة المتجر.</p>
-        <label for="wAmount">المبلغ (ريال)</label>
-        <input id="wAmount" type="number" min="10" step="0.01" placeholder="10 كحد أدنى" />
-        <button type="button" class="btn btn-primary" id="btnWithdraw" style="margin-top: 10px">تقديم طلب سحب</button>
-        <div id="wList" style="margin-top: 14px"></div>
+        <div class="portal-panel">
+          <div class="card" id="formCard">
+            <h2 style="margin: 0 0 12px">إضافة / تعديل منتج</h2>
+            <input type="hidden" id="editId" />
+            <label for="pName">اسم المنتج</label>
+            <input id="pName" type="text" />
+            <label for="pDesc" style="margin-top: 10px">الوصف</label>
+            <textarea id="pDesc" rows="2"></textarea>
+            <label for="pPrice" style="margin-top: 10px">السعر (ريال)</label>
+            <input id="pPrice" type="number" min="0" step="0.01" />
+            <label for="pOffer" style="margin-top: 10px">سعر العرض (اختياري — أقل من السعر)</label>
+            <input id="pOffer" type="number" min="0" step="0.01" placeholder="مثال: 9.99" />
+            <label for="pSort" style="margin-top: 10px">ترتيب العرض</label>
+            <input id="pSort" type="number" step="1" value="0" />
+            <label for="pCategory" style="margin-top: 10px">قسم المنتج (سوبرماركت / بقالة)</label>
+            <select id="pCategory">
+              <option value="">— بدون قسم —</option>
+              <option value="vegetables">خضار وفواكه</option>
+              <option value="meat">لحوم</option>
+              <option value="dairy">ألبان</option>
+              <option value="bakery">مخبوزات</option>
+              <option value="drinks">مشروبات</option>
+              <option value="snacks">سناكات</option>
+              <option value="frozen">مجمدات</option>
+              <option value="cleaning">منظفات</option>
+            </select>
+            <label for="pStock" style="margin-top: 10px">المخزون (فراغ = بدون حد صريح)</label>
+            <input id="pStock" type="number" min="0" step="1" placeholder="مثال: 20" />
+            <label for="pRating" style="margin-top: 10px">تقييم عرض المنتج 0–5 (اختياري)</label>
+            <input id="pRating" type="number" min="0" max="5" step="0.1" placeholder="مثال: 4.5" />
+            <label for="pImg" style="margin-top: 10px">صورة المنتج (اختياري — يُضغط تلقائياً)</label>
+            <input id="pImg" type="file" accept="image/*" />
+            <div class="row" style="margin-top: 12px; gap: 8px; flex-wrap: wrap">
+              <button type="button" class="btn btn-primary" id="btnSave">حفظ المنتج</button>
+              <button type="button" class="btn btn-ghost" id="btnReset">مسح النموذج</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="portal-panel">
+          <div class="card" id="listCard">
+            <h2 style="margin: 0 0 12px">منتجاتك</h2>
+            <div id="plist"></div>
+          </div>
+        </div>
+
+        <div class="portal-panel">
+          <div class="card" id="withdrawCard">
+            <h2 style="margin: 0 0 12px">سحب الأرباح</h2>
+            <p class="sub">يُرسل الطلب للإدارة. عند الموافقة يُخصم من رصيد محفظة المتجر.</p>
+            <label for="wAmount">المبلغ (ريال)</label>
+            <input id="wAmount" type="number" min="10" step="0.01" placeholder="10 كحد أدنى" />
+            <button type="button" class="btn btn-primary" id="btnWithdraw" style="margin-top: 10px">تقديم طلب سحب</button>
+            <div id="wList" style="margin-top: 14px"></div>
+          </div>
+        </div>
       </div>
 
       <div class="msg" id="msg" style="display: none"></div>
@@ -84,6 +305,18 @@
     <script src="/assets/api.js"></script>
     <script>
       var storeId = null;
+      var TYPE_AR = {
+        restaurant: "مطعم",
+        pharmacy: "صيدلية",
+        supermarket: "سوبر ماركت",
+        minimarket: "بقالة",
+        vegetables: "خضار وفواكه",
+        butcher: "لحوم",
+        fish: "أسماك",
+        home_business: "أسرة منتجة",
+        services: "خدمات",
+        other: "أخرى",
+      };
 
       function show(text, ok) {
         var el = document.getElementById("msg");
@@ -99,30 +332,141 @@
           .replace(/"/g, "&quot;");
       }
 
+      function typeLabel(t) {
+        var k = String(t || "").toLowerCase();
+        return TYPE_AR[k] || k || "—";
+      }
+
+      function fmtDate(iso) {
+        if (!iso) return "—";
+        try {
+          var d = new Date(iso);
+          return isNaN(d.getTime()) ? "—" : d.toLocaleString("ar-SA", { dateStyle: "short", timeStyle: "short" });
+        } catch (e) {
+          return "—";
+        }
+      }
+
+      function applyHeroBanner(url) {
+        var el = document.getElementById("heroBanner");
+        if (!el) return;
+        if (url) {
+          el.style.backgroundImage = 'url("' + String(url).replace(/"/g, '\\"') + '")';
+          el.hidden = false;
+        } else {
+          el.hidden = true;
+          el.style.backgroundImage = "";
+        }
+      }
+
       async function boot() {
-        if (!window.PlatformAPI.getToken()) {
+        if (!window.PlatformAPI || !window.PlatformAPI.getToken || !window.PlatformAPI.getToken()) {
           return;
         }
         try {
-          var j = await window.PlatformAPI.api("/api/store/my-store");
-          var s = j.store;
+          var my = await window.PlatformAPI.api("/api/store/my-store");
+          var s = my.store;
+          var hub = my.merchant_hub || null;
           storeId = s.id;
-          document.getElementById("storeCard").style.display = "block";
-          document.getElementById("formCard").style.display = "block";
-          document.getElementById("listCard").style.display = "block";
-          document.getElementById("withdrawCard").style.display = "block";
+
+          document.getElementById("portalMain").style.display = "block";
           document.getElementById("hint").style.display = "none";
-          document.getElementById("storeTitle").textContent = s.name || "متجرك";
-          document.getElementById("storeSub").textContent =
-            "التقييم: " + (Number(s.average_rating) || 0).toFixed(1) + " — الطلبات المسجّلة: " + (Number(s.total_orders) || 0);
+
+          document.getElementById("heroName").textContent = s.name || "متجرك";
+          document.getElementById("heroType").textContent = typeLabel(s.type);
+          document.getElementById("heroCategory").textContent = s.category_label_ar || s.category || "—";
+
+          var logoEl = document.getElementById("heroLogo");
+          var defSvg =
+            "data:image/svg+xml," +
+            encodeURIComponent(
+              '<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160"><rect fill="#f5ebe0" width="160" height="160" rx="24"/><text x="50%" y="52%" dominant-baseline="middle" text-anchor="middle" fill="#c9a227" font-family="sans-serif" font-size="15" font-weight="700">ERVENOW</text></svg>'
+            );
+          logoEl.onerror = function () {
+            logoEl.src = defSvg;
+          };
+          logoEl.src = s.logo_url || defSvg;
+
+          if (hub && hub.banner_url) applyHeroBanner(hub.banner_url);
+          if (hub && hub.bio != null) document.getElementById("hubBio").value = hub.bio;
+
           var pub = document.getElementById("publicLink");
-          pub.href = "/store?id=" + encodeURIComponent(storeId);
+          pub.href = "/store.html?id=" + encodeURIComponent(storeId);
+
+          try {
+            var dash = await window.PlatformAPI.api("/api/store/merchant-dashboard");
+            var w = dash.wallet || {};
+            document.getElementById("walletBal").textContent = (Number(w.balance) || 0).toFixed(2);
+            document.getElementById("walletCur").textContent = w.currency_code === "SAR" || !w.currency_code ? "ريال" : String(w.currency_code);
+            var agg = dash.aggregates || {};
+            document.getElementById("statOrders").textContent = String(agg.orders_count != null ? agg.orders_count : "0");
+            document.getElementById("statProducts").textContent = String(agg.products_active_count != null ? agg.products_active_count : "0");
+            document.getElementById("statRev").textContent =
+              (Number(agg.revenue_orders_sum) || 0).toFixed(2) + " ر.س";
+
+            var txs = dash.transactions || [];
+            var txBox = document.getElementById("walletTx");
+            if (!txs.length) {
+              txBox.innerHTML = '<p class="sub" style="margin:0">لا حركات مسجّلة بعد.</p>';
+            } else {
+              txBox.innerHTML = txs
+                .slice(0, 8)
+                .map(function (t) {
+                  return (
+                    '<div class="portal-tx-row"><span>' +
+                    esc(fmtDate(t.created_at)) +
+                    '</span><span><strong>' +
+                    (Number(t.amount) || 0).toFixed(2) +
+                    '</strong> — ' +
+                    esc(t.description || "—") +
+                    "</span></div>"
+                  );
+                })
+                .join("");
+            }
+            document.getElementById("walletErr").style.display = "none";
+          } catch (we) {
+            document.getElementById("walletBal").textContent = "—";
+            var weEl = document.getElementById("walletErr");
+            weEl.style.display = "block";
+            weEl.textContent = String((we && we.message) || we || "تعذر تحميل المحفظة");
+            document.getElementById("walletTx").innerHTML = "";
+          }
+
           await loadProducts();
           await loadWithdrawals();
+
+          if (window.location.hash === "#wallet") {
+            document.getElementById("walletAnchor").scrollIntoView({ behavior: "smooth", block: "start" });
+          }
         } catch (e) {
-          show(String(e.message || e), false);
+          show(String((e && e.message) || e || "تعذر التحميل"), false);
         }
       }
+
+      document.getElementById("btnSaveHub").onclick = async function () {
+        if (!storeId) return show("لا يوجد متجر مرتبط", false);
+        var body = { bio: document.getElementById("hubBio").value };
+        var bf = document.getElementById("hubBanner").files && document.getElementById("hubBanner").files[0];
+        if (bf) {
+          try {
+            body.banner_base64 = await window.compressImageToDataUrl(bf, 0.72, 1600);
+            body.banner_file_name = bf.name || "banner.jpg";
+          } catch (ce) {
+            return show(String(ce.message || ce), false);
+          }
+        }
+        try {
+          await window.PlatformAPI.api("/api/store/merchant-hub", { method: "PATCH", body: body });
+          show("تم حفظ البروفايل", true);
+          document.getElementById("hubBanner").value = "";
+          var r = await window.PlatformAPI.api("/api/store/my-store");
+          var h = r.merchant_hub;
+          if (h && h.banner_url) applyHeroBanner(h.banner_url);
+        } catch (e) {
+          show(String((e && e.message) || e), false);
+        }
+      };
 
       async function loadProducts() {
         var data = await window.PlatformAPI.api(
@@ -137,10 +481,10 @@
         box.innerHTML = rows
           .map(function (p) {
             var thumb = p.image_url
-              ? '<img src="' + esc(p.image_url) + '" alt="" loading="lazy" style="width:72px;height:72px;object-fit:cover;border-radius:8px" />'
+              ? '<img src="' + esc(p.image_url) + '" alt="" loading="lazy" style="width:72px;height:72px;object-fit:cover;border-radius:12px" />'
               : "";
             return (
-              '<div class="card" style="padding:10px;margin-bottom:8px;display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap">' +
+              '<div class="card" style="padding:12px;margin-bottom:10px;display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap">' +
               thumb +
               "<div style=\"flex:1;min-width:160px\">" +
               "<strong>" +
@@ -191,7 +535,7 @@
             document.getElementById("pRating").value =
               p.rating != null && p.rating !== "" && Number.isFinite(Number(p.rating)) ? String(p.rating) : "";
             document.getElementById("pImg").value = "";
-            window.scrollTo({ top: document.getElementById("formCard").offsetTop - 20, behavior: "smooth" });
+            document.getElementById("formCard").scrollIntoView({ behavior: "smooth", block: "start" });
           };
         });
         box.querySelectorAll(".btn-del").forEach(function (btn) {

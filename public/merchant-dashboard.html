@@ -65,7 +65,7 @@
   </head>
   <body>
     <div class="layout">
-      <p><a href="/">← الرئيسية</a> · <a href="/store-dashboard">لوحة المنتجات</a></p>
+      <p><a href="/">← الرئيسية</a> · <a href="/store-dashboard">بوابة المتجر</a></p>
       <h1>لوحة الطلبات والإيرادات</h1>
       <p class="sub" id="hint">
         سجّل الدخول كتاجر (نفس جوال المتجر المعتمد).
@@ -77,7 +77,7 @@
           <h2 style="margin: 0 0 6px" id="storeName">—</h2>
           <p class="sub" id="storePhone">—</p>
           <div class="md-actions">
-            <a class="btn btn-primary" href="/store-dashboard">إدارة المنتجات</a>
+            <a class="btn btn-primary" href="/store-dashboard">العودة لبوابة المتجر</a>
             <a class="btn btn-ghost" id="publicStoreLink" href="#" target="_blank" rel="noopener">صفحة المتجر</a>
           </div>
         </div>
@@ -180,7 +180,7 @@
           document.getElementById("storeName").textContent = s.name || "—";
           document.getElementById("storePhone").textContent = s.phone ? "الجوال: " + s.phone : "";
           var pub = document.getElementById("publicStoreLink");
-          if (s.id) pub.href = "/store?id=" + encodeURIComponent(s.id);
+          if (s.id) pub.href = "/store.html?id=" + encodeURIComponent(s.id);
 
           var agg = data.aggregates || {};
           document.getElementById("statOrders").textContent = String(agg.orders_count || 0);

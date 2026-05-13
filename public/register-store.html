@@ -46,7 +46,8 @@
       <p><a href="/">← الرئيسية</a></p>
       <h1>تسجيل متجر جديد</h1>
       <p class="sub">
-        <strong>موقع المتجر إجباري.</strong> بعد موافقة الإدارة سجّل الدخول كـ «تاجر» بنفس الجوال لإدارة المنتجات.
+        <strong>موقع المتجر إجباري.</strong> بعد موافقة الإدارة سجّل الدخول كـ «تاجر» بنفس الجوال ثم افتح
+        <a href="/store-dashboard">بوابة المتجر</a> لإدارة المنتجات والمحفظة والبروفايل.
       </p>
 
       <details class="card" style="margin-bottom: 16px; padding: 12px 14px">
@@ -57,7 +58,8 @@
             <code>shared/migration_store_location_delivery.sql</code> ثم <code>shared/migration_stores_platform.sql</code> ثم عند الحاجة
             <code>shared/migration_stores_email.sql</code> (عمود البريد + تقليل أخطاء schema cache) ثم
             <code>shared/migration_categories.sql</code> لأقسام المطاعم والبقالة الديناميكية، ثم عند الحاجة
-            <code>shared/migration_category_usage.sql</code> لتتبع الاستخدام والترتيب الذكي.</li>
+            <code>shared/migration_category_usage.sql</code> لتتبع الاستخدام والترتيب الذكي، وعند الحاجة
+            <code>shared/migration_store_merchant_hub.sql</code> لبيانات بروفايل التاجر في لوحة المتجر.</li>
           <li>بعد أي <code>ALTER TABLE</code>: من Supabase → <strong>Settings → API</strong> استخدم <strong>Reload schema</strong> إن وُجد، ثم أعد تحميل الصفحة.</li>
         </ol>
       </details>
