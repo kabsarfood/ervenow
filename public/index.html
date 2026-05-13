@@ -1230,6 +1230,16 @@
         background: rgba(185, 135, 47, 0.14);
       }
 
+      button.lp-dd-item.lp-dd-item--action {
+        border: none;
+        background: transparent;
+        width: 100%;
+        text-align: inherit;
+        font: inherit;
+        cursor: pointer;
+        color: inherit;
+      }
+
       .lp-dd-ic {
         font-size: 1.05rem;
         line-height: 1;
@@ -1293,6 +1303,21 @@
           </button>
           <div class="lp-quick-dd__panel" id="lpQuickNavPanel" role="menu" hidden>
             <p class="lp-quick-dd__panel-title">القائمة</p>
+
+            <button
+              type="button"
+              role="menuitem"
+              class="lp-dd-item lp-dd-item--action"
+              id="lpQuickGuestBtn"
+              data-guest-only="true"
+              onclick="continueAsGuest()"
+            >
+              <span class="lp-dd-ic" aria-hidden="true">&#127760;</span><span class="lp-dd-link__text">دخول زائر المنصة</span>
+            </button>
+            <a role="menuitem" class="lp-dd-item" href="/login" data-guest-only="true" aria-label="دخول بحسابك"
+              ><span class="lp-dd-ic" aria-hidden="true">&#128100;</span><span class="lp-dd-link__text">دخول</span></a
+            >
+            <div class="lp-quick-dd__sep" role="separator"></div>
 
             <div class="lp-dd-mobile-only" aria-label="تصفح الموقع">
               <a role="menuitem" class="lp-dd-item" href="#top" aria-label="الرئيسية"
@@ -1389,10 +1414,7 @@
             </span>
           </a>
           <div class="cart-btn" onclick="goCart()" style="cursor: pointer">🛒 <span id="cartCount">0</span></div>
-          <div id="authArea">
-            <button class="lp-btn-outline" type="button" onclick="goLogin()">دخول</button>
-            <button class="lp-btn-outline" type="button" onclick="continueAsGuest()">زائر المنصة</button>
-          </div>
+          <div id="authArea"></div>
         </div>
       </div>
     </header>
