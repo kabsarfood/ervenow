@@ -31,7 +31,7 @@ const router = express.Router();
  *    👉 مرتبطة بالتوصيل (drivers)
  *
  *
- * 2) services (الخدمات + كداد)
+ * 2) services (خدمات + توصيل)
  *    - service
  *    - plumber
  *    - electrician
