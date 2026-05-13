@@ -152,34 +152,6 @@
         font-weight: 700;
       }
 
-      .header-right {
-        display: inline-flex;
-        align-items: center;
-      }
-
-      .orders-btn {
-        position: relative;
-        padding: 10px 15px;
-        background: #222;
-        color: #fff;
-        border-radius: 8px;
-        text-decoration: none;
-        font-weight: 700;
-      }
-
-      .orders-btn #ordersBadge {
-        position: absolute;
-        top: -5px;
-        right: -8px;
-        background: red;
-        color: white;
-        font-size: 12px;
-        padding: 3px 6px;
-        border-radius: 50%;
-        min-width: 18px;
-        text-align: center;
-      }
-
       /* رصيد المنصة — ثابت في الهيدر (عرض محجوز يقلل القفز عند التحديث) */
       .lp-header-wallet {
         display: inline-flex;
@@ -262,6 +234,13 @@
         box-shadow: 0 10px 28px rgba(155, 111, 37, 0.42);
       }
 
+      .lp-nav-wrap {
+        flex: 1;
+        display: flex;
+        justify-content: center;
+        min-width: 0;
+      }
+
       .lp-menu-toggle {
         display: none;
         padding: 10px 14px;
@@ -277,7 +256,7 @@
       @media (max-width: 900px) {
         .lp-header__inner {
           display: grid;
-          grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+          grid-template-columns: auto 1fr;
           align-items: center;
           column-gap: 10px;
           row-gap: 12px;
@@ -305,11 +284,11 @@
         }
 
         .lp-menu-toggle {
-          display: inline-flex;
-          grid-column: 3;
-          grid-row: 1;
-          justify-self: end;
-          align-self: center;
+          display: none !important;
+        }
+
+        .lp-nav-wrap {
+          display: none !important;
         }
 
         .lp-header__actions {
@@ -321,32 +300,18 @@
           order: 0;
         }
 
-        .lp-nav-wrap {
-          display: none;
-          grid-column: 1 / -1;
-          grid-row: 3;
-          width: 100%;
-          order: 0;
-        }
-
-        .lp-nav-wrap.is-open {
-          display: block;
-        }
-
-        .lp-nav {
-          flex-direction: column;
-          align-items: stretch;
-          padding: 12px 0 0;
-        }
-
-        .lp-nav a {
-          padding: 12px 14px;
-        }
-
         #authArea {
           display: flex;
           align-items: center;
           gap: 12px;
+        }
+
+        .lp-dd-mobile-only {
+          display: block;
+        }
+
+        .lp-dd-sep-mobile {
+          display: block;
         }
 
         /* لوحة ثابتة فوق المحتوى — تتفادى القصّ على iOS / Samsung */
@@ -362,23 +327,43 @@
           -webkit-overflow-scrolling: touch;
         }
 
-        .lp-quick-dd__panel a {
+        .lp-quick-dd__panel .lp-dd-item {
           min-height: 48px;
           padding: 14px 14px;
         }
-      }
 
-      @media (max-width: 400px) {
-        .lp-quick-dd__label {
+        /* على الجوال: أيقونات واضحة بدون عرض النص داخل القائمة (يُبقى aria-label للقارئ) */
+        .lp-quick-dd__panel .lp-dd-link__text {
           position: absolute;
           width: 1px;
           height: 1px;
           padding: 0;
           margin: -1px;
           overflow: hidden;
-          clip: rect(0, 0, 0, 0);
           clip-path: inset(50%);
+          border: 0;
           white-space: nowrap;
+        }
+
+        .lp-quick-dd__panel .lp-dd-item:not(.lp-dd-orders) {
+          justify-content: center;
+        }
+
+        .lp-quick-dd__panel .lp-dd-orders {
+          justify-content: space-between;
+        }
+      }
+
+      @media (max-width: 400px) {
+        .lp-quick-dd__label {
+          position: static;
+          width: auto;
+          height: auto;
+          padding: 0;
+          margin: 0;
+          overflow: visible;
+          clip-path: none;
+          white-space: normal;
           border: 0;
         }
       }
@@ -1099,7 +1084,7 @@
         font-weight: 600;
       }
 
-      /* ——— قائمة ERVENOW المنسدلة (روابط سريعة) ——— */
+      /* ——— القائمة المنسدلة (هاتف + روابط إدارية) ——— */
       .lp-quick-dd {
         position: relative;
         flex-shrink: 0;
@@ -1172,18 +1157,23 @@
         display: none !important;
       }
 
-      .lp-quick-dd__panel-title {
-        margin: 4px 8px 10px;
-        padding-bottom: 8px;
-        border-bottom: 1px solid rgba(61, 34, 19, 0.1);
-        font-size: 0.68rem;
-        font-weight: 800;
-        letter-spacing: 0.16em;
-        text-transform: uppercase;
-        color: var(--gold);
+      .lp-dd-mobile-only {
+        display: none;
       }
 
-      .lp-quick-dd__panel a {
+      .lp-dd-mobile-only .lp-dd-item:last-child {
+        margin-bottom: 0;
+      }
+
+      .lp-dd-sep-mobile {
+        display: none;
+        height: 1px;
+        margin: 8px 6px;
+        background: rgba(61, 34, 19, 0.1);
+        border: 0;
+      }
+
+      .lp-dd-item {
         display: flex;
         align-items: center;
         gap: 10px;
@@ -1195,10 +1185,46 @@
         font-weight: 700;
         font-size: 0.9rem;
         transition: background 0.2s;
+        box-sizing: border-box;
       }
 
-      .lp-quick-dd__panel a:hover {
+      .lp-dd-item:hover {
         background: rgba(185, 135, 47, 0.14);
+      }
+
+      .lp-dd-ic {
+        font-size: 1.05rem;
+        line-height: 1;
+        flex-shrink: 0;
+      }
+
+      .lp-dd-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 1.5rem;
+        padding: 2px 8px;
+        border-radius: 999px;
+        background: #c62828;
+        color: #fff;
+        font-size: 0.75rem;
+        font-weight: 800;
+        flex-shrink: 0;
+      }
+
+      .lp-quick-dd__panel .lp-dd-orders {
+        font-weight: 800;
+      }
+
+      .lp-quick-dd__panel-title {
+        margin: 4px 8px 10px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid rgba(61, 34, 19, 0.1);
+        font-size: 0.68rem;
+        font-weight: 800;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--gold);
       }
 
       .lp-quick-dd__sep {
@@ -1220,24 +1246,66 @@
             aria-expanded="false"
             aria-haspopup="true"
             aria-controls="lpQuickNavPanel"
-            aria-label="قائمة روابط ERVENOW"
+            aria-label="فتح القائمة"
           >
             <span class="lp-quick-dd__icon" aria-hidden="true">&#9776;</span>
-            <span class="lp-quick-dd__label">روابط سريعة</span>
+            <span class="lp-quick-dd__label">القائمة</span>
             <span class="lp-quick-dd__caret" aria-hidden="true">▾</span>
           </button>
           <div class="lp-quick-dd__panel" id="lpQuickNavPanel" role="menu" hidden>
-            <p class="lp-quick-dd__panel-title">ERVENOW</p>
-            <a role="menuitem" href="/">&#127968; الرئيسية</a>
-            <a role="menuitem" href="/#services">&#127869; مطاعم</a>
-            <a role="menuitem" href="/#services">&#128138; صيدليات</a>
+            <p class="lp-quick-dd__panel-title">القائمة</p>
+
+            <div class="lp-dd-mobile-only" aria-label="تصفح الموقع">
+              <a role="menuitem" class="lp-dd-item" href="#top" aria-label="الرئيسية"
+                ><span class="lp-dd-ic" aria-hidden="true">&#127968;</span><span class="lp-dd-link__text">الرئيسية</span></a
+              >
+              <a role="menuitem" class="lp-dd-item" href="/stores" aria-label="المتاجر"
+                ><span class="lp-dd-ic" aria-hidden="true">&#128722;</span><span class="lp-dd-link__text">المتاجر</span></a
+              >
+              <a role="menuitem" class="lp-dd-item" href="#trust" aria-label="الثقة"
+                ><span class="lp-dd-ic" aria-hidden="true">&#128737;</span><span class="lp-dd-link__text">الثقة</span></a
+              >
+              <a role="menuitem" class="lp-dd-item" href="#services" aria-label="الخدمات"
+                ><span class="lp-dd-ic" aria-hidden="true">&#127869;</span><span class="lp-dd-link__text">الخدمات</span></a
+              >
+              <a role="menuitem" class="lp-dd-item" href="#why" aria-label="لماذا ERVENOW"
+                ><span class="lp-dd-ic" aria-hidden="true">&#10067;</span><span class="lp-dd-link__text">لماذا ERVENOW</span></a
+              >
+              <a role="menuitem" class="lp-dd-item" href="#how" aria-label="كيف تعمل"
+                ><span class="lp-dd-ic" aria-hidden="true">&#128218;</span><span class="lp-dd-link__text">كيف تعمل</span></a
+              >
+              <a role="menuitem" class="lp-dd-item" href="#contact" aria-label="تواصل معنا"
+                ><span class="lp-dd-ic" aria-hidden="true">&#128231;</span><span class="lp-dd-link__text">تواصل معنا</span></a
+              >
+            </div>
+            <div class="lp-dd-sep-mobile" role="separator"></div>
+
+            <a
+              role="menuitem"
+              id="lpQuickOrdersLink"
+              class="lp-dd-item lp-dd-orders"
+              href="/orders"
+              aria-label="الطلبات"
+              ><span class="lp-dd-ic" aria-hidden="true">&#128203;</span><span class="lp-dd-link__text">الطلبات</span
+              ><span class="lp-dd-badge" id="ordersBadge">0</span></a
+            >
+            <a role="menuitem" class="lp-dd-item" href="/admin-login" aria-label="دخول الإدارة"
+              ><span class="lp-dd-ic" aria-hidden="true">&#128272;</span><span class="lp-dd-link__text">دخول الإدارة</span></a
+            >
+            <a role="menuitem" class="lp-dd-item" href="/partner-portal" aria-label="دخول المتاجر ومزودي الخدمة"
+              ><span class="lp-dd-ic" aria-hidden="true">&#127978;</span><span class="lp-dd-link__text">دخول المتاجر ومزودي الخدمة</span></a
+            >
+            <a role="menuitem" class="lp-dd-item" href="/driver-login" aria-label="دخول المناديب"
+              ><span class="lp-dd-ic" aria-hidden="true">&#128663;</span><span class="lp-dd-link__text">دخول المناديب</span></a
+            >
+
             <div class="lp-quick-dd__sep" role="separator"></div>
-            <a role="menuitem" id="lpQuickOrdersLink" href="/orders">&#128203; الطلبات</a>
-            <a role="menuitem" href="/track">&#128205; الخريطة الحية</a>
-            <a role="menuitem" href="/driver-login">&#128100; تسجيل دخول (مندوب)</a>
-            <a role="menuitem" href="/partner-portal">&#127978; دخول المتاجر ومزودي الخدمة</a>
-            <div class="lp-quick-dd__sep" role="separator"></div>
-            <a role="menuitem" href="/dashboard">&#9881; الإعدادات</a>
+            <a role="menuitem" class="lp-dd-item" href="/track" aria-label="الخريطة الحية"
+              ><span class="lp-dd-ic" aria-hidden="true">&#128205;</span><span class="lp-dd-link__text">الخريطة الحية</span></a
+            >
+            <a role="menuitem" class="lp-dd-item" href="/dashboard" aria-label="الإعدادات"
+              ><span class="lp-dd-ic" aria-hidden="true">⚙</span><span class="lp-dd-link__text">الإعدادات</span></a
+            >
           </div>
         </div>
         <a class="lp-brand" href="/" aria-label="ERVENOW">
@@ -1253,15 +1321,10 @@
           <span class="lp-brand__tag">Platform</span>
         </a>
 
-        <button type="button" class="lp-menu-toggle" id="lpMenuBtn" aria-expanded="false" aria-controls="lpNavWrap">
-          القائمة
-        </button>
-
         <div class="lp-nav-wrap" id="lpNavWrap">
           <nav class="lp-nav" aria-label="التنقل الرئيسي">
             <a href="#top">الرئيسية</a>
             <a href="/stores">المتاجر</a>
-            <a href="/partner-portal">دخول المتاجر ومزودي الخدمة</a>
             <a href="#trust">الثقة</a>
             <a href="#services">الخدمات</a>
             <a href="#why">لماذا ERVENOW</a>
@@ -1278,12 +1341,6 @@
               <span class="lp-header-wallet__cur">ر.س</span>
             </span>
           </a>
-          <div class="header-right">
-            <a href="/orders" class="orders-btn" id="lpHeaderOrdersLink">
-              الطلبات
-              <span id="ordersBadge" class="badge">0</span>
-            </a>
-          </div>
           <div class="cart-btn" onclick="goCart()" style="cursor: pointer">🛒 <span id="cartCount">0</span></div>
           <div id="authArea">
             <button class="lp-btn-outline" type="button" onclick="goLogin()">دخول</button>
@@ -1615,7 +1672,7 @@
           }, 200);
         });
 
-        panel.querySelectorAll("a[role='menuitem']").forEach(function (a) {
+        panel.querySelectorAll('[role="menuitem"]').forEach(function (a) {
           a.addEventListener("click", function () {
             openDd(false);
           });
@@ -1636,23 +1693,6 @@
     </script>
     <script>
       (function () {
-        var btn = document.getElementById("lpMenuBtn");
-        var wrap = document.getElementById("lpNavWrap");
-        if (btn && wrap) {
-          btn.addEventListener("click", function () {
-            var open = wrap.classList.toggle("is-open");
-            btn.setAttribute("aria-expanded", open ? "true" : "false");
-          });
-          wrap.querySelectorAll("a").forEach(function (a) {
-            a.addEventListener("click", function () {
-              if (window.matchMedia("(max-width: 900px)").matches) {
-                wrap.classList.remove("is-open");
-                btn.setAttribute("aria-expanded", "false");
-              }
-            });
-          });
-        }
-
         document.querySelectorAll(".lp-reveal").forEach(function (el) {
           var io = new IntersectionObserver(
             function (entries) {
@@ -1825,10 +1865,8 @@
           localStorage.getItem("ervenow_access_token") ||
           localStorage.getItem("erwenow_access_token");
         applyStartMenuAuthState(!!token);
-        var headerOrders = document.getElementById("lpHeaderOrdersLink");
         var quickOrders = document.getElementById("lpQuickOrdersLink");
         if (!token) {
-          if (headerOrders) headerOrders.setAttribute("href", "/orders");
           if (quickOrders) quickOrders.setAttribute("href", "/orders");
           await refreshHeaderWallet("", "");
         }
@@ -1845,9 +1883,6 @@
             });
             role = String((me.profile && me.profile.role) || "").toLowerCase();
 
-            if (headerOrders && (role === "admin" || role === "customer")) {
-              headerOrders.setAttribute("href", "/dashboard");
-            }
             if (quickOrders && (role === "admin" || role === "customer")) {
               quickOrders.setAttribute("href", "/dashboard");
             }
