@@ -241,6 +241,65 @@
         min-width: 0;
       }
 
+      /* سطح المكتب: صف أول (قائمة + شعار + إجراءات) وصف ثاني لروابط التصفح متجاورة */
+      @media (min-width: 901px) {
+        .lp-header__inner {
+          display: grid;
+          grid-template-columns: auto 1fr auto;
+          grid-template-rows: auto auto;
+          align-items: center;
+          column-gap: 18px;
+          row-gap: 10px;
+          padding-top: 12px;
+          padding-bottom: 12px;
+        }
+
+        .lp-quick-dd {
+          grid-column: 1;
+          grid-row: 1;
+          justify-self: start;
+        }
+
+        .lp-brand {
+          grid-column: 2;
+          grid-row: 1;
+          justify-self: center;
+        }
+
+        .lp-header__actions {
+          grid-column: 3;
+          grid-row: 1;
+          justify-self: end;
+        }
+
+        .lp-nav-wrap {
+          grid-column: 1 / -1;
+          grid-row: 2;
+          flex: none;
+          width: 100%;
+          justify-content: safe center;
+          padding-top: 10px;
+          margin-top: 2px;
+          border-top: 1px solid rgba(61, 34, 19, 0.08);
+          overflow-x: auto;
+          -webkit-overflow-scrolling: touch;
+          scrollbar-width: thin;
+        }
+
+        .lp-nav {
+          flex-wrap: nowrap;
+          justify-content: center;
+          gap: 4px;
+          max-width: 100%;
+        }
+
+        .lp-nav a {
+          white-space: nowrap;
+          padding: 8px 12px;
+          font-size: 0.86rem;
+        }
+      }
+
       .lp-menu-toggle {
         display: none;
         padding: 10px 14px;
@@ -330,27 +389,6 @@
         .lp-quick-dd__panel .lp-dd-item {
           min-height: 48px;
           padding: 14px 14px;
-        }
-
-        /* على الجوال: أيقونات واضحة بدون عرض النص داخل القائمة (يُبقى aria-label للقارئ) */
-        .lp-quick-dd__panel .lp-dd-link__text {
-          position: absolute;
-          width: 1px;
-          height: 1px;
-          padding: 0;
-          margin: -1px;
-          overflow: hidden;
-          clip-path: inset(50%);
-          border: 0;
-          white-space: nowrap;
-        }
-
-        .lp-quick-dd__panel .lp-dd-item:not(.lp-dd-orders) {
-          justify-content: center;
-        }
-
-        .lp-quick-dd__panel .lp-dd-orders {
-          justify-content: space-between;
         }
       }
 
@@ -1214,6 +1252,7 @@
 
       .lp-quick-dd__panel .lp-dd-orders {
         font-weight: 800;
+        justify-content: space-between;
       }
 
       .lp-quick-dd__panel-title {
@@ -1306,6 +1345,14 @@
             <a role="menuitem" class="lp-dd-item" href="/dashboard" aria-label="الإعدادات"
               ><span class="lp-dd-ic" aria-hidden="true">⚙</span><span class="lp-dd-link__text">الإعدادات</span></a
             >
+            <a
+              role="menuitem"
+              class="lp-dd-item"
+              href="/login?mode=register&amp;role=customer"
+              aria-label="إنشاء حساب"
+              data-guest-only="true"
+              ><span class="lp-dd-ic" aria-hidden="true">&#10133;</span><span class="lp-dd-link__text">إنشاء حساب</span></a
+            >
           </div>
         </div>
         <a class="lp-brand" href="/" aria-label="ERVENOW">
@@ -1344,7 +1391,6 @@
           <div class="cart-btn" onclick="goCart()" style="cursor: pointer">🛒 <span id="cartCount">0</span></div>
           <div id="authArea">
             <button class="lp-btn-outline" type="button" onclick="goLogin()">دخول</button>
-            <button class="lp-btn-solid" type="button" onclick="goRegister()">إنشاء حساب</button>
             <button class="lp-btn-outline" type="button" onclick="continueAsGuest()">زائر المنصة</button>
           </div>
         </div>
