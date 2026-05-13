@@ -463,6 +463,10 @@ if (servePublicUi) {
     res.sendFile(path.join(publicPath, "merchant-dashboard.html"));
   });
 
+  app.get("/partner-portal", (_req, res) => {
+    res.sendFile(path.join(publicPath, "partner-portal.html"));
+  });
+
   app.get("/cart", (_req, res) => {
     res.sendFile(path.join(publicPath, "cart.html"));
   });
