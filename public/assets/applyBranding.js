@@ -42,20 +42,23 @@
     var img = document.getElementById("ervBrandLogo");
     var nameEl = document.querySelector(".lp-brand__name");
     var tagEl = document.querySelector(".lp-brand__tag");
+    var logoSlot = document.querySelector(".lp-header__logo-slot");
     if (img && d.logo_url && String(d.logo_url).trim()) {
       var u = String(d.logo_url).trim();
       if (u.startsWith("http://") || u.startsWith("https://") || u.startsWith("data:")) img.src = u;
       else img.src = u;
       img.style.display = "block";
       img.alt = "ERVENOW";
-      if (nameEl) nameEl.style.display = "none";
-      if (tagEl) tagEl.style.display = "none";
+      if (logoSlot) logoSlot.classList.add("lp-header__logo-slot--has-img");
     } else if (img) {
-      img.removeAttribute("src");
-      img.style.display = "none";
-      if (nameEl) nameEl.style.display = "";
-      if (tagEl) tagEl.style.display = "";
+      var fallback = "/assets/ervenow-logo.png";
+      img.src = fallback;
+      img.style.display = "block";
+      img.alt = "ERVENOW";
+      if (logoSlot) logoSlot.classList.add("lp-header__logo-slot--has-img");
     }
+    if (nameEl) nameEl.style.display = "";
+    if (tagEl) tagEl.style.display = "";
   }
 
   async function run() {

@@ -77,28 +77,73 @@
         justify-content: space-between;
         gap: 16px;
         flex-wrap: wrap;
+        direction: ltr;
+        unicode-bidi: isolate;
       }
 
-      .lp-brand {
+      .lp-header__logo-slot {
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-start;
+        flex-shrink: 0;
+        text-decoration: none;
+        color: inherit;
+        border-radius: 12px;
+        min-width: 0;
+        width: 0;
+        overflow: hidden;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.2s ease;
+      }
+
+      .lp-header__logo-slot.lp-header__logo-slot--has-img {
+        width: auto;
+        min-width: 40px;
+        opacity: 1;
+        pointer-events: auto;
+        padding: 2px 4px;
+      }
+
+      .lp-header__logo-img {
+        display: block;
+        max-height: 56px;
+        width: auto;
+        height: auto;
+        object-fit: contain;
+        vertical-align: middle;
+      }
+
+      .lp-header__brand-mid {
         display: flex;
-        align-items: baseline;
-        gap: 10px;
+        align-items: center;
+        justify-content: center;
         text-decoration: none;
         color: var(--brown);
+        min-width: 0;
+        text-align: center;
       }
 
-      .lp-brand__name {
+      .lp-header__brand-mid .lp-brand__name {
         font-weight: 800;
         font-size: clamp(1.15rem, 3vw, 1.35rem);
         letter-spacing: 0.04em;
       }
 
-      .lp-brand__tag {
-        font-size: 0.7rem;
-        font-weight: 700;
-        color: var(--gold);
-        letter-spacing: 0.12em;
-        text-transform: uppercase;
+      .lp-header__brand-mid,
+      .lp-nav-wrap {
+        direction: rtl;
+      }
+
+      .lp-header__end-zone {
+        display: flex;
+        flex-direction: row-reverse;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 12px;
+        flex-wrap: wrap;
+        min-width: 0;
+        width: 100%;
       }
 
       .lp-nav {
@@ -128,6 +173,7 @@
         align-items: center;
         gap: 14px;
         flex-wrap: wrap;
+        direction: rtl;
       }
 
       #authArea {
@@ -180,21 +226,43 @@
         box-shadow: 0 0 0 3px rgba(185, 135, 47, 0.22);
       }
 
+      body.lp-cart-no-scroll {
+        overflow: hidden;
+        overscroll-behavior: none;
+      }
+
+      body.lp-cart-no-scroll .lp-header {
+        z-index: 1405;
+      }
+
       .lp-cart-backdrop {
         position: fixed;
         inset: 0;
         z-index: 1380;
-        background: rgba(45, 26, 14, 0.38);
-        backdrop-filter: blur(3px);
-        -webkit-backdrop-filter: blur(3px);
+        background: rgba(26, 18, 12, 0.42);
+        backdrop-filter: blur(12px) saturate(1.15);
+        -webkit-backdrop-filter: blur(12px) saturate(1.15);
         border: none;
         padding: 0;
         margin: 0;
         cursor: pointer;
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        transition:
+          opacity 0.32s ease,
+          visibility 0s linear 0.32s,
+          backdrop-filter 0.32s ease;
       }
 
-      .lp-cart-backdrop[hidden] {
-        display: none !important;
+      .lp-cart-backdrop.lp-cart-backdrop--open {
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+        transition:
+          opacity 0.32s ease,
+          visibility 0s,
+          backdrop-filter 0.32s ease;
       }
 
       .lp-cart-panel {
@@ -215,13 +283,79 @@
           0 24px 48px rgba(45, 26, 14, 0.16),
           0 0 0 1px rgba(255, 255, 255, 0.55) inset;
         overflow: hidden;
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        transform: translateY(-14px);
+        transition:
+          opacity 0.28s ease,
+          transform 0.34s cubic-bezier(0.22, 1, 0.36, 1),
+          visibility 0s linear 0.34s;
       }
 
-      .lp-cart-panel[hidden] {
-        display: none !important;
+      .lp-cart-panel.lp-cart-panel--open {
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+        transform: translateY(0);
+        transition:
+          opacity 0.28s ease,
+          transform 0.34s cubic-bezier(0.22, 1, 0.36, 1),
+          visibility 0s;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .lp-cart-backdrop,
+        .lp-cart-panel {
+          transition: none;
+        }
+      }
+
+      .lp-cart-panel__shop-bar {
+        flex-shrink: 0;
+        padding: 8px 10px 10px;
+        border-bottom: 1px solid var(--border);
+        background: linear-gradient(180deg, rgba(255, 252, 248, 0.98), rgba(250, 246, 238, 0.92));
+      }
+
+      .lp-cart-panel__continue-shop {
+        display: block;
+        text-align: center;
+        font-weight: 800;
+        font-size: 0.88rem;
+        color: var(--brown);
+        text-decoration: none;
+        padding: 8px 12px;
+        border-radius: 10px;
+        border: 1px solid transparent;
+        transition:
+          background 0.2s ease,
+          border-color 0.2s ease,
+          color 0.2s ease;
+      }
+
+      .lp-cart-panel__continue-shop:hover {
+        background: rgba(201, 162, 39, 0.14);
+        border-color: rgba(185, 135, 47, 0.35);
+        color: #3d2213;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        .lp-cart-panel__shop-bar {
+          background: linear-gradient(180deg, rgba(36, 28, 22, 0.96), rgba(28, 22, 18, 0.92));
+          border-bottom-color: rgba(212, 167, 106, 0.18);
+        }
+        .lp-cart-panel__continue-shop {
+          color: #faf6ef;
+        }
+        .lp-cart-panel__continue-shop:hover {
+          background: rgba(212, 167, 106, 0.12);
+          color: #fffef8;
+        }
       }
 
       .lp-cart-panel__inner {
+        flex: 1 1 auto;
         display: flex;
         flex-direction: column;
         max-height: inherit;
@@ -665,37 +799,48 @@
         display: flex;
         justify-content: center;
         min-width: 0;
+        direction: rtl;
       }
 
       /* سطح المكتب: صف أول (قائمة + شعار + إجراءات) وصف ثاني لروابط التصفح متجاورة */
       @media (min-width: 901px) {
         .lp-header__inner {
           display: grid;
-          grid-template-columns: auto 1fr auto;
+          grid-template-columns: auto auto 1fr;
           grid-template-rows: auto auto;
           align-items: center;
-          column-gap: 18px;
+          column-gap: 12px;
           row-gap: 10px;
           padding-top: 12px;
           padding-bottom: 12px;
+          direction: ltr;
         }
 
-        .lp-quick-dd {
+        .lp-header__logo-slot {
           grid-column: 1;
           grid-row: 1;
-          justify-self: start;
+          justify-self: left;
+          align-self: center;
         }
 
-        .lp-brand {
+        .lp-header__brand-mid {
           grid-column: 2;
           grid-row: 1;
-          justify-self: center;
+          justify-self: start;
+          align-self: center;
+          justify-content: flex-start;
+          text-align: start;
         }
 
-        .lp-header__actions {
+        .lp-header__end-zone {
           grid-column: 3;
           grid-row: 1;
           justify-self: end;
+          align-self: center;
+        }
+
+        .lp-header__actions {
+          flex-shrink: 0;
         }
 
         .lp-nav-wrap {
@@ -715,13 +860,13 @@
         .lp-nav {
           flex-wrap: nowrap;
           justify-content: center;
-          gap: 4px;
+          gap: 14px;
           max-width: 100%;
         }
 
         .lp-nav a {
           white-space: nowrap;
-          padding: 8px 12px;
+          padding: 8px 18px;
           font-size: 0.86rem;
         }
       }
@@ -741,7 +886,7 @@
       @media (max-width: 900px) {
         .lp-header__inner {
           display: grid;
-          grid-template-columns: auto 1fr;
+          grid-template-columns: auto 1fr auto;
           align-items: center;
           column-gap: 10px;
           row-gap: 12px;
@@ -750,22 +895,32 @@
           padding-left: max(14px, env(safe-area-inset-left, 0px));
           padding-right: max(14px, env(safe-area-inset-right, 0px));
           padding-top: max(10px, env(safe-area-inset-top, 0px));
+          direction: ltr;
         }
 
-        .lp-quick-dd {
+        .lp-header__logo-slot {
           grid-column: 1;
           grid-row: 1;
-          justify-self: start;
+          justify-self: left;
           align-self: center;
-          min-width: 0;
-          max-width: 100%;
         }
 
-        .lp-brand {
+        .lp-header__brand-mid {
           grid-column: 2;
           grid-row: 1;
           justify-self: center;
+          align-self: center;
           min-width: 0;
+        }
+
+        .lp-header__end-zone {
+          grid-column: 3;
+          grid-row: 1;
+          justify-self: end;
+          align-self: center;
+          min-width: 0;
+          max-width: 100%;
+          justify-content: flex-end;
         }
 
         .lp-menu-toggle {
@@ -777,12 +932,11 @@
         }
 
         .lp-header__actions {
-          grid-column: 1 / -1;
-          grid-row: 2;
-          width: 100%;
+          width: auto;
+          flex: 1 1 auto;
+          min-width: 0;
           justify-content: flex-end;
-          gap: 12px;
-          order: 0;
+          gap: 10px;
         }
 
         #authArea {
@@ -793,6 +947,14 @@
 
         .lp-dd-mobile-only {
           display: block;
+        }
+
+        .lp-dd-mobile-quick {
+          margin-bottom: 2px;
+        }
+
+        .lp-dd-mobile-quick-sep {
+          margin: 10px 6px;
         }
 
         .lp-dd-sep-mobile {
@@ -815,20 +977,6 @@
         .lp-quick-dd__panel .lp-dd-item {
           min-height: 48px;
           padding: 14px 14px;
-        }
-      }
-
-      @media (max-width: 400px) {
-        .lp-quick-dd__label {
-          position: static;
-          width: auto;
-          height: auto;
-          padding: 0;
-          margin: 0;
-          overflow: visible;
-          clip-path: none;
-          white-space: normal;
-          border: 0;
         }
       }
 
@@ -1552,14 +1700,17 @@
       .lp-quick-dd {
         position: relative;
         flex-shrink: 0;
+        direction: rtl;
       }
 
       .lp-quick-dd__btn {
         display: inline-flex;
         align-items: center;
-        gap: 8px;
-        padding: 10px 14px;
+        justify-content: center;
+        gap: 0;
+        padding: 10px 11px;
         min-height: 44px;
+        min-width: 44px;
         position: relative;
         border-radius: 12px;
         border: 1px solid rgba(185, 135, 47, 0.38);
@@ -1571,6 +1722,7 @@
         cursor: pointer;
         box-shadow: 0 4px 16px rgba(45, 26, 14, 0.08);
         transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+        direction: ltr;
       }
 
       .lp-quick-dd__btn:hover {
@@ -1583,29 +1735,28 @@
         box-shadow: 0 8px 24px rgba(155, 111, 37, 0.18);
       }
 
-      .lp-quick-dd__icon {
-        font-size: 1rem;
-        opacity: 0.9;
+      .lp-quick-dd__burger {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        align-items: stretch;
+        width: 1.28rem;
+        height: 0.95rem;
       }
 
-      .lp-quick-dd__label {
-        font-size: 0.85rem;
-      }
-
-      .lp-quick-dd__caret {
-        font-size: 0.65rem;
-        opacity: 0.85;
-        transition: transform 0.2s ease;
-      }
-
-      .lp-quick-dd.is-open .lp-quick-dd__caret {
-        transform: rotate(-180deg);
+      .lp-quick-dd__burger span {
+        display: block;
+        height: 2px;
+        flex-shrink: 0;
+        border-radius: 1px;
+        background: currentColor;
       }
 
       .lp-quick-dd__panel {
         position: absolute;
         top: calc(100% + 8px);
-        right: 0;
+        inset-inline-end: 0;
+        inset-inline-start: auto;
         min-width: min(280px, calc(100vw - 32px));
         max-height: min(70vh, 420px);
         overflow-y: auto;
@@ -1713,21 +1864,40 @@
   <body class="lp-body">
     <header class="lp-header" id="top">
       <div class="lp-header__inner">
-        <div class="lp-quick-dd" id="lpQuickNav">
-          <button
-            type="button"
-            class="lp-quick-dd__btn"
-            id="lpQuickNavBtn"
-            aria-expanded="false"
-            aria-haspopup="true"
-            aria-controls="lpQuickNavPanel"
-            aria-label="فتح القائمة"
-          >
-            <span class="lp-quick-dd__icon" aria-hidden="true">&#9776;</span>
-            <span class="lp-quick-dd__label">القائمة</span>
-            <span class="lp-quick-dd__caret" aria-hidden="true">▾</span>
-          </button>
-          <div class="lp-quick-dd__panel" id="lpQuickNavPanel" role="menu" hidden>
+        <a
+          class="lp-header__logo-slot lp-header__logo-slot--has-img"
+          href="/"
+          aria-label="ERVENOW — الصفحة الرئيسية"
+        >
+          <img
+            id="ervBrandLogo"
+            class="lp-header__logo-img"
+            src="/assets/ervenow-logo.png"
+            alt="ERVENOW"
+            width="160"
+            height="56"
+            decoding="async"
+          />
+        </a>
+        <a class="lp-header__brand-mid" href="/" aria-label="ERVENOW">
+          <span class="lp-brand__name">ERVENOW</span>
+        </a>
+        <div class="lp-header__end-zone">
+          <div class="lp-quick-dd" id="lpQuickNav">
+            <button
+              type="button"
+              class="lp-quick-dd__btn"
+              id="lpQuickNavBtn"
+              aria-expanded="false"
+              aria-haspopup="true"
+              aria-controls="lpQuickNavPanel"
+              aria-label="فتح القائمة"
+            >
+              <span class="lp-quick-dd__burger" aria-hidden="true"
+                ><span></span><span></span><span></span><span></span
+              ></span>
+            </button>
+            <div class="lp-quick-dd__panel" id="lpQuickNavPanel" role="menu" hidden>
             <p class="lp-quick-dd__panel-title">القائمة</p>
 
             <button
@@ -1746,27 +1916,44 @@
             <div class="lp-quick-dd__sep" role="separator"></div>
 
             <div class="lp-dd-mobile-only" aria-label="تصفح الموقع">
-              <a role="menuitem" class="lp-dd-item" href="#top" aria-label="الرئيسية"
-                ><span class="lp-dd-ic" aria-hidden="true">&#127968;</span><span class="lp-dd-link__text">الرئيسية</span></a
-              >
-              <a role="menuitem" class="lp-dd-item" href="/stores" aria-label="متاجر"
-                ><span class="lp-dd-ic" aria-hidden="true">&#128722;</span><span class="lp-dd-link__text">متاجر</span></a
-              >
-              <a role="menuitem" class="lp-dd-item" href="#trust" aria-label="الثقة"
-                ><span class="lp-dd-ic" aria-hidden="true">&#128737;</span><span class="lp-dd-link__text">الثقة</span></a
-              >
-              <a role="menuitem" class="lp-dd-item" href="#services" aria-label="خدمات"
-                ><span class="lp-dd-ic" aria-hidden="true">&#127869;</span><span class="lp-dd-link__text">خدمات</span></a
-              >
-              <a role="menuitem" class="lp-dd-item" href="#why" aria-label="لماذا ERVENOW"
-                ><span class="lp-dd-ic" aria-hidden="true">&#10067;</span><span class="lp-dd-link__text">لماذا ERVENOW</span></a
-              >
-              <a role="menuitem" class="lp-dd-item" href="#how" aria-label="كيف تعمل"
-                ><span class="lp-dd-ic" aria-hidden="true">&#128218;</span><span class="lp-dd-link__text">كيف تعمل</span></a
-              >
-              <a role="menuitem" class="lp-dd-item" href="#contact" aria-label="تواصل معنا"
-                ><span class="lp-dd-ic" aria-hidden="true">&#128231;</span><span class="lp-dd-link__text">تواصل معنا</span></a
-              >
+              <div class="lp-dd-mobile-quick" aria-label="وصول سريع">
+                <a role="menuitem" class="lp-dd-item" href="/browse?type=restaurant" aria-label="مطاعم"
+                  ><span class="lp-dd-ic" aria-hidden="true">&#127860;</span><span class="lp-dd-link__text">مطاعم</span></a
+                >
+                <a role="menuitem" class="lp-dd-item" href="#services" aria-label="خدمات"
+                  ><span class="lp-dd-ic" aria-hidden="true">&#127869;</span><span class="lp-dd-link__text">خدمات</span></a
+                >
+                <a role="menuitem" class="lp-dd-item" href="/stores" aria-label="متاجر"
+                  ><span class="lp-dd-ic" aria-hidden="true">&#128722;</span><span class="lp-dd-link__text">متاجر</span></a
+                >
+                <a role="menuitem" class="lp-dd-item" href="/browse?type=internal_delivery" aria-label="توصيل"
+                  ><span class="lp-dd-ic" aria-hidden="true">&#128666;</span><span class="lp-dd-link__text">توصيل</span></a
+                >
+              </div>
+              <div class="lp-quick-dd__sep lp-dd-mobile-quick-sep" role="separator" aria-hidden="true"></div>
+              <div class="lp-dd-mobile-site" aria-label="صفحات الموقع">
+                <a role="menuitem" class="lp-dd-item" href="#top" aria-label="الرئيسية"
+                  ><span class="lp-dd-ic" aria-hidden="true">&#127968;</span><span class="lp-dd-link__text">الرئيسية</span></a
+                >
+                <a role="menuitem" class="lp-dd-item" href="/stores" aria-label="متاجر"
+                  ><span class="lp-dd-ic" aria-hidden="true">&#128722;</span><span class="lp-dd-link__text">متاجر</span></a
+                >
+                <a role="menuitem" class="lp-dd-item" href="#trust" aria-label="الثقة"
+                  ><span class="lp-dd-ic" aria-hidden="true">&#128737;</span><span class="lp-dd-link__text">الثقة</span></a
+                >
+                <a role="menuitem" class="lp-dd-item" href="#services" aria-label="خدمات"
+                  ><span class="lp-dd-ic" aria-hidden="true">&#127869;</span><span class="lp-dd-link__text">خدمات</span></a
+                >
+                <a role="menuitem" class="lp-dd-item" href="#why" aria-label="لماذا ERVENOW"
+                  ><span class="lp-dd-ic" aria-hidden="true">&#10067;</span><span class="lp-dd-link__text">لماذا ERVENOW</span></a
+                >
+                <a role="menuitem" class="lp-dd-item" href="#how" aria-label="كيف تعمل"
+                  ><span class="lp-dd-ic" aria-hidden="true">&#128218;</span><span class="lp-dd-link__text">كيف تعمل</span></a
+                >
+                <a role="menuitem" class="lp-dd-item" href="#contact" aria-label="تواصل معنا"
+                  ><span class="lp-dd-ic" aria-hidden="true">&#128231;</span><span class="lp-dd-link__text">تواصل معنا</span></a
+                >
+              </div>
             </div>
             <div class="lp-dd-sep-mobile" role="separator"></div>
 
@@ -1806,31 +1993,6 @@
             >
           </div>
         </div>
-        <a class="lp-brand" href="/" aria-label="ERVENOW">
-          <img
-            id="ervBrandLogo"
-            alt=""
-            width="0"
-            height="0"
-            decoding="async"
-            style="display: none; max-height: 38px; width: auto; vertical-align: middle"
-          />
-          <span class="lp-brand__name">ERVENOW</span>
-          <span class="lp-brand__tag">Platform</span>
-        </a>
-
-        <div class="lp-nav-wrap" id="lpNavWrap">
-          <nav class="lp-nav" aria-label="التنقل الرئيسي">
-            <a href="#top">الرئيسية</a>
-            <a href="/stores">متاجر</a>
-            <a href="#trust">الثقة</a>
-            <a href="#services">خدمات</a>
-            <a href="#why">لماذا ERVENOW</a>
-            <a href="#how">كيف تعمل</a>
-            <a href="#contact">تواصل معنا</a>
-          </nav>
-        </div>
-
         <div class="lp-header__actions">
           <a class="lp-header-wallet" id="lpHeaderWallet" href="/wallet.html" hidden>
             <span class="lp-header-wallet__inner">
@@ -1851,15 +2013,18 @@
               <span aria-hidden="true">🛒</span>
               <span id="cartCount">0</span>
             </button>
-            <div class="lp-cart-backdrop" id="lpCartBackdrop" hidden aria-hidden="true"></div>
+            <div class="lp-cart-backdrop" id="lpCartBackdrop" aria-hidden="true"></div>
             <div
               class="lp-cart-panel"
               id="lpCartPanel"
               role="dialog"
               aria-modal="true"
               aria-labelledby="lpCartDialogTitle"
-              hidden
+              aria-hidden="true"
             >
+              <div class="lp-cart-panel__shop-bar">
+                <a href="/browse" class="lp-cart-panel__continue-shop" id="lpCartContinueShop">استمر بالتسوق</a>
+              </div>
               <div class="lp-cart-panel__inner">
                 <header class="lp-cart-panel__welcome">
                   <p class="lp-cart-panel__eyebrow">ERVENOW</p>
@@ -1918,6 +2083,18 @@
             </div>
           </div>
           <div id="authArea"></div>
+        </div>
+        </div>
+        <div class="lp-nav-wrap" id="lpNavWrap">
+          <nav class="lp-nav" aria-label="التنقل الرئيسي">
+            <a href="#top">الرئيسية</a>
+            <a href="/stores">متاجر</a>
+            <a href="#trust">الثقة</a>
+            <a href="#services">خدمات</a>
+            <a href="#why">لماذا ERVENOW</a>
+            <a href="#how">كيف تعمل</a>
+            <a href="#contact">تواصل معنا</a>
+          </nav>
         </div>
       </div>
     </header>
@@ -2322,29 +2499,51 @@
         var panel = document.getElementById("lpCartPanel");
         var backdrop = document.getElementById("lpCartBackdrop");
         var checkout = document.getElementById("lpCartCheckoutBtn");
+        var continueShop = document.getElementById("lpCartContinueShop");
         if (!wrap || !btn || !panel) return;
 
+        function isOpen() {
+          return panel.classList.contains("lp-cart-panel--open");
+        }
+
         function setOpen(open) {
-          panel.hidden = !open;
-          if (backdrop) backdrop.hidden = !open;
-          btn.setAttribute("aria-expanded", open ? "true" : "false");
-          if (open && typeof renderHeaderCartPreview === "function") renderHeaderCartPreview();
+          if (open) {
+            panel.classList.add("lp-cart-panel--open");
+            if (backdrop) backdrop.classList.add("lp-cart-backdrop--open");
+            document.body.classList.add("lp-cart-no-scroll");
+            panel.setAttribute("aria-hidden", "false");
+            if (backdrop) backdrop.setAttribute("aria-hidden", "false");
+            btn.setAttribute("aria-expanded", "true");
+            if (typeof renderHeaderCartPreview === "function") renderHeaderCartPreview();
+          } else {
+            panel.classList.remove("lp-cart-panel--open");
+            if (backdrop) backdrop.classList.remove("lp-cart-backdrop--open");
+            document.body.classList.remove("lp-cart-no-scroll");
+            panel.setAttribute("aria-hidden", "true");
+            if (backdrop) backdrop.setAttribute("aria-hidden", "true");
+            btn.setAttribute("aria-expanded", "false");
+          }
         }
 
         btn.addEventListener("click", function (e) {
           e.stopPropagation();
-          setOpen(panel.hidden);
+          setOpen(!isOpen());
         });
         if (backdrop) {
           backdrop.addEventListener("click", function () {
             setOpen(false);
           });
         }
+        if (continueShop) {
+          continueShop.addEventListener("click", function () {
+            setOpen(false);
+          });
+        }
         document.addEventListener("click", function (e) {
-          if (!wrap.contains(e.target)) setOpen(false);
+          if (isOpen() && !wrap.contains(e.target)) setOpen(false);
         });
         document.addEventListener("keydown", function (e) {
-          if (e.key === "Escape" && !panel.hidden) setOpen(false);
+          if (e.key === "Escape" && isOpen()) setOpen(false);
         });
         if (checkout) {
           checkout.addEventListener("click", function () {
