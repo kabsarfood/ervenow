@@ -135,15 +135,24 @@
         direction: rtl;
       }
 
-      .lp-header__end-zone {
+      .lp-header__toolbar-right {
         display: flex;
         flex-direction: row-reverse;
         align-items: center;
-        justify-content: flex-start;
+        justify-content: flex-end;
         gap: 12px;
         flex-wrap: wrap;
         min-width: 0;
-        width: 100%;
+      }
+
+      .lp-header__end-zone {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 12px;
+        flex-wrap: wrap;
+        min-width: 0;
+        width: auto;
       }
 
       .lp-nav {
@@ -832,11 +841,16 @@
           text-align: start;
         }
 
-        .lp-header__end-zone {
+        .lp-header__toolbar-right {
           grid-column: 3;
           grid-row: 1;
           justify-self: end;
           align-self: center;
+          min-width: 0;
+        }
+
+        .lp-header__end-zone {
+          flex-shrink: 0;
         }
 
         .lp-header__actions {
@@ -884,6 +898,10 @@
       }
 
       @media (max-width: 900px) {
+        .lp-header__toolbar-right {
+          display: contents;
+        }
+
         .lp-header__inner {
           display: grid;
           grid-template-columns: auto 1fr;
@@ -920,7 +938,50 @@
           align-self: center;
           min-width: 0;
           max-width: 100%;
-          justify-content: flex-end;
+          width: auto;
+        }
+
+        .lp-header__actions {
+          grid-column: 1 / -1;
+          grid-row: 2;
+          width: auto;
+          min-width: 0;
+          max-width: none;
+          align-self: stretch;
+          justify-self: stretch;
+          box-sizing: border-box;
+          margin-top: 2px;
+          margin-left: calc(-1 * max(14px, env(safe-area-inset-left, 0px)));
+          margin-right: calc(-1 * max(14px, env(safe-area-inset-right, 0px)));
+          padding: 12px max(14px, env(safe-area-inset-left, 0px)) 12px max(14px, env(safe-area-inset-right, 0px));
+          direction: ltr;
+          display: grid;
+          grid-template-columns: auto minmax(0, 1fr) auto;
+          grid-template-areas: "cart auth wallet";
+          align-items: center;
+          gap: 10px;
+          flex-wrap: unset;
+          background: linear-gradient(145deg, rgba(255, 254, 251, 0.98), rgba(248, 241, 229, 0.96));
+          border: 1px solid rgba(61, 34, 19, 0.1);
+          border-radius: 14px;
+          box-shadow: 0 4px 20px rgba(45, 26, 14, 0.08);
+        }
+
+        .lp-header__actions .lp-cart-wrap {
+          grid-area: cart;
+          justify-self: start;
+        }
+
+        .lp-header__actions #authArea {
+          grid-area: auth;
+          justify-self: center;
+          min-width: 0;
+          max-width: 100%;
+        }
+
+        .lp-header__actions .lp-header-wallet {
+          grid-area: wallet;
+          justify-self: end;
         }
 
         .lp-menu-toggle {
@@ -931,18 +992,13 @@
           display: none !important;
         }
 
-        .lp-header__actions {
-          width: auto;
-          flex: 1 1 auto;
-          min-width: 0;
-          justify-content: flex-end;
-          gap: 10px;
-        }
-
         #authArea {
           display: flex;
           align-items: center;
-          gap: 12px;
+          gap: 10px;
+          flex-wrap: wrap;
+          justify-content: center;
+          direction: rtl;
         }
 
         .lp-dd-mobile-only {
@@ -991,12 +1047,17 @@
 
       @media (max-width: 520px) {
         .lp-header__actions {
-          justify-content: stretch;
+          gap: 8px;
+          padding-top: 10px;
+          padding-bottom: 10px;
         }
+
         #authArea {
-          width: 100%;
-          justify-content: space-between;
+          width: auto;
+          max-width: 100%;
+          justify-content: center;
         }
+
         #authArea > .lp-btn-outline,
         #authArea > .lp-btn-solid {
           flex: 1 1 auto;
@@ -1890,8 +1951,9 @@
         <a class="lp-header__brand-mid" href="/" aria-label="ERVENOW">
           <span class="lp-brand__name">ERVENOW</span>
         </a>
-        <div class="lp-header__end-zone">
-          <div class="lp-quick-dd" id="lpQuickNav">
+        <div class="lp-header__toolbar-right">
+          <div class="lp-header__end-zone">
+            <div class="lp-quick-dd" id="lpQuickNav">
             <button
               type="button"
               class="lp-quick-dd__btn"
@@ -2000,6 +2062,7 @@
               ><span class="lp-dd-ic" aria-hidden="true">&#10133;</span><span class="lp-dd-link__text">إنشاء حساب</span></a
             >
           </div>
+        </div>
         </div>
         <div class="lp-header__actions">
           <a class="lp-header-wallet" id="lpHeaderWallet" href="/wallet.html" hidden>
