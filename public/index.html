@@ -968,6 +968,8 @@
           top: var(--lp-dd-anchor-top, calc(64px + env(safe-area-inset-top, 0px)));
           left: max(10px, env(safe-area-inset-left, 0px));
           right: max(10px, env(safe-area-inset-right, 0px));
+          inset-inline-start: auto;
+          inset-inline-end: auto;
           min-width: 0;
           width: auto;
           max-height: min(78dvh, 78vh, calc(100vh - 100px));
@@ -1753,19 +1755,25 @@
       }
 
       .lp-quick-dd__panel {
-        position: absolute;
-        top: calc(100% + 8px);
-        inset-inline-end: 0;
-        inset-inline-start: auto;
-        min-width: min(280px, calc(100vw - 32px));
-        max-height: min(70vh, 420px);
-        overflow-y: auto;
+        box-sizing: border-box;
         padding: 10px;
         border-radius: 14px;
         border: 1px solid var(--border);
         background: linear-gradient(180deg, #fffef9, #f8f4ee);
         box-shadow: 0 18px 48px rgba(45, 26, 14, 0.14);
         z-index: 1200;
+        overflow-y: auto;
+      }
+
+      @media (min-width: 901px) {
+        .lp-quick-dd__panel {
+          position: absolute;
+          top: calc(100% + 8px);
+          inset-inline-end: 0;
+          inset-inline-start: auto;
+          min-width: min(280px, calc(100vw - 32px));
+          max-height: min(70vh, 420px);
+        }
       }
 
       .lp-quick-dd__panel[hidden] {
