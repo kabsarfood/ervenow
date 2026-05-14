@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 32" role="img" aria-label="الدفع عند الوصول">
+  <rect width="96" height="32" rx="6" fill="#5c4638"/>
+  <rect x="10" y="10" width="18" height="12" rx="2" fill="#f5e6c8" stroke="#b9872f" stroke-width="1"/>
+  <path d="M34 11h40v10H34z" fill="none" stroke="#f5e6c8" stroke-width="1.5"/>
+  <text x="48" y="21" text-anchor="middle" fill="#fffef8" font-family="Arial,Helvetica,sans-serif" font-size="7" font-weight="700">عند الوصول</text>
+</svg>

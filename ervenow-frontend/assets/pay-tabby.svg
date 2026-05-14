@@ -1,0 +1,4 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 40" role="img" aria-label="Tabby">
+  <rect width="120" height="40" rx="10" fill="#3d24d6"/>
+  <text x="60" y="27" text-anchor="middle" fill="#fff" font-family="system-ui,sans-serif" font-size="18" font-weight="800">tabby</text>
+</svg>

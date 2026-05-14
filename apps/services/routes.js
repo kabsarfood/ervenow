@@ -4,6 +4,7 @@ const { requireRole } = require("../../shared/middleware/roles");
 const { createServiceClient } = require("../../shared/config/supabase");
 const { ok, fail } = require("../../shared/utils/helpers");
 const { sendWhatsApp } = require("../../shared/utils/whatsapp");
+const checkoutPaymentMethods = require("../../shared/utils/checkoutPaymentMethods");
 
 const router = express.Router();
 const PLATFORM_COMMISSION_RATE = 0.12;
@@ -337,6 +338,53 @@ router.post("/bookings/:id/rate", requireAuth, requireRole("customer"), async (r
     return ok(res, { booking: data });
   } catch (e) {
     fail(res, e.message, 500);
+  }
+});
+
+router.get("/me/checkout-payment-methods", requireAuth, requireRole("service"), async (req, res) => {
+  try {
+    const sb = createServiceClient();
+    if (!sb) return fail(res, "قاعدة البيانات غير جاهزة", 503);
+    const platform = await checkoutPaymentMethods.loadPlatformPaymentMethodsFromDb(sb);
+    const { data: u, error } = await sb.from("users").select("checkout_payment_methods").eq("id", req.appUser.id).maybeSingle();
+    if (error && !/column|does not exist|schema cache/i.test(String(error.message || ""))) {
+      return fail(res, error.message, 400);
+    }
+    const userPart = error ? null : u?.checkout_payment_methods;
+    return ok(res, { methods: checkoutPaymentMethods.intersectMethods(platform, userPart) });
+  } catch (e) {
+    return fail(res, e.message || String(e), 500);
+  }
+});
+
+router.patch("/me/checkout-payment-methods", requireAuth, requireRole("service"), async (req, res) => {
+  try {
+    const sb = createServiceClient();
+    if (!sb) return fail(res, "قاعدة البيانات غير جاهزة", 503);
+    const platform = await checkoutPaymentMethods.loadPlatformPaymentMethodsFromDb(sb);
+    const incoming = checkoutPaymentMethods.normalizeMethodsPartial(
+      (req.body && req.body.methods) || req.body || {}
+    );
+    const restricted = checkoutPaymentMethods.intersectMethods(platform, incoming);
+    const { data, error } = await sb
+      .from("users")
+      .update({ checkout_payment_methods: restricted, updated_at: new Date().toISOString() })
+      .eq("id", req.appUser.id)
+      .select("checkout_payment_methods")
+      .single();
+    if (error) {
+      if (/column|does not exist|schema cache/i.test(String(error.message || ""))) {
+        return fail(
+          res,
+          "نفّذ shared/migration_checkout_payment_methods.sql لإضافة عمود checkout_payment_methods على users",
+          400
+        );
+      }
+      return fail(res, error.message, 400);
+    }
+    return ok(res, { ok: true, methods: data?.checkout_payment_methods || restricted });
+  } catch (e) {
+    return fail(res, e.message || String(e), 500);
   }
 });
 

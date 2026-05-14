@@ -27,6 +27,7 @@ const {
   fetchCategoryLabelMap,
 } = require("../../shared/categoriesDb");
 const { incrementCategoryUsage } = require("../../shared/categoryUsage");
+const checkoutPaymentMethods = require("../../shared/utils/checkoutPaymentMethods");
 
 let twilioFactory = null;
 try {
@@ -414,7 +415,14 @@ router.get("/my-store", requireAuth, requireMerchantRole, async (req, res) => {
     const bankSafe = sanitizeDriverOrStoreRowForApi(row);
 
     let merchant_hub = null;
-    const hubRes = await sb.from("store_merchant_hub").select("bio,banner_url,updated_at").eq("store_id", row.id).maybeSingle();
+    let hubRes = await sb
+      .from("store_merchant_hub")
+      .select("bio,banner_url,checkout_payment_methods,updated_at")
+      .eq("store_id", row.id)
+      .maybeSingle();
+    if (hubRes.error && /column|does not exist|schema cache/i.test(String(hubRes.error.message || ""))) {
+      hubRes = await sb.from("store_merchant_hub").select("bio,banner_url,updated_at").eq("store_id", row.id).maybeSingle();
+    }
     if (!hubRes.error && hubRes.data) {
       merchant_hub = hubRes.data;
     } else if (hubRes.error && !isStoreMerchantHubMissing(hubRes.error)) {
@@ -684,12 +692,35 @@ router.get("/", optionalAuth, async (req, res) => {
   }
 });
 
+async function computeStoreCheckoutPaymentMethodsForPublic(sb, storeId) {
+  const platform = await checkoutPaymentMethods.loadPlatformPaymentMethodsFromDb(sb);
+  let hubPart = null;
+  const hubRes = await sb.from("store_merchant_hub").select("checkout_payment_methods").eq("store_id", storeId).maybeSingle();
+  if (!hubRes.error && hubRes.data && hubRes.data.checkout_payment_methods != null) {
+    hubPart = hubRes.data.checkout_payment_methods;
+  } else if (
+    hubRes.error &&
+    !isStoreMerchantHubMissing(hubRes.error) &&
+    !/column|does not exist/i.test(String(hubRes.error.message || ""))
+  ) {
+    console.warn("[store] hub checkout_payment_methods", hubRes.error.message || hubRes.error);
+  }
+  return checkoutPaymentMethods.intersectMethods(platform, hubPart);
+}
+
 async function getPublicStoreById(req, res) {
   try {
     const sb = createServiceClient();
     if (!sb) return fail(res, "الخادم غير مهيأ لقاعدة البيانات", 503);
     const id = String(req.params.id || "").trim();
     if (!id) return fail(res, "معرّف المتجر مطلوب", 400);
+
+    let checkoutPayResolved = checkoutPaymentMethods.cloneDefaults();
+    try {
+      checkoutPayResolved = await computeStoreCheckoutPaymentMethodsForPublic(sb, id);
+    } catch (pe) {
+      console.warn("[store/public] checkout_payment_methods", pe && (pe.message || String(pe)));
+    }
 
     const extendedSel =
       "id,name,phone,type,category,lat,lng,status,is_active,logo_url,location_text,address,delivery_radius_km,average_rating,rating_count,total_orders";
@@ -744,6 +775,7 @@ async function getPublicStoreById(req, res) {
           if (etaMin != null) out.delivery_eta_minutes = etaMin;
         }
       }
+      out.checkout_payment_methods = checkoutPayResolved;
       return ok(res, {
         store: out,
         browse_masked: false,
@@ -764,6 +796,7 @@ async function getPublicStoreById(req, res) {
         if (etaMin != null) maskedPayload.store.delivery_eta_minutes = etaMin;
       }
     }
+    maskedPayload.store.checkout_payment_methods = checkoutPayResolved;
     return ok(res, maskedPayload);
   } catch (e) {
     console.error("[store/public]", e);
@@ -1484,7 +1517,20 @@ router.patch("/merchant-hub", requireAuth, requireMerchantRole, async (req, res)
       if (url) bannerNext = url;
     }
 
-    const { data: ex, error: exErr } = await sb.from("store_merchant_hub").select("bio,banner_url").eq("store_id", st.id).maybeSingle();
+    let ex = null;
+    let exErr = null;
+    ({ data: ex, error: exErr } = await sb
+      .from("store_merchant_hub")
+      .select("bio,banner_url,checkout_payment_methods")
+      .eq("store_id", st.id)
+      .maybeSingle());
+    if (exErr && /column|does not exist|schema cache/i.test(String(exErr.message || ""))) {
+      const retry = await sb.from("store_merchant_hub").select("bio,banner_url").eq("store_id", st.id).maybeSingle();
+      if (!retry.error) {
+        ex = retry.data;
+        exErr = null;
+      }
+    }
     if (exErr) {
       if (isStoreMerchantHubMissing(exErr)) {
         return fail(res, "جدول store_merchant_hub غير جاهز — نفّذ shared/migration_store_merchant_hub.sql", 400);
@@ -1499,11 +1545,39 @@ router.patch("/merchant-hub", requireAuth, requireMerchantRole, async (req, res)
       updated_at: new Date().toISOString(),
     };
 
+    if (Object.prototype.hasOwnProperty.call(b, "checkout_payment_methods")) {
+      const platform = await checkoutPaymentMethods.loadPlatformPaymentMethodsFromDb(sb);
+      merged.checkout_payment_methods = checkoutPaymentMethods.intersectMethods(
+        platform,
+        checkoutPaymentMethods.normalizeMethodsPartial(b.checkout_payment_methods)
+      );
+    } else if (ex && ex.checkout_payment_methods != null) {
+      merged.checkout_payment_methods = ex.checkout_payment_methods;
+    }
+
     const { data: saved, error: upErr } = await sb
       .from("store_merchant_hub")
       .upsert(merged, { onConflict: "store_id" })
-      .select("bio,banner_url,updated_at,created_at")
+      .select("bio,banner_url,checkout_payment_methods,updated_at,created_at")
       .single();
+    if (upErr && /column|does not exist|schema cache/i.test(String(upErr.message || ""))) {
+      const { data: saved2, error: upErr2 } = await sb
+        .from("store_merchant_hub")
+        .upsert(
+          { store_id: merged.store_id, bio: merged.bio, banner_url: merged.banner_url, updated_at: merged.updated_at },
+          { onConflict: "store_id" }
+        )
+        .select("bio,banner_url,updated_at,created_at")
+        .single();
+      if (upErr2) {
+        if (isStoreMerchantHubMissing(upErr2)) {
+          return fail(res, "جدول store_merchant_hub غير جاهز — نفّذ shared/migration_store_merchant_hub.sql", 400);
+        }
+        return fail(res, upErr2.message, 400);
+      }
+      listCache = { key: "", at: 0, payload: null };
+      return ok(res, { ok: true, merchant_hub: saved2 || merged });
+    }
     if (upErr) {
       if (isStoreMerchantHubMissing(upErr)) {
         return fail(res, "جدول store_merchant_hub غير جاهز — نفّذ shared/migration_store_merchant_hub.sql", 400);

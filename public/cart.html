@@ -26,9 +26,48 @@
         color: #555;
         line-height: 1.7;
       }
-      .cart-total {
-        font-size: 1.1rem;
+      .erv-cart-fin {
+        margin-top: 10px;
+        padding: 12px;
+        border-radius: 12px;
+        background: var(--card);
+        border: 1px solid var(--border);
+      }
+      .erv-cart-fin .erv-fin-row {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 10px;
+        margin: 6px 0;
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: var(--muted);
+      }
+      .erv-cart-fin .erv-fin-row--grand {
+        margin-top: 8px;
+        padding-top: 8px;
+        border-top: 1px dashed rgba(61, 34, 19, 0.12);
+        font-size: 0.92rem;
+        color: var(--brown);
+      }
+      .erv-cart-fin .erv-fin-val {
         font-weight: 800;
+        color: var(--brown);
+        font-variant-numeric: tabular-nums;
+      }
+      .erv-cart-fin .erv-fin-note {
+        margin: 4px 0 0;
+        font-size: 0.72rem;
+        color: var(--muted);
+        line-height: 1.4;
+      }
+      .erv-cart-fin .erv-fin-note[hidden] {
+        display: none !important;
+      }
+      .lp-cart-panel__cur {
+        color: var(--gold);
+        font-weight: 700;
+        font-size: 0.72rem;
       }
       @media (max-width: 860px) {
         .cart-grid {
@@ -61,7 +100,44 @@
         <div class="card">
           <div class="badge">ملخص السلة</div>
           <p class="sub" id="cartItemsCount" style="margin-top: 10px">عدد العناصر: 0</p>
-          <p class="cart-total" id="cartTotal">الإجمالي: 0.00 ريال</p>
+          <div class="erv-cart-fin" id="cartFinBox">
+            <div class="erv-fin-row">
+              <span>المجموع الفرعي</span>
+              <span class="erv-fin-val" id="cartFinSub">٠٫٠٠ <small style="color: var(--gold); font-weight: 700">ر.س</small></span>
+            </div>
+            <div class="erv-fin-row">
+              <span>أجرة التوصيل</span>
+              <span class="erv-fin-val" id="cartFinDel">٠٫٠٠ <small style="color: var(--gold); font-weight: 700">ر.س</small></span>
+            </div>
+            <p id="cartFinDelNote" class="erv-fin-note" hidden>
+              لطلبات المتجر: اضغط «تحديد موقعي GPS» أدناه لحساب أجرة التوصيل (كم × 2.3 ر.س) كما عند إتمام الطلب.
+            </p>
+            <div class="erv-fin-row">
+              <span>ضريبة القيمة المضافة (15%)</span>
+              <span class="erv-fin-val" id="cartFinVat">٠٫٠٠ <small style="color: var(--gold); font-weight: 700">ر.س</small></span>
+            </div>
+            <div class="erv-fin-row">
+              <span>عمولة المنصة (12%)</span>
+              <span class="erv-fin-val" id="cartFinComm">٠٫٠٠ <small style="color: var(--gold); font-weight: 700">ر.س</small></span>
+            </div>
+            <p class="erv-fin-note" style="margin-top: 2px">
+              العمولة تُقتطع من التاجر أو مزود الخدمة — لا تُضاف إلى إجمالي المبلغ الذي تدفعه.
+            </p>
+            <div class="erv-fin-row erv-fin-row--grand">
+              <span>الإجمالي المستحق</span>
+              <span class="erv-fin-val" id="cartFinGrand">٠٫٠٠ <small style="color: var(--gold); font-weight: 700">ر.س</small></span>
+            </div>
+          </div>
+          <p class="sub lp-cart-panel__pay-label" style="margin: 10px 0 4px">وسائل الدفع</p>
+          <div id="cartPayIcons" class="erv-pay-cards" role="radiogroup" aria-label="اختر وسيلة الدفع"></div>
+          <div id="cartEwPayDetail" class="erv-pay-ew-detail" hidden>
+            <div class="erv-pay-ew-detail__row">
+              <span class="erv-pay-ew-detail__label">رصيد المحفظة</span>
+              <strong class="erv-pay-ew-detail__bal" id="cartEwPayBalance">—</strong>
+              <span class="erv-pay-ew-detail__cur">ر.س</span>
+            </div>
+            <p class="erv-pay-ew-detail__tagline">⚡ دفع فوري وآمن</p>
+          </div>
           <div class="btn-row" style="margin-top: 10px; flex-direction: column; align-items: stretch">
             <button class="btn btn-primary" type="button" id="checkoutBtn" onclick="checkout()">إتمام الطلب</button>
             <button class="btn btn-ghost" type="button" id="clearBtn" onclick="clearAllCart()">تفريغ السلة</button>
@@ -131,6 +207,7 @@
             pendingGeo.lat = p.coords.latitude;
             pendingGeo.lng = p.coords.longitude;
             if (st) st.textContent = "تم حفظ موقع التوصيل.";
+            void refreshCartDeliveryFee();
           },
           function () {
             if (st) st.textContent = "تعذر الوصول للموقع — تأكد من الإذن.";
@@ -139,30 +216,66 @@
         );
       };
 
+      async function refreshCartDeliveryFee() {
+        try {
+          delete window.__ervCartDeliveryFee;
+          var cart = getCart();
+          if (!cartNeedsStoreGeo(cart)) {
+            window.__ervCartDeliveryFee = 0;
+            updateCartCount();
+            return;
+          }
+          if (pendingGeo.lat == null || pendingGeo.lng == null) {
+            updateCartCount();
+            return;
+          }
+          var sid = null;
+          cart.forEach(function (i) {
+            var d = i && i.data;
+            if (d && d.store_id && !sid) sid = String(d.store_id);
+          });
+          if (!sid || !window.PlatformAPI || typeof PlatformAPI.apiUrl !== "function") {
+            updateCartCount();
+            return;
+          }
+          var url =
+            PlatformAPI.apiUrl("/api/store/public/" + encodeURIComponent(sid)) +
+            "?user_lat=" +
+            encodeURIComponent(pendingGeo.lat) +
+            "&user_lng=" +
+            encodeURIComponent(pendingGeo.lng);
+          var res = await fetch(url);
+          var j = await res.json().catch(function () {
+            return {};
+          });
+          var km = j && j.store && j.store.distance_km;
+          if (typeof km === "number" && Number.isFinite(km)) {
+            window.__ervCartDeliveryFee = Math.round(km * 2.3 * 100) / 100;
+          }
+        } catch (e) {}
+        updateCartCount();
+      }
+
       function renderCart() {
         const cart = getCart();
         const el = document.getElementById("cartList");
         const countEl = document.getElementById("cartItemsCount");
-        const totalEl = document.getElementById("cartTotal");
         if (!el) return;
 
         if (!cart.length) {
           el.innerHTML = "<p>السلة فارغة حالياً</p>";
           if (countEl) countEl.innerText = "عدد القطع: 0";
-          if (totalEl) totalEl.innerText = "الإجمالي: 0.00 ريال";
+          if (typeof zeroCartFinancialsUi === "function") zeroCartFinancialsUi();
+          delete window.__ervCartDeliveryFee;
           refreshGuestCartBanner();
           refreshStoreDeliveryCard();
           return;
         }
 
-        const total = cart.reduce(function (sum, item) {
-          return sum + (Number(item.price) || 0);
-        }, 0);
         const totalQty = cart.reduce(function (sum, item) {
           return sum + (Number(item.data && item.data.qty) || 1);
         }, 0);
         if (countEl) countEl.innerText = "عدد القطع: " + totalQty;
-        if (totalEl) totalEl.innerText = "الإجمالي: " + total.toFixed(2) + " ريال";
 
         el.innerHTML = cart
           .map(function (item) {
@@ -207,6 +320,13 @@
           .join("");
         refreshGuestCartBanner();
         refreshStoreDeliveryCard();
+        var feeQuick;
+        if (!cartHasStoreProducts(cart)) feeQuick = 0;
+        else if (typeof window.__ervCartDeliveryFee === "number" && Number.isFinite(window.__ervCartDeliveryFee))
+          feeQuick = window.__ervCartDeliveryFee;
+        else feeQuick = undefined;
+        applyCartFinancialsToUi(computeErvCartBreakdown(cart, feeQuick));
+        void refreshCartDeliveryFee();
       }
 
       function removeItem(id) {
@@ -217,6 +337,7 @@
 
       function clearAllCart() {
         localStorage.removeItem("cart");
+        delete window.__ervCartDeliveryFee;
         updateCartCount();
         renderCart();
         showSuccess("تم تفريغ السلة");
@@ -284,6 +405,7 @@
 
           showSuccess("تم إنشاء " + ((data.orders && data.orders.length) || 0) + " طلب");
           localStorage.removeItem("cart");
+          delete window.__ervCartDeliveryFee;
           updateCartCount();
           renderCart();
         } catch (e) {

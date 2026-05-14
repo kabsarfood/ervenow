@@ -203,6 +203,38 @@
         font-family: ui-monospace, monospace;
         font-size: 0.9rem;
       }
+      .pay-method-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin: 12px 0;
+      }
+      .pay-method-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        font-weight: 700;
+        font-size: 0.92rem;
+        cursor: pointer;
+      }
+      .pay-method-row input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        flex-shrink: 0;
+        cursor: pointer;
+      }
+      .pay-method-row img {
+        height: 22px;
+        width: auto;
+        max-width: 49px;
+        min-width: 29px;
+        object-fit: contain;
+        border-radius: 8px;
+        background: #fff;
+        padding: 5px 10px;
+        box-shadow: 0 2px 8px rgba(45, 26, 14, 0.1);
+      }
       .btn {
         border: 0;
         border-radius: 10px;
@@ -408,6 +440,18 @@
           <div class="msg" id="msgColors"></div>
         </div>
 
+        <div class="card" id="cardCheckoutPay">
+          <h3>وسائل الدفع في السلة</h3>
+          <p class="hint">
+            تحكم المنصة في الأيقونات المعروضة للزائر في السلة (مدى، البطاقات، Apple Pay، STC Pay، الدفع عند الاستلام). المتاجر ومزودو الخدمة يمكنهم لاحقاً تعطيل ما لا يناسبهم ضمن ما تسمح به المنصة.
+          </p>
+          <div class="pay-method-grid" id="adminPayMethodGrid"></div>
+          <div class="btn-row">
+            <button type="button" class="btn btn-primary" id="btnSaveCheckoutPay">حفظ وسائل الدفع</button>
+          </div>
+          <div class="msg" id="msgCheckoutPay"></div>
+        </div>
+
         <div class="card">
           <h3>معاينة التغييرات</h3>
           <p class="hint">تتحدّث مباشرة عند تعديل الألوان أو معاينة الشعار قبل الحفظ.</p>
@@ -577,6 +621,62 @@
           updateLivePreview();
         }
 
+        var ADMIN_CHECKOUT_PAY_ROWS = [
+          { key: "ew_pay", label: "EW PAY", src: "/assets/pay-ew.svg" },
+          { key: "mada", label: "مدى", src: "/assets/pay-mada.svg" },
+          { key: "visa", label: "Visa", src: "/assets/pay-visa.svg" },
+          { key: "mastercard", label: "Mastercard", src: "/assets/pay-mastercard.svg" },
+          { key: "apple_pay", label: "Apple Pay", src: "/assets/pay-apple.svg" },
+          { key: "stc_pay", label: "STC Pay", src: "/assets/pay-stcpay.svg" },
+          { key: "cash_on_delivery", label: "الدفع عند الوصول", src: "/assets/pay-cod.svg" },
+          { key: "tabby", label: "Tabby", src: "/assets/pay-tabby.svg" },
+          { key: "tamara", label: "Tamara", src: "/assets/pay-tamara.svg" },
+        ];
+
+        function buildAdminPayGrid() {
+          var box = document.getElementById("adminPayMethodGrid");
+          if (!box) return;
+          box.innerHTML = ADMIN_CHECKOUT_PAY_ROWS.map(function (row) {
+            return (
+              '<label class="pay-method-row">' +
+              '<input type="checkbox" id="adminPay_' +
+              row.key +
+              '" data-pay-key="' +
+              row.key +
+              '" />' +
+              '<img src="' +
+              row.src +
+              '" alt="" width="49" height="25" loading="lazy" />' +
+              "<span>" +
+              row.label +
+              "</span></label>"
+            );
+          }).join("");
+        }
+
+        function readAdminPayMethodsBody() {
+          var o = {};
+          ADMIN_CHECKOUT_PAY_ROWS.forEach(function (row) {
+            var cb = document.getElementById("adminPay_" + row.key);
+            o[row.key] = !!(cb && cb.checked);
+          });
+          return o;
+        }
+
+        function applyAdminPayMethodsToUi(methods) {
+          var m = methods || {};
+          ADMIN_CHECKOUT_PAY_ROWS.forEach(function (row) {
+            var cb = document.getElementById("adminPay_" + row.key);
+            if (cb) cb.checked = !!m[row.key];
+          });
+        }
+
+        async function loadCheckoutPayMethods() {
+          hideMsg("msgCheckoutPay");
+          var j = await window.PlatformAPI.api("/api/admin/checkout-payment-methods");
+          applyAdminPayMethodsToUi(j.methods || {});
+        }
+
         async function loadSettings() {
           var j = await window.PlatformAPI.api("/api/admin/platform-settings");
           settings = j.settings || {};
@@ -613,7 +713,13 @@
             location.href = "/admin-login";
             return;
           }
+          buildAdminPayGrid();
           await loadSettings();
+          try {
+            await loadCheckoutPayMethods();
+          } catch (e2) {
+            show("msgCheckoutPay", String((e2 && e2.message) || e2 || "تعذر تحميل وسائل الدفع"), false);
+          }
         }
 
         document.getElementById("logoutLink").onclick = function (e) {
@@ -630,6 +736,20 @@
         ["Primary", "Secondary", "Accent", "Bg", "Text"].forEach(function (k) {
           wirePicker(k);
         });
+
+        document.getElementById("btnSaveCheckoutPay").onclick = async function () {
+          hideMsg("msgCheckoutPay");
+          try {
+            var j = await window.PlatformAPI.api("/api/admin/checkout-payment-methods", {
+              method: "POST",
+              body: { methods: readAdminPayMethodsBody() },
+            });
+            applyAdminPayMethodsToUi(j.methods || {});
+            show("msgCheckoutPay", j.message || "تم الحفظ", true);
+          } catch (e) {
+            show("msgCheckoutPay", String((e && e.message) || e || "تعذر الحفظ"), false);
+          }
+        };
 
         document.getElementById("btnPickLogo").onclick = function () {
           document.getElementById("logoFile").click();

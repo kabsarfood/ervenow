@@ -5,6 +5,42 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>ERVENOW | مزود الخدمة</title>
     <link rel="stylesheet" href="/assets/styles.css" />
+    <style>
+      .hub-pay-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin: 12px 0 14px;
+      }
+      .hub-pay-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        font-weight: 700;
+        font-size: 0.88rem;
+        cursor: pointer;
+      }
+      .hub-pay-row input[type="checkbox"] {
+        width: 17px;
+        height: 17px;
+        flex-shrink: 0;
+      }
+      .hub-pay-row img {
+        height: 22px;
+        width: auto;
+        max-width: 49px;
+        min-width: 29px;
+        object-fit: contain;
+        border-radius: 8px;
+        background: #fff;
+        padding: 5px 10px;
+        box-shadow: 0 2px 8px rgba(45, 26, 14, 0.1);
+      }
+      .hub-pay-row input:disabled + img {
+        opacity: 0.45;
+      }
+    </style>
   </head>
   <body>
     <div class="layout">
@@ -23,12 +59,106 @@
         <p class="sub" id="summary">—</p>
         <div id="list"></div>
       </div>
+
+      <div class="card" id="svcPayCard">
+        <h2 style="margin: 0 0 8px">وسائل الدفع في السلة</h2>
+        <p class="sub" style="margin: 0 0 12px">
+          يظهر للعميل تقاطع إعدادات المنصة مع اختياراتك. عطّل ما لا تناسبك (مثل الدفع عند الاستلام أو البطاقات).
+        </p>
+        <div class="hub-pay-grid" id="svcPayGrid"></div>
+        <button type="button" class="btn btn-primary" id="btnSaveSvcPay">حفظ وسائل الدفع</button>
+        <p class="sub" id="svcPayMsg" style="margin-top: 10px"></p>
+      </div>
     </div>
 
     <script src="/assets/api-config.js"></script>
     <script src="/assets/api.js"></script>
     <script src="/assets/cart.js"></script>
     <script>
+      var SVC_PAY_ROWS = [
+        { key: "ew_pay", label: "EW PAY", src: "/assets/pay-ew.svg" },
+        { key: "mada", label: "مدى", src: "/assets/pay-mada.svg" },
+        { key: "visa", label: "Visa", src: "/assets/pay-visa.svg" },
+        { key: "mastercard", label: "Mastercard", src: "/assets/pay-mastercard.svg" },
+        { key: "apple_pay", label: "Apple Pay", src: "/assets/pay-apple.svg" },
+        { key: "stc_pay", label: "STC Pay", src: "/assets/pay-stcpay.svg" },
+        { key: "cash_on_delivery", label: "الدفع عند الوصول", src: "/assets/pay-cod.svg" },
+        { key: "tabby", label: "Tabby", src: "/assets/pay-tabby.svg" },
+        { key: "tamara", label: "Tamara", src: "/assets/pay-tamara.svg" },
+      ];
+      var __svcPlat = {};
+      var __svcEff = {};
+
+      function buildSvcPayGrid() {
+        var box = document.getElementById("svcPayGrid");
+        if (!box || box.getAttribute("data-built")) return;
+        box.setAttribute("data-built", "1");
+        box.innerHTML = SVC_PAY_ROWS.map(function (row) {
+          return (
+            '<label class="hub-pay-row">' +
+            '<input type="checkbox" id="svcPay_' +
+            row.key +
+            '" />' +
+            '<img src="' +
+            row.src +
+            '" alt="" width="49" height="25" loading="lazy" />' +
+            "<span>" +
+            row.label +
+            "</span></label>"
+          );
+        }).join("");
+      }
+
+      function applySvcPayUi() {
+        SVC_PAY_ROWS.forEach(function (row) {
+          var cb = document.getElementById("svcPay_" + row.key);
+          if (!cb) return;
+          var pOn = !(__svcPlat && __svcPlat[row.key] === false);
+          cb.disabled = !pOn;
+          cb.checked = pOn && !!(__svcEff && __svcEff[row.key]);
+        });
+      }
+
+      async function loadSvcPaySettings() {
+        var msg = document.getElementById("svcPayMsg");
+        if (msg) msg.textContent = "";
+        var token =
+          window.PlatformAPI && typeof window.PlatformAPI.getToken === "function" ? window.PlatformAPI.getToken() : "";
+        if (!token || !String(token).trim()) return;
+        buildSvcPayGrid();
+        try {
+          var platJ = await window.PlatformAPI.api("/api/core/checkout-payment-methods");
+          var effJ = await window.PlatformAPI.api("/api/services/me/checkout-payment-methods");
+          __svcPlat = platJ.methods || {};
+          __svcEff = effJ.methods || {};
+          applySvcPayUi();
+        } catch (e) {
+          if (msg) msg.textContent = String((e && e.message) || e || "تعذر تحميل وسائل الدفع");
+        }
+      }
+
+      document.getElementById("btnSaveSvcPay").addEventListener("click", async function () {
+        var msg = document.getElementById("svcPayMsg");
+        if (msg) msg.textContent = "";
+        try {
+          var o = {};
+          SVC_PAY_ROWS.forEach(function (row) {
+            var cb = document.getElementById("svcPay_" + row.key);
+            if (!cb) return;
+            o[row.key] = cb.disabled ? false : !!cb.checked;
+          });
+          var j = await window.PlatformAPI.api("/api/services/me/checkout-payment-methods", {
+            method: "PATCH",
+            body: { methods: o },
+          });
+          __svcEff = j.methods || __svcEff;
+          applySvcPayUi();
+          if (msg) msg.textContent = "تم الحفظ";
+        } catch (e) {
+          if (msg) msg.textContent = String((e && e.message) || e || "تعذر الحفظ");
+        }
+      });
+
       function payLabel(v) {
         return String(v || "").toLowerCase() === "paid" ? "مدفوع" : "غير مدفوع";
       }
@@ -168,6 +298,7 @@
       });
 
       loadBookings();
+      loadSvcPaySettings();
       setInterval(loadBookings, 5000);
     </script>
   </body>

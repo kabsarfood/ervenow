@@ -16,6 +16,7 @@ const {
 const { attachSiteSessionCookie, clearSiteSessionCookie } = require("../../shared/middleware/publicSiteOtpGate");
 const { parseOptionalPayoutPayload, payoutRowForUsers } = require("../../shared/utils/payoutFields");
 const { assertPayoutIbanGloballyAvailable } = require("../../shared/utils/payoutUniqueness");
+const checkoutPaymentMethods = require("../../shared/utils/checkoutPaymentMethods");
 
 const router = express.Router();
 const OTP_TTL_MS = 5 * 60 * 1000;
@@ -525,6 +526,17 @@ router.post("/users/sync", requireAuth, async (req, res) => {
 
 router.get("/roles/check", requireAuth, requireRole("admin"), (_req, res) => {
   ok(res, { message: "admin OK" });
+});
+
+/** وسائل الدفع المعروضة في السلة (إعدادات المنصة) — للواجهة العامة */
+router.get("/checkout-payment-methods", async (_req, res) => {
+  try {
+    const sb = createServiceClient();
+    const methods = await checkoutPaymentMethods.loadPlatformPaymentMethodsFromDb(sb);
+    ok(res, { methods });
+  } catch (e) {
+    fail(res, e.message || String(e), 500);
+  }
 });
 
 module.exports = router;

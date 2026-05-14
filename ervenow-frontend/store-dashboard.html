@@ -162,6 +162,40 @@
         color: #3d2213;
         margin-top: 4px;
       }
+      .hub-pay-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin: 12px 0 4px;
+      }
+      .hub-pay-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        font-weight: 700;
+        font-size: 0.88rem;
+        cursor: pointer;
+      }
+      .hub-pay-row input[type="checkbox"] {
+        width: 17px;
+        height: 17px;
+        flex-shrink: 0;
+      }
+      .hub-pay-row img {
+        height: 22px;
+        width: auto;
+        max-width: 49px;
+        min-width: 29px;
+        object-fit: contain;
+        border-radius: 8px;
+        background: #fff;
+        padding: 5px 10px;
+        box-shadow: 0 2px 8px rgba(45, 26, 14, 0.1);
+      }
+      .hub-pay-row input:disabled + img {
+        opacity: 0.45;
+      }
       .portal-panel {
         margin-bottom: 18px;
       }
@@ -233,6 +267,11 @@
             <textarea id="hubBio" rows="3" placeholder="مثال: وجبات منزلية طازجة، توصيل سريع…"></textarea>
             <label for="hubBanner" style="margin-top: 12px">صورة غلاف (اختياري)</label>
             <input id="hubBanner" type="file" accept="image/*" />
+            <p class="sub" style="margin-top: 14px; margin-bottom: 6px; font-weight: 800">وسائل الدفع المعروضة في السلة (منتجاتك)</p>
+            <p class="sub" style="margin-top: 0; font-size: 0.82rem">
+              يظهر للعميل تقاطع ما تسمح به المنصة مع اختياراتك. عطّل ما لا تقدمه (مثلاً الدفع عند الاستلام أو البطاقات).
+            </p>
+            <div class="hub-pay-grid" id="hubPayGrid"></div>
             <div class="row" style="margin-top: 12px">
               <button type="button" class="btn btn-primary" id="btnSaveHub">حفظ البروفايل</button>
             </div>
@@ -305,6 +344,59 @@
     <script src="/assets/api.js"></script>
     <script>
       var storeId = null;
+      var HUB_PAY_ROWS = [
+        { key: "ew_pay", label: "EW PAY", src: "/assets/pay-ew.svg" },
+        { key: "mada", label: "مدى", src: "/assets/pay-mada.svg" },
+        { key: "visa", label: "Visa", src: "/assets/pay-visa.svg" },
+        { key: "mastercard", label: "Mastercard", src: "/assets/pay-mastercard.svg" },
+        { key: "apple_pay", label: "Apple Pay", src: "/assets/pay-apple.svg" },
+        { key: "stc_pay", label: "STC Pay", src: "/assets/pay-stcpay.svg" },
+        { key: "cash_on_delivery", label: "الدفع عند الوصول", src: "/assets/pay-cod.svg" },
+        { key: "tabby", label: "Tabby", src: "/assets/pay-tabby.svg" },
+        { key: "tamara", label: "Tamara", src: "/assets/pay-tamara.svg" },
+      ];
+      var __checkoutPlatform = {};
+
+      function buildHubPayGrid() {
+        var box = document.getElementById("hubPayGrid");
+        if (!box || box.getAttribute("data-built")) return;
+        box.setAttribute("data-built", "1");
+        box.innerHTML = HUB_PAY_ROWS.map(function (row) {
+          return (
+            '<label class="hub-pay-row">' +
+            '<input type="checkbox" id="hubPay_' +
+            row.key +
+            '" />' +
+            '<img src="' +
+            row.src +
+            '" alt="" width="49" height="25" loading="lazy" />' +
+            "<span>" +
+            row.label +
+            "</span></label>"
+          );
+        }).join("");
+      }
+
+      function platformCheckoutAllows(key) {
+        var p = __checkoutPlatform;
+        if (!p || typeof p !== "object") return true;
+        if (Object.prototype.hasOwnProperty.call(p, key)) return !!p[key];
+        return true;
+      }
+
+      function applyHubPaymentCheckboxes(hub) {
+        var hm =
+          hub && hub.checkout_payment_methods && typeof hub.checkout_payment_methods === "object"
+            ? hub.checkout_payment_methods
+            : {};
+        HUB_PAY_ROWS.forEach(function (row) {
+          var cb = document.getElementById("hubPay_" + row.key);
+          if (!cb) return;
+          var pOn = platformCheckoutAllows(row.key);
+          cb.disabled = !pOn;
+          cb.checked = pOn && hm[row.key] !== false;
+        });
+      }
       var TYPE_AR = {
         restaurant: "مطعم",
         pharmacy: "صيدلية",
@@ -363,6 +455,13 @@
         if (!window.PlatformAPI || !window.PlatformAPI.getToken || !window.PlatformAPI.getToken()) {
           return;
         }
+        buildHubPayGrid();
+        try {
+          var pj = await window.PlatformAPI.api("/api/core/checkout-payment-methods");
+          __checkoutPlatform = pj.methods || {};
+        } catch (pe) {
+          __checkoutPlatform = {};
+        }
         try {
           var my = await window.PlatformAPI.api("/api/store/my-store");
           var s = my.store;
@@ -389,6 +488,7 @@
 
           if (hub && hub.banner_url) applyHeroBanner(hub.banner_url);
           if (hub && hub.bio != null) document.getElementById("hubBio").value = hub.bio;
+          applyHubPaymentCheckboxes(hub);
 
           var pub = document.getElementById("publicLink");
           pub.href = "/store.html?id=" + encodeURIComponent(storeId);
@@ -447,6 +547,13 @@
       document.getElementById("btnSaveHub").onclick = async function () {
         if (!storeId) return show("لا يوجد متجر مرتبط", false);
         var body = { bio: document.getElementById("hubBio").value };
+        var payBody = {};
+        HUB_PAY_ROWS.forEach(function (row) {
+          var cb = document.getElementById("hubPay_" + row.key);
+          if (!cb) return;
+          payBody[row.key] = cb.disabled ? false : !!cb.checked;
+        });
+        body.checkout_payment_methods = payBody;
         var bf = document.getElementById("hubBanner").files && document.getElementById("hubBanner").files[0];
         if (bf) {
           try {

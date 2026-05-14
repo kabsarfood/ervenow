@@ -9,6 +9,7 @@ const { getRiyadhDate } = require("../delivery/service");
 const { readState, writeState } = require("../../shared/utils/siteMaintenanceStore");
 const { createServiceClient } = require("../../shared/config/supabase");
 const platformBranding = require("../../shared/utils/platformBrandingStore");
+const checkoutPaymentMethods = require("../../shared/utils/checkoutPaymentMethods");
 const { sanitizeDriverOrStoreRowForApi, sanitizeDriverOrStoreListForApi } = require("../../shared/utils/bankApiSafe");
 const {
   normalizeScopeType,
@@ -376,6 +377,30 @@ router.post("/platform-settings", requireAuth, requireRole("admin"), requireAdmi
     const raw = b.settings && typeof b.settings === "object" ? b.settings : b;
     const settings = await platformBranding.applyBrandingPatch(sb, raw, { publicRoot: ADMIN_PUBLIC_ROOT });
     return ok(res, { settings, message: "تم حفظ إعدادات الهوية" });
+  } catch (e) {
+    return fail(res, e.message || String(e), 400);
+  }
+});
+
+router.get("/checkout-payment-methods", requireAuth, requireRole("admin"), requireAdminPermission("dashboard"), async (_req, res) => {
+  try {
+    const sb = createServiceClient();
+    if (!sb) return fail(res, "قاعدة البيانات غير جاهزة", 503);
+    const methods = await checkoutPaymentMethods.loadPlatformPaymentMethodsFromDb(sb);
+    return ok(res, { methods });
+  } catch (e) {
+    return fail(res, e.message || String(e), 500);
+  }
+});
+
+router.post("/checkout-payment-methods", requireAuth, requireRole("admin"), requireAdminPermission("dashboard"), async (req, res) => {
+  try {
+    const sb = createServiceClient();
+    if (!sb) return fail(res, "قاعدة البيانات غير جاهزة", 503);
+    const raw = req.body?.methods && typeof req.body.methods === "object" ? req.body.methods : req.body || {};
+    const methods = checkoutPaymentMethods.normalizeMethodsPartial(raw);
+    await checkoutPaymentMethods.savePlatformPaymentMethodsToDb(sb, methods);
+    return ok(res, { methods, message: "تم حفظ وسائل الدفع في السلة" });
   } catch (e) {
     return fail(res, e.message || String(e), 400);
   }

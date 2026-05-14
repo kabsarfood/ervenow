@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 48" role="img" aria-label="EW PAY">
+  <defs>
+    <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1a120c"/>
+      <stop offset="100%" stop-color="#2d1a0f"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#e8c56a"/>
+      <stop offset="50%" stop-color="#d4a76a"/>
+      <stop offset="100%" stop-color="#b8872f"/>
+    </linearGradient>
+  </defs>
+  <rect width="120" height="48" rx="10" fill="url(#g)" stroke="url(#gold)" stroke-width="1.2"/>
+  <text x="60" y="31" text-anchor="middle" fill="#d4a76a" font-family="system-ui,Segoe UI,sans-serif" font-size="17" font-weight="800" letter-spacing="0.06em">EW PAY</text>
+</svg>

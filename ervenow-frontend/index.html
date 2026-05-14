@@ -142,14 +142,440 @@
         margin: 0;
       }
 
+      .lp-cart-wrap {
+        position: relative;
+        z-index: 2;
+      }
+
       .cart-btn {
         display: inline-flex;
         align-items: center;
         gap: 6px;
-        padding: 8px 12px;
-        border-radius: 10px;
-        background: rgba(185, 135, 47, 0.12);
+        padding: 8px 14px;
+        border-radius: 12px;
+        background: linear-gradient(145deg, rgba(255, 254, 251, 0.98), rgba(248, 241, 229, 0.92));
+        border: 1px solid rgba(185, 135, 47, 0.38);
+        font-weight: 800;
+        font-family: inherit;
+        font-size: 0.9rem;
+        color: var(--brown);
+        cursor: pointer;
+        box-shadow: 0 4px 14px rgba(45, 26, 14, 0.08);
+        transition: transform 0.2s, box-shadow 0.25s, border-color 0.2s;
+      }
+
+      .cart-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 8px 22px rgba(155, 111, 37, 0.18);
+        border-color: rgba(185, 135, 47, 0.55);
+      }
+
+      .cart-btn:focus-visible {
+        outline: 2px solid var(--gold);
+        outline-offset: 2px;
+      }
+
+      .cart-btn[aria-expanded="true"] {
+        border-color: rgba(185, 135, 47, 0.75);
+        box-shadow: 0 0 0 3px rgba(185, 135, 47, 0.22);
+      }
+
+      .lp-cart-backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 1380;
+        background: rgba(45, 26, 14, 0.38);
+        backdrop-filter: blur(3px);
+        -webkit-backdrop-filter: blur(3px);
+        border: none;
+        padding: 0;
+        margin: 0;
+        cursor: pointer;
+      }
+
+      .lp-cart-backdrop[hidden] {
+        display: none !important;
+      }
+
+      .lp-cart-panel {
+        position: absolute;
+        z-index: 1390;
+        inset-inline-end: 0;
+        top: calc(100% + 10px);
+        width: min(460px, calc(100vw - 28px));
+        max-height: calc(100dvh - 88px);
+        display: flex;
+        flex-direction: column;
+        font-family: var(--font, "Cairo", system-ui, sans-serif);
+        color: var(--brown);
+        background: linear-gradient(180deg, #fffefb 0%, #f8f4ee 100%);
+        border: 1px solid rgba(185, 135, 47, 0.35);
+        border-radius: 16px;
+        box-shadow:
+          0 24px 48px rgba(45, 26, 14, 0.16),
+          0 0 0 1px rgba(255, 255, 255, 0.55) inset;
+        overflow: hidden;
+      }
+
+      .lp-cart-panel[hidden] {
+        display: none !important;
+      }
+
+      .lp-cart-panel__inner {
+        display: flex;
+        flex-direction: column;
+        max-height: inherit;
+        min-height: 0;
+        overflow: hidden;
+      }
+
+      .lp-cart-panel__welcome {
+        flex-shrink: 0;
+        padding: 16px 18px 14px;
+        text-align: center;
+        background: linear-gradient(135deg, rgba(185, 135, 47, 0.14), rgba(255, 254, 251, 0.55));
+        border-bottom: 1px solid var(--border);
+      }
+
+      .lp-cart-panel__eyebrow {
+        margin: 0 0 4px;
+        font-size: 0.68rem;
+        font-weight: 800;
+        letter-spacing: 0.14em;
+        color: var(--gold);
+        text-transform: uppercase;
+      }
+
+      .lp-cart-panel__title {
+        margin: 0;
+        font-size: clamp(1.05rem, 2.8vw, 1.25rem);
+        font-weight: 800;
+        color: var(--brown);
+      }
+
+      .lp-cart-panel__sub {
+        margin: 6px 0 0;
+        font-size: 0.88rem;
+        color: var(--muted);
+        font-weight: 600;
+        line-height: 1.45;
+      }
+
+      .lp-cart-panel__lines {
+        flex: 0 0 auto;
+        min-height: 0;
+        overflow: visible;
+        padding: 12px 14px 8px;
+      }
+
+      .lp-cart-panel__list {
+        overflow: visible;
+        max-height: none;
+      }
+
+      .lp-cart-panel__list.lp-cart-panel__list--scroll {
+        overflow-y: auto;
+        overflow-x: hidden;
+        -webkit-overflow-scrolling: touch;
+        max-height: min(calc(100dvh - 268px), 42rem);
+        padding-inline-end: 4px;
+        scrollbar-gutter: stable;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(91, 55, 29, 0.35) transparent;
+      }
+
+      .lp-cart-panel__list.lp-cart-panel__list--scroll::-webkit-scrollbar {
+        width: 8px;
+      }
+
+      .lp-cart-panel__list.lp-cart-panel__list--scroll::-webkit-scrollbar-thumb {
+        background: rgba(91, 55, 29, 0.28);
+        border-radius: 999px;
+      }
+
+      .lp-cart-panel__section-title {
+        margin: 0 0 10px;
+        font-size: 0.78rem;
+        font-weight: 800;
+        letter-spacing: 0.06em;
+        color: var(--muted);
+        text-transform: uppercase;
+      }
+
+      .lp-cart-panel__empty {
+        margin: 0;
+        padding: 14px 10px;
+        text-align: center;
+        font-size: 0.92rem;
+        color: var(--muted);
+        font-weight: 600;
+        line-height: 1.55;
+      }
+
+      .lp-cart-line {
+        margin-bottom: 12px;
+        padding: 14px 14px 12px;
+        border-radius: 12px;
+        background: var(--card, #fffefb);
+        border: 1px solid var(--border);
+        box-shadow: 0 4px 14px rgba(45, 26, 14, 0.05);
+      }
+
+      .lp-cart-line__top {
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .lp-cart-line__badge {
+        flex-shrink: 0;
+        font-size: 0.68rem;
+        font-weight: 800;
+        padding: 3px 8px;
+        border-radius: 999px;
+        letter-spacing: 0.02em;
+      }
+
+      .lp-cart-line__badge--product {
+        background: rgba(46, 125, 50, 0.12);
+        color: #1b5e20;
+      }
+
+      .lp-cart-line__badge--delivery {
+        background: rgba(25, 118, 210, 0.12);
+        color: #0d47a1;
+      }
+
+      .lp-cart-line__badge--service {
+        background: rgba(185, 135, 47, 0.2);
+        color: #5c3710;
+      }
+
+      .lp-cart-line__title {
+        flex: 1 1 120px;
+        min-width: 0;
+        font-size: 1rem;
+        font-weight: 800;
+        line-height: 1.35;
+        color: var(--brown);
+      }
+
+      .lp-cart-line__meta {
+        margin: 8px 0 0;
+        font-size: 0.82rem;
+        color: var(--muted);
+        line-height: 1.55;
+        word-break: break-word;
+      }
+
+      .lp-cart-line__foot {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-top: 10px;
+        padding-top: 8px;
+        border-top: 1px dashed rgba(61, 34, 19, 0.1);
+      }
+
+      .lp-cart-line__price {
+        font-size: 0.95rem;
+        font-weight: 800;
+        font-variant-numeric: tabular-nums;
+        color: var(--brown);
+      }
+
+      .lp-cart-line__remove {
+        font-family: inherit;
+        font-size: 0.78rem;
         font-weight: 700;
+        padding: 6px 12px;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        background: rgba(255, 254, 251, 0.95);
+        color: var(--muted);
+        cursor: pointer;
+        transition: background 0.2s, color 0.2s, border-color 0.2s;
+      }
+
+      .lp-cart-line__remove:hover {
+        background: rgba(211, 47, 47, 0.08);
+        color: #b71c1c;
+        border-color: rgba(211, 47, 47, 0.28);
+      }
+
+      .lp-cart-panel__summary {
+        flex-shrink: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding: 12px 16px 14px;
+        border-top: 1px solid var(--border);
+        background: rgba(248, 244, 238, 0.88);
+      }
+
+      .lp-cart-panel__fin-row {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 10px;
+        font-size: 0.84rem;
+        font-weight: 700;
+        color: var(--muted);
+      }
+
+      .lp-cart-panel__fin-row strong,
+      .lp-cart-panel__fin-row .lp-cart-panel__fin-val {
+        font-weight: 800;
+        color: var(--brown);
+        font-variant-numeric: tabular-nums;
+        text-align: left;
+      }
+
+      .lp-cart-panel__fin-row--grand {
+        margin-top: 4px;
+        padding-top: 8px;
+        border-top: 1px dashed rgba(61, 34, 19, 0.12);
+        font-size: 0.88rem;
+        color: var(--brown);
+      }
+
+      .lp-cart-panel__fin-row--grand .lp-cart-panel__fin-val {
+        font-size: 1.05rem;
+      }
+
+      .lp-cart-panel__fin-note {
+        margin: 0;
+        font-size: 0.68rem;
+        font-weight: 600;
+        color: var(--muted);
+        line-height: 1.4;
+      }
+
+      .lp-cart-panel__fin-note[hidden] {
+        display: none !important;
+      }
+
+      .lp-cart-panel__pending {
+        color: var(--muted);
+        font-weight: 800;
+      }
+
+      .lp-cart-panel__total-label {
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: var(--muted);
+      }
+
+      .lp-cart-panel__total-val {
+        font-size: 1.05rem;
+        font-weight: 800;
+        font-variant-numeric: tabular-nums;
+        color: var(--brown);
+      }
+
+      .lp-cart-panel__cur {
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: var(--gold);
+      }
+
+      .lp-cart-panel__checkout {
+        width: 100%;
+        display: block;
+        padding: 12px 16px;
+        border: none;
+        border-radius: 12px;
+        font-family: inherit;
+        font-size: 1rem;
+        font-weight: 800;
+        cursor: pointer;
+        color: #fffef8;
+        background: linear-gradient(135deg, #b9872f, #7a5a1f);
+        box-shadow: 0 8px 24px rgba(155, 111, 37, 0.38);
+        transition: transform 0.2s, filter 0.2s, box-shadow 0.25s;
+      }
+
+      .lp-cart-panel__checkout:hover:not(:disabled) {
+        transform: translateY(-1px);
+        filter: brightness(1.04);
+      }
+
+      .lp-cart-panel__checkout:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      @media (min-width: 901px) {
+        .lp-cart-panel {
+          width: min(580px, calc(100vw - 32px));
+          max-height: calc(100dvh - 76px);
+        }
+        .lp-cart-panel__welcome {
+          padding: 18px 22px 16px;
+        }
+        .lp-cart-panel__title {
+          font-size: 1.28rem;
+        }
+        .lp-cart-panel__sub {
+          font-size: 0.93rem;
+        }
+        .lp-cart-panel__section-title {
+          font-size: 0.82rem;
+          margin-bottom: 12px;
+        }
+        .lp-cart-panel__checkout {
+          font-size: 1.06rem;
+          padding: 14px 18px;
+        }
+        .lp-cart-panel__list.lp-cart-panel__list--scroll {
+          max-height: min(calc(100dvh - 232px), 46rem);
+        }
+      }
+
+      @media (max-width: 900px) {
+        .lp-cart-panel {
+          position: fixed;
+          left: max(10px, env(safe-area-inset-left, 0px));
+          right: max(10px, env(safe-area-inset-right, 0px));
+          top: calc(72px + env(safe-area-inset-top, 0px));
+          width: auto;
+          inset-inline-end: auto;
+          max-height: calc(100dvh - 76px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+        }
+        .lp-cart-panel__welcome {
+          padding: 17px 16px 15px;
+        }
+        .lp-cart-panel__title {
+          font-size: 1.18rem;
+        }
+        .lp-cart-panel__sub {
+          font-size: 0.9rem;
+        }
+        .lp-cart-panel__section-title {
+          font-size: 0.8rem;
+          margin-bottom: 11px;
+        }
+        .lp-cart-panel__checkout {
+          font-size: 1.04rem;
+          padding: 13px 16px;
+        }
+        .lp-cart-panel__list.lp-cart-panel__list--scroll {
+          max-height: min(
+            calc(100dvh - 236px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)),
+            46rem
+          );
+        }
+      }
+
+      @media (max-width: 400px) {
+        .lp-cart-panel {
+          left: max(8px, env(safe-area-inset-left, 0px));
+          right: max(8px, env(safe-area-inset-right, 0px));
+          max-height: calc(100dvh - 72px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+        }
       }
 
       /* رصيد المنصة — ثابت في الهيدر (عرض محجوز يقلل القفز عند التحديث) */
@@ -1413,7 +1839,84 @@
               <span class="lp-header-wallet__cur">ر.س</span>
             </span>
           </a>
-          <div class="cart-btn" onclick="goCart()" style="cursor: pointer">🛒 <span id="cartCount">0</span></div>
+          <div class="lp-cart-wrap" id="lpCartWrap">
+            <button
+              type="button"
+              class="cart-btn"
+              id="lpCartToggle"
+              aria-expanded="false"
+              aria-controls="lpCartPanel"
+              aria-haspopup="dialog"
+            >
+              <span aria-hidden="true">🛒</span>
+              <span id="cartCount">0</span>
+            </button>
+            <div class="lp-cart-backdrop" id="lpCartBackdrop" hidden aria-hidden="true"></div>
+            <div
+              class="lp-cart-panel"
+              id="lpCartPanel"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="lpCartDialogTitle"
+              hidden
+            >
+              <div class="lp-cart-panel__inner">
+                <header class="lp-cart-panel__welcome">
+                  <p class="lp-cart-panel__eyebrow">ERVENOW</p>
+                  <h2 id="lpCartDialogTitle" class="lp-cart-panel__title">مرحباً بك</h2>
+                  <p class="lp-cart-panel__sub">راجع أصناف طلبك — أسعارها كما أُضيفت من المتجر أو من حاسبة الخدمات في المنصة، ثم تابع للدفع.</p>
+                </header>
+                <section class="lp-cart-panel__lines" aria-labelledby="lpCartLinesHeading">
+                  <h3 id="lpCartLinesHeading" class="lp-cart-panel__section-title">الأصناف</h3>
+                  <div id="lpCartLines" class="lp-cart-panel__list"></div>
+                  <p id="lpCartEmpty" class="lp-cart-panel__empty" hidden>
+                    السلة فارغة حالياً — تصفّح المتاجر أو الخدمات وأضف ما تحتاجه.
+                  </p>
+                </section>
+                <div class="lp-cart-panel__summary">
+                  <div class="lp-cart-panel__fin-row">
+                    <span>المجموع الفرعي</span>
+                    <span class="lp-cart-panel__fin-val" id="lpCartSub">٠٫٠٠ <small class="lp-cart-panel__cur">ر.س</small></span>
+                  </div>
+                  <div class="lp-cart-panel__fin-row">
+                    <span>أجرة التوصيل</span>
+                    <span class="lp-cart-panel__fin-val" id="lpCartDel">٠٫٠٠ <small class="lp-cart-panel__cur">ر.س</small></span>
+                  </div>
+                  <p id="lpCartDelNote" class="lp-cart-panel__fin-note" hidden>
+                    لطلبات المتجر: تُحدَّد أجرة التوصيل بعد «تحديد موقعي» في صفحة السلة (كم × 2.3 ر.س) كما في إتمام الطلب.
+                  </p>
+                  <div class="lp-cart-panel__fin-row">
+                    <span>ضريبة القيمة المضافة (15%)</span>
+                    <span class="lp-cart-panel__fin-val" id="lpCartVat">٠٫٠٠ <small class="lp-cart-panel__cur">ر.س</small></span>
+                  </div>
+                  <div class="lp-cart-panel__fin-row">
+                    <span>عمولة المنصة (12%)</span>
+                    <span class="lp-cart-panel__fin-val" id="lpCartComm">٠٫٠٠ <small class="lp-cart-panel__cur">ر.س</small></span>
+                  </div>
+                  <p class="lp-cart-panel__fin-note" style="margin-top: 2px">
+                    العمولة تُقتطع من التاجر أو مزود الخدمة — لا تُضاف إلى إجمالي المبلغ الذي تدفعه.
+                  </p>
+                  <div class="lp-cart-panel__fin-row lp-cart-panel__fin-row--grand">
+                    <span>الإجمالي المستحق</span>
+                    <span class="lp-cart-panel__fin-val" id="lpCartTotal">٠٫٠٠ <small class="lp-cart-panel__cur">ر.س</small></span>
+                  </div>
+                </div>
+                <footer class="lp-cart-panel__footer">
+                  <p class="lp-cart-panel__pay-label">وسائل الدفع</p>
+                  <div id="lpCartPayIcons" class="erv-pay-cards" role="radiogroup" aria-label="اختر وسيلة الدفع"></div>
+                  <div id="lpCartEwPayDetail" class="erv-pay-ew-detail" hidden>
+                    <div class="erv-pay-ew-detail__row">
+                      <span class="erv-pay-ew-detail__label">رصيد المحفظة</span>
+                      <strong class="erv-pay-ew-detail__bal" id="lpCartEwPayBalance">—</strong>
+                      <span class="erv-pay-ew-detail__cur">ر.س</span>
+                    </div>
+                    <p class="erv-pay-ew-detail__tagline">⚡ دفع فوري وآمن</p>
+                  </div>
+                  <button type="button" class="lp-cart-panel__checkout" id="lpCartCheckoutBtn">إتمام الطلب</button>
+                </footer>
+              </div>
+            </div>
+          </div>
           <div id="authArea"></div>
         </div>
       </div>
@@ -1813,8 +2316,41 @@
         window.location.href = "/login";
       }
 
-      function goCart() {
-        window.location.href = "/cart";
+      function initLpHeaderCart() {
+        var wrap = document.getElementById("lpCartWrap");
+        var btn = document.getElementById("lpCartToggle");
+        var panel = document.getElementById("lpCartPanel");
+        var backdrop = document.getElementById("lpCartBackdrop");
+        var checkout = document.getElementById("lpCartCheckoutBtn");
+        if (!wrap || !btn || !panel) return;
+
+        function setOpen(open) {
+          panel.hidden = !open;
+          if (backdrop) backdrop.hidden = !open;
+          btn.setAttribute("aria-expanded", open ? "true" : "false");
+          if (open && typeof renderHeaderCartPreview === "function") renderHeaderCartPreview();
+        }
+
+        btn.addEventListener("click", function (e) {
+          e.stopPropagation();
+          setOpen(panel.hidden);
+        });
+        if (backdrop) {
+          backdrop.addEventListener("click", function () {
+            setOpen(false);
+          });
+        }
+        document.addEventListener("click", function (e) {
+          if (!wrap.contains(e.target)) setOpen(false);
+        });
+        document.addEventListener("keydown", function (e) {
+          if (e.key === "Escape" && !panel.hidden) setOpen(false);
+        });
+        if (checkout) {
+          checkout.addEventListener("click", function () {
+            window.location.href = "/cart";
+          });
+        }
       }
 
       function goRegister() {
@@ -2093,6 +2629,7 @@
         }
 
         checkAuth();
+        if (typeof initLpHeaderCart === "function") initLpHeaderCart();
         window.addEventListener("storage", function () {
           if (typeof updateCartCount === "function") updateCartCount();
         });
