@@ -886,7 +886,7 @@
       @media (max-width: 900px) {
         .lp-header__inner {
           display: grid;
-          grid-template-columns: auto 1fr auto;
+          grid-template-columns: auto 1fr;
           align-items: center;
           column-gap: 10px;
           row-gap: 12px;
@@ -905,16 +905,16 @@
           align-self: center;
         }
 
+        .lp-header__logo-img {
+          max-height: 67px;
+        }
+
         .lp-header__brand-mid {
-          grid-column: 2;
-          grid-row: 1;
-          justify-self: center;
-          align-self: center;
-          min-width: 0;
+          display: none !important;
         }
 
         .lp-header__end-zone {
-          grid-column: 3;
+          grid-column: 2;
           grid-row: 1;
           justify-self: end;
           align-self: center;
