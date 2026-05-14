@@ -210,8 +210,21 @@ async function createDeliveryOrderFromBody(sb, appUser, body, opts) {
   let distanceKm = null;
   let deliveryFee = 0;
   if (pickup_lat != null && pickup_lng != null && drop_lat != null && drop_lng != null) {
-    distanceKm = haversineDistanceKm(pickup_lat, pickup_lng, drop_lat, drop_lng);
-    deliveryFee = calcDeliveryBaseFee(distanceKm, vehicleType);
+    if (b.distance_km_override != null && String(b.distance_km_override).trim() !== "") {
+      const ov = Number(b.distance_km_override);
+      distanceKm = Number.isFinite(ov) && ov > 0 ? Math.round(ov * 1000) / 1000 : haversineDistanceKm(pickup_lat, pickup_lng, drop_lat, drop_lng);
+    } else {
+      distanceKm = haversineDistanceKm(pickup_lat, pickup_lng, drop_lat, drop_lng);
+    }
+    const forceFee =
+      (b.force_delivery_fee === true || b.force_delivery_fee === "true") &&
+      b.delivery_fee != null &&
+      String(b.delivery_fee).trim() !== "";
+    if (forceFee) {
+      deliveryFee = Math.max(0, Math.round(Number(b.delivery_fee) * 100) / 100);
+    } else {
+      deliveryFee = calcDeliveryBaseFee(distanceKm, vehicleType);
+    }
   } else if (b.delivery_fee != null && b.delivery_fee !== "") {
     deliveryFee = Math.max(0, Math.round(Number(b.delivery_fee) * 100) / 100);
   }
@@ -269,6 +282,9 @@ async function createDeliveryOrderFromBody(sb, appUser, body, opts) {
 
   const payment_method = normalizeOrderPaymentMethod(b);
 
+  const orderDataJson =
+    b.data != null && typeof b.data === "object" && !Array.isArray(b.data) ? b.data : null;
+
   return insertDeliveryOrderWithRetry(sb, (order_number) => ({
     customer_id: appUser.id,
     customer_phone: b.customer_phone != null && String(b.customer_phone).trim() !== "" ? String(b.customer_phone) : appUser.phone || "",
@@ -301,6 +317,7 @@ async function createDeliveryOrderFromBody(sb, appUser, body, opts) {
     ...(payment_status ? { payment_status } : {}),
     ...(payment_method ? { payment_method } : {}),
     ...(idemRaw ? { idempotency_key: idemRaw } : {}),
+    ...(orderDataJson ? { data: orderDataJson } : {}),
   }));
 }
 

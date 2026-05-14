@@ -34,6 +34,7 @@ function normalizedGroup(typeRaw) {
   ) {
     return "store";
   }
+  /* pickup_truck / furniture_move: تبقى للتوافق مع سلات قديمة؛ الواجهة العامة تستخدم /delivery-services.html */
   if (
     [
       "service",

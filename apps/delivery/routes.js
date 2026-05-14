@@ -33,6 +33,7 @@ const {
   LIST_CACHE_TTL_MS,
 } = require("../../shared/utils/deliveryOrdersListCache");
 const { runUnifiedDeliveryOnlyCreate } = require("../order/deliveryOrderCreateShared");
+const { createUnifiedDeliveryOrder } = require("./unifiedDeliveryCreate");
 const {
   broadcastDriverUpdate,
   broadcastOrderPatch,
@@ -167,6 +168,46 @@ router.get("/orders/:id", requireAuth, async (req, res) => {
       return ok(res, { order: o });
     }
     return fail(res, "Forbidden", 403);
+  } catch (e) {
+    fail(res, e.message, 500);
+  }
+});
+
+/** طلب توصيل موحد (خدمات منصة) — يبدأ بدعم car_transport */
+router.post("/create", requireAuth, deliveryOrdersCreateLimiter, async (req, res) => {
+  try {
+    const body = { ...(req.body || {}) };
+    const idk = normalizeIdempotencyKey(req);
+    if (idk) body.idempotency_key = idk;
+
+    const { data, error } = await createUnifiedDeliveryOrder(req.supabase, req.appUser, body, {
+      initialDeliveryStatus: "pending",
+      payment_status: "pending",
+    });
+    if (error) return fail(res, error.message, 400);
+
+    if (data && String(data.delivery_status || "") === "pending") {
+      try {
+        await enqueueDeliveryJob("new-order", {
+          orderId: data.id,
+          pickup:
+            data.pickup_lat != null && data.pickup_lng != null
+              ? { lat: Number(data.pickup_lat), lng: Number(data.pickup_lng) }
+              : null,
+          dropoff:
+            data.drop_lat != null && data.drop_lng != null
+              ? { lat: Number(data.drop_lat), lng: Number(data.drop_lng) }
+              : null,
+        });
+      } catch (qe) {
+        logger.error({ err: qe && (qe.message || String(qe)), orderId: data.id }, "[delivery/create] enqueue new-order");
+      }
+      await bumpDeliveryOrdersListEpoch();
+    } else if (data) {
+      await bumpDeliveryOrdersListEpoch();
+    }
+
+    return ok(res, { order: data, unified: true });
   } catch (e) {
     fail(res, e.message, 500);
   }

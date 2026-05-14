@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ERVENOW | خدمات التوصيل</title>
+    <link rel="stylesheet" href="/assets/styles.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+      .ds-wrap {
+        max-width: 720px;
+        margin: 20px auto;
+        padding: 0 14px 48px;
+      }
+      .ds-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+      .ds-services {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: 10px;
+        margin-top: 14px;
+      }
+      .ds-svc {
+        border: 1px solid var(--border, #e8dfd4);
+        border-radius: 12px;
+        padding: 12px;
+        background: #fffef9;
+        cursor: pointer;
+        text-align: center;
+        font-weight: 800;
+        color: var(--brown, #3d2213);
+      }
+      .ds-svc.is-active {
+        border-color: rgba(185, 135, 47, 0.65);
+        box-shadow: 0 4px 16px rgba(155, 111, 37, 0.2);
+      }
+      .ds-welcome {
+        margin: 14px 0;
+        padding: 14px;
+        border-radius: 12px;
+        background: linear-gradient(145deg, rgba(255, 254, 251, 0.98), rgba(248, 241, 229, 0.92));
+        border: 1px solid rgba(61, 34, 19, 0.1);
+        font-size: 0.98rem;
+        line-height: 1.55;
+      }
+      .ds-form {
+        display: grid;
+        gap: 12px;
+      }
+      .ds-row {
+        display: grid;
+        gap: 8px;
+      }
+      .ds-row label {
+        font-weight: 700;
+        font-size: 0.9rem;
+      }
+      .ds-row select,
+      .ds-row input,
+      .ds-row textarea {
+        width: 100%;
+        padding: 10px 12px;
+        border-radius: 10px;
+        border: 1px solid var(--border, #e8dfd4);
+        font-family: inherit;
+      }
+      .ds-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+      #dsMapModal {
+        position: fixed;
+        inset: 0;
+        background: rgba(26, 18, 12, 0.45);
+        z-index: 2000;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+      }
+      #dsMapModal.open {
+        display: flex;
+      }
+      #dsMapInner {
+        width: min(560px, 100%);
+        background: #fff;
+        border-radius: 14px;
+        overflow: hidden;
+        box-shadow: 0 18px 48px rgba(0, 0, 0, 0.2);
+      }
+      #dsMapBox {
+        height: min(60vh, 420px);
+      }
+      .ds-muted {
+        color: #6b5a4d;
+        font-size: 0.88rem;
+      }
+      .ds-err {
+        color: #b71c1c;
+        font-weight: 700;
+        font-size: 0.9rem;
+      }
+      .ds-ok {
+        color: #1b5e20;
+        font-weight: 700;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="layout ds-wrap">
+      <div class="card ds-head">
+        <h1 style="margin: 0">خدمات التوصيل</h1>
+        <a class="btn btn-ghost" href="/">الرئيسية</a>
+      </div>
+
+      <div class="card" style="margin-top: 12px">
+        <p class="ds-muted" style="margin: 0 0 10px">اختر الخدمة ثم أكمل النموذج. التسعير يُحسب من مسافة الطريق بين نقطتي الاستلام والتسليم.</p>
+        <div class="ds-services" id="dsServiceChips"></div>
+        <div class="ds-welcome" id="dsWelcome" hidden></div>
+        <div id="dsFormMount"></div>
+        <p class="ds-err" id="dsErr" style="display: none; margin-top: 10px"></p>
+        <p class="ds-ok" id="dsOk" style="display: none; margin-top: 10px"></p>
+      </div>
+    </div>
+
+    <div id="dsMapModal" aria-hidden="true">
+      <div id="dsMapInner">
+        <div style="padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; gap: 8px">
+          <strong id="dsMapTitle">حدد على الخريطة</strong>
+          <button type="button" class="btn btn-solid" id="dsMapConfirm">تأكيد</button>
+        </div>
+        <div id="dsMapBox"></div>
+      </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="/assets/api-config.js"></script>
+    <script src="/assets/api.js"></script>
+    <script>
+      (function () {
+        var INDUSTRIAL = [
+          "صناعية العروبة",
+          "صناعية أم الحمام",
+          "صناعية الشمال",
+          "صناعية الموسى",
+          "صناعية النسيم",
+          "صناعية المونسية",
+          "صناعية العاصمة",
+          "صناعية القديمة",
+        ];
+        var SA_CITIES = [
+          "الرياض",
+          "جدة",
+          "مكة المكرمة",
+          "المدينة المنورة",
+          "الدمام",
+          "الخبر",
+          "الظهران",
+          "بريدة",
+          "تبوك",
+          "خميس مشيط",
+          "الطائف",
+          "نجران",
+          "جازان",
+          "أبها",
+          "ينبع",
+          "الأحساء",
+          "حائل",
+          "الجبيل",
+          "القطيف",
+          "عرعر",
+          "سكاكا",
+          "الباحة",
+          "الرس",
+          "بيشة",
+          "الدوادمي",
+          "الزلفي",
+          "بقيق",
+          "رابغ",
+          "الليث",
+          "القنفذة",
+        ];
+
+        var SERVICES = [
+          { id: "car_transport", label: "نقل المركبات", ready: true },
+          { id: "local_delivery", label: "توصيل داخلي", ready: false },
+          { id: "furniture", label: "نقل أثاث", ready: false },
+          { id: "gas_delivery", label: "توصيل غاز", ready: false },
+        ];
+
+        var state = {
+          service: "car_transport",
+          pickup: null,
+          dropoff: null,
+          mapTarget: null,
+          map: null,
+          marker: null,
+        };
+
+        function qs() {
+          var p = new URLSearchParams(location.search);
+          var s = (p.get("service") || "car_transport").toLowerCase();
+          if (s === "pickup_truck" || s === "vehicle_transfer") return "car_transport";
+          return s;
+        }
+
+        function authHeaders() {
+          var t =
+            localStorage.getItem("token") ||
+            localStorage.getItem("ervenow_access_token") ||
+            localStorage.getItem("erwenow_access_token");
+          if (!t) return {};
+          return { Authorization: "Bearer " + t };
+        }
+
+        function priceCarInternal(km) {
+          var d = Math.max(0, Number(km) || 0);
+          if (d <= 10) return 100;
+          if (d <= 35) return 180;
+          if (d <= 50) return 200;
+          if (d <= 100) return 250;
+          return Math.round((250 + (d - 100) * 2) * 100) / 100;
+        }
+        function priceCarExternal(km) {
+          return Math.round((Number(km) || 0) * 2 * 100) / 100;
+        }
+
+        function renderChips() {
+          var el = document.getElementById("dsServiceChips");
+          el.innerHTML = "";
+          SERVICES.forEach(function (s) {
+            var b = document.createElement("button");
+            b.type = "button";
+            b.className = "ds-svc" + (s.id === state.service ? " is-active" : "");
+            b.textContent = s.label;
+            b.onclick = function () {
+              location.search = "?service=" + encodeURIComponent(s.id);
+            };
+            el.appendChild(b);
+          });
+        }
+
+        function setWelcome() {
+          var w = document.getElementById("dsWelcome");
+          var s = state.service;
+          if (s === "car_transport") {
+            w.hidden = false;
+            w.innerHTML =
+              "<strong>أهلاً بك في نقل المركبات</strong><br />1) نوع المركبة — 2) حالة المركبة — 3) نقل داخلي أو خارجي — 4) موقع الاستلام — 5) موقع التسليم — ثم أرسل الطلب.";
+            return;
+          }
+          w.hidden = false;
+          w.innerHTML =
+            "<strong>قريباً</strong><br />سيتم تفعيل نموذج هذه الخدمة ضمن النظام الموحد. يمكنك حالياً استخدام <a href='?service=car_transport'>نقل المركبات</a>.";
+        }
+
+        function openMap(which) {
+          state.mapTarget = which;
+          document.getElementById("dsMapTitle").textContent =
+            which === "pickup" ? "حدد موقع المركبة (الاستلام)" : "حدد موقع التسليم";
+          var m = document.getElementById("dsMapModal");
+          m.classList.add("open");
+          m.setAttribute("aria-hidden", "false");
+          setTimeout(initMapIfNeeded, 50);
+        }
+
+        function closeMap() {
+          var m = document.getElementById("dsMapModal");
+          m.classList.remove("open");
+          m.setAttribute("aria-hidden", "true");
+        }
+
+        function initMapIfNeeded() {
+          if (state.map) {
+            state.map.invalidateSize();
+            return;
+          }
+          var center = [24.7136, 46.6753];
+          state.map = L.map("dsMapBox").setView(center, 11);
+          L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            maxZoom: 19,
+            attribution: "&copy; OpenStreetMap",
+          }).addTo(state.map);
+          state.marker = L.marker(center, { draggable: true }).addTo(state.map);
+          state.map.on("click", function (e) {
+            state.marker.setLatLng(e.latlng);
+          });
+        }
+
+        function confirmMap() {
+          if (!state.marker) return closeMap();
+          var ll = state.marker.getLatLng();
+          if (state.mapTarget === "pickup") state.pickup = { lat: ll.lat, lng: ll.lng };
+          else state.dropoff = { lat: ll.lat, lng: ll.lng };
+          document.getElementById("dsPickupLbl").textContent = state.pickup
+            ? "تم تحديد موقع الاستلام"
+            : "لم يُحدد";
+          document.getElementById("dsDropLbl").textContent = state.dropoff
+            ? "تم تحديد موقع التسليم"
+            : "لم يُحدد";
+          updateEstimate();
+          closeMap();
+        }
+
+        function haversineKm(a, b, c, d) {
+          var R = 6371;
+          var toR = function (x) {
+            return (x * Math.PI) / 180;
+          };
+          var dLat = toR(c - a);
+          var dLng = toR(d - b);
+          var x =
+            Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(toR(a)) * Math.cos(toR(c)) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+          return 2 * R * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x));
+        }
+
+        function updateEstimate() {
+          var el = document.getElementById("dsEstimate");
+          if (!el) return;
+          if (!state.pickup || !state.dropoff) {
+            el.textContent = "حدد موقعي الاستلام والتسليم لعرض تقدير المسافة والسعر التقريبي.";
+            return;
+          }
+          var km = haversineKm(state.pickup.lat, state.pickup.lng, state.dropoff.lat, state.dropoff.lng);
+          var mode = (document.getElementById("dsTransfer") || {}).value || "internal";
+          var fee = mode === "external" ? priceCarExternal(km) : priceCarInternal(km);
+          el.textContent =
+            "تقدير (خط مستقيم ≈ " +
+            km.toFixed(1) +
+            " كم): " +
+            fee.toFixed(2) +
+            " ر.س — السعر النهائي يُحسب من مسار الطريق على الخادم.";
+        }
+
+        function renderCarForm() {
+          var mount = document.getElementById("dsFormMount");
+          if (state.service !== "car_transport") {
+            mount.innerHTML = "";
+            return;
+          }
+          var indOpts = INDUSTRIAL.map(function (x) {
+            return "<option value='" + x.replace(/'/g, "&#39;") + "'>" + x + "</option>";
+          }).join("");
+          var cityOpts = SA_CITIES.map(function (x) {
+            return "<option value='" + x.replace(/'/g, "&#39;") + "'>" + x + "</option>";
+          }).join("");
+          mount.innerHTML =
+            "<form class='ds-form' id='dsCarForm'>" +
+            "<div class='ds-row'><label>نوع المركبة</label><select id='dsVehCat' required><option value='sedan'>سيدان</option><option value='van'>فان</option><option value='suv'>جيب</option></select></div>" +
+            "<div class='ds-row'><label>حالة المركبة</label><select id='dsVehCond' required><option value='working'>صالحة</option><option value='damaged'>مصدوم</option><option value='broken'>معطل</option><option value='appraisal'>تقديرات</option></select></div>" +
+            "<div class='ds-row'><label>نوع النقل</label><select id='dsTransfer' required><option value='internal'>نقل داخلي</option><option value='external'>نقل خارجي</option></select></div>" +
+            "<div class='ds-row' id='dsDistrictRow'><label>منطقة صناعية (اختياري — يُضاف للعنوان)</label><select id='dsPickupInd'><option value=''>—</option>" +
+            indOpts +
+            "</select></div>" +
+            "<div class='ds-row'><label>منطقة تسليم صناعية (اختياري)</label><select id='dsDropInd'><option value=''>—</option>" +
+            indOpts +
+            "</select></div>" +
+            "<div class='ds-row' id='dsCityRow' style='display:none'><label>من مدينة</label><select id='dsFromCity'><option value=''>—</option>" +
+            cityOpts +
+            "</select></div>" +
+            "<div class='ds-row' id='dsCityRow2' style='display:none'><label>إلى مدينة</label><select id='dsToCity'><option value=''>—</option>" +
+            cityOpts +
+            "</select></div>" +
+            "<div class='ds-actions'><button type='button' class='btn btn-outline' id='dsBtnPickup'>تحديد موقع الاستلام على الخريطة</button>" +
+            "<button type='button' class='btn btn-outline' id='dsBtnDrop'>تحديد موقع التسليم على الخريطة</button></div>" +
+            "<p class='ds-muted' id='dsPickupLbl'>لم يُحدد موقع الاستلام</p>" +
+            "<p class='ds-muted' id='dsDropLbl'>لم يُحدد موقع التسليم</p>" +
+            "<div class='ds-row'><label>جوال التواصل</label><input id='dsPhone' type='tel' placeholder='05xxxxxxxx' /></div>" +
+            "<div class='ds-row'><label>ملاحظات إضافية</label><textarea id='dsNotes' rows='2'></textarea></div>" +
+            "<p class='ds-muted' id='dsEstimate'></p>" +
+            "<button type='submit' class='btn btn-solid' id='dsSubmit'>إرسال الطلب</button>" +
+            "</form>";
+
+          document.getElementById("dsBtnPickup").onclick = function () {
+            openMap("pickup");
+          };
+          document.getElementById("dsBtnDrop").onclick = function () {
+            openMap("dropoff");
+          };
+          document.getElementById("dsTransfer").onchange = function () {
+            var ext = document.getElementById("dsTransfer").value === "external";
+            document.getElementById("dsCityRow").style.display = ext ? "grid" : "none";
+            document.getElementById("dsCityRow2").style.display = ext ? "grid" : "none";
+            updateEstimate();
+          };
+          document.getElementById("dsCarForm").onsubmit = submitCar;
+          updateEstimate();
+        }
+
+        function submitCar(ev) {
+          ev.preventDefault();
+          var err = document.getElementById("dsErr");
+          var ok = document.getElementById("dsOk");
+          err.style.display = "none";
+          ok.style.display = "none";
+          if (!state.pickup || !state.dropoff) {
+            err.textContent = "يرجى تحديد موقعي الاستلام والتسليم.";
+            err.style.display = "block";
+            return;
+          }
+          var transfer = document.getElementById("dsTransfer").value;
+          if (transfer === "external") {
+            if (!document.getElementById("dsFromCity").value || !document.getElementById("dsToCity").value) {
+              err.textContent = "اختر مدينة الانطلاق والوصول للنقل الخارجي.";
+              err.style.display = "block";
+              return;
+            }
+          }
+          var tok = authHeaders().Authorization;
+          if (!tok) {
+            err.textContent = "يجب تسجيل الدخول أولاً.";
+            err.style.display = "block";
+            return;
+          }
+          var payload = {
+            vehicle_category: document.getElementById("dsVehCat").value,
+            vehicle_condition: document.getElementById("dsVehCond").value,
+            transfer_mode: transfer,
+            pickup_lat: state.pickup.lat,
+            pickup_lng: state.pickup.lng,
+            drop_lat: state.dropoff.lat,
+            drop_lng: state.dropoff.lng,
+            pickup_district_label: document.getElementById("dsPickupInd").value,
+            drop_district_label: document.getElementById("dsDropInd").value,
+            from_city: document.getElementById("dsFromCity").value,
+            to_city: document.getElementById("dsToCity").value,
+            notes_extra: document.getElementById("dsNotes").value.trim(),
+          };
+          var phone = document.getElementById("dsPhone").value.trim();
+          fetch(window.PlatformAPI.apiUrl("/api/delivery/create"), {
+            method: "POST",
+            headers: Object.assign({ "Content-Type": "application/json" }, authHeaders()),
+            body: JSON.stringify({
+              service_type: "car_transport",
+              payload: payload,
+              customer_phone: phone,
+            }),
+          })
+            .then(function (r) {
+              return r.json().then(function (j) {
+                return { ok: r.ok, j: j };
+              });
+            })
+            .then(function (x) {
+              if (!x.ok || !x.j || x.j.ok === false) {
+                err.textContent = (x.j && (x.j.message || x.j.error)) || "فشل الإرسال";
+                err.style.display = "block";
+                return;
+              }
+              ok.textContent = "تم إنشاء الطلب بنجاح — رقم الطلب: " + (x.j.order && (x.j.order.order_number || x.j.order.id));
+              ok.style.display = "block";
+            })
+            .catch(function () {
+              err.textContent = "خطأ في الاتصال";
+              err.style.display = "block";
+            });
+        }
+
+        document.getElementById("dsMapConfirm").onclick = confirmMap;
+
+        state.service = qs();
+        renderChips();
+        setWelcome();
+        renderCarForm();
+      })();
+    </script>
+  </body>
+</html>
