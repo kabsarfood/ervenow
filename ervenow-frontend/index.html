@@ -135,6 +135,26 @@
         direction: rtl;
       }
 
+      .lp-header__user-mid {
+        display: none;
+        align-items: center;
+        justify-content: center;
+        min-width: 0;
+        max-width: 100%;
+        padding: 0 4px;
+      }
+
+      .lp-header__user-mid__num {
+        font-weight: 800;
+        font-size: clamp(0.78rem, 2.8vw, 0.88rem);
+        color: var(--brown);
+        letter-spacing: 0.02em;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: min(11.5rem, 42vw);
+      }
+
       .lp-header__toolbar-right {
         display: flex;
         flex-direction: row-reverse;
@@ -205,7 +225,9 @@
       .cart-btn {
         display: inline-flex;
         align-items: center;
+        justify-content: center;
         gap: 6px;
+        min-height: 44px;
         padding: 8px 14px;
         border-radius: 12px;
         background: linear-gradient(145deg, rgba(255, 254, 251, 0.98), rgba(248, 241, 229, 0.92));
@@ -721,41 +743,52 @@
         }
       }
 
-      /* رصيد المنصة — ثابت في الهيدر (عرض محجوز يقلل القفز عند التحديث) */
+      /* رصيد المنصة — نفس ارتفاع/حشو زر السلة */
       .lp-header-wallet {
         display: inline-flex;
         align-items: center;
         justify-content: center;
         flex-shrink: 0;
-        min-width: 6.5rem;
-        padding: 8px 12px;
+        min-width: 0;
+        min-height: 44px;
+        padding: 8px 14px;
         border-radius: 12px;
-        border: 1px solid rgba(185, 135, 47, 0.45);
-        background: linear-gradient(145deg, rgba(255, 254, 251, 0.98), rgba(248, 241, 229, 0.95));
+        border: 1px solid rgba(185, 135, 47, 0.38);
+        background: linear-gradient(145deg, rgba(255, 254, 251, 0.98), rgba(248, 241, 229, 0.92));
         text-decoration: none;
         color: var(--brown);
         font-weight: 800;
-        font-size: 0.82rem;
+        font-size: 0.9rem;
+        font-family: inherit;
         box-sizing: border-box;
-        box-shadow: 0 2px 10px rgba(45, 26, 14, 0.06);
+        box-shadow: 0 4px 14px rgba(45, 26, 14, 0.08);
+        transition: transform 0.2s, box-shadow 0.25s, border-color 0.2s;
+      }
+      .lp-header-wallet:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 8px 22px rgba(155, 111, 37, 0.18);
+        border-color: rgba(185, 135, 47, 0.55);
       }
       .lp-header-wallet__inner {
         display: inline-flex;
-        align-items: baseline;
+        align-items: center;
         gap: 6px;
-        flex-wrap: wrap;
+        flex-wrap: nowrap;
         justify-content: center;
+        min-width: 0;
       }
       .lp-header-wallet__label {
-        font-size: 0.72rem;
+        font-size: 0.75rem;
         font-weight: 700;
         color: var(--muted);
+        flex-shrink: 0;
       }
       .lp-header-wallet__val {
         font-variant-numeric: tabular-nums;
-        min-width: 3.25em;
+        min-width: 0;
         text-align: center;
         letter-spacing: 0.02em;
+        white-space: nowrap;
       }
       .lp-header-wallet__cur {
         font-size: 0.72rem;
@@ -841,6 +874,10 @@
           text-align: start;
         }
 
+        .lp-header__user-mid {
+          display: none !important;
+        }
+
         .lp-header__toolbar-right {
           grid-column: 3;
           grid-row: 1;
@@ -914,6 +951,22 @@
           padding-right: max(14px, env(safe-area-inset-right, 0px));
           padding-top: max(10px, env(safe-area-inset-top, 0px));
           direction: ltr;
+        }
+
+        .lp-header__inner.lp-header__inner--user-mid {
+          grid-template-columns: auto 1fr auto;
+        }
+
+        .lp-header__user-mid:not([hidden]) {
+          display: flex;
+          grid-column: 2;
+          grid-row: 1;
+          justify-self: center;
+          align-self: center;
+        }
+
+        .lp-header__inner--user-mid .lp-header__end-zone {
+          grid-column: 3;
         }
 
         .lp-header__logo-slot {
@@ -1932,7 +1985,7 @@
   </head>
   <body class="lp-body">
     <header class="lp-header" id="top">
-      <div class="lp-header__inner">
+      <div class="lp-header__inner" id="lpHeaderInner">
         <a
           class="lp-header__logo-slot lp-header__logo-slot--has-img"
           href="/"
@@ -1951,6 +2004,9 @@
         <a class="lp-header__brand-mid" href="/" aria-label="ERVENOW">
           <span class="lp-brand__name">ERVENOW</span>
         </a>
+        <div class="lp-header__user-mid" id="lpHeaderUserMid" hidden>
+          <span class="lp-header__user-mid__num" id="lpHeaderUserMidText" dir="ltr"></span>
+        </div>
         <div class="lp-header__toolbar-right">
           <div class="lp-header__end-zone">
             <div class="lp-quick-dd" id="lpQuickNav">
@@ -2061,6 +2117,18 @@
               data-guest-only="true"
               ><span class="lp-dd-ic" aria-hidden="true">&#10133;</span><span class="lp-dd-link__text">إنشاء حساب</span></a
             >
+            <div class="lp-quick-dd__sep" role="separator" id="lpQuickLogoutSep" hidden></div>
+            <button
+              type="button"
+              role="menuitem"
+              class="lp-dd-item lp-dd-item--action lp-dd-logout"
+              id="lpQuickLogoutBtn"
+              hidden
+              aria-label="تسجيل الخروج"
+              onclick="logout()"
+            >
+              <span class="lp-dd-ic" aria-hidden="true">🚪</span><span class="lp-dd-link__text">خروج</span>
+            </button>
           </div>
         </div>
         </div>
@@ -2733,6 +2801,37 @@
         });
       }
 
+      function clearHeaderUserMid() {
+        var inner = document.getElementById("lpHeaderInner");
+        var mid = document.getElementById("lpHeaderUserMid");
+        var midText = document.getElementById("lpHeaderUserMidText");
+        if (midText) midText.textContent = "";
+        if (mid) mid.hidden = true;
+        if (inner) inner.classList.remove("lp-header__inner--user-mid");
+      }
+
+      function setHeaderUserMidLine(phone) {
+        var inner = document.getElementById("lpHeaderInner");
+        var mid = document.getElementById("lpHeaderUserMid");
+        var midText = document.getElementById("lpHeaderUserMidText");
+        if (!mid || !midText || !inner) return;
+        var p = String(phone || "").replace(/\s+/g, " ").trim();
+        if (!p) {
+          clearHeaderUserMid();
+          return;
+        }
+        midText.textContent = p;
+        mid.hidden = false;
+        inner.classList.add("lp-header__inner--user-mid");
+      }
+
+      function setQuickLogoutVisible(show) {
+        var btn = document.getElementById("lpQuickLogoutBtn");
+        var sep = document.getElementById("lpQuickLogoutSep");
+        if (btn) btn.hidden = !show;
+        if (sep) sep.hidden = !show;
+      }
+
       async function checkAuth() {
         var token =
           localStorage.getItem("token") ||
@@ -2743,6 +2842,8 @@
         if (!token) {
           if (quickOrders) quickOrders.setAttribute("href", "/orders");
           await refreshHeaderWallet("", "");
+          clearHeaderUserMid();
+          setQuickLogoutVisible(false);
         }
         var authArea = document.getElementById("authArea");
         if (token && authArea) {
@@ -2761,42 +2862,46 @@
               quickOrders.setAttribute("href", "/dashboard");
             }
 
+            var phone =
+              (me.user && me.user.phone) ||
+              (me.profile && me.profile.phone) ||
+              "";
+            var name =
+              (me.profile && (me.profile.name || me.profile.full_name || me.profile.display_name)) ||
+              (me.user && (me.user.name || me.user.full_name)) ||
+              "";
+
             if (role === "admin") {
               label = "مالك المنصة";
               authArea.style.display = "flex";
               authArea.style.flexWrap = "wrap";
               authArea.style.gap = "8px";
               authArea.style.alignItems = "center";
+              setHeaderUserMidLine(phone);
               authArea.innerHTML =
                 '<button class="lp-btn-solid" type="button" onclick="goDashboard()">' +
                 label +
                 "</button>" +
-                '<button class="lp-btn-outline" type="button" onclick="goAdminDashboard()">لوحة الإدارة</button>' +
-                '<button class="lp-btn-outline" type="button" onclick="logout()">خروج</button>';
+                '<button class="lp-btn-outline" type="button" onclick="goAdminDashboard()">لوحة الإدارة</button>';
             } else {
               authArea.style.display = "";
               authArea.style.flexWrap = "";
               authArea.style.gap = "";
               authArea.style.alignItems = "";
-              var name =
-                (me.profile && (me.profile.name || me.profile.full_name || me.profile.display_name)) ||
-                (me.user && (me.user.name || me.user.full_name)) ||
-                "";
-              var phone = (me.user && me.user.phone) || (me.profile && me.profile.phone) || "";
-              label = String(phone || name || "حسابي").trim() || "حسابي";
+              var phoneTrim = String(phone || "").trim();
+              setHeaderUserMidLine(phoneTrim);
+              var dashLabel = phoneTrim ? "حسابي" : String(name || "حسابي").trim() || "حسابي";
               authArea.innerHTML =
-                '<button class="lp-btn-solid" type="button" onclick="goDashboard()">' +
-                label +
-                "</button>" +
-                '<button class="lp-btn-outline" type="button" onclick="logout()">خروج</button>';
+                '<button class="lp-btn-solid" type="button" onclick="goDashboard()">' + dashLabel + "</button>";
             }
+            setQuickLogoutVisible(true);
             await refreshHeaderWallet(token, role);
           } catch (e) {
             authArea.innerHTML =
               '<button class="lp-btn-solid" type="button" onclick="goDashboard()">' +
               label +
-              "</button>" +
-              '<button class="lp-btn-outline" type="button" onclick="logout()">خروج</button>';
+              "</button>";
+            setQuickLogoutVisible(true);
             await refreshHeaderWallet(token, "");
           }
         }
