@@ -10,7 +10,8 @@
     "frontend:sync": "node scripts/sync-ervenow-frontend.js",
     "load:test": "npx artillery run tests/load/artillery.yml",
     "test": "jest",
-    "test:ci": "jest --ci"
+    "test:ci": "jest --ci",
+    "migrate:platform-settings": "node scripts/run-migration-platform-settings.js"
   },
   "engines": {
     "node": ">=20"
@@ -35,6 +36,8 @@
   },
   "devDependencies": {
     "artillery": "^2.0.31",
-    "jest": "^29.7.0"
+    "jest": "^29.7.0",
+    "pg": "^8.20.0",
+    "supabase": "^2.98.2"
   }
 }

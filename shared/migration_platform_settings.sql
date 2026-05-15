@@ -1,5 +1,6 @@
 -- ERVENOW: إعدادات الهوية البصرية (شعار + ألوان) — key/value
--- نفّذ في Supabase SQL Editor
+-- نفّذ في Supabase SQL Editor، أو من الطرفية بعد ضبط SUPABASE_DB_URL في .env:
+--   npm run migrate:platform-settings
 
 CREATE TABLE IF NOT EXISTS public.platform_settings (
   key text PRIMARY KEY,
