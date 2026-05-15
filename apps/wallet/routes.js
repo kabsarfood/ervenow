@@ -251,7 +251,17 @@ router.post("/withdraw", requireAuth, requireRole(...PAYOUT_ROLES), async (req, 
       iban: ibanRaw,
       status: "pending",
     });
-    if (insE) return fail(res, insE.message, 400);
+    if (insE) {
+      const msg = String(insE.message || "");
+      if (/ervenow_withdraw_requests|schema cache|relation/i.test(msg)) {
+        return fail(
+          res,
+          "جدول طلبات السحب غير جاهز في قاعدة البيانات. تواصل مع الإدارة أو نفّذ migration_ervenow_withdraw_requests_schema_cache.sql في Supabase.",
+          503
+        );
+      }
+      return fail(res, insE.message, 400);
+    }
     await insertAuditEvent(req.supabase, {
       scope: "wallet",
       action: "withdraw_request_created",
@@ -359,7 +369,17 @@ router.post("/withdraw/confirm-otp", requireAuth, requireRole(...PAYOUT_ROLES), 
       status: "pending",
       note: "OTP verified",
     });
-    if (insE) return fail(res, insE.message, 400);
+    if (insE) {
+      const msg = String(insE.message || "");
+      if (/ervenow_withdraw_requests|schema cache|relation/i.test(msg)) {
+        return fail(
+          res,
+          "جدول طلبات السحب غير جاهز في قاعدة البيانات. تواصل مع الإدارة أو نفّذ migration_ervenow_withdraw_requests_schema_cache.sql في Supabase.",
+          503
+        );
+      }
+      return fail(res, insE.message, 400);
+    }
 
     await insertAuditEvent(req.supabase, {
       scope: "wallet",

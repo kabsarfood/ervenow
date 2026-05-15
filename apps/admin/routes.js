@@ -639,7 +639,17 @@ router.get("/withdraws", requireAuth, requireRole("admin"), requireAdminPermissi
       .select("*")
       .order("created_at", { ascending: false })
       .limit(200);
-    if (error) return fail(res, error.message, 400);
+    if (error) {
+      const msg = String(error.message || "");
+      if (/ervenow_withdraw_requests|schema cache|relation/i.test(msg)) {
+        return fail(
+          res,
+          "جدول طلبات السحب غير موجود. نفّذ shared/migration_ervenow_withdraw_requests_schema_cache.sql في Supabase SQL Editor.",
+          503
+        );
+      }
+      return fail(res, error.message, 400);
+    }
     ok(res, { requests: data || [] });
   } catch (e) {
     fail(res, e.message, 500);
@@ -718,7 +728,17 @@ router.get("/withdrawals/drivers", requireAuth, requireRole("admin"), requireAdm
       q = q.eq("status", statusQ);
     }
     const { data, error } = await q;
-    if (error) return fail(res, error.message, 400);
+    if (error) {
+      const msg = String(error.message || "");
+      if (/ervenow_withdraw_requests|schema cache|relation/i.test(msg)) {
+        return fail(
+          res,
+          "جدول طلبات السحب غير موجود. نفّذ shared/migration_ervenow_withdraw_requests_schema_cache.sql في Supabase SQL Editor.",
+          503
+        );
+      }
+      return fail(res, error.message, 400);
+    }
     const enriched = await attachUserPhonesForWithdrawals(req.supabase, data || []);
     return ok(res, { withdrawals: enriched, kind: "driver" });
   } catch (e) {
