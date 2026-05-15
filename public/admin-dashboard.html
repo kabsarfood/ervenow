@@ -670,6 +670,7 @@
     <script src="/assets/cart.js"></script>
     <script src="/assets/api-config.js"></script>
     <script src="/assets/api.js"></script>
+    <script src="https://cdn.socket.io/4.8.1/socket.io.min.js" crossorigin="anonymous"></script>
     <script>
       function setBadge(id, count) {
         var el = document.getElementById(id);
@@ -700,6 +701,10 @@
       var lastAdminActivityAt = Date.now();
       var fullAdminForcedLogout = false;
       var cacheOrders = [];
+      var adminSocket = null;
+      var adminSocketFallbackTimer = null;
+      var adminLiveStatsDebounceTimer = null;
+      var adminDriverSilentRefreshTimer = null;
       var cacheNotifications = [];
       var cacheDrivers = [];
       var cacheComplaints = [];
@@ -728,6 +733,28 @@
         localStorage.removeItem("token");
       }
 
+      function teardownAdminRealtime() {
+        if (adminDriverSilentRefreshTimer) {
+          clearTimeout(adminDriverSilentRefreshTimer);
+          adminDriverSilentRefreshTimer = null;
+        }
+        if (adminLiveStatsDebounceTimer) {
+          clearTimeout(adminLiveStatsDebounceTimer);
+          adminLiveStatsDebounceTimer = null;
+        }
+        if (adminSocketFallbackTimer) {
+          clearInterval(adminSocketFallbackTimer);
+          adminSocketFallbackTimer = null;
+        }
+        if (adminSocket) {
+          try {
+            adminSocket.removeAllListeners();
+            adminSocket.disconnect();
+          } catch (_d) {}
+          adminSocket = null;
+        }
+      }
+
       function forceAdminLogout(reason) {
         if (fullAdminForcedLogout) return;
         fullAdminForcedLogout = true;
@@ -735,6 +762,7 @@
           clearTimeout(fullAdminIdleTimer);
           fullAdminIdleTimer = null;
         }
+        teardownAdminRealtime();
         clearSessionTokens();
         if (window.PlatformAPI && typeof window.PlatformAPI.setToken === "function") {
           window.PlatformAPI.setToken("");
@@ -1023,48 +1051,297 @@
         if (el) el.textContent = "آخر تحديث: " + new Date().toLocaleTimeString("ar-SA");
       }
 
-      async function refreshLiveDashboard() {
-        if (liveTickBusy) return;
-        liveTickBusy = true;
-        try {
-          if (hasPermission("dashboard")) {
+      function adminDashboardSocketConnected() {
+        return !!(adminSocket && adminSocket.connected);
+      }
+
+      function getAdminSocketOrigin() {
+        var base = "";
+        if (window.__ERVENOW_API_BASE__ != null) {
+          base = String(window.__ERVENOW_API_BASE__).trim().replace(/\/$/, "");
+        }
+        if (base && /^https?:\/\//i.test(base)) return base;
+        return window.location.origin;
+      }
+
+      function startAdminSocketFallbackPolling() {
+        if (adminSocketFallbackTimer) return;
+        adminSocketFallbackTimer = setInterval(function () {
+          if (adminDashboardSocketConnected()) {
+            clearInterval(adminSocketFallbackTimer);
+            adminSocketFallbackTimer = null;
+            return;
+          }
+          void refreshLiveDashboard();
+        }, 10000);
+      }
+
+      function findCacheOrderIndex(orderId) {
+        var want = String(orderId || "").trim();
+        for (var i = 0; i < cacheOrders.length; i++) {
+          if (String(cacheOrders[i].id) === want) return i;
+        }
+        return -1;
+      }
+
+      function buildLiveOrderRow(o) {
+        var row = document.createElement("div");
+        row.className = "live-order-row";
+        row.setAttribute("data-live-order-id", String(o.id != null ? o.id : ""));
+        var left = document.createElement("div");
+        var idLine = document.createElement("div");
+        idLine.className = "live-order-id";
+        var meta = document.createElement("div");
+        meta.className = "live-order-meta";
+        left.appendChild(idLine);
+        left.appendChild(meta);
+        row.appendChild(left);
+        var badge = document.createElement("span");
+        badge.className = "live-badge";
+        row.appendChild(badge);
+        fillLiveOrderRowContent(row, o);
+        return row;
+      }
+
+      function fillLiveOrderRowContent(row, o) {
+        var idLine = row.querySelector(".live-order-id");
+        var meta = row.querySelector(".live-order-meta");
+        var badge = row.querySelector(".live-badge");
+        if (idLine) {
+          idLine.textContent = String(o.order_number || (o.id != null ? String(o.id).slice(0, 12) : ""));
+        }
+        if (meta) meta.textContent = fmtWhen(o.created_at);
+        if (badge) {
+          var ci = classifyOrderStatusLive(o);
+          badge.className = "live-badge " + ci.cls;
+          var raw = String(o.delivery_status || o.status || "—");
+          badge.textContent = ci.label + " · " + raw;
+        }
+      }
+
+      /** يعيد استخدام عناصر DOM للصفوف حيثما أمكن (تحديث الصف بدل إعادة بناء كل القائمة). */
+      function syncLiveOrdersDomFromCache() {
+        var listRoot = document.getElementById("liveOrdersList");
+        var hint = document.getElementById("liveOrdersHint");
+        if (!listRoot || !hasPermission("orders")) return;
+        if (hint) {
+          hint.style.display = "none";
+          hint.textContent = "";
+        }
+        var top = (cacheOrders || []).slice(0, 10);
+        listRoot.className = "";
+        if (!top.length) {
+          listRoot.innerHTML = "";
+          listRoot.className = "live-dash-msg";
+          listRoot.textContent = "لا توجد طلبات.";
+          return;
+        }
+        var map = {};
+        var existing = listRoot.querySelectorAll("[data-live-order-id]");
+        for (var ex = 0; ex < existing.length; ex++) {
+          var el = existing[ex];
+          if (el.className !== "live-order-row") continue;
+          var rid = el.getAttribute("data-live-order-id");
+          if (rid) map[rid] = el;
+        }
+        var allowed = {};
+        for (var i = 0; i < top.length; i++) {
+          var o = top[i];
+          var id = String(o.id != null ? o.id : "");
+          if (!id) continue;
+          allowed[id] = true;
+          var row = map[id];
+          if (!row) row = buildLiveOrderRow(o);
+          else fillLiveOrderRowContent(row, o);
+          listRoot.appendChild(row);
+        }
+        var ch = Array.prototype.slice.call(listRoot.children);
+        for (var c = 0; c < ch.length; c++) {
+          var child = ch[c];
+          var cid = child.getAttribute("data-live-order-id");
+          if (cid && !allowed[cid]) {
             try {
-              var sj = await window.PlatformAPI.api("/api/admin/stats?range=today");
-              var t = sj.ordersToday != null ? sj.ordersToday : sj.today_orders || 0;
-              var a = sj.activeOrders != null ? sj.activeOrders : sj.active_orders || 0;
-              var lt = document.getElementById("liveStatToday");
-              var la = document.getElementById("liveStatActive");
-              if (lt) lt.textContent = String(t);
-              if (la) la.textContent = String(a);
+              child.remove();
+            } catch (_r) {}
+          }
+        }
+      }
+
+      function adminRealtimeJoinTrackedOrders() {
+        if (!adminSocket || !adminSocket.connected) return;
+        var tok = window.PlatformAPI && typeof window.PlatformAPI.getToken === "function" ? window.PlatformAPI.getToken() : "";
+        if (!tok) return;
+        var lim = Math.min(cacheOrders.length, 40);
+        for (var i = 0; i < lim; i++) {
+          var oid = cacheOrders[i] && cacheOrders[i].id;
+          if (oid == null) continue;
+          var sid = String(oid).trim();
+          if (!sid) continue;
+          try {
+            adminSocket.emit("join:order", sid);
+          } catch (_e) {}
+        }
+      }
+
+      function scheduleAdminLiveStatsRefresh() {
+        if (!hasPermission("dashboard")) return;
+        if (adminLiveStatsDebounceTimer) clearTimeout(adminLiveStatsDebounceTimer);
+        adminLiveStatsDebounceTimer = setTimeout(function () {
+          adminLiveStatsDebounceTimer = null;
+          void refreshLiveStatsAndDriversBlocks(false);
+        }, 280);
+      }
+
+      /** يحدّث إحصائيات «اليوم/النشط» وعداد المندوبين في بطاقات المباشر (بدون جلب قائمة الطلبات). */
+      async function refreshLiveStatsAndDriversBlocks(updateMainStatCards) {
+        if (!hasPermission("dashboard")) {
+          var lt0 = document.getElementById("liveStatToday");
+          var la0 = document.getElementById("liveStatActive");
+          if (lt0) lt0.textContent = "—";
+          if (la0) la0.textContent = "—";
+        } else {
+          try {
+            var sj = await window.PlatformAPI.api("/api/admin/stats?range=today");
+            var t = sj.ordersToday != null ? sj.ordersToday : sj.today_orders || 0;
+            var a = sj.activeOrders != null ? sj.activeOrders : sj.active_orders || 0;
+            var lt = document.getElementById("liveStatToday");
+            var la = document.getElementById("liveStatActive");
+            if (lt) lt.textContent = String(t);
+            if (la) la.textContent = String(a);
+            if (updateMainStatCards !== false) {
               var ot = document.getElementById("ordersToday");
               var ao = document.getElementById("activeOrders");
               if (ot) ot.textContent = String(t);
               if (ao) ao.textContent = String(a);
-            } catch (_e) {
-              var ltE = document.getElementById("liveStatToday");
-              var laE = document.getElementById("liveStatActive");
-              if (ltE) ltE.textContent = "—";
-              if (laE) laE.textContent = "—";
             }
-          } else {
-            var lt0 = document.getElementById("liveStatToday");
-            var la0 = document.getElementById("liveStatActive");
-            if (lt0) lt0.textContent = "—";
-            if (la0) la0.textContent = "—";
+          } catch (_e) {
+            var ltE = document.getElementById("liveStatToday");
+            var laE = document.getElementById("liveStatActive");
+            if (ltE) ltE.textContent = "—";
+            if (laE) laE.textContent = "—";
           }
+        }
 
-          var drvEl = document.getElementById("liveStatDrivers");
-          if (drvEl) {
-            if (hasPermission("drivers")) {
-              try {
-                var dj = await window.PlatformAPI.api("/api/admin/drivers");
-                var n = dj.drivers && dj.drivers.length ? dj.drivers.length : 0;
-                drvEl.textContent = String(n);
-              } catch (_e2) {
-                drvEl.textContent = "—";
-              }
-            } else drvEl.textContent = "—";
+        var drvEl = document.getElementById("liveStatDrivers");
+        if (!drvEl) return;
+        if (hasPermission("drivers")) {
+          try {
+            var dj = await window.PlatformAPI.api("/api/admin/drivers");
+            var n = dj.drivers && dj.drivers.length ? dj.drivers.length : 0;
+            drvEl.textContent = String(n);
+          } catch (_e2) {
+            drvEl.textContent = "—";
           }
+        } else drvEl.textContent = "—";
+      }
+
+      function handleAdminOrderPatch(msg) {
+        if (!msg || !msg.patch) return;
+        var oid = String(msg.orderId != null ? msg.orderId : msg.patch.id || "").trim();
+        if (!oid) return;
+        var idx = findCacheOrderIndex(oid);
+        var merged;
+        var isNew = idx < 0;
+        if (idx >= 0) {
+          merged = Object.assign({}, cacheOrders[idx], msg.patch);
+          cacheOrders[idx] = merged;
+        } else {
+          merged = Object.assign({ id: oid }, msg.patch);
+          cacheOrders.unshift(merged);
+          if (cacheOrders.length > 600) cacheOrders.length = 600;
+        }
+        setBadge("badgeOrders", cacheOrders.length);
+        renderRecentOrders();
+        syncLiveOrdersDomFromCache();
+        scheduleAdminLiveStatsRefresh();
+        if (isNew) adminRealtimeJoinTrackedOrders();
+      }
+
+      function handleAdminOrderLive(msg) {
+        if (!msg || !msg.orderId) return;
+        var oid = String(msg.orderId).trim();
+        if (!oid) return;
+        var idx = findCacheOrderIndex(oid);
+        if (idx >= 0) {
+          var extras = {};
+          if (msg.arrivalPing !== undefined) extras._liveArrivalPing = msg.arrivalPing;
+          if (msg.ts != null) extras._liveTs = msg.ts;
+          cacheOrders[idx] = Object.assign({}, cacheOrders[idx], extras);
+          renderRecentOrders();
+          syncLiveOrdersDomFromCache();
+        } else {
+          handleAdminOrderPatch({ orderId: oid, patch: { id: oid } });
+          return;
+        }
+        scheduleAdminLiveStatsRefresh();
+      }
+
+      function handleAdminDriverUpdate() {
+        if (adminDriverSilentRefreshTimer) clearTimeout(adminDriverSilentRefreshTimer);
+        adminDriverSilentRefreshTimer = setTimeout(function () {
+          adminDriverSilentRefreshTimer = null;
+          void silentLoadRecentOrdersForRealtime();
+          scheduleAdminLiveStatsRefresh();
+        }, 420);
+      }
+
+      async function silentLoadRecentOrdersForRealtime() {
+        try {
+          var j = await window.PlatformAPI.api("/api/admin/orders");
+          cacheOrders = j.orders || [];
+          setBadge("badgeOrders", cacheOrders.length);
+          renderRecentOrders();
+          syncLiveOrdersDomFromCache();
+          adminRealtimeJoinTrackedOrders();
+          return true;
+        } catch (_e) {
+          return false;
+        }
+      }
+
+      function initAdminDashboardSocket() {
+        if (typeof io === "undefined") {
+          startAdminSocketFallbackPolling();
+          return;
+        }
+        var tok = window.PlatformAPI && typeof window.PlatformAPI.getToken === "function" ? window.PlatformAPI.getToken() : "";
+        if (!tok) return;
+        var API_ORIGIN = getAdminSocketOrigin();
+        try {
+          adminSocket = io(API_ORIGIN, {
+            path: "/socket.io/",
+            transports: ["websocket"],
+            auth: { token: tok },
+          });
+        } catch (_e) {
+          startAdminSocketFallbackPolling();
+          return;
+        }
+        adminSocket.on("connect", function () {
+          if (adminSocketFallbackTimer) {
+            clearInterval(adminSocketFallbackTimer);
+            adminSocketFallbackTimer = null;
+          }
+          adminRealtimeJoinTrackedOrders();
+          syncLiveOrdersDomFromCache();
+          void refreshLiveStatsAndDriversBlocks(true);
+        });
+        adminSocket.on("connect_error", function () {
+          startAdminSocketFallbackPolling();
+        });
+        adminSocket.on("disconnect", function () {
+          startAdminSocketFallbackPolling();
+        });
+        adminSocket.on("order:patch", handleAdminOrderPatch);
+        adminSocket.on("order:live", handleAdminOrderLive);
+        adminSocket.on("driver:update", handleAdminDriverUpdate);
+      }
+
+      async function refreshLiveDashboard() {
+        if (liveTickBusy) return;
+        liveTickBusy = true;
+        try {
+          await refreshLiveStatsAndDriversBlocks(true);
 
           var listRoot = document.getElementById("liveOrdersList");
           var hint = document.getElementById("liveOrdersHint");
@@ -1074,43 +1351,15 @@
               hint.style.display = "none";
               hint.textContent = "";
             }
-            try {
-              var oj = await window.PlatformAPI.api("/api/admin/orders");
-              var orders = (oj.orders || []).slice(0, 10);
-              listRoot.innerHTML = "";
-              listRoot.className = "";
-              if (!orders.length) {
+            if (adminDashboardSocketConnected()) {
+              syncLiveOrdersDomFromCache();
+            } else {
+              var synced = await silentLoadRecentOrdersForRealtime();
+              if (!synced) {
+                listRoot.innerHTML = "";
                 listRoot.className = "live-dash-msg";
-                listRoot.textContent = "لا توجد طلبات.";
-              } else {
-                for (var i = 0; i < orders.length; i++) {
-                  (function (o) {
-                    var row = document.createElement("div");
-                    row.className = "live-order-row";
-                    var left = document.createElement("div");
-                    var idLine = document.createElement("div");
-                    idLine.className = "live-order-id";
-                    idLine.textContent = String(o.order_number || (o.id != null ? String(o.id).slice(0, 12) : ""));
-                    var meta = document.createElement("div");
-                    meta.className = "live-order-meta";
-                    meta.textContent = fmtWhen(o.created_at);
-                    left.appendChild(idLine);
-                    left.appendChild(meta);
-                    row.appendChild(left);
-                    var ci = classifyOrderStatusLive(o);
-                    var badge = document.createElement("span");
-                    badge.className = "live-badge " + ci.cls;
-                    var raw = String(o.delivery_status || o.status || "—");
-                    badge.textContent = ci.label + " · " + raw;
-                    row.appendChild(badge);
-                    listRoot.appendChild(row);
-                  })(orders[i]);
-                }
+                listRoot.textContent = "تعذّر تحميل الطلبات";
               }
-            } catch (oe) {
-              listRoot.innerHTML = "";
-              listRoot.className = "live-dash-msg";
-              listRoot.textContent = oe.message || "تعذّر تحميل الطلبات";
             }
           } else {
             listRoot.innerHTML = "";
@@ -1178,6 +1427,8 @@
           cacheOrders = j.orders || [];
           setBadge("badgeOrders", cacheOrders.length);
           renderRecentOrders();
+          syncLiveOrdersDomFromCache();
+          adminRealtimeJoinTrackedOrders();
         } catch (e) {
           showError(e.message || "فشل تحميل آخر الطلبات");
         }
@@ -1603,10 +1854,8 @@
         if (hasPermission("stores")) loadStores();
         if (hasPermission("jobs")) loadJobs();
         if (hasPermission("admin_accounts")) loadAdminAccounts();
-        refreshLiveDashboard();
-        setInterval(function () {
-          refreshLiveDashboard();
-        }, 5000);
+        initAdminDashboardSocket();
+        void refreshLiveDashboard();
         setInterval(function () { if (hasPermission("dashboard")) loadStats(); }, 15000);
         setInterval(function () { if (hasPermission("orders")) loadRecentOrders(); }, 20000);
         setInterval(function () { if (hasPermission("notifications")) loadNotifications(); }, 20000);
