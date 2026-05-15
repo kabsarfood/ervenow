@@ -5,9 +5,21 @@ const { createServiceClient } = require("../../shared/config/supabase");
 const { ok, fail } = require("../../shared/utils/helpers");
 const { sendWhatsApp } = require("../../shared/utils/whatsapp");
 const checkoutPaymentMethods = require("../../shared/utils/checkoutPaymentMethods");
+const { computePlatformCommission } = require("../../shared/utils/serviceCommission");
+const {
+  gasModeFromBody,
+  computeGasTotal,
+  gasServiceLabel,
+  CENTRAL_LITERS,
+} = require("../../shared/utils/gasDeliveryPricing");
+const { notifyProvidersForBooking } = require("../../shared/services/serviceBookingNotify");
+const { recordCommissionDebtOnDelivered } = require("../../shared/services/providerCommissionDebts");
+const {
+  insertServiceBookingResilient,
+  insertServiceBookingsBatchResilient,
+} = require("../../shared/utils/idempotency");
 
 const router = express.Router();
-const PLATFORM_COMMISSION_RATE = 0.12;
 const SERVICE_TYPES = new Set([
   "plumber",
   "electrician",
@@ -74,35 +86,25 @@ function labelByType(type) {
   return map[type] || type || "خدمة";
 }
 
-async function getServiceProviderPhones(sb, serviceType) {
-  let q = sb.from("users").select("phone").eq("role", "service");
-  if (serviceType) q = q.eq("service_type", serviceType);
-  const { data, error } = await q;
-  if (error || !Array.isArray(data)) return [];
-  return data
-    .map((u) => String(u.phone || "").trim())
-    .filter((p) => p.length >= 10);
-}
-
-async function sendProviderBookingWhatsApp(phones, booking) {
-  if (!Array.isArray(phones) || !phones.length || !booking) return;
-  const paymentText = booking.payment_status === "paid" ? "مدفوع" : "غير مدفوع";
-  const message =
-    `📥 طلب خدمة جديد\n` +
-    `الخدمة: ${booking.service_name || "خدمة"}\n` +
-    `العدد: ${booking.qty || 1}\n` +
-    `الموقع/الحي: ${booking.location || booking.district || "—"}\n` +
-    `جوال طالب الخدمة: ${booking.customer_phone || "—"}\n` +
-    `الحالة المالية: ${paymentText}\n` +
-    `القيمة: ${Number(booking.total_amount || 0).toFixed(2)} ريال\n` +
-    `عمولة المنصة (12%): ${Number(booking.platform_commission || 0).toFixed(2)} ريال`;
-  for (const phone of phones) {
-    try {
-      await sendWhatsApp({ to: phone, message });
-    } catch (e) {
-      console.error("[services] provider WhatsApp:", e && (e.message || e));
-    }
-  }
+function buildServiceBookingRow(base) {
+  const service_type = String(base.service_type || "service").trim().toLowerCase();
+  const totalAmount = normalizeMoney(base.total_amount);
+  return {
+    service_order_number: base.service_order_number,
+    customer_id: base.customer_id || null,
+    customer_phone: String(base.customer_phone || "").trim(),
+    service_type,
+    service_name: String(base.service_name || labelByType(service_type)).trim(),
+    district: String(base.district || "").trim(),
+    location: String(base.location || "").trim(),
+    qty: normalizeQty(base.qty),
+    gas_mode: base.gas_mode || null,
+    gas_liters: base.gas_liters != null ? Number(base.gas_liters) : null,
+    total_amount: totalAmount,
+    payment_status: normalizePaymentStatus(base.payment_status),
+    platform_commission: computePlatformCommission(totalAmount, service_type),
+    status: "new",
+  };
 }
 
 async function sendCustomerRateWhatsApp(booking) {
@@ -148,6 +150,72 @@ async function recalcProviderRating(sb, providerId) {
   }
 }
 
+router.get("/gas/pricing", (_req, res) => {
+  return ok(res, {
+    cylinder_one: 39,
+    cylinder_two: 75,
+    central_per_liter: 0.9,
+    central_liters: CENTRAL_LITERS,
+    commission_rate: require("../../shared/utils/platformCommission").PLATFORM_COMMISSION_RATE,
+  });
+});
+
+router.post("/gas-order", optionalAuth, async (req, res) => {
+  try {
+    const sb = req.supabase || createServiceClient();
+    if (!sb) return fail(res, "تعذر تهيئة الاتصال بقاعدة البيانات", 503);
+
+    const b = req.body || {};
+    const gas_mode = gasModeFromBody(b);
+    const qty = gas_mode === "cylinder_swap" ? Math.max(1, Math.min(10, normalizeQty(b.qty))) : 1;
+    const gas_liters =
+      gas_mode === "central_refill" ? Number(b.gas_liters || b.liters) : null;
+    if (gas_mode === "central_refill" && !CENTRAL_LITERS.includes(gas_liters)) {
+      return fail(res, "اختر كمية التعبئة من القائمة", 400);
+    }
+    const location = String(b.location || "").trim();
+    if (!location) return fail(res, "حدد موقع التوصيل", 400);
+
+    const totalAmount = computeGasTotal(gas_mode, qty, gas_liters);
+    if (totalAmount <= 0) return fail(res, "تعذر حساب السعر", 400);
+
+    const payOnDelivery = Boolean(b.pay_on_delivery);
+    const payment_status = payOnDelivery ? "unpaid" : normalizePaymentStatus(b.payment_status || "paid");
+    const service_order_number = await buildNextServiceOrderNumber(sb);
+    const service_name = gasServiceLabel(gas_mode);
+
+    const insertRow = buildServiceBookingRow(sb, {
+      service_order_number,
+      customer_id: req.appUser ? req.appUser.id : null,
+      customer_phone: String(b.customer_phone || (req.appUser && req.appUser.phone) || "").trim(),
+      service_type: "gas_delivery",
+      service_name,
+      district: String(b.district || "").trim(),
+      location,
+      qty: gas_mode === "central_refill" ? gas_liters : qty,
+      gas_mode,
+      gas_liters: gas_mode === "central_refill" ? gas_liters : null,
+      total_amount: totalAmount,
+      payment_status,
+    });
+
+    const { data, error } = await insertServiceBookingResilient(sb, insertRow);
+    if (error) return fail(res, error.message, 400);
+
+    await notifyProvidersForBooking(sb, data);
+
+    return ok(res, {
+      booking: data,
+      order_number: data.service_order_number,
+      message: payOnDelivery
+        ? "تم تسجيل الطلب — الدفع عند التوصيل"
+        : "تم تسجيل الطلب والدفع",
+    });
+  } catch (e) {
+    return fail(res, e.message, 500);
+  }
+});
+
 router.get("/health", (_req, res) => ok(res, { service: "services" }));
 
 router.get("/bookings", requireAuth, async (req, res) => {
@@ -184,30 +252,23 @@ router.post("/bookings", requireAuth, async (req, res) => {
     const b = req.body || {};
     const service_type = String(b.service_type || "").trim().toLowerCase() || "service";
     const service_name = String(b.service_name || "").trim() || labelByType(service_type);
-    const qty = normalizeQty(b.qty);
-    const totalAmount = normalizeMoney(b.total_amount);
-    const payment_status = normalizePaymentStatus(b.payment_status);
-    const platform_commission = Math.round(totalAmount * PLATFORM_COMMISSION_RATE * 100) / 100;
     const service_order_number = await buildNextServiceOrderNumber(req.supabase);
+    const insertRow = buildServiceBookingRow({
+      service_order_number,
+      customer_id: req.appUser.id,
+      customer_phone: b.customer_phone || req.appUser.phone || "",
+      service_type,
+      service_name,
+      district: b.district,
+      location: b.location,
+      qty: b.qty,
+      gas_mode: b.gas_mode,
+      gas_liters: b.gas_liters,
+      total_amount: b.total_amount,
+      payment_status: b.payment_status,
+    });
 
-    const { data, error } = await req.supabase
-      .from("service_bookings")
-      .insert({
-        service_order_number,
-        customer_id: req.appUser.id,
-        customer_phone: b.customer_phone || req.appUser.phone || "",
-        service_type,
-        service_name,
-        district: String(b.district || "").trim(),
-        location: String(b.location || "").trim(),
-        qty,
-        total_amount: totalAmount,
-        payment_status,
-        platform_commission,
-        status: "new",
-      })
-      .select()
-      .single();
+    const { data, error } = await insertServiceBookingResilient(req.supabase, insertRow);
     if (error) return fail(res, error.message, 400);
     ok(res, { booking: data });
   } catch (e) {
@@ -234,31 +295,30 @@ router.post("/checkout", optionalAuth, async (req, res) => {
     for (const it of serviceItems) {
       const type = String(it.type || "").trim().toLowerCase();
       const data = it && typeof it.data === "object" && it.data ? it.data : {};
-      const qty = normalizeQty(data.qty || 1);
-      const totalAmount = normalizeMoney(it.price || data.total_amount || 0);
       const service_order_number = await buildNextServiceOrderNumber(sb);
-      rows.push({
-        service_order_number,
-        customer_id: customerId,
-        customer_phone: String(data.customer_phone || customerPhoneFromUser || "").trim(),
-        service_type: type,
-        service_name: String(it.title || labelByType(type)).trim(),
-        district: String(data.district || "").trim(),
-        location: String(data.location || "").trim(),
-        qty,
-        total_amount: totalAmount,
-        payment_status: normalizePaymentStatus(data.payment_status || "unpaid"),
-        platform_commission: Math.round(totalAmount * PLATFORM_COMMISSION_RATE * 100) / 100,
-        status: "new",
-      });
+      rows.push(
+        buildServiceBookingRow({
+          service_order_number,
+          customer_id: customerId,
+          customer_phone: String(data.customer_phone || customerPhoneFromUser || "").trim(),
+          service_type: type,
+          service_name: String(it.title || labelByType(type)).trim(),
+          district: data.district,
+          location: data.location,
+          qty: data.qty,
+          gas_mode: data.gas_mode,
+          gas_liters: data.gas_liters,
+          total_amount: it.price || data.total_amount || 0,
+          payment_status: data.payment_status || "unpaid",
+        })
+      );
     }
 
-    const { data: inserted, error } = await sb.from("service_bookings").insert(rows).select("*");
+    const { data: inserted, error } = await insertServiceBookingsBatchResilient(sb, rows);
     if (error) return fail(res, error.message, 400);
 
     for (const booking of inserted || []) {
-      const providerPhones = await getServiceProviderPhones(sb, booking.service_type);
-      await sendProviderBookingWhatsApp(providerPhones, booking);
+      await notifyProvidersForBooking(sb, booking);
     }
 
     return ok(res, { bookings: inserted || [], skipped: items.length - serviceItems.length });
@@ -288,6 +348,14 @@ router.patch("/bookings/:id/status", requireAuth, requireRole("service", "admin"
     if (error) return fail(res, error.message, 400);
 
     if (nextStatus === "delivered") {
+      const providerId = data.provider_id || (req.appUser.role === "service" ? req.appUser.id : null);
+      if (providerId) {
+        try {
+          await recordCommissionDebtOnDelivered(req.supabase, data, providerId);
+        } catch (debtErr) {
+          console.error("[services] commission debt:", debtErr && (debtErr.message || debtErr));
+        }
+      }
       await sendCustomerRateWhatsApp(data);
     }
 

@@ -7,6 +7,7 @@ const { getOsrmRouteKmOrHaversine } = require("../../shared/utils/osrmClient");
 const { logger } = require("../../shared/utils/logger");
 const { normalizeOrderFinancialsForInsert } = require("../../shared/utils/orderTotals");
 const { isOrdersStoreColumnMissingError, insertOrdersResilient } = require("../../shared/utils/idempotency");
+const { computePlatformCommission } = require("../../shared/utils/platformCommission");
 
 function haversineDistanceKm(lat1, lng1, lat2, lng2) {
   const R = 6371;
@@ -60,7 +61,7 @@ function calcDeliveryFee(distanceKm) {
 }
 
 function calcPlatformFee(total) {
-  return Math.round(Number(total) * 0.12 * 100) / 100;
+  return computePlatformCommission(total);
 }
 
 function normalizeVehicleType(v) {
@@ -237,9 +238,9 @@ async function createDeliveryOrderFromBody(sb, appUser, body, opts) {
     ? storeIdRaw
     : null;
 
-  /* طلب متجر بقيمة بضاعة: عمولة المنصة على المبيعات 12% (كما في checkout) + عمولة التوصيل */
+  /* طلب متجر: عمولة المنصة الموحّدة على البضاعة + على التوصيل */
   const storeGoodsPlatform =
-    store_id && orderTotal > 0 ? Math.round(orderTotal * 0.12 * 100) / 100 : 0;
+    store_id && orderTotal > 0 ? computePlatformCommission(orderTotal) : 0;
   if (store_id && orderTotal > 0) {
     platformFee = Math.round((deliveryPlatformFee + storeGoodsPlatform) * 100) / 100;
     driverEarning = Math.round(deliveryFee * 100) / 100;

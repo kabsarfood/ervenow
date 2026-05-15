@@ -127,7 +127,7 @@ where not exists (
 
 -- ——— قواعد عمولة افتراضية ———
 insert into public.commission_rules (commission_rate, applies_to, country_code, is_active)
-select 0.12, v.applies, 'SA', true
+select 0.07, v.applies, 'SA', true
 from (values ('merchant'::text), ('delivery'::text), ('service'::text)) as v(applies)
 where not exists (
   select 1 from public.commission_rules c where c.applies_to = v.applies and c.country_code = 'SA' and c.is_active

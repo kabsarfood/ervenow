@@ -142,6 +142,7 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="/assets/api-config.js"></script>
     <script src="/assets/api.js"></script>
+    <script src="/assets/cart.js"></script>
     <script>
       (function () {
         var INDUSTRIAL = [
@@ -192,17 +193,22 @@
           { id: "pickup_truck", label: "ونيت", ready: true },
           { id: "local_delivery", label: "توصيل داخلي", ready: false },
           { id: "furniture", label: "نقل أثاث", ready: false },
-          { id: "gas_delivery", label: "توصيل غاز", ready: false },
+          { id: "gas_delivery", label: "توصيل غاز", ready: true },
         ];
 
         var state = {
           service: "car_transport",
           pickup: null,
           dropoff: null,
+          gasLocation: null,
           mapTarget: null,
           map: null,
           marker: null,
         };
+
+        var GAS_CYL_ONE = 39;
+        var GAS_CYL_TWO = 75;
+        var GAS_PER_LITER = 0.9;
 
         function qs() {
           var p = new URLSearchParams(location.search);
@@ -262,15 +268,79 @@
               "<strong>أهلاً بك في خدمة الونيت</strong><br />نفس خطوات نقل المركبات (مواقع الاستلام والتسليم والتسعير الموحد). اختر نوع المركبة والحالة ثم حدد المواقع.";
             return;
           }
+          if (s === "gas_delivery") {
+            w.hidden = false;
+            w.innerHTML = "<strong>🪔 أهلاً بك في خدمة توصيل الغاز من ERVENOW</strong>";
+            return;
+          }
           w.hidden = false;
           w.innerHTML =
             "<strong>قريباً</strong><br />سيتم تفعيل نموذج هذه الخدمة ضمن النظام الموحد. يمكنك حالياً استخدام <a href='?service=car_transport'>نقل المركبات</a>.";
         }
 
+        function gasPrice() {
+          var modeEl = document.getElementById("gdMode");
+          if (!modeEl) return 0;
+          if (modeEl.value === "bulk") {
+            return Math.round(Number(document.getElementById("gdLiters").value) * GAS_PER_LITER * 100) / 100;
+          }
+          var q = parseInt(document.getElementById("gdCylinders").value, 10) || 1;
+          if (q === 1) return GAS_CYL_ONE;
+          if (q === 2) return GAS_CYL_TWO;
+          return q * GAS_CYL_ONE;
+        }
+
+        function updateGasPrice() {
+          var el = document.getElementById("gdPriceLive");
+          if (!el) return;
+          el.textContent = "السعر: " + gasPrice().toFixed(2) + " ر.س (عمولة المنصة 7%: " + (gasPrice() * 0.07).toFixed(2) + " ر.س)";
+        }
+
+        function toggleGasMode() {
+          var bulk = document.getElementById("gdMode").value === "bulk";
+          document.getElementById("gdCylinderBox").hidden = bulk;
+          document.getElementById("gdBulkBox").hidden = !bulk;
+          updateGasPrice();
+        }
+
+        function renderGasForm() {
+          var mount = document.getElementById("dsFormMount");
+          if (state.service !== "gas_delivery") return;
+          var cylOpts = "";
+          for (var i = 1; i <= 10; i++) {
+            var p = i === 1 ? GAS_CYL_ONE : i === 2 ? GAS_CYL_TWO : i * GAS_CYL_ONE;
+            cylOpts += "<option value='" + i + "'>" + i + " — " + p + " ر.س</option>";
+          }
+          mount.innerHTML =
+            "<form class='ds-form' id='gdForm'>" +
+            "<div class='ds-row'><label>نوع الخدمة</label><select id='gdMode'><option value='cylinder'>1 — تبديل أسطوانة غاز</option><option value='bulk'>2 — تعبئة غاز مركزي</option></select></div>" +
+            "<div id='gdCylinderBox'><div class='ds-row'><label>عدد الأسطوانات</label><select id='gdCylinders'>" +
+            cylOpts +
+            "</select></div></div>" +
+            "<div class='ds-subopts' id='gdBulkBox' hidden><div class='ds-row'><label>الكمية (لتر)</label><select id='gdLiters'><option value='250'>250</option><option value='500'>500</option><option value='1000'>1000</option><option value='2000'>2000</option><option value='3000'>3000</option><option value='4000'>4000</option></select></div></div>" +
+            "<p class='ds-muted' id='gdPriceLive' style='font-weight:800;font-size:1.1rem;color:#3d2213'>السعر: —</p>" +
+            "<div class='ds-row'><label>جوال طالب الخدمة</label><input id='gdPhone' type='tel' placeholder='05xxxxxxxx' required /></div>" +
+            "<div class='ds-actions'><button type='button' class='btn btn-outline' id='gdBtnMap'>📍 حدد موقعك</button></div>" +
+            "<p class='ds-muted' id='gdLocLbl'>لم يُحدد الموقع</p>" +
+            "<div class='ds-row'><label>طريقة الدفع</label><div class='ds-actions'><button type='button' class='btn btn-solid' id='gdPayCod'>الدفع عند الوصول</button><button type='button' class='btn btn-primary' id='gdPayNow'>الدفع الآن (السلة)</button></div></div>" +
+            "</form>";
+          document.getElementById("gdMode").onchange = toggleGasMode;
+          document.getElementById("gdCylinders").onchange = updateGasPrice;
+          document.getElementById("gdLiters").onchange = updateGasPrice;
+          document.getElementById("gdBtnMap").onclick = function () {
+            openMap("gas");
+          };
+          document.getElementById("gdPayCod").onclick = submitGasCod;
+          document.getElementById("gdPayNow").onclick = submitGasPayNow;
+          toggleGasMode();
+        }
+
         function openMap(which) {
           state.mapTarget = which;
-          document.getElementById("dsMapTitle").textContent =
-            which === "pickup" ? "حدد موقع المركبة (الاستلام)" : "حدد موقع التسليم";
+          var title = "حدد موقع التسليم";
+          if (which === "pickup") title = "حدد موقع المركبة (الاستلام)";
+          else if (which === "gas") title = "حدد موقع التوصيل";
+          document.getElementById("dsMapTitle").textContent = title;
           var m = document.getElementById("dsMapModal");
           m.classList.add("open");
           m.setAttribute("aria-hidden", "false");
@@ -303,16 +373,120 @@
         function confirmMap() {
           if (!state.marker) return closeMap();
           var ll = state.marker.getLatLng();
+          if (state.mapTarget === "gas") {
+            state.gasLocation = { lat: ll.lat, lng: ll.lng };
+            var lbl = document.getElementById("gdLocLbl");
+            if (lbl) lbl.textContent = "تم تحديد الموقع: " + ll.lat.toFixed(5) + ", " + ll.lng.toFixed(5);
+            closeMap();
+            return;
+          }
           if (state.mapTarget === "pickup") state.pickup = { lat: ll.lat, lng: ll.lng };
           else state.dropoff = { lat: ll.lat, lng: ll.lng };
-          document.getElementById("dsPickupLbl").textContent = state.pickup
-            ? "تم تحديد موقع الاستلام"
-            : "لم يُحدد";
-          document.getElementById("dsDropLbl").textContent = state.dropoff
-            ? "تم تحديد موقع التسليم"
-            : "لم يُحدد";
+          var pu = document.getElementById("dsPickupLbl");
+          var dr = document.getElementById("dsDropLbl");
+          if (pu) pu.textContent = state.pickup ? "تم تحديد موقع الاستلام" : "لم يُحدد";
+          if (dr) dr.textContent = state.dropoff ? "تم تحديد موقع التسليم" : "لم يُحدد";
           updateEstimate();
           closeMap();
+        }
+
+        function gasPayload(paymentMethod) {
+          var bulk = document.getElementById("gdMode").value === "bulk";
+          return {
+            mode: bulk ? "bulk" : "cylinder",
+            cylinders: bulk ? null : parseInt(document.getElementById("gdCylinders").value, 10) || 1,
+            liters: bulk ? parseInt(document.getElementById("gdLiters").value, 10) : null,
+            payment_method: paymentMethod,
+            lat: state.gasLocation.lat,
+            lng: state.gasLocation.lng,
+            customer_phone: document.getElementById("gdPhone").value.trim(),
+          };
+        }
+
+        function validateGas() {
+          var err = document.getElementById("dsErr");
+          var okEl = document.getElementById("dsOk");
+          err.style.display = "none";
+          okEl.style.display = "none";
+          if (!state.gasLocation) {
+            err.textContent = "يرجى تحديد موقع التوصيل.";
+            err.style.display = "block";
+            return false;
+          }
+          var phone = document.getElementById("gdPhone").value.trim();
+          if (!/^05\d{8}$/.test(phone)) {
+            err.textContent = "أدخل رقم جوال صحيح (05xxxxxxxx).";
+            err.style.display = "block";
+            return false;
+          }
+          if (!authHeaders().Authorization) {
+            err.textContent = "يجب تسجيل الدخول أولاً.";
+            err.style.display = "block";
+            return false;
+          }
+          return true;
+        }
+
+        function submitGasCod() {
+          if (!validateGas()) return;
+          var err = document.getElementById("dsErr");
+          var okEl = document.getElementById("dsOk");
+          fetch(window.PlatformAPI.apiUrl("/api/delivery/create"), {
+            method: "POST",
+            headers: Object.assign({ "Content-Type": "application/json" }, authHeaders()),
+            body: JSON.stringify({
+              service_type: "gas_delivery",
+              payload: gasPayload("cash_on_delivery"),
+              customer_phone: document.getElementById("gdPhone").value.trim(),
+            }),
+          })
+            .then(function (r) {
+              return r.json().then(function (j) {
+                return { ok: r.ok, j: j };
+              });
+            })
+            .then(function (x) {
+              if (!x.ok || !x.j || x.j.ok === false) {
+                err.textContent = (x.j && (x.j.message || x.j.error)) || "فشل الإرسال";
+                err.style.display = "block";
+                return;
+              }
+              var o = x.j.order || {};
+              okEl.textContent =
+                "تم إنشاء الطلب — رقم: " +
+                (o.order_number || o.service_order_number || o.id) +
+                " — الدفع عند الوصول. تم إشعار المزودين.";
+              okEl.style.display = "block";
+            })
+            .catch(function () {
+              err.textContent = "خطأ في الاتصال";
+              err.style.display = "block";
+            });
+        }
+
+        function submitGasPayNow() {
+          if (!validateGas()) return;
+          var bulk = document.getElementById("gdMode").value === "bulk";
+          var price = gasPrice();
+          var title = bulk ? "تعبئة غاز مركزي" : "تبديل اسطوانة غاز";
+          var qty = bulk
+            ? parseInt(document.getElementById("gdLiters").value, 10)
+            : parseInt(document.getElementById("gdCylinders").value, 10);
+          addToCart({
+            type: "gas_delivery",
+            title: title,
+            price: price,
+            data: {
+              gas_mode: bulk ? "central_refill" : "cylinder_swap",
+              gas_liters: bulk ? qty : null,
+              qty: qty,
+              location: state.gasLocation.lat.toFixed(6) + "," + state.gasLocation.lng.toFixed(6),
+              customer_phone: document.getElementById("gdPhone").value.trim(),
+              payment_status: "paid",
+              total_amount: price,
+            },
+          });
+          location.href = "/cart.html";
         }
 
         function haversineKm(a, b, c, d) {
@@ -346,10 +520,18 @@
             " ر.س — السعر النهائي يُحسب من مسار الطريق على الخادم.";
         }
 
+        function renderForms() {
+          if (state.service === "gas_delivery") {
+            renderGasForm();
+            return;
+          }
+          renderCarForm();
+        }
+
         function renderCarForm() {
           var mount = document.getElementById("dsFormMount");
           if (state.service !== "car_transport" && state.service !== "pickup_truck") {
-            mount.innerHTML = "";
+            if (state.service !== "gas_delivery") mount.innerHTML = "";
             return;
           }
           var indOpts = INDUSTRIAL.map(function (x) {
@@ -480,7 +662,7 @@
         state.service = qs();
         renderChips();
         setWelcome();
-        renderCarForm();
+        renderForms();
       })();
     </script>
   </body>

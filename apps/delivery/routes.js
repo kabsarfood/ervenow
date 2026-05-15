@@ -186,7 +186,11 @@ router.post("/create", requireAuth, deliveryOrdersCreateLimiter, async (req, res
     });
     if (error) return fail(res, error.message, 400);
 
-    if (data && String(data.delivery_status || "") === "pending") {
+    const isGas =
+      String(body.service_type || "").toLowerCase() === "gas_delivery" ||
+      (data && data.data && data.data.gas);
+
+    if (!isGas && data && String(data.delivery_status || "") === "pending") {
       try {
         await enqueueDeliveryJob("new-order", {
           orderId: data.id,
@@ -203,7 +207,7 @@ router.post("/create", requireAuth, deliveryOrdersCreateLimiter, async (req, res
         logger.error({ err: qe && (qe.message || String(qe)), orderId: data.id }, "[delivery/create] enqueue new-order");
       }
       await bumpDeliveryOrdersListEpoch();
-    } else if (data) {
+    } else if (data && !isGas) {
       await bumpDeliveryOrdersListEpoch();
     }
 
@@ -213,9 +217,15 @@ router.post("/create", requireAuth, deliveryOrdersCreateLimiter, async (req, res
       from_location: rowData.from_location || null,
       to_location: rowData.to_location || null,
       distance_km: data.distance_km != null ? data.distance_km : rowData.distance_km ?? null,
-      price: data.delivery_fee != null ? data.delivery_fee : rowData.price ?? null,
+      price:
+        data.delivery_fee != null
+          ? data.delivery_fee
+          : data.order_total != null
+            ? data.order_total
+            : rowData.price ?? null,
+      commission: data.commission != null ? data.commission : rowData.commission ?? null,
     };
-    return ok(res, { order: data, unified: true, summary });
+    return ok(res, { order: data, unified: true, summary, gas: Boolean(isGas) });
   } catch (e) {
     fail(res, e.message, 500);
   }

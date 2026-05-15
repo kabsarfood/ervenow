@@ -135,7 +135,7 @@ function escCartHtml(s) {
 
 /** ضريبة القيمة المضافة وعمولة المنصة — نفس ترتيب checkout للمتاجر (ضريبة على البضاعة + التوصيل) */
 var ERV_VAT_RATE = 0.15;
-var ERV_PLATFORM_COMMISSION_RATE = 0.12;
+var ERV_PLATFORM_COMMISSION_RATE = 0.07;
 var ERV_DELIVERY_SAR_PER_KM = 2.3;
 
 function roundMoney(n) {

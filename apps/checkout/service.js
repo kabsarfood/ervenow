@@ -9,7 +9,10 @@ const { logger } = require("../../shared/utils/logger");
 const { runStoreCheckoutSideEffects } = require("../../shared/utils/storeOrderPostCheckout");
 const { isOrderPaymentGateRequired } = require("../../shared/utils/orderPaymentGate");
 const { isPaidFromRequestBody, normalizeOrderPaymentMethod } = require("../delivery/service");
-const { insertOrdersResilient } = require("../../shared/utils/idempotency");
+const { insertOrdersResilient, insertServiceBookingResilient } = require("../../shared/utils/idempotency");
+const { computePlatformCommission } = require("../../shared/utils/platformCommission");
+const { computePlatformCommission: computeServiceBookingCommission } = require("../../shared/utils/serviceCommission");
+const { notifyProvidersForBooking } = require("../../shared/services/serviceBookingNotify");
 
 function normalizedGroup(typeRaw) {
   const type = String(typeRaw || "")
@@ -130,9 +133,12 @@ async function runCheckoutInsert(sb, appUser, body, options) {
           district: String(data.district || "").trim(),
           location: String(data.location || data.to || "").trim(),
           qty: normalizeQty(data.qty || 1),
+          gas_mode: data.gas_mode || null,
+          gas_liters: data.gas_liters != null ? Number(data.gas_liters) : null,
           total_amount: total,
-          payment_status: "paid",
-          platform_commission: Math.round(total * 0.12 * 100) / 100,
+          payment_status:
+            String(data.payment_status || "").toLowerCase() === "unpaid" ? "unpaid" : "paid",
+          platform_commission: computeServiceBookingCommission(total, serviceType),
           status: "new",
         };
 
@@ -140,7 +146,7 @@ async function runCheckoutInsert(sb, appUser, body, options) {
         let sErr = null;
         for (let insAttempt = 0; insAttempt < 5; insAttempt += 1) {
           serviceRow.service_order_number = await allocateUniqueServiceOrderNumber(sb, "SV");
-          const ins = await sb.from("service_bookings").insert(serviceRow).select().single();
+          const ins = await insertServiceBookingResilient(sb, serviceRow);
           serviceData = ins.data;
           sErr = ins.error;
           if (!sErr) break;
@@ -152,6 +158,14 @@ async function runCheckoutInsert(sb, appUser, body, options) {
         }
         if (sErr) throw sErr;
         results.push(serviceData);
+        try {
+          await notifyProvidersForBooking(sb, serviceData);
+        } catch (waErr) {
+          logger.error(
+            { err: waErr && (waErr.message || String(waErr)), bookingId: serviceData && serviceData.id },
+            "[checkout/service] provider WhatsApp"
+          );
+        }
       }
       continue;
     }
@@ -230,7 +244,7 @@ async function runCheckoutInsert(sb, appUser, body, options) {
       row.order_total = total;
       row.total_amount = Math.round((total + deliveryFee) * 100) / 100;
       row.driver_earning = deliveryFee;
-      row.platform_fee = Math.round(total * 0.12 * 100) / 100;
+      row.platform_fee = computePlatformCommission(total);
       row.notes = `متجر: ${storeRow.name || singleStoreId}`;
       row.store_id = singleStoreId;
       row.store_name = String(storeRow.name || "").trim() || null;

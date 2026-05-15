@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ERVENOW | طلبات السحب</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/assets/styles.css" />
+    <style>
+      .wd-wrap {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 14px;
+      }
+      .wd-tabs {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin: 12px 0 16px;
+      }
+      .wd-tab {
+        border: 1px solid #5b371d;
+        background: #fff;
+        color: #5b371d;
+        padding: 10px 18px;
+        border-radius: 10px;
+        font-family: Cairo, sans-serif;
+        font-weight: 700;
+        cursor: pointer;
+      }
+      .wd-tab.active {
+        background: #5b371d;
+        color: #fff;
+      }
+      .wd-toolbar {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        align-items: center;
+        margin-bottom: 12px;
+      }
+      .wd-toolbar select {
+        border: 1px solid #d8c8b8;
+        border-radius: 10px;
+        padding: 8px 12px;
+        font-family: Cairo, sans-serif;
+      }
+      .wd-table-wrap {
+        overflow-x: auto;
+        border: 1px solid #e5d8cb;
+        border-radius: 12px;
+        background: #fff;
+      }
+      table.wd-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.9rem;
+      }
+      .wd-table th,
+      .wd-table td {
+        padding: 10px 12px;
+        text-align: right;
+        border-bottom: 1px solid #eee4d8;
+        vertical-align: middle;
+      }
+      .wd-table th {
+        background: #faf6f1;
+        font-weight: 800;
+        color: #5b371d;
+        white-space: nowrap;
+      }
+      .wd-table tr:hover td {
+        background: #fffdfa;
+      }
+      .wd-badge {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-weight: 700;
+        font-size: 0.78rem;
+      }
+      .wd-badge.pending {
+        background: #fff3cd;
+        color: #856404;
+      }
+      .wd-badge.approved,
+      .wd-badge.paid {
+        background: #d4edda;
+        color: #155724;
+      }
+      .wd-badge.rejected {
+        background: #f8d7da;
+        color: #721c24;
+      }
+      .wd-actions {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+      }
+      .wd-actions .btn {
+        padding: 6px 10px;
+        font-size: 0.82rem;
+      }
+      .wd-msg {
+        margin-top: 10px;
+        padding: 10px;
+        border-radius: 10px;
+        display: none;
+      }
+      .wd-msg.show {
+        display: block;
+      }
+      .wd-msg.ok {
+        background: #d4edda;
+        color: #155724;
+      }
+      .wd-msg.err {
+        background: #f8d7da;
+        color: #721c24;
+      }
+      .wd-muted {
+        color: #6f5441;
+        font-size: 0.85rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="layout wd-wrap">
+      <div class="top-nav">
+        <h1 style="margin: 0">طلبات السحب</h1>
+        <div class="btn-row">
+          <a class="btn btn-ghost" href="/">الرئيسية</a>
+          <a class="btn btn-ghost" href="/admin-dashboard">لوحة الإدارة</a>
+          <a class="btn btn-ghost" href="/admin-finance">التقرير المالي</a>
+          <a class="btn btn-ghost" href="/admin-approvals">الموافقات</a>
+        </div>
+      </div>
+      <p class="sub">صلاحية <strong>finance</strong> مطلوبة. الموافقة تستخدم نفس دوال النظام (خصم ذرّي + حركة سحب).</p>
+
+      <div class="wd-tabs">
+        <button type="button" class="wd-tab active" data-tab="drivers">مندوبون</button>
+        <button type="button" class="wd-tab" data-tab="stores">متاجر</button>
+      </div>
+
+      <div class="wd-toolbar">
+        <label class="wd-muted">الحالة:</label>
+        <select id="wdStatus">
+          <option value="">الكل</option>
+          <option value="pending" selected>قيد المراجعة</option>
+          <option value="approved">موافق</option>
+          <option value="rejected">مرفوض</option>
+          <option value="paid">مدفوع (مندوبين)</option>
+        </select>
+        <button type="button" class="btn btn-primary" id="wdRefresh">تحديث</button>
+      </div>
+
+      <div id="wdMsg" class="wd-msg" role="status"></div>
+
+      <div class="wd-table-wrap">
+        <table class="wd-table" id="wdTable">
+          <thead>
+            <tr id="wdHeadRow"></tr>
+          </thead>
+          <tbody id="wdBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <script src="/assets/api-config.js"></script>
+    <script src="/assets/api.js"></script>
+    <script>
+      if (!window.PlatformAPI.getToken()) {
+        location.href = "/admin-login";
+      }
+
+      var activeTab = "drivers";
+
+      function showMsg(text, ok) {
+        var el = document.getElementById("wdMsg");
+        el.textContent = text || "";
+        el.className = "wd-msg show " + (ok ? "ok" : "err");
+        if (!text) el.classList.remove("show");
+      }
+
+      function fmtMoney(n) {
+        var x = Number(n);
+        if (!Number.isFinite(x)) return "—";
+        return x.toFixed(2) + " ر.س";
+      }
+
+      function fmtDt(iso) {
+        if (!iso) return "—";
+        try {
+          var d = new Date(iso);
+          if (Number.isNaN(d.getTime())) return iso;
+          return d.toLocaleString("ar-SA", { dateStyle: "short", timeStyle: "short" });
+        } catch (e) {
+          return iso;
+        }
+      }
+
+      function statusBadge(st) {
+        var s = String(st || "").toLowerCase();
+        var cls = "wd-badge " + (s || "unknown");
+        return '<span class="' + cls + '">' + (st || "—") + "</span>";
+      }
+
+      function setTab(tab) {
+        activeTab = tab;
+        var tabs = document.querySelectorAll(".wd-tab");
+        for (var i = 0; i < tabs.length; i++) {
+          tabs[i].classList.toggle("active", tabs[i].getAttribute("data-tab") === tab);
+        }
+        var paidOpt = document.querySelector("#wdStatus option[value=paid]");
+        if (paidOpt) paidOpt.style.display = tab === "drivers" ? "" : "none";
+        if (tab === "stores" && document.getElementById("wdStatus").value === "paid") {
+          document.getElementById("wdStatus").value = "pending";
+        }
+        loadData();
+      }
+
+      function buildHeaders() {
+        var head = document.getElementById("wdHeadRow");
+        head.innerHTML = "";
+        if (activeTab === "drivers") {
+          ["المعرّف", "المستخدم", "الجوال", "المبلغ", "الحالة", "التاريخ", "إجراءات"].forEach(function (h) {
+            var th = document.createElement("th");
+            th.textContent = h;
+            head.appendChild(th);
+          });
+        } else {
+          ["المعرّف", "المتجر", "جوال المتجر", "المبلغ", "الحالة", "التاريخ", "إجراءات"].forEach(function (h) {
+            var th = document.createElement("th");
+            th.textContent = h;
+            head.appendChild(th);
+          });
+        }
+      }
+
+      async function loadData() {
+        showMsg("", true);
+        buildHeaders();
+        var tbody = document.getElementById("wdBody");
+        tbody.innerHTML = '<tr><td colspan="7" class="wd-muted">جارٍ التحميل…</td></tr>';
+        var st = document.getElementById("wdStatus").value;
+        var q = st ? "?status=" + encodeURIComponent(st) : "";
+        var path = activeTab === "drivers" ? "/api/admin/withdrawals/drivers" : "/api/admin/withdrawals/stores";
+        try {
+          var j = await window.PlatformAPI.api(path + q);
+          var rows = j.withdrawals || [];
+          if (j.note) showMsg(j.note, true);
+          tbody.innerHTML = "";
+          if (!rows.length) {
+            tbody.innerHTML = '<tr><td colspan="7" class="wd-muted">لا توجد طلبات</td></tr>';
+            return;
+          }
+          rows.forEach(function (r) {
+            var tr = document.createElement("tr");
+            if (activeTab === "drivers") {
+              tr.innerHTML =
+                "<td><code translate=\"no\">" +
+                (r.id || "").slice(0, 8) +
+                "…</code></td>" +
+                "<td><code translate=\"no\">" +
+                (r.user_id || "").slice(0, 8) +
+                "…</code></td>" +
+                "<td translate=\"no\">" +
+                (r.user_phone || "—") +
+                "</td>" +
+                "<td><strong>" +
+                fmtMoney(r.amount) +
+                "</strong></td>" +
+                "<td>" +
+                statusBadge(r.status) +
+                "</td>" +
+                "<td class=\"wd-muted\">" +
+                fmtDt(r.created_at) +
+                "</td>" +
+                "<td>" +
+                actionsHtml(r, "driver") +
+                "</td>";
+            } else {
+              tr.innerHTML =
+                "<td><code translate=\"no\">" +
+                (r.id || "").slice(0, 8) +
+                "…</code></td>" +
+                "<td>" +
+                (r.store_name || "—") +
+                "</td>" +
+                "<td translate=\"no\">" +
+                (r.store_phone || "—") +
+                "</td>" +
+                "<td><strong>" +
+                fmtMoney(r.amount) +
+                "</strong></td>" +
+                "<td>" +
+                statusBadge(r.status) +
+                "</td>" +
+                "<td class=\"wd-muted\">" +
+                fmtDt(r.created_at) +
+                "</td>" +
+                "<td>" +
+                actionsHtml(r, "store") +
+                "</td>";
+            }
+            tbody.appendChild(tr);
+          });
+          bindActionButtons();
+        } catch (e) {
+          tbody.innerHTML = "";
+          showMsg(e.message || "خطأ في التحميل", false);
+        }
+      }
+
+      function actionsHtml(r, kind) {
+        var st = String(r.status || "").toLowerCase();
+        if (st !== "pending") return '<span class="wd-muted">—</span>';
+        var id = r.id;
+        return (
+          '<div class="wd-actions">' +
+          '<button type="button" class="btn btn-primary wd-appr" data-id="' +
+          id +
+          '" data-kind="' +
+          kind +
+          '">موافقة</button>' +
+          '<button type="button" class="btn btn-ghost wd-rej" data-id="' +
+          id +
+          '" data-kind="' +
+          kind +
+          '">رفض</button>' +
+          "</div>"
+        );
+      }
+
+      function bindActionButtons() {
+        document.querySelectorAll(".wd-appr").forEach(function (btn) {
+          btn.onclick = function () {
+            doDecision(btn.getAttribute("data-id"), btn.getAttribute("data-kind"), "approve");
+          };
+        });
+        document.querySelectorAll(".wd-rej").forEach(function (btn) {
+          btn.onclick = function () {
+            doDecision(btn.getAttribute("data-id"), btn.getAttribute("data-kind"), "reject");
+          };
+        });
+      }
+
+      async function doDecision(id, kind, action) {
+        if (!id || !kind) return;
+        var path =
+          "/api/admin/withdrawals/" + encodeURIComponent(id) + "/" + (action === "approve" ? "approve" : "reject");
+        try {
+          await window.PlatformAPI.api(path, {
+            method: "POST",
+            body: { kind: kind },
+          });
+          showMsg(action === "approve" ? "تمت الموافقة" : "تم الرفض", true);
+          await loadData();
+        } catch (e) {
+          showMsg(e.message || "فشل الطلب", false);
+        }
+      }
+
+      document.querySelectorAll(".wd-tab").forEach(function (t) {
+        t.onclick = function () {
+          setTab(t.getAttribute("data-tab"));
+        };
+      });
+      document.getElementById("wdRefresh").onclick = loadData;
+      document.getElementById("wdStatus").onchange = loadData;
+
+      setTab("drivers");
+    </script>
+  </body>
+</html>

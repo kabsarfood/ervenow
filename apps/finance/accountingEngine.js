@@ -2,13 +2,14 @@
  * ERVENOW — Accounting Engine (منطق العمولات والتسوية)
  * الرصيد الفعلي يُحدَّث فقط عبر wallet_transactions + مشغّل قاعدة البيانات.
  */
+const { PLATFORM_COMMISSION_RATE } = require("../../shared/utils/platformCommission");
 
 function round2(n) {
   return Math.round(Number(n) * 100) / 100;
 }
 
 /**
- * جلب نسب العمولة النشطة حسب البلد (مع احتياط 12%).
+ * جلب نسب العمولة النشطة حسب البلد (مع احتياط 7% — ERVENOW_PLATFORM_COMMISSION_RATE).
  */
 async function fetchCommissionRates(supabase, countryCode = "SA") {
   const { data, error } = await supabase
@@ -19,7 +20,11 @@ async function fetchCommissionRates(supabase, countryCode = "SA") {
 
   if (error) throw error;
 
-  const rates = { merchant: 0.12, delivery: 0.12, service: 0.12 };
+  const rates = {
+    merchant: PLATFORM_COMMISSION_RATE,
+    delivery: PLATFORM_COMMISSION_RATE,
+    service: PLATFORM_COMMISSION_RATE,
+  };
   for (const row of data || []) {
     if (row.applies_to && row.commission_rate != null) {
       rates[row.applies_to] = Number(row.commission_rate);
@@ -41,8 +46,8 @@ async function fetchCommissionRates(supabase, countryCode = "SA") {
 function calculateCommission({
   orderTotal,
   deliveryFee,
-  rateMerchant = 0.12,
-  rateDelivery = 0.12,
+  rateMerchant = PLATFORM_COMMISSION_RATE,
+  rateDelivery = PLATFORM_COMMISSION_RATE,
   merchantId = null,
   serviceProviderId = null,
   platformVatOnCommissionRate = 0,

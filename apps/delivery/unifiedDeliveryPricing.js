@@ -24,9 +24,11 @@ function priceCarTransportExternal(distanceKm) {
   return Math.round(d * 2 * 100) / 100;
 }
 
+const { priceCylinderSwap, priceCentralRefill } = require("../../shared/utils/gasDeliveryPricing");
+
 function priceGasDelivery(cylinders) {
-  const c = Math.max(0, Math.floor(clampNum(cylinders, 0)));
-  return c * 35;
+  const c = Math.max(1, Math.min(10, Math.floor(clampNum(cylinders, 1))));
+  return priceCylinderSwap(c);
 }
 
 /** توصيل داخلي — سعر ثابت مؤقت (حتى تعريف المنتجات والمسافات) */
@@ -47,8 +49,15 @@ function computeUnifiedDeliveryFee(serviceType, payload) {
     return { ok: true, delivery_fee: priceCarTransportInternal(km), distance_km: km, mode: "internal" };
   }
   if (st === "gas_delivery") {
-    const n = Math.max(1, Math.floor(clampNum(p.cylinders, 1)));
-    return { ok: true, delivery_fee: priceGasDelivery(n), cylinders: n };
+    const mode = String(p.mode || "cylinder").toLowerCase();
+    if (mode === "bulk" || mode === "central_refill") {
+      const liters = Number(p.liters);
+      const fee = priceCentralRefill(liters);
+      if (fee <= 0) return { ok: false, message: "liters invalid" };
+      return { ok: true, delivery_fee: fee, liters, mode: "bulk" };
+    }
+    const n = Math.max(1, Math.min(10, Math.floor(clampNum(p.cylinders, 1))));
+    return { ok: true, delivery_fee: priceGasDelivery(n), cylinders: n, mode: "cylinder" };
   }
   if (st === "local_delivery") {
     return { ok: true, delivery_fee: priceLocalDeliveryFlat() };

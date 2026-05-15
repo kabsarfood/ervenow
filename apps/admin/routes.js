@@ -1727,4 +1727,84 @@ router.post(
   }
 );
 
+/** مديونيات عمولة مزودي الخدمة (من أتمّوا مهاماً ولم يورّدوا العمولة) */
+router.get(
+  "/provider-debts",
+  requireAuth,
+  requireRole("admin"),
+  requireAdminPermission("finance"),
+  async (req, res) => {
+    try {
+      const sb = createServiceClient();
+      if (!sb) return fail(res, "قاعدة البيانات غير جاهزة", 503);
+      const status = String(req.query.status || "pending").trim().toLowerCase();
+      let q = sb
+        .from("provider_commission_debts")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(200);
+      if (status && status !== "all") q = q.eq("status", status);
+      const { data, error } = await q;
+      if (error) {
+        if (/does not exist|relation|schema cache/i.test(String(error.message || ""))) {
+          return ok(res, { debts: [], note: "نفّذ shared/migration_gas_service_and_debts.sql" });
+        }
+        return fail(res, error.message, 400);
+      }
+      const debts = data || [];
+      const pendingSum = debts
+        .filter((d) => String(d.status || "").toLowerCase() === "pending")
+        .reduce((s, d) => s + (Number(d.commission_amount) || 0), 0);
+      return ok(res, {
+        debts,
+        summary: { count: debts.length, pending_total: Math.round(pendingSum * 100) / 100 },
+      });
+    } catch (e) {
+      return fail(res, e.message || String(e), 500);
+    }
+  }
+);
+
+router.patch(
+  "/provider-debts/:id/collect",
+  requireAuth,
+  requireRole("admin"),
+  requireAdminPermission("finance"),
+  async (req, res) => {
+    try {
+      const sb = createServiceClient();
+      if (!sb) return fail(res, "قاعدة البيانات غير جاهزة", 503);
+      const id = String(req.params.id || "").trim();
+      const note = String(req.body?.note || "").trim().slice(0, 500);
+      const now = new Date().toISOString();
+      const { data, error } = await sb
+        .from("provider_commission_debts")
+        .update({
+          status: "collected",
+          collected_at: now,
+          collected_note: note || null,
+          updated_at: now,
+        })
+        .eq("id", id)
+        .select("*")
+        .single();
+      if (error) return fail(res, error.message, 400);
+      if (data && data.booking_id) {
+        await sb
+          .from("service_bookings")
+          .update({
+            commission_settled: true,
+            commission_due: false,
+            commission_paid_at: now,
+            updated_at: now,
+          })
+          .eq("id", data.booking_id);
+      }
+      return ok(res, { debt: data });
+    } catch (e) {
+      return fail(res, e.message || String(e), 500);
+    }
+  }
+);
+
 module.exports = router;

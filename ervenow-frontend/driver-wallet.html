@@ -37,9 +37,10 @@
 
       <div class="card">
         <strong>سحب الأموال (OTP)</strong>
-        <p class="muted">اكتب المبلغ ثم أرسل رمز التحقق إلى جوالك، وبعدها أكّد السحب.</p>
+        <p class="muted">اكتب المبلغ و<strong>نفس الآيبان المسجّل</strong> ثم أرسل رمز التحقق إلى جوالك، وبعدها أكّد السحب.</p>
         <div class="row">
           <input id="amount" type="number" min="20" step="0.01" placeholder="المبلغ (20 ريال كحد أدنى)" />
+          <input id="withdrawIban" type="text" placeholder="تأكيد الآيبان (SA…)" translate="no" />
           <button class="btn btn-primary" id="sendOtpBtn">إرسال رمز السحب</button>
         </div>
         <div class="row">
@@ -149,10 +150,15 @@
           showError("الحد الأدنى للسحب 20 ريال");
           return;
         }
+        var ibanC = String(document.getElementById("withdrawIban").value || "").trim();
+        if (!ibanC) {
+          showError("أدخل الآيبان لتأكيد المطابقة مع السجل");
+          return;
+        }
         try {
           var r = await window.PlatformAPI.api("/api/wallet/withdraw/send-otp", {
             method: "POST",
-            body: { amount: amt },
+            body: { amount: amt, iban: ibanC },
           });
           if (r.dev_otp) {
             document.getElementById("otpHint").innerText = "رمز التطوير: " + r.dev_otp;
@@ -174,9 +180,10 @@
           return;
         }
         try {
+          var ibanC2 = String(document.getElementById("withdrawIban").value || "").trim();
           await window.PlatformAPI.api("/api/wallet/withdraw/confirm-otp", {
             method: "POST",
-            body: { code: code },
+            body: { code: code, iban: ibanC2 },
           });
           showSuccess("تم إرسال طلب السحب للإدارة");
           document.getElementById("otpCode").value = "";

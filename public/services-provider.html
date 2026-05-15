@@ -208,14 +208,14 @@
             return {};
           });
           if (!res.ok || !data.ok) throw new Error(data.error || "update failed");
-          showSuccess("🚚 تم تسليم الطلب");
+          showSuccess("✅ تم إتمام المهمة — العمولة في ذمتكم ويجب توريدها للمنصة");
           await loadBookings();
         } catch (e) {
           showError("❌ حدث خطأ أثناء التحديث");
         } finally {
           if (btn) {
             btn.disabled = false;
-            btn.innerText = "تم التوصيل";
+            btn.innerText = "إتمام المهمة";
           }
         }
       });
@@ -246,16 +246,18 @@
               "<p>الموقع: " +
               (b.location || "—") +
               "</p>" +
-              "<p>العدد: " +
-              (b.qty || 1) +
-              "</p>" +
+              (String(b.service_type || "") === "gas_delivery" && b.gas_mode === "central_refill"
+                ? "<p>الكمية: " + (b.gas_liters || b.qty) + " لتر (تعبئة مركزي)</p>"
+                : String(b.service_type || "") === "gas_delivery"
+                  ? "<p>عدد الأسطوانات: " + (b.qty || 1) + "</p>"
+                  : "<p>العدد: " + (b.qty || 1) + "</p>") +
               "<p>الحالة المالية: " +
               payLabel(b.payment_status) +
               "</p>" +
               "<p>القيمة: " +
               Number(b.total_amount || 0).toFixed(2) +
               " ريال</p>" +
-              "<p>عمولة المنصة (12%): " +
+              "<p>عمولة المنصة: " +
               Number(b.platform_commission || 0).toFixed(2) +
               " ريال</p>" +
               "<p>الحالة: " +
@@ -271,7 +273,8 @@
                 ? ""
                 : "<button class='btn btn-primary' type='button' onclick='markDelivered(\"" +
                   b.id +
-                  "\", this)'>تم التوصيل</button>") +
+                  "\", this)'>إتمام المهمة</button>" +
+                  "<p class='sub' style='margin-top:6px'>بعد الإتمام تُسجَّل عمولة المنصة في ذمتكم ويجب توريدها للمنصة.</p>") +
               "</div>"
             );
           })

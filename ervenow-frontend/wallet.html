@@ -900,12 +900,17 @@
 
           <div id="withdrawForm">
             <p class="wallet-hint" style="margin-top: 0">
-              يُشترط تسجيل <strong>IBAN سعودي صالح</strong> في ملفك قبل السحب. يُرسل رمز تحقق إلى جوالك ثم تؤكّد الطلب.
+              يُشترط تسجيل <strong>IBAN سعودي صالح</strong> في ملفك قبل السحب. أدخل <strong>نفس الآيبان</strong> أدناه
+              لمطابقته مع السجل، ثم يُرسل رمز تحقق إلى جوالك.
             </p>
             <div class="wallet-form-grid">
               <label>
                 <span>المبلغ (ر.س) — الحد الأدنى 20</span>
                 <input type="number" id="withdrawAmount" min="20" step="0.01" placeholder="مثال: 100" />
+              </label>
+              <label>
+                <span>تأكيد الآيبان (مطابق للمسجّل)</span>
+                <input type="text" id="withdrawIbanConfirm" inputmode="text" autocomplete="off" placeholder="SA…" translate="no" />
               </label>
             </div>
 
@@ -1021,6 +1026,7 @@
       const elWithdrawForm = document.getElementById("withdrawForm");
       const elBtnStartWithdraw = document.getElementById("btnStartWithdraw");
       const elWithdrawAmount = document.getElementById("withdrawAmount");
+      const elWithdrawIban = document.getElementById("withdrawIbanConfirm");
       const elBtnSendOtp = document.getElementById("btnSendOtp");
       const elBtnCancelWithdraw = document.getElementById("btnCancelWithdraw");
       const elWithdrawOtpBlock = document.getElementById("withdrawOtpBlock");
@@ -1314,10 +1320,15 @@
           setMsg(elWithdrawMsg, "الحد الأدنى للسحب 20 ريال.", "err");
           return;
         }
+        var ibanConf = String(elWithdrawIban && elWithdrawIban.value ? elWithdrawIban.value : "").trim();
+        if (!ibanConf) {
+          setMsg(elWithdrawMsg, "أدخل الآيبان لتأكيد أنه يطابق بياناتك المسجّلة.", "err");
+          return;
+        }
         try {
           var r = await window.PlatformAPI.api("/api/wallet/withdraw/send-otp", {
             method: "POST",
-            body: { amount: amt },
+            body: { amount: amt, iban: ibanConf },
           });
           elWithdrawOtpBlock.classList.add("is-visible");
           elWithdrawOtp.value = "";
@@ -1347,9 +1358,10 @@
         setMsg(elWithdrawMsg, "جاري التأكيد…", "ok");
         var lockedAfterErr = false;
         try {
+          var ibanConf2 = String(elWithdrawIban && elWithdrawIban.value ? elWithdrawIban.value : "").trim();
           await window.PlatformAPI.api("/api/wallet/withdraw/confirm-otp", {
             method: "POST",
-            body: { code: code },
+            body: { code: code, iban: ibanConf2 },
           });
           setMsg(elWithdrawMsg, "تم إرسال طلب السحب للإدارة.", "ok");
           resetWithdrawFlow();

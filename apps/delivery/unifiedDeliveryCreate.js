@@ -4,6 +4,7 @@
  */
 const { computeUnifiedDeliveryFee } = require("./unifiedDeliveryPricing");
 const { createDeliveryOrderFromBody, getRoadDistanceKm } = require("./service");
+const { createGasDelivery } = require("./gasDeliveryCreate");
 
 const CAR_VEHICLE = new Set(["sedan", "van", "suv"]);
 const CAR_COND = new Set(["working", "damaged", "broken", "appraisal"]);
@@ -169,8 +170,11 @@ async function createUnifiedDeliveryOrder(sb, appUser, rawBody, opts) {
   if (service_type === "furniture") {
     return { data: null, error: new Error("نقل الأثاث قيد التفعيل ضمن النظام الموحد") };
   }
-  if (service_type === "local_delivery" || service_type === "gas_delivery") {
-    return { data: null, error: new Error("هذه الخدمة قيد التفعيل — استخدم نقل المركبات أو الونيت حالياً") };
+  if (service_type === "gas_delivery") {
+    return createGasDelivery(sb, appUser, body);
+  }
+  if (service_type === "local_delivery") {
+    return { data: null, error: new Error("التوصيل الداخلي قيد التفعيل") };
   }
   return { data: null, error: new Error("service_type غير مدعوم") };
 }
@@ -178,4 +182,5 @@ async function createUnifiedDeliveryOrder(sb, appUser, rawBody, opts) {
 module.exports = {
   createUnifiedDeliveryOrder,
   validateCarTransportPayload,
+  createGasDelivery,
 };

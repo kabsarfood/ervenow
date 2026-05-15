@@ -15,6 +15,10 @@
       "dest": "/admin-categories.html"
     },
     {
+      "src": "/admin/withdrawals",
+      "dest": "/admin-withdrawals.html"
+    },
+    {
       "src": "/(.*)",
       "dest": "/index.html"
     }

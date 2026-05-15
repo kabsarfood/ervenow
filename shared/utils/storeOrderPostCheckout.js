@@ -42,7 +42,8 @@ async function runStoreCheckoutSideEffects({ order, groupItems, storeRow }) {
   }
 
   const orderTotal = Number(order.order_total || 0);
-  const commissionRate = 0.12;
+  const { PLATFORM_COMMISSION_RATE } = require("./platformCommission");
+  const commissionRate = PLATFORM_COMMISSION_RATE;
   const goodsPlatformFee = Math.round(orderTotal * commissionRate * 100) / 100;
   const net = Math.round((orderTotal - goodsPlatformFee) * 100) / 100;
   const pay = String(order.payment_status || "").trim().toLowerCase();

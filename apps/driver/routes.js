@@ -29,6 +29,7 @@ const {
   broadcastOrderLive,
   orderPatchFromRow,
 } = require("../../shared/lib/trackingSocket");
+const { completeGasServiceBooking } = require("../../shared/services/completeGasBooking");
 const { attachSiteSessionCookie } = require("../../shared/middleware/publicSiteOtpGate");
 const { parseOptionalPayoutPayload, payoutRowForDriversOrStores } = require("../../shared/utils/payoutFields");
 const { sanitizeDriverOrStoreRowForApi } = require("../../shared/utils/bankApiSafe");
@@ -629,10 +630,46 @@ router.post("/ping-arrival/:id", requireAuth, async (req, res) => {
 
 router.post("/complete-order/:id", requireAuth, async (req, res) => {
   try {
-    const drv = await ensureApprovedDriver(req, res);
-    if (!drv) return;
     const id = String(req.params.id || "").trim();
     if (!id) return fail(res, "order id required", 400);
+
+    const role = String(req.appUser?.role || "").toLowerCase();
+    if (role === "service" || role === "admin") {
+      const gasDone = await completeGasServiceBooking(
+        req.supabase,
+        id,
+        role === "service" ? req.appUser.id : null
+      );
+      if (!gasDone.error && gasDone.data) {
+        return ok(res, { order: gasDone.data, gas: true, status: "completed" });
+      }
+      if (gasDone.error && gasDone.error.message !== "Not found" && gasDone.error.message !== "not a gas booking") {
+        return fail(res, gasDone.error.message, 400);
+      }
+    }
+
+    const drv = await ensureApprovedDriver(req, res);
+    if (!drv) {
+      const gasTry = await completeGasServiceBooking(req.supabase, id, null);
+      if (!gasTry.error && gasTry.data) {
+        return ok(res, { order: gasTry.data, gas: true, status: "completed" });
+      }
+      return;
+    }
+
+    const { data: orderProbe } = await req.supabase
+      .from("service_bookings")
+      .select("id, service_type")
+      .eq("id", id)
+      .maybeSingle();
+    if (orderProbe && String(orderProbe.service_type || "").toLowerCase() === "gas_delivery") {
+      const gasDone = await completeGasServiceBooking(req.supabase, id, req.appUser.id);
+      if (!gasDone.error && gasDone.data) {
+        return ok(res, { order: gasDone.data, gas: true, status: "completed" });
+      }
+      return fail(res, gasDone.error?.message || "failed", 400);
+    }
+
     const { data, error } = await setStatus(req.supabase, id, "delivered", req.appUser);
     if (error) return fail(res, error.message || "order not available", 400);
     if (!data) return fail(res, "order not available", 400);

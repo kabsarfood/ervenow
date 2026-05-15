@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ERVENOW | توصيل الغاز</title>
+    <link rel="stylesheet" href="/assets/styles.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+      .gd-wrap {
+        max-width: 640px;
+        margin: 20px auto;
+        padding: 0 14px 48px;
+      }
+      .gd-welcome {
+        margin: 0 0 14px;
+        padding: 16px;
+        border-radius: 14px;
+        background: linear-gradient(145deg, #fffef9, #f8f1e5);
+        border: 1px solid rgba(61, 34, 19, 0.1);
+        line-height: 1.6;
+      }
+      .gd-box {
+        display: grid;
+        gap: 12px;
+      }
+      .gd-row label {
+        font-weight: 700;
+        font-size: 0.9rem;
+        display: block;
+        margin-bottom: 6px;
+      }
+      .gd-row select,
+      .gd-row input {
+        width: 100%;
+        padding: 10px 12px;
+        border-radius: 10px;
+        border: 1px solid var(--border, #e8dfd4);
+        font-family: inherit;
+      }
+      .gd-price {
+        font-size: 1.25rem;
+        font-weight: 800;
+        color: var(--brown, #3d2213);
+        padding: 12px;
+        background: rgba(185, 135, 47, 0.08);
+        border-radius: 10px;
+        text-align: center;
+      }
+      .gd-subopts {
+        padding: 10px;
+        border: 1px dashed rgba(61, 34, 19, 0.15);
+        border-radius: 10px;
+        display: grid;
+        gap: 10px;
+      }
+      .gd-subopts[hidden] {
+        display: none !important;
+      }
+      .gd-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 8px;
+      }
+      #gdMapModal {
+        position: fixed;
+        inset: 0;
+        background: rgba(26, 18, 12, 0.45);
+        z-index: 2000;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+      }
+      #gdMapModal.open {
+        display: flex;
+      }
+      #gdMapBox {
+        height: min(60vh, 400px);
+      }
+      #gdMapInner {
+        width: min(560px, 100%);
+        background: #fff;
+        border-radius: 14px;
+        overflow: hidden;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="layout gd-wrap">
+      <div class="card" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px">
+        <h1 style="margin: 0">توصيل الغاز</h1>
+        <a class="btn btn-ghost" href="/">الرئيسية</a>
+      </div>
+
+      <div class="card" style="margin-top: 12px">
+        <div class="gd-welcome">
+          <strong>أهلاً بك في خدمة توصيل الغاز من ERVENOW</strong><br />
+          اختر نوع الخدمة، حدّد الكمية، ثم موقع التوصيل. الأسعار: أسطوانة واحدة
+          <strong>39 ر.س</strong>، اثنتان <strong>75 ر.س</strong>، وتعبئة المركزي
+          <strong>0.90 ر.س/لتر</strong>.
+        </div>
+
+        <form class="gd-box" id="gdForm">
+          <div class="gd-row">
+            <label for="gdServiceType">نوع الخدمة</label>
+            <select id="gdServiceType" required>
+              <option value="cylinder_swap">1 — تبديل اسطوانة غاز</option>
+              <option value="central_refill">2 — تعبئة غاز مركزي</option>
+            </select>
+          </div>
+
+          <div class="gd-subopts" id="gdCylinderBox">
+            <div class="gd-row">
+              <label for="gdCylQty">عدد الأسطوانات</label>
+              <select id="gdCylQty">
+                <option value="1">1 أسطوانة — 39 ر.س</option>
+                <option value="2">2 أسطوانة — 75 ر.س</option>
+                <option value="3">3 أسطوانات</option>
+                <option value="4">4 أسطوانات</option>
+                <option value="5">5 أسطوانات</option>
+                <option value="6">6 أسطوانات</option>
+                <option value="7">7 أسطوانات</option>
+                <option value="8">8 أسطوانات</option>
+                <option value="9">9 أسطوانات</option>
+                <option value="10">10 أسطوانات</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="gd-subopts" id="gdCentralBox" hidden>
+            <div class="gd-row">
+              <label for="gdLiters">الكمية (لتر)</label>
+              <select id="gdLiters">
+                <option value="250">250 لتر — 225 ر.س</option>
+                <option value="500">500 لتر — 450 ر.س</option>
+                <option value="1000">1000 لتر — 900 ر.س</option>
+                <option value="2000">2000 لتر — 1800 ر.س</option>
+                <option value="3000">3000 لتر — 2700 ر.س</option>
+                <option value="4000">4000 لتر — 3600 ر.س</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="gd-price" id="gdPrice">السعر: —</div>
+
+          <div class="gd-row">
+            <label for="gdDistrict">الحي (اختياري)</label>
+            <input id="gdDistrict" type="text" placeholder="اسم الحي" />
+          </div>
+
+          <div class="gd-row">
+            <label>موقع التوصيل</label>
+            <input id="gdLocation" type="text" readonly placeholder="اضغط لتحديد الموقع على الخريطة" />
+            <div class="gd-actions" style="margin-top: 8px">
+              <button type="button" class="btn btn-outline" id="gdBtnMap">تحديد الموقع على الخريطة</button>
+              <button type="button" class="btn btn-ghost" id="gdBtnGps">موقعي الحالي</button>
+            </div>
+          </div>
+
+          <div class="gd-row">
+            <label for="gdPhone">جوال طالب الخدمة</label>
+            <input id="gdPhone" type="tel" placeholder="05xxxxxxxx" required />
+          </div>
+
+          <div class="gd-row">
+            <label>طريقة السداد</label>
+            <div class="gd-actions">
+              <button type="button" class="btn btn-solid" id="gdPayCod">الدفع عند التوصيل</button>
+              <button type="button" class="btn btn-primary" id="gdPayCart">الانتقال للسلة والسداد</button>
+            </div>
+          </div>
+
+          <p class="sub" id="gdMsg" style="margin: 0"></p>
+        </form>
+      </div>
+    </div>
+
+    <div id="gdMapModal" aria-hidden="true">
+      <div id="gdMapInner">
+        <div style="padding: 10px 12px; display: flex; justify-content: space-between; align-items: center">
+          <strong>حدد موقع التوصيل</strong>
+          <button type="button" class="btn btn-solid" id="gdMapConfirm">تأكيد</button>
+        </div>
+        <div id="gdMapBox"></div>
+      </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="/assets/api-config.js"></script>
+    <script src="/assets/api.js"></script>
+    <script src="/assets/cart.js"></script>
+    <script>
+      (function () {
+        var CYL_ONE = 39;
+        var CYL_TWO = 75;
+        var PER_LITER = 0.9;
+        var map = null;
+        var marker = null;
+
+        function priceCylinders(qty) {
+          qty = Math.max(1, Math.min(10, parseInt(qty, 10) || 1));
+          if (qty === 1) return CYL_ONE;
+          if (qty === 2) return CYL_TWO;
+          return CYL_TWO + (qty - 2) * CYL_ONE;
+        }
+
+        function priceCentral(liters) {
+          return Math.round(Number(liters) * PER_LITER * 100) / 100;
+        }
+
+        function currentMode() {
+          return document.getElementById("gdServiceType").value;
+        }
+
+        function updatePrice() {
+          var mode = currentMode();
+          var total =
+            mode === "central_refill"
+              ? priceCentral(document.getElementById("gdLiters").value)
+              : priceCylinders(document.getElementById("gdCylQty").value);
+          document.getElementById("gdPrice").textContent = "السعر: " + total.toFixed(2) + " ر.س";
+          return total;
+        }
+
+        function toggleSubforms() {
+          var mode = currentMode();
+          document.getElementById("gdCylinderBox").hidden = mode !== "cylinder_swap";
+          document.getElementById("gdCentralBox").hidden = mode !== "central_refill";
+          updatePrice();
+        }
+
+        function buildCartItem() {
+          var mode = currentMode();
+          var total = updatePrice();
+          var qty = 1;
+          var liters = null;
+          var title = mode === "central_refill" ? "تعبئة غاز مركزي" : "تبديل اسطوانة غاز";
+          if (mode === "cylinder_swap") {
+            qty = parseInt(document.getElementById("gdCylQty").value, 10) || 1;
+          } else {
+            liters = parseInt(document.getElementById("gdLiters").value, 10);
+            qty = liters;
+          }
+          return {
+            type: "gas_delivery",
+            title: title,
+            price: total,
+            data: {
+              gas_mode: mode,
+              gas_liters: liters,
+              qty: qty,
+              district: document.getElementById("gdDistrict").value.trim(),
+              location: document.getElementById("gdLocation").value.trim(),
+              customer_phone: document.getElementById("gdPhone").value.trim(),
+              total_amount: total,
+            },
+          };
+        }
+
+        function validateForm() {
+          if (!document.getElementById("gdLocation").value.trim()) {
+            alert("يرجى تحديد موقع التوصيل");
+            return false;
+          }
+          var phone = document.getElementById("gdPhone").value.trim();
+          if (!/^05\d{8}$/.test(phone)) {
+            alert("أدخل رقم جوال سعودي صحيح (05xxxxxxxx)");
+            return false;
+          }
+          return true;
+        }
+
+        function authHeaders() {
+          var t =
+            localStorage.getItem("token") ||
+            localStorage.getItem("ervenow_access_token") ||
+            localStorage.getItem("erwenow_access_token");
+          return t ? { Authorization: "Bearer " + t } : {};
+        }
+
+        function showMsg(text, ok) {
+          var el = document.getElementById("gdMsg");
+          el.textContent = text;
+          el.style.color = ok ? "#1b5e20" : "#b71c1c";
+          el.style.fontWeight = "700";
+        }
+
+        async function submitCod() {
+          if (!validateForm()) return;
+          var mode = currentMode();
+          showMsg("جاري إرسال الطلب...", true);
+          try {
+            var res = await fetch(window.PlatformAPI.apiUrl("/api/services/gas-order"), {
+              method: "POST",
+              headers: Object.assign({ "Content-Type": "application/json" }, authHeaders()),
+              body: JSON.stringify({
+                gas_mode: mode,
+                qty: mode === "cylinder_swap" ? document.getElementById("gdCylQty").value : 1,
+                gas_liters: mode === "central_refill" ? document.getElementById("gdLiters").value : null,
+                district: document.getElementById("gdDistrict").value.trim(),
+                location: document.getElementById("gdLocation").value.trim(),
+                customer_phone: document.getElementById("gdPhone").value.trim(),
+                pay_on_delivery: true,
+              }),
+            });
+            var j = await res.json();
+            if (!res.ok || !j.ok) throw new Error((j && (j.message || j.error)) || "فشل الإرسال");
+            showMsg(
+              "تم تسجيل الطلب — رقم: " +
+                (j.order_number || (j.booking && j.booking.service_order_number) || "—") +
+                ". تم إشعار المزودين عبر واتساب. الدفع عند التوصيل.",
+              true
+            );
+          } catch (e) {
+            showMsg(String(e.message || e), false);
+          }
+        }
+
+        function goCart() {
+          if (!validateForm()) return;
+          addToCart(buildCartItem());
+          location.href = "/cart.html";
+        }
+
+        function openMap() {
+          document.getElementById("gdMapModal").classList.add("open");
+          setTimeout(function () {
+            if (!map) {
+              var center = [24.7136, 46.6753];
+              map = L.map("gdMapBox").setView(center, 11);
+              L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19 }).addTo(map);
+              marker = L.marker(center, { draggable: true }).addTo(map);
+              map.on("click", function (e) {
+                marker.setLatLng(e.latlng);
+              });
+            } else {
+              map.invalidateSize();
+            }
+          }, 80);
+        }
+
+        document.getElementById("gdServiceType").onchange = toggleSubforms;
+        document.getElementById("gdCylQty").onchange = updatePrice;
+        document.getElementById("gdLiters").onchange = updatePrice;
+        document.getElementById("gdPayCod").onclick = submitCod;
+        document.getElementById("gdPayCart").onclick = goCart;
+        document.getElementById("gdBtnMap").onclick = openMap;
+        document.getElementById("gdMapConfirm").onclick = function () {
+          if (!marker) return;
+          var ll = marker.getLatLng();
+          document.getElementById("gdLocation").value = ll.lat.toFixed(6) + "," + ll.lng.toFixed(6);
+          document.getElementById("gdMapModal").classList.remove("open");
+        };
+        document.getElementById("gdBtnGps").onclick = function () {
+          if (!navigator.geolocation) return alert("المتصفح لا يدعم تحديد الموقع");
+          navigator.geolocation.getCurrentPosition(
+            function (pos) {
+              document.getElementById("gdLocation").value =
+                pos.coords.latitude.toFixed(6) + "," + pos.coords.longitude.toFixed(6);
+            },
+            function () {
+              alert("تعذر تحميل موقعك");
+            }
+          );
+        };
+
+        toggleSubforms();
+      })();
+    </script>
+  </body>
+</html>

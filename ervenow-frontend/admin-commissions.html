@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>عمولات المزودين | ERVENOW</title>
+    <link rel="stylesheet" href="/assets/styles.css" />
+    <style>
+      body {
+        font-family: Cairo, sans-serif;
+        background: #f8f4ef;
+        margin: 0;
+      }
+      .wrap {
+        max-width: 960px;
+        margin: 20px auto;
+        padding: 14px;
+      }
+      .debt-item {
+        border: 1px solid #ecdccf;
+        border-radius: 10px;
+        padding: 12px;
+        margin-bottom: 10px;
+        background: #fffdfa;
+      }
+      .debt-item.collected {
+        opacity: 0.75;
+        background: #f5f5f5;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="top-nav" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px">
+        <h1 style="margin: 0; color: #5b371d">عمولات مزودي الخدمة (7%)</h1>
+        <div class="btn-row">
+          <a class="btn btn-ghost" href="/admin-dashboard">لوحة الإدارة</a>
+          <a class="btn btn-ghost" href="/admin-finance">المالية</a>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top: 12px">
+        <p class="sub">طلبات أُتمت عبر المنصة وعمولة المنصة لم تُسدَّد بعد.</p>
+        <div class="btn-row" style="margin-bottom: 12px">
+          <button type="button" class="btn btn-primary" data-filter="pending">غير مدفوعة</button>
+          <button type="button" class="btn btn-ghost" data-filter="collected">مدفوعة</button>
+          <button type="button" class="btn btn-ghost" data-filter="all">الكل</button>
+          <button type="button" class="btn btn-ghost" id="btnRefresh">تحديث</button>
+        </div>
+        <p id="summary" class="sub">—</p>
+        <div id="list"></div>
+      </div>
+    </div>
+
+    <script src="/assets/api-config.js"></script>
+    <script src="/assets/api.js"></script>
+    <script>
+      (function () {
+        var filter = "pending";
+        function esc(s) {
+          return String(s || "")
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;");
+        }
+        async function load() {
+          var listEl = document.getElementById("list");
+          var sumEl = document.getElementById("summary");
+          listEl.innerHTML = "<p class='sub'>جاري التحميل...</p>";
+          try {
+            var j = await window.PlatformAPI.api(
+              "/api/admin/provider-debts?status=" + encodeURIComponent(filter)
+            );
+            var debts = Array.isArray(j.debts) ? j.debts : [];
+            var summary = j.summary || {};
+            sumEl.textContent =
+              "عدد السجلات: " +
+              debts.length +
+              (filter === "pending" || filter === "all"
+                ? " — إجمالي غير المدفوع: " + Number(summary.pending_total || 0).toFixed(2) + " ر.س"
+                : "");
+            if (j.note) sumEl.textContent += " — " + j.note;
+            if (!debts.length) {
+              listEl.innerHTML = "<p class='sub'>لا توجد سجلات</p>";
+              return;
+            }
+            listEl.innerHTML = debts
+              .map(function (d) {
+                var paid = String(d.status || "").toLowerCase() === "collected";
+                return (
+                  '<div class="debt-item' +
+                  (paid ? " collected" : "") +
+                  '">' +
+                  "<p><b>رقم الطلب:</b> " +
+                  esc(d.service_order_number || "—") +
+                  "</p>" +
+                  "<p><b>مزود الخدمة:</b> " +
+                  esc(d.provider_id || "—") +
+                  "</p>" +
+                  "<p><b>الخدمة:</b> " +
+                  esc(d.service_name || d.service_type) +
+                  "</p>" +
+                  "<p><b>السعر:</b> " +
+                  Number(d.total_amount || 0).toFixed(2) +
+                  " ر.س</p>" +
+                  "<p><b>العمولة (7%):</b> " +
+                  Number(d.commission_amount || 0).toFixed(2) +
+                  " ر.س</p>" +
+                  "<p><b>الحالة:</b> " +
+                  (paid ? "مدفوعة" : "غير مدفوعة") +
+                  "</p>" +
+                  (paid
+                    ? ""
+                    : '<button type="button" class="btn btn-primary btn-collect" data-id="' +
+                      d.id +
+                      '">تم السداد</button>') +
+                  "</div>"
+                );
+              })
+              .join("");
+            listEl.querySelectorAll(".btn-collect").forEach(function (btn) {
+              btn.onclick = async function () {
+                if (!confirm("تأكيد سداد العمولة؟")) return;
+                btn.disabled = true;
+                try {
+                  await window.PlatformAPI.api(
+                    "/api/admin/provider-debts/" + encodeURIComponent(btn.getAttribute("data-id")) + "/collect",
+                    { method: "PATCH", body: { note: "تم السداد من /admin/commissions" } }
+                  );
+                  await load();
+                } catch (e) {
+                  alert(String((e && e.message) || e));
+                  btn.disabled = false;
+                }
+              };
+            });
+          } catch (e) {
+            listEl.innerHTML =
+              "<p style='color:#b71c1c'>تعذر التحميل: " + esc((e && e.message) || e) + "</p>";
+          }
+        }
+        document.querySelectorAll("[data-filter]").forEach(function (b) {
+          b.onclick = function () {
+            filter = b.getAttribute("data-filter");
+            load();
+          };
+        });
+        document.getElementById("btnRefresh").onclick = load;
+        load();
+      })();
+    </script>
+  </body>
+</html>

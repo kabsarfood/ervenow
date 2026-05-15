@@ -403,6 +403,18 @@ if (servePublicUi) {
     res.sendFile(path.join(publicPath, "admin-finance.html"));
   });
 
+  app.get("/admin-debts", (_req, res) => {
+    res.sendFile(path.join(publicPath, "admin-debts.html"));
+  });
+
+  app.get("/admin/commissions", (_req, res) => {
+    res.sendFile(path.join(publicPath, "admin-commissions.html"));
+  });
+
+  app.get("/gas-delivery", (_req, res) => {
+    res.sendFile(path.join(publicPath, "gas-delivery.html"));
+  });
+
   app.get("/admin/withdrawals", (_req, res) => {
     res.sendFile(path.join(publicPath, "admin-withdrawals.html"));
   });
