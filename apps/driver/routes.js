@@ -29,7 +29,7 @@ const {
   broadcastOrderLive,
   orderPatchFromRow,
 } = require("../../shared/lib/trackingSocket");
-const { completeGasServiceBooking } = require("../../shared/services/completeGasBooking");
+const { completeServiceBooking } = require("../../shared/services/completeServiceBooking");
 const { attachSiteSessionCookie } = require("../../shared/middleware/publicSiteOtpGate");
 const { parseOptionalPayoutPayload, payoutRowForDriversOrStores } = require("../../shared/utils/payoutFields");
 const { sanitizeDriverOrStoreRowForApi } = require("../../shared/utils/bankApiSafe");
@@ -634,40 +634,33 @@ router.post("/complete-order/:id", requireAuth, async (req, res) => {
     if (!id) return fail(res, "order id required", 400);
 
     const role = String(req.appUser?.role || "").toLowerCase();
-    if (role === "service" || role === "admin") {
-      const gasDone = await completeGasServiceBooking(
+    const { data: bookingProbe } = await req.supabase
+      .from("service_bookings")
+      .select("id, service_type")
+      .eq("id", id)
+      .maybeSingle();
+
+    if (bookingProbe) {
+      const svcDone = await completeServiceBooking(
         req.supabase,
         id,
-        role === "service" ? req.appUser.id : null
+        role === "service" ? req.appUser.id : role === "admin" ? null : req.appUser.id
       );
-      if (!gasDone.error && gasDone.data) {
-        return ok(res, { order: gasDone.data, gas: true, status: "completed" });
+      if (!svcDone.error && svcDone.data) {
+        return ok(res, { order: svcDone.data, service_booking: true, status: "completed" });
       }
-      if (gasDone.error && gasDone.error.message !== "Not found" && gasDone.error.message !== "not a gas booking") {
-        return fail(res, gasDone.error.message, 400);
+      if (svcDone.error && svcDone.error.message !== "Not found" && svcDone.error.message !== "not a service booking") {
+        return fail(res, svcDone.error.message, 400);
       }
     }
 
     const drv = await ensureApprovedDriver(req, res);
     if (!drv) {
-      const gasTry = await completeGasServiceBooking(req.supabase, id, null);
-      if (!gasTry.error && gasTry.data) {
-        return ok(res, { order: gasTry.data, gas: true, status: "completed" });
+      const svcTry = await completeServiceBooking(req.supabase, id, null);
+      if (!svcTry.error && svcTry.data) {
+        return ok(res, { order: svcTry.data, service_booking: true, status: "completed" });
       }
       return;
-    }
-
-    const { data: orderProbe } = await req.supabase
-      .from("service_bookings")
-      .select("id, service_type")
-      .eq("id", id)
-      .maybeSingle();
-    if (orderProbe && String(orderProbe.service_type || "").toLowerCase() === "gas_delivery") {
-      const gasDone = await completeGasServiceBooking(req.supabase, id, req.appUser.id);
-      if (!gasDone.error && gasDone.data) {
-        return ok(res, { order: gasDone.data, gas: true, status: "completed" });
-      }
-      return fail(res, gasDone.error?.message || "failed", 400);
     }
 
     const { data, error } = await setStatus(req.supabase, id, "delivered", req.appUser);

@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>ERVENOW | اكتشف المتاجر</title>
+    <title>ERVENOW | اكتشف المطاعم</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -541,11 +541,11 @@
     <header class="stores-header">
       <div class="stores-header__inner">
         <div class="stores-brand">
-          <span class="stores-brand__eyebrow">ERVENOW</span>
-          <h1 class="stores-brand__title">اكتشف المتاجر</h1>
-          <p class="stores-brand__sub">متاجر معتمدة — بحث، فلاتر، وتجربة قريبة من تطبيقات التوصيل الكبرى</p>
+          <span class="stores-brand__eyebrow">أهلاً بك في ERVENOW</span>
+          <h1 class="stores-brand__title">اكتشف ألذ الأكلات</h1>
+          <p class="stores-brand__sub">مطاعم معتمدة — تصنيفات المطابخ، بحث بالاسم، وتوصيل لبابك</p>
           <p class="stores-brand__hint" style="margin: 8px 0 0; font-size: 0.82rem; color: #8a7264; font-weight: 600; max-width: 520px; line-height: 1.5">
-            يظهر المتجر هنا بعد <strong>موافقة الإدارة</strong> وتفعيله. التسجيل وحده لا يكفي — راجع لوحة الإدارة أو انتظر الموافقة.
+            يظهر المطعم هنا بعد <strong>موافقة الإدارة</strong> وتفعيله على المنصة.
           </p>
         </div>
         <div class="stores-header__actions">
@@ -564,38 +564,37 @@
           type="search"
           class="stores-search"
           id="storeSearch"
-          placeholder="ابحث باسم المتجر…"
+          placeholder="ابحث باسم المطعم…"
           autocomplete="off"
           enterkeyhint="search"
           disabled
         />
       </div>
-      <div class="stores-restaurant-cuisine-block" id="storesCategoryBlock">
-        <div class="stores-restaurant-cuisine-block__head">
-          <span class="stores-restaurant-cuisine-block__emoji" aria-hidden="true">🛒</span>
-          <div>
-            <p class="stores-restaurant-cuisine-block__title">تصنيفات المتاجر</p>
-            <p class="stores-restaurant-cuisine-block__sub">سوبرماركت، صيدليات، خضار، وأكثر.</p>
-          </div>
-        </div>
-        <div class="stores-cuisine-scroll" id="storesCategoryBar" role="tablist" aria-label="تصنيف المتجر"></div>
-      </div>
-
       <label class="stores-geo-opt" for="storesGeoFilter">
         <input type="checkbox" id="storesGeoFilter" />
-        <span>تصفية حسب قرب موقعي (ضمن نطاق توصيل كل متجر)</span>
+        <span>تصفية حسب قرب موقعي (ضمن نطاق توصيل كل مطعم)</span>
       </label>
 
+      <div class="stores-restaurant-cuisine-block" id="storesRestaurantCuisineBlock">
+        <div class="stores-restaurant-cuisine-block__head">
+          <span class="stores-restaurant-cuisine-block__emoji" aria-hidden="true">🍽️</span>
+          <div>
+            <p class="stores-restaurant-cuisine-block__title">تصنيفات المطابخ</p>
+            <p class="stores-restaurant-cuisine-block__sub">اختر نوع الأكلات التي تفضّلها.</p>
+          </div>
+        </div>
+        <div class="stores-cuisine-scroll" id="storesCuisineBar" role="tablist" aria-label="تصنيف المطعم"></div>
+      </div>
     </div>
 
     <main class="stores-main">
       <p class="stores-note" id="guestNote">
-        أنت تتصفّح كزائر: قد تظهر أسماء المحلات بشكل مختصر حتى تسجّل الدخول. البحث يعمل على الاسم الظاهر. بشكل افتراضي تُعرض
-        <strong>كل المتاجر المعتمدة</strong>؛ إن فعّلت «تصفية حسب قرب موقعي» فقط تُعرض المتاجر التي يصلها التوصيل من موقعك الحالي ضمن نطاق كل متجر.
+        أنت تتصفّح كزائر: قد تظهر أسماء المطاعم بشكل مختصر حتى تسجّل الدخول. بشكل افتراضي تُعرض
+        <strong>كل المطاعم المعتمدة</strong>؛ إن فعّلت «تصفية حسب قرب موقعي» تُعرض المطاعم التي يصلها التوصيل من موقعك الحالي.
       </p>
 
       <div class="stores-panel">
-        <div id="container" class="stores-grid stores-grid--skeleton" aria-busy="true" aria-label="جاري تحميل المتاجر"></div>
+        <div id="container" class="stores-grid stores-grid--skeleton" aria-busy="true" aria-label="جاري تحميل المطاعم"></div>
       </div>
     </main>
 
@@ -618,6 +617,44 @@
         var n = Number(km);
         if (!Number.isFinite(n) || n < 0) return null;
         return Math.max(10, Math.round(n * 4));
+      }
+
+      var RESTAURANT_CUISINES = [];
+
+      function loadRestaurantCuisinesFromApi() {
+        if (!window.PlatformAPI || !PlatformAPI.apiUrl) return Promise.resolve();
+        return fetch(PlatformAPI.apiUrl("/api/categories?type=restaurant&list=canonical&sort=manual"))
+          .then(function (r) {
+            return r.json();
+          })
+          .then(function (data) {
+            var list = (data && data.categories) || [];
+            RESTAURANT_CUISINES = list.map(function (c) {
+              return { slug: c.slug, icon: c.icon || "▫", label: c.name_ar || c.label_ar || c.slug };
+            });
+          })
+          .catch(function () {
+            RESTAURANT_CUISINES = [];
+          });
+      }
+
+      var CUISINE_COMBO = {
+        burger_broasted: ["broasted", "burger", "burger_broasted"],
+        cafe_sweets: ["cafe", "sweets", "dessert_cafe"],
+      };
+
+      function storeMatchesCuisineChip(store, slug) {
+        if (!slug) return true;
+        if (String(store.type || "").toLowerCase() !== "restaurant") return false;
+        var c = String(store.category || "")
+          .trim()
+          .toLowerCase();
+        var key = String(slug || "")
+          .trim()
+          .toLowerCase();
+        var combo = CUISINE_COMBO[key];
+        if (combo) return combo.indexOf(c) !== -1;
+        return c === key;
       }
 
       var TYPE_AR = {
@@ -669,28 +706,6 @@
         return "service";
       }
 
-      var STORE_CATEGORIES = [
-        { filter: "all", icon: "🏪", label: "كل المتاجر" },
-        { filter: "supermarket", icon: "🛒", label: "سوبر ماركت" },
-        { filter: "pharmacy", icon: "💊", label: "صيدليات" },
-        { filter: "vegetables", icon: "🥬", label: "خضار" },
-        { filter: "flowers_gifts", icon: "💐", label: "ورود وهدايا" },
-        { filter: "sweets", icon: "🍰", label: "حلويات" },
-        { filter: "home_business", icon: "🏠", label: "أسر منتجة" },
-      ];
-
-      function storeMatchesCategoryFilter(store, filter) {
-        var t = String(store.type || store.category || "").toLowerCase();
-        if (filter === "all") return t !== "restaurant";
-        if (filter === "supermarket") return t === "supermarket" || t === "minimarket";
-        if (filter === "pharmacy") return t === "pharmacy";
-        if (filter === "vegetables") return t === "vegetables";
-        if (filter === "flowers_gifts") return t === "flowers_gifts";
-        if (filter === "sweets") return t === "sweets";
-        if (filter === "home_business") return t === "home_business";
-        return t === filter;
-      }
-
       function displayName(store) {
         if (store.masked) return String(store.label || "");
         return String(store.name || store.label || "");
@@ -722,7 +737,6 @@
         var container = document.getElementById("container");
         var guestNote = document.getElementById("guestNote");
         var searchEl = document.getElementById("storeSearch");
-        var categoryBar = document.getElementById("storesCategoryBar");
         var defaultLogo =
           "data:image/svg+xml," +
           encodeURIComponent(
@@ -730,8 +744,9 @@
           );
 
         var allStores = [];
-        var activeFilter = "all";
+        var activeCuisine = null;
         var SKELETON_COUNT = 8;
+        var cuisineBar = document.getElementById("storesCuisineBar");
         var geoFilterEl = document.getElementById("storesGeoFilter");
         try {
           if (geoFilterEl && sessionStorage.getItem("ervenow_stores_geo") === "1") geoFilterEl.checked = true;
@@ -745,44 +760,42 @@
           });
         }
 
-        function renderCategoryBarActive() {
-          if (!categoryBar) return;
-          var chips = categoryBar.querySelectorAll(".stores-cuisine-chip");
+        function renderCuisineBarActive() {
+          if (!cuisineBar) return;
+          var chips = cuisineBar.querySelectorAll(".stores-cuisine-chip");
           for (var i = 0; i < chips.length; i++) {
             var c = chips[i];
-            var f = c.getAttribute("data-filter") || "all";
-            var on = f === activeFilter;
+            var slug = c.getAttribute("data-cuisine") || "";
+            var on = (!activeCuisine && !slug) || (activeCuisine && slug === activeCuisine);
             c.classList.toggle("is-active", on);
             c.setAttribute("aria-selected", on ? "true" : "false");
           }
         }
 
-        function buildCategoryBar() {
-          if (!categoryBar) return;
-          var html = "";
-          for (var i = 0; i < STORE_CATEGORIES.length; i++) {
-            var it = STORE_CATEGORIES[i];
-            var on = it.filter === activeFilter;
+        function buildCuisineBar() {
+          if (!cuisineBar) return;
+          var html =
+            '<button type="button" class="stores-cuisine-chip is-active" data-cuisine="" role="tab" aria-selected="true">' +
+            '<span class="stores-cuisine-chip__icon" aria-hidden="true">▦</span><span>الكل</span></button>';
+          for (var i = 0; i < RESTAURANT_CUISINES.length; i++) {
+            var it = RESTAURANT_CUISINES[i];
             html +=
-              '<button type="button" class="stores-cuisine-chip' +
-              (on ? " is-active" : "") +
-              '" data-filter="' +
-              esc(it.filter) +
-              '" role="tab" aria-selected="' +
-              (on ? "true" : "false") +
-              '">' +
+              '<button type="button" class="stores-cuisine-chip" data-cuisine="' +
+              esc(it.slug) +
+              '" role="tab" aria-selected="false">' +
               '<span class="stores-cuisine-chip__icon" aria-hidden="true">' +
               esc(it.icon) +
               "</span><span>" +
               esc(it.label) +
               "</span></button>";
           }
-          categoryBar.innerHTML = html;
+          cuisineBar.innerHTML = html;
         }
 
-        function setCategoryChip(btn) {
-          activeFilter = btn.getAttribute("data-filter") || "all";
-          renderCategoryBarActive();
+        function setCuisineFromChip(btn) {
+          var slug = btn.getAttribute("data-cuisine");
+          activeCuisine = slug ? String(slug) : null;
+          renderCuisineBarActive();
           load();
         }
 
@@ -825,13 +838,13 @@
           } else if (kind === "none") {
             var geoHint =
               detail === true
-                ? "<p style=\"margin-top:12px;font-weight:600;color:#5c4638\">عند تفعيل <strong>الموقع</strong> نعرض فقط المتاجر التي يصلها التوصيل إلى موقعك الحالي. إن لم يظهر أي متجر، جرّب إعادة التحميل و<strong>رفض</strong> مشاركة الموقع لعرض كل المتاجر المعتمدة (بدون فلترة بالمسافة).</p>"
+                ? "<p style=\"margin-top:12px;font-weight:600;color:#5c4638\">عند تفعيل <strong>الموقع</strong> نعرض فقط المطاعم التي يصلها التوصيل إلى موقعك الحالي. إن لم يظهر أي مطعم، جرّب إعادة التحميل و<strong>رفض</strong> مشاركة الموقع لعرض كل المطاعم المعتمدة (بدون فلترة بالمسافة).</p>"
                 : "";
             body =
               '<div class="stores-empty" role="status">' +
               '<div class="stores-empty__icon" aria-hidden="true">🏪</div>' +
-              "<h2>لا متاجر معروضة بعد</h2>" +
-              "<p>لم نجد متاجر مفعّلة تطابق العرض الحالي. إن كنت قد سجّلت متجراً، فغالباً ما زال <strong>بانتظار الموافقة</strong> أو خارج نطاق التوصيل عند تفعيل الموقع.</p>" +
+              "<h2>لا مطاعم معروضة بعد</h2>" +
+              "<p>لم نجد مطاعم مفعّلة تطابق العرض الحالي. إن كنت قد سجّلت مطعماً، فغالباً ما زال <strong>بانتظار الموافقة</strong> أو خارج نطاق التوصيل عند تفعيل الموقع.</p>" +
               geoHint +
               '<div class="stores-empty__actions">' +
               '<a class="btn btn-primary" href="/">الصفحة الرئيسية</a>' +
@@ -856,8 +869,8 @@
           if (clearBtn) {
             clearBtn.addEventListener("click", function () {
               if (searchEl) searchEl.value = "";
-              activeFilter = "all";
-              renderCategoryBarActive();
+              activeCuisine = null;
+              renderCuisineBarActive();
               load();
             });
           }
@@ -867,7 +880,8 @@
           var q = searchEl ? searchEl.value : "";
           return allStores.filter(function (s) {
             if (!s || !s.id) return false;
-            return storeMatchesCategoryFilter(s, activeFilter) && matchesSearch(s, q);
+            if (storeBucket(s) !== "restaurant") return false;
+            return matchesSearch(s, q);
           });
         }
 
@@ -883,7 +897,7 @@
           }
 
           list.forEach(function (store) {
-            var name = displayName(store) || "متجر";
+            var name = displayName(store) || "مطعم";
             var act = store.category_label_ar || typeLabelAr(store.type || store.category);
             var km = store.distance_km != null && Number.isFinite(Number(store.distance_km)) ? Number(store.distance_km) : null;
             var metaHtml = "";
@@ -924,7 +938,7 @@
               "</p>" +
               metaHtml +
               '<div class="store-card__cta">' +
-              '<button type="button" class="store-card__btn">عرض المتجر</button>' +
+              '<button type="button" class="store-card__btn">عرض المطعم</button>' +
               "</div>" +
               "</div>";
 
@@ -945,14 +959,6 @@
           });
         }
 
-        if (categoryBar) {
-          categoryBar.addEventListener("click", function (e) {
-            var t = e.target.closest(".stores-cuisine-chip");
-            if (!t) return;
-            setCategoryChip(t);
-          });
-        }
-
         if (searchEl) {
           searchEl.addEventListener("input", function () {
             if (allStores.length) renderList();
@@ -970,8 +976,9 @@
               parts.push("user_lat=" + encodeURIComponent(geo.lat));
               parts.push("user_lng=" + encodeURIComponent(geo.lng));
             }
-            if (activeFilter !== "all") {
-              parts.push("type=" + encodeURIComponent(activeFilter));
+            parts.push("type=restaurant");
+            if (activeCuisine) {
+              parts.push("category=" + encodeURIComponent(activeCuisine));
             }
             var qs = parts.length ? "?" + parts.join("&") : "";
             var headers = {};
@@ -991,6 +998,11 @@
 
             if (data.browse_masked) guestNote.style.display = "block";
             allStores = Array.isArray(data.stores) ? data.stores : [];
+            if (activeCuisine) {
+              allStores = allStores.filter(function (s) {
+                return storeMatchesCuisineChip(s, activeCuisine);
+              });
+            }
 
             if (searchEl) searchEl.disabled = false;
 
@@ -1008,46 +1020,27 @@
 
         function applyQueryFromUrl() {
           var p = new URLSearchParams(location.search);
-          var type = String(p.get("type") || "")
-            .trim()
-            .toLowerCase();
           var category = String(p.get("category") || "")
             .trim()
             .toLowerCase();
-          if (type === "restaurant") {
-            var dest = "/restaurants" + (category ? "?category=" + encodeURIComponent(category) : "");
-            location.replace(dest);
-            return true;
+          if (category) {
+            activeCuisine = category;
+            renderCuisineBarActive();
           }
-          var serviceTypes = [
-            "plumber",
-            "electrician",
-            "nursery",
-            "ac_technician",
-            "cleaning",
-            "cleaning_villa",
-            "cleaning_building",
-            "service",
-            "services",
-          ];
-          if (serviceTypes.indexOf(type) !== -1) {
-            var sdest = "/services";
-            if (type === "cleaning") type = "cleaning_villa";
-            if (type && type !== "service" && type !== "services") sdest += "?type=" + encodeURIComponent(type);
-            location.replace(sdest);
-            return true;
-          }
-          if (type === "minimarket") type = "supermarket";
-          var valid = ["supermarket", "pharmacy", "vegetables", "flowers_gifts", "sweets", "home_business"];
-          if (valid.indexOf(type) !== -1) {
-            activeFilter = type;
-            buildCategoryBar();
-          }
-          return false;
         }
 
-        buildCategoryBar();
-        if (!applyQueryFromUrl()) load();
+        loadRestaurantCuisinesFromApi().then(function () {
+          buildCuisineBar();
+          applyQueryFromUrl();
+          if (cuisineBar) {
+            cuisineBar.addEventListener("click", function (e) {
+              var t = e.target.closest(".stores-cuisine-chip");
+              if (!t) return;
+              setCuisineFromChip(t);
+            });
+          }
+          load();
+        });
       })();
     </script>
   </body>

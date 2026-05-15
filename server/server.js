@@ -463,6 +463,14 @@ if (servePublicUi) {
     res.sendFile(path.join(publicPath, "stores.html"));
   });
 
+  app.get("/restaurants", (_req, res) => {
+    res.sendFile(path.join(publicPath, "restaurants.html"));
+  });
+
+  app.get("/services", (_req, res) => {
+    res.sendFile(path.join(publicPath, "services.html"));
+  });
+
   app.get("/store", (_req, res) => {
     res.sendFile(path.join(publicPath, "store.html"));
   });

@@ -13,6 +13,13 @@ const {
   CENTRAL_LITERS,
 } = require("../../shared/utils/gasDeliveryPricing");
 const { notifyProvidersForBooking } = require("../../shared/services/serviceBookingNotify");
+const {
+  HOME_SERVICE_CATALOG,
+  isHomeServiceType,
+  normalizeServiceType,
+  computeHomeServiceTotal,
+  serviceDisplayName,
+} = require("../../shared/utils/homeServicePricing");
 const { recordCommissionDebtOnDelivered } = require("../../shared/services/providerCommissionDebts");
 const {
   insertServiceBookingResilient,
@@ -75,7 +82,9 @@ function labelByType(type) {
     electrician: "كهربائي",
     nursery: "مشتل",
     ac_technician: "فني مكيفات",
-    cleaning: "غسيل درج",
+    cleaning: "غسيل درج فيلا",
+    cleaning_villa: "غسيل درج فيلا",
+    cleaning_building: "غسيل درج عمارة (3 أدوار)",
     vehicle_transfer: "نقل مركبات",
     internal_delivery: "توصيل داخلي",
     pickup_truck: "ونيت",
@@ -150,6 +159,90 @@ async function recalcProviderRating(sb, providerId) {
   }
 }
 
+router.get("/catalog", (_req, res) => {
+  return ok(res, { catalog: HOME_SERVICE_CATALOG, currency: "SAR" });
+});
+
+router.post("/home-order", optionalAuth, async (req, res) => {
+  try {
+    const sb = req.supabase || createServiceClient();
+    if (!sb) return fail(res, "تعذر تهيئة الاتصال بقاعدة البيانات", 503);
+
+    const b = req.body || {};
+    const service_type = normalizeServiceType(b.service_type);
+    if (!isHomeServiceType(service_type)) return fail(res, "نوع الخدمة غير مدعوم", 400);
+
+    const district = String(b.district || "").trim();
+    const customer_phone = String(b.customer_phone || (req.appUser && req.appUser.phone) || "").trim();
+    if (!district) return fail(res, "حدد الحي", 400);
+    if (customer_phone.replace(/\D/g, "").length < 9) return fail(res, "أدخل رقم جوال صحيح", 400);
+
+    const location = String(b.location || "").trim();
+    const payMode = String(b.pay_mode || b.payment_mode || "on_service").trim().toLowerCase();
+    const entry = HOME_SERVICE_CATALOG[service_type];
+    const totalAmount = computeHomeServiceTotal(service_type);
+
+    if (payMode === "cart") {
+      return ok(res, {
+        use_cart: true,
+        cart_item: {
+          type: service_type,
+          title: serviceDisplayName(service_type),
+          price: totalAmount,
+          data: {
+            district,
+            location,
+            customer_phone,
+            total_amount: totalAmount,
+            payment_status: "unpaid",
+          },
+        },
+      });
+    }
+
+    const payAfterDiag = Boolean(entry.payAfterDiagnosis);
+    let payment_status = "unpaid";
+    if (payMode === "paid" || payMode === "prepaid") payment_status = "paid";
+    if (payAfterDiag && payMode !== "paid" && payMode !== "prepaid") payment_status = "unpaid";
+
+    const service_order_number = await buildNextServiceOrderNumber(sb);
+    const insertRow = buildServiceBookingRow({
+      service_order_number,
+      customer_id: req.appUser ? req.appUser.id : null,
+      customer_phone,
+      service_type,
+      service_name: serviceDisplayName(service_type),
+      district,
+      location: location || district,
+      qty: 1,
+      total_amount: totalAmount,
+      payment_status,
+    });
+
+    const { data, error } = await insertServiceBookingResilient(sb, insertRow);
+    if (error) return fail(res, error.message, 400);
+
+    await notifyProvidersForBooking(sb, data);
+
+    return ok(res, {
+      booking: data,
+      order_number: data.service_order_number,
+      message:
+        payment_status === "paid"
+          ? "تم تسجيل الطلب وإشعار المزودين"
+          : entry.fixedPrice
+            ? "تم تسجيل الطلب — سعر ثابت " + (entry.priceLabel || "")
+            : entry.inspectionOnly
+              ? "تم تسجيل الطلب — رسوم المعاينة 60 ريال، والإصلاح يُحسب لاحقاً عند رغبتكم"
+              : payAfterDiag
+                ? "تم تسجيل الطلب — الدفع بعد المعاينة"
+                : "تم تسجيل الطلب — الدفع عند إتمام الخدمة",
+    });
+  } catch (e) {
+    return fail(res, e.message, 500);
+  }
+});
+
 router.get("/gas/pricing", (_req, res) => {
   return ok(res, {
     cylinder_one: 39,
@@ -184,7 +277,7 @@ router.post("/gas-order", optionalAuth, async (req, res) => {
     const service_order_number = await buildNextServiceOrderNumber(sb);
     const service_name = gasServiceLabel(gas_mode);
 
-    const insertRow = buildServiceBookingRow(sb, {
+    const insertRow = buildServiceBookingRow({
       service_order_number,
       customer_id: req.appUser ? req.appUser.id : null,
       customer_phone: String(b.customer_phone || (req.appUser && req.appUser.phone) || "").trim(),

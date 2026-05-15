@@ -1,6 +1,8 @@
 const { sendWhatsApp } = require("../utils/whatsapp");
 const { commissionPercentLabel } = require("../utils/serviceCommission");
 const { gasServiceLabel } = require("../utils/gasDeliveryPricing");
+const { isHomeServiceType } = require("../utils/homeServicePricing");
+const { notifyHomeServiceProvidersCascade } = require("./homeServiceNotify");
 
 async function getServiceProviderPhones(sb, serviceType) {
   let q = sb.from("users").select("phone").eq("role", "service");
@@ -55,6 +57,11 @@ async function sendProviderBookingWhatsApp(phones, booking) {
 
 async function notifyProvidersForBooking(sb, booking) {
   if (!sb || !booking) return;
+  const t = String(booking.service_type || "").toLowerCase();
+  if (isHomeServiceType(t)) {
+    await notifyHomeServiceProvidersCascade(sb, booking);
+    return;
+  }
   const phones = await getServiceProviderPhones(sb, booking.service_type);
   await sendProviderBookingWhatsApp(phones, booking);
 }

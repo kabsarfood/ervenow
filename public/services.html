@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>ERVENOW | اكتشف المتاجر</title>
+    <title>ERVENOW | خدمات منزلية</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -535,6 +535,105 @@
         border-radius: 12px;
         font-weight: 700;
       }
+
+      .svc-order-panel {
+        margin-top: 14px;
+        padding: 16px;
+        border-radius: var(--stores-radius-sm);
+        background: linear-gradient(180deg, rgba(255, 252, 248, 0.98), rgba(255, 245, 235, 0.9));
+        border: 1px solid rgba(61, 34, 19, 0.1);
+        box-shadow: 0 6px 22px rgba(42, 24, 16, 0.06);
+      }
+      .svc-order-panel__title {
+        margin: 0 0 4px;
+        font-size: 1rem;
+        font-weight: 800;
+      }
+      .svc-order-panel__sub {
+        margin: 0 0 12px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: #7a6558;
+      }
+      .svc-order-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: 10px;
+        margin-bottom: 14px;
+      }
+      .svc-order-card {
+        border: 1px solid rgba(61, 34, 19, 0.1);
+        border-radius: 14px;
+        padding: 12px 10px;
+        background: rgba(255, 255, 255, 0.94);
+        cursor: pointer;
+        text-align: center;
+        font-family: inherit;
+        transition: transform 0.15s, box-shadow 0.2s, border-color 0.2s;
+      }
+      .svc-order-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 22px rgba(42, 24, 16, 0.1);
+      }
+      .svc-order-card.is-active {
+        border-color: transparent;
+        background: linear-gradient(135deg, #3d2213, #5c3220);
+        color: #fff8ee;
+        box-shadow: 0 12px 28px rgba(61, 34, 19, 0.28);
+      }
+      .svc-order-card__ic {
+        font-size: 1.5rem;
+        line-height: 1;
+        display: block;
+        margin-bottom: 6px;
+      }
+      .svc-order-card__label {
+        font-weight: 800;
+        font-size: 0.82rem;
+        display: block;
+      }
+      .svc-order-card__price {
+        font-size: 0.72rem;
+        font-weight: 600;
+        opacity: 0.9;
+        margin-top: 4px;
+        display: block;
+      }
+      .svc-order-form {
+        display: grid;
+        gap: 10px;
+      }
+      .svc-order-form label {
+        font-weight: 700;
+        font-size: 0.86rem;
+      }
+      .svc-order-form input,
+      .svc-order-form select {
+        width: 100%;
+        padding: 10px 12px;
+        border-radius: 10px;
+        border: 1px solid rgba(61, 34, 19, 0.12);
+        font-family: inherit;
+        font-weight: 600;
+      }
+      .svc-order-form__row {
+        display: grid;
+        gap: 6px;
+      }
+      .svc-order-form__actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 4px;
+      }
+      .svc-order-success {
+        padding: 14px;
+        border-radius: 12px;
+        background: rgba(232, 245, 233, 0.95);
+        border: 1px solid rgba(46, 125, 50, 0.25);
+        font-weight: 700;
+        line-height: 1.55;
+      }
     </style>
   </head>
   <body class="stores-page">
@@ -542,10 +641,10 @@
       <div class="stores-header__inner">
         <div class="stores-brand">
           <span class="stores-brand__eyebrow">ERVENOW</span>
-          <h1 class="stores-brand__title">اكتشف المتاجر</h1>
-          <p class="stores-brand__sub">متاجر معتمدة — بحث، فلاتر، وتجربة قريبة من تطبيقات التوصيل الكبرى</p>
-          <p class="stores-brand__hint" style="margin: 8px 0 0; font-size: 0.82rem; color: #8a7264; font-weight: 600; max-width: 520px; line-height: 1.5">
-            يظهر المتجر هنا بعد <strong>موافقة الإدارة</strong> وتفعيله. التسجيل وحده لا يكفي — راجع لوحة الإدارة أو انتظر الموافقة.
+          <h1 class="stores-brand__title">خدمات منزلية</h1>
+          <p class="stores-brand__sub" id="servicesHeaderSub">سباك، كهرباء، تكييف، تنظيف، وأكثر — احجز بخطوات بسيطة</p>
+          <p class="stores-brand__hint" id="servicesHeaderHint" style="margin: 8px 0 0; font-size: 0.82rem; color: #8a7264; font-weight: 600; max-width: 520px; line-height: 1.5">
+            يظهر مقدّم الخدمة هنا بعد <strong>موافقة الإدارة</strong>. يمكنك أيضاً إرسال طلب مباشر من صفحة الخدمة.
           </p>
         </div>
         <div class="stores-header__actions">
@@ -564,7 +663,7 @@
           type="search"
           class="stores-search"
           id="storeSearch"
-          placeholder="ابحث باسم المتجر…"
+          placeholder="ابحث باسم مقدّم الخدمة…"
           autocomplete="off"
           enterkeyhint="search"
           disabled
@@ -572,18 +671,53 @@
       </div>
       <div class="stores-restaurant-cuisine-block" id="storesCategoryBlock">
         <div class="stores-restaurant-cuisine-block__head">
-          <span class="stores-restaurant-cuisine-block__emoji" aria-hidden="true">🛒</span>
+          <span class="stores-restaurant-cuisine-block__emoji" aria-hidden="true">🔧</span>
           <div>
-            <p class="stores-restaurant-cuisine-block__title">تصنيفات المتاجر</p>
-            <p class="stores-restaurant-cuisine-block__sub">سوبرماركت، صيدليات، خضار، وأكثر.</p>
+            <p class="stores-restaurant-cuisine-block__title">تصنيفات الخدمات</p>
+            <p class="stores-restaurant-cuisine-block__sub">اختر نوع الخدمة التي تحتاجها.</p>
           </div>
         </div>
-        <div class="stores-cuisine-scroll" id="storesCategoryBar" role="tablist" aria-label="تصنيف المتجر"></div>
+        <div class="stores-cuisine-scroll" id="storesCategoryBar" role="tablist" aria-label="تصنيف الخدمة"></div>
       </div>
+
+      <section class="svc-order-panel" id="svcOrderPanel" aria-labelledby="svcOrderTitle">
+        <h2 class="svc-order-panel__title" id="svcOrderTitle">طلب الخدمة</h2>
+        <p class="svc-order-panel__sub">اختر نوع الخدمة، حدّد الحي والموقع والجوال، ثم أرسل الطلب أو أضفه للسلة.</p>
+        <div class="svc-order-cards" id="svcOrderCards" role="list"></div>
+        <div id="svcOrderSuccess" class="svc-order-success" hidden role="status"></div>
+        <form class="svc-order-form" id="svcOrderForm">
+          <div class="svc-order-form__row">
+            <label for="svcDistrict">الحي</label>
+            <input type="text" id="svcDistrict" name="district" placeholder="مثال: العزيزية" required autocomplete="address-level2" />
+          </div>
+          <div class="svc-order-form__row">
+            <label for="svcPhone">رقم الجوال</label>
+            <input type="tel" id="svcPhone" name="phone" placeholder="05XXXXXXXX" required dir="ltr" />
+          </div>
+          <div class="svc-order-form__row">
+            <label for="svcLocation">الموقع (إحداثيات أو وصف)</label>
+            <input type="text" id="svcLocation" name="location" placeholder="اضغط «موقعي» أو اكتب العنوان" />
+            <button type="button" class="btn btn-ghost" id="svcGeoBtn" style="justify-self: start">📍 موقعي الحالي</button>
+          </div>
+          <div class="svc-order-form__row">
+            <label for="svcPayMode">طريقة الدفع</label>
+            <select id="svcPayMode" name="pay_mode">
+              <option value="on_service">الدفع عند إتمام الخدمة</option>
+              <option value="after_diagnosis">الدفع بعد تقييم العطل</option>
+              <option value="cart">إضافة للسلة والدفع لاحقاً</option>
+            </select>
+          </div>
+          <p id="svcPriceHint" class="stores-brand__hint" style="margin: 0; max-width: none"></p>
+          <div class="svc-order-form__actions">
+            <button type="submit" class="btn btn-primary" id="svcSubmitBtn">إرسال الطلب</button>
+            <a class="btn btn-ghost" href="/cart" id="svcCartLink" hidden>الذهاب للسلة</a>
+          </div>
+        </form>
+      </section>
 
       <label class="stores-geo-opt" for="storesGeoFilter">
         <input type="checkbox" id="storesGeoFilter" />
-        <span>تصفية حسب قرب موقعي (ضمن نطاق توصيل كل متجر)</span>
+        <span>تصفية حسب قرب موقعي (ضمن نطاق خدمة كل مقدّم)</span>
       </label>
 
     </div>
@@ -591,16 +725,17 @@
     <main class="stores-main">
       <p class="stores-note" id="guestNote">
         أنت تتصفّح كزائر: قد تظهر أسماء المحلات بشكل مختصر حتى تسجّل الدخول. البحث يعمل على الاسم الظاهر. بشكل افتراضي تُعرض
-        <strong>كل المتاجر المعتمدة</strong>؛ إن فعّلت «تصفية حسب قرب موقعي» فقط تُعرض المتاجر التي يصلها التوصيل من موقعك الحالي ضمن نطاق كل متجر.
+        <strong>كل مقدّمي الخدمات المعتمدين</strong>؛ إن فعّلت «تصفية حسب قرب موقعي» تُعرض الخدمات القريبة من موقعك ضمن نطاق كل مقدّم.
       </p>
 
       <div class="stores-panel">
-        <div id="container" class="stores-grid stores-grid--skeleton" aria-busy="true" aria-label="جاري تحميل المتاجر"></div>
+        <div id="container" class="stores-grid stores-grid--skeleton" aria-busy="true" aria-label="جاري تحميل الخدمات"></div>
       </div>
     </main>
 
     <script src="/assets/api-config.js"></script>
     <script src="/assets/api.js"></script>
+    <script src="/assets/cart.js"></script>
     <script>
       function esc(s) {
         return String(s || "")
@@ -669,26 +804,58 @@
         return "service";
       }
 
-      var STORE_CATEGORIES = [
-        { filter: "all", icon: "🏪", label: "كل المتاجر" },
-        { filter: "supermarket", icon: "🛒", label: "سوبر ماركت" },
-        { filter: "pharmacy", icon: "💊", label: "صيدليات" },
-        { filter: "vegetables", icon: "🥬", label: "خضار" },
-        { filter: "flowers_gifts", icon: "💐", label: "ورود وهدايا" },
-        { filter: "sweets", icon: "🍰", label: "حلويات" },
-        { filter: "home_business", icon: "🏠", label: "أسر منتجة" },
+      var SERVICE_CATEGORIES = [
+        { filter: "all", icon: "🔧", label: "كل الخدمات", desc: "معاينة 60 ريال — غسيل درج بأسعار ثابتة." },
+        { filter: "plumber", icon: "🔧", label: "سباك", desc: "60 ريال معاينة وتقييم — الإصلاح لاحقاً عند الرغبة." },
+        { filter: "electrician", icon: "⚡", label: "كهربائي", desc: "60 ريال معاينة وتقييم — الإصلاح يُحسب عند الموافقة." },
+        { filter: "nursery", icon: "🪴", label: "مشتل", desc: "60 ريال معاينة — التنفيذ والتسعير حسب الاتفاق." },
+        { filter: "ac_technician", icon: "❄️", label: "فني مكيفات", desc: "60 ريال معاينة وتقييم أعطال المكيف." },
+        { filter: "cleaning_villa", icon: "🧼", label: "غسيل درج فيلا", desc: "60 ريال ثابت." },
+        { filter: "cleaning_building", icon: "🏢", label: "غسيل درج عمارة", desc: "120 ريال (3 أدوار)." },
       ];
 
-      function storeMatchesCategoryFilter(store, filter) {
+      var HOME_SERVICE_TYPES = {
+        plumber: 1,
+        electrician: 1,
+        nursery: 1,
+        ac_technician: 1,
+        cleaning: 1,
+        cleaning_villa: 1,
+        cleaning_building: 1,
+        services: 1,
+      };
+
+      function isHomeServiceStore(store) {
         var t = String(store.type || store.category || "").toLowerCase();
-        if (filter === "all") return t !== "restaurant";
-        if (filter === "supermarket") return t === "supermarket" || t === "minimarket";
-        if (filter === "pharmacy") return t === "pharmacy";
-        if (filter === "vegetables") return t === "vegetables";
-        if (filter === "flowers_gifts") return t === "flowers_gifts";
-        if (filter === "sweets") return t === "sweets";
-        if (filter === "home_business") return t === "home_business";
-        return t === filter;
+        if (t === "restaurant") return false;
+        if (MARKET_TYPES[t]) return false;
+        if (t === "pharmacy") return false;
+        if (HOME_SERVICE_TYPES[t]) return true;
+        return storeBucket(store) === "service";
+      }
+
+      function storeMatchesServiceFilter(store, filter) {
+        var t = String(store.type || store.category || "").toLowerCase();
+        var cat = String(store.category || "").toLowerCase();
+        if (!isHomeServiceStore(store)) return false;
+        if (filter === "all") return true;
+        if (t === filter) return true;
+        if (filter === "cleaning_villa" && t === "cleaning") return true;
+        if (t === "services" && cat === filter) return true;
+        return false;
+      }
+
+      function serviceCategoryMeta(filter) {
+        for (var i = 0; i < SERVICE_CATEGORIES.length; i++) {
+          if (SERVICE_CATEGORIES[i].filter === filter) return SERVICE_CATEGORIES[i];
+        }
+        return SERVICE_CATEGORIES[0];
+      }
+
+      function syncServiceHeader() {
+        var meta = serviceCategoryMeta(activeFilter);
+        var sub = document.getElementById("servicesHeaderSub");
+        if (sub && meta.desc) sub.textContent = meta.desc;
       }
 
       function displayName(store) {
@@ -734,12 +901,12 @@
         var SKELETON_COUNT = 8;
         var geoFilterEl = document.getElementById("storesGeoFilter");
         try {
-          if (geoFilterEl && sessionStorage.getItem("ervenow_stores_geo") === "1") geoFilterEl.checked = true;
+          if (geoFilterEl && sessionStorage.getItem("ervenow_services_geo") === "1") geoFilterEl.checked = true;
         } catch (e) {}
         if (geoFilterEl) {
           geoFilterEl.addEventListener("change", function () {
             try {
-              sessionStorage.setItem("ervenow_stores_geo", geoFilterEl.checked ? "1" : "0");
+              sessionStorage.setItem("ervenow_services_geo", geoFilterEl.checked ? "1" : "0");
             } catch (e2) {}
             load();
           });
@@ -760,8 +927,8 @@
         function buildCategoryBar() {
           if (!categoryBar) return;
           var html = "";
-          for (var i = 0; i < STORE_CATEGORIES.length; i++) {
-            var it = STORE_CATEGORIES[i];
+          for (var i = 0; i < SERVICE_CATEGORIES.length; i++) {
+            var it = SERVICE_CATEGORIES[i];
             var on = it.filter === activeFilter;
             html +=
               '<button type="button" class="stores-cuisine-chip' +
@@ -783,6 +950,8 @@
         function setCategoryChip(btn) {
           activeFilter = btn.getAttribute("data-filter") || "all";
           renderCategoryBarActive();
+          syncServiceHeader();
+          if (window.__svcSelectOrderType) window.__svcSelectOrderType(activeFilter);
           load();
         }
 
@@ -829,22 +998,23 @@
                 : "";
             body =
               '<div class="stores-empty" role="status">' +
-              '<div class="stores-empty__icon" aria-hidden="true">🏪</div>' +
-              "<h2>لا متاجر معروضة بعد</h2>" +
-              "<p>لم نجد متاجر مفعّلة تطابق العرض الحالي. إن كنت قد سجّلت متجراً، فغالباً ما زال <strong>بانتظار الموافقة</strong> أو خارج نطاق التوصيل عند تفعيل الموقع.</p>" +
+              '<div class="stores-empty__icon" aria-hidden="true">🔧</div>' +
+              "<h2>لا مقدّمي خدمة معروضين بعد</h2>" +
+              "<p>لم نجد مقدّمي خدمة معتمدين لهذا التصنيف. يمكنك إرسال <strong>طلب مباشر</strong> وسنربطك بأقرب مزود متاح.</p>" +
               geoHint +
               '<div class="stores-empty__actions">' +
-              '<a class="btn btn-primary" href="/">الصفحة الرئيسية</a>' +
-              '<a class="btn btn-ghost" href="/register-store.html">تسجيل متجر</a>' +
+              '<a class="btn btn-primary" id="btnRequestService">اطلب الخدمة الآن</a>' +
+              '<a class="btn btn-ghost" href="/">الصفحة الرئيسية</a>' +
               "</div></div>";
           } else {
             body =
               '<div class="stores-empty" role="status">' +
               '<div class="stores-empty__icon" aria-hidden="true">🔎</div>' +
               "<h2>لا نتائج</h2>" +
-              "<p>جرّب كلمات أخرى، أو امسح البحث، أو اختر تصنيف &laquo;الكل&raquo;.</p>" +
+              "<p>جرّب كلمات أخرى، أو امسح البحث، أو اختر تصنيفاً آخر.</p>" +
               '<div class="stores-empty__actions">' +
-              '<button type="button" class="btn btn-primary" id="btnClearFilters">مسح البحث والفلتر</button>' +
+              '<a class="btn btn-primary" id="btnRequestService">اطلب الخدمة الآن</a>' +
+              '<button type="button" class="btn btn-ghost" id="btnClearFilters">مسح البحث والفلتر</button>' +
               "</div></div>";
           }
           container.innerHTML = body;
@@ -858,16 +1028,18 @@
               if (searchEl) searchEl.value = "";
               activeFilter = "all";
               renderCategoryBarActive();
+              syncServiceHeader();
               load();
             });
           }
+          wireRequestServiceBtn();
         }
 
         function applyFilters() {
           var q = searchEl ? searchEl.value : "";
           return allStores.filter(function (s) {
             if (!s || !s.id) return false;
-            return storeMatchesCategoryFilter(s, activeFilter) && matchesSearch(s, q);
+            return storeMatchesServiceFilter(s, activeFilter) && matchesSearch(s, q);
           });
         }
 
@@ -883,7 +1055,7 @@
           }
 
           list.forEach(function (store) {
-            var name = displayName(store) || "متجر";
+            var name = displayName(store) || "مقدّم خدمة";
             var act = store.category_label_ar || typeLabelAr(store.type || store.category);
             var km = store.distance_km != null && Number.isFinite(Number(store.distance_km)) ? Number(store.distance_km) : null;
             var metaHtml = "";
@@ -924,7 +1096,7 @@
               "</p>" +
               metaHtml +
               '<div class="store-card__cta">' +
-              '<button type="button" class="store-card__btn">عرض المتجر</button>' +
+              '<button type="button" class="store-card__btn">عرض الخدمة</button>' +
               "</div>" +
               "</div>";
 
@@ -970,9 +1142,7 @@
               parts.push("user_lat=" + encodeURIComponent(geo.lat));
               parts.push("user_lng=" + encodeURIComponent(geo.lng));
             }
-            if (activeFilter !== "all") {
-              parts.push("type=" + encodeURIComponent(activeFilter));
-            }
+            parts.push("type=service");
             var qs = parts.length ? "?" + parts.join("&") : "";
             var headers = {};
             var tok = window.PlatformAPI && PlatformAPI.getToken && PlatformAPI.getToken();
@@ -1006,48 +1176,271 @@
           }
         }
 
+        function browseTypeForFilter() {
+          if (activeFilter === "all") return "plumber";
+          return activeFilter;
+        }
+
+        function wireRequestServiceBtn() {
+          var btn = document.getElementById("btnRequestService");
+          if (!btn) return;
+          btn.addEventListener("click", function () {
+            window.location.href = "/browse?type=" + encodeURIComponent(browseTypeForFilter());
+          });
+        }
+
         function applyQueryFromUrl() {
           var p = new URLSearchParams(location.search);
           var type = String(p.get("type") || "")
             .trim()
             .toLowerCase();
-          var category = String(p.get("category") || "")
-            .trim()
-            .toLowerCase();
           if (type === "restaurant") {
-            var dest = "/restaurants" + (category ? "?category=" + encodeURIComponent(category) : "");
-            location.replace(dest);
+            location.replace("/restaurants");
             return true;
           }
-          var serviceTypes = [
+          var marketTypes = ["supermarket", "pharmacy", "vegetables", "flowers_gifts", "sweets", "home_business", "minimarket"];
+          if (marketTypes.indexOf(type) !== -1) {
+            location.replace("/stores?type=" + encodeURIComponent(type === "minimarket" ? "supermarket" : type));
+            return true;
+          }
+          if (type === "cleaning") type = "cleaning_villa";
+          var valid = [
             "plumber",
             "electrician",
             "nursery",
             "ac_technician",
-            "cleaning",
             "cleaning_villa",
             "cleaning_building",
             "service",
             "services",
           ];
-          if (serviceTypes.indexOf(type) !== -1) {
-            var sdest = "/services";
-            if (type === "cleaning") type = "cleaning_villa";
-            if (type && type !== "service" && type !== "services") sdest += "?type=" + encodeURIComponent(type);
-            location.replace(sdest);
-            return true;
-          }
-          if (type === "minimarket") type = "supermarket";
-          var valid = ["supermarket", "pharmacy", "vegetables", "flowers_gifts", "sweets", "home_business"];
           if (valid.indexOf(type) !== -1) {
-            activeFilter = type;
+            if (type === "service" || type === "services") activeFilter = "all";
+            else activeFilter = type;
             buildCategoryBar();
+            syncServiceHeader();
+            if (window.__svcSelectOrderType) window.__svcSelectOrderType(activeFilter);
           }
           return false;
         }
 
         buildCategoryBar();
+        syncServiceHeader();
         if (!applyQueryFromUrl()) load();
+      })();
+    </script>
+    <script>
+      (function () {
+        var catalog = {};
+        var selectedType = "plumber";
+        var cardsEl = document.getElementById("svcOrderCards");
+        var formEl = document.getElementById("svcOrderForm");
+        var successEl = document.getElementById("svcOrderSuccess");
+        var priceHint = document.getElementById("svcPriceHint");
+        var paySel = document.getElementById("svcPayMode");
+        var cartLink = document.getElementById("svcCartLink");
+
+        function entry(type) {
+          return catalog[type] || null;
+        }
+
+        function effectiveType(filter) {
+          var t = String(filter || selectedType || "plumber").toLowerCase();
+          if (t === "cleaning") t = "cleaning_villa";
+          if (t === "all" || t === "service" || t === "services") return "plumber";
+          if (catalog[t]) return t;
+          return "plumber";
+        }
+
+        function updatePayOptions() {
+          if (!paySel) return;
+          var e = entry(selectedType);
+          var inspect = e && e.inspectionOnly;
+          var fixed = e && e.fixedPrice;
+          for (var i = 0; i < paySel.options.length; i++) {
+            var opt = paySel.options[i];
+            if (opt.value === "after_diagnosis") {
+              opt.hidden = !inspect;
+              opt.textContent = "دفع رسوم المعاينة (60 ريال) عند الزيارة";
+            }
+            if (opt.value === "on_service") {
+              opt.hidden = inspect;
+              opt.disabled = false;
+              opt.textContent = "الدفع عند إتمام الخدمة";
+            }
+          }
+          if (inspect) paySel.value = "after_diagnosis";
+          else paySel.value = "on_service";
+        }
+
+        function updatePriceHint() {
+          if (!priceHint) return;
+          var e = entry(selectedType);
+          if (!e) {
+            priceHint.textContent = "";
+            return;
+          }
+          priceHint.textContent = e.desc + " — " + (e.priceLabel || "");
+        }
+
+        function renderOrderCards() {
+          if (!cardsEl) return;
+          var html = "";
+          var keys = ["plumber", "electrician", "ac_technician", "nursery", "cleaning_villa", "cleaning_building"];
+          for (var i = 0; i < keys.length; i++) {
+            var k = keys[i];
+            var e = catalog[k];
+            if (!e) continue;
+            var on = k === selectedType;
+            html +=
+              '<button type="button" class="svc-order-card' +
+              (on ? " is-active" : "") +
+              '" data-svc-type="' +
+              k +
+              '" role="listitem">' +
+              '<span class="svc-order-card__ic" aria-hidden="true">' +
+              e.icon +
+              "</span>" +
+              '<span class="svc-order-card__label">' +
+              e.label +
+              "</span>" +
+              '<span class="svc-order-card__price">' +
+              (e.priceLabel || "") +
+              "</span></button>";
+          }
+          cardsEl.innerHTML = html;
+        }
+
+        window.__svcSelectOrderType = function (filter) {
+          selectedType = effectiveType(filter);
+          renderOrderCards();
+          updatePayOptions();
+          updatePriceHint();
+        };
+
+        if (cardsEl) {
+          cardsEl.addEventListener("click", function (ev) {
+            var btn = ev.target.closest(".svc-order-card");
+            if (!btn) return;
+            selectedType = btn.getAttribute("data-svc-type") || "plumber";
+            renderOrderCards();
+            updatePayOptions();
+            updatePriceHint();
+          });
+        }
+
+        var geoBtn = document.getElementById("svcGeoBtn");
+        if (geoBtn) {
+          geoBtn.addEventListener("click", function () {
+            if (!navigator.geolocation) {
+              alert("المتصفح لا يدعم تحديد الموقع");
+              return;
+            }
+            geoBtn.disabled = true;
+            navigator.geolocation.getCurrentPosition(
+              function (p) {
+                geoBtn.disabled = false;
+                var loc = document.getElementById("svcLocation");
+                if (loc) loc.value = p.coords.latitude.toFixed(6) + "," + p.coords.longitude.toFixed(6);
+              },
+              function () {
+                geoBtn.disabled = false;
+                alert("تعذر الحصول على الموقع");
+              },
+              { timeout: 12000 }
+            );
+          });
+        }
+
+        if (formEl) {
+          formEl.addEventListener("submit", async function (e) {
+            e.preventDefault();
+            if (!window.PlatformAPI || !PlatformAPI.apiUrl) return;
+            var district = document.getElementById("svcDistrict").value.trim();
+            var phone = document.getElementById("svcPhone").value.trim();
+            var location = document.getElementById("svcLocation").value.trim();
+            var pay_mode = paySel ? paySel.value : "on_service";
+            var submitBtn = document.getElementById("svcSubmitBtn");
+            if (submitBtn) submitBtn.disabled = true;
+            try {
+              var headers = { "Content-Type": "application/json" };
+              var tok = PlatformAPI.getToken && PlatformAPI.getToken();
+              if (tok) headers.Authorization = "Bearer " + tok;
+              var res = await fetch(PlatformAPI.apiUrl("/api/services/home-order"), {
+                method: "POST",
+                headers: headers,
+                body: JSON.stringify({
+                  service_type: selectedType,
+                  district: district,
+                  customer_phone: phone,
+                  location: location,
+                  pay_mode: pay_mode,
+                }),
+              });
+              var data = await res.json().catch(function () {
+                return {};
+              });
+              if (!res.ok || !data.ok) {
+                alert(data.error || "تعذر إرسال الطلب");
+                return;
+              }
+              if (data.use_cart && data.cart_item && typeof addToCart === "function") {
+                addToCart(data.cart_item);
+                if (successEl) {
+                  successEl.hidden = false;
+                  successEl.textContent = "تمت إضافة الخدمة إلى السلة. أكمل الدفع من صفحة السلة.";
+                }
+                if (cartLink) cartLink.hidden = false;
+                return;
+              }
+              if (successEl) {
+                successEl.hidden = false;
+                successEl.textContent =
+                  "✅ تم إرسال الطلب بنجاح.\nرقم الطلب: " +
+                  (data.order_number || "—") +
+                  "\n" +
+                  (data.message || "سيتم إشعار أقرب مزودي الخدمة عبر واتساب.");
+              }
+              formEl.reset();
+            } catch (err2) {
+              alert("تعذر إكمال الطلب. تحقق من الاتصال.");
+            } finally {
+              if (submitBtn) submitBtn.disabled = false;
+            }
+          });
+        }
+
+        function loadCatalog() {
+          if (!window.PlatformAPI || !PlatformAPI.apiUrl) return;
+          fetch(PlatformAPI.apiUrl("/api/services/catalog"))
+            .then(function (r) {
+              return r.json();
+            })
+            .then(function (data) {
+              if (data && data.catalog) catalog = data.catalog;
+              var p = new URLSearchParams(location.search);
+              var t = effectiveType(p.get("type") || "plumber");
+              selectedType = t;
+              renderOrderCards();
+              updatePayOptions();
+              updatePriceHint();
+            })
+            .catch(function () {
+              catalog = {
+                plumber: { label: "سباك", icon: "🔧", priceLabel: "60 ريال معاينة وتقييم", inspectionOnly: true, fixedPrice: false, desc: "" },
+                electrician: { label: "كهربائي", icon: "⚡", priceLabel: "60 ريال معاينة وتقييم", inspectionOnly: true, fixedPrice: false, desc: "" },
+                ac_technician: { label: "فني مكيفات", icon: "❄️", priceLabel: "60 ريال معاينة وتقييم", inspectionOnly: true, fixedPrice: false, desc: "" },
+                nursery: { label: "مشتل", icon: "🪴", priceLabel: "60 ريال معاينة وتقييم", inspectionOnly: true, fixedPrice: false, desc: "" },
+                cleaning_villa: { label: "غسيل درج فيلا", icon: "🧼", priceLabel: "60 ريال ثابت", inspectionOnly: false, fixedPrice: true, desc: "" },
+                cleaning_building: { label: "غسيل درج عمارة", icon: "🏢", priceLabel: "120 ريال (3 أدوار)", inspectionOnly: false, fixedPrice: true, desc: "" },
+              };
+              renderOrderCards();
+              updatePayOptions();
+              updatePriceHint();
+            });
+        }
+
+        loadCatalog();
       })();
     </script>
   </body>

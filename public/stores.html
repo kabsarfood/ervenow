@@ -570,12 +570,15 @@
           disabled
         />
       </div>
-      <div class="stores-filters" id="categoryFilters" role="tablist" aria-label="تصنيف المتاجر">
-        <button type="button" class="stores-filter is-active" data-filter="all" role="tab" aria-selected="true">الكل</button>
-        <button type="button" class="stores-filter" data-filter="restaurant" role="tab" aria-selected="false">مطاعم</button>
-        <button type="button" class="stores-filter" data-filter="pharmacy" role="tab" aria-selected="false">صيدليات</button>
-        <button type="button" class="stores-filter" data-filter="market" role="tab" aria-selected="false">أسواق</button>
-        <button type="button" class="stores-filter" data-filter="service" role="tab" aria-selected="false">خدمات</button>
+      <div class="stores-restaurant-cuisine-block" id="storesCategoryBlock">
+        <div class="stores-restaurant-cuisine-block__head">
+          <span class="stores-restaurant-cuisine-block__emoji" aria-hidden="true">🛒</span>
+          <div>
+            <p class="stores-restaurant-cuisine-block__title">تصنيفات المتاجر</p>
+            <p class="stores-restaurant-cuisine-block__sub">سوبرماركت، صيدليات، خضار، وأكثر.</p>
+          </div>
+        </div>
+        <div class="stores-cuisine-scroll" id="storesCategoryBar" role="tablist" aria-label="تصنيف المتجر"></div>
       </div>
 
       <label class="stores-geo-opt" for="storesGeoFilter">
@@ -583,16 +586,6 @@
         <span>تصفية حسب قرب موقعي (ضمن نطاق توصيل كل متجر)</span>
       </label>
 
-      <div class="stores-restaurant-cuisine-block" id="storesRestaurantCuisineBlock" hidden>
-        <div class="stores-restaurant-cuisine-block__head">
-          <span class="stores-restaurant-cuisine-block__emoji" aria-hidden="true">🍽️</span>
-          <div>
-            <p class="stores-restaurant-cuisine-block__title">المطاعم</p>
-            <p class="stores-restaurant-cuisine-block__sub">تصنيفات المطابخ — اختر تصفية المطاعم في القائمة أدناه.</p>
-          </div>
-        </div>
-        <div class="stores-cuisine-scroll" id="storesCuisineBar" role="tablist" aria-label="تصنيف المطعم"></div>
-      </div>
     </div>
 
     <main class="stores-main">
@@ -625,44 +618,6 @@
         var n = Number(km);
         if (!Number.isFinite(n) || n < 0) return null;
         return Math.max(10, Math.round(n * 4));
-      }
-
-      var RESTAURANT_CUISINES = [];
-
-      function loadRestaurantCuisinesFromApi() {
-        if (!window.PlatformAPI || !PlatformAPI.apiUrl) return Promise.resolve();
-        return fetch(PlatformAPI.apiUrl("/api/categories?type=restaurant&list=canonical&sort=manual"))
-          .then(function (r) {
-            return r.json();
-          })
-          .then(function (data) {
-            var list = (data && data.categories) || [];
-            RESTAURANT_CUISINES = list.map(function (c) {
-              return { slug: c.slug, icon: c.icon || "▫", label: c.name_ar || c.label_ar || c.slug };
-            });
-          })
-          .catch(function () {
-            RESTAURANT_CUISINES = [];
-          });
-      }
-
-      var CUISINE_COMBO = {
-        burger_broasted: ["broasted", "burger", "burger_broasted"],
-        cafe_sweets: ["cafe", "sweets", "dessert_cafe"],
-      };
-
-      function storeMatchesCuisineChip(store, slug) {
-        if (!slug) return true;
-        if (String(store.type || "").toLowerCase() !== "restaurant") return false;
-        var c = String(store.category || "")
-          .trim()
-          .toLowerCase();
-        var key = String(slug || "")
-          .trim()
-          .toLowerCase();
-        var combo = CUISINE_COMBO[key];
-        if (combo) return combo.indexOf(c) !== -1;
-        return c === key;
       }
 
       var TYPE_AR = {
@@ -714,6 +669,28 @@
         return "service";
       }
 
+      var STORE_CATEGORIES = [
+        { filter: "all", icon: "🏪", label: "كل المتاجر" },
+        { filter: "supermarket", icon: "🛒", label: "سوبر ماركت" },
+        { filter: "pharmacy", icon: "💊", label: "صيدليات" },
+        { filter: "vegetables", icon: "🥬", label: "خضار" },
+        { filter: "flowers_gifts", icon: "💐", label: "ورود وهدايا" },
+        { filter: "sweets", icon: "🍰", label: "حلويات" },
+        { filter: "home_business", icon: "🏠", label: "أسر منتجة" },
+      ];
+
+      function storeMatchesCategoryFilter(store, filter) {
+        var t = String(store.type || store.category || "").toLowerCase();
+        if (filter === "all") return t !== "restaurant";
+        if (filter === "supermarket") return t === "supermarket" || t === "minimarket";
+        if (filter === "pharmacy") return t === "pharmacy";
+        if (filter === "vegetables") return t === "vegetables";
+        if (filter === "flowers_gifts") return t === "flowers_gifts";
+        if (filter === "sweets") return t === "sweets";
+        if (filter === "home_business") return t === "home_business";
+        return t === filter;
+      }
+
       function displayName(store) {
         if (store.masked) return String(store.label || "");
         return String(store.name || store.label || "");
@@ -745,7 +722,7 @@
         var container = document.getElementById("container");
         var guestNote = document.getElementById("guestNote");
         var searchEl = document.getElementById("storeSearch");
-        var filterWrap = document.getElementById("categoryFilters");
+        var categoryBar = document.getElementById("storesCategoryBar");
         var defaultLogo =
           "data:image/svg+xml," +
           encodeURIComponent(
@@ -754,10 +731,7 @@
 
         var allStores = [];
         var activeFilter = "all";
-        var activeCuisine = null;
         var SKELETON_COUNT = 8;
-        var cuisineWrap = document.getElementById("storesRestaurantCuisineBlock");
-        var cuisineBar = document.getElementById("storesCuisineBar");
         var geoFilterEl = document.getElementById("storesGeoFilter");
         try {
           if (geoFilterEl && sessionStorage.getItem("ervenow_stores_geo") === "1") geoFilterEl.checked = true;
@@ -771,63 +745,44 @@
           });
         }
 
-        function syncCuisineStripVisibility() {
-          if (!cuisineWrap) return;
-          /* التصنيفات الفرعية للمطاعم تظهر فقط بعد اختيار تبويب «مطاعم» — لا تُعرض مع «الكل» لتقليل التشتت */
-          var show = activeFilter === "restaurant";
-          cuisineWrap.hidden = !show;
-        }
-
-        function renderCuisineBarActive() {
-          if (!cuisineBar) return;
-          var chips = cuisineBar.querySelectorAll(".stores-cuisine-chip");
+        function renderCategoryBarActive() {
+          if (!categoryBar) return;
+          var chips = categoryBar.querySelectorAll(".stores-cuisine-chip");
           for (var i = 0; i < chips.length; i++) {
             var c = chips[i];
-            var slug = c.getAttribute("data-cuisine") || "";
-            var on = (!activeCuisine && !slug) || (activeCuisine && slug === activeCuisine);
+            var f = c.getAttribute("data-filter") || "all";
+            var on = f === activeFilter;
             c.classList.toggle("is-active", on);
             c.setAttribute("aria-selected", on ? "true" : "false");
           }
         }
 
-        function buildCuisineBar() {
-          if (!cuisineBar) return;
-          var html =
-            '<button type="button" class="stores-cuisine-chip is-active" data-cuisine="" role="tab" aria-selected="true">' +
-            '<span class="stores-cuisine-chip__icon" aria-hidden="true">▦</span><span>الكل</span></button>';
-          for (var i = 0; i < RESTAURANT_CUISINES.length; i++) {
-            var it = RESTAURANT_CUISINES[i];
+        function buildCategoryBar() {
+          if (!categoryBar) return;
+          var html = "";
+          for (var i = 0; i < STORE_CATEGORIES.length; i++) {
+            var it = STORE_CATEGORIES[i];
+            var on = it.filter === activeFilter;
             html +=
-              '<button type="button" class="stores-cuisine-chip" data-cuisine="' +
-              esc(it.slug) +
-              '" role="tab" aria-selected="false">' +
+              '<button type="button" class="stores-cuisine-chip' +
+              (on ? " is-active" : "") +
+              '" data-filter="' +
+              esc(it.filter) +
+              '" role="tab" aria-selected="' +
+              (on ? "true" : "false") +
+              '">' +
               '<span class="stores-cuisine-chip__icon" aria-hidden="true">' +
               esc(it.icon) +
               "</span><span>" +
               esc(it.label) +
               "</span></button>";
           }
-          cuisineBar.innerHTML = html;
+          categoryBar.innerHTML = html;
         }
 
-        function setCuisineFromChip(btn) {
-          var slug = btn.getAttribute("data-cuisine");
-          activeCuisine = slug ? String(slug) : null;
-          if (activeCuisine) {
-            activeFilter = "restaurant";
-            var rb = filterWrap.querySelector('[data-filter="restaurant"]');
-            if (rb) {
-              var buttons = filterWrap.querySelectorAll(".stores-filter");
-              for (var i = 0; i < buttons.length; i++) {
-                var b = buttons[i];
-                var on = b === rb;
-                b.classList.toggle("is-active", on);
-                b.setAttribute("aria-selected", on ? "true" : "false");
-              }
-            }
-          }
-          renderCuisineBarActive();
-          syncCuisineStripVisibility();
+        function setCategoryChip(btn) {
+          activeFilter = btn.getAttribute("data-filter") || "all";
+          renderCategoryBarActive();
           load();
         }
 
@@ -901,12 +856,9 @@
           if (clearBtn) {
             clearBtn.addEventListener("click", function () {
               if (searchEl) searchEl.value = "";
-              var allBtn = filterWrap.querySelector('[data-filter="all"]');
-              if (allBtn) setFilter(allBtn);
-              else {
-                activeFilter = "all";
-                renderList();
-              }
+              activeFilter = "all";
+              renderCategoryBarActive();
+              load();
             });
           }
         }
@@ -915,8 +867,7 @@
           var q = searchEl ? searchEl.value : "";
           return allStores.filter(function (s) {
             if (!s || !s.id) return false;
-            if (activeFilter !== "all" && storeBucket(s) !== activeFilter) return false;
-            return matchesSearch(s, q);
+            return storeMatchesCategoryFilter(s, activeFilter) && matchesSearch(s, q);
           });
         }
 
@@ -994,25 +945,13 @@
           });
         }
 
-        function setFilter(btn) {
-          activeCuisine = null;
-          activeFilter = btn.getAttribute("data-filter") || "all";
-          var buttons = filterWrap.querySelectorAll(".stores-filter");
-          for (var i = 0; i < buttons.length; i++) {
-            var b = buttons[i];
-            var on = b === btn;
-            b.classList.toggle("is-active", on);
-            b.setAttribute("aria-selected", on ? "true" : "false");
-          }
-          renderCuisineBarActive();
-          syncCuisineStripVisibility();
-          load();
+        if (categoryBar) {
+          categoryBar.addEventListener("click", function (e) {
+            var t = e.target.closest(".stores-cuisine-chip");
+            if (!t) return;
+            setCategoryChip(t);
+          });
         }
-
-        filterWrap.addEventListener("click", function (e) {
-          var t = e.target;
-          if (t && t.getAttribute && t.getAttribute("data-filter")) setFilter(t);
-        });
 
         if (searchEl) {
           searchEl.addEventListener("input", function () {
@@ -1031,13 +970,8 @@
               parts.push("user_lat=" + encodeURIComponent(geo.lat));
               parts.push("user_lng=" + encodeURIComponent(geo.lng));
             }
-            if (activeCuisine) {
-              parts.push("category=" + encodeURIComponent(activeCuisine));
-            } else {
-              if (activeFilter === "restaurant") parts.push("type=restaurant");
-              else if (activeFilter === "pharmacy") parts.push("type=pharmacy");
-              else if (activeFilter === "market") parts.push("type=market");
-              else if (activeFilter === "service") parts.push("type=service");
+            if (activeFilter !== "all") {
+              parts.push("type=" + encodeURIComponent(activeFilter));
             }
             var qs = parts.length ? "?" + parts.join("&") : "";
             var headers = {};
@@ -1057,11 +991,6 @@
 
             if (data.browse_masked) guestNote.style.display = "block";
             allStores = Array.isArray(data.stores) ? data.stores : [];
-            if (activeCuisine) {
-              allStores = allStores.filter(function (s) {
-                return storeMatchesCuisineChip(s, activeCuisine);
-              });
-            }
 
             if (searchEl) searchEl.disabled = false;
 
@@ -1085,52 +1014,40 @@
           var category = String(p.get("category") || "")
             .trim()
             .toLowerCase();
-          if (category) {
-            activeCuisine = category;
-            activeFilter = "restaurant";
-            var rb = filterWrap.querySelector('[data-filter="restaurant"]');
-            if (rb) {
-              var buttons = filterWrap.querySelectorAll(".stores-filter");
-              for (var i = 0; i < buttons.length; i++) {
-                var b = buttons[i];
-                var on = b === rb;
-                b.classList.toggle("is-active", on);
-                b.setAttribute("aria-selected", on ? "true" : "false");
-              }
-            }
-            renderCuisineBarActive();
-            syncCuisineStripVisibility();
-            return;
-          }
           if (type === "restaurant") {
-            activeFilter = "restaurant";
-            var rbtn = filterWrap.querySelector('[data-filter="restaurant"]');
-            if (rbtn) {
-              var btns = filterWrap.querySelectorAll(".stores-filter");
-              for (var j = 0; j < btns.length; j++) {
-                var bb = btns[j];
-                var on2 = bb === rbtn;
-                bb.classList.toggle("is-active", on2);
-                bb.setAttribute("aria-selected", on2 ? "true" : "false");
-              }
-            }
-            syncCuisineStripVisibility();
+            var dest = "/restaurants" + (category ? "?category=" + encodeURIComponent(category) : "");
+            location.replace(dest);
+            return true;
           }
+          var serviceTypes = [
+            "plumber",
+            "electrician",
+            "nursery",
+            "ac_technician",
+            "cleaning",
+            "cleaning_villa",
+            "cleaning_building",
+            "service",
+            "services",
+          ];
+          if (serviceTypes.indexOf(type) !== -1) {
+            var sdest = "/services";
+            if (type === "cleaning") type = "cleaning_villa";
+            if (type && type !== "service" && type !== "services") sdest += "?type=" + encodeURIComponent(type);
+            location.replace(sdest);
+            return true;
+          }
+          if (type === "minimarket") type = "supermarket";
+          var valid = ["supermarket", "pharmacy", "vegetables", "flowers_gifts", "sweets", "home_business"];
+          if (valid.indexOf(type) !== -1) {
+            activeFilter = type;
+            buildCategoryBar();
+          }
+          return false;
         }
 
-        loadRestaurantCuisinesFromApi().then(function () {
-          buildCuisineBar();
-          applyQueryFromUrl();
-          syncCuisineStripVisibility();
-          if (cuisineBar) {
-            cuisineBar.addEventListener("click", function (e) {
-              var t = e.target.closest(".stores-cuisine-chip");
-              if (!t) return;
-              setCuisineFromChip(t);
-            });
-          }
-          load();
-        });
+        buildCategoryBar();
+        if (!applyQueryFromUrl()) load();
       })();
     </script>
   </body>
