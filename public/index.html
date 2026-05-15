@@ -1433,6 +1433,109 @@
         line-height: 1.65;
       }
 
+      /* ——— أقسام رئيسية (جوال — تحت الهيدر دون المساس بشبكة الأيقونات) ——— */
+      .lp-home-hub {
+        display: none;
+      }
+
+      @media (max-width: 900px) {
+        .lp-home-hub {
+          display: block;
+          position: relative;
+          z-index: 40;
+          padding: 8px max(14px, env(safe-area-inset-right, 0px)) 6px max(14px, env(safe-area-inset-left, 0px));
+          background: linear-gradient(180deg, rgba(255, 254, 251, 0.98) 0%, rgba(248, 244, 238, 0.92) 100%);
+          border-bottom: 1px solid rgba(61, 34, 19, 0.08);
+        }
+
+        .lp-home-hub__box {
+          max-width: 1120px;
+          margin: 0 auto;
+          padding: 10px;
+          border-radius: 16px;
+          background: rgba(255, 254, 249, 0.96);
+          border: 1px solid rgba(185, 135, 47, 0.22);
+          box-shadow: 0 8px 28px rgba(61, 34, 19, 0.08);
+        }
+
+        .lp-home-hub__row {
+          display: grid;
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+          gap: 6px;
+        }
+
+        .lp-home-hub__tab {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 2px;
+          min-height: 52px;
+          padding: 6px 4px;
+          border-radius: 12px;
+          border: 1px solid rgba(61, 34, 19, 0.1);
+          background: #fffef9;
+          color: var(--brown);
+          font-family: inherit;
+          font-size: 0.72rem;
+          font-weight: 800;
+          line-height: 1.25;
+          text-align: center;
+          text-decoration: none;
+          cursor: pointer;
+          transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+        }
+
+        .lp-home-hub__tab-ic {
+          font-size: 1.15rem;
+          line-height: 1;
+        }
+
+        .lp-home-hub__tab.is-active,
+        .lp-home-hub__tab:hover {
+          border-color: rgba(185, 135, 47, 0.45);
+          background: rgba(185, 135, 47, 0.1);
+          box-shadow: 0 2px 10px rgba(155, 111, 37, 0.14);
+        }
+
+        .lp-home-hub__sub {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 6px;
+          margin-top: 8px;
+          padding-top: 8px;
+          border-top: 1px dashed rgba(61, 34, 19, 0.12);
+        }
+
+        .lp-home-hub__sub[hidden] {
+          display: none;
+        }
+
+        .lp-home-hub__chip {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          padding: 8px 10px;
+          border-radius: 10px;
+          border: 1px solid rgba(61, 34, 19, 0.08);
+          background: #fff;
+          color: var(--brown);
+          font-size: 0.74rem;
+          font-weight: 700;
+          text-decoration: none;
+          line-height: 1.3;
+        }
+
+        .lp-home-hub__chip-ic {
+          flex-shrink: 0;
+          font-size: 1rem;
+        }
+
+        .lp-hero-shell .lp-hero {
+          padding-top: clamp(28px, 6vw, 48px);
+        }
+      }
+
       /* ——— Services ——— */
       .lp-services__grid {
         display: grid;
@@ -2043,17 +2146,17 @@
 
             <div class="lp-dd-mobile-only" aria-label="تصفح الموقع">
               <div class="lp-dd-mobile-quick" aria-label="وصول سريع">
-                <a role="menuitem" class="lp-dd-item" href="/browse?type=restaurant" aria-label="مطاعم"
+                <a role="menuitem" class="lp-dd-item" href="/stores?type=restaurant" aria-label="مطاعم"
                   ><span class="lp-dd-ic" aria-hidden="true">&#127860;</span><span class="lp-dd-link__text">مطاعم</span></a
-                >
-                <a role="menuitem" class="lp-dd-item" href="#services" aria-label="خدمات"
-                  ><span class="lp-dd-ic" aria-hidden="true">&#127869;</span><span class="lp-dd-link__text">خدمات</span></a
                 >
                 <a role="menuitem" class="lp-dd-item" href="/stores" aria-label="متاجر"
                   ><span class="lp-dd-ic" aria-hidden="true">&#128722;</span><span class="lp-dd-link__text">متاجر</span></a
                 >
-                <a role="menuitem" class="lp-dd-item" href="/browse?type=internal_delivery" aria-label="توصيل"
+                <a role="menuitem" class="lp-dd-item" href="/delivery-services.html" aria-label="توصيل"
                   ><span class="lp-dd-ic" aria-hidden="true">&#128666;</span><span class="lp-dd-link__text">توصيل</span></a
+                >
+                <a role="menuitem" class="lp-dd-item" href="#services" aria-label="خدمات"
+                  ><span class="lp-dd-ic" aria-hidden="true">&#127869;</span><span class="lp-dd-link__text">خدمات</span></a
                 >
               </div>
               <div class="lp-quick-dd__sep lp-dd-mobile-quick-sep" role="separator" aria-hidden="true"></div>
@@ -2227,9 +2330,11 @@
         <div class="lp-nav-wrap" id="lpNavWrap">
           <nav class="lp-nav" aria-label="التنقل الرئيسي">
             <a href="#top">الرئيسية</a>
+            <a href="/stores?type=restaurant">مطاعم</a>
             <a href="/stores">متاجر</a>
-            <a href="#trust">الثقة</a>
+            <a href="/delivery-services.html">توصيل</a>
             <a href="#services">خدمات</a>
+            <a href="#trust">الثقة</a>
             <a href="#why">لماذا ERVENOW</a>
             <a href="#how">كيف تعمل</a>
             <a href="#contact">تواصل معنا</a>
@@ -2237,6 +2342,57 @@
         </div>
       </div>
     </header>
+
+    <nav class="lp-home-hub" id="lpHomeHub" aria-label="الأقسام الرئيسية">
+      <div class="lp-home-hub__box">
+        <div class="lp-home-hub__row" role="tablist" aria-label="الأقسام">
+          <button
+            type="button"
+            class="lp-home-hub__tab is-active"
+            id="lpHomeHubRestBtn"
+            role="tab"
+            aria-selected="true"
+            aria-controls="lpHomeHubRestSub"
+            aria-expanded="true"
+          >
+            <span class="lp-home-hub__tab-ic" aria-hidden="true">🍽️</span>
+            <span>مطاعم</span>
+          </button>
+          <a class="lp-home-hub__tab" href="/stores" role="tab">
+            <span class="lp-home-hub__tab-ic" aria-hidden="true">🛒</span>
+            <span>متاجر</span>
+          </a>
+          <a class="lp-home-hub__tab" href="/delivery-services.html" role="tab">
+            <span class="lp-home-hub__tab-ic" aria-hidden="true">🚚</span>
+            <span>توصيل</span>
+          </a>
+          <a class="lp-home-hub__tab" href="#services" role="tab">
+            <span class="lp-home-hub__tab-ic" aria-hidden="true">🔧</span>
+            <span>خدمات</span>
+          </a>
+        </div>
+        <div class="lp-home-hub__sub" id="lpHomeHubRestSub" role="region" aria-label="تصنيفات المطاعم">
+          <a class="lp-home-hub__chip" href="/stores?type=restaurant&amp;category=shawarma_grill"
+            ><span class="lp-home-hub__chip-ic" aria-hidden="true">🌯</span><span>شاورما ومشاوي</span></a
+          >
+          <a class="lp-home-hub__chip" href="/stores?type=restaurant&amp;category=kabsa_bukhari"
+            ><span class="lp-home-hub__chip-ic" aria-hidden="true">🍚</span><span>كبسة وبخاري</span></a
+          >
+          <a class="lp-home-hub__chip" href="/stores?type=restaurant&amp;category=burger_broasted"
+            ><span class="lp-home-hub__chip-ic" aria-hidden="true">🍔</span><span>بروستد وبرقر</span></a
+          >
+          <a class="lp-home-hub__chip" href="/stores?type=restaurant&amp;category=seafood"
+            ><span class="lp-home-hub__chip-ic" aria-hidden="true">🐟</span><span>ماكولات بحرية</span></a
+          >
+          <a class="lp-home-hub__chip" href="/stores?type=restaurant&amp;category=cafe_sweets"
+            ><span class="lp-home-hub__chip-ic" aria-hidden="true">☕</span><span>قهوة وحلا</span></a
+          >
+          <a class="lp-home-hub__chip" href="/stores?type=restaurant" style="grid-column: 1 / -1; justify-content: center"
+            ><span class="lp-home-hub__chip-ic" aria-hidden="true">▦</span><span>كل المطاعم</span></a
+          >
+        </div>
+      </div>
+    </nav>
 
     <div class="lp-hero-shell">
       <section class="lp-hero lp-wrap" aria-labelledby="hero-title">
@@ -2298,11 +2454,42 @@
         <p class="lp-section__lead">اختر خدمتك الآن 👇</p>
         <p class="lp-section__lead">كل ما تحتاجه لتشغيل عملياتك — من الطلب حتى باب زائر المنصة.</p>
         <div class="lp-services__grid">
+          <h3 style="grid-column: 1 / -1; margin: 0">🍽️ مطاعم</h3>
+          <a class="lp-card" href="/stores?type=restaurant&amp;category=shawarma_grill">
+            <span class="lp-card__icon" aria-hidden="true">🌯</span>
+            <h3 class="lp-card__title">شاورما ومشاوي</h3>
+            <p class="lp-card__text">مطاعم الشاورما والمشاوي المعتمدة.</p>
+          </a>
+          <a class="lp-card" href="/stores?type=restaurant&amp;category=kabsa_bukhari">
+            <span class="lp-card__icon" aria-hidden="true">🍚</span>
+            <h3 class="lp-card__title">كبسة وبخاري</h3>
+            <p class="lp-card__text">أطباق الكبسة والبخاري والمندي.</p>
+          </a>
+          <a class="lp-card" href="/stores?type=restaurant&amp;category=burger_broasted">
+            <span class="lp-card__icon" aria-hidden="true">🍔</span>
+            <h3 class="lp-card__title">بروستد وبرقر</h3>
+            <p class="lp-card__text">مطاعم البرقر والبروستد.</p>
+          </a>
+          <a class="lp-card" href="/stores?type=restaurant&amp;category=seafood">
+            <span class="lp-card__icon" aria-hidden="true">🐟</span>
+            <h3 class="lp-card__title">ماكولات بحرية</h3>
+            <p class="lp-card__text">أسماك ومأكولات بحرية طازجة.</p>
+          </a>
+          <a class="lp-card" href="/stores?type=restaurant&amp;category=cafe_sweets">
+            <span class="lp-card__icon" aria-hidden="true">☕</span>
+            <h3 class="lp-card__title">قهوة وحلا</h3>
+            <p class="lp-card__text">مقاهي وحلويات وعصائر.</p>
+          </a>
+          <a class="lp-card" href="/stores?type=restaurant">
+            <span class="lp-card__icon" aria-hidden="true">▦</span>
+            <h3 class="lp-card__title">كل المطاعم</h3>
+            <p class="lp-card__text">تصفّح جميع المطاعم المعتمدة.</p>
+          </a>
           <h3 style="grid-column: 1 / -1; margin: 0">🛒 متاجر</h3>
-          <a class="lp-card" href="/browse?type=restaurant" data-type="restaurant">
-            <span class="lp-card__icon" aria-hidden="true">🍛</span>
-            <h3 class="lp-card__title">مطاعم</h3>
-            <p class="lp-card__text">طلبات طعام مع ربط تلقائي بالتوصيل.</p>
+          <a class="lp-card" href="/stores">
+            <span class="lp-card__icon" aria-hidden="true">🏪</span>
+            <h3 class="lp-card__title">كل المتاجر</h3>
+            <p class="lp-card__text">سوبرماركت، صيدليات، خضار، وأكثر.</p>
           </a>
           <a class="lp-card" href="/browse?type=supermarket" data-type="supermarket">
             <span class="lp-card__icon" aria-hidden="true">🛒</span>
@@ -2334,33 +2521,7 @@
             <h3 class="lp-card__title">أسر منتجة</h3>
             <p class="lp-card__text">دعم المنتجات المنزلية عبر الطلب المباشر.</p>
           </a>
-          <h3 style="grid-column: 1 / -1; margin: 0">🔧 خدمات</h3>
-          <a class="lp-card" href="/browse?type=plumber" data-type="plumber">
-            <span class="lp-card__icon" aria-hidden="true">🔧</span>
-            <h3 class="lp-card__title">سباك</h3>
-            <p class="lp-card__text">حجز فني سباكة بخطوات بسيطة.</p>
-          </a>
-          <a class="lp-card" href="/browse?type=electrician" data-type="electrician">
-            <span class="lp-card__icon" aria-hidden="true">⚡</span>
-            <h3 class="lp-card__title">كهربائي</h3>
-            <p class="lp-card__text">خدمات الصيانة الكهربائية المنزلية.</p>
-          </a>
-          <a class="lp-card" href="/browse?type=nursery" data-type="nursery">
-            <span class="lp-card__icon" aria-hidden="true">🪴</span>
-            <h3 class="lp-card__title">مشتل</h3>
-            <p class="lp-card__text">نباتات ولوازم زراعية عند الطلب.</p>
-          </a>
-          <a class="lp-card" href="/browse?type=ac_technician" data-type="ac_technician">
-            <span class="lp-card__icon" aria-hidden="true">❄️</span>
-            <h3 class="lp-card__title">فني مكيفات</h3>
-            <p class="lp-card__text">صيانة وتنظيف المكيفات ميدانيًا.</p>
-          </a>
-          <a class="lp-card" href="/browse?type=cleaning" data-type="cleaning">
-            <span class="lp-card__icon" aria-hidden="true">🧼</span>
-            <h3 class="lp-card__title">غسيل درج</h3>
-            <p class="lp-card__text">خدمات تنظيف المباني والدرج.</p>
-          </a>
-          <h3 style="grid-column: 1 / -1; margin: 0">🚚 توصيل</h3>
+          <h3 id="services-delivery" style="grid-column: 1 / -1; margin: 0">🚚 توصيل</h3>
           <a class="lp-card" href="/delivery-services.html?service=car_transport" data-type="vehicle_transfer">
             <span class="lp-card__icon" aria-hidden="true">🚗</span>
             <h3 class="lp-card__title">نقل مركبات</h3>
@@ -2385,6 +2546,32 @@
             <span class="lp-card__icon" aria-hidden="true">🔥</span>
             <h3 class="lp-card__title">توصيل غاز</h3>
             <p class="lp-card__text">نموذج موحد (قريباً).</p>
+          </a>
+          <h3 id="services-home" style="grid-column: 1 / -1; margin: 0">🔧 خدمات</h3>
+          <a class="lp-card" href="/browse?type=plumber" data-type="plumber">
+            <span class="lp-card__icon" aria-hidden="true">🔧</span>
+            <h3 class="lp-card__title">سباك</h3>
+            <p class="lp-card__text">حجز فني سباكة بخطوات بسيطة.</p>
+          </a>
+          <a class="lp-card" href="/browse?type=electrician" data-type="electrician">
+            <span class="lp-card__icon" aria-hidden="true">⚡</span>
+            <h3 class="lp-card__title">كهربائي</h3>
+            <p class="lp-card__text">خدمات الصيانة الكهربائية المنزلية.</p>
+          </a>
+          <a class="lp-card" href="/browse?type=nursery" data-type="nursery">
+            <span class="lp-card__icon" aria-hidden="true">🪴</span>
+            <h3 class="lp-card__title">مشتل</h3>
+            <p class="lp-card__text">نباتات ولوازم زراعية عند الطلب.</p>
+          </a>
+          <a class="lp-card" href="/browse?type=ac_technician" data-type="ac_technician">
+            <span class="lp-card__icon" aria-hidden="true">❄️</span>
+            <h3 class="lp-card__title">فني مكيفات</h3>
+            <p class="lp-card__text">صيانة وتنظيف المكيفات ميدانيًا.</p>
+          </a>
+          <a class="lp-card" href="/browse?type=cleaning" data-type="cleaning">
+            <span class="lp-card__icon" aria-hidden="true">🧼</span>
+            <h3 class="lp-card__title">غسيل درج</h3>
+            <p class="lp-card__text">خدمات تنظيف المباني والدرج.</p>
           </a>
         </div>
       </section>
@@ -2512,6 +2699,21 @@
 
     <audio id="newOrderSound" src="/sound.mp3" preload="none"></audio>
     <script src="/assets/cart.js"></script>
+
+    <script>
+      (function () {
+        var restBtn = document.getElementById("lpHomeHubRestBtn");
+        var restSub = document.getElementById("lpHomeHubRestSub");
+        if (!restBtn || !restSub) return;
+        restBtn.addEventListener("click", function () {
+          var open = restSub.hidden;
+          restSub.hidden = !open;
+          restBtn.classList.toggle("is-active", open);
+          restBtn.setAttribute("aria-expanded", open ? "true" : "false");
+          restBtn.setAttribute("aria-selected", open ? "true" : "false");
+        });
+      })();
+    </script>
 
     <script>
       (function () {

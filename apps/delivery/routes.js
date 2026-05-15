@@ -207,7 +207,15 @@ router.post("/create", requireAuth, deliveryOrdersCreateLimiter, async (req, res
       await bumpDeliveryOrdersListEpoch();
     }
 
-    return ok(res, { order: data, unified: true });
+    const rowData = data && data.data && typeof data.data === "object" ? data.data : {};
+    const summary = {
+      service_type: rowData.service_type || body.service_type,
+      from_location: rowData.from_location || null,
+      to_location: rowData.to_location || null,
+      distance_km: data.distance_km != null ? data.distance_km : rowData.distance_km ?? null,
+      price: data.delivery_fee != null ? data.delivery_fee : rowData.price ?? null,
+    };
+    return ok(res, { order: data, unified: true, summary });
   } catch (e) {
     fail(res, e.message, 500);
   }

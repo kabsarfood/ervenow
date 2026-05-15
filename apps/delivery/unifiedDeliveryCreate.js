@@ -33,9 +33,10 @@ function validateCarTransportPayload(p) {
   return null;
 }
 
-function buildCarTransportNotes(p, feeInfo) {
+function buildCarTransportNotes(p, feeInfo, serviceLabel) {
+  const label = str(serviceLabel) || "car_transport";
   const lines = [
-    "[ERVENOW unified] car_transport",
+    `[ERVENOW unified] ${label}`,
     `المركبة: ${p.vehicle_category} — الحالة: ${p.vehicle_condition}`,
     `النقل: ${feeInfo.mode === "external" ? "خارجي" : "داخلي"}`,
     `المسافة (طريق تقريبي): ${Number(feeInfo.distance_km || 0).toFixed(2)} كم`,
@@ -89,12 +90,33 @@ async function createCarTransport(sb, appUser, payload, topBody, opts) {
     [str(payload.drop_district_label), str(payload.to_city)].filter(Boolean).join(" — ") ||
     "موقع التسليم";
 
-  const notes = buildCarTransportNotes(payload, feeResult);
+  const requestedSt = str(topBody.service_type).toLowerCase();
+  const serviceTypeStored = requestedSt === "pickup_truck" ? "pickup_truck" : "car_transport";
+  const notes = buildCarTransportNotes(payload, feeResult, serviceTypeStored);
+
+  const fromCity = transfer_mode === "external" ? str(payload.from_city) : "";
+  const toCity = transfer_mode === "external" ? str(payload.to_city) : "";
 
   const orderData = {
     unified: true,
-    service_type: "car_transport",
+    service_type: serviceTypeStored,
     legacy_service_type: "vehicle_transfer",
+    from_location: {
+      lat: pickup_lat,
+      lng: pickup_lng,
+      address: pickup_address,
+      district: str(payload.pickup_district_label) || null,
+      city: fromCity || null,
+    },
+    to_location: {
+      lat: drop_lat,
+      lng: drop_lng,
+      address: drop_address,
+      district: str(payload.drop_district_label) || null,
+      city: toCity || null,
+    },
+    distance_km: Math.round(Number(feeResult.distance_km || distanceKm) * 1000) / 1000,
+    price: Math.round(Number(feeResult.delivery_fee || 0) * 100) / 100,
     car: {
       vehicle_category: str(payload.vehicle_category).toLowerCase(),
       vehicle_condition: str(payload.vehicle_condition).toLowerCase(),
@@ -141,11 +163,14 @@ async function createUnifiedDeliveryOrder(sb, appUser, rawBody, opts) {
   const service_type = str(body.service_type).toLowerCase();
   const payload = body.payload && typeof body.payload === "object" ? body.payload : {};
 
-  if (service_type === "car_transport") {
+  if (service_type === "car_transport" || service_type === "pickup_truck") {
     return createCarTransport(sb, appUser, payload, body, opts);
   }
+  if (service_type === "furniture") {
+    return { data: null, error: new Error("نقل الأثاث قيد التفعيل ضمن النظام الموحد") };
+  }
   if (service_type === "local_delivery" || service_type === "gas_delivery") {
-    return { data: null, error: new Error("هذه الخدمة قيد التفعيل — استخدم نقل المركبات حالياً") };
+    return { data: null, error: new Error("هذه الخدمة قيد التفعيل — استخدم نقل المركبات أو الونيت حالياً") };
   }
   return { data: null, error: new Error("service_type غير مدعوم") };
 }

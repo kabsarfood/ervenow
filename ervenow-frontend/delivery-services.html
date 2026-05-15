@@ -189,6 +189,7 @@
 
         var SERVICES = [
           { id: "car_transport", label: "نقل المركبات", ready: true },
+          { id: "pickup_truck", label: "ونيت", ready: true },
           { id: "local_delivery", label: "توصيل داخلي", ready: false },
           { id: "furniture", label: "نقل أثاث", ready: false },
           { id: "gas_delivery", label: "توصيل غاز", ready: false },
@@ -206,7 +207,7 @@
         function qs() {
           var p = new URLSearchParams(location.search);
           var s = (p.get("service") || "car_transport").toLowerCase();
-          if (s === "pickup_truck" || s === "vehicle_transfer") return "car_transport";
+          if (s === "vehicle_transfer") return "car_transport";
           return s;
         }
 
@@ -253,6 +254,12 @@
             w.hidden = false;
             w.innerHTML =
               "<strong>أهلاً بك في نقل المركبات</strong><br />1) نوع المركبة — 2) حالة المركبة — 3) نقل داخلي أو خارجي — 4) موقع الاستلام — 5) موقع التسليم — ثم أرسل الطلب.";
+            return;
+          }
+          if (s === "pickup_truck") {
+            w.hidden = false;
+            w.innerHTML =
+              "<strong>أهلاً بك في خدمة الونيت</strong><br />نفس خطوات نقل المركبات (مواقع الاستلام والتسليم والتسعير الموحد). اختر نوع المركبة والحالة ثم حدد المواقع.";
             return;
           }
           w.hidden = false;
@@ -341,7 +348,7 @@
 
         function renderCarForm() {
           var mount = document.getElementById("dsFormMount");
-          if (state.service !== "car_transport") {
+          if (state.service !== "car_transport" && state.service !== "pickup_truck") {
             mount.innerHTML = "";
             return;
           }
@@ -438,7 +445,7 @@
             method: "POST",
             headers: Object.assign({ "Content-Type": "application/json" }, authHeaders()),
             body: JSON.stringify({
-              service_type: "car_transport",
+              service_type: state.service,
               payload: payload,
               customer_phone: phone,
             }),
@@ -454,7 +461,12 @@
                 err.style.display = "block";
                 return;
               }
-              ok.textContent = "تم إنشاء الطلب بنجاح — رقم الطلب: " + (x.j.order && (x.j.order.order_number || x.j.order.id));
+              var sn = x.j.summary || {};
+              var px = sn.price != null ? " — " + sn.price + " ر.س (أجرة التوصيل)" : "";
+              ok.textContent =
+                "تم إنشاء الطلب بنجاح — رقم الطلب: " +
+                (x.j.order && (x.j.order.order_number || x.j.order.id)) +
+                px;
               ok.style.display = "block";
             })
             .catch(function () {

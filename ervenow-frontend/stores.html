@@ -646,10 +646,23 @@
           });
       }
 
+      var CUISINE_COMBO = {
+        burger_broasted: ["broasted", "burger", "burger_broasted"],
+        cafe_sweets: ["cafe", "sweets", "dessert_cafe"],
+      };
+
       function storeMatchesCuisineChip(store, slug) {
         if (!slug) return true;
         if (String(store.type || "").toLowerCase() !== "restaurant") return false;
-        return String(store.category || "").trim().toLowerCase() === String(slug).trim().toLowerCase();
+        var c = String(store.category || "")
+          .trim()
+          .toLowerCase();
+        var key = String(slug || "")
+          .trim()
+          .toLowerCase();
+        var combo = CUISINE_COMBO[key];
+        if (combo) return combo.indexOf(c) !== -1;
+        return c === key;
       }
 
       var TYPE_AR = {
@@ -1064,8 +1077,50 @@
           }
         }
 
+        function applyQueryFromUrl() {
+          var p = new URLSearchParams(location.search);
+          var type = String(p.get("type") || "")
+            .trim()
+            .toLowerCase();
+          var category = String(p.get("category") || "")
+            .trim()
+            .toLowerCase();
+          if (category) {
+            activeCuisine = category;
+            activeFilter = "restaurant";
+            var rb = filterWrap.querySelector('[data-filter="restaurant"]');
+            if (rb) {
+              var buttons = filterWrap.querySelectorAll(".stores-filter");
+              for (var i = 0; i < buttons.length; i++) {
+                var b = buttons[i];
+                var on = b === rb;
+                b.classList.toggle("is-active", on);
+                b.setAttribute("aria-selected", on ? "true" : "false");
+              }
+            }
+            renderCuisineBarActive();
+            syncCuisineStripVisibility();
+            return;
+          }
+          if (type === "restaurant") {
+            activeFilter = "restaurant";
+            var rbtn = filterWrap.querySelector('[data-filter="restaurant"]');
+            if (rbtn) {
+              var btns = filterWrap.querySelectorAll(".stores-filter");
+              for (var j = 0; j < btns.length; j++) {
+                var bb = btns[j];
+                var on2 = bb === rbtn;
+                bb.classList.toggle("is-active", on2);
+                bb.setAttribute("aria-selected", on2 ? "true" : "false");
+              }
+            }
+            syncCuisineStripVisibility();
+          }
+        }
+
         loadRestaurantCuisinesFromApi().then(function () {
           buildCuisineBar();
+          applyQueryFromUrl();
           syncCuisineStripVisibility();
           if (cuisineBar) {
             cuisineBar.addEventListener("click", function (e) {
