@@ -3,6 +3,11 @@
  * المفاتيح: ew_pay, mada, visa, mastercard, apple_pay, stc_pay, cash_on_delivery, tabby, tamara
  */
 
+const {
+  isMissingPlatformSettingsTable,
+  platformSettingsHelpMessage,
+} = require("./platformBrandingStore");
+
 const METHOD_KEYS = ["ew_pay", "mada", "visa", "mastercard", "apple_pay", "stc_pay", "cash_on_delivery", "tabby", "tamara"];
 
 const DEFAULT_METHODS = Object.freeze({
@@ -81,6 +86,9 @@ async function savePlatformPaymentMethodsToDb(sb, obj) {
     updated_at: new Date().toISOString(),
   };
   const { error } = await sb.from("platform_settings").upsert(row, { onConflict: "key" });
+  if (error && isMissingPlatformSettingsTable(error)) {
+    throw new Error(platformSettingsHelpMessage(error));
+  }
   if (error) throw error;
 }
 

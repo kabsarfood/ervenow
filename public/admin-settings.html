@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>إعدادات المنصة | ERVENOW</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --as-bg: #0f1115;
+        --as-card: #1c2230;
+        --as-gold: #c9a24a;
+        --as-gold-dim: rgba(201, 162, 74, 0.18);
+        --as-text: #eef0f5;
+        --as-muted: #8b92a3;
+        --as-border: rgba(201, 162, 74, 0.22);
+        --as-radius: 14px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100dvh;
+        font-family: "Cairo", system-ui, sans-serif;
+        background: var(--as-bg);
+        color: var(--as-text);
+        line-height: 1.55;
+      }
+
+      .as-page {
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 24px 18px 48px;
+      }
+
+      .as-top {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        margin-bottom: 22px;
+      }
+
+      .as-top h1 {
+        margin: 0;
+        font-size: 1.35rem;
+        font-weight: 800;
+        color: var(--as-gold);
+        letter-spacing: 0.02em;
+      }
+
+      .as-nav a {
+        color: var(--as-gold);
+        text-decoration: none;
+        font-weight: 700;
+        font-size: 0.88rem;
+        padding: 8px 12px;
+        border-radius: 10px;
+        border: 1px solid var(--as-border);
+        background: var(--as-gold-dim);
+      }
+
+      .as-nav a:hover {
+        background: rgba(201, 162, 74, 0.28);
+      }
+
+      .as-status {
+        min-height: 1.4em;
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: var(--as-muted);
+        margin-bottom: 18px;
+      }
+
+      .as-status.as-err {
+        color: #f0a8a8;
+      }
+
+      .as-status.as-ok {
+        color: #8fd4a6;
+      }
+
+      .as-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .as-card {
+        background: var(--as-card);
+        border-radius: var(--as-radius);
+        border: 1px solid var(--as-border);
+        padding: 18px 18px 16px;
+        box-shadow: 0 12px 36px rgba(0, 0, 0, 0.35);
+      }
+
+      .as-card__title {
+        margin: 0 0 6px;
+        font-size: 1.05rem;
+        font-weight: 800;
+        color: var(--as-text);
+      }
+
+      .as-card__key {
+        margin: 0 0 14px;
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: var(--as-muted);
+        direction: ltr;
+        text-align: right;
+        unicode-bidi: embed;
+      }
+
+      .as-card__input {
+        width: 100%;
+        padding: 12px 14px;
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(15, 17, 21, 0.65);
+        color: var(--as-text);
+        font: inherit;
+        font-weight: 600;
+        min-height: 48px;
+      }
+
+      .as-card__input:focus {
+        outline: none;
+        border-color: var(--as-gold);
+        box-shadow: 0 0 0 1px var(--as-gold-dim);
+      }
+
+      .as-card__foot {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 14px;
+      }
+
+      .as-btn-save {
+        padding: 10px 22px;
+        border: none;
+        border-radius: 10px;
+        font-family: inherit;
+        font-size: 0.92rem;
+        font-weight: 800;
+        cursor: pointer;
+        background: linear-gradient(180deg, #dfc06e, var(--as-gold));
+        color: #0f1115;
+        box-shadow: 0 8px 20px rgba(201, 162, 74, 0.25);
+      }
+
+      .as-btn-save:hover {
+        filter: brightness(1.06);
+      }
+
+      .as-btn-save:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="as-page">
+      <header class="as-top">
+        <h1>إعدادات المنصة</h1>
+        <nav class="as-nav">
+          <a href="/">الرئيسية</a>
+          <a href="/admin-dashboard">لوحة الإدارة</a>
+        </nav>
+      </header>
+
+      <p class="as-status" id="asStatus" aria-live="polite"></p>
+      <div class="as-grid" id="asGrid"></div>
+    </div>
+
+    <script src="/assets/api-config.js"></script>
+    <script>
+      (function () {
+        var grid = document.getElementById("asGrid");
+        var statusEl = document.getElementById("asStatus");
+
+        function apiUrl(path) {
+          var base =
+            typeof window.PlatformAPI !== "undefined" &&
+            typeof window.PlatformAPI.apiUrl === "function"
+              ? window.PlatformAPI.apiUrl(path)
+              : path.indexOf("/") === 0
+                ? path
+                : "/" + path;
+          return base;
+        }
+
+        function setStatus(msg, cls) {
+          statusEl.textContent = msg || "";
+          statusEl.className = "as-status" + (cls ? " " + cls : "");
+        }
+
+        function titleFor(row) {
+          var d = row.description != null && String(row.description).trim();
+          if (d) return String(row.description).trim();
+          return row.key != null ? String(row.key) : "إعداد";
+        }
+
+        async function loadSettings() {
+          setStatus("جارٍ تحميل الإعدادات…");
+          grid.innerHTML = "";
+          try {
+            var r = await fetch(apiUrl("/api/admin/settings"), { credentials: "same-origin" });
+            var j = await r.json().catch(function () {
+              return {};
+            });
+            if (!j.success) {
+              var errStr =
+                j.error && (j.error.message || j.error.details)
+                  ? j.error.message || j.error.details
+                  : JSON.stringify(j.error || j);
+              setStatus("تعذّر التحميل: " + errStr, "as-err");
+              return;
+            }
+            var rows = Array.isArray(j.data) ? j.data : [];
+            if (!rows.length) {
+              setStatus("لا توجد إعدادات في الجدول.", "");
+              return;
+            }
+            setStatus("تم تحميل " + rows.length + " إعداداً.", "as-ok");
+
+            for (var i = 0; i < rows.length; i++) {
+              (function (row) {
+                var key = row.key != null ? String(row.key) : "";
+                if (!key) return;
+
+                var card = document.createElement("section");
+                card.className = "as-card";
+
+                var h = document.createElement("h2");
+                h.className = "as-card__title";
+                h.textContent = titleFor(row);
+                card.appendChild(h);
+
+                var sub = document.createElement("p");
+                sub.className = "as-card__key";
+                sub.textContent = "key: " + key;
+                card.appendChild(sub);
+
+                var input = document.createElement("input");
+                input.type = "text";
+                input.className = "as-card__input";
+                input.value = row.value != null ? String(row.value) : "";
+                input.autocomplete = "off";
+                input.setAttribute("aria-label", "قيمة " + key);
+                card.appendChild(input);
+
+                var foot = document.createElement("div");
+                foot.className = "as-card__foot";
+                var btn = document.createElement("button");
+                btn.type = "button";
+                btn.className = "as-btn-save";
+                btn.textContent = "حفظ";
+                btn.onclick = function () {
+                  saveOne(key, input, btn);
+                };
+                foot.appendChild(btn);
+                card.appendChild(foot);
+
+                grid.appendChild(card);
+              })(rows[i]);
+            }
+          } catch (e) {
+            setStatus(e.message || "خطأ في الاتصال", "as-err");
+          }
+        }
+
+        async function saveOne(key, inputEl, btn) {
+          btn.disabled = true;
+          setStatus("جارٍ حفظ " + key + "…");
+          try {
+            var r = await fetch(apiUrl("/api/admin/settings/update"), {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              credentials: "same-origin",
+              body: JSON.stringify({ key: key, value: inputEl.value }),
+            });
+            var j = await r.json().catch(function () {
+              return {};
+            });
+            if (!j.success) {
+              var errStr =
+                j.error && (j.error.message || j.error.details)
+                  ? j.error.message || j.error.details
+                  : JSON.stringify(j.error || j);
+              setStatus("فشل الحفظ: " + errStr, "as-err");
+              return;
+            }
+            setStatus("تم حفظ «" + key + "» بنجاح.", "as-ok");
+            await loadSettings();
+          } catch (e) {
+            setStatus(e.message || "فشل الحفظ", "as-err");
+          } finally {
+            btn.disabled = false;
+          }
+        }
+
+        loadSettings();
+      })();
+    </script>
+  </body>
+</html>

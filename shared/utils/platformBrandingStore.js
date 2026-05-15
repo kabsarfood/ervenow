@@ -120,6 +120,20 @@ async function loadBranding(sb) {
   }
 }
 
+function platformSettingsHelpMessage(error) {
+  const msg = String((error && (error.message || error.details || error.hint)) || "");
+  const code = error && error.code;
+  const cacheIssue = /schema cache|PGRST205/i.test(msg) || code === "PGRST205";
+  if (cacheIssue) {
+    return (
+      "واجهة Supabase لم تُحدَّث بعد — نفّذ في SQL Editor: NOTIFY pgrst, 'reload schema'; أو نفّذ كامل ملف shared/migration_platform_settings.sql (يضم هذا الأمر في آخر الملف)، ثم انتظر ثوانٍ وأعد المحاولة."
+    );
+  }
+  return (
+    "جدول platform_settings غير جاهز — افتح Supabase → SQL Editor والصق محتوى الملف ثم Run: shared/migration_platform_settings.sql أو من الطرفية: npm run migrate:platform-settings بعد ضبط SUPABASE_DB_URL أو SUPABASE_DB_PASSWORD في .env"
+  );
+}
+
 async function upsertSetting(sb, key, value) {
   const row = {
     key,
@@ -128,7 +142,7 @@ async function upsertSetting(sb, key, value) {
   };
   const { error } = await sb.from("platform_settings").upsert(row, { onConflict: "key" });
   if (error && isMissingPlatformSettingsTable(error)) {
-    throw new Error("جدول platform_settings غير موجود — نفّذ shared/migration_platform_settings.sql");
+    throw new Error(platformSettingsHelpMessage(error));
   }
   if (error) throw error;
 }
@@ -186,4 +200,6 @@ module.exports = {
   resetColorsToDefaults,
   isValidHexColor,
   saveLogoBase64,
+  isMissingPlatformSettingsTable,
+  platformSettingsHelpMessage,
 };

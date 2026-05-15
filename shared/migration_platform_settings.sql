@@ -21,3 +21,6 @@ VALUES
   ('background_color', '#f8f5f0'),
   ('text_color', '#2b1f16')
 ON CONFLICT (key) DO NOTHING;
+
+-- يُحدّث واجهة REST (PostgREST) لتتعرّف على الجدول فوراً (يُجنّب PGRST205 / schema cache)
+NOTIFY pgrst, 'reload schema';

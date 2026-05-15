@@ -22,6 +22,7 @@ const orderRoutes = require("../apps/order/routes");
 const driverRoutes = require("../apps/driver/routes");
 const walletRoutes = require("../apps/wallet/routes");
 const adminRoutes = require("../apps/admin/routes");
+const adminSettingsRoutes = require("../apps/admin/settings");
 const categoriesRoutes = require("../apps/categories/routes");
 const invoiceRoutes = require("../apps/invoice/routes");
 const whatsappRoutes = require("../apps/whatsapp/routes");
@@ -275,6 +276,7 @@ app.use("/api/categories", categoriesRoutes);
 app.use("/api/driver", driverRoutes);
 app.use("/api/wallet", walletRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/admin/settings", adminSettingsRoutes);
 app.use("/api/invoice", invoiceRoutes);
 app.use("/api/whatsapp", whatsappRoutes);
 
@@ -425,6 +427,10 @@ if (servePublicUi) {
 
   app.get("/admin/branding", (_req, res) => {
     res.sendFile(path.join(publicPath, "admin-branding.html"));
+  });
+
+  app.get("/admin-settings", (_req, res) => {
+    res.sendFile(path.join(publicPath, "admin-settings.html"));
   });
 
   app.get("/admin/categories", (_req, res) => {

@@ -189,6 +189,155 @@
         font-size: 0.95rem;
       }
 
+      /* ——— Live Dashboard ——— */
+      .live-dash {
+        margin: 10px 0 18px;
+        padding: 16px;
+        border-radius: 18px;
+        background: linear-gradient(145deg, #2a1810 0%, #5b371d 52%, #3d2618 100%);
+        color: #fff8ee;
+        box-shadow: 0 14px 40px rgba(45, 26, 14, 0.18);
+        border: 1px solid rgba(212, 167, 106, 0.35);
+      }
+      .live-dash-head {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px 14px;
+        margin-bottom: 14px;
+      }
+      .live-dash-head h2 {
+        margin: 0;
+        font-size: 1.2rem;
+        font-weight: 800;
+        color: #f5e6c8;
+        letter-spacing: 0.03em;
+      }
+      .live-pulse {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: #22c55e;
+        box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.6);
+        animation: livePulse 1.8s ease-out infinite;
+      }
+      @keyframes livePulse {
+        0% {
+          box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.55);
+        }
+        70% {
+          box-shadow: 0 0 0 12px rgba(34, 197, 94, 0);
+        }
+        100% {
+          box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+        }
+      }
+      #liveLastUpdated {
+        margin-inline-start: auto;
+        font-size: 0.82rem;
+        color: rgba(255, 248, 237, 0.75);
+        font-weight: 600;
+      }
+      .live-stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 12px;
+        margin-bottom: 14px;
+      }
+      .live-stat-card {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 248, 230, 0.18);
+        border-radius: 14px;
+        padding: 12px 14px;
+      }
+      .live-stat-card .lbl {
+        font-size: 0.86rem;
+        font-weight: 700;
+        color: rgba(255, 246, 230, 0.88);
+      }
+      .live-stat-card .num {
+        font-size: 1.75rem;
+        font-weight: 800;
+        margin-top: 6px;
+        color: #fff;
+        letter-spacing: 0.02em;
+      }
+      .live-stat-card .hint {
+        font-size: 0.72rem;
+        margin-top: 4px;
+        color: rgba(255, 248, 230, 0.55);
+      }
+      .live-orders-card {
+        background: rgba(0, 0, 0, 0.15);
+        border-radius: 14px;
+        border: 1px solid rgba(255, 248, 230, 0.14);
+        padding: 14px;
+      }
+      .live-orders-card h3 {
+        margin: 0 0 12px;
+        font-size: 1.05rem;
+        font-weight: 800;
+        color: #f5e6c8;
+      }
+      .live-order-row {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 8px;
+        align-items: center;
+        padding: 10px 12px;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.08);
+        margin-bottom: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+      .live-order-row:last-child {
+        margin-bottom: 0;
+      }
+      .live-order-id {
+        font-weight: 800;
+        font-size: 0.92rem;
+        color: #fff;
+      }
+      .live-order-meta {
+        font-size: 0.78rem;
+        color: rgba(255, 248, 237, 0.65);
+        margin-top: 4px;
+      }
+      .live-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-size: 0.78rem;
+        font-weight: 800;
+        white-space: nowrap;
+      }
+      .live-badge--pending {
+        background: rgba(245, 158, 11, 0.25);
+        color: #fcd34d;
+        border: 1px solid rgba(245, 158, 11, 0.45);
+      }
+      .live-badge--delivering {
+        background: rgba(59, 130, 246, 0.22);
+        color: #bfdbfe;
+        border: 1px solid rgba(59, 130, 246, 0.45);
+      }
+      .live-badge--delivered {
+        background: rgba(34, 197, 94, 0.22);
+        color: #bbf7d0;
+        border: 1px solid rgba(34, 197, 94, 0.45);
+      }
+      .live-badge--na {
+        background: rgba(156, 163, 175, 0.2);
+        color: #e5e7eb;
+        border: 1px solid rgba(156, 163, 175, 0.35);
+      }
+      .live-dash-msg {
+        font-size: 0.88rem;
+        font-weight: 600;
+        color: rgba(255, 246, 230, 0.65);
+      }
+
       /* جوال: تحسينات لمس وتمرير أقسام */
       @media (max-width: 768px) {
         body {
@@ -267,6 +416,9 @@
         .panel-toolbar-actions .btn {
           width: 100%;
         }
+        .live-order-row {
+          grid-template-columns: 1fr;
+        }
         .item {
           padding: 12px;
           font-size: 0.95rem;
@@ -300,6 +452,37 @@
         </div>
       </div>
       <p class="sub" id="adminWho">—</p>
+
+      <section class="live-dash" id="liveDashboard" aria-label="لوحة حية">
+        <div class="live-dash-head">
+          <span class="live-pulse" aria-hidden="true"></span>
+          <h2>لوحة حية — Live Stats</h2>
+          <span id="liveLastUpdated">—</span>
+        </div>
+        <div class="live-stats-grid">
+          <div class="live-stat-card">
+            <div class="lbl">طلبات اليوم</div>
+            <div class="num" id="liveStatToday">—</div>
+            <div class="hint">من آخر استجابة للخادم</div>
+          </div>
+          <div class="live-stat-card">
+            <div class="lbl">طلبات نشطة</div>
+            <div class="num" id="liveStatActive">—</div>
+            <div class="hint">قيد التجهيز أو التوصيل</div>
+          </div>
+          <div class="live-stat-card">
+            <div class="lbl">عدد المندوبين</div>
+            <div class="num" id="liveStatDrivers">—</div>
+            <div class="hint">سجلات المندوبين المسجلة</div>
+          </div>
+        </div>
+        <div class="live-orders-card">
+          <h3>آخر الطلبات (مباشر — 10)</h3>
+          <p class="live-dash-msg" id="liveOrdersHint" style="margin: 0 0 10px; display: none"></p>
+          <div id="liveOrdersList" class="live-dash-msg">جارٍ التحميل…</div>
+        </div>
+      </section>
+
       <div class="grid" id="stats-cards">
         <div class="card">
           <strong>📦 الطلبات اليوم</strong>
@@ -819,6 +1002,132 @@
         }
       }
 
+      var liveTickBusy = false;
+
+      /** Live dashboard: pending ≠ delivering/delivered — نعرض pending للحالات المبكرة */
+      function classifyOrderStatusLive(o) {
+        var s = String(o && (o.delivery_status || o.status) || "")
+          .toLowerCase()
+          .trim();
+        if (s === "delivering") {
+          return { bucket: "delivering", label: "قيد التوصيل", cls: "live-badge--delivering" };
+        }
+        if (s === "delivered") {
+          return { bucket: "delivered", label: "تم التسليم", cls: "live-badge--delivered" };
+        }
+        return { bucket: "pending", label: "في الانتظار", cls: "live-badge--pending" };
+      }
+
+      function updateLiveClock() {
+        var el = document.getElementById("liveLastUpdated");
+        if (el) el.textContent = "آخر تحديث: " + new Date().toLocaleTimeString("ar-SA");
+      }
+
+      async function refreshLiveDashboard() {
+        if (liveTickBusy) return;
+        liveTickBusy = true;
+        try {
+          if (hasPermission("dashboard")) {
+            try {
+              var sj = await window.PlatformAPI.api("/api/admin/stats?range=today");
+              var t = sj.ordersToday != null ? sj.ordersToday : sj.today_orders || 0;
+              var a = sj.activeOrders != null ? sj.activeOrders : sj.active_orders || 0;
+              var lt = document.getElementById("liveStatToday");
+              var la = document.getElementById("liveStatActive");
+              if (lt) lt.textContent = String(t);
+              if (la) la.textContent = String(a);
+              var ot = document.getElementById("ordersToday");
+              var ao = document.getElementById("activeOrders");
+              if (ot) ot.textContent = String(t);
+              if (ao) ao.textContent = String(a);
+            } catch (_e) {
+              var ltE = document.getElementById("liveStatToday");
+              var laE = document.getElementById("liveStatActive");
+              if (ltE) ltE.textContent = "—";
+              if (laE) laE.textContent = "—";
+            }
+          } else {
+            var lt0 = document.getElementById("liveStatToday");
+            var la0 = document.getElementById("liveStatActive");
+            if (lt0) lt0.textContent = "—";
+            if (la0) la0.textContent = "—";
+          }
+
+          var drvEl = document.getElementById("liveStatDrivers");
+          if (drvEl) {
+            if (hasPermission("drivers")) {
+              try {
+                var dj = await window.PlatformAPI.api("/api/admin/drivers");
+                var n = dj.drivers && dj.drivers.length ? dj.drivers.length : 0;
+                drvEl.textContent = String(n);
+              } catch (_e2) {
+                drvEl.textContent = "—";
+              }
+            } else drvEl.textContent = "—";
+          }
+
+          var listRoot = document.getElementById("liveOrdersList");
+          var hint = document.getElementById("liveOrdersHint");
+          if (!listRoot) return;
+          if (hasPermission("orders")) {
+            if (hint) {
+              hint.style.display = "none";
+              hint.textContent = "";
+            }
+            try {
+              var oj = await window.PlatformAPI.api("/api/admin/orders");
+              var orders = (oj.orders || []).slice(0, 10);
+              listRoot.innerHTML = "";
+              listRoot.className = "";
+              if (!orders.length) {
+                listRoot.className = "live-dash-msg";
+                listRoot.textContent = "لا توجد طلبات.";
+              } else {
+                for (var i = 0; i < orders.length; i++) {
+                  (function (o) {
+                    var row = document.createElement("div");
+                    row.className = "live-order-row";
+                    var left = document.createElement("div");
+                    var idLine = document.createElement("div");
+                    idLine.className = "live-order-id";
+                    idLine.textContent = String(o.order_number || (o.id != null ? String(o.id).slice(0, 12) : ""));
+                    var meta = document.createElement("div");
+                    meta.className = "live-order-meta";
+                    meta.textContent = fmtWhen(o.created_at);
+                    left.appendChild(idLine);
+                    left.appendChild(meta);
+                    row.appendChild(left);
+                    var ci = classifyOrderStatusLive(o);
+                    var badge = document.createElement("span");
+                    badge.className = "live-badge " + ci.cls;
+                    var raw = String(o.delivery_status || o.status || "—");
+                    badge.textContent = ci.label + " · " + raw;
+                    row.appendChild(badge);
+                    listRoot.appendChild(row);
+                  })(orders[i]);
+                }
+              }
+            } catch (oe) {
+              listRoot.innerHTML = "";
+              listRoot.className = "live-dash-msg";
+              listRoot.textContent = oe.message || "تعذّر تحميل الطلبات";
+            }
+          } else {
+            listRoot.innerHTML = "";
+            listRoot.className = "live-dash-msg";
+            if (hint) {
+              hint.style.display = "block";
+              hint.textContent = "يلزم صلاحية «الطلبات» لعرض القائمة المباشرة.";
+            }
+            listRoot.textContent = "لا تتوفر قائمة الطلبات (صلاحيات).";
+          }
+
+          updateLiveClock();
+        } finally {
+          liveTickBusy = false;
+        }
+      }
+
       async function loadStats() {
         try {
           var range = document.getElementById("range").value || "today";
@@ -1294,6 +1603,10 @@
         if (hasPermission("stores")) loadStores();
         if (hasPermission("jobs")) loadJobs();
         if (hasPermission("admin_accounts")) loadAdminAccounts();
+        refreshLiveDashboard();
+        setInterval(function () {
+          refreshLiveDashboard();
+        }, 5000);
         setInterval(function () { if (hasPermission("dashboard")) loadStats(); }, 15000);
         setInterval(function () { if (hasPermission("orders")) loadRecentOrders(); }, 20000);
         setInterval(function () { if (hasPermission("notifications")) loadNotifications(); }, 20000);

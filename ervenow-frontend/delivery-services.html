@@ -7,7 +7,10 @@
     <title>ERVENOW | خدمات التوصيل</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
     <link rel="stylesheet" href="/assets/styles.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
@@ -23,9 +26,10 @@
         --ds-radius: 16px;
         --ds-radius-sm: 12px;
         --ds-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
-        --ds-font: "Cairo", system-ui, sans-serif;
-        --ds-max: 480px;
+        --ds-max: 100%;
+        --ds-page: 1120px;
         --ds-nav-h: 72px;
+        --ds-pad-x: 16px;
       }
 
       * {
@@ -35,16 +39,22 @@
       body.ds-page {
         margin: 0;
         min-height: 100vh;
-        font-family: var(--ds-font);
+        font-family: var(--font);
+        line-height: 1.5;
         color: var(--ds-black);
         background: var(--ds-bg);
         padding-bottom: calc(var(--ds-nav-h) + env(safe-area-inset-bottom, 0px));
       }
 
       .ds-app {
-        max-width: var(--ds-max);
+        width: 100%;
+        max-width: var(--ds-page);
         margin: 0 auto;
         background: var(--ds-bg);
+      }
+
+      .ds-topbar__nav {
+        display: none;
       }
 
       /* ——— Top bar ——— */
@@ -52,7 +62,8 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 12px 16px;
+        gap: 10px;
+        padding: 12px var(--ds-pad-x);
         background: var(--ds-white);
         border-bottom: 1px solid var(--ds-border);
         position: sticky;
@@ -128,7 +139,7 @@
       /* ——— Hero ——— */
       .ds-hero {
         position: relative;
-        padding: 20px 16px 24px;
+        padding: 20px var(--ds-pad-x) 24px;
         background: linear-gradient(180deg, #eef0f4 0%, #f8f8f8 100%);
         overflow: hidden;
       }
@@ -191,7 +202,7 @@
 
       /* ——— Sections ——— */
       .ds-main {
-        padding: 0 16px 24px;
+        padding: 0 var(--ds-pad-x) 24px;
       }
 
       .ds-section-title {
@@ -507,7 +518,7 @@
       .ds-map-preview .leaflet-container {
         height: 100%;
         width: 100%;
-        font-family: var(--ds-font);
+        font-family: var(--font);
       }
 
       .ds-map-btn {
@@ -691,7 +702,7 @@
       }
 
       .ds-bottomnav__inner {
-        max-width: var(--ds-max);
+        max-width: var(--ds-page);
         margin: 0 auto;
         display: flex;
         justify-content: space-around;
@@ -774,7 +785,7 @@
       }
 
       #dsMapTitle {
-        font-family: var(--ds-font) !important;
+        font-family: var(--font) !important;
         font-weight: 800 !important;
       }
 
@@ -811,6 +822,349 @@
         background: var(--ds-green);
         border: 2px solid #fff;
       }
+
+      /* ——— شاشات صغيرة جداً ——— */
+      @media (max-width: 359px) {
+        .ds-loc-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .ds-notes-phone__grid {
+          grid-template-columns: 1fr;
+        }
+
+        .ds-svc {
+          flex: 0 0 132px;
+          min-height: 156px;
+        }
+
+        .ds-hero__inner {
+          grid-template-columns: 1fr;
+          text-align: center;
+        }
+
+        .ds-hero__text {
+          text-align: center;
+        }
+
+        .ds-hero__title {
+          justify-content: center;
+          font-size: 1.2rem;
+        }
+
+        .ds-hero__van {
+          max-height: 100px;
+          margin: 0 auto;
+        }
+      }
+
+      /* ——— تابلت ——— */
+      @media (min-width: 640px) {
+        :root {
+          --ds-pad-x: 24px;
+        }
+
+        .ds-main {
+          padding-left: var(--ds-pad-x);
+          padding-right: var(--ds-pad-x);
+        }
+
+        .ds-topbar {
+          padding-left: var(--ds-pad-x);
+          padding-right: var(--ds-pad-x);
+        }
+
+        .ds-hero {
+          padding-left: var(--ds-pad-x);
+          padding-right: var(--ds-pad-x);
+        }
+
+        .ds-services-wrap {
+          margin: 0;
+          padding: 0;
+          overflow: visible;
+        }
+
+        .ds-services {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          min-width: 0;
+          gap: 12px;
+        }
+
+        .ds-svc {
+          flex: unset;
+          width: 100%;
+          min-height: 176px;
+        }
+
+        .ds-map-preview {
+          height: 110px;
+        }
+
+        .ds-map-btn {
+          font-size: 0.82rem;
+          padding: 12px 10px;
+        }
+      }
+
+      /* ——— كمبيوتر / شاشات عريضة ——— */
+      @media (min-width: 900px) {
+        :root {
+          --ds-pad-x: 32px;
+          --ds-nav-h: 0px;
+        }
+
+        body.ds-page {
+          padding-bottom: 40px;
+          background: linear-gradient(180deg, #eceef2 0%, var(--ds-bg) 120px);
+        }
+
+        .ds-app {
+          box-shadow: 0 0 0 1px var(--ds-border);
+        }
+
+        .ds-topbar {
+          padding: 14px var(--ds-pad-x);
+          gap: 16px;
+        }
+
+        .ds-topbar__menu {
+          display: none;
+        }
+
+        .ds-topbar__logo {
+          flex-shrink: 0;
+        }
+
+        .ds-topbar__nav {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex: 1;
+          gap: 6px;
+          flex-wrap: wrap;
+          min-width: 0;
+        }
+
+        .ds-topbar__bell {
+          flex-shrink: 0;
+          margin-inline-start: auto;
+        }
+
+        .ds-topbar__nav a {
+          padding: 8px 14px;
+          border-radius: 999px;
+          font-size: 0.88rem;
+          font-weight: 700;
+          color: var(--ds-muted);
+          text-decoration: none;
+          transition: background 0.15s, color 0.15s;
+        }
+
+        .ds-topbar__nav a:hover {
+          background: var(--ds-gold-soft);
+          color: var(--ds-black);
+        }
+
+        .ds-topbar__nav a.is-active {
+          background: var(--ds-gold);
+          color: var(--ds-black);
+        }
+
+        .ds-topbar__logo-e {
+          width: 42px;
+          height: 42px;
+          font-size: 1.2rem;
+        }
+
+        .ds-topbar__logo-text {
+          font-size: 1.35rem;
+        }
+
+        .ds-bottomnav {
+          display: none;
+        }
+
+        .ds-hero {
+          padding: 36px var(--ds-pad-x) 44px;
+          border-radius: 0 0 28px 28px;
+          margin-bottom: 8px;
+        }
+
+        .ds-hero__inner {
+          grid-template-columns: 1.15fr 1fr;
+          gap: 32px;
+          max-width: 100%;
+        }
+
+        .ds-hero__van {
+          max-height: 220px;
+        }
+
+        .ds-hero__title {
+          font-size: 2rem;
+          justify-content: flex-start;
+        }
+
+        .ds-hero__sub {
+          font-size: 1rem;
+          max-width: 28em;
+        }
+
+        .ds-section-title {
+          font-size: 1.25rem;
+          margin-top: 28px;
+        }
+
+        .ds-services {
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+          gap: 14px;
+        }
+
+        .ds-svc {
+          min-height: 190px;
+          padding: 18px 14px;
+        }
+
+        .ds-svc:hover:not(.is-active) {
+          border-color: var(--ds-gold);
+          transform: translateY(-2px);
+        }
+
+        .ds-card {
+          padding: 20px 22px;
+        }
+
+        .ds-field-grid-3 {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .ds-notes-phone__grid {
+          grid-template-columns: 1.2fr 0.8fr;
+        }
+
+        .ds-map-preview {
+          height: 130px;
+        }
+
+        .ds-price-cell__val {
+          font-size: 1.5rem;
+        }
+
+        #dsSubmit {
+          font-size: 1.1rem;
+          padding: 18px 24px;
+          transition: filter 0.15s, transform 0.15s;
+        }
+
+        #dsSubmit:hover {
+          filter: brightness(1.05);
+        }
+
+        /* نموذج: عمود رئيسي + شريط جانبي للسعر والإرسال */
+        #dsCarForm {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) minmax(280px, 340px);
+          gap: 20px 28px;
+          align-items: start;
+        }
+
+        #dsCarForm .ds-form-head {
+          grid-column: 1 / -1;
+        }
+
+        #dsCarForm .ds-card {
+          grid-column: 1;
+        }
+
+        #dsCarForm .ds-price-box {
+          grid-column: 2;
+          grid-row: 2;
+          position: sticky;
+          top: 88px;
+        }
+
+        #dsCarForm .ds-submit-wrap {
+          grid-column: 2;
+          grid-row: 3;
+          position: sticky;
+          top: calc(88px + 140px);
+        }
+
+        #dsCarForm > #dsEstimate {
+          grid-column: 1 / -1;
+          position: static;
+          width: auto;
+          height: auto;
+          clip: auto;
+          overflow: visible;
+          font-size: 0.85rem;
+          color: var(--ds-muted);
+          margin: -8px 0 0;
+        }
+
+        .ds-coming {
+          max-width: 520px;
+          margin: 24px auto;
+          padding: 48px 32px;
+        }
+
+        #dsMapModal {
+          align-items: center;
+          padding: 24px;
+        }
+
+        #dsMapInner {
+          border-radius: var(--ds-radius);
+          max-width: 720px;
+          max-height: 90vh;
+        }
+
+        #dsMapBox {
+          height: min(60vh, 520px);
+        }
+
+        .ds-main > .ds-err,
+        .ds-main > .ds-ok {
+          margin-top: 16px;
+        }
+      }
+
+      /* تابلت: إبقاء الشريط السفلي مع توسيع المحتوى */
+      @media (min-width: 640px) and (max-width: 899px) {
+        .ds-bottomnav__inner {
+          padding-left: var(--ds-pad-x);
+          padding-right: var(--ds-pad-x);
+        }
+
+        #dsCarForm .ds-field-grid-3 {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+      }
+
+      @media (min-width: 1200px) {
+        .ds-hero__inner {
+          grid-template-columns: 1.2fr 1fr;
+          gap: 48px;
+        }
+
+        .ds-hero__van {
+          max-height: 260px;
+        }
+
+        #dsCarForm {
+          grid-template-columns: minmax(0, 1fr) minmax(300px, 380px);
+        }
+      }
+
+      /* تقليل الحركة */
+      @media (prefers-reduced-motion: reduce) {
+        .ds-svc,
+        #dsSubmit {
+          transition: none;
+        }
+      }
     </style>
   </head>
   <body class="ds-page">
@@ -821,6 +1175,13 @@
           <span class="ds-topbar__logo-e">E</span>
           <span class="ds-topbar__logo-text">ERVE<span>NOW</span></span>
         </a>
+        <nav class="ds-topbar__nav" aria-label="التنقل الرئيسي">
+          <a href="/account.html">الحساب</a>
+          <a href="/offers.html">العروض</a>
+          <a href="/" class="is-active">الرئيسية</a>
+          <a href="/orders.html">طلباتي</a>
+          <a href="/more.html">المزيد</a>
+        </nav>
         <a class="ds-topbar__bell" href="/notifications.html" aria-label="الإشعارات">
           🔔
           <span class="ds-topbar__bell-badge">3</span>
