@@ -1,5 +1,9 @@
 const { isValidDeliveryTransition, deliveryLifecycleIndex } = require("../../shared/utils/helpers");
 const { applyDriverOrderEarning } = require("../../shared/utils/ervenowWalletCredit");
+const {
+  applyDriverCommissionOnDelivered,
+  assertDriverCanAcceptOrders,
+} = require("../../shared/services/driverCommissionLedger");
 const { onDeliveryDelivered } = require("../finance/hooks");
 /* محفظتان: ervenow_* = تشغيل (مندوب/سحب/استرجاع عميل) | wallets + wallet_transactions = محاسبة (تسوية تسليم) */
 const { normalizePhone } = require("../../shared/utils/phone");
@@ -473,6 +477,12 @@ async function listOrders(sb, appUser) {
 }
 
 async function acceptOrder(sb, orderId, driverId) {
+  try {
+    await assertDriverCanAcceptOrders(sb, driverId);
+  } catch (debtErr) {
+    return { data: null, error: debtErr };
+  }
+
   const { data: order, error: gErr } = await sb
     .from("orders")
     .select("*")
@@ -538,6 +548,20 @@ async function setStatus(sb, orderId, nextStatus, appUser) {
         }
       } catch (err) {
         logger.error({ err: err.message || String(err), orderId: data.id }, "[ervenow] operational driver earning");
+      }
+      try {
+        const comm = await applyDriverCommissionOnDelivered(sb, data.id);
+        if (comm && comm.ok === false && comm.reason !== "migration_missing") {
+          logger.warn({ orderId: data.id, result: comm }, "[driver_ledger] commission on delivered");
+        }
+        try {
+          const { notifySmartCollectionOnDelivered } = require("../../shared/services/smartCollectionNotify");
+          notifySmartCollectionOnDelivered(sb, data, comm || {}).catch((nErr) =>
+            logger.warn({ err: nErr.message || String(nErr), orderId: data.id }, "[smart-collection] notify")
+          );
+        } catch (_nReq) {}
+      } catch (err) {
+        logger.error({ err: err.message || String(err), orderId: data.id }, "[driver_ledger] commission on delivered");
       }
     }
   }

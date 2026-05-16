@@ -262,7 +262,10 @@ router.post("/orders/:id/accept", requireAuth, requireRole("driver"), async (req
   try {
     const orderId = String(req.params.id || "").trim();
     const { data, error } = await acceptOrder(req.supabase, orderId, req.appUser.id);
-    if (error) return fail(res, error.message, 400);
+    if (error) {
+      const code = error.code === "DRIVER_DEBT_LIMIT" ? 403 : 400;
+      return fail(res, error.message, code);
+    }
 
     if (data) {
       await bumpDeliveryOrdersListEpoch();

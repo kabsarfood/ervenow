@@ -20,6 +20,21 @@ const {
   CATEGORY_SCOPE_PRODUCT,
 } = require("../../shared/categoriesDb");
 const { recordStoreCategoryUsageOnApprove } = require("../../shared/categoryUsage");
+const { acceptOrder } = require("../delivery/service");
+const { broadcastOrderPatch, orderPatchFromRow } = require("../../shared/lib/trackingSocket");
+const {
+  collectDriverCommission,
+  getDriverCommissionBalance,
+  isDriverLedgerTableMissing,
+  DRIVER_DEBT_LIMIT,
+  generateReceiptReference,
+  roundCollectAmount,
+} = require("../../shared/services/driverCommissionLedger");
+const {
+  CHANNEL: SMART_COLLECTION_CHANNEL,
+  COMMISSION_ALERT_THRESHOLD,
+  sendSmartCollectionReminder,
+} = require("../../shared/services/smartCollectionNotify");
 
 const ADMIN_PUBLIC_ROOT = path.join(__dirname, "../../public");
 
@@ -1020,6 +1035,53 @@ router.patch("/store/:id/approve", requireAuth, requireRole("admin"), requireAdm
   }
 });
 
+async function attachUserIdsToDrivers(sb, drivers) {
+  const list = Array.isArray(drivers) ? drivers : [];
+  const phones = [...new Set(list.map((d) => normalizeDigits(d && d.phone)).filter(Boolean))];
+  if (!phones.length) {
+    return list.map((d) => ({ ...d, user_id: d.user_id || null }));
+  }
+  const { data: users, error } = await sb.from("users").select("id, phone").in("phone", phones);
+  if (error) return list;
+  const map = new Map();
+  for (const u of users || []) {
+    const p = normalizeDigits(u.phone);
+    if (p) map.set(p, u.id);
+  }
+  return list.map((d) => ({
+    ...d,
+    user_id: map.get(normalizeDigits(d.phone)) || d.user_id || null,
+  }));
+}
+
+async function resolveDriverUserIdForAssign(sb, body) {
+  const raw = String(
+    body?.driver_user_id || body?.driverUserId || body?.driver_id || body?.driverId || ""
+  ).trim();
+  if (!raw) return { error: "مطلوب معرّف المندوب" };
+
+  const { data: userById } = await sb.from("users").select("id, role, phone").eq("id", raw).maybeSingle();
+  if (userById && String(userById.role || "").toLowerCase() === "driver") {
+    return { userId: userById.id };
+  }
+
+  const { data: drv } = await sb.from("drivers").select("id, phone, status, active").eq("id", raw).maybeSingle();
+  if (drv) {
+    const st = String(drv.status || "").toLowerCase();
+    if (st !== "approved" && drv.active !== true) {
+      return { error: "المندوب غير معتمد أو غير نشط" };
+    }
+    const phone = normalizeDigits(drv.phone);
+    if (!phone) return { error: "رقم المندوب غير صالح" };
+    const { data: u } = await sb.from("users").select("id, role").eq("phone", phone).maybeSingle();
+    if (!u || !u.id) return { error: "لا يوجد حساب مستخدم مرتبط بهذا المندوب" };
+    return { userId: u.id, driver: drv };
+  }
+
+  if (userById && userById.id) return { userId: userById.id };
+  return { error: "مندوب غير معروف" };
+}
+
 router.get("/drivers", requireAuth, requireRole("admin"), requireAdminPermission("drivers"), async (req, res) => {
   try {
     const { data, error } = await req.supabase
@@ -1028,7 +1090,8 @@ router.get("/drivers", requireAuth, requireRole("admin"), requireAdminPermission
       .order("created_at", { ascending: false })
       .limit(500);
     if (error) return fail(res, error.message, 400);
-    return ok(res, { drivers: sanitizeDriverOrStoreListForApi(data || []) });
+    const enriched = await attachUserIdsToDrivers(req.supabase, data || []);
+    return ok(res, { drivers: sanitizeDriverOrStoreListForApi(enriched) });
   } catch (e) {
     return fail(res, e.message || String(e), 500);
   }
@@ -1349,18 +1412,20 @@ router.get("/platform-treasury", requireAuth, requireRole("admin"), requireAdmin
 router.get("/orders", requireAuth, requireRole("admin"), requireAdminPermission("orders"), async (req, res) => {
   try {
     const selectFull =
-      "id, order_number, delivery_status, status, created_at, order_total, total_amount, delivery_fee, vat_amount, total_with_vat";
+      "id, order_number, delivery_status, status, created_at, order_total, total_amount, delivery_fee, vat_amount, total_with_vat, driver_id, pickup_lat, pickup_lng, drop_lat, drop_lng, pickup_address, drop_address, platform_fee";
     let { data, error } = await req.supabase
       .from("orders")
       .select(selectFull)
       .order("created_at", { ascending: false })
-      .limit(20);
+      .limit(80);
     if (error && isSchemaMissingError(error)) {
       const r2 = await req.supabase
         .from("orders")
-        .select("id, order_number, delivery_status, status, created_at, order_total, total_amount")
+        .select(
+          "id, order_number, delivery_status, status, created_at, order_total, total_amount, driver_id, pickup_lat, pickup_lng, drop_lat, drop_lng"
+        )
         .order("created_at", { ascending: false })
-        .limit(20);
+        .limit(80);
       data = r2.data;
       error = r2.error;
     }
@@ -1382,6 +1447,103 @@ router.get("/orders", requireAuth, requireRole("admin"), requireAdminPermission(
     return fail(res, e.message || String(e), 500);
   }
 });
+
+router.post(
+  "/orders/:id/assign-driver",
+  requireAuth,
+  requireRole("admin"),
+  requireAdminPermission("orders"),
+  async (req, res) => {
+    try {
+      const orderId = String(req.params.id || "").trim();
+      if (!orderId) return fail(res, "id required", 400);
+      const resolved = await resolveDriverUserIdForAssign(req.supabase, req.body || {});
+      if (resolved.error) return fail(res, resolved.error, 400);
+
+      const { data: order, error: oErr } = await req.supabase
+        .from("orders")
+        .select("id, driver_id, delivery_status, status")
+        .eq("id", orderId)
+        .maybeSingle();
+      if (oErr || !order) return fail(res, oErr?.message || "الطلب غير موجود", 404);
+
+      const ds = String(order.delivery_status || order.status || "").toLowerCase();
+      if (["delivered", "cancelled", "canceled", "cancelled_by_customer", "canceled_by_customer"].includes(ds)) {
+        return fail(res, "لا يمكن تعيين مندوب لطلب منتهٍ", 400);
+      }
+      if (order.driver_id) return fail(res, "الطلب مرتبط بمندوب — استخدم تحويل المندوب", 409);
+
+      let data = null;
+      let error = null;
+      const accepted = await acceptOrder(req.supabase, orderId, resolved.userId);
+      data = accepted.data;
+      error = accepted.error;
+      if (error) {
+        const nextStatus = ds === "new" || ds === "pending" || !ds ? "accepted" : order.delivery_status || order.status;
+        const r2 = await req.supabase
+          .from("orders")
+          .update({
+            driver_id: resolved.userId,
+            delivery_status: nextStatus,
+            status: nextStatus,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", orderId)
+          .select()
+          .single();
+        data = r2.data;
+        error = r2.error;
+      }
+      if (error) return fail(res, error.message || "تعذر تعيين المندوب", 400);
+      if (data && data.id) broadcastOrderPatch(String(data.id), orderPatchFromRow(data));
+      return ok(res, { order: data, driver_user_id: resolved.userId });
+    } catch (e) {
+      return fail(res, e.message || String(e), 500);
+    }
+  }
+);
+
+router.post(
+  "/orders/:id/transfer-driver",
+  requireAuth,
+  requireRole("admin"),
+  requireAdminPermission("orders"),
+  async (req, res) => {
+    try {
+      const orderId = String(req.params.id || "").trim();
+      if (!orderId) return fail(res, "id required", 400);
+      const resolved = await resolveDriverUserIdForAssign(req.supabase, req.body || {});
+      if (resolved.error) return fail(res, resolved.error, 400);
+
+      const { data: order, error: oErr } = await req.supabase
+        .from("orders")
+        .select("id, driver_id, delivery_status, status")
+        .eq("id", orderId)
+        .maybeSingle();
+      if (oErr || !order) return fail(res, oErr?.message || "الطلب غير موجود", 404);
+
+      const ds = String(order.delivery_status || order.status || "").toLowerCase();
+      if (["delivered", "cancelled", "canceled", "cancelled_by_customer", "canceled_by_customer"].includes(ds)) {
+        return fail(res, "لا يمكن تحويل مندوب لطلب منتهٍ", 400);
+      }
+
+      const { data, error } = await req.supabase
+        .from("orders")
+        .update({
+          driver_id: resolved.userId,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", orderId)
+        .select()
+        .single();
+      if (error) return fail(res, error.message || "تعذر تحويل المندوب", 400);
+      if (data && data.id) broadcastOrderPatch(String(data.id), orderPatchFromRow(data));
+      return ok(res, { order: data, driver_user_id: resolved.userId });
+    } catch (e) {
+      return fail(res, e.message || String(e), 500);
+    }
+  }
+);
 
 router.get("/driver-notifications", requireAuth, requireRole("admin"), requireAdminPermission("notifications"), async (req, res) => {
   try {
@@ -1779,6 +1941,355 @@ router.get(
         debts,
         summary: { count: debts.length, pending_total: Math.round(pendingSum * 100) / 100 },
       });
+    } catch (e) {
+      return fail(res, e.message || String(e), 500);
+    }
+  }
+);
+
+/** مديونيات عمولة COD للمندوبين (driver_wallets + driver_ledger) */
+router.get(
+  "/driver-debts",
+  requireAuth,
+  requireRole("admin"),
+  requireAdminPermission("finance"),
+  async (req, res) => {
+    try {
+      const sb = createServiceClient();
+      if (!sb) return fail(res, "قاعدة البيانات غير جاهزة", 503);
+
+      const { data: wallets, error: wErr } = await sb
+        .from("driver_wallets")
+        .select("driver_id, balance, updated_at")
+        .order("balance", { ascending: false })
+        .limit(500);
+      if (wErr) {
+        if (isDriverLedgerTableMissing(wErr)) {
+          return ok(res, {
+            drivers: [],
+            debt_limit: DRIVER_DEBT_LIMIT,
+            note: "نفّذ shared/migration_driver_commission_ledger.sql",
+          });
+        }
+        return fail(res, wErr.message, 400);
+      }
+
+      const walletRows = wallets || [];
+      const driverIds = walletRows.map((w) => w.driver_id).filter(Boolean);
+      const counts = {};
+      if (driverIds.length) {
+        const { data: ledgerRows, error: lErr } = await sb
+          .from("driver_ledger")
+          .select("driver_id")
+          .in("driver_id", driverIds);
+        if (lErr && !isDriverLedgerTableMissing(lErr)) return fail(res, lErr.message, 400);
+        for (const row of ledgerRows || []) {
+          const id = String(row.driver_id);
+          counts[id] = (counts[id] || 0) + 1;
+        }
+      }
+
+      const { data: driversTbl } = await sb.from("drivers").select("id, name, phone, status, active").limit(500);
+      const { data: usersTbl } =
+        driverIds.length > 0
+          ? await sb.from("users").select("id, phone").in("id", driverIds)
+          : { data: [] };
+
+      const phoneToDriver = new Map();
+      for (const d of driversTbl || []) {
+        const ph = normalizeDigits(d.phone);
+        if (ph) phoneToDriver.set(ph, d);
+      }
+      const userPhone = new Map((usersTbl || []).map((u) => [String(u.id), normalizeDigits(u.phone)]));
+
+      const riyadhDay = getRiyadhDate();
+      const dayStartIso = `${riyadhDay}T00:00:00.000+03:00`;
+      const notifyByPhone = new Map();
+      try {
+        const { data: notifyRows } = await sb
+          .from("driver_notifications")
+          .select("phone, status, error, created_at, sent_at")
+          .eq("channel", SMART_COLLECTION_CHANNEL)
+          .gte("created_at", dayStartIso)
+          .order("created_at", { ascending: false })
+          .limit(800);
+        for (const n of notifyRows || []) {
+          const nph = normalizeDigits(n.phone);
+          if (!nph || notifyByPhone.has(nph)) continue;
+          const err = String(n.error || "");
+          notifyByPhone.set(nph, {
+            notify_status: String(n.status || "pending"),
+            notify_kind: err.includes("threshold") ? "threshold" : "delivery",
+            notify_at: n.sent_at || n.created_at || null,
+          });
+        }
+      } catch (_nErr) {}
+
+      const drivers = walletRows.map((w) => {
+        const uid = String(w.driver_id);
+        const ph = userPhone.get(uid) || "";
+        const prof = ph ? phoneToDriver.get(ph) : null;
+        const bal = round2(Number(w.balance) || 0);
+        const phoneKey = normalizeDigits(prof?.phone || ph || "");
+        const notify = phoneKey ? notifyByPhone.get(phoneKey) : null;
+        return {
+          driver_id: uid,
+          driver_record_id: prof?.id || null,
+          name: prof?.name || null,
+          phone: prof?.phone || ph || null,
+          status: prof?.status || null,
+          balance: bal,
+          operations_count: counts[uid] || 0,
+          debt_blocked: bal > DRIVER_DEBT_LIMIT,
+          updated_at: w.updated_at,
+          alert_balance: bal > COMMISSION_ALERT_THRESHOLD,
+          notify_status: notify?.notify_status || null,
+          notify_kind: notify?.notify_kind || null,
+          notify_at: notify?.notify_at || null,
+        };
+      });
+
+      const totalDue = drivers.reduce((s, d) => s + (Number(d.balance) || 0), 0);
+      return ok(res, {
+        drivers,
+        summary: {
+          count: drivers.length,
+          total_balance_due: round2(totalDue),
+          debt_limit: DRIVER_DEBT_LIMIT,
+          alert_threshold: COMMISSION_ALERT_THRESHOLD,
+        },
+        debt_limit: DRIVER_DEBT_LIMIT,
+        smart_collection: {
+          alert_threshold: COMMISSION_ALERT_THRESHOLD,
+          channel: SMART_COLLECTION_CHANNEL,
+        },
+      });
+    } catch (e) {
+      return fail(res, e.message || String(e), 500);
+    }
+  }
+);
+
+router.get(
+  "/driver-ledger/:id",
+  requireAuth,
+  requireRole("admin"),
+  requireAdminPermission("finance"),
+  async (req, res) => {
+    try {
+      const sb = createServiceClient();
+      if (!sb) return fail(res, "قاعدة البيانات غير جاهزة", 503);
+      const driverId = String(req.params.id || "").trim();
+      if (!driverId) return fail(res, "driver id required", 400);
+
+      const { data: wallet, error: wErr } = await sb
+        .from("driver_wallets")
+        .select("driver_id, balance, updated_at")
+        .eq("driver_id", driverId)
+        .maybeSingle();
+      if (wErr) {
+        if (isDriverLedgerTableMissing(wErr)) {
+          return ok(res, { driver_id: driverId, entries: [], note: "نفّذ migration_driver_commission_ledger.sql" });
+        }
+        return fail(res, wErr.message, 400);
+      }
+
+      const { data: entries, error: eErr } = await sb
+        .from("driver_ledger")
+        .select("id, driver_id, order_id, type, amount, meta, created_at")
+        .eq("driver_id", driverId)
+        .order("created_at", { ascending: false })
+        .limit(200);
+      if (eErr) return fail(res, eErr.message, 400);
+
+      const balance = wallet ? round2(Number(wallet.balance) || 0) : 0;
+      return ok(res, {
+        driver_id: driverId,
+        balance,
+        debt_blocked: balance > DRIVER_DEBT_LIMIT,
+        debt_limit: DRIVER_DEBT_LIMIT,
+        operations_count: (entries || []).length,
+        entries: entries || [],
+        wallet: wallet || { driver_id: driverId, balance: 0 },
+      });
+    } catch (e) {
+      return fail(res, e.message || String(e), 500);
+    }
+  }
+);
+
+router.post(
+  "/collect",
+  requireAuth,
+  requireRole("admin"),
+  requireAdminPermission("finance"),
+  async (req, res) => {
+    try {
+      const sb = createServiceClient();
+      if (!sb) return fail(res, "قاعدة البيانات غير جاهزة", 503);
+      const driverId = String(req.body?.driver_id || req.body?.driverId || "").trim();
+      const amountRaw = Number(req.body?.amount);
+      if (!driverId) return fail(res, "driver_id required", 400);
+      if (!Number.isFinite(amountRaw)) return fail(res, "amount must be a valid number", 400);
+      const amount = roundCollectAmount(amountRaw);
+      if (amount <= 0) return fail(res, "amount must be positive (rounded to 2 decimals)", 400);
+
+      const balanceBefore = await getDriverCommissionBalance(sb, driverId);
+      if (amount > round2(balanceBefore) + 0.004) {
+        return fail(
+          res,
+          `المبلغ (${amount.toFixed(2)}) أكبر من الرصيد المستحق (${round2(balanceBefore).toFixed(2)})`,
+          400
+        );
+      }
+
+      const receiptReference = generateReceiptReference();
+      const note = String(req.body?.note || "").trim().slice(0, 500);
+      const adminId = req.appUser?.id || null;
+      let result;
+      try {
+        result = await collectDriverCommission(sb, driverId, amount, {
+          note: note || null,
+          collected_by: adminId,
+          source: "admin_collect",
+          receipt_reference: receiptReference,
+        });
+      } catch (err) {
+        if (isDriverLedgerTableMissing(err)) {
+          return fail(res, "نفّذ shared/migration_driver_commission_ledger.sql على Supabase", 503);
+        }
+        if (String(err.message || "").includes("insufficient_balance")) {
+          return fail(res, "المبلغ أكبر من الرصيد المستحق", 400);
+        }
+        throw err;
+      }
+
+      if (result.ok === false) {
+        const reason = result.reason || "collect_failed";
+        if (reason === "insufficient_balance") {
+          return fail(res, "المبلغ أكبر من الرصيد المستحق", 400);
+        }
+        return fail(res, reason, 400);
+      }
+
+      const balanceAfter = await getDriverCommissionBalance(sb, driverId);
+      return ok(res, {
+        ok: true,
+        driver_id: driverId,
+        collected: round2(amount),
+        balance_before: round2(balanceBefore),
+        balance_after: balanceAfter,
+        debt_blocked: balanceAfter > DRIVER_DEBT_LIMIT,
+        ledger_id: result.ledger_id || null,
+        receipt_reference: receiptReference,
+        amount_rounded: Math.abs(amountRaw - amount) > 0.001,
+        result,
+      });
+    } catch (e) {
+      return fail(res, e.message || String(e), 500);
+    }
+  }
+);
+
+/** تذكير واتساب لمندوب — Smart Collection */
+router.post(
+  "/smart-collection-remind",
+  requireAuth,
+  requireRole("admin"),
+  requireAdminPermission("finance"),
+  async (req, res) => {
+    try {
+      const sb = createServiceClient();
+      if (!sb) return fail(res, "قاعدة البيانات غير جاهزة", 503);
+      const driverId = String(req.body?.driver_id || req.body?.driverId || "").trim();
+      if (!driverId) return fail(res, "driver_id required", 400);
+      const out = await sendSmartCollectionReminder(sb, driverId);
+      if (out.reason === "no_phone") return fail(res, "لا يوجد جوال للمندوب", 400);
+      if (out.reason === "no_balance") {
+        return fail(res, "لا يوجد رصيد مستحق — لا حاجة لتذكير", 400);
+      }
+      if (!out.sent) return fail(res, "تعذّر إرسال واتساب — تحقق من إعدادات WA", 502);
+      return ok(res, out);
+    } catch (e) {
+      return fail(res, e.message || String(e), 500);
+    }
+  }
+);
+
+/** تقرير يومي — Smart Collection (إضافة) */
+router.get(
+  "/smart-collection-daily-report",
+  requireAuth,
+  requireRole("admin"),
+  requireAdminPermission("finance"),
+  async (req, res) => {
+    try {
+      const sb = createServiceClient();
+      if (!sb) return fail(res, "قاعدة البيانات غير جاهزة", 503);
+      const riyadhDay = getRiyadhDate();
+      const dayStartIso = `${riyadhDay}T00:00:00.000+03:00`;
+
+      let commissionsToday = 0;
+      let collectionsToday = 0;
+      let ledgerOpsToday = 0;
+      try {
+        const { data: ledgerToday, error: lErr } = await sb
+          .from("driver_ledger")
+          .select("type, amount, created_at")
+          .gte("created_at", dayStartIso)
+          .limit(5000);
+        if (!lErr && ledgerToday) {
+          for (const row of ledgerToday) {
+            ledgerOpsToday += 1;
+            const amt = Number(row.amount) || 0;
+            const typ = String(row.type || "").toLowerCase();
+            if (typ === "commission") commissionsToday += amt;
+            if (typ === "payout") collectionsToday += Math.abs(amt);
+          }
+        }
+      } catch (_le) {}
+
+      let notificationsSent = 0;
+      let notificationsFailed = 0;
+      try {
+        const { data: notes } = await sb
+          .from("driver_notifications")
+          .select("status")
+          .eq("channel", SMART_COLLECTION_CHANNEL)
+          .gte("created_at", dayStartIso)
+          .limit(2000);
+        for (const n of notes || []) {
+          const st = String(n.status || "").toLowerCase();
+          if (st === "sent") notificationsSent += 1;
+          else if (st === "failed") notificationsFailed += 1;
+        }
+      } catch (_ne) {}
+
+      const { data: wallets } = await sb.from("driver_wallets").select("balance").limit(500);
+      const rows = wallets || [];
+      const totalDebt = round2(rows.reduce((s, w) => s + (Number(w.balance) || 0), 0));
+      const withDebt = rows.filter((w) => (Number(w.balance) || 0) > 0).length;
+      const blocked = rows.filter((w) => (Number(w.balance) || 0) > DRIVER_DEBT_LIMIT).length;
+      const aboveAlert = rows.filter((w) => (Number(w.balance) || 0) > COMMISSION_ALERT_THRESHOLD).length;
+
+      const report = {
+        date: riyadhDay,
+        timezone: "Asia/Riyadh",
+        total_debt: totalDebt,
+        drivers_with_debt: withDebt,
+        blocked_drivers: blocked,
+        drivers_above_alert: aboveAlert,
+        ledger_operations_today: ledgerOpsToday,
+        commissions_accrued_today: round2(commissionsToday),
+        collections_today: round2(collectionsToday),
+        driver_notifications_sent: notificationsSent,
+        driver_notifications_failed: notificationsFailed,
+        alert_threshold: COMMISSION_ALERT_THRESHOLD,
+        debt_limit: DRIVER_DEBT_LIMIT,
+      };
+
+      console.log("[smart-collection] daily report", JSON.stringify(report));
+      return ok(res, { report });
     } catch (e) {
       return fail(res, e.message || String(e), 500);
     }
