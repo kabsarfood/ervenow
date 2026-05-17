@@ -16,6 +16,7 @@
     />
     <link rel="stylesheet" href="/assets/styles.css" />
     <script src="/assets/api-config.js"></script>
+    <script src="/assets/phonePrivacy.js"></script>
     <script src="/assets/api.js"></script>
     <script>
       document.addEventListener("DOMContentLoaded", function () {
@@ -3126,6 +3127,15 @@
         if (inner) inner.classList.remove("lp-header__inner--user-mid");
       }
 
+      function maskHeaderPhone(phone) {
+        if (window.ErvenowPhonePrivacy && typeof window.ErvenowPhonePrivacy.maskPhoneForDisplay === "function") {
+          return window.ErvenowPhonePrivacy.maskPhoneForDisplay(phone);
+        }
+        var d = String(phone || "").replace(/\D/g, "");
+        if (d.length < 4) return "••••";
+        return "••••" + d.slice(-4);
+      }
+
       function setHeaderUserMidLine(phone) {
         var inner = document.getElementById("lpHeaderInner");
         var mid = document.getElementById("lpHeaderUserMid");
@@ -3136,7 +3146,7 @@
           clearHeaderUserMid();
           return;
         }
-        midText.textContent = p;
+        midText.textContent = maskHeaderPhone(p);
         mid.hidden = false;
         inner.classList.add("lp-header__inner--user-mid");
       }
@@ -3206,7 +3216,7 @@
               authArea.style.alignItems = "";
               var phoneTrim = String(phone || "").trim();
               setHeaderUserMidLine(phoneTrim);
-              var dashLabel = phoneTrim ? "حسابي" : String(name || "حسابي").trim() || "حسابي";
+              var dashLabel = phoneTrim ? maskHeaderPhone(phoneTrim) : String(name || "حسابي").trim() || "حسابي";
               authArea.innerHTML =
                 '<button class="lp-btn-solid" type="button" onclick="goDashboard()">' + dashLabel + "</button>";
             }

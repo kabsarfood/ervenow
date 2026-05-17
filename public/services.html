@@ -809,6 +809,8 @@
         { filter: "plumber", icon: "🔧", label: "سباك", desc: "60 ريال معاينة وتقييم — الإصلاح لاحقاً عند الرغبة." },
         { filter: "electrician", icon: "⚡", label: "كهربائي", desc: "60 ريال معاينة وتقييم — الإصلاح يُحسب عند الموافقة." },
         { filter: "nursery", icon: "🪴", label: "مشتل", desc: "60 ريال معاينة — التنفيذ والتسعير حسب الاتفاق." },
+        { filter: "agricultural_engineer", icon: "🌾", label: "مهندس زراعي", desc: "60 ريال معاينة — التنفيذ حسب الاتفاق." },
+        { filter: "pickup_truck", icon: "🛻", label: "سائق سطحى", desc: "نقل بالسطحية — التسعير حسب الاتفاق." },
         { filter: "ac_technician", icon: "❄️", label: "فني مكيفات", desc: "60 ريال معاينة وتقييم أعطال المكيف." },
         { filter: "cleaning_villa", icon: "🧼", label: "غسيل درج فيلا", desc: "60 ريال ثابت." },
         { filter: "cleaning_building", icon: "🏢", label: "غسيل درج عمارة", desc: "120 ريال (3 أدوار)." },
@@ -818,6 +820,9 @@
         plumber: 1,
         electrician: 1,
         nursery: 1,
+        agricultural_engineer: 1,
+        pickup_truck: 1,
+        laundry_estates: 1,
         ac_technician: 1,
         cleaning: 1,
         cleaning_villa: 1,
@@ -1399,7 +1404,7 @@
                   "✅ تم إرسال الطلب بنجاح.\nرقم الطلب: " +
                   (data.order_number || "—") +
                   "\n" +
-                  (data.message || "سيتم إشعار أقرب مزودي الخدمة عبر واتساب.");
+                  (data.message || "سيظهر الطلب لمزودي الخدمة في حيّك — يحجزونه من لوحاتهم.");
               }
               formEl.reset();
             } catch (err2) {

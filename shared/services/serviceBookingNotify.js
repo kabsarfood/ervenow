@@ -58,7 +58,7 @@ async function sendProviderBookingWhatsApp(phones, booking) {
 async function notifyProvidersForBooking(sb, booking) {
   if (!sb || !booking) return;
   const t = String(booking.service_type || "").toLowerCase();
-  if (isHomeServiceType(t)) {
+  if (isHomeServiceType(t) || t === "gas_delivery") {
     await notifyHomeServiceProvidersCascade(sb, booking);
     return;
   }

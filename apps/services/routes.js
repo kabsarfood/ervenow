@@ -25,14 +25,30 @@ const {
   insertServiceBookingResilient,
   insertServiceBookingsBatchResilient,
 } = require("../../shared/utils/idempotency");
+const { completeServiceBooking } = require("../../shared/services/completeServiceBooking");
+const { sendReserveWelcomeWhatsApp } = require("../../shared/services/serviceProviderReserve");
+const {
+  bookingTypesForProvider,
+  districtsMatch,
+  providerAreaMatches,
+  providerAreaLabel,
+  panelTitleForType,
+  labelForType,
+  providerMatchesBookingType,
+} = require("../../shared/utils/serviceProviderTypes");
+const { toStorageDigits } = require("../../shared/utils/phone");
 
 const router = express.Router();
 const SERVICE_TYPES = new Set([
   "plumber",
   "electrician",
   "nursery",
+  "agricultural_engineer",
   "ac_technician",
   "cleaning",
+  "cleaning_villa",
+  "cleaning_building",
+  "laundry_estates",
   "vehicle_transfer",
   "internal_delivery",
   "pickup_truck",
@@ -90,9 +106,49 @@ function labelByType(type) {
     pickup_truck: "ونيت",
     furniture_move: "نقل أثاث",
     gas_delivery: "تبديل غاز",
+    agricultural_engineer: "مهندس زراعي",
+    laundry_estates: "مغسل فلل وعمائر",
+    pickup_truck: "سائق سطحى",
     service: "خدمة عامة",
   };
-  return map[type] || type || "خدمة";
+  return map[type] || labelForType(type) || type || "خدمة";
+}
+
+function filterBookingsForProvider(rows, providerId, providerType, providerDistrict) {
+  const types = bookingTypesForProvider(providerType);
+  const pid = String(providerId || "");
+  return (rows || []).filter((b) => {
+    const st = String(b.service_type || "").toLowerCase();
+    if (!providerMatchesBookingType(providerType, st, b.gas_mode)) return false;
+    const status = String(b.status || "new").toLowerCase();
+    const bookedBy = b.provider_id ? String(b.provider_id) : "";
+    if (bookedBy && bookedBy !== pid) return false;
+    if (bookedBy === pid) return true;
+    if (status !== "new" && status !== "pending") return false;
+    return providerAreaMatches(providerType, providerDistrict, b.district, b.location);
+  });
+}
+
+function sortBookingsByPriority(rows, providerId) {
+  const pid = String(providerId || "");
+  return (rows || []).slice().sort((a, b) => {
+    const sa = String(a.status || "").toLowerCase();
+    const sb = String(b.status || "").toLowerCase();
+    const mineA = String(a.provider_id || "") === pid;
+    const mineB = String(b.provider_id || "") === pid;
+    if (mineA && !mineB) return -1;
+    if (!mineA && mineB) return 1;
+    const rank = (s) => {
+      if (s === "new") return 0;
+      if (s === "accepted") return 1;
+      if (s === "delivering") return 2;
+      if (s === "delivered") return 3;
+      return 4;
+    };
+    const d = rank(sa) - rank(sb);
+    if (d !== 0) return d;
+    return new Date(b.created_at || 0) - new Date(a.created_at || 0);
+  });
 }
 
 function buildServiceBookingRow(base) {
@@ -311,6 +367,125 @@ router.post("/gas-order", optionalAuth, async (req, res) => {
 
 router.get("/health", (_req, res) => ok(res, { service: "services" }));
 
+router.get("/provider-types", (_req, res) => {
+  const { SERVICE_PROVIDER_OPTIONS } = require("../../shared/utils/serviceProviderTypes");
+  return ok(res, { options: SERVICE_PROVIDER_OPTIONS });
+});
+
+router.get("/providers", async (req, res) => {
+  try {
+    const sb = createServiceClient();
+    if (!sb) return fail(res, "قاعدة البيانات غير جاهزة", 503);
+    const serviceType = String(req.query?.service_type || req.query?.type || "").trim().toLowerCase();
+    const district = String(req.query?.district || "").trim();
+    let q = sb
+      .from("users")
+      .select("id, name, phone, service_type, service_district, service_rating_avg, service_rating_count, lat, lng")
+      .eq("role", "service");
+    if (serviceType) {
+      const types = bookingTypesForProvider(serviceType);
+      if (types.length === 1) q = q.eq("service_type", types[0]);
+    }
+    const { data, error } = await q;
+    if (error) return fail(res, error.message, 400);
+    let list = (data || []).filter((u) => {
+      if (!serviceType) return true;
+      return providerMatchesBookingType(u.service_type, serviceType);
+    });
+    if (district) {
+      list = list.filter((u) => districtsMatch(u.service_district, district));
+    }
+    list.sort((a, b) => {
+      const ra = Number(a.service_rating_avg) || 0;
+      const rb = Number(b.service_rating_avg) || 0;
+      if (rb !== ra) return rb - ra;
+      return (Number(b.service_rating_count) || 0) - (Number(a.service_rating_count) || 0);
+    });
+    return ok(res, { providers: list });
+  } catch (e) {
+    return fail(res, e.message, 500);
+  }
+});
+
+router.get("/me/dashboard", requireAuth, requireRole("service"), async (req, res) => {
+  try {
+    const sb = req.supabase || createServiceClient();
+    const uid = req.appUser.id;
+    let profile = null;
+    const firstProfile = await sb
+      .from("users")
+      .select(
+        "id, name, phone, service_type, service_district, service_rating_avg, service_rating_count, service_vehicle_type, service_plate_number, service_vehicle_model"
+      )
+      .eq("id", uid)
+      .maybeSingle();
+    if (firstProfile.error) {
+      const msg = String(firstProfile.error.message || "");
+      if (/service_vehicle_type|service_plate_number|service_vehicle_model/i.test(msg)) {
+        const fallback = await sb
+          .from("users")
+          .select("id, name, phone, service_type, service_district, service_rating_avg, service_rating_count")
+          .eq("id", uid)
+          .maybeSingle();
+        if (fallback.error) return fail(res, fallback.error.message, 400);
+        profile = fallback.data;
+      } else {
+        return fail(res, firstProfile.error.message, 400);
+      }
+    } else {
+      profile = firstProfile.data;
+    }
+
+    const providerType = String(profile?.service_type || "").trim().toLowerCase();
+    const types = bookingTypesForProvider(providerType);
+
+    let bookingsQ = sb.from("service_bookings").select("*").order("created_at", { ascending: false }).limit(200);
+    if (types.length === 1) bookingsQ = bookingsQ.eq("service_type", types[0]);
+    else if (types.length > 1) bookingsQ = bookingsQ.in("service_type", types);
+    const { data: rawBookings, error: bErr } = await bookingsQ;
+    if (bErr) return fail(res, bErr.message, 400);
+
+    const bookings = sortBookingsByPriority(
+      filterBookingsForProvider(rawBookings, uid, providerType, profile?.service_district),
+      uid
+    );
+    const newCount = bookings.filter((b) => {
+      const s = String(b.status || "").toLowerCase();
+      return (s === "new" || s === "pending") && !b.provider_id;
+    }).length;
+
+    let commissionPending = 0;
+    try {
+      const { data: debts } = await sb
+        .from("provider_commission_debts")
+        .select("commission_amount, status")
+        .eq("provider_id", uid)
+        .eq("status", "pending");
+      commissionPending = (debts || []).reduce((s, r) => s + (Number(r.commission_amount) || 0), 0);
+    } catch (_) {
+      /* table optional */
+    }
+
+    const completed = bookings.filter((b) => String(b.status || "").toLowerCase() === "delivered").length;
+
+    return ok(res, {
+      panel_title: panelTitleForType(providerType),
+      service_label: labelForType(providerType),
+      profile: profile || {},
+      bookings,
+      stats: {
+        new_orders: newCount,
+        completed_jobs: completed,
+        commission_pending_sar: Math.round(commissionPending * 100) / 100,
+        rating_avg: Number(profile?.service_rating_avg) || 0,
+        rating_count: Number(profile?.service_rating_count) || 0,
+      },
+    });
+  } catch (e) {
+    return fail(res, e.message, 500);
+  }
+});
+
 router.get("/bookings", requireAuth, async (req, res) => {
   try {
     const user = req.appUser;
@@ -318,7 +493,7 @@ router.get("/bookings", requireAuth, async (req, res) => {
 
     const { data: profile, error: pErr } = await req.supabase
       .from("users")
-      .select("service_type")
+      .select("service_type, service_district")
       .eq("id", user.id)
       .maybeSingle();
     if (pErr) return fail(res, pErr.message, 400);
@@ -326,17 +501,122 @@ router.get("/bookings", requireAuth, async (req, res) => {
     const providerType = String(profile?.service_type || "").trim().toLowerCase();
     if (!providerType) return ok(res, { bookings: [] });
 
-    const { data, error } = await req.supabase
-      .from("service_bookings")
-      .select("*")
-      .eq("service_type", providerType)
-      .order("created_at", { ascending: false });
-
+    const types = bookingTypesForProvider(providerType);
+    let q = req.supabase.from("service_bookings").select("*").order("created_at", { ascending: false }).limit(200);
+    if (types.length === 1) q = q.eq("service_type", types[0]);
+    else q = q.in("service_type", types);
+    const { data, error } = await q;
     if (error) throw error;
-    return res.json({ ok: true, bookings: data || [] });
+
+    const filtered = sortBookingsByPriority(
+      filterBookingsForProvider(data, user.id, providerType, profile?.service_district),
+      user.id
+    );
+    return res.json({ ok: true, bookings: filtered });
   } catch (e) {
     console.error(e);
     return res.status(500).json({ ok: false, error: "INTERNAL_ERROR" });
+  }
+});
+
+router.post("/bookings/:id/reserve", requireAuth, requireRole("service"), async (req, res) => {
+  try {
+    const sb = req.supabase || createServiceClient();
+    const uid = req.appUser.id;
+    const { data: profile } = await sb
+      .from("users")
+      .select("id, name, phone, service_type, service_district")
+      .eq("id", uid)
+      .maybeSingle();
+    const providerType = String(profile?.service_type || "").trim().toLowerCase();
+    if (!providerType) return fail(res, "نوع الخدمة غير مضبوط في حسابك", 400);
+
+    const { data: booking, error: gErr } = await sb
+      .from("service_bookings")
+      .select("*")
+      .eq("id", req.params.id)
+      .maybeSingle();
+    if (gErr || !booking) return fail(res, "الطلب غير موجود", 404);
+
+    const types = bookingTypesForProvider(providerType);
+    if (!providerMatchesBookingType(providerType, booking.service_type, booking.gas_mode)) {
+      return fail(res, "هذا الطلب لا يطابق تخصصك", 403);
+    }
+    if (!providerAreaMatches(providerType, profile?.service_district, booking.district, booking.location)) {
+      return fail(res, providerType === "pickup_truck" ? "الطلب خارج مدينتك المسجّلة" : "الطلب خارج حيّك المسجّل", 403);
+    }
+    const st = String(booking.status || "new").toLowerCase();
+    if (st !== "new" && st !== "pending") return fail(res, "الطلب غير متاح للحجز", 400);
+    if (booking.provider_id && String(booking.provider_id) !== String(uid)) {
+      return fail(res, "تم حجز الطلب من مزود آخر", 409);
+    }
+
+    const now = new Date().toISOString();
+    const { data, error } = await sb
+      .from("service_bookings")
+      .update({
+        provider_id: uid,
+        status: "accepted",
+        reserved_at: now,
+        updated_at: now,
+      })
+      .eq("id", req.params.id)
+      .is("provider_id", null)
+      .in("status", ["new", "pending"])
+      .select("*")
+      .maybeSingle();
+
+    if (error) return fail(res, error.message, 400);
+    if (!data) return fail(res, "تعذر حجز الطلب — ربما حجزه مزود آخر", 409);
+
+    await sendReserveWelcomeWhatsApp(data, profile?.phone, profile?.name);
+
+    return ok(res, { booking: data, message: "تم حجز الطلب وإرسال تفاصيله عبر واتساب" });
+  } catch (e) {
+    return fail(res, e.message, 500);
+  }
+});
+
+router.post("/bookings/:id/complete", requireAuth, async (req, res) => {
+  try {
+    const sb = req.supabase || createServiceClient();
+    const uid = req.appUser.id;
+    const role = String(req.appUser.role || "").toLowerCase();
+    const { data: booking, error: gErr } = await sb
+      .from("service_bookings")
+      .select("*")
+      .eq("id", req.params.id)
+      .maybeSingle();
+    if (gErr || !booking) return fail(res, "الطلب غير موجود", 404);
+
+    const status = String(booking.status || "").toLowerCase();
+    if (status === "delivered" || status === "cancelled") {
+      return ok(res, { booking, already_done: true });
+    }
+
+    const phoneDigits = toStorageDigits(req.appUser.phone || "");
+    const custPhone = toStorageDigits(booking.customer_phone || "");
+    const isProvider = role === "service" && String(booking.provider_id || "") === String(uid);
+    const isCustomer =
+      role === "customer" &&
+      (String(booking.customer_id || "") === String(uid) || (phoneDigits && custPhone && phoneDigits === custPhone));
+    const isAdmin = role === "admin";
+    if (!isProvider && !isCustomer && !isAdmin) {
+      return fail(res, "غير مصرح", 403);
+    }
+
+    const providerId = booking.provider_id || (isProvider ? uid : null);
+    const done = await completeServiceBooking(sb, req.params.id, providerId);
+    if (done.error) return fail(res, done.error.message || "فشل الإتمام", 400);
+
+    await sendCustomerRateWhatsApp(done.data);
+
+    return ok(res, {
+      booking: done.data,
+      message: "تمام المهمة — شكراً. يمكن للعميل تقييم الخدمة الآن.",
+    });
+  } catch (e) {
+    return fail(res, e.message, 500);
   }
 });
 
@@ -474,7 +754,12 @@ router.post("/bookings/:id/rate", requireAuth, requireRole("customer"), async (r
       .eq("id", req.params.id)
       .single();
     if (gErr || !booking) return fail(res, "Not found", 404);
-    if (booking.customer_id !== req.appUser.id) return fail(res, "Forbidden", 403);
+    const phoneDigits = toStorageDigits(req.appUser.phone || "");
+    const custPhone = toStorageDigits(booking.customer_phone || "");
+    const ownsBooking =
+      String(booking.customer_id || "") === String(req.appUser.id) ||
+      (phoneDigits && custPhone && phoneDigits === custPhone);
+    if (!ownsBooking) return fail(res, "Forbidden", 403);
     if (String(booking.status || "").toLowerCase() !== "delivered") {
       return fail(res, "booking is not delivered", 400);
     }

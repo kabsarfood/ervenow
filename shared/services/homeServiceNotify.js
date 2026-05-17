@@ -2,6 +2,7 @@ const { sendWhatsApp } = require("../utils/whatsapp");
 const { roughDistanceKm } = require("../utils/geo");
 const { commissionPercentLabel } = require("../utils/serviceCommission");
 const { catalogEntry, serviceDisplayName } = require("../utils/homeServicePricing");
+const { providerAreaMatches, providerMatchesBookingType } = require("../utils/serviceProviderTypes");
 async function getServiceProviderPhones(sb, serviceType) {
   let q = sb.from("users").select("phone").eq("role", "service");
   if (serviceType) q = q.eq("service_type", serviceType);
@@ -90,9 +91,11 @@ function buildHomeProviderMessage(booking, rankHint) {
   );
 }
 
-async function fetchServiceProviders(sb, serviceType) {
-  let q = sb.from("users").select("id, phone, lat, lng, service_type").eq("role", "service");
-  if (serviceType) q = q.eq("service_type", serviceType);
+async function fetchServiceProviders(sb, serviceType, bookingDistrict, bookingGasMode, bookingLocation) {
+  let q = sb
+    .from("users")
+    .select("id, phone, lat, lng, service_type, service_district, name")
+    .eq("role", "service");
   const { data, error } = await q;
   if (error || !Array.isArray(data)) {
     const phones = await getServiceProviderPhones(sb, serviceType);
@@ -102,11 +105,16 @@ async function fetchServiceProviders(sb, serviceType) {
     .map((u) => ({
       id: u.id,
       phone: String(u.phone || "").trim(),
+      name: String(u.name || "").trim(),
+      service_type: String(u.service_type || "").trim().toLowerCase(),
+      service_district: String(u.service_district || "").trim(),
       lat: u.lat != null ? Number(u.lat) : NaN,
       lng: u.lng != null ? Number(u.lng) : NaN,
       dist: Infinity,
     }))
-    .filter((p) => p.phone.length >= 10);
+    .filter((p) => p.phone.length >= 10)
+    .filter((p) => providerMatchesBookingType(p.service_type, serviceType, bookingGasMode))
+    .filter((p) => providerAreaMatches(p.service_type, p.service_district, bookingDistrict, bookingLocation));
 }
 
 function sortProvidersByDistance(providers, customerCoords) {
@@ -127,15 +135,28 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-/** إشعار متدرّج: الأقرب ثم الأبعد (واتساب) */
+/**
+ * إشعار مقدّمي الخدمة — الطلبات تظهر في لوحة المزود.
+ * واتساب الترحيب يُرسل عند «حجز الطلب» من لوحة المزود (انظر serviceProviderReserve).
+ */
 async function notifyHomeServiceProvidersCascade(sb, booking) {
-  if (!sb || !booking) return { sent: 0 };
+  if (!sb || !booking) return { sent: 0, providers: 0 };
   const serviceType = String(booking.service_type || "").trim().toLowerCase();
-  let providers = await fetchServiceProviders(sb, serviceType);
-  if (!providers.length) return { sent: 0 };
+  const district = String(booking.district || "").trim();
+  const gasMode = booking.gas_mode || null;
+  let providers = await fetchServiceProviders(sb, serviceType, district, gasMode, booking.location);
+  if (!providers.length) {
+    const phones = await getServiceProviderPhones(sb, serviceType);
+    return { sent: 0, providers: phones.length };
+  }
 
   const coords = parseCoordsFromLocation(booking.location);
   providers = sortProvidersByDistance(providers, coords);
+
+  const waOnCreate = String(process.env.ERVENOW_SERVICE_WA_ON_CREATE || "").trim() === "1";
+  if (!waOnCreate) {
+    return { sent: 0, providers: providers.length, dashboard_only: true };
+  }
 
   const staggerMs = Math.max(2000, Number(process.env.ERVENOW_SERVICE_WA_STAGGER_MS) || 4500);
   let sent = 0;
@@ -149,7 +170,7 @@ async function notifyHomeServiceProvidersCascade(sb, booking) {
     }
     if (i < providers.length - 1) await sleep(staggerMs);
   }
-  return { sent };
+  return { sent, providers: providers.length };
 }
 
 module.exports = {

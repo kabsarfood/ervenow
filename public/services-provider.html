@@ -3,9 +3,81 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>ERVENOW | مزود الخدمة</title>
+    <title>ERVENOW | لوحة مزود الخدمة</title>
     <link rel="stylesheet" href="/assets/styles.css" />
     <style>
+      .sp-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+      .sp-bell {
+        position: relative;
+        border: 0;
+        background: #fffdf8;
+        border-radius: 12px;
+        padding: 10px 14px;
+        cursor: pointer;
+        font-size: 1.25rem;
+        box-shadow: 0 2px 10px rgba(45, 26, 14, 0.08);
+      }
+      .sp-bell__badge {
+        position: absolute;
+        top: 2px;
+        left: 4px;
+        min-width: 18px;
+        height: 18px;
+        border-radius: 999px;
+        background: #c0392b;
+        color: #fff;
+        font-size: 0.7rem;
+        font-weight: 800;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 4px;
+      }
+      .sp-kpis {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 10px;
+        margin: 14px 0;
+      }
+      .sp-kpi {
+        background: linear-gradient(180deg, #fffdf8 0%, #f5efe6 100%);
+        border: 1px solid rgba(91, 55, 29, 0.12);
+        border-radius: 12px;
+        padding: 12px;
+      }
+      .sp-kpi strong {
+        display: block;
+        font-size: 1.15rem;
+        color: #5b371d;
+      }
+      .sp-kpi span {
+        font-size: 0.82rem;
+        color: #6e5a4a;
+        font-weight: 700;
+      }
+      .sp-order {
+        border: 1px solid rgba(91, 55, 29, 0.12);
+        border-radius: 12px;
+        padding: 12px;
+        margin-top: 10px;
+        background: #fff;
+      }
+      .sp-order.is-mine {
+        border-color: rgba(185, 135, 47, 0.45);
+        background: #fffdf8;
+      }
+      .sp-order__actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 10px;
+      }
       .hub-pay-grid {
         display: flex;
         flex-direction: column;
@@ -24,36 +96,56 @@
       .hub-pay-row input[type="checkbox"] {
         width: 17px;
         height: 17px;
-        flex-shrink: 0;
       }
-      .hub-pay-row img {
-        height: 22px;
-        width: auto;
-        max-width: 49px;
-        min-width: 29px;
-        object-fit: contain;
-        border-radius: 8px;
-        background: #fff;
-        padding: 5px 10px;
-        box-shadow: 0 2px 8px rgba(45, 26, 14, 0.1);
-      }
-      .hub-pay-row input:disabled + img {
-        opacity: 0.45;
+      #ordersPanel[hidden] {
+        display: none !important;
       }
     </style>
   </head>
   <body>
     <div class="layout">
-      <div class="top-nav">
-        <h1 style="margin: 0">طلبات مزود الخدمة</h1>
+      <div class="sp-top top-nav">
+        <div>
+          <h1 style="margin: 0" id="panelTitle">لوحة مزود الخدمة</h1>
+          <p class="sub" id="panelSub" style="margin: 4px 0 0">—</p>
+        </div>
         <div class="btn-row">
+          <button type="button" class="sp-bell" id="bellBtn" aria-label="الطلبات">
+            🔔
+            <span class="sp-bell__badge" id="bellBadge" hidden>0</span>
+          </button>
+          <a class="btn btn-ghost" href="/services">قسم الخدمات</a>
           <a class="btn btn-ghost" href="/">الرئيسية</a>
           <a class="btn btn-ghost" href="/login" id="logoutBtn">خروج</a>
         </div>
       </div>
 
       <div class="card">
+        <div class="sp-kpis">
+          <div class="sp-kpi">
+            <strong id="kpiRating">—</strong>
+            <span>التقييم</span>
+          </div>
+          <div class="sp-kpi">
+            <strong id="kpiWallet">—</strong>
+            <span>عمولة مستحقة (ريال)</span>
+          </div>
+          <div class="sp-kpi">
+            <strong id="kpiDone">0</strong>
+            <span>أعمال منجزة</span>
+          </div>
+          <div class="sp-kpi">
+            <strong id="kpiNew">0</strong>
+            <span>طلبات جديدة</span>
+          </div>
+        </div>
+        <p class="sub" id="districtLine">—</p>
+        <p class="sub" id="vehicleLine" hidden>—</p>
+      </div>
+
+      <div class="card" id="ordersPanel" hidden>
         <div class="btn-row">
+          <h2 style="margin: 0">الطلبات</h2>
           <button class="btn btn-primary" type="button" id="refreshBtn">تحديث</button>
         </div>
         <p class="sub" id="summary">—</p>
@@ -62,9 +154,7 @@
 
       <div class="card" id="svcPayCard">
         <h2 style="margin: 0 0 8px">وسائل الدفع في السلة</h2>
-        <p class="sub" style="margin: 0 0 12px">
-          يظهر للعميل تقاطع إعدادات المنصة مع اختياراتك. عطّل ما لا تناسبك (مثل الدفع عند الاستلام أو البطاقات).
-        </p>
+        <p class="sub" style="margin: 0 0 12px">تقاطع إعدادات المنصة مع اختياراتك للعملاء.</p>
         <div class="hub-pay-grid" id="svcPayGrid"></div>
         <button type="button" class="btn btn-primary" id="btnSaveSvcPay">حفظ وسائل الدفع</button>
         <p class="sub" id="svcPayMsg" style="margin-top: 10px"></p>
@@ -73,7 +163,6 @@
 
     <script src="/assets/api-config.js"></script>
     <script src="/assets/api.js"></script>
-    <script src="/assets/cart.js"></script>
     <script>
       var SVC_PAY_ROWS = [
         { key: "ew_pay", label: "EW PAY", src: "/assets/pay-ew.svg" },
@@ -88,6 +177,216 @@
       ];
       var __svcPlat = {};
       var __svcEff = {};
+      var __bookings = [];
+
+      function showMsg(text, ok) {
+        var el = document.getElementById("svcPayMsg");
+        if (!el) return;
+        el.textContent = text || "";
+        el.style.color = ok ? "#2d6a4f" : "#a33";
+      }
+
+      function payLabel(v) {
+        return String(v || "").toLowerCase() === "paid" ? "مدفوع" : "كاش عند الإتمام";
+      }
+
+      function statusLabel(v) {
+        var s = String(v || "").toLowerCase();
+        if (s === "new" || s === "pending") return "جديد — متاح للحجز";
+        if (s === "accepted") return "محجوز — قيد التنفيذ";
+        if (s === "delivering") return "قيد التنفيذ";
+        if (s === "delivered") return "تمت المهمة";
+        if (s === "cancelled") return "ملغي";
+        return s || "—";
+      }
+
+      function safeClick(fn) {
+        var locked = false;
+        return async function () {
+          if (locked) return;
+          locked = true;
+          try {
+            await fn.apply(this, arguments);
+          } finally {
+            locked = false;
+          }
+        };
+      }
+
+      var reserveOrder = safeClick(async function (id, btn) {
+        if (btn) {
+          btn.disabled = true;
+          btn.textContent = "جاري الحجز...";
+        }
+        try {
+          var j = await window.PlatformAPI.api("/api/services/bookings/" + encodeURIComponent(id) + "/reserve", {
+            method: "POST",
+          });
+          alert(j.message || "تم حجز الطلب");
+          await loadDashboard();
+        } catch (e) {
+          alert(String((e && e.message) || e || "تعذر الحجز"));
+        } finally {
+          if (btn) {
+            btn.disabled = false;
+            btn.textContent = "حجز الطلب";
+          }
+        }
+      });
+
+      var completeOrder = safeClick(async function (id, btn) {
+        if (btn) {
+          btn.disabled = true;
+          btn.textContent = "جاري الإتمام...";
+        }
+        try {
+          var j = await window.PlatformAPI.api("/api/services/bookings/" + encodeURIComponent(id) + "/complete", {
+            method: "POST",
+          });
+          alert(j.message || "تمام المهمة");
+          await loadDashboard();
+        } catch (e) {
+          alert(String((e && e.message) || e || "تعذر الإتمام"));
+        } finally {
+          if (btn) {
+            btn.disabled = false;
+            btn.textContent = "تمام المهمة";
+          }
+        }
+      });
+
+      function renderBookings(list) {
+        var el = document.getElementById("list");
+        if (!el) return;
+        if (!list.length) {
+          el.innerHTML = "<p class='sub'>لا توجد طلبات في حيّك حالياً</p>";
+          return;
+        }
+        el.innerHTML = list
+          .map(function (b) {
+            var st = String(b.status || "").toLowerCase();
+            var mine = !!b.provider_id;
+            var canReserve = (st === "new" || st === "pending") && !b.provider_id;
+            var canComplete = mine && st !== "delivered" && st !== "cancelled";
+            var maps =
+              b.location && String(b.location).indexOf(",") !== -1
+                ? "https://www.google.com/maps?q=" + encodeURIComponent(b.location)
+                : null;
+            return (
+              '<div class="sp-order' +
+              (mine ? " is-mine" : "") +
+              '">' +
+              "<p><b>" +
+              (b.service_name || "خدمة") +
+              "</b> — " +
+              statusLabel(b.status) +
+              "</p>" +
+              "<p>رقم: " +
+              (b.service_order_number || "—") +
+              "</p>" +
+              "<p>الحي: " +
+              (b.district || "—") +
+              "</p>" +
+              "<p>جوال العميل: " +
+              (b.customer_phone || "—") +
+              "</p>" +
+              (maps ? '<p><a href="' + maps + '" target="_blank" rel="noopener">فتح الموقع على الخرائط</a></p>' : "<p>الموقع: " + (b.location || "—") + "</p>") +
+              "<p>الدفع: " +
+              payLabel(b.payment_status) +
+              " — " +
+              Number(b.total_amount || 0).toFixed(2) +
+              " ريال</p>" +
+              "<p>عمولة المنصة: " +
+              Number(b.platform_commission || 0).toFixed(2) +
+              " ريال</p>" +
+              (b.rating ? "<p>تقييم: " + b.rating + "/5</p>" : "") +
+              '<div class="sp-order__actions">' +
+              (canReserve
+                ? '<button type="button" class="btn btn-primary" data-reserve="' + b.id + '">حجز الطلب</button>'
+                : "") +
+              (canComplete
+                ? '<button type="button" class="btn btn-ghost" data-complete="' + b.id + '">تمام المهمة</button>'
+                : "") +
+              "</div></div>"
+            );
+          })
+          .join("");
+
+        el.querySelectorAll("[data-reserve]").forEach(function (btn) {
+          btn.addEventListener("click", function () {
+            reserveOrder(btn.getAttribute("data-reserve"), btn);
+          });
+        });
+        el.querySelectorAll("[data-complete]").forEach(function (btn) {
+          btn.addEventListener("click", function () {
+            completeOrder(btn.getAttribute("data-complete"), btn);
+          });
+        });
+      }
+
+      function applyDashboard(data) {
+        var stats = data.stats || {};
+        var profile = data.profile || {};
+        document.getElementById("panelTitle").textContent = data.panel_title || "لوحة مزود الخدمة";
+        document.getElementById("panelSub").textContent =
+          (profile.name || "") + (data.service_label ? " — " + data.service_label : "");
+        var areaLabel =
+          String(profile.service_type || "").toLowerCase() === "pickup_truck" ? "المدينة" : "الحي";
+        document.getElementById("districtLine").textContent =
+          areaLabel + " المسجّلة: " + (profile.service_district || "—");
+        var vehLine = document.getElementById("vehicleLine");
+        if (vehLine) {
+          var isPickup = String(profile.service_type || "").toLowerCase() === "pickup_truck";
+          var vType = profile.service_vehicle_type || "";
+          var vLabels = {
+            flatbed: "سطحة",
+            flatbed_hydraulic: "سطحة هيدروليك",
+            tow: "ونش",
+            car_carrier: "ناقلة سيارات",
+            other: "أخرى",
+          };
+          if (isPickup && (vType || profile.service_plate_number || profile.service_vehicle_model)) {
+            vehLine.hidden = false;
+            var modelYear = profile.service_vehicle_model || "";
+            vehLine.textContent =
+              "المركبة: " +
+              (vLabels[vType] || vType || "—") +
+              " · لوحة " +
+              (profile.service_plate_number || "—") +
+              (modelYear ? " · سنة " + modelYear : "");
+          } else {
+            vehLine.hidden = true;
+          }
+        }
+        document.getElementById("kpiRating").textContent =
+          stats.rating_count > 0 ? stats.rating_avg + " ★ (" + stats.rating_count + ")" : "لا تقييم بعد";
+        document.getElementById("kpiWallet").textContent = Number(stats.commission_pending_sar || 0).toFixed(2);
+        document.getElementById("kpiDone").textContent = String(stats.completed_jobs || 0);
+        document.getElementById("kpiNew").textContent = String(stats.new_orders || 0);
+        var badge = document.getElementById("bellBadge");
+        var n = Number(stats.new_orders || 0);
+        if (badge) {
+          if (n > 0) {
+            badge.hidden = false;
+            badge.textContent = n > 99 ? "99+" : String(n);
+          } else {
+            badge.hidden = true;
+          }
+        }
+        __bookings = data.bookings || [];
+        renderBookings(__bookings);
+        var summary = document.getElementById("summary");
+        if (summary) summary.textContent = "عدد الطلبات المعروضة: " + __bookings.length;
+      }
+
+      async function loadDashboard() {
+        try {
+          var j = await window.PlatformAPI.api("/api/services/me/dashboard");
+          applyDashboard(j);
+        } catch (e) {
+          showMsg(String((e && e.message) || e || "تعذر تحميل اللوحة"), false);
+        }
+      }
 
       function buildSvcPayGrid() {
         var box = document.getElementById("svcPayGrid");
@@ -95,14 +394,11 @@
         box.setAttribute("data-built", "1");
         box.innerHTML = SVC_PAY_ROWS.map(function (row) {
           return (
-            '<label class="hub-pay-row">' +
-            '<input type="checkbox" id="svcPay_' +
+            '<label class="hub-pay-row"><input type="checkbox" id="svcPay_' +
             row.key +
-            '" />' +
-            '<img src="' +
+            '" /><img src="' +
             row.src +
-            '" alt="" width="49" height="25" loading="lazy" />' +
-            "<span>" +
+            '" alt="" width="49" height="25" loading="lazy" /><span>' +
             row.label +
             "</span></label>"
           );
@@ -120,11 +416,6 @@
       }
 
       async function loadSvcPaySettings() {
-        var msg = document.getElementById("svcPayMsg");
-        if (msg) msg.textContent = "";
-        var token =
-          window.PlatformAPI && typeof window.PlatformAPI.getToken === "function" ? window.PlatformAPI.getToken() : "";
-        if (!token || !String(token).trim()) return;
         buildSvcPayGrid();
         try {
           var platJ = await window.PlatformAPI.api("/api/core/checkout-payment-methods");
@@ -133,13 +424,25 @@
           __svcEff = effJ.methods || {};
           applySvcPayUi();
         } catch (e) {
-          if (msg) msg.textContent = String((e && e.message) || e || "تعذر تحميل وسائل الدفع");
+          showMsg(String((e && e.message) || e), false);
         }
       }
 
+      document.getElementById("bellBtn").addEventListener("click", function () {
+        var panel = document.getElementById("ordersPanel");
+        if (!panel) return;
+        panel.hidden = !panel.hidden;
+        if (!panel.hidden) loadDashboard();
+      });
+
+      document.getElementById("refreshBtn").addEventListener("click", loadDashboard);
+      document.getElementById("logoutBtn").addEventListener("click", function (e) {
+        e.preventDefault();
+        window.PlatformAPI.setToken("");
+        location.href = "/login";
+      });
+
       document.getElementById("btnSaveSvcPay").addEventListener("click", async function () {
-        var msg = document.getElementById("svcPayMsg");
-        if (msg) msg.textContent = "";
         try {
           var o = {};
           SVC_PAY_ROWS.forEach(function (row) {
@@ -153,156 +456,25 @@
           });
           __svcEff = j.methods || __svcEff;
           applySvcPayUi();
-          if (msg) msg.textContent = "تم الحفظ";
+          showMsg("تم الحفظ", true);
         } catch (e) {
-          if (msg) msg.textContent = String((e && e.message) || e || "تعذر الحفظ");
+          showMsg(String((e && e.message) || e), false);
         }
       });
 
-      function payLabel(v) {
-        return String(v || "").toLowerCase() === "paid" ? "مدفوع" : "غير مدفوع";
-      }
-
-      function statusLabel(v) {
-        const s = String(v || "").toLowerCase();
-        if (s === "new") return "جديد";
-        if (s === "accepted") return "مقبول";
-        if (s === "delivering") return "قيد التنفيذ";
-        if (s === "delivered") return "تم التوصيل";
-        if (s === "cancelled") return "ملغي";
-        return s || "—";
-      }
-
-      function safeClick(fn) {
-        let locked = false;
-        return async function (...args) {
-          if (locked) return;
-          locked = true;
-          try {
-            await fn.apply(this, args);
-          } finally {
-            locked = false;
-          }
-        };
-      }
-
-      const markDelivered = safeClick(async function (id, btn) {
-        if (btn) {
-          btn.disabled = true;
-          btn.innerText = "جاري التحديث...";
-        }
-        try {
-          const token =
-            window.PlatformAPI && typeof window.PlatformAPI.getToken === "function"
-              ? window.PlatformAPI.getToken()
-              : "";
-          const res = await fetch(window.PlatformAPI.apiUrl("/api/services/bookings/" + encodeURIComponent(id) + "/status"), {
-            method: "PATCH",
-            headers: Object.assign(
-              { "Content-Type": "application/json" },
-              token ? { Authorization: "Bearer " + token } : {}
-            ),
-            body: JSON.stringify({ status: "delivered" }),
-          });
-          const data = await res.json().catch(function () {
-            return {};
-          });
-          if (!res.ok || !data.ok) throw new Error(data.error || "update failed");
-          showSuccess("✅ تم إتمام المهمة — العمولة في ذمتكم ويجب توريدها للمنصة");
-          await loadBookings();
-        } catch (e) {
-          showError("❌ حدث خطأ أثناء التحديث");
-        } finally {
-          if (btn) {
-            btn.disabled = false;
-            btn.innerText = "إتمام المهمة";
-          }
-        }
-      });
-
-      function render(list) {
-        const el = document.getElementById("list");
-        if (!el) return;
-        if (!list.length) {
-          el.innerHTML = "<p class='sub'>لا توجد طلبات حالياً</p>";
+      (function init() {
+        var token =
+          window.PlatformAPI && typeof window.PlatformAPI.getToken === "function"
+            ? window.PlatformAPI.getToken()
+            : "";
+        if (!token) {
+          location.href = "/login?mode=register&role=customer";
           return;
         }
-        el.innerHTML = list
-          .map(function (b) {
-            return (
-              "<div class='card' style='margin-top:8px'>" +
-              "<p><b>" +
-              (b.service_name || "خدمة") +
-              "</b></p>" +
-              "<p>رقم الخدمة: " +
-              (b.service_order_number || "—") +
-              "</p>" +
-              "<p>جوال زائر المنصة: " +
-              (b.customer_phone || "—") +
-              "</p>" +
-              "<p>الحي: " +
-              (b.district || "—") +
-              "</p>" +
-              "<p>الموقع: " +
-              (b.location || "—") +
-              "</p>" +
-              (String(b.service_type || "") === "gas_delivery" && b.gas_mode === "central_refill"
-                ? "<p>الكمية: " + (b.gas_liters || b.qty) + " لتر (تعبئة مركزي)</p>"
-                : String(b.service_type || "") === "gas_delivery"
-                  ? "<p>عدد الأسطوانات: " + (b.qty || 1) + "</p>"
-                  : "<p>العدد: " + (b.qty || 1) + "</p>") +
-              "<p>الحالة المالية: " +
-              payLabel(b.payment_status) +
-              "</p>" +
-              "<p>القيمة: " +
-              Number(b.total_amount || 0).toFixed(2) +
-              " ريال</p>" +
-              "<p>عمولة المنصة: " +
-              Number(b.platform_commission || 0).toFixed(2) +
-              " ريال</p>" +
-              "<p>الحالة: " +
-              statusLabel(b.status) +
-              "</p>" +
-              "<p>تقييم زائر المنصة: " +
-              (b.rating ? b.rating + "/5" : "—") +
-              "</p>" +
-              "<p>المراجعة: " +
-              (b.review || "—") +
-              "</p>" +
-              (String(b.status || "").toLowerCase() === "delivered"
-                ? ""
-                : "<button class='btn btn-primary' type='button' onclick='markDelivered(\"" +
-                  b.id +
-                  "\", this)'>إتمام المهمة</button>" +
-                  "<p class='sub' style='margin-top:6px'>بعد الإتمام تُسجَّل عمولة المنصة في ذمتكم ويجب توريدها للمنصة.</p>") +
-              "</div>"
-            );
-          })
-          .join("");
-      }
-
-      async function loadBookings() {
-        try {
-          const j = await window.PlatformAPI.api("/api/services/bookings");
-          const list = Array.isArray(j.bookings) ? j.bookings : [];
-          render(list);
-          const summary = document.getElementById("summary");
-          if (summary) summary.textContent = "عدد الطلبات: " + list.length;
-        } catch (e) {
-          showError("❌ تعذر تحميل الطلبات");
-        }
-      }
-
-      document.getElementById("refreshBtn").addEventListener("click", loadBookings);
-      document.getElementById("logoutBtn").addEventListener("click", function (e) {
-        e.preventDefault();
-        window.PlatformAPI.setToken("");
-        location.href = "/login";
-      });
-
-      loadBookings();
-      loadSvcPaySettings();
-      setInterval(loadBookings, 5000);
+        loadDashboard();
+        loadSvcPaySettings();
+        setInterval(loadDashboard, 8000);
+      })();
     </script>
   </body>
 </html>

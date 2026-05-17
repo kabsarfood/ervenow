@@ -90,20 +90,30 @@ function signPlatformToken(userId, phoneDigits, role) {
    upsert مستخدم (بدون Supabase Auth)
 ====================== */
 const ALLOWED_USER_ROLES = new Set(["customer", "driver", "restaurant", "merchant", "service", "admin"]);
+const { normalizeProviderServiceType } = require("../../shared/utils/serviceProviderTypes");
+
 const ALLOWED_SERVICE_TYPES = new Set([
   "plumber",
   "electrician",
   "nursery",
+  "agricultural_engineer",
   "ac_technician",
   "cleaning",
+  "cleaning_villa",
+  "cleaning_building",
+  "laundry_estates",
   "vehicle_transfer",
   "internal_delivery",
   "pickup_truck",
   "furniture_move",
   "gas_delivery",
+  "gas_cylinder_swap",
+  "gas_central_refill",
 ]);
 
 function normalizeServiceType(v) {
+  const fromProvider = normalizeProviderServiceType(v);
+  if (fromProvider) return fromProvider;
   const s = String(v || "").trim().toLowerCase();
   if (!s) return null;
   return ALLOWED_SERVICE_TYPES.has(s) ? s : null;
@@ -121,11 +131,73 @@ function isMissingNameColumnError(err) {
   return /users\.name|column .*name.* does not exist|Could not find the .*name/i.test(msg);
 }
 
-async function upsertDriverByPhone(sb, phoneDigits, preferredRole, preferredServiceType, displayName) {
+function isMissingServiceVehicleColumnError(err) {
+  if (!err) return false;
+  const msg = String(err.message || err.details || "");
+  return /service_vehicle_type|service_plate_number|service_vehicle_model/i.test(msg);
+}
+
+const PICKUP_VEHICLE_TYPES = new Set([
+  "flatbed",
+  "flatbed_hydraulic",
+  "tow",
+  "car_carrier",
+  "other",
+]);
+
+function pickupModelYearBounds() {
+  const now = new Date().getFullYear();
+  return { min: now - 14, max: now };
+}
+
+function parsePickupVehiclePayload(body) {
+  const vType = String(body?.service_vehicle_type || body?.vehicle_type || "")
+    .trim()
+    .toLowerCase();
+  const plate = String(body?.service_plate_number || body?.plate_number || "")
+    .trim()
+    .slice(0, 20);
+  const modelRaw = String(body?.service_vehicle_model || body?.vehicle_model || "").trim();
+  const modelYear = parseInt(modelRaw, 10);
+  const { min, max } = pickupModelYearBounds();
+  if (!PICKUP_VEHICLE_TYPES.has(vType)) return { ok: false, error: "اختر نوع المركبة" };
+  if (!plate) return { ok: false, error: "رقم اللوحة مطلوب" };
+  if (!Number.isFinite(modelYear) || String(modelYear) !== modelRaw) {
+    return { ok: false, error: "اختر سنة موديل المركبة من القائمة" };
+  }
+  if (modelYear < min || modelYear > max) {
+    return { ok: false, error: `سنة الموديل يجب أن تكون ضمن آخر 15 سنة (${min}–${max})` };
+  }
+  const model = String(modelYear);
+  return {
+    ok: true,
+    data: {
+      service_vehicle_type: vType,
+      service_plate_number: plate,
+      service_vehicle_model: model,
+    },
+  };
+}
+
+async function upsertDriverByPhone(
+  sb,
+  phoneDigits,
+  preferredRole,
+  preferredServiceType,
+  displayName,
+  serviceDistrict,
+  serviceVehicle
+) {
   const role = ALLOWED_USER_ROLES.has(preferredRole) ? preferredRole : "customer";
   const serviceType = role === "service" ? normalizeServiceType(preferredServiceType) : null;
   const trimmedName =
-    role === "customer" && displayName ? String(displayName).trim().slice(0, 200) : "";
+    (role === "customer" || role === "service") && displayName
+      ? String(displayName).trim().slice(0, 200)
+      : "";
+  const trimmedDistrict =
+    role === "service" && serviceDistrict ? String(serviceDistrict).trim().slice(0, 120) : "";
+  const applyVehicle =
+    role === "service" && serviceType === "pickup_truck" && serviceVehicle && typeof serviceVehicle === "object";
 
   let existing = null;
   let selErr = null;
@@ -176,9 +248,18 @@ async function upsertDriverByPhone(sb, phoneDigits, preferredRole, preferredServ
     if (trimmedName && role === "customer" && !String(existing.name || "").trim()) {
       patch.name = trimmedName;
     }
+    if (trimmedName && role === "service") patch.name = trimmedName;
+    if (trimmedDistrict && role === "service") patch.service_district = trimmedDistrict;
+    if (applyVehicle) Object.assign(patch, serviceVehicle);
     let upd = await sb.from("users").update(patch).eq("id", existing.id).select().single();
     if (upd.error && isMissingNameColumnError(upd.error) && patch.name != null) {
       delete patch.name;
+      upd = await sb.from("users").update(patch).eq("id", existing.id).select().single();
+    }
+    if (upd.error && isMissingServiceVehicleColumnError(upd.error) && applyVehicle) {
+      delete patch.service_vehicle_type;
+      delete patch.service_plate_number;
+      delete patch.service_vehicle_model;
       upd = await sb.from("users").update(patch).eq("id", existing.id).select().single();
     }
     return upd;
@@ -189,7 +270,9 @@ async function upsertDriverByPhone(sb, phoneDigits, preferredRole, preferredServ
     role,
     service_type: serviceType,
     updated_at: now,
-    ...(trimmedName && role === "customer" ? { name: trimmedName } : {}),
+    ...(trimmedName && (role === "customer" || role === "service") ? { name: trimmedName } : {}),
+    ...(trimmedDistrict && role === "service" ? { service_district: trimmedDistrict } : {}),
+    ...(applyVehicle ? serviceVehicle : {}),
   };
   const withStatusInsert = await sb
     .from("users")
@@ -197,6 +280,18 @@ async function upsertDriverByPhone(sb, phoneDigits, preferredRole, preferredServ
     .select()
     .single();
   if (!withStatusInsert.error) return withStatusInsert;
+  if (isMissingServiceVehicleColumnError(withStatusInsert.error) && applyVehicle) {
+    const insertNoVehicle = { ...insertRow };
+    delete insertNoVehicle.service_vehicle_type;
+    delete insertNoVehicle.service_plate_number;
+    delete insertNoVehicle.service_vehicle_model;
+    const retryVehicle = await sb
+      .from("users")
+      .insert({ ...insertNoVehicle, status: "active" })
+      .select()
+      .single();
+    if (!retryVehicle.error) return retryVehicle;
+  }
   if (
     isMissingNameColumnError(withStatusInsert.error) &&
     trimmedName &&
@@ -409,13 +504,33 @@ router.post("/verify-otp", async (req, res) => {
     }
 
     const wantServiceType = req.body?.service_type;
-    const displayName = wantRole === "customer" ? String(req.body?.name || "").trim() : "";
+    const displayName =
+      wantRole === "customer" || wantRole === "service" ? String(req.body?.name || "").trim() : "";
+    const serviceDistrict =
+      wantRole === "service"
+        ? String(req.body?.service_district || req.body?.service_city || req.body?.district || "").trim()
+        : "";
+    if (wantRole === "service" && !normalizeServiceType(wantServiceType)) {
+      return fail(res, "اختر نوع الخدمة من القائمة", 400);
+    }
+    if (wantRole === "service" && !serviceDistrict) {
+      const st = normalizeServiceType(wantServiceType);
+      return fail(res, st === "pickup_truck" ? "اختر المدينة" : "أدخل الحي الذي تخدمه", 400);
+    }
+    let serviceVehicle = null;
+    if (wantRole === "service" && normalizeServiceType(wantServiceType) === "pickup_truck") {
+      const parsedVehicle = parsePickupVehiclePayload(req.body);
+      if (!parsedVehicle.ok) return fail(res, parsedVehicle.error, 400);
+      serviceVehicle = parsedVehicle.data;
+    }
     const { data: userRow, error: dbErr } = await upsertDriverByPhone(
       sb,
       digits,
       wantRole,
       wantServiceType,
-      displayName
+      displayName,
+      serviceDistrict,
+      serviceVehicle
     );
     if (dbErr) {
       console.error("[ERVENOW] verify-otp DB:", dbErr);
