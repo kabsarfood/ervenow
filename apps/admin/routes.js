@@ -304,6 +304,141 @@ async function safeSelectRowsWithFallback(sb, tableName, selectExprList) {
   return [];
 }
 
+const ACTIVE_ORDER_STATUSES = ["new", "pending", "accepted", "delivering"];
+const ACTIVE_SERVICE_STATUSES = ["new", "accepted", "delivering"];
+const STATS_PAGE_SIZE = 1000;
+
+async function countTableRows(sb, tableName, applyFilters) {
+  let q = sb.from(tableName).select("*", { count: "exact", head: true });
+  if (typeof applyFilters === "function") q = applyFilters(q);
+  const { count, error } = await q;
+  if (error) {
+    if (isSchemaMissingError(error)) return null;
+    throw error;
+  }
+  return Number(count) || 0;
+}
+
+async function paginatedSelectWithFallback(sb, tableName, selectExprList, applyFilters) {
+  let lastErr = null;
+  for (const expr of selectExprList) {
+    const rows = [];
+    let offset = 0;
+    let schemaMissing = false;
+    while (true) {
+      let q = sb.from(tableName).select(expr).range(offset, offset + STATS_PAGE_SIZE - 1);
+      if (typeof applyFilters === "function") q = applyFilters(q);
+      const { data, error } = await q;
+      if (error) {
+        if (isSchemaMissingError(error)) {
+          lastErr = error;
+          schemaMissing = true;
+          break;
+        }
+        throw error;
+      }
+      const chunk = data || [];
+      rows.push(...chunk);
+      if (chunk.length < STATS_PAGE_SIZE) return rows;
+      offset += STATS_PAGE_SIZE;
+    }
+    if (!schemaMissing) return rows;
+  }
+  if (lastErr) {
+    console.warn("[admin/paginatedSelectWithFallback] schema fallback:", tableName, lastErr.message || lastErr);
+  }
+  return [];
+}
+
+async function computeAdminDashboardStats(sb, rangeMeta) {
+  const startToday = startOfToday();
+  const todayIso = startToday.toISOString();
+  const rangeIso = rangeMeta.start.toISOString();
+  const activeOrderOr = `delivery_status.in.(${ACTIVE_ORDER_STATUSES.join(",")}),status.in.(${ACTIVE_ORDER_STATUSES.join(",")})`;
+  const activeServiceOr = `status.in.(${ACTIVE_SERVICE_STATUSES.join(",")})`;
+
+  const orderRevenueExprs = [
+    "created_at, delivery_status, status, order_total, total_amount, delivery_fee, vat_amount, total_with_vat, platform_fee, driver_earning",
+    "created_at, delivery_status, status, order_total, total_amount, platform_fee, driver_earning",
+  ];
+  const serviceRevenueExprs = [
+    "created_at, status, total_amount, total, platform_commission",
+    "created_at, status, total_amount, total",
+    "created_at, status, total_amount",
+    "created_at, status, total",
+    "created_at, status",
+  ];
+  const chartCreatedExprs = ["created_at"];
+
+  const [
+    ordersTodayOrd,
+    ordersTodaySvc,
+    activeOrd,
+    activeSvc,
+    totalOrd,
+    totalSvc,
+    allOrders,
+    allServices,
+    rangeOrdersChart,
+    rangeServicesChart,
+  ] = await Promise.all([
+    countTableRows(sb, "orders", (q) => q.gte("created_at", todayIso)),
+    countTableRows(sb, "service_bookings", (q) => q.gte("created_at", todayIso)),
+    countTableRows(sb, "orders", (q) => q.or(activeOrderOr)),
+    countTableRows(sb, "service_bookings", (q) => q.or(activeServiceOr)),
+    countTableRows(sb, "orders"),
+    countTableRows(sb, "service_bookings"),
+    paginatedSelectWithFallback(sb, "orders", orderRevenueExprs),
+    paginatedSelectWithFallback(sb, "service_bookings", serviceRevenueExprs),
+    paginatedSelectWithFallback(sb, "orders", chartCreatedExprs, (q) => q.gte("created_at", rangeIso)),
+    paginatedSelectWithFallback(sb, "service_bookings", chartCreatedExprs, (q) => q.gte("created_at", rangeIso)),
+  ]);
+
+  const todayOrders = (ordersTodayOrd || 0) + (ordersTodaySvc || 0);
+  const activeOrders = (activeOrd || 0) + (activeSvc || 0);
+  const totalOrders = (totalOrd || 0) + (totalSvc || 0);
+
+  const revenueOrders = allOrders.reduce((a, b) => {
+    if (isCancelledOrder(b)) return a;
+    return a + orderBillableAmount(b);
+  }, 0);
+  const revenueServices = allServices.reduce((a, b) => a + amountFromRow(b), 0);
+  const platformOrders = allOrders.reduce((a, b) => {
+    if (isCancelledOrder(b)) return a;
+    return a + (Number(b.platform_fee) || 0);
+  }, 0);
+  const platformServices = allServices.reduce((a, b) => a + (Number(b.platform_commission) || 0), 0);
+  const driversEarnings = allOrders.reduce((a, b) => {
+    if (isCancelledOrder(b)) return a;
+    return a + (Number(b.driver_earning) || 0);
+  }, 0);
+  const revenueOrdersToday = allOrders.reduce((a, b) => {
+    if (isCancelledOrder(b)) return a;
+    if (!(b.created_at >= todayIso)) return a;
+    return a + orderBillableAmount(b);
+  }, 0);
+  const revenueServicesToday = allServices.reduce((a, b) => {
+    if (!(b.created_at >= todayIso)) return a;
+    return a + amountFromRow(b);
+  }, 0);
+  const chart = buildChartForRange([...rangeOrdersChart, ...rangeServicesChart], rangeMeta);
+
+  return {
+    range: rangeMeta.range,
+    total_orders: totalOrders,
+    today_orders: todayOrders,
+    active_orders: activeOrders,
+    total_revenue: round2(revenueOrders + revenueServices),
+    platform_commission: round2(platformOrders + platformServices),
+    drivers_earnings: round2(driversEarnings),
+    ordersToday: todayOrders,
+    activeOrders,
+    revenueToday: round2(revenueOrdersToday + revenueServicesToday),
+    revenueTotal: round2(revenueOrders + revenueServices),
+    chart,
+  };
+}
+
 function isEmployeeApplicationsTableMissing(err) {
   if (!err) return false;
   if (String(err.code || "") === "42P01") return true;
@@ -1288,77 +1423,8 @@ router.post("/activate-customer", requireAuth, requireRole("admin"), requireAdmi
 router.get("/stats", requireAuth, requireRole("admin"), requireAdminPermission("dashboard"), async (req, res) => {
   try {
     const rangeMeta = resolveRangeWindow(req.query.range);
-    const startToday = startOfToday();
-    const todayIso = startToday.toISOString();
-    const rangeIso = rangeMeta.start.toISOString();
-
-    const orders = await safeSelectRowsWithFallback(req.supabase, "orders", [
-      "id, created_at, delivery_status, status, order_total, total_amount, delivery_fee, vat_amount, total_with_vat, platform_fee, driver_earning",
-      "id, created_at, delivery_status, status, order_total, total_amount, platform_fee, driver_earning",
-    ]);
-    const services = await safeSelectRowsWithFallback(req.supabase, "service_bookings", [
-      "id, created_at, status, total_amount, total, platform_commission",
-      "id, created_at, status, total_amount, total",
-      "id, created_at, status, total_amount",
-      "id, created_at, status, total",
-      "id, created_at, status",
-    ]);
-
-    const allOrders = orders || [];
-    const allServices = services || [];
-    const orderRowsForRange = allOrders.filter((x) => x.created_at >= rangeIso);
-    const serviceRowsForRange = allServices.filter((x) => x.created_at >= rangeIso);
-    const totalOrders = allOrders.length + allServices.length;
-    const todayOrders =
-      allOrders.filter((x) => x.created_at >= todayIso).length +
-      allServices.filter((x) => x.created_at >= todayIso).length;
-    const activeOrders =
-      allOrders.filter((x) => ["new", "pending", "accepted", "delivering"].includes(x.delivery_status || x.status))
-        .length +
-      allServices.filter((x) => ["new", "accepted", "delivering"].includes(x.status)).length;
-
-    const revenueOrders = allOrders.reduce((a, b) => {
-      if (isCancelledOrder(b)) return a;
-      return a + orderBillableAmount(b);
-    }, 0);
-    const revenueServices = allServices.reduce((a, b) => {
-      const amount = amountFromRow(b);
-      return a + amount;
-    }, 0);
-    const platformOrders = allOrders.reduce((a, b) => {
-      if (isCancelledOrder(b)) return a;
-      return a + (Number(b.platform_fee) || 0);
-    }, 0);
-    const platformServices = allServices.reduce((a, b) => a + (Number(b.platform_commission) || 0), 0);
-    const driversEarnings = allOrders.reduce((a, b) => {
-      if (isCancelledOrder(b)) return a;
-      return a + (Number(b.driver_earning) || 0);
-    }, 0);
-    const revenueOrdersToday = allOrders.reduce((a, b) => {
-      if (isCancelledOrder(b)) return a;
-      if (!(b.created_at >= todayIso)) return a;
-      return a + orderBillableAmount(b);
-    }, 0);
-    const revenueServicesToday = allServices.reduce((a, b) => {
-      if (!(b.created_at >= todayIso)) return a;
-      return a + amountFromRow(b);
-    }, 0);
-    const chart = buildChartForRange([...orderRowsForRange, ...serviceRowsForRange], rangeMeta);
-
-    return ok(res, {
-      range: rangeMeta.range,
-      total_orders: totalOrders,
-      today_orders: todayOrders,
-      active_orders: activeOrders,
-      total_revenue: round2(revenueOrders + revenueServices),
-      platform_commission: round2(platformOrders + platformServices),
-      drivers_earnings: round2(driversEarnings),
-      ordersToday: todayOrders,
-      activeOrders,
-      revenueToday: round2(revenueOrdersToday + revenueServicesToday),
-      revenueTotal: round2(revenueOrders + revenueServices),
-      chart,
-    });
+    const stats = await computeAdminDashboardStats(req.supabase, rangeMeta);
+    return ok(res, stats);
   } catch (e) {
     return fail(res, e.message || String(e), 500);
   }

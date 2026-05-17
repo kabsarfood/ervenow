@@ -1693,6 +1693,7 @@
     <script src="https://cdn.socket.io/4.8.1/socket.io.min.js" crossorigin="anonymous"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
+      window.__ERVENOW_FETCH_TIMEOUT_MS = 30000;
       function setBadge(id, count) {
         var el = document.getElementById(id);
         if (!el) return;
@@ -4240,7 +4241,7 @@
         try {
           adminSocket = io(API_ORIGIN, {
             path: "/socket.io/",
-            transports: ["websocket"],
+            transports: ["websocket", "polling"],
             auth: { token: tok },
           });
         } catch (_e) {
@@ -4313,16 +4314,33 @@
         }
       }
 
+      function applyStatsToDom(j) {
+        if (!j) return;
+        var t = j.ordersToday != null ? j.ordersToday : j.today_orders || 0;
+        var a = j.activeOrders != null ? j.activeOrders : j.active_orders || 0;
+        var ot = document.getElementById("ordersToday");
+        var ao = document.getElementById("activeOrders");
+        if (ot) ot.innerText = String(t);
+        if (ao) ao.innerText = String(a);
+        var rt = document.getElementById("revenueToday");
+        var rtot = document.getElementById("revenueTotal");
+        if (rt) rt.innerText = fmtMoney(j.revenueToday || 0);
+        if (rtot) rtot.innerText = fmtMoney(j.revenueTotal || 0);
+        var pc = document.getElementById("platformCommissionStat");
+        if (pc && j.platform_commission != null) pc.innerText = fmtMoney(j.platform_commission);
+        var lt = document.getElementById("liveStatToday");
+        var la = document.getElementById("liveStatActive");
+        if (lt) lt.textContent = String(t);
+        if (la) la.textContent = String(a);
+        syncLiveProfitFromStats(j);
+      }
+
       async function loadStats() {
         try {
-          var range = document.getElementById("range").value || "today";
+          var rangeEl = document.getElementById("range");
+          var range = rangeEl && rangeEl.value ? rangeEl.value : "today";
           var j = await window.PlatformAPI.api("/api/admin/stats?range=" + encodeURIComponent(range));
-          document.getElementById("ordersToday").innerText = j.ordersToday || 0;
-          document.getElementById("activeOrders").innerText = j.activeOrders || 0;
-          document.getElementById("revenueToday").innerText = fmtMoney(j.revenueToday || 0);
-          document.getElementById("revenueTotal").innerText = fmtMoney(j.revenueTotal || 0);
-          var pc = document.getElementById("platformCommissionStat");
-          if (pc && j.platform_commission != null) pc.innerText = fmtMoney(j.platform_commission);
+          applyStatsToDom(j);
           if (hasPermission("finance")) await loadTreasury();
         } catch (e) {
           showError(e.message || "فشل تحميل الإحصائيات");
@@ -4809,6 +4827,9 @@
         startAdminAlertsTimer();
         void refreshLiveDashboard();
         updateLiveSocketPulse();
+        setInterval(function () {
+          if (hasPermission("dashboard") || hasPermission("orders")) void refreshLiveDashboard();
+        }, 10000);
         setInterval(function () { if (hasPermission("dashboard")) loadStats(); }, 15000);
         setInterval(function () { if (hasPermission("orders")) loadRecentOrders(); }, 20000);
         setInterval(function () { if (hasPermission("notifications")) loadNotifications(); }, 20000);
