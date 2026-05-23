@@ -6,7 +6,8 @@ const { ok, fail } = require("../../shared/utils/helpers");
 const { sendWhatsApp } = require("../../shared/utils/whatsapp");
 const { driverApprovedBody } = require("../../shared/messages/driverWhatsApp");
 const { getRiyadhDate } = require("../delivery/service");
-const { readState, writeState } = require("../../shared/utils/siteMaintenanceStore");
+const { readStateAsync, writeState } = require("../../shared/utils/siteMaintenanceStore");
+const { normalizePhone } = require("../../shared/utils/phone");
 const { createServiceClient } = require("../../shared/config/supabase");
 const platformBranding = require("../../shared/utils/platformBrandingStore");
 const checkoutPaymentMethods = require("../../shared/utils/checkoutPaymentMethods");
@@ -77,7 +78,7 @@ function parsePhoneList(envValue) {
 }
 
 function getAdminProfileByPhone(phoneRaw) {
-  const phone = normalizeDigits(phoneRaw);
+  const phone = normalizePhone(phoneRaw) || normalizeDigits(phoneRaw);
   const fullPhones = parsePhoneList(process.env.ERVENOW_ADMIN_FULL_PHONES || "0505745650");
   const limited1Phones = parsePhoneList(process.env.ERVENOW_ADMIN_LIMITED1_PHONES);
   const limited2Phones = parsePhoneList(process.env.ERVENOW_ADMIN_LIMITED2_PHONES);
@@ -307,6 +308,7 @@ async function safeSelectRowsWithFallback(sb, tableName, selectExprList) {
 const ACTIVE_ORDER_STATUSES = ["new", "pending", "accepted", "delivering"];
 const ACTIVE_SERVICE_STATUSES = ["new", "accepted", "delivering"];
 const STATS_PAGE_SIZE = 1000;
+const STATS_MAX_PAGES = 80;
 
 async function countTableRows(sb, tableName, applyFilters) {
   let q = sb.from(tableName).select("*", { count: "exact", head: true });
@@ -325,7 +327,9 @@ async function paginatedSelectWithFallback(sb, tableName, selectExprList, applyF
     const rows = [];
     let offset = 0;
     let schemaMissing = false;
-    while (true) {
+    let pages = 0;
+    while (pages < STATS_MAX_PAGES) {
+      pages += 1;
       let q = sb.from(tableName).select(expr).range(offset, offset + STATS_PAGE_SIZE - 1);
       if (typeof applyFilters === "function") q = applyFilters(q);
       const { data, error } = await q;
@@ -342,7 +346,10 @@ async function paginatedSelectWithFallback(sb, tableName, selectExprList, applyF
       if (chunk.length < STATS_PAGE_SIZE) return rows;
       offset += STATS_PAGE_SIZE;
     }
-    if (!schemaMissing) return rows;
+    if (!schemaMissing) {
+      console.warn("[admin/stats] pagination cap reached:", tableName, rows.length);
+      return rows;
+    }
   }
   if (lastErr) {
     console.warn("[admin/paginatedSelectWithFallback] schema fallback:", tableName, lastErr.message || lastErr);
@@ -486,19 +493,20 @@ async function syncUserStatusByPhone(sb, phone, status) {
   throw first.error;
 }
 
-router.get("/site-maintenance", requireAuth, requireRole("admin"), requireAdminPermission("dashboard"), async (_req, res) => {
+router.get("/site-maintenance", requireAuth, requireRole("admin"), async (_req, res) => {
   try {
-    return ok(res, { enabled: readState() });
+    const enabled = await readStateAsync();
+    return ok(res, { enabled });
   } catch (e) {
     return fail(res, e.message || String(e), 500);
   }
 });
 
-router.post("/site-maintenance", requireAuth, requireRole("admin"), requireAdminPermission("dashboard"), async (req, res) => {
+router.post("/site-maintenance", requireAuth, requireRole("admin"), async (req, res) => {
   try {
     const enabled = !!req.body?.enabled;
-    writeState(enabled);
-    return ok(res, { enabled: readState() });
+    const saved = await writeState(enabled);
+    return ok(res, { enabled: saved, message: saved ? "تم تعطيل الموقع للزوار" : "تم تفعيل الموقع للزوار" });
   } catch (e) {
     return fail(res, e.message || String(e), 500);
   }

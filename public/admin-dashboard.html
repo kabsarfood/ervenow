@@ -1687,13 +1687,55 @@
       </div>
     </div>
 
-    <script src="/assets/cart.js"></script>
     <script src="/assets/api-config.js"></script>
     <script src="/assets/api.js"></script>
     <script src="https://cdn.socket.io/4.8.1/socket.io.min.js" crossorigin="anonymous"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
       window.__ERVENOW_FETCH_TIMEOUT_MS = 30000;
+
+      var ADMIN_DEFAULT_PERMISSIONS = [
+        "dashboard",
+        "drivers",
+        "customers",
+        "complaints",
+        "stores",
+        "jobs",
+        "finance",
+        "providers",
+        "notifications",
+        "orders",
+        "admin_accounts",
+      ];
+
+      function showSuccess(msg) {
+        var el = document.createElement("div");
+        el.textContent = String(msg || "");
+        el.setAttribute("role", "status");
+        el.style.cssText =
+          "position:fixed;bottom:20px;left:20px;right:20px;max-width:420px;margin:0 auto;background:#166534;color:#fff;padding:12px 14px;border-radius:10px;z-index:99999;font-weight:700;box-shadow:0 8px 24px rgba(0,0,0,.2)";
+        document.body.appendChild(el);
+        setTimeout(function () {
+          try {
+            el.remove();
+          } catch (_r) {}
+        }, 3500);
+      }
+
+      function showError(msg) {
+        var el = document.createElement("div");
+        el.textContent = String(msg || "حدث خطأ");
+        el.setAttribute("role", "alert");
+        el.style.cssText =
+          "position:fixed;bottom:20px;left:20px;right:20px;max-width:420px;margin:0 auto;background:#b91c1c;color:#fff;padding:12px 14px;border-radius:10px;z-index:99999;font-weight:700;box-shadow:0 8px 24px rgba(0,0,0,.2)";
+        document.body.appendChild(el);
+        setTimeout(function () {
+          try {
+            el.remove();
+          } catch (_r) {}
+        }, 5000);
+      }
+
       function setBadge(id, count) {
         var el = document.getElementById(id);
         if (!el) return;
@@ -1718,7 +1760,7 @@
 
       var adminPermissions = [];
       var adminLevel = "full";
-      var FULL_ADMIN_IDLE_MS = 2 * 60 * 1000;
+      var FULL_ADMIN_IDLE_MS = 45 * 60 * 1000;
       var fullAdminIdleTimer = null;
       var lastAdminActivityAt = Date.now();
       var fullAdminForcedLogout = false;
@@ -1853,13 +1895,7 @@
           document.addEventListener(eventName, touchAdminActivity, { passive: true });
         });
         document.addEventListener("visibilitychange", function () {
-          if (document.visibilityState === "visible") {
-            touchAdminActivity();
-            return;
-          }
-          if (Date.now() - lastAdminActivityAt >= FULL_ADMIN_IDLE_MS) {
-            forceAdminLogout("تم تسجيل الخروج تلقائياً بسبب السكون. يرجى إعادة الدخول بالرمز.");
-          }
+          if (document.visibilityState === "visible") touchAdminActivity();
         });
         touchAdminActivity();
       }
@@ -1905,7 +1941,9 @@
           var data = await me.json().catch(function () {
             return {};
           });
-          if (!me.ok || !data || !data.profile || data.profile.role !== "admin") {
+          var role = data && data.profile && data.profile.role;
+          if (!role && data && data.user && data.user.role) role = data.user.role;
+          if (!me.ok || !data || String(role || "").toLowerCase() !== "admin") {
             window.location.href = "/admin-login";
             return false;
           }
@@ -1916,18 +1954,45 @@
         }
       }
 
+      function applyAdminPermissionsFallback(reason) {
+        adminPermissions = ADMIN_DEFAULT_PERMISSIONS.slice();
+        adminLevel = "full";
+        var who = document.getElementById("adminWho");
+        if (who) {
+          who.textContent =
+            "مالك المنصة — " +
+            levelLabel(adminLevel) +
+            (reason ? " (وضع احتياطي)" : "");
+        }
+      }
+
       async function loadAdminProfile() {
-        try {
-          var j = await window.PlatformAPI.api("/api/admin/me");
-          adminPermissions = Array.isArray(j.permissions) ? j.permissions : [];
-          adminLevel = j.level || "full";
-          var who = document.getElementById("adminWho");
-          if (who) {
-            who.textContent = "مالك المنصة — " + levelLabel(adminLevel);
+        for (var attempt = 0; attempt < 3; attempt++) {
+          try {
+            var j = await window.PlatformAPI.api("/api/admin/me");
+            var perms = Array.isArray(j.permissions) ? j.permissions : [];
+            if (!perms.length) {
+              applyAdminPermissionsFallback(true);
+              return;
+            }
+            adminPermissions = perms;
+            adminLevel = j.level || "full";
+            var who = document.getElementById("adminWho");
+            if (who) who.textContent = "مالك المنصة — " + levelLabel(adminLevel);
+            return;
+          } catch (e) {
+            if (attempt < 2) {
+              await new Promise(function (r) {
+                setTimeout(r, 500 + attempt * 400);
+              });
+              continue;
+            }
+            applyAdminPermissionsFallback(true);
+            showError(
+              (e && e.message) ||
+                "تعذّر تحميل صلاحيات الأدمن — تم تفعيل الوضع الاحتياطي (لوحة + صيانة)"
+            );
           }
-        } catch (_e) {
-          adminPermissions = [];
-          adminLevel = "limited2";
         }
       }
 
@@ -1948,16 +2013,17 @@
 
       async function loadSiteMaintenanceState() {
         var btn = document.getElementById("siteMaintenanceBtn");
-        if (!hasPermission("dashboard")) {
-          if (btn) btn.style.display = "none";
-          return;
-        }
-        if (btn) btn.style.display = "";
+        if (!btn) return;
+        btn.style.display = "";
+        btn.disabled = false;
         try {
           var j = await window.PlatformAPI.api("/api/admin/site-maintenance");
           updateSiteMaintenanceBtn(j.enabled);
-        } catch (_e) {
-          if (btn) btn.style.display = "none";
+        } catch (e) {
+          showError(
+            (e && e.message) ||
+              "تعذّر قراءة وضع الصيانة — يمكنك الضغط على «تعطيل الموقع» للمحاولة"
+          );
         }
       }
 
