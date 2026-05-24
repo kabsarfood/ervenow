@@ -550,8 +550,8 @@ async function setStatus(sb, orderId, nextStatus, appUser) {
         logger.error({ err: err.message || String(err), orderId: data.id }, "[ervenow] operational driver earning");
       }
       try {
-        const comm = await applyDriverCommissionOnDelivered(sb, data.id);
-        if (comm && comm.ok === false && comm.reason !== "migration_missing") {
+        const comm = await applyDriverCommissionOnDelivered(sb, data.id, data);
+        if (comm && comm.ok === false && comm.reason !== "migration_missing" && !comm.skipped) {
           logger.warn({ orderId: data.id, result: comm }, "[driver_ledger] commission on delivered");
         }
         try {

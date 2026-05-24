@@ -29,12 +29,42 @@ CREATE UNIQUE INDEX IF NOT EXISTS uq_driver_ledger_commission_per_order
   ON public.driver_ledger (order_id)
   WHERE type = 'commission' AND order_id IS NOT NULL;
 
+CREATE OR REPLACE FUNCTION public.driver_ledger_order_payment_method(o public.orders)
+RETURNS text
+LANGUAGE sql
+STABLE
+AS $$
+  SELECT lower(trim(coalesce(
+    o.payment_method,
+    o.data->>'paymentMethod',
+    o.data->>'payment_method',
+    o.breakdown->>'paymentMethod',
+    o.breakdown->>'payment_method',
+    ''
+  )));
+$$;
+
+CREATE OR REPLACE FUNCTION public.driver_ledger_order_total_amount(o public.orders)
+RETURNS numeric
+LANGUAGE sql
+STABLE
+AS $$
+  SELECT coalesce(
+    nullif(o.total_amount, 0),
+    nullif((o.data->>'total')::numeric, 0),
+    nullif((o.data->>'total_amount')::numeric, 0),
+    0::numeric
+  );
+$$;
+
 CREATE OR REPLACE FUNCTION public.driver_ledger_is_cod_payment(p_method text)
 RETURNS boolean
 LANGUAGE sql
 IMMUTABLE
 AS $$
-  SELECT lower(trim(coalesce(p_method, ''))) IN ('cash', 'cash_on_delivery', 'cod', 'cod_payment');
+  SELECT lower(trim(coalesce(p_method, ''))) IN (
+    'cash', 'cod', 'cash_on_delivery', 'cod_payment', 'delivery'
+  );
 $$;
 
 CREATE OR REPLACE FUNCTION public.driver_ledger_order_billable(p_order public.orders)
@@ -45,8 +75,9 @@ AS $$
   SELECT round(
     coalesce(
       nullif(p_order.total_with_vat, 0),
-      nullif(p_order.platform_fee, 0),
       (coalesce(p_order.order_total, 0) + coalesce(p_order.delivery_fee, 0) + coalesce(p_order.vat_amount, 0)),
+      nullif(public.driver_ledger_order_total_amount(p_order), 0),
+      nullif(p_order.platform_fee, 0),
       p_order.total_amount,
       p_order.order_total,
       0
@@ -63,11 +94,14 @@ SET search_path = public
 AS $$
 DECLARE
   o public.orders%ROWTYPE;
+  v_payment text;
   v_amt numeric(14, 2);
   v_rate numeric := 0.07;
   v_comm numeric(14, 2);
   v_row_id uuid;
 BEGIN
+  RAISE NOTICE 'driver_ledger: commission check for order %', p_order_id;
+
   SELECT * INTO o FROM public.orders WHERE id = p_order_id FOR UPDATE;
   IF NOT FOUND THEN
     RETURN jsonb_build_object('ok', false, 'reason', 'order_not_found');
@@ -78,11 +112,13 @@ BEGIN
   END IF;
 
   IF o.driver_id IS NULL THEN
-    RETURN jsonb_build_object('ok', false, 'reason', 'no_driver');
+    RETURN jsonb_build_object('ok', false, 'reason', 'no_driver', 'skipped', true);
   END IF;
 
-  IF NOT public.driver_ledger_is_cod_payment(o.payment_method) THEN
-    RETURN jsonb_build_object('ok', true, 'reason', 'not_cod', 'skipped', true);
+  v_payment := public.driver_ledger_order_payment_method(o);
+
+  IF NOT public.driver_ledger_is_cod_payment(v_payment) THEN
+    RETURN jsonb_build_object('ok', true, 'reason', 'not_cod', 'skipped', true, 'payment_method', v_payment);
   END IF;
 
   IF EXISTS (
@@ -93,8 +129,8 @@ BEGIN
   END IF;
 
   v_amt := public.driver_ledger_order_billable(o);
-  IF v_amt <= 0 THEN
-    RETURN jsonb_build_object('ok', true, 'reason', 'zero_billable', 'amount', 0);
+  IF v_amt IS NULL OR v_amt <= 0 THEN
+    RETURN jsonb_build_object('ok', true, 'reason', 'zero_billable', 'amount', 0, 'skipped', true);
   END IF;
 
   IF o.platform_fee IS NOT NULL AND o.platform_fee > 0 THEN
@@ -116,7 +152,7 @@ BEGIN
     jsonb_build_object(
       'rate', v_rate,
       'billable', v_amt,
-      'payment_method', o.payment_method,
+      'payment_method', v_payment,
       'order_number', o.order_number
     )
   )
@@ -128,16 +164,23 @@ BEGIN
     balance = public.driver_wallets.balance + excluded.balance,
     updated_at = now();
 
+  RAISE NOTICE 'Commission applied for order % driver % amount %', p_order_id, o.driver_id, v_comm;
+
   RETURN jsonb_build_object(
     'ok', true,
     'reason', 'commission_recorded',
     'ledger_id', v_row_id,
     'amount', v_comm,
-    'driver_id', o.driver_id
+    'driver_id', o.driver_id,
+    'payment_method', v_payment,
+    'billable', v_amt
   );
 EXCEPTION
   WHEN unique_violation THEN
     RETURN jsonb_build_object('ok', true, 'reason', 'already_recorded');
+  WHEN OTHERS THEN
+    RAISE NOTICE 'driver_ledger commission error order %: %', p_order_id, SQLERRM;
+    RETURN jsonb_build_object('ok', false, 'reason', 'error', 'message', SQLERRM);
 END;
 $$;
 

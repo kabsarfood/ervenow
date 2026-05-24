@@ -1,6 +1,7 @@
 /**
  * دفتر عمولة COD للمندوبين — driver_ledger / driver_wallets
  * يتطلب: shared/migration_driver_commission_ledger.sql
+ *         shared/migration_driver_commission_robust.sql (موصى به)
  */
 
 const { logger } = require("../utils/logger");
@@ -10,12 +11,74 @@ const DRIVER_DEBT_LIMIT = (() => {
   return Number.isFinite(n) && n > 0 ? n : 300;
 })();
 
-const COD_PAYMENT_METHODS = new Set(["cash", "cash_on_delivery", "cod", "cod_payment"]);
+/** أنواع الدفع التي تُسجَّل عليها عمولة COD */
+const COD_PAYMENT_METHODS = new Set([
+  "cash",
+  "cod",
+  "cash_on_delivery",
+  "cod_payment",
+  "delivery",
+]);
 
-function isCodOrder(order) {
-  const pm = String(order?.payment_method || "")
+function asObject(v) {
+  return v && typeof v === "object" && !Array.isArray(v) ? v : {};
+}
+
+/**
+ * COALESCE(column, data.paymentMethod, data.payment_method, breakdown…)
+ * @param {object} order
+ * @returns {string}
+ */
+function resolveOrderPaymentMethod(order) {
+  const o = asObject(order);
+  const data = asObject(o.data);
+  const breakdown = asObject(o.breakdown);
+  return String(
+    o.payment_method ||
+      data.paymentMethod ||
+      data.payment_method ||
+      breakdown.paymentMethod ||
+      breakdown.payment_method ||
+      ""
+  )
     .trim()
     .toLowerCase();
+}
+
+/**
+ * مبلغ الفاتورة — أعمدة orders ثم data JSON
+ * @param {object} order
+ * @returns {number}
+ */
+function resolveOrderBillableAmount(order) {
+  const o = asObject(order);
+  const data = asObject(o.data);
+
+  const twv = Number(o.total_with_vat);
+  if (Number.isFinite(twv) && twv > 0) return Math.round(twv * 100) / 100;
+
+  const composed =
+    (Number(o.order_total) || 0) + (Number(o.delivery_fee) || 0) + (Number(o.vat_amount) || 0);
+  if (Number.isFinite(composed) && composed > 0) return Math.round(composed * 100) / 100;
+
+  const ta = Number(o.total_amount);
+  if (Number.isFinite(ta) && ta > 0) return Math.round(ta * 100) / 100;
+
+  const fromData = Number(data.total ?? data.total_amount ?? data.totalWithVat);
+  if (Number.isFinite(fromData) && fromData > 0) return Math.round(fromData * 100) / 100;
+
+  const pf = Number(o.platform_fee);
+  if (Number.isFinite(pf) && pf > 0) return Math.round(pf * 100) / 100;
+
+  const ot = Number(o.order_total);
+  if (Number.isFinite(ot) && ot > 0) return Math.round(ot * 100) / 100;
+
+  return 0;
+}
+
+function isCodOrder(order) {
+  const pm = resolveOrderPaymentMethod(order);
+  if (!pm) return false;
   return COD_PAYMENT_METHODS.has(pm);
 }
 
@@ -37,12 +100,62 @@ async function rpcResult(sb, fn, args) {
 /**
  * @param {import("@supabase/supabase-js").SupabaseClient} sb
  * @param {string} orderId
+ * @param {object} [orderRow] صف الطلب إن وُجد (يتجنب round-trip)
  */
-async function applyDriverCommissionOnDelivered(sb, orderId) {
+async function applyDriverCommissionOnDelivered(sb, orderId, orderRow) {
   const oid = String(orderId || "").trim();
   if (!oid) return { ok: false, reason: "missing_order_id" };
+
+  let order = orderRow;
+  if (!order || typeof order !== "object") {
+    try {
+      const { data, error } = await sb.from("orders").select("*").eq("id", oid).maybeSingle();
+      if (error) throw error;
+      if (!data) return { ok: false, reason: "order_not_found" };
+      order = data;
+    } catch (fetchErr) {
+      if (/does not exist|42883|driver_ledger/i.test(String(fetchErr.message || ""))) {
+        logger.warn("[driver_ledger] orders fetch skip — migration?");
+        return { ok: false, reason: "order_fetch_failed" };
+      }
+      throw fetchErr;
+    }
+  }
+
+  if (!order.driver_id) {
+    return { ok: false, reason: "no_driver", skipped: true };
+  }
+
+  const status = String(order.delivery_status || order.status || "").toLowerCase();
+  if (status !== "delivered") {
+    return { ok: false, reason: "not_delivered", status };
+  }
+
+  const billable = resolveOrderBillableAmount(order);
+  if (!Number.isFinite(billable) || billable <= 0) {
+    return { ok: true, reason: "zero_billable", skipped: true, amount: 0 };
+  }
+
+  if (!isCodOrder(order)) {
+    return {
+      ok: true,
+      reason: "not_cod",
+      skipped: true,
+      payment_method: resolveOrderPaymentMethod(order),
+    };
+  }
+
   try {
-    return await rpcResult(sb, "driver_ledger_apply_commission_on_delivered", { p_order_id: oid });
+    const result = await rpcResult(sb, "driver_ledger_apply_commission_on_delivered", {
+      p_order_id: oid,
+    });
+    if (result && result.ok === true && result.reason === "commission_recorded") {
+      logger.info(
+        { orderId: oid, amount: result.amount, driverId: result.driver_id },
+        "[driver_ledger] commission applied on delivered"
+      );
+    }
+    return result;
   } catch (err) {
     if (/does not exist|42883|driver_ledger/i.test(String(err.message || ""))) {
       logger.warn("[driver_ledger] migration not applied — skip commission ledger");
@@ -136,6 +249,8 @@ function roundCollectAmount(amount) {
 module.exports = {
   DRIVER_DEBT_LIMIT,
   COD_PAYMENT_METHODS,
+  resolveOrderPaymentMethod,
+  resolveOrderBillableAmount,
   isCodOrder,
   isDebtLimitError,
   isDriverLedgerTableMissing,

@@ -277,6 +277,8 @@ app.use("/api/driver", driverRoutes);
 app.use("/api/wallet", walletRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/admin/settings", adminSettingsRoutes);
+const commissionTestRoutes = require("../apps/test/routes");
+app.use("/api/test", commissionTestRoutes);
 app.use("/api/invoice", invoiceRoutes);
 app.use("/api/whatsapp", whatsappRoutes);
 
