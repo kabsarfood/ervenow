@@ -1,7 +1,5 @@
 /**
  * /api/wallet — طبقة التشغيل: ervenow_wallets / ervenow_wallet_transactions
- * الرصيد ومجاميع الإيراد/السحب من sum(amount) عبر RPC ervenow_wallet_operational_summary بعد تنفيذ migration_wallet_operational_ledger.sql
- * طبقة المحاسبة: public.wallets + wallet_transactions (تسوية عند التسليم عبر erwenow_finance_settle_order)
  */
 const express = require("express");
 const { requireAuth } = require("../../shared/middleware/auth");
@@ -17,21 +15,20 @@ const {
   invalidateOtpChallenge,
 } = require("../../shared/services/otpChallengeService");
 const { insertAuditEvent } = require("../../shared/services/auditLog");
+const {
+  getOperationalWalletPayload,
+  listOperationalWalletTransactions,
+} = require("../../shared/utils/operationalWallet");
 
 const router = express.Router();
 const MIN_WITHDRAW = 20;
 const WITHDRAW_OTP_TTL_MS = 5 * 60 * 1000;
 
-/** قراءة رصيد التشغيل + سجل الحركات */
 const WALLET_READ_ROLES = ["driver", "restaurant", "merchant", "service", "customer", "admin"];
 const PAYOUT_ROLES = ["driver", "restaurant", "merchant", "service"];
 
 function isValidIBAN(iban) {
   return /^SA\d{22}$/i.test(iban);
-}
-
-function round2(n) {
-  return Math.round(Number(n) * 100) / 100;
 }
 
 function genOtp() {
@@ -50,6 +47,10 @@ function clientIp(req) {
     .trim();
   if (xf) return xf.slice(0, 128);
   return req.ip ? String(req.ip).slice(0, 128) : null;
+}
+
+async function operationalWalletPayload(req) {
+  return getOperationalWalletPayload(req.supabase, req.appUser.id);
 }
 
 async function validateWithdrawRequest(req, amount) {
@@ -83,45 +84,11 @@ async function validateWithdrawRequest(req, amount) {
     }
   }
 
-  const { data: w } = await req.supabase.from("ervenow_wallets").select("balance").eq("user_id", req.appUser.id).maybeSingle();
-  const bal = Number(w?.balance) || 0;
+  const wallet = await getOperationalWalletPayload(req.supabase, req.appUser.id);
+  const bal = Number(wallet.balance) || 0;
   if (amount > bal) throw new Error("الرصيد غير كافٍ");
 
   return { ibanRaw, bal };
-}
-
-async function operationalWalletPayload(req) {
-  const { data: rpcData, error: rpcErr } = await req.supabase.rpc("ervenow_wallet_operational_summary", {
-    p_user_id: req.appUser.id,
-  });
-  if (!rpcErr && rpcData && typeof rpcData === "object" && !Array.isArray(rpcData)) {
-    const b = Number(rpcData.balance);
-    const te = Number(rpcData.total_earned);
-    const tw = Number(rpcData.total_withdrawn);
-    return {
-      balance: round2(Number.isFinite(b) ? b : 0),
-      total_earned: round2(Number.isFinite(te) ? te : 0),
-      total_withdrawn: round2(Number.isFinite(tw) ? tw : 0),
-      wallet_mode: "operational",
-      layer: "ervenow_wallet_transactions",
-    };
-  }
-
-  const { data, error } = await req.supabase
-    .from("ervenow_wallets")
-    .select("balance, total_earned, total_withdrawn, role")
-    .eq("user_id", req.appUser.id)
-    .maybeSingle();
-  if (error) throw error;
-  const w = data || { balance: 0, total_earned: 0, total_withdrawn: 0, role: req.appUser.role };
-  return {
-    balance: round2(w.balance) || 0,
-    total_earned: round2(w.total_earned) || 0,
-    total_withdrawn: round2(w.total_withdrawn) || 0,
-    wallet_mode: "operational",
-    layer: "ervenow_wallets",
-    note: rpcErr ? "نفّذ shared/migration_wallet_operational_ledger.sql لرصيد من sum(الحركات)" : undefined,
-  };
 }
 
 router.get("/me", requireAuth, requireRole(...WALLET_READ_ROLES), async (req, res) => {
@@ -144,14 +111,10 @@ router.get("/", requireAuth, requireRole(...WALLET_READ_ROLES), async (req, res)
 
 router.get("/transactions", requireAuth, requireRole(...WALLET_READ_ROLES), async (req, res) => {
   try {
-    const { data, error } = await req.supabase
-      .from("ervenow_wallet_transactions")
-      .select("id, amount, type, status, reference_id, note, created_at")
-      .eq("user_id", req.appUser.id)
-      .order("created_at", { ascending: false })
-      .limit(100);
-    if (error) return fail(res, error.message, 400);
-    ok(res, { transactions: data || [], wallet_mode: "operational" });
+    const transactions = await listOperationalWalletTransactions(req.supabase, req.appUser.id, {
+      limit: 100,
+    });
+    ok(res, { transactions, wallet_mode: "operational" });
   } catch (e) {
     fail(res, e.message, 500);
   }
@@ -311,7 +274,7 @@ router.post("/withdraw/send-otp", requireAuth, requireRole(...PAYOUT_ROLES), asy
         to: phone,
         message: `رمز سحب المحفظة ERVENOW: ${code}`,
       });
-    } catch (e) {
+    } catch (_e) {
       sent = false;
     }
 

@@ -10,6 +10,8 @@ const { createServiceClient } = require("../../shared/config/supabase");
 const { notifyDriver } = require("./notify");
 const { bumpDeliveryOrdersListEpoch } = require("../../shared/utils/deliveryOrdersListCache");
 const { setStatus } = require("../delivery/service");
+const { requireRole } = require("../../shared/middleware/roles");
+const { getOperationalWalletPayload } = require("../../shared/utils/operationalWallet");
 const {
   OTP_SCOPE,
   otpBackendMode,
@@ -470,22 +472,10 @@ router.get("/orders", requireAuth, async (req, res) => {
   }
 });
 
-router.get("/wallet", requireAuth, async (req, res) => {
+router.get("/wallet", requireAuth, requireRole("driver"), async (req, res) => {
   try {
-    const drv = await ensureApprovedDriver(req, res);
-    if (!drv) return;
-    const { data, error } = await req.supabase
-      .from("ervenow_wallets")
-      .select("balance, total_earned, total_withdrawn")
-      .eq("user_id", req.appUser.id)
-      .maybeSingle();
-    if (error) return fail(res, error.message, 400);
-    return ok(res, {
-      balance: Number(data?.balance) || 0,
-      total_earned: Number(data?.total_earned) || 0,
-      total_withdrawn: Number(data?.total_withdrawn) || 0,
-      wallet_mode: "operational",
-    });
+    const payload = await getOperationalWalletPayload(req.supabase, req.appUser.id);
+    return ok(res, payload);
   } catch (e) {
     return fail(res, e.message, 500);
   }
