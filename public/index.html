@@ -2130,22 +2130,39 @@
             <div class="lp-quick-dd__panel" id="lpQuickNavPanel" role="menu" hidden>
             <p class="lp-quick-dd__panel-title">القائمة</p>
 
-            <button
-              type="button"
+            <a role="menuitem" class="lp-dd-item" href="/login" data-guest-only="true" aria-label="الدخول"
+              ><span class="lp-dd-ic" aria-hidden="true">🔐</span><span class="lp-dd-link__text">الدخول</span></a
+            >
+            <a
               role="menuitem"
-              class="lp-dd-item lp-dd-item--action"
-              id="lpQuickGuestBtn"
+              class="lp-dd-item"
+              href="/login?mode=register&amp;role=customer"
+              aria-label="إنشاء حساب"
               data-guest-only="true"
-              onclick="continueAsGuest()"
+              ><span class="lp-dd-ic" aria-hidden="true">➕</span><span class="lp-dd-link__text">إنشاء حساب</span></a
             >
-              <span class="lp-dd-ic" aria-hidden="true">&#127760;</span><span class="lp-dd-link__text">دخول زائر المنصة</span>
-            </button>
-            <a role="menuitem" class="lp-dd-item" href="/login" data-guest-only="true" aria-label="دخول بحسابك"
-              ><span class="lp-dd-ic" aria-hidden="true">&#128100;</span><span class="lp-dd-link__text">دخول</span></a
+            <a
+              role="menuitem"
+              id="lpQuickOrdersLink"
+              class="lp-dd-item lp-dd-orders"
+              href="/orders"
+              aria-label="الطلبات"
+              ><span class="lp-dd-ic" aria-hidden="true">📋</span><span class="lp-dd-link__text">الطلبات</span
+              ><span class="lp-dd-badge" id="ordersBadge">0</span></a
             >
+            <a role="menuitem" class="lp-dd-item" href="/track" aria-label="الخريطة الحية"
+              ><span class="lp-dd-ic" aria-hidden="true">📍</span><span class="lp-dd-link__text">الخريطة الحية</span></a
+            >
+            <a role="menuitem" class="lp-dd-item" href="/dashboard" aria-label="الإعدادات"
+              ><span class="lp-dd-ic" aria-hidden="true">⚙️</span><span class="lp-dd-link__text">الإعدادات</span></a
+            >
+            <a role="menuitem" class="lp-dd-item" href="#contact" aria-label="تواصل معنا" id="lpQuickGuestBtn"
+              ><span class="lp-dd-ic" aria-hidden="true">📞</span><span class="lp-dd-link__text">تواصل معنا</span></a
+            >
+
             <div class="lp-quick-dd__sep" role="separator"></div>
 
-            <div class="lp-dd-mobile-only" aria-label="تصفح الموقع">
+            <div class="lp-dd-mobile-only" aria-label="تصفح الموقع" hidden>
               <div class="lp-dd-mobile-quick" aria-label="وصول سريع">
                 <a role="menuitem" class="lp-dd-item" href="/restaurants" aria-label="مطاعم"
                   ><span class="lp-dd-ic" aria-hidden="true">&#127860;</span><span class="lp-dd-link__text">مطاعم</span></a
@@ -2185,42 +2202,18 @@
                 >
               </div>
             </div>
-            <div class="lp-dd-sep-mobile" role="separator"></div>
+            <div class="lp-dd-sep-mobile" role="separator" hidden></div>
 
-            <a
-              role="menuitem"
-              id="lpQuickOrdersLink"
-              class="lp-dd-item lp-dd-orders"
-              href="/orders"
-              aria-label="الطلبات"
-              ><span class="lp-dd-ic" aria-hidden="true">&#128203;</span><span class="lp-dd-link__text">الطلبات</span
-              ><span class="lp-dd-badge" id="ordersBadge">0</span></a
+            <a role="menuitem" class="lp-dd-item" href="/admin-dashboard" aria-label="لوحة التحكم" data-nav-role="admin" hidden
+              ><span class="lp-dd-ic" aria-hidden="true">&#128272;</span><span class="lp-dd-link__text">لوحة التحكم</span></a
             >
-            <a role="menuitem" class="lp-dd-item" href="/admin-login" aria-label="دخول الإدارة"
-              ><span class="lp-dd-ic" aria-hidden="true">&#128272;</span><span class="lp-dd-link__text">دخول الإدارة</span></a
+            <a role="menuitem" class="lp-dd-item" href="/services-provider" aria-label="طلبات الخدمات" data-nav-role="service" hidden
+              ><span class="lp-dd-ic" aria-hidden="true">&#127978;</span><span class="lp-dd-link__text">طلبات الخدمات</span></a
             >
-            <a role="menuitem" class="lp-dd-item" href="/partner-portal" aria-label="دخول المتاجر ومزودي الخدمة"
-              ><span class="lp-dd-ic" aria-hidden="true">&#127978;</span><span class="lp-dd-link__text">دخول المتاجر ومزودي الخدمة</span></a
-            >
-            <a role="menuitem" class="lp-dd-item" href="/driver-login" aria-label="دخول المناديب"
-              ><span class="lp-dd-ic" aria-hidden="true">&#128663;</span><span class="lp-dd-link__text">دخول المناديب</span></a
+            <a role="menuitem" class="lp-dd-item" href="/driver-dashboard" aria-label="طلباتي" data-nav-role="driver" hidden
+              ><span class="lp-dd-ic" aria-hidden="true">&#128663;</span><span class="lp-dd-link__text">طلباتي</span></a
             >
 
-            <div class="lp-quick-dd__sep" role="separator"></div>
-            <a role="menuitem" class="lp-dd-item" href="/track" aria-label="الخريطة الحية"
-              ><span class="lp-dd-ic" aria-hidden="true">&#128205;</span><span class="lp-dd-link__text">الخريطة الحية</span></a
-            >
-            <a role="menuitem" class="lp-dd-item" href="/dashboard" aria-label="الإعدادات"
-              ><span class="lp-dd-ic" aria-hidden="true">⚙</span><span class="lp-dd-link__text">الإعدادات</span></a
-            >
-            <a
-              role="menuitem"
-              class="lp-dd-item"
-              href="/login?mode=register&amp;role=customer"
-              aria-label="إنشاء حساب"
-              data-guest-only="true"
-              ><span class="lp-dd-ic" aria-hidden="true">&#10133;</span><span class="lp-dd-link__text">إنشاء حساب</span></a
-            >
             <div class="lp-quick-dd__sep" role="separator" id="lpQuickLogoutSep" hidden></div>
             <button
               type="button"
@@ -2231,7 +2224,7 @@
               aria-label="تسجيل الخروج"
               onclick="logout()"
             >
-              <span class="lp-dd-ic" aria-hidden="true">🚪</span><span class="lp-dd-link__text">خروج</span>
+              <span class="lp-dd-ic" aria-hidden="true">🚪</span><span class="lp-dd-link__text">تسجيل الخروج</span>
             </button>
           </div>
         </div>
@@ -3112,9 +3105,15 @@
         }
       }
 
-      function applyStartMenuAuthState(isLoggedIn) {
+      function applyStartMenuAuthState(isLoggedIn, role) {
         document.querySelectorAll("[data-guest-only='true']").forEach(function (el) {
           el.style.display = isLoggedIn ? "none" : "";
+        });
+        var r = String(role || "").toLowerCase();
+        if (r === "provider") r = "service";
+        document.querySelectorAll("[data-nav-role]").forEach(function (el) {
+          var want = String(el.getAttribute("data-nav-role") || "").toLowerCase();
+          el.hidden = !(isLoggedIn && want === r);
         });
       }
 
@@ -3163,9 +3162,9 @@
           localStorage.getItem("token") ||
           localStorage.getItem("ervenow_access_token") ||
           localStorage.getItem("erwenow_access_token");
-        applyStartMenuAuthState(!!token);
         var quickOrders = document.getElementById("lpQuickOrdersLink");
         if (!token) {
+          applyStartMenuAuthState(false);
           if (quickOrders) quickOrders.setAttribute("href", "/orders");
           await refreshHeaderWallet("", "");
           clearHeaderUserMid();
@@ -3183,10 +3182,7 @@
               return {};
             });
             role = String((me.profile && me.profile.role) || "").toLowerCase();
-
-            if (quickOrders && (role === "admin" || role === "customer")) {
-              quickOrders.setAttribute("href", "/dashboard");
-            }
+            applyStartMenuAuthState(true, role);
 
             var phone =
               (me.user && me.user.phone) ||
@@ -3223,6 +3219,7 @@
             setQuickLogoutVisible(true);
             await refreshHeaderWallet(token, role);
           } catch (e) {
+            applyStartMenuAuthState(true, "");
             authArea.innerHTML =
               '<button class="lp-btn-solid" type="button" onclick="goDashboard()">' +
               label +

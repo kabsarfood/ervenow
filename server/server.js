@@ -502,6 +502,15 @@ if (servePublicUi) {
   app.get("/services-provider", (_req, res) => {
     res.sendFile(path.join(publicPath, "services-provider.html"));
   });
+  app.get("/service-dashboard", (_req, res) => {
+    res.redirect(302, "/services-provider");
+  });
+  app.get("/restaurant-dashboard", (_req, res) => {
+    res.redirect(302, "/store-dashboard");
+  });
+  app.get("/provider-dashboard", (_req, res) => {
+    res.redirect(302, "/services-provider");
+  });
 
   app.get("/blocked-complaints", (_req, res) => {
     res.sendFile(path.join(publicPath, "blocked-complaints.html"));

@@ -27,6 +27,7 @@ const {
 } = require("../../shared/utils/idempotency");
 const { completeServiceBooking } = require("../../shared/services/completeServiceBooking");
 const { sendReserveWelcomeWhatsApp } = require("../../shared/services/serviceProviderReserve");
+const { getOperationalWalletPayload } = require("../../shared/utils/operationalWallet");
 const {
   bookingTypesForProvider,
   districtsMatch,
@@ -467,6 +468,20 @@ router.get("/me/dashboard", requireAuth, requireRole("service"), async (req, res
     }
 
     const completed = bookings.filter((b) => String(b.status || "").toLowerCase() === "delivered").length;
+    const activeJobs = bookings.filter((b) => {
+      const s = String(b.status || "").toLowerCase();
+      return (s === "accepted" || s === "delivering") && String(b.provider_id || "") === String(uid);
+    }).length;
+
+    let walletBalance = 0;
+    let walletEarned = 0;
+    try {
+      const wallet = await getOperationalWalletPayload(sb, uid);
+      walletBalance = Number(wallet.balance) || 0;
+      walletEarned = Number(wallet.total_earned) || 0;
+    } catch (_) {
+      /* optional */
+    }
 
     return ok(res, {
       panel_title: panelTitleForType(providerType),
@@ -476,7 +491,10 @@ router.get("/me/dashboard", requireAuth, requireRole("service"), async (req, res
       stats: {
         new_orders: newCount,
         completed_jobs: completed,
+        active_jobs: activeJobs,
         commission_pending_sar: Math.round(commissionPending * 100) / 100,
+        wallet_balance_sar: Math.round(walletBalance * 100) / 100,
+        wallet_earned_sar: Math.round(walletEarned * 100) / 100,
         rating_avg: Number(profile?.service_rating_avg) || 0,
         rating_count: Number(profile?.service_rating_count) || 0,
       },
@@ -606,14 +624,37 @@ router.post("/bookings/:id/complete", requireAuth, async (req, res) => {
     }
 
     const providerId = booking.provider_id || (isProvider ? uid : null);
-    const done = await completeServiceBooking(sb, req.params.id, providerId);
+    const step = String(req.body?.step || req.body?.actor || "").toLowerCase();
+    let actor = "legacy";
+    if (isAdmin) actor = "both";
+    else if (isProvider) actor = "provider";
+    else if (isCustomer) actor = "customer";
+
+    const done = await completeServiceBooking(sb, req.params.id, providerId, { actor });
     if (done.error) return fail(res, done.error.message || "فشل الإتمام", 400);
+    if (done.already_done) {
+      return ok(res, { booking: done.data, already_done: true });
+    }
 
-    await sendCustomerRateWhatsApp(done.data);
+    if (done.finalized) {
+      await sendCustomerRateWhatsApp(done.data);
+      return ok(res, {
+        booking: done.data,
+        message: "تمت المهمة — شكراً. يمكن للعميل تقييم الخدمة الآن.",
+        finalized: true,
+      });
+    }
 
+    const msg =
+      actor === "provider"
+        ? "تم تأكيد التنفيذ — بانتظار تأكيد العميل."
+        : "تم تأكيد الاستلام — بانتظار مزود الخدمة.";
     return ok(res, {
       booking: done.data,
-      message: "تمام المهمة — شكراً. يمكن للعميل تقييم الخدمة الآن.",
+      message: msg,
+      finalized: false,
+      awaiting_customer: !!done.data?.awaiting_customer,
+      awaiting_provider: !!done.data?.awaiting_provider,
     });
   } catch (e) {
     return fail(res, e.message, 500);

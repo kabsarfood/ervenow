@@ -260,6 +260,51 @@
         height: 20px;
         fill: currentColor;
       }
+      .role-picker-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(45, 26, 14, 0.45);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        padding: 16px;
+      }
+      .role-picker-overlay[hidden] {
+        display: none !important;
+      }
+      .role-picker {
+        background: #fffdf8;
+        border-radius: 16px;
+        padding: 20px;
+        max-width: 420px;
+        width: 100%;
+        box-shadow: 0 12px 40px rgba(45, 26, 14, 0.18);
+      }
+      .role-picker h2 {
+        margin: 0 0 8px;
+        font-size: 1.15rem;
+      }
+      .role-picker__list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-top: 14px;
+      }
+      .role-picker__btn {
+        width: 100%;
+        text-align: right;
+        padding: 12px 14px;
+        border-radius: 12px;
+        border: 1px solid rgba(91, 55, 29, 0.15);
+        background: #fff;
+        font-weight: 700;
+        cursor: pointer;
+      }
+      .role-picker__btn:hover {
+        border-color: var(--gold);
+        background: #fff9ef;
+      }
     </style>
   </head>
   <body class="auth-page">
@@ -287,7 +332,7 @@
       <div id="authPlainHead">
         <h1 class="auth-plain-title" id="authTitleLogin">تسجيل الدخول — ERVENOW</h1>
         <p class="sub" id="authSubtitleLogin">
-          أدخل رقم جوال سعودي <strong>يبدأ بـ 05</strong> (مثال 05xxxxxxxx) ثم اطلب رمز الدخول عبر واتساب.
+          أدخل رقم جوال سعودي <strong>يبدأ بـ 05</strong> (مثال 05xxxxxxxx) ثم اطلب رمز الدخول عبر واتساب — يُوجّهك النظام تلقائياً للوحة المناسبة.
         </p>
         <p class="sub" style="margin-top: -8px">رمز واتساب صالح لمدة 5 دقائق.</p>
       </div>
@@ -297,14 +342,21 @@
       </div>
 
       <div class="card">
+      <div id="roleWrap">
         <label for="role" id="roleLabel">نوع الحساب</label>
         <select id="role">
           <option value="customer">زائر المنصة</option>
           <option value="driver">مندوب توصيل</option>
+          <option value="merchant">متجر</option>
           <option value="restaurant">مطعم</option>
-          <option value="merchant">تاجر (متجر)</option>
-          <option value="service">مقدّم خدمة (دخول)</option>
+          <option value="service">مزود خدمة</option>
         </select>
+
+        <div id="serviceTypeSubWrap" class="driver-register-fields" hidden>
+          <label for="serviceTypeSub" style="margin-top: 12px">نوع الخدمة</label>
+          <select id="serviceTypeSub" aria-label="نوع الخدمة"></select>
+        </div>
+      </div>
 
         <div id="customerRegisterFields" class="driver-register-fields">
           <label for="customerName">الاسم (اختياري)</label>
@@ -459,6 +511,14 @@
       </div>
     </footer>
 
+    <div class="role-picker-overlay" id="rolePickerOverlay" hidden role="dialog" aria-modal="true" aria-labelledby="rolePickerTitle">
+      <div class="role-picker">
+        <h2 id="rolePickerTitle">اختر نوع الدخول</h2>
+        <p class="sub" style="margin: 0">حسابك مرتبط بأكثر من لوحة — اختر الوجهة المناسبة.</p>
+        <div class="role-picker__list" id="rolePickerList"></div>
+      </div>
+    </div>
+
     <script src="/assets/api-config.js"></script>
     <script>
       document.addEventListener("DOMContentLoaded", function () {
@@ -505,15 +565,42 @@
       }
 
       var REGISTER_SERVICE_TYPES = [
-        { value: "pickup_truck", label: "سائق سطحى" },
+        { value: "pickup_truck", label: "سائق سطحة" },
         { value: "electrician", label: "فني كهربائي" },
         { value: "plumber", label: "فني سباك" },
         { value: "ac_technician", label: "فني مكيفات" },
         { value: "laundry_estates", label: "مغسل فلل وعمائر" },
         { value: "agricultural_engineer", label: "مهندس زراعي" },
-        { value: "gas_cylinder_swap", label: "تبديل غاز اسطوانات" },
+        { value: "gas_cylinder_swap", label: "تبديل غاز" },
         { value: "gas_central_refill", label: "تعبئة غاز مركزي" },
       ];
+
+      function initServiceTypeSubSelect() {
+        var sub = document.getElementById("serviceTypeSub");
+        if (!sub || sub.getAttribute("data-built")) return;
+        sub.setAttribute("data-built", "1");
+        sub.innerHTML =
+          '<option value="">اختر نوع الخدمة</option>' +
+          REGISTER_SERVICE_TYPES.map(function (o) {
+            return '<option value="' + o.value + '">' + o.label + "</option>";
+          }).join("");
+      }
+
+      function syncLoginRoleUi() {
+        initServiceTypeSubSelect();
+        var roleWrap = document.getElementById("roleWrap");
+        var subWrap = document.getElementById("serviceTypeSubWrap");
+        var reg = isRegisterMode();
+        if (roleWrap) roleWrap.hidden = !reg;
+        if (!reg) return;
+        var sel = document.getElementById("role").value;
+        var showSub = sel === "service" || isServiceTypeValue(sel);
+        if (subWrap) subWrap.hidden = !showSub;
+        if (showSub && sel !== "service" && isServiceTypeValue(sel)) {
+          var sub = document.getElementById("serviceTypeSub");
+          if (sub) sub.value = sel;
+        }
+      }
 
       function isServiceTypeValue(v) {
         var x = String(v || "").trim();
@@ -524,17 +611,24 @@
       }
 
       function isServiceRegisterMode() {
-        return isRegisterMode() && isServiceTypeValue(document.getElementById("role").value);
+        if (!isRegisterMode()) return false;
+        var sel = document.getElementById("role").value;
+        return sel === "service" || isServiceTypeValue(sel);
       }
 
       function apiRoleFromSelection() {
         var sel = document.getElementById("role").value;
-        return isServiceTypeValue(sel) ? "service" : sel;
+        if (sel === "service" || isServiceTypeValue(sel)) return "service";
+        return sel;
       }
 
       function selectedServiceType() {
         var sel = document.getElementById("role").value;
-        return isServiceTypeValue(sel) ? sel : null;
+        if (isServiceTypeValue(sel)) return sel;
+        if (sel === "service") {
+          return String(document.getElementById("serviceTypeSub").value || "").trim() || null;
+        }
+        return null;
       }
 
       function populateRegisterAccountTypes(preferred) {
@@ -547,17 +641,26 @@
           '<option value="driver">مندوب توصيل</option>' +
           '<option value="merchant">متجر</option>' +
           '<option value="restaurant">مطعم</option>' +
+          '<option value="service">مزود خدمة</option>' +
+          '<optgroup label="— أنواع الخدمة (توافق سابق) —">' +
           REGISTER_SERVICE_TYPES.map(function (o) {
             return '<option value="' + o.value + '">' + o.label + "</option>";
-          }).join("");
+          }).join("") +
+          "</optgroup>";
         sel.innerHTML = html;
         var want = String(preferred || "customer").trim();
         if (want === "service") want = "electrician";
-        if (isServiceTypeValue(want) || want === "customer" || want === "driver" || want === "restaurant" || want === "merchant") {
+        if (isServiceTypeValue(want)) {
+          sel.value = "service";
+          initServiceTypeSubSelect();
+          var sub = document.getElementById("serviceTypeSub");
+          if (sub) sub.value = want;
+        } else if (want === "customer" || want === "driver" || want === "restaurant" || want === "merchant") {
           sel.value = want;
         } else {
           sel.value = "customer";
         }
+        syncLoginRoleUi();
       }
 
       function assertDriverOnlyInRegisterMode() {
@@ -617,7 +720,7 @@
       ];
 
       function isPickupTruckRegister() {
-        return isServiceRegisterMode() && document.getElementById("role").value === "pickup_truck";
+        return isServiceRegisterMode() && selectedServiceType() === "pickup_truck";
       }
 
       function initServiceCitySelect() {
@@ -702,6 +805,7 @@
         syncServiceLocationField();
         syncPayoutRegisterBlock();
         syncAuthHead();
+        syncLoginRoleUi();
       }
 
       function safeInternalNext(raw) {
@@ -720,11 +824,65 @@
         var ar = String(actualRole || roleFallback || "").toLowerCase();
         if (next && ar !== "blocked") return next;
 
-        var target = "/dashboard";
-        if (ar === "blocked") target = "/blocked-complaints";
-        else if (ar === "admin") target = "/";
-        else if (ar === "service") target = "/services-provider.html";
-        return target;
+        var map = {
+          blocked: "/blocked-complaints",
+          admin: "/admin-dashboard",
+          driver: "/driver-dashboard",
+          merchant: "/store-dashboard",
+          restaurant: "/store-dashboard",
+          service: "/services-provider",
+          customer: "/",
+        };
+        return map[ar] || "/";
+      }
+
+      function showRolePicker(destinations) {
+        var overlay = document.getElementById("rolePickerOverlay");
+        var list = document.getElementById("rolePickerList");
+        if (!overlay || !list) {
+          var fb = destinations[0];
+          window.location.href = (fb && fb.path) || "/";
+          return;
+        }
+        list.innerHTML = destinations
+          .map(function (d) {
+            return (
+              '<button type="button" class="role-picker__btn" data-path="' +
+              String(d.path || "/").replace(/"/g, "") +
+              '">' +
+              (d.label || d.role || "دخول") +
+              "</button>"
+            );
+          })
+          .join("");
+        list.querySelectorAll(".role-picker__btn").forEach(function (btn) {
+          btn.addEventListener("click", function () {
+            var p = btn.getAttribute("data-path") || "/";
+            window.location.href = p;
+          });
+        });
+        overlay.hidden = false;
+      }
+
+      async function navigateAfterLogin(actualRole) {
+        var qs = new URLSearchParams(window.location.search);
+        var next = safeInternalNext(qs.get("next"));
+        if (next && String(actualRole || "").toLowerCase() !== "blocked") {
+          window.location.href = next;
+          return;
+        }
+        try {
+          var destRes = await window.PlatformAPI.api("/api/core/login-destinations");
+          var dests = destRes.destinations || [];
+          if (dests.length > 1) {
+            showRolePicker(dests);
+            return;
+          }
+          var pick = dests[0] || destRes.default;
+          window.location.href = (pick && pick.path) || resolvePostLoginTarget(actualRole);
+        } catch (navErr) {
+          window.location.href = resolvePostLoginTarget(actualRole);
+        }
       }
 
       function mapOtpError(msg) {
@@ -765,13 +923,21 @@
           if (b) b.textContent = "إنشاء حساب";
           populateRegisterAccountTypes(r || "customer");
           syncAuthHead();
-        } else if (r) {
+        } else {
+          syncLoginRoleUi();
+        }
+        if (r && mode !== "register") {
           var sel = document.getElementById("role");
           if (sel) sel.value = r;
         }
         syncCustomerRegisterUi();
       })();
-      document.getElementById("role").addEventListener("change", syncCustomerRegisterUi);
+      document.getElementById("role").addEventListener("change", function () {
+        syncCustomerRegisterUi();
+        syncLoginRoleUi();
+      });
+      var serviceTypeSubEl = document.getElementById("serviceTypeSub");
+      if (serviceTypeSubEl) serviceTypeSubEl.addEventListener("change", syncCustomerRegisterUi);
 
       (function initPayoutRegistrationUi() {
         if (!window.ERVENOW_PAYOUT_UI) return;
@@ -847,6 +1013,7 @@
             var sType = selectedServiceType();
             var sArea = readServiceAreaValue();
             if (!sName) return show("أدخل الاسم", false);
+            if (!sType) return show("اختر نوع الخدمة من القائمة", false);
             if (!sArea) {
               return show(isPickupTruckRegister() ? "اختر المدينة" : "أدخل الحي الذي تخدمه", false);
             }
@@ -871,7 +1038,8 @@
             }
           }
 
-          var verifyBody = Object.assign({ phone: phone, code: code, role: role }, extra);
+          var loginOnly = !isRegisterMode();
+          var verifyBody = Object.assign({ phone: phone, code: code, login_only: loginOnly }, loginOnly ? {} : { role: role }, extra);
           if (
             payoutPayload &&
             isRegisterMode() &&
@@ -951,22 +1119,8 @@
           }
 
           var actualRole = String((res.user && res.user.role) || role || "").toLowerCase();
-          var target = resolvePostLoginTarget(actualRole, role);
           show("نجاح تسجيل الدخول. تحويل…", true);
-
-          try {
-            window.location.href = target;
-          } catch (navErr) {
-            console.error(navErr);
-            alert("تم التحقق لكن لم يتم التحويل");
-            return;
-          }
-
-          setTimeout(function () {
-            if (window.location.pathname !== target) {
-              alert("تم التحقق لكن لم يتم التحويل — افتح يدوياً: " + target);
-            }
-          }, 1500);
+          await navigateAfterLogin(actualRole);
         } catch (e) {
           show(mapOtpError(String(e.message || e)), false);
         }
@@ -979,13 +1133,15 @@
           if (!isValid05(raw)) {
             return show("أدخل رقم سعودي يبدأ بـ 05 (10 أرقام مثال 05xxxxxxxx)", false);
           }
-          if (!assertDriverOnlyInRegisterMode()) return;
+          var loginOnly = !isRegisterMode();
+          if (!loginOnly && !assertDriverOnlyInRegisterMode()) return;
           var phone = toE164(raw);
           var role = apiRoleFromSelection();
           show("جارٍ إرسال رمز واتساب...", true);
+          var otpBody = loginOnly ? { phone: phone, login_only: true } : { phone: phone, role: role };
           var sent = await window.PlatformAPI.api("/api/core/send-otp", {
             method: "POST",
-            body: { phone: phone, role: role },
+            body: otpBody,
           });
           if (sent.ok === false) {
             return show("تعذر إرسال رمز واتساب", false);

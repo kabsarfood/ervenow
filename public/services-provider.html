@@ -127,8 +127,16 @@
             <span>التقييم</span>
           </div>
           <div class="sp-kpi">
+            <strong id="kpiWalletBal">—</strong>
+            <span>رصيد المحفظة (ريال)</span>
+          </div>
+          <div class="sp-kpi">
             <strong id="kpiWallet">—</strong>
-            <span>عمولة مستحقة (ريال)</span>
+            <span>عمولات مستحقة (ريال)</span>
+          </div>
+          <div class="sp-kpi">
+            <strong id="kpiActive">0</strong>
+            <span>مهام حالية</span>
           </div>
           <div class="sp-kpi">
             <strong id="kpiDone">0</strong>
@@ -139,6 +147,7 @@
             <span>طلبات جديدة</span>
           </div>
         </div>
+        <p class="sub" id="walletLine"><a href="/wallet">فتح المحفظة</a></p>
         <p class="sub" id="districtLine">—</p>
         <p class="sub" id="vehicleLine" hidden>—</p>
       </div>
@@ -190,11 +199,14 @@
         return String(v || "").toLowerCase() === "paid" ? "مدفوع" : "كاش عند الإتمام";
       }
 
-      function statusLabel(v) {
+      function statusLabel(v, booking) {
         var s = String(v || "").toLowerCase();
         if (s === "new" || s === "pending") return "جديد — متاح للحجز";
         if (s === "accepted") return "محجوز — قيد التنفيذ";
-        if (s === "delivering") return "قيد التنفيذ";
+        if (s === "delivering") {
+          if (booking && booking.customer_confirmed_at) return "بانتظار تأكيد المزود";
+          return "تم التنفيذ — بانتظار تأكيد العميل";
+        }
         if (s === "delivered") return "تمت المهمة";
         if (s === "cancelled") return "ملغي";
         return s || "—";
@@ -234,7 +246,7 @@
         }
       });
 
-      var completeOrder = safeClick(async function (id, btn) {
+      var completeOrder = safeClick(async function (id, btn, step) {
         if (btn) {
           btn.disabled = true;
           btn.textContent = "جاري الإتمام...";
@@ -242,15 +254,16 @@
         try {
           var j = await window.PlatformAPI.api("/api/services/bookings/" + encodeURIComponent(id) + "/complete", {
             method: "POST",
+            body: { step: step || "provider" },
           });
-          alert(j.message || "تمام المهمة");
+          alert(j.message || "تم التحديث");
           await loadDashboard();
         } catch (e) {
           alert(String((e && e.message) || e || "تعذر الإتمام"));
         } finally {
           if (btn) {
             btn.disabled = false;
-            btn.textContent = "تمام المهمة";
+            btn.textContent = step === "provider" ? "تم التنفيذ" : "تمام المهمة";
           }
         }
       });
@@ -267,7 +280,7 @@
             var st = String(b.status || "").toLowerCase();
             var mine = !!b.provider_id;
             var canReserve = (st === "new" || st === "pending") && !b.provider_id;
-            var canComplete = mine && st !== "delivered" && st !== "cancelled";
+            var canProviderExecute = mine && st === "accepted";
             var maps =
               b.location && String(b.location).indexOf(",") !== -1
                 ? "https://www.google.com/maps?q=" + encodeURIComponent(b.location)
@@ -279,7 +292,7 @@
               "<p><b>" +
               (b.service_name || "خدمة") +
               "</b> — " +
-              statusLabel(b.status) +
+              statusLabel(b.status, b) +
               "</p>" +
               "<p>رقم: " +
               (b.service_order_number || "—") +
@@ -304,9 +317,13 @@
               (canReserve
                 ? '<button type="button" class="btn btn-primary" data-reserve="' + b.id + '">حجز الطلب</button>'
                 : "") +
-              (canComplete
-                ? '<button type="button" class="btn btn-ghost" data-complete="' + b.id + '">تمام المهمة</button>'
-                : "") +
+              (canProviderExecute
+                ? '<button type="button" class="btn btn-ghost" data-complete="' +
+                  b.id +
+                  '" data-step="provider">تم التنفيذ</button>'
+                : st === "delivering" && mine
+                  ? '<span class="sub">بانتظار تأكيد العميل</span>'
+                  : "") +
               "</div></div>"
             );
           })
@@ -319,7 +336,7 @@
         });
         el.querySelectorAll("[data-complete]").forEach(function (btn) {
           btn.addEventListener("click", function () {
-            completeOrder(btn.getAttribute("data-complete"), btn);
+            completeOrder(btn.getAttribute("data-complete"), btn, btn.getAttribute("data-step") || "provider");
           });
         });
       }
@@ -360,7 +377,9 @@
         }
         document.getElementById("kpiRating").textContent =
           stats.rating_count > 0 ? stats.rating_avg + " ★ (" + stats.rating_count + ")" : "لا تقييم بعد";
+        document.getElementById("kpiWalletBal").textContent = Number(stats.wallet_balance_sar || 0).toFixed(2);
         document.getElementById("kpiWallet").textContent = Number(stats.commission_pending_sar || 0).toFixed(2);
+        document.getElementById("kpiActive").textContent = String(stats.active_jobs || 0);
         document.getElementById("kpiDone").textContent = String(stats.completed_jobs || 0);
         document.getElementById("kpiNew").textContent = String(stats.new_orders || 0);
         var badge = document.getElementById("bellBadge");

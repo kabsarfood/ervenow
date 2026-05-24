@@ -17,6 +17,10 @@ const { attachSiteSessionCookie, clearSiteSessionCookie } = require("../../share
 const { parseOptionalPayoutPayload, payoutRowForUsers } = require("../../shared/utils/payoutFields");
 const { assertPayoutIbanGloballyAvailable } = require("../../shared/utils/payoutUniqueness");
 const checkoutPaymentMethods = require("../../shared/utils/checkoutPaymentMethods");
+const {
+  resolveLoginDestinations,
+  pickDefaultDestination,
+} = require("../../shared/utils/loginDestinations");
 
 const router = express.Router();
 const OTP_TTL_MS = 5 * 60 * 1000;
@@ -186,8 +190,10 @@ async function upsertDriverByPhone(
   preferredServiceType,
   displayName,
   serviceDistrict,
-  serviceVehicle
+  serviceVehicle,
+  options = {}
 ) {
+  const loginOnly = options.loginOnly === true;
   const role = ALLOWED_USER_ROLES.has(preferredRole) ? preferredRole : "customer";
   const serviceType = role === "service" ? normalizeServiceType(preferredServiceType) : null;
   const trimmedName =
@@ -243,6 +249,11 @@ async function upsertDriverByPhone(
       String(existing.role || "").toLowerCase() === "blocked"
     ) {
       return { data: existing, error: null };
+    }
+    if (loginOnly) {
+      const touch = await sb.from("users").update({ updated_at: now }).eq("id", existing.id).select().single();
+      if (touch.error) return { data: existing, error: null };
+      return touch;
     }
     const patch = { role, service_type: serviceType, updated_at: now };
     if (trimmedName && role === "customer" && !String(existing.name || "").trim()) {
@@ -376,7 +387,8 @@ router.post("/send-otp", async (req, res) => {
     }
 
     const digits = toStorageDigits(e164);
-    const role = roleIn || "customer";
+    const loginOnly = req.body?.login_only === true || req.body?.login_only === "true";
+    const role = loginOnly ? "login" : roleIn || "customer";
     if (roleIn === "admin") {
       if (!isAllowedAdminPhoneDigits(digits)) {
         return fail(res, "غير مصرح لهذا الرقم بدخول لوحة الإدارة", 403);
@@ -450,7 +462,10 @@ router.post("/verify-otp", async (req, res) => {
   try {
     const raw = req.body?.phone;
     const codeIn = String(req.body?.code || "").trim();
-    const wantRole = String(req.body?.role || "customer").trim().toLowerCase();
+    const loginOnly = req.body?.login_only === true || req.body?.login_only === "true";
+    const wantRole = loginOnly
+      ? "customer"
+      : String(req.body?.role || "customer").trim().toLowerCase();
 
     const e164 = toE164(raw);
     if (!e164) return fail(res, "رقم الجوال غير صالح", 400);
@@ -477,7 +492,7 @@ router.post("/verify-otp", async (req, res) => {
       }
     }
 
-    const key = otpKey(wantRole, digits);
+    const key = otpKey(loginOnly ? "login" : wantRole, digits);
     const mode = otpBackendMode();
     const sbOtp = mode === "supabase" ? createServiceClient() : null;
     const checked = await verifyOtpChallenge({
@@ -530,7 +545,8 @@ router.post("/verify-otp", async (req, res) => {
       wantServiceType,
       displayName,
       serviceDistrict,
-      serviceVehicle
+      serviceVehicle,
+      { loginOnly }
     );
     if (dbErr) {
       console.error("[ERVENOW] verify-otp DB:", dbErr);
@@ -602,6 +618,30 @@ router.get("/me", requireAuth, (req, res) => {
     },
     profile: req.appUser,
   });
+});
+
+router.get("/login-destinations", requireAuth, async (req, res) => {
+  try {
+    const sb = createServiceClient();
+    if (!sb) {
+      return fail(res, `قاعدة البيانات غير جاهزة — ${getDatabaseConfigHint()}`, 503);
+    }
+    const { data: row, error } = await sb.from("users").select("*").eq("id", req.appUser.id).maybeSingle();
+    if (error) return fail(res, error.message, 400);
+    const profile = row || req.appUser;
+    const destinations = await resolveLoginDestinations(sb, profile);
+    return ok(res, {
+      destinations,
+      default: pickDefaultDestination(destinations, profile.role),
+      user: {
+        id: profile.id,
+        role: profile.role,
+        service_type: profile.service_type || null,
+      },
+    });
+  } catch (e) {
+    return fail(res, e.message || "تعذر تحديد وجهة الدخول", 500);
+  }
 });
 
 router.post("/users/sync", requireAuth, async (req, res) => {
