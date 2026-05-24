@@ -21,13 +21,14 @@ const {
   serviceDisplayName,
 } = require("../../shared/utils/homeServicePricing");
 const { recordCommissionDebtOnDelivered } = require("../../shared/services/providerCommissionDebts");
+const { shadowLedgerSettleDeliveredOrder } = require("../../shared/services/shadowLedger");
 const {
   insertServiceBookingResilient,
   insertServiceBookingsBatchResilient,
 } = require("../../shared/utils/idempotency");
 const { completeServiceBooking } = require("../../shared/services/completeServiceBooking");
 const { sendReserveWelcomeWhatsApp } = require("../../shared/services/serviceProviderReserve");
-const { getOperationalWalletPayload } = require("../../shared/utils/operationalWallet");
+const { getWalletPayloadWithLedgerFallback } = require("../../shared/utils/ledgerWallet");
 const {
   bookingTypesForProvider,
   districtsMatch,
@@ -475,10 +476,17 @@ router.get("/me/dashboard", requireAuth, requireRole("service"), async (req, res
 
     let walletBalance = 0;
     let walletEarned = 0;
+    let walletCommission = 0;
+    let walletSource = "legacy";
     try {
-      const wallet = await getOperationalWalletPayload(sb, uid);
+      const wallet = await getWalletPayloadWithLedgerFallback(sb, uid, "service");
       walletBalance = Number(wallet.balance) || 0;
       walletEarned = Number(wallet.total_earned) || 0;
+      walletCommission = Number(wallet.total_commission) || 0;
+      walletSource = wallet.source || wallet.wallet_mode || "legacy";
+      if (walletSource === "ervenow_ledger" && walletCommission > 0) {
+        commissionPending = walletCommission;
+      }
     } catch (_) {
       /* optional */
     }
@@ -495,6 +503,8 @@ router.get("/me/dashboard", requireAuth, requireRole("service"), async (req, res
         commission_pending_sar: Math.round(commissionPending * 100) / 100,
         wallet_balance_sar: Math.round(walletBalance * 100) / 100,
         wallet_earned_sar: Math.round(walletEarned * 100) / 100,
+        wallet_commission_sar: Math.round(walletCommission * 100) / 100,
+        wallet_source: walletSource,
         rating_avg: Number(profile?.service_rating_avg) || 0,
         rating_count: Number(profile?.service_rating_count) || 0,
       },
@@ -771,6 +781,10 @@ router.patch("/bookings/:id/status", requireAuth, requireRole("service", "admin"
         }
       }
       await sendCustomerRateWhatsApp(data);
+      void shadowLedgerSettleDeliveredOrder(req.supabase, data.id, {
+        type: "service",
+        context: "service:delivered",
+      });
     }
 
     return ok(res, { booking: data });

@@ -36,6 +36,7 @@ const {
   COMMISSION_ALERT_THRESHOLD,
   sendSmartCollectionReminder,
 } = require("../../shared/services/smartCollectionNotify");
+const { getAdminFinanceSummaryFromLedger } = require("../../shared/utils/ledgerWallet");
 
 const ADMIN_PUBLIC_ROOT = path.join(__dirname, "../../public");
 
@@ -787,6 +788,57 @@ router.get("/wallet-integrity-check", requireAuth, requireRole("admin"), require
     });
   } catch (e) {
     fail(res, e.message, 500);
+  }
+});
+
+/** GET /api/admin/finance-summary — ملخص مالي من ervenow_ledger فقط */
+router.get("/finance-summary", requireAuth, requireRole("admin"), requireAdminPermission("finance"), async (req, res) => {
+  try {
+    const summary = await getAdminFinanceSummaryFromLedger(req.supabase);
+    if (!summary.ok) {
+      return fail(
+        res,
+        summary.reason === "migration_missing"
+          ? "نفّذ migration_unified_finance_ledger.sql و migration_ervenow_ledger_withdraw_requests.sql في Supabase"
+          : "تعذر جلب الملخص المالي",
+        summary.reason === "migration_missing" ? 503 : 500,
+        { reason: summary.reason, detail: summary.detail || null }
+      );
+    }
+    return ok(res, summary);
+  } catch (e) {
+    return fail(res, e.message, 500);
+  }
+});
+
+/** POST /api/admin/withdraw/approve — موافقة سحب ledger (withdraw_requests) */
+router.post("/withdraw/approve", requireAuth, requireRole("admin"), requireAdminPermission("finance"), async (req, res) => {
+  try {
+    const id = String(req.body?.id || req.body?.request_id || "").trim();
+    if (!id) return fail(res, "معرّف طلب السحب مطلوب", 400);
+
+    const { data: rpcData, error: rpcErr } = await req.supabase.rpc("ledger_withdraw_request_approve", {
+      p_request_id: id,
+    });
+    if (rpcErr) {
+      const msg = String(rpcErr.message || "");
+      if (/ledger_withdraw_request_approve|withdraw_requests|does not exist|schema cache/i.test(msg)) {
+        return fail(
+          res,
+          "نفّذ shared/migration_ervenow_ledger_withdraw_requests.sql في Supabase SQL Editor",
+          503
+        );
+      }
+      return fail(res, rpcErr.message, 400);
+    }
+
+    const row = typeof rpcData === "object" && rpcData !== null && !Array.isArray(rpcData) ? rpcData : {};
+    if (row.ok === true || row.ok === "true") {
+      return ok(res, { result: row, source: "ervenow_ledger" });
+    }
+    return fail(res, String(row.reason || "approve_failed"), 400, { result: row });
+  } catch (e) {
+    return fail(res, e.message, 500);
   }
 });
 

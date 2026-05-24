@@ -25,13 +25,13 @@ async function ensureLedgerWalletId(sb, userId, appRole) {
   return { walletId: data, ledgerRole: p_role };
 }
 
+const { shadowLedgerSettleDeliveredOrder } = require("../services/shadowLedger");
+
 /**
  * @param {import("@supabase/supabase-js").SupabaseClient} sb
  */
 async function settleDeliveredOrderLedger(sb, orderId) {
-  const { data, error } = await sb.rpc("ervenow_ledger_settle_delivered_order", { p_order_id: orderId });
-  if (error) throw error;
-  const row = typeof data === "object" && data !== null && !Array.isArray(data) ? data : {};
+  const row = await shadowLedgerSettleDeliveredOrder(sb, orderId, { context: "settleDeliveredOrderLedger" });
   if (row.ok === true || row.ok === "true") return row;
   const err = new Error(String(row.reason || "ervenow_ledger_settle_delivered_order failed"));
   err.ledgerResult = row;

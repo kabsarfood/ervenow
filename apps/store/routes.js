@@ -28,6 +28,7 @@ const {
 } = require("../../shared/categoriesDb");
 const { incrementCategoryUsage } = require("../../shared/categoryUsage");
 const checkoutPaymentMethods = require("../../shared/utils/checkoutPaymentMethods");
+const { getStoreWalletPayloadWithFallback } = require("../../shared/utils/ledgerWallet");
 
 let twilioFactory = null;
 try {
@@ -1401,6 +1402,28 @@ function isStoreMerchantHubMissing(err) {
   return /store_merchant_hub|schema cache|relation .*store_merchant_hub/i.test(msg);
 }
 
+router.get("/wallet", requireAuth, requireMerchantRole, async (req, res) => {
+  try {
+    const sb = createServiceClient();
+    if (!sb) return fail(res, "الخادم غير مهيأ لقاعدة البيانات", 503);
+    const digits = normalizePhone(req.appUser.phone);
+    const { data: st, error: sErr } = await sb
+      .from("stores")
+      .select("id")
+      .eq("phone", digits)
+      .eq("status", "approved")
+      .maybeSingle();
+    if (sErr) return fail(res, sErr.message, 400);
+    if (!st) return fail(res, "لا يوجد متجر معتمد لجوالك.", 404);
+
+    const wallet = await getStoreWalletPayloadWithFallback(sb, req.appUser.id, st.id);
+    return ok(res, { wallet });
+  } catch (e) {
+    console.error("[store/wallet]", e);
+    return fail(res, e.message || "خطأ في الخادم", 500);
+  }
+});
+
 router.get("/merchant-dashboard", requireAuth, requireMerchantRole, async (req, res) => {
   try {
     const sb = createServiceClient();
@@ -1422,7 +1445,7 @@ router.get("/merchant-dashboard", requireAuth, requireMerchantRole, async (req, 
     if (!st) return fail(res, "لا يوجد متجر معتمد لجوالك.", 404);
 
     const sid = st.id;
-    const [oRes, wRes, txRes, pCountRes] = await Promise.all([
+    const [oRes, walletPayload, txRes, pCountRes] = await Promise.all([
       sb
         .from("orders")
         .select(
@@ -1431,7 +1454,7 @@ router.get("/merchant-dashboard", requireAuth, requireMerchantRole, async (req, 
         .eq("store_id", sid)
         .order("created_at", { ascending: false })
         .limit(100),
-      sb.from("store_wallets").select("balance,currency_code").eq("store_id", sid).maybeSingle(),
+      getStoreWalletPayloadWithFallback(sb, req.appUser.id, sid),
       sb
         .from("store_transactions")
         .select("id,amount,type,description,created_at,order_id")
@@ -1448,12 +1471,14 @@ router.get("/merchant-dashboard", requireAuth, requireMerchantRole, async (req, 
       orders = oRes.data || [];
     }
 
-    let wallet = { balance: 0, currency_code: "SAR" };
-    if (!wRes.error && wRes.data) {
-      wallet = { balance: Number(wRes.data.balance) || 0, currency_code: wRes.data.currency_code || "SAR" };
-    } else if (wRes.error && !isStoreFinancialMissing(wRes.error)) {
-      console.warn("[merchant-dashboard] wallet", wRes.error.message || wRes.error);
-    }
+    let wallet = {
+      balance: walletPayload.balance,
+      currency_code: walletPayload.currency_code || "SAR",
+      total_earned: walletPayload.total_earned,
+      total_commission: walletPayload.total_commission,
+      source: walletPayload.source,
+      wallet_mode: walletPayload.wallet_mode,
+    };
 
     let transactions = [];
     if (!txRes.error && txRes.data) transactions = txRes.data;

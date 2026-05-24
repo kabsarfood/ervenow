@@ -1,5 +1,6 @@
 const { createServiceClient } = require("../config/supabase");
 const { logger } = require("./logger");
+const { shadowLedgerSettleDeliveredOrder } = require("../services/shadowLedger");
 
 let twilioFactory = null;
 try {
@@ -68,6 +69,8 @@ async function runStoreCheckoutSideEffects({ order, groupItems, storeRow }) {
       "[storePostCheckout] skip wallet until payment_status=paid"
     );
   }
+
+  void shadowLedgerSettleDeliveredOrder(svc, order.id, { context: "store:checkout" });
 
   const phoneDigits = String(storeRow?.phone || "").replace(/\D/g, "");
   if (phoneDigits.length < 9) return;

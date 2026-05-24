@@ -98,6 +98,49 @@ async function rpcResult(sb, fn, args) {
 }
 
 /**
+ * استدعاء RPC عمولة COD — مع حماية وتسجيل (ربط مباشر)
+ * @param {import("@supabase/supabase-js").SupabaseClient} sb
+ * @param {string} orderId
+ * @param {{ driverId?: string, total?: number, label?: string }} [opts]
+ */
+async function invokeDriverLedgerCommissionRpc(sb, orderId, opts = {}) {
+  const oid = String(orderId || "").trim();
+  const label = String(opts.label || "delivery");
+  const driverId = String(opts.driverId || opts.driver_id || "").trim();
+  const total = Number(opts.total);
+
+  if (!oid) {
+    console.log(`[commission:${label}] skip — missing order id`);
+    return { ok: false, reason: "missing_order_id" };
+  }
+  if (!driverId) {
+    console.log(`[commission:${label}] skip — no driver_id`, { orderId: oid });
+    return { ok: false, reason: "no_driver", skipped: true };
+  }
+  if (!Number.isFinite(total) || total <= 0) {
+    console.log(`[commission:${label}] skip — zero total`, { orderId: oid });
+    return { ok: false, reason: "zero_total", skipped: true };
+  }
+
+  try {
+    const { data, error } = await sb.rpc("driver_ledger_apply_commission_on_delivered", {
+      p_order_id: oid,
+    });
+    if (error) throw error;
+    const row = typeof data === "object" && data !== null && !Array.isArray(data) ? data : {};
+    if (row.ok === true && row.reason === "commission_recorded") {
+      console.log(`[commission:${label}] success`, { orderId: oid, amount: row.amount, driverId: row.driver_id });
+    } else {
+      console.log(`[commission:${label}] rpc result`, { orderId: oid, result: row });
+    }
+    return row;
+  } catch (e) {
+    console.error("Commission error:", e.message || String(e));
+    return { ok: false, error: e.message || String(e) };
+  }
+}
+
+/**
  * @param {import("@supabase/supabase-js").SupabaseClient} sb
  * @param {string} orderId
  * @param {object} [orderRow] صف الطلب إن وُجد (يتجنب round-trip)
@@ -146,16 +189,11 @@ async function applyDriverCommissionOnDelivered(sb, orderId, orderRow) {
   }
 
   try {
-    const result = await rpcResult(sb, "driver_ledger_apply_commission_on_delivered", {
-      p_order_id: oid,
+    return await invokeDriverLedgerCommissionRpc(sb, oid, {
+      driverId: order.driver_id,
+      total: billable,
+      label: "delivery",
     });
-    if (result && result.ok === true && result.reason === "commission_recorded") {
-      logger.info(
-        { orderId: oid, amount: result.amount, driverId: result.driver_id },
-        "[driver_ledger] commission applied on delivered"
-      );
-    }
-    return result;
   } catch (err) {
     if (/does not exist|42883|driver_ledger/i.test(String(err.message || ""))) {
       logger.warn("[driver_ledger] migration not applied — skip commission ledger");
@@ -257,6 +295,7 @@ module.exports = {
   generateReceiptReference,
   roundCollectAmount,
   applyDriverCommissionOnDelivered,
+  invokeDriverLedgerCommissionRpc,
   getDriverCommissionBalance,
   assertDriverCanAcceptOrders,
   collectDriverCommission,

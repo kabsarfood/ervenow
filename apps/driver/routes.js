@@ -11,7 +11,7 @@ const { notifyDriver } = require("./notify");
 const { bumpDeliveryOrdersListEpoch } = require("../../shared/utils/deliveryOrdersListCache");
 const { setStatus } = require("../delivery/service");
 const { requireRole } = require("../../shared/middleware/roles");
-const { getOperationalWalletPayload } = require("../../shared/utils/operationalWallet");
+const { getWalletPayloadWithLedgerFallback } = require("../../shared/utils/ledgerWallet");
 const {
   OTP_SCOPE,
   otpBackendMode,
@@ -474,7 +474,7 @@ router.get("/orders", requireAuth, async (req, res) => {
 
 router.get("/wallet", requireAuth, requireRole("driver"), async (req, res) => {
   try {
-    const payload = await getOperationalWalletPayload(req.supabase, req.appUser.id);
+    const payload = await getWalletPayloadWithLedgerFallback(req.supabase, req.appUser.id, "driver");
     return ok(res, payload);
   } catch (e) {
     return fail(res, e.message, 500);

@@ -262,6 +262,22 @@
       .finance-table tbody tr.finance-row--ok {
         background: #f0fdf4;
       }
+      .ledger-tx-credit {
+        color: #166534;
+        font-weight: 700;
+      }
+      .ledger-tx-debit {
+        color: #b91c1c;
+        font-weight: 700;
+      }
+      .ledger-tx-table-wrap {
+        margin-top: 14px;
+      }
+      .ledger-tx-updated {
+        font-size: 0.82rem;
+        color: #6f5441;
+        margin: 0 0 8px;
+      }
       .finance-balance-pill {
         display: inline-block;
         padding: 4px 10px;
@@ -1329,9 +1345,9 @@
             <div class="hint">طلبات مُسلَّمة اليوم</div>
           </div>
           <div class="live-stat-card live-stat-card--profit">
-            <div class="lbl">عمولة المنصة (7%)</div>
+            <div class="lbl">عمولة المنصة (ledger)</div>
             <div class="num" id="liveProfitCommission">—</div>
-            <div class="hint">من إيراد التسليم اليوم</div>
+            <div class="hint">إجمالي من ervenow_ledger</div>
           </div>
         </div>
         <div class="live-map-card">
@@ -1374,8 +1390,57 @@
           <div class="stat" id="revenueTotal">0</div>
         </div>
         <div class="card" id="cardPlatformCommission" style="display: none">
-          <strong>💎 عمولة المنصة (تقدير من الطلبات)</strong>
+          <strong>💎 عمولة المنصة (ervenow_ledger)</strong>
           <div class="stat" id="platformCommissionStat">0</div>
+        </div>
+      </div>
+
+      <div class="card" id="ledgerFinancePanel" style="display: none; margin-bottom: 14px">
+        <strong>📊 الملخص المالي — Financial Control (ervenow_ledger)</strong>
+        <p class="sub" style="margin: 8px 0 12px">
+          أرقام مجمّعة من حركات الدفتر الموحّد فقط — المصدر: <code>GET /api/admin/finance-summary</code>
+        </p>
+        <p class="sub" id="ledgerFinanceHint" style="display: none; color: #a63; font-weight: 700"></p>
+        <div class="finance-kpi-grid" id="ledgerFinanceKpiGrid">
+          <div class="finance-kpi-card">
+            <span class="muted">عمولة المنصة</span>
+            <strong id="lfPlatformCommission">—</strong>
+          </div>
+          <div class="finance-kpi-card">
+            <span class="muted">أرباح المندوبين</span>
+            <strong id="lfDriverEarnings">—</strong>
+          </div>
+          <div class="finance-kpi-card">
+            <span class="muted">عمولات مزودي الخدمة</span>
+            <strong id="lfServiceCommission">—</strong>
+          </div>
+          <div class="finance-kpi-card">
+            <span class="muted">أرباح المتاجر</span>
+            <strong id="lfStoreEarnings">—</strong>
+          </div>
+        </div>
+        <div class="ledger-tx-table-wrap">
+          <h3 style="margin: 16px 0 8px; font-size: 1rem; color: #5b371d">آخر العمليات المالية</h3>
+          <p class="ledger-tx-updated" id="ledgerTxLastUpdated">—</p>
+          <div class="finance-table-wrap">
+            <table class="finance-table" aria-label="آخر عمليات ervenow_ledger">
+              <thead>
+                <tr>
+                  <th>type</th>
+                  <th>direction</th>
+                  <th>amount</th>
+                  <th>user_id</th>
+                  <th>reference_id</th>
+                  <th>created_at</th>
+                </tr>
+              </thead>
+              <tbody id="ledgerTransactionsBody">
+                <tr>
+                  <td colspan="6" class="finance-msg">جارٍ التحميل…</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 
@@ -1756,6 +1821,7 @@
           if (panelId && btns[j].getAttribute("data-panel") === panelId) btns[j].classList.add("active");
           else btns[j].classList.remove("active");
         }
+        activePanelId = panelId || "";
       }
 
       var adminPermissions = [];
@@ -1769,8 +1835,11 @@
       var adminSocketFallbackTimer = null;
       var adminLiveStatsDebounceTimer = null;
       var adminDriverSilentRefreshTimer = null;
-      var LIVE_COMMISSION_RATE = 0.07;
-      var liveProfit = { ordersToday: 0, revenueDeliveredToday: 0, commissionToday: 0 };
+      var STATS_POLL_MS = 30000;
+      var LEDGER_TX_POLL_MS = 12000;
+      var activePanelId = "";
+      var ledgerFinanceSummary = null;
+      var liveProfit = { ordersToday: 0, revenueDeliveredToday: 0, commissionLedgerTotal: 0 };
       var liveMap = null;
       var liveMapMarkersLayer = null;
       var liveMapDriverMarkers = {};
@@ -2134,6 +2203,131 @@
         if (cc) cc.style.display = fin ? "" : "none";
         var finBtn = document.getElementById("financePanelBtn");
         if (finBtn) finBtn.style.display = fin ? "" : "none";
+        var lfp = document.getElementById("ledgerFinancePanel");
+        if (lfp) lfp.style.display = fin ? "block" : "none";
+      }
+
+      function renderLedgerTransactionsTable(rows) {
+        var body = document.getElementById("ledgerTransactionsBody");
+        var updatedEl = document.getElementById("ledgerTxLastUpdated");
+        if (!body) return;
+        if (updatedEl) updatedEl.textContent = "آخر تحديث: " + fmtWhen(new Date().toISOString());
+        if (!rows || !rows.length) {
+          body.innerHTML =
+            '<tr><td colspan="6" class="finance-msg">لا توجد عمليات في ervenow_ledger بعد</td></tr>';
+          return;
+        }
+        var esc = function (s) {
+          if (s == null || s === "") return "—";
+          return String(s)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;");
+        };
+        body.innerHTML = rows
+          .map(function (tx) {
+            var dir = String(tx.direction || "").toLowerCase();
+            var dirClass = dir === "credit" ? "ledger-tx-credit" : dir === "debit" ? "ledger-tx-debit" : "";
+            return (
+              "<tr>" +
+              "<td>" +
+              esc(tx.type) +
+              "</td>" +
+              '<td class="' +
+              dirClass +
+              '">' +
+              esc(tx.direction) +
+              "</td>" +
+              "<td>" +
+              esc(fmtMoneyShort(tx.amount)) +
+              "</td>" +
+              "<td>" +
+              esc(tx.user_id) +
+              "</td>" +
+              "<td>" +
+              esc(tx.reference_id) +
+              "</td>" +
+              "<td>" +
+              esc(fmtWhen(tx.created_at)) +
+              "</td>" +
+              "</tr>"
+            );
+          })
+          .join("");
+      }
+
+      function applyLedgerFinanceSummary(j) {
+        if (!j) return;
+        var set = function (id, val) {
+          var el = document.getElementById(id);
+          if (el) el.textContent = fmtMoney(val || 0);
+        };
+        set("lfPlatformCommission", j.platform_commission_total);
+        set("lfDriverEarnings", j.driver_earnings_total);
+        set("lfServiceCommission", j.service_commission_total);
+        set("lfStoreEarnings", j.store_earnings_total);
+        var pc = document.getElementById("platformCommissionStat");
+        if (pc) pc.innerText = fmtMoney(j.platform_commission_total || 0);
+        syncLiveProfitCommissionFromLedger();
+        renderLiveProfitCards();
+        renderLedgerTransactionsTable(j.recent_transactions || []);
+      }
+
+      async function loadLedgerFinanceSummary() {
+        if (!hasPermission("finance")) return;
+        var hint = document.getElementById("ledgerFinanceHint");
+        if (hint) {
+          hint.style.display = "none";
+          hint.textContent = "";
+        }
+        try {
+          var j = await window.PlatformAPI.api("/api/admin/finance-summary");
+          if (!j || j.ok === false) {
+            throw new Error((j && j.reason) || "finance-summary failed");
+          }
+          console.log("[finance dashboard] using ledger");
+          ledgerFinanceSummary = j;
+          applyLedgerFinanceSummary(j);
+        } catch (e) {
+          if (hint) {
+            hint.style.display = "block";
+            hint.textContent = e.message || "تعذّر تحميل الملخص من ervenow_ledger — تحقق من الهجرات";
+          }
+          var txBody = document.getElementById("ledgerTransactionsBody");
+          if (txBody) {
+            txBody.innerHTML =
+              '<tr><td colspan="6" class="finance-msg">' +
+              (e.message || "تعذّر تحميل العمليات") +
+              "</td></tr>";
+          }
+        }
+      }
+
+      function loadPanelById(panelId) {
+        if (!panelId) return Promise.resolve();
+        switch (panelId) {
+          case "panelOrders":
+            return loadRecentOrders();
+          case "panelNotifications":
+            return loadNotifications();
+          case "panelDrivers":
+            return loadDrivers();
+          case "panelComplaints":
+            return loadComplaints();
+          case "panelCustomers":
+            return loadCustomers();
+          case "panelStores":
+            return loadStores();
+          case "panelJobs":
+            return loadJobs();
+          case "panelAdminAccounts":
+            return loadAdminAccounts();
+          case "financePanel":
+            return loadFinancePanel();
+          default:
+            return Promise.resolve();
+        }
       }
 
       function financeRiskLevel(d) {
@@ -3063,26 +3257,28 @@
             : "—";
         }
         if (cEl) {
-          cEl.textContent = hasPermission("dashboard")
-            ? fmtMoneyShort(liveProfit.commissionToday) + " ر.س"
+          cEl.textContent = hasPermission("finance") || hasPermission("dashboard")
+            ? fmtMoneyShort(liveProfit.commissionLedgerTotal) + " ر.س"
             : "—";
+        }
+      }
+
+      function syncLiveProfitCommissionFromLedger() {
+        if (ledgerFinanceSummary) {
+          liveProfit.commissionLedgerTotal = roundMoney2(Number(ledgerFinanceSummary.platform_commission_total) || 0);
         }
       }
 
       function recomputeLiveProfitDelivered() {
         var rev = 0;
-        var comm = 0;
         for (var i = 0; i < cacheOrders.length; i++) {
           var o = cacheOrders[i];
           if (!o || isCancelledOrderClient(o)) continue;
           if (!isDeliveredStatusClient(o) || !isCreatedTodayClient(o.created_at)) continue;
-          var amt = orderBillableAmountClient(o);
-          rev += amt;
-          var pf = Number(o.platform_fee);
-          comm += Number.isFinite(pf) && pf > 0 ? pf : amt * LIVE_COMMISSION_RATE;
+          rev += orderBillableAmountClient(o);
         }
         liveProfit.revenueDeliveredToday = roundMoney2(rev);
-        liveProfit.commissionToday = roundMoney2(comm);
+        syncLiveProfitCommissionFromLedger();
       }
 
       function applyLiveProfitOnOrderPatch(prev, merged, isNew) {
@@ -4392,8 +4588,6 @@
         var rtot = document.getElementById("revenueTotal");
         if (rt) rt.innerText = fmtMoney(j.revenueToday || 0);
         if (rtot) rtot.innerText = fmtMoney(j.revenueTotal || 0);
-        var pc = document.getElementById("platformCommissionStat");
-        if (pc && j.platform_commission != null) pc.innerText = fmtMoney(j.platform_commission);
         var lt = document.getElementById("liveStatToday");
         var la = document.getElementById("liveStatActive");
         if (lt) lt.textContent = String(t);
@@ -4407,7 +4601,10 @@
           var range = rangeEl && rangeEl.value ? rangeEl.value : "today";
           var j = await window.PlatformAPI.api("/api/admin/stats?range=" + encodeURIComponent(range));
           applyStatsToDom(j);
-          if (hasPermission("finance")) await loadTreasury();
+          if (hasPermission("finance")) {
+            await loadLedgerFinanceSummary();
+            await loadTreasury();
+          }
         } catch (e) {
           showError(e.message || "فشل تحميل الإحصائيات");
         }
@@ -4858,9 +5055,7 @@
           if (!panelId) return;
           var isActive = this.classList.contains("active");
           showPanel(isActive ? "" : panelId);
-          if (!isActive && panelId === "financePanel" && hasPermission("finance")) {
-            loadFinancePanel();
-          }
+          if (!isActive && panelId) void loadPanelById(panelId);
         });
       }
       var closeBtn = document.getElementById("closePanelsBtn");
@@ -4879,15 +5074,8 @@
         applyPermissionVisibility();
         showPanel("");
         if (hasPermission("dashboard")) loadStats();
+        else if (hasPermission("finance")) loadLedgerFinanceSummary();
         if (hasPermission("orders")) loadRecentOrders();
-        if (hasPermission("notifications")) loadNotifications();
-        if (hasPermission("drivers")) loadDrivers();
-        if (hasPermission("complaints")) loadComplaints();
-        if (hasPermission("customers")) loadCustomers();
-        if (hasPermission("stores")) loadStores();
-        if (hasPermission("jobs")) loadJobs();
-        if (hasPermission("admin_accounts")) loadAdminAccounts();
-        if (hasPermission("finance")) loadFinancePanel();
         setupExecUi();
         initAdminDashboardSocket();
         startAdminAlertsTimer();
@@ -4895,17 +5083,16 @@
         updateLiveSocketPulse();
         setInterval(function () {
           if (hasPermission("dashboard") || hasPermission("orders")) void refreshLiveDashboard();
-        }, 10000);
-        setInterval(function () { if (hasPermission("dashboard")) loadStats(); }, 15000);
-        setInterval(function () { if (hasPermission("orders")) loadRecentOrders(); }, 20000);
-        setInterval(function () { if (hasPermission("notifications")) loadNotifications(); }, 20000);
-        setInterval(function () { if (hasPermission("drivers")) loadDrivers(); }, 20000);
-        setInterval(function () { if (hasPermission("complaints")) loadComplaints(); }, 25000);
-        setInterval(function () { if (hasPermission("customers")) loadCustomers(); }, 25000);
-        setInterval(function () { if (hasPermission("stores")) loadStores(); }, 25000);
-        setInterval(function () { if (hasPermission("jobs")) loadJobs(); }, 25000);
-        setInterval(function () { if (hasPermission("admin_accounts")) loadAdminAccounts(); }, 30000);
-        setInterval(function () { if (hasPermission("finance")) loadFinancePanel(); }, 30000);
+        }, STATS_POLL_MS);
+        setInterval(function () {
+          if (hasPermission("dashboard")) loadStats();
+        }, STATS_POLL_MS);
+        setInterval(function () {
+          if (hasPermission("finance")) loadLedgerFinanceSummary();
+        }, LEDGER_TX_POLL_MS);
+        setInterval(function () {
+          if (activePanelId) void loadPanelById(activePanelId);
+        }, STATS_POLL_MS);
       })();
     </script>
   </body>

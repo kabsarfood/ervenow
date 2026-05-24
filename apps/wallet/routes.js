@@ -19,6 +19,12 @@ const {
   getOperationalWalletPayload,
   listOperationalWalletTransactions,
 } = require("../../shared/utils/operationalWallet");
+const {
+  getWalletPayloadWithLedgerFallback,
+  getWalletMePayload,
+  listLedgerWithdrawRequests,
+  getWithdrawAvailableBalance,
+} = require("../../shared/utils/ledgerWallet");
 
 const router = express.Router();
 const MIN_WITHDRAW = 20;
@@ -50,7 +56,7 @@ function clientIp(req) {
 }
 
 async function operationalWalletPayload(req) {
-  return getOperationalWalletPayload(req.supabase, req.appUser.id);
+  return getWalletPayloadWithLedgerFallback(req.supabase, req.appUser.id, req.appUser.role);
 }
 
 async function validateWithdrawRequest(req, amount) {
@@ -84,16 +90,16 @@ async function validateWithdrawRequest(req, amount) {
     }
   }
 
-  const wallet = await getOperationalWalletPayload(req.supabase, req.appUser.id);
-  const bal = Number(wallet.balance) || 0;
+  const balInfo = await getWithdrawAvailableBalance(req.supabase, req.appUser.id, req.appUser.role);
+  const bal = Number(balInfo.balance) || 0;
   if (amount > bal) throw new Error("الرصيد غير كافٍ");
 
-  return { ibanRaw, bal };
+  return { ibanRaw, bal, balance_source: balInfo.source };
 }
 
 router.get("/me", requireAuth, requireRole(...WALLET_READ_ROLES), async (req, res) => {
   try {
-    const payload = await operationalWalletPayload(req);
+    const payload = await getWalletMePayload(req.supabase, req.appUser.id, req.appUser.role);
     ok(res, payload);
   } catch (e) {
     fail(res, e.message, 500);
@@ -199,6 +205,17 @@ router.post("/ledger/refund", requireAuth, requireRole("admin"), async (req, res
   }
 });
 
+router.get("/withdraw", requireAuth, requireRole(...PAYOUT_ROLES), async (req, res) => {
+  try {
+    const { rows, source } = await listLedgerWithdrawRequests(req.supabase, req.appUser.id, {
+      limit: Number(req.query?.limit) || 50,
+    });
+    ok(res, { requests: rows, source });
+  } catch (e) {
+    fail(res, e.message, 500);
+  }
+});
+
 router.post("/withdraw", requireAuth, requireRole(...PAYOUT_ROLES), async (req, res) => {
   try {
     const amount = Number(req.body?.amount);
@@ -207,6 +224,29 @@ router.post("/withdraw", requireAuth, requireRole(...PAYOUT_ROLES), async (req, 
     }
 
     const { ibanRaw } = await validateWithdrawRequest(req, amount);
+
+    const ledgerInsert = await req.supabase.from("withdraw_requests").insert({
+      user_id: req.appUser.id,
+      amount,
+      status: "pending",
+    });
+    if (!ledgerInsert.error) {
+      await insertAuditEvent(req.supabase, {
+        scope: "wallet",
+        action: "withdraw_request_created",
+        actor_type: "user",
+        actor_id: req.appUser.id,
+        subject_type: "withdraw_requests",
+        ip: clientIp(req),
+        metadata: { amount, path: "ledger_direct" },
+      });
+      return ok(res, { message: "تم إرسال طلب السحب", source: "withdraw_requests" });
+    }
+
+    const msg = String(ledgerInsert.error.message || "");
+    if (!/withdraw_requests|schema cache|relation/i.test(msg)) {
+      return fail(res, ledgerInsert.error.message, 400);
+    }
 
     const { error: insE } = await req.supabase.from("ervenow_withdraw_requests").insert({
       user_id: req.appUser.id,
@@ -324,6 +364,30 @@ router.post("/withdraw/confirm-otp", requireAuth, requireRole(...PAYOUT_ROLES), 
     const mergedBody = { ...(req.body || {}), iban: req.body?.iban || meta.iban, amount };
     const mergedReq = { ...req, body: mergedBody };
     const { ibanRaw } = await validateWithdrawRequest(mergedReq, amount);
+
+    const ledgerInsert = await req.supabase.from("withdraw_requests").insert({
+      user_id: req.appUser.id,
+      amount,
+      status: "pending",
+      note: "OTP verified",
+    });
+    if (!ledgerInsert.error) {
+      await insertAuditEvent(req.supabase, {
+        scope: "wallet",
+        action: "withdraw_request_created",
+        actor_type: "user",
+        actor_id: req.appUser.id,
+        subject_type: "withdraw_requests",
+        ip: clientIp(req),
+        metadata: { amount, path: "ledger_otp_confirm" },
+      });
+      return ok(res, { message: "تم إرسال طلب السحب بنجاح بعد التحقق", source: "withdraw_requests" });
+    }
+
+    const ledgerMsg = String(ledgerInsert.error.message || "");
+    if (!/withdraw_requests|schema cache|relation/i.test(ledgerMsg)) {
+      return fail(res, ledgerInsert.error.message, 400);
+    }
 
     const { error: insE } = await req.supabase.from("ervenow_withdraw_requests").insert({
       user_id: req.appUser.id,

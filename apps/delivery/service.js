@@ -1,8 +1,8 @@
 const { isValidDeliveryTransition, deliveryLifecycleIndex } = require("../../shared/utils/helpers");
 const { applyDriverOrderEarning } = require("../../shared/utils/ervenowWalletCredit");
 const {
-  applyDriverCommissionOnDelivered,
   assertDriverCanAcceptOrders,
+  resolveOrderBillableAmount,
 } = require("../../shared/services/driverCommissionLedger");
 const { onDeliveryDelivered } = require("../finance/hooks");
 /* محفظتان: ervenow_* = تشغيل (مندوب/سحب/استرجاع عميل) | wallets + wallet_transactions = محاسبة (تسوية تسليم) */
@@ -12,6 +12,7 @@ const { logger } = require("../../shared/utils/logger");
 const { normalizeOrderFinancialsForInsert } = require("../../shared/utils/orderTotals");
 const { isOrdersStoreColumnMissingError, insertOrdersResilient } = require("../../shared/utils/idempotency");
 const { computePlatformCommission } = require("../../shared/utils/platformCommission");
+const { shadowLedgerSettleDeliveredOrder } = require("../../shared/services/shadowLedger");
 
 function haversineDistanceKm(lat1, lng1, lat2, lng2) {
   const R = 6371;
@@ -81,8 +82,9 @@ function calcDeliveryBaseFee(distanceKm, vehicleType) {
   return calcDeliveryFee(km);
 }
 
+/** عمولة المنصة على أجرة التوصيل — نفس نسبة commission_rules (افتراضي 7%) */
 function calcDeliveryPlatformFee(deliveryFee) {
-  return Math.round(Number(deliveryFee) * 0.15 * 100) / 100;
+  return computePlatformCommission(deliveryFee);
 }
 
 function calcDriverEarning(deliveryFee) {
@@ -550,7 +552,25 @@ async function setStatus(sb, orderId, nextStatus, appUser) {
         logger.error({ err: err.message || String(err), orderId: data.id }, "[ervenow] operational driver earning");
       }
       try {
-        const comm = await applyDriverCommissionOnDelivered(sb, data.id, data);
+        const billable = resolveOrderBillableAmount(data);
+        let comm = { ok: false };
+        if (data.driver_id && billable > 0) {
+          try {
+            const { data: commData, error: commErr } = await sb.rpc(
+              "driver_ledger_apply_commission_on_delivered",
+              { p_order_id: data.id }
+            );
+            if (commErr) throw commErr;
+            comm = typeof commData === "object" && commData !== null ? commData : { ok: true };
+            console.log("[commission:delivery] success", data.id, comm);
+          } catch (e) {
+            console.error("Commission error:", e.message || String(e));
+          }
+        } else if (!data.driver_id) {
+          console.log("[commission:delivery] skip — no driver_id", data.id);
+        } else {
+          console.log("[commission:delivery] skip — zero total", data.id);
+        }
         if (comm && comm.ok === false && comm.reason !== "migration_missing" && !comm.skipped) {
           logger.warn({ orderId: data.id, result: comm }, "[driver_ledger] commission on delivered");
         }
@@ -564,6 +584,7 @@ async function setStatus(sb, orderId, nextStatus, appUser) {
         logger.error({ err: err.message || String(err), orderId: data.id }, "[driver_ledger] commission on delivered");
       }
     }
+    void shadowLedgerSettleDeliveredOrder(sb, data.id, { context: "delivery:delivered" });
   }
 
   return { data, error };
