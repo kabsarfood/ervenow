@@ -1,6 +1,7 @@
 const { createServiceClient } = require("../config/supabase");
 const { logger } = require("./logger");
-const { shadowLedgerSettleDeliveredOrder } = require("../services/shadowLedger");
+const { isLedgerOnlyMode } = require("./financeMode");
+const { ledgerDepositForUser } = require("./ledgerWallet");
 
 let twilioFactory = null;
 try {
@@ -48,29 +49,35 @@ async function runStoreCheckoutSideEffects({ order, groupItems, storeRow }) {
   const goodsPlatformFee = Math.round(orderTotal * commissionRate * 100) / 100;
   const net = Math.round((orderTotal - goodsPlatformFee) * 100) / 100;
   const pay = String(order.payment_status || "").trim().toLowerCase();
-  if (pay === "paid" && net > 0) {
-    const { error: rpcErr } = await svc.rpc("store_wallet_credit_for_order", {
-      p_store_id: order.store_id,
-      p_order_id: order.id,
-      p_amount: net,
-      p_description: `طلب ${order.order_number || order.id}`,
-    });
-    if (rpcErr) {
-      const msg = String(rpcErr.message || rpcErr.details || rpcErr);
-      if (!/store_wallets|store_transactions|function.*does not exist|schema cache/i.test(msg)) {
-        logger.error({ err: msg, orderId: order.id }, "[storePostCheckout] wallet credit");
-      } else {
-        logger.warn({ err: msg, orderId: order.id }, "[storePostCheckout] wallet tables missing — run migration_store_wallet.sql");
+  if (pay === "paid" && net > 0 && storeRow?.phone) {
+    const digits = String(storeRow.phone).replace(/\D/g, "");
+    const { data: merchantUser } = await svc
+      .from("users")
+      .select("id, role")
+      .eq("phone", digits)
+      .maybeSingle();
+    if (merchantUser?.id) {
+      try {
+        await ledgerDepositForUser(
+          svc,
+          merchantUser.id,
+          merchantUser.role || "merchant",
+          net,
+          `store:order:${order.id}:merchant_net`,
+          `صافي متجر — طلب ${order.order_number || order.id}`
+        );
+      } catch (e) {
+        logger.error({ err: e.message || String(e), orderId: order.id }, "[storePostCheckout] ledger deposit");
       }
+    } else {
+      logger.warn({ orderId: order.id, phone: digits }, "[storePostCheckout] no merchant user for ledger deposit");
     }
-  } else if (net > 0) {
+  } else if (net > 0 && pay !== "paid") {
     logger.info(
       { orderId: order.id, payment_status: order.payment_status },
-      "[storePostCheckout] skip wallet until payment_status=paid"
+      "[storePostCheckout] skip ledger deposit until payment_status=paid"
     );
   }
-
-  void shadowLedgerSettleDeliveredOrder(svc, order.id, { context: "store:checkout" });
 
   const phoneDigits = String(storeRow?.phone || "").replace(/\D/g, "");
   if (phoneDigits.length < 9) return;

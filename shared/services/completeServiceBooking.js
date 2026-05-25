@@ -1,6 +1,7 @@
 const { recordCommissionDebtOnDelivered } = require("./providerCommissionDebts");
 const { isHomeServiceType } = require("../utils/homeServicePricing");
-const { shadowLedgerSettleDeliveredOrder } = require("./shadowLedger");
+const { settleCompletedServiceLedgerOnly } = require("./ledgerOnlySettlement");
+const { isLedgerOnlyMode } = require("../utils/financeMode");
 
 function isMissingOptionalColumnError(err) {
   const msg = String((err && err.message) || err || "");
@@ -91,32 +92,17 @@ async function completeServiceBooking(sb, bookingId, providerId, options = {}) {
       }
     }
 
-    if (pid && total > 0) {
+    if (!isLedgerOnlyMode() && pid && total > 0) {
       try {
         const { data: commData, error: commErr } = await sb.rpc(
           "driver_ledger_apply_commission_on_delivered",
           { p_order_id: id }
         );
         if (commErr) throw commErr;
-        const row = typeof commData === "object" && commData !== null ? commData : {};
-        if (row.reason === "order_not_found") {
-          console.log("[commission:service] provider debt recorded (booking)", {
-            bookingId: id,
-            providerId: pid,
-            total,
-          });
-        } else if (row.ok === true) {
-          console.log("[commission:service] success", id, row);
-        } else {
-          console.log("[commission:service] rpc result", id, row);
-        }
+        console.log("[commission:service] legacy rpc", id, commData);
       } catch (e) {
         console.error("Commission error:", e.message || String(e));
       }
-    } else if (!pid) {
-      console.log("[commission:service] skip — no provider_id", id);
-    } else {
-      console.log("[commission:service] skip — zero total", id);
     }
 
     try {
@@ -128,7 +114,7 @@ async function completeServiceBooking(sb, bookingId, providerId, options = {}) {
       /* optional column */
     }
 
-    void shadowLedgerSettleDeliveredOrder(sb, id, { type: "service", context: "service:completed" });
+    void settleCompletedServiceLedgerOnly(sb, id, "service:completed");
   }
 
   return {

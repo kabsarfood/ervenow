@@ -36,7 +36,28 @@ const {
   COMMISSION_ALERT_THRESHOLD,
   sendSmartCollectionReminder,
 } = require("../../shared/services/smartCollectionNotify");
-const { getAdminFinanceSummaryFromLedger } = require("../../shared/utils/ledgerWallet");
+const {
+  getAdminFinanceSummaryFromLedger,
+  listDriverDebtsFromLedger,
+  collectDriverDebtViaLedger,
+  getDriverLedgerOwedBalance,
+  listLedgerWalletTransactions,
+} = require("../../shared/utils/ledgerWallet");
+const { isLedgerOnlyMode } = require("../../shared/utils/financeMode");
+const {
+  updateFinancialFeatureFlag,
+  listFinancialFeatureFlagsArray,
+  FINANCIAL_FEATURE_KEYS,
+  normalizeMode,
+  parseAutoFreezeConfig,
+  assertWithdrawSystemEnabled,
+} = require("../../shared/utils/platformFeatureFlags");
+const {
+  enrichDriversWithAutoFreeze,
+  evaluateAutoFreezeBalance,
+  toAutoFreezeBalance,
+  loadAutoFreezeSettings,
+} = require("../../shared/services/autoFreeze");
 
 const ADMIN_PUBLIC_ROOT = path.join(__dirname, "../../public");
 
@@ -703,8 +724,11 @@ router.get("/daily-report", requireAuth, requireRole("admin"), requireAdminPermi
   }
 });
 
-/** ملخص محفظة ERVENOW (ervenow_wallets): إيداعات مناديب اليوم، عمولة المنصة من طلبات مُسلَّمة (أنشئت اليوم)، وإيراد الطلبات نفس نافذة التقرير اليومي */
+/** Legacy operational summary — معطّل في ledger_only */
 router.get("/wallet-ervenow-summary", requireAuth, requireRole("admin"), requireAdminPermission("finance"), async (req, res) => {
+  if (isLedgerOnlyMode()) {
+    return fail(res, "استخدم GET /api/admin/finance-summary (ledger only)", 410);
+  }
   try {
     const start = new Date();
     start.setHours(0, 0, 0, 0);
@@ -753,8 +777,10 @@ router.get("/wallet-ervenow-summary", requireAuth, requireRole("admin"), require
   }
 });
 
-/** تدقيق: رصيد ervenow_wallets مقابل مجموع الحركات المكتملة (ervenow_wallet_ledger_balance) */
 router.get("/wallet-integrity-check", requireAuth, requireRole("admin"), requireAdminPermission("finance"), async (req, res) => {
+  if (isLedgerOnlyMode()) {
+    return fail(res, "غير متاح — FINANCE_MODE=ledger_only", 410);
+  }
   try {
     const limit = Math.min(500, Math.max(1, Number(req.query.limit) || 200));
     const { data: wallets, error: wErr } = await req.supabase
@@ -791,6 +817,78 @@ router.get("/wallet-integrity-check", requireAuth, requireRole("admin"), require
   }
 });
 
+/** GET /api/admin/features — [{ key, mode }, ...] (service_role) */
+router.get("/features", requireAuth, requireRole("admin"), requireAdminPermission("finance"), async (_req, res) => {
+  try {
+    const sb = createServiceClient();
+    if (!sb) return fail(res, "قاعدة البيانات غير جاهزة (service_role)", 503);
+
+    const result = await listFinancialFeatureFlagsArray(sb);
+    if (!result.ok && result.reason === "migration_missing") {
+      return fail(
+        res,
+        "نفّذ shared/migration_platform_feature_flags.sql في Supabase SQL Editor",
+        503,
+        { reason: result.reason, detail: result.detail || null }
+      );
+    }
+    return res.status(200).json(result.list);
+  } catch (e) {
+    return fail(res, e.message, 500);
+  }
+});
+
+/** POST /api/admin/features/update — body: { key, mode } (service_role) */
+router.post("/features/update", requireAuth, requireRole("admin"), requireAdminPermission("finance"), async (req, res) => {
+  try {
+    const sb = createServiceClient();
+    if (!sb) return fail(res, "قاعدة البيانات غير جاهزة (service_role)", 503);
+
+    const updates = Array.isArray(req.body?.updates) ? req.body.updates : null;
+    if (updates && updates.length) {
+      const list = [];
+      for (const row of updates) {
+        const key = String(row?.key || "").trim();
+        const mode = normalizeMode(row?.mode);
+        if (!FINANCIAL_FEATURE_KEYS.includes(key)) {
+          return fail(res, `مفتاح غير مدعوم: ${key}`, 400);
+        }
+        const result = await updateFinancialFeatureFlag(sb, key, mode);
+        if (!result.ok) {
+          if (result.reason === "migration_missing") {
+            return fail(res, "نفّذ shared/migration_platform_feature_flags.sql في Supabase", 503, result);
+          }
+          return fail(res, "تعذّر تحديث الميزة", 500, result);
+        }
+        list.push({ key, mode });
+      }
+      return res.status(200).json(list);
+    }
+
+    const key = String(req.body?.key || "").trim();
+    const mode = normalizeMode(req.body?.mode);
+    const config = req.body?.config;
+    if (!key) return fail(res, "key مطلوب", 400);
+    if (!FINANCIAL_FEATURE_KEYS.includes(key)) {
+      return fail(res, `مفتاح غير مدعوم. المسموح: ${FINANCIAL_FEATURE_KEYS.join(", ")}`, 400);
+    }
+
+    const result = await updateFinancialFeatureFlag(sb, key, mode, config);
+    if (!result.ok) {
+      if (result.reason === "migration_missing") {
+        return fail(res, "نفّذ shared/migration_platform_feature_flags.sql في Supabase", 503, result);
+      }
+      return fail(res, "تعذّر تحديث الميزة", 500, result);
+    }
+
+    const out = { key, mode };
+    if (result.feature?.config) out.config = result.feature.config;
+    return res.status(200).json(out);
+  } catch (e) {
+    return fail(res, e.message, 500);
+  }
+});
+
 /** GET /api/admin/finance-summary — ملخص مالي من ervenow_ledger فقط */
 router.get("/finance-summary", requireAuth, requireRole("admin"), requireAdminPermission("finance"), async (req, res) => {
   try {
@@ -814,6 +912,9 @@ router.get("/finance-summary", requireAuth, requireRole("admin"), requireAdminPe
 /** POST /api/admin/withdraw/approve — موافقة سحب ledger (withdraw_requests) */
 router.post("/withdraw/approve", requireAuth, requireRole("admin"), requireAdminPermission("finance"), async (req, res) => {
   try {
+    const sb = createServiceClient() || req.supabase;
+    await assertWithdrawSystemEnabled(sb);
+
     const id = String(req.body?.id || req.body?.request_id || "").trim();
     if (!id) return fail(res, "معرّف طلب السحب مطلوب", 400);
 
@@ -838,7 +939,7 @@ router.post("/withdraw/approve", requireAuth, requireRole("admin"), requireAdmin
     }
     return fail(res, String(row.reason || "approve_failed"), 400, { result: row });
   } catch (e) {
-    return fail(res, e.message, 500);
+    return fail(res, e.message, e.statusCode || 500);
   }
 });
 
@@ -1286,7 +1387,8 @@ router.get("/drivers", requireAuth, requireRole("admin"), requireAdminPermission
       .limit(500);
     if (error) return fail(res, error.message, 400);
     const enriched = await attachUserIdsToDrivers(req.supabase, data || []);
-    return ok(res, { drivers: sanitizeDriverOrStoreListForApi(enriched) });
+    const withFreeze = await enrichDriversWithAutoFreeze(req.supabase, enriched);
+    return ok(res, { drivers: sanitizeDriverOrStoreListForApi(withFreeze) });
   } catch (e) {
     return fail(res, e.message || String(e), 500);
   }
@@ -1490,8 +1592,24 @@ router.get("/stats", requireAuth, requireRole("admin"), requireAdminPermission("
   }
 });
 
-/** لقطة أرصدة المنصة والسيولة (محاسبة + تشغيل + متاجر) — أدمن بصلاحية finance فقط */
-router.get("/platform-treasury", requireAuth, requireRole("admin"), requireAdminPermission("finance"), async (_req, res) => {
+router.get("/platform-treasury", requireAuth, requireRole("admin"), requireAdminPermission("finance"), async (req, res) => {
+  if (isLedgerOnlyMode()) {
+    try {
+      const summary = await getAdminFinanceSummaryFromLedger(req.supabase);
+      if (!summary.ok) return fail(res, "ledger finance-summary required", 503);
+      return ok(res, {
+        treasury: {
+          source: "ervenow_ledger",
+          platform_commission_total: summary.platform_commission_total,
+          driver_earnings_total: summary.driver_earnings_total,
+          store_earnings_total: summary.store_earnings_total,
+          service_commission_total: summary.service_commission_total,
+        },
+      });
+    } catch (e) {
+      return fail(res, e.message, 500);
+    }
+  }
   try {
     const sb = createServiceClient();
     if (!sb) return fail(res, "قاعدة البيانات غير جاهزة", 503);
@@ -2084,6 +2202,53 @@ router.get(
       const sb = createServiceClient();
       if (!sb) return fail(res, "قاعدة البيانات غير جاهزة", 503);
 
+      if (isLedgerOnlyMode()) {
+        const ledgerRows = await listDriverDebtsFromLedger(sb, 500);
+        const owing = ledgerRows.filter((d) => Number(d.balance) > 0);
+        const { data: driversTbl } = await sb.from("drivers").select("id, name, phone, status, active").limit(500);
+        const { data: usersTbl } = await sb.from("users").select("id, phone, role").eq("role", "driver").limit(500);
+        const userById = new Map((usersTbl || []).map((u) => [String(u.id), u]));
+        const phoneToDriver = new Map();
+        for (const d of driversTbl || []) {
+          const ph = normalizeDigits(d.phone);
+          if (ph) phoneToDriver.set(ph, d);
+        }
+        const drivers = owing.map((w) => {
+          const uid = String(w.driver_id);
+          const u = userById.get(uid);
+          const ph = u ? normalizeDigits(u.phone) : "";
+          const dr = ph ? phoneToDriver.get(ph) : null;
+          return {
+            driver_id: uid,
+            balance: w.balance,
+            ledger_balance: w.ledger_balance,
+            name: dr?.name || null,
+            phone: dr?.phone || u?.phone || null,
+            status: dr?.status || null,
+            active: dr?.active,
+            source: "ervenow_ledger",
+          };
+        });
+        const totalDue = drivers.reduce((s, d) => s + (Number(d.balance) || 0), 0);
+        const freezeSettings = await loadAutoFreezeSettings(sb);
+        return ok(res, {
+          drivers,
+          summary: {
+            count: drivers.length,
+            total_balance_due: round2(totalDue),
+            debt_limit: DRIVER_DEBT_LIMIT,
+            alert_threshold: COMMISSION_ALERT_THRESHOLD,
+          },
+          debt_limit: DRIVER_DEBT_LIMIT,
+          smart_collection: {
+            alert_threshold: COMMISSION_ALERT_THRESHOLD,
+            channel: SMART_COLLECTION_CHANNEL,
+          },
+          auto_freeze: freezeSettings,
+          finance_mode: "ledger_only",
+        });
+      }
+
       const { data: wallets, error: wErr } = await sb
         .from("driver_wallets")
         .select("driver_id, balance, updated_at")
@@ -2151,6 +2316,8 @@ router.get(
         }
       } catch (_nErr) {}
 
+      const freezeSettings = await loadAutoFreezeSettings(sb);
+
       const drivers = walletRows.map((w) => {
         const uid = String(w.driver_id);
         const ph = userPhone.get(uid) || "";
@@ -2158,6 +2325,14 @@ router.get(
         const bal = round2(Number(w.balance) || 0);
         const phoneKey = normalizeDigits(prof?.phone || ph || "");
         const notify = phoneKey ? notifyByPhone.get(phoneKey) : null;
+        const freezeSt = evaluateAutoFreezeBalance(
+          toAutoFreezeBalance(bal),
+          freezeSettings.config,
+          freezeSettings.mode
+        );
+        const legacyBlocked = bal > DRIVER_DEBT_LIMIT;
+        const autoBlocked = freezeSettings.auto && freezeSt.phase === "block";
+        const autoWarn = freezeSettings.auto && freezeSt.phase === "warn";
         return {
           driver_id: uid,
           driver_record_id: prof?.id || null,
@@ -2166,7 +2341,11 @@ router.get(
           status: prof?.status || null,
           balance: bal,
           operations_count: counts[uid] || 0,
-          debt_blocked: bal > DRIVER_DEBT_LIMIT,
+          debt_blocked: freezeSettings.auto ? autoBlocked : legacyBlocked,
+          is_frozen: freezeSettings.auto ? autoBlocked : false,
+          warning: freezeSettings.auto ? autoWarn : false,
+          auto_freeze_warn: autoWarn,
+          auto_freeze_phase: freezeSt.phase,
           updated_at: w.updated_at,
           alert_balance: bal > COMMISSION_ALERT_THRESHOLD,
           notify_status: notify?.notify_status || null,
@@ -2189,6 +2368,7 @@ router.get(
           alert_threshold: COMMISSION_ALERT_THRESHOLD,
           channel: SMART_COLLECTION_CHANNEL,
         },
+        auto_freeze: freezeSettings,
       });
     } catch (e) {
       return fail(res, e.message || String(e), 500);
@@ -2207,6 +2387,29 @@ router.get(
       if (!sb) return fail(res, "قاعدة البيانات غير جاهزة", 503);
       const driverId = String(req.params.id || "").trim();
       if (!driverId) return fail(res, "driver id required", 400);
+
+      if (isLedgerOnlyMode()) {
+        const balance = await getDriverLedgerOwedBalance(sb, driverId);
+        const entries = await listLedgerWalletTransactions(sb, driverId, "driver", 200);
+        return ok(res, {
+          driver_id: driverId,
+          balance,
+          debt_blocked: balance > DRIVER_DEBT_LIMIT,
+          debt_limit: DRIVER_DEBT_LIMIT,
+          operations_count: entries.length,
+          entries: entries.map((t) => ({
+            id: t.id,
+            type: t.type,
+            direction: t.direction,
+            amount: t.amount,
+            reference_id: t.reference_id,
+            description: t.description,
+            created_at: t.created_at,
+            source: "ervenow_ledger",
+          })),
+          wallet: { driver_id: driverId, balance, source: "ervenow_ledger" },
+        });
+      }
 
       const { data: wallet, error: wErr } = await sb
         .from("driver_wallets")
@@ -2260,7 +2463,9 @@ router.post(
       const amount = roundCollectAmount(amountRaw);
       if (amount <= 0) return fail(res, "amount must be positive (rounded to 2 decimals)", 400);
 
-      const balanceBefore = await getDriverCommissionBalance(sb, driverId);
+      const balanceBefore = isLedgerOnlyMode()
+        ? await getDriverLedgerOwedBalance(sb, driverId)
+        : await getDriverCommissionBalance(sb, driverId);
       if (amount > round2(balanceBefore) + 0.004) {
         return fail(
           res,
@@ -2273,32 +2478,47 @@ router.post(
       const note = String(req.body?.note || "").trim().slice(0, 500);
       const adminId = req.appUser?.id || null;
       let result;
-      try {
-        result = await collectDriverCommission(sb, driverId, amount, {
-          note: note || null,
-          collected_by: adminId,
-          source: "admin_collect",
-          receipt_reference: receiptReference,
-        });
-      } catch (err) {
-        if (isDriverLedgerTableMissing(err)) {
-          return fail(res, "نفّذ shared/migration_driver_commission_ledger.sql على Supabase", 503);
+      if (isLedgerOnlyMode()) {
+        try {
+          result = await collectDriverDebtViaLedger(sb, driverId, amount, {
+            note: note || null,
+            collected_by: adminId,
+            source: "admin_collect",
+            receipt_reference: receiptReference,
+          });
+        } catch (err) {
+          return fail(res, err.message || "collect_failed", 400);
         }
-        if (String(err.message || "").includes("insufficient_balance")) {
-          return fail(res, "المبلغ أكبر من الرصيد المستحق", 400);
+      } else {
+        try {
+          result = await collectDriverCommission(sb, driverId, amount, {
+            note: note || null,
+            collected_by: adminId,
+            source: "admin_collect",
+            receipt_reference: receiptReference,
+          });
+        } catch (err) {
+          if (isDriverLedgerTableMissing(err)) {
+            return fail(res, "نفّذ shared/migration_driver_commission_ledger.sql على Supabase", 503);
+          }
+          if (String(err.message || "").includes("insufficient_balance")) {
+            return fail(res, "المبلغ أكبر من الرصيد المستحق", 400);
+          }
+          throw err;
         }
-        throw err;
+
+        if (result.ok === false) {
+          const reason = result.reason || "collect_failed";
+          if (reason === "insufficient_balance") {
+            return fail(res, "المبلغ أكبر من الرصيد المستحق", 400);
+          }
+          return fail(res, reason, 400);
+        }
       }
 
-      if (result.ok === false) {
-        const reason = result.reason || "collect_failed";
-        if (reason === "insufficient_balance") {
-          return fail(res, "المبلغ أكبر من الرصيد المستحق", 400);
-        }
-        return fail(res, reason, 400);
-      }
-
-      const balanceAfter = await getDriverCommissionBalance(sb, driverId);
+      const balanceAfter = isLedgerOnlyMode()
+        ? await getDriverLedgerOwedBalance(sb, driverId)
+        : await getDriverCommissionBalance(sb, driverId);
       return ok(res, {
         ok: true,
         driver_id: driverId,
@@ -2306,9 +2526,10 @@ router.post(
         balance_before: round2(balanceBefore),
         balance_after: balanceAfter,
         debt_blocked: balanceAfter > DRIVER_DEBT_LIMIT,
-        ledger_id: result.ledger_id || null,
+        ledger_id: result.ledger_id || result.transaction_id || null,
         receipt_reference: receiptReference,
         amount_rounded: Math.abs(amountRaw - amount) > 0.001,
+        source: isLedgerOnlyMode() ? "ervenow_ledger" : "driver_ledger",
         result,
       });
     } catch (e) {
@@ -2359,18 +2580,37 @@ router.get(
       let collectionsToday = 0;
       let ledgerOpsToday = 0;
       try {
-        const { data: ledgerToday, error: lErr } = await sb
-          .from("driver_ledger")
-          .select("type, amount, created_at")
-          .gte("created_at", dayStartIso)
-          .limit(5000);
-        if (!lErr && ledgerToday) {
-          for (const row of ledgerToday) {
-            ledgerOpsToday += 1;
-            const amt = Number(row.amount) || 0;
-            const typ = String(row.type || "").toLowerCase();
-            if (typ === "commission") commissionsToday += amt;
-            if (typ === "payout") collectionsToday += Math.abs(amt);
+        if (isLedgerOnlyMode()) {
+          const { data: ledgerToday, error: lErr } = await sb
+            .from("ervenow_ledger_transactions")
+            .select("type, direction, amount, created_at, wallet:ervenow_ledger_wallets(role)")
+            .eq("status", "completed")
+            .gte("created_at", dayStartIso)
+            .limit(5000);
+          if (!lErr && ledgerToday) {
+            for (const row of ledgerToday) {
+              if (row.wallet?.role !== "driver") continue;
+              ledgerOpsToday += 1;
+              const amt = Number(row.amount) || 0;
+              const typ = String(row.type || "").toLowerCase();
+              if (typ === "commission" && row.direction === "debit") commissionsToday += amt;
+              if (typ === "deposit" && row.direction === "credit") collectionsToday += amt;
+            }
+          }
+        } else {
+          const { data: ledgerToday, error: lErr } = await sb
+            .from("driver_ledger")
+            .select("type, amount, created_at")
+            .gte("created_at", dayStartIso)
+            .limit(5000);
+          if (!lErr && ledgerToday) {
+            for (const row of ledgerToday) {
+              ledgerOpsToday += 1;
+              const amt = Number(row.amount) || 0;
+              const typ = String(row.type || "").toLowerCase();
+              if (typ === "commission") commissionsToday += amt;
+              if (typ === "payout") collectionsToday += Math.abs(amt);
+            }
           }
         }
       } catch (_le) {}
@@ -2391,8 +2631,14 @@ router.get(
         }
       } catch (_ne) {}
 
-      const { data: wallets } = await sb.from("driver_wallets").select("balance").limit(500);
-      const rows = wallets || [];
+      let rows = [];
+      if (isLedgerOnlyMode()) {
+        const debts = await listDriverDebtsFromLedger(sb, 500);
+        rows = debts.map((d) => ({ balance: d.balance }));
+      } else {
+        const { data: wallets } = await sb.from("driver_wallets").select("balance").limit(500);
+        rows = wallets || [];
+      }
       const totalDebt = round2(rows.reduce((s, w) => s + (Number(w.balance) || 0), 0));
       const withDebt = rows.filter((w) => (Number(w.balance) || 0) > 0).length;
       const blocked = rows.filter((w) => (Number(w.balance) || 0) > DRIVER_DEBT_LIMIT).length;

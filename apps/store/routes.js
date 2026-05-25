@@ -1703,9 +1703,8 @@ router.post("/withdrawals", requireAuth, requireMerchantRole, async (req, res) =
       return fail(res, "الآيبان لا يطابق بيانات المتجر المسجّلة", 400);
     }
 
-    const { data: wRow, error: wErr } = await sb.from("store_wallets").select("balance").eq("store_id", sid).maybeSingle();
-    if (wErr && !isStoreFinancialMissing(wErr)) return fail(res, wErr.message, 400);
-    const balance = Number(wRow?.balance) || 0;
+    const wallet = await getStoreWalletPayloadWithFallback(sb, req.appUser.id, sid);
+    const balance = Number(wallet.balance) || 0;
 
     const { data: pendRows, error: pErr } = await sb
       .from("store_withdrawals")

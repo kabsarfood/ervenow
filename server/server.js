@@ -26,6 +26,7 @@ const adminSettingsRoutes = require("../apps/admin/settings");
 const categoriesRoutes = require("../apps/categories/routes");
 const invoiceRoutes = require("../apps/invoice/routes");
 const whatsappRoutes = require("../apps/whatsapp/routes");
+const payRoutes = require("../apps/pay/routes");
 const { createPublicSiteOtpGate, isPrivateOtpGate } = require("../shared/middleware/publicSiteOtpGate");
 const { createSiteMaintenanceMiddleware } = require("../shared/middleware/siteMaintenanceGate");
 const { pushToErvenow } = require("../shared/utils/ervenowPush");
@@ -33,6 +34,7 @@ const { startRetryNotificationsWorker } = require("../apps/driver/retryNotificat
 const { createServiceClient } = require("../shared/config/supabase");
 const { register, metrics } = require("../shared/utils/metrics");
 const { logger } = require("../shared/utils/logger");
+const { financeMode, isLedgerOnlyMode } = require("../shared/utils/financeMode");
 const { pingRedis } = require("../queues/deliveryQueue");
 
 const PORT = process.env.PORT || 4000;
@@ -281,6 +283,7 @@ const commissionTestRoutes = require("../apps/test/routes");
 app.use("/api/test", commissionTestRoutes);
 app.use("/api/invoice", invoiceRoutes);
 app.use("/api/whatsapp", whatsappRoutes);
+app.use("/api/pay", payRoutes);
 
 /** بوابة واجهة الموقع (OTP) — بعد كل مسارات API؛ لا تعيق GET /api/* ولا /socket.io ولا /assets */
 app.use(createPublicSiteOtpGate(servePublicUi));
@@ -440,7 +443,7 @@ if (servePublicUi) {
   });
 
   app.get("/admin-dashboard", (_req, res) => {
-    res.sendFile(path.join(publicPath, "admin-dashboard.html"));
+    res.sendFile(path.join(publicPath, "admin", "admin-dashboard.html"));
   });
 
   app.get("/admin-login", (_req, res) => {
@@ -518,6 +521,9 @@ if (servePublicUi) {
   app.get("/wallet", (_req, res) => {
     res.sendFile(path.join(publicPath, "wallet.html"));
   });
+  app.get("/pay", (_req, res) => {
+    res.sendFile(path.join(publicPath, "pay.html"));
+  });
 } else {
   if (hasPublicIndex && hidePublicUi) {
     console.warn("[boot] HIDE_PUBLIC_UI=1 — الجذر / يعيد JSON فقط (وضع API)");
@@ -558,6 +564,7 @@ app.use((err, _req, res, _next) => {
 
     server.listen(PORT, "0.0.0.0", () => {
       console.log("🚀 ERVENOW RUNNING ON", PORT);
+      console.log(`[boot] FINANCE_MODE=${financeMode()}${isLedgerOnlyMode() ? " (ervenow_ledger only)" : ""}`);
       if (servePublicUi && isPrivateOtpGate()) {
         console.log("[boot] ERVENOW_PRIVATE_OTP_GATE — الواجهة محمية برمز واتساب حتى تُعطّل المتغير");
       }

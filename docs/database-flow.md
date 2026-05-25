@@ -37,6 +37,8 @@
 
 راجع `docs/wallet-system.md` — يوجد أكثر من مسار (`ervenow_*`، `wallets`، `ervenow_ledger_*`)؛ التثبيت يتطلب سياسة «مصدر حقيقة» تدريجياً.
 
+**هجرات التوحيد (تدريجي):** `docs/database-refactor-migrations.md` — ملفات `shared/migration_database_refactor_01..08_*.sql`.
+
 ## 6. Realtime
 
 - التعليقات في `schema.sql` تشير إلى تفعيل Realtime لجداول معينة — يُحدَّث حسب المنتج الفعلي.

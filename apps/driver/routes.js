@@ -12,6 +12,7 @@ const { bumpDeliveryOrdersListEpoch } = require("../../shared/utils/deliveryOrde
 const { setStatus } = require("../delivery/service");
 const { requireRole } = require("../../shared/middleware/roles");
 const { getWalletPayloadWithLedgerFallback } = require("../../shared/utils/ledgerWallet");
+const { getDriverFreezeFlags } = require("../../shared/services/autoFreeze");
 const {
   OTP_SCOPE,
   otpBackendMode,
@@ -475,7 +476,12 @@ router.get("/orders", requireAuth, async (req, res) => {
 router.get("/wallet", requireAuth, requireRole("driver"), async (req, res) => {
   try {
     const payload = await getWalletPayloadWithLedgerFallback(req.supabase, req.appUser.id, "driver");
-    return ok(res, payload);
+    const freeze = await getDriverFreezeFlags(req.supabase, req.appUser.id);
+    return ok(res, {
+      ...payload,
+      is_frozen: freeze.is_frozen,
+      warning: freeze.warning,
+    });
   } catch (e) {
     return fail(res, e.message, 500);
   }

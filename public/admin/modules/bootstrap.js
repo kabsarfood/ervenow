@@ -1,0 +1,113 @@
+/** UI wiring & boot */
+import { app, bindToWindow } from "./shared.js";
+import "./settings.js";
+import "./finance.js";
+import "./dashboard.js";
+import "./orders.js";
+import "./drivers.js";
+import "./sockets.js";
+import "./panels.js";
+
+document.getElementById("reloadDriversBtn").onclick = app.loadDrivers;
+document.getElementById("reloadComplaintsBtn").onclick = app.loadComplaints;
+document.getElementById("reloadOrdersBtn").onclick = app.loadRecentOrders;
+document.getElementById("reloadNotificationsBtn").onclick = app.loadNotifications;
+document.getElementById("reloadCustomersBtn").onclick = app.loadCustomers;
+document.getElementById("reloadStoresBtn").onclick = app.loadStores;
+document.getElementById("reloadJobsBtn").onclick = app.loadJobs;
+var reloadAdminAccountsBtn = document.getElementById("reloadAdminAccountsBtn");
+if (reloadAdminAccountsBtn) reloadAdminAccountsBtn.onclick = app.loadAdminAccounts;
+var reloadFinanceBtn = document.getElementById("reloadFinanceBtn");
+if (reloadFinanceBtn) reloadFinanceBtn.onclick = app.loadFinancePanel;
+var reloadSettingsBtn = document.getElementById("reloadSettingsBtn");
+if (reloadSettingsBtn) reloadSettingsBtn.onclick = app.loadSettingsPanel;
+var openAdminAccountsBtn = document.getElementById("openAdminAccountsBtn");
+if (openAdminAccountsBtn) {
+  openAdminAccountsBtn.onclick = function () {
+    app.showPanel("panelAdminAccounts");
+    void app.loadAdminAccounts();
+  };
+}
+var searchBind = [
+  ["searchOrders", app.renderRecentOrders],
+  ["searchNotifications", app.renderNotifications],
+  ["searchDrivers", app.renderDrivers],
+  ["searchComplaints", app.renderComplaints],
+  ["searchCustomers", app.renderCustomers],
+  ["searchStores", app.renderStores],
+  ["searchJobs", app.renderJobs],
+  ["searchAdminAccounts", app.renderAdminAccounts],
+  ["financeSearch", app.renderFinanceTable],
+];
+var financeFilterEl = document.getElementById("financeFilter");
+if (financeFilterEl) financeFilterEl.addEventListener("change", app.renderFinanceTable);
+app.setupFinanceDrawerUi();
+searchBind.forEach(function (pair) {
+  var el = document.getElementById(pair[0]);
+  if (!el) return;
+  el.addEventListener("input", pair[1]);
+});
+var logoutAdminBtn = document.getElementById("logoutAdminBtn");
+if (logoutAdminBtn) {
+  logoutAdminBtn.onclick = function () {
+    app.forceAdminLogout("");
+  };
+}
+var siteMaintenanceBtn = document.getElementById("siteMaintenanceBtn");
+if (siteMaintenanceBtn) {
+  siteMaintenanceBtn.onclick = function () {
+    app.toggleSiteMaintenance();
+  };
+}
+var panelButtons = document.querySelectorAll(".panel-btn");
+for (var i = 0; i < panelButtons.length; i++) {
+  panelButtons[i].addEventListener("click", function () {
+    var panelId = this.getAttribute("data-panel");
+    if (!panelId) return;
+    var isActive = this.classList.contains("active");
+    app.showPanel(isActive ? "" : panelId);
+    if (!isActive && panelId) void app.loadPanelById(panelId);
+  });
+}
+var closeBtn = document.getElementById("closePanelsBtn");
+if (closeBtn) {
+  closeBtn.addEventListener("click", function () {
+    app.showPanel("");
+  });
+}
+
+(async function () {
+  var ok = await app.ensureAdminAccess();
+  if (!ok) return;
+  await app.loadAdminProfile();
+  await app.loadSiteMaintenanceState();
+  app.setupFullAdminIdleGuard();
+  app.applyPermissionVisibility();
+  app.showPanel("");
+  if (app.hasPermission("dashboard")) app.loadStats();
+  else if (app.hasPermission("finance")) app.loadLedgerFinanceSummary();
+  if (app.hasPermission("orders")) app.loadRecentOrders();
+  app.setupExecUi();
+  app.initAdminDashboardSocket();
+  app.startAdminAlertsTimer();
+  void app.refreshLiveDashboard();
+  app.updateLiveSocketPulse();
+  if (app.hasPermission("finance")) {
+    app.loadFinancialFeatureFlags();
+    app.loadLedgerFinanceSummary();
+  }
+  setInterval(function () {
+    if (app.hasPermission("dashboard")) {
+      app.loadStats();
+      void app.refreshLiveDashboard();
+    }
+  }, app.STATS_POLL_MS);
+  setInterval(function () {
+    if (app.hasPermission("finance")) {
+      app.loadFinancialFeatureFlags();
+      app.loadLedgerFinanceSummary();
+    }
+  }, app.LEDGER_TX_POLL_MS);
+})();
+
+bindToWindow();

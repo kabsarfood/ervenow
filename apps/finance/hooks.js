@@ -1,10 +1,19 @@
-const { calculateCommission, fetchCommissionRates } = require("./accountingEngine");
-
 /**
- * تسوية محاسبية عند التسليم: `erwenow_finance_settle_order` → public.wallets / wallet_transactions (دفتر المحاسبة).
- * منفصلة عن محفظة التشغيل ervenow_* (أجر المندوب يُودَع عبر ervenow_wallet_apply_driver_order_earning في مسار آخر).
+ * Legacy finance hooks — معطّلة عند FINANCE_MODE=ledger_only.
+ * التسوية عبر shared/services/ledgerOnlySettlement.js فقط.
  */
-async function onDeliveryDelivered(sb, deliveryOrder) {
+
+const { isLedgerOnlyMode } = require("../../shared/utils/financeMode");
+
+async function onDeliveryDelivered(_sb, _deliveryOrder) {
+  if (isLedgerOnlyMode()) {
+    return { linked: false, skipped: "ledger_only_mode" };
+  }
+  const { calculateCommission, fetchCommissionRates } = require("./accountingEngine");
+  const { SETTLEMENT_KINDS, tryClaimSettlement } = require("../../shared/services/settlementGuard");
+
+  const sb = _sb;
+  const deliveryOrder = _deliveryOrder;
   try {
     const { data: byId, error: idErr } = await sb
       .from("orders")
@@ -27,6 +36,11 @@ async function onDeliveryDelivered(sb, deliveryOrder) {
     }
 
     if (fo.settled_at) return { linked: true, skipped: "already_settled" };
+
+    const shouldProceed = await tryClaimSettlement(sb, fo.id, "order", SETTLEMENT_KINDS.FINANCE_WALLETS_SETTLE, {
+      path: "onDeliveryDelivered",
+    });
+    if (!shouldProceed) return { linked: true, skipped: "settlement_log_duplicate" };
 
     const rates = await fetchCommissionRates(sb, fo.country_code || "SA");
     const vat = Number(

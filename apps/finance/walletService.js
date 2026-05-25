@@ -1,7 +1,13 @@
 /**
  * محاسبة مالية عامة — جداول `wallets` / `wallet_transactions` (finance).
- * مسار دفع المناديب في الواجهة هو `ervenow_wallets` / `ervenow_wallet_transactions` وليس هذا الملف.
+ * معطّل عند FINANCE_MODE=ledger_only — استخدم ervenow_ledger_*.
  */
+const { assertLedgerOnlyFinance } = require("../../shared/utils/financeMode");
+
+function guardLegacyWalletService() {
+  assertLedgerOnlyFinance("finance/wallets");
+}
+
 function walletOwnerTypeForRole(role) {
   if (role === "driver") return "driver";
   if (role === "merchant" || role === "restaurant") return "merchant";
@@ -11,6 +17,7 @@ function walletOwnerTypeForRole(role) {
 }
 
 async function ensureWallet(supabase, ownerId, ownerType, countryCode = "SAR", currencyCode = "SAR") {
+  guardLegacyWalletService();
   const { data, error } = await supabase.rpc("erwenow_fn_ensure_wallet", {
     p_owner_id: ownerId,
     p_owner_type: ownerType,
@@ -22,6 +29,7 @@ async function ensureWallet(supabase, ownerId, ownerType, countryCode = "SAR", c
 }
 
 async function getWalletByOwner(supabase, ownerId, ownerType, countryCode = "SA") {
+  guardLegacyWalletService();
   const { data, error } = await supabase
     .from("wallets")
     .select("*")
@@ -35,6 +43,7 @@ async function getWalletByOwner(supabase, ownerId, ownerType, countryCode = "SA"
 }
 
 async function getOrCreateWalletForUser(supabase, userId, role, countryCode = "SA", currencyCode = "SAR") {
+  guardLegacyWalletService();
   const ownerType = walletOwnerTypeForRole(role);
   let w = await getWalletByOwner(supabase, userId, ownerType, countryCode);
   if (!w) {
@@ -47,6 +56,7 @@ async function getOrCreateWalletForUser(supabase, userId, role, countryCode = "S
 }
 
 async function listTransactions(supabase, walletId, limit = 50) {
+  guardLegacyWalletService();
   const { data, error } = await supabase
     .from("wallet_transactions")
     .select("*")
@@ -59,6 +69,7 @@ async function listTransactions(supabase, walletId, limit = 50) {
 }
 
 async function createWithdrawalRequest(supabase, walletId, amount, bankNote) {
+  guardLegacyWalletService();
   const amt = Number(amount);
   if (!amt || amt <= 0) {
     const e = new Error("amount invalid");
@@ -91,6 +102,7 @@ async function createWithdrawalRequest(supabase, walletId, amount, bankNote) {
 
 /** اعتماد سحب: خصم من المحفظة عبر حركة debit */
 async function approveWithdrawal(supabase, withdrawalId) {
+  guardLegacyWalletService();
   const { data: row, error: ge } = await supabase.from("withdrawals").select("*").eq("id", withdrawalId).single();
   if (ge) throw ge;
   if (!row || row.status !== "pending") {
@@ -121,6 +133,7 @@ async function approveWithdrawal(supabase, withdrawalId) {
 }
 
 async function markWithdrawalPaid(supabase, withdrawalId) {
+  guardLegacyWalletService();
   const { data, error } = await supabase
     .from("withdrawals")
     .update({ status: "paid", updated_at: new Date().toISOString() })
@@ -133,6 +146,7 @@ async function markWithdrawalPaid(supabase, withdrawalId) {
 }
 
 async function rejectWithdrawal(supabase, withdrawalId) {
+  guardLegacyWalletService();
   const { data: row, error: ge } = await supabase.from("withdrawals").select("*").eq("id", withdrawalId).single();
   if (ge) throw ge;
   if (!row || row.status !== "pending") {

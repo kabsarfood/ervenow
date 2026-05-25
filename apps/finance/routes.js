@@ -18,6 +18,13 @@ const {
 } = require("./walletService");
 const { normalizeOrderFinancialsForInsert } = require("../../shared/utils/orderTotals");
 const { insertOrdersResilient } = require("../../shared/utils/idempotency");
+const { isLedgerOnlyMode } = require("../../shared/utils/financeMode");
+const { settleDeliveredOrderLedgerOnly } = require("../../shared/services/ledgerOnlySettlement");
+const {
+  getWalletMePayload,
+  listLedgerWalletTransactions,
+  listLedgerWithdrawRequests,
+} = require("../../shared/utils/ledgerWallet");
 
 const router = express.Router();
 
@@ -177,7 +184,11 @@ router.patch("/orders/:id/status", requireAuth, async (req, res) => {
 
       let settlement;
       try {
-        settlement = await distributeFunds(req.supabase, order.id);
+        if (isLedgerOnlyMode()) {
+          settlement = await settleDeliveredOrderLedgerOnly(req.supabase, order.id, "finance:delivered");
+        } else {
+          settlement = await distributeFunds(req.supabase, order.id);
+        }
       } catch (rpcErr) {
         return fail(res, rpcErr.message || "Settlement failed", 500);
       }
@@ -275,6 +286,10 @@ router.post("/commission-rules", requireAuth, requireRole("admin"), async (req, 
 /** GET /wallet/me */
 router.get("/wallet/me", requireAuth, async (req, res) => {
   try {
+    if (isLedgerOnlyMode()) {
+      const wallet = await getWalletMePayload(req.supabase, req.appUser.id, req.appUser.role);
+      return ok(res, { wallet });
+    }
     const cc = req.query.country || "SA";
     const wallet = await getOrCreateWalletForUser(req.supabase, req.appUser.id, req.appUser.role, cc);
     return ok(res, { wallet });
@@ -286,6 +301,15 @@ router.get("/wallet/me", requireAuth, async (req, res) => {
 /** GET /wallet/transactions */
 router.get("/wallet/transactions", requireAuth, async (req, res) => {
   try {
+    if (isLedgerOnlyMode()) {
+      const txs = await listLedgerWalletTransactions(
+        req.supabase,
+        req.appUser.id,
+        req.appUser.role,
+        Number(req.query.limit) || 50
+      );
+      return ok(res, { source: "ervenow_ledger", transactions: txs });
+    }
     const cc = req.query.country || "SA";
     const wallet = await getOrCreateWalletForUser(req.supabase, req.appUser.id, req.appUser.role, cc);
     const txs = await listTransactions(req.supabase, wallet.id, Number(req.query.limit) || 50);
@@ -298,6 +322,9 @@ router.get("/wallet/transactions", requireAuth, async (req, res) => {
 /** POST /withdrawals */
 router.post("/withdrawals", requireAuth, async (req, res) => {
   try {
+    if (isLedgerOnlyMode()) {
+      return fail(res, "استخدم POST /api/wallet/withdraw (ervenow_withdraw_requests)", 410);
+    }
     const body = req.body || {};
     const cc = req.query.country || "SA";
     const wallet = await getOrCreateWalletForUser(req.supabase, req.appUser.id, req.appUser.role, cc);

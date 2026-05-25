@@ -264,6 +264,13 @@ router.post("/orders/:id/accept", requireAuth, requireRole("driver"), async (req
     const { data, error } = await acceptOrder(req.supabase, orderId, req.appUser.id);
     if (error) {
       const code = error.code === "DRIVER_DEBT_LIMIT" ? 403 : 400;
+      if (error.reason === "auto_freeze_block") {
+        return res.status(403).json({
+          ok: false,
+          message: error.message || "تم إيقاف حسابك بسبب تجاوز الحد المالي، يرجى السداد",
+          error: error.message,
+        });
+      }
       return fail(res, error.message, code);
     }
 

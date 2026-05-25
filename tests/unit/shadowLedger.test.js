@@ -4,9 +4,14 @@ describe("shadowLedger", () => {
   test("calls service booking rpc when type is service", async () => {
     const logSpy = jest.spyOn(console, "log").mockImplementation(() => {});
     const sb = {
-      rpc: jest.fn().mockResolvedValue({
-        data: { ok: true, reason: "settled", commission: 7 },
-        error: null,
+      rpc: jest.fn((fn) => {
+        if (fn === "settlement_log_try_claim") {
+          return Promise.resolve({ data: true, error: null });
+        }
+        return Promise.resolve({
+          data: { ok: true, reason: "settled", commission: 7 },
+          error: null,
+        });
       }),
     };
 
@@ -25,9 +30,11 @@ describe("shadowLedger", () => {
   test("logs settlement done on ok rpc", async () => {
     const logSpy = jest.spyOn(console, "log").mockImplementation(() => {});
     const sb = {
-      rpc: jest.fn().mockResolvedValue({
-        data: { ok: true, reason: "settled" },
-        error: null,
+      rpc: jest.fn((fn) => {
+        if (fn === "settlement_log_try_claim") {
+          return Promise.resolve({ data: true, error: null });
+        }
+        return Promise.resolve({ data: { ok: true, reason: "settled" }, error: null });
       }),
     };
 
@@ -49,9 +56,11 @@ describe("shadowLedger", () => {
   test("logs skip reason when rpc returns not_delivered", async () => {
     const logSpy = jest.spyOn(console, "log").mockImplementation(() => {});
     const sb = {
-      rpc: jest.fn().mockResolvedValue({
-        data: { ok: false, reason: "not_delivered" },
-        error: null,
+      rpc: jest.fn((fn) => {
+        if (fn === "settlement_log_try_claim") {
+          return Promise.resolve({ data: true, error: null });
+        }
+        return Promise.resolve({ data: { ok: false, reason: "not_delivered" }, error: null });
       }),
     };
 

@@ -5,6 +5,9 @@
  */
 
 const { logger } = require("../utils/logger");
+const { applyAutoFreezeGate, AUTO_FREEZE_BLOCK_MESSAGE } = require("./autoFreeze");
+const { isLedgerOnlyMode, assertLedgerOnlyFinance } = require("../utils/financeMode");
+const { getDriverLedgerOwedBalance } = require("../utils/ledgerWallet");
 
 const DRIVER_DEBT_LIMIT = (() => {
   const n = Number(process.env.DRIVER_COMMISSION_DEBT_LIMIT || process.env.ERVENOW_DRIVER_DEBT_LIMIT);
@@ -104,6 +107,9 @@ async function rpcResult(sb, fn, args) {
  * @param {{ driverId?: string, total?: number, label?: string }} [opts]
  */
 async function invokeDriverLedgerCommissionRpc(sb, orderId, opts = {}) {
+  if (isLedgerOnlyMode()) {
+    return { ok: false, skipped: true, reason: "ledger_only_mode" };
+  }
   const oid = String(orderId || "").trim();
   const label = String(opts.label || "delivery");
   const driverId = String(opts.driverId || opts.driver_id || "").trim();
@@ -146,6 +152,9 @@ async function invokeDriverLedgerCommissionRpc(sb, orderId, opts = {}) {
  * @param {object} [orderRow] صف الطلب إن وُجد (يتجنب round-trip)
  */
 async function applyDriverCommissionOnDelivered(sb, orderId, orderRow) {
+  if (isLedgerOnlyMode()) {
+    return { ok: false, skipped: true, reason: "ledger_only_mode" };
+  }
   const oid = String(orderId || "").trim();
   if (!oid) return { ok: false, reason: "missing_order_id" };
 
@@ -210,6 +219,9 @@ async function applyDriverCommissionOnDelivered(sb, orderId, orderRow) {
 async function getDriverCommissionBalance(sb, driverUserId) {
   const id = String(driverUserId || "").trim();
   if (!id) return 0;
+  if (isLedgerOnlyMode()) {
+    return getDriverLedgerOwedBalance(sb, id);
+  }
   try {
     const { data, error } = await sb.rpc("driver_ledger_get_balance", { p_driver_id: id });
     if (error) {
@@ -231,6 +243,42 @@ async function getDriverCommissionBalance(sb, driverUserId) {
  */
 async function assertDriverCanAcceptOrders(sb, driverUserId) {
   const balance = await getDriverCommissionBalance(sb, driverUserId);
+  const gate = await applyAutoFreezeGate(sb, driverUserId, balance);
+
+  if (gate.blocked) {
+    const err = new Error(gate.message || AUTO_FREEZE_BLOCK_MESSAGE);
+    err.code = "DRIVER_DEBT_LIMIT";
+    err.reason = "auto_freeze_block";
+    err.balance = balance;
+    err.limit = gate.freeze_threshold;
+    throw err;
+  }
+
+  if (gate.warning) {
+    return {
+      allowed: true,
+      balance,
+      limit: gate.freeze_threshold,
+      debt_blocked: false,
+      is_frozen: false,
+      warning: true,
+      auto_freeze_warn: true,
+      auto_freeze_phase: "warn",
+    };
+  }
+
+  if (gate.active) {
+    return {
+      allowed: true,
+      balance,
+      limit: gate.freeze_threshold,
+      debt_blocked: false,
+      is_frozen: false,
+      warning: false,
+      auto_freeze_phase: "none",
+    };
+  }
+
   const blocked = balance > DRIVER_DEBT_LIMIT;
   if (blocked) {
     const err = new Error(
@@ -242,7 +290,14 @@ async function assertDriverCanAcceptOrders(sb, driverUserId) {
     err.limit = DRIVER_DEBT_LIMIT;
     throw err;
   }
-  return { allowed: true, balance, limit: DRIVER_DEBT_LIMIT, debt_blocked: false };
+  return {
+    allowed: true,
+    balance,
+    limit: DRIVER_DEBT_LIMIT,
+    debt_blocked: false,
+    is_frozen: false,
+    warning: false,
+  };
 }
 
 /**
@@ -252,6 +307,7 @@ async function assertDriverCanAcceptOrders(sb, driverUserId) {
  * @param {object} [meta]
  */
 async function collectDriverCommission(sb, driverUserId, amount, meta) {
+  assertLedgerOnlyFinance("driver_ledger_collect");
   const id = String(driverUserId || "").trim();
   const amt = Number(amount);
   if (!id) throw new Error("driver_id required");

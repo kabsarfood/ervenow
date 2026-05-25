@@ -3,6 +3,7 @@ const {
   getWalletMePayload,
   getWalletPayloadWithLedgerFallback,
   getAdminFinanceSummaryFromLedger,
+  computeFinancialAlertsFromLedger,
 } = require("../../shared/utils/ledgerWallet");
 
 jest.mock("../../shared/utils/operationalWallet", () => ({
@@ -17,6 +18,10 @@ jest.mock("../../shared/utils/operationalWallet", () => ({
   listOperationalWalletTransactions: jest.fn().mockResolvedValue([
     { id: "legacy-tx-1", amount: 50, type: "earning", status: "completed", created_at: "2026-01-02" },
   ]),
+}));
+
+jest.mock("../../shared/services/autoFreeze", () => ({
+  listAutoFreezeDashboardAlerts: jest.fn().mockResolvedValue([]),
 }));
 
 const { getOperationalWalletPayload } = require("../../shared/utils/operationalWallet");
@@ -77,7 +82,6 @@ describe("ledgerWallet", () => {
   });
 
   test("getWalletMePayload uses ledger with last_transactions", async () => {
-    const logSpy = jest.spyOn(console, "log").mockImplementation(() => {});
     const sb = mockLedgerSb({
       txs: [
         { type: "earning", direction: "credit", amount: 100 },
@@ -99,12 +103,9 @@ describe("ledgerWallet", () => {
     expect(payload.source).toBe("ervenow_ledger");
     expect(payload.balance).toBe(85);
     expect(payload.last_transactions).toHaveLength(1);
-    expect(logSpy).toHaveBeenCalledWith("[wallet] using ledger");
-    logSpy.mockRestore();
   });
 
-  test("getWalletMePayload falls back to legacy", async () => {
-    const logSpy = jest.spyOn(console, "log").mockImplementation(() => {});
+  test("getWalletMePayload returns empty ledger when no wallet row", async () => {
     const sb = {
       from: jest.fn(() => ({
         select: () => ({
@@ -122,11 +123,9 @@ describe("ledgerWallet", () => {
     };
 
     const payload = await getWalletMePayload(sb, "user-2", "driver");
-    expect(payload.source).toBe("legacy_operational");
-    expect(payload.balance).toBe(50);
-    expect(payload.last_transactions).toHaveLength(1);
-    expect(logSpy).toHaveBeenCalledWith("[wallet] fallback to legacy");
-    logSpy.mockRestore();
+    expect(payload.source).toBe("ervenow_ledger");
+    expect(payload.balance).toBe(0);
+    expect(getOperationalWalletPayload).not.toHaveBeenCalled();
   });
 
   test("uses ledger when has_data via getWalletPayloadWithLedgerFallback", async () => {
@@ -150,7 +149,7 @@ describe("ledgerWallet", () => {
     expect(getOperationalWalletPayload).not.toHaveBeenCalled();
   });
 
-  test("falls back to operational wallet when ledger empty", async () => {
+  test("getWalletPayloadWithLedgerFallback returns zero when ledger empty", async () => {
     const sb = {
       rpc: jest.fn().mockResolvedValue({
         data: {
@@ -165,9 +164,9 @@ describe("ledgerWallet", () => {
     };
 
     const payload = await getWalletPayloadWithLedgerFallback(sb, "user-2", "driver");
-    expect(payload.source).toBe("legacy_operational");
-    expect(payload.balance).toBe(50);
-    expect(getOperationalWalletPayload).toHaveBeenCalled();
+    expect(payload.source).toBe("ervenow_ledger");
+    expect(payload.balance).toBe(0);
+    expect(getOperationalWalletPayload).not.toHaveBeenCalled();
   });
 
   test("admin finance summary from ledger rpc", async () => {
@@ -182,6 +181,17 @@ describe("ledgerWallet", () => {
         error: null,
       }),
       from: jest.fn((table) => {
+        if (table === "platform_feature_flags") {
+          return {
+            select: () => ({
+              in: () =>
+                Promise.resolve({
+                  data: [{ key: "auto_freeze", mode: 2, config: { warn_threshold: 50, freeze_threshold: 100 } }],
+                  error: null,
+                }),
+            }),
+          };
+        }
         if (table === "ervenow_ledger_transactions") {
           return {
             select: () => ({
@@ -203,6 +213,42 @@ describe("ledgerWallet", () => {
                       error: null,
                     }),
                 }),
+                eq: () => ({
+                  gt: () => ({
+                    gte: () => ({
+                      order: () => ({
+                        limit: () => Promise.resolve({ data: [], error: null }),
+                      }),
+                    }),
+                  }),
+                }),
+                gte: () => Promise.resolve({ data: [], error: null }),
+              }),
+            }),
+          };
+        }
+        if (table === "ervenow_ledger_wallets") {
+          return {
+            select: () => ({
+              not: () => ({
+                lt: () => ({
+                  order: () => ({
+                    limit: () => Promise.resolve({ data: [], error: null }),
+                  }),
+                }),
+              }),
+            }),
+          };
+        }
+        if (table === "withdraw_requests") {
+          return {
+            select: () => ({
+              gt: () => ({
+                in: () => ({
+                  order: () => ({
+                    limit: () => Promise.resolve({ data: [], error: null }),
+                  }),
+                }),
               }),
             }),
           };
@@ -219,5 +265,78 @@ describe("ledgerWallet", () => {
     expect(summary.recent_transactions).toHaveLength(1);
     expect(summary.recent_transactions[0].user_id).toBe("platform");
     expect(summary.recent_transactions[0].direction).toBe("credit");
+    expect(summary.financial_alerts).toEqual([]);
+  });
+
+  test("computeFinancialAlertsFromLedger detects high debt and large withdrawal", async () => {
+    const sb = {
+      from: jest.fn((table) => {
+        if (table === "ervenow_ledger_wallets") {
+          return {
+            select: () => ({
+              not: () => ({
+                lt: () => ({
+                  order: () => ({
+                    limit: () =>
+                      Promise.resolve({
+                        data: [{ id: "w1", user_id: "user-debt", role: "driver", balance: -450 }],
+                        error: null,
+                      }),
+                  }),
+                }),
+              }),
+            }),
+          };
+        }
+        if (table === "withdraw_requests") {
+          return {
+            select: () => ({
+              gt: () => ({
+                in: () => ({
+                  order: () => ({
+                    limit: () =>
+                      Promise.resolve({
+                        data: [
+                          {
+                            id: "wr-1",
+                            user_id: "user-w",
+                            amount: 1500,
+                            status: "pending",
+                            created_at: "2026-01-01T00:00:00Z",
+                          },
+                        ],
+                        error: null,
+                      }),
+                  }),
+                }),
+              }),
+            }),
+          };
+        }
+        if (table === "ervenow_ledger_transactions") {
+          return {
+            select: () => ({
+              eq: () => ({
+                eq: () => ({
+                  gt: () => ({
+                    gte: () => ({
+                      order: () => ({
+                        limit: () => Promise.resolve({ data: [], error: null }),
+                      }),
+                    }),
+                  }),
+                }),
+                gte: () => Promise.resolve({ data: null, error: null }),
+              }),
+            }),
+          };
+        }
+        return {};
+      }),
+    };
+
+    const alerts = await computeFinancialAlertsFromLedger(sb);
+    expect(alerts.some((a) => a.type === "high_debt" && a.severity === "danger")).toBe(true);
+    expect(alerts.some((a) => a.type === "large_withdrawal" && a.severity === "warn")).toBe(true);
   });
 });

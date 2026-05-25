@@ -1,18 +1,13 @@
 const { isValidDeliveryTransition, deliveryLifecycleIndex } = require("../../shared/utils/helpers");
-const { applyDriverOrderEarning } = require("../../shared/utils/ervenowWalletCredit");
-const {
-  assertDriverCanAcceptOrders,
-  resolveOrderBillableAmount,
-} = require("../../shared/services/driverCommissionLedger");
-const { onDeliveryDelivered } = require("../finance/hooks");
-/* محفظتان: ervenow_* = تشغيل (مندوب/سحب/استرجاع عميل) | wallets + wallet_transactions = محاسبة (تسوية تسليم) */
+const { assertDriverCanAcceptOrders } = require("../../shared/services/driverCommissionLedger");
+/* FINANCE_MODE=ledger_only — تسوية التسليم عبر ervenow_ledger_settle_delivered_order فقط */
 const { normalizePhone } = require("../../shared/utils/phone");
 const { getOsrmRouteKmOrHaversine } = require("../../shared/utils/osrmClient");
 const { logger } = require("../../shared/utils/logger");
 const { normalizeOrderFinancialsForInsert } = require("../../shared/utils/orderTotals");
 const { isOrdersStoreColumnMissingError, insertOrdersResilient } = require("../../shared/utils/idempotency");
 const { computePlatformCommission } = require("../../shared/utils/platformCommission");
-const { shadowLedgerSettleDeliveredOrder } = require("../../shared/services/shadowLedger");
+const { settleDeliveredOrderLedgerOnly } = require("../../shared/services/ledgerOnlySettlement");
 
 function haversineDistanceKm(lat1, lng1, lat2, lng2) {
   const R = 6371;
@@ -539,52 +534,21 @@ async function setStatus(sb, orderId, nextStatus, appUser) {
     .single();
 
   if (!error && data && nextStatus === "delivered") {
-    onDeliveryDelivered(sb, data).catch((err) =>
-      logger.error({ err: err.message || String(err) }, "[ERVENOW] accounting settle (wallets ledger)")
-    );
-    if (data.driver_id) {
-      try {
-        const cr = await applyDriverOrderEarning(sb, data.driver_id, data);
-        if (!cr || cr.ok !== true) {
-          logger.warn({ orderId: data.id, result: cr }, "[ervenow] operational driver earning");
-        }
-      } catch (err) {
-        logger.error({ err: err.message || String(err), orderId: data.id }, "[ervenow] operational driver earning");
+    void settleDeliveredOrderLedgerOnly(sb, data.id, "delivery:delivered").then((row) => {
+      if (row && row.ok !== true && row.ok !== "true" && row.reason !== "already_settled" && !row.skipped) {
+        logger.warn({ orderId: data.id, result: row }, "[ledger] delivered settlement");
       }
-      try {
-        const billable = resolveOrderBillableAmount(data);
-        let comm = { ok: false };
-        if (data.driver_id && billable > 0) {
-          try {
-            const { data: commData, error: commErr } = await sb.rpc(
-              "driver_ledger_apply_commission_on_delivered",
-              { p_order_id: data.id }
-            );
-            if (commErr) throw commErr;
-            comm = typeof commData === "object" && commData !== null ? commData : { ok: true };
-            console.log("[commission:delivery] success", data.id, comm);
-          } catch (e) {
-            console.error("Commission error:", e.message || String(e));
-          }
-        } else if (!data.driver_id) {
-          console.log("[commission:delivery] skip — no driver_id", data.id);
-        } else {
-          console.log("[commission:delivery] skip — zero total", data.id);
-        }
-        if (comm && comm.ok === false && comm.reason !== "migration_missing" && !comm.skipped) {
-          logger.warn({ orderId: data.id, result: comm }, "[driver_ledger] commission on delivered");
-        }
+      if (data.driver_id) {
         try {
           const { notifySmartCollectionOnDelivered } = require("../../shared/services/smartCollectionNotify");
-          notifySmartCollectionOnDelivered(sb, data, comm || {}).catch((nErr) =>
+          notifySmartCollectionOnDelivered(sb, data, row || {}).catch((nErr) =>
             logger.warn({ err: nErr.message || String(nErr), orderId: data.id }, "[smart-collection] notify")
           );
         } catch (_nReq) {}
-      } catch (err) {
-        logger.error({ err: err.message || String(err), orderId: data.id }, "[driver_ledger] commission on delivered");
       }
-    }
-    void shadowLedgerSettleDeliveredOrder(sb, data.id, { context: "delivery:delivered" });
+    }).catch((err) =>
+      logger.error({ err: err.message || String(err), orderId: data.id }, "[ledger] delivered settlement")
+    );
   }
 
   return { data, error };
