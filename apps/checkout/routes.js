@@ -41,7 +41,7 @@ const router = express.Router();
  *    - furniture_move
  *    - gas_delivery
  *
- *    👉 هذه تذهب إلى جدول: service_bookings
+ *    👉 الخدمات تُنشأ في جدول orders (order_type = service | gas_delivery)
  *    👉 مرتبطة بمزودي الخدمة (service providers)
  *
  *
@@ -60,6 +60,8 @@ const router = express.Router();
  * ============================================================
  */
 router.post("/", requireAuth, checkoutLimiter, async (req, res) => {
+  const { setDeprecationHeaders, UNIFIED_ORDER_CREATE } = require("../../shared/middleware/deprecateLegacyRoute");
+  setDeprecationHeaders(res, UNIFIED_ORDER_CREATE);
   const perfStart = Date.now();
   const idemKey = normalizeIdempotencyKey(req);
   let idemClaimed = false;

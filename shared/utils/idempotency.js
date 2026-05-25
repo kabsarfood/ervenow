@@ -112,74 +112,18 @@ function normalizeIdempotencyKey(req) {
   return s.slice(0, MAX_LEN);
 }
 
-const SERVICE_BOOKINGS_INSERT_NEVER_STRIP = new Set([
-  "id",
-  "customer_id",
-  "service_name",
-  "status",
-  "created_at",
-]);
-
-function parseMissingServiceBookingsColumnFromError(err) {
-  const msg = String((err && (err.message || err.details || err.hint)) || err || "");
-  let m = /Could not find the '([^']+)' column of 'service_bookings'/i.exec(msg);
-  if (m) return m[1];
-  m = /column "([^"]+)" of relation "service_bookings" does not exist/i.exec(msg);
-  if (m) return m[1];
-  if (String(err && err.code) === "42703") {
-    const m2 = /column "([^"]+)" does not exist/i.exec(msg);
-    if (m2) return m2[1];
-  }
-  return null;
+async function insertServiceBookingResilient(_sb, _row) {
+  return {
+    data: null,
+    error: new Error("service_bookings removed — use createServiceOrder / POST /api/order/create"),
+  };
 }
 
-async function insertServiceBookingResilient(sb, row) {
-  let current = { ...row };
-  const maxRounds = 40;
-  for (let i = 0; i < maxRounds; i += 1) {
-    const { data, error } = await sb.from("service_bookings").insert(current).select().single();
-    if (!error) return { data, error: null };
-
-    const code = String(error.code || "");
-    const em = String(error.message || error.details || "");
-    if (code === "23505" || /duplicate key|unique constraint/i.test(em)) {
-      return { data, error };
-    }
-
-    const missing = parseMissingServiceBookingsColumnFromError(error);
-    if (
-      missing &&
-      !SERVICE_BOOKINGS_INSERT_NEVER_STRIP.has(missing) &&
-      Object.prototype.hasOwnProperty.call(current, missing)
-    ) {
-      const droppedVal = current[missing];
-      const { [missing]: _drop, ...rest } = current;
-      current = rest;
-      if (missing === "customer_phone" && droppedVal) {
-        const loc = String(current.location || "").trim();
-        const tag = "جوال: " + String(droppedVal).trim();
-        current.location = loc ? loc + " | " + tag : tag;
-      }
-      logger.warn(
-        { missing, err: em },
-        "[service_bookings] insert: column missing — retrying without it; run shared/migration_service_bookings_schema_cache.sql"
-      );
-      continue;
-    }
-
-    return { data, error };
-  }
-  return { data: null, error: new Error("service_bookings insert: exceeded resilient retries") };
-}
-
-async function insertServiceBookingsBatchResilient(sb, rows) {
-  const inserted = [];
-  for (const row of rows) {
-    const { data, error } = await insertServiceBookingResilient(sb, row);
-    if (error) return { data: inserted, error };
-    if (data) inserted.push(data);
-  }
-  return { data: inserted, error: null };
+async function insertServiceBookingsBatchResilient(_sb, _rows) {
+  return {
+    data: [],
+    error: new Error("service_bookings removed — use createServiceOrder / POST /api/order/create"),
+  };
 }
 
 module.exports = {

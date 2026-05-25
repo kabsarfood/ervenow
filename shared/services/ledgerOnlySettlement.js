@@ -33,7 +33,7 @@ async function settleCompletedServiceLedgerOnly(sb, bookingId, context = "ledger
   const id = String(bookingId || "").trim();
   if (!id || !sb) return { ok: false, reason: "missing_id" };
 
-  const shouldProceed = await tryClaimSettlement(sb, id, "service_booking", SETTLEMENT_KINDS.LEDGER_SERVICE, {
+  const shouldProceed = await tryClaimSettlement(sb, id, "order", SETTLEMENT_KINDS.LEDGER_SERVICE, {
     context,
   });
   if (!shouldProceed) {

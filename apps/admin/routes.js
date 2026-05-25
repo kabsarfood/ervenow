@@ -383,60 +383,34 @@ async function computeAdminDashboardStats(sb, rangeMeta) {
   const startToday = startOfToday();
   const todayIso = startToday.toISOString();
   const rangeIso = rangeMeta.start.toISOString();
-  const activeOrderOr = `delivery_status.in.(${ACTIVE_ORDER_STATUSES.join(",")}),status.in.(${ACTIVE_ORDER_STATUSES.join(",")})`;
-  const activeServiceOr = `status.in.(${ACTIVE_SERVICE_STATUSES.join(",")})`;
+  const activeOrderOr = `delivery_status.in.(${ACTIVE_ORDER_STATUSES.join(",")})`;
 
   const orderRevenueExprs = [
-    "created_at, delivery_status, status, order_total, total_amount, delivery_fee, vat_amount, total_with_vat, platform_fee, driver_earning",
+    "created_at, delivery_status, status, order_type, order_total, total_amount, delivery_fee, vat_amount, total_with_vat, platform_fee, platform_commission, driver_earning",
+    "created_at, delivery_status, status, order_total, total_amount, platform_fee, platform_commission, driver_earning",
     "created_at, delivery_status, status, order_total, total_amount, platform_fee, driver_earning",
-  ];
-  const serviceRevenueExprs = [
-    "created_at, status, total_amount, total, platform_commission",
-    "created_at, status, total_amount, total",
-    "created_at, status, total_amount",
-    "created_at, status, total",
-    "created_at, status",
   ];
   const chartCreatedExprs = ["created_at"];
 
-  const [
-    ordersTodayOrd,
-    ordersTodaySvc,
-    activeOrd,
-    activeSvc,
-    totalOrd,
-    totalSvc,
-    allOrders,
-    allServices,
-    rangeOrdersChart,
-    rangeServicesChart,
-  ] = await Promise.all([
+  const [ordersToday, activeOrders, totalOrders, allOrders, rangeOrdersChart] = await Promise.all([
     countTableRows(sb, "orders", (q) => q.gte("created_at", todayIso)),
-    countTableRows(sb, "service_bookings", (q) => q.gte("created_at", todayIso)),
     countTableRows(sb, "orders", (q) => q.or(activeOrderOr)),
-    countTableRows(sb, "service_bookings", (q) => q.or(activeServiceOr)),
     countTableRows(sb, "orders"),
-    countTableRows(sb, "service_bookings"),
     paginatedSelectWithFallback(sb, "orders", orderRevenueExprs),
-    paginatedSelectWithFallback(sb, "service_bookings", serviceRevenueExprs),
     paginatedSelectWithFallback(sb, "orders", chartCreatedExprs, (q) => q.gte("created_at", rangeIso)),
-    paginatedSelectWithFallback(sb, "service_bookings", chartCreatedExprs, (q) => q.gte("created_at", rangeIso)),
   ]);
 
-  const todayOrders = (ordersTodayOrd || 0) + (ordersTodaySvc || 0);
-  const activeOrders = (activeOrd || 0) + (activeSvc || 0);
-  const totalOrders = (totalOrd || 0) + (totalSvc || 0);
+  const todayOrders = ordersToday || 0;
+  const totalOrdersCount = totalOrders || 0;
 
   const revenueOrders = allOrders.reduce((a, b) => {
     if (isCancelledOrder(b)) return a;
     return a + orderBillableAmount(b);
   }, 0);
-  const revenueServices = allServices.reduce((a, b) => a + amountFromRow(b), 0);
   const platformOrders = allOrders.reduce((a, b) => {
     if (isCancelledOrder(b)) return a;
-    return a + (Number(b.platform_fee) || 0);
+    return a + (Number(b.platform_fee) || Number(b.platform_commission) || 0);
   }, 0);
-  const platformServices = allServices.reduce((a, b) => a + (Number(b.platform_commission) || 0), 0);
   const driversEarnings = allOrders.reduce((a, b) => {
     if (isCancelledOrder(b)) return a;
     return a + (Number(b.driver_earning) || 0);
@@ -446,24 +420,20 @@ async function computeAdminDashboardStats(sb, rangeMeta) {
     if (!(b.created_at >= todayIso)) return a;
     return a + orderBillableAmount(b);
   }, 0);
-  const revenueServicesToday = allServices.reduce((a, b) => {
-    if (!(b.created_at >= todayIso)) return a;
-    return a + amountFromRow(b);
-  }, 0);
-  const chart = buildChartForRange([...rangeOrdersChart, ...rangeServicesChart], rangeMeta);
+  const chart = buildChartForRange(rangeOrdersChart, rangeMeta);
 
   return {
     range: rangeMeta.range,
-    total_orders: totalOrders,
+    total_orders: totalOrdersCount,
     today_orders: todayOrders,
-    active_orders: activeOrders,
-    total_revenue: round2(revenueOrders + revenueServices),
-    platform_commission: round2(platformOrders + platformServices),
+    active_orders: activeOrders || 0,
+    total_revenue: round2(revenueOrders),
+    platform_commission: round2(platformOrders),
     drivers_earnings: round2(driversEarnings),
     ordersToday: todayOrders,
-    activeOrders,
-    revenueToday: round2(revenueOrdersToday + revenueServicesToday),
-    revenueTotal: round2(revenueOrders + revenueServices),
+    activeOrders: activeOrders || 0,
+    revenueToday: round2(revenueOrdersToday),
+    revenueTotal: round2(revenueOrders),
     chart,
   };
 }
@@ -1729,7 +1699,6 @@ router.post(
           .update({
             driver_id: resolved.userId,
             delivery_status: nextStatus,
-            status: nextStatus,
             updated_at: new Date().toISOString(),
           })
           .eq("id", orderId)
@@ -2694,7 +2663,7 @@ router.patch(
       if (error) return fail(res, error.message, 400);
       if (data && data.booking_id) {
         await sb
-          .from("service_bookings")
+          .from("orders")
           .update({
             commission_settled: true,
             commission_due: false,

@@ -5,14 +5,12 @@ const { createServiceClient } = require("../../shared/config/supabase");
 const { ok, fail } = require("../../shared/utils/helpers");
 const { sendWhatsApp } = require("../../shared/utils/whatsapp");
 const checkoutPaymentMethods = require("../../shared/utils/checkoutPaymentMethods");
-const { computePlatformCommission } = require("../../shared/utils/serviceCommission");
 const {
   gasModeFromBody,
   computeGasTotal,
   gasServiceLabel,
   CENTRAL_LITERS,
 } = require("../../shared/utils/gasDeliveryPricing");
-const { notifyProvidersForBooking } = require("../../shared/services/serviceBookingNotify");
 const {
   HOME_SERVICE_CATALOG,
   isHomeServiceType,
@@ -20,12 +18,7 @@ const {
   computeHomeServiceTotal,
   serviceDisplayName,
 } = require("../../shared/utils/homeServicePricing");
-const { recordCommissionDebtOnDelivered } = require("../../shared/services/providerCommissionDebts");
-const { shadowLedgerSettleDeliveredOrder } = require("../../shared/services/shadowLedger");
-const {
-  insertServiceBookingResilient,
-  insertServiceBookingsBatchResilient,
-} = require("../../shared/utils/idempotency");
+const { createServiceOrder } = require("../../shared/services/serviceOrderCreate");
 const { completeServiceBooking } = require("../../shared/services/completeServiceBooking");
 const { sendReserveWelcomeWhatsApp } = require("../../shared/services/serviceProviderReserve");
 const { getWalletPayloadWithLedgerFallback } = require("../../shared/utils/ledgerWallet");
@@ -39,6 +32,17 @@ const {
   providerMatchesBookingType,
 } = require("../../shared/utils/serviceProviderTypes");
 const { toStorageDigits } = require("../../shared/utils/phone");
+const {
+  bookingStatus,
+  mapOrdersToBookings,
+  orderToBookingView,
+  serviceOrdersQuery,
+  applyServiceTypeFilter,
+  fetchServiceOrderById,
+} = require("../../shared/utils/serviceOrderQuery");
+const { buildOrderStatusPatch } = require("../../shared/domain/orders/orderStatus");
+const { DELIVERY_STATUS } = require("../../shared/domain/orders/constants");
+const { patchUnifiedOrderStatus } = require("../../shared/services/unifiedOrderStatus");
 
 const router = express.Router();
 const SERVICE_TYPES = new Set([
@@ -77,21 +81,42 @@ function normalizeQty(v) {
   return Math.max(1, Math.floor(n));
 }
 
-async function buildNextServiceOrderNumber(sb) {
-  const now = new Date();
-  const day = String(now.getDate()).padStart(2, "0");
-  const start = new Date(now);
-  start.setHours(0, 0, 0, 0);
-  const end = new Date(now);
-  end.setHours(23, 59, 59, 999);
-  const { count, error } = await sb
-    .from("service_bookings")
-    .select("id", { count: "exact", head: true })
-    .gte("created_at", start.toISOString())
-    .lte("created_at", end.toISOString());
-  if (error) throw error;
-  const seq = (count || 0) + 1;
-  return `ES-${day}-${String(seq).padStart(3, "0")}`;
+function filterBookingsForProvider(rows, providerId, providerType, providerDistrict) {
+  const types = bookingTypesForProvider(providerType);
+  const pid = String(providerId || "");
+  return (rows || []).filter((b) => {
+    const st = String(b.service_type || "").toLowerCase();
+    if (!providerMatchesBookingType(providerType, st, b.gas_mode)) return false;
+    const status = bookingStatus(b);
+    const bookedBy = b.provider_id ? String(b.provider_id) : "";
+    if (bookedBy && bookedBy !== pid) return false;
+    if (bookedBy === pid) return true;
+    if (status !== "new" && status !== "pending") return false;
+    const loc = b.service_location || b.location;
+    return providerAreaMatches(providerType, providerDistrict, b.district, loc);
+  });
+}
+
+function sortBookingsByPriority(rows, providerId) {
+  const pid = String(providerId || "");
+  return (rows || []).slice().sort((a, b) => {
+    const sa = bookingStatus(a);
+    const sb = bookingStatus(b);
+    const mineA = String(a.provider_id || "") === pid;
+    const mineB = String(b.provider_id || "") === pid;
+    if (mineA && !mineB) return -1;
+    if (!mineA && mineB) return 1;
+    const rank = (s) => {
+      if (s === "new" || s === "pending") return 0;
+      if (s === "accepted") return 1;
+      if (s === "delivering") return 2;
+      if (s === "delivered") return 3;
+      return 4;
+    };
+    const d = rank(sa) - rank(sb);
+    if (d !== 0) return d;
+    return new Date(b.created_at || 0) - new Date(a.created_at || 0);
+  });
 }
 
 function labelByType(type) {
@@ -110,68 +135,9 @@ function labelByType(type) {
     gas_delivery: "تبديل غاز",
     agricultural_engineer: "مهندس زراعي",
     laundry_estates: "مغسل فلل وعمائر",
-    pickup_truck: "سائق سطحى",
     service: "خدمة عامة",
   };
   return map[type] || labelForType(type) || type || "خدمة";
-}
-
-function filterBookingsForProvider(rows, providerId, providerType, providerDistrict) {
-  const types = bookingTypesForProvider(providerType);
-  const pid = String(providerId || "");
-  return (rows || []).filter((b) => {
-    const st = String(b.service_type || "").toLowerCase();
-    if (!providerMatchesBookingType(providerType, st, b.gas_mode)) return false;
-    const status = String(b.status || "new").toLowerCase();
-    const bookedBy = b.provider_id ? String(b.provider_id) : "";
-    if (bookedBy && bookedBy !== pid) return false;
-    if (bookedBy === pid) return true;
-    if (status !== "new" && status !== "pending") return false;
-    return providerAreaMatches(providerType, providerDistrict, b.district, b.location);
-  });
-}
-
-function sortBookingsByPriority(rows, providerId) {
-  const pid = String(providerId || "");
-  return (rows || []).slice().sort((a, b) => {
-    const sa = String(a.status || "").toLowerCase();
-    const sb = String(b.status || "").toLowerCase();
-    const mineA = String(a.provider_id || "") === pid;
-    const mineB = String(b.provider_id || "") === pid;
-    if (mineA && !mineB) return -1;
-    if (!mineA && mineB) return 1;
-    const rank = (s) => {
-      if (s === "new") return 0;
-      if (s === "accepted") return 1;
-      if (s === "delivering") return 2;
-      if (s === "delivered") return 3;
-      return 4;
-    };
-    const d = rank(sa) - rank(sb);
-    if (d !== 0) return d;
-    return new Date(b.created_at || 0) - new Date(a.created_at || 0);
-  });
-}
-
-function buildServiceBookingRow(base) {
-  const service_type = String(base.service_type || "service").trim().toLowerCase();
-  const totalAmount = normalizeMoney(base.total_amount);
-  return {
-    service_order_number: base.service_order_number,
-    customer_id: base.customer_id || null,
-    customer_phone: String(base.customer_phone || "").trim(),
-    service_type,
-    service_name: String(base.service_name || labelByType(service_type)).trim(),
-    district: String(base.district || "").trim(),
-    location: String(base.location || "").trim(),
-    qty: normalizeQty(base.qty),
-    gas_mode: base.gas_mode || null,
-    gas_liters: base.gas_liters != null ? Number(base.gas_liters) : null,
-    total_amount: totalAmount,
-    payment_status: normalizePaymentStatus(base.payment_status),
-    platform_commission: computePlatformCommission(totalAmount, service_type),
-    status: "new",
-  };
 }
 
 async function sendCustomerRateWhatsApp(booking) {
@@ -188,8 +154,7 @@ async function sendCustomerRateWhatsApp(booking) {
 
 async function recalcProviderRating(sb, providerId) {
   if (!providerId) return;
-  const { data, error } = await sb
-    .from("service_bookings")
+  const { data, error } = await serviceOrdersQuery(sb)
     .select("rating")
     .eq("provider_id", providerId)
     .not("rating", "is", null);
@@ -263,11 +228,8 @@ router.post("/home-order", optionalAuth, async (req, res) => {
     if (payMode === "paid" || payMode === "prepaid") payment_status = "paid";
     if (payAfterDiag && payMode !== "paid" && payMode !== "prepaid") payment_status = "unpaid";
 
-    const service_order_number = await buildNextServiceOrderNumber(sb);
-    const insertRow = buildServiceBookingRow({
-      service_order_number,
-      customer_id: req.appUser ? req.appUser.id : null,
-      customer_phone,
+    const created = await createServiceOrder(sb, req.appUser || { id: null, phone: customer_phone }, {
+      order_type: "service",
       service_type,
       service_name: serviceDisplayName(service_type),
       district,
@@ -275,12 +237,10 @@ router.post("/home-order", optionalAuth, async (req, res) => {
       qty: 1,
       total_amount: totalAmount,
       payment_status,
+      customer_phone,
     });
-
-    const { data, error } = await insertServiceBookingResilient(sb, insertRow);
-    if (error) return fail(res, error.message, 400);
-
-    await notifyProvidersForBooking(sb, data);
+    if (!created.ok) return fail(res, created.message, created.status || 400);
+    const data = orderToBookingView(created.order);
 
     return ok(res, {
       booking: data,
@@ -332,13 +292,9 @@ router.post("/gas-order", optionalAuth, async (req, res) => {
 
     const payOnDelivery = Boolean(b.pay_on_delivery);
     const payment_status = payOnDelivery ? "unpaid" : normalizePaymentStatus(b.payment_status || "paid");
-    const service_order_number = await buildNextServiceOrderNumber(sb);
     const service_name = gasServiceLabel(gas_mode);
-
-    const insertRow = buildServiceBookingRow({
-      service_order_number,
-      customer_id: req.appUser ? req.appUser.id : null,
-      customer_phone: String(b.customer_phone || (req.appUser && req.appUser.phone) || "").trim(),
+    const created = await createServiceOrder(sb, req.appUser || { id: null, phone: String(b.customer_phone || "") }, {
+      order_type: "gas_delivery",
       service_type: "gas_delivery",
       service_name,
       district: String(b.district || "").trim(),
@@ -348,12 +304,10 @@ router.post("/gas-order", optionalAuth, async (req, res) => {
       gas_liters: gas_mode === "central_refill" ? gas_liters : null,
       total_amount: totalAmount,
       payment_status,
+      customer_phone: String(b.customer_phone || (req.appUser && req.appUser.phone) || "").trim(),
     });
-
-    const { data, error } = await insertServiceBookingResilient(sb, insertRow);
-    if (error) return fail(res, error.message, 400);
-
-    await notifyProvidersForBooking(sb, data);
+    if (!created.ok) return fail(res, created.message, created.status || 400);
+    const data = orderToBookingView(created.order);
 
     return ok(res, {
       booking: data,
@@ -441,18 +395,17 @@ router.get("/me/dashboard", requireAuth, requireRole("service"), async (req, res
     const providerType = String(profile?.service_type || "").trim().toLowerCase();
     const types = bookingTypesForProvider(providerType);
 
-    let bookingsQ = sb.from("service_bookings").select("*").order("created_at", { ascending: false }).limit(200);
-    if (types.length === 1) bookingsQ = bookingsQ.eq("service_type", types[0]);
-    else if (types.length > 1) bookingsQ = bookingsQ.in("service_type", types);
+    let bookingsQ = serviceOrdersQuery(sb).order("created_at", { ascending: false }).limit(200);
+    bookingsQ = applyServiceTypeFilter(bookingsQ, types);
     const { data: rawBookings, error: bErr } = await bookingsQ;
     if (bErr) return fail(res, bErr.message, 400);
 
     const bookings = sortBookingsByPriority(
-      filterBookingsForProvider(rawBookings, uid, providerType, profile?.service_district),
+      filterBookingsForProvider(mapOrdersToBookings(rawBookings), uid, providerType, profile?.service_district),
       uid
     );
     const newCount = bookings.filter((b) => {
-      const s = String(b.status || "").toLowerCase();
+      const s = bookingStatus(b);
       return (s === "new" || s === "pending") && !b.provider_id;
     }).length;
 
@@ -468,9 +421,9 @@ router.get("/me/dashboard", requireAuth, requireRole("service"), async (req, res
       /* table optional */
     }
 
-    const completed = bookings.filter((b) => String(b.status || "").toLowerCase() === "delivered").length;
+    const completed = bookings.filter((b) => bookingStatus(b) === "delivered").length;
     const activeJobs = bookings.filter((b) => {
-      const s = String(b.status || "").toLowerCase();
+      const s = bookingStatus(b);
       return (s === "accepted" || s === "delivering") && String(b.provider_id || "") === String(uid);
     }).length;
 
@@ -530,14 +483,13 @@ router.get("/bookings", requireAuth, async (req, res) => {
     if (!providerType) return ok(res, { bookings: [] });
 
     const types = bookingTypesForProvider(providerType);
-    let q = req.supabase.from("service_bookings").select("*").order("created_at", { ascending: false }).limit(200);
-    if (types.length === 1) q = q.eq("service_type", types[0]);
-    else q = q.in("service_type", types);
+    let q = serviceOrdersQuery(req.supabase).order("created_at", { ascending: false }).limit(200);
+    q = applyServiceTypeFilter(q, types);
     const { data, error } = await q;
     if (error) throw error;
 
     const filtered = sortBookingsByPriority(
-      filterBookingsForProvider(data, user.id, providerType, profile?.service_district),
+      filterBookingsForProvider(mapOrdersToBookings(data), user.id, providerType, profile?.service_district),
       user.id
     );
     return res.json({ ok: true, bookings: filtered });
@@ -559,43 +511,42 @@ router.post("/bookings/:id/reserve", requireAuth, requireRole("service"), async 
     const providerType = String(profile?.service_type || "").trim().toLowerCase();
     if (!providerType) return fail(res, "نوع الخدمة غير مضبوط في حسابك", 400);
 
-    const { data: booking, error: gErr } = await sb
-      .from("service_bookings")
-      .select("*")
-      .eq("id", req.params.id)
-      .maybeSingle();
+    const { data: booking, error: gErr } = await fetchServiceOrderById(sb, req.params.id);
     if (gErr || !booking) return fail(res, "الطلب غير موجود", 404);
 
-    const types = bookingTypesForProvider(providerType);
     if (!providerMatchesBookingType(providerType, booking.service_type, booking.gas_mode)) {
       return fail(res, "هذا الطلب لا يطابق تخصصك", 403);
     }
-    if (!providerAreaMatches(providerType, profile?.service_district, booking.district, booking.location)) {
+  const bookingLoc = booking.service_location || booking.location;
+    if (!providerAreaMatches(providerType, profile?.service_district, booking.district, bookingLoc)) {
       return fail(res, providerType === "pickup_truck" ? "الطلب خارج مدينتك المسجّلة" : "الطلب خارج حيّك المسجّل", 403);
     }
-    const st = String(booking.status || "new").toLowerCase();
+    const st = bookingStatus(booking);
     if (st !== "new" && st !== "pending") return fail(res, "الطلب غير متاح للحجز", 400);
     if (booking.provider_id && String(booking.provider_id) !== String(uid)) {
       return fail(res, "تم حجز الطلب من مزود آخر", 409);
     }
 
     const now = new Date().toISOString();
-    const { data, error } = await sb
-      .from("service_bookings")
-      .update({
-        provider_id: uid,
-        status: "accepted",
-        reserved_at: now,
-        updated_at: now,
-      })
+    const reservePatch = {
+      provider_id: uid,
+      service_provider_id: uid,
+      reserved_at: now,
+      updated_at: now,
+      ...buildOrderStatusPatch(DELIVERY_STATUS.ACCEPTED),
+    };
+    const { data: raw, error } = await sb
+      .from("orders")
+      .update(reservePatch)
       .eq("id", req.params.id)
       .is("provider_id", null)
-      .in("status", ["new", "pending"])
+      .in("delivery_status", ["new", "pending"])
       .select("*")
       .maybeSingle();
 
     if (error) return fail(res, error.message, 400);
-    if (!data) return fail(res, "تعذر حجز الطلب — ربما حجزه مزود آخر", 409);
+    if (!raw) return fail(res, "تعذر حجز الطلب — ربما حجزه مزود آخر", 409);
+    const data = orderToBookingView(raw);
 
     await sendReserveWelcomeWhatsApp(data, profile?.phone, profile?.name);
 
@@ -610,14 +561,10 @@ router.post("/bookings/:id/complete", requireAuth, async (req, res) => {
     const sb = req.supabase || createServiceClient();
     const uid = req.appUser.id;
     const role = String(req.appUser.role || "").toLowerCase();
-    const { data: booking, error: gErr } = await sb
-      .from("service_bookings")
-      .select("*")
-      .eq("id", req.params.id)
-      .maybeSingle();
+    const { data: booking, error: gErr } = await fetchServiceOrderById(sb, req.params.id);
     if (gErr || !booking) return fail(res, "الطلب غير موجود", 404);
 
-    const status = String(booking.status || "").toLowerCase();
+    const status = bookingStatus(booking);
     if (status === "delivered" || status === "cancelled") {
       return ok(res, { booking, already_done: true });
     }
@@ -643,13 +590,14 @@ router.post("/bookings/:id/complete", requireAuth, async (req, res) => {
     const done = await completeServiceBooking(sb, req.params.id, providerId, { actor });
     if (done.error) return fail(res, done.error.message || "فشل الإتمام", 400);
     if (done.already_done) {
-      return ok(res, { booking: done.data, already_done: true });
+      return ok(res, { booking: orderToBookingView(done.data), already_done: true });
     }
 
     if (done.finalized) {
-      await sendCustomerRateWhatsApp(done.data);
+      const view = orderToBookingView(done.data);
+      await sendCustomerRateWhatsApp(view);
       return ok(res, {
-        booking: done.data,
+        booking: view,
         message: "تمت المهمة — شكراً. يمكن للعميل تقييم الخدمة الآن.",
         finalized: true,
       });
@@ -659,8 +607,9 @@ router.post("/bookings/:id/complete", requireAuth, async (req, res) => {
       actor === "provider"
         ? "تم تأكيد التنفيذ — بانتظار تأكيد العميل."
         : "تم تأكيد الاستلام — بانتظار مزود الخدمة.";
+  const view = orderToBookingView(done.data);
     return ok(res, {
-      booking: done.data,
+      booking: view,
       message: msg,
       finalized: false,
       awaiting_customer: !!done.data?.awaiting_customer,
@@ -675,14 +624,10 @@ router.post("/bookings", requireAuth, async (req, res) => {
   try {
     const b = req.body || {};
     const service_type = String(b.service_type || "").trim().toLowerCase() || "service";
-    const service_name = String(b.service_name || "").trim() || labelByType(service_type);
-    const service_order_number = await buildNextServiceOrderNumber(req.supabase);
-    const insertRow = buildServiceBookingRow({
-      service_order_number,
-      customer_id: req.appUser.id,
-      customer_phone: b.customer_phone || req.appUser.phone || "",
+    const created = await createServiceOrder(req.supabase, req.appUser, {
+      order_type: "service",
       service_type,
-      service_name,
+      service_name: String(b.service_name || "").trim() || labelByType(service_type),
       district: b.district,
       location: b.location,
       qty: b.qty,
@@ -690,11 +635,10 @@ router.post("/bookings", requireAuth, async (req, res) => {
       gas_liters: b.gas_liters,
       total_amount: b.total_amount,
       payment_status: b.payment_status,
+      customer_phone: b.customer_phone || req.appUser.phone || "",
     });
-
-    const { data, error } = await insertServiceBookingResilient(req.supabase, insertRow);
-    if (error) return fail(res, error.message, 400);
-    ok(res, { booking: data });
+    if (!created.ok) return fail(res, created.message, created.status || 400);
+    ok(res, { booking: orderToBookingView(created.order) });
   } catch (e) {
     fail(res, e.message, 500);
   }
@@ -713,39 +657,30 @@ router.post("/checkout", optionalAuth, async (req, res) => {
       return ok(res, { bookings: [], skipped: items.length, message: "لا توجد عناصر خدمات في السلة" });
     }
 
-    const customerId = req.appUser ? req.appUser.id : null;
     const customerPhoneFromUser = req.appUser ? req.appUser.phone || "" : "";
-    const rows = [];
+    const inserted = [];
     for (const it of serviceItems) {
       const type = String(it.type || "").trim().toLowerCase();
       const data = it && typeof it.data === "object" && it.data ? it.data : {};
-      const service_order_number = await buildNextServiceOrderNumber(sb);
-      rows.push(
-        buildServiceBookingRow({
-          service_order_number,
-          customer_id: customerId,
-          customer_phone: String(data.customer_phone || customerPhoneFromUser || "").trim(),
-          service_type: type,
-          service_name: String(it.title || labelByType(type)).trim(),
-          district: data.district,
-          location: data.location,
-          qty: data.qty,
-          gas_mode: data.gas_mode,
-          gas_liters: data.gas_liters,
-          total_amount: it.price || data.total_amount || 0,
-          payment_status: data.payment_status || "unpaid",
-        })
-      );
+      const created = await createServiceOrder(sb, req.appUser || { id: null, phone: customerPhoneFromUser }, {
+        order_type: type === "gas_delivery" ? "gas_delivery" : "service",
+        service_type: type,
+        service_name: String(it.title || labelByType(type)).trim(),
+        district: data.district,
+        location: data.location,
+        qty: data.qty,
+        gas_mode: data.gas_mode,
+        gas_liters: data.gas_liters,
+        total_amount: it.price || data.total_amount || 0,
+        payment_status: data.payment_status || "unpaid",
+        customer_phone: String(data.customer_phone || customerPhoneFromUser || "").trim(),
+        data,
+      });
+      if (!created.ok) return fail(res, created.message, created.status || 400);
+      inserted.push(orderToBookingView(created.order));
     }
 
-    const { data: inserted, error } = await insertServiceBookingsBatchResilient(sb, rows);
-    if (error) return fail(res, error.message, 400);
-
-    for (const booking of inserted || []) {
-      await notifyProvidersForBooking(sb, booking);
-    }
-
-    return ok(res, { bookings: inserted || [], skipped: items.length - serviceItems.length });
+    return ok(res, { bookings: inserted, skipped: items.length - serviceItems.length });
   } catch (e) {
     fail(res, e.message, 500);
   }
@@ -753,41 +688,37 @@ router.post("/checkout", optionalAuth, async (req, res) => {
 
 router.patch("/bookings/:id/status", requireAuth, requireRole("service", "admin"), async (req, res) => {
   try {
-    const nextStatus = String(req.body?.status || "").trim().toLowerCase();
+    const nextStatus = String(req.body?.status || req.body?.delivery_status || "").trim().toLowerCase();
     if (!nextStatus) return fail(res, "status required", 400);
     const allowed = new Set(["accepted", "delivering", "delivered", "cancelled"]);
     if (!allowed.has(nextStatus)) return fail(res, "invalid status", 400);
 
-    const patch = { status: nextStatus, updated_at: new Date().toISOString() };
+    if (nextStatus === "delivered" || nextStatus === "delivering") {
+      const out = await patchUnifiedOrderStatus(req.supabase, req.params.id, nextStatus, req.appUser);
+      if (out.error) return fail(res, out.error.message, 400);
+      const view = orderToBookingView(out.data);
+      if (nextStatus === "delivered") await sendCustomerRateWhatsApp(view);
+      return ok(res, { booking: view });
+    }
+
+    const patch = {
+      ...buildOrderStatusPatch(nextStatus),
+    };
     if (req.appUser.role === "service") {
       patch.provider_id = req.appUser.id;
+      patch.service_provider_id = req.appUser.id;
     }
 
     const { data, error } = await req.supabase
-      .from("service_bookings")
+      .from("orders")
       .update(patch)
       .eq("id", req.params.id)
+      .in("order_type", ["service", "gas_delivery"])
       .select("*")
       .single();
     if (error) return fail(res, error.message, 400);
 
-    if (nextStatus === "delivered") {
-      const providerId = data.provider_id || (req.appUser.role === "service" ? req.appUser.id : null);
-      if (providerId) {
-        try {
-          await recordCommissionDebtOnDelivered(req.supabase, data, providerId);
-        } catch (debtErr) {
-          console.error("[services] commission debt:", debtErr && (debtErr.message || debtErr));
-        }
-      }
-      await sendCustomerRateWhatsApp(data);
-      void shadowLedgerSettleDeliveredOrder(req.supabase, data.id, {
-        type: "service",
-        context: "service:delivered",
-      });
-    }
-
-    return ok(res, { booking: data });
+    return ok(res, { booking: orderToBookingView(data) });
   } catch (e) {
     fail(res, e.message, 500);
   }
@@ -803,11 +734,7 @@ router.post("/bookings/:id/rate", requireAuth, requireRole("customer"), async (r
       return fail(res, "rating must be 1..5", 400);
     }
 
-    const { data: booking, error: gErr } = await req.supabase
-      .from("service_bookings")
-      .select("*")
-      .eq("id", req.params.id)
-      .single();
+    const { data: booking, error: gErr } = await fetchServiceOrderById(req.supabase, req.params.id);
     if (gErr || !booking) return fail(res, "Not found", 404);
     const phoneDigits = toStorageDigits(req.appUser.phone || "");
     const custPhone = toStorageDigits(booking.customer_phone || "");
@@ -815,12 +742,12 @@ router.post("/bookings/:id/rate", requireAuth, requireRole("customer"), async (r
       String(booking.customer_id || "") === String(req.appUser.id) ||
       (phoneDigits && custPhone && phoneDigits === custPhone);
     if (!ownsBooking) return fail(res, "Forbidden", 403);
-    if (String(booking.status || "").toLowerCase() !== "delivered") {
+    if (bookingStatus(booking) !== "delivered") {
       return fail(res, "booking is not delivered", 400);
     }
 
     const { data, error } = await req.supabase
-      .from("service_bookings")
+      .from("orders")
       .update({
         rating: r,
         review: review || null,
@@ -836,7 +763,7 @@ router.post("/bookings/:id/rate", requireAuth, requireRole("customer"), async (r
       await recalcProviderRating(req.supabase, data.provider_id);
     }
 
-    return ok(res, { booking: data });
+    return ok(res, { booking: orderToBookingView(data) });
   } catch (e) {
     fail(res, e.message, 500);
   }

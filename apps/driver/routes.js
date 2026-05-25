@@ -9,7 +9,8 @@ const { driverPendingRegistrationBody } = require("../../shared/messages/driverW
 const { createServiceClient } = require("../../shared/config/supabase");
 const { notifyDriver } = require("./notify");
 const { bumpDeliveryOrdersListEpoch } = require("../../shared/utils/deliveryOrdersListCache");
-const { setStatus } = require("../delivery/service");
+const { patchUnifiedOrderStatus } = require("../../shared/services/unifiedOrderStatus");
+const { setDeprecationHeaders, UNIFIED_ORDER_STATUS } = require("../../shared/middleware/deprecateLegacyRoute");
 const { requireRole } = require("../../shared/middleware/roles");
 const { getWalletPayloadWithLedgerFallback } = require("../../shared/utils/ledgerWallet");
 const { getDriverFreezeFlags } = require("../../shared/services/autoFreeze");
@@ -32,7 +33,6 @@ const {
   broadcastOrderLive,
   orderPatchFromRow,
 } = require("../../shared/lib/trackingSocket");
-const { completeServiceBooking } = require("../../shared/services/completeServiceBooking");
 const { attachSiteSessionCookie } = require("../../shared/middleware/publicSiteOtpGate");
 const { parseOptionalPayoutPayload, payoutRowForDriversOrStores } = require("../../shared/utils/payoutFields");
 const { sanitizeDriverOrStoreRowForApi } = require("../../shared/utils/bankApiSafe");
@@ -576,26 +576,17 @@ router.post("/update-location", requireAuth, async (req, res) => {
 
 router.post("/start-delivery/:id", requireAuth, async (req, res) => {
   try {
+    setDeprecationHeaders(res, UNIFIED_ORDER_STATUS);
     const drv = await ensureApprovedDriver(req, res);
     if (!drv) return;
     const id = String(req.params.id || "").trim();
     if (!id) return fail(res, "order id required", 400);
-    const { data, error } = await req.supabase
-      .from("orders")
-      .update({ delivery_status: "delivering", updated_at: nowIso() })
-      .eq("id", id)
-      .eq("driver_id", req.appUser.id)
-      .in("delivery_status", ["accepted", "picked"])
-      .select()
-      .maybeSingle();
-    if (error) return fail(res, error.message, 400);
+    const out = await patchUnifiedOrderStatus(req.supabase, id, "delivering", req.appUser);
+    if (out.error) return fail(res, out.error.message || "order not available", 400);
+    const data = out.data;
     if (!data) return fail(res, "order not available", 400);
-    if (data.customer_phone) {
-      await sendCustomerDeliveringNotice(data);
-    }
-    await bumpDeliveryOrdersListEpoch();
-    broadcastOrderPatch(id, orderPatchFromRow(data));
-    return ok(res, { order: data });
+    if (data.customer_phone) await sendCustomerDeliveringNotice(data);
+    return ok(res, { order: data, unified_redirect: UNIFIED_ORDER_STATUS });
   } catch (e) {
     return fail(res, e.message, 500);
   }
@@ -626,41 +617,20 @@ router.post("/ping-arrival/:id", requireAuth, async (req, res) => {
 
 router.post("/complete-order/:id", requireAuth, async (req, res) => {
   try {
+    setDeprecationHeaders(res, UNIFIED_ORDER_STATUS);
     const id = String(req.params.id || "").trim();
     if (!id) return fail(res, "order id required", 400);
 
-    const role = String(req.appUser?.role || "").toLowerCase();
-    const { data: bookingProbe } = await req.supabase
-      .from("service_bookings")
-      .select("id, service_type")
-      .eq("id", id)
-      .maybeSingle();
-
-    if (bookingProbe) {
-      const svcDone = await completeServiceBooking(
-        req.supabase,
-        id,
-        role === "service" ? req.appUser.id : role === "admin" ? null : req.appUser.id
-      );
-      if (!svcDone.error && svcDone.data) {
-        return ok(res, { order: svcDone.data, service_booking: true, status: "completed" });
-      }
-      if (svcDone.error && svcDone.error.message !== "Not found" && svcDone.error.message !== "not a service booking") {
-        return fail(res, svcDone.error.message, 400);
-      }
-    }
-
     const drv = await ensureApprovedDriver(req, res);
     if (!drv) {
-      const svcTry = await completeServiceBooking(req.supabase, id, null);
-      if (!svcTry.error && svcTry.data) {
-        return ok(res, { order: svcTry.data, service_booking: true, status: "completed" });
-      }
-      return;
+      const out = await patchUnifiedOrderStatus(req.supabase, id, "delivered", req.appUser);
+      if (out.error) return fail(res, out.error.message, out.error.message === "Not found" ? 404 : 400);
+      return ok(res, { order: out.data, service_booking: !!out.service_booking, unified_redirect: UNIFIED_ORDER_STATUS });
     }
 
-    const { data, error } = await setStatus(req.supabase, id, "delivered", req.appUser);
-    if (error) return fail(res, error.message || "order not available", 400);
+    const out = await patchUnifiedOrderStatus(req.supabase, id, "delivered", req.appUser);
+    if (out.error) return fail(res, out.error.message || "order not available", 400);
+    const data = out.data;
     if (!data) return fail(res, "order not available", 400);
     if (data.customer_phone) {
       await sendDriverArrived(data);

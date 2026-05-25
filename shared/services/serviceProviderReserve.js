@@ -33,8 +33,8 @@ function paymentLabel(booking) {
 }
 
 function buildReserveWelcomeMessage(booking, providerName) {
-  const coords = parseCoordsFromLocation(booking.location);
-  const maps = mapsUrl(coords, booking.location || booking.district);
+  const coords = parseCoordsFromLocation(booking.service_location || booking.location);
+  const maps = mapsUrl(coords, booking.service_location || booking.location || booking.district);
   const svcName = booking.service_name || serviceDisplayName(booking.service_type);
   const pct = commissionPercentLabel(booking.service_type);
   const greet = providerName ? `مرحباً ${providerName}` : "مرحباً";
@@ -42,7 +42,7 @@ function buildReserveWelcomeMessage(booking, providerName) {
   return (
     `${greet} من منصة ERVENOW 👋\n` +
     `تم حجز طلب خدمة لك بنجاح:\n\n` +
-    `📋 رقم الطلب: ${booking.service_order_number || booking.id}\n` +
+    `📋 رقم الطلب: ${booking.service_order_number || booking.order_number || booking.id}\n` +
     `🔧 نوع العمل: ${svcName}\n` +
     `🏘 الحي: ${booking.district || "—"}\n` +
     `📍 موقع طالب الخدمة:\n${maps}\n` +

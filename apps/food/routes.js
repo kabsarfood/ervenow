@@ -69,6 +69,8 @@ router.get("/orders", requireAuth, async (req, res) => {
 /** إنشاء طلب مطعم + ربط طلب توصيل */
 router.post("/orders", requireAuth, async (req, res) => {
   try {
+    const { setDeprecationHeaders, UNIFIED_ORDER_CREATE } = require("../../shared/middleware/deprecateLegacyRoute");
+    setDeprecationHeaders(res, UNIFIED_ORDER_CREATE);
     const body = req.body || {};
     const isDelivery = body.type === "delivery" || !!body.address || !!body.drop_address;
     const items = body.items || [];
@@ -126,7 +128,7 @@ router.post("/orders", requireAuth, async (req, res) => {
         order_total: orderTotal,
         delivery_fee: deliveryFee,
         delivery_status: "pending",
-        status: "new",
+        order_type: "restaurant",
         platform_fee: platformFee,
         driver_earning: driverEarning,
         vat_amount: vatAmount,

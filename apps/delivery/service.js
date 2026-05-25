@@ -1,4 +1,6 @@
-const { isValidDeliveryTransition, deliveryLifecycleIndex } = require("../../shared/utils/helpers");
+const { deliveryLifecycleIndex } = require("../../shared/utils/helpers");
+const { getOrderDeliveryStatus } = require("../../shared/domain/orders/orderStatus");
+const { patchUnifiedOrderStatus } = require("../../shared/services/unifiedOrderStatus");
 const { assertDriverCanAcceptOrders } = require("../../shared/services/driverCommissionLedger");
 /* FINANCE_MODE=ledger_only — تسوية التسليم عبر ervenow_ledger_settle_delivered_order فقط */
 const { normalizePhone } = require("../../shared/utils/phone");
@@ -7,8 +9,6 @@ const { logger } = require("../../shared/utils/logger");
 const { normalizeOrderFinancialsForInsert } = require("../../shared/utils/orderTotals");
 const { isOrdersStoreColumnMissingError, insertOrdersResilient } = require("../../shared/utils/idempotency");
 const { computePlatformCommission } = require("../../shared/utils/platformCommission");
-const { settleDeliveredOrderLedgerOnly } = require("../../shared/services/ledgerOnlySettlement");
-
 function haversineDistanceKm(lat1, lng1, lat2, lng2) {
   const R = 6371;
   const dLat = ((lat2 - lat1) * Math.PI) / 180;
@@ -295,7 +295,6 @@ async function createDeliveryOrderFromBody(sb, appUser, body, opts) {
     notes: String(b.notes || "").trim(),
     order_number,
     delivery_status,
-    status: "new",
     pickup_lat,
     pickup_lng,
     drop_lat,
@@ -487,7 +486,7 @@ async function acceptOrder(sb, orderId, driverId) {
     .single();
 
   if (gErr || !order) return { data: null, error: gErr || new Error("Not found") };
-  const current = order.delivery_status || order.status || "pending";
+  const current = getOrderDeliveryStatus(order);
   if (deliveryLifecycleIndex(current) !== 0) {
     return { data: null, error: new Error("Order not available") };
   }
@@ -508,50 +507,10 @@ async function acceptOrder(sb, orderId, driverId) {
   return { data, error };
 }
 
+/** @deprecated استخدم patchUnifiedOrderStatus — يُبقى للتوافق الداخلي */
 async function setStatus(sb, orderId, nextStatus, appUser) {
-  const { data: order, error: gErr } = await sb
-    .from("orders")
-    .select("*")
-    .eq("id", orderId)
-    .single();
-
-  if (gErr || !order) return { data: null, error: gErr || new Error("Not found") };
-
-  if (appUser.role === "driver" && order.driver_id !== appUser.id) {
-    return { data: null, error: new Error("Not your order") };
-  }
-
-  const current = order.delivery_status || order.status || "pending";
-  if (!isValidDeliveryTransition(current, nextStatus)) {
-    return { data: null, error: new Error(`Invalid transition ${current} → ${nextStatus}`) };
-  }
-
-  const { data, error } = await sb
-    .from("orders")
-    .update({ delivery_status: nextStatus, updated_at: new Date().toISOString() })
-    .eq("id", orderId)
-    .select()
-    .single();
-
-  if (!error && data && nextStatus === "delivered") {
-    void settleDeliveredOrderLedgerOnly(sb, data.id, "delivery:delivered").then((row) => {
-      if (row && row.ok !== true && row.ok !== "true" && row.reason !== "already_settled" && !row.skipped) {
-        logger.warn({ orderId: data.id, result: row }, "[ledger] delivered settlement");
-      }
-      if (data.driver_id) {
-        try {
-          const { notifySmartCollectionOnDelivered } = require("../../shared/services/smartCollectionNotify");
-          notifySmartCollectionOnDelivered(sb, data, row || {}).catch((nErr) =>
-            logger.warn({ err: nErr.message || String(nErr), orderId: data.id }, "[smart-collection] notify")
-          );
-        } catch (_nReq) {}
-      }
-    }).catch((err) =>
-      logger.error({ err: err.message || String(err), orderId: data.id }, "[ledger] delivered settlement")
-    );
-  }
-
-  return { data, error };
+  const out = await patchUnifiedOrderStatus(sb, orderId, nextStatus, appUser);
+  return { data: out.data, error: out.error };
 }
 
 async function saveLocation(sb, orderId, appUser, lat, lng) {
@@ -628,7 +587,7 @@ async function rateOrder(sb, orderId, appUser, rating, review) {
   if (!canRateVisitor) {
     return { data: null, error: new Error("Forbidden") };
   }
-  const current = order.delivery_status || order.status;
+  const current = getOrderDeliveryStatus(order);
   if (current !== "delivered") {
     return { data: null, error: new Error("Order not delivered") };
   }
@@ -663,7 +622,7 @@ async function cancelOrderByCustomer(sb, orderId, appUser) {
   if (!canCancelVisitor) {
     return { data: null, error: new Error("Forbidden"), refund: null };
   }
-  const current = String(order.delivery_status || order.status || "").trim().toLowerCase();
+  const current = getOrderDeliveryStatus(order);
   if (!["draft", "new", "pending", "accepted"].includes(current)) {
     return { data: null, error: new Error("لا يمكن إلغاء الطلب في هذه المرحلة"), refund: null };
   }

@@ -18,10 +18,10 @@ function gasTypeLine(booking) {
   if (String(booking.service_type || "").toLowerCase() !== "gas_delivery") return "";
   const mode = String(booking.gas_mode || "cylinder_swap").toLowerCase();
   if (mode === "central_refill") {
-    const L = booking.gas_liters || booking.qty;
+    const L = booking.gas_liters || booking.service_qty || booking.qty;
     return `نوع الخدمة: 2 — تعبئة غاز مركزي\nالكمية: ${L} لتر\n`;
   }
-  return `نوع الخدمة: 1 — تبديل اسطوانة غاز\nالكمية: ${booking.qty || 1} أسطوانة\n`;
+  return `نوع الخدمة: 1 — تبديل اسطوانة غاز\nالكمية: ${booking.service_qty || booking.qty || 1} أسطوانة\n`;
 }
 
 async function sendProviderBookingWhatsApp(phones, booking) {
@@ -35,10 +35,10 @@ async function sendProviderBookingWhatsApp(phones, booking) {
     "وصلك طلب خدمة غاز جديد:\n\n";
   const message =
     welcome +
-    `📋 رقم الطلب: ${booking.service_order_number || booking.id || "—"}\n` +
+    `📋 رقم الطلب: ${booking.service_order_number || booking.order_number || booking.id || "—"}\n` +
     gasLine +
     `الخدمة: ${booking.service_name || gasServiceLabel(booking.gas_mode) || "توصيل غاز"}\n` +
-    `الموقع: ${booking.location || booking.district || "—"}\n` +
+    `الموقع: ${booking.service_location || booking.location || booking.district || "—"}\n` +
     `جوال العميل: ${booking.customer_phone || "—"}\n` +
     `السعر: ${Number(booking.total_amount || 0).toFixed(2)} ريال\n` +
     `حالة الدفع: ${paymentText}\n` +

@@ -1,4 +1,4 @@
-/** عمولة المنصة على service_bookings — نفس نسبة المنصة الموحّدة */
+/** عمولة المنصة على طلبات الخدمة (orders) — نفس نسبة المنصة الموحّدة */
 const {
   PLATFORM_COMMISSION_RATE,
   computePlatformCommission,

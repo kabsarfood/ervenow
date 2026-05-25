@@ -1,7 +1,6 @@
 const { routeKmWithRoughFallback } = require("../../shared/utils/routeDistance");
 const {
   allocateUniqueOrderNumber,
-  allocateUniqueServiceOrderNumber,
 } = require("../../shared/utils/generateOrderNumber");
 const { normalizeOrderFinancialsForInsert } = require("../../shared/utils/orderTotals");
 const { enqueueDeliveryJob } = require("../../queues/deliveryQueue");
@@ -9,10 +8,8 @@ const { logger } = require("../../shared/utils/logger");
 const { runStoreCheckoutSideEffects } = require("../../shared/utils/storeOrderPostCheckout");
 const { isOrderPaymentGateRequired } = require("../../shared/utils/orderPaymentGate");
 const { isPaidFromRequestBody, normalizeOrderPaymentMethod } = require("../delivery/service");
-const { insertOrdersResilient, insertServiceBookingResilient } = require("../../shared/utils/idempotency");
-const { computePlatformCommission } = require("../../shared/utils/platformCommission");
-const { computePlatformCommission: computeServiceBookingCommission } = require("../../shared/utils/serviceCommission");
-const { notifyProvidersForBooking } = require("../../shared/services/serviceBookingNotify");
+const { insertOrdersResilient } = require("../../shared/utils/idempotency");
+const { createServiceOrder } = require("../../shared/services/serviceOrderCreate");
 
 function normalizedGroup(typeRaw) {
   const type = String(typeRaw || "")
@@ -124,10 +121,8 @@ async function runCheckoutInsert(sb, appUser, body, options) {
         const data = it && typeof it.data === "object" && it.data ? it.data : {};
         const serviceType = String(it.type || "service").trim().toLowerCase();
         const total = Number(it.price) || Number(data.total_amount) || 0;
-        const serviceRow = {
-          service_order_number: null,
-          customer_id: appUser.id,
-          customer_phone: String(appUser.phone || data.customer_phone || it.customer_phone || "").trim(),
+        const created = await createServiceOrder(sb, appUser, {
+          order_type: "service",
           service_type: serviceType,
           service_name: String(it.title || labelByType(serviceType)).trim(),
           district: String(data.district || "").trim(),
@@ -136,36 +131,13 @@ async function runCheckoutInsert(sb, appUser, body, options) {
           gas_mode: data.gas_mode || null,
           gas_liters: data.gas_liters != null ? Number(data.gas_liters) : null,
           total_amount: total,
-          payment_status:
-            String(data.payment_status || "").toLowerCase() === "unpaid" ? "unpaid" : "paid",
-          platform_commission: computeServiceBookingCommission(total, serviceType),
-          status: "new",
-        };
-
-        let serviceData = null;
-        let sErr = null;
-        for (let insAttempt = 0; insAttempt < 5; insAttempt += 1) {
-          serviceRow.service_order_number = await allocateUniqueServiceOrderNumber(sb, "SV");
-          const ins = await insertServiceBookingResilient(sb, serviceRow);
-          serviceData = ins.data;
-          sErr = ins.error;
-          if (!sErr) break;
-          const msg = String(sErr.message || sErr.details || "");
-          const dup =
-            String(sErr.code || "") === "23505" ||
-            /duplicate key|unique constraint/i.test(msg);
-          if (!dup || insAttempt === 4) throw sErr;
+          payment_status: String(data.payment_status || "").toLowerCase() === "unpaid" ? "unpaid" : "paid",
+          data,
+        });
+        if (!created.ok) {
+          return { ok: false, message: created.message, status: created.status || 400 };
         }
-        if (sErr) throw sErr;
-        results.push(serviceData);
-        try {
-          await notifyProvidersForBooking(sb, serviceData);
-        } catch (waErr) {
-          logger.error(
-            { err: waErr && (waErr.message || String(waErr)), bookingId: serviceData && serviceData.id },
-            "[checkout/service] provider WhatsApp"
-          );
-        }
+        results.push(created.order);
       }
       continue;
     }
@@ -186,7 +158,7 @@ async function runCheckoutInsert(sb, appUser, body, options) {
     const row = {
       series_source: "ERVENOW",
       delivery_status: openDeliveryStatus,
-      status: "new",
+      order_type: type === "store" ? "store" : type === "restaurant" ? "restaurant" : "delivery",
       order_total: total,
       total_amount: total,
       customer_id: appUser.id,

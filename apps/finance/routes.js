@@ -19,7 +19,6 @@ const {
 const { normalizeOrderFinancialsForInsert } = require("../../shared/utils/orderTotals");
 const { insertOrdersResilient } = require("../../shared/utils/idempotency");
 const { isLedgerOnlyMode } = require("../../shared/utils/financeMode");
-const { settleDeliveredOrderLedgerOnly } = require("../../shared/services/ledgerOnlySettlement");
 const {
   getWalletMePayload,
   listLedgerWalletTransactions,
@@ -117,94 +116,20 @@ router.get("/orders/:id", requireAuth, async (req, res) => {
   }
 });
 
-/** PATCH /orders/:id/status — تحديث الحالة؛ عند delivered يُشغَّل المحاسب الخفي */
+/** @deprecated — PATCH /api/order/:id/status */
 router.patch("/orders/:id/status", requireAuth, async (req, res) => {
   try {
-    const next = String(req.body?.status || "").trim();
-    if (!next) return fail(res, "status required", 400);
-
-    const { data: order, error: ge } = await req.supabase.from("orders").select("*").eq("id", req.params.id).single();
-    if (ge || !order) return fail(res, "Not found", 404);
-
-    const u = req.appUser;
-    const allowed =
-      u.role === "admin" ||
-      (u.role === "customer" && order.customer_id === u.id && next === "cancelled") ||
-      (u.role === "driver" && order.driver_id === u.id && ["onroad", "delivered"].includes(next)) ||
-      (["merchant", "restaurant"].includes(u.role) && order.merchant_id === u.id && next === "accepted");
-
-    if (!allowed) return fail(res, "Forbidden", 403);
-
-    if (next === "cancelled") {
-      if (["delivered", "cancelled"].includes(order.status)) {
-        return fail(res, "Cannot cancel this order", 400);
-      }
-      const { data, error } = await req.supabase
-        .from("orders")
-        .update({ status: "cancelled", cancelled_at: new Date().toISOString(), updated_at: new Date().toISOString() })
-        .eq("id", order.id)
-        .select()
-        .single();
-      if (error) return fail(res, error.message, 400);
-      return ok(res, { order: data });
+    const { setDeprecationHeaders, UNIFIED_ORDER_STATUS } = require("../../shared/middleware/deprecateLegacyRoute");
+    const { patchUnifiedOrderStatus, normalizeIncomingStatus } = require("../../shared/services/unifiedOrderStatus");
+    setDeprecationHeaders(res, UNIFIED_ORDER_STATUS);
+    const nextStatus = normalizeIncomingStatus(req.body?.delivery_status ?? req.body?.status);
+    if (!nextStatus) return fail(res, "delivery_status required", 400);
+    const out = await patchUnifiedOrderStatus(req.supabase, req.params.id, nextStatus, req.appUser);
+    if (out.error) {
+      const msg = out.error.message || String(out.error);
+      return fail(res, msg, msg === "Forbidden" ? 403 : msg === "Not found" ? 404 : 400);
     }
-
-    if (next === "delivered") {
-      if (order.settled_at) return fail(res, "Already settled", 400);
-      const rates = await fetchCommissionRates(req.supabase, order.country_code || "SA");
-      const vat = Number(
-        process.env.ERVENOW_PLATFORM_VAT_ON_COMMISSION_RATE ||
-          process.env.ERWENOW_PLATFORM_VAT_ON_COMMISSION_RATE ||
-          0
-      );
-      const calc = calculateCommission({
-        orderTotal: Number(order.total_amount),
-        deliveryFee: Number(order.delivery_fee),
-        rateMerchant: rates.merchant,
-        rateDelivery: rates.delivery,
-        merchantId: order.merchant_id,
-        serviceProviderId: order.service_provider_id,
-        platformVatOnCommissionRate: vat,
-      });
-
-      const driverId = req.body.driver_id || order.driver_id;
-      const { data: updated, error: ue } = await req.supabase
-        .from("orders")
-        .update({
-          status: "delivered",
-          breakdown: calc.breakdown,
-          driver_id: driverId,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", order.id)
-        .select()
-        .single();
-
-      if (ue) return fail(res, ue.message, 400);
-
-      let settlement;
-      try {
-        if (isLedgerOnlyMode()) {
-          settlement = await settleDeliveredOrderLedgerOnly(req.supabase, order.id, "finance:delivered");
-        } else {
-          settlement = await distributeFunds(req.supabase, order.id);
-        }
-      } catch (rpcErr) {
-        return fail(res, rpcErr.message || "Settlement failed", 500);
-      }
-
-      return ok(res, { order: updated, settlement, commission: calc.breakdown });
-    }
-
-    const { data, error } = await req.supabase
-      .from("orders")
-      .update({ status: next, updated_at: new Date().toISOString() })
-      .eq("id", order.id)
-      .select()
-      .single();
-
-    if (error) return fail(res, error.message, 400);
-    return ok(res, { order: data });
+    return ok(res, { order: out.data, settlement: out.settlement || null, unified_redirect: UNIFIED_ORDER_STATUS });
   } catch (e) {
     return fail(res, e.message || String(e), 500);
   }

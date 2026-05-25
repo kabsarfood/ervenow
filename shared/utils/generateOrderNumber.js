@@ -21,13 +21,13 @@ async function allocateUniqueOrderNumber(sb, prefix = "ED") {
 
 async function allocateUniqueServiceOrderNumber(sb, prefix = "SV") {
   for (let attempt = 0; attempt < MAX_ALLOC_ATTEMPTS; attempt += 1) {
-    const service_order_number = generateOrderNumber(prefix);
+    const order_number = generateOrderNumber(prefix);
     const { data } = await sb
-      .from("service_bookings")
+      .from("orders")
       .select("id")
-      .eq("service_order_number", service_order_number)
+      .eq("order_number", order_number)
       .maybeSingle();
-    if (!data) return service_order_number;
+    if (!data) return order_number;
   }
   throw new Error("allocateUniqueServiceOrderNumber: exhausted retries");
 }

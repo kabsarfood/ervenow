@@ -7,7 +7,6 @@ const { createServiceClient, getDatabaseConfigHint } = require("../../shared/con
 const {
   listOrders,
   acceptOrder,
-  setStatus,
   saveLocation,
   reportGpsError,
   rateOrder,
@@ -17,7 +16,6 @@ const {
 const { enqueueDeliveryJob } = require("../../queues/deliveryQueue");
 const { deliveryOrdersCreateLimiter } = require("../../shared/middleware/apiRateLimits");
 const { normalizeIdempotencyKey } = require("../../shared/utils/idempotency");
-const { isAllowedDeliveryStatusTransition } = require("../../shared/utils/deliveryStateMachine");
 const { logger } = require("../../shared/utils/logger");
 const {
   sendOrderAcceptedToCustomer,
@@ -233,6 +231,8 @@ router.post("/create", requireAuth, deliveryOrdersCreateLimiter, async (req, res
 
 router.post("/orders", requireAuth, deliveryOrdersCreateLimiter, async (req, res) => {
   try {
+    const { setDeprecationHeaders, UNIFIED_ORDER_CREATE } = require("../../shared/middleware/deprecateLegacyRoute");
+    setDeprecationHeaders(res, UNIFIED_ORDER_CREATE);
     const body = { ...(req.body || {}) };
     delete body.idempotency_key;
 
@@ -365,47 +365,23 @@ router.post("/orders/:id/cancel", requireAuth, requireRole("customer", "admin"),
 
 router.patch("/orders/:id/status", requireAuth, async (req, res) => {
   try {
-    const nextStatus = String(req.body?.status || "").trim();
-    if (!nextStatus) return fail(res, "status required");
+    const { setDeprecationHeaders, UNIFIED_ORDER_STATUS } = require("../../shared/middleware/deprecateLegacyRoute");
+    const { patchUnifiedOrderStatus, normalizeIncomingStatus } = require("../../shared/services/unifiedOrderStatus");
+    setDeprecationHeaders(res, UNIFIED_ORDER_STATUS);
     const orderId = String(req.params.id || "").trim();
-    const { data: cur, error: curErr } = await req.supabase
-      .from("orders")
-      .select("delivery_status,status")
-      .eq("id", orderId)
-      .maybeSingle();
-    if (curErr || !cur) return fail(res, curErr?.message || "Not found", 404);
-    const current = cur.delivery_status || cur.status || "pending";
-    if (!isAllowedDeliveryStatusTransition(current, nextStatus)) {
-      return fail(res, `Invalid transition ${current} → ${nextStatus}`, 400);
+    const nextRaw = req.body?.delivery_status ?? req.body?.status;
+    const nextStatus = normalizeIncomingStatus(nextRaw);
+    if (!nextStatus) return fail(res, "delivery_status required", 400);
+    const out = await patchUnifiedOrderStatus(req.supabase, orderId, nextStatus, req.appUser);
+    if (out.error) {
+      const msg = out.error.message || String(out.error);
+      return fail(res, msg, msg === "Forbidden" ? 403 : msg === "Not found" ? 404 : 400);
     }
-    const { data, error } = await setStatus(req.supabase, orderId, nextStatus, req.appUser);
-    if (error) return fail(res, error.message, 400);
-    if (data) {
-      await bumpDeliveryOrdersListEpoch();
-      const ds = String(nextStatus || "").toLowerCase();
-      const prevDs = String(current || "").toLowerCase();
-      if (prevDs === "draft" && ds === "pending") {
-        try {
-          await enqueueJobForPublishedOrder(data);
-        } catch (qe) {
-          logger.error(
-            { err: qe && (qe.message || String(qe)), orderId: data.id },
-            "[delivery/status] enqueue after draft→pending"
-          );
-        }
-      }
-      if (data.customer_phone) {
-        if (ds === "delivering") {
-          await sendCustomerDeliveringNotice(data);
-        } else if (ds === "delivered") {
-          await sendDriverArrived(data);
-        }
-      }
+    if (out.data?.customer_phone) {
+      if (nextStatus === "delivering") await sendCustomerDeliveringNotice(out.data);
+      else if (nextStatus === "delivered") await sendDriverArrived(out.data);
     }
-    if (data && data.id) {
-      broadcastOrderPatch(String(data.id), orderPatchFromRow(data));
-    }
-    ok(res, { order: data });
+    ok(res, { order: out.data, unified_redirect: UNIFIED_ORDER_STATUS });
   } catch (e) {
     fail(res, e.message, 500);
   }
