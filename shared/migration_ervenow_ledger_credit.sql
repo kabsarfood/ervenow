@@ -3,7 +3,8 @@ CREATE OR REPLACE FUNCTION public.ervenow_ledger_credit(
   p_user_id uuid,
   p_amount numeric,
   p_reference text,
-  p_role text DEFAULT NULL
+  p_role text DEFAULT NULL,
+  p_reference_suffix text DEFAULT 'provider_credit'
 )
 RETURNS jsonb
 LANGUAGE plpgsql
@@ -15,6 +16,7 @@ DECLARE
   r text;
   urole text;
   v_ref text;
+  v_suffix text;
 BEGIN
   IF p_user_id IS NULL THEN
     RETURN jsonb_build_object('ok', false, 'reason', 'missing_user_id');
@@ -29,7 +31,8 @@ BEGIN
   SELECT u.role INTO urole FROM public.users u WHERE u.id = p_user_id LIMIT 1;
   r := coalesce(nullif(trim(p_role), ''), public.ervenow_ledger_map_user_role(urole), 'service');
   wid := public.ervenow_ledger_ensure_wallet(p_user_id, r);
-  v_ref := 'order:' || trim(p_reference) || ':provider_credit';
+  v_suffix := coalesce(nullif(trim(p_reference_suffix), ''), 'provider_credit');
+  v_ref := 'order:' || trim(p_reference) || ':' || v_suffix;
 
   RETURN public.ervenow_ledger_append_completed(
     wid,
@@ -37,12 +40,12 @@ BEGIN
     'credit',
     round(p_amount::numeric, 2),
     v_ref,
-    'أرباح مزود — تسليم طلب'
+    CASE WHEN v_suffix = 'earning' THEN 'أجر توصيل — تسليم طلب' ELSE 'أرباح — تسليم طلب' END
   );
 END;
 $$;
 
-GRANT EXECUTE ON FUNCTION public.ervenow_ledger_credit(uuid, numeric, text, text)
+GRANT EXECUTE ON FUNCTION public.ervenow_ledger_credit(uuid, numeric, text, text, text)
   TO authenticated, service_role;
 
 NOTIFY pgrst, 'reload schema';

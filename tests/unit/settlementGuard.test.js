@@ -20,7 +20,7 @@ describe("settlementGuard", () => {
     expect(ok).toBe(false);
   });
 
-  test("blocks when settlement_log missing in ledger_only", async () => {
+  test("proceeds when settlement_log missing in ledger_only (ledger reference_id idempotent)", async () => {
     const prev = process.env.FINANCE_MODE;
     process.env.FINANCE_MODE = "ledger_only";
     const sb = {
@@ -30,7 +30,7 @@ describe("settlementGuard", () => {
       }),
     };
     const ok = await tryClaimSettlement(sb, "11111111-1111-4111-8111-111111111111", "order", SETTLEMENT_KINDS.LEDGER_DELIVERED);
-    expect(ok).toBe(false);
+    expect(ok).toBe(true);
     if (prev === undefined) delete process.env.FINANCE_MODE;
     else process.env.FINANCE_MODE = prev;
   });

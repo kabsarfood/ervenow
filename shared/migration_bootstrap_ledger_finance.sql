@@ -368,7 +368,19 @@ BEGIN
     RETURN jsonb_build_object('ok', false, 'reason', 'platform_wallet_missing');
   END IF;
 
-  driver_component := round(coalesce(nullif(o.driver_earning, 0), nullif(o.delivery_fee, 0), 0)::numeric, 2);
+  driver_component := round(coalesce(
+    nullif(o.driver_earning, 0),
+    nullif(o.delivery_fee, 0) - greatest(coalesce(o.platform_fee, o.platform_commission, 0), 0),
+    nullif((o.data->>'driver_earning')::numeric, 0),
+    nullif((o.data->>'delivery_fee')::numeric, 0),
+    0
+  )::numeric, 2);
+  IF driver_component < 0 THEN
+    driver_component := 0;
+  END IF;
+  IF driver_component = 0 AND coalesce(nullif(o.delivery_fee, 0), 0) > 0 THEN
+    driver_component := round(o.delivery_fee::numeric, 2);
+  END IF;
   amt_driver := driver_component;
   amt_platform := round(coalesce(o.platform_fee, o.platform_commission, 0)::numeric, 2);
   amt_merchant := round(greatest(
@@ -593,7 +605,8 @@ CREATE OR REPLACE FUNCTION public.ervenow_ledger_credit(
   p_user_id uuid,
   p_amount numeric,
   p_reference text,
-  p_role text DEFAULT NULL
+  p_role text DEFAULT NULL,
+  p_reference_suffix text DEFAULT 'provider_credit'
 )
 RETURNS jsonb
 LANGUAGE plpgsql
@@ -605,6 +618,7 @@ DECLARE
   r text;
   urole text;
   v_ref text;
+  v_suffix text;
 BEGIN
   IF p_user_id IS NULL THEN
     RETURN jsonb_build_object('ok', false, 'reason', 'missing_user_id');
@@ -619,10 +633,16 @@ BEGIN
   SELECT u.role INTO urole FROM public.users u WHERE u.id = p_user_id LIMIT 1;
   r := coalesce(nullif(trim(p_role), ''), public.ervenow_ledger_map_user_role(urole), 'service');
   wid := public.ervenow_ledger_ensure_wallet(p_user_id, r);
-  v_ref := 'order:' || trim(p_reference) || ':provider_credit';
+  v_suffix := coalesce(nullif(trim(p_reference_suffix), ''), 'provider_credit');
+  v_ref := 'order:' || trim(p_reference) || ':' || v_suffix;
 
   RETURN public.ervenow_ledger_append_completed(
-    wid, 'earning', 'credit', round(p_amount::numeric, 2), v_ref, 'أرباح مزود — تسليم طلب'
+    wid,
+    'earning',
+    'credit',
+    round(p_amount::numeric, 2),
+    v_ref,
+    CASE WHEN v_suffix = 'earning' THEN 'أجر توصيل — تسليم طلب' ELSE 'أرباح — تسليم طلب' END
   );
 END;
 $$;
@@ -713,7 +733,7 @@ GRANT EXECUTE ON FUNCTION public.settlement_log_try_claim(uuid, text, text, json
 GRANT EXECUTE ON FUNCTION public.ledger_withdraw_request_approve(uuid) TO authenticated, service_role;
 GRANT EXECUTE ON FUNCTION public.ervenow_ledger_withdraw_atomic(uuid) TO authenticated, service_role;
 GRANT EXECUTE ON FUNCTION public.ervenow_ledger_user_wallet_summary(uuid, text) TO authenticated, service_role;
-GRANT EXECUTE ON FUNCTION public.ervenow_ledger_credit(uuid, numeric, text, text) TO authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.ervenow_ledger_credit(uuid, numeric, text, text, text) TO authenticated, service_role;
 
 NOTIFY pgrst, 'reload schema';
 

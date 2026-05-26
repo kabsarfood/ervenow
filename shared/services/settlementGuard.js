@@ -42,10 +42,9 @@ async function tryClaimSettlement(sb, entityId, entityType, settlementKind, meta
     });
     if (error) {
       if (isMissingSettlementSchema(error)) {
-        if (isLedgerOnlyMode()) {
-          console.error("[settlement_guard] settlement_log required — run migration_database_refactor_05_settlement_log.sql");
-          return false;
-        }
+        console.warn(
+          "[settlement_guard] settlement_log missing — proceed (ledger reference_id is idempotent); run migration_database_refactor_05_settlement_log.sql"
+        );
         return true;
       }
       console.warn("[settlement_guard] claim error:", error.message || error);
@@ -54,10 +53,9 @@ async function tryClaimSettlement(sb, entityId, entityType, settlementKind, meta
     return data === true;
   } catch (e) {
     if (isMissingSettlementSchema(e)) {
-      if (isLedgerOnlyMode()) {
-        console.error("[settlement_guard] settlement_log required");
-        return false;
-      }
+      console.warn(
+        "[settlement_guard] settlement_log missing — proceed (ledger reference_id is idempotent)"
+      );
       return true;
     }
     console.warn("[settlement_guard] claim exception:", e.message || e);
