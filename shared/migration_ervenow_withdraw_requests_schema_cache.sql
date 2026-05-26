@@ -1,12 +1,14 @@
 -- =============================================================================
 -- ERVENOW — إصلاح:
 --   Could not find the table 'public.ervenow_withdraw_requests' in the schema cache
+--   «جدول طلبات السحب غير موجود»
 --
--- نفّذ في Supabase → SQL Editor (مرة واحدة).
--- يعتمد على وجود جدول public.users.
--- للمحفظة الكاملة + RPC السحب الذرّي نفّذ أيضاً:
---   shared/migration_ervenow_wallet_payouts.sql
---   shared/migration_ervenow_wallet_atomic_v2.sql
+-- نفّذ في Supabase → SQL Editor (مرة واحدة، idempotent).
+-- يعتمد على: public.users
+--
+-- ⚠️ استخدم بدلاً من هذا الملف (موحّد ونهائي):
+--   shared/migration_withdraw_ledger_only_final.sql
+-- ثم (للـ ledger): shared/migration_bootstrap_ledger_finance.sql
 -- =============================================================================
 
 -- أعمدة اختيارية على users (للسحب)
@@ -82,4 +84,13 @@ DROP POLICY IF EXISTS "ervenow_wtx_service" ON public.ervenow_wallet_transaction
 CREATE POLICY "ervenow_wtx_service" ON public.ervenow_wallet_transactions
   FOR ALL TO authenticated USING (true) WITH CHECK (true);
 
+GRANT SELECT, INSERT, UPDATE ON public.ervenow_withdraw_requests TO authenticated, service_role;
+GRANT SELECT, INSERT, UPDATE ON public.ervenow_wallets TO authenticated, service_role;
+GRANT SELECT, INSERT, UPDATE ON public.ervenow_wallet_transactions TO authenticated, service_role;
+
 NOTIFY pgrst, 'reload schema';
+
+-- تحقق بعد التنفيذ
+SELECT
+  to_regclass('public.ervenow_withdraw_requests') IS NOT NULL AS withdraw_table_ok,
+  (SELECT count(*) FROM public.ervenow_withdraw_requests) AS withdraw_rows;

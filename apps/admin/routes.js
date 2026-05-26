@@ -925,7 +925,7 @@ router.get("/withdraws", requireAuth, requireRole("admin"), requireAdminPermissi
       if (/ervenow_withdraw_requests|schema cache|relation/i.test(msg)) {
         return fail(
           res,
-          "جدول طلبات السحب غير موجود. نفّذ shared/migration_ervenow_withdraw_requests_schema_cache.sql في Supabase SQL Editor.",
+          "جدول طلبات السحب غير موجود. نفّذ shared/migration_withdraw_ledger_only_final.sql في Supabase SQL Editor.",
           503
         );
       }
@@ -1014,7 +1014,7 @@ router.get("/withdrawals/drivers", requireAuth, requireRole("admin"), requireAdm
       if (/ervenow_withdraw_requests|schema cache|relation/i.test(msg)) {
         return fail(
           res,
-          "جدول طلبات السحب غير موجود. نفّذ shared/migration_ervenow_withdraw_requests_schema_cache.sql في Supabase SQL Editor.",
+          "جدول طلبات السحب غير موجود. نفّذ shared/migration_withdraw_ledger_only_final.sql في Supabase SQL Editor.",
           503
         );
       }

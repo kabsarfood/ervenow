@@ -8,6 +8,10 @@
 
 `shared/migration_bootstrap_ledger_finance.sql` (ملف واحد — جداول + RPC + بذرة محافظ)
 
+**توحيد السحب (جدول + VIEW):** نفّذ:
+
+`shared/migration_withdraw_ledger_only_final.sql` (مرة واحدة — `ervenow_withdraw_requests` + VIEW `withdraw_requests`)
+
 ثم (اختياري للمراحل اللاحقة):
 
 

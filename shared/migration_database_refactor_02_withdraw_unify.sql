@@ -66,7 +66,6 @@ BEGIN
           ELSE status
         END AS status,
         created_at,
-        processed_at,
         note
       FROM public.ervenow_withdraw_requests
     $v$;
@@ -101,7 +100,7 @@ SET search_path = public
 AS $$
 BEGIN
   INSERT INTO public.ervenow_withdraw_requests (
-    id, user_id, amount, iban, status, note, created_at, processed_at
+    id, user_id, amount, iban, status, note, created_at
   )
   VALUES (
     COALESCE(NEW.id, gen_random_uuid()),
@@ -110,8 +109,7 @@ BEGIN
     NULL,
     COALESCE(NEW.status, 'pending'),
     NEW.note,
-    COALESCE(NEW.created_at, now()),
-    NEW.processed_at
+    COALESCE(NEW.created_at, now())
   );
   RETURN NEW;
 END;

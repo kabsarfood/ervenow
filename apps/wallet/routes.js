@@ -241,7 +241,7 @@ router.post("/withdraw", requireAuth, requireRole(...PAYOUT_ROLES), async (req, 
       if (/ervenow_withdraw_requests|schema cache|relation/i.test(msg)) {
         return fail(
           res,
-          "جدول طلبات السحب غير جاهز. نفّذ migration_ervenow_withdraw_requests_schema_cache.sql",
+          "جدول طلبات السحب غير موجود. نفّذ shared/migration_withdraw_ledger_only_final.sql في Supabase SQL Editor.",
           503
         );
       }
@@ -362,7 +362,7 @@ router.post("/withdraw/confirm-otp", requireAuth, requireRole(...PAYOUT_ROLES), 
       if (/ervenow_withdraw_requests|schema cache|relation/i.test(msg)) {
         return fail(
           res,
-          "جدول طلبات السحب غير جاهز. نفّذ migration_ervenow_withdraw_requests_schema_cache.sql",
+          "جدول طلبات السحب غير موجود. نفّذ shared/migration_withdraw_ledger_only_final.sql في Supabase SQL Editor.",
           503
         );
       }
