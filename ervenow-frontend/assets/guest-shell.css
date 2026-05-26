@@ -1,10 +1,9 @@
 /* ERVENOW — هيدر/فوتر/غلاف صفحات الزائر (مشترك مع dashboard) */
 .dash-main {
-  min-height: 100vh;
-  min-height: 100dvh;
+  min-height: 0;
   width: 100%;
   direction: rtl;
-  flex: 1;
+  flex: 1 1 auto;
   display: flex;
   flex-direction: column;
 }
@@ -13,10 +12,17 @@ body.guest-shell-page {
   font-family: var(--font, "Cairo", system-ui, sans-serif);
   background: var(--bg, #f8f4ee);
   color: var(--brown, #3d2213);
+  min-height: 100%;
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
   overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior-y: none;
+  -webkit-overflow-scrolling: touch;
+}
+body.guest-shell-page.stores-page {
+  min-height: 100dvh;
 }
 .dash-site-header {
   position: sticky;
@@ -28,6 +34,7 @@ body.guest-shell-page {
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   box-shadow: 0 4px 24px rgba(45, 26, 14, 0.06);
+  flex-shrink: 0;
 }
 .dash-site-header__inner {
   max-width: min(1120px, 100%);
@@ -169,6 +176,7 @@ body.guest-shell-page {
   border: 1px solid var(--border, rgba(61, 34, 19, 0.1));
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
   scrollbar-width: none;
   max-width: 100%;
 }
@@ -339,6 +347,7 @@ body.guest-shell-page {
 
 /* ——— عنوان القسم (تحت الهيدر) ——— */
 .guest-section-hero {
+  flex-shrink: 0;
   padding: clamp(18px, 4vw, 28px) max(14px, env(safe-area-inset-left, 14px)) clamp(14px, 3vw, 20px)
     max(14px, env(safe-area-inset-right, 14px));
   background: linear-gradient(135deg, #fffefb 0%, #f5ede2 55%, var(--bg, #f8f4ee) 100%);
@@ -419,8 +428,26 @@ body.guest-shell-page.stores-page {
     margin-bottom: 4px;
   }
 }
+/* تمرير أنعم — مناطق أفقية لا تسحب الصفحة يميناً/يساراً */
+.guest-shell-page .stores-cuisine-scroll,
+.guest-shell-page .stores-filters {
+  overscroll-behavior-x: contain;
+}
+
 /* جوال — فوتر وهيدر متطابقان مع لوحة الزائر */
 @media (max-width: 767px) {
+  .dash-site-header {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background: #f8f4ee;
+    box-shadow: 0 2px 12px rgba(45, 26, 14, 0.06);
+  }
+  .dash-main .layout {
+    padding-block: clamp(14px, 3vw, 20px) clamp(20px, 4vw, 28px);
+  }
+  .guest-section-hero {
+    padding-block: clamp(14px, 3.5vw, 22px) clamp(12px, 3vw, 18px);
+  }
   .dash-site-footer {
     padding: clamp(28px, 6vw, 36px) max(16px, env(safe-area-inset-left, 16px))
       max(24px, env(safe-area-inset-bottom, 24px)) max(16px, env(safe-area-inset-right, 16px));
@@ -510,4 +537,14 @@ body.guest-shell-page.stores-page {
 .guest-shell-page .gd-welcome {
   background: linear-gradient(145deg, #fffefb, #f5ede2);
   border-color: var(--border, rgba(61, 34, 19, 0.12));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .guest-shell-page *,
+  .guest-shell-page *::before,
+  .guest-shell-page *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

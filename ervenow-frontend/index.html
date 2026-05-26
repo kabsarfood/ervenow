@@ -29,6 +29,12 @@
         scroll-behavior: smooth;
       }
 
+      @media (max-width: 768px) {
+        html {
+          scroll-behavior: auto;
+        }
+      }
+
       .lp-body {
         margin: 0;
         padding-top: 0;
@@ -54,6 +60,13 @@
       .lp-reveal.lp-reveal--in {
         opacity: 1;
         transform: translateY(0);
+      }
+
+      @media (max-width: 768px) {
+        .lp-reveal {
+          transform: translateY(12px);
+          transition: opacity 0.4s ease-out, transform 0.4s ease-out;
+        }
       }
 
       /* ——— Header ——— */
@@ -1532,8 +1545,83 @@
           font-size: 1rem;
         }
 
+        .lp-hero-shell {
+          overflow: visible;
+        }
+
         .lp-hero-shell .lp-hero {
-          padding-top: clamp(28px, 6vw, 48px);
+          padding: clamp(18px, 4.5vw, 28px) 0 clamp(26px, 5.5vw, 40px);
+        }
+
+        .lp-hero__eyebrow {
+          font-size: 0.72rem;
+          padding: 7px 14px;
+          margin-bottom: 12px;
+          animation: none;
+          opacity: 1;
+          transform: none;
+        }
+
+        .lp-hero h1 {
+          font-size: clamp(1.45rem, 7.2vw, 2rem);
+          line-height: 1.22;
+          margin-bottom: 12px;
+          animation: none;
+          opacity: 1;
+          transform: none;
+        }
+
+        .lp-hero__desc {
+          font-size: clamp(0.94rem, 3.8vw, 1.05rem);
+          line-height: 1.65;
+          margin-bottom: 18px;
+          animation: none;
+          opacity: 1;
+          transform: none;
+        }
+
+        .lp-hero__cta {
+          animation: none;
+          opacity: 1;
+          transform: none;
+        }
+
+        .lp-hero__btn {
+          width: min(100%, 300px);
+          min-height: 52px;
+          padding: 14px 22px;
+          font-size: 1rem;
+          border-radius: 14px;
+        }
+
+        .lp-hero__btn:hover {
+          transform: none;
+        }
+
+        .lp-counters {
+          margin-top: 0;
+          padding-top: 4px;
+        }
+
+        .lp-header {
+          backdrop-filter: none;
+          -webkit-backdrop-filter: none;
+          background: #f8f4ee;
+        }
+      }
+
+      @media (max-width: 520px) {
+        .lp-home-hub__row {
+          gap: 5px;
+        }
+
+        .lp-home-hub__tab {
+          min-height: 48px;
+          font-size: 0.68rem;
+        }
+
+        .lp-hero h1 {
+          font-size: clamp(1.35rem, 8vw, 1.75rem);
         }
       }
 
@@ -2900,7 +2988,11 @@
                 }
               });
             },
-            { root: null, rootMargin: "0px 0px -8% 0px", threshold: 0.08 }
+            {
+              root: null,
+              rootMargin: window.matchMedia("(max-width: 768px)").matches ? "0px 0px -4% 0px" : "0px 0px -8% 0px",
+              threshold: window.matchMedia("(max-width: 768px)").matches ? 0.04 : 0.08,
+            }
           );
           io.observe(el);
         });
