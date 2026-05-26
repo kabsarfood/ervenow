@@ -45,8 +45,6 @@ const {
   stripIban,
 } = require("../../shared/utils/payoutUniqueness");
 
-const { filterDriverDispatchOrders } = require("../../shared/utils/driverDispatchOrders");
-
 const router = express.Router();
 
 router.use((req, res, next) => {
