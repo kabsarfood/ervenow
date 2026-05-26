@@ -18,6 +18,7 @@ const {
 } = require("./walletService");
 const { normalizeOrderFinancialsForInsert } = require("../../shared/utils/orderTotals");
 const { insertOrdersResilient } = require("../../shared/utils/idempotency");
+const { getOrderProviderId, applyProviderIdToInsertRow } = require("../../shared/utils/orderProviderId");
 const { isLedgerOnlyMode } = require("../../shared/utils/financeMode");
 const {
   getWalletMePayload,
@@ -40,7 +41,7 @@ function canReadFinanceOrder(order, u) {
   if (order.customer_id === u.id) return true;
   if (order.merchant_id === u.id) return true;
   if (order.driver_id === u.id) return true;
-  if (order.service_provider_id === u.id) return true;
+  if (getOrderProviderId(order) === u.id) return true;
   return false;
 }
 
@@ -51,23 +52,25 @@ router.post("/orders", requireAuth, async (req, res) => {
     const customerId =
       req.appUser.role === "admin" && body.customer_id ? body.customer_id : req.appUser.id;
 
-    const row = normalizeOrderFinancialsForInsert({
-      customer_id: customerId,
-      merchant_id: body.merchant_id || null,
-      driver_id: body.driver_id || null,
-      service_provider_id: body.service_provider_id || null,
-      delivery_order_id: body.delivery_order_id || null,
-      external_order_id: body.external_order_id || null,
-      series_source: body.series_source || "ervenow",
-      country_code: body.country_code || "SA",
-      city: body.city || null,
-      currency_code: body.currency_code || "SAR",
-      total_amount: Number(body.total_amount) || 0,
-      delivery_fee: Number(body.delivery_fee) || 0,
-      status: body.status && String(body.status) === "accepted" ? "accepted" : "new",
-      delivery_status: "pending",
-      breakdown: {},
-    });
+    const row = applyProviderIdToInsertRow(
+      normalizeOrderFinancialsForInsert({
+        customer_id: customerId,
+        merchant_id: body.merchant_id || null,
+        driver_id: body.driver_id || null,
+        delivery_order_id: body.delivery_order_id || null,
+        external_order_id: body.external_order_id || null,
+        series_source: body.series_source || "ervenow",
+        country_code: body.country_code || "SA",
+        city: body.city || null,
+        currency_code: body.currency_code || "SAR",
+        total_amount: Number(body.total_amount) || 0,
+        delivery_fee: Number(body.delivery_fee) || 0,
+        status: body.status && String(body.status) === "accepted" ? "accepted" : "new",
+        delivery_status: "pending",
+        breakdown: {},
+      }),
+      body.provider_id || body.service_provider_id || null
+    );
 
     const { data, error } = await insertOrdersResilient(req.supabase, row);
     if (error) return fail(res, error.message, 400);
@@ -91,7 +94,7 @@ router.get("/orders", requireAuth, async (req, res) => {
     } else if (req.appUser.role === "driver") {
       q = q.eq("driver_id", req.appUser.id);
     } else if (req.appUser.role === "service") {
-      q = q.eq("service_provider_id", req.appUser.id);
+      q = q.eq("provider_id", req.appUser.id);
     } else {
       return ok(res, { orders: [] });
     }

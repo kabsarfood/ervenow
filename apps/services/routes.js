@@ -43,6 +43,8 @@ const {
 const { buildOrderStatusPatch } = require("../../shared/domain/orders/orderStatus");
 const { DELIVERY_STATUS } = require("../../shared/domain/orders/constants");
 const { patchUnifiedOrderStatus } = require("../../shared/services/unifiedOrderStatus");
+const { updateOrdersResilient } = require("../../shared/utils/idempotency");
+const { applyProviderIdToPatch } = require("../../shared/utils/orderProviderId");
 
 const router = express.Router();
 const SERVICE_TYPES = new Set([
@@ -528,21 +530,20 @@ router.post("/bookings/:id/reserve", requireAuth, requireRole("service"), async 
     }
 
     const now = new Date().toISOString();
-    const reservePatch = {
-      provider_id: uid,
-      service_provider_id: uid,
-      reserved_at: now,
-      updated_at: now,
-      ...buildOrderStatusPatch(DELIVERY_STATUS.ACCEPTED),
-    };
-    const { data: raw, error } = await sb
-      .from("orders")
-      .update(reservePatch)
-      .eq("id", req.params.id)
-      .is("provider_id", null)
-      .in("delivery_status", ["new", "pending"])
-      .select("*")
-      .maybeSingle();
+    const reservePatch = applyProviderIdToPatch(
+      {
+        reserved_at: now,
+        updated_at: now,
+        ...buildOrderStatusPatch(DELIVERY_STATUS.ACCEPTED),
+      },
+      uid
+    );
+    const { data: raw, error } = await updateOrdersResilient(sb, reservePatch, (q) =>
+      q
+        .eq("id", req.params.id)
+        .is("provider_id", null)
+        .in("delivery_status", ["new", "pending"])
+    );
 
     if (error) return fail(res, error.message, 400);
     if (!raw) return fail(res, "تعذر حجز الطلب — ربما حجزه مزود آخر", 409);
@@ -705,17 +706,12 @@ router.patch("/bookings/:id/status", requireAuth, requireRole("service", "admin"
       ...buildOrderStatusPatch(nextStatus),
     };
     if (req.appUser.role === "service") {
-      patch.provider_id = req.appUser.id;
-      patch.service_provider_id = req.appUser.id;
+      Object.assign(patch, applyProviderIdToPatch({}, req.appUser.id));
     }
 
-    const { data, error } = await req.supabase
-      .from("orders")
-      .update(patch)
-      .eq("id", req.params.id)
-      .in("order_type", ["service", "gas_delivery"])
-      .select("*")
-      .single();
+    const { data, error } = await updateOrdersResilient(req.supabase, patch, (q) =>
+      q.eq("id", req.params.id).in("order_type", ["service", "gas_delivery"])
+    );
     if (error) return fail(res, error.message, 400);
 
     return ok(res, { booking: orderToBookingView(data) });

@@ -4,6 +4,7 @@
 
 const { allocateUniqueServiceOrderNumber } = require("../utils/generateOrderNumber");
 const { insertOrdersResilient } = require("../utils/idempotency");
+const { applyProviderIdToInsertRow } = require("../utils/orderProviderId");
 const { computePlatformCommission } = require("../utils/serviceCommission");
 const { isHomeServiceType } = require("../utils/homeServicePricing");
 const { DELIVERY_STATUS } = require("../domain/orders/constants");
@@ -75,14 +76,13 @@ async function createServiceOrder(sb, appUser, body) {
   let insertErr = null;
   for (let attempt = 0; attempt < 5; attempt += 1) {
     const order_number = await allocateUniqueServiceOrderNumber(sb, orderType === "gas_delivery" ? "ES" : "SV");
-    const row = {
+    const row = applyProviderIdToInsertRow(
+      {
       customer_id: appUser.id,
       customer_phone: String(appUser.phone || raw.customer_phone || "").trim(),
       order_type: orderType,
       service_type: serviceType,
       service_name: String(raw.service_name || raw.title || serviceType).trim(),
-      provider_id: providerId,
-      service_provider_id: providerId,
       delivery_status: DELIVERY_STATUS.NEW,
       order_number,
       order_total: total,
@@ -98,7 +98,6 @@ async function createServiceOrder(sb, appUser, body) {
       gas_liters: raw.gas_liters != null ? Number(raw.gas_liters) : null,
       scheduled_at: raw.scheduled_at || null,
       pickup_address: district || "خدمة منزلية",
-      drop_address: location || district || "موقع الخدمة",
       notes: String(raw.notes || "").trim() || null,
       data: {
         order_type: orderType,
@@ -106,7 +105,9 @@ async function createServiceOrder(sb, appUser, body) {
         unified: true,
         ...(raw.data && typeof raw.data === "object" ? raw.data : {}),
       },
-    };
+    },
+      providerId
+    );
 
     const ins = await insertOrdersResilient(sb, row);
     orderData = ins.data;

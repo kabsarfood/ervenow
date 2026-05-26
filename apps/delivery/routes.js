@@ -16,6 +16,7 @@ const {
 const { enqueueDeliveryJob } = require("../../queues/deliveryQueue");
 const { deliveryOrdersCreateLimiter } = require("../../shared/middleware/apiRateLimits");
 const { normalizeIdempotencyKey } = require("../../shared/utils/idempotency");
+const { getOrderProviderId } = require("../../shared/utils/orderProviderId");
 const { logger } = require("../../shared/utils/logger");
 const {
   sendOrderAcceptedToCustomer,
@@ -293,7 +294,7 @@ router.post("/orders/:id/accept", requireAuth, requireRole("driver"), async (req
 
       const providerPhone =
         (await getUserPhoneById(req.supabase, data.merchant_id)) ||
-        (await getUserPhoneById(req.supabase, data.service_provider_id));
+        (await getUserPhoneById(req.supabase, getOrderProviderId(data)));
       if (providerPhone) {
         const providerMessage = `✅ تم استلام طلب ${orderLabel} بواسطة المندوب ${driverInfo}.`.trim();
         try {

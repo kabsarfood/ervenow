@@ -68,11 +68,18 @@ async function insertOrdersResilient(sb, row) {
 
     const missing = parseMissingOrdersColumnFromError(error);
     if (missing && !ORDERS_INSERT_NEVER_STRIP.has(missing) && Object.prototype.hasOwnProperty.call(current, missing)) {
+      const dropped = current[missing];
       const { [missing]: _drop, ...rest } = current;
       current = rest;
+      if (missing === "service_provider_id" && dropped != null && current.provider_id == null) {
+        current.provider_id = dropped;
+      }
+      if (missing === "provider_id" && dropped != null && current.service_provider_id == null) {
+        current.service_provider_id = dropped;
+      }
       logger.warn(
         { missing, err: em },
-        "[orders] insert: optional column missing in DB — retrying without it; run shared/migration_orders_schema_cache_columns.sql"
+        "[orders] insert: optional column missing in DB — retrying without it; run shared/migration_orders_service_provider_columns.sql"
       );
       continue;
     }
@@ -80,6 +87,52 @@ async function insertOrdersResilient(sb, row) {
     return { data, error };
   }
   return { data: null, error: new Error("orders insert: exceeded resilient retries") };
+}
+
+/**
+ * تحديث orders مع إسقاط أعمدة اختيارية غير موجودة في schema cache.
+ */
+async function updateOrdersResilient(sb, patch, match) {
+  let current = { ...patch };
+  const maxRounds = 40;
+
+  for (let i = 0; i < maxRounds; i += 1) {
+    let q = sb.from("orders").update(current);
+    if (typeof match === "function") {
+      q = match(q);
+    } else if (match && typeof match === "object") {
+      if (match.id != null) q = q.eq("id", match.id);
+      if (typeof match.chain === "function") q = match.chain(q);
+      if (match.eq) {
+        for (const [col, val] of Object.entries(match.eq)) {
+          q = q.eq(col, val);
+        }
+      }
+    }
+    const { data, error } = await q.select().maybeSingle();
+    if (!error) return { data, error: null };
+
+    const missing = parseMissingOrdersColumnFromError(error);
+    if (missing && !ORDERS_INSERT_NEVER_STRIP.has(missing) && Object.prototype.hasOwnProperty.call(current, missing)) {
+      const dropped = current[missing];
+      const { [missing]: _drop, ...rest } = current;
+      current = rest;
+      if (missing === "service_provider_id" && dropped != null && current.provider_id == null) {
+        current.provider_id = dropped;
+      }
+      if (missing === "provider_id" && dropped != null && current.service_provider_id == null) {
+        current.service_provider_id = dropped;
+      }
+      logger.warn(
+        { missing, err: error.message || String(error) },
+        "[orders] update: optional column missing — retrying; run shared/migration_orders_service_provider_columns.sql"
+      );
+      continue;
+    }
+
+    return { data, error };
+  }
+  return { data: null, error: new Error("orders update: exceeded resilient retries") };
 }
 
 /**
@@ -133,6 +186,7 @@ module.exports = {
   isOrdersStoreColumnMissingError,
   parseMissingOrdersColumnFromError,
   insertOrdersResilient,
+  updateOrdersResilient,
   insertServiceBookingResilient,
   insertServiceBookingsBatchResilient,
 };

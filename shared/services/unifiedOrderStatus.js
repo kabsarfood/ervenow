@@ -8,6 +8,8 @@ const { getOrderDeliveryStatus, normalizeIncomingStatus, buildOrderStatusPatch, 
 const { DELIVERY_STATUS } = require("../domain/orders/constants");
 const { settleDeliveredOrderLedgerOnly } = require("./ledgerOnlySettlement");
 const { completeServiceOrder, isServiceOrderRow } = require("./completeServiceOrder");
+const { getOrderProviderId } = require("../utils/orderProviderId");
+const { updateOrdersResilient } = require("../utils/idempotency");
 const { logger } = require("../utils/logger");
 const { broadcastOrderPatch, orderPatchFromRow } = require("../lib/trackingSocket");
 const { bumpDeliveryOrdersListEpoch } = require("../utils/deliveryOrdersListCache");
@@ -42,7 +44,7 @@ function canPatchOrderStatus(order, appUser, nextStatus) {
     return next === DELIVERY_STATUS.ACCEPTED;
   }
 
-  if (u.role === "service" && (order.service_provider_id === u.id || order.provider_id === u.id)) {
+  if (u.role === "service" && getOrderProviderId(order) === u.id) {
     return [DELIVERY_STATUS.DELIVERING, DELIVERY_STATUS.DELIVERED].includes(next);
   }
 
@@ -110,7 +112,7 @@ async function patchUnifiedOrderStatus(sb, entityId, nextStatusRaw, appUser) {
             ? "provider"
             : "both";
     }
-    const svcOut = await completeServiceOrder(sb, id, order.provider_id || order.service_provider_id || appUser.id, {
+    const svcOut = await completeServiceOrder(sb, id, getOrderProviderId(order) || appUser.id, {
       actor,
     });
     if (svcOut.error) return { data: null, error: svcOut.error };
@@ -134,7 +136,7 @@ async function patchUnifiedOrderStatus(sb, entityId, nextStatusRaw, appUser) {
       patch.driver_id = appUser.id;
     }
 
-    const { data, error } = await sb.from("orders").update(patch).eq("id", id).select().single();
+    const { data, error } = await updateOrdersResilient(sb, patch, { id });
     if (error) return { data: null, error };
 
     let settlementRow = null;

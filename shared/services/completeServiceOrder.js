@@ -6,6 +6,8 @@ const { isHomeServiceType } = require("../utils/homeServicePricing");
 const { settleCompletedServiceLedgerOnly } = require("./ledgerOnlySettlement");
 const { getOrderDeliveryStatus, buildOrderStatusPatch } = require("../domain/orders/orderStatus");
 const { DELIVERY_STATUS } = require("../domain/orders/constants");
+const { updateOrdersResilient } = require("../utils/idempotency");
+const { applyProviderIdToPatch } = require("../utils/orderProviderId");
 
 function isMissingOptionalColumnError(err) {
   const msg = String((err && err.message) || err || "");
@@ -72,8 +74,7 @@ async function completeServiceOrder(sb, orderId, providerId, options = {}) {
   if (providerDone) patch.provider_completed_at = now;
   if (customerDone) patch.customer_confirmed_at = now;
   if (providerId) {
-    patch.provider_id = providerId;
-    patch.service_provider_id = providerId;
+    Object.assign(patch, applyProviderIdToPatch({}, providerId));
   }
 
   if (bothDone || actor === "legacy") {
@@ -83,14 +84,11 @@ async function completeServiceOrder(sb, orderId, providerId, options = {}) {
     Object.assign(patch, buildOrderStatusPatch(DELIVERY_STATUS.DELIVERING));
   }
 
-  let upd = await sb.from("orders").update(patch).eq("id", id).select("*").single();
+  let upd = await updateOrdersResilient(sb, patch, { id });
   if (upd.error && isMissingOptionalColumnError(upd.error)) {
     const fallback = { updated_at: now, delivery_status: patch.delivery_status };
-    if (providerId) {
-      fallback.provider_id = providerId;
-      fallback.service_provider_id = providerId;
-    }
-    upd = await sb.from("orders").update(fallback).eq("id", id).select("*").single();
+    if (providerId) fallback.provider_id = providerId;
+    upd = await updateOrdersResilient(sb, fallback, { id });
   }
   if (upd.error) return { data: null, error: upd.error };
   if (!upd.data) return { data: null, error: new Error("Not found") };
