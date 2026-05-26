@@ -8,6 +8,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/assets/styles.css" />
+    <link rel="stylesheet" href="/assets/guest-shell.css" />
     <style>
       .input-readonly {
         background: #f0ebe3;
@@ -305,12 +306,232 @@
         border-color: var(--gold);
         background: #fff9ef;
       }
+
+      /* ——— غلاف تسجيل الدخول (متناسق مع لوحة الزائر) ——— */
+      .auth-login-page {
+        min-height: 100dvh;
+      }
+      .auth-login-page .auth-page__main {
+        max-width: min(520px, 100%);
+        padding: 0 max(14px, env(safe-area-inset-left, 14px)) clamp(24px, 4vw, 36px)
+          max(14px, env(safe-area-inset-right, 14px));
+      }
+      .auth-login-page .dash-site-header__link[href="/"] {
+        pointer-events: none;
+        cursor: default;
+      }
+      .auth-card {
+        background: #fffefb;
+        border: 1px solid var(--border, rgba(61, 34, 19, 0.12));
+        border-radius: clamp(16px, 3vw, 22px);
+        padding: clamp(18px, 4vw, 26px);
+        box-shadow: 0 10px 40px rgba(45, 26, 14, 0.08);
+      }
+      .auth-mode-tabs {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        margin-bottom: 18px;
+        padding: 4px;
+        border-radius: 14px;
+        background: rgba(61, 34, 19, 0.05);
+        border: 1px solid rgba(61, 34, 19, 0.08);
+      }
+      .auth-mode-tabs__btn {
+        min-height: 48px;
+        border: none;
+        border-radius: 11px;
+        font-family: inherit;
+        font-size: 0.92rem;
+        font-weight: 800;
+        color: var(--muted, #5c4a3d);
+        background: transparent;
+        cursor: pointer;
+        transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+      }
+      .auth-mode-tabs__btn.is-active {
+        background: linear-gradient(145deg, #fffefb, #f5ede2);
+        color: var(--brown, #3d2213);
+        box-shadow: 0 2px 12px rgba(45, 26, 14, 0.08);
+      }
+      .auth-mode-tabs__btn:focus-visible {
+        outline: 2px solid var(--gold, #b9872f);
+        outline-offset: 2px;
+      }
+      .auth-role-section {
+        margin-bottom: 16px;
+      }
+      .auth-role-section__title {
+        margin: 0 0 4px;
+        font-size: 0.95rem;
+        font-weight: 800;
+        color: var(--brown, #3d2213);
+      }
+      .auth-role-section__sub {
+        margin: 0 0 12px;
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: var(--muted, #5c4a3d);
+        line-height: 1.5;
+      }
+      .auth-role-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+      }
+      @media (min-width: 480px) {
+        .auth-role-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+      .auth-role-card {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+        padding: 12px;
+        border-radius: 14px;
+        border: 1.5px solid rgba(61, 34, 19, 0.1);
+        background: #fff;
+        font-family: inherit;
+        text-align: right;
+        cursor: pointer;
+        transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+      }
+      .auth-role-card:hover {
+        border-color: rgba(185, 135, 47, 0.45);
+        background: rgba(185, 135, 47, 0.06);
+      }
+      .auth-role-card.is-active {
+        border-color: var(--gold, #b9872f);
+        background: linear-gradient(145deg, #fffefb, rgba(185, 135, 47, 0.12));
+        box-shadow: 0 4px 16px rgba(185, 135, 47, 0.18);
+      }
+      .auth-role-card__ic {
+        font-size: 1.35rem;
+        line-height: 1;
+      }
+      .auth-role-card__name {
+        font-size: 0.88rem;
+        font-weight: 800;
+        color: var(--brown, #3d2213);
+      }
+      .auth-role-card__hint {
+        font-size: 0.72rem;
+        font-weight: 600;
+        color: var(--muted, #5c4a3d);
+        line-height: 1.35;
+      }
+      .auth-role-card--wide {
+        grid-column: 1 / -1;
+      }
+      #roleWrap label#roleLabel,
+      #roleWrap select#role {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        opacity: 0;
+        pointer-events: none;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+      }
+      #roleWrap {
+        position: relative;
+      }
+      #serviceTypeSubWrap:not([hidden]) {
+        margin-bottom: 14px;
+      }
+      .auth-login-page #authPlainHead {
+        display: none !important;
+      }
+      .auth-services-panel {
+        margin-bottom: 18px;
+        padding: 14px;
+        border-radius: 14px;
+        border: 1px solid rgba(185, 135, 47, 0.22);
+        background: linear-gradient(180deg, rgba(185, 135, 47, 0.08), rgba(255, 254, 251, 0.5));
+      }
+      .auth-services-panel__title {
+        margin: 0 0 10px;
+        font-size: 0.88rem;
+        font-weight: 800;
+        color: var(--brown, #3d2213);
+      }
+      .auth-services-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 6px;
+      }
+      @media (min-width: 520px) {
+        .auth-services-grid {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+      }
+      .auth-service-chip {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 10px;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.85);
+        border: 1px solid rgba(61, 34, 19, 0.08);
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: var(--brown-mid, #5c4a3d);
+        line-height: 1.3;
+      }
+      .auth-service-chip span:first-child {
+        flex-shrink: 0;
+      }
+      .auth-form-intro {
+        margin: 0 0 14px;
+        font-size: 0.88rem;
+        font-weight: 600;
+        color: var(--muted, #5c4a3d);
+        line-height: 1.55;
+      }
+      .auth-store-link {
+        display: block;
+        margin: 0 0 14px;
+        padding: 10px 12px;
+        border-radius: 12px;
+        background: rgba(61, 34, 19, 0.04);
+        border: 1px dashed rgba(61, 34, 19, 0.15);
+        text-align: center;
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: var(--gold, #b9872f);
+        text-decoration: none;
+      }
+      .auth-store-link:hover {
+        background: rgba(185, 135, 47, 0.1);
+      }
+      .auth-login-page .lp-footer {
+        display: none;
+      }
     </style>
   </head>
-  <body class="auth-page">
-    <main class="auth-page__main layout">
-      <p><a href="/">← الرئيسية</a></p>
+  <body class="guest-shell-page auth-page auth-login-page">
+    <header class="dash-site-header">
+      <div class="dash-site-header__inner">
+        <div class="dash-site-header__brand">
+          <a class="dash-site-header__logo" href="/">
+            ERVENOW
+            <span class="dash-site-header__logo-dot" aria-hidden="true"></span>
+          </a>
+          <p class="dash-site-header__tag">تسجيل الدخول</p>
+        </div>
+        <nav class="dash-site-header__nav" aria-label="التنقل">
+          <div class="dash-site-header__links">
+            <a class="dash-site-header__link" href="/dashboard">لوحة الزائر</a>
+            <a class="dash-site-header__link" href="/">الرئيسية</a>
+          </div>
+        </nav>
+        <a class="dash-site-header__btn dash-site-header__btn--primary" href="/start-now.html">ابدأ الآن</a>
+      </div>
+    </header>
 
+    <main class="auth-page__main">
       <div class="auth-hero-wrap" id="authHero" hidden>
         <header class="auth-hero">
           <div class="auth-hero__bg" role="presentation" aria-hidden="true"></div>
@@ -341,10 +562,72 @@
         <strong>ملاحظة:</strong> إنّ تفعيل خاصية تحديد المواقع في لوحتك يزيد من فرص النقل.
       </div>
 
-      <div class="card">
-      <div id="roleWrap">
+      <div class="auth-card">
+        <div class="auth-mode-tabs" role="tablist" aria-label="دخول أو تسجيل">
+          <button type="button" class="auth-mode-tabs__btn is-active" id="authTabLogin" role="tab" aria-selected="true">
+            تسجيل الدخول
+          </button>
+          <button type="button" class="auth-mode-tabs__btn" id="authTabRegister" role="tab" aria-selected="false">
+            إنشاء حساب
+          </button>
+        </div>
+
+        <p class="auth-form-intro" id="authFormIntro">
+          أدخل جوالك السعودي <strong dir="ltr">05xxxxxxxx</strong> — يصلك رمز التفعيل عبر واتساب خلال 5 دقائق.
+        </p>
+
+        <section class="auth-services-panel" id="authServicesPanel" hidden aria-hidden="true"></section>
+
+        <section class="auth-role-section" id="authRoleSection" hidden>
+          <h2 class="auth-role-section__title">اختر وظيفتك</h2>
+          <p class="auth-role-section__sub">يظهر لك في لوحتك فقط الطلبات التي تخصّ تخصّصك.</p>
+          <div class="auth-role-grid" id="authRoleGrid" role="group" aria-label="نوع الحساب">
+            <button type="button" class="auth-role-card is-active" data-role="customer" data-service="">
+              <span class="auth-role-card__ic" aria-hidden="true">👤</span>
+              <span class="auth-role-card__name">زائر</span>
+              <span class="auth-role-card__hint">طلب من المنصة كعميل</span>
+            </button>
+            <button type="button" class="auth-role-card" data-role="service" data-service="pickup_truck">
+              <span class="auth-role-card__ic" aria-hidden="true">🚗</span>
+              <span class="auth-role-card__name">نقل مركبات</span>
+              <span class="auth-role-card__hint">سطحة — طلبات نقل المركبات فقط</span>
+            </button>
+            <button type="button" class="auth-role-card" data-role="service" data-service="ac_technician">
+              <span class="auth-role-card__ic" aria-hidden="true">❄️</span>
+              <span class="auth-role-card__name">فني مكيفات</span>
+              <span class="auth-role-card__hint">طلبات التكييف فقط</span>
+            </button>
+            <button type="button" class="auth-role-card" data-role="service" data-service="plumber">
+              <span class="auth-role-card__ic" aria-hidden="true">🔧</span>
+              <span class="auth-role-card__name">سباك</span>
+              <span class="auth-role-card__hint">طلبات السباكة فقط</span>
+            </button>
+            <button type="button" class="auth-role-card" data-role="service" data-service="electrician">
+              <span class="auth-role-card__ic" aria-hidden="true">⚡</span>
+              <span class="auth-role-card__name">مهندس كهربائي</span>
+              <span class="auth-role-card__hint">طلبات الكهرباء فقط</span>
+            </button>
+            <button type="button" class="auth-role-card" data-role="service" data-service="laundry_estates">
+              <span class="auth-role-card__ic" aria-hidden="true">🧼</span>
+              <span class="auth-role-card__name">مغسل فلل وعمائر</span>
+              <span class="auth-role-card__hint">تنظيف وغسيل فلل وعمائر</span>
+            </button>
+            <button type="button" class="auth-role-card" data-role="service" data-service="furniture_move">
+              <span class="auth-role-card__ic" aria-hidden="true">🛋️</span>
+              <span class="auth-role-card__name">نقل أثاث</span>
+              <span class="auth-role-card__hint">طلبات نقل الأثاث فقط</span>
+            </button>
+            <button type="button" class="auth-role-card" data-role="driver" data-service="">
+              <span class="auth-role-card__ic" aria-hidden="true">🛵</span>
+              <span class="auth-role-card__name">مندوب توصيل</span>
+              <span class="auth-role-card__hint">مطاعم ومتاجر والتوصيل العام</span>
+            </button>
+          </div>
+        </section>
+
+        <div id="roleWrap">
         <label for="role" id="roleLabel">نوع الحساب</label>
-        <select id="role">
+        <select id="role" aria-hidden="true" tabindex="-1">
           <option value="customer">زائر المنصة</option>
           <option value="driver">مندوب توصيل</option>
           <option value="merchant">متجر</option>
@@ -353,7 +636,7 @@
         </select>
 
         <div id="serviceTypeSubWrap" class="driver-register-fields" hidden>
-          <label for="serviceTypeSub" style="margin-top: 12px">نوع الخدمة</label>
+          <label for="serviceTypeSub" style="margin-top: 12px">تفاصيل نوع الخدمة</label>
           <select id="serviceTypeSub" aria-label="نوع الخدمة"></select>
         </div>
       </div>
@@ -474,9 +757,21 @@
 
         <div class="msg" id="msg" style="display: none"></div>
       </div>
+
+      <footer class="dash-site-footer" style="margin-top: 24px">
+        <div class="dash-site-footer__logo">ERVENOW</div>
+        <nav class="dash-site-footer__links" aria-label="روابط سفلية">
+          <a class="dash-site-footer__link" href="/restaurants">مطاعم</a>
+          <a class="dash-site-footer__link" href="/stores">متاجر</a>
+          <a class="dash-site-footer__link" href="/delivery-services.html">توصيل</a>
+          <a class="dash-site-footer__link" href="/services">خدمات</a>
+          <a class="dash-site-footer__link" href="/dashboard">لوحة الزائر</a>
+        </nav>
+        <p class="dash-site-footer__copy">© 2026 ERVENOW — جميع الحقوق محفوظة</p>
+      </footer>
     </main>
 
-    <footer class="lp-footer">
+    <footer class="lp-footer" hidden aria-hidden="true">
       <div class="lp-footer__inner">
         <div>
           <p class="lp-footer__brand">ERVENOW</p>
@@ -556,6 +851,102 @@
         return new URLSearchParams(window.location.search).get("mode") === "register";
       }
 
+      function setAuthMode(register) {
+        var qs = new URLSearchParams(window.location.search);
+        if (register) {
+          qs.set("mode", "register");
+          if (!qs.get("role")) qs.set("role", "customer");
+        } else {
+          qs.delete("mode");
+        }
+        var next = qs.get("next");
+        var role = qs.get("role") || "customer";
+        var url = "/login?role=" + encodeURIComponent(role);
+        if (next) url += "&next=" + encodeURIComponent(next);
+        if (register) url += "&mode=register";
+        window.history.replaceState({}, "", url);
+        var tabL = document.getElementById("authTabLogin");
+        var tabR = document.getElementById("authTabRegister");
+        if (tabL) {
+          tabL.classList.toggle("is-active", !register);
+          tabL.setAttribute("aria-selected", register ? "false" : "true");
+        }
+        if (tabR) {
+          tabR.classList.toggle("is-active", register);
+          tabR.setAttribute("aria-selected", register ? "true" : "false");
+        }
+        var intro = document.getElementById("authFormIntro");
+        if (intro) {
+          intro.textContent = register
+            ? "اختر صفة حسابك، ثم أدخل جوالك السعودي — يصلك رمز واتساب للتفعيل."
+            : "أدخل جوالك السعودي 05xxxxxxxx — يصلك رمز واتساب خلال 5 دقائق.";
+        }
+        var btn = document.getElementById("btnVerify");
+        if (btn) btn.textContent = register ? "إنشاء حساب" : "تسجيل الدخول";
+        var servicesPanel = document.getElementById("authServicesPanel");
+        if (servicesPanel) {
+          servicesPanel.hidden = true;
+          servicesPanel.setAttribute("aria-hidden", "true");
+        }
+        var roleSec = document.getElementById("authRoleSection");
+        if (roleSec) roleSec.hidden = !register;
+        if (register) populateRegisterAccountTypes(qs.get("role") || "customer");
+        else syncLoginRoleUi();
+        syncCustomerRegisterUi();
+        syncAuthHead();
+        syncRoleCardsFromSelect();
+      }
+
+      function syncRoleCardsFromSelect() {
+        var sel = document.getElementById("role");
+        if (!sel) return;
+        var role = sel.value;
+        var st = selectedServiceType() || "";
+        document.querySelectorAll(".auth-role-card[data-role]").forEach(function (card) {
+          var cr = card.getAttribute("data-role");
+          var cs = card.getAttribute("data-service") || "";
+          var match = cr === role && (cr !== "service" || cs === st);
+          card.classList.toggle("is-active", match);
+        });
+      }
+
+      function applyRoleCard(card) {
+        var role = card.getAttribute("data-role");
+        var svc = card.getAttribute("data-service") || "";
+        var sel = document.getElementById("role");
+        if (!sel) return;
+        initServiceTypeSubSelect();
+        sel.value = role;
+        if (role === "service") {
+          var sub = document.getElementById("serviceTypeSub");
+          if (sub) sub.value = svc;
+        }
+        var qs = new URLSearchParams(window.location.search);
+        qs.set("mode", "register");
+        qs.set("role", role === "service" && svc ? svc : role);
+        var next = qs.get("next");
+        var url = "/login?role=" + encodeURIComponent(qs.get("role"));
+        if (next) url += "&next=" + encodeURIComponent(next);
+        url += "&mode=register";
+        window.history.replaceState({}, "", url);
+        syncRoleCardsFromSelect();
+        syncCustomerRegisterUi();
+        syncLoginRoleUi();
+      }
+
+      document.getElementById("authTabLogin") &&
+        document.getElementById("authTabLogin").addEventListener("click", function () {
+          setAuthMode(false);
+        });
+      document.getElementById("authTabRegister") &&
+        document.getElementById("authTabRegister").addEventListener("click", function () {
+          setAuthMode(true);
+        });
+      document.querySelectorAll(".auth-role-card[data-role]").forEach(function (card) {
+        card.addEventListener("click", function () {
+          applyRoleCard(card);
+        });
+      });
       function isCustomerRegisterMode() {
         return isRegisterMode() && document.getElementById("role").value === "customer";
       }
@@ -565,14 +956,12 @@
       }
 
       var REGISTER_SERVICE_TYPES = [
-        { value: "pickup_truck", label: "سائق سطحة" },
-        { value: "electrician", label: "فني كهربائي" },
-        { value: "plumber", label: "فني سباك" },
+        { value: "pickup_truck", label: "نقل مركبات" },
         { value: "ac_technician", label: "فني مكيفات" },
+        { value: "plumber", label: "سباك" },
+        { value: "electrician", label: "مهندس كهربائي" },
         { value: "laundry_estates", label: "مغسل فلل وعمائر" },
-        { value: "agricultural_engineer", label: "مهندس زراعي" },
-        { value: "gas_cylinder_swap", label: "تبديل غاز" },
-        { value: "gas_central_refill", label: "تعبئة غاز مركزي" },
+        { value: "furniture_move", label: "نقل أثاث" },
       ];
 
       function initServiceTypeSubSelect() {
@@ -588,18 +977,8 @@
 
       function syncLoginRoleUi() {
         initServiceTypeSubSelect();
-        var roleWrap = document.getElementById("roleWrap");
         var subWrap = document.getElementById("serviceTypeSubWrap");
-        var reg = isRegisterMode();
-        if (roleWrap) roleWrap.hidden = !reg;
-        if (!reg) return;
-        var sel = document.getElementById("role").value;
-        var showSub = sel === "service" || isServiceTypeValue(sel);
-        if (subWrap) subWrap.hidden = !showSub;
-        if (showSub && sel !== "service" && isServiceTypeValue(sel)) {
-          var sub = document.getElementById("serviceTypeSub");
-          if (sub) sub.value = sel;
-        }
+        if (subWrap) subWrap.hidden = true;
       }
 
       function isServiceTypeValue(v) {
@@ -634,33 +1013,23 @@
       function populateRegisterAccountTypes(preferred) {
         var sel = document.getElementById("role");
         if (!sel || !isRegisterMode()) return;
-        var label = document.getElementById("roleLabel");
-        if (label) label.textContent = "نوع الحساب";
-        var html =
-          '<option value="customer">زائر المنصة</option>' +
+        sel.innerHTML =
+          '<option value="customer">زائر</option>' +
           '<option value="driver">مندوب توصيل</option>' +
-          '<option value="merchant">متجر</option>' +
-          '<option value="restaurant">مطعم</option>' +
-          '<option value="service">مزود خدمة</option>' +
-          '<optgroup label="— أنواع الخدمة (توافق سابق) —">' +
-          REGISTER_SERVICE_TYPES.map(function (o) {
-            return '<option value="' + o.value + '">' + o.label + "</option>";
-          }).join("") +
-          "</optgroup>";
-        sel.innerHTML = html;
+          '<option value="service">مقدم خدمة</option>';
         var want = String(preferred || "customer").trim();
-        if (want === "service") want = "electrician";
         if (isServiceTypeValue(want)) {
           sel.value = "service";
           initServiceTypeSubSelect();
           var sub = document.getElementById("serviceTypeSub");
           if (sub) sub.value = want;
-        } else if (want === "customer" || want === "driver" || want === "restaurant" || want === "merchant") {
+        } else if (want === "customer" || want === "driver") {
           sel.value = want;
         } else {
           sel.value = "customer";
         }
         syncLoginRoleUi();
+        syncRoleCardsFromSelect();
       }
 
       function assertDriverOnlyInRegisterMode() {
@@ -919,12 +1288,9 @@
           return;
         }
         if (mode === "register") {
-          var b = document.getElementById("btnVerify");
-          if (b) b.textContent = "إنشاء حساب";
-          populateRegisterAccountTypes(r || "customer");
-          syncAuthHead();
+          setAuthMode(true);
         } else {
-          syncLoginRoleUi();
+          setAuthMode(false);
         }
         if (r && mode !== "register") {
           var sel = document.getElementById("role");
@@ -933,6 +1299,7 @@
         syncCustomerRegisterUi();
       })();
       document.getElementById("role").addEventListener("change", function () {
+        syncRoleCardsFromSelect();
         syncCustomerRegisterUi();
         syncLoginRoleUi();
       });

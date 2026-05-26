@@ -214,6 +214,7 @@
           localStorage.removeItem(FALLBACK_TOKEN_KEY);
         }
       } catch (e) {}
+      emit("ervenow:auth-changed", { token: t || null });
     },
     apiUrl: function (path) {
       var base = readApiBase();

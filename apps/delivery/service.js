@@ -9,6 +9,7 @@ const { logger } = require("../../shared/utils/logger");
 const { normalizeOrderFinancialsForInsert } = require("../../shared/utils/orderTotals");
 const { isOrdersStoreColumnMissingError, insertOrdersResilient } = require("../../shared/utils/idempotency");
 const { computePlatformCommission } = require("../../shared/utils/platformCommission");
+const { isDriverDispatchOrder, filterDriverDispatchOrders } = require("../../shared/utils/driverDispatchOrders");
 function haversineDistanceKm(lat1, lng1, lat2, lng2) {
   const R = 6371;
   const dLat = ((lat2 - lat1) * Math.PI) / 180;
@@ -431,13 +432,15 @@ const ORDERS_LIST_COLUMNS_FULL =
   "id,customer_id,driver_id,status,delivery_status,order_number,created_at,updated_at," +
   "pickup_address,drop_address,pickup_lat,pickup_lng,drop_lat,drop_lng," +
   "series_source,external_order_id,customer_phone,delivery_fee,distance_km," +
+  "order_type,service_type," +
   "store_id,store_name,store_address";
 
 /** احتياط عند غياب أعمدة المتجر */
 const ORDERS_LIST_COLUMNS_MINIMAL =
   "id,customer_id,driver_id,status,delivery_status,order_number,created_at,updated_at," +
   "pickup_address,drop_address,pickup_lat,pickup_lng,drop_lat,drop_lng," +
-  "series_source,external_order_id,customer_phone,delivery_fee,distance_km";
+  "series_source,external_order_id,customer_phone,delivery_fee,distance_km," +
+  "order_type,service_type";
 
 async function listOrders(sb, appUser) {
   const runSelect = (cols) => {
@@ -475,6 +478,9 @@ async function listOrders(sb, appUser) {
     );
     r = await runSelect(ORDERS_LIST_COLUMNS_MINIMAL);
   }
+  if (!r.error && appUser.role === "driver" && Array.isArray(r.data)) {
+    return { ...r, data: filterDriverDispatchOrders(r.data) };
+  }
   return r;
 }
 
@@ -492,6 +498,9 @@ async function acceptOrder(sb, orderId, driverId) {
     .single();
 
   if (gErr || !order) return { data: null, error: gErr || new Error("Not found") };
+  if (!isDriverDispatchOrder(order)) {
+    return { data: null, error: new Error("هذا الطلب ليس من اختصاص مندوب التوصيل") };
+  }
   const current = getOrderDeliveryStatus(order);
   if (deliveryLifecycleIndex(current) !== 0) {
     return { data: null, error: new Error("Order not available") };

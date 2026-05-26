@@ -1,10 +1,11 @@
 /** أنواع مقدّمي الخدمات — تسجيل، لوحة، ومطابقة الطلبات */
 const SERVICE_PROVIDER_OPTIONS = [
-  { value: "pickup_truck", label: "سائق سطحى", panelTitle: "لوحة سائق السطحية", icon: "🛻" },
-  { value: "electrician", label: "فني كهربائي", panelTitle: "لوحة فني الكهرباء", icon: "⚡" },
-  { value: "plumber", label: "فني سباك", panelTitle: "لوحة فني السباكة", icon: "🔧" },
+  { value: "pickup_truck", label: "نقل مركبات (سطحة)", panelTitle: "لوحة نقل المركبات", icon: "🚗" },
+  { value: "electrician", label: "مهندس كهربائي", panelTitle: "لوحة فني الكهرباء", icon: "⚡" },
+  { value: "plumber", label: "سباك", panelTitle: "لوحة فني السباكة", icon: "🔧" },
   { value: "ac_technician", label: "فني مكيفات", panelTitle: "لوحة فني المكيفات", icon: "❄️" },
   { value: "laundry_estates", label: "مغسل فلل وعمائر", panelTitle: "لوحة مغسل الفلل والعمائر", icon: "🧼" },
+  { value: "furniture_move", label: "نقل أثاث", panelTitle: "لوحة نقل الأثاث", icon: "🛋️" },
   { value: "agricultural_engineer", label: "مهندس زراعي", panelTitle: "لوحة المهندس الزراعي", icon: "🌾" },
   { value: "gas_cylinder_swap", label: "تبديل غاز اسطوانات", panelTitle: "لوحة تبديل غاز الاسطوانات", icon: "🔥" },
   { value: "gas_central_refill", label: "تعبئة غاز مركزي", panelTitle: "لوحة تعبئة الغاز المركزي", icon: "⛽" },
@@ -20,6 +21,9 @@ function bookingTypesForProvider(serviceType) {
   }
   if (t === "gas_cylinder_swap" || t === "gas_central_refill") {
     return ["gas_delivery"];
+  }
+  if (t === "pickup_truck") {
+    return ["pickup_truck", "vehicle_transfer", "car_transport"];
   }
   if (!t) return [];
   return [t];
@@ -102,6 +106,18 @@ function labelForType(serviceType) {
   return row ? row.label : serviceType || "مزود خدمة";
 }
 
+/** أنواع حسابات مقدّمي الخدمة التي تطابق نوع الطلب */
+function providerTypesMatchingBooking(bookingType) {
+  const bt = String(bookingType || "").trim().toLowerCase();
+  if (!bt) return [];
+  const out = new Set();
+  for (const row of SERVICE_PROVIDER_OPTIONS) {
+    if (bookingTypesForProvider(row.value).includes(bt)) out.add(row.value);
+  }
+  if (ALLOWED_SERVICE_PROVIDER_TYPES.has(bt)) out.add(bt);
+  return [...out];
+}
+
 module.exports = {
   SERVICE_PROVIDER_OPTIONS,
   ALLOWED_SERVICE_PROVIDER_TYPES,
@@ -116,4 +132,5 @@ module.exports = {
   normDistrictText,
   panelTitleForType,
   labelForType,
+  providerTypesMatchingBooking,
 };

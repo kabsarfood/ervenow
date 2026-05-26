@@ -33,6 +33,7 @@ const {
 } = require("../../shared/utils/deliveryOrdersListCache");
 const { runUnifiedDeliveryOnlyCreate } = require("../order/deliveryOrderCreateShared");
 const { createUnifiedDeliveryOrder } = require("./unifiedDeliveryCreate");
+const { notifyProvidersForBooking } = require("../../shared/services/serviceBookingNotify");
 const {
   broadcastDriverUpdate,
   broadcastOrderPatch,
@@ -188,6 +189,32 @@ router.post("/create", requireAuth, deliveryOrdersCreateLimiter, async (req, res
     const isGas =
       String(body.service_type || "").toLowerCase() === "gas_delivery" ||
       (data && data.data && data.data.gas);
+    const isServiceOrder =
+      data && String(data.order_type || "").trim().toLowerCase() === "service";
+
+    if (isServiceOrder && data) {
+      try {
+        await notifyProvidersForBooking(req.supabase, data);
+      } catch (ne) {
+        logger.error({ err: ne && (ne.message || String(ne)), orderId: data.id }, "[delivery/create] notify providers");
+      }
+      await bumpDeliveryOrdersListEpoch();
+      const rowData = data.data && typeof data.data === "object" ? data.data : {};
+      const summary = {
+        service_type: rowData.service_type || body.service_type,
+        from_location: rowData.from_location || null,
+        to_location: rowData.to_location || null,
+        distance_km: data.distance_km != null ? data.distance_km : rowData.distance_km ?? null,
+        price:
+          data.delivery_fee != null
+            ? data.delivery_fee
+            : data.order_total != null
+              ? data.order_total
+              : rowData.price ?? null,
+        commission: data.commission != null ? data.commission : rowData.commission ?? null,
+      };
+      return ok(res, { order: data, unified: true, summary, gas: false });
+    }
 
     if (!isGas && data && String(data.delivery_status || "") === "pending") {
       try {

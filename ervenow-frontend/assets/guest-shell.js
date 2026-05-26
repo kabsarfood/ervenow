@@ -8,12 +8,39 @@
     { key: "home", href: "/", label: "الرئيسية" },
   ];
 
+  var TOKEN_STORAGE_KEYS = ["ervenow_access_token", "erwenow_access_token", "token"];
+
   function hasToken() {
     try {
       return !!(global.PlatformAPI && PlatformAPI.getToken && PlatformAPI.getToken());
     } catch (e) {
       return false;
     }
+  }
+
+  function whenPlatformApiReady(cb, tries) {
+    tries = tries || 0;
+    if (global.PlatformAPI && typeof global.PlatformAPI.getToken === "function") {
+      cb();
+      return;
+    }
+    if (tries > 100) return;
+    setTimeout(function () {
+      whenPlatformApiReady(cb, tries + 1);
+    }, 40);
+  }
+
+  function syncGuestBrowseMode() {
+    if (!hasToken()) return;
+    try {
+      if (global.ErvenowGuestBrowse && ErvenowGuestBrowse.setActive) {
+        ErvenowGuestBrowse.setActive(false);
+      } else {
+        localStorage.removeItem("ervenow_guest_browse");
+      }
+    } catch (e) {}
+    var note = document.getElementById("guestNote");
+    if (note) note.style.display = "none";
   }
 
   function fmtWalletMoney(n) {
@@ -78,25 +105,45 @@
     }
   }
 
+  function setAccountButtonLoggedOut(switchAccount) {
+    if (!switchAccount) return;
+    switchAccount.style.display = "";
+    switchAccount.textContent = "تسجيل الدخول";
+    switchAccount.className = "dash-site-header__btn dash-site-header__btn--primary";
+    switchAccount.setAttribute("href", "/login?role=customer");
+    switchAccount.removeAttribute("aria-label");
+  }
+
+  function setAccountButtonLoggedIn(switchAccount, role) {
+    if (!switchAccount) return;
+    role = String(role || "customer").toLowerCase();
+    switchAccount.style.display = "";
+    switchAccount.textContent = "حسابي";
+    switchAccount.className = "dash-site-header__btn dash-site-header__btn--primary";
+    switchAccount.setAttribute("aria-label", "الانتقال إلى لوحة حسابك");
+    if (role === "driver") switchAccount.setAttribute("href", "/driver");
+    else if (role === "merchant" || role === "restaurant") switchAccount.setAttribute("href", "/store-dashboard");
+    else if (role === "service") switchAccount.setAttribute("href", "/services-provider.html");
+    else if (role === "admin") switchAccount.setAttribute("href", "/admin");
+    else switchAccount.setAttribute("href", "/dashboard");
+  }
+
   async function initAuthHeader() {
     var switchAccount = document.getElementById("switchAccount");
     if (!hasToken()) {
-      if (switchAccount) {
-        switchAccount.style.display = "";
-        switchAccount.textContent = "تسجيل الدخول";
-        switchAccount.className = "dash-site-header__btn dash-site-header__btn--primary";
-        switchAccount.setAttribute("href", "/login?role=customer");
-      }
+      setAccountButtonLoggedOut(switchAccount);
       await refreshHeaderWallet("");
       return;
     }
+    syncGuestBrowseMode();
     try {
       var me = await global.PlatformAPI.api("/api/core/me");
       var role = (me.profile && me.profile.role) || "customer";
-      if (switchAccount) switchAccount.style.display = "none";
+      setAccountButtonLoggedIn(switchAccount, role);
       await refreshHeaderWallet(role);
     } catch (e) {
-      await refreshHeaderWallet("");
+      setAccountButtonLoggedIn(switchAccount, "customer");
+      await refreshHeaderWallet("customer");
     }
   }
 
@@ -204,11 +251,25 @@
     }
     setActiveNav(opts.activeNav || "");
     refreshCartBadge();
-    initAuthHeader();
-    global.addEventListener("storage", function (ev) {
-      if (ev.key === "cart") refreshCartBadge();
+    whenPlatformApiReady(function () {
+      initAuthHeader();
     });
   }
+
+  function onStorageAuth(ev) {
+    if (!ev || !ev.key) return;
+    if (TOKEN_STORAGE_KEYS.indexOf(ev.key) === -1 && ev.key !== "ervenow_guest_browse") return;
+    whenPlatformApiReady(function () {
+      initAuthHeader();
+    });
+  }
+
+  global.addEventListener("storage", onStorageAuth);
+  global.addEventListener("ervenow:auth-changed", function () {
+    whenPlatformApiReady(function () {
+      initAuthHeader();
+    });
+  });
 
   global.ErvenowGuestShell = {
     init: init,
@@ -217,6 +278,11 @@
     renderFooter: renderFooter,
     refreshCartBadge: refreshCartBadge,
     refreshHeaderWallet: refreshHeaderWallet,
+    refreshAuthHeader: function () {
+      whenPlatformApiReady(function () {
+        initAuthHeader();
+      });
+    },
     setActiveNav: setActiveNav,
   };
 })(window);

@@ -37,12 +37,15 @@ const {
 const { attachSiteSessionCookie } = require("../../shared/middleware/publicSiteOtpGate");
 const { parseOptionalPayoutPayload, payoutRowForDriversOrStores } = require("../../shared/utils/payoutFields");
 const { sanitizeDriverOrStoreRowForApi } = require("../../shared/utils/bankApiSafe");
+const { filterDriverDispatchOrders } = require("../../shared/utils/driverDispatchOrders");
 const {
   assertPayoutIbanGloballyAvailable,
   iqamaDigitsNormalized,
   ibanFingerprintFromPlain,
   stripIban,
 } = require("../../shared/utils/payoutUniqueness");
+
+const { filterDriverDispatchOrders } = require("../../shared/utils/driverDispatchOrders");
 
 const router = express.Router();
 
@@ -467,7 +470,10 @@ router.get("/orders", requireAuth, async (req, res) => {
       return allowed;
     });
 
-    const finalOrders = [...(assignedOrders || []), ...visibleOpenOrders];
+    const finalOrders = filterDriverDispatchOrders([
+      ...(assignedOrders || []),
+      ...visibleOpenOrders,
+    ]);
     return ok(res, { orders: finalOrders });
   } catch (e) {
     return fail(res, e.message, 500);

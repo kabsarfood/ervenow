@@ -3,10 +3,14 @@ const { commissionPercentLabel } = require("../utils/serviceCommission");
 const { gasServiceLabel } = require("../utils/gasDeliveryPricing");
 const { isHomeServiceType } = require("../utils/homeServicePricing");
 const { notifyHomeServiceProvidersCascade } = require("./homeServiceNotify");
+const { providerTypesMatchingBooking } = require("../utils/serviceProviderTypes");
 
-async function getServiceProviderPhones(sb, serviceType) {
+async function getServiceProviderPhones(sb, bookingType) {
+  const matchTypes = providerTypesMatchingBooking(bookingType);
+  if (!matchTypes.length) return [];
   let q = sb.from("users").select("phone").eq("role", "service");
-  if (serviceType) q = q.eq("service_type", serviceType);
+  if (matchTypes.length === 1) q = q.eq("service_type", matchTypes[0]);
+  else q = q.in("service_type", matchTypes);
   const { data, error } = await q;
   if (error || !Array.isArray(data)) return [];
   return data

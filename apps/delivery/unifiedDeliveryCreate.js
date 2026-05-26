@@ -92,7 +92,7 @@ async function createCarTransport(sb, appUser, payload, topBody, opts) {
     "موقع التسليم";
 
   const requestedSt = str(topBody.service_type).toLowerCase();
-  const serviceTypeStored = requestedSt === "pickup_truck" ? "pickup_truck" : "car_transport";
+  const serviceTypeStored = requestedSt === "pickup_truck" ? "pickup_truck" : "vehicle_transfer";
   const notes = buildCarTransportNotes(payload, feeResult, serviceTypeStored);
 
   const fromCity = transfer_mode === "external" ? str(payload.from_city) : "";
@@ -148,6 +148,8 @@ async function createCarTransport(sb, appUser, payload, topBody, opts) {
     external_order_id: topBody.external_order_id,
     idempotency_key: topBody.idempotency_key,
     data: orderData,
+    order_type: "service",
+    service_type: serviceTypeStored,
   };
 
   return createDeliveryOrderFromBody(sb, appUser, compat, opts);
