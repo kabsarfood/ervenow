@@ -18,7 +18,7 @@ function isMissingOptionalColumnError(err) {
 function isServiceOrderRow(row) {
   if (!row) return false;
   const ot = String(row.order_type || "").toLowerCase();
-  return ot === "service" || ot === "gas_delivery";
+  return ot === "service";
 }
 
 /**

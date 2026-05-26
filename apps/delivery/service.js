@@ -319,6 +319,12 @@ async function createDeliveryOrderFromBody(sb, appUser, body, opts) {
     ...(payment_method ? { payment_method } : {}),
     ...(idemRaw ? { idempotency_key: idemRaw } : {}),
     ...(orderDataJson ? { data: orderDataJson } : {}),
+    ...(opts.order_type || b.order_type
+      ? { order_type: String(opts.order_type || b.order_type).trim() }
+      : {}),
+    ...(opts.service_type || b.service_type
+      ? { service_type: String(opts.service_type || b.service_type).trim() }
+      : {}),
   }));
 }
 

@@ -7,6 +7,7 @@ const UNIFIED_ORDER_STATUS = "PATCH /api/order/:id/status";
 
 function setDeprecationHeaders(res, replacement) {
   res.setHeader("Deprecation", "true");
+  res.setHeader("X-ERVENOW-Deprecated", "Use /api/order/create or /api/order/:id/status");
   res.setHeader("X-ERVENOW-Unified-Replacement", replacement);
   res.setHeader("Link", `<${replacement}>; rel="successor-version"`);
 }

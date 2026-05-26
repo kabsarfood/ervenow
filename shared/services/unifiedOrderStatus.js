@@ -6,9 +6,7 @@
 const { isValidDeliveryTransition } = require("../utils/helpers");
 const { getOrderDeliveryStatus, normalizeIncomingStatus, buildOrderStatusPatch, isTerminalOrderStatus } = require("../domain/orders/orderStatus");
 const { DELIVERY_STATUS } = require("../domain/orders/constants");
-const { settleDeliveredOrderLedgerOnly } = require("./ledgerOnlySettlement");
-const { creditProviderOnDelivered } = require("./providerLedgerCredit");
-const { creditDriverOnDelivered } = require("./driverLedgerCredit");
+const { runDeliveredFinancialSettlement } = require("./deliveredFinancialSettlement");
 const { completeServiceOrder, isServiceOrderRow } = require("./completeServiceOrder");
 const { getOrderProviderId } = require("../utils/orderProviderId");
 const { updateOrdersResilient } = require("../utils/idempotency");
@@ -141,11 +139,10 @@ async function patchUnifiedOrderStatus(sb, entityId, nextStatusRaw, appUser) {
     const { data, error } = await updateOrdersResilient(sb, patch, { id });
     if (error) return { data: null, error };
 
-    let settlementRow = null;
-    let providerCreditRow = null;
-    let driverCreditRow = null;
+    let financial = { settlement: null, provider_credit: null };
     if (nextStatus === DELIVERY_STATUS.DELIVERED) {
-      settlementRow = await settleDeliveredOrderLedgerOnly(sb, id, "unified:delivered");
+      financial = await runDeliveredFinancialSettlement(sb, data, "unified:delivered");
+      const settlementRow = financial.settlement;
       if (
         settlementRow &&
         settlementRow.ok !== true &&
@@ -155,20 +152,7 @@ async function patchUnifiedOrderStatus(sb, entityId, nextStatusRaw, appUser) {
       ) {
         logger.warn({ orderId: id, result: settlementRow }, "[unifiedOrderStatus] ledger settlement");
       }
-
-      driverCreditRow = await creditDriverOnDelivered(sb, data, settlementRow || {}, "unified:delivered");
-      if (
-        driverCreditRow &&
-        driverCreditRow.ok !== true &&
-        driverCreditRow.ok !== "true" &&
-        driverCreditRow.reason !== "duplicate" &&
-        driverCreditRow.reason !== "settled_via_rpc" &&
-        !driverCreditRow.skipped
-      ) {
-        logger.warn({ orderId: id, result: driverCreditRow }, "[unifiedOrderStatus] driver ledger credit");
-      }
-
-      providerCreditRow = await creditProviderOnDelivered(sb, data, "unified:delivered");
+      const providerCreditRow = financial.provider_credit;
       if (
         providerCreditRow &&
         providerCreditRow.ok !== true &&
@@ -180,14 +164,13 @@ async function patchUnifiedOrderStatus(sb, entityId, nextStatusRaw, appUser) {
       }
     }
 
-    await afterStatusSideEffects(sb, data, current, nextStatus, settlementRow);
+    await afterStatusSideEffects(sb, data, current, nextStatus, financial.settlement);
     return {
       data,
       error: null,
       entity: "order",
-      settlement: settlementRow,
-      driver_credit: driverCreditRow,
-      provider_credit: providerCreditRow,
+      settlement: financial.settlement,
+      provider_credit: financial.provider_credit,
     };
   }
 }

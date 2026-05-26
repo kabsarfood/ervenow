@@ -14,6 +14,7 @@ const { setDeprecationHeaders, UNIFIED_ORDER_STATUS } = require("../../shared/mi
 const { requireRole } = require("../../shared/middleware/roles");
 const { getWalletPayloadWithLedgerFallback } = require("../../shared/utils/ledgerWallet");
 const { getDriverFreezeFlags } = require("../../shared/services/autoFreeze");
+const { assertDriverCanAcceptOrders } = require("../../shared/services/driverCommissionLedger");
 const {
   OTP_SCOPE,
   otpBackendMode,
@@ -494,6 +495,12 @@ router.post("/accept/:id", requireAuth, async (req, res) => {
     const driverId = req.appUser.id;
     const orderId = String(req.params.id || "").trim();
     if (!orderId) return fail(res, "order id required", 400);
+
+    try {
+      await assertDriverCanAcceptOrders(req.supabase, driverId);
+    } catch (debtErr) {
+      return fail(res, debtErr.message || "تعذر قبول الطلب", debtErr.code === "DRIVER_DEBT_LIMIT" ? 403 : 400);
+    }
 
     const { data, error } = await req.supabase
       .from("orders")

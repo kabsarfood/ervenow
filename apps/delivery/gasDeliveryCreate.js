@@ -1,5 +1,5 @@
 /**
- * إنشاء طلب توصيل غاز — orders (order_type = gas_delivery)
+ * إنشاء طلب توصيل غاز — orders عبر delivery flow (order_type = gas_delivery)
  */
 const {
   priceCylinderSwap,
@@ -8,7 +8,7 @@ const {
   CENTRAL_LITERS,
   googleMapsUrl,
 } = require("../../shared/utils/gasDeliveryPricing");
-const { createServiceOrder } = require("../../shared/services/serviceOrderCreate");
+const { createDeliveryOrderFromBody } = require("./service");
 const { sendGasProviderWhatsApp } = require("../../shared/services/gasDeliveryWhatsApp");
 
 function str(v) {
@@ -79,40 +79,56 @@ async function createGasDelivery(sb, appUser, rawBody) {
     str(appUser && appUser.phone);
 
   const mapsUrl = googleMapsUrl(coords.lat, coords.lng);
+  const dropAddress = str(body.drop_address || payload.drop_address || coords.location) || coords.location;
+  const pickupAddress = str(body.pickup_address || payload.pickup_address || dropAddress) || dropAddress;
 
-  const created = await createServiceOrder(sb, appUser, {
-    order_type: "gas_delivery",
-    service_type: "gas_delivery",
-    service_name: gasServiceLabel(mode),
-    district: str(dataBlock.district || payload.district || body.district),
-    location: coords.location,
-    qty: priced.qty,
-    gas_mode: mode,
-    gas_liters: priced.liters,
-    total_amount: priced.price,
-    payment_status: pay.payment_status,
-    customer_phone,
-    data: {
-      service_type: "gas_delivery",
-      unified: true,
-      gas: true,
-      mode: mode === "central_refill" ? "bulk" : "cylinder",
-      cylinders: mode === "cylinder_swap" ? priced.qty : null,
-      liters: priced.liters,
-      payment_method: pay.payment_method,
+  const { data: order, error } = await createDeliveryOrderFromBody(
+    sb,
+    appUser || { id: null, phone: customer_phone },
+    {
+      pickup_address: pickupAddress,
+      drop_address: dropAddress,
+      pickup_lat: coords.lat,
+      pickup_lng: coords.lng,
       drop_lat: coords.lat,
       drop_lng: coords.lng,
+      order_total: 0,
+      force_delivery_fee: true,
+      delivery_fee: priced.price,
+      customer_phone,
+      notes: `[غاز] ${gasServiceLabel(mode)}`,
+      order_type: "gas_delivery",
+      service_type: "gas_delivery",
+      data: {
+        service_type: "gas_delivery",
+        unified: true,
+        gas: true,
+        gas_mode: mode,
+        mode: mode === "central_refill" ? "bulk" : "cylinder",
+        cylinders: mode === "cylinder_swap" ? priced.qty : null,
+        liters: priced.liters,
+        payment_method: pay.payment_method,
+        district: str(dataBlock.district || payload.district || body.district),
+      },
     },
-  });
+    {
+      initialDeliveryStatus: "pending",
+      payment_status: pay.payment_status,
+      order_type: "gas_delivery",
+      service_type: "gas_delivery",
+    }
+  );
 
-  if (!created.ok) {
-    return { data: null, error: new Error(created.message || "create failed") };
+  if (error) {
+    return { data: null, error };
+  }
+  if (!order) {
+    return { data: null, error: new Error("تعذر إنشاء طلب الغاز") };
   }
 
-  const order = created.order;
   const enriched = {
     ...order,
-    location: order.service_location || coords.location,
+    location: dropAddress,
     service_order_number: order.order_number,
     _maps_url: mapsUrl,
     _payment_method: pay.payment_method,

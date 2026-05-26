@@ -19,6 +19,7 @@ const {
   serviceDisplayName,
 } = require("../../shared/utils/homeServicePricing");
 const { createServiceOrder } = require("../../shared/services/serviceOrderCreate");
+const { createGasDelivery } = require("../delivery/gasDeliveryCreate");
 const { completeServiceBooking } = require("../../shared/services/completeServiceBooking");
 const { sendReserveWelcomeWhatsApp } = require("../../shared/services/serviceProviderReserve");
 const { getWalletPayloadWithLedgerFallback } = require("../../shared/utils/ledgerWallet");
@@ -294,26 +295,31 @@ router.post("/gas-order", optionalAuth, async (req, res) => {
 
     const payOnDelivery = Boolean(b.pay_on_delivery);
     const payment_status = payOnDelivery ? "unpaid" : normalizePaymentStatus(b.payment_status || "paid");
-    const service_name = gasServiceLabel(gas_mode);
-    const created = await createServiceOrder(sb, req.appUser || { id: null, phone: String(b.customer_phone || "") }, {
-      order_type: "gas_delivery",
-      service_type: "gas_delivery",
-      service_name,
-      district: String(b.district || "").trim(),
+    const { data: gasOrder, error: gasErr } = await createGasDelivery(sb, req.appUser || { id: null, phone: String(b.customer_phone || "") }, {
       location,
-      qty: gas_mode === "central_refill" ? gas_liters : qty,
-      gas_mode,
-      gas_liters: gas_mode === "central_refill" ? gas_liters : null,
-      total_amount: totalAmount,
+      lat: b.lat,
+      lng: b.lng,
+      district: String(b.district || "").trim(),
+      payload: {
+        gas_mode,
+        qty,
+        gas_liters: gas_mode === "central_refill" ? gas_liters : null,
+        payment_method: payOnDelivery ? "cash_on_delivery" : "paid",
+      },
       payment_status,
       customer_phone: String(b.customer_phone || (req.appUser && req.appUser.phone) || "").trim(),
+      delivery_fee: totalAmount,
+      force_delivery_fee: true,
     });
-    if (!created.ok) return fail(res, created.message, created.status || 400);
-    const data = orderToBookingView(created.order);
+    if (gasErr) return fail(res, gasErr.message, 400);
+    if (!gasOrder) return fail(res, "تعذر إنشاء طلب الغاز", 400);
+
+    const data = orderToBookingView(gasOrder);
 
     return ok(res, {
       booking: data,
-      order_number: data.service_order_number,
+      order: gasOrder,
+      order_number: data.service_order_number || gasOrder.order_number,
       message: payOnDelivery
         ? "تم تسجيل الطلب — الدفع عند التوصيل"
         : "تم تسجيل الطلب والدفع",
