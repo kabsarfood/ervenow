@@ -4,98 +4,525 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>ابدأ الآن | ERVENOW</title>
+    <meta name="description" content="اطلب من مطاعم، متاجر، توصيل، أو خدمات منزلية — كل شيء في مكان واحد." />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
     <style>
+      *, *::before, *::after { box-sizing: border-box; }
+
+      :root {
+        --brown:        #3d2213;
+        --brown-mid:    #5c4a3d;
+        --brown-light:  #7a5a1f;
+        --cream:        #f8f4ee;
+        --cream-card:   #fffefb;
+        --border:       rgba(61, 34, 19, 0.12);
+        --text:         #3d2213;
+        --muted:        #5c4a3d;
+        --gold:         #b9872f;
+        --radius-lg:    20px;
+        --radius-md:    14px;
+        --shadow-sm:    0 2px 8px rgba(45,26,14,.06);
+        --shadow-md:    0 6px 24px rgba(45,26,14,.10);
+        --shadow-hover: 0 12px 34px rgba(45,26,14,.14);
+        --transition:   .22s cubic-bezier(.4,0,.2,1);
+      }
+
       body {
         margin: 0;
         font-family: Cairo, sans-serif;
-        background: #f8f4ef;
-        color: #2b1f16;
-      }
-      .wrap {
-        max-width: 980px;
-        margin: 26px auto;
-        padding: 14px;
-      }
-      h1 {
-        margin: 0 0 6px;
-        color: #5b371d;
-      }
-      p {
-        margin: 0 0 14px;
-        color: #6e5a4a;
-      }
-      .grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-        gap: 10px;
-      }
-      .card {
-        display: block;
-        background: #fff;
-        border: 1px solid #e5d8cb;
-        border-radius: 12px;
-        padding: 12px;
-        text-decoration: none;
-        color: #2b1f16;
-        font-weight: 700;
-      }
-      .card:hover {
-        background: #fffaf3;
-      }
-      .actions {
-        margin-top: 16px;
+        background: var(--cream);
+        color: var(--text);
+        min-height: 100dvh;
         display: flex;
-        gap: 10px;
+        flex-direction: column;
+      }
+
+      /* ══ HEADER ══════════════════════════════════════════════ */
+      .sn-header {
+        background: linear-gradient(180deg, rgba(248, 244, 238, 0.97), rgba(255, 254, 251, 0.94));
+        color: var(--brown);
+        padding: 0 24px;
+        height: 62px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        border-bottom: 1px solid var(--border);
+        backdrop-filter: blur(10px);
+        box-shadow: 0 4px 24px rgba(45, 26, 14, 0.06);
+      }
+      .sn-header__logo {
+        font-size: 1.35rem;
+        font-weight: 900;
+        letter-spacing: -.5px;
+        color: var(--brown);
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .sn-header__logo-dot {
+        width: 8px; height: 8px;
+        background: var(--gold);
+        border-radius: 50%;
+        display: inline-block;
+      }
+      .sn-header__nav {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .sn-header__link {
+        color: var(--muted);
+        text-decoration: none;
+        font-size: .88rem;
+        font-weight: 600;
+        padding: 6px 12px;
+        border-radius: 10px;
+        transition: background var(--transition), color var(--transition);
+      }
+      .sn-header__link:hover {
+        background: rgba(185, 135, 47, 0.1);
+        color: var(--brown);
+      }
+      .sn-header__btn {
+        background: var(--gold);
+        color: #fff;
+        border: none;
+        font-family: inherit;
+        font-size: .88rem;
+        font-weight: 700;
+        padding: 7px 16px;
+        border-radius: 10px;
+        cursor: pointer;
+        text-decoration: none;
+        transition: opacity var(--transition);
+      }
+      .sn-header__btn:hover { opacity: .88; }
+
+      /* ══ HERO ═════════════════════════════════════════════════ */
+      .sn-hero {
+        background: linear-gradient(180deg, #f5ede2 0%, #f8f4ee 58%, #fffefb 100%);
+        color: var(--brown);
+        text-align: center;
+        padding: 64px 24px 72px;
+        position: relative;
+        overflow: hidden;
+      }
+      .sn-hero::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+          radial-gradient(circle at 80% 20%, rgba(185,135,47,.12) 0%, transparent 55%),
+          radial-gradient(circle at 20% 80%, rgba(61,34,19,.04) 0%, transparent 50%);
+        pointer-events: none;
+      }
+      .sn-hero__eyebrow {
+        display: inline-block;
+        background: rgba(185, 135, 47, 0.1);
+        backdrop-filter: blur(6px);
+        border: 1px solid rgba(61,34,19,.12);
+        border-radius: 100px;
+        padding: 5px 16px;
+        font-size: .8rem;
+        font-weight: 700;
+        letter-spacing: .04em;
+        margin-bottom: 20px;
+        color: var(--brown-mid);
+      }
+      .sn-hero__title {
+        font-size: clamp(1.8rem, 5vw, 2.9rem);
+        font-weight: 900;
+        margin: 0 0 14px;
+        line-height: 1.2;
+        letter-spacing: -.5px;
+      }
+      .sn-hero__title span {
+        color: var(--gold);
+      }
+      .sn-hero__sub {
+        font-size: clamp(.95rem, 2.5vw, 1.1rem);
+        color: var(--muted);
+        margin: 0 auto 32px;
+        max-width: 480px;
+        line-height: 1.7;
+      }
+      .sn-hero__actions {
+        display: flex;
+        gap: 12px;
+        justify-content: center;
         flex-wrap: wrap;
       }
-      .btn {
-        padding: 9px 14px;
-        border-radius: 10px;
-        border: 1px solid #5b371d;
-        text-decoration: none;
-        color: #5b371d;
-        background: #fff;
+      .sn-hero__cta {
+        background: var(--gold);
+        color: #fff;
+        border: none;
+        border-radius: 14px;
+        padding: 13px 28px;
+        font-family: inherit;
+        font-size: 1rem;
         font-weight: 700;
         cursor: pointer;
-        font-family: inherit;
+        text-decoration: none;
+        box-shadow: 0 4px 18px rgba(185,135,47,.35);
+        transition: transform var(--transition), box-shadow var(--transition);
       }
-      .btn-primary {
-        background: #5b371d;
+      .sn-hero__cta:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(185,135,47,.40);
+      }
+      .sn-hero__cta--outline {
+        background: rgba(61,34,19,.04);
+        backdrop-filter: blur(6px);
+        border: 1.5px solid rgba(61,34,19,.2);
+        color: var(--brown);
+        box-shadow: none;
+      }
+      .sn-hero__cta--outline:hover {
+        background: rgba(61,34,19,.08);
+        box-shadow: none;
+        transform: none;
+      }
+      /* wave separator */
+      .sn-wave {
+        display: block;
+        margin-top: -2px;
+        line-height: 0;
+      }
+      .sn-wave svg { display: block; width: 100%; }
+
+      /* ══ GUEST NOTE ═══════════════════════════════════════════ */
+      .sn-guest-note {
+        display: none;
+        margin: 24px auto 0;
+        max-width: 640px;
+        padding: 13px 18px;
+        background: #fff8ee;
+        border: 1px solid #e8d0a8;
+        border-radius: var(--radius-md);
+        color: var(--brown-mid);
+        font-size: .9rem;
+        font-weight: 600;
+        text-align: center;
+      }
+
+      /* ══ SECTION ══════════════════════════════════════════════ */
+      .sn-section {
+        flex: 1;
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 36px 20px 0;
+        width: 100%;
+      }
+      .sn-section__label {
+        text-align: center;
+        font-size: .82rem;
+        font-weight: 700;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        color: var(--gold);
+        margin-bottom: 8px;
+      }
+      .sn-section__title {
+        text-align: center;
+        font-size: 1.45rem;
+        font-weight: 800;
+        color: var(--brown);
+        margin: 0 0 28px;
+      }
+
+      /* ══ CATEGORY GRID ═══════════════════════════════════════ */
+      .sn-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+      }
+      @media (min-width: 640px) {
+        .sn-grid { grid-template-columns: repeat(4, 1fr); }
+      }
+
+      .sn-card {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 14px;
+        padding: 28px 16px 24px;
+        background: var(--cream-card);
+        border: 1.5px solid var(--border);
+        border-radius: var(--radius-lg);
+        text-decoration: none;
+        color: var(--text);
+        box-shadow: var(--shadow-sm);
+        transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition);
+        position: relative;
+        overflow: hidden;
+      }
+      .sn-card::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: var(--card-accent, transparent);
+        opacity: 0;
+        transition: opacity var(--transition);
+      }
+      .sn-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--shadow-hover);
+        border-color: var(--card-color, var(--gold));
+      }
+      .sn-card:hover::before { opacity: .045; }
+
+      .sn-card--restaurants { --card-color: #b9872f; --card-accent: #b9872f; }
+      .sn-card--stores      { --card-color: #a97b3a; --card-accent: #a97b3a; }
+      .sn-card--delivery    { --card-color: #8f6a35; --card-accent: #8f6a35; }
+      .sn-card--services    { --card-color: #6f4e2b; --card-accent: #6f4e2b; }
+
+      .sn-card__icon-wrap {
+        width: 68px; height: 68px;
+        border-radius: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        background: var(--icon-bg, #f5ede4);
+        box-shadow: 0 4px 14px rgba(0,0,0,.08);
+        transition: transform var(--transition);
+      }
+      .sn-card:hover .sn-card__icon-wrap { transform: scale(1.1); }
+
+      .sn-card--restaurants .sn-card__icon-wrap { --icon-bg: #f8efe1; }
+      .sn-card--stores      .sn-card__icon-wrap { --icon-bg: #f6efe5; }
+      .sn-card--delivery    .sn-card__icon-wrap { --icon-bg: #f4ecdf; }
+      .sn-card--services    .sn-card__icon-wrap { --icon-bg: #f3eadf; }
+
+      .sn-card__name {
+        font-size: 1.05rem;
+        font-weight: 800;
+        color: var(--brown);
+        text-align: center;
+      }
+      .sn-card__desc {
+        font-size: .8rem;
+        color: var(--muted);
+        text-align: center;
+        line-height: 1.55;
+        margin-top: -6px;
+      }
+      .sn-card__arrow {
+        font-size: .85rem;
+        color: var(--card-color, var(--gold));
+        font-weight: 700;
+        opacity: 0;
+        transform: translateX(4px);
+        transition: opacity var(--transition), transform var(--transition);
+      }
+      .sn-card:hover .sn-card__arrow {
+        opacity: 1;
+        transform: translateX(0);
+      }
+
+      /* ══ TRUST STRIP ══════════════════════════════════════════ */
+      .sn-trust {
+        display: flex;
+        justify-content: center;
+        gap: 28px;
+        flex-wrap: wrap;
+        margin: 40px auto 0;
+        padding: 22px 24px;
+        max-width: 680px;
+        background: var(--cream-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-sm);
+      }
+      .sn-trust__item {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        font-size: .82rem;
+        font-weight: 700;
+        color: var(--muted);
+      }
+      .sn-trust__icon {
+        font-size: 1.1rem;
+      }
+
+      /* ══ FOOTER ═══════════════════════════════════════════════ */
+      .sn-footer {
+        margin-top: 48px;
+        background: var(--brown);
+        color: rgba(255,255,255,.7);
+        text-align: center;
+        padding: 32px 20px;
+      }
+      .sn-footer__logo {
+        font-size: 1.25rem;
+        font-weight: 900;
         color: #fff;
+        margin-bottom: 10px;
+      }
+      .sn-footer__links {
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+        flex-wrap: wrap;
+        margin-bottom: 18px;
+      }
+      .sn-footer__link {
+        color: rgba(255,255,255,.65);
+        text-decoration: none;
+        font-size: .85rem;
+        font-weight: 600;
+        transition: color var(--transition);
+      }
+      .sn-footer__link:hover { color: #fff; }
+      .sn-footer__copy {
+        font-size: .78rem;
+        color: rgba(255,255,255,.4);
       }
     </style>
   </head>
   <body>
-    <div class="wrap">
-      <h1>اطلب أي خدمة الآن</h1>
-      <p id="guestStartNote" style="display: none; margin: 0 0 14px; padding: 10px 12px; background: #fff8ee; border: 1px solid #e8d4bc; border-radius: 10px; color: #5b371d">
-        وضع زائر: تصفّح العروض دون ظهور أسماء أو أرقام المحلات. لإتمام الطلب سجّل من صفحة التسجيل برمز واتساب.
+
+    <!-- ══ HEADER ══════════════════════════════════════════════ -->
+    <header class="sn-header">
+      <a class="sn-header__logo" href="/">
+        ERVENOW
+        <span class="sn-header__logo-dot"></span>
+      </a>
+      <nav class="sn-header__nav">
+        <a class="sn-header__link" href="/restaurants">مطاعم</a>
+        <a class="sn-header__link" href="/stores">متاجر</a>
+        <a class="sn-header__link" href="/services">خدمات</a>
+        <a class="sn-header__btn guest-only" href="/login">دخول</a>
+        <a class="sn-header__btn" id="headerDashBtn" style="display:none" href="/dashboard">حسابي</a>
+      </nav>
+    </header>
+
+    <!-- ══ HERO ════════════════════════════════════════════════ -->
+    <section class="sn-hero">
+      <div class="sn-hero__eyebrow">منصة ERVENOW — خدمة واحدة لكل شيء</div>
+      <h1 class="sn-hero__title">
+        اطلب أي خدمة<br>
+        <span>الآن وبسهولة</span>
+      </h1>
+      <p class="sn-hero__sub">
+        مطاعم، متاجر، توصيل سريع، وخدمات منزلية —<br>
+        كل ما تحتاجه في مكان واحد.
       </p>
-
-      <p>اختر الخدمة المناسبة:</p>
-
-      <div class="grid">
-        <a class="card" href="/browse?type=restaurant">🍛 مطعم</a>
-        <a class="card" href="/browse?type=pharmacy">💊 صيدلية</a>
-        <a class="card" href="/browse?type=plumber">🔧 خدمات</a>
-        <a class="card" href="/dashboard">🚚 توصيل</a>
-        <a class="card guest-only" href="/login">🔐 تسجيل دخول</a>
-        <a class="card guest-only" href="/login?mode=register&role=customer">📝 إنشاء حساب</a>
+      <div class="sn-hero__actions">
+        <a class="sn-hero__cta" href="/restaurants">ابدأ الطلب</a>
+        <a class="sn-hero__cta sn-hero__cta--outline" href="/dashboard">لوحة التحكم</a>
       </div>
 
-      <div class="actions">
-        <button class="btn" type="button" id="btnBack">⬅ رجوع</button>
-        <a class="btn btn-primary" href="/">🏠 الرئيسية</a>
-      </div>
+      <!-- guest note داخل الهيرو -->
+      <p id="guestStartNote" class="sn-guest-note">
+        وضع زائر — تصفّح العروض بحرية. لإتمام الطلب
+        <a href="/login" style="color:var(--gold);font-weight:800;text-decoration:none">سجّل دخولك</a>
+        برمز واتساب.
+      </p>
+    </section>
+
+    <!-- wave -->
+    <div class="sn-wave" aria-hidden="true">
+      <svg viewBox="0 0 1440 48" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+        <path fill="#e9dccb" d="M0,32 C360,0 1080,64 1440,32 L1440,0 L0,0 Z"/>
+        <path fill="#f8f4ee" d="M0,48 C360,16 1080,80 1440,48 L1440,0 L0,0 Z" opacity=".0"/>
+        <rect x="0" y="44" width="1440" height="4" fill="#f8f4ee"/>
+      </svg>
     </div>
+
+    <!-- ══ CATEGORIES ══════════════════════════════════════════ -->
+    <main class="sn-section">
+      <p class="sn-section__label">الأقسام الرئيسية</p>
+      <h2 class="sn-section__title">اختر ما يناسبك</h2>
+
+      <div class="sn-grid" role="list">
+
+        <a class="sn-card sn-card--restaurants" href="/restaurants" role="listitem">
+          <div class="sn-card__icon-wrap">🍽️</div>
+          <div>
+            <div class="sn-card__name">مطاعم</div>
+            <div class="sn-card__desc">مشاوي، برقر، شاورما<br>وأكثر من مطاعم معتمدة</div>
+          </div>
+          <div class="sn-card__arrow">← اكتشف</div>
+        </a>
+
+        <a class="sn-card sn-card--stores" href="/stores" role="listitem">
+          <div class="sn-card__icon-wrap">🛒</div>
+          <div>
+            <div class="sn-card__name">متاجر</div>
+            <div class="sn-card__desc">سوبرماركت، صيدليات<br>وبقالة مع توصيل سريع</div>
+          </div>
+          <div class="sn-card__arrow">← اكتشف</div>
+        </a>
+
+        <a class="sn-card sn-card--delivery" href="/delivery-services.html" role="listitem">
+          <div class="sn-card__icon-wrap">🚚</div>
+          <div>
+            <div class="sn-card__name">توصيل</div>
+            <div class="sn-card__desc">توصيل من نقطة لأخرى<br>وتوصيل غاز منزلي</div>
+          </div>
+          <div class="sn-card__arrow">← اطلب</div>
+        </a>
+
+        <a class="sn-card sn-card--services" href="/services" role="listitem">
+          <div class="sn-card__icon-wrap">🔧</div>
+          <div>
+            <div class="sn-card__name">خدمات</div>
+            <div class="sn-card__desc">سباكة، كهرباء، تنظيف<br>وخدمات منزلية متنوعة</div>
+          </div>
+          <div class="sn-card__arrow">← احجز</div>
+        </a>
+
+      </div>
+
+      <!-- Trust strip -->
+      <div class="sn-trust" role="list">
+        <div class="sn-trust__item" role="listitem">
+          <span class="sn-trust__icon">⚡</span>
+          توصيل سريع
+        </div>
+        <div class="sn-trust__item" role="listitem">
+          <span class="sn-trust__icon">🛡️</span>
+          دفع آمن
+        </div>
+        <div class="sn-trust__item" role="listitem">
+          <span class="sn-trust__icon">📍</span>
+          تتبع لحظي
+        </div>
+        <div class="sn-trust__item" role="listitem">
+          <span class="sn-trust__icon">💬</span>
+          دعم فوري
+        </div>
+      </div>
+    </main>
+
+    <!-- ══ FOOTER ═══════════════════════════════════════════════ -->
+    <footer class="sn-footer">
+      <div class="sn-footer__logo">ERVENOW</div>
+      <nav class="sn-footer__links">
+        <a class="sn-footer__link" href="/restaurants">مطاعم</a>
+        <a class="sn-footer__link" href="/stores">متاجر</a>
+        <a class="sn-footer__link" href="/delivery-services.html">توصيل</a>
+        <a class="sn-footer__link" href="/services">خدمات</a>
+        <a class="sn-footer__link" href="/dashboard">حسابي</a>
+        <a class="sn-footer__link" href="/">الرئيسية</a>
+      </nav>
+      <p class="sn-footer__copy">© 2026 ERVENOW — جميع الحقوق محفوظة</p>
+    </footer>
 
     <script src="/assets/guestBrowse.js"></script>
     <script>
       (function () {
         var n = document.getElementById("guestStartNote");
-        if (n && window.ErvenowGuestBrowse && ErvenowGuestBrowse.isAnonymousGuest()) n.style.display = "block";
+        if (n && window.ErvenowGuestBrowse && ErvenowGuestBrowse.isAnonymousGuest()) {
+          n.style.display = "block";
+        }
       })();
     </script>
 
@@ -106,17 +533,14 @@
           localStorage.getItem("ervenow_access_token") ||
           localStorage.getItem("erwenow_access_token")
         );
+        var guestEls = document.querySelectorAll(".guest-only");
+        var dashBtn  = document.getElementById("headerDashBtn");
         if (hasToken) {
-          document.querySelectorAll(".guest-only").forEach(function (el) {
-            el.style.display = "none";
-          });
+          guestEls.forEach(function (el) { el.style.display = "none"; });
+          if (dashBtn) dashBtn.style.display = "inline-flex";
         }
       })();
-
-      document.getElementById("btnBack").onclick = function () {
-        if (history.length > 1) history.back();
-        else location.href = "/";
-      };
     </script>
+
   </body>
 </html>

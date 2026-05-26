@@ -2,10 +2,10 @@
 <html lang="ar" dir="rtl">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>ERVENOW | لوحة زائر المنصة</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/assets/styles.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
@@ -14,31 +14,370 @@
         min-height: 100dvh;
         width: 100%;
         direction: rtl;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+      }
+      body {
+        margin: 0;
+        font-family: var(--font, "Cairo", system-ui, sans-serif);
+        background: var(--bg, #f8f4ee);
+        color: var(--brown, #3d2213);
+        min-height: 100dvh;
+        display: flex;
+        flex-direction: column;
+      }
+      .dash-site-header {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        padding: 0 max(14px, env(safe-area-inset-left, 14px)) 0 max(14px, env(safe-area-inset-right, 14px));
+        background: linear-gradient(180deg, rgba(248, 244, 238, 0.98), rgba(255, 254, 251, 0.95));
+        border-bottom: 1px solid var(--border, rgba(61, 34, 19, 0.12));
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        box-shadow: 0 4px 24px rgba(45, 26, 14, 0.06);
+      }
+      .dash-site-header__inner {
+        max-width: min(1120px, 100%);
+        margin: 0 auto;
+        min-height: 58px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 8px 0;
+      }
+      .dash-site-header__brand {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        min-width: 0;
+      }
+      .dash-site-header__logo {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 1.28rem;
+        font-weight: 900;
+        letter-spacing: -0.02em;
+        color: var(--brown, #3d2213);
+        text-decoration: none;
+      }
+      .dash-site-header__logo-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--gold, #b9872f);
+        flex-shrink: 0;
+      }
+      .dash-site-header__tag {
+        margin: 0;
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: var(--muted, #5c4a3d);
+        line-height: 1.2;
+      }
+      .dash-site-header__nav {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-shrink: 1;
+        min-width: 0;
+      }
+      .dash-site-header__tools-row {
+        display: none;
+      }
+      @media (min-width: 641px) {
+        .dash-site-header__inner {
+          flex-wrap: nowrap;
+        }
+        .dash-site-header__nav {
+          flex: 1 1 auto;
+          min-width: 0;
+        }
+      }
+      .dash-site-header__tools {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        flex-shrink: 0;
+      }
+      .dash-header-cart,
+      .dash-header-wallet {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+        min-height: 36px;
+        padding: 6px 10px;
+        border-radius: 9px;
+        border: 1px solid rgba(185, 135, 47, 0.32);
+        background: linear-gradient(145deg, #fffefb, #f8f0e6);
+        text-decoration: none;
+        color: var(--brown, #3d2213);
+        font-family: inherit;
+        font-size: 0.78rem;
+        font-weight: 800;
+        box-shadow: 0 2px 8px rgba(45, 26, 14, 0.06);
+        transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s;
+        position: relative;
+        white-space: nowrap;
+      }
+      .dash-header-cart:hover,
+      .dash-header-wallet:hover {
+        transform: translateY(-1px);
+        border-color: rgba(185, 135, 47, 0.5);
+        box-shadow: 0 4px 14px rgba(45, 26, 14, 0.1);
+      }
+      .dash-header-cart__badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 20px;
+        height: 20px;
+        padding: 0 5px;
+        border-radius: 999px;
+        background: var(--gold, #b9872f);
+        color: #fff;
+        font-size: 0.72rem;
+        font-weight: 800;
+        line-height: 1;
+      }
+      .dash-header-cart__badge:empty,
+      .dash-header-cart__badge[data-empty="true"] {
+        opacity: 0.55;
+      }
+      .dash-header-wallet__label {
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: var(--muted, #5c4a3d);
+      }
+      .dash-header-wallet__val {
+        font-variant-numeric: tabular-nums;
+        font-size: 0.8rem;
+      }
+      .dash-header-wallet__cur {
+        font-size: 0.68rem;
+        font-weight: 700;
+        color: var(--gold, #b9872f);
+      }
+      @media (max-width: 520px) {
+        .dash-header-cart__label,
+        .dash-header-wallet__label {
+          display: none;
+        }
+        .dash-header-cart,
+        .dash-header-wallet {
+          padding: 6px 9px;
+          min-width: 36px;
+        }
+      }
+      .dash-site-header__links {
+        display: flex;
+        align-items: center;
+        gap: 0;
+        padding: 3px;
+        border-radius: 11px;
+        background: rgba(61, 34, 19, 0.04);
+        border: 1px solid var(--border, rgba(61, 34, 19, 0.1));
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        max-width: 100%;
+      }
+      .dash-site-header__links::-webkit-scrollbar {
+        display: none;
+      }
+      .dash-site-header__link {
+        flex: 0 0 auto;
+        padding: 6px 9px;
+        border-radius: 8px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: var(--muted, #5c4a3d);
+        text-decoration: none;
+        white-space: nowrap;
+        transition: background 0.15s, color 0.15s;
+      }
+      .dash-site-header__link:hover {
+        background: rgba(185, 135, 47, 0.1);
+        color: var(--brown, #3d2213);
+      }
+      .dash-site-header__link.is-active {
+        background: rgba(185, 135, 47, 0.14);
+        color: var(--brown, #3d2213);
+        font-weight: 800;
+      }
+      .dash-site-header__btn {
+        flex: 0 0 auto;
+        padding: 6px 12px;
+        border-radius: 9px;
+        font-size: 0.8rem;
+        font-weight: 700;
+        font-family: inherit;
+        text-decoration: none;
+        border: none;
+        cursor: pointer;
+        white-space: nowrap;
+      }
+      .dash-site-header__btn--ghost {
+        background: transparent;
+        color: var(--muted, #5c4a3d);
+        border: 1px solid var(--border, rgba(61, 34, 19, 0.12));
+      }
+      .dash-site-header__btn--ghost:hover {
+        border-color: rgba(185, 135, 47, 0.35);
+        color: var(--brown, #3d2213);
+      }
+      .dash-site-header__btn--primary {
+        background: var(--gold, #b9872f);
+        color: #fff;
+      }
+      .dash-site-header__btn--primary:hover {
+        opacity: 0.9;
+      }
+      @media (min-width: 900px) {
+        .dash-site-header__link {
+          padding: 7px 11px;
+          font-size: 0.84rem;
+        }
+        .dash-site-header__btn {
+          padding: 7px 14px;
+          font-size: 0.84rem;
+        }
+      }
+      @media (max-width: 640px) {
+        .dash-site-header {
+          padding-top: max(6px, env(safe-area-inset-top, 0px));
+        }
+        .dash-site-header__inner {
+          display: grid;
+          grid-template-columns: 1fr auto;
+          grid-template-rows: auto auto auto;
+          gap: 8px;
+          padding: 6px 0 8px;
+        }
+        .dash-site-header__brand {
+          grid-column: 1;
+          grid-row: 1;
+        }
+        .dash-site-header__tools {
+          grid-column: 2;
+          grid-row: 1;
+          align-self: center;
+        }
+        .dash-site-header__nav {
+          grid-column: 1 / -1;
+          grid-row: 2;
+          width: 100%;
+          flex-direction: column;
+          align-items: stretch;
+          gap: 8px;
+        }
+        .dash-site-header__links {
+          width: 100%;
+          padding: 4px;
+        }
+        .dash-site-header__link {
+          padding: 8px 10px;
+          font-size: 0.78rem;
+          min-height: 36px;
+          display: inline-flex;
+          align-items: center;
+        }
+        #switchAccount {
+          grid-column: 1 / -1;
+          grid-row: 3;
+          width: 100%;
+          text-align: center;
+          min-height: 44px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .dash-header-cart,
+        .dash-header-wallet {
+          min-height: 40px;
+          min-width: 40px;
+        }
+        .dash-site-header__logo {
+          font-size: 1.1rem;
+        }
+        .dash-site-header__tag {
+          font-size: 0.68rem;
+        }
+      }
+      .dash-site-footer {
+        margin-top: auto;
+        background: var(--brown, #3d2213);
+        color: rgba(255, 255, 255, 0.72);
+        text-align: center;
+        padding: 32px 20px max(28px, env(safe-area-inset-bottom, 20px));
+      }
+      .dash-site-footer__logo {
+        font-size: 1.25rem;
+        font-weight: 900;
+        color: #fff;
+        margin-bottom: 10px;
+        letter-spacing: 0.02em;
+      }
+      .dash-site-footer__links {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 10px 18px;
+        margin-bottom: 16px;
+      }
+      .dash-site-footer__link {
+        color: rgba(255, 255, 255, 0.65);
+        text-decoration: none;
+        font-size: 0.85rem;
+        font-weight: 600;
+        transition: color 0.2s;
+      }
+      .dash-site-footer__link:hover {
+        color: #fff;
+      }
+      .dash-site-footer__copy {
+        margin: 0;
+        font-size: 0.78rem;
+        color: rgba(255, 255, 255, 0.4);
       }
       .dash-main .layout {
         max-width: min(1120px, 100%);
         margin-inline: auto;
         padding-inline: max(14px, env(safe-area-inset-left, 14px)) max(14px, env(safe-area-inset-right, 14px));
-        padding-block: clamp(12px, 3vw, 22px) max(40px, env(safe-area-inset-bottom, 24px));
+        padding-block: clamp(16px, 3vw, 24px) clamp(24px, 4vw, 36px);
+        flex: 1;
+        width: 100%;
       }
-      .dash-top {
-        position: sticky;
-        top: 0;
-        z-index: 50;
-        margin: -4px -6px 14px;
-        padding: 8px 6px 12px;
-        background: linear-gradient(180deg, rgba(248, 244, 238, 0.97) 0%, rgba(248, 244, 238, 0.92) 70%, transparent 100%);
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
+      .dash-alert {
+        display: none;
+        margin: 0 0 14px;
+        padding: 12px 14px;
+        border-radius: 14px;
+        font-size: clamp(0.86rem, 2.3vw, 0.94rem);
+        font-weight: 600;
+        line-height: 1.55;
+        border: 1px solid transparent;
       }
-      @media (min-width: 721px) {
-        .dash-top {
-          margin: 0 0 18px;
-          padding: 0 0 4px;
-          background: transparent;
-          backdrop-filter: none;
-        }
+      .dash-alert--guest {
+        background: rgba(185, 135, 47, 0.1);
+        border-color: rgba(185, 135, 47, 0.22);
+        color: var(--brown-mid, #5c4a3d);
       }
+      .dash-alert--admin {
+        background: linear-gradient(135deg, rgba(61, 34, 19, 0.06), rgba(185, 135, 47, 0.12));
+        border-color: rgba(185, 135, 47, 0.28);
+        color: var(--brown, #3d2213);
+      }
+      .dash-alert a {
+        color: var(--gold, #b9872f);
+        font-weight: 800;
+        text-decoration: none;
+      }
+      .dash-alert a:hover { text-decoration: underline; }
       .delivery-form {
         display: grid;
         gap: 10px;
@@ -228,18 +567,11 @@
 
       #dashStatus {
         margin: 0 0 14px;
-        min-height: 1.2em;
-        font-weight: 600;
-        color: #8a5a2a;
-        padding: 12px 14px;
-        border-radius: 12px;
-        background: rgba(185, 135, 47, 0.12);
-        border: 1px solid rgba(185, 135, 47, 0.22);
-        line-height: 1.5;
-        font-size: clamp(0.88rem, 2.4vw, 0.95rem);
       }
       .dash-profile-card {
         margin-bottom: 14px;
+        background: linear-gradient(135deg, #fffefb 0%, #f8f0e6 100%);
+        border-color: rgba(61, 34, 19, 0.1);
       }
       .dash-profile-card__row {
         display: flex;
@@ -247,11 +579,39 @@
         align-items: center;
         gap: 10px 14px;
       }
+      .dash-profile-card__avatar {
+        width: 44px;
+        height: 44px;
+        border-radius: 14px;
+        background: linear-gradient(135deg, #b9872f, #7a5a1f);
+        color: #fffef8;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        font-weight: 900;
+        flex-shrink: 0;
+      }
+      .dash-profile-card__meta {
+        flex: 1;
+        min-width: 0;
+      }
       .dash-profile-card__phone {
-        margin: 0;
+        margin: 4px 0 0;
         font-weight: 700;
         font-size: clamp(0.9rem, 2.5vw, 1rem);
         word-break: break-all;
+        color: var(--brown, #3d2213);
+      }
+      .badge--role {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-size: 0.78rem;
+        font-weight: 800;
+        background: rgba(185, 135, 47, 0.15);
+        color: var(--brown, #3d2213);
+        border: 1px solid rgba(185, 135, 47, 0.25);
       }
       @media (max-width: 720px) {
         .top-nav {
@@ -493,7 +853,118 @@
         font-size: 1rem;
       }
       .dash-hero.card {
+        background: linear-gradient(135deg, #fffefb 0%, #f5ede2 55%, #f8f4ee 100%);
+        border-color: rgba(61, 34, 19, 0.1);
+      }
+      .dash-main-hub {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        margin-top: 4px;
+      }
+      @media (min-width: 640px) {
+        .dash-main-hub { grid-template-columns: repeat(4, 1fr); }
+      }
+      .hub-card {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        padding: 18px 12px 16px;
+        border-radius: 16px;
+        text-decoration: none;
+        color: var(--brown, #3d2213);
+        background: #fffefb;
+        border: 1px solid rgba(61, 34, 19, 0.1);
+        box-shadow: 0 2px 10px rgba(45, 26, 14, 0.05);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        text-align: center;
+      }
+      .hub-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 24px rgba(45, 26, 14, 0.1);
+        border-color: rgba(185, 135, 47, 0.35);
+      }
+      .hub-card__icon {
+        font-size: 1.75rem;
+        line-height: 1;
+      }
+      .hub-card__name {
+        font-weight: 800;
+        font-size: 0.95rem;
+      }
+      .dash-tabs-card {
         margin-bottom: 14px;
+      }
+      .dash-tabs__nav {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin: 0 0 14px;
+      }
+      .dash-tabs__nav button {
+        flex: 1 1 calc(50% - 4px);
+        min-width: 0;
+        padding: 11px 10px;
+        border-radius: 999px;
+        border: 1px solid rgba(61, 34, 19, 0.12);
+        background: #fffefb;
+        font-family: inherit;
+        font-weight: 800;
+        font-size: 0.86rem;
+        cursor: pointer;
+        color: var(--brown, #3d2213);
+        transition: background 0.15s, color 0.15s, border-color 0.15s;
+      }
+      @media (min-width: 520px) {
+        .dash-tabs__nav button { flex: 1 1 calc(25% - 6px); }
+      }
+      .dash-tabs__nav button.is-active,
+      .dash-tabs__nav button[aria-selected="true"] {
+        background: linear-gradient(180deg, #3d2213 0%, #2b170d 100%);
+        color: #f8f4ee;
+        border-color: rgba(185, 135, 47, 0.35);
+      }
+      .dash-tabs__panel[hidden] {
+        display: none !important;
+      }
+      .dash-tabs__all {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin: 0 0 12px;
+        font-size: 0.84rem;
+        font-weight: 800;
+        color: var(--gold, #b9872f);
+        text-decoration: none;
+      }
+      .dash-tabs__all:hover { text-decoration: underline; }
+      .dash-tabs__foot {
+        margin: 16px 0 0;
+        padding-top: 14px;
+        border-top: 1px solid rgba(61, 34, 19, 0.08);
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: var(--muted, #5c4a3d);
+        text-align: center;
+        line-height: 1.8;
+      }
+      .dash-tabs__foot a {
+        color: var(--gold, #b9872f);
+        font-weight: 800;
+        text-decoration: none;
+      }
+      .dash-tabs__foot a:hover { text-decoration: underline; }
+      .cat-section-card {
+        margin-bottom: 14px;
+      }
+      .cat-section-card .cat-block h3 {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid rgba(61, 34, 19, 0.08);
+        margin-bottom: 12px;
       }
       @media (max-width: 720px) {
         .delivery-form select,
@@ -502,27 +973,154 @@
         }
       }
 
+      /* ── جوال وتابلت: تخطيط متجاوب ── */
+      html {
+        -webkit-text-size-adjust: 100%;
+      }
+      body {
+        overflow-x: hidden;
+      }
+      .dash-main .layout .card {
+        padding: clamp(14px, 3.5vw, 20px);
+        margin-bottom: clamp(12px, 2.5vw, 16px);
+      }
+      .dash-delivery-card .btn-row {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .dash-delivery-card .btn-row .btn {
+        width: 100%;
+        min-height: 48px;
+      }
+      .delivery-loc-actions .btn {
+        min-height: 44px;
+      }
+      .delivery-stats {
+        flex-direction: column;
+        gap: 4px;
+      }
+      .delivery-stats .sub {
+        font-size: 0.88rem;
+      }
+      @media (max-width: 767px) {
+        .dash-hero__grid {
+          text-align: center;
+        }
+        .dash-hero__title {
+          font-size: clamp(1.15rem, 5vw, 1.45rem);
+        }
+        .dash-hero__art {
+          max-height: min(42vw, 200px);
+        }
+        .dash-tabs__nav button {
+          min-height: 44px;
+          font-size: 0.84rem;
+        }
+        .cat-card {
+          min-height: 88px;
+          padding: 12px;
+        }
+        .cat-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 8px;
+        }
+        .dash-site-footer__links {
+          gap: 8px 14px;
+        }
+        .dash-site-footer__link {
+          font-size: 0.8rem;
+          padding: 4px 2px;
+        }
+        #pickupDropMap {
+          min-height: min(50vh, 320px);
+        }
+        .delivery-dropdown[open] #pickupDropMap {
+          min-height: min(58vh, 380px);
+        }
+      }
+      @media (min-width: 641px) and (max-width: 1024px) {
+        .dash-site-header__inner {
+          gap: 10px;
+        }
+        .dash-site-header__link {
+          padding: 7px 9px;
+          font-size: 0.8rem;
+        }
+        .dash-main .layout {
+          padding-inline: max(18px, env(safe-area-inset-left, 18px)) max(18px, env(safe-area-inset-right, 18px));
+        }
+        .cat-grid {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+        .dash-hero__grid {
+          grid-template-columns: 1.1fr 0.9fr;
+        }
+        .dash-tabs__nav button {
+          min-height: 42px;
+        }
+      }
+      @media (max-width: 380px) {
+        .dash-site-header__link {
+          padding: 7px 8px;
+          font-size: 0.74rem;
+        }
+        .cat-grid {
+          grid-template-columns: 1fr;
+        }
+        .dash-tabs__nav button {
+          flex: 1 1 calc(50% - 4px);
+        }
+      }
+
     </style>
   </head>
   <body>
+    <header class="dash-site-header">
+      <div class="dash-site-header__inner">
+        <div class="dash-site-header__brand">
+          <a class="dash-site-header__logo" href="/">
+            ERVENOW
+            <span class="dash-site-header__logo-dot" aria-hidden="true"></span>
+          </a>
+          <p class="dash-site-header__tag">لوحة زائر المنصة</p>
+        </div>
+        <nav class="dash-site-header__nav" aria-label="التنقل الرئيسي">
+          <div class="dash-site-header__links">
+            <a class="dash-site-header__link is-active" href="/dashboard" aria-current="page">لوحة الزائر</a>
+            <a class="dash-site-header__link" href="/restaurants">مطاعم</a>
+            <a class="dash-site-header__link" href="/stores">متاجر</a>
+            <a class="dash-site-header__link" href="/delivery-services.html">توصيل</a>
+            <a class="dash-site-header__link" href="/services">خدمات</a>
+            <a class="dash-site-header__link" href="/">الرئيسية</a>
+          </div>
+        </nav>
+        <div class="dash-site-header__tools">
+          <a class="dash-header-wallet" id="dashHeaderWallet" href="/wallet.html" hidden aria-label="المحفظة">
+            <span class="dash-header-wallet__label">محفظة</span>
+            <span class="dash-header-wallet__val" id="dashHeaderWalletAmount">—</span>
+            <span class="dash-header-wallet__cur">ر.س</span>
+          </a>
+          <a class="dash-header-cart" href="/cart" aria-label="السلة — الدفع">
+            <span aria-hidden="true">🛒</span>
+            <span class="dash-header-cart__label">السلة</span>
+            <span class="dash-header-cart__badge" id="cartCount" data-empty="true">0</span>
+          </a>
+        </div>
+        <a class="dash-site-header__btn dash-site-header__btn--primary" href="/login?role=customer" id="switchAccount">تسجيل الدخول</a>
+      </div>
+    </header>
+
     <div class="dash-main">
     <div class="layout">
-      <header class="dash-top">
-        <div class="top-nav">
-          <h1 style="margin: 0; flex: 1; min-width: 0">لوحة زائر المنصة</h1>
-          <div class="top-nav-actions">
-            <a class="btn btn-ghost" href="/">الرئيسية</a>
-            <a class="btn btn-primary" href="/login?role=customer" id="switchAccount">تسجيل الدخول</a>
-          </div>
-        </div>
-      </header>
-
-      <p class="sub" id="dashStatus" style="display: none" aria-live="polite"></p>
+      <div class="dash-alert dash-alert--guest" id="dashStatus" style="display: none" role="status" aria-live="polite"></div>
 
       <div class="card dash-profile-card" id="profileCard" style="display: none" aria-label="حسابك">
         <div class="dash-profile-card__row">
-          <span class="badge" id="roleBadge"></span>
-          <p class="dash-profile-card__phone" id="phoneLine"></p>
+          <span class="dash-profile-card__avatar" id="profileAvatar" aria-hidden="true">👤</span>
+          <div class="dash-profile-card__meta">
+            <span class="badge badge--role" id="roleBadge"></span>
+            <p class="dash-profile-card__phone" id="phoneLine"></p>
+          </div>
         </div>
       </div>
 
@@ -532,8 +1130,7 @@
           <div>
             <h2 class="dash-hero__title" id="dashHeroTitle">أهلاً بكم في منصة ارفينو</h2>
             <p class="dash-hero__lead">
-              كل ما تحتاجونه موجود في هذه الصفحة: متاجر، مطاعم، خدمات منزلية، وتوصيل. تصفّح الأقسام واختر ما يناسبك،
-              ثم تابع الطلب من صفحة الطلب أو المتجر.
+              تصفّح الأقسام من التبويبات أدناه، أو أنشئ طلب توصيل مباشرة من الخريطة في أسفل الصفحة.
             </p>
           </div>
           <div class="dash-hero__art">
@@ -549,66 +1146,72 @@
         </div>
       </section>
 
-      <section class="card dash-quick-card" aria-labelledby="dashQuickTitle">
-        <h2 class="dash-section-title" id="dashQuickTitle">مطاعم وعروض وسريع</h2>
-        <p class="dash-section-hint">مرّر الشريط أفقياً واضغط للانتقال مباشرة</p>
-        <div class="horiz-scroll-wrap">
-          <div class="horiz-scroll" role="list">
-            <a class="spot-chip" role="listitem" href="/stores">🍽️ مطاعم</a>
-            <a class="spot-chip" role="listitem" href="/browse">🔥 عروض</a>
-            <a class="spot-chip" role="listitem" href="/stores">🛒 متاجر قريبة</a>
-            <a class="spot-chip" role="listitem" href="/order">🚚 طلب توصيل</a>
-            <a class="spot-chip" role="listitem" href="/services">🔧 خدمات منزلية</a>
-            <a class="spot-chip" role="listitem" href="/start-now.html">✨ ابدأ الآن</a>
+      <section class="card dash-tabs-card" aria-labelledby="dashTabsTitle">
+        <h2 class="dash-section-title" id="dashTabsTitle">تفاصيل سريعة</h2>
+        <p class="dash-section-hint">اختر تبويباً واحداً لعرض الخيارات الفرعية</p>
+        <div class="dash-tabs">
+          <div class="dash-tabs__nav" role="tablist" aria-label="أقسام المنصة">
+            <button type="button" class="is-active" role="tab" id="tab-restaurants" data-tab="restaurants" aria-selected="true" aria-controls="panel-restaurants">مطاعم</button>
+            <button type="button" role="tab" id="tab-stores" data-tab="stores" aria-selected="false" aria-controls="panel-stores">متاجر</button>
+            <button type="button" role="tab" id="tab-services" data-tab="services" aria-selected="false" aria-controls="panel-services">خدمات</button>
+            <button type="button" role="tab" id="tab-delivery" data-tab="delivery" aria-selected="false" aria-controls="panel-delivery">توصيل</button>
           </div>
-        </div>
-      </section>
 
-      <section class="card" aria-labelledby="catStoresTitle">
-        <div class="cat-block">
-          <h3 id="catStoresTitle">🛒 متاجر</h3>
-          <div class="cat-grid">
-            <a class="cat-card" href="/stores"><span class="cat-card__icon" aria-hidden="true">🏪</span><strong>كل المتاجر</strong><span>سوبرماركت، صيدليات، خضار، وأكثر.</span></a>
-            <a class="cat-card" href="/stores?type=supermarket"><span class="cat-card__icon" aria-hidden="true">🛒</span><strong>سوبر ماركت</strong><span>مشتريات يومية سريعة عبر نفس المنصة.</span></a>
-            <a class="cat-card" href="/stores?type=pharmacy"><span class="cat-card__icon" aria-hidden="true">💊</span><strong>صيدليات</strong><span>طلبات الأدوية والمنتجات الصحية بسهولة.</span></a>
-            <a class="cat-card" href="/stores?type=vegetables"><span class="cat-card__icon" aria-hidden="true">🥬</span><strong>خضار</strong><span>توريد منتجات طازجة مباشرة لزائر المنصة.</span></a>
-            <a class="cat-card" href="/stores?type=flowers_gifts"><span class="cat-card__icon" aria-hidden="true">💐</span><strong>ورود وهدايا</strong><span>هدايا وتنسيقات ورد مع توصيل مرن.</span></a>
-            <a class="cat-card" href="/stores?type=sweets"><span class="cat-card__icon" aria-hidden="true">🍰</span><strong>حلويات</strong><span>طلبات حلويات ومناسبات بسرعة.</span></a>
-            <a class="cat-card" href="/stores?type=home_business"><span class="cat-card__icon" aria-hidden="true">🏠</span><strong>أسر منتجة</strong><span>دعم المنتجات المنزلية عبر الطلب المباشر.</span></a>
+          <div class="dash-tabs__panel" id="panel-restaurants" role="tabpanel" aria-labelledby="tab-restaurants">
+            <a class="dash-tabs__all" href="/restaurants">عرض كل المطاعم ←</a>
+            <div class="cat-grid">
+              <a class="cat-card" href="/restaurants"><span class="cat-card__icon" aria-hidden="true">🍽️</span><strong>كل المطاعم</strong><span>اطلب من المطاعم القريبة مع التوصيل.</span></a>
+              <a class="cat-card" href="/browse"><span class="cat-card__icon" aria-hidden="true">🔥</span><strong>عروض</strong><span>خصومات من المتاجر والمطاعم.</span></a>
+            </div>
           </div>
-        </div>
-      </section>
 
-      <section class="card" aria-labelledby="catServicesTitle">
-        <div class="cat-block">
-          <h3 id="catServicesTitle">🔧 خدمات</h3>
-          <div class="cat-grid">
-            <a class="cat-card" href="/services"><span class="cat-card__icon" aria-hidden="true">🔧</span><strong>كل الخدمات</strong><span>سباك، كهرباء، تكييف، تنظيف، وأكثر.</span></a>
-            <a class="cat-card" href="/services?type=plumber"><span class="cat-card__icon" aria-hidden="true">🔧</span><strong>سباك</strong><span>60 ريال معاينة — الإصلاح لاحقاً.</span></a>
-            <a class="cat-card" href="/services?type=electrician"><span class="cat-card__icon" aria-hidden="true">⚡</span><strong>كهربائي</strong><span>60 ريال معاينة — الإصلاح عند الموافقة.</span></a>
-            <a class="cat-card" href="/services?type=nursery"><span class="cat-card__icon" aria-hidden="true">🪴</span><strong>مشتل</strong><span>60 ريال معاينة — التنفيذ حسب الاتفاق.</span></a>
-            <a class="cat-card" href="/services?type=ac_technician"><span class="cat-card__icon" aria-hidden="true">❄️</span><strong>فني مكيفات</strong><span>60 ريال معاينة وتقييم الأعطال.</span></a>
-            <a class="cat-card" href="/services?type=cleaning_villa"><span class="cat-card__icon" aria-hidden="true">🧼</span><strong>غسيل درج فيلا</strong><span>60 ريال ثابت.</span></a>
-            <a class="cat-card" href="/services?type=cleaning_building"><span class="cat-card__icon" aria-hidden="true">🏢</span><strong>غسيل درج عمارة</strong><span>120 ريال — 3 أدوار.</span></a>
+          <div class="dash-tabs__panel" id="panel-stores" role="tabpanel" aria-labelledby="tab-stores" hidden>
+            <a class="dash-tabs__all" href="/stores">عرض كل المتاجر ←</a>
+            <div class="cat-grid">
+              <a class="cat-card" href="/stores?type=supermarket"><span class="cat-card__icon" aria-hidden="true">🛒</span><strong>سوبر ماركت</strong><span>مشتريات يومية سريعة.</span></a>
+              <a class="cat-card" href="/stores?type=pharmacy"><span class="cat-card__icon" aria-hidden="true">💊</span><strong>صيدليات</strong><span>أدوية ومنتجات صحية.</span></a>
+              <a class="cat-card" href="/stores?type=vegetables"><span class="cat-card__icon" aria-hidden="true">🥬</span><strong>خضار</strong><span>منتجات طازجة.</span></a>
+              <a class="cat-card" href="/stores?type=flowers_gifts"><span class="cat-card__icon" aria-hidden="true">💐</span><strong>ورود وهدايا</strong><span>هدايا مع توصيل.</span></a>
+              <a class="cat-card" href="/stores?type=sweets"><span class="cat-card__icon" aria-hidden="true">🍰</span><strong>حلويات</strong><span>حلويات ومناسبات.</span></a>
+              <a class="cat-card" href="/stores?type=home_business"><span class="cat-card__icon" aria-hidden="true">🏠</span><strong>أسر منتجة</strong><span>منتجات منزلية.</span></a>
+            </div>
           </div>
-        </div>
-      </section>
 
-      <section class="card" aria-labelledby="catDeliveryTitle">
-        <div class="cat-block">
-          <h3 id="catDeliveryTitle">🚚 توصيل</h3>
-          <div class="cat-grid">
-            <a class="cat-card" href="/order"><span class="cat-card__icon" aria-hidden="true">🚗</span><strong>نقل مركبات</strong><span>نقل داخل المدينة وخارجها.</span></a>
-            <a class="cat-card" href="/order"><span class="cat-card__icon" aria-hidden="true">📦</span><strong>توصيل داخلي</strong><span>توصيل داخل الأحياء بسرعة.</span></a>
-            <a class="cat-card" href="/order"><span class="cat-card__icon" aria-hidden="true">🛻</span><strong>ونيت</strong><span>نقل بالونيت حسب الحاجة.</span></a>
-            <a class="cat-card" href="/order"><span class="cat-card__icon" aria-hidden="true">🛋️</span><strong>نقل أثاث</strong><span>نقل أثاث بمرونة وجدولة.</span></a>
-            <a class="cat-card" href="/order"><span class="cat-card__icon" aria-hidden="true">🔥</span><strong>توصيل غاز</strong><span>طلبات غاز منزلية عند الطلب.</span></a>
+          <div class="dash-tabs__panel" id="panel-services" role="tabpanel" aria-labelledby="tab-services" hidden>
+            <a class="dash-tabs__all" href="/services">عرض كل الخدمات ←</a>
+            <div class="cat-grid">
+              <a class="cat-card" href="/services?type=plumber"><span class="cat-card__icon" aria-hidden="true">🔧</span><strong>سباك</strong><span>60 ريال معاينة.</span></a>
+              <a class="cat-card" href="/services?type=electrician"><span class="cat-card__icon" aria-hidden="true">⚡</span><strong>كهربائي</strong><span>60 ريال معاينة.</span></a>
+              <a class="cat-card" href="/services?type=nursery"><span class="cat-card__icon" aria-hidden="true">🪴</span><strong>مشتل</strong><span>60 ريال معاينة.</span></a>
+              <a class="cat-card" href="/services?type=ac_technician"><span class="cat-card__icon" aria-hidden="true">❄️</span><strong>فني مكيفات</strong><span>60 ريال معاينة.</span></a>
+              <a class="cat-card" href="/services?type=cleaning_villa"><span class="cat-card__icon" aria-hidden="true">🧼</span><strong>غسيل درج فيلا</strong><span>60 ريال ثابت.</span></a>
+              <a class="cat-card" href="/services?type=cleaning_building"><span class="cat-card__icon" aria-hidden="true">🏢</span><strong>غسيل درج عمارة</strong><span>120 ريال — 3 أدوار.</span></a>
+            </div>
           </div>
+
+          <div class="dash-tabs__panel" id="panel-delivery" role="tabpanel" aria-labelledby="tab-delivery" hidden>
+            <a class="dash-tabs__all" href="/delivery-services.html">كل خدمات التوصيل ←</a>
+            <div class="cat-grid">
+              <a class="cat-card" href="/delivery-services.html?service=car_transport"><span class="cat-card__icon" aria-hidden="true">🚗</span><strong>نقل مركبات</strong><span>داخل وخارج المدينة.</span></a>
+              <a class="cat-card" href="/delivery-services.html?service=local_delivery"><span class="cat-card__icon" aria-hidden="true">📦</span><strong>توصيل داخلي</strong><span>داخل الأحياء.</span></a>
+              <a class="cat-card" href="/delivery-services.html?service=furniture"><span class="cat-card__icon" aria-hidden="true">🛋️</span><strong>نقل أثاث</strong><span>جدولة مرنة.</span></a>
+              <a class="cat-card" href="/delivery-services.html?service=gas_delivery"><span class="cat-card__icon" aria-hidden="true">🔥</span><strong>توصيل غاز</strong><span>عند الطلب.</span></a>
+              <a class="cat-card" href="#dashDeliveryTitle"><span class="cat-card__icon" aria-hidden="true">🗺️</span><strong>من الخريطة</strong><span>احسب المسافة وأنشئ الطلب.</span></a>
+            </div>
+          </div>
+
+          <p class="dash-tabs__foot">
+            <a href="/start-now.html">ابدأ الآن</a>
+            ·
+            <a href="/browse">عروض</a>
+            ·
+            <a href="/">الرئيسية</a>
+          </p>
         </div>
       </section>
 
       <section class="card dash-delivery-card" aria-labelledby="dashDeliveryTitle">
-        <h2 class="dash-section-title" id="dashDeliveryTitle">🚚 طلب توصيل من نقطة إلى أخرى</h2>
+        <h2 class="dash-section-title" id="dashDeliveryTitle">طلب توصيل من الخريطة</h2>
         <div class="grid-apps">
           <details class="delivery-dropdown" id="deliveryDetails">
             <summary>
@@ -709,6 +1312,22 @@
       </main>
     </div>
 
+    <footer class="dash-site-footer">
+      <div class="dash-site-footer__logo">ERVENOW</div>
+      <nav class="dash-site-footer__links" aria-label="روابط سفلية">
+        <a class="dash-site-footer__link" href="/restaurants">مطاعم</a>
+        <a class="dash-site-footer__link" href="/stores">متاجر</a>
+        <a class="dash-site-footer__link" href="/delivery-services.html">توصيل</a>
+        <a class="dash-site-footer__link" href="/services">خدمات</a>
+        <a class="dash-site-footer__link" href="#dashDeliveryTitle">طلب من الخريطة</a>
+        <a class="dash-site-footer__link" href="/start-now.html">ابدأ الآن</a>
+        <a class="dash-site-footer__link" href="/">الرئيسية</a>
+      </nav>
+      <p class="dash-site-footer__copy">© 2026 ERVENOW — جميع الحقوق محفوظة</p>
+    </footer>
+    </div>
+
+    <script src="/assets/cart.js"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="/assets/api-config.js"></script>
     <script src="/assets/api.js"></script>
@@ -1140,21 +1759,117 @@
         }
       }
 
+      function roleLabelAr(role) {
+        var map = {
+          admin: "مدير",
+          customer: "عميل",
+          driver: "مندوب",
+          merchant: "تاجر",
+          provider: "مزود خدمة",
+        };
+        return map[role] || role;
+      }
+
+      function roleAvatar(role) {
+        var map = { admin: "⚙️", customer: "👤", driver: "🚗", merchant: "🏪", provider: "🔧" };
+        return map[role] || "👤";
+      }
+
+      function showDashAlert(kind, html) {
+        var dash = document.getElementById("dashStatus");
+        if (!dash) return;
+        dash.className = "dash-alert dash-alert--" + kind;
+        dash.innerHTML = html;
+        dash.style.display = "block";
+      }
+
+      function hideDashAlert() {
+        var dash = document.getElementById("dashStatus");
+        if (!dash) return;
+        dash.style.display = "none";
+        dash.textContent = "";
+        dash.className = "dash-alert";
+      }
+
+      function fmtWalletMoney(n) {
+        var x = Number(n);
+        if (!Number.isFinite(x)) x = 0;
+        try {
+          return x.toLocaleString("ar-SA", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        } catch (e) {
+          return x.toFixed(2);
+        }
+      }
+
+      function refreshDashCartBadge() {
+        if (typeof updateCartCount === "function") updateCartCount();
+        var badge = document.getElementById("cartCount");
+        if (!badge) return;
+        var n = parseInt(badge.textContent, 10) || 0;
+        badge.setAttribute("data-empty", n > 0 ? "false" : "true");
+      }
+
+      async function refreshDashHeaderWallet(role) {
+        var box = document.getElementById("dashHeaderWallet");
+        var amountEl = document.getElementById("dashHeaderWalletAmount");
+        if (!box || !amountEl) return;
+        role = String(role || "").toLowerCase();
+        if (!dashHasToken()) {
+          box.hidden = false;
+          box.setAttribute("href", "/login?role=customer");
+          amountEl.textContent = "—";
+          return;
+        }
+        if (role === "admin") {
+          box.hidden = true;
+          return;
+        }
+        box.hidden = false;
+        var href = "/wallet.html";
+        if (role === "driver") href = "/driver-wallet";
+        if (role === "merchant" || role === "restaurant") href = "/store-dashboard#wallet";
+        box.setAttribute("href", href);
+        amountEl.textContent = "…";
+        try {
+          var bal = 0;
+          if (role === "driver") {
+            var j = await window.PlatformAPI.api("/api/driver/wallet");
+            bal = Number(j.balance) || 0;
+          } else if (role === "merchant" || role === "restaurant") {
+            try {
+              var md = await window.PlatformAPI.api("/api/store/merchant-dashboard");
+              bal = Number((md.wallet && md.wallet.balance) || 0);
+            } catch (em) {
+              var w2 = await window.PlatformAPI.api("/api/wallet");
+              bal = Number(w2.balance) || 0;
+            }
+          } else {
+            var w = await window.PlatformAPI.api("/api/wallet");
+            bal = Number(w.balance) || 0;
+          }
+          amountEl.textContent = fmtWalletMoney(bal);
+        } catch (e) {
+          amountEl.textContent = "—";
+        }
+      }
+
       async function run() {
         var dash = document.getElementById("dashStatus");
         var switchAccount = document.getElementById("switchAccount");
         if (!dashHasToken()) {
           if (document.getElementById("profileCard")) document.getElementById("profileCard").style.display = "none";
-          if (dash) {
-            dash.style.display = "block";
-            dash.textContent =
-              "أنت تتصفّح كزائر — يمكنك استكشاف الأقسام وحساب المسافة. لتنفيذ طلب توصيل سجّل الدخول من الزر أعلاه.";
-          }
+          showDashAlert(
+            "guest",
+            "أنت تتصفّح كزائر — استكشف الأقسام وحسّب المسافة. لتنفيذ طلب توصيل <a href=\"/login?role=customer\">سجّل الدخول</a>."
+          );
           if (switchAccount) {
+            switchAccount.style.display = "";
             switchAccount.textContent = "تسجيل الدخول";
-            switchAccount.className = "btn btn-primary";
+            switchAccount.className = "dash-site-header__btn dash-site-header__btn--primary";
             switchAccount.setAttribute("href", "/login?role=customer");
           }
+          refreshDashHeaderWallet("");
+          refreshDashCartBadge();
           enableCreate();
           return;
         }
@@ -1165,45 +1880,50 @@
             location.href = "/driver";
             return;
           }
-          if (dash) {
-            dash.style.display = "none";
-            dash.textContent = "";
-          }
-          if (role === "admin" && dash) {
-            dash.style.display = "block";
-            dash.textContent =
-              "تنبيه للأدمن: يمكنك تصفّح المنصة كزائر ثم العودة للوحة الإدارة من الرئيسية.";
+          hideDashAlert();
+          if (role === "admin") {
+            showDashAlert(
+              "admin",
+              "تنبيه للأدمن: يمكنك تصفّح المنصة كزائر ثم العودة إلى <a href=\"/admin\">لوحة الإدارة</a>."
+            );
           }
           document.getElementById("profileCard").style.display = "block";
-          document.getElementById("roleBadge").textContent = role;
+          document.getElementById("roleBadge").textContent = roleLabelAr(role);
           document.getElementById("phoneLine").textContent = me.user.phone || me.user.email || me.user.id;
-          if (switchAccount) {
-            switchAccount.textContent = "تسجيل الخروج / تبديل الحساب";
-            switchAccount.className = "btn btn-ghost";
-            switchAccount.setAttribute("href", "/login?role=customer");
-          }
+          var avatar = document.getElementById("profileAvatar");
+          if (avatar) avatar.textContent = roleAvatar(role);
+          if (switchAccount) switchAccount.style.display = "none";
+          await refreshDashHeaderWallet(role);
         } catch (e) {
-          if (dash) {
-            dash.style.display = "block";
-            dash.textContent = e.message || "تعذر تحميل الحساب";
-          }
+          showDashAlert("guest", e.message || "تعذّر تحميل الحساب");
+          refreshDashHeaderWallet("");
         }
+        refreshDashCartBadge();
         enableCreate();
       }
 
+      (function initDashTabs() {
+        var nav = document.querySelector(".dash-tabs__nav");
+        if (!nav) return;
+        var tabs = nav.querySelectorAll('[role="tab"]');
+        var panels = document.querySelectorAll(".dash-tabs__panel");
+        tabs.forEach(function (tab) {
+          tab.addEventListener("click", function () {
+            var id = tab.getAttribute("data-tab");
+            tabs.forEach(function (t) {
+              var active = t === tab;
+              t.setAttribute("aria-selected", active ? "true" : "false");
+              t.classList.toggle("is-active", active);
+            });
+            panels.forEach(function (p) {
+              p.hidden = p.id !== "panel-" + id;
+            });
+          });
+        });
+      })();
+
       (function initServiceCardsUi() {
         var deliveryDetails = document.getElementById("deliveryDetails");
-        var switchAccount = document.getElementById("switchAccount");
-        if (switchAccount) {
-          switchAccount.addEventListener("click", function (e) {
-            e.preventDefault();
-            try {
-              localStorage.removeItem("userPhone");
-            } catch (err) {}
-            if (window.PlatformAPI && PlatformAPI.setToken) window.PlatformAPI.setToken("");
-            window.location.href = "/login?role=customer";
-          });
-        }
         if (deliveryDetails) {
           deliveryDetails.addEventListener("toggle", function () {
             if (deliveryDetails.open) {
@@ -1219,6 +1939,10 @@
       })();
 
       run();
+      refreshDashCartBadge();
+      window.addEventListener("storage", function (ev) {
+        if (ev.key === "cart") refreshDashCartBadge();
+      });
       window.addEventListener("resize", function () {
         refreshMapSize();
       });
@@ -1240,6 +1964,5 @@
         }
       });
     </script>
-    </div>
   </body>
 </html>

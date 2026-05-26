@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="theme-color" content="#f8f8f8" />
+    <meta name="theme-color" content="#f8f4ee" />
     <title>ERVENOW | خدمات التوصيل</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -15,20 +15,20 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
       :root {
-        --ds-bg: #f8f8f8;
-        --ds-white: #ffffff;
-        --ds-black: #1a1a1a;
-        --ds-gold: #c9a24a;
-        --ds-gold-soft: rgba(201, 162, 74, 0.14);
-        --ds-green: #2e9e5b;
-        --ds-border: #e8e4dc;
-        --ds-muted: #8a8580;
+        --ds-bg: var(--bg, #f8f4ee);
+        --ds-white: var(--card, #fffefb);
+        --ds-black: var(--brown, #3d2213);
+        --ds-gold: var(--gold, #b9872f);
+        --ds-gold-soft: rgba(185, 135, 47, 0.14);
+        --ds-green: #2e7d4a;
+        --ds-border: var(--border, rgba(61, 34, 19, 0.12));
+        --ds-muted: var(--muted, #5c4a3d);
         --ds-radius: 16px;
         --ds-radius-sm: 12px;
-        --ds-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+        --ds-shadow: 0 4px 20px rgba(45, 26, 14, 0.06);
         --ds-max: 100%;
         --ds-page: 1120px;
-        --ds-nav-h: 72px;
+        --ds-nav-h: 68px;
         --ds-pad-x: 16px;
       }
 
@@ -55,6 +55,59 @@
 
       .ds-topbar__nav {
         display: none;
+      }
+
+      .ds-topbar__back {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 12px;
+        border-radius: 10px;
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: var(--ds-muted);
+        text-decoration: none;
+        border: 1px solid var(--ds-border);
+        background: var(--ds-white);
+      }
+
+      .ds-topbar__back:hover {
+        color: var(--ds-black);
+        border-color: rgba(185, 135, 47, 0.35);
+      }
+
+      .ds-crumb {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+        margin: 0 0 16px;
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: var(--ds-muted);
+      }
+
+      .ds-crumb a {
+        color: var(--ds-gold);
+        text-decoration: none;
+        font-weight: 700;
+      }
+
+      .ds-crumb a:hover { text-decoration: underline; }
+
+      .ds-crumb__sep { opacity: 0.45; }
+
+      .ds-lead {
+        margin: -6px 0 16px;
+        padding: 12px 14px;
+        border-radius: var(--ds-radius-sm);
+        background: rgba(185, 135, 47, 0.08);
+        border: 1px solid rgba(185, 135, 47, 0.18);
+        font-size: 0.88rem;
+        font-weight: 600;
+        line-height: 1.6;
+        color: var(--ds-muted);
+        text-align: center;
       }
 
       /* ——— Top bar ——— */
@@ -116,14 +169,14 @@
         width: 36px;
         height: 36px;
         border-radius: 50%;
-        background: linear-gradient(145deg, #e8d5a8, var(--ds-gold));
-        color: var(--ds-white);
+        background: linear-gradient(145deg, #d4b06a, var(--ds-gold));
+        color: #fffef8;
         font-weight: 800;
         font-size: 1.1rem;
         display: flex;
         align-items: center;
         justify-content: center;
-        box-shadow: 0 4px 12px rgba(201, 162, 74, 0.35);
+        box-shadow: 0 4px 12px rgba(185, 135, 47, 0.35);
       }
 
       .ds-topbar__logo-text {
@@ -140,17 +193,18 @@
       .ds-hero {
         position: relative;
         padding: 20px var(--ds-pad-x) 24px;
-        background: linear-gradient(180deg, #eef0f4 0%, #f8f8f8 100%);
+        background: linear-gradient(135deg, #fffefb 0%, #f5ede2 55%, var(--ds-bg) 100%);
         overflow: hidden;
+        border-bottom: 1px solid var(--ds-border);
       }
 
       .ds-hero::before {
         content: "";
         position: absolute;
         inset: 0;
-        background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 120' preserveAspectRatio='none'%3E%3Cpath fill='%23d0d4dc' fill-opacity='0.35' d='M0 80 L40 70 L80 75 L120 60 L160 65 L200 55 L240 62 L280 50 L320 58 L360 48 L400 52 L400 120 L0 120 Z'/%3E%3C/svg%3E")
-          bottom center / 100% 45% no-repeat;
-        opacity: 0.7;
+        background:
+          radial-gradient(circle at 15% 30%, rgba(185, 135, 47, 0.1) 0%, transparent 45%),
+          radial-gradient(circle at 85% 70%, rgba(61, 34, 19, 0.05) 0%, transparent 50%);
         pointer-events: none;
       }
 
@@ -206,11 +260,24 @@
       }
 
       .ds-section-title {
-        margin: 20px 0 14px;
+        margin: 0 0 6px;
         font-size: 1.05rem;
         font-weight: 800;
-        text-align: center;
+        text-align: right;
         color: var(--ds-black);
+      }
+
+      .ds-section-block {
+        margin-bottom: 20px;
+      }
+
+      .ds-section-block__hint {
+        margin: 0 0 14px;
+        font-size: 0.84rem;
+        font-weight: 600;
+        color: var(--ds-muted);
+        line-height: 1.5;
+        text-align: right;
       }
 
       .ds-welcome {
@@ -219,6 +286,25 @@
 
       .ds-lead-hidden {
         display: none;
+      }
+
+      .ds-svc__badge {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        padding: 2px 8px;
+        border-radius: 999px;
+        font-size: 0.62rem;
+        font-weight: 800;
+        background: rgba(46, 125, 74, 0.12);
+        color: var(--ds-green);
+        border: 1px solid rgba(46, 125, 74, 0.25);
+      }
+
+      .ds-svc__badge--soon {
+        background: rgba(185, 135, 47, 0.12);
+        color: var(--ds-gold);
+        border-color: rgba(185, 135, 47, 0.28);
       }
 
       /* Service cards horizontal scroll */
@@ -301,10 +387,14 @@
       }
 
       .ds-svc.is-active {
-        background: var(--ds-black);
+        background: linear-gradient(180deg, #3d2213 0%, #2b170d 100%);
         border-color: var(--ds-gold);
-        color: var(--ds-white);
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+        color: #f8f4ee;
+        box-shadow: 0 8px 24px rgba(45, 26, 14, 0.22);
+      }
+
+      .ds-svc.is-soon:not(.is-active) {
+        opacity: 0.92;
       }
 
       .ds-svc.is-active .ds-svc__ic {
@@ -312,7 +402,13 @@
       }
 
       .ds-svc.is-active .ds-svc__desc {
-        color: rgba(255, 255, 255, 0.75);
+        color: rgba(248, 244, 238, 0.78);
+      }
+
+      .ds-svc.is-active .ds-svc__badge {
+        background: rgba(248, 244, 238, 0.14);
+        color: #f8f4ee;
+        border-color: rgba(248, 244, 238, 0.28);
       }
 
       .ds-svc.is-active .ds-svc__check {
@@ -407,7 +503,7 @@
       .ds-row input,
       .ds-row textarea {
         width: 100%;
-        padding: 12px 12px 12px 36px;
+        padding: 12px;
         border: 1px solid var(--ds-border);
         border-radius: var(--ds-radius-sm);
         background: var(--ds-white);
@@ -428,12 +524,7 @@
 
       .ds-row textarea {
         min-height: 88px;
-        padding: 12px;
         resize: vertical;
-      }
-
-      .ds-row--full textarea {
-        padding: 12px 40px 12px 12px;
       }
 
       .ds-advanced {
@@ -630,13 +721,13 @@
         padding: 16px 20px;
         border: none;
         border-radius: var(--ds-radius-sm);
-        background: linear-gradient(180deg, #d9b96a, var(--ds-gold));
-        color: var(--ds-black);
+        background: linear-gradient(180deg, #c99a3d, var(--ds-gold));
+        color: #fffef8;
         font-family: inherit;
         font-size: 1.05rem;
         font-weight: 800;
         cursor: pointer;
-        box-shadow: 0 8px 24px rgba(201, 162, 74, 0.35);
+        box-shadow: 0 8px 24px rgba(185, 135, 47, 0.35);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -645,6 +736,45 @@
 
       #dsSubmit:active {
         transform: scale(0.99);
+      }
+
+      .ds-quicklinks {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 18px;
+      }
+
+      .ds-quicklinks a {
+        flex: 1 1 calc(50% - 4px);
+        min-width: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        padding: 10px 12px;
+        border-radius: 999px;
+        font-size: 0.82rem;
+        font-weight: 800;
+        text-decoration: none;
+        color: var(--ds-black);
+        background: var(--ds-white);
+        border: 1px solid var(--ds-border);
+        box-shadow: var(--ds-shadow);
+      }
+
+      .ds-quicklinks a:hover {
+        border-color: rgba(185, 135, 47, 0.35);
+      }
+
+      @media (min-width: 640px) {
+        .ds-quicklinks a { flex: 1 1 auto; }
+      }
+
+      .ds-form-zone {
+        margin-top: 8px;
+        padding-top: 16px;
+        border-top: 1px dashed rgba(61, 34, 19, 0.12);
       }
 
       .ds-coming {
@@ -737,16 +867,16 @@
         margin-top: -22px;
       }
 
-      .ds-bottomnav__home-btn {
+        .ds-bottomnav__home-btn {
         width: 52px;
         height: 52px;
         border-radius: 50%;
-        background: linear-gradient(180deg, #e0c078, var(--ds-gold));
+        background: linear-gradient(180deg, #c99a3d, var(--ds-gold));
         display: flex;
         align-items: center;
         justify-content: center;
         font-size: 1.35rem;
-        box-shadow: 0 6px 20px rgba(201, 162, 74, 0.45);
+        box-shadow: 0 6px 20px rgba(185, 135, 47, 0.4);
         border: 3px solid var(--ds-white);
       }
 
@@ -917,7 +1047,7 @@
 
         body.ds-page {
           padding-bottom: 40px;
-          background: linear-gradient(180deg, #eceef2 0%, var(--ds-bg) 120px);
+          background: linear-gradient(180deg, #f5ede2 0%, var(--ds-bg) 120px);
         }
 
         .ds-app {
@@ -927,6 +1057,10 @@
         .ds-topbar {
           padding: 14px var(--ds-pad-x);
           gap: 16px;
+        }
+
+        .ds-topbar__back {
+          display: none;
         }
 
         .ds-topbar__menu {
@@ -1014,7 +1148,7 @@
 
         .ds-section-title {
           font-size: 1.25rem;
-          margin-top: 28px;
+          margin-top: 0;
         }
 
         .ds-services {
@@ -1170,22 +1304,20 @@
   <body class="ds-page">
     <div class="ds-app">
       <header class="ds-topbar">
-        <a class="ds-topbar__menu" href="/" aria-label="القائمة">☰</a>
+        <a class="ds-topbar__back" href="/dashboard">← لوحة الزائر</a>
         <a class="ds-topbar__logo" href="/">
           <span class="ds-topbar__logo-e">E</span>
           <span class="ds-topbar__logo-text">ERVE<span>NOW</span></span>
         </a>
         <nav class="ds-topbar__nav" aria-label="التنقل الرئيسي">
-          <a href="/account.html">الحساب</a>
-          <a href="/offers.html">العروض</a>
-          <a href="/" class="is-active">الرئيسية</a>
-          <a href="/orders.html">طلباتي</a>
-          <a href="/more.html">المزيد</a>
+          <a href="/dashboard">لوحة الزائر</a>
+          <a href="/start-now.html">ابدأ الآن</a>
+          <a href="/delivery-services.html" class="is-active">توصيل</a>
+          <a href="/services">خدمات</a>
+          <a href="/stores">متاجر</a>
+          <a href="/restaurants">مطاعم</a>
         </nav>
-        <a class="ds-topbar__bell" href="/notifications.html" aria-label="الإشعارات">
-          🔔
-          <span class="ds-topbar__bell-badge">3</span>
-        </a>
+        <a class="ds-topbar__menu" href="/" aria-label="الرئيسية">🏠</a>
       </header>
 
       <section class="ds-hero">
@@ -1201,24 +1333,45 @@
               <span class="ds-hero__title-ic" aria-hidden="true">🚚</span>
               خدمات التوصيل
             </h1>
-            <p class="ds-hero__sub">اختر الخدمة وأكمل طلبك بسهولة وأمان</p>
+            <p class="ds-hero__sub">نقل مركبات، توصيل داخلي، أثاث، وغاز — اختر الخدمة وأكمل الطلب من نموذج واحد منظم.</p>
           </div>
         </div>
       </section>
 
       <main class="ds-main">
-        <h2 class="ds-section-title">اختر الخدمة</h2>
-        <p class="ds-lead-hidden" id="dsLeadMuted">
-          اختر الخدمة ثم أكمل النموذج. التسعير يُحسب من مسافة الطريق بين نقطتي الاستلام والتسليم.
-        </p>
+        <nav class="ds-crumb" aria-label="مسار التصفح">
+          <a href="/">الرئيسية</a>
+          <span class="ds-crumb__sep" aria-hidden="true">/</span>
+          <a href="/dashboard">لوحة الزائر</a>
+          <span class="ds-crumb__sep" aria-hidden="true">/</span>
+          <span aria-current="page">خدمات التوصيل</span>
+        </nav>
 
-        <div class="ds-services-wrap">
-          <div class="ds-services" id="dsServiceChips" role="tablist" aria-label="نوع الخدمة"></div>
+        <div class="ds-quicklinks" aria-label="اختصارات">
+          <a href="/dashboard#dashDeliveryTitle">🗺️ توصيل من الخريطة</a>
+          <a href="/order">📦 طلب توصيل سريع</a>
+          <a href="/start-now.html">✨ ابدأ الآن</a>
+          <a href="/">🏠 الرئيسية</a>
         </div>
+
+        <section class="ds-section-block" aria-labelledby="dsQuickTitle">
+          <h2 class="ds-section-title" id="dsQuickTitle">١ — اختر نوع الخدمة</h2>
+          <p class="ds-section-block__hint" id="dsLeadMuted">
+            التسعير يُحسب من مسافة الطريق بين نقطتي الاستلام والتسليم. «نقل المركبات» متاح الآن؛ باقي الخدمات قريباً.
+          </p>
+
+          <div class="ds-services-wrap">
+            <div class="ds-services" id="dsServiceChips" role="tablist" aria-label="نوع الخدمة"></div>
+          </div>
+        </section>
 
         <div class="ds-welcome" id="dsWelcome" hidden></div>
 
-        <div id="dsFormMount"></div>
+        <section class="ds-section-block ds-form-zone" aria-labelledby="dsFormTitle">
+          <h2 class="ds-section-title" id="dsFormTitle">٢ — أكمل تفاصيل الطلب</h2>
+          <p class="ds-section-block__hint">املأ النموذج أدناه بعد اختيار الخدمة المناسبة.</p>
+          <div id="dsFormMount"></div>
+        </section>
 
         <p class="ds-err" id="dsErr" role="alert"></p>
         <p class="ds-ok" id="dsOk" role="status"></p>
@@ -1227,11 +1380,11 @@
 
     <nav class="ds-bottomnav" aria-label="التنقل السفلي">
       <div class="ds-bottomnav__inner">
-        <a href="/account.html"><span class="ds-bottomnav__ic">👤</span>الحساب</a>
-        <a href="/offers.html"><span class="ds-bottomnav__ic">🏷️</span>العروض</a>
-        <a href="/" class="is-active is-home"><span class="ds-bottomnav__home-btn">🏠</span>الرئيسية</a>
-        <a href="/orders.html"><span class="ds-bottomnav__ic">📋</span>طلباتي</a>
-        <a href="/more.html"><span class="ds-bottomnav__ic">⋯</span>المزيد</a>
+        <a href="/dashboard"><span class="ds-bottomnav__ic">📋</span>لوحة الزائر</a>
+        <a href="/stores"><span class="ds-bottomnav__ic">🛒</span>متاجر</a>
+        <a href="/" class="is-home"><span class="ds-bottomnav__home-btn">🏠</span>الرئيسية</a>
+        <a href="/delivery-services.html" class="is-active"><span class="ds-bottomnav__ic">🚚</span>توصيل</a>
+        <a href="/services"><span class="ds-bottomnav__ic">🔧</span>خدمات</a>
       </div>
     </nav>
 
@@ -1366,9 +1519,18 @@
             if (!s) return;
             var b = document.createElement("button");
             b.type = "button";
-            b.className = "ds-svc" + (s.id === state.service ? " is-active" : "");
+            b.className =
+              "ds-svc" +
+              (s.id === state.service ? " is-active" : "") +
+              (s.ready ? "" : " is-soon");
             b.setAttribute("role", "tab");
+            b.setAttribute("aria-selected", s.id === state.service ? "true" : "false");
             b.innerHTML =
+              '<span class="ds-svc__badge' +
+              (s.ready ? "" : " ds-svc__badge--soon") +
+              '">' +
+              (s.ready ? "متاح" : "قريباً") +
+              "</span>" +
               '<span class="ds-svc__check" aria-hidden="true">✓</span>' +
               '<span class="ds-svc__ic" aria-hidden="true">' +
               (SERVICE_ICONS[s.id] || "📦") +
@@ -1529,8 +1691,11 @@
 
         function renderComingSoon() {
           clearPreviewMaps();
+          var label = (SERVICES.filter(function (x) { return x.id === state.service; })[0] || {}).label || "هذه الخدمة";
           document.getElementById("dsFormMount").innerHTML =
-            "<div class='ds-coming'>هذه الخدمة قريباً. يمكنك استخدام <a href='?service=car_transport'>نقل المركبات</a> الآن.</div>";
+            "<div class='ds-coming'><strong>" +
+            label +
+            "</strong> — قريباً على المنصة.<br>يمكنك الآن استخدام <a href='?service=car_transport'>نقل المركبات</a> أو <a href='/dashboard#dashDeliveryTitle'>التوصيل من الخريطة</a>.</div>";
         }
 
         function renderCarForm() {
@@ -1548,12 +1713,12 @@
           }).join("");
           mount.innerHTML =
             "<form class='ds-form' id='dsCarForm'>" +
-            "<div class='ds-form-head'><h2>تفاصيل الطلب</h2><span class='ds-step'>1/5</span></div>" +
+            "<div class='ds-form-head'><h2>نقل المركبات</h2><span class='ds-step'>الخطوة 2 من 2</span></div>" +
             "<div class='ds-card'>" +
             "<div class='ds-field-grid-3'>" +
-            "<div class='ds-row'><label>نوع المركبة</label><div class='ds-field'><span class='ds-field-ic'>🚗</span><select id='dsVehCat' required><option value='sedan'>سيدان</option><option value='van'>فان</option><option value='suv'>جيب</option></select></div></div>" +
-            "<div class='ds-row'><label>حالة المركبة</label><div class='ds-field'><span class='ds-field-ic'>🛡️</span><select id='dsVehCond' required><option value='working'>صالحة</option><option value='damaged'>مصدوم</option><option value='broken'>معطل</option><option value='appraisal'>تقديرات</option></select></div></div>" +
-            "<div class='ds-row'><label>نوع النقل</label><div class='ds-field'><span class='ds-field-ic'>🌐</span><select id='dsTransfer' required><option value='internal'>نقل داخلي</option><option value='external'>نقل خارجي</option></select></div></div>" +
+            "<div class='ds-row'><label>نوع المركبة</label><div class='ds-field'><select id='dsVehCat' required><option value='sedan'>سيدان</option><option value='van'>فان</option><option value='suv'>جيب</option></select></div></div>" +
+            "<div class='ds-row'><label>حالة المركبة</label><div class='ds-field'><select id='dsVehCond' required><option value='working'>صالحة</option><option value='damaged'>مصدوم</option><option value='broken'>معطل</option><option value='appraisal'>تقديرات</option></select></div></div>" +
+            "<div class='ds-row'><label>نوع النقل</label><div class='ds-field'><select id='dsTransfer' required><option value='internal'>نقل داخلي</option><option value='external'>نقل خارجي</option></select></div></div>" +
             "</div>" +
             "<details class='ds-advanced'><summary>خيارات متقدمة (صناعية / مدن)</summary>" +
             "<div class='ds-field-grid-3' style='margin-top:10px'>" +
@@ -1589,8 +1754,8 @@
             "</div>" +
             "<div class='ds-card ds-notes-phone'>" +
             "<div class='ds-field-grid-3 ds-notes-phone__grid'>" +
-            "<div class='ds-row ds-row--full'><label>ملاحظات إضافية (اختياري)</label><div class='ds-field'><span class='ds-field-ic'>✏️</span><textarea id='dsNotes' rows='3' placeholder='اكتب أي ملاحظات خاصة بطلبك...'></textarea></div></div>" +
-            "<div class='ds-row'><label>رقم الجوال</label><div class='ds-field'><span class='ds-field-ic'>📱</span><input id='dsPhone' type='tel' placeholder='05xxxxxxxx' dir='ltr' /></div></div>" +
+            "<div class='ds-row ds-row--full'><label>ملاحظات إضافية (اختياري)</label><div class='ds-field'><textarea id='dsNotes' rows='3' placeholder='اكتب أي ملاحظات خاصة بطلبك...'></textarea></div></div>" +
+            "<div class='ds-row'><label>رقم الجوال</label><div class='ds-field'><input id='dsPhone' type='tel' placeholder='05xxxxxxxx' dir='ltr' /></div></div>" +
             "</div>" +
             "</div>" +
             "<div class='ds-price-box'>" +
