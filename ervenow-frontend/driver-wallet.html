@@ -66,6 +66,10 @@
       async function loadWallet() {
         try {
           var w = await window.PlatformAPI.api("/api/wallet");
+          if (w.setup_required && w.message) {
+            showError(w.message);
+            return;
+          }
           document.getElementById("balanceLine").innerText =
             "الرصيد الحالي: " + (w.balance || 0) +
             " ريال | إجمالي المكتسب: " + (w.total_earned || 0) +
@@ -73,6 +77,10 @@
         } catch (e1) {
           try {
             var dw = await window.PlatformAPI.api("/api/driver/wallet");
+            if (dw.setup_required && dw.message) {
+              showError(dw.message);
+              return;
+            }
             document.getElementById("balanceLine").innerText =
               "الرصيد الحالي: " + (dw.balance || 0) +
               " ريال | إجمالي المكتسب: " + (dw.total_earned || 0) +

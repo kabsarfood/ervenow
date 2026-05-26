@@ -539,6 +539,56 @@ BEGIN
 END;
 $$;
 
+CREATE OR REPLACE FUNCTION public.ervenow_ledger_user_wallet_summary(p_user_id uuid, p_role text)
+RETURNS jsonb
+LANGUAGE plpgsql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  wid uuid;
+  v_balance numeric(14, 2);
+  v_earned numeric(14, 2);
+  v_commission numeric(14, 2);
+  v_tx_count bigint;
+BEGIN
+  IF p_user_id IS NULL THEN
+    RETURN jsonb_build_object('ok', false, 'reason', 'missing_user_id');
+  END IF;
+
+  wid := public.ervenow_ledger_ensure_wallet(p_user_id, coalesce(p_role, 'customer'));
+  v_balance := public.ervenow_ledger_wallet_balance(wid);
+
+  SELECT count(*) INTO v_tx_count
+  FROM public.ervenow_ledger_transactions t
+  WHERE t.wallet_id = wid AND t.status = 'completed';
+
+  SELECT round(coalesce(sum(t.amount), 0)::numeric, 2) INTO v_earned
+  FROM public.ervenow_ledger_transactions t
+  WHERE t.wallet_id = wid
+    AND t.status = 'completed'
+    AND t.direction = 'credit'
+    AND t.type IN ('earning', 'deposit');
+
+  SELECT round(coalesce(sum(t.amount), 0)::numeric, 2) INTO v_commission
+  FROM public.ervenow_ledger_transactions t
+  WHERE t.wallet_id = wid
+    AND t.status = 'completed'
+    AND t.direction = 'debit'
+    AND t.type = 'commission';
+
+  RETURN jsonb_build_object(
+    'ok', true,
+    'wallet_id', wid,
+    'balance', v_balance,
+    'total_earned', v_earned,
+    'total_commission', v_commission,
+    'transaction_count', v_tx_count
+  );
+END;
+$$;
+
 CREATE OR REPLACE FUNCTION public.ervenow_ledger_credit(
   p_user_id uuid,
   p_amount numeric,
@@ -662,6 +712,7 @@ GRANT EXECUTE ON FUNCTION public.ervenow_ledger_settle_service_booking(uuid) TO 
 GRANT EXECUTE ON FUNCTION public.settlement_log_try_claim(uuid, text, text, jsonb) TO authenticated, service_role;
 GRANT EXECUTE ON FUNCTION public.ledger_withdraw_request_approve(uuid) TO authenticated, service_role;
 GRANT EXECUTE ON FUNCTION public.ervenow_ledger_withdraw_atomic(uuid) TO authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.ervenow_ledger_user_wallet_summary(uuid, text) TO authenticated, service_role;
 GRANT EXECUTE ON FUNCTION public.ervenow_ledger_credit(uuid, numeric, text, text) TO authenticated, service_role;
 
 NOTIFY pgrst, 'reload schema';

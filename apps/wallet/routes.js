@@ -101,7 +101,7 @@ router.get("/me", requireAuth, requireRole(...WALLET_READ_ROLES), async (req, re
     const payload = await getWalletMePayload(req.supabase, req.appUser.id, req.appUser.role);
     ok(res, payload);
   } catch (e) {
-    fail(res, e.message, 500);
+    fail(res, e.message || "تعذر تحميل المحفظة", 500);
   }
 });
 
@@ -110,7 +110,7 @@ router.get("/", requireAuth, requireRole(...WALLET_READ_ROLES), async (req, res)
     const payload = await operationalWalletPayload(req);
     ok(res, payload);
   } catch (e) {
-    fail(res, e.message, 500);
+    fail(res, e.message || "تعذر تحميل المحفظة", 500);
   }
 });
 

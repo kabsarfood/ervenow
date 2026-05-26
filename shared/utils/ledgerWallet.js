@@ -186,9 +186,11 @@ async function getWalletMePayload(sb, userId, appRole) {
 
   if (!ledger.ok) {
     if (ledger.reason === "migration_missing") {
-      const err = new Error("ervenow_ledger migrations required");
-      err.code = "E_LEDGER_MIGRATION";
-      throw err;
+      return {
+        ...emptyLedgerWalletPayload("migration_missing"),
+        setup_required: true,
+        message: "نظام المحفظة غير مفعّل — نفّذ هجرة ledger في Supabase",
+      };
     }
     return emptyLedgerWalletPayload(ledger.reason);
   }
@@ -265,18 +267,28 @@ async function getLedgerUserWalletSummary(sb, userId, appRole) {
  * @param {string} appRole
  */
 async function getWalletPayloadWithLedgerFallback(sb, userId, appRole) {
-  const ledger = await getLedgerUserWalletSummary(sb, userId, appRole);
-  if (!ledger.ok && ledger.reason === "migration_missing") {
-    const err = new Error("ervenow_ledger migrations required");
-    err.code = "E_LEDGER_MIGRATION";
-    throw err;
+  let ledger = await computeLedgerWalletFromAllTransactions(sb, userId, appRole);
+  if (!ledger.ok) {
+    ledger = await getLedgerUserWalletSummary(sb, userId, appRole);
   }
+
+  if (!ledger.ok) {
+    if (ledger.reason === "migration_missing") {
+      return {
+        ...emptyLedgerWalletPayload("migration_missing"),
+        setup_required: true,
+        message: "نظام المحفظة غير مفعّل — نفّذ هجرة ledger في Supabase",
+      };
+    }
+    return emptyLedgerWalletPayload(ledger.reason);
+  }
+
   return {
-    balance: ledger.ok ? ledger.balance : 0,
-    total_earned: ledger.ok ? ledger.total_earned : 0,
-    total_commission: ledger.ok ? ledger.total_commission : 0,
+    balance: ledger.balance,
+    total_earned: ledger.total_earned,
+    total_commission: ledger.total_commission,
     wallet_mode: "ledger",
-    layer: "ervenow_ledger_transactions",
+    layer: ledger.layer || "ervenow_ledger_transactions",
     wallet_id: ledger.wallet_id || null,
     source: "ervenow_ledger",
   };

@@ -130,6 +130,19 @@ describe("ledgerWallet", () => {
 
   test("uses ledger when has_data via getWalletPayloadWithLedgerFallback", async () => {
     const sb = {
+      from: jest.fn(() => ({
+        select: () => ({
+          eq: () => ({
+            eq: () => ({
+              maybeSingle: () =>
+                Promise.resolve({
+                  data: null,
+                  error: { message: 'relation "ervenow_ledger_wallets" does not exist' },
+                }),
+            }),
+          }),
+        }),
+      })),
       rpc: jest.fn().mockResolvedValue({
         data: {
           ok: true,
@@ -151,6 +164,15 @@ describe("ledgerWallet", () => {
 
   test("getWalletPayloadWithLedgerFallback returns zero when ledger empty", async () => {
     const sb = {
+      from: jest.fn(() => ({
+        select: () => ({
+          eq: () => ({
+            eq: () => ({
+              maybeSingle: () => Promise.resolve({ data: null, error: null }),
+            }),
+          }),
+        }),
+      })),
       rpc: jest.fn().mockResolvedValue({
         data: {
           ok: true,
