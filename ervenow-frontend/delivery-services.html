@@ -8,10 +8,11 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="/assets/styles.css" />
+    <link rel="stylesheet" href="/assets/guest-shell.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
       :root {
@@ -27,8 +28,6 @@
         --ds-radius-sm: 12px;
         --ds-shadow: 0 4px 20px rgba(45, 26, 14, 0.06);
         --ds-max: 100%;
-        --ds-page: 1120px;
-        --ds-nav-h: 68px;
         --ds-pad-x: 16px;
       }
 
@@ -36,44 +35,8 @@
         box-sizing: border-box;
       }
 
-      body.ds-page {
-        margin: 0;
-        min-height: 100vh;
-        font-family: var(--font);
+      .guest-shell-page {
         line-height: 1.5;
-        color: var(--ds-black);
-        background: var(--ds-bg);
-        padding-bottom: calc(var(--ds-nav-h) + env(safe-area-inset-bottom, 0px));
-      }
-
-      .ds-app {
-        width: 100%;
-        max-width: var(--ds-page);
-        margin: 0 auto;
-        background: var(--ds-bg);
-      }
-
-      .ds-topbar__nav {
-        display: none;
-      }
-
-      .ds-topbar__back {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        padding: 8px 12px;
-        border-radius: 10px;
-        font-size: 0.85rem;
-        font-weight: 700;
-        color: var(--ds-muted);
-        text-decoration: none;
-        border: 1px solid var(--ds-border);
-        background: var(--ds-white);
-      }
-
-      .ds-topbar__back:hover {
-        color: var(--ds-black);
-        border-color: rgba(185, 135, 47, 0.35);
       }
 
       .ds-crumb {
@@ -108,85 +71,6 @@
         line-height: 1.6;
         color: var(--ds-muted);
         text-align: center;
-      }
-
-      /* ——— Top bar ——— */
-      .ds-topbar {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 10px;
-        padding: 12px var(--ds-pad-x);
-        background: var(--ds-white);
-        border-bottom: 1px solid var(--ds-border);
-        position: sticky;
-        top: 0;
-        z-index: 100;
-      }
-
-      .ds-topbar__menu,
-      .ds-topbar__bell {
-        width: 44px;
-        height: 44px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border: none;
-        background: transparent;
-        font-size: 1.35rem;
-        color: var(--ds-black);
-        text-decoration: none;
-        border-radius: 12px;
-        cursor: pointer;
-        position: relative;
-      }
-
-      .ds-topbar__bell-badge {
-        position: absolute;
-        top: 6px;
-        left: 6px;
-        min-width: 18px;
-        height: 18px;
-        padding: 0 5px;
-        border-radius: 999px;
-        background: var(--ds-gold);
-        color: var(--ds-white);
-        font-size: 0.65rem;
-        font-weight: 800;
-        line-height: 18px;
-        text-align: center;
-      }
-
-      .ds-topbar__logo {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        text-decoration: none;
-        color: var(--ds-black);
-      }
-
-      .ds-topbar__logo-e {
-        width: 36px;
-        height: 36px;
-        border-radius: 50%;
-        background: linear-gradient(145deg, #d4b06a, var(--ds-gold));
-        color: #fffef8;
-        font-weight: 800;
-        font-size: 1.1rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 4px 12px rgba(185, 135, 47, 0.35);
-      }
-
-      .ds-topbar__logo-text {
-        font-size: 1.15rem;
-        font-weight: 800;
-        letter-spacing: 0.04em;
-      }
-
-      .ds-topbar__logo-text span {
-        color: var(--ds-gold);
       }
 
       /* ——— Hero ——— */
@@ -256,7 +140,7 @@
 
       /* ——— Sections ——— */
       .ds-main {
-        padding: 0 var(--ds-pad-x) 24px;
+        padding: 0 0 24px;
       }
 
       .ds-section-title {
@@ -818,68 +702,6 @@
         border: 1px solid #bbf7d0;
       }
 
-      /* Bottom nav */
-      .ds-bottomnav {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        z-index: 90;
-        background: var(--ds-white);
-        border-top: 1px solid var(--ds-border);
-        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.06);
-        padding-bottom: env(safe-area-inset-bottom, 0px);
-      }
-
-      .ds-bottomnav__inner {
-        max-width: var(--ds-page);
-        margin: 0 auto;
-        display: flex;
-        justify-content: space-around;
-        align-items: flex-end;
-        padding: 8px 8px 10px;
-        min-height: var(--ds-nav-h);
-      }
-
-      .ds-bottomnav a {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 4px;
-        text-decoration: none;
-        font-size: 0.65rem;
-        font-weight: 700;
-        color: var(--ds-muted);
-        padding: 4px 2px;
-      }
-
-      .ds-bottomnav a.is-active {
-        color: var(--ds-gold);
-      }
-
-      .ds-bottomnav__ic {
-        font-size: 1.25rem;
-        line-height: 1;
-      }
-
-      .ds-bottomnav a.is-home {
-        margin-top: -22px;
-      }
-
-        .ds-bottomnav__home-btn {
-        width: 52px;
-        height: 52px;
-        border-radius: 50%;
-        background: linear-gradient(180deg, #c99a3d, var(--ds-gold));
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.35rem;
-        box-shadow: 0 6px 20px rgba(185, 135, 47, 0.4);
-        border: 3px solid var(--ds-white);
-      }
-
       /* Map modal */
       #dsMapModal {
         position: fixed;
@@ -994,16 +816,6 @@
           --ds-pad-x: 24px;
         }
 
-        .ds-main {
-          padding-left: var(--ds-pad-x);
-          padding-right: var(--ds-pad-x);
-        }
-
-        .ds-topbar {
-          padding-left: var(--ds-pad-x);
-          padding-right: var(--ds-pad-x);
-        }
-
         .ds-hero {
           padding-left: var(--ds-pad-x);
           padding-right: var(--ds-pad-x);
@@ -1042,82 +854,10 @@
       @media (min-width: 900px) {
         :root {
           --ds-pad-x: 32px;
-          --ds-nav-h: 0px;
         }
 
-        body.ds-page {
-          padding-bottom: 40px;
+        .guest-shell-page {
           background: linear-gradient(180deg, #f5ede2 0%, var(--ds-bg) 120px);
-        }
-
-        .ds-app {
-          box-shadow: 0 0 0 1px var(--ds-border);
-        }
-
-        .ds-topbar {
-          padding: 14px var(--ds-pad-x);
-          gap: 16px;
-        }
-
-        .ds-topbar__back {
-          display: none;
-        }
-
-        .ds-topbar__menu {
-          display: none;
-        }
-
-        .ds-topbar__logo {
-          flex-shrink: 0;
-        }
-
-        .ds-topbar__nav {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          flex: 1;
-          gap: 6px;
-          flex-wrap: wrap;
-          min-width: 0;
-        }
-
-        .ds-topbar__bell {
-          flex-shrink: 0;
-          margin-inline-start: auto;
-        }
-
-        .ds-topbar__nav a {
-          padding: 8px 14px;
-          border-radius: 999px;
-          font-size: 0.88rem;
-          font-weight: 700;
-          color: var(--ds-muted);
-          text-decoration: none;
-          transition: background 0.15s, color 0.15s;
-        }
-
-        .ds-topbar__nav a:hover {
-          background: var(--ds-gold-soft);
-          color: var(--ds-black);
-        }
-
-        .ds-topbar__nav a.is-active {
-          background: var(--ds-gold);
-          color: var(--ds-black);
-        }
-
-        .ds-topbar__logo-e {
-          width: 42px;
-          height: 42px;
-          font-size: 1.2rem;
-        }
-
-        .ds-topbar__logo-text {
-          font-size: 1.35rem;
-        }
-
-        .ds-bottomnav {
-          display: none;
         }
 
         .ds-hero {
@@ -1265,13 +1005,8 @@
         }
       }
 
-      /* تابلت: إبقاء الشريط السفلي مع توسيع المحتوى */
+      /* تابلت */
       @media (min-width: 640px) and (max-width: 899px) {
-        .ds-bottomnav__inner {
-          padding-left: var(--ds-pad-x);
-          padding-right: var(--ds-pad-x);
-        }
-
         #dsCarForm .ds-field-grid-3 {
           grid-template-columns: repeat(3, minmax(0, 1fr));
         }
@@ -1301,25 +1036,43 @@
       }
     </style>
   </head>
-  <body class="ds-page">
-    <div class="ds-app">
-      <header class="ds-topbar">
-        <a class="ds-topbar__back" href="/dashboard">← لوحة الزائر</a>
-        <a class="ds-topbar__logo" href="/">
-          <span class="ds-topbar__logo-e">E</span>
-          <span class="ds-topbar__logo-text">ERVE<span>NOW</span></span>
-        </a>
-        <nav class="ds-topbar__nav" aria-label="التنقل الرئيسي">
-          <a href="/dashboard">لوحة الزائر</a>
-          <a href="/start-now.html">ابدأ الآن</a>
-          <a href="/delivery-services.html" class="is-active">توصيل</a>
-          <a href="/services">خدمات</a>
-          <a href="/stores">متاجر</a>
-          <a href="/restaurants">مطاعم</a>
+  <body class="guest-shell-page">
+    <header class="dash-site-header">
+      <div class="dash-site-header__inner">
+        <div class="dash-site-header__brand">
+          <a class="dash-site-header__logo" href="/">
+            ERVENOW
+            <span class="dash-site-header__logo-dot" aria-hidden="true"></span>
+          </a>
+          <p class="dash-site-header__tag" id="guestShellPageTag">خدمات التوصيل</p>
+        </div>
+        <nav class="dash-site-header__nav" aria-label="التنقل الرئيسي">
+          <div class="dash-site-header__links">
+            <a class="dash-site-header__link" href="/dashboard" data-nav="guest">لوحة الزائر</a>
+            <a class="dash-site-header__link" href="/restaurants" data-nav="restaurants">مطاعم</a>
+            <a class="dash-site-header__link" href="/stores" data-nav="stores">متاجر</a>
+            <a class="dash-site-header__link is-active" href="/delivery-services.html" data-nav="delivery" aria-current="page">توصيل</a>
+            <a class="dash-site-header__link" href="/services" data-nav="services">خدمات</a>
+            <a class="dash-site-header__link" href="/" data-nav="home">الرئيسية</a>
+          </div>
         </nav>
-        <a class="ds-topbar__menu" href="/" aria-label="الرئيسية">🏠</a>
-      </header>
+        <div class="dash-site-header__tools">
+          <a class="dash-header-wallet" id="dashHeaderWallet" href="/wallet.html" hidden aria-label="المحفظة">
+            <span class="dash-header-wallet__label">محفظة</span>
+            <span class="dash-header-wallet__val" id="dashHeaderWalletAmount">—</span>
+            <span class="dash-header-wallet__cur">ر.س</span>
+          </a>
+          <a class="dash-header-cart" href="/cart" aria-label="السلة — الدفع">
+            <span aria-hidden="true">🛒</span>
+            <span class="dash-header-cart__label">السلة</span>
+            <span class="dash-header-cart__badge" id="cartCount" data-empty="true">0</span>
+          </a>
+        </div>
+        <a class="dash-site-header__btn dash-site-header__btn--primary" href="/login?role=customer" id="switchAccount">تسجيل الدخول</a>
+      </div>
+    </header>
 
+    <div class="dash-main">
       <section class="ds-hero">
         <div class="ds-hero__inner">
           <img
@@ -1338,6 +1091,7 @@
         </div>
       </section>
 
+      <div class="layout">
       <main class="ds-main">
         <nav class="ds-crumb" aria-label="مسار التصفح">
           <a href="/">الرئيسية</a>
@@ -1376,17 +1130,22 @@
         <p class="ds-err" id="dsErr" role="alert"></p>
         <p class="ds-ok" id="dsOk" role="status"></p>
       </main>
-    </div>
-
-    <nav class="ds-bottomnav" aria-label="التنقل السفلي">
-      <div class="ds-bottomnav__inner">
-        <a href="/dashboard"><span class="ds-bottomnav__ic">📋</span>لوحة الزائر</a>
-        <a href="/stores"><span class="ds-bottomnav__ic">🛒</span>متاجر</a>
-        <a href="/" class="is-home"><span class="ds-bottomnav__home-btn">🏠</span>الرئيسية</a>
-        <a href="/delivery-services.html" class="is-active"><span class="ds-bottomnav__ic">🚚</span>توصيل</a>
-        <a href="/services"><span class="ds-bottomnav__ic">🔧</span>خدمات</a>
       </div>
-    </nav>
+
+    <footer class="dash-site-footer">
+      <div class="dash-site-footer__logo">ERVENOW</div>
+      <nav class="dash-site-footer__links" aria-label="روابط سفلية">
+        <a class="dash-site-footer__link" href="/restaurants">مطاعم</a>
+        <a class="dash-site-footer__link" href="/stores">متاجر</a>
+        <a class="dash-site-footer__link" href="/delivery-services.html">توصيل</a>
+        <a class="dash-site-footer__link" href="/services">خدمات</a>
+        <a class="dash-site-footer__link" href="/dashboard#dashDeliveryTitle">طلب من الخريطة</a>
+        <a class="dash-site-footer__link" href="/start-now.html">ابدأ الآن</a>
+        <a class="dash-site-footer__link" href="/">الرئيسية</a>
+      </nav>
+      <p class="dash-site-footer__copy">© 2026 ERVENOW — جميع الحقوق محفوظة</p>
+    </footer>
+    </div>
 
     <div id="dsMapModal" aria-hidden="true">
       <div id="dsMapInner">
@@ -1399,8 +1158,13 @@
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="/assets/cart.js"></script>
     <script src="/assets/api-config.js"></script>
     <script src="/assets/api.js"></script>
+    <script src="/assets/guest-shell.js"></script>
+    <script>
+      ErvenowGuestShell.init({ activeNav: "delivery", pageTag: "خدمات التوصيل" });
+    </script>
     <script>
       (function () {
         var INDUSTRIAL = [

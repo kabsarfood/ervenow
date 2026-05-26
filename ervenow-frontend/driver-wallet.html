@@ -13,11 +13,16 @@
       .btn { border: 0; border-radius: 10px; padding: 9px 12px; cursor: pointer; font-family: inherit; font-weight: 700; }
       .btn-primary { background: #5b371d; color: #fff; }
       .btn-ghost { border: 1px solid #5b371d; background: #fff; color: #5b371d; text-decoration: none; display: inline-block; }
+      .btn:disabled { opacity: 0.55; cursor: not-allowed; }
       .card { background: #fff; border: 1px solid #e5d8cb; border-radius: 14px; padding: 12px; margin-top: 12px; }
       .muted { color: #6e5a4a; }
       .row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
       input { padding: 10px; border-radius: 10px; border: 1px solid #d7c6b5; font-family: inherit; min-width: 200px; }
       .tx { border: 1px solid #ecdccf; border-radius: 10px; padding: 8px; margin-bottom: 8px; background: #fffdf9; }
+      .balance-num { font-size: 1.35rem; font-weight: 800; color: #5b371d; margin: 8px 0 4px; }
+      .toast { position: fixed; bottom: 16px; left: 16px; right: 16px; max-width: 420px; margin: 0 auto; padding: 12px 14px; border-radius: 10px; color: #fff; font-weight: 700; z-index: 9999; }
+      .toast--ok { background: #166534; }
+      .toast--err { background: #b91c1c; }
     </style>
   </head>
   <body>
@@ -26,13 +31,14 @@
         <h2 style="margin:0;color:#5b371d">محفظة المندوب</h2>
         <div class="row">
           <a class="btn btn-ghost" href="/driver">الرجوع لصفحة المندوب</a>
-          <button class="btn btn-primary" id="refreshBtn">تحديث</button>
+          <button class="btn btn-primary" id="refreshBtn" type="button">تحديث</button>
         </div>
       </div>
 
       <div class="card">
         <strong>الرصيد</strong>
         <p id="balanceLine" class="muted">جارٍ التحميل...</p>
+        <p id="balanceHint" class="muted" style="display:none;margin-top:6px"></p>
       </div>
 
       <div class="card">
@@ -41,76 +47,114 @@
         <div class="row">
           <input id="amount" type="number" min="20" step="0.01" placeholder="المبلغ (20 ريال كحد أدنى)" />
           <input id="withdrawIban" type="text" placeholder="تأكيد الآيبان (SA…)" translate="no" />
-          <button class="btn btn-primary" id="sendOtpBtn">إرسال رمز السحب</button>
+          <button class="btn btn-primary" id="sendOtpBtn" type="button">إرسال رمز السحب</button>
         </div>
         <div class="row">
           <input id="otpCode" placeholder="رمز التحقق" />
-          <button class="btn btn-ghost" id="confirmOtpBtn">تأكيد السحب</button>
+          <button class="btn btn-ghost" id="confirmOtpBtn" type="button">تأكيد السحب</button>
         </div>
         <p class="muted" id="otpHint"></p>
       </div>
 
       <div class="card">
         <strong>سجل العمليات</strong>
-        <div id="txList"></div>
+        <div id="txList"><p class="muted">جارٍ التحميل...</p></div>
       </div>
     </div>
 
-    <script src="/assets/cart.js"></script>
     <script src="/assets/api-config.js"></script>
     <script src="/assets/api.js"></script>
     <script>
-      var token = window.PlatformAPI.getToken();
-      if (!token) location.href = "/driver-login";
+      window.__ERVENOW_FETCH_TIMEOUT_MS = 30000;
+
+      if (!window.PlatformAPI || !window.PlatformAPI.getToken()) {
+        location.href = "/driver-login";
+      }
+
+      function fmtMoney(n) {
+        var x = Number(n);
+        if (!Number.isFinite(x)) x = 0;
+        return x.toFixed(2);
+      }
+
+      function showToast(msg, ok) {
+        var el = document.createElement("div");
+        el.className = "toast " + (ok ? "toast--ok" : "toast--err");
+        el.textContent = String(msg || "");
+        document.body.appendChild(el);
+        setTimeout(function () {
+          try { el.remove(); } catch (_e) {}
+        }, ok ? 3500 : 5000);
+      }
+
+      function showSuccess(msg) { showToast(msg, true); }
+      function showError(msg) { showToast(msg, false); }
+
+      function renderBalance(w) {
+        var bal = w && w.balance != null ? Number(w.balance) : 0;
+        var earned = w && w.total_earned != null ? Number(w.total_earned) : 0;
+        var withdrawn = w && w.total_withdrawn != null ? Number(w.total_withdrawn) : 0;
+        if (!Number.isFinite(bal)) bal = 0;
+        if (!Number.isFinite(earned)) earned = 0;
+        if (!Number.isFinite(withdrawn)) withdrawn = 0;
+        document.getElementById("balanceLine").innerHTML =
+          '<div class="balance-num">' + fmtMoney(bal) + ' <span style="font-size:0.85rem;font-weight:600">ر.س</span></div>' +
+          '<div class="muted">إجمالي المكتسب: ' + fmtMoney(earned) + ' ر.س | إجمالي المسحوب: ' + fmtMoney(withdrawn) + ' ر.س</div>';
+        var hint = document.getElementById("balanceHint");
+        if (hint && w && w.note) {
+          hint.style.display = "block";
+          hint.textContent = String(w.note);
+        }
+      }
+
+      function renderZeroBalance(note) {
+        renderBalance({ balance: 0, total_earned: 0, total_withdrawn: 0, note: note || "" });
+      }
 
       async function loadWallet() {
+        var balanceEl = document.getElementById("balanceLine");
         try {
           var w = await window.PlatformAPI.api("/api/wallet");
-          if (w.setup_required && w.message) {
-            showError(w.message);
-            return;
-          }
-          document.getElementById("balanceLine").innerText =
-            "الرصيد الحالي: " + (w.balance || 0) +
-            " ريال | إجمالي المكتسب: " + (w.total_earned || 0) +
-            " ريال | إجمالي المسحوب: " + (w.total_withdrawn || 0) + " ريال";
+          renderBalance(w);
+          return;
         } catch (e1) {
           try {
             var dw = await window.PlatformAPI.api("/api/driver/wallet");
-            if (dw.setup_required && dw.message) {
-              showError(dw.message);
-              return;
-            }
-            document.getElementById("balanceLine").innerText =
-              "الرصيد الحالي: " + (dw.balance || 0) +
-              " ريال | إجمالي المكتسب: " + (dw.total_earned || 0) +
-              " ريال | إجمالي المسحوب: " + (dw.total_withdrawn || 0) + " ريال";
+            renderBalance(dw);
+            return;
           } catch (e2) {
-            showError((e1 && e1.message) || (e2 && e2.message) || "تعذر تحميل الرصيد");
+            renderZeroBalance("تعذّر مزامنة الرصيد — يُعرض 0.00 ر.س");
+            showError((e2 && e2.message) || (e1 && e1.message) || "تعذّر تحميل الرصيد");
           }
         }
       }
 
       async function loadTransactions() {
+        var box = document.getElementById("txList");
+        box.innerHTML = '<p class="muted">جارٍ التحميل...</p>';
         try {
           var j = await window.PlatformAPI.api("/api/wallet/transactions");
-          var box = document.getElementById("txList");
+          var rows = j.transactions || [];
           box.innerHTML = "";
-          (j.transactions || []).forEach(function (t) {
+          if (!rows.length) {
+            box.innerHTML = "<p class='muted'>لا توجد عمليات بعد</p>";
+            return;
+          }
+          rows.forEach(function (t) {
             var div = document.createElement("div");
             div.className = "tx";
+            var type = String(t.type || "").toLowerCase();
+            var label = type === "earning" || type === "credit" ? "إيداع" : type === "withdraw" ? "سحب" : (t.type || "—");
             div.innerHTML =
-              "<strong>" + (t.type === "earning" ? "إيداع" : "سحب") + "</strong>" +
-              "<div>المبلغ: " + t.amount + " ريال</div>" +
+              "<strong>" + label + "</strong>" +
+              "<div>المبلغ: " + fmtMoney(t.amount) + " ر.س</div>" +
               "<div>ملاحظة: " + (t.note || "—") + "</div>" +
               "<div class='muted'>" + (t.created_at || "") + "</div>";
             box.appendChild(div);
           });
-          if (!j.transactions || !j.transactions.length) {
-            box.innerHTML = "<p class='muted'>لا توجد عمليات بعد</p>";
-          }
         } catch (e) {
-          showError(e.message || "تعذر تحميل العمليات");
+          box.innerHTML = "<p class='muted'>لا توجد عمليات بعد</p>";
+          showError(e.message || "تعذّر تحميل العمليات");
         }
       }
 
@@ -150,6 +194,15 @@
         var m2 = msg.match(/([0-9]+)\s*ثانية/);
         if (m2 && m2[1]) return Number(m2[1]);
         return 0;
+      }
+
+      var actionBusy = false;
+      function safeClick(fn) {
+        return async function () {
+          if (actionBusy) return;
+          actionBusy = true;
+          try { await fn.apply(this, arguments); } finally { actionBusy = false; }
+        };
       }
 
       var sendOtp = safeClick(async function () {

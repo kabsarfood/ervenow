@@ -1,0 +1,513 @@
+/* ERVENOW — هيدر/فوتر/غلاف صفحات الزائر (مشترك مع dashboard) */
+.dash-main {
+  min-height: 100vh;
+  min-height: 100dvh;
+  width: 100%;
+  direction: rtl;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+body.guest-shell-page {
+  margin: 0;
+  font-family: var(--font, "Cairo", system-ui, sans-serif);
+  background: var(--bg, #f8f4ee);
+  color: var(--brown, #3d2213);
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+}
+.dash-site-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  padding: 0 max(14px, env(safe-area-inset-left, 14px)) 0 max(14px, env(safe-area-inset-right, 14px));
+  background: linear-gradient(180deg, rgba(248, 244, 238, 0.98), rgba(255, 254, 251, 0.95));
+  border-bottom: 1px solid var(--border, rgba(61, 34, 19, 0.12));
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 4px 24px rgba(45, 26, 14, 0.06);
+}
+.dash-site-header__inner {
+  max-width: min(1120px, 100%);
+  margin: 0 auto;
+  min-height: 58px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 0;
+}
+.dash-site-header__brand {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.dash-site-header__logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.28rem;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  color: var(--brown, #3d2213);
+  text-decoration: none;
+}
+.dash-site-header__logo-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--gold, #b9872f);
+  flex-shrink: 0;
+}
+.dash-site-header__tag {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--muted, #5c4a3d);
+  line-height: 1.2;
+}
+.dash-site-header__nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 1;
+  min-width: 0;
+}
+@media (min-width: 641px) {
+  .dash-site-header__inner {
+    flex-wrap: nowrap;
+  }
+  .dash-site-header__nav {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+}
+.dash-site-header__tools {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.dash-header-cart,
+.dash-header-wallet {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-height: 36px;
+  padding: 6px 10px;
+  border-radius: 9px;
+  border: 1px solid rgba(185, 135, 47, 0.32);
+  background: linear-gradient(145deg, #fffefb, #f8f0e6);
+  text-decoration: none;
+  color: var(--brown, #3d2213);
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 800;
+  box-shadow: 0 2px 8px rgba(45, 26, 14, 0.06);
+  transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s;
+  white-space: nowrap;
+}
+.dash-header-cart:hover,
+.dash-header-wallet:hover {
+  transform: translateY(-1px);
+  border-color: rgba(185, 135, 47, 0.5);
+  box-shadow: 0 4px 14px rgba(45, 26, 14, 0.1);
+}
+.dash-header-cart__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--gold, #b9872f);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 800;
+  line-height: 1;
+}
+.dash-header-cart__badge[data-empty="true"] {
+  opacity: 0.55;
+}
+.dash-header-wallet__label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--muted, #5c4a3d);
+}
+.dash-header-wallet__val {
+  font-variant-numeric: tabular-nums;
+  font-size: 0.8rem;
+}
+.dash-header-wallet__cur {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--gold, #b9872f);
+}
+@media (max-width: 520px) {
+  .dash-header-cart__label,
+  .dash-header-wallet__label {
+    display: none;
+  }
+  .dash-header-cart,
+  .dash-header-wallet {
+    padding: 6px 9px;
+    min-width: 36px;
+  }
+}
+.dash-site-header__links {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 3px;
+  border-radius: 11px;
+  background: rgba(61, 34, 19, 0.04);
+  border: 1px solid var(--border, rgba(61, 34, 19, 0.1));
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  max-width: 100%;
+}
+.dash-site-header__links::-webkit-scrollbar {
+  display: none;
+}
+.dash-site-header__link {
+  flex: 0 0 auto;
+  padding: 6px 9px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--muted, #5c4a3d);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background 0.15s, color 0.15s;
+}
+.dash-site-header__link:hover {
+  background: rgba(185, 135, 47, 0.1);
+  color: var(--brown, #3d2213);
+}
+.dash-site-header__link.is-active {
+  background: rgba(185, 135, 47, 0.14);
+  color: var(--brown, #3d2213);
+  font-weight: 800;
+}
+.dash-site-header__btn {
+  flex: 0 0 auto;
+  padding: 6px 12px;
+  border-radius: 9px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  font-family: inherit;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.dash-site-header__btn--primary {
+  background: var(--gold, #b9872f);
+  color: #fff;
+}
+.dash-site-header__btn--primary:hover {
+  opacity: 0.9;
+}
+@media (min-width: 900px) {
+  .dash-site-header__link {
+    padding: 7px 11px;
+    font-size: 0.84rem;
+  }
+  .dash-site-header__btn {
+    padding: 7px 14px;
+    font-size: 0.84rem;
+  }
+}
+@media (max-width: 640px) {
+  .dash-site-header {
+    padding-top: max(6px, env(safe-area-inset-top, 0px));
+  }
+  .dash-site-header__inner {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-rows: auto auto auto;
+    gap: 8px;
+    padding: 6px 0 8px;
+  }
+  .dash-site-header__brand {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .dash-site-header__tools {
+    grid-column: 2;
+    grid-row: 1;
+    align-self: center;
+  }
+  .dash-site-header__nav {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  .dash-site-header__links {
+    width: 100%;
+    padding: 4px;
+  }
+  .dash-site-header__link {
+    padding: 8px 10px;
+    font-size: 0.78rem;
+    min-height: 36px;
+    display: inline-flex;
+    align-items: center;
+  }
+  #switchAccount {
+    grid-column: 1 / -1;
+    grid-row: 3;
+    width: 100%;
+    text-align: center;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .dash-header-cart,
+  .dash-header-wallet {
+    min-height: 40px;
+    min-width: 40px;
+  }
+  .dash-site-header__logo {
+    font-size: 1.1rem;
+  }
+  .dash-site-header__tag {
+    font-size: 0.68rem;
+  }
+}
+.dash-main > .dash-site-footer {
+  width: 100%;
+  max-width: none;
+  margin-inline: 0;
+  flex-shrink: 0;
+  box-sizing: border-box;
+}
+.dash-site-footer {
+  margin-top: auto;
+  background: var(--brown, #3d2213);
+  color: rgba(255, 255, 255, 0.72);
+  text-align: center;
+  padding: 32px 20px max(28px, env(safe-area-inset-bottom, 20px));
+}
+.dash-site-footer__logo {
+  font-size: 1.25rem;
+  font-weight: 900;
+  color: #fff;
+  margin-bottom: 10px;
+  letter-spacing: 0.02em;
+}
+.dash-site-footer__links {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px 18px;
+  margin-bottom: 16px;
+}
+.dash-site-footer__link {
+  color: rgba(255, 255, 255, 0.65);
+  text-decoration: none;
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: color 0.2s;
+}
+.dash-site-footer__link:hover {
+  color: #fff;
+}
+.dash-site-footer__copy {
+  margin: 0;
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.4);
+}
+.dash-main .layout {
+  max-width: min(1120px, 100%);
+  margin-inline: auto;
+  padding-inline: max(14px, env(safe-area-inset-left, 14px)) max(14px, env(safe-area-inset-right, 14px));
+  padding-block: clamp(16px, 3vw, 24px) clamp(24px, 4vw, 36px);
+  flex: 1;
+  width: 100%;
+}
+
+/* ——— عنوان القسم (تحت الهيدر) ——— */
+.guest-section-hero {
+  padding: clamp(18px, 4vw, 28px) max(14px, env(safe-area-inset-left, 14px)) clamp(14px, 3vw, 20px)
+    max(14px, env(safe-area-inset-right, 14px));
+  background: linear-gradient(135deg, #fffefb 0%, #f5ede2 55%, var(--bg, #f8f4ee) 100%);
+  border-bottom: 1px solid var(--border, rgba(61, 34, 19, 0.12));
+}
+.guest-section-hero__inner {
+  max-width: min(1120px, 100%);
+  margin: 0 auto;
+}
+.guest-section-hero__eyebrow {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: var(--gold, #b9872f);
+  margin: 0 0 4px;
+}
+.guest-section-hero__title {
+  margin: 0;
+  font-size: clamp(1.35rem, 3.5vw, 1.85rem);
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  color: var(--brown, #3d2213);
+}
+.guest-section-hero__sub {
+  margin: 6px 0 0;
+  font-size: clamp(0.86rem, 2vw, 0.95rem);
+  color: var(--muted, #5c4a3d);
+  font-weight: 600;
+  line-height: 1.55;
+  max-width: 36em;
+}
+.guest-section-hero__hint {
+  margin: 8px 0 0;
+  font-size: 0.82rem;
+  color: var(--muted, #5c4a3d);
+  font-weight: 600;
+  max-width: 36em;
+  line-height: 1.5;
+  opacity: 0.9;
+}
+
+/* ——— صفحات التصفح (مطاعم/متاجر/خدمات) ——— */
+body.guest-shell-page.stores-page {
+  background:
+    radial-gradient(1200px 600px at 100% -10%, rgba(255, 180, 140, 0.14), transparent 55%),
+    radial-gradient(900px 500px at -5% 40%, rgba(61, 34, 19, 0.04), transparent 50%),
+    var(--bg, #f8f4ee);
+}
+.guest-shell-page.stores-page .stores-toolbar {
+  max-width: 100%;
+  margin: 0;
+  padding: 0 0 20px;
+}
+.guest-shell-page.stores-page .stores-main {
+  max-width: 100%;
+  margin: 0;
+  padding: 0 0 24px;
+}
+.guest-shell-page .guest-page-title {
+  margin: 0 0 16px;
+  font-size: clamp(1.1rem, 2.5vw, 1.35rem);
+  font-weight: 900;
+  color: var(--brown, #3d2213);
+}
+
+@media (min-width: 640px) {
+  .guest-shell-page.stores-page .stores-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (min-width: 900px) {
+  .guest-shell-page.stores-page .stores-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .guest-section-hero {
+    border-radius: 0 0 24px 24px;
+    margin-bottom: 4px;
+  }
+}
+/* جوال — فوتر وهيدر متطابقان مع لوحة الزائر */
+@media (max-width: 767px) {
+  .dash-site-footer {
+    padding: clamp(28px, 6vw, 36px) max(16px, env(safe-area-inset-left, 16px))
+      max(24px, env(safe-area-inset-bottom, 24px)) max(16px, env(safe-area-inset-right, 16px));
+  }
+  .dash-site-footer__logo {
+    font-size: clamp(1.1rem, 4.5vw, 1.25rem);
+    margin-bottom: 12px;
+  }
+  .dash-site-footer__links {
+    gap: 10px 12px;
+    margin-bottom: 14px;
+  }
+  .dash-site-footer__link {
+    font-size: 0.8rem;
+    padding: 6px 4px;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .guest-shell-page.stores-page .stores-search {
+    font-size: 0.95rem;
+    padding: 13px 44px 13px 16px;
+  }
+  .guest-shell-page.stores-page .stores-filter {
+    min-height: 44px;
+    padding: 10px 14px;
+  }
+  .guest-shell-page.stores-page .stores-grid {
+    gap: 12px;
+  }
+}
+
+/* تابلت */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .dash-site-header__inner {
+    gap: 10px;
+  }
+  .dash-site-header__link {
+    padding: 7px 9px;
+    font-size: 0.8rem;
+  }
+  .dash-main .layout {
+    padding-inline: max(18px, env(safe-area-inset-left, 18px)) max(18px, env(safe-area-inset-right, 18px));
+  }
+  .dash-site-footer {
+    padding: 30px 22px max(26px, env(safe-area-inset-bottom, 22px));
+  }
+  .dash-site-footer__links {
+    gap: 10px 16px;
+  }
+  .guest-section-hero__title {
+    font-size: clamp(1.45rem, 3vw, 1.75rem);
+  }
+}
+
+@media (max-width: 380px) {
+  .dash-site-footer__links {
+    gap: 8px 10px;
+  }
+  .dash-site-footer__link {
+    font-size: 0.78rem;
+    min-height: 40px;
+  }
+}
+
+/* توحيد ألوان صفحات المطاعم/المتاجر/الخدمات مع لوحة الزائر */
+.guest-shell-page.stores-page {
+  --stores-ink: var(--brown, #3d2213);
+  --stores-cream: var(--bg, #f8f4ee);
+  --stores-card: #fffefb;
+  --stores-gold: var(--gold, #b9872f);
+  --stores-gold-soft: rgba(185, 135, 47, 0.2);
+  --stores-shadow: 0 4px 20px rgba(45, 26, 14, 0.06);
+  --stores-shadow-hover: 0 8px 28px rgba(45, 26, 14, 0.1);
+}
+.guest-shell-page.stores-page .stores-filter.is-active,
+.guest-shell-page.stores-page .stores-filter:hover {
+  border-color: rgba(185, 135, 47, 0.5);
+  background: rgba(185, 135, 47, 0.14);
+  color: var(--brown, #3d2213);
+}
+.guest-shell-page.stores-page .stores-search:focus {
+  border-color: rgba(185, 135, 47, 0.5);
+  box-shadow: 0 8px 28px rgba(45, 26, 14, 0.1), 0 0 0 3px rgba(185, 135, 47, 0.2);
+}
+.guest-shell-page .gd-welcome {
+  background: linear-gradient(145deg, #fffefb, #f5ede2);
+  border-color: var(--border, rgba(61, 34, 19, 0.12));
+}

@@ -7,351 +7,9 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/assets/styles.css" />
+    <link rel="stylesheet" href="/assets/guest-shell.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
-      .dash-main {
-        min-height: 100vh;
-        min-height: 100dvh;
-        width: 100%;
-        direction: rtl;
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-      }
-      body {
-        margin: 0;
-        font-family: var(--font, "Cairo", system-ui, sans-serif);
-        background: var(--bg, #f8f4ee);
-        color: var(--brown, #3d2213);
-        min-height: 100dvh;
-        display: flex;
-        flex-direction: column;
-      }
-      .dash-site-header {
-        position: sticky;
-        top: 0;
-        z-index: 100;
-        padding: 0 max(14px, env(safe-area-inset-left, 14px)) 0 max(14px, env(safe-area-inset-right, 14px));
-        background: linear-gradient(180deg, rgba(248, 244, 238, 0.98), rgba(255, 254, 251, 0.95));
-        border-bottom: 1px solid var(--border, rgba(61, 34, 19, 0.12));
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-        box-shadow: 0 4px 24px rgba(45, 26, 14, 0.06);
-      }
-      .dash-site-header__inner {
-        max-width: min(1120px, 100%);
-        margin: 0 auto;
-        min-height: 58px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        padding: 8px 0;
-      }
-      .dash-site-header__brand {
-        display: flex;
-        flex-direction: column;
-        gap: 2px;
-        min-width: 0;
-      }
-      .dash-site-header__logo {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        font-size: 1.28rem;
-        font-weight: 900;
-        letter-spacing: -0.02em;
-        color: var(--brown, #3d2213);
-        text-decoration: none;
-      }
-      .dash-site-header__logo-dot {
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        background: var(--gold, #b9872f);
-        flex-shrink: 0;
-      }
-      .dash-site-header__tag {
-        margin: 0;
-        font-size: 0.72rem;
-        font-weight: 700;
-        color: var(--muted, #5c4a3d);
-        line-height: 1.2;
-      }
-      .dash-site-header__nav {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        flex-shrink: 1;
-        min-width: 0;
-      }
-      .dash-site-header__tools-row {
-        display: none;
-      }
-      @media (min-width: 641px) {
-        .dash-site-header__inner {
-          flex-wrap: nowrap;
-        }
-        .dash-site-header__nav {
-          flex: 1 1 auto;
-          min-width: 0;
-        }
-      }
-      .dash-site-header__tools {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        flex-shrink: 0;
-      }
-      .dash-header-cart,
-      .dash-header-wallet {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 5px;
-        min-height: 36px;
-        padding: 6px 10px;
-        border-radius: 9px;
-        border: 1px solid rgba(185, 135, 47, 0.32);
-        background: linear-gradient(145deg, #fffefb, #f8f0e6);
-        text-decoration: none;
-        color: var(--brown, #3d2213);
-        font-family: inherit;
-        font-size: 0.78rem;
-        font-weight: 800;
-        box-shadow: 0 2px 8px rgba(45, 26, 14, 0.06);
-        transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s;
-        position: relative;
-        white-space: nowrap;
-      }
-      .dash-header-cart:hover,
-      .dash-header-wallet:hover {
-        transform: translateY(-1px);
-        border-color: rgba(185, 135, 47, 0.5);
-        box-shadow: 0 4px 14px rgba(45, 26, 14, 0.1);
-      }
-      .dash-header-cart__badge {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        min-width: 20px;
-        height: 20px;
-        padding: 0 5px;
-        border-radius: 999px;
-        background: var(--gold, #b9872f);
-        color: #fff;
-        font-size: 0.72rem;
-        font-weight: 800;
-        line-height: 1;
-      }
-      .dash-header-cart__badge:empty,
-      .dash-header-cart__badge[data-empty="true"] {
-        opacity: 0.55;
-      }
-      .dash-header-wallet__label {
-        font-size: 0.72rem;
-        font-weight: 700;
-        color: var(--muted, #5c4a3d);
-      }
-      .dash-header-wallet__val {
-        font-variant-numeric: tabular-nums;
-        font-size: 0.8rem;
-      }
-      .dash-header-wallet__cur {
-        font-size: 0.68rem;
-        font-weight: 700;
-        color: var(--gold, #b9872f);
-      }
-      @media (max-width: 520px) {
-        .dash-header-cart__label,
-        .dash-header-wallet__label {
-          display: none;
-        }
-        .dash-header-cart,
-        .dash-header-wallet {
-          padding: 6px 9px;
-          min-width: 36px;
-        }
-      }
-      .dash-site-header__links {
-        display: flex;
-        align-items: center;
-        gap: 0;
-        padding: 3px;
-        border-radius: 11px;
-        background: rgba(61, 34, 19, 0.04);
-        border: 1px solid var(--border, rgba(61, 34, 19, 0.1));
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        scrollbar-width: none;
-        max-width: 100%;
-      }
-      .dash-site-header__links::-webkit-scrollbar {
-        display: none;
-      }
-      .dash-site-header__link {
-        flex: 0 0 auto;
-        padding: 6px 9px;
-        border-radius: 8px;
-        font-size: 0.8rem;
-        font-weight: 600;
-        color: var(--muted, #5c4a3d);
-        text-decoration: none;
-        white-space: nowrap;
-        transition: background 0.15s, color 0.15s;
-      }
-      .dash-site-header__link:hover {
-        background: rgba(185, 135, 47, 0.1);
-        color: var(--brown, #3d2213);
-      }
-      .dash-site-header__link.is-active {
-        background: rgba(185, 135, 47, 0.14);
-        color: var(--brown, #3d2213);
-        font-weight: 800;
-      }
-      .dash-site-header__btn {
-        flex: 0 0 auto;
-        padding: 6px 12px;
-        border-radius: 9px;
-        font-size: 0.8rem;
-        font-weight: 700;
-        font-family: inherit;
-        text-decoration: none;
-        border: none;
-        cursor: pointer;
-        white-space: nowrap;
-      }
-      .dash-site-header__btn--ghost {
-        background: transparent;
-        color: var(--muted, #5c4a3d);
-        border: 1px solid var(--border, rgba(61, 34, 19, 0.12));
-      }
-      .dash-site-header__btn--ghost:hover {
-        border-color: rgba(185, 135, 47, 0.35);
-        color: var(--brown, #3d2213);
-      }
-      .dash-site-header__btn--primary {
-        background: var(--gold, #b9872f);
-        color: #fff;
-      }
-      .dash-site-header__btn--primary:hover {
-        opacity: 0.9;
-      }
-      @media (min-width: 900px) {
-        .dash-site-header__link {
-          padding: 7px 11px;
-          font-size: 0.84rem;
-        }
-        .dash-site-header__btn {
-          padding: 7px 14px;
-          font-size: 0.84rem;
-        }
-      }
-      @media (max-width: 640px) {
-        .dash-site-header {
-          padding-top: max(6px, env(safe-area-inset-top, 0px));
-        }
-        .dash-site-header__inner {
-          display: grid;
-          grid-template-columns: 1fr auto;
-          grid-template-rows: auto auto auto;
-          gap: 8px;
-          padding: 6px 0 8px;
-        }
-        .dash-site-header__brand {
-          grid-column: 1;
-          grid-row: 1;
-        }
-        .dash-site-header__tools {
-          grid-column: 2;
-          grid-row: 1;
-          align-self: center;
-        }
-        .dash-site-header__nav {
-          grid-column: 1 / -1;
-          grid-row: 2;
-          width: 100%;
-          flex-direction: column;
-          align-items: stretch;
-          gap: 8px;
-        }
-        .dash-site-header__links {
-          width: 100%;
-          padding: 4px;
-        }
-        .dash-site-header__link {
-          padding: 8px 10px;
-          font-size: 0.78rem;
-          min-height: 36px;
-          display: inline-flex;
-          align-items: center;
-        }
-        #switchAccount {
-          grid-column: 1 / -1;
-          grid-row: 3;
-          width: 100%;
-          text-align: center;
-          min-height: 44px;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-        }
-        .dash-header-cart,
-        .dash-header-wallet {
-          min-height: 40px;
-          min-width: 40px;
-        }
-        .dash-site-header__logo {
-          font-size: 1.1rem;
-        }
-        .dash-site-header__tag {
-          font-size: 0.68rem;
-        }
-      }
-      .dash-site-footer {
-        margin-top: auto;
-        background: var(--brown, #3d2213);
-        color: rgba(255, 255, 255, 0.72);
-        text-align: center;
-        padding: 32px 20px max(28px, env(safe-area-inset-bottom, 20px));
-      }
-      .dash-site-footer__logo {
-        font-size: 1.25rem;
-        font-weight: 900;
-        color: #fff;
-        margin-bottom: 10px;
-        letter-spacing: 0.02em;
-      }
-      .dash-site-footer__links {
-        display: flex;
-        justify-content: center;
-        flex-wrap: wrap;
-        gap: 10px 18px;
-        margin-bottom: 16px;
-      }
-      .dash-site-footer__link {
-        color: rgba(255, 255, 255, 0.65);
-        text-decoration: none;
-        font-size: 0.85rem;
-        font-weight: 600;
-        transition: color 0.2s;
-      }
-      .dash-site-footer__link:hover {
-        color: #fff;
-      }
-      .dash-site-footer__copy {
-        margin: 0;
-        font-size: 0.78rem;
-        color: rgba(255, 255, 255, 0.4);
-      }
-      .dash-main .layout {
-        max-width: min(1120px, 100%);
-        margin-inline: auto;
-        padding-inline: max(14px, env(safe-area-inset-left, 14px)) max(14px, env(safe-area-inset-right, 14px));
-        padding-block: clamp(16px, 3vw, 24px) clamp(24px, 4vw, 36px);
-        flex: 1;
-        width: 100%;
-      }
       .dash-alert {
         display: none;
         margin: 0 0 14px;
@@ -1074,7 +732,7 @@
 
     </style>
   </head>
-  <body>
+  <body class="guest-shell-page">
     <header class="dash-site-header">
       <div class="dash-site-header__inner">
         <div class="dash-site-header__brand">
@@ -1082,16 +740,16 @@
             ERVENOW
             <span class="dash-site-header__logo-dot" aria-hidden="true"></span>
           </a>
-          <p class="dash-site-header__tag">لوحة زائر المنصة</p>
+          <p class="dash-site-header__tag" id="guestShellPageTag">لوحة زائر المنصة</p>
         </div>
         <nav class="dash-site-header__nav" aria-label="التنقل الرئيسي">
           <div class="dash-site-header__links">
-            <a class="dash-site-header__link is-active" href="/dashboard" aria-current="page">لوحة الزائر</a>
-            <a class="dash-site-header__link" href="/restaurants">مطاعم</a>
-            <a class="dash-site-header__link" href="/stores">متاجر</a>
-            <a class="dash-site-header__link" href="/delivery-services.html">توصيل</a>
-            <a class="dash-site-header__link" href="/services">خدمات</a>
-            <a class="dash-site-header__link" href="/">الرئيسية</a>
+            <a class="dash-site-header__link is-active" href="/dashboard" data-nav="guest" aria-current="page">لوحة الزائر</a>
+            <a class="dash-site-header__link" href="/restaurants" data-nav="restaurants">مطاعم</a>
+            <a class="dash-site-header__link" href="/stores" data-nav="stores">متاجر</a>
+            <a class="dash-site-header__link" href="/delivery-services.html" data-nav="delivery">توصيل</a>
+            <a class="dash-site-header__link" href="/services" data-nav="services">خدمات</a>
+            <a class="dash-site-header__link" href="/" data-nav="home">الرئيسية</a>
           </div>
         </nav>
         <div class="dash-site-header__tools">
@@ -1328,6 +986,8 @@
     </div>
 
     <script src="/assets/cart.js"></script>
+    <script src="/assets/guest-shell.js"></script>
+    <script>ErvenowGuestShell.init({ activeNav: "guest", pageTag: "لوحة زائر المنصة" });</script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="/assets/api-config.js"></script>
     <script src="/assets/api.js"></script>

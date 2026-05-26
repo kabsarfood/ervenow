@@ -1172,16 +1172,28 @@
       }
 
       async function loadWallet() {
-        var data = await window.PlatformAPI.api("/api/wallet");
-        lastBalanceNum = data.balance;
-        balanceMasked = false;
-        elBtnBalanceEye.setAttribute("aria-pressed", "true");
-        renderBalanceDisplay();
-        elKpiEarned.textContent = fmtNum(data.total_earned);
-        elKpiWithdrawn.textContent = fmtNum(data.total_withdrawn);
-        elKpiSection.style.display = "";
-        elTxCard.style.display = "";
-        elWithdrawCard.style.display = "none";
+        try {
+          var data = await window.PlatformAPI.api("/api/wallet");
+          lastBalanceNum = data.balance != null ? Number(data.balance) : 0;
+          if (!Number.isFinite(lastBalanceNum)) lastBalanceNum = 0;
+          balanceMasked = false;
+          elBtnBalanceEye.setAttribute("aria-pressed", "true");
+          renderBalanceDisplay();
+          elKpiEarned.textContent = fmtNum(data.total_earned != null ? data.total_earned : 0);
+          elKpiWithdrawn.textContent = fmtNum(data.total_withdrawn != null ? data.total_withdrawn : 0);
+          elKpiSection.style.display = "";
+          elTxCard.style.display = "";
+          elWithdrawCard.style.display = "none";
+        } catch (e) {
+          lastBalanceNum = 0;
+          balanceMasked = false;
+          renderBalanceDisplay();
+          elKpiEarned.textContent = fmtNum(0);
+          elKpiWithdrawn.textContent = fmtNum(0);
+          elKpiSection.style.display = "";
+          elTxCard.style.display = "";
+          elLoadHint.textContent = e.message || "تعذّر المزامنة — يُعرض رصيد 0";
+        }
       }
 
       function appendTxRow(row) {
@@ -1276,9 +1288,6 @@
           elLoadHint.textContent = "تم التحديث.";
         } catch (e) {
           elLoadHint.textContent = e.message || "خطأ";
-          elKpiSection.style.display = "none";
-          elWithdrawCard.style.display = "none";
-          elTxCard.style.display = "none";
         }
       }
 

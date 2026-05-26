@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#5b371d" />
+    <title>ERVENOW | سداد مستحقات</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet" />
+    <style>
+      :root {
+        --primary: #5b371d;
+        --primary-deep: #3d2615;
+        --gold: #d4a76a;
+        --cream: #f8f5f0;
+        --surface: #fffdfa;
+        --text: #2b1f16;
+        --muted: #6f5441;
+        --danger: #b42318;
+        --success: #1a7f4b;
+        --radius: 18px;
+        --font: "Cairo", system-ui, sans-serif;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        min-height: 100dvh;
+        font-family: var(--font);
+        color: var(--text);
+        background: linear-gradient(165deg, var(--cream) 0%, #efe6db 100%);
+        line-height: 1.5;
+      }
+      .wrap {
+        max-width: 480px;
+        margin: 0 auto;
+        padding: max(1rem, env(safe-area-inset-top)) 1rem 2rem;
+      }
+      .brand {
+        text-align: center;
+        margin-bottom: 1.25rem;
+      }
+      .brand strong {
+        display: block;
+        font-size: 1.35rem;
+        color: var(--primary);
+        font-weight: 800;
+      }
+      .brand span {
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+      .card {
+        background: var(--surface);
+        border-radius: var(--radius);
+        box-shadow: 0 16px 48px rgba(45, 28, 14, 0.12);
+        border: 1px solid rgba(91, 55, 29, 0.08);
+        overflow: hidden;
+      }
+      .hero {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-deep) 100%);
+        color: #fff;
+        padding: 1.5rem 1.25rem;
+        text-align: center;
+      }
+      .hero .label {
+        opacity: 0.85;
+        font-size: 0.9rem;
+        margin-bottom: 0.35rem;
+      }
+      .hero .amount {
+        font-size: 2.2rem;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+      }
+      .hero .amount small {
+        font-size: 1rem;
+        font-weight: 600;
+        opacity: 0.9;
+      }
+      .badge {
+        display: inline-block;
+        margin-top: 0.75rem;
+        padding: 0.35rem 0.75rem;
+        border-radius: 999px;
+        font-size: 0.8rem;
+        font-weight: 700;
+        background: rgba(255, 255, 255, 0.15);
+      }
+      .badge.frozen {
+        background: rgba(180, 35, 24, 0.35);
+      }
+      .badge.warn {
+        background: rgba(212, 167, 106, 0.35);
+        color: #fff8e8;
+      }
+      .body {
+        padding: 1.25rem;
+      }
+      .note {
+        color: var(--muted);
+        font-size: 0.92rem;
+        margin: 0 0 1rem;
+      }
+      .methods {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+      }
+      .method {
+        display: flex;
+        align-items: center;
+        gap: 0.65rem;
+        padding: 0.75rem 0.9rem;
+        border: 1px solid #e8ddd0;
+        border-radius: 12px;
+        background: #fff;
+        font-weight: 600;
+        font-size: 0.95rem;
+      }
+      .method::before {
+        content: "";
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--gold);
+        flex-shrink: 0;
+      }
+      .actions {
+        display: flex;
+        flex-direction: column;
+        gap: 0.6rem;
+      }
+      .btn {
+        display: block;
+        width: 100%;
+        text-align: center;
+        padding: 0.85rem 1rem;
+        border-radius: 12px;
+        font-family: inherit;
+        font-size: 1rem;
+        font-weight: 700;
+        cursor: pointer;
+        border: none;
+        text-decoration: none;
+      }
+      .btn-primary {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-deep) 100%);
+        color: #fff;
+      }
+      .btn-outline {
+        background: #fff;
+        color: var(--primary);
+        border: 2px solid var(--primary);
+      }
+      .btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      .status {
+        text-align: center;
+        padding: 2rem 1rem;
+        color: var(--muted);
+      }
+      .status.err {
+        color: var(--danger);
+      }
+      .footer {
+        margin-top: 1.5rem;
+        text-align: center;
+        font-size: 0.82rem;
+        color: var(--muted);
+      }
+      .footer a {
+        color: var(--primary);
+        font-weight: 600;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="brand">
+        <strong>ارفينو ERVENOW</strong>
+        <span>سداد مستحقات — Pay Link</span>
+      </div>
+      <div id="root" class="card">
+        <div class="status" id="loading">جاري تحميل بيانات السداد…</div>
+      </div>
+      <p class="footer">
+        للمساعدة تواصل مع الإدارة —
+        <a id="supportLink" href="/">الرئيسية</a>
+      </p>
+    </div>
+    <script>
+      (function () {
+        var params = new URLSearchParams(window.location.search);
+        var uid = params.get("uid") || "";
+        var amount = params.get("amount") || "";
+        var type = params.get("type") || "debt";
+        var root = document.getElementById("root");
+        var supportLink = document.getElementById("supportLink");
+
+        function esc(s) {
+          var d = document.createElement("div");
+          d.textContent = s == null ? "" : String(s);
+          return d.innerHTML;
+        }
+
+        function renderError(msg) {
+          root.innerHTML = '<div class="status err">' + esc(msg) + "</div>";
+        }
+
+        function renderData(d) {
+          var amt =
+            d.amount_due > 0
+              ? Number(d.amount_due).toFixed(2)
+              : d.amount_requested != null
+                ? Number(d.amount_requested).toFixed(2)
+                : "0.00";
+          var frozen = d.auto_freeze && d.auto_freeze.is_frozen;
+          var warn = d.auto_freeze && d.auto_freeze.warning;
+          var badge = "";
+          if (frozen) badge = '<span class="badge frozen">الحساب موقوف مؤقتاً — يرجى السداد</span>';
+          else if (warn) badge = '<span class="badge warn">تنبيه: مستحقات مستحقة</span>';
+
+          var methodsHtml = "";
+          var methods = d.payment_methods || [];
+          if (methods.length) {
+            methodsHtml =
+              '<div class="methods">' +
+              methods
+                .map(function (m) {
+                  return '<div class="method">' + esc(m.label || m.key) + "</div>";
+                })
+                .join("") +
+              "</div>";
+          }
+
+          var note = esc(d.note || "أكمل السداد عبر الوسيلة المناسبة.");
+          var support = d.support_phone ? String(d.support_phone) : "";
+          if (support) {
+            supportLink.href = "tel:" + support.replace(/\s/g, "");
+            supportLink.textContent = support;
+          }
+
+          root.innerHTML =
+            '<div class="hero">' +
+            '<div class="label">المبلغ المستحق</div>' +
+            '<div class="amount">' +
+            esc(amt) +
+            ' <small>ر.س</small></div>' +
+            badge +
+            "</div>" +
+            '<div class="body">' +
+            '<p class="note">' +
+            note +
+            "</p>" +
+            methodsHtml +
+            '<div class="actions">' +
+            (d.has_debt && Number(amt) > 0
+              ? '<button type="button" class="btn btn-primary" id="payNow">ادفع الآن — ' + esc(amt) + " ر.س</button>"
+              : "") +
+            '<button type="button" class="btn btn-outline" id="copyLink">نسخ رابط السداد</button>' +
+            (support
+              ? '<a class="btn btn-outline" href="tel:' +
+                esc(support.replace(/\s/g, "")) +
+                '">تواصل مع الإدارة</a>'
+              : "") +
+            "</div></div>";
+
+          var payBtn = document.getElementById("payNow");
+          if (payBtn) {
+            payBtn.addEventListener("click", function () {
+              payBtn.disabled = true;
+              payBtn.textContent = "جاري التحويل للدفع…";
+              fetch("/api/pay/create-session", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  uid: d.user_id,
+                  amount: Number(amt),
+                  type: "debt",
+                }),
+              })
+                .then(function (r) {
+                  return r.json().then(function (j) {
+                    return { ok: r.ok, j: j };
+                  });
+                })
+                .then(function (x) {
+                  var j = x.j || {};
+                  if (!x.ok || !j.checkout_url) {
+                    payBtn.disabled = false;
+                    payBtn.textContent = "ادفع الآن";
+                    alert(j.error || j.message || "تعذّر بدء الدفع");
+                    return;
+                  }
+                  if (j.gateway === "mock" && j.session_id) {
+                    fetch("/api/pay/mock-complete", {
+                      method: "POST",
+                      headers: {
+                        "Content-Type": "application/json",
+                        "X-Pay-Webhook-Secret": "",
+                      },
+                      body: JSON.stringify({ session_id: j.session_id }),
+                    })
+                      .then(function () {
+                        window.location.href =
+                          "/pay?uid=" +
+                          encodeURIComponent(d.user_id) +
+                          "&amount=" +
+                          encodeURIComponent(amt) +
+                          "&type=debt&paid=1";
+                      })
+                      .catch(function () {
+                        window.location.href = j.checkout_url;
+                      });
+                    return;
+                  }
+                  window.location.href = j.checkout_url;
+                })
+                .catch(function () {
+                  payBtn.disabled = false;
+                  payBtn.textContent = "ادفع الآن";
+                  alert("تعذّر الاتصال بالخادم");
+                });
+            });
+          }
+
+          var copyBtn = document.getElementById("copyLink");
+          if (copyBtn) {
+            copyBtn.addEventListener("click", function () {
+              var link = d.payment_link || window.location.href;
+              if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(link).then(function () {
+                  copyBtn.textContent = "تم النسخ ✓";
+                  setTimeout(function () {
+                    copyBtn.textContent = "نسخ رابط السداد";
+                  }, 2000);
+                });
+              } else {
+                prompt("انسخ الرابط:", link);
+              }
+            });
+          }
+        }
+
+        if (!uid) {
+          renderError("رابط غير صالح — معرّف المستخدم (uid) مطلوب.");
+          return;
+        }
+
+        if (params.get("paid") === "1") {
+          root.innerHTML =
+            '<div class="hero"><div class="label">تم السداد</div><div class="amount" style="font-size:1.4rem">شكراً لتعاونكم ✓</div></div>' +
+            '<div class="body"><p class="note">إن كان حسابكم موقوفاً سابقاً فسيتم تفعيله تلقائياً بعد تأكيد العملية.</p></div>';
+          return;
+        }
+
+        var api =
+          "/api/pay/debt-info?uid=" +
+          encodeURIComponent(uid) +
+          "&amount=" +
+          encodeURIComponent(amount) +
+          "&type=" +
+          encodeURIComponent(type);
+
+        fetch(api)
+          .then(function (r) {
+            return r.json().then(function (j) {
+              return { ok: r.ok, j: j };
+            });
+          })
+          .then(function (x) {
+            var j = x.j || {};
+            if (!x.ok || j.ok === false) {
+              renderError(j.error || j.message || "تعذّر تحميل بيانات السداد");
+              return;
+            }
+            renderData(j);
+          })
+          .catch(function () {
+            renderError("تعذّر الاتصال بالخادم. حاول لاحقاً.");
+          });
+      })();
+    </script>
+  </body>
+</html>

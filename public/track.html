@@ -5,8 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>ERVENOW | تتبع الطلب</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/assets/styles.css" />
+    <link rel="stylesheet" href="/assets/guest-shell.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
       #rateStars.disabled {
@@ -76,40 +77,12 @@
           min-height: 300px !important;
         }
 
-        .top-nav .btn-row {
-          width: 100%;
-          justify-content: flex-start;
-        }
-      }
-
-      @media (max-width: 768px) {
+        @media (max-width: 768px) {
         .layout {
           padding: 16px 12px 30px;
         }
 
-        .top-nav {
-          align-items: stretch;
-        }
-
-        .top-nav h1 {
-          font-size: 1.2rem;
-        }
-
-        .top-nav .btn-row {
-          display: grid;
-          grid-template-columns: repeat(2, minmax(0, 1fr));
-          gap: 8px;
-          width: 100%;
-          margin-top: 0;
-        }
-
-        .top-nav .btn-row .btn {
-          width: 100%;
-          padding: 10px 12px;
-          font-size: 0.9rem;
-        }
-
-        .card .btn-row {
+                .card .btn-row {
           display: grid;
           grid-template-columns: 1fr;
           gap: 8px;
@@ -264,19 +237,46 @@
       }
     </style>
   </head>
-  <body>
+  <body class="guest-shell-page">
+    <header class="dash-site-header">
+      <div class="dash-site-header__inner">
+        <div class="dash-site-header__brand">
+          <a class="dash-site-header__logo" href="/">
+            ERVENOW
+            <span class="dash-site-header__logo-dot" aria-hidden="true"></span>
+          </a>
+          <p class="dash-site-header__tag" id="guestShellPageTag">تتبع الطلب</p>
+        </div>
+        <nav class="dash-site-header__nav" aria-label="التنقل الرئيسي">
+          <div class="dash-site-header__links">
+            <a class="dash-site-header__link is-active" href="/dashboard" data-nav="guest" aria-current="page">لوحة الزائر</a>
+            <a class="dash-site-header__link" href="/restaurants" data-nav="restaurants">مطاعم</a>
+            <a class="dash-site-header__link" href="/stores" data-nav="stores">متاجر</a>
+            <a class="dash-site-header__link" href="/delivery-services.html" data-nav="delivery">توصيل</a>
+            <a class="dash-site-header__link" href="/services" data-nav="services">خدمات</a>
+            <a class="dash-site-header__link" href="/" data-nav="home">الرئيسية</a>
+          </div>
+        </nav>
+        <div class="dash-site-header__tools">
+          <a class="dash-header-wallet" id="dashHeaderWallet" href="/wallet.html" hidden aria-label="المحفظة">
+            <span class="dash-header-wallet__label">محفظة</span>
+            <span class="dash-header-wallet__val" id="dashHeaderWalletAmount">—</span>
+            <span class="dash-header-wallet__cur">ر.س</span>
+          </a>
+          <a class="dash-header-cart" href="/cart" aria-label="السلة — الدفع">
+            <span aria-hidden="true">🛒</span>
+            <span class="dash-header-cart__label">السلة</span>
+            <span class="dash-header-cart__badge" id="cartCount" data-empty="true">0</span>
+          </a>
+        </div>
+        <a class="dash-site-header__btn dash-site-header__btn--primary" href="/login?role=customer" id="switchAccount">تسجيل الدخول</a>
+      </div>
+    </header>
+
+    <div class="dash-main">
     <div id="trackSocketBanner" role="status" translate="no">⚠️ الاتصال ضعيف، يتم تحديث الموقع من السيرفر…</div>
     <div id="ervenowTrackToast" aria-live="polite"></div>
     <div class="layout">
-      <div class="top-nav">
-        <h1 style="margin: 0">تتبع الطلب</h1>
-        <div class="btn-row">
-          <a class="btn btn-ghost" href="/dashboard">لوحة</a>
-          <a class="btn btn-ghost" href="/order">طلب جديد</a>
-          <a class="btn btn-ghost" href="/">رئيسية</a>
-        </div>
-      </div>
-
       <p class="sub" id="authHint">سجّل الدخول لعرض تفاصيل الطلب وموقع المندوب.</p>
 
       <div class="card">
@@ -368,9 +368,31 @@
         <pre id="out" style="display: none; margin-top: 8px; white-space: pre-wrap; font-size: 0.85rem"></pre>
       </div>
     </div>
+      </div>
+
+    <footer class="dash-site-footer">
+        <div class="dash-site-footer__logo">ERVENOW</div>
+        <nav class="dash-site-footer__links" aria-label="روابط سفلية">
+          <a class="dash-site-footer__link" href="/restaurants">مطاعم</a>
+          <a class="dash-site-footer__link" href="/stores">متاجر</a>
+          <a class="dash-site-footer__link" href="/delivery-services.html">توصيل</a>
+          <a class="dash-site-footer__link" href="/services">خدمات</a>
+          <a class="dash-site-footer__link" href="/dashboard#dashDeliveryTitle">طلب من الخريطة</a>
+          <a class="dash-site-footer__link" href="/start-now.html">ابدأ الآن</a>
+          <a class="dash-site-footer__link" href="/">الرئيسية</a>
+        </nav>
+        <p class="dash-site-footer__copy">© 2026 ERVENOW — جميع الحقوق محفوظة</p>
+      </footer>
+    </div>
+
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="/assets/track.js"></script>
     <script src="https://cdn.socket.io/4.8.1/socket.io.min.js" crossorigin="anonymous"></script>
+    <script src="/assets/cart.js"></script>
+    <script src="/assets/guest-shell.js"></script>
+    <script>
+      ErvenowGuestShell.init({ activeNav: "guest", pageTag: "تتبع الطلب" });
+    </script>
     <script src="/assets/api-config.js"></script>
     <script src="/assets/api.js"></script>
     <script>

@@ -35,33 +35,370 @@
         font-size: 0.82rem;
         color: #6e5a4a;
       }
+      body.auth-page {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        margin: 0;
+      }
+      .auth-page__main {
+        flex: 1;
+        width: 100%;
+        max-width: 560px;
+        margin: 0 auto;
+        padding: 12px 16px 24px;
+        box-sizing: border-box;
+      }
+      .auth-hero-wrap {
+        margin: 0 0 20px;
+        border-radius: clamp(12px, 2.5vw, 18px);
+        overflow: hidden;
+        box-shadow: 0 14px 36px rgba(45, 26, 14, 0.22);
+        border: 1px solid rgba(185, 135, 47, 0.25);
+      }
+      .auth-hero {
+        position: relative;
+        min-height: clamp(220px, 52vw, 340px);
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+        color: #fffdf8;
+        background: #2b170d;
+      }
+      .auth-hero__bg {
+        position: absolute;
+        inset: 0;
+        background: url("/assets/ervenow-delivery-hero.png") center 18% / cover no-repeat;
+      }
+      @media (min-width: 640px) {
+        .auth-hero__bg {
+          background-position: center 42%;
+        }
+      }
+      @media (min-width: 1024px) {
+        .auth-hero {
+          min-height: min(360px, 38vh);
+        }
+        .auth-hero__bg {
+          background-position: center center;
+        }
+      }
+      .auth-hero__overlay {
+        position: absolute;
+        inset: 0;
+        background:
+          linear-gradient(180deg, rgba(20, 12, 8, 0.35) 0%, rgba(45, 26, 14, 0.55) 45%, rgba(45, 26, 14, 0.92) 100%),
+          linear-gradient(115deg, rgba(45, 26, 14, 0.25) 0%, transparent 50%);
+        pointer-events: none;
+      }
+      .auth-hero__content {
+        position: relative;
+        z-index: 1;
+        text-align: center;
+        width: 100%;
+        padding: clamp(14px, 3vw, 22px) clamp(12px, 3vw, 20px) clamp(16px, 3vw, 22px);
+        box-sizing: border-box;
+      }
+      .auth-hero__logo {
+        height: clamp(36px, 8vw, 48px);
+        width: auto;
+        margin-bottom: 8px;
+        filter: drop-shadow(0 2px 10px rgba(0, 0, 0, 0.45));
+      }
+      .auth-hero__title {
+        margin: 0 0 8px;
+        font-size: clamp(1.15rem, 4.2vw, 1.45rem);
+        font-weight: 800;
+        letter-spacing: 0.02em;
+        text-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+      }
+      .auth-hero__sub,
+      .auth-hero__note {
+        margin: 0 auto;
+        max-width: 520px;
+        font-size: clamp(0.82rem, 2.8vw, 0.92rem);
+        line-height: 1.55;
+        font-weight: 600;
+        color: rgba(255, 253, 248, 0.96);
+        text-shadow: 0 1px 6px rgba(0, 0, 0, 0.35);
+      }
+      .auth-hero__note {
+        margin-top: 6px;
+        font-size: clamp(0.78rem, 2.5vw, 0.84rem);
+        opacity: 0.95;
+      }
+      .auth-plain-title {
+        margin: 0 0 8px;
+      }
+      #authHero[hidden],
+      #authPlainHead[hidden],
+      #pickupTruckTip[hidden],
+      #serviceRegCity[hidden],
+      #pickupTruckVehicleFields[hidden] {
+        display: none !important;
+      }
+      .auth-pickup-tip {
+        margin: 0 0 14px;
+        padding: 12px 14px;
+        border-radius: 12px;
+        border: 1px solid rgba(185, 135, 47, 0.45);
+        background: linear-gradient(180deg, #fff9ee 0%, #fffdf8 100%);
+        color: #5b371d;
+        font-size: 0.9rem;
+        line-height: 1.55;
+        font-weight: 600;
+      }
+      .auth-pickup-tip strong {
+        color: #3d2213;
+      }
+      #serviceRegCity,
+      #pickupTruckModel {
+        width: 100%;
+        margin-top: 0;
+      }
+      .auth-field-note {
+        margin: 8px 0 0;
+        font-size: 0.82rem;
+        line-height: 1.5;
+        color: #6b5344;
+        font-weight: 600;
+      }
+      .lp-footer {
+        background: linear-gradient(180deg, rgba(61, 34, 19, 0.07), rgba(61, 34, 19, 0.03));
+        border-top: 1px solid var(--border);
+        padding: clamp(32px, 5vw, 48px) clamp(16px, 4vw, 24px) 24px;
+        margin-top: auto;
+        width: 100%;
+        box-sizing: border-box;
+      }
+      .lp-footer__inner {
+        max-width: 1120px;
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: 1.1fr 1fr 1fr;
+        gap: clamp(24px, 4vw, 40px);
+        align-items: start;
+      }
+      @media (max-width: 800px) {
+        .lp-footer__inner {
+          grid-template-columns: 1fr;
+          text-align: center;
+        }
+        .lp-footer__links,
+        .lp-footer__social {
+          justify-content: center;
+        }
+        .lp-footer__contact {
+          align-items: center;
+        }
+      }
+      .lp-footer__brand {
+        font-weight: 800;
+        font-size: 1.2rem;
+        color: var(--brown);
+        margin: 0 0 10px;
+      }
+      .lp-footer__copy {
+        font-size: 0.86rem;
+        color: var(--muted);
+        font-weight: 600;
+        margin: 0;
+        line-height: 1.6;
+      }
+      .lp-footer__contact {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .lp-footer__contact a {
+        color: var(--muted);
+        font-weight: 700;
+        font-size: 0.92rem;
+        text-decoration: none;
+      }
+      .lp-footer__contact a:hover {
+        color: var(--gold);
+      }
+      .lp-footer__contact span {
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: var(--gold);
+      }
+      .lp-footer__links {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 14px 20px;
+        margin-bottom: 18px;
+      }
+      .lp-footer__links a {
+        color: var(--muted);
+        font-weight: 700;
+        font-size: 0.88rem;
+        text-decoration: none;
+      }
+      .lp-footer__links a:hover {
+        color: var(--gold);
+      }
+      .lp-footer__social {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      .lp-footer__social a {
+        width: 44px;
+        height: 44px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #fffdf8;
+        border: 1px solid var(--border);
+        color: var(--brown);
+      }
+      .lp-footer__social svg {
+        width: 20px;
+        height: 20px;
+        fill: currentColor;
+      }
+      .role-picker-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(45, 26, 14, 0.45);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        padding: 16px;
+      }
+      .role-picker-overlay[hidden] {
+        display: none !important;
+      }
+      .role-picker {
+        background: #fffdf8;
+        border-radius: 16px;
+        padding: 20px;
+        max-width: 420px;
+        width: 100%;
+        box-shadow: 0 12px 40px rgba(45, 26, 14, 0.18);
+      }
+      .role-picker h2 {
+        margin: 0 0 8px;
+        font-size: 1.15rem;
+      }
+      .role-picker__list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-top: 14px;
+      }
+      .role-picker__btn {
+        width: 100%;
+        text-align: right;
+        padding: 12px 14px;
+        border-radius: 12px;
+        border: 1px solid rgba(91, 55, 29, 0.15);
+        background: #fff;
+        font-weight: 700;
+        cursor: pointer;
+      }
+      .role-picker__btn:hover {
+        border-color: var(--gold);
+        background: #fff9ef;
+      }
     </style>
   </head>
-  <body>
-    <div class="layout">
+  <body class="auth-page">
+    <main class="auth-page__main layout">
       <p><a href="/">← الرئيسية</a></p>
-      <h1 id="authTitle">تسجيل الدخول — ERVENOW</h1>
-      <p class="sub" id="authSubtitle">
-        أدخل رقم جوال سعودي <strong>يبدأ بـ 05</strong> (مثال 05XXXXXXXX) ثم اطلب رمز الدخول عبر واتساب.
-      </p>
-      <p class="sub" style="margin-top:-8px">رمز واتساب صالح لمدة 5 دقائق.</p>
-      <p class="sub" id="customerRegisterHint">
-        أدخل <strong>اسمك</strong> ليظهر في أعلى الصفحة الرئيسية بدل رقم الجوال.
-      </p>
+
+      <div class="auth-hero-wrap" id="authHero" hidden>
+        <header class="auth-hero">
+          <div class="auth-hero__bg" role="presentation" aria-hidden="true"></div>
+          <div class="auth-hero__overlay" aria-hidden="true"></div>
+          <div class="auth-hero__content">
+            <img class="auth-hero__logo" src="/assets/ervenow-logo.png" width="160" height="42" alt="ERVENOW" />
+            <h1 class="auth-hero__title" id="authTitle">مرحباً بك في ERVENOW</h1>
+            <p class="auth-hero__sub" id="authSubtitle">
+              اختر نوع حسابك، ثم أدخل جوالك السعودي <strong dir="ltr">05xxxxxxxx</strong> — يصلك رمز التفعيل عبر واتساب.
+            </p>
+            <p class="auth-hero__note" id="authOtpHint">صلاحية رمز واتساب: 5 دقائق.</p>
+            <p class="auth-hero__note" id="customerRegisterHint">
+              سيظهر رقم جوالك <strong>مخفّى</strong> في أعلى الصفحة الرئيسية (آخر 4 أرقام فقط) بدلاً من الاسم.
+            </p>
+          </div>
+        </header>
+      </div>
+
+      <div id="authPlainHead">
+        <h1 class="auth-plain-title" id="authTitleLogin">تسجيل الدخول — ERVENOW</h1>
+        <p class="sub" id="authSubtitleLogin">
+          أدخل رقم جوال سعودي <strong>يبدأ بـ 05</strong> (مثال 05xxxxxxxx) ثم اطلب رمز الدخول عبر واتساب — يُوجّهك النظام تلقائياً للوحة المناسبة.
+        </p>
+        <p class="sub" style="margin-top: -8px">رمز واتساب صالح لمدة 5 دقائق.</p>
+      </div>
+
+      <div id="pickupTruckTip" class="auth-pickup-tip" hidden role="note">
+        <strong>ملاحظة:</strong> إنّ تفعيل خاصية تحديد المواقع في لوحتك يزيد من فرص النقل.
+      </div>
 
       <div class="card">
-        <label for="role">نوع الحساب</label>
+      <div id="roleWrap">
+        <label for="role" id="roleLabel">نوع الحساب</label>
         <select id="role">
           <option value="customer">زائر المنصة</option>
           <option value="driver">مندوب توصيل</option>
+          <option value="merchant">متجر</option>
           <option value="restaurant">مطعم</option>
-          <option value="merchant">تاجر (متجر)</option>
-          <option value="service">مقدّم خدمة</option>
+          <option value="service">مزود خدمة</option>
         </select>
 
+        <div id="serviceTypeSubWrap" class="driver-register-fields" hidden>
+          <label for="serviceTypeSub" style="margin-top: 12px">نوع الخدمة</label>
+          <select id="serviceTypeSub" aria-label="نوع الخدمة"></select>
+        </div>
+      </div>
+
         <div id="customerRegisterFields" class="driver-register-fields">
-          <label for="customerName">الاسم</label>
-          <input id="customerName" type="text" maxlength="100" placeholder="اسمك كما يظهر في المنصة" autocomplete="name" />
+          <label for="customerName">الاسم (اختياري)</label>
+          <input id="customerName" type="text" maxlength="100" placeholder="اختياري — التعريف في الأعلى برقم الجوال المخفّى" autocomplete="name" />
+        </div>
+
+        <div id="serviceRegisterFields" class="driver-register-fields">
+          <p class="sub" id="serviceRegIntro" style="margin-top: 0">
+            بيانات مقدّم الخدمة — بعد التأكيد تُفتح لوحتك لاستقبال الطلبات في منطقتك.
+          </p>
+          <label for="serviceRegName">الاسم</label>
+          <input id="serviceRegName" type="text" maxlength="120" placeholder="اسمك أو اسم النشاط" autocomplete="name" />
+
+          <label id="serviceRegAreaLabel" for="serviceRegDistrict" style="margin-top: 12px">الحي الذي تخدمه</label>
+          <input id="serviceRegDistrict" type="text" maxlength="120" placeholder="مثال: العزيزية" autocomplete="address-level2" />
+          <select id="serviceRegCity" hidden aria-label="المدينة">
+            <option value="">اختر المدينة</option>
+          </select>
+
+          <div id="pickupTruckVehicleFields" hidden>
+            <p class="sub" style="margin: 16px 0 8px; font-weight: 700">بيانات المركبة</p>
+            <label for="pickupTruckVehicleType">نوع المركبة</label>
+            <select id="pickupTruckVehicleType">
+              <option value="">اختر نوع المركبة</option>
+              <option value="flatbed">سطحة</option>
+              <option value="flatbed_hydraulic">سطحة هيدروليك</option>
+              <option value="tow">ونش</option>
+              <option value="car_carrier">ناقلة سيارات</option>
+              <option value="other">أخرى</option>
+            </select>
+
+            <label for="pickupTruckPlate" style="margin-top: 12px">رقم اللوحة</label>
+            <input id="pickupTruckPlate" type="text" maxlength="20" placeholder="مثال: أ ب ج 1234" autocomplete="off" />
+
+            <label for="pickupTruckModel" style="margin-top: 12px">موديل المركبة (سنة الصنع)</label>
+            <select id="pickupTruckModel" aria-describedby="pickupTruckModelNote">
+              <option value="">اختر السنة</option>
+            </select>
+            <p class="sub auth-field-note" id="pickupTruckModelNote" role="note">
+              ملاحظة: تُعرض آخر 15 سنة فقط (من الأقدم إلى الأحدث)، وتُحدَّث القائمة تلقائياً كل عام.
+            </p>
+          </div>
         </div>
 
         <div id="driverRegisterFields" class="driver-register-fields">
@@ -137,11 +474,61 @@
 
         <div class="msg" id="msg" style="display: none"></div>
       </div>
+    </main>
+
+    <footer class="lp-footer">
+      <div class="lp-footer__inner">
+        <div>
+          <p class="lp-footer__brand">ERVENOW</p>
+          <p class="lp-footer__copy">© جميع الحقوق محفوظة ERVENOW<br />منصة توصيل ذكية — من الطلب إلى باب زائر المنصة.</p>
+        </div>
+        <div class="lp-footer__contact">
+          <span>تواصل</span>
+          <a href="mailto:support@ervenow.com">support@ervenow.com</a>
+          <a href="tel:+966505745650">+966 50 574 5650</a>
+          <a href="https://wa.me/966505745650" target="_blank" rel="noopener noreferrer">واتساب مباشر</a>
+        </div>
+        <div>
+          <div class="lp-footer__links">
+            <a href="#">سياسة الخصوصية</a>
+            <a href="#">سياسة الاستخدام</a>
+            <a href="/">الرئيسية</a>
+            <a href="/track">تتبع الطلب</a>
+            <a href="#" id="ervenowHealthFooterLink" target="_blank" rel="noopener">حالة المنصة</a>
+          </div>
+          <div class="lp-footer__social" aria-label="وسائل التواصل">
+            <a href="https://wa.me/966505745650" target="_blank" rel="noopener noreferrer" aria-label="واتساب">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.435 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+            </a>
+            <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" aria-label="تويتر">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+            </a>
+            <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" aria-label="إنستقرام">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+            </a>
+          </div>
+        </div>
+      </div>
+    </footer>
+
+    <div class="role-picker-overlay" id="rolePickerOverlay" hidden role="dialog" aria-modal="true" aria-labelledby="rolePickerTitle">
+      <div class="role-picker">
+        <h2 id="rolePickerTitle">اختر نوع الدخول</h2>
+        <p class="sub" style="margin: 0">حسابك مرتبط بأكثر من لوحة — اختر الوجهة المناسبة.</p>
+        <div class="role-picker__list" id="rolePickerList"></div>
+      </div>
     </div>
 
+    <script src="/assets/api-config.js"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        var el = document.getElementById("ervenowHealthFooterLink");
+        if (el && window.PlatformAPI) el.href = PlatformAPI.apiUrl("/api/health");
+      });
+    </script>
+    <script src="/assets/phonePrivacy.js"></script>
     <script src="/assets/guestBrowse.js"></script>
     <script src="/assets/payoutRegistration.js"></script>
-    <script src="/assets/api-config.js"></script>
     <script src="/assets/api.js"></script>
     <script>
       function toE164(v) {
@@ -177,6 +564,105 @@
         return isRegisterMode() && document.getElementById("role").value === "driver";
       }
 
+      var REGISTER_SERVICE_TYPES = [
+        { value: "pickup_truck", label: "سائق سطحة" },
+        { value: "electrician", label: "فني كهربائي" },
+        { value: "plumber", label: "فني سباك" },
+        { value: "ac_technician", label: "فني مكيفات" },
+        { value: "laundry_estates", label: "مغسل فلل وعمائر" },
+        { value: "agricultural_engineer", label: "مهندس زراعي" },
+        { value: "gas_cylinder_swap", label: "تبديل غاز" },
+        { value: "gas_central_refill", label: "تعبئة غاز مركزي" },
+      ];
+
+      function initServiceTypeSubSelect() {
+        var sub = document.getElementById("serviceTypeSub");
+        if (!sub || sub.getAttribute("data-built")) return;
+        sub.setAttribute("data-built", "1");
+        sub.innerHTML =
+          '<option value="">اختر نوع الخدمة</option>' +
+          REGISTER_SERVICE_TYPES.map(function (o) {
+            return '<option value="' + o.value + '">' + o.label + "</option>";
+          }).join("");
+      }
+
+      function syncLoginRoleUi() {
+        initServiceTypeSubSelect();
+        var roleWrap = document.getElementById("roleWrap");
+        var subWrap = document.getElementById("serviceTypeSubWrap");
+        var reg = isRegisterMode();
+        if (roleWrap) roleWrap.hidden = !reg;
+        if (!reg) return;
+        var sel = document.getElementById("role").value;
+        var showSub = sel === "service" || isServiceTypeValue(sel);
+        if (subWrap) subWrap.hidden = !showSub;
+        if (showSub && sel !== "service" && isServiceTypeValue(sel)) {
+          var sub = document.getElementById("serviceTypeSub");
+          if (sub) sub.value = sel;
+        }
+      }
+
+      function isServiceTypeValue(v) {
+        var x = String(v || "").trim();
+        for (var i = 0; i < REGISTER_SERVICE_TYPES.length; i++) {
+          if (REGISTER_SERVICE_TYPES[i].value === x) return true;
+        }
+        return false;
+      }
+
+      function isServiceRegisterMode() {
+        if (!isRegisterMode()) return false;
+        var sel = document.getElementById("role").value;
+        return sel === "service" || isServiceTypeValue(sel);
+      }
+
+      function apiRoleFromSelection() {
+        var sel = document.getElementById("role").value;
+        if (sel === "service" || isServiceTypeValue(sel)) return "service";
+        return sel;
+      }
+
+      function selectedServiceType() {
+        var sel = document.getElementById("role").value;
+        if (isServiceTypeValue(sel)) return sel;
+        if (sel === "service") {
+          return String(document.getElementById("serviceTypeSub").value || "").trim() || null;
+        }
+        return null;
+      }
+
+      function populateRegisterAccountTypes(preferred) {
+        var sel = document.getElementById("role");
+        if (!sel || !isRegisterMode()) return;
+        var label = document.getElementById("roleLabel");
+        if (label) label.textContent = "نوع الحساب";
+        var html =
+          '<option value="customer">زائر المنصة</option>' +
+          '<option value="driver">مندوب توصيل</option>' +
+          '<option value="merchant">متجر</option>' +
+          '<option value="restaurant">مطعم</option>' +
+          '<option value="service">مزود خدمة</option>' +
+          '<optgroup label="— أنواع الخدمة (توافق سابق) —">' +
+          REGISTER_SERVICE_TYPES.map(function (o) {
+            return '<option value="' + o.value + '">' + o.label + "</option>";
+          }).join("") +
+          "</optgroup>";
+        sel.innerHTML = html;
+        var want = String(preferred || "customer").trim();
+        if (want === "service") want = "electrician";
+        if (isServiceTypeValue(want)) {
+          sel.value = "service";
+          initServiceTypeSubSelect();
+          var sub = document.getElementById("serviceTypeSub");
+          if (sub) sub.value = want;
+        } else if (want === "customer" || want === "driver" || want === "restaurant" || want === "merchant") {
+          sel.value = want;
+        } else {
+          sel.value = "customer";
+        }
+        syncLoginRoleUi();
+      }
+
       function assertDriverOnlyInRegisterMode() {
         if (document.getElementById("role").value !== "driver") return true;
         if (isRegisterMode()) return true;
@@ -190,7 +676,7 @@
       function isMerchantRestaurantRegisterMode() {
         if (!isRegisterMode()) return false;
         var r = document.getElementById("role").value;
-        return r === "merchant" || r === "restaurant" || r === "service";
+        return r === "merchant" || r === "restaurant" || isServiceRegisterMode();
       }
 
       function syncPayoutRegisterBlock() {
@@ -200,14 +686,126 @@
         el.style.display = show ? "block" : "none";
       }
 
+      var SAUDI_CITIES = [
+        "الرياض",
+        "جدة",
+        "مكة المكرمة",
+        "المدينة المنورة",
+        "الدمام",
+        "الخبر",
+        "الظهران",
+        "الأحساء",
+        "الهفوف",
+        "القطيف",
+        "الجبيل",
+        "ينبع",
+        "الطائف",
+        "تبوك",
+        "بريدة",
+        "عنيزة",
+        "خميس مشيط",
+        "أبها",
+        "نجران",
+        "جازان",
+        "حائل",
+        "سكاكا",
+        "عرعر",
+        "الباحة",
+        "الخرج",
+        "القريات",
+        "بيشة",
+        "رابغ",
+        "الدوادمي",
+        "المجمعة",
+      ];
+
+      function isPickupTruckRegister() {
+        return isServiceRegisterMode() && selectedServiceType() === "pickup_truck";
+      }
+
+      function initServiceCitySelect() {
+        var sel = document.getElementById("serviceRegCity");
+        if (!sel || sel.getAttribute("data-built")) return;
+        sel.setAttribute("data-built", "1");
+        sel.innerHTML =
+          '<option value="">اختر المدينة</option>' +
+          SAUDI_CITIES.map(function (c) {
+            return '<option value="' + c + '">' + c + "</option>";
+          }).join("");
+      }
+
+      function initPickupTruckModelYears() {
+        var sel = document.getElementById("pickupTruckModel");
+        if (!sel || sel.tagName !== "SELECT") return;
+        var now = new Date().getFullYear();
+        var builtFor = String(sel.getAttribute("data-built-for") || "");
+        if (builtFor === String(now)) return;
+        sel.setAttribute("data-built-for", String(now));
+        var start = now - 14;
+        var opts = '<option value="">اختر السنة</option>';
+        for (var y = start; y <= now; y++) {
+          opts += '<option value="' + y + '">' + y + "</option>";
+        }
+        sel.innerHTML = opts;
+      }
+
+      function syncServiceLocationField() {
+        initServiceCitySelect();
+        initPickupTruckModelYears();
+        var label = document.getElementById("serviceRegAreaLabel");
+        var districtIn = document.getElementById("serviceRegDistrict");
+        var citySel = document.getElementById("serviceRegCity");
+        var tip = document.getElementById("pickupTruckTip");
+        var intro = document.getElementById("serviceRegIntro");
+        var vehBox = document.getElementById("pickupTruckVehicleFields");
+        var isPickup = isPickupTruckRegister();
+        if (tip) tip.hidden = !(isRegisterMode() && isPickup);
+        if (vehBox) vehBox.hidden = !(isRegisterMode() && isPickup);
+        if (isPickup) {
+          if (intro) intro.textContent = "بيانات سائق السطحية — اختر مدينتك لاستقبال طلبات النقل فيها.";
+          if (label) {
+            label.textContent = "المدينة";
+            label.setAttribute("for", "serviceRegCity");
+          }
+          if (districtIn) districtIn.hidden = true;
+          if (citySel) citySel.hidden = false;
+        } else if (isServiceRegisterMode()) {
+          if (intro) intro.textContent = "بيانات مقدّم الخدمة — بعد التأكيد تُفتح لوحتك لاستقبال الطلبات في حيّك.";
+          if (label) {
+            label.textContent = "الحي الذي تخدمه";
+            label.setAttribute("for", "serviceRegDistrict");
+          }
+          if (districtIn) districtIn.hidden = false;
+          if (citySel) citySel.hidden = true;
+        }
+      }
+
+      function readServiceAreaValue() {
+        if (isPickupTruckRegister()) {
+          return String(document.getElementById("serviceRegCity").value || "").trim();
+        }
+        return String(document.getElementById("serviceRegDistrict").value || "").trim();
+      }
+
+      function syncAuthHead() {
+        var hero = document.getElementById("authHero");
+        var plain = document.getElementById("authPlainHead");
+        var reg = isRegisterMode();
+        if (hero) hero.hidden = !reg;
+        if (plain) plain.hidden = reg;
+      }
+
       function syncCustomerRegisterUi() {
         var customerBox = document.getElementById("customerRegisterFields");
         var driverBox = document.getElementById("driverRegisterFields");
-        var hint = document.getElementById("customerRegisterHint");
+        var serviceBox = document.getElementById("serviceRegisterFields");
         if (customerBox) customerBox.style.display = isCustomerRegisterMode() ? "block" : "none";
         if (driverBox) driverBox.style.display = isDriverRegisterMode() ? "block" : "none";
-        if (hint) hint.style.display = isCustomerRegisterMode() ? "block" : "none";
+        if (serviceBox) serviceBox.style.display = isServiceRegisterMode() ? "block" : "none";
+        syncServiceLocationField();
         syncPayoutRegisterBlock();
+        syncAuthHead();
+        syncLoginRoleUi();
       }
 
       function safeInternalNext(raw) {
@@ -226,10 +824,65 @@
         var ar = String(actualRole || roleFallback || "").toLowerCase();
         if (next && ar !== "blocked") return next;
 
-        var target = "/dashboard";
-        if (ar === "blocked") target = "/blocked-complaints";
-        else if (ar === "admin") target = "/";
-        return target;
+        var map = {
+          blocked: "/blocked-complaints",
+          admin: "/admin-dashboard",
+          driver: "/driver-dashboard",
+          merchant: "/store-dashboard",
+          restaurant: "/store-dashboard",
+          service: "/services-provider",
+          customer: "/",
+        };
+        return map[ar] || "/";
+      }
+
+      function showRolePicker(destinations) {
+        var overlay = document.getElementById("rolePickerOverlay");
+        var list = document.getElementById("rolePickerList");
+        if (!overlay || !list) {
+          var fb = destinations[0];
+          window.location.href = (fb && fb.path) || "/";
+          return;
+        }
+        list.innerHTML = destinations
+          .map(function (d) {
+            return (
+              '<button type="button" class="role-picker__btn" data-path="' +
+              String(d.path || "/").replace(/"/g, "") +
+              '">' +
+              (d.label || d.role || "دخول") +
+              "</button>"
+            );
+          })
+          .join("");
+        list.querySelectorAll(".role-picker__btn").forEach(function (btn) {
+          btn.addEventListener("click", function () {
+            var p = btn.getAttribute("data-path") || "/";
+            window.location.href = p;
+          });
+        });
+        overlay.hidden = false;
+      }
+
+      async function navigateAfterLogin(actualRole) {
+        var qs = new URLSearchParams(window.location.search);
+        var next = safeInternalNext(qs.get("next"));
+        if (next && String(actualRole || "").toLowerCase() !== "blocked") {
+          window.location.href = next;
+          return;
+        }
+        try {
+          var destRes = await window.PlatformAPI.api("/api/core/login-destinations");
+          var dests = destRes.destinations || [];
+          if (dests.length > 1) {
+            showRolePicker(dests);
+            return;
+          }
+          var pick = dests[0] || destRes.default;
+          window.location.href = (pick && pick.path) || resolvePostLoginTarget(actualRole);
+        } catch (navErr) {
+          window.location.href = resolvePostLoginTarget(actualRole);
+        }
       }
 
       function mapOtpError(msg) {
@@ -266,24 +919,25 @@
           return;
         }
         if (mode === "register") {
-          var t = document.getElementById("authTitle");
-          var s = document.getElementById("authSubtitle");
           var b = document.getElementById("btnVerify");
-          if (t) t.textContent = "إنشاء حساب — ERVENOW";
-          if (s) {
-            s.innerHTML =
-              'أدخل رقم جوال سعودي <strong>يبدأ بـ 05</strong> (مثال 05XXXXXXXX). سيصلك رمز واتساب لتأكيد وإنشاء الحساب.';
-          }
           if (b) b.textContent = "إنشاء حساب";
-          if (!r) r = "customer";
+          populateRegisterAccountTypes(r || "customer");
+          syncAuthHead();
+        } else {
+          syncLoginRoleUi();
         }
-        if (r) {
+        if (r && mode !== "register") {
           var sel = document.getElementById("role");
           if (sel) sel.value = r;
         }
         syncCustomerRegisterUi();
       })();
-      document.getElementById("role").addEventListener("change", syncCustomerRegisterUi);
+      document.getElementById("role").addEventListener("change", function () {
+        syncCustomerRegisterUi();
+        syncLoginRoleUi();
+      });
+      var serviceTypeSubEl = document.getElementById("serviceTypeSub");
+      if (serviceTypeSubEl) serviceTypeSubEl.addEventListener("change", syncCustomerRegisterUi);
 
       (function initPayoutRegistrationUi() {
         if (!window.ERVENOW_PAYOUT_UI) return;
@@ -325,12 +979,12 @@
           if (!phone) return show("أدخل الرقم", false);
           if (!code) return show("أدخل رمز واتساب أولاً", false);
 
-          var role = document.getElementById("role").value;
+          var roleSel = document.getElementById("role").value;
+          var role = apiRoleFromSelection();
           var extra = {};
           if (isCustomerRegisterMode()) {
             var custName = String(document.getElementById("customerName").value || "").trim();
-            if (!custName) return show("أدخل الاسم كما تود ظهوره في المنصة", false);
-            extra.name = custName;
+            if (custName) extra.name = custName;
           }
           var driverRegPayload = null;
           if (isDriverRegisterMode()) {
@@ -354,11 +1008,42 @@
             driverRegPayload.payout = payoutPayload;
           }
 
-          var verifyBody = Object.assign({ phone: phone, code: code, role: role }, extra);
+          if (isServiceRegisterMode()) {
+            var sName = String(document.getElementById("serviceRegName").value || "").trim();
+            var sType = selectedServiceType();
+            var sArea = readServiceAreaValue();
+            if (!sName) return show("أدخل الاسم", false);
+            if (!sType) return show("اختر نوع الخدمة من القائمة", false);
+            if (!sArea) {
+              return show(isPickupTruckRegister() ? "اختر المدينة" : "أدخل الحي الذي تخدمه", false);
+            }
+            extra.name = sName;
+            extra.service_type = sType;
+            extra.service_district = sArea;
+            extra.district = sArea;
+            if (isPickupTruckRegister()) extra.service_city = sArea;
+            if (isPickupTruckRegister()) {
+              var vType = String(document.getElementById("pickupTruckVehicleType").value || "").trim();
+              var vPlate = String(document.getElementById("pickupTruckPlate").value || "").trim();
+              var vModel = String(document.getElementById("pickupTruckModel").value || "").trim();
+              if (!vType || !vPlate || !vModel) {
+                return show("أكمل بيانات المركبة: النوع، رقم اللوحة، وسنة الموديل", false);
+              }
+              extra.service_vehicle_type = vType;
+              extra.service_plate_number = vPlate;
+              extra.service_vehicle_model = vModel;
+            }
+            if (payoutPayload && !payoutPayload.iban) {
+              return show("أدخل رقم الآيبان لاستلام المستحقات", false);
+            }
+          }
+
+          var loginOnly = !isRegisterMode();
+          var verifyBody = Object.assign({ phone: phone, code: code, login_only: loginOnly }, loginOnly ? {} : { role: role }, extra);
           if (
             payoutPayload &&
             isRegisterMode() &&
-            (role === "merchant" || role === "restaurant" || role === "service")
+            (roleSel === "merchant" || roleSel === "restaurant" || isServiceRegisterMode())
           ) {
             verifyBody.payout = payoutPayload;
           }
@@ -434,22 +1119,8 @@
           }
 
           var actualRole = String((res.user && res.user.role) || role || "").toLowerCase();
-          var target = resolvePostLoginTarget(actualRole, role);
           show("نجاح تسجيل الدخول. تحويل…", true);
-
-          try {
-            window.location.href = target;
-          } catch (navErr) {
-            console.error(navErr);
-            alert("تم التحقق لكن لم يتم التحويل");
-            return;
-          }
-
-          setTimeout(function () {
-            if (window.location.pathname !== target) {
-              alert("تم التحقق لكن لم يتم التحويل — افتح يدوياً: " + target);
-            }
-          }, 1500);
+          await navigateAfterLogin(actualRole);
         } catch (e) {
           show(mapOtpError(String(e.message || e)), false);
         }
@@ -462,13 +1133,15 @@
           if (!isValid05(raw)) {
             return show("أدخل رقم سعودي يبدأ بـ 05 (10 أرقام مثال 05xxxxxxxx)", false);
           }
-          if (!assertDriverOnlyInRegisterMode()) return;
+          var loginOnly = !isRegisterMode();
+          if (!loginOnly && !assertDriverOnlyInRegisterMode()) return;
           var phone = toE164(raw);
-          var role = document.getElementById("role").value;
+          var role = apiRoleFromSelection();
           show("جارٍ إرسال رمز واتساب...", true);
+          var otpBody = loginOnly ? { phone: phone, login_only: true } : { phone: phone, role: role };
           var sent = await window.PlatformAPI.api("/api/core/send-otp", {
             method: "POST",
-            body: { phone: phone, role: role },
+            body: otpBody,
           });
           if (sent.ok === false) {
             return show("تعذر إرسال رمز واتساب", false);
