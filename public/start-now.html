@@ -2,11 +2,13 @@
 <html lang="ar" dir="rtl">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>ابدأ الآن | ERVENOW</title>
     <meta name="description" content="اطلب من مطاعم، متاجر، توصيل، أو خدمات منزلية — كل شيء في مكان واحد." />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/assets/styles.css" />
+    <link rel="stylesheet" href="/assets/guest-shell.css" />
     <style>
       *, *::before, *::after { box-sizing: border-box; }
 
@@ -28,17 +30,12 @@
         --transition:   .22s cubic-bezier(.4,0,.2,1);
       }
 
-      body {
-        margin: 0;
-        font-family: Cairo, sans-serif;
-        background: var(--cream);
-        color: var(--text);
-        min-height: 100dvh;
-        display: flex;
-        flex-direction: column;
+      /* محتوى الصفحة — الهيدر/الفوتر من guest-shell.css */
+      .sn-page .dash-main {
+        flex: 1 1 auto;
+        min-height: 0;
+        width: 100%;
       }
-
-      /* ══ HEADER ══════════════════════════════════════════════ */
 
       /* ══ HERO ═════════════════════════════════════════════════ */
       .sn-hero {
@@ -288,39 +285,6 @@
         font-size: 1.1rem;
       }
 
-      /* ══ FOOTER ═══════════════════════════════════════════════ */
-      .sn-footer {
-        margin-top: 48px;
-        background: var(--brown);
-        color: rgba(255,255,255,.7);
-        text-align: center;
-        padding: 32px 20px;
-      }
-      .sn-footer__logo {
-        font-size: 1.25rem;
-        font-weight: 900;
-        color: #fff;
-        margin-bottom: 10px;
-      }
-      .sn-footer__links {
-        display: flex;
-        justify-content: center;
-        gap: 20px;
-        flex-wrap: wrap;
-        margin-bottom: 18px;
-      }
-      .sn-footer__link {
-        color: rgba(255,255,255,.65);
-        text-decoration: none;
-        font-size: .85rem;
-        font-weight: 600;
-        transition: color var(--transition);
-      }
-      .sn-footer__link:hover { color: #fff; }
-      .sn-footer__copy {
-        font-size: .78rem;
-        color: rgba(255,255,255,.4);
-      }
     </style>
   </head>
   <body class="guest-shell-page sn-page">
@@ -340,7 +304,8 @@
             <a class="dash-site-header__link" href="/stores" data-nav="stores">متاجر</a>
             <a class="dash-site-header__link" href="/delivery-services.html" data-nav="delivery">توصيل</a>
             <a class="dash-site-header__link" href="/services" data-nav="services">خدمات</a>
-            <a class="dash-site-header__link is-active" href="/" data-nav="home" aria-current="page">الرئيسية</a>
+            <a class="dash-site-header__link is-active" href="/start-now.html" data-nav="start" aria-current="page">ابدأ الآن</a>
+            <a class="dash-site-header__link" href="/" data-nav="home">الرئيسية</a>
           </div>
         </nav>
         <div class="dash-site-header__tools">
@@ -373,7 +338,7 @@
       </p>
       <div class="sn-hero__actions">
         <a class="sn-hero__cta" href="/restaurants">ابدأ الطلب</a>
-        <a class="sn-hero__cta sn-hero__cta--outline" href="/dashboard">لوحة التحكم</a>
+        <a class="sn-hero__cta sn-hero__cta--outline" href="/dashboard">لوحة الزائر</a>
       </div>
 
       <!-- guest note داخل الهيرو -->
@@ -459,38 +424,24 @@
       </div>
     </main>
 
-    <!-- ══ FOOTER ═══════════════════════════════════════════════ -->
-    <footer class="sn-footer">
-      <div class="sn-footer__logo">ERVENOW</div>
-      <nav class="sn-footer__links">
-        <a class="sn-footer__link" href="/restaurants">مطاعم</a>
-        <a class="sn-footer__link" href="/stores">متاجر</a>
-        <a class="sn-footer__link" href="/delivery-services.html">توصيل</a>
-        <a class="sn-footer__link" href="/services">خدمات</a>
-        <a class="sn-footer__link" href="/dashboard">حسابي</a>
-        <a class="sn-footer__link" href="/">الرئيسية</a>
+    <footer class="dash-site-footer">
+      <div class="dash-site-footer__logo">ERVENOW</div>
+      <nav class="dash-site-footer__links" aria-label="روابط سفلية">
+        <a class="dash-site-footer__link" href="/restaurants">مطاعم</a>
+        <a class="dash-site-footer__link" href="/stores">متاجر</a>
+        <a class="dash-site-footer__link" href="/delivery-services.html">توصيل</a>
+        <a class="dash-site-footer__link" href="/services">خدمات</a>
+        <a class="dash-site-footer__link" href="/dashboard#dashDeliveryTitle">طلب من الخريطة</a>
+        <a class="dash-site-footer__link" href="/start-now.html">ابدأ الآن</a>
+        <a class="dash-site-footer__link" href="/">الرئيسية</a>
       </nav>
-      <p class="sn-footer__copy">© 2026 ERVENOW — جميع الحقوق محفوظة</p>
+      <p class="dash-site-footer__copy">© 2026 ERVENOW — جميع الحقوق محفوظة</p>
     </footer>
-
-      <footer class="dash-site-footer">
-        <div class="dash-site-footer__logo">ERVENOW</div>
-        <nav class="dash-site-footer__links" aria-label="روابط سفلية">
-          <a class="dash-site-footer__link" href="/restaurants">مطاعم</a>
-          <a class="dash-site-footer__link" href="/stores">متاجر</a>
-          <a class="dash-site-footer__link" href="/delivery-services.html">توصيل</a>
-          <a class="dash-site-footer__link" href="/services">خدمات</a>
-          <a class="dash-site-footer__link" href="/dashboard#dashDeliveryTitle">طلب من الخريطة</a>
-          <a class="dash-site-footer__link" href="/start-now.html">ابدأ الآن</a>
-          <a class="dash-site-footer__link" href="/">الرئيسية</a>
-        </nav>
-        <p class="dash-site-footer__copy">© 2026 ERVENOW — جميع الحقوق محفوظة</p>
-      </footer>
     </div>
     <script src="/assets/cart.js"></script>
     <script src="/assets/guest-shell.js"></script>
     <script>
-      ErvenowGuestShell.init({ activeNav: "home", pageTag: "ابدأ الآن" });
+      ErvenowGuestShell.init({ activeNav: "start", pageTag: "ابدأ الآن" });
     </script>
 
     <script src="/assets/guestBrowse.js"></script>

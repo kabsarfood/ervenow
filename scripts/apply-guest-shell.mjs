@@ -177,6 +177,25 @@ function patchSimplePage(file, active, tag, bodyClass, removeTopNav) {
 function patchStartNow(file) {
   let html = fs.readFileSync(file, "utf8");
   html = ensureHeadLinks(html);
+  if (!html.includes('href="/assets/guest-shell.css"')) {
+    html = html.replace(
+      '<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet" />',
+      '<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet" />\n    <link rel="stylesheet" href="/assets/styles.css" />\n    <link rel="stylesheet" href="/assets/guest-shell.css" />'
+    );
+  }
+  if (html.includes("dash-site-header")) {
+    html = html.replace(
+      '<a class="dash-site-header__link is-active" href="/" data-nav="home" aria-current="page">الرئيسية</a>',
+      '<a class="dash-site-header__link is-active" href="/start-now.html" data-nav="start" aria-current="page">ابدأ الآن</a>\n            <a class="dash-site-header__link" href="/" data-nav="home">الرئيسية</a>'
+    );
+    html = html.replace(
+      'ErvenowGuestShell.init({ activeNav: "home", pageTag: "ابدأ الآن" });',
+      'ErvenowGuestShell.init({ activeNav: "start", pageTag: "ابدأ الآن" });'
+    );
+    fs.writeFileSync(file, html);
+    console.log("patched start-now (links/nav)");
+    return;
+  }
   html = html.replace(/      \.sn-header[\s\S]*?      \.sn-header__btn:hover \{ opacity: \.88; \}\n/, "");
   html = html.replace(
     /<body>[\s\S]*?<header class="sn-header">[\s\S]*?<\/header>\n\n/,
@@ -188,7 +207,7 @@ function patchStartNow(file) {
       `\n${FOOTER}\n    </div>\n$1`
     );
   }
-  html = injectScripts(html, "home", "ابدأ الآن");
+  html = injectScripts(html, "start", "ابدأ الآن");
   fs.writeFileSync(file, html);
   console.log("patched start-now");
 }
