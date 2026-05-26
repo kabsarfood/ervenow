@@ -7,6 +7,7 @@ const { isValidDeliveryTransition } = require("../utils/helpers");
 const { getOrderDeliveryStatus, normalizeIncomingStatus, buildOrderStatusPatch, isTerminalOrderStatus } = require("../domain/orders/orderStatus");
 const { DELIVERY_STATUS } = require("../domain/orders/constants");
 const { settleDeliveredOrderLedgerOnly } = require("./ledgerOnlySettlement");
+const { creditProviderOnDelivered } = require("./providerLedgerCredit");
 const { completeServiceOrder, isServiceOrderRow } = require("./completeServiceOrder");
 const { getOrderProviderId } = require("../utils/orderProviderId");
 const { updateOrdersResilient } = require("../utils/idempotency");
@@ -140,6 +141,7 @@ async function patchUnifiedOrderStatus(sb, entityId, nextStatusRaw, appUser) {
     if (error) return { data: null, error };
 
     let settlementRow = null;
+    let providerCreditRow = null;
     if (nextStatus === DELIVERY_STATUS.DELIVERED) {
       settlementRow = await settleDeliveredOrderLedgerOnly(sb, id, "unified:delivered");
       if (
@@ -151,10 +153,27 @@ async function patchUnifiedOrderStatus(sb, entityId, nextStatusRaw, appUser) {
       ) {
         logger.warn({ orderId: id, result: settlementRow }, "[unifiedOrderStatus] ledger settlement");
       }
+
+      providerCreditRow = await creditProviderOnDelivered(sb, data, "unified:delivered");
+      if (
+        providerCreditRow &&
+        providerCreditRow.ok !== true &&
+        providerCreditRow.ok !== "true" &&
+        providerCreditRow.reason !== "duplicate" &&
+        !providerCreditRow.skipped
+      ) {
+        logger.warn({ orderId: id, result: providerCreditRow }, "[unifiedOrderStatus] provider ledger credit");
+      }
     }
 
     await afterStatusSideEffects(sb, data, current, nextStatus, settlementRow);
-    return { data, error: null, entity: "order", settlement: settlementRow };
+    return {
+      data,
+      error: null,
+      entity: "order",
+      settlement: settlementRow,
+      provider_credit: providerCreditRow,
+    };
   }
 }
 

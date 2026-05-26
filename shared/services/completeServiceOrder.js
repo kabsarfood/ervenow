@@ -4,6 +4,7 @@
 
 const { isHomeServiceType } = require("../utils/homeServicePricing");
 const { settleCompletedServiceLedgerOnly } = require("./ledgerOnlySettlement");
+const { creditProviderOnDelivered } = require("./providerLedgerCredit");
 const { getOrderDeliveryStatus, buildOrderStatusPatch } = require("../domain/orders/orderStatus");
 const { DELIVERY_STATUS } = require("../domain/orders/constants");
 const { updateOrdersResilient } = require("../utils/idempotency");
@@ -96,8 +97,10 @@ async function completeServiceOrder(sb, orderId, providerId, options = {}) {
   const data = upd.data;
   const finalized = getOrderDeliveryStatus(data) === DELIVERY_STATUS.DELIVERED;
 
+  let providerCreditRow = null;
   if (finalized) {
     void settleCompletedServiceLedgerOnly(sb, id, "service:completed");
+    providerCreditRow = await creditProviderOnDelivered(sb, data, "service:delivered");
   }
 
   return {
@@ -106,6 +109,7 @@ async function completeServiceOrder(sb, orderId, providerId, options = {}) {
     finalized,
     provider_completed: providerDone,
     customer_confirmed: customerDone,
+    provider_credit: providerCreditRow,
   };
 }
 

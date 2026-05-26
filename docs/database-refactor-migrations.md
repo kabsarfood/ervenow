@@ -4,7 +4,12 @@
 
 ## ترتيب التنفيذ (إلزامي)
 
-نفّذ في **Supabase → SQL Editor** بالترتيب، بعد الهجرات الأساسية (`schema.sql`, `migration_unified_finance_ledger.sql`, `migration_ervenow_withdraw_requests_schema_cache.sql`):
+**إن لم تكن جداول Ledger موجودة بعد:** نفّذ أولاً:
+
+`shared/migration_bootstrap_ledger_finance.sql` (ملف واحد — جداول + RPC + بذرة محافظ)
+
+ثم (اختياري للمراحل اللاحقة):
+
 
 | # | ملف | المرحلة |
 |---|-----|---------|
