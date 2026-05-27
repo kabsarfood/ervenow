@@ -1070,7 +1070,28 @@
         }
 
         .lp-nav-wrap {
-          display: none !important;
+          display: flex !important;
+          grid-column: 1 / -1;
+          grid-row: 3;
+          width: 100%;
+          justify-content: center;
+          padding-top: 8px;
+          margin-top: 2px;
+          border-top: 1px solid rgba(61, 34, 19, 0.08);
+          overflow-x: auto;
+          -webkit-overflow-scrolling: touch;
+        }
+
+        .lp-nav {
+          flex-wrap: nowrap;
+          gap: 8px;
+          padding-bottom: 2px;
+        }
+
+        .lp-nav a {
+          white-space: nowrap;
+          font-size: 0.8rem;
+          padding: 7px 12px;
         }
 
         #authArea {
@@ -2236,33 +2257,11 @@
             <div class="lp-quick-dd__sep" role="separator"></div>
 
             <div class="lp-dd-mobile-only" aria-label="تصفح الموقع" hidden>
-              <div class="lp-dd-mobile-quick" aria-label="وصول سريع">
-                <a role="menuitem" class="lp-dd-item" href="/restaurants" aria-label="مطاعم"
-                  ><span class="lp-dd-ic" aria-hidden="true">&#127860;</span><span class="lp-dd-link__text">مطاعم</span></a
-                >
-                <a role="menuitem" class="lp-dd-item" href="/stores" aria-label="متاجر"
-                  ><span class="lp-dd-ic" aria-hidden="true">&#128722;</span><span class="lp-dd-link__text">متاجر</span></a
-                >
-                <a role="menuitem" class="lp-dd-item" href="/delivery-services.html" aria-label="توصيل"
-                  ><span class="lp-dd-ic" aria-hidden="true">&#128666;</span><span class="lp-dd-link__text">توصيل</span></a
-                >
-                <a role="menuitem" class="lp-dd-item" href="/services" aria-label="خدمات"
-                  ><span class="lp-dd-ic" aria-hidden="true">&#127869;</span><span class="lp-dd-link__text">خدمات</span></a
-                >
-              </div>
+              <div class="lp-dd-mobile-quick" id="lpMobileQuickNav" aria-label="روابط الهيدر"></div>
               <div class="lp-quick-dd__sep lp-dd-mobile-quick-sep" role="separator" aria-hidden="true"></div>
               <div class="lp-dd-mobile-site" aria-label="صفحات الموقع">
-                <a role="menuitem" class="lp-dd-item" href="/dashboard" aria-label="لوحة الزائر"
-                  ><span class="lp-dd-ic" aria-hidden="true">&#128203;</span><span class="lp-dd-link__text">لوحة الزائر</span></a
-                >
-                <a role="menuitem" class="lp-dd-item" href="/stores" aria-label="متاجر"
-                  ><span class="lp-dd-ic" aria-hidden="true">&#128722;</span><span class="lp-dd-link__text">متاجر</span></a
-                >
                 <a role="menuitem" class="lp-dd-item" href="#trust" aria-label="الثقة"
                   ><span class="lp-dd-ic" aria-hidden="true">&#128737;</span><span class="lp-dd-link__text">الثقة</span></a
-                >
-                <a role="menuitem" class="lp-dd-item" href="/services" aria-label="خدمات"
-                  ><span class="lp-dd-ic" aria-hidden="true">&#127869;</span><span class="lp-dd-link__text">خدمات</span></a
                 >
                 <a role="menuitem" class="lp-dd-item" href="#why" aria-label="لماذا ERVENOW"
                   ><span class="lp-dd-ic" aria-hidden="true">&#10067;</span><span class="lp-dd-link__text">لماذا ERVENOW</span></a
@@ -2396,15 +2395,11 @@
         </div>
         <div class="lp-nav-wrap" id="lpNavWrap">
           <nav class="lp-nav" aria-label="التنقل الرئيسي">
-            <a href="/dashboard">لوحة الزائر</a>
-            <a href="/restaurants">مطاعم</a>
-            <a href="/stores">متاجر</a>
-            <a href="/delivery-services.html">توصيل</a>
-            <a href="/services">خدمات</a>
-            <a href="#trust">الثقة</a>
-            <a href="#why">لماذا ERVENOW</a>
-            <a href="#how">كيف تعمل</a>
-            <a href="#contact">تواصل معنا</a>
+            <a href="/dashboard" data-nav="guest">لوحة الزائر</a>
+            <a href="/dashboard" data-nav="orders">الطلبات</a>
+            <a href="/dashboard" data-nav="control">لوحة التحكم</a>
+            <a href="/dashboard" data-nav="my_orders">طلباتي</a>
+            <a href="/" data-nav="home">الرئيسية</a>
           </nav>
         </div>
       </div>
@@ -2867,6 +2862,7 @@
       })();
     </script>
     <script src="/assets/guestBrowse.js"></script>
+    <script src="/assets/guest-shell.js"></script>
     <script>
       function goLogin() {
         window.location.href = "/login";
@@ -3110,6 +3106,9 @@
           await refreshHeaderWallet("", "");
           clearHeaderUserMid();
           setQuickLogoutVisible(false);
+          if (window.ErvenowGuestShell && ErvenowGuestShell.paintIndexNav) {
+            ErvenowGuestShell.paintIndexNav("");
+          }
         }
         var authArea = document.getElementById("authArea");
         if (token && authArea) {
@@ -3182,6 +3181,9 @@
             }
             setQuickLogoutVisible(true);
             await refreshHeaderWallet(token, role);
+            if (window.ErvenowGuestShell && ErvenowGuestShell.paintIndexNav) {
+              ErvenowGuestShell.paintIndexNav(role);
+            }
           } catch (e) {
             applyStartMenuAuthState(true, "");
             authArea.innerHTML =
@@ -3190,8 +3192,15 @@
               "</button>";
             setQuickLogoutVisible(true);
             await refreshHeaderWallet(token, "");
+            if (window.ErvenowGuestShell && ErvenowGuestShell.paintIndexNav) {
+              ErvenowGuestShell.paintIndexNav("");
+            }
           }
         }
+      }
+
+      if (window.ErvenowGuestShell && ErvenowGuestShell.paintIndexNav) {
+        ErvenowGuestShell.paintIndexNav("");
       }
     </script>
     <script>

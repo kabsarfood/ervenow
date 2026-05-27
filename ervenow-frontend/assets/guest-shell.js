@@ -1,14 +1,27 @@
 (function (global) {
-  var NAV_LINKS = [
-    { key: "guest", href: "/dashboard", label: "لوحة الزائر" },
-    { key: "restaurants", href: "/restaurants", label: "مطاعم" },
-    { key: "stores", href: "/stores", label: "متاجر" },
-    { key: "delivery", href: "/delivery-services.html", label: "توصيل" },
-    { key: "services", href: "/services", label: "خدمات" },
-    { key: "home", href: "/", label: "الرئيسية" },
-  ];
-
   var TOKEN_STORAGE_KEYS = ["ervenow_access_token", "erwenow_access_token", "token"];
+  var _activeNavKey = "";
+
+  /** روابط الهيدر حسب الدور (من القائمة → الهيدر) */
+  function buildNavLinks(role) {
+    var r = String(role || "").toLowerCase();
+    if (r === "user") r = "customer";
+    var links = [{ key: "guest", href: "/dashboard", label: "لوحة الزائر" }];
+    var ordersHref = r === "driver" || r === "admin" ? "/orders" : "/dashboard";
+    links.push({ key: "orders", href: ordersHref, label: "الطلبات" });
+    links.push({
+      key: "control",
+      href: r === "admin" ? "/admin-dashboard" : "/dashboard",
+      label: "لوحة التحكم",
+    });
+    links.push({
+      key: "my_orders",
+      href: r === "driver" ? "/driver" : "/dashboard",
+      label: "طلباتي",
+    });
+    links.push({ key: "home", href: "/", label: "الرئيسية" });
+    return links;
+  }
 
   function hasToken() {
     try {
@@ -145,6 +158,8 @@
     if (!hasToken()) {
       setAccountButtonLoggedOut(switchAccount);
       await refreshHeaderWallet("");
+      paintHeaderNav(_activeNavKey, "");
+      paintIndexNav("");
       return;
     }
     syncGuestBrowseMode();
@@ -158,6 +173,8 @@
       var serviceType = me.profile && me.profile.service_type;
       setAccountButtonLoggedIn(switchAccount, role, serviceType);
       await refreshHeaderWallet(role);
+      paintHeaderNav(_activeNavKey, role);
+      paintIndexNav(role);
       if (role === "driver") {
         document.querySelectorAll(".dash-header-cart").forEach(function (a) {
           a.style.display = "none";
@@ -166,6 +183,57 @@
     } catch (e) {
       setAccountButtonLoggedIn(switchAccount, "customer");
       await refreshHeaderWallet("customer");
+      paintHeaderNav(_activeNavKey, "");
+      paintIndexNav("");
+    }
+  }
+
+  function paintHeaderNav(activeNav, role) {
+    var box = document.querySelector(".dash-site-header__links");
+    if (!box) return;
+    box.innerHTML = buildNavLinks(role)
+      .map(function (l) {
+        return navLinkHtml(l, activeNav || "");
+      })
+      .join("\n");
+  }
+
+  function lpNavLinkHtml(link) {
+    return (
+      '<a href="' +
+      link.href +
+      '" data-nav="' +
+      link.key +
+      '">' +
+      link.label +
+      "</a>"
+    );
+  }
+
+  function paintIndexNav(role) {
+    var wrap = document.getElementById("lpNavWrap");
+    if (!wrap) return;
+    wrap.innerHTML =
+      '<nav class="lp-nav" aria-label="التنقل الرئيسي">' +
+      buildNavLinks(role)
+        .map(lpNavLinkHtml)
+        .join("") +
+      "</nav>";
+    var mobileQuick = document.getElementById("lpMobileQuickNav");
+    if (mobileQuick) {
+      mobileQuick.innerHTML = buildNavLinks(role)
+        .map(function (l) {
+          return (
+            '<a role="menuitem" class="lp-dd-item" href="' +
+            l.href +
+            '" data-nav="' +
+            l.key +
+            '"><span class="lp-dd-ic" aria-hidden="true">•</span><span class="lp-dd-link__text">' +
+            l.label +
+            "</span></a>"
+          );
+        })
+        .join("");
     }
   }
 
@@ -200,9 +268,11 @@
     opts = opts || {};
     var pageTag = opts.pageTag || "ERVENOW";
     var activeNav = opts.activeNav || "";
-    var links = NAV_LINKS.map(function (l) {
-      return navLinkHtml(l, activeNav);
-    }).join("\n            ");
+    var links = buildNavLinks("")
+      .map(function (l) {
+        return navLinkHtml(l, activeNav);
+      })
+      .join("\n            ");
     return (
       '<header class="dash-site-header">' +
       '<div class="dash-site-header__inner">' +
@@ -285,11 +355,13 @@
 
   function init(opts) {
     opts = opts || {};
+    _activeNavKey = opts.activeNav || "";
     if (opts.pageTag) {
       var tag = document.getElementById("guestShellPageTag");
       if (tag) tag.textContent = opts.pageTag;
     }
-    setActiveNav(opts.activeNav || "");
+    paintHeaderNav(_activeNavKey, "");
+    paintIndexNav("");
     refreshCartBadge();
     loadPlatformAccessScript();
     loadAccountDestScript();
@@ -318,6 +390,9 @@
     mountShell: mountShell,
     renderHeader: renderHeader,
     renderFooter: renderFooter,
+    buildNavLinks: buildNavLinks,
+    paintHeaderNav: paintHeaderNav,
+    paintIndexNav: paintIndexNav,
     refreshCartBadge: refreshCartBadge,
     refreshHeaderWallet: refreshHeaderWallet,
     refreshAuthHeader: function () {
