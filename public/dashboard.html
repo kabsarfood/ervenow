@@ -496,17 +496,191 @@
         color: rgba(45, 30, 20, 0.72);
         line-height: 1.35;
       }
+      .cat-card--map {
+        padding: 0;
+        min-height: 100px;
+      }
+      .cat-card--map[open] {
+        grid-column: 1 / -1;
+        width: 100%;
+        max-width: 100%;
+        border-color: rgba(185, 135, 47, 0.42);
+        box-shadow: 0 10px 28px rgba(45, 28, 14, 0.1);
+      }
+      .cat-card__summary {
+        list-style: none;
+        cursor: pointer;
+        padding: clamp(12px, 2.8vw, 16px);
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+      }
+      .cat-card__summary::-webkit-details-marker {
+        display: none;
+      }
+      .cat-card--map[open] > .cat-card__summary {
+        background: linear-gradient(180deg, #3d2213 0%, #2b170d 100%);
+        color: #f8f4ee;
+        border-bottom: 1px solid rgba(185, 135, 47, 0.28);
+      }
+      .cat-card--map[open] > .cat-card__summary strong,
+      .cat-card--map[open] > .cat-card__summary span {
+        color: #f8f4ee;
+      }
+      .cat-card--map .delivery-panel {
+        margin: 0;
+        padding: clamp(12px, 2.5vw, 16px);
+        border-top: 1px solid rgba(61, 34, 19, 0.08);
+      }
+      .cat-card--map .delivery-panel__title {
+        margin: 0 0 10px;
+        font-size: clamp(1rem, 2.4vw, 1.12rem);
+        font-weight: 800;
+        color: var(--brown, #3d2213);
+      }
+      .cat-card--map[open] .delivery-form {
+        display: grid;
+        gap: clamp(10px, 2vw, 14px);
+        width: 100%;
+        max-width: 100%;
+      }
+      .cat-card--map[open] .delivery-form > select {
+        grid-column: 1 / -1;
+        width: 100%;
+      }
+      .cat-card--map[open] .delivery-locs {
+        grid-column: 1 / -1;
+      }
+      .cat-card--map[open] #pickupDropMap {
+        grid-column: 1 / -1;
+        width: 100%;
+        min-height: clamp(200px, 34vw, 280px);
+        max-height: 320px;
+      }
+      .cat-card--map[open] .btn-row {
+        grid-column: 1 / -1;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        flex-direction: row;
+        align-items: stretch;
+      }
+      .cat-card--map[open] .btn-row .btn {
+        flex: 1 1 140px;
+        min-width: 0;
+        width: auto;
+      }
+      .cat-card--map[open] .delivery-stats {
+        grid-column: 1 / -1;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px 12px;
+      }
+      .cat-card--map[open] .delivery-stats .sub {
+        font-size: 0.84rem;
+      }
+      .cat-card--map[open] #result {
+        grid-column: 1 / -1;
+      }
+      @media (min-width: 768px) {
+        .cat-card--map[open] .delivery-form {
+          grid-template-columns: minmax(0, 1fr) minmax(280px, 1.15fr);
+          align-items: start;
+        }
+        .cat-card--map[open] .delivery-form > select {
+          grid-row: 1;
+        }
+        .cat-card--map[open] .delivery-locs {
+          grid-column: 1;
+          grid-row: 2;
+          align-self: start;
+        }
+        .cat-card--map[open] #pickupDropMap {
+          grid-column: 2;
+          grid-row: 2 / span 2;
+          min-height: 280px;
+          max-height: 340px;
+          height: 100%;
+          align-self: stretch;
+        }
+        .cat-card--map[open] .btn-row {
+          grid-column: 1;
+          grid-row: 3;
+          align-self: end;
+        }
+        .cat-card--map[open] .delivery-stats {
+          grid-column: 1 / -1;
+          grid-row: 4;
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
+        .cat-card--map[open] #result {
+          grid-column: 1 / -1;
+          grid-row: 5;
+        }
+      }
 
       .dash-quick-card {
         margin-bottom: 14px;
       }
-      .dash-delivery-card .grid-apps {
+      .dash-map-quick {
+        margin-top: 16px;
+        padding: clamp(14px, 3vw, 18px);
+        border-radius: 14px;
+        border: 1px solid rgba(185, 135, 47, 0.28);
+        background: linear-gradient(145deg, rgba(255, 254, 251, 0.98), rgba(248, 240, 228, 0.92));
+        scroll-margin-top: 88px;
+      }
+      .dash-map-quick__head {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        margin-bottom: 12px;
+      }
+      .dash-map-quick__icon {
+        font-size: 1.6rem;
+        line-height: 1;
+        flex-shrink: 0;
+      }
+      .dash-map-quick__title {
+        margin: 0;
+        font-size: clamp(1rem, 2.6vw, 1.12rem);
+        font-weight: 900;
+        color: var(--brown, #3d2213);
+      }
+      .dash-map-quick__hint {
+        margin: 4px 0 0;
+        font-size: 0.86rem;
+        font-weight: 600;
+        color: rgba(45, 30, 20, 0.72);
+        line-height: 1.45;
+      }
+      .dash-map-quick .grid-apps {
         grid-template-columns: 1fr;
       }
-      .dash-delivery-card .app-tile {
-        min-height: 72px;
+      .dash-map-quick .delivery-dropdown > summary {
+        list-style: none;
       }
-      .dash-delivery-card .btn-row .btn {
+      .dash-map-quick .delivery-dropdown > summary::-webkit-details-marker {
+        display: none;
+      }
+      .dash-map-quick__open {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        margin: 0 0 10px;
+        padding: 10px 14px;
+        border-radius: 10px;
+        border: 1px dashed rgba(185, 135, 47, 0.45);
+        background: rgba(255, 254, 251, 0.9);
+        font-family: inherit;
+        font-size: 0.86rem;
+        font-weight: 800;
+        color: var(--brown, #3d2213);
+        cursor: pointer;
+      }
+      .dash-map-quick .btn-row .btn {
         min-height: 48px;
         font-size: 1rem;
       }
@@ -642,11 +816,11 @@
         padding: clamp(14px, 3.5vw, 20px);
         margin-bottom: clamp(12px, 2.5vw, 16px);
       }
-      .dash-delivery-card .btn-row {
+      .dash-map-quick .btn-row {
         flex-direction: column;
         align-items: stretch;
       }
-      .dash-delivery-card .btn-row .btn {
+      .dash-map-quick .btn-row .btn {
         width: 100%;
         min-height: 48px;
       }
@@ -689,11 +863,18 @@
           font-size: 0.8rem;
           padding: 4px 2px;
         }
-        #pickupDropMap {
-          min-height: min(50vh, 320px);
+        .cat-card--map[open] #pickupDropMap {
+          min-height: 220px;
+          max-height: 260px;
         }
-        .delivery-dropdown[open] #pickupDropMap {
-          min-height: min(58vh, 380px);
+        .cat-card--map[open] .delivery-stats {
+          grid-template-columns: 1fr;
+        }
+        .cat-card--map[open] .btn-row {
+          flex-direction: column;
+        }
+        .cat-card--map[open] .btn-row .btn {
+          width: 100%;
         }
       }
       @media (min-width: 641px) and (max-width: 1024px) {
@@ -788,7 +969,7 @@
           <div>
             <h2 class="dash-hero__title" id="dashHeroTitle">أهلاً بكم في منصة ارفينو</h2>
             <p class="dash-hero__lead">
-              تصفّح الأقسام من التبويبات أدناه، أو أنشئ طلب توصيل مباشرة من الخريطة في أسفل الصفحة.
+              تصفّح الأقسام من التبويبات أدناه، أو أنشئ طلب توصيل مباشرة من الخريطة داخل «تفاصيل سريعة».
             </p>
           </div>
           <div class="dash-hero__art">
@@ -854,7 +1035,96 @@
               <a class="cat-card" href="/delivery-services.html?service=local_delivery"><span class="cat-card__icon" aria-hidden="true">📦</span><strong>توصيل داخلي</strong><span>داخل الأحياء.</span></a>
               <a class="cat-card" href="/delivery-services.html?service=furniture"><span class="cat-card__icon" aria-hidden="true">🛋️</span><strong>نقل أثاث</strong><span>جدولة مرنة.</span></a>
               <a class="cat-card" href="/delivery-services.html?service=gas_delivery"><span class="cat-card__icon" aria-hidden="true">🔥</span><strong>توصيل غاز</strong><span>عند الطلب.</span></a>
-              <a class="cat-card" href="#dashDeliveryTitle"><span class="cat-card__icon" aria-hidden="true">🗺️</span><strong>من الخريطة</strong><span>احسب المسافة وأنشئ الطلب.</span></a>
+              <details class="cat-card cat-card--map" id="dashDeliveryTitle">
+                <summary class="cat-card__summary" id="tileDelivery" data-service="delivery">
+                  <span class="cat-card__icon" aria-hidden="true">🗺️</span>
+                  <strong>من الخريطة</strong>
+                  <span>احسب المسافة وأنشئ الطلب.</span>
+                </summary>
+                <div class="delivery-panel">
+                  <h2 class="delivery-panel__title">🚚 طلب توصيل</h2>
+                  <div class="delivery-form">
+                    <select id="vehicleType" onchange="recalculatePricePreview()">
+                      <option value="bike">دراجة نارية (0 - 7 كم = 15 ريال)</option>
+                      <option value="car" selected>سيارة (0 - 7 كم = 22 ريال)</option>
+                    </select>
+                    <div class="delivery-locs">
+                      <div class="delivery-loc-block">
+                        <label class="delivery-loc-label" for="from">من — الاستلام</label>
+                        <input
+                          id="from"
+                          type="text"
+                          autocomplete="street-address"
+                          placeholder="عنوان أو lat,lng"
+                          oninput="handleLocationInputChange()"
+                        />
+                        <div class="delivery-loc-actions">
+                          <button
+                            class="btn btn-ghost map-action-btn"
+                            id="btnSelectFrom"
+                            type="button"
+                            onclick="selectMode('from')"
+                            title="تحديد على الخريطة"
+                          >
+                            🗺 خريطة
+                          </button>
+                          <button
+                            class="btn btn-ghost map-action-btn"
+                            type="button"
+                            onclick="openGoogleMapsFor('from')"
+                            title="فتح في Google Maps"
+                          >
+                            🗺 Google
+                          </button>
+                        </div>
+                      </div>
+                      <div class="delivery-loc-block">
+                        <label class="delivery-loc-label" for="to">إلى — التسليم</label>
+                        <input
+                          id="to"
+                          type="text"
+                          autocomplete="street-address"
+                          placeholder="عنوان أو lat,lng"
+                          oninput="handleLocationInputChange()"
+                        />
+                        <div class="delivery-loc-actions">
+                          <button
+                            class="btn btn-ghost map-action-btn"
+                            id="btnSelectTo"
+                            type="button"
+                            onclick="selectMode('to')"
+                            title="تحديد على الخريطة"
+                          >
+                            🗺 خريطة
+                          </button>
+                          <button
+                            class="btn btn-ghost map-action-btn"
+                            type="button"
+                            onclick="openGoogleMapsFor('to')"
+                            title="فتح في Google Maps"
+                          >
+                            🗺 Google
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                    <div id="pickupDropMap"></div>
+                    <div class="btn-row">
+                      <button class="btn btn-ghost" type="button" onclick="calculate()">احسب المسافة</button>
+                      <button id="createBtn" class="btn btn-primary" type="button" onclick="createOrder()" disabled>
+                        إنشاء الطلب
+                      </button>
+                    </div>
+                    <div class="delivery-stats">
+                      <p id="distance" class="sub">المسافة: —</p>
+                      <p id="price" class="sub">السعر: —</p>
+                      <p id="platformFeeLine" class="sub">عمولة المنصة (15%): —</p>
+                      <p id="driverNetLine" class="sub">صافي المندوب: —</p>
+                    </div>
+                    <p id="result" class="sub" style="margin: 0"></p>
+                  </div>
+                </div>
+              </details>
             </div>
           </div>
 
@@ -866,106 +1136,7 @@
             <a href="/">الرئيسية</a>
           </p>
         </div>
-      </section>
 
-      <section class="card dash-delivery-card" aria-labelledby="dashDeliveryTitle">
-        <h2 class="dash-section-title" id="dashDeliveryTitle">طلب توصيل من الخريطة</h2>
-        <div class="grid-apps">
-          <details class="delivery-dropdown" id="deliveryDetails">
-            <summary>
-              <div class="app-tile" style="cursor: pointer" id="tileDelivery" data-service="delivery">
-                <strong>افتح نموذج التوصيل</strong>
-                <span>احسب المسافة وأنشئ الطلب من الخريطة</span>
-              </div>
-            </summary>
-            <div class="delivery-panel">
-              <h2 style="margin: 6px 0 10px; font-size: 1.15rem">🚚 طلب توصيل</h2>
-              <div class="delivery-form">
-                <select id="vehicleType" onchange="recalculatePricePreview()">
-                  <option value="bike">دراجة نارية (0 - 7 كم = 15 ريال)</option>
-                  <option value="car" selected>سيارة (0 - 7 كم = 22 ريال)</option>
-                </select>
-                <div class="delivery-locs">
-                  <div class="delivery-loc-block">
-                    <label class="delivery-loc-label" for="from">من — الاستلام</label>
-                    <input
-                      id="from"
-                      type="text"
-                      autocomplete="street-address"
-                      placeholder="عنوان أو lat,lng"
-                      oninput="handleLocationInputChange()"
-                    />
-                    <div class="delivery-loc-actions">
-                      <button
-                        class="btn btn-ghost map-action-btn"
-                        id="btnSelectFrom"
-                        type="button"
-                        onclick="selectMode('from')"
-                        title="تحديد على الخريطة"
-                      >
-                        🗺 خريطة
-                      </button>
-                      <button
-                        class="btn btn-ghost map-action-btn"
-                        type="button"
-                        onclick="openGoogleMapsFor('from')"
-                        title="فتح في Google Maps"
-                      >
-                        🗺 Google
-                      </button>
-                    </div>
-                  </div>
-                  <div class="delivery-loc-block">
-                    <label class="delivery-loc-label" for="to">إلى — التسليم</label>
-                    <input
-                      id="to"
-                      type="text"
-                      autocomplete="street-address"
-                      placeholder="عنوان أو lat,lng"
-                      oninput="handleLocationInputChange()"
-                    />
-                    <div class="delivery-loc-actions">
-                      <button
-                        class="btn btn-ghost map-action-btn"
-                        id="btnSelectTo"
-                        type="button"
-                        onclick="selectMode('to')"
-                        title="تحديد على الخريطة"
-                      >
-                        🗺 خريطة
-                      </button>
-                      <button
-                        class="btn btn-ghost map-action-btn"
-                        type="button"
-                        onclick="openGoogleMapsFor('to')"
-                        title="فتح في Google Maps"
-                      >
-                        🗺 Google
-                      </button>
-                    </div>
-                  </div>
-                </div>
-                <div id="pickupDropMap"></div>
-                <div class="btn-row">
-                  <button class="btn btn-ghost" type="button" onclick="calculate()">احسب المسافة</button>
-                  <button id="createBtn" class="btn btn-primary" type="button" onclick="createOrder()" disabled>
-                    إنشاء الطلب
-                  </button>
-                </div>
-                <div class="delivery-stats">
-                  <p id="distance" class="sub">المسافة: —</p>
-                  <p id="price" class="sub">السعر: —</p>
-                  <p id="platformFeeLine" class="sub">عمولة المنصة (15%): —</p>
-                  <p id="driverNetLine" class="sub">صافي المندوب: —</p>
-                </div>
-                <p id="result" class="sub" style="margin: 0"></p>
-              </div>
-            </div>
-          </details>
-        </div>
-        <div class="btn-row" style="margin-top: 20px">
-          <a class="btn btn-primary" href="/order" style="flex: 1; text-align: center; max-width: 100%">اطلب الآن</a>
-        </div>
       </section>
       </main>
     </div>
@@ -977,7 +1148,7 @@
         <a class="dash-site-footer__link" href="/stores">متاجر</a>
         <a class="dash-site-footer__link" href="/delivery-services.html">توصيل</a>
         <a class="dash-site-footer__link" href="/services">خدمات</a>
-        <a class="dash-site-footer__link" href="#dashDeliveryTitle">طلب من الخريطة</a>
+        <a class="dash-site-footer__link" href="/dashboard#dashDeliveryTitle">من الخريطة</a>
         <a class="dash-site-footer__link" href="/start-now.html">ابدأ الآن</a>
         <a class="dash-site-footer__link" href="/">الرئيسية</a>
       </nav>
@@ -1002,7 +1173,7 @@
       }
 
       function setActiveServiceCard(serviceKey) {
-        var tiles = document.querySelectorAll(".grid-apps .app-tile[data-service]");
+        var tiles = document.querySelectorAll(".grid-apps [data-service]");
         tiles.forEach(function (tile) {
           var key = tile.getAttribute("data-service");
           if (key === serviceKey) tile.classList.add("is-active");
@@ -1562,28 +1733,66 @@
         enableCreate();
       }
 
-      (function initDashTabs() {
+      function activateDashTab(tabKey) {
         var nav = document.querySelector(".dash-tabs__nav");
         if (!nav) return;
         var tabs = nav.querySelectorAll('[role="tab"]');
         var panels = document.querySelectorAll(".dash-tabs__panel");
+        tabs.forEach(function (t) {
+          var active = t.getAttribute("data-tab") === tabKey;
+          t.setAttribute("aria-selected", active ? "true" : "false");
+          t.classList.toggle("is-active", active);
+        });
+        panels.forEach(function (p) {
+          p.hidden = p.id !== "panel-" + tabKey;
+        });
+      }
+
+      function openDashMapQuick(opts) {
+        opts = opts || {};
+        activateDashTab("delivery");
+        var details = document.getElementById("dashDeliveryTitle");
+        if (details && opts.openForm) details.open = true;
+        if (details) {
+          requestAnimationFrame(function () {
+            details.scrollIntoView({ behavior: "smooth", block: "start" });
+          });
+        }
+        if (details && details.open) {
+          setActiveServiceCard("delivery");
+          initMap();
+          refreshMapSize();
+        }
+      }
+
+      (function initDashTabs() {
+        var nav = document.querySelector(".dash-tabs__nav");
+        if (!nav) return;
+        var tabs = nav.querySelectorAll('[role="tab"]');
         tabs.forEach(function (tab) {
           tab.addEventListener("click", function () {
-            var id = tab.getAttribute("data-tab");
-            tabs.forEach(function (t) {
-              var active = t === tab;
-              t.setAttribute("aria-selected", active ? "true" : "false");
-              t.classList.toggle("is-active", active);
-            });
-            panels.forEach(function (p) {
-              p.hidden = p.id !== "panel-" + id;
-            });
+            activateDashTab(tab.getAttribute("data-tab"));
           });
+        });
+        document.querySelectorAll("[data-dash-map-jump], a[href*='#dashDeliveryTitle']").forEach(function (link) {
+          link.addEventListener("click", function (e) {
+            var href = link.getAttribute("href") || "";
+            if (href.indexOf("dashDeliveryTitle") === -1) return;
+            if (link.closest("#dashDeliveryTitle")) return;
+            e.preventDefault();
+            openDashMapQuick({ openForm: false });
+          });
+        });
+        if (location.hash === "#dashDeliveryTitle") {
+          openDashMapQuick({ openForm: true });
+        }
+        window.addEventListener("hashchange", function () {
+          if (location.hash === "#dashDeliveryTitle") openDashMapQuick({ openForm: true });
         });
       })();
 
       (function initServiceCardsUi() {
-        var deliveryDetails = document.getElementById("deliveryDetails");
+        var deliveryDetails = document.getElementById("dashDeliveryTitle");
         if (deliveryDetails) {
           deliveryDetails.addEventListener("toggle", function () {
             if (deliveryDetails.open) {
@@ -1594,7 +1803,6 @@
               setActiveServiceCard("");
             }
           });
-          setActiveServiceCard("");
         }
       })();
 

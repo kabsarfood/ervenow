@@ -598,6 +598,136 @@
         border-color: rgba(211, 47, 47, 0.28);
       }
 
+      .lp-cart-line__qty {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: rgba(255, 254, 251, 0.95);
+        padding: 2px;
+      }
+
+      .lp-cart-line__qty-btn {
+        font-family: inherit;
+        width: 28px;
+        height: 28px;
+        border: none;
+        border-radius: 8px;
+        background: transparent;
+        font-size: 1rem;
+        font-weight: 800;
+        color: var(--brown);
+        cursor: pointer;
+        line-height: 1;
+      }
+
+      .lp-cart-line__qty-btn:hover {
+        background: rgba(185, 135, 47, 0.14);
+      }
+
+      .lp-cart-line__qty-val {
+        min-width: 1.5rem;
+        text-align: center;
+        font-size: 0.88rem;
+        font-weight: 800;
+        font-variant-numeric: tabular-nums;
+        color: var(--brown);
+      }
+
+      .lp-cart-line__qty-static {
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: var(--muted);
+      }
+
+      .lp-cart-panel--empty .lp-cart-panel__welcome {
+        padding-bottom: 10px;
+      }
+
+      .lp-cart-panel__title-row {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .lp-cart-panel__count-badge {
+        font-size: 0.72rem;
+        font-weight: 800;
+        padding: 3px 10px;
+        border-radius: 999px;
+        background: rgba(185, 135, 47, 0.22);
+        color: #5c3710;
+      }
+
+      .lp-cart-panel__count-badge[hidden] {
+        display: none !important;
+      }
+
+      .lp-cart-panel__empty-cta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        justify-content: center;
+        margin-top: 12px;
+      }
+
+      .lp-cart-panel__empty-cta[hidden] {
+        display: none !important;
+      }
+
+      .lp-cart-panel__empty-btn {
+        font-family: inherit;
+        font-size: 0.82rem;
+        font-weight: 800;
+        padding: 8px 14px;
+        border-radius: 10px;
+        border: 1px solid rgba(185, 135, 47, 0.35);
+        background: rgba(255, 254, 251, 0.95);
+        color: var(--brown);
+        text-decoration: none;
+        cursor: pointer;
+        transition: background 0.2s, border-color 0.2s;
+      }
+
+      .lp-cart-panel__empty-btn:hover {
+        background: rgba(201, 162, 39, 0.16);
+        border-color: rgba(185, 135, 47, 0.5);
+      }
+
+      .lp-cart-panel__empty-btn--primary {
+        background: linear-gradient(135deg, rgba(185, 135, 47, 0.28), rgba(122, 90, 31, 0.12));
+        border-color: rgba(185, 135, 47, 0.45);
+      }
+
+      .lp-cart-panel__fin-details {
+        margin: 2px 0 0;
+      }
+
+      .lp-cart-panel__fin-details summary {
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: var(--muted);
+        cursor: pointer;
+        list-style: none;
+        user-select: none;
+      }
+
+      .lp-cart-panel__fin-details summary::-webkit-details-marker {
+        display: none;
+      }
+
+      .lp-cart-panel__fin-details[open] summary {
+        margin-bottom: 6px;
+      }
+
+      .lp-cart-panel__summary[hidden],
+      .lp-cart-panel__footer[hidden] {
+        display: none !important;
+      }
+
       .lp-cart-panel__summary {
         flex-shrink: 0;
         display: flex;
@@ -2276,7 +2406,7 @@
             </div>
             <div class="lp-dd-sep-mobile" role="separator" hidden></div>
 
-            <a role="menuitem" class="lp-dd-item" href="/admin-dashboard" aria-label="لوحة التحكم" data-nav-role="admin" hidden
+            <a role="menuitem" class="lp-dd-item" href="/admin-login" aria-label="لوحة التحكم" id="lpNavControlMenu"
               ><span class="lp-dd-ic" aria-hidden="true">&#128272;</span><span class="lp-dd-link__text">لوحة التحكم</span></a
             >
             <a role="menuitem" class="lp-dd-item" href="/services-provider.html" aria-label="لوحة مزود الخدمة" data-nav-role="service" hidden
@@ -2323,7 +2453,7 @@
             </button>
             <div class="lp-cart-backdrop" id="lpCartBackdrop" aria-hidden="true"></div>
             <div
-              class="lp-cart-panel"
+              class="lp-cart-panel lp-cart-panel--empty"
               id="lpCartPanel"
               role="dialog"
               aria-modal="true"
@@ -2336,17 +2466,24 @@
               <div class="lp-cart-panel__inner">
                 <header class="lp-cart-panel__welcome">
                   <p class="lp-cart-panel__eyebrow">ERVENOW</p>
-                  <h2 id="lpCartDialogTitle" class="lp-cart-panel__title">مرحباً بك</h2>
-                  <p class="lp-cart-panel__sub">راجع أصناف طلبك — أسعارها كما أُضيفت من المتجر أو من حاسبة الخدمات في المنصة، ثم تابع للدفع.</p>
+                  <div class="lp-cart-panel__title-row">
+                    <h2 id="lpCartDialogTitle" class="lp-cart-panel__title">سلتك</h2>
+                    <span id="lpCartItemBadge" class="lp-cart-panel__count-badge" hidden>0</span>
+                  </div>
+                  <p id="lpCartPanelSub" class="lp-cart-panel__sub">أضف منتجات أو خدمات، ثم أكمل الدفع.</p>
                 </header>
                 <section class="lp-cart-panel__lines" aria-labelledby="lpCartLinesHeading">
                   <h3 id="lpCartLinesHeading" class="lp-cart-panel__section-title">الأصناف</h3>
                   <div id="lpCartLines" class="lp-cart-panel__list"></div>
-                  <p id="lpCartEmpty" class="lp-cart-panel__empty" hidden>
-                    السلة فارغة حالياً — تصفّح المتاجر أو الخدمات وأضف ما تحتاجه.
-                  </p>
+                  <p id="lpCartEmpty" class="lp-cart-panel__empty" hidden>السلة فارغة — ابدأ من أحد الأقسام:</p>
+                  <div id="lpCartEmptyCta" class="lp-cart-panel__empty-cta" hidden>
+                    <a class="lp-cart-panel__empty-btn" href="/stores">متاجر</a>
+                    <a class="lp-cart-panel__empty-btn" href="/services">خدمات</a>
+                    <a class="lp-cart-panel__empty-btn" href="/delivery-services.html">توصيل</a>
+                    <a class="lp-cart-panel__empty-btn lp-cart-panel__empty-btn--primary" href="/start-now.html">ابدأ طلباً</a>
+                  </div>
                 </section>
-                <div class="lp-cart-panel__summary">
+                <div id="lpCartSummary" class="lp-cart-panel__summary" hidden>
                   <div class="lp-cart-panel__fin-row">
                     <span>المجموع الفرعي</span>
                     <span class="lp-cart-panel__fin-val" id="lpCartSub">٠٫٠٠ <small class="lp-cart-panel__cur">ر.س</small></span>
@@ -2356,25 +2493,28 @@
                     <span class="lp-cart-panel__fin-val" id="lpCartDel">٠٫٠٠ <small class="lp-cart-panel__cur">ر.س</small></span>
                   </div>
                   <p id="lpCartDelNote" class="lp-cart-panel__fin-note" hidden>
-                    لطلبات المتجر: تُحدَّد أجرة التوصيل بعد «تحديد موقعي» في صفحة السلة (كم × 2.3 ر.س) كما في إتمام الطلب.
+                    لطلبات المتجر: تُحسب أجرة التوصيل في صفحة السلة بعد تحديد موقعك (كم × 2.3 ر.س).
                   </p>
                   <div class="lp-cart-panel__fin-row">
                     <span>ضريبة القيمة المضافة (15%)</span>
                     <span class="lp-cart-panel__fin-val" id="lpCartVat">٠٫٠٠ <small class="lp-cart-panel__cur">ر.س</small></span>
                   </div>
-                  <div class="lp-cart-panel__fin-row">
-                    <span>عمولة المنصة (7%)</span>
-                    <span class="lp-cart-panel__fin-val" id="lpCartComm">٠٫٠٠ <small class="lp-cart-panel__cur">ر.س</small></span>
-                  </div>
-                  <p class="lp-cart-panel__fin-note" style="margin-top: 2px">
-                    العمولة تُقتطع من التاجر أو مزود الخدمة — لا تُضاف إلى إجمالي المبلغ الذي تدفعه.
-                  </p>
+                  <details class="lp-cart-panel__fin-details">
+                    <summary>تفاصيل إضافية (عمولة المنصة)</summary>
+                    <div class="lp-cart-panel__fin-row">
+                      <span>عمولة المنصة (7%)</span>
+                      <span class="lp-cart-panel__fin-val" id="lpCartComm">٠٫٠٠ <small class="lp-cart-panel__cur">ر.س</small></span>
+                    </div>
+                    <p class="lp-cart-panel__fin-note" style="margin-top: 2px">
+                      تُقتطع من التاجر أو مزود الخدمة — لا تُضاف إلى ما تدفعه.
+                    </p>
+                  </details>
                   <div class="lp-cart-panel__fin-row lp-cart-panel__fin-row--grand">
                     <span>الإجمالي المستحق</span>
                     <span class="lp-cart-panel__fin-val" id="lpCartTotal">٠٫٠٠ <small class="lp-cart-panel__cur">ر.س</small></span>
                   </div>
                 </div>
-                <footer class="lp-cart-panel__footer">
+                <footer id="lpCartFooter" class="lp-cart-panel__footer" hidden>
                   <p class="lp-cart-panel__pay-label">وسائل الدفع</p>
                   <div id="lpCartPayIcons" class="erv-pay-cards" role="radiogroup" aria-label="اختر وسيلة الدفع"></div>
                   <div id="lpCartEwPayDetail" class="erv-pay-ew-detail" hidden>
@@ -2385,7 +2525,7 @@
                     </div>
                     <p class="erv-pay-ew-detail__tagline">⚡ دفع فوري وآمن</p>
                   </div>
-                  <button type="button" class="lp-cart-panel__checkout" id="lpCartCheckoutBtn">إتمام الطلب</button>
+                  <button type="button" class="lp-cart-panel__checkout" id="lpCartCheckoutBtn" disabled>متابعة الدفع</button>
                 </footer>
               </div>
             </div>
@@ -2397,7 +2537,7 @@
           <nav class="lp-nav" aria-label="التنقل الرئيسي">
             <a href="/dashboard" data-nav="guest">لوحة الزائر</a>
             <a href="/dashboard" data-nav="orders">الطلبات</a>
-            <a href="/dashboard" data-nav="control">لوحة التحكم</a>
+            <a href="/admin-login" data-nav="control">لوحة التحكم</a>
             <a href="/dashboard" data-nav="my_orders">طلباتي</a>
             <a href="/" data-nav="home">الرئيسية</a>
           </nav>

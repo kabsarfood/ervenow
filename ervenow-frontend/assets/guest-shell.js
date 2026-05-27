@@ -3,15 +3,18 @@
   var _activeNavKey = "";
 
   /** روابط الهيدر حسب الدور (من القائمة → الهيدر) */
-  function buildNavLinks(role) {
+  function buildNavLinks(role, opts) {
+    opts = opts && typeof opts === "object" ? opts : {};
     var r = String(role || "").toLowerCase();
     if (r === "user") r = "customer";
     var links = [{ key: "guest", href: "/dashboard", label: "لوحة الزائر" }];
     var ordersHref = r === "driver" || r === "admin" ? "/orders" : "/dashboard";
     links.push({ key: "orders", href: ordersHref, label: "الطلبات" });
+    var controlHref = "/admin-login";
+    if (r === "admin" && opts.authenticated) controlHref = "/admin-dashboard";
     links.push({
       key: "control",
-      href: r === "admin" ? "/admin-dashboard" : "/dashboard",
+      href: controlHref,
       label: "لوحة التحكم",
     });
     links.push({
@@ -158,8 +161,8 @@
     if (!hasToken()) {
       setAccountButtonLoggedOut(switchAccount);
       await refreshHeaderWallet("");
-      paintHeaderNav(_activeNavKey, "");
-      paintIndexNav("");
+      paintHeaderNav(_activeNavKey, "", { authenticated: false });
+      paintIndexNav("", { authenticated: false });
       return;
     }
     syncGuestBrowseMode();
@@ -173,8 +176,8 @@
       var serviceType = me.profile && me.profile.service_type;
       setAccountButtonLoggedIn(switchAccount, role, serviceType);
       await refreshHeaderWallet(role);
-      paintHeaderNav(_activeNavKey, role);
-      paintIndexNav(role);
+      paintHeaderNav(_activeNavKey, role, { authenticated: true });
+      paintIndexNav(role, { authenticated: true });
       if (role === "driver") {
         document.querySelectorAll(".dash-header-cart").forEach(function (a) {
           a.style.display = "none";
@@ -183,15 +186,15 @@
     } catch (e) {
       setAccountButtonLoggedIn(switchAccount, "customer");
       await refreshHeaderWallet("customer");
-      paintHeaderNav(_activeNavKey, "");
-      paintIndexNav("");
+      paintHeaderNav(_activeNavKey, "", { authenticated: false });
+      paintIndexNav("", { authenticated: false });
     }
   }
 
-  function paintHeaderNav(activeNav, role) {
+  function paintHeaderNav(activeNav, role, opts) {
     var box = document.querySelector(".dash-site-header__links");
     if (!box) return;
-    box.innerHTML = buildNavLinks(role)
+    box.innerHTML = buildNavLinks(role, opts)
       .map(function (l) {
         return navLinkHtml(l, activeNav || "");
       })
@@ -210,18 +213,18 @@
     );
   }
 
-  function paintIndexNav(role) {
+  function paintIndexNav(role, opts) {
     var wrap = document.getElementById("lpNavWrap");
     if (!wrap) return;
     wrap.innerHTML =
       '<nav class="lp-nav" aria-label="التنقل الرئيسي">' +
-      buildNavLinks(role)
+      buildNavLinks(role, opts)
         .map(lpNavLinkHtml)
         .join("") +
       "</nav>";
     var mobileQuick = document.getElementById("lpMobileQuickNav");
     if (mobileQuick) {
-      mobileQuick.innerHTML = buildNavLinks(role)
+      mobileQuick.innerHTML = buildNavLinks(role, opts)
         .map(function (l) {
           return (
             '<a role="menuitem" class="lp-dd-item" href="' +
@@ -268,7 +271,7 @@
     opts = opts || {};
     var pageTag = opts.pageTag || "ERVENOW";
     var activeNav = opts.activeNav || "";
-    var links = buildNavLinks("")
+    var links = buildNavLinks("", { authenticated: false })
       .map(function (l) {
         return navLinkHtml(l, activeNav);
       })
@@ -360,8 +363,8 @@
       var tag = document.getElementById("guestShellPageTag");
       if (tag) tag.textContent = opts.pageTag;
     }
-    paintHeaderNav(_activeNavKey, "");
-    paintIndexNav("");
+    paintHeaderNav(_activeNavKey, "", { authenticated: hasToken() });
+    paintIndexNav("", { authenticated: hasToken() });
     refreshCartBadge();
     loadPlatformAccessScript();
     loadAccountDestScript();

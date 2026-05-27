@@ -4,181 +4,219 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="robots" content="noindex, nofollow" />
-    <meta name="theme-color" content="#3d2914" />
-    <title>دخول الإدارة | ERVENOW</title>
+    <meta name="theme-color" content="#2b170d" />
+    <title>لوحة التحكم | ERVENOW</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
     <style>
       :root {
-        --admin-bg: linear-gradient(165deg, #2a1810 0%, #4a2e1a 45%, #6b4423 100%);
-        --admin-card: rgba(255, 252, 248, 0.97);
-        --admin-border: rgba(91, 55, 29, 0.18);
-        --admin-text: #1f140c;
-        --admin-muted: #5c4a3d;
-        --admin-accent: #5b371d;
-        --admin-accent2: #7a4d28;
-        --admin-radius: 18px;
-        --admin-touch: 52px;
+        --gold: #d4a84b;
+        --gold-light: #f5e6b8;
+        --brown: #3d2213;
+        --brown-deep: #1f1209;
+        --touch: 52px;
         --safe-t: env(safe-area-inset-top, 0px);
         --safe-b: env(safe-area-inset-bottom, 0px);
       }
-      * { box-sizing: border-box; }
-      html { font-size: clamp(15px, 2.8vw, 18px); }
+      * {
+        box-sizing: border-box;
+      }
+      html {
+        font-size: clamp(15px, 2.8vw, 18px);
+      }
       body {
         margin: 0;
         min-height: 100dvh;
         font-family: Cairo, system-ui, sans-serif;
-        background: var(--admin-bg);
-        color: var(--admin-text);
+        color: var(--brown);
         display: flex;
-        align-items: stretch;
+        align-items: center;
         justify-content: center;
-        padding: calc(12px + var(--safe-t)) 16px calc(20px + var(--safe-b));
+        padding: calc(16px + var(--safe-t)) max(16px, env(safe-area-inset-left, 16px))
+          calc(20px + var(--safe-b)) max(16px, env(safe-area-inset-right, 16px));
+        background:
+          radial-gradient(ellipse 120% 80% at 50% -20%, rgba(212, 168, 75, 0.28), transparent 55%),
+          radial-gradient(ellipse 90% 60% at 100% 100%, rgba(61, 34, 19, 0.5), transparent 50%),
+          linear-gradient(165deg, #1a0f08 0%, #2b170d 38%, #4a2e1a 72%, #3d2213 100%);
       }
-      .shell {
+      .admin-login-scene {
         width: 100%;
         max-width: 440px;
         margin: auto;
-        display: flex;
-        flex-direction: column;
-        gap: 1rem;
       }
-      .brand {
+      .admin-login-card {
+        position: relative;
+        border-radius: 24px;
+        overflow: hidden;
+        background: linear-gradient(155deg, #fffefb 0%, #faf3e8 48%, #f0e4d4 100%);
+        box-shadow:
+          0 4px 0 rgba(212, 168, 75, 0.45),
+          0 28px 64px rgba(0, 0, 0, 0.38);
+        outline: 1px solid rgba(212, 168, 75, 0.35);
+      }
+      .admin-login-card::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        padding: 2px;
+        background: linear-gradient(135deg, #f5e6b8, #d4a84b 40%, #8f6420 100%);
+        -webkit-mask:
+          linear-gradient(#fff 0 0) content-box,
+          linear-gradient(#fff 0 0);
+        mask:
+          linear-gradient(#fff 0 0) content-box,
+          linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+        pointer-events: none;
+      }
+      .admin-login-card__ribbon {
+        height: 7px;
+        background: linear-gradient(90deg, #8f6420, #d4a84b 35%, #f5e6b8 50%, #d4a84b 65%, #8f6420);
+      }
+      .admin-login-card__body {
+        padding: clamp(22px, 5vw, 28px) clamp(20px, 4.5vw, 26px) clamp(24px, 5vw, 30px);
+      }
+      .admin-login-card__brand {
         text-align: center;
-        color: #f5ebe0;
-        padding: 0.25rem 0;
+        margin-bottom: 20px;
       }
-      .brand-badge {
+      .admin-login-card__seal {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        width: 64px;
-        height: 64px;
+        width: 72px;
+        height: 72px;
+        margin-bottom: 12px;
         border-radius: 20px;
-        background: rgba(255, 255, 255, 0.12);
-        font-size: 1.75rem;
-        margin-bottom: 0.35rem;
-        border: 1px solid rgba(255, 255, 255, 0.2);
+        font-size: 2rem;
+        background: linear-gradient(145deg, #f5e6b8, #d4a84b 55%, #8f6420);
+        border: 2px solid rgba(255, 255, 255, 0.65);
+        box-shadow:
+          0 10px 28px rgba(139, 100, 32, 0.4),
+          inset 0 1px 0 rgba(255, 255, 255, 0.55);
       }
-      .brand h1 {
+      .admin-login-card__logo {
         margin: 0;
-        font-size: 1.35rem;
-        font-weight: 800;
-        letter-spacing: 0.02em;
+        font-size: clamp(1.2rem, 4vw, 1.4rem);
+        font-weight: 900;
+        letter-spacing: 0.12em;
+        color: var(--brown);
       }
-      .brand p {
-        margin: 0.35rem 0 0;
+      .admin-login-card__tag {
+        margin: 6px 0 0;
         font-size: 0.88rem;
-        opacity: 0.88;
-        font-weight: 600;
-      }
-      .card {
-        background: var(--admin-card);
-        border: 1px solid var(--admin-border);
-        border-radius: var(--admin-radius);
-        padding: 1.35rem 1.25rem 1.5rem;
-        box-shadow: 0 18px 50px rgba(0, 0, 0, 0.22);
-      }
-      .card h2 {
-        margin: 0 0 0.35rem;
-        font-size: 1.2rem;
         font-weight: 800;
-        color: var(--admin-accent);
+        color: #8f6420;
       }
-      .hint {
-        margin: 0 0 1rem;
-        font-size: 0.92rem;
-        line-height: 1.55;
-        color: var(--admin-muted);
+      .admin-login-card__title {
+        margin: 0 0 8px;
+        font-size: 1.15rem;
+        font-weight: 900;
+        color: var(--brown);
+        text-align: center;
       }
-      .field {
-        margin-bottom: 1rem;
-      }
-      .field label {
-        display: block;
-        font-size: 0.82rem;
-        font-weight: 700;
-        color: var(--admin-accent2);
-        margin-bottom: 0.4rem;
-      }
-      .field input {
-        width: 100%;
-        min-height: var(--admin-touch);
-        padding: 0.65rem 1rem;
-        border-radius: 14px;
-        border: 2px solid #e5d8cb;
-        font-family: inherit;
-        font-size: 1.05rem;
+      .admin-login-card__hint {
+        margin: 0 0 18px;
+        font-size: 0.88rem;
         font-weight: 600;
-        letter-spacing: 0.04em;
+        line-height: 1.6;
+        color: #5c4a3d;
+        text-align: center;
+      }
+      .admin-login-card__hint strong {
+        color: var(--brown);
+      }
+      .admin-field {
+        margin-bottom: 14px;
+      }
+      .admin-field label {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 0.8rem;
+        font-weight: 800;
+        color: #6b4528;
+      }
+      .admin-field input {
+        width: 100%;
+        min-height: var(--touch);
+        padding: 0 14px;
+        border-radius: 14px;
+        border: 1px solid rgba(61, 34, 19, 0.14);
+        background: rgba(255, 255, 255, 0.85);
+        font-family: inherit;
+        font-size: 1.02rem;
+        font-weight: 700;
+        color: var(--brown);
+        box-shadow: inset 0 1px 3px rgba(45, 26, 14, 0.06);
         transition: border-color 0.15s, box-shadow 0.15s;
       }
-      .field input:focus {
+      .admin-field input:focus {
         outline: none;
-        border-color: var(--admin-accent);
-        box-shadow: 0 0 0 3px rgba(91, 55, 29, 0.15);
-      }
-      .actions {
-        display: flex;
-        flex-direction: column;
-        gap: 0.65rem;
-        margin-top: 0.25rem;
-      }
-      .actions--single {
-        margin-top: 1rem;
-      }
-      .actions--single .btn-primary {
-        width: 100%;
+        border-color: var(--gold);
+        box-shadow:
+          0 0 0 3px rgba(212, 168, 75, 0.22),
+          inset 0 1px 3px rgba(45, 26, 14, 0.06);
       }
       .auth-code-group[hidden] {
         display: none !important;
       }
-      .actions-foot {
-        margin-top: 0.85rem;
-        text-align: center;
+      .admin-login-card__actions {
+        margin-top: 18px;
       }
-      .btn-primary,
-      .btn-ghost {
+      .admin-btn-primary {
         display: flex;
         align-items: center;
         justify-content: center;
-        min-height: var(--admin-touch);
-        padding: 0 1.1rem;
+        width: 100%;
+        min-height: var(--touch);
+        border: none;
         border-radius: 14px;
         font-family: inherit;
-        font-size: 1rem;
-        font-weight: 800;
+        font-size: 1.02rem;
+        font-weight: 900;
+        color: #fff8e8;
         cursor: pointer;
-        text-decoration: none;
-        border: none;
-        transition: transform 0.08s, opacity 0.15s;
+        background: linear-gradient(135deg, #3d2213 0%, #5a3820 45%, #3d2213 100%);
+        border: 1px solid rgba(245, 230, 184, 0.3);
+        box-shadow:
+          0 6px 20px rgba(45, 26, 14, 0.28),
+          inset 0 1px 0 rgba(255, 255, 255, 0.12);
+        transition: filter 0.15s, transform 0.12s;
       }
-      .btn-primary:active,
-      .btn-ghost:active {
-        transform: scale(0.98);
+      .admin-btn-primary:hover {
+        filter: brightness(1.06);
       }
-      .btn-primary {
-        background: linear-gradient(180deg, #6d4528, var(--admin-accent));
-        color: #fff;
-        box-shadow: 0 4px 14px rgba(91, 55, 29, 0.35);
+      .admin-btn-primary:active {
+        transform: scale(0.99);
       }
-      .btn-primary:disabled {
+      .admin-btn-primary:disabled {
         opacity: 0.55;
         cursor: not-allowed;
         transform: none;
       }
-      .btn-ghost {
-        background: #fff;
-        color: var(--admin-accent);
-        border: 2px solid var(--admin-accent);
+      .admin-login-card__foot {
+        margin-top: 16px;
+        text-align: center;
+      }
+      .admin-login-card__foot a {
+        font-size: 0.84rem;
+        font-weight: 700;
+        color: #8f6420;
+        text-decoration: none;
+      }
+      .admin-login-card__foot a:hover {
+        text-decoration: underline;
       }
       #msg {
-        margin-top: 1rem;
-        min-height: 1.25em;
-        font-size: 0.92rem;
+        margin: 14px 0 0;
+        min-height: 1.3em;
+        font-size: 0.88rem;
+        font-weight: 700;
         line-height: 1.5;
-        font-weight: 600;
-        color: var(--admin-muted);
+        text-align: center;
+        color: #5c4a3d;
       }
       #msg.err {
         color: #b91c1c;
@@ -189,38 +227,45 @@
     </style>
   </head>
   <body>
-    <div class="shell">
-      <header class="brand">
-        <div class="brand-badge" aria-hidden="true">🔐</div>
-        <h1>ERVENOW</h1>
-        <p>لوحة مالك المنصة</p>
-      </header>
-      <div class="card">
-        <h2>تسجيل الدخول</h2>
-        <p class="hint" id="adminAuthIntro">أدخل الجوال المصرّح ثم اضغط إرسال رمز واتساب. صلاحية الرمز <strong>5 دقائق</strong>.</p>
+    <main class="admin-login-scene" aria-label="دخول لوحة التحكم">
+      <article class="admin-login-card">
+        <div class="admin-login-card__ribbon" aria-hidden="true"></div>
+        <div class="admin-login-card__body">
+          <header class="admin-login-card__brand">
+            <div class="admin-login-card__seal" aria-hidden="true">🔐</div>
+            <p class="admin-login-card__logo">ERVENOW</p>
+            <p class="admin-login-card__tag">لوحة التحكم</p>
+          </header>
 
-        <div class="field">
-          <label for="phone">رقم الجوال</label>
-          <input id="phone" type="tel" inputmode="numeric" autocomplete="tel-national" maxlength="10" placeholder="05xxxxxxxx" />
-        </div>
+          <h1 class="admin-login-card__title">تسجيل دخول الإدارة</h1>
+          <p class="admin-login-card__hint" id="adminAuthIntro">
+            أدخل الجوال المصرّح ثم اضغط إرسال رمز واتساب. صلاحية الرمز <strong>5 دقائق</strong>.
+          </p>
 
-        <div class="auth-code-group" id="adminCodeGroup" hidden>
-          <div class="field" style="margin-top: 1rem">
-            <label for="code">رمز واتساب</label>
-            <input id="code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="8" placeholder="أدخل الرمز المرسل على واتساب" />
+          <div class="admin-field">
+            <label for="phone">رقم الجوال</label>
+            <input id="phone" type="tel" inputmode="numeric" autocomplete="tel-national" maxlength="10" placeholder="05xxxxxxxx" dir="ltr" />
           </div>
-        </div>
 
-        <div class="actions actions--single">
-          <button class="btn-primary" id="adminAuthBtn" type="button">إرسال رمز واتساب</button>
-        </div>
-        <div class="actions-foot">
-          <a class="btn-ghost" href="/">الرئيسية</a>
-        </div>
+          <div class="auth-code-group" id="adminCodeGroup" hidden>
+            <div class="admin-field">
+              <label for="code">رمز واتساب</label>
+              <input id="code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="8" placeholder="رمز التحقق" dir="ltr" />
+            </div>
+          </div>
 
-        <p id="msg" role="status" aria-live="polite"></p>
-      </div>
-    </div>
+          <div class="admin-login-card__actions">
+            <button class="admin-btn-primary" id="adminAuthBtn" type="button">إرسال رمز واتساب</button>
+          </div>
+
+          <p id="msg" role="status" aria-live="polite"></p>
+
+          <footer class="admin-login-card__foot">
+            <a href="/">← العودة للرئيسية</a>
+          </footer>
+        </div>
+      </article>
+    </main>
 
     <script src="/assets/api-config.js"></script>
     <script>
@@ -229,6 +274,34 @@
     <script src="/assets/api.js"></script>
     <script src="/assets/auth-otp-flow.js"></script>
     <script>
+      function getAnyToken() {
+        return (
+          localStorage.getItem("ervenow_access_token") ||
+          localStorage.getItem("erwenow_access_token") ||
+          localStorage.getItem("token") ||
+          ""
+        );
+      }
+
+      (function redirectIfAdminSession() {
+        if (!getAnyToken()) return;
+        fetch(window.PlatformAPI.apiUrl("/api/core/me"), {
+          headers: { Authorization: "Bearer " + getAnyToken() },
+        })
+          .then(function (r) {
+            return r.json().then(function (d) {
+              return { ok: r.ok, d: d };
+            });
+          })
+          .then(function (x) {
+            var role = x.d && x.d.profile && x.d.profile.role;
+            if (x.ok && String(role || "").toLowerCase() === "admin") {
+              window.location.replace("/admin-dashboard");
+            }
+          })
+          .catch(function () {});
+      })();
+
       function normalizeAdminPhone(v) {
         var d = String(v || "").replace(/\D/g, "");
         if (d.startsWith("9665") && d.length === 12) return "0" + d.slice(3);
@@ -237,8 +310,7 @@
       }
 
       function isValid05(v) {
-        var d = normalizeAdminPhone(v);
-        return /^05\d{8}$/.test(d);
+        return /^05\d{8}$/.test(normalizeAdminPhone(v));
       }
 
       function setMsg(text, kind) {
@@ -246,7 +318,7 @@
         el.classList.remove("err", "ok");
         if (kind === "err") el.classList.add("err");
         else if (kind === "ok") el.classList.add("ok");
-        el.innerText = text || "";
+        el.textContent = text || "";
       }
 
       function mapOtpError(msg) {
@@ -270,10 +342,10 @@
         btnId: "adminAuthBtn",
         introId: "adminAuthIntro",
         introSend: "أدخل الجوال المصرّح ثم اضغط إرسال رمز واتساب. صلاحية الرمز 5 دقائق.",
-        introVerify: "أدخل رمز واتساب ثم اضغط دخول لوحة الإدارة.",
+        introVerify: "أدخل رمز واتساب ثم اضغط دخول لوحة التحكم.",
         labels: {
           send: "إرسال رمز واتساب",
-          verify: "دخول لوحة الإدارة",
+          verify: "دخول لوحة التحكم",
         },
         phoneValid: function (v) {
           return isValid05(v);
