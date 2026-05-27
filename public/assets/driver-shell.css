@@ -1,0 +1,612 @@
+/* لوحة المندوب — نفس هوية زائر المنصة */
+body.driver-page {
+  margin: 0;
+  font-family: var(--font, "Cairo", system-ui, sans-serif);
+  background: var(--bg, #f8f4ee);
+  color: var(--brown, #3d2213);
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+body.driver-page .dash-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+body.driver-page .dash-site-header__link.is-active {
+  background: linear-gradient(180deg, #3d2213 0%, #2b170d 100%);
+  color: #f8f4ee;
+  border-color: rgba(185, 135, 47, 0.35);
+}
+
+.drv-tool-balance {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 36px;
+  padding: 6px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(185, 135, 47, 0.45);
+  background: linear-gradient(145deg, #3d2213, #2b170d);
+  text-decoration: none;
+  color: #f8f4ee;
+  font-size: 0.78rem;
+  font-weight: 800;
+  box-shadow: 0 4px 12px rgba(45, 26, 14, 0.15);
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.drv-tool-balance:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(185, 135, 47, 0.25);
+}
+.drv-tool-balance__val {
+  font-variant-numeric: tabular-nums;
+  color: #f5d78e;
+}
+.driver-balance-link {
+  display: inline-flex;
+  margin-top: 10px;
+  font-size: 0.86rem;
+  font-weight: 800;
+  color: var(--gold, #b9872f);
+  text-decoration: none;
+}
+.driver-balance-link:hover {
+  text-decoration: underline;
+}
+
+/* بطاقة طلب — الرقم بارز */
+.drv-order-card {
+  margin-bottom: 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(185, 135, 47, 0.28);
+  background: linear-gradient(165deg, #fffefb 0%, #faf4ea 100%);
+  box-shadow: 0 8px 22px rgba(45, 26, 14, 0.07);
+  overflow: hidden;
+}
+.drv-order-card:last-child {
+  margin-bottom: 0;
+}
+.drv-order-card__ribbon {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 12px 14px;
+  background: linear-gradient(90deg, #3d2213 0%, #5a3820 55%, #b9872f 100%);
+  color: #fffdf8;
+}
+.drv-order-card__num {
+  font-size: clamp(1.05rem, 3.2vw, 1.28rem);
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums;
+  direction: ltr;
+}
+.drv-order-card__status {
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+}
+.drv-order-card__body {
+  padding: 12px 14px;
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: var(--brown-mid, #5c4a3d);
+}
+.drv-order-card__body strong,
+.drv-order-card__meta-line {
+  color: var(--brown, #3d2213);
+  font-weight: 700;
+}
+.drv-order-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 0 14px 14px;
+}
+.drv-order-card__actions .btn,
+.drv-order-card__actions .drv-btn {
+  flex: 1 1 auto;
+  min-height: 40px;
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 800;
+  border-radius: 10px;
+  cursor: pointer;
+  text-align: center;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 12px;
+  border: none;
+}
+.drv-btn--gold {
+  background: linear-gradient(180deg, #c99a3f, #b9872f);
+  color: #fffdf8;
+}
+.drv-btn--ghost {
+  background: #fff;
+  border: 1px solid rgba(61, 34, 19, 0.15) !important;
+  color: var(--brown, #3d2213);
+}
+
+#orders .order-row {
+  padding: 0;
+  margin-bottom: 12px;
+  border: none;
+  background: transparent;
+  border-radius: 0;
+}
+
+.drv-section-title {
+  margin: 0 0 6px;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--brown, #3d2213);
+}
+.drv-section-hint {
+  margin: 0 0 12px;
+  font-size: 0.86rem;
+  color: var(--muted, #5c4a3d);
+  font-weight: 600;
+}
+.drv-empty-state {
+  padding: 20px 16px;
+  text-align: center;
+  border-radius: 14px;
+  border: 1px dashed rgba(185, 135, 47, 0.35);
+  background: rgba(255, 254, 251, 0.8);
+  color: var(--muted, #5c4a3d);
+  font-weight: 600;
+}
+
+/* تتبع الحي */
+.da-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.da-tabs .da-tab {
+  font-family: inherit;
+  font-size: 0.88rem;
+  font-weight: 800;
+  padding: 10px 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(61, 34, 19, 0.12);
+  background: #fffdf8;
+  color: var(--brown, #3d2213);
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.da-tabs .da-tab.is-active {
+  background: linear-gradient(180deg, #3d2213, #2b170d);
+  color: #f8f4ee;
+  border-color: rgba(185, 135, 47, 0.35);
+}
+#daMap {
+  min-height: min(48vh, 400px);
+  border-radius: 14px;
+  border: 1px solid rgba(185, 135, 47, 0.28);
+  overflow: hidden;
+}
+.da-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+.da-actions .drv-btn {
+  flex: 1 1 140px;
+}
+
+/* محفظة فاخرة */
+body.driver-wallet-page {
+  background: linear-gradient(165deg, #f8f4ee 0%, #ebe3d6 40%, #f8f4ee 100%);
+}
+.drv-wallet-hero {
+  position: relative;
+  margin-bottom: 18px;
+  padding: clamp(24px, 5vw, 36px) 20px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #2b170d 0%, #3d2213 40%, #6b4528 75%, #b9872f 100%);
+  color: #fffdf8;
+  box-shadow: 0 20px 48px rgba(45, 26, 14, 0.22);
+  overflow: hidden;
+}
+.drv-wallet-hero::after {
+  content: "";
+  position: absolute;
+  inset: -40% -20% auto auto;
+  width: 60%;
+  height: 120%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.12) 0%, transparent 70%);
+  pointer-events: none;
+}
+.drv-wallet-hero__label {
+  margin: 0 0 6px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  opacity: 0.85;
+  letter-spacing: 0.06em;
+}
+.drv-wallet-hero__amount {
+  margin: 0;
+  font-size: clamp(2rem, 8vw, 2.75rem);
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+  position: relative;
+  z-index: 1;
+}
+.drv-wallet-hero__amount span {
+  font-size: 0.45em;
+  font-weight: 700;
+  opacity: 0.9;
+  margin-inline-start: 6px;
+}
+.drv-wallet-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 16px;
+  position: relative;
+  z-index: 1;
+}
+.drv-wallet-stat {
+  flex: 1 1 120px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+.drv-wallet-stat strong {
+  display: block;
+  font-size: 1.05rem;
+  margin-top: 4px;
+  color: #f5d78e;
+}
+.drv-wallet-panel {
+  margin-bottom: 14px;
+  padding: 16px 18px;
+  border-radius: 16px;
+  border: 1px solid rgba(185, 135, 47, 0.2);
+  background: #fffdf8;
+  box-shadow: 0 8px 24px rgba(45, 26, 14, 0.06);
+}
+.drv-wallet-panel h3 {
+  margin: 0 0 8px;
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--brown, #3d2213);
+}
+.drv-wallet-panel .muted {
+  margin: 0 0 12px;
+  font-size: 0.86rem;
+  color: var(--muted, #5c4a3d);
+  line-height: 1.5;
+}
+.drv-wallet-inputs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.drv-wallet-inputs input {
+  flex: 1 1 160px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(61, 34, 19, 0.15);
+  font-family: inherit;
+  font-size: 0.9rem;
+  background: #fff;
+}
+.drv-wallet-btn {
+  font-family: inherit;
+  font-weight: 800;
+  padding: 12px 18px;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  min-height: 44px;
+}
+.drv-wallet-btn--primary {
+  background: linear-gradient(180deg, #c99a3f, #8f6020);
+  color: #fffdf8;
+}
+.drv-wallet-btn--ghost {
+  background: #fff;
+  border: 1px solid rgba(61, 34, 19, 0.18) !important;
+  color: var(--brown, #3d2213);
+}
+.drv-wallet-tx {
+  padding: 12px 14px;
+  margin-bottom: 8px;
+  border-radius: 12px;
+  border: 1px solid rgba(61, 34, 19, 0.08);
+  background: linear-gradient(180deg, #fffefb, #faf6ef);
+  font-size: 0.88rem;
+}
+.drv-wallet-tx:last-child {
+  margin-bottom: 0;
+}
+.drv-toast {
+  position: fixed;
+  bottom: max(16px, env(safe-area-inset-bottom));
+  left: 16px;
+  right: 16px;
+  max-width: 400px;
+  margin: 0 auto;
+  padding: 14px 16px;
+  border-radius: 14px;
+  font-weight: 800;
+  z-index: 99999;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+}
+.drv-toast--ok {
+  background: linear-gradient(180deg, #166534, #14532d);
+  color: #fff;
+}
+.drv-toast--err {
+  background: linear-gradient(180deg, #b91c1c, #7f1d1d);
+  color: #fff;
+}
+
+.driver-profile-card {
+  margin-bottom: 14px;
+  padding: 16px 18px;
+  border-radius: 16px;
+  border: 1px solid rgba(185, 135, 47, 0.22);
+  background: linear-gradient(145deg, #fffefb, #f8f0e6);
+  box-shadow: 0 8px 24px rgba(45, 26, 14, 0.06);
+}
+
+.driver-profile-card__row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.driver-profile-card__avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  background: linear-gradient(145deg, rgba(185, 135, 47, 0.2), rgba(61, 34, 19, 0.08));
+  flex-shrink: 0;
+}
+
+.driver-profile-card__meta {
+  min-width: 0;
+  flex: 1;
+}
+
+.driver-profile-card__role {
+  display: inline-block;
+  margin: 0 0 4px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  background: rgba(185, 135, 47, 0.15);
+  color: var(--brown, #3d2213);
+}
+
+.driver-profile-card__phone {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--muted, #5c4a3d);
+  direction: ltr;
+  text-align: right;
+}
+
+.driver-profile-card__rating {
+  margin: 10px 0 0;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--brown-mid, #5c4a3d);
+  line-height: 1.5;
+  white-space: pre-line;
+}
+
+.driver-panel-card {
+  margin-bottom: 14px;
+  border-radius: 16px;
+  border: 1px solid rgba(61, 34, 19, 0.1);
+  background: #fffdf8;
+  box-shadow: 0 6px 20px rgba(45, 26, 14, 0.05);
+  overflow: hidden;
+}
+
+.driver-panel-card > .badge {
+  display: block;
+  margin: 0;
+  padding: 12px 16px;
+  border-radius: 0;
+  background: linear-gradient(90deg, rgba(61, 34, 19, 0.06), rgba(185, 135, 47, 0.12));
+  border-bottom: 1px solid rgba(61, 34, 19, 0.08);
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--brown, #3d2213);
+}
+
+.driver-panel-card__body {
+  padding: 14px 16px 16px;
+}
+
+.driver-loc-status {
+  margin: 0 0 10px;
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--muted, #5c4a3d);
+  line-height: 1.5;
+}
+
+#driverLiveMap {
+  min-height: min(52vh, 420px);
+  border-radius: 14px;
+  border: 1px solid rgba(185, 135, 47, 0.28);
+  overflow: hidden;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.4);
+}
+
+#orders .order-row {
+  padding: 14px;
+  margin-bottom: 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(61, 34, 19, 0.1);
+  background: linear-gradient(180deg, #fffefb, #faf6ef);
+}
+
+#orders .order-row:last-child {
+  margin-bottom: 0;
+}
+
+#orders .order-row strong {
+  color: var(--brown, #3d2213);
+}
+
+#orders .order-row .badge {
+  background: rgba(185, 135, 47, 0.18);
+  color: var(--brown, #3d2213);
+  font-size: 0.75rem;
+}
+
+.driver-refresh-btn {
+  margin-top: 12px;
+  width: 100%;
+  min-height: 44px;
+  font-family: inherit;
+  font-weight: 800;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  background: linear-gradient(180deg, #c99a3f, #b9872f);
+  color: #fffdf8;
+  box-shadow: 0 4px 14px rgba(185, 135, 47, 0.35);
+}
+
+.driver-refresh-btn:hover {
+  filter: brightness(1.05);
+}
+
+body.driver-page .msg.err {
+  margin-top: 12px;
+  border-radius: 12px;
+  padding: 12px 14px;
+  background: rgba(185, 28, 28, 0.08);
+  border: 1px solid rgba(185, 28, 28, 0.2);
+  color: #7f1d1d;
+  font-weight: 600;
+}
+
+/* شريط الإجراء السفلي — ألوان المنصة */
+.driver-nav-dock {
+  display: none;
+  position: fixed;
+  inset-inline: 0;
+  bottom: 0;
+  z-index: 10050;
+  padding: 12px 14px calc(14px + env(safe-area-inset-bottom, 0px));
+  background: linear-gradient(180deg, transparent, rgba(43, 23, 13, 0.94));
+}
+
+.driver-nav-dock.is-visible {
+  display: block;
+}
+
+.driver-nav-dock-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: min(520px, 100%);
+  margin: 0 auto;
+}
+
+.driver-order-chip {
+  text-align: center;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: rgba(255, 253, 248, 0.95);
+}
+
+.driver-main-action {
+  font-family: inherit;
+  font-size: 1.12rem;
+  font-weight: 800;
+  line-height: 1.2;
+  padding: 20px 16px;
+  min-height: 58px;
+  width: 100%;
+  border: none;
+  border-radius: 14px;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(45, 26, 14, 0.25);
+}
+
+.driver-main-action:active:not(:disabled) {
+  transform: scale(0.99);
+}
+
+.driver-main-action:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.driver-main-action.mode-pending {
+  background: linear-gradient(180deg, #22a06b, #15803d);
+  color: #fff;
+}
+
+.driver-main-action.mode-nav {
+  background: linear-gradient(180deg, #c99a3f, #8f6020);
+  color: #fffdf8;
+}
+
+.driver-main-action.mode-finish {
+  background: linear-gradient(180deg, #f5d78e, #b9872f);
+  color: #2b170d;
+}
+
+body.driver-nav-dock-active .dash-main .layout {
+  padding-bottom: calc(130px + env(safe-area-inset-bottom, 0px));
+}
+
+body.driver-ultra-mode #driverRatingLine {
+  display: none !important;
+}
+
+body.driver-ultra-mode .driver-profile-card {
+  display: none;
+}
+
+body.driver-ultra-mode #ordersCard .driver-panel-card__body #orders {
+  max-height: 110px;
+  overflow: auto;
+}
+
+body.driver-ultra-mode #driverMapCard #driverLiveMap {
+  min-height: min(58vh, 480px) !important;
+}
+
+@media (max-width: 640px) {
+  #driverLiveMap {
+    min-height: 46vh;
+  }
+}

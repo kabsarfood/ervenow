@@ -1,5 +1,6 @@
 const express = require("express");
 const { requireAuth, optionalAuth } = require("../../shared/middleware/auth");
+const { denyUnlessCanPlaceOrders } = require("../../shared/middleware/platformAccess");
 const { requireRole } = require("../../shared/middleware/roles");
 const { createServiceClient } = require("../../shared/config/supabase");
 const { ok, fail } = require("../../shared/utils/helpers");
@@ -627,7 +628,7 @@ router.post("/bookings/:id/complete", requireAuth, async (req, res) => {
   }
 });
 
-router.post("/bookings", requireAuth, async (req, res) => {
+router.post("/bookings", requireAuth, denyUnlessCanPlaceOrders, async (req, res) => {
   try {
     const b = req.body || {};
     const service_type = String(b.service_type || "").trim().toLowerCase() || "service";

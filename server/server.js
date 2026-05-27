@@ -390,8 +390,8 @@ if (servePublicUi) {
     res.sendFile(path.join(publicPath, "driver-register.html"));
   });
 
-  app.get("/driver-dashboard", (_req, res) => {
-    res.sendFile(path.join(publicPath, "driver-dashboard.html"));
+  app.get(["/driver-dashboard", "/driver-dashboard.html"], (_req, res) => {
+    res.redirect(301, "/driver");
   });
 
   app.get("/driver-wallet", (_req, res) => {

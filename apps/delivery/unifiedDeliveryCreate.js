@@ -161,7 +161,12 @@ async function createCarTransport(sb, appUser, payload, topBody, opts) {
  * @param {object} rawBody { service_type, payload, ... }
  * @param {object} [opts] createDeliveryOrderFromBody options
  */
+const { canPlaceOrders, driverOrderPlacementError } = require("../../shared/utils/platformAccessPolicy");
+
 async function createUnifiedDeliveryOrder(sb, appUser, rawBody, opts) {
+  if (!canPlaceOrders(appUser && appUser.role)) {
+    return { data: null, error: new Error(driverOrderPlacementError()) };
+  }
   const body = rawBody && typeof rawBody === "object" ? rawBody : {};
   const service_type = str(body.service_type).toLowerCase();
   const payload = body.payload && typeof body.payload === "object" ? body.payload : {};

@@ -1,5 +1,6 @@
 const express = require("express");
 const { requireAuth, optionalAuth } = require("../../shared/middleware/auth");
+const { denyUnlessCanPlaceOrders } = require("../../shared/middleware/platformAccess");
 const { requireRole } = require("../../shared/middleware/roles");
 const { ok, fail } = require("../../shared/utils/helpers");
 const { sendWhatsApp } = require("../../shared/utils/whatsapp");
@@ -174,7 +175,7 @@ router.get("/orders/:id", requireAuth, async (req, res) => {
 });
 
 /** طلب توصيل موحد (خدمات منصة) — يبدأ بدعم car_transport */
-router.post("/create", requireAuth, deliveryOrdersCreateLimiter, async (req, res) => {
+router.post("/create", requireAuth, denyUnlessCanPlaceOrders, deliveryOrdersCreateLimiter, async (req, res) => {
   try {
     const body = { ...(req.body || {}) };
     const idk = normalizeIdempotencyKey(req);
@@ -257,7 +258,7 @@ router.post("/create", requireAuth, deliveryOrdersCreateLimiter, async (req, res
   }
 });
 
-router.post("/orders", requireAuth, deliveryOrdersCreateLimiter, async (req, res) => {
+router.post("/orders", requireAuth, denyUnlessCanPlaceOrders, deliveryOrdersCreateLimiter, async (req, res) => {
   try {
     const { setDeprecationHeaders, UNIFIED_ORDER_CREATE } = require("../../shared/middleware/deprecateLegacyRoute");
     setDeprecationHeaders(res, UNIFIED_ORDER_CREATE);

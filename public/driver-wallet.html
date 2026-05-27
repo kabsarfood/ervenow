@@ -2,69 +2,78 @@
 <html lang="ar" dir="rtl">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>محفظة المندوب | ERVENOW</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>ERVENOW | رصيد المندوب</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet" />
-    <style>
-      body { margin: 0; font-family: Cairo, sans-serif; background: #f8f4ef; color: #2b1f16; }
-      .wrap { max-width: 980px; margin: 22px auto; padding: 14px; }
-      .top { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; align-items: center; }
-      .btn { border: 0; border-radius: 10px; padding: 9px 12px; cursor: pointer; font-family: inherit; font-weight: 700; }
-      .btn-primary { background: #5b371d; color: #fff; }
-      .btn-ghost { border: 1px solid #5b371d; background: #fff; color: #5b371d; text-decoration: none; display: inline-block; }
-      .btn:disabled { opacity: 0.55; cursor: not-allowed; }
-      .card { background: #fff; border: 1px solid #e5d8cb; border-radius: 14px; padding: 12px; margin-top: 12px; }
-      .muted { color: #6e5a4a; }
-      .row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
-      input { padding: 10px; border-radius: 10px; border: 1px solid #d7c6b5; font-family: inherit; min-width: 200px; }
-      .tx { border: 1px solid #ecdccf; border-radius: 10px; padding: 8px; margin-bottom: 8px; background: #fffdf9; }
-      .balance-num { font-size: 1.35rem; font-weight: 800; color: #5b371d; margin: 8px 0 4px; }
-      .toast { position: fixed; bottom: 16px; left: 16px; right: 16px; max-width: 420px; margin: 0 auto; padding: 12px 14px; border-radius: 10px; color: #fff; font-weight: 700; z-index: 9999; }
-      .toast--ok { background: #166534; }
-      .toast--err { background: #b91c1c; }
-    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/assets/styles.css" />
+    <link rel="stylesheet" href="/assets/guest-shell.css" />
+    <link rel="stylesheet" href="/assets/driver-shell.css" />
   </head>
-  <body>
-    <div class="wrap">
-      <div class="top">
-        <h2 style="margin:0;color:#5b371d">محفظة المندوب</h2>
-        <div class="row">
-          <a class="btn btn-ghost" href="/driver">الرجوع لصفحة المندوب</a>
-          <button class="btn btn-primary" id="refreshBtn" type="button">تحديث</button>
+  <body class="guest-shell-page driver-page driver-wallet-page">
+    <div id="driverShellHeader"></div>
+    <div class="dash-main">
+      <div id="driverShellHero"></div>
+      <div class="layout">
+        <div class="drv-wallet-hero" aria-live="polite">
+          <p class="drv-wallet-hero__label">رصيدك المتاح</p>
+          <p class="drv-wallet-hero__amount" id="balanceMain">
+            <span id="balanceAmount">…</span>
+            <span>ر.س</span>
+          </p>
+          <div class="drv-wallet-stats">
+            <div class="drv-wallet-stat">
+              إجمالي المكتسب
+              <strong id="statEarned">—</strong>
+            </div>
+            <div class="drv-wallet-stat">
+              إجمالي المسحوب
+              <strong id="statWithdrawn">—</strong>
+            </div>
+          </div>
+          <p class="muted" id="balanceHint" style="display: none; margin: 12px 0 0; color: rgba(255,253,248,0.85); font-size: 0.82rem"></p>
+        </div>
+
+        <div class="drv-wallet-panel">
+          <h3>سحب الأموال</h3>
+          <p class="muted">أدخل المبلغ و<strong>نفس الآيبان المسجّل</strong> — يصلك رمز واتساب للتأكيد.</p>
+          <div class="drv-wallet-inputs">
+            <input id="amount" type="number" min="20" step="0.01" placeholder="المبلغ (20 ر.س كحد أدنى)" />
+            <input id="withdrawIban" type="text" placeholder="تأكيد الآيبان (SA…)" translate="no" />
+          </div>
+          <div class="drv-wallet-inputs">
+            <button class="drv-wallet-btn drv-wallet-btn--primary" id="sendOtpBtn" type="button">إرسال رمز السحب</button>
+            <input id="otpCode" placeholder="رمز التحقق" />
+            <button class="drv-wallet-btn drv-wallet-btn--ghost" id="confirmOtpBtn" type="button">تأكيد السحب</button>
+          </div>
+          <p class="muted" id="otpHint"></p>
+        </div>
+
+        <div class="drv-wallet-panel">
+          <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px">
+            <h3 style="margin: 0">سجل العمليات</h3>
+            <button class="drv-wallet-btn drv-wallet-btn--ghost" id="refreshBtn" type="button" style="min-height: 38px; padding: 8px 14px">تحديث</button>
+          </div>
+          <div id="txList"><p class="muted">جارٍ التحميل…</p></div>
         </div>
       </div>
-
-      <div class="card">
-        <strong>الرصيد</strong>
-        <p id="balanceLine" class="muted">جارٍ التحميل...</p>
-        <p id="balanceHint" class="muted" style="display:none;margin-top:6px"></p>
-      </div>
-
-      <div class="card">
-        <strong>سحب الأموال (OTP)</strong>
-        <p class="muted">اكتب المبلغ و<strong>نفس الآيبان المسجّل</strong> ثم أرسل رمز التحقق إلى جوالك، وبعدها أكّد السحب.</p>
-        <div class="row">
-          <input id="amount" type="number" min="20" step="0.01" placeholder="المبلغ (20 ريال كحد أدنى)" />
-          <input id="withdrawIban" type="text" placeholder="تأكيد الآيبان (SA…)" translate="no" />
-          <button class="btn btn-primary" id="sendOtpBtn" type="button">إرسال رمز السحب</button>
-        </div>
-        <div class="row">
-          <input id="otpCode" placeholder="رمز التحقق" />
-          <button class="btn btn-ghost" id="confirmOtpBtn" type="button">تأكيد السحب</button>
-        </div>
-        <p class="muted" id="otpHint"></p>
-      </div>
-
-      <div class="card">
-        <strong>سجل العمليات</strong>
-        <div id="txList"><p class="muted">جارٍ التحميل...</p></div>
-      </div>
+      <div id="driverShellFooter"></div>
     </div>
 
     <script src="/assets/api-config.js"></script>
     <script src="/assets/api.js"></script>
+    <script src="/assets/driver-nav.js"></script>
     <script>
+      ErvenowDriverNav.mount({
+        activeNav: "driver",
+        pageTag: "رصيد المندوب",
+        hero: {
+          title: "محفظة المندوب",
+          sub: "رصيدك وأرباحك وسحوباتك — بتجربة آمنة ومريحة.",
+          eyebrow: "ERVENOW — شريك التوصيل",
+        },
+      });
+
       window.__ERVENOW_FETCH_TIMEOUT_MS = 30000;
 
       if (!window.PlatformAPI || !window.PlatformAPI.getToken()) {
@@ -74,87 +83,96 @@
       function fmtMoney(n) {
         var x = Number(n);
         if (!Number.isFinite(x)) x = 0;
-        return x.toFixed(2);
+        return x.toLocaleString("ar-SA", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
       }
 
       function showToast(msg, ok) {
         var el = document.createElement("div");
-        el.className = "toast " + (ok ? "toast--ok" : "toast--err");
+        el.className = "drv-toast " + (ok ? "drv-toast--ok" : "drv-toast--err");
         el.textContent = String(msg || "");
         document.body.appendChild(el);
         setTimeout(function () {
-          try { el.remove(); } catch (_e) {}
+          try {
+            el.remove();
+          } catch (_e) {}
         }, ok ? 3500 : 5000);
       }
-
-      function showSuccess(msg) { showToast(msg, true); }
-      function showError(msg) { showToast(msg, false); }
 
       function renderBalance(w) {
         var bal = w && w.balance != null ? Number(w.balance) : 0;
         var earned = w && w.total_earned != null ? Number(w.total_earned) : 0;
         var withdrawn = w && w.total_withdrawn != null ? Number(w.total_withdrawn) : 0;
-        if (!Number.isFinite(bal)) bal = 0;
-        if (!Number.isFinite(earned)) earned = 0;
-        if (!Number.isFinite(withdrawn)) withdrawn = 0;
-        document.getElementById("balanceLine").innerHTML =
-          '<div class="balance-num">' + fmtMoney(bal) + ' <span style="font-size:0.85rem;font-weight:600">ر.س</span></div>' +
-          '<div class="muted">إجمالي المكتسب: ' + fmtMoney(earned) + ' ر.س | إجمالي المسحوب: ' + fmtMoney(withdrawn) + ' ر.س</div>';
+        document.getElementById("balanceAmount").textContent = fmtMoney(bal);
+        document.getElementById("statEarned").textContent = fmtMoney(earned) + " ر.س";
+        document.getElementById("statWithdrawn").textContent = fmtMoney(withdrawn) + " ر.س";
         var hint = document.getElementById("balanceHint");
         if (hint && w && w.note) {
           hint.style.display = "block";
           hint.textContent = String(w.note);
         }
-      }
-
-      function renderZeroBalance(note) {
-        renderBalance({ balance: 0, total_earned: 0, total_withdrawn: 0, note: note || "" });
+        if (window.ErvenowDriverNav && ErvenowDriverNav.refreshBalanceChip) {
+          ErvenowDriverNav.refreshBalanceChip();
+        }
       }
 
       async function loadWallet() {
-        var balanceEl = document.getElementById("balanceLine");
         try {
-          var w = await window.PlatformAPI.api("/api/wallet");
+          var w = await window.PlatformAPI.api("/api/driver/wallet");
           renderBalance(w);
           return;
         } catch (e1) {
           try {
-            var dw = await window.PlatformAPI.api("/api/driver/wallet");
-            renderBalance(dw);
-            return;
+            var w2 = await window.PlatformAPI.api("/api/wallet");
+            renderBalance(w2);
           } catch (e2) {
-            renderZeroBalance("تعذّر مزامنة الرصيد — يُعرض 0.00 ر.س");
-            showError((e2 && e2.message) || (e1 && e1.message) || "تعذّر تحميل الرصيد");
+            renderBalance({ balance: 0, total_earned: 0, total_withdrawn: 0, note: "تعذّر مزامنة الرصيد" });
+            showToast((e2 && e2.message) || "تعذّر تحميل الرصيد", false);
           }
         }
       }
 
       async function loadTransactions() {
         var box = document.getElementById("txList");
-        box.innerHTML = '<p class="muted">جارٍ التحميل...</p>';
+        box.innerHTML = '<p class="muted">جارٍ التحميل…</p>';
         try {
           var j = await window.PlatformAPI.api("/api/wallet/transactions");
           var rows = j.transactions || [];
           box.innerHTML = "";
           if (!rows.length) {
-            box.innerHTML = "<p class='muted'>لا توجد عمليات بعد</p>";
+            box.innerHTML = '<div class="drv-empty-state">لا توجد عمليات بعد</div>';
             return;
           }
           rows.forEach(function (t) {
             var div = document.createElement("div");
-            div.className = "tx";
+            div.className = "drv-wallet-tx";
             var type = String(t.type || "").toLowerCase();
-            var label = type === "earning" || type === "credit" ? "إيداع" : type === "withdraw" ? "سحب" : (t.type || "—");
+            var label =
+              type === "earning" || type === "credit"
+                ? "💰 إيداع"
+                : type === "withdraw"
+                  ? "🏦 سحب"
+                  : t.type || "—";
+            var amt = Number(t.amount) || 0;
+            var sign = type === "withdraw" ? "−" : "+";
             div.innerHTML =
-              "<strong>" + label + "</strong>" +
-              "<div>المبلغ: " + fmtMoney(t.amount) + " ر.س</div>" +
-              "<div>ملاحظة: " + (t.note || "—") + "</div>" +
-              "<div class='muted'>" + (t.created_at || "") + "</div>";
+              "<strong>" +
+              label +
+              "</strong>" +
+              '<div style="font-size:1.05rem;font-weight:900;color:#3d2213;margin:4px 0">' +
+              sign +
+              " " +
+              fmtMoney(amt) +
+              " ر.س</div>" +
+              "<div>" +
+              (t.note || "—") +
+              "</div>" +
+              '<div class="muted" style="margin-top:4px;font-size:0.8rem">' +
+              (t.created_at || "") +
+              "</div>";
             box.appendChild(div);
           });
         } catch (e) {
-          box.innerHTML = "<p class='muted'>لا توجد عمليات بعد</p>";
-          showError(e.message || "تعذّر تحميل العمليات");
+          box.innerHTML = '<div class="drv-empty-state">لا توجد عمليات</div>';
         }
       }
 
@@ -169,21 +187,21 @@
         var remain = Number(seconds) || 0;
         if (remain <= 0) {
           btn.disabled = false;
-          btn.innerText = "تأكيد السحب";
+          btn.textContent = "تأكيد السحب";
           return;
         }
         btn.disabled = true;
-        btn.innerText = "مقفول (" + remain + "ث)";
+        btn.textContent = "مقفول (" + remain + "ث)";
         otpLockTimer = setInterval(function () {
           remain -= 1;
           if (remain <= 0) {
             clearInterval(otpLockTimer);
             otpLockTimer = null;
             btn.disabled = false;
-            btn.innerText = "تأكيد السحب";
+            btn.textContent = "تأكيد السحب";
             return;
           }
-          btn.innerText = "مقفول (" + remain + "ث)";
+          btn.textContent = "مقفول (" + remain + "ث)";
         }, 1000);
       }
 
@@ -201,19 +219,23 @@
         return async function () {
           if (actionBusy) return;
           actionBusy = true;
-          try { await fn.apply(this, arguments); } finally { actionBusy = false; }
+          try {
+            await fn.apply(this, arguments);
+          } finally {
+            actionBusy = false;
+          }
         };
       }
 
-      var sendOtp = safeClick(async function () {
+      document.getElementById("sendOtpBtn").onclick = safeClick(async function () {
         var amt = Number(document.getElementById("amount").value);
         if (!Number.isFinite(amt) || amt < 20) {
-          showError("الحد الأدنى للسحب 20 ريال");
+          showToast("الحد الأدنى للسحب 20 ريال", false);
           return;
         }
         var ibanC = String(document.getElementById("withdrawIban").value || "").trim();
         if (!ibanC) {
-          showError("أدخل الآيبان لتأكيد المطابقة مع السجل");
+          showToast("أدخل الآيبان لتأكيد المطابقة", false);
           return;
         }
         try {
@@ -221,23 +243,21 @@
             method: "POST",
             body: { amount: amt, iban: ibanC },
           });
-          if (r.dev_otp) {
-            document.getElementById("otpHint").innerText = "رمز التطوير: " + r.dev_otp;
-          } else {
-            document.getElementById("otpHint").innerText = "تم إرسال رمز التحقق إلى جوالك";
-          }
-          showSuccess("تم إرسال رمز السحب");
+          document.getElementById("otpHint").textContent = r.dev_otp
+            ? "رمز التطوير: " + r.dev_otp
+            : "تم إرسال رمز التحقق إلى جوالك";
+          showToast("تم إرسال رمز السحب", true);
         } catch (e) {
           var lockSec1 = extractLockSeconds(e.message);
           if (lockSec1 > 0) setConfirmLock(lockSec1);
-          showError(e.message || "تعذر إرسال الرمز");
+          showToast(e.message || "تعذر إرسال الرمز", false);
         }
       });
 
-      var confirmOtp = safeClick(async function () {
+      document.getElementById("confirmOtpBtn").onclick = safeClick(async function () {
         var code = (document.getElementById("otpCode").value || "").trim();
         if (!code) {
-          showError("اكتب رمز التحقق");
+          showToast("اكتب رمز التحقق", false);
           return;
         }
         try {
@@ -246,22 +266,19 @@
             method: "POST",
             body: { code: code, iban: ibanC2 },
           });
-          showSuccess("تم إرسال طلب السحب للإدارة");
+          showToast("تم إرسال طلب السحب للإدارة", true);
           document.getElementById("otpCode").value = "";
-          document.getElementById("otpHint").innerText = "";
+          document.getElementById("otpHint").textContent = "";
           setConfirmLock(0);
           await loadWallet();
           await loadTransactions();
         } catch (e) {
-          var msg = String(e.message || "");
-          var lockSec2 = extractLockSeconds(msg);
+          var lockSec2 = extractLockSeconds(e.message);
           if (lockSec2 > 0) setConfirmLock(lockSec2);
-          showError(msg || "تعذر تأكيد الرمز");
+          showToast(e.message || "تعذر تأكيد الرمز", false);
         }
       });
 
-      document.getElementById("sendOtpBtn").onclick = sendOtp;
-      document.getElementById("confirmOtpBtn").onclick = confirmOtp;
       document.getElementById("refreshBtn").onclick = function () {
         loadWallet();
         loadTransactions();

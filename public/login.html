@@ -9,6 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/assets/styles.css" />
     <link rel="stylesheet" href="/assets/guest-shell.css" />
+    <link rel="stylesheet" href="/assets/auth-shell.css" />
     <style>
       .input-readonly {
         background: #f0ebe3;
@@ -747,12 +748,20 @@
           autocomplete="tel-national"
         />
 
-        <label for="otp" style="margin-top: 16px">رمز الدخول</label>
-        <input id="otp" type="text" inputmode="numeric" placeholder="أدخل رمز واتساب" />
+        <div class="auth-code-group" id="loginCodeGroup" hidden>
+          <label for="otp" style="margin-top: 16px">رمز واتساب</label>
+          <input
+            id="otp"
+            type="text"
+            inputmode="numeric"
+            maxlength="8"
+            placeholder="أدخل الرمز المرسل على واتساب"
+            autocomplete="one-time-code"
+          />
+        </div>
 
-        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
-          <button type="button" class="btn btn-ghost" id="btnSendOtp" style="flex:1 1 180px">إرسال الكود</button>
-          <button type="button" class="btn btn-primary" id="btnVerify" style="flex:1 1 180px">تسجيل الدخول</button>
+        <div class="auth-otp-actions auth-otp-actions--single">
+          <button type="button" class="btn btn-primary" id="authOtpBtn">إرسال الكود</button>
         </div>
 
         <div class="msg" id="msg" style="display: none"></div>
@@ -825,6 +834,7 @@
     <script src="/assets/guestBrowse.js"></script>
     <script src="/assets/payoutRegistration.js"></script>
     <script src="/assets/api.js"></script>
+    <script src="/assets/auth-otp-flow.js"></script>
     <script>
       function toE164(v) {
         var d = String(v || "").replace(/\D/g, "");
@@ -881,8 +891,7 @@
             ? "اختر صفة حسابك، ثم أدخل جوالك السعودي — يصلك رمز واتساب للتفعيل."
             : "أدخل جوالك السعودي 05xxxxxxxx — يصلك رمز واتساب خلال 5 دقائق.";
         }
-        var btn = document.getElementById("btnVerify");
-        if (btn) btn.textContent = register ? "إنشاء حساب" : "تسجيل الدخول";
+        if (window.loginOtpFlow && loginOtpFlow.refreshLabels) loginOtpFlow.refreshLabels();
         var servicesPanel = document.getElementById("authServicesPanel");
         if (servicesPanel) {
           servicesPanel.hidden = true;
@@ -1196,11 +1205,11 @@
         var map = {
           blocked: "/blocked-complaints",
           admin: "/admin-dashboard",
-          driver: "/driver-dashboard",
+          driver: "/driver",
           merchant: "/store-dashboard",
           restaurant: "/store-dashboard",
           service: "/services-provider",
-          customer: "/",
+          customer: "/dashboard",
         };
         return map[ar] || "/";
       }
@@ -1227,6 +1236,7 @@
         list.querySelectorAll(".role-picker__btn").forEach(function (btn) {
           btn.addEventListener("click", function () {
             var p = btn.getAttribute("data-path") || "/";
+            if (p.indexOf("driver-dashboard") !== -1) p = "/driver";
             window.location.href = p;
           });
         });
@@ -1248,7 +1258,9 @@
             return;
           }
           var pick = dests[0] || destRes.default;
-          window.location.href = (pick && pick.path) || resolvePostLoginTarget(actualRole);
+          var targetPath = (pick && pick.path) || resolvePostLoginTarget(actualRole);
+          if (String(targetPath).indexOf("driver-dashboard") !== -1) targetPath = "/driver";
+          window.location.href = targetPath;
         } catch (navErr) {
           window.location.href = resolvePostLoginTarget(actualRole);
         }
@@ -1333,18 +1345,25 @@
         });
       }
 
-      document.getElementById("btnVerify").onclick = async function () {
+      async function runLoginVerify() {
         try {
           normalizeInputPhone();
           var raw = document.getElementById("phone").value;
           if (!isValid05(raw)) {
-            return show("أدخل رقم سعودي يبدأ بـ 05 (10 أرقام مثال 05xxxxxxxx)", false);
+            show("أدخل رقم سعودي يبدأ بـ 05 (10 أرقام مثال 05xxxxxxxx)", false);
+            throw new Error("invalid_phone");
           }
-          if (!assertDriverOnlyInRegisterMode()) return;
+          if (!assertDriverOnlyInRegisterMode()) throw new Error("driver_register");
           var phone = toE164(raw);
           var code = String(document.getElementById("otp").value).trim();
-          if (!phone) return show("أدخل الرقم", false);
-          if (!code) return show("أدخل رمز واتساب أولاً", false);
+          if (!phone) {
+            show("أدخل الرقم", false);
+            throw new Error("no_phone");
+          }
+          if (!code) {
+            show("أدخل رمز واتساب أولاً", false);
+            throw new Error("no_code");
+          }
 
           var roleSel = document.getElementById("role").value;
           var role = apiRoleFromSelection();
@@ -1360,7 +1379,8 @@
             var carType = String(document.getElementById("driverRegCarType").value || "").trim();
             var plate = String(document.getElementById("driverRegPlate").value || "").trim();
             if (!dName || !iqama || !carType || !plate) {
-              return show("أكمل بيانات المندوب: الاسم، الهوية/الإقامة، نوع المركبة، ورقم اللوحة", false);
+              show("أكمل بيانات المندوب: الاسم، الهوية/الإقامة، نوع المركبة، ورقم اللوحة", false);
+              throw new Error("driver_fields");
             }
             driverRegPayload = { name: dName, iqama: iqama, car_type: carType, plate_number: plate };
           }
@@ -1369,7 +1389,8 @@
           try {
             payoutPayload = collectRegisterPayoutPayload();
           } catch (pe) {
-            return show(String(pe.message || pe), false);
+            show(String(pe.message || pe), false);
+            throw pe;
           }
           if (driverRegPayload && payoutPayload) {
             driverRegPayload.payout = payoutPayload;
@@ -1379,10 +1400,17 @@
             var sName = String(document.getElementById("serviceRegName").value || "").trim();
             var sType = selectedServiceType();
             var sArea = readServiceAreaValue();
-            if (!sName) return show("أدخل الاسم", false);
-            if (!sType) return show("اختر نوع الخدمة من القائمة", false);
+            if (!sName) {
+              show("أدخل الاسم", false);
+              throw new Error("service_name");
+            }
+            if (!sType) {
+              show("اختر نوع الخدمة من القائمة", false);
+              throw new Error("service_type");
+            }
             if (!sArea) {
-              return show(isPickupTruckRegister() ? "اختر المدينة" : "أدخل الحي الذي تخدمه", false);
+              show(isPickupTruckRegister() ? "اختر المدينة" : "أدخل الحي الذي تخدمه", false);
+              throw new Error("service_area");
             }
             extra.name = sName;
             extra.service_type = sType;
@@ -1394,14 +1422,16 @@
               var vPlate = String(document.getElementById("pickupTruckPlate").value || "").trim();
               var vModel = String(document.getElementById("pickupTruckModel").value || "").trim();
               if (!vType || !vPlate || !vModel) {
-                return show("أكمل بيانات المركبة: النوع، رقم اللوحة، وسنة الموديل", false);
+                show("أكمل بيانات المركبة: النوع، رقم اللوحة، وسنة الموديل", false);
+                throw new Error("vehicle_fields");
               }
               extra.service_vehicle_type = vType;
               extra.service_plate_number = vPlate;
               extra.service_vehicle_model = vModel;
             }
             if (payoutPayload && !payoutPayload.iban) {
-              return show("أدخل رقم الآيبان لاستلام المستحقات", false);
+              show("أدخل رقم الآيبان لاستلام المستحقات", false);
+              throw new Error("iban");
             }
           }
 
@@ -1422,12 +1452,12 @@
 
           if (res.ok === false || res.success === false) {
             show("فشل التحقق", false);
-            return;
+            throw new Error("verify_failed");
           }
           var token = res.token;
           if (!token) {
             show("فشل التحقق", false);
-            return;
+            throw new Error("no_token");
           }
 
           try {
@@ -1490,34 +1520,74 @@
           await navigateAfterLogin(actualRole);
         } catch (e) {
           show(mapOtpError(String(e.message || e)), false);
+          throw e;
         }
-      };
+      }
 
-      document.getElementById("btnSendOtp").onclick = async function () {
-        try {
-          normalizeInputPhone();
-          var raw = document.getElementById("phone").value;
-          if (!isValid05(raw)) {
-            return show("أدخل رقم سعودي يبدأ بـ 05 (10 أرقام مثال 05xxxxxxxx)", false);
-          }
-          var loginOnly = !isRegisterMode();
-          if (!loginOnly && !assertDriverOnlyInRegisterMode()) return;
-          var phone = toE164(raw);
-          var role = apiRoleFromSelection();
-          show("جارٍ إرسال رمز واتساب...", true);
-          var otpBody = loginOnly ? { phone: phone, login_only: true } : { phone: phone, role: role };
-          var sent = await window.PlatformAPI.api("/api/core/send-otp", {
-            method: "POST",
-            body: otpBody,
-          });
-          if (sent.ok === false) {
-            return show("تعذر إرسال رمز واتساب", false);
-          }
-          show("تم إرسال الرمز عبر واتساب. صلاحية الرمز 5 دقائق.", true);
-        } catch (e) {
-          show(mapOtpError(String(e.message || e)), false);
+      async function runLoginSendOtp() {
+        normalizeInputPhone();
+        var raw = document.getElementById("phone").value;
+        if (!isValid05(raw)) {
+          show("أدخل رقم سعودي يبدأ بـ 05 (10 أرقام مثال 05xxxxxxxx)", false);
+          throw new Error("invalid_phone");
         }
-      };
+        var loginOnly = !isRegisterMode();
+        if (!loginOnly && !assertDriverOnlyInRegisterMode()) throw new Error("driver_register");
+        var phone = toE164(raw);
+        var role = apiRoleFromSelection();
+        var otpBody = loginOnly ? { phone: phone, login_only: true } : { phone: phone, role: role };
+        var sent = await window.PlatformAPI.api("/api/core/send-otp", {
+          method: "POST",
+          body: otpBody,
+        });
+        if (sent.ok === false) {
+          show("تعذر إرسال رمز واتساب", false);
+          throw new Error("send_failed");
+        }
+        show("تم إرسال الرمز عبر واتساب. صلاحية الرمز 5 دقائق.", true);
+      }
+
+      window.loginOtpFlow = ErvenowAuthOtpFlow.mount({
+        phoneId: "phone",
+        codeId: "otp",
+        codeGroupId: "loginCodeGroup",
+        btnId: "authOtpBtn",
+        introId: "authFormIntro",
+        introSend: function () {
+          return isRegisterMode()
+            ? "اختر صفة حسابك، ثم أدخل جوالك السعودي — اضغط إرسال الكود."
+            : "أدخل جوالك السعودي 05xxxxxxxx — اضغط إرسال الكود.";
+        },
+        introVerify: function () {
+          return isRegisterMode()
+            ? "أدخل رمز واتساب ثم اضغط إنشاء حساب."
+            : "أدخل رمز واتساب ثم اضغط تسجيل الدخول.";
+        },
+        labels: {
+          verify: function () {
+            return isRegisterMode() ? "إنشاء حساب" : "تسجيل الدخول";
+          },
+        },
+        phoneValid: function (v) {
+          return isValid05(v);
+        },
+        normalizePhone: function (phoneInput) {
+          normalizeInputPhone();
+          return phoneInput.value;
+        },
+        onPhoneInvalid: function () {
+          show("أدخل رقم سعودي يبدأ بـ 05 (10 أرقام مثال 05xxxxxxxx)", false);
+        },
+        onVerifyNeedsCode: function (codeInput) {
+          if (!(codeInput.value || "").trim()) {
+            show("أدخل رمز واتساب", false);
+            return false;
+          }
+          return true;
+        },
+        onSend: runLoginSendOtp,
+        onVerify: runLoginVerify,
+      });
     </script>
   </body>
 </html>

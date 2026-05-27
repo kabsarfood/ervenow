@@ -55,7 +55,12 @@ function normalizeMoney(v) {
  * @param {object} appUser
  * @param {object} body
  */
+const { canPlaceOrders, driverOrderPlacementError } = require("../utils/platformAccessPolicy");
+
 async function createServiceOrder(sb, appUser, body) {
+  if (!canPlaceOrders(appUser && appUser.role)) {
+    return { ok: false, status: 403, message: driverOrderPlacementError() };
+  }
   const raw = body && typeof body === "object" ? body : {};
   const serviceType = String(raw.service_type || raw.type || "service").trim().toLowerCase();
   if (!isServiceOrderType(serviceType) && !isHomeServiceType(serviceType)) {

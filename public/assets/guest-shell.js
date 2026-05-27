@@ -114,18 +114,30 @@
     switchAccount.removeAttribute("aria-label");
   }
 
-  function setAccountButtonLoggedIn(switchAccount, role) {
+  function setAccountButtonLoggedIn(switchAccount, role, serviceType) {
     if (!switchAccount) return;
     role = String(role || "customer").toLowerCase();
+    if (role === "user") role = "customer";
+    if (role === "provider") role = "service";
+    var home =
+      global.ErvenowAccountDest && ErvenowAccountDest.homeFor
+        ? ErvenowAccountDest.homeFor(role, serviceType)
+        : { path: "/dashboard", label: "لوحة زائر المنصة", short: "حسابي" };
     switchAccount.style.display = "";
-    switchAccount.textContent = "حسابي";
+    switchAccount.textContent = home.short || "حسابي";
     switchAccount.className = "dash-site-header__btn dash-site-header__btn--primary";
-    switchAccount.setAttribute("aria-label", "الانتقال إلى لوحة حسابك");
-    if (role === "driver") switchAccount.setAttribute("href", "/driver");
-    else if (role === "merchant" || role === "restaurant") switchAccount.setAttribute("href", "/store-dashboard");
-    else if (role === "service") switchAccount.setAttribute("href", "/services-provider.html");
-    else if (role === "admin") switchAccount.setAttribute("href", "/admin");
-    else switchAccount.setAttribute("href", "/dashboard");
+    switchAccount.setAttribute("href", home.path);
+    switchAccount.setAttribute("aria-label", "فتح " + (home.label || "لوحة حسابك"));
+    switchAccount.setAttribute("title", home.label || "");
+    if (!switchAccount.getAttribute("data-erv-account-wired")) {
+      switchAccount.setAttribute("data-erv-account-wired", "1");
+      switchAccount.addEventListener("click", function (e) {
+        if (global.ErvenowAccountDest && ErvenowAccountDest.goHome) {
+          e.preventDefault();
+          ErvenowAccountDest.goHome();
+        }
+      });
+    }
   }
 
   async function initAuthHeader() {
@@ -138,9 +150,19 @@
     syncGuestBrowseMode();
     try {
       var me = await global.PlatformAPI.api("/api/core/me");
+      if (global.ErvenowAccountDest && ErvenowAccountDest.setSessionFromMe) {
+        ErvenowAccountDest.setSessionFromMe(me);
+      }
       var role = (me.profile && me.profile.role) || "customer";
-      setAccountButtonLoggedIn(switchAccount, role);
+      role = String(role).toLowerCase();
+      var serviceType = me.profile && me.profile.service_type;
+      setAccountButtonLoggedIn(switchAccount, role, serviceType);
       await refreshHeaderWallet(role);
+      if (role === "driver") {
+        document.querySelectorAll(".dash-header-cart").forEach(function (a) {
+          a.style.display = "none";
+        });
+      }
     } catch (e) {
       setAccountButtonLoggedIn(switchAccount, "customer");
       await refreshHeaderWallet("customer");
@@ -243,6 +265,24 @@
     init(opts);
   }
 
+  function loadPlatformAccessScript() {
+    if (document.querySelector("script[data-erv-platform-access]")) return;
+    var s = document.createElement("script");
+    s.src = "/assets/platform-access.js";
+    s.defer = true;
+    s.setAttribute("data-erv-platform-access", "1");
+    document.head.appendChild(s);
+  }
+
+  function loadAccountDestScript() {
+    if (document.querySelector("script[data-erv-account-dest]")) return;
+    var s = document.createElement("script");
+    s.src = "/assets/account-destinations.js";
+    s.defer = true;
+    s.setAttribute("data-erv-account-dest", "1");
+    document.head.appendChild(s);
+  }
+
   function init(opts) {
     opts = opts || {};
     if (opts.pageTag) {
@@ -251,6 +291,8 @@
     }
     setActiveNav(opts.activeNav || "");
     refreshCartBadge();
+    loadPlatformAccessScript();
+    loadAccountDestScript();
     whenPlatformApiReady(function () {
       initAuthHeader();
     });

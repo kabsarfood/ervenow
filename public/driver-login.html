@@ -2,128 +2,119 @@
 <html lang="ar" dir="rtl">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>دخول المندوب | ERVENOW</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>ERVENOW | دخول المندوب</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet" />
-    <style>
-      body {
-        margin: 0;
-        font-family: Cairo, sans-serif;
-        background: #f8f4ef;
-        color: #2b1f16;
-      }
-      .wrap {
-        max-width: 520px;
-        margin: 28px auto;
-        padding: 16px;
-      }
-      .card {
-        background: #fff;
-        border: 1px solid #e5d8cb;
-        border-radius: 16px;
-        padding: 20px;
-        box-shadow: 0 8px 20px rgba(84, 52, 31, 0.08);
-        /* يمنع قفز التخطيط عند ظهور/اختفاء أزرار مختلفة */
-        min-height: 280px;
-      }
-      h1 {
-        margin: 0 0 10px;
-        color: #5b371d;
-      }
-      p {
-        margin: 0 0 12px;
-        color: #6e5a4a;
-      }
-      a {
-        color: #5b371d;
-        font-weight: 700;
-      }
-      label {
-        display: block;
-        margin: 10px 0 4px;
-        font-weight: 700;
-      }
-      input,
-      button {
-        width: 100%;
-        box-sizing: border-box;
-        border-radius: 10px;
-        border: 1px solid #d9c8b7;
-        padding: 11px;
-        font-family: inherit;
-      }
-      button {
-        background: #5b371d;
-        color: #fff;
-        border: 0;
-        cursor: pointer;
-        font-weight: 700;
-        margin-top: 0;
-      }
-      button:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-      }
-      .driver-actions {
-        margin-top: 12px;
-        min-height: 50px;
-      }
-      @media (max-width: 520px) {
-        input {
-          font-size: 16px;
-        }
-      }
-      .note {
-        font-size: 0.92rem;
-        background: #fff8ee;
-        border: 1px solid #e8d4bc;
-        border-radius: 10px;
-        padding: 10px 12px;
-        margin-bottom: 14px;
-      }
-    </style>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/assets/styles.css" />
+    <link rel="stylesheet" href="/assets/guest-shell.css" />
+    <link rel="stylesheet" href="/assets/auth-shell.css" />
   </head>
-  <body>
-    <div class="wrap">
-      <p style="margin: 0 0 14px"><a href="/">← الرئيسية</a></p>
-
-      <div class="note">
-        🔒 <strong>للمندوبين المعتمدين من الإدارة فقط.</strong> لا يوجد تسجيل جديد من هذه الصفحة — بعد الموافقة على طلبك يمكنك إدخال الجوال ورمز واتساب هنا.
-      </div>
-
-      <div class="card">
-        <h1>تسجيل دخول المندوب</h1>
-        <p>أدخل رقم الجوال ثم رمز واتساب. صلاحية الرمز 5 دقائق.</p>
-
-        <label for="loginPhone">رقم الجوال</label>
-        <input id="loginPhone" type="tel" inputmode="numeric" maxlength="10" placeholder="05xxxxxxxx" />
-
-        <label for="loginCode">رمز الدخول</label>
-        <input id="loginCode" type="text" inputmode="numeric" placeholder="رمز واتساب" />
-
-        <div class="driver-actions" id="driverActions">
-          <button id="sendOtpBtn" type="button">إرسال الكود</button>
-          <button id="verifyBtn" type="button" hidden>تسجيل الدخول</button>
+  <body class="guest-shell-page auth-page auth-login-page driver-auth-page">
+    <header class="dash-site-header">
+      <div class="dash-site-header__inner">
+        <div class="dash-site-header__brand">
+          <a class="dash-site-header__logo" href="/">
+            ERVENOW
+            <span class="dash-site-header__logo-dot" aria-hidden="true"></span>
+          </a>
+          <p class="dash-site-header__tag">دخول المندوب</p>
         </div>
-
-        <p style="margin-top: 16px; margin-bottom: 0">
-          لم تُعتمد بعد؟ <a href="/login?mode=register&amp;role=driver">طلب الانضمام كمندوب</a>
-        </p>
+        <nav class="dash-site-header__nav" aria-label="التنقل">
+          <div class="dash-site-header__links">
+            <a class="dash-site-header__link" href="/">الرئيسية</a>
+            <a class="dash-site-header__link" href="/dashboard">لوحة الزائر</a>
+            <a class="dash-site-header__link" href="/login?mode=register&amp;role=driver">طلب انضمام</a>
+          </div>
+        </nav>
+        <a class="dash-site-header__btn dash-site-header__btn--primary" href="/driver">لوحة المندوب</a>
       </div>
-    </div>
+    </header>
 
-    <script src="/assets/cart.js"></script>
+    <section class="driver-auth-banner" aria-labelledby="driverBannerTitle">
+      <div class="driver-auth-banner__veil" aria-hidden="true"></div>
+      <div class="driver-auth-banner__inner">
+        <p class="driver-auth-banner__eyebrow">بوابة الشركاء</p>
+        <img class="driver-auth-banner__logo" src="/assets/ervenow-logo.png" width="160" height="42" alt="ERVENOW" />
+        <h1 class="driver-auth-banner__title" id="driverBannerTitle">مندوب توصيل ERVENOW</h1>
+        <p class="driver-auth-banner__sub">
+          أدخل جوالك <strong dir="ltr">05xxxxxxxx</strong> واستلم رمز واتساب للدخول إلى لوحتك.
+        </p>
+        <span class="driver-auth-banner__badge">صلاحية الرمز 5 دقائق</span>
+      </div>
+    </section>
+
+    <main class="auth-page__main">
+      <div class="auth-page__body">
+        <div class="auth-card">
+          <p class="auth-pickup-tip driver-auth-card-title" role="note">دخول المندوب</p>
+          <p class="auth-form-intro" id="driverAuthIntro">أدخل رقم جوالك السعودي ثم اضغط إرسال الكود.</p>
+
+          <label for="loginPhone">رقم الجوال</label>
+          <input
+            id="loginPhone"
+            type="tel"
+            inputmode="numeric"
+            maxlength="10"
+            placeholder="05xxxxxxxx"
+            autocomplete="tel-national"
+          />
+
+          <div class="auth-code-group" id="codeGroup" hidden>
+            <label for="loginCode">رمز واتساب</label>
+            <input
+              id="loginCode"
+              type="text"
+              inputmode="numeric"
+              maxlength="8"
+              placeholder="أدخل الرمز المرسل على واتساب"
+              autocomplete="one-time-code"
+            />
+          </div>
+
+          <div class="auth-otp-actions auth-otp-actions--single">
+            <button type="button" class="btn btn-primary" id="driverAuthBtn">إرسال الكود</button>
+          </div>
+
+          <div class="msg" id="msg" style="display: none" role="status" aria-live="polite"></div>
+
+          <a class="auth-join-link" href="/login?mode=register&amp;role=driver">
+            لم تُعتمد بعد؟ قدّم طلب الانضمام كمندوب توصيل
+          </a>
+        </div>
+      </div>
+    </main>
+
+    <footer class="dash-site-footer driver-auth-footer">
+      <div class="dash-site-footer__logo">ERVENOW</div>
+      <nav class="dash-site-footer__links" aria-label="روابط سفلية">
+        <a class="dash-site-footer__link" href="/">الرئيسية</a>
+        <a class="dash-site-footer__link" href="/driver">لوحة المندوب</a>
+        <a class="dash-site-footer__link" href="/orders">طلبات المنصة</a>
+        <a class="dash-site-footer__link" href="/dashboard">لوحة الزائر</a>
+      </nav>
+      <p class="dash-site-footer__copy">© 2026 ERVENOW — جميع الحقوق محفوظة</p>
+    </footer>
+
     <script src="/assets/api-config.js"></script>
     <script src="/assets/api.js"></script>
+    <script src="/assets/auth-otp-flow.js"></script>
     <script>
+      function showInlineMsg(text, isOk) {
+        var el = document.getElementById("msg");
+        if (!el) return;
+        el.style.display = text ? "block" : "none";
+        el.className = "msg " + (isOk ? "ok" : "err");
+        el.textContent = text || "";
+      }
+
       function getVal(id) {
         var el = document.getElementById(id);
         return ((el && el.value) || "").trim();
       }
 
-      function normalizePhoneInput() {
-        var el = document.getElementById("loginPhone");
+      function normalizePhoneInput(el) {
         if (!el) return "";
         var d = String(el.value || "").replace(/\D/g, "");
         if (d.startsWith("9665")) d = "0" + d.slice(3);
@@ -132,46 +123,9 @@
         return el.value;
       }
 
-      var otpSent = false;
-      var lastSentPhone = "";
-
-      function phoneOk() {
-        return /^05\d{8}$/.test(getVal("loginPhone"));
+      function phoneOk(v) {
+        return /^05\d{8}$/.test(String(v || "").replace(/\D/g, ""));
       }
-
-      function updateLoginStep() {
-        var sendBtn = document.getElementById("sendOtpBtn");
-        var verifyBtn = document.getElementById("verifyBtn");
-        if (!sendBtn || !verifyBtn) return;
-        if (otpSent) {
-          sendBtn.hidden = true;
-          verifyBtn.hidden = false;
-        } else {
-          sendBtn.hidden = false;
-          verifyBtn.hidden = true;
-          sendBtn.disabled = !phoneOk();
-        }
-      }
-
-      document.getElementById("loginPhone").addEventListener("input", function () {
-        normalizePhoneInput();
-        if (otpSent && getVal("loginPhone") !== lastSentPhone) {
-          otpSent = false;
-          lastSentPhone = "";
-          try {
-            document.getElementById("loginCode").value = "";
-          } catch (e) {}
-        }
-        updateLoginStep();
-      });
-      document.getElementById("loginPhone").addEventListener("blur", function () {
-        normalizePhoneInput();
-        updateLoginStep();
-      });
-
-      document.getElementById("loginCode").addEventListener("input", function () {
-        if (otpSent) updateLoginStep();
-      });
 
       function mapOtpError(msg) {
         var m = String(msg || "");
@@ -181,49 +135,52 @@
         return m;
       }
 
-      var sendOtp = safeClick(async function () {
-        normalizePhoneInput();
-        if (!phoneOk()) {
-          showError("أدخل رقم جوال سعودي يبدأ بـ 05 ومكوّن من 10 أرقام");
-          return;
-        }
-        var btn = document.getElementById("sendOtpBtn");
-        var old = btn.innerText;
-        btn.disabled = true;
-        btn.innerText = "جارٍ الإرسال...";
-        try {
-          await window.PlatformAPI.api("/api/driver/send-otp", {
-            method: "POST",
-            body: { phone: getVal("loginPhone") },
-          });
-          otpSent = true;
-          lastSentPhone = getVal("loginPhone");
-          updateLoginStep();
-          showSuccess("تم إرسال الرمز عبر واتساب. صلاحية الرمز 5 دقائق.");
+      ErvenowAuthOtpFlow.mount({
+        phoneId: "loginPhone",
+        codeId: "loginCode",
+        codeGroupId: "codeGroup",
+        btnId: "driverAuthBtn",
+        introId: "driverAuthIntro",
+        introSend: "أدخل رقم جوالك السعودي ثم اضغط إرسال الكود.",
+        introVerify: "أدخل رمز واتساب ثم اضغط تسجيل الدخول.",
+        phoneValid: phoneOk,
+        normalizePhone: normalizePhoneInput,
+        onPhoneInvalid: function () {
+          showInlineMsg("أدخل رقم جوال سعودي يبدأ بـ 05 ومكوّن من 10 أرقام", false);
+        },
+        onVerifyNeedsCode: function (codeEl) {
+          if (!getVal("loginCode")) {
+            showInlineMsg("أدخل رمز واتساب المرسل إلى جوالك", false);
+            return false;
+          }
+          return true;
+        },
+        onSend: async function (phoneEl) {
+          showInlineMsg("", false);
           try {
-            document.getElementById("loginCode").focus();
-          } catch (e) {}
-        } catch (e) {
-          showError(mapOtpError(e.message || "فشل إرسال الرمز"));
-        } finally {
-          btn.disabled = false;
-          btn.innerText = old;
-          updateLoginStep();
-        }
-      });
-
-      var verifyOtp = safeClick(async function () {
-        normalizePhoneInput();
-        var btn = document.getElementById("verifyBtn");
-        var old = btn.innerText;
-        btn.disabled = true;
-        btn.innerText = "جارٍ التحقق...";
-        try {
-          var j = await window.PlatformAPI.api("/api/driver/verify-otp", {
-            method: "POST",
-            body: { phone: getVal("loginPhone"), code: getVal("loginCode") },
-          });
-          if (!j.token) throw new Error("لم يتم إصدار جلسة");
+            await window.PlatformAPI.api("/api/driver/send-otp", {
+              method: "POST",
+              body: { phone: normalizePhoneInput(phoneEl) },
+            });
+            showInlineMsg("تم إرسال الرمز عبر واتساب. صلاحية الرمز 5 دقائق.", true);
+          } catch (e) {
+            showInlineMsg(mapOtpError(e.message || "فشل إرسال الرمز"), false);
+            throw e;
+          }
+        },
+        onVerify: async function (phoneEl, codeEl) {
+          showInlineMsg("", false);
+          var j;
+          try {
+            j = await window.PlatformAPI.api("/api/driver/verify-otp", {
+              method: "POST",
+              body: { phone: normalizePhoneInput(phoneEl), code: (codeEl.value || "").trim() },
+            });
+            if (!j.token) throw new Error("لم يتم إصدار جلسة");
+          } catch (e) {
+            showInlineMsg(mapOtpError(e.message || "فشل تسجيل الدخول"), false);
+            throw e;
+          }
           window.PlatformAPI.setToken(j.token);
           try {
             var maxAgeSec = 7 * 24 * 60 * 60;
@@ -237,24 +194,29 @@
             document.cookie = c;
           } catch (cookieErr) {}
           try {
-            var dp = getVal("loginPhone");
+            var dp = normalizePhoneInput(phoneEl);
             if (dp) localStorage.setItem("userPhone", dp);
           } catch (lsErr) {}
-          showSuccess("تم تسجيل الدخول");
+          try {
+            localStorage.removeItem("ervenow_guest_browse");
+          } catch (e) {}
+          showInlineMsg("تم تسجيل الدخول — جاري التوجيه…", true);
           setTimeout(function () {
-            location.href = "/driver-dashboard";
+            var qs = new URLSearchParams(location.search);
+            var next = qs.get("next");
+            location.href =
+              next && next.startsWith("/") && !next.startsWith("//") ? next.split("#")[0] : "/driver";
           }, 500);
-        } catch (e) {
-          showError(mapOtpError(e.message || "فشل تسجيل الدخول"));
-        } finally {
-          btn.disabled = false;
-          btn.innerText = old;
-        }
+        },
       });
 
-      document.getElementById("sendOtpBtn").onclick = sendOtp;
-      document.getElementById("verifyBtn").onclick = verifyOtp;
-      updateLoginStep();
+      if (window.PlatformAPI && PlatformAPI.getToken()) {
+        var qs0 = new URLSearchParams(location.search);
+        var n0 = qs0.get("next");
+        location.replace(
+          n0 && n0.startsWith("/") && !n0.startsWith("//") ? n0.split("#")[0] : "/driver"
+        );
+      }
     </script>
   </body>
 </html>

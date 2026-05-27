@@ -10,6 +10,7 @@ const { isOrderPaymentGateRequired } = require("../../shared/utils/orderPaymentG
 const { isPaidFromRequestBody, normalizeOrderPaymentMethod } = require("../delivery/service");
 const { insertOrdersResilient } = require("../../shared/utils/idempotency");
 const { createServiceOrder } = require("../../shared/services/serviceOrderCreate");
+const { canPlaceOrders, driverOrderPlacementError } = require("../../shared/utils/platformAccessPolicy");
 
 function normalizedGroup(typeRaw) {
   const type = String(typeRaw || "")
@@ -85,6 +86,9 @@ function labelByType(type) {
  * @returns {Promise<{ ok: true, orders: any[] } | { ok: false, message: string, status?: number }>}
  */
 async function runCheckoutInsert(sb, appUser, body, options) {
+  if (!canPlaceOrders(appUser && appUser.role)) {
+    return { ok: false, message: driverOrderPlacementError(), status: 403 };
+  }
   const opts = options && typeof options === "object" ? options : {};
   const usePaymentGate = Boolean(opts.applyPaymentGate) && isOrderPaymentGateRequired();
   const paymentConfirmed = usePaymentGate ? isPaidFromRequestBody(body) : false;

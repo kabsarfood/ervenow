@@ -21,6 +21,7 @@ const {
   resolveLoginDestinations,
   pickDefaultDestination,
 } = require("../../shared/utils/loginDestinations");
+const { accessFlagsForRole } = require("../../shared/utils/platformAccessPolicy");
 
 const router = express.Router();
 const OTP_TTL_MS = 5 * 60 * 1000;
@@ -617,6 +618,7 @@ router.get("/me", requireAuth, (req, res) => {
       name: req.appUser.name || null,
     },
     profile: req.appUser,
+    access: accessFlagsForRole(req.appUser.role),
   });
 });
 

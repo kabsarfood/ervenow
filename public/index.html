@@ -18,6 +18,8 @@
     <script src="/assets/api-config.js"></script>
     <script src="/assets/phonePrivacy.js"></script>
     <script src="/assets/api.js"></script>
+    <script src="/assets/account-destinations.js" defer></script>
+    <script src="/assets/platform-access.js" defer></script>
     <script>
       document.addEventListener("DOMContentLoaded", function () {
         var el = document.getElementById("ervenowHealthFooterLink");
@@ -156,6 +158,18 @@
         min-width: 0;
         max-width: 100%;
         padding: 0 4px;
+        border: none;
+        background: transparent;
+        font-family: inherit;
+        cursor: pointer;
+        border-radius: 10px;
+        transition: background 0.15s ease;
+      }
+
+      .lp-header__user-mid:hover,
+      .lp-header__user-mid:focus-visible {
+        background: rgba(185, 135, 47, 0.12);
+        outline: none;
       }
 
       .lp-header__user-mid__num {
@@ -2167,9 +2181,9 @@
         <a class="lp-header__brand-mid" href="/" aria-label="ERVENOW">
           <span class="lp-brand__name">ERVENOW</span>
         </a>
-        <div class="lp-header__user-mid" id="lpHeaderUserMid" hidden>
+        <button type="button" class="lp-header__user-mid" id="lpHeaderUserMid" hidden aria-label="فتح لوحة حسابك">
           <span class="lp-header__user-mid__num" id="lpHeaderUserMidText" dir="ltr"></span>
-        </div>
+        </button>
         <div class="lp-header__toolbar-right">
           <div class="lp-header__end-zone">
             <div class="lp-quick-dd" id="lpQuickNav">
@@ -2266,10 +2280,10 @@
             <a role="menuitem" class="lp-dd-item" href="/admin-dashboard" aria-label="لوحة التحكم" data-nav-role="admin" hidden
               ><span class="lp-dd-ic" aria-hidden="true">&#128272;</span><span class="lp-dd-link__text">لوحة التحكم</span></a
             >
-            <a role="menuitem" class="lp-dd-item" href="/services-provider" aria-label="طلبات الخدمات" data-nav-role="service" hidden
+            <a role="menuitem" class="lp-dd-item" href="/services-provider.html" aria-label="لوحة مزود الخدمة" data-nav-role="service" hidden
               ><span class="lp-dd-ic" aria-hidden="true">&#127978;</span><span class="lp-dd-link__text">طلبات الخدمات</span></a
             >
-            <a role="menuitem" class="lp-dd-item" href="/driver-dashboard" aria-label="طلباتي" data-nav-role="driver" hidden
+            <a role="menuitem" class="lp-dd-item" href="/driver" aria-label="لوحة المندوب" data-nav-role="driver" hidden
               ><span class="lp-dd-ic" aria-hidden="true">&#128663;</span><span class="lp-dd-link__text">طلباتي</span></a
             >
 
@@ -2933,10 +2947,18 @@
       }
 
       function goDashboard() {
+        if (window.ErvenowAccountDest && ErvenowAccountDest.goHome) {
+          ErvenowAccountDest.goHome();
+          return;
+        }
         window.location.href = "/dashboard";
       }
 
       function goAdminDashboard() {
+        if (window.ErvenowAccountDest && ErvenowAccountDest.goHome) {
+          ErvenowAccountDest.goHome({ role: "admin", skipPicker: true });
+          return;
+        }
         window.location.href = "/admin-dashboard";
       }
 
@@ -3064,6 +3086,9 @@
         midText.textContent = maskHeaderPhone(p);
         mid.hidden = false;
         inner.classList.add("lp-header__inner--user-mid");
+        if (window.ErvenowAccountDest && ErvenowAccountDest.wirePhoneMidButton) {
+          ErvenowAccountDest.wirePhoneMidButton(mid);
+        }
       }
 
       function setQuickLogoutVisible(show) {
@@ -3081,7 +3106,7 @@
         var quickOrders = document.getElementById("lpQuickOrdersLink");
         if (!token) {
           applyStartMenuAuthState(false);
-          if (quickOrders) quickOrders.setAttribute("href", "/orders");
+          if (quickOrders) quickOrders.setAttribute("href", "/dashboard");
           await refreshHeaderWallet("", "");
           clearHeaderUserMid();
           setQuickLogoutVisible(false);
@@ -3098,7 +3123,21 @@
               return {};
             });
             role = String((me.profile && me.profile.role) || "").toLowerCase();
+            if (window.ErvenowAccountDest && ErvenowAccountDest.setSessionFromMe) {
+              ErvenowAccountDest.setSessionFromMe(me);
+            }
+            var serviceType = me.profile && me.profile.service_type;
             applyStartMenuAuthState(true, role);
+            if (quickOrders) {
+              if (role === "driver" || role === "admin") {
+                quickOrders.setAttribute("href", "/orders");
+                quickOrders.hidden = false;
+              } else {
+                quickOrders.setAttribute("href", "/dashboard");
+                var qtxt = quickOrders.querySelector(".lp-dd-link__text");
+                if (qtxt) qtxt.textContent = "طلباتي";
+              }
+            }
 
             var phone =
               (me.user && me.user.phone) ||
@@ -3109,15 +3148,20 @@
               (me.user && (me.user.name || me.user.full_name)) ||
               "";
 
+            var home =
+              window.ErvenowAccountDest && ErvenowAccountDest.homeFor
+                ? ErvenowAccountDest.homeFor(role, serviceType)
+                : { path: "/dashboard", label: "لوحة زائر المنصة", short: "حسابي" };
+
             if (role === "admin") {
-              label = "مالك المنصة";
+              label = home.short || "الإدارة";
               authArea.style.display = "flex";
               authArea.style.flexWrap = "wrap";
               authArea.style.gap = "8px";
               authArea.style.alignItems = "center";
-              setHeaderUserMidLine(phone);
+              setHeaderUserMidLine(phone, role, serviceType);
               authArea.innerHTML =
-                '<button class="lp-btn-solid" type="button" onclick="goDashboard()">' +
+                '<button class="lp-btn-solid" type="button" onclick="goAccountHome()">' +
                 label +
                 "</button>" +
                 '<button class="lp-btn-outline" type="button" onclick="goAdminDashboard()">لوحة الإدارة</button>';
@@ -3128,16 +3172,20 @@
               authArea.style.alignItems = "";
               var phoneTrim = String(phone || "").trim();
               setHeaderUserMidLine(phoneTrim);
-              var dashLabel = phoneTrim ? maskHeaderPhone(phoneTrim) : String(name || "حسابي").trim() || "حسابي";
+              var dashLabel = home.short || home.label || "حسابي";
               authArea.innerHTML =
-                '<button class="lp-btn-solid" type="button" onclick="goDashboard()">' + dashLabel + "</button>";
+                '<button class="lp-btn-solid" type="button" onclick="goAccountHome()" title="' +
+                String(home.label || "").replace(/"/g, "") +
+                '">' +
+                dashLabel +
+                "</button>";
             }
             setQuickLogoutVisible(true);
             await refreshHeaderWallet(token, role);
           } catch (e) {
             applyStartMenuAuthState(true, "");
             authArea.innerHTML =
-              '<button class="lp-btn-solid" type="button" onclick="goDashboard()">' +
+              '<button class="lp-btn-solid" type="button" onclick="goAccountHome()">' +
               label +
               "</button>";
             setQuickLogoutVisible(true);
@@ -3217,7 +3265,28 @@
           if (!badge) return;
           try {
             var token = getToken();
-            var headers = token ? { Authorization: "Bearer " + token } : {};
+            if (!token) {
+              badge.style.display = "none";
+              return;
+            }
+            var role = "";
+            try {
+              var meRes = await fetch(window.PlatformAPI.apiUrl("/api/core/me"), {
+                headers: { Authorization: "Bearer " + token },
+              });
+              var me = await meRes.json().catch(function () {
+                return {};
+              });
+              role = String((me.access && me.access.role) || (me.profile && me.profile.role) || "").toLowerCase();
+            } catch (meErr) {
+              role = "";
+            }
+            if (role !== "driver" && role !== "admin") {
+              badge.style.display = "none";
+              return;
+            }
+            badge.style.display = "";
+            var headers = { Authorization: "Bearer " + token };
             var res = await fetch(window.PlatformAPI.apiUrl("/api/delivery/orders"), { headers: headers });
             var data = await res.json().catch(function () {
               return {};

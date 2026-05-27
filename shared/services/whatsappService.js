@@ -37,7 +37,7 @@ function buildDriverOrderDeepLink(orderId) {
   const base = publicBaseUrl();
   const id = encodeURIComponent(String(orderId || "").trim());
   if (!id) return "";
-  if (base) return `${base}/driver-dashboard.html?order=${id}`;
+  if (base) return `${base}/driver?order=${id}`;
   return `https://ervenow.com/driver/order/${id}`;
 }
 

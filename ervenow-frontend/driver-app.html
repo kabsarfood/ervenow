@@ -7,108 +7,75 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/assets/styles.css" />
+    <link rel="stylesheet" href="/assets/guest-shell.css" />
+    <link rel="stylesheet" href="/assets/driver-shell.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
-      .da-tabs {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        margin: 12px 0 18px;
-      }
-      .da-tabs a {
-        text-decoration: none;
-      }
-      .da-tabs .btn.is-active {
-        box-shadow: inset 0 0 0 2px rgba(37, 99, 235, 0.35);
-      }
-      #daMap {
-        min-height: 280px;
-        border-radius: 12px;
-        border: 1px solid rgba(0, 0, 0, 0.12);
-        margin-top: 10px;
-      }
-      .da-actions {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        margin-top: 14px;
-      }
-      .da-actions .btn {
-        flex: 1 1 140px;
-      }
-      .da-sub {
-        margin-top: 8px;
-        font-size: 0.92rem;
-        color: rgba(15, 23, 42, 0.75);
-      }
-      .da-panel {
-        display: none;
-      }
-      .da-panel.is-visible {
-        display: block;
-      }
+      .da-panel { display: none; }
+      .da-panel.is-visible { display: block; }
+      .da-sub { margin: 0 0 8px; font-size: 0.88rem; font-weight: 600; color: var(--muted, #5c4a3d); }
     </style>
   </head>
-  <body>
-    <div class="layout">
-      <div class="top-nav">
-        <h1 style="margin: 0">لوحة المندوب — التتبع الحي</h1>
-        <div class="btn-row">
-          <a class="btn btn-ghost" href="/driver">الطلبات الكلاسيكية</a>
-          <a class="btn btn-ghost" href="/driver-wallet">المحفظة</a>
-          <a class="btn btn-ghost" href="/login" id="daLogout">خروج</a>
+  <body class="guest-shell-page driver-page">
+    <div id="driverShellHeader"></div>
+    <div class="dash-main">
+      <div id="driverShellHero"></div>
+      <div class="layout">
+        <div class="da-tabs" role="tablist">
+          <a class="da-tab" href="#orders" data-panel="orders">قائمة الطلبات</a>
+          <a class="da-tab" href="#track" data-panel="track">التتبع الحي</a>
         </div>
-      </div>
 
-      <div class="da-tabs">
-        <a class="btn btn-ghost da-tab" href="#orders" data-panel="orders">الطلبات</a>
-        <a class="btn btn-ghost da-tab" href="#track" data-panel="track">التتبع الحي</a>
-        <a class="btn btn-ghost da-tab" href="#wallet" data-panel="wallet">المحفظة</a>
-      </div>
+        <div id="daErr" class="msg err" style="display: none"></div>
 
-      <div id="daErr" class="msg err" style="display: none"></div>
-
-      <div class="da-panel" id="daPanelOrders">
-        <div class="card">
-          <div class="badge">طلباتي النشطة</div>
-          <p class="sub" style="margin-top: 8px">اختر طلباً للانتقال إلى التتبع الحي وإرسال الموقع.</p>
-          <div id="daOrders"></div>
-          <button type="button" class="btn btn-primary" id="daBtnRefreshOrders">تحديث</button>
-        </div>
-      </div>
-
-      <div class="da-panel" id="daPanelTrack">
-        <div class="card">
-          <div class="badge">الخريطة والموقع</div>
-          <p class="sub da-sub" id="daLocStatus">—</p>
-          <p class="sub da-sub" id="daOrderStatus">—</p>
-          <div id="daMap"></div>
-          <div class="da-actions">
-            <button type="button" class="btn btn-primary" id="daBtnStart">بدء التوصيل</button>
-            <button type="button" class="btn btn-ghost" id="daBtnArrived">وصلت للعنوان</button>
-            <button type="button" class="btn btn-primary" id="daBtnDelivered" style="background: #15803d; border-color: #15803d">
-              تم التسليم
-            </button>
+        <div class="da-panel" id="daPanelOrders">
+          <div class="card driver-panel-card">
+            <div class="badge">طلباتي النشطة</div>
+            <div class="driver-panel-card__body">
+              <p class="drv-section-hint">اختر طلباً — يظهر رقمه في أعلى البطاقة — ثم انتقل للتتبع الحي.</p>
+              <div id="daOrders"></div>
+              <button type="button" class="driver-refresh-btn" id="daBtnRefreshOrders">تحديث القائمة</button>
+            </div>
           </div>
-          <p class="sub" style="margin-top: 12px; font-size: 0.85rem">
-            يُرسل الموقع إلى الخادم كل ~2.5 ثانية أثناء التفعيل، مع بث لحظي لصفحة تتبع العميل.
-          </p>
         </div>
-      </div>
 
-      <div class="da-panel" id="daPanelWallet">
-        <div class="card">
-          <div class="badge">المحفظة</div>
-          <p class="sub" style="margin-top: 8px">إدارة الرصيد والسحوبات من صفحة المحفظة.</p>
-          <a class="btn btn-primary" href="/driver-wallet">فتح محفظة المندوب</a>
+        <div class="da-panel" id="daPanelTrack">
+          <div class="card driver-panel-card">
+            <div class="badge">الخريطة والموقع الحي</div>
+            <div class="driver-panel-card__body">
+              <p class="da-sub" id="daLocStatus">—</p>
+              <p class="da-sub" id="daOrderStatus">—</p>
+              <div id="daMap" role="application" aria-label="خريطة التتبع"></div>
+              <div class="da-actions">
+                <button type="button" class="drv-btn drv-btn--gold" id="daBtnStart">بدء التوصيل</button>
+                <button type="button" class="drv-btn drv-btn--ghost" id="daBtnArrived">وصلت للعنوان</button>
+                <button type="button" class="drv-btn drv-btn--gold" id="daBtnDelivered">تم التسليم</button>
+              </div>
+              <p class="drv-section-hint" style="margin-top:12px">
+                يُرسل موقعك للخادم كل ~2.5 ثانية أثناء التتبع، مع بث لحظي لصفحة العميل.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
+      <div id="driverShellFooter"></div>
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdn.socket.io/4.8.1/socket.io.min.js" crossorigin="anonymous"></script>
     <script src="/assets/api-config.js"></script>
     <script src="/assets/api.js"></script>
+    <script src="/assets/driver-nav.js"></script>
+    <script>
+      ErvenowDriverNav.mount({
+        activeNav: "track",
+        pageTag: "تتبع الحي",
+        hero: {
+          title: "التتبع الحي",
+          sub: "تابع موقعك على الخريطة، أبلغ العميل بالوصول، وأكمل التسليم من هنا.",
+        },
+      });
+    </script>
     <script>
       var token = window.PlatformAPI.getToken();
       if (!token) {
@@ -147,7 +114,7 @@
 
       function parseHashPanel() {
         var h = (location.hash || "").replace(/^#/, "").trim().toLowerCase();
-        if (h === "track" || h === "wallet") return h;
+        if (h === "track") return h;
         return "orders";
       }
 
@@ -367,20 +334,25 @@
             box.textContent = "لا توجد طلبات حالياً.";
             return;
           }
+          var STATUS = {
+            new: "جديد",
+            pending: "انتظار",
+            accepted: "مقبول",
+            delivering: "توصيل",
+            delivered: "مُسلَّم",
+          };
           orders.forEach(function (o) {
             var st = String(o.delivery_status || o.status || "");
             var row = document.createElement("div");
             row.className = "order-row";
-            row.style.marginBottom = "10px";
-            var num = o.order_number || String(o.id).slice(0, 8) + "…";
-            row.innerHTML =
-              "<strong>" +
-              num +
-              '</strong> <span class="badge">' +
-              st +
-              '</span><br/><button type="button" class="btn btn-ghost" style="margin-top:6px">فتح في التتبع الحي</button>';
-            var btn = row.querySelector("button");
-            btn.onclick = function () {
+            var body = "<p>📍 " + ErvenowDriverNav.escHtml(o.drop_address || "—") + "</p>";
+            row.innerHTML = ErvenowDriverNav.orderCardHtml(o, {
+              statusLabel: STATUS[st] || st,
+              bodyHtml: body,
+              actionsHtml:
+                '<button type="button" class="drv-btn drv-btn--gold da-open-track">فتح التتبع الحي</button>',
+            });
+            row.querySelector(".da-open-track").onclick = function () {
               location.hash = "#track";
               syncHashUi();
               void loadOrderById(o.id).catch(function (e) {

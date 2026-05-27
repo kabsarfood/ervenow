@@ -1,5 +1,6 @@
 const express = require("express");
 const { requireAuth } = require("../../shared/middleware/auth");
+const { denyUnlessCanPlaceOrders } = require("../../shared/middleware/platformAccess");
 const { createServiceClient } = require("../../shared/config/supabase");
 const { perfLog } = require("../../shared/utils/perfLog");
 const { checkoutLimiter } = require("../../shared/middleware/apiRateLimits");
@@ -59,7 +60,7 @@ const router = express.Router();
  * ❗ أي تعديل على التصنيف يجب أن يراعي هذا الفصل
  * ============================================================
  */
-router.post("/", requireAuth, checkoutLimiter, async (req, res) => {
+router.post("/", requireAuth, denyUnlessCanPlaceOrders, checkoutLimiter, async (req, res) => {
   const { setDeprecationHeaders, UNIFIED_ORDER_CREATE } = require("../../shared/middleware/deprecateLegacyRoute");
   setDeprecationHeaders(res, UNIFIED_ORDER_CREATE);
   const perfStart = Date.now();

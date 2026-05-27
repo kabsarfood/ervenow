@@ -1,5 +1,6 @@
 const express = require("express");
 const { requireAuth } = require("../../shared/middleware/auth");
+const { denyUnlessCanPlaceOrders } = require("../../shared/middleware/platformAccess");
 const { createServiceClient } = require("../../shared/config/supabase");
 const { ok, fail } = require("../../shared/utils/helpers");
 const { normalizeIdempotencyKey } = require("../../shared/utils/idempotency");
@@ -20,7 +21,7 @@ const router = express.Router();
  * POST /api/order/create — مسار موحد: سلة أو توصيل.
  * افتراضياً: payment_status=pending على orders، والتوصيل يبقى نشطاً؛ إيداع محفظة المتجر فقط عند payment_status=paid.
  */
-router.post("/create", requireAuth, deliveryOrdersCreateLimiter, async (req, res) => {
+router.post("/create", requireAuth, denyUnlessCanPlaceOrders, deliveryOrdersCreateLimiter, async (req, res) => {
   try {
     const sb = req.supabase || createServiceClient();
     if (!sb) return fail(res, "database not configured", 503);

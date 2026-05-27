@@ -3,192 +3,95 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <title>ERVENOW | إدارة الطلبات</title>
+    <title>ERVENOW | طلبات المنصة</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/assets/styles.css" />
+    <link rel="stylesheet" href="/assets/guest-shell.css" />
+    <link rel="stylesheet" href="/assets/driver-shell.css" />
     <style>
-      .drv-orders {
-        max-width: 900px;
-        margin: 0 auto;
-        padding: 12px 14px 28px;
-        padding-bottom: max(28px, env(safe-area-inset-bottom));
-      }
-      .drv-top {
+      .drv-orders-toolbar {
         display: flex;
         flex-wrap: wrap;
         align-items: center;
         justify-content: space-between;
         gap: 10px;
         margin-bottom: 14px;
-        padding-bottom: 12px;
-        border-bottom: 1px solid rgba(91, 55, 29, 0.15);
       }
-      .drv-phone {
+      .drv-orders-toolbar .drv-phone {
         font-weight: 800;
-        font-size: 1rem;
-        color: #3d2213;
-        letter-spacing: 0.02em;
-      }
-      .drv-actions {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        align-items: center;
-      }
-      .drv-actions .btn {
-        padding: 8px 12px;
-        font-size: 0.88rem;
-      }
-      .drv-section {
-        margin-top: 18px;
-      }
-      .drv-section h2 {
-        margin: 0 0 10px;
-        font-size: 1.05rem;
-        color: #3d2213;
-      }
-      .drv-summary {
-        font-size: 0.88rem;
-        color: #6e5a4a;
-        margin-bottom: 10px;
-      }
-      .drv-table {
-        width: 100%;
-        border-collapse: separate;
-        border-spacing: 0;
-        background: #fff;
-        border: 1px solid rgba(91, 55, 29, 0.12);
-        border-radius: 12px;
-        overflow: hidden;
-        box-shadow: 0 1px 0 rgba(0, 0, 0, 0.04);
-      }
-      .drv-table thead th {
+        font-size: 0.95rem;
+        color: var(--brown, #3d2213);
+        direction: ltr;
         text-align: right;
-        font-size: 0.78rem;
-        font-weight: 800;
-        color: #5b371d;
-        background: #faf6f0;
-        padding: 10px 12px;
-        border-bottom: 1px solid rgba(91, 55, 29, 0.1);
       }
-      .drv-table tbody td {
-        padding: 12px;
-        vertical-align: middle;
-        border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-        font-size: 0.9rem;
-      }
-      .drv-table tbody tr:last-child td {
-        border-bottom: 0;
-      }
-      .drv-num {
-        font-weight: 800;
-        color: #1a120c;
-      }
-      .drv-actions-cell {
-        white-space: nowrap;
-      }
-      .drv-actions-cell .btn {
-        padding: 8px 14px;
-        font-size: 0.85rem;
-      }
-      .drv-empty {
-        padding: 20px 14px;
-        text-align: center;
-        color: #6e5a4a;
-        background: #fffdf9;
-        border: 1px dashed rgba(91, 55, 29, 0.2);
-        border-radius: 12px;
-        font-size: 0.92rem;
-      }
-      .drv-cards-mobile {
+      #msg.drv-alert {
         display: none;
-        flex-direction: column;
-        gap: 10px;
-      }
-      .drv-mcard {
-        background: #fff;
-        border: 1px solid rgba(91, 55, 29, 0.12);
-        border-radius: 12px;
-        padding: 12px;
-      }
-      .drv-mrow {
-        display: flex;
-        justify-content: space-between;
-        gap: 8px;
-        margin-bottom: 6px;
-        font-size: 0.9rem;
-      }
-      .drv-mrow:last-of-type {
-        margin-bottom: 10px;
-      }
-      .drv-mrow span:first-child {
-        color: #6e5a4a;
-        font-size: 0.82rem;
-      }
-      @media (max-width: 640px) {
-        .drv-table-wrap {
-          display: none;
-        }
-        .drv-cards-mobile {
-          display: flex;
-        }
-        .drv-top {
-          flex-direction: column;
-          align-items: stretch;
-        }
-        .drv-actions {
-          justify-content: flex-start;
-        }
-      }
-      .alert {
-        padding: 12px;
-        border-radius: 10px;
-        background: #fff4e8;
-        border: 1px solid #f0c991;
-        color: #7a4f1d;
         margin-top: 12px;
+        padding: 12px 14px;
+        border-radius: 12px;
+        background: rgba(185, 135, 47, 0.12);
+        border: 1px solid rgba(185, 135, 47, 0.28);
+        color: var(--brown, #3d2213);
+        font-weight: 600;
       }
     </style>
   </head>
-  <body>
-    <div class="layout drv-orders">
-      <div class="drv-top">
-        <div class="drv-phone" id="phoneLine" translate="no">—</div>
-        <div class="drv-actions">
-          <button class="btn btn-primary" id="refreshBtn" type="button">تحديث</button>
-          <a class="btn btn-ghost" href="/driver-wallet">المحفظة</a>
-          <a class="btn btn-ghost" href="/track">التتبع</a>
-          <a class="btn btn-ghost" href="/">الرئيسية</a>
-          <a class="btn btn-ghost" href="/login" id="logoutBtn">خروج</a>
+  <body class="guest-shell-page driver-page">
+    <div id="driverShellHeader"></div>
+    <div class="dash-main">
+      <div id="driverShellHero"></div>
+      <div class="layout">
+        <div class="card driver-profile-card">
+          <div class="driver-profile-card__row">
+            <span class="driver-profile-card__avatar" aria-hidden="true">📋</span>
+            <div class="driver-profile-card__meta">
+              <span class="driver-profile-card__role">طلبات المنصة</span>
+              <p class="driver-profile-card__phone" id="phoneLine" translate="no">—</p>
+            </div>
+          </div>
+          <div class="drv-orders-toolbar">
+            <button type="button" class="driver-refresh-btn" id="refreshBtn" style="margin:0;width:auto;min-width:140px">تحديث</button>
+            <a class="driver-balance-link" href="/driver-wallet">الرصيد والسحب ←</a>
+          </div>
         </div>
-      </div>
 
-      <div class="top-nav" style="margin-bottom: 4px; padding-bottom: 0; border: none">
-        <h1 style="margin: 0; font-size: 1.25rem">إدارة الطلبات</h1>
-      </div>
+        <div class="card driver-panel-card" id="secAvailable">
+          <div class="badge">الطلبات المتاحة</div>
+          <div class="driver-panel-card__body">
+            <p class="drv-section-hint" id="summaryAvailable">—</p>
+            <div id="cardsAvailable"></div>
+          </div>
+        </div>
 
-      <div class="drv-section" id="secAvailable">
-        <h2>الطلبات المتاحة</h2>
-        <p class="drv-summary" id="summaryAvailable">—</p>
-        <div class="drv-table-wrap" id="wrapAvailable"></div>
-        <div class="drv-cards-mobile" id="cardsAvailable"></div>
-      </div>
+        <div class="card driver-panel-card" id="secMine">
+          <div class="badge">طلباتي النشطة</div>
+          <div class="driver-panel-card__body">
+            <p class="drv-section-hint" id="summaryMine">—</p>
+            <div id="cardsMine"></div>
+          </div>
+        </div>
 
-      <div class="drv-section" id="secMine">
-        <h2>طلباتي النشطة</h2>
-        <p class="drv-summary" id="summaryMine">—</p>
-        <div class="drv-table-wrap" id="wrapMine"></div>
-        <div class="drv-cards-mobile" id="cardsMine"></div>
+        <div id="msg" class="drv-alert"></div>
       </div>
-
-      <div id="msg" class="alert" style="display: none"></div>
+      <div id="driverShellFooter"></div>
     </div>
 
     <audio id="newOrderSound" src="/sound.mp3" preload="auto"></audio>
 
     <script src="/assets/api-config.js"></script>
     <script src="/assets/api.js"></script>
+    <script src="/assets/driver-nav.js"></script>
+    <script>
+      ErvenowDriverNav.mount({
+        activeNav: "orders",
+        pageTag: "طلبات المنصة",
+        hero: {
+          title: "طلبات المنصة",
+          sub: "اقبل الطلبات الجديدة وتابع طلباتك النشطة — رقم كل طلب يظهر بوضوح في أعلى البطاقة.",
+        },
+      });
+    </script>
     <script>
       var token = window.PlatformAPI.getToken();
       var meUser = null;
@@ -367,101 +270,68 @@
         return { available: available, mine: mine };
       }
 
-      function renderTable(tbodyRowsHtml) {
-        return (
-          '<table class="drv-table" role="grid">' +
-          "<thead><tr>" +
-          "<th>طلب رقم</th>" +
-          "<th>المسافة</th>" +
-          "<th>السعر</th>" +
-          "<th></th>" +
-          "</tr></thead><tbody>" +
-          tbodyRowsHtml +
-          "</tbody></table>"
-        );
-      }
+      var STATUS_AR_ORDERS = {
+        new: "جديد",
+        pending: "بانتظار مندوب",
+        accepted: "مقبول",
+        delivering: "جاري التوصيل",
+        delivered: "تم التسليم",
+      };
 
       function renderOrderRows(orders, mode) {
-        var meId = meUser && meUser.id;
         if (!orders.length) {
-          return { table: "", cards: '<div class="drv-empty">لا توجد طلبات.</div>' };
+          return { cards: '<div class="drv-empty-state">لا توجد طلبات في هذا القسم.</div>' };
         }
-        var tableRows = "";
         var cards = "";
         orders.forEach(function (o) {
           var ds = String(o.delivery_status || o.status || "").toLowerCase();
-          var num = orderNo(o);
           var km = orderKm(o);
           var kmStr = km != null ? km + " كم" : "—";
-          var fee = orderFee(o);
-          var feeStr = fee.toFixed(2) + " ريال";
+          var feeStr = orderFee(o).toFixed(2) + " ر.س";
+          var stLabel = STATUS_AR_ORDERS[ds] || ds;
+
+          var body =
+            "<p><strong>المسافة:</strong> " + kmStr + " · <strong>الأجرة:</strong> " + feeStr + "</p>";
+          if (o.drop_address) body += "<p>📍 " + ErvenowDriverNav.escHtml(o.drop_address) + "</p>";
 
           var actionsHtml = "";
           if (mode === "available") {
             actionsHtml =
-              '<button type="button" class="btn btn-primary btn-accept" data-id="' +
+              '<button type="button" class="drv-btn drv-btn--gold btn-accept" data-id="' +
               encodeURIComponent(o.id) +
               '">قبول الطلب</button>';
           } else {
             if (ds === "accepted") {
               actionsHtml +=
-                '<button type="button" class="btn btn-primary btn-start" data-id="' +
+                '<button type="button" class="drv-btn drv-btn--gold btn-start" data-id="' +
                 encodeURIComponent(o.id) +
-                '">استلام الطلب</button> ';
+                '">بدء التوصيل</button>';
             }
             if (ds === "accepted" || ds === "delivering") {
               actionsHtml +=
-                '<button type="button" class="btn btn-ghost btn-done" data-id="' +
+                '<button type="button" class="drv-btn drv-btn--ghost btn-done" data-id="' +
                 encodeURIComponent(o.id) +
-                '">تم التسليم</button> ';
+                '">تم التسليم</button>';
             }
             actionsHtml +=
-              '<a class="btn btn-ghost" href="/track?id=' +
+              '<a class="drv-btn drv-btn--ghost" href="/driver-app?order=' +
               encodeURIComponent(o.id) +
-              '">تتبع</a> ' +
-              '<button type="button" class="btn btn-ghost btn-map" data-id="' +
+              '#track">تتبع الحي</a>' +
+              '<button type="button" class="drv-btn drv-btn--ghost btn-map" data-id="' +
               encodeURIComponent(o.id) +
               '">خريطة</button>';
           }
 
-          tableRows +=
-            "<tr>" +
-            '<td><span class="drv-num" translate="no">' +
-            num +
-            "</span></td>" +
-            "<td translate=\"no\">" +
-            kmStr +
-            "</td>" +
-            "<td translate=\"no\">" +
-            feeStr +
-            "</td>" +
-            '<td class="drv-actions-cell">' +
-            actionsHtml +
-            "</td>" +
-            "</tr>";
-
-          cards +=
-            '<div class="drv-mcard" data-oid="' +
-            encodeURIComponent(o.id) +
-            '">' +
-            '<div class="drv-mrow"><span>طلب رقم</span><span class="drv-num" translate="no">' +
-            num +
-            "</span></div>" +
-            '<div class="drv-mrow"><span>المسافة</span><span translate="no">' +
-            kmStr +
-            "</span></div>" +
-            '<div class="drv-mrow"><span>السعر</span><span translate="no">' +
-            feeStr +
-            "</span></div>" +
-            '<div class="drv-actions-cell" style="margin-top:4px">' +
-            actionsHtml +
-            "</div></div>";
+          cards += ErvenowDriverNav.orderCardHtml(o, {
+            statusLabel: stLabel,
+            bodyHtml: body,
+            actionsHtml: actionsHtml,
+          });
         });
-
-        return { table: renderTable(tableRows), cards: cards };
+        return { cards: cards };
       }
 
-      function wireOrderButtons(wrapEl, cardsEl, orders, mode) {
+      function wireOrderButtons(cardsEl, orders, mode) {
         function findOrder(id) {
           var u = decodeURIComponent(id);
           for (var i = 0; i < orders.length; i++) {
@@ -497,7 +367,6 @@
             };
           });
         }
-        bind(wrapEl);
         bind(cardsEl);
       }
 
@@ -513,19 +382,15 @@
           mine.length ? "عدد طلباتك الجارية: " + mine.length : "لا توجد طلبات مسندة إليك حالياً";
 
         var ra = renderOrderRows(av, "available");
-        var wa = document.getElementById("wrapAvailable");
         var ca = document.getElementById("cardsAvailable");
-        wa.innerHTML = av.length ? ra.table : '<div class="drv-empty">لا توجد طلبات متاحة.</div>';
-        ca.innerHTML = av.length ? ra.cards : "";
+        ca.innerHTML = ra.cards;
 
         var rm = renderOrderRows(mine, "mine");
-        var wm = document.getElementById("wrapMine");
         var cm = document.getElementById("cardsMine");
-        wm.innerHTML = mine.length ? rm.table : '<div class="drv-empty">لا شيء هنا بعد قبول طلب.</div>';
-        cm.innerHTML = mine.length ? rm.cards : "";
+        cm.innerHTML = rm.cards;
 
-        wireOrderButtons(wa, ca, av, "available");
-        wireOrderButtons(wm, cm, mine, "mine");
+        wireOrderButtons(ca, av, "available");
+        wireOrderButtons(cm, mine, "mine");
       }
 
       async function loadOrders() {
@@ -585,7 +450,10 @@
           meUser = me.user || {};
           var role = me.profile && me.profile.role;
           if (role !== "driver" && role !== "admin") {
-            showMsg("هذه الصفحة مخصصة للمندوبين.");
+            showMsg("طابور طلبات المندوبين غير متاح — تابع طلباتك من لوحة الزائر أو التتبع.");
+            setTimeout(function () {
+              location.replace("/dashboard");
+            }, 2200);
             return;
           }
           var phone = meUser.phone || (me.profile && me.profile.name) || meUser.id || "—";
@@ -610,17 +478,6 @@
         } catch (e) {}
         loadOrders();
       });
-
-      document.getElementById("logoutBtn").onclick = function (e) {
-        e.preventDefault();
-        if (pollTimer) clearInterval(pollTimer);
-        stopLocationLoop();
-        try {
-          localStorage.removeItem("userPhone");
-        } catch (err) {}
-        window.PlatformAPI.setToken("");
-        location.href = "/driver-login";
-      };
 
       init();
     </script>

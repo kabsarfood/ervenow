@@ -124,24 +124,18 @@
         gap: 0.65rem;
         margin-top: 0.25rem;
       }
-      .actions-row {
-        display: flex;
-        flex-direction: column;
-        gap: 0.65rem;
-        margin-top: 0.5rem;
+      .actions--single {
+        margin-top: 1rem;
       }
-      @media (min-width: 400px) {
-        .actions-row {
-          flex-direction: row;
-          align-items: stretch;
-        }
-        .actions-row .btn-ghost {
-          flex: 0 0 auto;
-          min-width: 42%;
-        }
-        .actions-row .btn-primary {
-          flex: 1;
-        }
+      .actions--single .btn-primary {
+        width: 100%;
+      }
+      .auth-code-group[hidden] {
+        display: none !important;
+      }
+      .actions-foot {
+        margin-top: 0.85rem;
+        text-align: center;
       }
       .btn-primary,
       .btn-ghost {
@@ -203,22 +197,24 @@
       </header>
       <div class="card">
         <h2>تسجيل الدخول</h2>
-        <p class="hint">أدخل الجوال المصرّح ثم رمز واتساب. صلاحية الرمز <strong>5 دقائق</strong>.</p>
+        <p class="hint" id="adminAuthIntro">أدخل الجوال المصرّح ثم اضغط إرسال رمز واتساب. صلاحية الرمز <strong>5 دقائق</strong>.</p>
 
         <div class="field">
           <label for="phone">رقم الجوال</label>
           <input id="phone" type="tel" inputmode="numeric" autocomplete="tel-national" maxlength="10" placeholder="05xxxxxxxx" />
         </div>
-        <div class="actions">
-          <button class="btn-primary" id="sendBtn" type="button">إرسال رمز واتساب</button>
+
+        <div class="auth-code-group" id="adminCodeGroup" hidden>
+          <div class="field" style="margin-top: 1rem">
+            <label for="code">رمز واتساب</label>
+            <input id="code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="8" placeholder="أدخل الرمز المرسل على واتساب" />
+          </div>
         </div>
 
-        <div class="field" style="margin-top: 1.15rem">
-          <label for="code">رمز التحقق</label>
-          <input id="code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="8" placeholder="أدخل الرمز" />
+        <div class="actions actions--single">
+          <button class="btn-primary" id="adminAuthBtn" type="button">إرسال رمز واتساب</button>
         </div>
-        <div class="actions-row">
-          <button class="btn-primary" id="verifyBtn" type="button">دخول لوحة الإدارة</button>
+        <div class="actions-foot">
           <a class="btn-ghost" href="/">الرئيسية</a>
         </div>
 
@@ -231,6 +227,7 @@
       window.__ERVENOW_FETCH_TIMEOUT_MS = 20000;
     </script>
     <script src="/assets/api.js"></script>
+    <script src="/assets/auth-otp-flow.js"></script>
     <script>
       function normalizeAdminPhone(v) {
         var d = String(v || "").replace(/\D/g, "");
@@ -260,60 +257,95 @@
         return m;
       }
 
-      async function sendOtp() {
-        var phone = normalizeAdminPhone(document.getElementById("phone").value || "");
-        if (!phone) return setMsg("أدخل رقم الجوال أولاً", "err");
-        if (!isValid05(phone)) return setMsg("أدخل رقم سعودي يبدأ بـ 05 (10 أرقام)", "err");
-        setMsg("جارٍ إرسال الكود…", "");
-        try {
-          var j = await window.PlatformAPI.api("/api/core/send-otp", {
-            method: "POST",
-            body: { phone: "+966" + phone.slice(1), role: "admin" },
-          });
-          if (!j || j.ok === false) throw new Error((j && j.error) || "تعذر إرسال الكود");
-          setMsg("تم إرسال رمز واتساب. تحقق من الرسائل.", "ok");
-        } catch (e) {
-          setMsg(mapOtpError(e.message || "فشل الإرسال"), "err");
-        }
+      function phoneToE164(phoneEl) {
+        var phone = normalizeAdminPhone(phoneEl.value || "");
+        phoneEl.value = phone;
+        return "+966" + phone.slice(1);
       }
 
-      async function verifyOtp() {
-        var phone = normalizeAdminPhone(document.getElementById("phone").value || "");
-        var code = (document.getElementById("code").value || "").trim();
-        if (!phone || !code) return setMsg("أدخل رقم الجوال والرمز", "err");
-        if (!isValid05(phone)) return setMsg("أدخل رقم سعودي يبدأ بـ 05 (10 أرقام)", "err");
-        setMsg("جارٍ التحقق…", "");
-        try {
-          var data = await window.PlatformAPI.api("/api/core/verify-otp", {
-            method: "POST",
-            body: { phone: "+966" + phone.slice(1), code: code, role: "admin" },
-          });
-          if (!data || !data.token) throw new Error((data && data.error) || "فشل التحقق");
-          localStorage.setItem("token", data.token);
-          if (window.PlatformAPI && typeof window.PlatformAPI.setToken === "function") {
-            window.PlatformAPI.setToken(data.token);
-          } else {
-            localStorage.setItem("ervenow_access_token", data.token);
+      ErvenowAuthOtpFlow.mount({
+        phoneId: "phone",
+        codeId: "code",
+        codeGroupId: "adminCodeGroup",
+        btnId: "adminAuthBtn",
+        introId: "adminAuthIntro",
+        introSend: "أدخل الجوال المصرّح ثم اضغط إرسال رمز واتساب. صلاحية الرمز 5 دقائق.",
+        introVerify: "أدخل رمز واتساب ثم اضغط دخول لوحة الإدارة.",
+        labels: {
+          send: "إرسال رمز واتساب",
+          verify: "دخول لوحة الإدارة",
+        },
+        phoneValid: function (v) {
+          return isValid05(v);
+        },
+        normalizePhone: function (phoneEl) {
+          phoneEl.value = normalizeAdminPhone(phoneEl.value);
+          return phoneEl.value;
+        },
+        onPhoneInvalid: function () {
+          setMsg("أدخل رقم سعودي يبدأ بـ 05 (10 أرقام)", "err");
+        },
+        onVerifyNeedsCode: function (codeEl) {
+          if (!(codeEl.value || "").trim()) {
+            setMsg("أدخل رمز واتساب", "err");
+            return false;
+          }
+          return true;
+        },
+        onSend: async function (phoneEl) {
+          setMsg("", "");
+          var e164 = phoneToE164(phoneEl);
+          try {
+            var j = await window.PlatformAPI.api("/api/core/send-otp", {
+              method: "POST",
+              body: { phone: e164, role: "admin" },
+            });
+            if (!j || j.ok === false) throw new Error((j && j.error) || "تعذر إرسال الكود");
+            setMsg("تم إرسال رمز واتساب. صلاحية الرمز 5 دقائق.", "ok");
+          } catch (e) {
+            setMsg(mapOtpError(e.message || "فشل الإرسال"), "err");
+            throw e;
+          }
+        },
+        onVerify: async function (phoneEl, codeEl) {
+          setMsg("", "");
+          var e164 = phoneToE164(phoneEl);
+          var code = (codeEl.value || "").trim();
+          if (!isValid05(normalizeAdminPhone(phoneEl.value))) {
+            setMsg("أدخل رقم سعودي يبدأ بـ 05 (10 أرقام)", "err");
+            throw new Error("invalid_phone");
           }
           try {
-            var maxAgeSec = 7 * 24 * 60 * 60;
-            var c =
-              "auth_token=" +
-              encodeURIComponent(data.token) +
-              "; path=/; max-age=" +
-              maxAgeSec +
-              "; SameSite=Lax";
-            if (location.protocol === "https:") c += "; Secure";
-            document.cookie = c;
-          } catch (cookieErr) {}
-          window.location.href = "/admin-dashboard";
-        } catch (e) {
-          setMsg(mapOtpError(e.message || "فشل الدخول"), "err");
-        }
-      }
+            var data = await window.PlatformAPI.api("/api/core/verify-otp", {
+              method: "POST",
+              body: { phone: e164, code: code, role: "admin" },
+            });
+            if (!data || !data.token) throw new Error((data && data.error) || "فشل التحقق");
+            localStorage.setItem("token", data.token);
+            if (window.PlatformAPI && typeof window.PlatformAPI.setToken === "function") {
+              window.PlatformAPI.setToken(data.token);
+            } else {
+              localStorage.setItem("ervenow_access_token", data.token);
+            }
+            try {
+              var maxAgeSec = 7 * 24 * 60 * 60;
+              var c =
+                "auth_token=" +
+                encodeURIComponent(data.token) +
+                "; path=/; max-age=" +
+                maxAgeSec +
+                "; SameSite=Lax";
+              if (location.protocol === "https:") c += "; Secure";
+              document.cookie = c;
+            } catch (cookieErr) {}
+            window.location.href = "/admin-dashboard";
+          } catch (e) {
+            setMsg(mapOtpError(e.message || "فشل الدخول"), "err");
+            throw e;
+          }
+        },
+      });
 
-      document.getElementById("sendBtn").onclick = sendOtp;
-      document.getElementById("verifyBtn").onclick = verifyOtp;
       document.getElementById("phone").addEventListener("blur", function () {
         document.getElementById("phone").value = normalizeAdminPhone(document.getElementById("phone").value);
       });

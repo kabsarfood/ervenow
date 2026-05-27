@@ -345,6 +345,23 @@ body.guest-shell-page.stores-page {
   width: 100%;
 }
 
+.erv-platform-access-notice {
+  margin: 0 auto 12px;
+  max-width: min(1120px, 100%);
+  padding: 10px 14px;
+  font-size: 0.86rem;
+  line-height: 1.55;
+  color: #5b371d;
+  background: linear-gradient(180deg, #fff9ee, #fffdf8);
+  border: 1px solid rgba(185, 135, 47, 0.4);
+  border-radius: 12px;
+  box-sizing: border-box;
+}
+.erv-platform-access-notice a {
+  color: #6b4a1a;
+  font-weight: 800;
+}
+
 /* ——— عنوان القسم (تحت الهيدر) ——— */
 .guest-section-hero {
   flex-shrink: 0;

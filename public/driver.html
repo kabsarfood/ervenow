@@ -7,117 +7,49 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/assets/styles.css" />
+    <link rel="stylesheet" href="/assets/guest-shell.css" />
+    <link rel="stylesheet" href="/assets/driver-shell.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <style>
-      .driver-nav-dock {
-        display: none;
-        position: fixed;
-        inset-inline: 0;
-        bottom: 0;
-        z-index: 10050;
-        padding: 12px 14px calc(14px + env(safe-area-inset-bottom, 0px));
-        background: linear-gradient(180deg, transparent, rgba(15, 23, 42, 0.96));
-      }
-      .driver-nav-dock.is-visible {
-        display: block;
-      }
-      .driver-nav-dock-inner {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        max-width: 520px;
-        margin: 0 auto;
-      }
-      .driver-order-chip {
-        text-align: center;
-        font-size: 0.88rem;
-        font-weight: 700;
-        color: rgba(255, 255, 255, 0.92);
-        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
-      }
-      .driver-main-action {
-        font-family: inherit;
-        font-size: 1.18rem;
-        font-weight: 800;
-        line-height: 1.2;
-        padding: 22px 16px;
-        min-height: 62px;
-        width: 100%;
-        border: none;
-        border-radius: 16px;
-        cursor: pointer;
-        box-shadow: 0 4px 18px rgba(0, 0, 0, 0.28);
-      }
-      .driver-main-action:active:not(:disabled) {
-        transform: scale(0.99);
-      }
-      .driver-main-action:disabled {
-        opacity: 0.45;
-        cursor: not-allowed;
-      }
-      .driver-main-action.mode-pending {
-        background: linear-gradient(180deg, #22c55e, #15803d);
-        color: #fff;
-      }
-      .driver-main-action.mode-nav {
-        background: linear-gradient(180deg, #38bdf8, #1d4ed8);
-        color: #fff;
-      }
-      .driver-main-action.mode-finish {
-        background: linear-gradient(180deg, #fbbf24, #b45309);
-        color: #1c1917;
-      }
-      body.driver-nav-dock-active .layout {
-        padding-bottom: calc(130px + env(safe-area-inset-bottom, 0px));
-      }
-      body.driver-ultra-mode #driverRatingLine {
-        display: none !important;
-      }
-      body.driver-ultra-mode .top-nav h1 {
-        font-size: 1.05rem;
-      }
-      body.driver-ultra-mode .top-nav .btn-row a:not(#driverLogout) {
-        display: none;
-      }
-      body.driver-ultra-mode #ordersCard .card > .badge:first-child + #orders {
-        max-height: 100px;
-        overflow: auto;
-      }
-      body.driver-ultra-mode #driverMapCard {
-        min-height: 52vh;
-      }
-      body.driver-ultra-mode #driverLiveMap {
-        min-height: 46vh !important;
-      }
-    </style>
   </head>
-  <body>
-    <div class="layout">
-      <div class="top-nav">
-        <h1 style="margin: 0">مندوب التوصيل</h1>
-        <div class="btn-row">
-          <a class="btn btn-ghost" href="/orders">طلبات المنصة</a>
-          <a class="btn btn-ghost" href="/driver-wallet">المحفظة</a>
-          <a class="btn btn-ghost" href="/driver-app">تتبع الحي</a>
-          <a class="btn btn-ghost" href="/login" id="driverLogout">خروج</a>
+  <body class="guest-shell-page driver-page">
+    <div id="driverShellHeader"></div>
+
+    <div class="dash-main">
+      <div id="driverShellHero"></div>
+
+      <div class="layout">
+        <div class="card driver-profile-card" id="driverProfileCard">
+          <div class="driver-profile-card__row">
+            <span class="driver-profile-card__avatar" aria-hidden="true">🛵</span>
+            <div class="driver-profile-card__meta">
+              <span class="driver-profile-card__role" id="driverRoleBadge">مندوب توصيل</span>
+              <p class="driver-profile-card__phone" id="who">—</p>
+            </div>
+          </div>
+          <p class="driver-profile-card__rating" id="driverRatingLine" translate="no">—</p>
+          <a class="driver-balance-link" href="/driver-wallet">الرصيد والسحب ←</a>
         </div>
-      </div>
-      <p class="sub" id="who"></p>
-      <p class="sub" id="driverRatingLine" style="margin-top: 6px" translate="no">—</p>
 
-      <div class="card" id="ordersCard">
-        <div class="badge">الطلبات</div>
-        <div id="orders"></div>
-        <button type="button" class="btn btn-primary" id="btnRefresh">تحديث</button>
+        <div class="card driver-panel-card" id="ordersCard">
+          <div class="badge">الطلبات</div>
+          <div class="driver-panel-card__body">
+            <div id="orders"></div>
+            <button type="button" class="driver-refresh-btn" id="btnRefresh">تحديث القائمة</button>
+          </div>
+        </div>
+
+        <div class="card driver-panel-card" id="driverMapCard">
+          <div class="badge">الخريطة</div>
+          <div class="driver-panel-card__body">
+            <p class="driver-loc-status" id="locStatus">—</p>
+            <div id="driverLiveMap" role="application" aria-label="خريطة التوصيل"></div>
+          </div>
+        </div>
+
+        <div class="msg err" id="err" style="display: none"></div>
       </div>
 
-      <div class="card" id="driverMapCard">
-        <div class="badge">الخريطة</div>
-        <p class="sub" style="margin-top: 8px" id="locStatus">—</p>
-        <div id="driverLiveMap" style="min-height: 280px; border-radius: 12px; border: 1px solid rgba(0,0,0,.12); margin-top: 10px"></div>
-      </div>
-
-      <div class="msg err" id="err" style="display: none"></div>
+      <div id="driverShellFooter"></div>
     </div>
 
     <div id="driverMapNavDock" class="driver-nav-dock" role="region" aria-label="إجراء التوصيل">
@@ -130,6 +62,17 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="/assets/api-config.js"></script>
     <script src="/assets/api.js"></script>
+    <script src="/assets/driver-nav.js"></script>
+    <script>
+      ErvenowDriverNav.mount({
+        activeNav: "driver",
+        pageTag: "لوحة مندوب التوصيل",
+        hero: {
+          title: "مندوب التوصيل",
+          sub: "استلم طلبات المطاعم والمتاجر، تابع موقعك على الخريطة، وأكمل التسليم من شريط الإجراء السفلي.",
+        },
+      });
+    </script>
     <script>
       var token = window.PlatformAPI.getToken();
       var isLoggedIn = !!token;
@@ -563,14 +506,27 @@
         }, 2500);
       }
 
+      async function refreshDriverWallet() {
+        if (window.ErvenowDriverNav && ErvenowDriverNav.refreshBalanceChip) {
+          await ErvenowDriverNav.refreshBalanceChip();
+        }
+      }
+
       async function loadMe() {
         var j = await window.PlatformAPI.api("/api/core/me");
         if (j.user && j.user.id) myUserId = String(j.user.id);
-        document.getElementById("who").textContent =
-          "الدور: " + (j.profile && j.profile.role) + " — " + (j.user && j.user.phone);
-        if (j.profile && j.profile.role !== "driver") {
-          err("هذه الصفحة للمندوبين. من صفحة الدخول اختر «مندوب» ثم سجّل الدخول.");
+        var whoEl = document.getElementById("who");
+        var roleEl = document.getElementById("driverRoleBadge");
+        var phone = (j.user && j.user.phone) || "—";
+        if (whoEl) whoEl.textContent = phone;
+        if (roleEl) {
+          var role = (j.profile && j.profile.role) || "driver";
+          roleEl.textContent = role === "driver" ? "مندوب توصيل معتمد" : "الدور: " + role;
         }
+        if (j.profile && j.profile.role !== "driver") {
+          err("هذه الصفحة للمندوبين. من صفحة الدخول اختر «مندوب توصيل» ثم سجّل الدخول.");
+        }
+        await refreshDriverWallet();
       }
 
       function renderStars(avg) {
@@ -742,12 +698,16 @@
             .replace(/"/g, "&quot;");
         }
 
+        if (!orders.length) {
+          box.innerHTML =
+            '<p class="driver-loc-status" style="margin:0">لا توجد طلبات متاحة الآن — اسحب للتحديث أو انتظر إشعاراً جديداً.</p>';
+        }
+
         orders.forEach(function (o) {
           var div = document.createElement("div");
           div.className = "order-row";
           var deliveryStatus = o.delivery_status || o.status;
           var st = STATUS_AR[deliveryStatus] || deliveryStatus;
-          var num = (o.order_number && String(o.order_number).trim()) || o.id.slice(0, 8) + "…";
           var src = (o.series_source && String(o.series_source)) || "";
           var isKabsar = /kabsar/i.test(src);
           var sourceTag = isKabsar ? "🍛 كبسار" : "🌐 المنصة";
@@ -756,37 +716,24 @@
               ? " — " + o.external_order_id
               : "";
           var phone = isLoggedIn ? (o.customer_phone || "—") : "**********";
-          var storeBlock = "";
+          var body = '<p class="drv-order-card__meta-line" translate="no">' + sourceTag + extLine + "</p>";
           if (o.store_name || o.store_id) {
-            storeBlock =
-              '<div class="sub order-store-name" style="margin:8px 0 2px;font-weight:800;font-size:0.95rem" translate="no">🏪 ' +
-              escHtml(o.store_name || "متجر") +
-              "</div>";
+            body += '<p class="drv-order-card__meta-line" translate="no">🏪 ' + escHtml(o.store_name || "متجر") + "</p>";
             if (o.store_address) {
-              storeBlock +=
-                '<div class="sub order-store-addr" style="margin:0 0 6px;font-size:0.85rem" translate="no">📍 ' +
-                escHtml(o.store_address) +
-                "</div>";
+              body += '<p translate="no">📍 ' + escHtml(o.store_address) + "</p>";
             }
           }
-          div.innerHTML =
-            "<strong><span class=\"ord-no\" translate=\"no\">" +
-            num +
-            "</span></strong> <span class=\"badge\" style=\"margin-inline-start:6px\">" +
-            st +
-            "</span><br/><div class=\"sub order-source\" style=\"margin:4px 0 2px; font-size:0.9rem\" translate=\"no\">" +
-            sourceTag +
-            extLine +
-            "</div>" +
-            storeBlock +
-            "<br/><small>" +
-            (o.drop_address || "") +
-            "</small><br/><small>هاتف زائر المنصة: " +
-            phone +
-            "</small><br/>" +
-            '<a class="btn btn-ghost" style="margin-top:8px;display:inline-block" href="/driver-app?order=' +
+          body += "<p>📍 " + escHtml(o.drop_address || "—") + "</p>";
+          body += "<p>هاتف العميل: " + escHtml(phone) + "</p>";
+          var actions =
+            '<a class="drv-btn drv-btn--ghost" href="/driver-app?order=' +
             encodeURIComponent(o.id) +
-            '">تتبع الحي</a>';
+            '#track">تتبع الحي</a>';
+          div.innerHTML = ErvenowDriverNav.orderCardHtml(o, {
+            statusLabel: st,
+            bodyHtml: body,
+            actionsHtml: actions,
+          });
           box.appendChild(div);
         });
 
@@ -962,7 +909,7 @@
         stopLocationLoop();
         stopProximityLoop();
         window.PlatformAPI.setToken("");
-        location.href = "/login";
+        location.href = "/driver-login";
       };
 
       (async function () {
@@ -971,6 +918,7 @@
         await loadOrders();
         pollTimer = setInterval(loadOrders, 8000);
         startPresenceLocationLoop();
+        setInterval(refreshDriverWallet, 60000);
       })();
     </script>
   </body>
