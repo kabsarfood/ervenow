@@ -676,14 +676,14 @@
           <div class="svc-order-form__row">
             <label for="svcPayMode">طريقة الدفع</label>
             <select id="svcPayMode" name="pay_mode">
+              <option value="cart" selected>إضافة للسلة ثم الدفع (موصى به)</option>
               <option value="on_service">الدفع عند إتمام الخدمة</option>
               <option value="after_diagnosis">الدفع بعد تقييم العطل</option>
-              <option value="cart">إضافة للسلة والدفع لاحقاً</option>
             </select>
           </div>
           <p id="svcPriceHint" class="stores-brand__hint" style="margin: 0; max-width: none"></p>
           <div class="svc-order-form__actions">
-            <button type="submit" class="btn btn-primary" id="svcSubmitBtn">إرسال الطلب</button>
+            <button type="submit" class="btn btn-primary" id="svcSubmitBtn">إضافة للسلة والدفع</button>
             <a class="btn btn-ghost" href="/cart" id="svcCartLink" hidden>الذهاب للسلة</a>
           </div>
         </form>
@@ -723,6 +723,7 @@
     </footer>
     </div>
     <script src="/assets/cart.js"></script>
+    <script src="/assets/service-cart.js"></script>
     <script src="/assets/api-config.js"></script>
     <script src="/assets/api.js"></script>
     <script src="/assets/guestBrowse.js"></script>
@@ -730,7 +731,6 @@
     <script>
       ErvenowGuestShell.init({ activeNav: "services", pageTag: "خدمات منزلية" });
     </script>
-    <script src="/assets/cart.js"></script>
     <script>
       function esc(s) {
         return String(s || "")
@@ -1239,6 +1239,14 @@
         var priceHint = document.getElementById("svcPriceHint");
         var paySel = document.getElementById("svcPayMode");
         var cartLink = document.getElementById("svcCartLink");
+        if (paySel) {
+          paySel.addEventListener("change", function () {
+            var submitBtn = document.getElementById("svcSubmitBtn");
+            if (submitBtn) {
+              submitBtn.textContent = paySel.value === "cart" ? "إضافة للسلة والدفع" : "إرسال الطلب";
+            }
+          });
+        }
 
         function entry(type) {
           return catalog[type] || null;
@@ -1270,7 +1278,11 @@
             }
           }
           if (inspect) paySel.value = "after_diagnosis";
-          else paySel.value = "on_service";
+          else paySel.value = "cart";
+          var submitBtn = document.getElementById("svcSubmitBtn");
+          if (submitBtn) {
+            submitBtn.textContent = paySel.value === "cart" ? "إضافة للسلة والدفع" : "إرسال الطلب";
+          }
         }
 
         function updatePriceHint() {
@@ -1384,14 +1396,22 @@
                 alert(data.error || "تعذر إرسال الطلب");
                 return;
               }
-              if (data.use_cart && data.cart_item && typeof addToCart === "function") {
-                addToCart(data.cart_item);
-                if (successEl) {
-                  successEl.hidden = false;
-                  successEl.textContent = "تمت إضافة الخدمة إلى السلة. أكمل الدفع من صفحة السلة.";
+              if (data.use_cart && data.cart_item) {
+                var ci = data.cart_item;
+                ci.customer_phone = phone;
+                if (window.ErvenowServiceCart && ErvenowServiceCart.add) {
+                  var cartRes = ErvenowServiceCart.add(ci);
+                  if (!cartRes.ok) {
+                    alert(cartRes.message || "تعذر الإضافة للسلة");
+                    return;
+                  }
+                  return;
                 }
-                if (cartLink) cartLink.hidden = false;
-                return;
+                if (typeof addToCart === "function") {
+                  addToCart(ci);
+                  location.href = "/cart";
+                  return;
+                }
               }
               if (successEl) {
                 successEl.hidden = false;

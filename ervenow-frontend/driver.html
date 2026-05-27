@@ -18,17 +18,33 @@
       <div id="driverShellHero"></div>
 
       <div class="layout">
-        <div class="card driver-profile-card" id="driverProfileCard">
-          <div class="driver-profile-card__row">
-            <span class="driver-profile-card__avatar" aria-hidden="true">🛵</span>
-            <div class="driver-profile-card__meta">
-              <span class="driver-profile-card__role" id="driverRoleBadge">مندوب توصيل</span>
+        <article class="driver-profile-card driver-profile-card--premium" id="driverProfileCard" aria-label="بطاقة المندوب">
+          <div class="driver-profile-card__accent" aria-hidden="true"></div>
+          <header class="driver-profile-card__head">
+            <div class="driver-profile-card__avatar-wrap">
+              <span class="driver-profile-card__avatar" aria-hidden="true">🛵</span>
+            </div>
+            <div class="driver-profile-card__identity">
+              <span class="driver-cert-badge" id="driverRoleBadge" role="img" aria-label="مندوب توصيل معتمد">
+                <span class="driver-cert-badge__seal" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M5 12.5l4 4L19 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </span>
+                <span class="driver-cert-badge__label">معتمد</span>
+              </span>
               <p class="driver-profile-card__phone" id="who">—</p>
             </div>
+          </header>
+          <div class="driver-profile-card__rating-block" id="driverRatingBlock">
+            <p class="driver-profile-card__rating" id="driverRatingLine" translate="no">—</p>
           </div>
-          <p class="driver-profile-card__rating" id="driverRatingLine" translate="no">—</p>
-          <a class="driver-balance-link" href="/driver-wallet">الرصيد والسحب ←</a>
-        </div>
+          <a class="driver-profile-card__wallet" href="/driver-wallet">
+            <span class="driver-profile-card__wallet-ic" aria-hidden="true">💳</span>
+            <span class="driver-profile-card__wallet-label">الرصيد والسحب</span>
+            <span class="driver-profile-card__wallet-arrow" aria-hidden="true">←</span>
+          </a>
+        </article>
 
         <div class="card driver-panel-card" id="ordersCard">
           <div class="badge">الطلبات</div>
@@ -66,10 +82,11 @@
     <script>
       ErvenowDriverNav.mount({
         activeNav: "driver",
-        pageTag: "لوحة مندوب التوصيل",
         hero: {
-          title: "مندوب التوصيل",
-          sub: "استلم طلبات المطاعم والمتاجر، تابع موقعك على الخريطة، وأكمل التسليم من شريط الإجراء السفلي.",
+          eyebrow: "شريك التوصيل",
+          eyebrowLarge: true,
+          title: "",
+          sub: "",
         },
       });
     </script>
@@ -521,7 +538,21 @@
         if (whoEl) whoEl.textContent = phone;
         if (roleEl) {
           var role = (j.profile && j.profile.role) || "driver";
-          roleEl.textContent = role === "driver" ? "مندوب توصيل معتمد" : "الدور: " + role;
+          if (role === "driver") {
+            roleEl.className = "driver-cert-badge";
+            roleEl.setAttribute("role", "img");
+            roleEl.setAttribute("aria-label", "مندوب توصيل معتمد");
+            roleEl.innerHTML =
+              '<span class="driver-cert-badge__seal" aria-hidden="true">' +
+              '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" xmlns="http://www.w3.org/2000/svg">' +
+              '<path d="M5 12.5l4 4L19 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>' +
+              "</svg></span><span class=\"driver-cert-badge__label\">معتمد</span>";
+          } else {
+            roleEl.className = "driver-profile-card__role";
+            roleEl.removeAttribute("role");
+            roleEl.removeAttribute("aria-label");
+            roleEl.textContent = "الدور: " + role;
+          }
         }
         if (j.profile && j.profile.role !== "driver") {
           err("هذه الصفحة للمندوبين. من صفحة الدخول اختر «مندوب توصيل» ثم سجّل الدخول.");
@@ -547,12 +578,22 @@
           var j = await window.PlatformAPI.api("/api/driver/rating");
           var c = j.count != null ? j.count : 0;
           if (!c || j.avg == null) {
-            el.textContent = "لا توجد تقييمات بعد";
+            el.innerHTML =
+              '<span class="driver-profile-card__rating-muted">لا توجد تقييمات بعد</span>';
             return;
           }
           var avgNum = Number(j.avg);
           var avgStr = Number.isFinite(avgNum) ? avgNum.toFixed(1) : String(j.avg);
-          el.innerText = renderStars(avgNum) + "\n" + avgStr + " من 5 (" + c + " تقييم)";
+          el.innerHTML =
+            '<span class="driver-profile-card__stars" aria-hidden="true">' +
+            renderStars(avgNum) +
+            "</span>" +
+            '<span class="driver-profile-card__rating-val">' +
+            avgStr +
+            " من 5</span>" +
+            '<span class="driver-profile-card__rating-count">(' +
+            c +
+            " تقييم)</span>";
         } catch (e) {
           el.textContent = "—";
         }

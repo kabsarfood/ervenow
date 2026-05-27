@@ -473,6 +473,25 @@
       window.checkout = checkout;
 
       renderCart();
+
+      (function showCartFlash() {
+        try {
+          var msg = sessionStorage.getItem("ervenow:cart-flash");
+          if (!msg) return;
+          sessionStorage.removeItem("ervenow:cart-flash");
+          var banner = document.getElementById("cartFlash");
+          if (!banner) {
+            banner = document.createElement("p");
+            banner.id = "cartFlash";
+            banner.setAttribute("role", "status");
+            banner.style.cssText =
+              "padding:12px 14px;border-radius:12px;background:#f0e8d8;color:#3d2213;font-weight:700;margin:0 0 12px;line-height:1.5";
+            var grid = document.querySelector(".cart-grid");
+            if (grid && grid.parentNode) grid.parentNode.insertBefore(banner, grid);
+          }
+          banner.textContent = msg;
+        } catch (_) {}
+      })();
     </script>
   </body>
 </html>

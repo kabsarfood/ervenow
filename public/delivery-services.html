@@ -926,14 +926,34 @@
           font-size: 1.5rem;
         }
 
-        #dsSubmit {
+        #dsSubmit,
+        .ds-btn-cart-primary {
           font-size: 1.1rem;
           padding: 18px 24px;
           transition: filter 0.15s, transform 0.15s;
+          width: 100%;
         }
 
-        #dsSubmit:hover {
+        #dsSubmit:hover,
+        .ds-btn-cart-primary:hover {
           filter: brightness(1.05);
+        }
+
+        .ds-submit-wrap {
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+        }
+
+        .ds-btn-cart-secondary {
+          display: block;
+          text-align: center;
+          font-weight: 700;
+          color: var(--ds-brown, #3d2213);
+          text-decoration: none;
+          padding: 10px;
+          border-radius: 12px;
+          border: 1px dashed rgba(61, 34, 19, 0.25);
         }
 
         /* نموذج: عمود رئيسي + شريط جانبي للسعر والإرسال */
@@ -1159,6 +1179,7 @@
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="/assets/cart.js"></script>
+    <script src="/assets/service-cart.js"></script>
     <script src="/assets/api-config.js"></script>
     <script src="/assets/api.js"></script>
     <script src="/assets/guestBrowse.js"></script>
@@ -1528,7 +1549,10 @@
             "<div class='ds-price-cell'><span class='ds-price-cell__ic'>📍</span><p class='ds-price-cell__lbl'>المسافة التقريبية</p><p class='ds-price-cell__val' id='dsDistVal'>—</p><span class='ds-price-cell__unit'>كم</span></div>" +
             "</div>" +
             "<p id='dsEstimate' aria-live='polite'></p>" +
-            "<div class='ds-submit-wrap'><button type='submit' id='dsSubmit'>🚀 إرسال الطلب</button></div>" +
+            "<div class='ds-submit-wrap'>" +
+            "<button type='submit' id='dsSubmit' class='ds-btn-cart-primary'>🛒 إضافة للسلة والدفع</button>" +
+            "<a href='/cart' class='ds-btn-cart-secondary'>عرض السلة</a>" +
+            "</div>" +
             "</form>";
 
           document.getElementById("dsBtnPickup").onclick = function () {
@@ -1543,7 +1567,7 @@
             document.getElementById("dsCityRow2").style.display = ext ? "flex" : "none";
             updateEstimate();
           };
-          document.getElementById("dsCarForm").onsubmit = submitCar;
+          document.getElementById("dsCarForm").onsubmit = addCarToCart;
           syncLocLabels();
           updateEstimate();
         }
@@ -1556,7 +1580,37 @@
           renderComingSoon();
         }
 
-        function submitCar(ev) {
+        function buildCarCartItem() {
+          var transfer = document.getElementById("dsTransfer").value;
+          var priceEl = document.getElementById("dsPriceVal");
+          var fee = priceEl ? parseInt(String(priceEl.textContent || "").replace(/[^\d]/g, ""), 10) : 0;
+          if (!Number.isFinite(fee) || fee < 1) fee = 1;
+          return {
+            type: "car_transport",
+            title: "نقل مركبات",
+            price: fee,
+            customer_phone: document.getElementById("dsPhone").value.trim(),
+            data: {
+              vehicle_category: document.getElementById("dsVehCat").value,
+              vehicle_condition: document.getElementById("dsVehCond").value,
+              transfer_mode: transfer,
+              pickup_lat: state.pickup.lat,
+              pickup_lng: state.pickup.lng,
+              drop_lat: state.dropoff.lat,
+              drop_lng: state.dropoff.lng,
+              pickup_district_label: document.getElementById("dsPickupInd").value,
+              drop_district_label: document.getElementById("dsDropInd").value,
+              from_city: document.getElementById("dsFromCity").value,
+              to_city: document.getElementById("dsToCity").value,
+              notes_extra: document.getElementById("dsNotes").value.trim(),
+              customer_phone: document.getElementById("dsPhone").value.trim(),
+              total_amount: fee,
+              payment_status: "unpaid",
+            },
+          };
+        }
+
+        function addCarToCart(ev) {
           ev.preventDefault();
           var err = document.getElementById("dsErr");
           var ok = document.getElementById("dsOk");
@@ -1575,55 +1629,19 @@
               return;
             }
           }
-          var tok = authHeaders().Authorization;
-          if (!tok) {
-            err.textContent = "يجب تسجيل الدخول أولاً.";
+          if (!window.ErvenowServiceCart || !ErvenowServiceCart.add) {
+            err.textContent = "تعذر تحميل السلة. حدّث الصفحة.";
             err.style.display = "block";
             return;
           }
-          var payload = {
-            vehicle_category: document.getElementById("dsVehCat").value,
-            vehicle_condition: document.getElementById("dsVehCond").value,
-            transfer_mode: transfer,
-            pickup_lat: state.pickup.lat,
-            pickup_lng: state.pickup.lng,
-            drop_lat: state.dropoff.lat,
-            drop_lng: state.dropoff.lng,
-            pickup_district_label: document.getElementById("dsPickupInd").value,
-            drop_district_label: document.getElementById("dsDropInd").value,
-            from_city: document.getElementById("dsFromCity").value,
-            to_city: document.getElementById("dsToCity").value,
-            notes_extra: document.getElementById("dsNotes").value.trim(),
-          };
-          var phone = document.getElementById("dsPhone").value.trim();
-          fetch(window.PlatformAPI.apiUrl("/api/delivery/create"), {
-            method: "POST",
-            headers: Object.assign({ "Content-Type": "application/json" }, authHeaders()),
-            body: JSON.stringify({
-              service_type: "car_transport",
-              payload: payload,
-              customer_phone: phone,
-            }),
-          })
-            .then(function (r) {
-              return r.json().then(function (j) {
-                return { ok: r.ok, j: j };
-              });
-            })
-            .then(function (x) {
-              if (!x.ok || !x.j || x.j.ok === false) {
-                err.textContent = (x.j && (x.j.message || x.j.error)) || "فشل الإرسال";
-                err.style.display = "block";
-                return;
-              }
-              ok.textContent =
-                "تم إنشاء الطلب بنجاح — رقم الطلب: " + (x.j.order && (x.j.order.order_number || x.j.order.id));
-              ok.style.display = "block";
-            })
-            .catch(function () {
-              err.textContent = "خطأ في الاتصال";
-              err.style.display = "block";
-            });
+          var result = ErvenowServiceCart.add(buildCarCartItem());
+          if (!result.ok) {
+            err.textContent = result.message || "تعذر الإضافة للسلة";
+            err.style.display = "block";
+            return;
+          }
+          ok.textContent = "تمت الإضافة للسلة — أكمل الدفع ثم يُخصَّص مندوب للنقل.";
+          ok.style.display = "block";
         }
 
         document.getElementById("dsMapConfirm").onclick = confirmMap;

@@ -204,8 +204,8 @@
           <div class="gd-row">
             <label>طريقة السداد</label>
             <div class="gd-actions">
-              <button type="button" class="btn btn-solid" id="gdPayCod">الدفع عند التوصيل</button>
-              <button type="button" class="btn btn-primary" id="gdPayCart">الانتقال للسلة والسداد</button>
+              <button type="button" class="btn btn-primary" id="gdPayCart">إضافة للسلة والدفع</button>
+              <button type="button" class="btn btn-solid" id="gdPayCod">الدفع عند التوصيل (مباشر)</button>
             </div>
           </div>
 
@@ -242,6 +242,7 @@
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="/assets/cart.js"></script>
+    <script src="/assets/service-cart.js"></script>
     <script src="/assets/api-config.js"></script>
     <script src="/assets/api.js"></script>
     <script src="/assets/guestBrowse.js"></script>
@@ -378,8 +379,14 @@
 
         function goCart() {
           if (!validateForm()) return;
-          addToCart(buildCartItem());
-          location.href = "/cart.html";
+          var item = buildCartItem();
+          item.customer_phone = document.getElementById("gdPhone").value.trim();
+          if (window.ErvenowServiceCart && ErvenowServiceCart.add) {
+            ErvenowServiceCart.add(item);
+            return;
+          }
+          addToCart(item);
+          location.href = "/cart";
         }
 
         function openMap() {

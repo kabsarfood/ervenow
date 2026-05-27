@@ -23,16 +23,19 @@
     );
   }
 
-  function renderHeader(activeNav) {
+  function renderHeader(activeNav, pageTag) {
     var links = NAV.map(function (l) {
       return navLink(l, activeNav);
     }).join("\n");
+    var tagHtml = pageTag
+      ? '<p class="dash-site-header__tag" id="driverShellPageTag">' + escHtml(pageTag) + "</p>"
+      : "";
     return (
       '<header class="dash-site-header">' +
       '<div class="dash-site-header__inner">' +
       '<div class="dash-site-header__brand">' +
       '<a class="dash-site-header__logo" href="/">ERVENOW<span class="dash-site-header__logo-dot" aria-hidden="true"></span></a>' +
-      '<p class="dash-site-header__tag" id="driverShellPageTag">لوحة مندوب التوصيل</p>' +
+      tagHtml +
       "</div>" +
       '<nav class="dash-site-header__nav" aria-label="تنقل المندوب">' +
       '<div class="dash-site-header__links">' +
@@ -51,18 +54,30 @@
 
   function renderHero(opts) {
     opts = opts || {};
-    return (
-      '<section class="guest-section-hero" aria-labelledby="driverHeroTitle">' +
+    var eyebrow = opts.eyebrow != null ? String(opts.eyebrow) : "شريك التوصيل";
+    var title = opts.title != null ? String(opts.title).trim() : "";
+    var sub = opts.sub != null ? String(opts.sub).trim() : "";
+    var labelledBy = title ? "driverHeroTitle" : "driverHeroEyebrow";
+    var eyebrowCls = "guest-section-hero__eyebrow";
+    if (opts.eyebrowLarge) eyebrowCls += " driver-hero-eyebrow--lg";
+    var html =
+      '<section class="guest-section-hero" aria-labelledby="' +
+      labelledBy +
+      '">' +
       '<div class="guest-section-hero__inner">' +
-      '<p class="guest-section-hero__eyebrow">' +
-      (opts.eyebrow || "شريك التوصيل — ERVENOW") +
-      "</p>" +
-      '<h1 class="guest-section-hero__title" id="driverHeroTitle">' +
-      (opts.title || "مندوب التوصيل") +
-      "</h1>" +
-      (opts.sub ? '<p class="guest-section-hero__sub">' + opts.sub + "</p>" : "") +
-      "</div></section>"
-    );
+      '<p class="' +
+      eyebrowCls +
+      '" id="driverHeroEyebrow">' +
+      escHtml(eyebrow) +
+      "</p>";
+    if (title) {
+      html += '<h1 class="guest-section-hero__title" id="driverHeroTitle">' + escHtml(title) + "</h1>";
+    }
+    if (sub) {
+      html += '<p class="guest-section-hero__sub">' + escHtml(sub) + "</p>";
+    }
+    html += "</div></section>";
+    return html;
   }
 
   function renderFooter() {
@@ -112,11 +127,9 @@
     var headerMount = document.getElementById("driverShellHeader");
     var heroMount = document.getElementById("driverShellHero");
     var footerMount = document.getElementById("driverShellFooter");
-    if (headerMount) headerMount.outerHTML = renderHeader(opts.activeNav || "driver");
+    if (headerMount) headerMount.outerHTML = renderHeader(opts.activeNav || "driver", opts.pageTag);
     if (heroMount && opts.hero !== false) heroMount.outerHTML = renderHero(opts.hero || {});
     if (footerMount) footerMount.outerHTML = renderFooter();
-    var tag = document.getElementById("driverShellPageTag");
-    if (tag && opts.pageTag) tag.textContent = opts.pageTag;
     wireLogout();
     if (!document.querySelector("script[data-erv-platform-access]")) {
       var ps = document.createElement("script");

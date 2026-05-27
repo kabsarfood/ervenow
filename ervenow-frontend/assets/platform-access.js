@@ -57,23 +57,6 @@
     };
   }
 
-  function showDriverBrowseNotice() {
-    if (document.getElementById("ervDriverBrowseNotice")) return;
-    var el = document.createElement("div");
-    el.id = "ervDriverBrowseNotice";
-    el.setAttribute("role", "status");
-    el.className = "erv-platform-access-notice";
-    el.innerHTML =
-      "<strong>وضع المندوب:</strong> يمكنك التجول في المنصة واستلام الطلبات من <a href=\"/orders\">طلبات المنصة</a> والرصيد من <a href=\"/driver-wallet\">محفظة المندوب</a> — لا يمكن إنشاء طلبات جديدة.";
-    var main =
-      document.querySelector(".auth-page__main") ||
-      document.querySelector("main") ||
-      document.querySelector(".dash-main") ||
-      document.body.firstElementChild;
-    if (main && main.parentNode) main.parentNode.insertBefore(el, main);
-    else document.body.insertBefore(el, document.body.firstChild);
-  }
-
   function applyDriverUiRestrictions() {
     document.querySelectorAll('a[href="/cart"], a[href="/order"]').forEach(function (a) {
       a.setAttribute("data-driver-order-blocked", "1");
@@ -96,7 +79,6 @@
       };
       global.__ervAddToCartWrapped = true;
     }
-    showDriverBrowseNotice();
   }
 
   function guardPage(role, access) {

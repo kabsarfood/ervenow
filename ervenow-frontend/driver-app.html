@@ -3,61 +3,76 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>ERVENOW | لوحة المندوب — التتبع الحي</title>
+    <title>ERVENOW | التتبع الحي</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/assets/styles.css" />
     <link rel="stylesheet" href="/assets/guest-shell.css" />
     <link rel="stylesheet" href="/assets/driver-shell.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <style>
-      .da-panel { display: none; }
-      .da-panel.is-visible { display: block; }
-      .da-sub { margin: 0 0 8px; font-size: 0.88rem; font-weight: 600; color: var(--muted, #5c4a3d); }
-    </style>
   </head>
-  <body class="guest-shell-page driver-page">
+  <body class="guest-shell-page driver-page driver-app-page">
     <div id="driverShellHeader"></div>
     <div class="dash-main">
       <div id="driverShellHero"></div>
-      <div class="layout">
-        <div class="da-tabs" role="tablist">
-          <a class="da-tab" href="#orders" data-panel="orders">قائمة الطلبات</a>
-          <a class="da-tab" href="#track" data-panel="track">التتبع الحي</a>
-        </div>
 
-        <div id="daErr" class="msg err" style="display: none"></div>
+      <div class="layout driver-app-layout">
+        <nav class="driver-app-segments" role="tablist" aria-label="أقسام التتبع الحي">
+          <button type="button" class="driver-app-segment is-active" role="tab" id="daTabOrders" data-panel="orders" aria-selected="true" aria-controls="daPanelOrders">
+            <span class="driver-app-segment__ic" aria-hidden="true">📋</span>
+            <span class="driver-app-segment__label">قائمة الطلبات</span>
+          </button>
+          <button type="button" class="driver-app-segment" role="tab" id="daTabTrack" data-panel="track" aria-selected="false" aria-controls="daPanelTrack">
+            <span class="driver-app-segment__ic" aria-hidden="true">📍</span>
+            <span class="driver-app-segment__label">التتبع الحي</span>
+          </button>
+        </nav>
 
-        <div class="da-panel" id="daPanelOrders">
-          <div class="card driver-panel-card">
-            <div class="badge">طلباتي النشطة</div>
-            <div class="driver-panel-card__body">
-              <p class="drv-section-hint">اختر طلباً — يظهر رقمه في أعلى البطاقة — ثم انتقل للتتبع الحي.</p>
-              <div id="daOrders"></div>
+        <div id="daErr" class="driver-app-alert msg err" role="alert" hidden></div>
+
+        <section class="driver-app-panel da-panel is-visible" id="daPanelOrders" role="tabpanel" aria-labelledby="daTabOrders">
+          <div class="driver-panel-card driver-app-card">
+            <header class="driver-app-card__head">
+              <h2 class="driver-app-card__title">طلباتي النشطة</h2>
+              <p class="driver-app-card__hint">اختر طلباً — يظهر رقمه في أعلى البطاقة — ثم انتقل للتتبع الحي.</p>
+            </header>
+            <div class="driver-app-card__body">
+              <div id="daOrders" class="driver-app-orders" aria-live="polite"></div>
               <button type="button" class="driver-refresh-btn" id="daBtnRefreshOrders">تحديث القائمة</button>
             </div>
           </div>
-        </div>
+        </section>
 
-        <div class="da-panel" id="daPanelTrack">
-          <div class="card driver-panel-card">
-            <div class="badge">الخريطة والموقع الحي</div>
-            <div class="driver-panel-card__body">
-              <p class="da-sub" id="daLocStatus">—</p>
-              <p class="da-sub" id="daOrderStatus">—</p>
-              <div id="daMap" role="application" aria-label="خريطة التتبع"></div>
-              <div class="da-actions">
-                <button type="button" class="drv-btn drv-btn--gold" id="daBtnStart">بدء التوصيل</button>
-                <button type="button" class="drv-btn drv-btn--ghost" id="daBtnArrived">وصلت للعنوان</button>
-                <button type="button" class="drv-btn drv-btn--gold" id="daBtnDelivered">تم التسليم</button>
+        <section class="driver-app-panel da-panel" id="daPanelTrack" role="tabpanel" aria-labelledby="daTabTrack" hidden>
+          <div class="driver-panel-card driver-app-card driver-app-card--track">
+            <header class="driver-app-card__head driver-app-card__head--compact">
+              <h2 class="driver-app-card__title">الخريطة والموقع الحي</h2>
+            </header>
+            <div class="driver-app-card__body">
+              <div id="daTrackEmpty" class="drv-empty-state driver-app-track-empty">
+                <p>لم يُختر طلب بعد.</p>
+                <button type="button" class="drv-btn drv-btn--gold" id="daGoOrders">العودة لقائمة الطلبات</button>
               </div>
-              <p class="drv-section-hint" style="margin-top:12px">
-                يُرسل موقعك للخادم كل ~2.5 ثانية أثناء التتبع، مع بث لحظي لصفحة العميل.
-              </p>
+
+              <div id="daTrackActive" class="driver-app-track-active" hidden>
+                <div class="driver-app-status">
+                  <div class="driver-app-status__order" id="daOrderChip" translate="no">—</div>
+                  <p class="driver-app-status__line" id="daOrderStatus">—</p>
+                  <p class="driver-app-status__line driver-app-status__line--gps" id="daLocStatus">—</p>
+                </div>
+                <div id="daMap" class="driver-app-map" role="application" aria-label="خريطة التتبع"></div>
+                <div class="driver-app-actions">
+                  <button type="button" class="drv-btn drv-btn--gold" id="daBtnStart">بدء التوصيل</button>
+                  <button type="button" class="drv-btn drv-btn--ghost" id="daBtnArrived">وصلت للعنوان</button>
+                  <button type="button" class="drv-btn drv-btn--gold" id="daBtnDelivered">تم التسليم</button>
+                </div>
+                <p class="driver-app-footnote">يُرسل موقعك للخادم كل ~2.5 ثانية أثناء التتبع، مع بث لحظي لصفحة العميل.</p>
+              </div>
             </div>
           </div>
-        </div>
+        </section>
       </div>
+
       <div id="driverShellFooter"></div>
     </div>
 
@@ -69,10 +84,11 @@
     <script>
       ErvenowDriverNav.mount({
         activeNav: "track",
-        pageTag: "تتبع الحي",
         hero: {
+          eyebrow: "شريك التوصيل",
+          eyebrowLarge: true,
           title: "التتبع الحي",
-          sub: "تابع موقعك على الخريطة، أبلغ العميل بالوصول، وأكمل التسليم من هنا.",
+          sub: "",
         },
       });
     </script>
@@ -80,10 +96,7 @@
       var token = window.PlatformAPI.getToken();
       if (!token) {
         document.body.innerHTML =
-          '<div style="text-align:center;margin-top:50px;font-family:Cairo,sans-serif">' +
-          "<h2>🔒 سجّل الدخول كمندوب</h2>" +
-          '<a href="/driver-login">تسجيل الدخول</a>' +
-          "</div>";
+          '<div class="driver-auth-gate"><h2>🔒 سجّل الدخول كمندوب</h2><a class="drv-btn drv-btn--gold" href="/driver-login">تسجيل الدخول</a></div>';
         throw new Error("auth");
       }
 
@@ -104,12 +117,30 @@
 
       var daLocStatus = document.getElementById("daLocStatus");
       var daOrderStatus = document.getElementById("daOrderStatus");
+      var daOrderChip = document.getElementById("daOrderChip");
       var daErr = document.getElementById("daErr");
+      var daTrackEmpty = document.getElementById("daTrackEmpty");
+      var daTrackActive = document.getElementById("daTrackActive");
 
       function showErr(msg) {
         if (!daErr) return;
-        daErr.style.display = msg ? "block" : "none";
+        var on = !!msg;
+        daErr.hidden = !on;
         daErr.textContent = msg || "";
+      }
+
+      function orderDisplayNumber(o) {
+        if (!o) return "—";
+        return (o.order_number && String(o.order_number).trim()) || (o.id && String(o.id).slice(0, 8) + "…") || "—";
+      }
+
+      function updateTrackView() {
+        var has = !!(daActiveOrder && daActiveOrder.id);
+        if (daTrackEmpty) daTrackEmpty.hidden = has;
+        if (daTrackActive) daTrackActive.hidden = !has;
+        if (has && daOrderChip) {
+          daOrderChip.textContent = "طلب #" + orderDisplayNumber(daActiveOrder);
+        }
       }
 
       function parseHashPanel() {
@@ -119,13 +150,25 @@
       }
 
       function setActivePanel(id) {
+        var cap = id.charAt(0).toUpperCase() + id.slice(1);
         document.querySelectorAll(".da-panel").forEach(function (el) {
-          el.classList.toggle("is-visible", el.id === "daPanel" + id.charAt(0).toUpperCase() + id.slice(1));
+          var on = el.id === "daPanel" + cap;
+          el.classList.toggle("is-visible", on);
+          el.hidden = !on;
         });
-        document.querySelectorAll(".da-tab").forEach(function (a) {
-          var p = a.getAttribute("data-panel");
-          a.classList.toggle("is-active", p === id);
+        document.querySelectorAll(".driver-app-segment").forEach(function (btn) {
+          var p = btn.getAttribute("data-panel");
+          var on = p === id;
+          btn.classList.toggle("is-active", on);
+          btn.setAttribute("aria-selected", on ? "true" : "false");
         });
+        if (id === "track") {
+          setTimeout(function () {
+            try {
+              if (daMap) daMap.invalidateSize();
+            } catch (e) {}
+          }, 120);
+        }
       }
 
       function syncHashUi() {
@@ -133,12 +176,19 @@
       }
       window.addEventListener("hashchange", syncHashUi);
 
-      document.querySelectorAll(".da-tab").forEach(function (a) {
-        a.addEventListener("click", function () {
-          var p = a.getAttribute("data-panel");
+      document.querySelectorAll(".driver-app-segment").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          var p = btn.getAttribute("data-panel");
           if (p) location.hash = "#" + p;
         });
       });
+
+      var daGoOrders = document.getElementById("daGoOrders");
+      if (daGoOrders) {
+        daGoOrders.onclick = function () {
+          location.hash = "#orders";
+        };
+      }
 
       function initMap() {
         if (daMap || typeof L === "undefined") return;
@@ -183,7 +233,7 @@
         if (Number.isFinite(pLat) && Number.isFinite(pLng)) bounds.push([pLat, pLng]);
         if (Number.isFinite(dLat) && Number.isFinite(dLng)) bounds.push([dLat, dLng]);
         if (bounds.length === 2) {
-          daLine = L.polyline(bounds, { color: "#2563eb", weight: 4, opacity: 0.85 }).addTo(daMap);
+          daLine = L.polyline(bounds, { color: "#b9872f", weight: 4, opacity: 0.9 }).addTo(daMap);
           daMap.fitBounds(bounds, { padding: [36, 36], maxZoom: 15 });
         } else if (bounds.length === 1) {
           daMap.setView(bounds[0], 14);
@@ -197,7 +247,7 @@
         var ln = Number(lng);
         if (!Number.isFinite(la) || !Number.isFinite(ln)) return;
         if (!daMarker) {
-          daMarker = L.circleMarker([la, ln], { radius: 10, color: "#0f766e", fillColor: "#14b8a6", fillOpacity: 0.9 })
+          daMarker = L.circleMarker([la, ln], { radius: 10, color: "#3d2213", fillColor: "#b9872f", fillOpacity: 0.9 })
             .addTo(daMap)
             .bindPopup("موقعك");
         } else {
@@ -250,7 +300,7 @@
             body: { lat: daLastLat, lng: daLastLng, order_id: String(orderId).trim() },
           });
         } catch (e) {
-          daLocStatus.textContent = "تعذّر إرسال الموقع: " + (e.message || e);
+          if (daLocStatus) daLocStatus.textContent = "تعذّر إرسال الموقع: " + (e.message || e);
         }
       }
 
@@ -270,11 +320,11 @@
       function startTrackingLoops(orderId) {
         stopTrackingLoops();
         if (!orderId || !navigator.geolocation) {
-          daLocStatus.textContent = "المتصفح لا يدعم تحديد الموقع.";
+          if (daLocStatus) daLocStatus.textContent = "المتصفح لا يدعم تحديد الموقع.";
           return;
         }
         joinOrderRoom(orderId);
-        daLocStatus.textContent = "جاري مراقبة الموقع…";
+        if (daLocStatus) daLocStatus.textContent = "جاري تفعيل GPS…";
         daWatchId = navigator.geolocation.watchPosition(
           function (pos) {
             daLastLat = pos.coords.latitude;
@@ -282,10 +332,10 @@
             daLastSpeed = pos.coords.speed != null ? Number(pos.coords.speed) : null;
             daLastHeading = pos.coords.heading != null ? Number(pos.coords.heading) : null;
             updateSelfMarker(daLastLat, daLastLng);
-            daLocStatus.textContent = "📍 الموقع نشط — يُرسل للخادم كل ~2.5 ث";
+            if (daLocStatus) daLocStatus.textContent = "📍 الموقع نشط — يُحدَّث كل ~2.5 ث";
           },
           function () {
-            daLocStatus.textContent = "تعذّر قراءة GPS — تحقق من أذونات الموقع.";
+            if (daLocStatus) daLocStatus.textContent = "تعذّر قراءة GPS — تحقق من أذونات الموقع.";
           },
           { enableHighAccuracy: true, maximumAge: 4000, timeout: 20000 }
         );
@@ -315,8 +365,10 @@
         var j = await window.PlatformAPI.api("/api/delivery/orders/" + encodeURIComponent(id));
         if (!j || !j.order) throw new Error("الطلب غير موجود");
         daActiveOrder = j.order;
-        daOrderStatus.textContent =
-          "الحالة: " + (daActiveOrder.delivery_status || daActiveOrder.status || "—");
+        if (daOrderStatus) {
+          daOrderStatus.textContent = "الحالة: " + (daActiveOrder.delivery_status || daActiveOrder.status || "—");
+        }
+        updateTrackView();
         renderOrderOnMap(daActiveOrder);
         refreshActionButtons();
         startTrackingLoops(daActiveOrder.id);
@@ -325,13 +377,13 @@
       async function refreshOrdersList() {
         var box = document.getElementById("daOrders");
         if (!box) return;
-        box.innerHTML = "جاري التحميل…";
+        box.innerHTML = '<p class="driver-app-loading">جاري التحميل…</p>';
         try {
           var j = await window.PlatformAPI.api("/api/driver/orders");
           var orders = j.orders || [];
           box.innerHTML = "";
           if (!orders.length) {
-            box.textContent = "لا توجد طلبات حالياً.";
+            box.innerHTML = '<div class="drv-empty-state">لا توجد طلبات حالياً.</div>';
             return;
           }
           var STATUS = {
@@ -344,8 +396,8 @@
           orders.forEach(function (o) {
             var st = String(o.delivery_status || o.status || "");
             var row = document.createElement("div");
-            row.className = "order-row";
-            var body = "<p>📍 " + ErvenowDriverNav.escHtml(o.drop_address || "—") + "</p>";
+            row.className = "driver-app-order-item";
+            var body = "<p class=\"driver-app-order-addr\">📍 " + ErvenowDriverNav.escHtml(o.drop_address || "—") + "</p>";
             row.innerHTML = ErvenowDriverNav.orderCardHtml(o, {
               statusLabel: STATUS[st] || st,
               bodyHtml: body,
@@ -362,17 +414,14 @@
             box.appendChild(row);
           });
         } catch (e) {
-          box.textContent = "";
+          box.innerHTML = "";
           showErr(e.message || String(e));
         }
       }
 
-      var br = document.getElementById("daBtnRefreshOrders");
-      if (br) {
-        br.onclick = function () {
-          void refreshOrdersList();
-        };
-      }
+      document.getElementById("daBtnRefreshOrders").onclick = function () {
+        void refreshOrdersList();
+      };
 
       document.getElementById("daBtnStart").onclick = async function () {
         if (!daActiveOrder || !daActiveOrder.id) return;
@@ -383,7 +432,7 @@
           });
           if (j.order) {
             daActiveOrder = j.order;
-            daOrderStatus.textContent = "الحالة: " + (daActiveOrder.delivery_status || "");
+            if (daOrderStatus) daOrderStatus.textContent = "الحالة: " + (daActiveOrder.delivery_status || "");
             refreshActionButtons();
           }
         } catch (e) {
@@ -398,7 +447,7 @@
           await window.PlatformAPI.api("/api/driver/ping-arrival/" + encodeURIComponent(daActiveOrder.id), {
             method: "POST",
           });
-          daLocStatus.textContent = "✅ تم إبلاغ العميل بالوصول (إن كان متصلاً بالتتبع).";
+          if (daLocStatus) daLocStatus.textContent = "✅ تم إبلاغ العميل بالوصول.";
         } catch (e) {
           showErr(e.message || String(e));
         }
@@ -414,7 +463,7 @@
           });
           if (j.order) {
             daActiveOrder = j.order;
-            daOrderStatus.textContent = "الحالة: " + (daActiveOrder.delivery_status || "");
+            if (daOrderStatus) daOrderStatus.textContent = "الحالة: " + (daActiveOrder.delivery_status || "");
             stopTrackingLoops();
             refreshActionButtons();
           }
@@ -423,13 +472,15 @@
         }
       };
 
+      updateTrackView();
+
       (async function boot() {
         try {
           var me = await window.PlatformAPI.api("/api/core/me");
           daMeRole = me && me.profile && me.profile.role;
           if (String(daMeRole || "").toLowerCase() !== "driver") {
             document.body.innerHTML =
-              '<div style="text-align:center;margin-top:50px;font-family:Cairo,sans-serif"><h2>هذه اللوحة للمناديب فقط</h2><a href="/track">صفحة التتبع للعميل</a></div>';
+              '<div class="driver-auth-gate"><h2>هذه اللوحة للمناديب فقط</h2><a class="drv-btn drv-btn--gold" href="/track">صفحة التتبع للعميل</a></div>';
             return;
           }
         } catch (e) {

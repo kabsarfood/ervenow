@@ -104,7 +104,11 @@
         <label for="notes">ملاحظات (اختياري)</label>
         <input id="notes" type="text" placeholder="تفاصيل إضافية للمندوب" />
 
-        <button type="button" class="btn btn-primary" id="btnSend">إرسال الطلب</button>
+        <label for="orderPhone">جوالك</label>
+        <input id="orderPhone" type="tel" placeholder="05xxxxxxxx" dir="ltr" />
+
+        <button type="button" class="btn btn-primary" id="btnCart">إضافة للسلة والدفع</button>
+        <button type="button" class="btn btn-ghost" id="btnSend" style="margin-top: 8px">إرسال مباشر (بدون سلة)</button>
         <div class="msg" id="msg" style="display: none"></div>
       </div>
     </div>
@@ -126,6 +130,7 @@
       </footer>
     </div>
     <script src="/assets/cart.js"></script>
+    <script src="/assets/service-cart.js"></script>
     <script src="/assets/api-config.js"></script>
     <script src="/assets/api.js"></script>
     <script src="/assets/guestBrowse.js"></script>
@@ -206,6 +211,37 @@
       }
 
       loadOrderStoreContext();
+
+      function buildOrderCartItem() {
+        var drop = document.getElementById("drop").value.trim();
+        var pickup = document.getElementById("pickup").value.trim();
+        var notes = document.getElementById("notes").value.trim();
+        var svc = document.getElementById("svc").value;
+        var typeLabel = { delivery: "توصيل", market: "متجر", services: "خدمات", food: "مطاعم" }[svc] || svc;
+        var cartType = svc === "food" ? "restaurant" : svc === "services" ? "service" : "delivery";
+        var item = {
+          type: cartType,
+          title: "طلب " + typeLabel,
+          price: cartType === "service" ? 1 : 0,
+          customer_phone: document.getElementById("orderPhone").value.trim(),
+          data: {
+            pickup_address: pickup,
+            drop_address: drop,
+            location: drop,
+            notes: "[" + typeLabel + "] " + (notes || ""),
+            customer_phone: document.getElementById("orderPhone").value.trim(),
+          },
+        };
+        if (urlStoreId && String(urlStoreId).trim()) item.data.store_id = String(urlStoreId).trim();
+        return item;
+      }
+
+      document.getElementById("btnCart").onclick = function () {
+        if (!document.getElementById("drop").value.trim()) return show("أدخل موقع التسليم", false);
+        if (!window.ErvenowServiceCart) return show("تعذر تحميل السلة", false);
+        var r = ErvenowServiceCart.add(buildOrderCartItem());
+        if (!r.ok) show(r.message || "تعذر الإضافة", false);
+      };
 
       document.getElementById("btnSend").onclick = async function () {
         var drop = document.getElementById("drop").value.trim();

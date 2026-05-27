@@ -7,6 +7,9 @@ body.driver-page {
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
+  overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 body.driver-page .dash-main {
@@ -20,6 +23,17 @@ body.driver-page .dash-site-header__link.is-active {
   background: linear-gradient(180deg, #3d2213 0%, #2b170d 100%);
   color: #f8f4ee;
   border-color: rgba(185, 135, 47, 0.35);
+}
+
+/* «شريك التوصيل» — أكبر 30%، متجاوب مع الشاشة */
+.driver-hero-eyebrow--lg {
+  font-size: clamp(0.85rem, 3.2vw, 0.936rem);
+}
+
+body.driver-page .dash-main .layout {
+  width: 100%;
+  max-width: min(1120px, 100%);
+  box-sizing: border-box;
 }
 
 .drv-tool-balance {
@@ -56,6 +70,11 @@ body.driver-page .dash-site-header__link.is-active {
 }
 .driver-balance-link:hover {
   text-decoration: underline;
+}
+
+/* توافق: رابط قديم إن وُجد خارج البطاقة المميزة */
+.driver-profile-card--premium .driver-balance-link {
+  display: none;
 }
 
 /* بطاقة طلب — الرقم بارز */
@@ -169,45 +188,261 @@ body.driver-page .dash-site-header__link.is-active {
   font-weight: 600;
 }
 
-/* تتبع الحي */
-.da-tabs {
+/* ——— صفحة التتبع الحي (driver-app) ——— */
+.driver-app-layout {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+  max-width: min(720px, 100%);
+  margin-inline: auto;
+  box-sizing: border-box;
+}
+
+.driver-app-segments {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 8px;
-  margin-bottom: 14px;
+  padding: 6px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(61, 34, 19, 0.1);
+  box-shadow: 0 6px 20px rgba(45, 26, 14, 0.05);
 }
-.da-tabs .da-tab {
+
+.driver-app-segment {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 10px 12px;
+  border: none;
+  border-radius: 12px;
   font-family: inherit;
-  font-size: 0.88rem;
+  font-size: clamp(0.82rem, 2.8vw, 0.9rem);
   font-weight: 800;
-  padding: 10px 16px;
-  border-radius: 999px;
-  border: 1px solid rgba(61, 34, 19, 0.12);
-  background: #fffdf8;
-  color: var(--brown, #3d2213);
-  text-decoration: none;
+  color: var(--muted, #5c4a3d);
+  background: transparent;
   cursor: pointer;
-  transition: background 0.15s, color 0.15s;
+  transition: background 0.15s, color 0.15s, box-shadow 0.15s;
+  -webkit-tap-highlight-color: transparent;
 }
-.da-tabs .da-tab.is-active {
-  background: linear-gradient(180deg, #3d2213, #2b170d);
+
+.driver-app-segment__ic {
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.driver-app-segment.is-active {
+  background: linear-gradient(180deg, #3d2213 0%, #2b170d 100%);
   color: #f8f4ee;
-  border-color: rgba(185, 135, 47, 0.35);
+  box-shadow: 0 4px 14px rgba(45, 26, 14, 0.2);
 }
+
+.driver-app-alert {
+  margin: 0;
+  border-radius: 12px;
+  padding: 12px 14px;
+}
+
+.driver-app-panel.da-panel {
+  display: none;
+}
+
+.driver-app-panel.da-panel.is-visible {
+  display: block;
+}
+
+.driver-app-card {
+  margin-bottom: 0;
+  overflow: hidden;
+}
+
+.driver-app-card__head {
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid rgba(61, 34, 19, 0.08);
+  background: linear-gradient(90deg, rgba(61, 34, 19, 0.04), rgba(185, 135, 47, 0.1));
+}
+
+.driver-app-card__head--compact {
+  padding-bottom: 12px;
+}
+
+.driver-app-card__title {
+  margin: 0;
+  font-size: clamp(1rem, 3vw, 1.08rem);
+  font-weight: 900;
+  color: var(--brown, #3d2213);
+}
+
+.driver-app-card__hint {
+  margin: 6px 0 0;
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--muted, #5c4a3d);
+  line-height: 1.5;
+}
+
+.driver-app-card__body {
+  padding: 14px 16px 16px;
+}
+
+.driver-app-card > .badge {
+  display: none;
+}
+
+.driver-app-orders {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.driver-app-order-item .drv-order-card {
+  margin-bottom: 0;
+}
+
+.driver-app-loading {
+  margin: 0;
+  text-align: center;
+  font-weight: 700;
+  color: var(--muted, #5c4a3d);
+  padding: 16px;
+}
+
+.driver-app-order-addr {
+  margin: 0;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--brown-mid, #5c4a3d);
+  line-height: 1.5;
+}
+
+.driver-app-track-empty {
+  margin: 0;
+}
+
+.driver-app-track-active {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.driver-app-status {
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: linear-gradient(145deg, #fffefb, #f5ede2);
+  border: 1px solid rgba(185, 135, 47, 0.22);
+}
+
+.driver-app-status__order {
+  font-size: 1.05rem;
+  font-weight: 900;
+  color: var(--brown, #3d2213);
+  margin-bottom: 6px;
+}
+
+.driver-app-status__line {
+  margin: 0;
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: var(--muted, #5c4a3d);
+  line-height: 1.45;
+}
+
+.driver-app-status__line--gps {
+  margin-top: 4px;
+  color: #0f766e;
+}
+
+.driver-app-map,
 #daMap {
-  min-height: min(48vh, 400px);
+  min-height: min(46vh, 380px);
+  width: 100%;
   border-radius: 14px;
   border: 1px solid rgba(185, 135, 47, 0.28);
   overflow: hidden;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.4);
 }
-.da-actions {
-  display: flex;
-  flex-wrap: wrap;
+
+.driver-app-actions {
+  display: grid;
+  grid-template-columns: 1fr;
   gap: 8px;
-  margin-top: 14px;
 }
-.da-actions .drv-btn {
-  flex: 1 1 140px;
+
+.driver-app-actions .drv-btn {
+  min-height: 48px;
+  width: 100%;
+  font-size: 0.9rem;
+}
+
+.driver-app-footnote {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--muted, #5c4a3d);
+  line-height: 1.5;
+  text-align: center;
+  opacity: 0.9;
+}
+
+.driver-auth-gate {
+  text-align: center;
+  margin: 48px 20px;
+  font-family: inherit;
+  padding: 24px;
+  border-radius: 16px;
+  background: #fffdf8;
+  border: 1px solid rgba(185, 135, 47, 0.25);
+}
+
+.driver-auth-gate h2 {
+  margin: 0 0 16px;
+  color: var(--brown, #3d2213);
+}
+
+body.driver-app-page .guest-section-hero__title {
+  margin-top: 2px;
+}
+
+@media (min-width: 480px) {
+  .driver-app-actions {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 641px) and (max-width: 1024px) {
+  .driver-app-layout {
+    max-width: min(640px, 100%);
+  }
+
+  .driver-app-map,
+  #daMap {
+    min-height: min(52vh, 440px);
+  }
+}
+
+@media (min-width: 768px) {
+  .driver-app-layout {
+    max-width: min(800px, 100%);
+  }
+
+  .driver-app-map,
+  #daMap {
+    min-height: 420px;
+  }
+}
+
+@media (max-width: 767px) {
+  body.driver-app-page .dash-main .layout.driver-app-layout {
+    padding-inline: max(12px, env(safe-area-inset-left, 12px)) max(12px, env(safe-area-inset-right, 12px));
+  }
+
+  .driver-app-segment__label {
+    font-size: 0.8rem;
+  }
 }
 
 /* محفظة فاخرة */
@@ -364,31 +599,83 @@ body.driver-wallet-page {
   color: #fff;
 }
 
-.driver-profile-card {
-  margin-bottom: 14px;
-  padding: 16px 18px;
-  border-radius: 16px;
-  border: 1px solid rgba(185, 135, 47, 0.22);
-  background: linear-gradient(145deg, #fffefb, #f8f0e6);
-  box-shadow: 0 8px 24px rgba(45, 26, 14, 0.06);
+/* ——— بطاقة المندوب المميزة (متجاوبة: جوال + تابلت) ——— */
+.driver-profile-card--premium {
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  margin-bottom: clamp(12px, 3vw, 16px);
+  padding: 0;
+  border: none;
+  border-radius: clamp(16px, 4vw, 20px);
+  overflow: hidden;
+  box-sizing: border-box;
+  background: linear-gradient(155deg, #fffefb 0%, #faf3e8 42%, #f0e4d4 100%);
+  box-shadow:
+    0 3px 0 rgba(185, 135, 47, 0.32),
+    0 10px 28px rgba(45, 26, 14, 0.1);
+  outline: 1px solid rgba(185, 135, 47, 0.28);
+}
+
+.driver-profile-card--premium::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 2px;
+  background: linear-gradient(135deg, #f5e6b8, #d4a84b 40%, #8f6420 100%);
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+.driver-profile-card__accent {
+  height: 6px;
+  background: linear-gradient(90deg, #8f6420, #d4a84b 35%, #f5e6b8 50%, #d4a84b 65%, #8f6420);
+}
+
+.driver-profile-card__head {
+  display: flex;
+  align-items: center;
+  gap: clamp(12px, 3vw, 16px);
+  padding: clamp(14px, 3.5vw, 18px) clamp(14px, 4vw, 18px) clamp(12px, 3vw, 14px);
+}
+
+.driver-profile-card__avatar-wrap {
+  flex-shrink: 0;
+  padding: 4px;
+  border-radius: 18px;
+  background: linear-gradient(145deg, #f5e6b8, #b9872f);
+  box-shadow: 0 6px 16px rgba(139, 100, 32, 0.28);
+}
+
+.driver-profile-card__avatar {
+  width: clamp(56px, 16vw, 64px);
+  height: clamp(56px, 16vw, 64px);
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(1.65rem, 5vw, 2rem);
+  background: linear-gradient(160deg, #fffefb, #f5ede2);
+  border: 2px solid rgba(255, 255, 255, 0.9);
+}
+
+.driver-profile-card__identity {
+  min-width: 0;
+  flex: 1;
 }
 
 .driver-profile-card__row {
   display: flex;
   align-items: center;
   gap: 14px;
-}
-
-.driver-profile-card__avatar {
-  width: 52px;
-  height: 52px;
-  border-radius: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.6rem;
-  background: linear-gradient(145deg, rgba(185, 135, 47, 0.2), rgba(61, 34, 19, 0.08));
-  flex-shrink: 0;
 }
 
 .driver-profile-card__meta {
@@ -407,22 +694,156 @@ body.driver-wallet-page {
   color: var(--brown, #3d2213);
 }
 
+/* شارة اعتماد ذهبية — بدل نص «مندوب توصيل معتمد» */
+.driver-cert-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 6px;
+  padding: 5px 12px 5px 8px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 900;
+  color: #3d2213;
+  background: linear-gradient(135deg, #f5e6b8 0%, #d4a84b 38%, #b9872f 72%, #8f6420 100%);
+  border: 1px solid rgba(255, 235, 180, 0.85);
+  box-shadow:
+    0 2px 8px rgba(139, 100, 32, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.55);
+  letter-spacing: 0.02em;
+}
+
+.driver-cert-badge__seal {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: linear-gradient(145deg, #fff8e8, #e8c56a);
+  border: 1px solid rgba(61, 34, 19, 0.12);
+  color: #5a3d0f;
+  flex-shrink: 0;
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.7);
+}
+
+.driver-cert-badge__seal svg {
+  display: block;
+}
+
+.driver-cert-badge__label {
+  line-height: 1;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+
 .driver-profile-card__phone {
-  margin: 0;
-  font-size: 0.9rem;
-  font-weight: 700;
-  color: var(--muted, #5c4a3d);
+  margin: 8px 0 0;
+  padding: clamp(8px, 2vw, 10px) clamp(10px, 3vw, 12px);
+  font-size: clamp(0.9rem, 4vw, 1rem);
+  font-weight: 800;
+  color: var(--brown, #3d2213);
   direction: ltr;
   text-align: right;
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums;
+  background: rgba(255, 255, 255, 0.65);
+  border-radius: 10px;
+  border: 1px solid rgba(61, 34, 19, 0.08);
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.8);
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  white-space: nowrap;
+}
+
+.driver-profile-card__rating-block {
+  margin: 0 clamp(10px, 3vw, 14px);
+  padding: clamp(10px, 2.5vw, 12px) clamp(12px, 3vw, 14px);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(185, 135, 47, 0.18);
 }
 
 .driver-profile-card__rating {
-  margin: 10px 0 0;
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px 10px;
   font-size: 0.88rem;
   font-weight: 700;
   color: var(--brown-mid, #5c4a3d);
-  line-height: 1.5;
-  white-space: pre-line;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.driver-profile-card__stars {
+  font-size: 1.15rem;
+  letter-spacing: 0.06em;
+  line-height: 1;
+}
+
+.driver-profile-card__rating-val {
+  font-size: 1.05rem;
+  font-weight: 900;
+  color: var(--brown, #3d2213);
+}
+
+.driver-profile-card__rating-count {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--muted, #5c4a3d);
+}
+
+.driver-profile-card__rating-muted {
+  display: block;
+  width: 100%;
+  text-align: center;
+  font-size: 0.86rem;
+  color: var(--muted, #5c4a3d);
+}
+
+.driver-profile-card__wallet {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin: clamp(10px, 3vw, 14px);
+  margin-bottom: max(clamp(10px, 3vw, 14px), env(safe-area-inset-bottom, 0px));
+  padding: clamp(14px, 3.5vw, 16px) clamp(16px, 4vw, 18px);
+  min-height: 48px;
+  border-radius: 14px;
+  font-size: clamp(0.9rem, 2.8vw, 0.95rem);
+  font-weight: 900;
+  color: #fff8e8;
+  text-decoration: none;
+  background: linear-gradient(135deg, #3d2213 0%, #5a3820 45%, #3d2213 100%);
+  border: 1px solid rgba(245, 230, 184, 0.25);
+  box-shadow:
+    0 4px 14px rgba(45, 26, 14, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  transition: transform 0.15s ease, filter 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.driver-profile-card__wallet:hover {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+  text-decoration: none;
+  color: #fff;
+}
+
+.driver-profile-card__wallet-ic {
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+.driver-profile-card__wallet-arrow {
+  margin-inline-start: auto;
+  font-size: 1.1rem;
+  opacity: 0.9;
 }
 
 .driver-panel-card {
@@ -603,6 +1024,153 @@ body.driver-ultra-mode #ordersCard .driver-panel-card__body #orders {
 
 body.driver-ultra-mode #driverMapCard #driverLiveMap {
   min-height: min(58vh, 480px) !important;
+}
+
+/* ——— جوال (حتى 767px) ——— */
+@media (max-width: 767px) {
+  body.driver-page .dash-main .layout {
+    padding-inline: max(12px, env(safe-area-inset-left, 12px)) max(12px, env(safe-area-inset-right, 12px));
+    padding-block: clamp(12px, 3vw, 18px) clamp(16px, 4vw, 24px);
+  }
+
+  body.driver-page .guest-section-hero {
+    padding-block: clamp(12px, 3vw, 18px);
+  }
+
+  body.driver-page .driver-profile-card--premium {
+    box-shadow:
+      0 2px 0 rgba(185, 135, 47, 0.28),
+      0 8px 22px rgba(45, 26, 14, 0.08);
+  }
+
+  .driver-profile-card__rating {
+    flex-direction: column;
+    gap: 4px 8px;
+  }
+
+  .driver-profile-card__stars {
+    font-size: clamp(1rem, 5vw, 1.15rem);
+  }
+
+  .driver-profile-card__rating-val {
+    font-size: clamp(0.95rem, 4vw, 1.05rem);
+  }
+
+  .driver-panel-card__body {
+    padding: 12px 14px 14px;
+  }
+
+  .driver-refresh-btn {
+    min-height: 48px;
+  }
+
+  #driverLiveMap {
+    min-height: min(46vh, 360px);
+  }
+
+  body.driver-nav-dock-active .dash-main .layout {
+    padding-bottom: calc(120px + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+/* جوال ضيق جداً */
+@media (max-width: 380px) {
+  .driver-profile-card__head {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .driver-profile-card__identity {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .driver-profile-card__phone {
+    width: 100%;
+    text-align: center;
+    box-sizing: border-box;
+  }
+
+  .driver-cert-badge {
+    margin-inline: auto;
+  }
+}
+
+/* ——— تابلت (641px – 1024px) ——— */
+@media (min-width: 641px) and (max-width: 1024px) {
+  body.driver-page .dash-main .layout {
+    padding-inline: max(20px, env(safe-area-inset-left, 20px)) max(20px, env(safe-area-inset-right, 20px));
+  }
+
+  .driver-profile-card--premium {
+    max-width: min(520px, 100%);
+    margin-inline: auto;
+  }
+
+  .driver-profile-card__head {
+    padding: 20px 22px 16px;
+  }
+
+  .driver-profile-card__avatar {
+    width: 68px;
+    height: 68px;
+    font-size: 2.1rem;
+  }
+
+  .driver-profile-card__phone {
+    font-size: 1.05rem;
+  }
+
+  .driver-profile-card__wallet {
+    min-height: 52px;
+    font-size: 1rem;
+  }
+
+  #driverLiveMap {
+    min-height: min(50vh, 440px);
+  }
+
+  .driver-panel-card {
+    max-width: min(720px, 100%);
+    margin-inline: auto;
+  }
+}
+
+/* ——— شاشات أوسع (لوحة + خريطة) ——— */
+@media (min-width: 768px) {
+  body.driver-page .dash-main .layout {
+    display: grid;
+    grid-template-columns: minmax(0, 380px) minmax(0, 1fr);
+    gap: 16px 20px;
+    align-items: start;
+  }
+
+  .driver-profile-card--premium {
+    grid-column: 1;
+    grid-row: 1;
+    margin-bottom: 0;
+  }
+
+  #ordersCard {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  #driverMapCard {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    margin-bottom: 0;
+  }
+
+  #driverMapCard #driverLiveMap {
+    min-height: min(58vh, 520px);
+  }
+
+  body.driver-page .msg.err {
+    grid-column: 1 / -1;
+  }
 }
 
 @media (max-width: 640px) {

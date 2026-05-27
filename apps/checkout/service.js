@@ -45,6 +45,7 @@ function normalizedGroup(typeRaw) {
       "ac_technician",
       "cleaning",
       "vehicle_transfer",
+      "car_transport",
       "internal_delivery",
       "pickup_truck",
       "furniture_move",
@@ -70,6 +71,7 @@ function labelByType(type) {
     ac_technician: "فني مكيفات",
     cleaning: "غسيل درج",
     vehicle_transfer: "نقل مركبات",
+    car_transport: "نقل مركبات",
     internal_delivery: "توصيل داخلي",
     pickup_truck: "ونيت",
     furniture_move: "نقل أثاث",
@@ -77,6 +79,18 @@ function labelByType(type) {
     service: "خدمة عامة",
   };
   return map[type] || type || "خدمة";
+}
+
+const GEO_DELIVERY_SERVICE_TYPES = new Set(["car_transport", "vehicle_transfer", "pickup_truck"]);
+
+function cartItemHasGeoCoords(data) {
+  const d = data || {};
+  return (
+    Number.isFinite(Number(d.pickup_lat)) &&
+    Number.isFinite(Number(d.pickup_lng)) &&
+    Number.isFinite(Number(d.drop_lat)) &&
+    Number.isFinite(Number(d.drop_lng))
+  );
 }
 
 /**
@@ -121,10 +135,52 @@ async function runCheckoutInsert(sb, appUser, body, options) {
     if (!groupItems.length) continue;
 
     if (type === "service") {
+      const { runUnifiedDeliveryOnlyCreate } = require("../order/deliveryOrderCreateShared");
       for (const it of groupItems) {
         const data = it && typeof it.data === "object" && it.data ? it.data : {};
         const serviceType = String(it.type || "service").trim().toLowerCase();
         const total = Number(it.price) || Number(data.total_amount) || 0;
+        const svcPaymentStatus = paymentConfirmed
+          ? "paid"
+          : String(data.payment_status || "").toLowerCase() === "paid"
+            ? "paid"
+            : "unpaid";
+
+        if (GEO_DELIVERY_SERVICE_TYPES.has(serviceType) && cartItemHasGeoCoords(data)) {
+          const unifiedType = serviceType === "vehicle_transfer" ? "car_transport" : serviceType;
+          const unified = await runUnifiedDeliveryOnlyCreate({
+            sb,
+            appUser,
+            body: {
+              service_type: unifiedType,
+              payload: {
+                vehicle_category: data.vehicle_category,
+                vehicle_condition: data.vehicle_condition,
+                transfer_mode: data.transfer_mode,
+                pickup_lat: Number(data.pickup_lat),
+                pickup_lng: Number(data.pickup_lng),
+                drop_lat: Number(data.drop_lat),
+                drop_lng: Number(data.drop_lng),
+                pickup_district_label: data.pickup_district_label,
+                drop_district_label: data.drop_district_label,
+                from_city: data.from_city,
+                to_city: data.to_city,
+                notes_extra: data.notes_extra,
+              },
+              customer_phone: String(data.customer_phone || appUser.phone || "").trim(),
+              payment_status: svcPaymentStatus,
+              paid: paymentConfirmed,
+            },
+            idempotencyKey: null,
+            entryPoint: "order",
+          });
+          if (!unified.ok) {
+            return { ok: false, message: unified.message, status: unified.status || 400 };
+          }
+          results.push(unified.order);
+          continue;
+        }
+
         const created = await createServiceOrder(sb, appUser, {
           order_type: "service",
           service_type: serviceType,
@@ -135,7 +191,7 @@ async function runCheckoutInsert(sb, appUser, body, options) {
           gas_mode: data.gas_mode || null,
           gas_liters: data.gas_liters != null ? Number(data.gas_liters) : null,
           total_amount: total,
-          payment_status: String(data.payment_status || "").toLowerCase() === "unpaid" ? "unpaid" : "paid",
+          payment_status: svcPaymentStatus,
           data,
         });
         if (!created.ok) {

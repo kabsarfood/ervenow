@@ -112,6 +112,7 @@ function updateCartCount() {
 /** أنواع طلبات التوصيل في السلة (browse) */
 var ERV_DELIVERY_TYPES = {
   vehicle_transfer: 1,
+  car_transport: 1,
   internal_delivery: 1,
   pickup_truck: 1,
   furniture_move: 1,
