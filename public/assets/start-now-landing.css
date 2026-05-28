@@ -1,0 +1,448 @@
+/**
+ * تنسيق صفحة «ابدأ الآن» — يُستخدم أيضاً في الصفحة الرئيسية
+ */
+:root {
+  --sn-brown: #3d2213;
+  --sn-brown-mid: #5c4a3d;
+  --sn-cream: #f8f4ee;
+  --sn-cream-card: #fffefb;
+  --sn-border: rgba(61, 34, 19, 0.12);
+  --sn-text: #3d2213;
+  --sn-muted: #5c4a3d;
+  --sn-gold: #b9872f;
+  --sn-radius-lg: 20px;
+  --sn-radius-md: 14px;
+  --sn-shadow-sm: 0 2px 8px rgba(45, 26, 14, 0.06);
+  --sn-shadow-hover: 0 12px 34px rgba(45, 26, 14, 0.14);
+  --sn-transition: 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.lp-home-premium {
+  background: var(--sn-cream);
+}
+
+.lp-home-premium .lp-home-hub {
+  display: none !important;
+}
+
+/* ══ HERO ═════════════════════════════════════════════════ */
+.sn-hero {
+  background: linear-gradient(180deg, #f5ede2 0%, #f8f4ee 58%, #fffefb 100%);
+  color: var(--sn-brown);
+  text-align: center;
+  padding: clamp(48px, 10vw, 64px) 24px clamp(56px, 10vw, 72px);
+  position: relative;
+  overflow: hidden;
+}
+
+.sn-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 80% 20%, rgba(185, 135, 47, 0.12) 0%, transparent 55%),
+    radial-gradient(circle at 20% 80%, rgba(61, 34, 19, 0.04) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+.sn-hero > * {
+  position: relative;
+  z-index: 1;
+}
+
+.sn-hero__eyebrow {
+  display: inline-block;
+  background: rgba(185, 135, 47, 0.1);
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(61, 34, 19, 0.12);
+  border-radius: 100px;
+  padding: 5px 16px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  margin-bottom: 20px;
+  color: var(--sn-brown-mid);
+}
+
+.sn-hero__title {
+  font-size: clamp(1.8rem, 5vw, 2.9rem);
+  font-weight: 900;
+  margin: 0 0 14px;
+  line-height: 1.2;
+  letter-spacing: -0.5px;
+}
+
+.sn-hero__title span {
+  color: var(--sn-gold);
+}
+
+.sn-hero__sub {
+  font-size: clamp(0.95rem, 2.5vw, 1.1rem);
+  color: var(--sn-muted);
+  margin: 0 auto 32px;
+  max-width: 480px;
+  line-height: 1.7;
+}
+
+.sn-hero__actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.sn-hero__cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--sn-gold);
+  color: #fff;
+  border: none;
+  border-radius: 14px;
+  padding: 13px 28px;
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: none;
+  box-shadow: 0 4px 18px rgba(185, 135, 47, 0.35);
+  transition: transform var(--sn-transition), box-shadow var(--sn-transition);
+}
+
+.sn-hero__cta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(185, 135, 47, 0.4);
+  color: #fff;
+}
+
+.sn-guest-note {
+  display: none;
+  margin: 24px auto 0;
+  max-width: 640px;
+  padding: 13px 18px;
+  background: #fff8ee;
+  border: 1px solid #e8d0a8;
+  border-radius: var(--sn-radius-md);
+  color: var(--sn-brown-mid);
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.sn-wave {
+  display: block;
+  margin-top: -2px;
+  line-height: 0;
+  background: #f8f4ee;
+}
+
+.sn-wave svg {
+  display: block;
+  width: 100%;
+}
+
+/* ══ SECTION ══════════════════════════════════════════════ */
+.sn-section {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 36px 20px clamp(32px, 6vw, 48px);
+  width: 100%;
+}
+
+.sn-section--stats {
+  padding-top: 0;
+  padding-bottom: 24px;
+}
+
+/* مسافة تحت بطاقة الثقة (sn-trust) */
+.lp-home-premium .sn-section--stats.lp-counters {
+  margin-top: 5%;
+  padding-top: 0;
+  padding-bottom: clamp(32px, 5vw, 48px);
+}
+
+.sn-section--stats .lp-counters__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+@media (max-width: 520px) {
+  .sn-section--stats .lp-counters__grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.sn-section__label {
+  text-align: center;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--sn-gold);
+  margin-bottom: 8px;
+}
+
+.sn-section__title {
+  text-align: center;
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: var(--sn-brown);
+  margin: 0 0 28px;
+}
+
+/* ══ CATEGORY GRID ═══════════════════════════════════════ */
+.sn-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+@media (min-width: 640px) {
+  .sn-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.sn-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 28px 16px 24px;
+  background: var(--sn-cream-card);
+  border: 1.5px solid var(--sn-border);
+  border-radius: var(--sn-radius-lg);
+  text-decoration: none;
+  color: var(--sn-text);
+  box-shadow: var(--sn-shadow-sm);
+  transition: transform var(--sn-transition), box-shadow var(--sn-transition), border-color var(--sn-transition);
+  position: relative;
+  overflow: hidden;
+}
+
+.sn-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--card-accent, transparent);
+  opacity: 0;
+  transition: opacity var(--sn-transition);
+}
+
+.sn-card:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--sn-shadow-hover);
+  border-color: var(--card-color, var(--sn-gold));
+}
+
+.sn-card:hover::before {
+  opacity: 0.045;
+}
+
+.sn-card--restaurants {
+  --card-color: #b9872f;
+  --card-accent: #b9872f;
+}
+.sn-card--stores {
+  --card-color: #a97b3a;
+  --card-accent: #a97b3a;
+}
+.sn-card--delivery {
+  --card-color: #8f6a35;
+  --card-accent: #8f6a35;
+}
+.sn-card--services {
+  --card-color: #6f4e2b;
+  --card-accent: #6f4e2b;
+}
+
+.sn-card__icon-wrap {
+  width: 68px;
+  height: 68px;
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  background: var(--icon-bg, #f5ede4);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+  transition: transform var(--sn-transition);
+}
+
+.sn-card:hover .sn-card__icon-wrap {
+  transform: scale(1.1);
+}
+
+.sn-card--restaurants .sn-card__icon-wrap {
+  --icon-bg: #f8efe1;
+}
+.sn-card--stores .sn-card__icon-wrap {
+  --icon-bg: #f6efe5;
+}
+.sn-card--delivery .sn-card__icon-wrap {
+  --icon-bg: #f4ecdf;
+}
+.sn-card--services .sn-card__icon-wrap {
+  --icon-bg: #f3eadf;
+}
+
+.sn-card__name {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--sn-brown);
+  text-align: center;
+}
+
+.sn-card__desc {
+  font-size: 0.8rem;
+  color: var(--sn-muted);
+  text-align: center;
+  line-height: 1.55;
+  margin-top: -6px;
+}
+
+.sn-card__arrow {
+  font-size: 0.85rem;
+  color: var(--card-color, var(--sn-gold));
+  font-weight: 700;
+  opacity: 0;
+  transform: translateX(4px);
+  transition: opacity var(--sn-transition), transform var(--sn-transition);
+}
+
+.sn-card:hover .sn-card__arrow {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* ══ TRUST STRIP ══════════════════════════════════════════ */
+.sn-trust {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: clamp(14px, 3.5vw, 22px) clamp(18px, 4vw, 32px);
+  margin: clamp(32px, 6vw, 44px) auto clamp(8px, 2vw, 16px);
+  padding: clamp(20px, 4vw, 28px) clamp(16px, 4vw, 28px);
+  max-width: 720px;
+  background: var(--sn-cream-card);
+  border: 1px solid var(--sn-border);
+  border-radius: var(--sn-radius-lg);
+  box-shadow: var(--sn-shadow-sm);
+}
+
+.sn-trust__item {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 16px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--sn-muted);
+  background: rgba(245, 237, 226, 0.85);
+  border: 1px solid rgba(61, 34, 19, 0.08);
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.sn-trust__icon {
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+@media (max-width: 560px) {
+  .sn-trust {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px 14px;
+    max-width: 100%;
+  }
+
+  .sn-trust__item {
+    width: 100%;
+    white-space: normal;
+    text-align: center;
+    font-size: 0.78rem;
+    padding: 12px 10px;
+  }
+}
+
+/* ══ الصفحة الرئيسية — توحيد الأقسام السفلية ═════════════════ */
+.lp-home-premium .lp-section {
+  padding-top: clamp(48px, 8vw, 72px);
+  padding-bottom: clamp(48px, 8vw, 72px);
+}
+
+.lp-home-premium .lp-section__title {
+  font-weight: 900;
+  letter-spacing: -0.02em;
+}
+
+.lp-home-premium .lp-section__lead {
+  font-weight: 600;
+  color: var(--sn-muted);
+}
+
+.lp-home-premium .lp-counter {
+  background: var(--sn-cream-card);
+  border: 1.5px solid var(--sn-border);
+  border-radius: var(--sn-radius-lg);
+  box-shadow: var(--sn-shadow-sm);
+}
+
+.lp-home-premium .lp-counter__value {
+  color: var(--sn-gold);
+  font-weight: 900;
+}
+
+.lp-home-premium .lp-trust-card,
+.lp-home-premium .lp-card {
+  background: var(--sn-cream-card);
+  border: 1.5px solid var(--sn-border);
+  border-radius: var(--sn-radius-lg);
+  box-shadow: var(--sn-shadow-sm);
+  transition: transform var(--sn-transition), box-shadow var(--sn-transition), border-color var(--sn-transition);
+}
+
+.lp-home-premium .lp-card:hover,
+.lp-home-premium .lp-trust-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--sn-shadow-hover);
+  border-color: rgba(185, 135, 47, 0.35);
+}
+
+.lp-home-premium .lp-card__icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #f5ede4;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  margin-bottom: 12px;
+}
+
+.lp-home-premium .lp-services__grid h3 {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--sn-gold);
+  margin: 20px 0 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--sn-border);
+}
+
+.lp-home-premium .lp-services__grid h3:first-child {
+  border-top: none;
+  padding-top: 0;
+  margin-top: 0;
+}
+
+.lp-home-premium .lp-footer {
+  background: linear-gradient(180deg, #f5ede2 0%, #ebe3d6 100%);
+  border-top: 1px solid var(--sn-border);
+}

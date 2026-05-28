@@ -66,12 +66,15 @@ router.get("/orders", requireAuth, async (req, res) => {
   }
 });
 
+const { normalizeIdempotencyKey } = require("../../shared/utils/idempotency");
+
 /** إنشاء طلب مطعم + ربط طلب توصيل */
 router.post("/orders", requireAuth, async (req, res) => {
   try {
     const { setDeprecationHeaders, UNIFIED_ORDER_CREATE } = require("../../shared/middleware/deprecateLegacyRoute");
     setDeprecationHeaders(res, UNIFIED_ORDER_CREATE);
     const body = req.body || {};
+    const idemKey = normalizeIdempotencyKey(req);
     const isDelivery = body.type === "delivery" || !!body.address || !!body.drop_address;
     const items = body.items || [];
     const total = Number(body.total) || 0;
@@ -133,6 +136,7 @@ router.post("/orders", requireAuth, async (req, res) => {
         driver_earning: driverEarning,
         vat_amount: vatAmount,
         total_with_vat: totalWithVAT,
+        ...(idemKey ? { idempotency_key: `${idemKey}:food` } : {}),
         ...(store_id
           ? {
               store_id,

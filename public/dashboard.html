@@ -760,6 +760,21 @@
       .dash-tabs__panel[hidden] {
         display: none !important;
       }
+      .dash-tabs__empty {
+        margin: 4px 0 0;
+        padding: 20px 16px;
+        text-align: center;
+        border-radius: 14px;
+        border: 1px dashed rgba(61, 34, 19, 0.18);
+        background: rgba(255, 254, 251, 0.85);
+        color: var(--muted, #6f5441);
+        font-weight: 700;
+        font-size: 0.92rem;
+        line-height: 1.55;
+      }
+      .dash-tabs__empty[hidden] {
+        display: none !important;
+      }
       .dash-tabs__all {
         display: inline-flex;
         align-items: center;
@@ -987,16 +1002,20 @@
 
       <section class="card dash-tabs-card" aria-labelledby="dashTabsTitle">
         <h2 class="dash-section-title" id="dashTabsTitle">تفاصيل سريعة</h2>
-        <p class="dash-section-hint">اختر تبويباً واحداً لعرض الخيارات الفرعية</p>
+        <p class="dash-section-hint">اضغط على قسم (مطاعم، متاجر، خدمات، توصيل) لعرض الخيارات</p>
         <div class="dash-tabs">
           <div class="dash-tabs__nav" role="tablist" aria-label="أقسام المنصة">
-            <button type="button" class="is-active" role="tab" id="tab-restaurants" data-tab="restaurants" aria-selected="true" aria-controls="panel-restaurants">مطاعم</button>
+            <button type="button" role="tab" id="tab-restaurants" data-tab="restaurants" aria-selected="false" aria-controls="panel-restaurants">مطاعم</button>
             <button type="button" role="tab" id="tab-stores" data-tab="stores" aria-selected="false" aria-controls="panel-stores">متاجر</button>
             <button type="button" role="tab" id="tab-services" data-tab="services" aria-selected="false" aria-controls="panel-services">خدمات</button>
             <button type="button" role="tab" id="tab-delivery" data-tab="delivery" aria-selected="false" aria-controls="panel-delivery">توصيل</button>
           </div>
 
-          <div class="dash-tabs__panel" id="panel-restaurants" role="tabpanel" aria-labelledby="tab-restaurants">
+          <p class="dash-tabs__empty" id="dashTabsEmpty" role="status">
+            اختر قسماً من الأزرار أعلاه لاستكشاف المنصة — لا يُفتح أي قسم تلقائياً.
+          </p>
+
+          <div class="dash-tabs__panel" id="panel-restaurants" role="tabpanel" aria-labelledby="tab-restaurants" hidden>
             <a class="dash-tabs__all" href="/restaurants">عرض كل المطاعم ←</a>
             <div class="cat-grid">
               <a class="cat-card" href="/restaurants"><span class="cat-card__icon" aria-hidden="true">🍽️</span><strong>كل المطاعم</strong><span>اطلب من المطاعم القريبة مع التوصيل.</span></a>
@@ -1112,7 +1131,7 @@
                     <div class="btn-row">
                       <button class="btn btn-ghost" type="button" onclick="calculate()">احسب المسافة</button>
                       <button id="createBtn" class="btn btn-primary" type="button" onclick="createOrder()" disabled>
-                        إنشاء الطلب
+                        أضف للسلة والدفع
                       </button>
                     </div>
                     <div class="delivery-stats">
@@ -1157,6 +1176,7 @@
     </div>
 
     <script src="/assets/cart.js"></script>
+    <script src="/assets/service-cart.js"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="/assets/api-config.js"></script>
     <script src="/assets/api.js"></script>
@@ -1518,75 +1538,107 @@
         }
       }
 
+      async function resolveDashCustomerPhone() {
+        var phone = "";
+        try {
+          if (dashHasToken() && window.PlatformAPI && typeof PlatformAPI.api === "function") {
+            var me = await PlatformAPI.api("/api/core/me");
+            phone = String(
+              (me && me.profile && me.profile.phone) ||
+                (me && me.user && me.user.phone) ||
+                ""
+            ).trim();
+          }
+        } catch (e) {}
+        return phone;
+      }
+
+      async function buildMapCartItem() {
+        var from = document.getElementById("from").value.trim();
+        var to = document.getElementById("to").value.trim();
+        if (!km) await calculate();
+        if (!km) throw new Error("احسب المسافة أولاً");
+        var pricing = calcDeliveryPricing(km);
+        var phone = await resolveDashCustomerPhone();
+        return {
+          type: "delivery",
+          title: "توصيل من الخريطة",
+          price: pricing.fee,
+          customer_phone: phone,
+          data: {
+            pickup_address: from,
+            drop_address: to,
+            from: from,
+            to: to,
+            location: to,
+            pickup_lat: fromLL ? fromLL.lat : null,
+            pickup_lng: fromLL ? fromLL.lng : null,
+            drop_lat: toLL ? toLL.lat : null,
+            drop_lng: toLL ? toLL.lng : null,
+            distance_km: Math.round(km * 100) / 100,
+            delivery_fee: pricing.fee,
+            platform_fee: pricing.platformFee,
+            driver_earning: pricing.driverNet,
+            vehicle_type: getSelectedVehicleType(),
+            customer_phone: phone,
+            payment_status: "unpaid",
+            source: "dashboard_map",
+            qty: 1,
+          },
+        };
+      }
+
       async function createOrder() {
         var btn = document.getElementById("createBtn");
         var result = document.getElementById("result");
         try {
-          if (!dashHasToken()) {
-            result.innerText = "❌ سجّل الدخول أولاً لإنشاء طلب التوصيل.";
-            return;
-          }
           var from = document.getElementById("from").value.trim();
           var to = document.getElementById("to").value.trim();
           if (!from || !to) {
             result.innerText = "❌ أدخل موقع الاستلام والتسليم أولاً";
             return;
           }
-          if (!km) await calculate();
+          if (!fromLL || !toLL) {
+            await calculate();
+          }
           if (!km) return;
 
+          if (!dashHasToken()) {
+            try {
+              var draft = await buildMapCartItem();
+              sessionStorage.setItem("ervenow:pending-map-cart", JSON.stringify(draft));
+            } catch (e0) {}
+            window.location.href =
+              "/login?mode=register&role=customer&next=" + encodeURIComponent("/cart");
+            return;
+          }
+
           btn.disabled = true;
-          btn.innerText = "جارٍ إنشاء الطلب...";
+          btn.innerText = "جارٍ الإضافة للسلة...";
 
-          var pricing = calcDeliveryPricing(km);
-          var idemKey =
-            window.crypto && window.crypto.randomUUID
-              ? window.crypto.randomUUID()
-              : "idem-" + Date.now() + "-" + Math.random().toString(36).slice(2, 12);
-          var data = await window.PlatformAPI.api("/api/delivery/orders", {
-            method: "POST",
-            idempotencyKey: idemKey,
-            body: {
-              pickup_address: from,
-              drop_address: to,
-              order_total: 0,
-              delivery_fee: pricing.fee,
-              platform_fee: pricing.platformFee,
-              driver_earning: pricing.driverNet,
-              vehicle_type: getSelectedVehicleType(),
-              pickup_lat: fromLL ? fromLL.lat : null,
-              pickup_lng: fromLL ? fromLL.lng : null,
-              drop_lat: toLL ? toLL.lat : null,
-              drop_lng: toLL ? toLL.lng : null,
-            },
+          var item = await buildMapCartItem();
+          if (!item.customer_phone) {
+            result.innerText =
+              "❌ أضف رقم جوالك في الملف الشخصي أولاً، أو سجّل بحساب يحتوي جوالاً.";
+            return;
+          }
+
+          if (!window.ErvenowServiceCart || typeof ErvenowServiceCart.add !== "function") {
+            throw new Error("تعذر تحميل السلة — حدّث الصفحة");
+          }
+
+          var cartRes = ErvenowServiceCart.add(item, {
+            message:
+              "تمت إضافة طلب التوصيل من الخريطة — أكمل الدفع في السلة لاعتماد الطلب وإرساله للمندوبين.",
           });
-
-          if (data.ok) {
-            var orderId = data.order.id;
-            var orderNumber = data.order.order_number || orderId;
-            result.innerText = "✅ تم إنشاء الطلب: " + orderNumber;
-            result.innerText += "\nجاري فتح التتبع...";
-            document.getElementById("from").value = "";
-            document.getElementById("to").value = "";
-            km = 0;
-            fromLL = null;
-            toLL = null;
-            document.getElementById("distance").innerText = "المسافة: —";
-            document.getElementById("price").innerText = "السعر: —";
-            document.getElementById("platformFeeLine").innerText = "عمولة المنصة (15%): —";
-            document.getElementById("driverNetLine").innerText = "صافي المندوب: —";
-            enableCreate();
-            run();
-            setTimeout(function () {
-              window.location.href = "/track?id=" + encodeURIComponent(orderId);
-            }, 1000);
-          } else {
-            throw new Error("فشل إنشاء الطلب");
+          if (!cartRes.ok) {
+            result.innerText = "❌ " + (cartRes.message || "تعذر الإضافة للسلة");
+            return;
           }
         } catch (e) {
-          result.innerText = "❌ " + (e.message || "تعذّر إنشاء الطلب");
+          result.innerText = "❌ " + (e.message || "تعذّر إضافة الطلب للسلة");
         } finally {
-          btn.innerText = "إنشاء الطلب";
+          btn.innerText = "أضف للسلة والدفع";
           enableCreate();
         }
       }
@@ -1736,15 +1788,29 @@
       function activateDashTab(tabKey) {
         var nav = document.querySelector(".dash-tabs__nav");
         if (!nav) return;
+        var key = tabKey != null ? String(tabKey).trim() : "";
         var tabs = nav.querySelectorAll('[role="tab"]');
         var panels = document.querySelectorAll(".dash-tabs__panel");
+        var empty = document.getElementById("dashTabsEmpty");
+        if (!key) {
+          tabs.forEach(function (t) {
+            t.setAttribute("aria-selected", "false");
+            t.classList.remove("is-active");
+          });
+          panels.forEach(function (p) {
+            p.hidden = true;
+          });
+          if (empty) empty.hidden = false;
+          return;
+        }
+        if (empty) empty.hidden = true;
         tabs.forEach(function (t) {
-          var active = t.getAttribute("data-tab") === tabKey;
+          var active = t.getAttribute("data-tab") === key;
           t.setAttribute("aria-selected", active ? "true" : "false");
           t.classList.toggle("is-active", active);
         });
         panels.forEach(function (p) {
-          p.hidden = p.id !== "panel-" + tabKey;
+          p.hidden = p.id !== "panel-" + key;
         });
       }
 
@@ -1771,9 +1837,12 @@
         var tabs = nav.querySelectorAll('[role="tab"]');
         tabs.forEach(function (tab) {
           tab.addEventListener("click", function () {
-            activateDashTab(tab.getAttribute("data-tab"));
+            var key = tab.getAttribute("data-tab");
+            var isOpen = tab.getAttribute("aria-selected") === "true";
+            activateDashTab(isOpen ? "" : key);
           });
         });
+        activateDashTab("");
         document.querySelectorAll("[data-dash-map-jump], a[href*='#dashDeliveryTitle']").forEach(function (link) {
           link.addEventListener("click", function (e) {
             var href = link.getAttribute("href") || "";

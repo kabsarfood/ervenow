@@ -5,6 +5,7 @@ const { requireRole } = require("../../shared/middleware/roles");
 const { ok, fail } = require("../../shared/utils/helpers");
 const { sendWhatsApp } = require("../../shared/utils/whatsapp");
 const { driverApprovedBody } = require("../../shared/messages/driverWhatsApp");
+const { storeApprovedBody } = require("../../shared/messages/storeWhatsApp");
 const { getRiyadhDate } = require("../delivery/service");
 const { readStateAsync, writeState } = require("../../shared/utils/siteMaintenanceStore");
 const { normalizePhone } = require("../../shared/utils/phone");
@@ -174,6 +175,26 @@ function isStoresTableMissing(err) {
   if (String(err.code || "") === "42P01") return true;
   const msg = String(err.message || err.details || "");
   return /relation .*stores/i.test(msg);
+}
+
+function storeMerchantPanelPaths(store) {
+  const id = store && store.id ? String(store.id) : "";
+  return {
+    merchant_panel_url: "/store-dashboard",
+    public_store_url: id ? `/store.html?id=${encodeURIComponent(id)}` : "/stores",
+  };
+}
+
+async function notifyStoreApprovedWhatsApp(store) {
+  try {
+    if (!store?.phone) return;
+    await sendWhatsApp({
+      to: store.phone,
+      message: storeApprovedBody(store.name),
+    });
+  } catch (waErr) {
+    console.error("[admin/approve-store] WhatsApp:", waErr && (waErr.message || String(waErr)));
+  }
 }
 
 async function linkStoreOwnerAfterApprove(sb, store) {
@@ -1237,7 +1258,11 @@ router.patch("/store-requests/:id", requireAuth, requireRole("admin"), requireAd
     }
     if (status === "approved") await linkStoreOwnerAfterApprove(req.supabase, data);
     if (status === "approved") recordStoreCategoryUsageOnApprove(data);
-    return ok(res, { request: sanitizeDriverOrStoreRowForApi(data) });
+    if (status === "approved") await notifyStoreApprovedWhatsApp(data);
+    return ok(res, {
+      request: sanitizeDriverOrStoreRowForApi(data),
+      ...(status === "approved" ? storeMerchantPanelPaths(data) : {}),
+    });
   } catch (e) {
     return fail(res, e.message || String(e), 500);
   }
@@ -1257,7 +1282,11 @@ router.post("/approve-store", requireAuth, requireRole("admin"), requireAdminPer
     }
     await linkStoreOwnerAfterApprove(req.supabase, data);
     recordStoreCategoryUsageOnApprove(data);
-    return ok(res, { store: sanitizeDriverOrStoreRowForApi(data) });
+    await notifyStoreApprovedWhatsApp(data);
+    return ok(res, {
+      store: sanitizeDriverOrStoreRowForApi(data),
+      ...storeMerchantPanelPaths(data),
+    });
   } catch (e) {
     return fail(res, e.message || String(e), 500);
   }
@@ -1295,7 +1324,11 @@ router.patch("/store/:id/approve", requireAuth, requireRole("admin"), requireAdm
     }
     await linkStoreOwnerAfterApprove(req.supabase, data);
     recordStoreCategoryUsageOnApprove(data);
-    return ok(res, { store: sanitizeDriverOrStoreRowForApi(data) });
+    await notifyStoreApprovedWhatsApp(data);
+    return ok(res, {
+      store: sanitizeDriverOrStoreRowForApi(data),
+      ...storeMerchantPanelPaths(data),
+    });
   } catch (e) {
     return fail(res, e.message || String(e), 500);
   }

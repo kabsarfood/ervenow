@@ -11,10 +11,11 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="/assets/styles.css" />
+    <link rel="stylesheet" href="/assets/start-now-landing.css" />
     <script src="/assets/api-config.js"></script>
     <script src="/assets/phonePrivacy.js"></script>
     <script src="/assets/api.js"></script>
@@ -2311,7 +2312,7 @@
       }
     </style>
   </head>
-  <body class="lp-body">
+  <body class="lp-body lp-home-premium">
     <header class="lp-header" id="top">
       <div class="lp-header__inner" id="lpHeaderInner">
         <a
@@ -2545,88 +2546,115 @@
       </div>
     </header>
 
-    <nav class="lp-home-hub" id="lpHomeHub" aria-label="الأقسام الرئيسية">
-      <div class="lp-home-hub__box">
-        <div class="lp-home-hub__row" aria-label="الأقسام">
-          <a class="lp-home-hub__tab" href="/restaurants">
-            <span class="lp-home-hub__tab-ic" aria-hidden="true">🍽️</span>
-            <span>مطاعم</span>
-          </a>
-          <a class="lp-home-hub__tab" href="/stores">
-            <span class="lp-home-hub__tab-ic" aria-hidden="true">🛒</span>
-            <span>متاجر</span>
-          </a>
-          <a class="lp-home-hub__tab" href="/delivery-services.html">
-            <span class="lp-home-hub__tab-ic" aria-hidden="true">🚚</span>
-            <span>توصيل</span>
-          </a>
-          <a class="lp-home-hub__tab" href="/services">
-            <span class="lp-home-hub__tab-ic" aria-hidden="true">🔧</span>
-            <span>خدمات</span>
-          </a>
-        </div>
+    <section class="sn-hero" aria-labelledby="hero-title">
+      <div class="sn-hero__eyebrow">منصة ERVENOW — خدمة واحدة لكل شيء</div>
+      <h1 class="sn-hero__title" id="hero-title">
+        اطلب أي خدمة<br>
+        <span>الآن وبسهولة</span>
+      </h1>
+      <p class="sn-hero__sub">
+        مطاعم، متاجر، توصيل سريع، وخدمات منزلية —<br>
+        كل ما تحتاجه في مكان واحد.
+      </p>
+      <div class="sn-hero__actions">
+        <a class="sn-hero__cta" href="/start-now">اطلب الآن</a>
       </div>
-    </nav>
+      <p id="guestStartNote" class="sn-guest-note">
+        وضع زائر — تصفّح العروض بحرية. لإتمام الطلب
+        <a href="/login" style="color:var(--sn-gold);font-weight:800;text-decoration:none">سجّل دخولك</a>
+        برمز واتساب.
+      </p>
+    </section>
 
-    <div class="lp-hero-shell">
-      <section class="lp-hero lp-wrap" aria-labelledby="hero-title">
-        <div class="lp-hero__inner">
-          <span class="lp-hero__eyebrow">تجربة موحّدة · تتبع ذكي</span>
-          <h1 id="hero-title">اطلب أي خدمة الآن 👇</h1>
-          <p class="lp-hero__desc">
-            حدد موقعك واطلب توصيل أو أي خدمة مباشرة
-          </p>
-          <div class="lp-hero__cta">
-            <a class="lp-hero__btn" href="/start-now">ابدأ الآن</a>
-          </div>
-        </div>
-      </section>
-
-      <section class="lp-counters lp-wrap lp-reveal" id="stats" aria-label="أرقام المنصة">
-        <div class="lp-counters__grid">
-          <div class="lp-counter">
-            <div class="lp-counter__value"><span class="js-count" data-target="300" data-suffix="+">0</span></div>
-            <p class="lp-counter__label">طلب يومي</p>
-          </div>
-          <div class="lp-counter">
-            <div class="lp-counter__value"><span class="js-count" data-target="45" data-suffix="+">0</span></div>
-            <p class="lp-counter__label">مندوب نشط</p>
-          </div>
-          <div class="lp-counter">
-            <div class="lp-counter__value"><span class="js-count" data-target="120" data-suffix="+">0</span></div>
-            <p class="lp-counter__label">متجر</p>
-          </div>
-        </div>
-      </section>
+    <div class="sn-wave" aria-hidden="true">
+      <svg viewBox="0 0 1440 48" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+        <path fill="#e9dccb" d="M0,32 C360,0 1080,64 1440,32 L1440,0 L0,0 Z"/>
+        <path fill="#f8f4ee" d="M0,48 C360,16 1080,80 1440,48 L1440,0 L0,0 Z" opacity=".0"/>
+        <rect x="0" y="44" width="1440" height="4" fill="#f8f4ee"/>
+      </svg>
     </div>
 
-    <main>
-      <section class="lp-section lp-wrap lp-reveal" id="trust" aria-labelledby="trust-title">
-        <h2 class="lp-section__title" id="trust-title">لماذا يثق بنا الشركاء</h2>
-        <p class="lp-section__lead">سرعة، أمان، وشفافية في كل عملية توصيل.</p>
-        <div class="lp-trust__grid">
-          <article class="lp-trust-card">
-            <span class="lp-trust-card__icon" aria-hidden="true">⚡</span>
-            <h3>توصيل سريع</h3>
-            <p>توجيه الطلبات بكفاءة لتقليل زمن الوصول وتحسين رضا العملاء.</p>
-          </article>
-          <article class="lp-trust-card">
-            <span class="lp-trust-card__icon" aria-hidden="true">🔒</span>
-            <h3>آمن</h3>
-            <p>بنية موحّدة تقلل الأخطاء وتبقي بيانات التشغيل تحت سيطرتك.</p>
-          </article>
-          <article class="lp-trust-card">
-            <span class="lp-trust-card__icon" aria-hidden="true">📍</span>
-            <h3>تتبع مباشر</h3>
-            <p>متابعة مسار الطلب والمندوب بثقة حتى لحظة التسليم.</p>
-          </article>
-        </div>
-      </section>
+    <section class="sn-section" aria-labelledby="home-cats-title">
+      <p class="sn-section__label">الأقسام الرئيسية</p>
+      <h2 class="sn-section__title" id="home-cats-title">اختر ما يناسبك</h2>
 
+      <div class="sn-grid" role="list">
+        <a class="sn-card sn-card--restaurants" href="/restaurants" role="listitem">
+          <div class="sn-card__icon-wrap" aria-hidden="true">🍽️</div>
+          <div>
+            <div class="sn-card__name">مطاعم</div>
+            <div class="sn-card__desc">مشاوي، برقر، شاورما<br>وأكثر من مطاعم معتمدة</div>
+          </div>
+          <div class="sn-card__arrow">← اكتشف</div>
+        </a>
+        <a class="sn-card sn-card--stores" href="/stores" role="listitem">
+          <div class="sn-card__icon-wrap" aria-hidden="true">🛒</div>
+          <div>
+            <div class="sn-card__name">متاجر</div>
+            <div class="sn-card__desc">سوبرماركت، صيدليات<br>وبقالة مع توصيل سريع</div>
+          </div>
+          <div class="sn-card__arrow">← اكتشف</div>
+        </a>
+        <a class="sn-card sn-card--delivery" href="/delivery-services.html" role="listitem">
+          <div class="sn-card__icon-wrap" aria-hidden="true">🚚</div>
+          <div>
+            <div class="sn-card__name">توصيل</div>
+            <div class="sn-card__desc">توصيل من نقطة لأخرى<br>وتوصيل غاز منزلي</div>
+          </div>
+          <div class="sn-card__arrow">← اطلب</div>
+        </a>
+        <a class="sn-card sn-card--services" href="/services" role="listitem">
+          <div class="sn-card__icon-wrap" aria-hidden="true">🔧</div>
+          <div>
+            <div class="sn-card__name">خدمات</div>
+            <div class="sn-card__desc">سباكة، كهرباء، تنظيف<br>وخدمات منزلية متنوعة</div>
+          </div>
+          <div class="sn-card__arrow">← احجز</div>
+        </a>
+      </div>
+
+      <div class="sn-trust" role="list" aria-label="مزايا المنصة">
+        <div class="sn-trust__item" role="listitem">
+          <span class="sn-trust__icon" aria-hidden="true">⚡</span>
+          توصيل سريع
+        </div>
+        <div class="sn-trust__item" role="listitem">
+          <span class="sn-trust__icon" aria-hidden="true">🛡️</span>
+          دفع آمن
+        </div>
+        <div class="sn-trust__item" role="listitem">
+          <span class="sn-trust__icon" aria-hidden="true">📍</span>
+          تتبع لحظي
+        </div>
+        <div class="sn-trust__item" role="listitem">
+          <span class="sn-trust__icon" aria-hidden="true">💬</span>
+          دعم فوري
+        </div>
+      </div>
+    </section>
+
+    <section class="sn-section sn-section--stats lp-counters lp-wrap lp-reveal" id="stats" aria-label="أرقام المنصة">
+      <div class="lp-counters__grid">
+        <div class="lp-counter">
+          <div class="lp-counter__value"><span class="js-count" data-target="300" data-suffix="+">0</span></div>
+          <p class="lp-counter__label">طلب يومي</p>
+        </div>
+        <div class="lp-counter">
+          <div class="lp-counter__value"><span class="js-count" data-target="45" data-suffix="+">0</span></div>
+          <p class="lp-counter__label">مندوب نشط</p>
+        </div>
+        <div class="lp-counter">
+          <div class="lp-counter__value"><span class="js-count" data-target="120" data-suffix="+">0</span></div>
+          <p class="lp-counter__label">متجر</p>
+        </div>
+      </div>
+    </section>
+
+    <main>
       <section class="lp-section lp-wrap lp-reveal" id="services" aria-labelledby="services-title">
+        <p class="sn-section__label">تصفّح بالتفصيل</p>
         <h2 class="lp-section__title" id="services-title">خدمات المنصة</h2>
-        <p class="lp-section__lead">اختر خدمتك الآن 👇</p>
-        <p class="lp-section__lead">كل ما تحتاجه لتشغيل عملياتك — من الطلب حتى باب زائر المنصة.</p>
+        <p class="lp-section__lead">كل ما تحتاجه — من الطلب حتى باب زائر المنصة.</p>
         <div class="lp-services__grid">
           <h3 style="grid-column: 1 / -1; margin: 0">🍽️ مطاعم</h3>
           <a class="lp-card" href="/restaurants?category=shawarma_grill">
@@ -3474,6 +3502,14 @@
         if (typeof updateCartCount === "function") updateCartCount();
         setInterval(loadOrdersCount, 5000);
         loadOrdersCount();
+      })();
+    </script>
+    <script>
+      (function () {
+        var n = document.getElementById("guestStartNote");
+        if (n && window.ErvenowGuestBrowse && ErvenowGuestBrowse.isAnonymousGuest()) {
+          n.style.display = "block";
+        }
       })();
     </script>
   </body>

@@ -11,7 +11,8 @@
     "load:test": "npx artillery run tests/load/artillery.yml",
     "test": "jest",
     "test:ci": "jest --ci",
-    "migrate:platform-settings": "node scripts/run-migration-platform-settings.js"
+    "migrate:platform-settings": "node scripts/run-migration-platform-settings.js",
+    "migrate:stores-steps-10-15": "node scripts/run-migration-stores-steps-10-15.js"
   },
   "engines": {
     "node": ">=20"

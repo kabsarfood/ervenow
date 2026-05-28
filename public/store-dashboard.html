@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>ERVENOW | بوابة المتجر</title>
+    <title>ERVENOW | لوحة تحكم المتجر</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/assets/styles.css" />
@@ -204,8 +204,42 @@
         border: 1px solid rgba(61, 34, 19, 0.08);
         box-shadow: 0 8px 28px rgba(42, 24, 16, 0.06);
       }
-      #walletAnchor {
+      #walletAnchor,
+      #brandingAnchor,
+      #productsAnchor {
         scroll-margin-top: 16px;
+      }
+      .portal-nav {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 16px;
+      }
+      .portal-nav a {
+        font-size: 0.86rem;
+        font-weight: 700;
+        padding: 8px 14px;
+        border-radius: 999px;
+        background: rgba(255, 252, 248, 0.9);
+        border: 1px solid rgba(61, 34, 19, 0.1);
+        color: #3d2213;
+        text-decoration: none;
+      }
+      .portal-panel-url {
+        font-size: 0.82rem;
+        color: rgba(255, 248, 238, 0.92);
+        margin-top: 8px;
+        word-break: break-all;
+      }
+      .portal-panel-url a {
+        color: #ffe8b8;
+        font-weight: 700;
+      }
+      .portal-brand-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 14px;
+        margin-top: 8px;
       }
     </style>
   </head>
@@ -214,9 +248,9 @@
       <p class="portal-back"><a href="/">← الرئيسية</a> · <a href="/merchant-dashboard">تفاصيل الطلبات والإيرادات</a></p>
 
       <p class="sub" id="hint" style="margin-bottom: 16px">
-        سجّل الدخول من
+        بعد موافقة الإدارة على متجرك، سجّل الدخول من
         <a href="/login?role=merchant">تسجيل الدخول</a>
-        واختر «تاجر (متجر)» بنفس رقم الجوال المستخدم في تسجيل المتجر بعد موافقة الإدارة.
+        كـ «تاجر» بنفس رقم الجوال — ستفتح <strong>صفحة تحكم خاصة بمتجرك</strong> لإدارة الشعار، صور المنتجات، الأسعار، والعروض.
       </p>
 
       <div id="portalMain" style="display: none">
@@ -234,9 +268,19 @@
               <div class="portal-actions">
                 <a class="btn btn-primary" id="publicLink" href="#" target="_blank" rel="noopener">صفحة المتجر للعملاء</a>
               </div>
+              <p class="portal-panel-url" id="panelUrlNote" hidden>
+                لوحة التحكم الخاصة بمتجرك:
+                <a id="panelUrlLink" href="/store-dashboard">/store-dashboard</a>
+              </p>
             </div>
           </div>
         </header>
+
+        <nav class="portal-nav" aria-label="أقسام لوحة التحكم">
+          <a href="#brandingAnchor">الشعار والصور</a>
+          <a href="#productsAnchor">المنتجات والعروض</a>
+          <a href="#walletAnchor">المحفظة</a>
+        </nav>
 
         <div class="portal-grid">
           <div class="portal-card" id="walletAnchor">
@@ -257,16 +301,26 @@
           </div>
         </div>
 
-        <div class="portal-panel">
+        <div class="portal-panel" id="brandingAnchor">
           <div class="card" id="profileCard">
-            <h2 style="margin: 0 0 10px">بروفايل المتجر في لوحة التحكم</h2>
+            <h2 style="margin: 0 0 10px">الشعار والصور</h2>
             <p class="sub" style="margin-top: 0">
-              يُحفظ في جدول <code>store_merchant_hub</code> في Supabase (نبذة + صورة غلاف للوحة التاجر فقط — لا يُعرض تلقائياً للعميل إلا إذا ربطتموه لاحقاً بواجهة المتجر).
+              كل متجر معتمد له هذه الصفحة الخاصة — عدّل الشعار وصورة الغلاف والنبذة في أي وقت.
             </p>
-            <label for="hubBio">نبذة عن المتجر</label>
+            <div class="portal-brand-grid">
+              <div>
+                <label for="hubLogo">شعار المتجر</label>
+                <input id="hubLogo" type="file" accept="image/*" />
+                <p class="sub" style="margin-top: 4px">يظهر في صفحة المتجر للعملاء وفي القوائم.</p>
+              </div>
+              <div>
+                <label for="hubBanner">صورة غلاف اللوحة (اختياري)</label>
+                <input id="hubBanner" type="file" accept="image/*" />
+                <p class="sub" style="margin-top: 4px">خلفية أعلى لوحة التحكم.</p>
+              </div>
+            </div>
+            <label for="hubBio" style="margin-top: 12px">نبذة عن المتجر</label>
             <textarea id="hubBio" rows="3" placeholder="مثال: وجبات منزلية طازجة، توصيل سريع…"></textarea>
-            <label for="hubBanner" style="margin-top: 12px">صورة غلاف (اختياري)</label>
-            <input id="hubBanner" type="file" accept="image/*" />
             <p class="sub" style="margin-top: 14px; margin-bottom: 6px; font-weight: 800">وسائل الدفع المعروضة في السلة (منتجاتك)</p>
             <p class="sub" style="margin-top: 0; font-size: 0.82rem">
               يظهر للعميل تقاطع ما تسمح به المنصة مع اختياراتك. عطّل ما لا تقدمه (مثلاً الدفع عند الاستلام أو البطاقات).
@@ -278,9 +332,9 @@
           </div>
         </div>
 
-        <div class="portal-panel">
+        <div class="portal-panel" id="productsAnchor">
           <div class="card" id="formCard">
-            <h2 style="margin: 0 0 12px">إضافة / تعديل منتج</h2>
+            <h2 style="margin: 0 0 12px">إضافة / تعديل منتج (صورة، سعر، عرض)</h2>
             <input type="hidden" id="editId" />
             <label for="pName">اسم المنتج</label>
             <input id="pName" type="text" />
@@ -492,6 +546,13 @@
 
           var pub = document.getElementById("publicLink");
           pub.href = "/store.html?id=" + encodeURIComponent(storeId);
+          var panelNote = document.getElementById("panelUrlNote");
+          var panelLink = document.getElementById("panelUrlLink");
+          if (panelNote && panelLink) {
+            panelLink.href = "/store-dashboard";
+            panelLink.textContent = "/store-dashboard";
+            panelNote.hidden = false;
+          }
 
           try {
             var dash = await window.PlatformAPI.api("/api/store/merchant-dashboard");
@@ -563,13 +624,28 @@
             return show(String(ce.message || ce), false);
           }
         }
+        var lf = document.getElementById("hubLogo").files && document.getElementById("hubLogo").files[0];
+        if (lf) {
+          try {
+            body.logo_base64 = await window.compressImageToDataUrl(lf, 0.78, 800);
+            body.logo_file_name = lf.name || "logo.jpg";
+          } catch (ce) {
+            return show(String(ce.message || ce), false);
+          }
+        }
         try {
           await window.PlatformAPI.api("/api/store/merchant-hub", { method: "PATCH", body: body });
-          show("تم حفظ البروفايل", true);
+          show("تم حفظ الشعار والبروفايل", true);
           document.getElementById("hubBanner").value = "";
+          document.getElementById("hubLogo").value = "";
           var r = await window.PlatformAPI.api("/api/store/my-store");
           var h = r.merchant_hub;
+          var st = r.store;
           if (h && h.banner_url) applyHeroBanner(h.banner_url);
+          if (st && st.logo_url) {
+            var logoEl = document.getElementById("heroLogo");
+            if (logoEl) logoEl.src = st.logo_url;
+          }
         } catch (e) {
           show(String((e && e.message) || e), false);
         }

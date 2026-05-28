@@ -72,10 +72,10 @@ app.renderCustomers = function () {
       "<div>الحالة: " + (blocked ? "محظور" : "نشط") + "</div>";
     var row = document.createElement("div");
     row.className = "row";
-    row.appendChild(app.mkAction("حظر", "btn-ghost", safeClick(async function () {
+    row.appendChild(app.mkAction("حظر", "btn-ghost", app.safeClick(async function () {
       try { await app.PlatformAPI.api("/api/admin/block-customer", { method: "POST", body: { id: u.id } }); app.showSuccess("تم حظر حساب زائر المنصة"); app.loadCustomers(); } catch (e) { app.showError(e.message || "فشل"); }
     })));
-    row.appendChild(app.mkAction("تفعيل", "btn-primary", safeClick(async function () {
+    row.appendChild(app.mkAction("تفعيل", "btn-primary", app.safeClick(async function () {
       try { await app.PlatformAPI.api("/api/admin/activate-customer", { method: "POST", body: { id: u.id } }); app.showSuccess("تم تفعيل حساب زائر المنصة"); app.loadCustomers(); } catch (e) { app.showError(e.message || "فشل"); }
     })));
     item.appendChild(row);
@@ -117,17 +117,29 @@ app.renderStores = function () {
       "<div>الحالة: " + (s.status || "pending") + "</div>";
     var row = document.createElement("div");
     row.className = "row";
-    row.appendChild(app.mkAction("قبول", "btn-primary", safeClick(async function () {
+    row.appendChild(app.mkAction("قبول", "btn-primary", app.safeClick(async function () {
       try {
-        await app.PlatformAPI.api("/api/admin/store-requests/" + encodeURIComponent(s.id), {
+        var res = await app.PlatformAPI.api("/api/admin/store-requests/" + encodeURIComponent(s.id), {
           method: "PATCH",
           body: { action: "approve" },
         });
-        app.showSuccess("تم قبول المتجر");
+        var panel = (res && res.merchant_panel_url) || "/store-dashboard";
+        app.showSuccess(
+          "تم قبول المتجر. لوحة التحكم للتاجر: " + panel + " (دخول كتاجر بنفس الجوال)"
+        );
         app.loadStores();
       } catch (e) { app.showError(e.message || "فشل"); }
     })));
-    row.appendChild(app.mkAction("رفض", "btn-ghost", safeClick(async function () {
+    if (String(s.status || "").toLowerCase() === "approved") {
+      var panelNote = document.createElement("div");
+      panelNote.className = "sub";
+      panelNote.style.marginTop = "6px";
+      panelNote.innerHTML =
+        'لوحة التحكم: <a href="/store-dashboard" target="_blank" rel="noopener">/store-dashboard</a> · ' +
+        '<a href="/store.html?id=' + encodeURIComponent(s.id) + '" target="_blank" rel="noopener">صفحة العملاء</a>';
+      item.appendChild(panelNote);
+    }
+    row.appendChild(app.mkAction("رفض", "btn-ghost", app.safeClick(async function () {
       try {
         await app.PlatformAPI.api("/api/admin/store-requests/" + encodeURIComponent(s.id), {
           method: "PATCH",
@@ -178,7 +190,7 @@ app.renderJobs = function () {
       "<div>نبذة: " + (r.note || "—") + "</div>";
     var row = document.createElement("div");
     row.className = "row";
-    row.appendChild(app.mkAction("قبول", "btn-primary", safeClick(async function () {
+    row.appendChild(app.mkAction("قبول", "btn-primary", app.safeClick(async function () {
       try {
         await app.PlatformAPI.api("/api/admin/job-applications/" + encodeURIComponent(r.id) + "/decision", {
           method: "POST",
@@ -188,7 +200,7 @@ app.renderJobs = function () {
         app.loadJobs();
       } catch (e) { app.showError(e.message || "فشل"); }
     })));
-    row.appendChild(app.mkAction("رفض", "btn-ghost", safeClick(async function () {
+    row.appendChild(app.mkAction("رفض", "btn-ghost", app.safeClick(async function () {
       try {
         await app.PlatformAPI.api("/api/admin/job-applications/" + encodeURIComponent(r.id) + "/decision", {
           method: "POST",
@@ -237,7 +249,7 @@ app.renderComplaints = function () {
     if (c.status !== "resolved") {
       var row = document.createElement("div");
       row.className = "row";
-      row.appendChild(app.mkAction("تم الحل", "btn-primary", safeClick(async function () {
+      row.appendChild(app.mkAction("تم الحل", "btn-primary", app.safeClick(async function () {
         try {
           await app.PlatformAPI.api("/api/admin/resolve-complaint", {
             method: "POST",

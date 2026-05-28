@@ -380,6 +380,23 @@
     <script>
       ErvenowGuestShell.init({ activeNav: "guest", pageTag: "السلة" });
 
+      (function restorePendingMapCart() {
+        try {
+          var raw = sessionStorage.getItem("ervenow:pending-map-cart");
+          if (!raw || typeof addToCart !== "function") return;
+          var item = JSON.parse(raw);
+          sessionStorage.removeItem("ervenow:pending-map-cart");
+          if (!item || !item.type) return;
+          addToCart(item);
+          sessionStorage.setItem(
+            "ervenow:cart-flash",
+            "تمت إضافة طلب التوصيل من الخريطة — أكمل الدفع لاعتماد الطلب."
+          );
+          if (typeof renderCartPage === "function") renderCartPage();
+          else if (typeof updateCartCount === "function") updateCartCount();
+        } catch (_) {}
+      })();
+
       function refreshGuestCartBanner() {
         var b = document.getElementById("guestCartBanner");
         if (!b || !window.ErvenowGuestBrowse) return;
@@ -492,6 +509,28 @@
       }
       window.clearAllCart = clearAllCart;
 
+      function checkoutIdempotencyKey() {
+        var KEY = "ervenow:checkout-idem";
+        try {
+          var saved = sessionStorage.getItem(KEY);
+          if (saved && String(saved).trim()) return String(saved).trim();
+        } catch (_e) {}
+        var key =
+          window.crypto && window.crypto.randomUUID
+            ? window.crypto.randomUUID()
+            : "checkout-" + Date.now() + "-" + Math.random().toString(36).slice(2, 12);
+        try {
+          sessionStorage.setItem(KEY, key);
+        } catch (_e2) {}
+        return key;
+      }
+
+      function clearCheckoutIdempotencyKey() {
+        try {
+          sessionStorage.removeItem("ervenow:checkout-idem");
+        } catch (_e) {}
+      }
+
       const checkout = safeClick(async function () {
         const cart = getCart();
         if (!cart.length) {
@@ -511,10 +550,17 @@
           return;
         }
 
+        if (!window.PlatformAPI || typeof window.PlatformAPI.api !== "function") {
+          showError("تعذّر الاتصال بالخادم — حدّث الصفحة");
+          return;
+        }
+
         if (btn) {
           btn.disabled = true;
           btn.innerText = "جارٍ الإرسال...";
         }
+
+        var idemKey = checkoutIdempotencyKey();
 
         try {
           var payload = { items: cart };
@@ -530,35 +576,26 @@
               "";
           }
 
-          const res = await fetch(window.PlatformAPI.apiUrl("/api/checkout"), {
+          const data = await window.PlatformAPI.api("/api/checkout", {
             method: "POST",
-            headers: Object.assign(
-              { "Content-Type": "application/json" },
-              { Authorization: "Bearer " + token }
-            ),
-            body: JSON.stringify(payload),
-          });
-          const data = await res.json().catch(function () {
-            return {};
+            body: payload,
+            idempotencyKey: idemKey,
           });
 
-          if (res.status === 401) {
-            window.location.href =
-              "/login?mode=register&role=customer&next=" + encodeURIComponent("/cart");
-            return;
-          }
-
-          if (!res.ok || !data.ok) {
-            throw new Error(data.message || data.error || "checkout failed");
-          }
-
+          clearCheckoutIdempotencyKey();
           showSuccess("تم إنشاء " + ((data.orders && data.orders.length) || 0) + " طلب");
           localStorage.removeItem("cart");
           delete window.__ervCartDeliveryFee;
           updateCartCount();
           renderCartPage();
         } catch (e) {
-          showError(String((e && e.message) || "حدث خطأ، حاول مرة أخرى"));
+          var msg = String((e && e.message) || "حدث خطأ، حاول مرة أخرى");
+          if (/401|غير مصرح|token/i.test(msg)) {
+            window.location.href =
+              "/login?mode=register&role=customer&next=" + encodeURIComponent("/cart");
+            return;
+          }
+          showError(msg);
           return;
         } finally {
           if (btn) {

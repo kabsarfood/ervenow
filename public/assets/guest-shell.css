@@ -300,6 +300,14 @@ body.guest-shell-page.stores-page {
   flex-shrink: 0;
   box-sizing: border-box;
 }
+/* صفحة ابدأ الآن: مسافة بين بطاقة المزايا والفوتر */
+body.sn-page .dash-main > .sn-section + .dash-site-footer,
+body.sn-page .dash-main > main.sn-section + .dash-site-footer {
+  margin-top: 0;
+}
+body.sn-page .sn-trust {
+  margin-bottom: clamp(28px, 5vw, 44px);
+}
 .dash-site-footer {
   margin-top: auto;
   background: var(--brown, #3d2213);

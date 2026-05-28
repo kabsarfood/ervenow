@@ -166,13 +166,13 @@ app.renderAdminAccounts = function () {
     if (a.slot === "limited1" || a.slot === "limited2") {
       var row = document.createElement("div");
       row.className = "row";
-      row.appendChild(app.mkAction("خروج", "btn-ghost", safeClick(async function () {
+      row.appendChild(app.mkAction("خروج", "btn-ghost", app.safeClick(async function () {
         try { await app.adminAccountAction(a.slot, "logout"); app.showSuccess("تم إخراج " + app.adminSlotLabel(a.slot)); app.loadAdminAccounts(); } catch (e) { app.showError(e.message || "فشل"); }
       })));
-      row.appendChild(app.mkAction("حظر", "btn-ghost", safeClick(async function () {
+      row.appendChild(app.mkAction("حظر", "btn-ghost", app.safeClick(async function () {
         try { await app.adminAccountAction(a.slot, "block"); app.showSuccess("تم حظر " + app.adminSlotLabel(a.slot)); app.loadAdminAccounts(); } catch (e) { app.showError(e.message || "فشل"); }
       })));
-      row.appendChild(app.mkAction("تفعيل", "btn-primary", safeClick(async function () {
+      row.appendChild(app.mkAction("تفعيل", "btn-primary", app.safeClick(async function () {
         try { await app.adminAccountAction(a.slot, "activate"); app.showSuccess("تم تفعيل " + app.adminSlotLabel(a.slot)); app.loadAdminAccounts(); } catch (e) { app.showError(e.message || "فشل"); }
       })));
       item.appendChild(row);

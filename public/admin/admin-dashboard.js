@@ -1,4 +1,6 @@
 /** Admin Dashboard entry */
+globalThis.__ERVENOW_FETCH_TIMEOUT_MS = 30000;
+
 import "./modules/shared.js";
 import "./modules/dashboard.js";
 import "./modules/finance.js";

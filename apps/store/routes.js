@@ -1542,6 +1542,19 @@ router.patch("/merchant-hub", requireAuth, requireMerchantRole, async (req, res)
       if (url) bannerNext = url;
     }
 
+    if (b.logo_base64 && typeof b.logo_base64 === "string" && String(b.logo_base64).length > 40) {
+      const fn = String(b.logo_file_name || "logo.jpg");
+      const logoUrl = await uploadToStoreBucket(sb, st.id, "logo", b.logo_base64, fn);
+      if (logoUrl) {
+        const upLogo = await sb.from("stores").update({ logo_url: logoUrl }).eq("id", st.id);
+        if (upLogo.error && /logo_url|column/i.test(String(upLogo.error.message || ""))) {
+          console.warn("[store/merchant-hub] logo_url column missing");
+        } else {
+          listCache = { key: "", at: 0, payload: null };
+        }
+      }
+    }
+
     let ex = null;
     let exErr = null;
     ({ data: ex, error: exErr } = await sb

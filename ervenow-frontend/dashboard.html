@@ -760,6 +760,21 @@
       .dash-tabs__panel[hidden] {
         display: none !important;
       }
+      .dash-tabs__empty {
+        margin: 4px 0 0;
+        padding: 20px 16px;
+        text-align: center;
+        border-radius: 14px;
+        border: 1px dashed rgba(61, 34, 19, 0.18);
+        background: rgba(255, 254, 251, 0.85);
+        color: var(--muted, #6f5441);
+        font-weight: 700;
+        font-size: 0.92rem;
+        line-height: 1.55;
+      }
+      .dash-tabs__empty[hidden] {
+        display: none !important;
+      }
       .dash-tabs__all {
         display: inline-flex;
         align-items: center;
@@ -987,16 +1002,20 @@
 
       <section class="card dash-tabs-card" aria-labelledby="dashTabsTitle">
         <h2 class="dash-section-title" id="dashTabsTitle">تفاصيل سريعة</h2>
-        <p class="dash-section-hint">اختر تبويباً واحداً لعرض الخيارات الفرعية</p>
+        <p class="dash-section-hint">اضغط على قسم (مطاعم، متاجر، خدمات، توصيل) لعرض الخيارات</p>
         <div class="dash-tabs">
           <div class="dash-tabs__nav" role="tablist" aria-label="أقسام المنصة">
-            <button type="button" class="is-active" role="tab" id="tab-restaurants" data-tab="restaurants" aria-selected="true" aria-controls="panel-restaurants">مطاعم</button>
+            <button type="button" role="tab" id="tab-restaurants" data-tab="restaurants" aria-selected="false" aria-controls="panel-restaurants">مطاعم</button>
             <button type="button" role="tab" id="tab-stores" data-tab="stores" aria-selected="false" aria-controls="panel-stores">متاجر</button>
             <button type="button" role="tab" id="tab-services" data-tab="services" aria-selected="false" aria-controls="panel-services">خدمات</button>
             <button type="button" role="tab" id="tab-delivery" data-tab="delivery" aria-selected="false" aria-controls="panel-delivery">توصيل</button>
           </div>
 
-          <div class="dash-tabs__panel" id="panel-restaurants" role="tabpanel" aria-labelledby="tab-restaurants">
+          <p class="dash-tabs__empty" id="dashTabsEmpty" role="status">
+            اختر قسماً من الأزرار أعلاه لاستكشاف المنصة — لا يُفتح أي قسم تلقائياً.
+          </p>
+
+          <div class="dash-tabs__panel" id="panel-restaurants" role="tabpanel" aria-labelledby="tab-restaurants" hidden>
             <a class="dash-tabs__all" href="/restaurants">عرض كل المطاعم ←</a>
             <div class="cat-grid">
               <a class="cat-card" href="/restaurants"><span class="cat-card__icon" aria-hidden="true">🍽️</span><strong>كل المطاعم</strong><span>اطلب من المطاعم القريبة مع التوصيل.</span></a>
@@ -1736,15 +1755,29 @@
       function activateDashTab(tabKey) {
         var nav = document.querySelector(".dash-tabs__nav");
         if (!nav) return;
+        var key = tabKey != null ? String(tabKey).trim() : "";
         var tabs = nav.querySelectorAll('[role="tab"]');
         var panels = document.querySelectorAll(".dash-tabs__panel");
+        var empty = document.getElementById("dashTabsEmpty");
+        if (!key) {
+          tabs.forEach(function (t) {
+            t.setAttribute("aria-selected", "false");
+            t.classList.remove("is-active");
+          });
+          panels.forEach(function (p) {
+            p.hidden = true;
+          });
+          if (empty) empty.hidden = false;
+          return;
+        }
+        if (empty) empty.hidden = true;
         tabs.forEach(function (t) {
-          var active = t.getAttribute("data-tab") === tabKey;
+          var active = t.getAttribute("data-tab") === key;
           t.setAttribute("aria-selected", active ? "true" : "false");
           t.classList.toggle("is-active", active);
         });
         panels.forEach(function (p) {
-          p.hidden = p.id !== "panel-" + tabKey;
+          p.hidden = p.id !== "panel-" + key;
         });
       }
 
@@ -1771,9 +1804,12 @@
         var tabs = nav.querySelectorAll('[role="tab"]');
         tabs.forEach(function (tab) {
           tab.addEventListener("click", function () {
-            activateDashTab(tab.getAttribute("data-tab"));
+            var key = tab.getAttribute("data-tab");
+            var isOpen = tab.getAttribute("aria-selected") === "true";
+            activateDashTab(isOpen ? "" : key);
           });
         });
+        activateDashTab("");
         document.querySelectorAll("[data-dash-map-jump], a[href*='#dashDeliveryTitle']").forEach(function (link) {
           link.addEventListener("click", function (e) {
             var href = link.getAttribute("href") || "";

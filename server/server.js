@@ -489,6 +489,9 @@ if (servePublicUi) {
   app.get("/store-dashboard", (_req, res) => {
     res.sendFile(path.join(publicPath, "store-dashboard.html"));
   });
+  app.get("/store-panel", (_req, res) => {
+    res.sendFile(path.join(publicPath, "store-dashboard.html"));
+  });
 
   app.get("/merchant-dashboard", (_req, res) => {
     res.sendFile(path.join(publicPath, "merchant-dashboard.html"));

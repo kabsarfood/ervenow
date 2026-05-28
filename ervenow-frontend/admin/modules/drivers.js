@@ -55,18 +55,18 @@ app.renderDrivers = function () {
     var isApprovedActive = ds === "approved" && d.active === true;
     var isBlocked = ds === "blocked" || d.active === false;
     if (isApprovedActive) {
-      row.appendChild(app.mkAction("حظر", "btn-ghost", safeClick(async function () {
+      row.appendChild(app.mkAction("حظر", "btn-ghost", app.safeClick(async function () {
         try { await app.updateDriver(d.id, "block-driver"); app.showSuccess("تم حظر المندوب"); app.loadDrivers(); } catch (e) { app.showError(e.message || "فشل"); }
       })));
     } else if (isBlocked) {
-      row.appendChild(app.mkAction("تفعيل", "btn-primary", safeClick(async function () {
+      row.appendChild(app.mkAction("تفعيل", "btn-primary", app.safeClick(async function () {
         try { await app.updateDriver(d.id, "activate-driver"); app.showSuccess("تم تفعيل المندوب"); app.loadDrivers(); } catch (e) { app.showError(e.message || "فشل"); }
       })));
     } else {
-      row.appendChild(app.mkAction("موافقة", "btn-primary", safeClick(async function () {
+      row.appendChild(app.mkAction("موافقة", "btn-primary", app.safeClick(async function () {
         try { await app.updateDriver(d.id, "approve-driver"); app.showSuccess("تمت الموافقة"); app.loadDrivers(); } catch (e) { app.showError(e.message || "فشل"); }
       })));
-      row.appendChild(app.mkAction("رفض", "btn-ghost", safeClick(async function () {
+      row.appendChild(app.mkAction("رفض", "btn-ghost", app.safeClick(async function () {
         try { await app.updateDriver(d.id, "reject-driver"); app.showSuccess("تم الرفض"); app.loadDrivers(); } catch (e) { app.showError(e.message || "فشل"); }
       })));
     }

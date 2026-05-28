@@ -12,10 +12,20 @@ SET category = type
 WHERE category IS NULL AND type IS NOT NULL;
 
 ALTER TABLE public.stores ADD COLUMN IF NOT EXISTS commercial_registration text;
+-- توافق مع نسخ قديمة قد لا تحتوي commercial_register
+ALTER TABLE public.stores ADD COLUMN IF NOT EXISTS commercial_register text;
 
-UPDATE public.stores
-SET commercial_registration = NULLIF(trim(commercial_register), '')
-WHERE commercial_registration IS NULL AND commercial_register IS NOT NULL;
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'stores' AND column_name = 'commercial_register'
+  ) THEN
+    UPDATE public.stores
+    SET commercial_registration = NULLIF(trim(commercial_register), '')
+    WHERE commercial_registration IS NULL AND commercial_register IS NOT NULL;
+  END IF;
+END $$;
 
 UPDATE public.stores
 SET is_active = true

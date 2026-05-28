@@ -91,7 +91,10 @@ router.post("/", requireAuth, denyUnlessCanPlaceOrders, checkoutLimiter, async (
       }
     }
 
-    const insertResult = await runCheckoutInsert(sb, req.appUser, req.body, { applyPaymentGate: false });
+    const insertResult = await runCheckoutInsert(sb, req.appUser, req.body, {
+      applyPaymentGate: false,
+      checkoutIdempotencyKey: idemKey,
+    });
     if (!insertResult.ok) {
       return res.status(insertResult.status || 400).json({ ok: false, message: insertResult.message });
     }

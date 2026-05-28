@@ -59,16 +59,17 @@ if (siteMaintenanceBtn) {
     app.toggleSiteMaintenance();
   };
 }
-var panelButtons = document.querySelectorAll(".panel-btn");
-for (var i = 0; i < panelButtons.length; i++) {
-  panelButtons[i].addEventListener("click", function () {
-    var panelId = this.getAttribute("data-panel");
+document.querySelectorAll(".panel-btn[data-panel]").forEach(function (btn) {
+  if (btn.getAttribute("data-panel-wired") === "1") return;
+  btn.setAttribute("data-panel-wired", "1");
+  btn.addEventListener("click", function () {
+    var panelId = btn.getAttribute("data-panel");
     if (!panelId) return;
-    var isActive = this.classList.contains("active");
+    var isActive = btn.classList.contains("active");
     app.showPanel(isActive ? "" : panelId);
     if (!isActive && panelId) void app.loadPanelById(panelId);
   });
-}
+});
 var closeBtn = document.getElementById("closePanelsBtn");
 if (closeBtn) {
   closeBtn.addEventListener("click", function () {

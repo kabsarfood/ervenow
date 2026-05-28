@@ -8,6 +8,11 @@ const { getOsrmRouteKmOrHaversine } = require("../../shared/utils/osrmClient");
 const { logger } = require("../../shared/utils/logger");
 const { normalizeOrderFinancialsForInsert } = require("../../shared/utils/orderTotals");
 const { isOrdersStoreColumnMissingError, insertOrdersResilient } = require("../../shared/utils/idempotency");
+const {
+  isIdempotencyKeyUniqueViolation,
+  fetchOrderByCustomerIdempotencyKey,
+  findRecentSimilarDeliveryOrder,
+} = require("../../shared/utils/orderDedup");
 const { computePlatformCommission } = require("../../shared/utils/platformCommission");
 const { isDriverDispatchOrder, filterDriverDispatchOrders } = require("../../shared/utils/driverDispatchOrders");
 function haversineDistanceKm(lat1, lng1, lat2, lng2) {
@@ -403,6 +408,31 @@ async function insertVatRecordForOrder(sb, insertedOrder) {
  * يُعيد المحاولة عند تعارض order_number (ضغط متزامن) دون تغيير منطق التوليد.
  */
 async function insertDeliveryOrderWithRetry(sb, buildRow) {
+  const probe = normalizeOrderFinancialsForInsert(buildRow("__probe__"));
+  const customerId = probe.customer_id;
+  const idemKey =
+    probe.idempotency_key != null && String(probe.idempotency_key).trim() !== ""
+      ? String(probe.idempotency_key).trim()
+      : null;
+
+  if (customerId && idemKey) {
+    try {
+      const existing = await fetchOrderByCustomerIdempotencyKey(sb, customerId, idemKey);
+      if (existing) return { data: existing, error: null };
+    } catch (e) {
+      logger.warn({ err: e.message || String(e) }, "[delivery] idempotency lookup");
+    }
+  }
+
+  if (customerId) {
+    try {
+      const similar = await findRecentSimilarDeliveryOrder(sb, customerId, probe);
+      if (similar) return { data: similar, error: null };
+    } catch (e) {
+      logger.warn({ err: e.message || String(e) }, "[delivery] recent-duplicate lookup");
+    }
+  }
+
   const maxAttempts = 12;
   for (let a = 0; a < maxAttempts; a++) {
     const base = 20;
@@ -419,6 +449,16 @@ async function insertDeliveryOrderWithRetry(sb, buildRow) {
       return { data, error: null };
     }
     if (isOrderNumberUniqueViolation(error)) continue;
+
+    if (isIdempotencyKeyUniqueViolation(error) && customerId && idemKey) {
+      try {
+        const existing = await fetchOrderByCustomerIdempotencyKey(sb, customerId, idemKey);
+        if (existing) return { data: existing, error: null };
+      } catch (e) {
+        logger.warn({ err: e.message || String(e) }, "[delivery] idempotency conflict recovery");
+      }
+    }
+
     return { data, error };
   }
   return {

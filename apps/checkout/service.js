@@ -9,6 +9,11 @@ const { runStoreCheckoutSideEffects } = require("../../shared/utils/storeOrderPo
 const { isOrderPaymentGateRequired } = require("../../shared/utils/orderPaymentGate");
 const { isPaidFromRequestBody, normalizeOrderPaymentMethod } = require("../delivery/service");
 const { insertOrdersResilient } = require("../../shared/utils/idempotency");
+const {
+  isIdempotencyKeyUniqueViolation,
+  fetchOrderByCustomerIdempotencyKey,
+  findRecentSimilarDeliveryOrder,
+} = require("../../shared/utils/orderDedup");
 const { createServiceOrder } = require("../../shared/services/serviceOrderCreate");
 const { canPlaceOrders, driverOrderPlacementError } = require("../../shared/utils/platformAccessPolicy");
 
@@ -104,6 +109,10 @@ async function runCheckoutInsert(sb, appUser, body, options) {
     return { ok: false, message: driverOrderPlacementError(), status: 403 };
   }
   const opts = options && typeof options === "object" ? options : {};
+  const checkoutIdempotencyKey =
+    opts.checkoutIdempotencyKey != null && String(opts.checkoutIdempotencyKey).trim() !== ""
+      ? String(opts.checkoutIdempotencyKey).trim().slice(0, 256)
+      : null;
   const usePaymentGate = Boolean(opts.applyPaymentGate) && isOrderPaymentGateRequired();
   const paymentConfirmed = usePaymentGate ? isPaidFromRequestBody(body) : false;
   const allowDispatchPipeline = usePaymentGate ? paymentConfirmed : true;
@@ -136,7 +145,8 @@ async function runCheckoutInsert(sb, appUser, body, options) {
 
     if (type === "service") {
       const { runUnifiedDeliveryOnlyCreate } = require("../order/deliveryOrderCreateShared");
-      for (const it of groupItems) {
+      for (let svcIdx = 0; svcIdx < groupItems.length; svcIdx += 1) {
+        const it = groupItems[svcIdx];
         const data = it && typeof it.data === "object" && it.data ? it.data : {};
         const serviceType = String(it.type || "service").trim().toLowerCase();
         const total = Number(it.price) || Number(data.total_amount) || 0;
@@ -171,7 +181,9 @@ async function runCheckoutInsert(sb, appUser, body, options) {
               payment_status: svcPaymentStatus,
               paid: paymentConfirmed,
             },
-            idempotencyKey: null,
+            idempotencyKey: checkoutIdempotencyKey
+              ? `${checkoutIdempotencyKey}:svc:${svcIdx}:${String(it.id || it.type || "item").slice(0, 32)}`
+              : null,
             entryPoint: "order",
           });
           if (!unified.ok) {
@@ -235,6 +247,10 @@ async function runCheckoutInsert(sb, appUser, body, options) {
       ...(payment_method ? { payment_method } : {}),
     };
 
+    if (checkoutIdempotencyKey) {
+      row.idempotency_key = `${checkoutIdempotencyKey}:${type}`;
+    }
+
     if (singleStoreId) {
       const custLat = Number(body.customer_lat);
       const custLng = Number(body.customer_lng);
@@ -283,9 +299,69 @@ async function runCheckoutInsert(sb, appUser, body, options) {
       row.store_address =
         String(storeRow.address || storeRow.location_text || "").trim() || null;
       storeRowForCheckout = storeRow;
+    } else if (type === "delivery") {
+      const d0 =
+        groupItems[0] && typeof groupItems[0].data === "object" && groupItems[0].data
+          ? groupItems[0].data
+          : {};
+      const plat = Number(d0.pickup_lat);
+      const plng = Number(d0.pickup_lng);
+      const dlat = Number(d0.drop_lat);
+      const dlng = Number(d0.drop_lng);
+      if (Number.isFinite(plat) && Number.isFinite(plng) && Number.isFinite(dlat) && Number.isFinite(dlng)) {
+        const deliveryFee =
+          Number(d0.delivery_fee) >= 0 ? Number(d0.delivery_fee) : total;
+        row.pickup_address =
+          String(d0.pickup_address || d0.from || "").trim() || "موقع الاستلام";
+        row.drop_address =
+          String(d0.drop_address || d0.to || d0.location || "").trim() || "موقع التسليم";
+        row.pickup_lat = plat;
+        row.pickup_lng = plng;
+        row.drop_lat = dlat;
+        row.drop_lng = dlng;
+        row.delivery_fee = Math.round(deliveryFee * 100) / 100;
+        row.distance_km =
+          Number(d0.distance_km) >= 0
+            ? Math.round(Number(d0.distance_km) * 100) / 100
+            : null;
+        row.platform_fee =
+          Number(d0.platform_fee) >= 0
+            ? Math.round(Number(d0.platform_fee) * 100) / 100
+            : Math.round(deliveryFee * 0.15 * 100) / 100;
+        row.driver_earning =
+          Number(d0.driver_earning) >= 0
+            ? Math.round(Number(d0.driver_earning) * 100) / 100
+            : Math.round((deliveryFee - row.platform_fee) * 100) / 100;
+        row.order_total = Math.round(deliveryFee * 100) / 100;
+        row.total_amount = row.order_total;
+        row.vehicle_type = String(d0.vehicle_type || "").trim() || null;
+        row.notes = "توصيل من الخريطة";
+      }
     }
 
     row.breakdown = Object.assign({}, row.breakdown, singleStoreId ? { store_id: singleStoreId } : {});
+
+    if (row.idempotency_key && appUser.id) {
+      try {
+        const existing = await fetchOrderByCustomerIdempotencyKey(sb, appUser.id, row.idempotency_key);
+        if (existing) {
+          results.push(existing);
+          continue;
+        }
+      } catch (e) {
+        logger.warn({ err: e.message || String(e) }, "[checkout] idempotency lookup");
+      }
+    }
+
+    try {
+      const similar = await findRecentSimilarDeliveryOrder(sb, appUser.id, row);
+      if (similar) {
+        results.push(similar);
+        continue;
+      }
+    } catch (e) {
+      logger.warn({ err: e.message || String(e) }, "[checkout] recent-duplicate lookup");
+    }
 
     let data = null;
     let insertErr = null;
@@ -300,6 +376,14 @@ async function runCheckoutInsert(sb, appUser, body, options) {
       const dup =
         String(insertErr.code || "") === "23505" ||
         /duplicate key|unique constraint/i.test(msg);
+      if (isIdempotencyKeyUniqueViolation(insertErr) && row.idempotency_key && appUser.id) {
+        const existing = await fetchOrderByCustomerIdempotencyKey(sb, appUser.id, row.idempotency_key);
+        if (existing) {
+          data = existing;
+          insertErr = null;
+          break;
+        }
+      }
       if (!dup || insAttempt === 4) throw insertErr;
     }
     if (insertErr) throw insertErr;
