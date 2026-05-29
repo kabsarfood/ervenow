@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta
       name="description"
       content="ERVENOW — نربط المطاعم والمتاجر والعملاء والمناديب في نظام ذكي واحد."
@@ -224,6 +224,17 @@
       .lp-nav a:hover {
         color: var(--brown);
         background: rgba(185, 135, 47, 0.1);
+      }
+
+      .lp-nav a.lp-nav__cta {
+        background: var(--gold);
+        color: #fff;
+        margin-inline-start: 4px;
+      }
+
+      .lp-nav a.lp-nav__cta:hover {
+        background: #a97b3a;
+        color: #fff;
       }
 
       .lp-header__actions {
@@ -2536,11 +2547,10 @@
         </div>
         <div class="lp-nav-wrap" id="lpNavWrap">
           <nav class="lp-nav" aria-label="التنقل الرئيسي">
-            <a href="/dashboard" data-nav="guest">لوحة الزائر</a>
-            <a href="/dashboard" data-nav="orders">الطلبات</a>
-            <a href="/admin-login" data-nav="control">لوحة التحكم</a>
-            <a href="/dashboard" data-nav="my_orders">طلباتي</a>
             <a href="/" data-nav="home">الرئيسية</a>
+            <a href="/dashboard" data-nav="guest">لوحة الزائر</a>
+            <a href="/admin-login" data-nav="control">لوحة التحكم</a>
+            <a href="/login?role=customer" data-nav="login" class="lp-nav__cta">دخول</a>
           </nav>
         </div>
       </div>
@@ -2552,10 +2562,7 @@
         اطلب أي خدمة<br>
         <span>الآن وبسهولة</span>
       </h1>
-      <p class="sn-hero__sub">
-        مطاعم، متاجر، توصيل سريع، وخدمات منزلية —<br>
-        كل ما تحتاجه في مكان واحد.
-      </p>
+      <p class="sn-hero__sub">كل ما تحتاجة — في مكان واحد.</p>
       <div class="sn-hero__actions">
         <a class="sn-hero__cta" href="/start-now">اطلب الآن</a>
       </div>
@@ -2578,39 +2585,80 @@
       <p class="sn-section__label">الأقسام الرئيسية</p>
       <h2 class="sn-section__title" id="home-cats-title">اختر ما يناسبك</h2>
 
-      <div class="sn-grid" role="list">
-        <a class="sn-card sn-card--restaurants" href="/restaurants" role="listitem">
-          <div class="sn-card__icon-wrap" aria-hidden="true">🍽️</div>
-          <div>
-            <div class="sn-card__name">مطاعم</div>
-            <div class="sn-card__desc">مشاوي، برقر، شاورما<br>وأكثر من مطاعم معتمدة</div>
+      <div class="sn-grid sn-home-hub" id="snHomeHub">
+        <details class="sn-hub-item sn-hub-item--restaurants">
+          <summary class="sn-card sn-card--restaurants">
+            <div class="sn-card__icon-wrap" aria-hidden="true">🍽️</div>
+            <div>
+              <div class="sn-card__name">مطاعم</div>
+              <div class="sn-card__desc">مشاوي، برقر، شاورما<br>وأكثر من مطاعم معتمدة</div>
+            </div>
+            <div class="sn-card__arrow">← اكتشف</div>
+          </summary>
+          <div class="sn-hub-panel">
+            <a class="sn-hub-link" href="/restaurants?category=shawarma_grill"><span class="sn-hub-link__ic" aria-hidden="true">🌯</span>شاورما ومشاوي</a>
+            <a class="sn-hub-link" href="/restaurants?category=kabsa_bukhari"><span class="sn-hub-link__ic" aria-hidden="true">🍚</span>كبسة وبخاري</a>
+            <a class="sn-hub-link" href="/restaurants?category=burger_broasted"><span class="sn-hub-link__ic" aria-hidden="true">🍔</span>بروستد وبرقر</a>
+            <a class="sn-hub-link" href="/restaurants?category=seafood"><span class="sn-hub-link__ic" aria-hidden="true">🐟</span>ماكولات بحرية</a>
+            <a class="sn-hub-link" href="/restaurants?category=cafe_sweets"><span class="sn-hub-link__ic" aria-hidden="true">☕</span>قهوة وحلا</a>
+            <a class="sn-hub-link" href="/restaurants"><span class="sn-hub-link__ic" aria-hidden="true">▦</span>كل المطاعم</a>
           </div>
-          <div class="sn-card__arrow">← اكتشف</div>
-        </a>
-        <a class="sn-card sn-card--stores" href="/stores" role="listitem">
-          <div class="sn-card__icon-wrap" aria-hidden="true">🛒</div>
-          <div>
-            <div class="sn-card__name">متاجر</div>
-            <div class="sn-card__desc">سوبرماركت، صيدليات<br>وبقالة مع توصيل سريع</div>
+        </details>
+        <details class="sn-hub-item sn-hub-item--stores">
+          <summary class="sn-card sn-card--stores">
+            <div class="sn-card__icon-wrap" aria-hidden="true">🛒</div>
+            <div>
+              <div class="sn-card__name">متاجر</div>
+              <div class="sn-card__desc">سوبرماركت، صيدليات<br>وبقالة مع توصيل سريع</div>
+            </div>
+            <div class="sn-card__arrow">← اكتشف</div>
+          </summary>
+          <div class="sn-hub-panel">
+            <a class="sn-hub-link" href="/stores?type=supermarket"><span class="sn-hub-link__ic" aria-hidden="true">🛒</span>سوبر ماركت</a>
+            <a class="sn-hub-link" href="/stores?type=pharmacy"><span class="sn-hub-link__ic" aria-hidden="true">💊</span>صيدليات</a>
+            <a class="sn-hub-link" href="/stores?type=vegetables"><span class="sn-hub-link__ic" aria-hidden="true">🥬</span>خضار</a>
+            <a class="sn-hub-link" href="/stores?type=flowers_gifts"><span class="sn-hub-link__ic" aria-hidden="true">💐</span>ورود وهدايا</a>
+            <a class="sn-hub-link" href="/stores?type=sweets"><span class="sn-hub-link__ic" aria-hidden="true">🍰</span>حلويات</a>
+            <a class="sn-hub-link" href="/stores?type=home_business"><span class="sn-hub-link__ic" aria-hidden="true">🏠</span>أسر منتجة</a>
+            <a class="sn-hub-link" href="/stores?type=all"><span class="sn-hub-link__ic" aria-hidden="true">▦</span>كل المتاجر</a>
           </div>
-          <div class="sn-card__arrow">← اكتشف</div>
-        </a>
-        <a class="sn-card sn-card--delivery" href="/delivery-services.html" role="listitem">
-          <div class="sn-card__icon-wrap" aria-hidden="true">🚚</div>
-          <div>
-            <div class="sn-card__name">توصيل</div>
-            <div class="sn-card__desc">توصيل من نقطة لأخرى<br>وتوصيل غاز منزلي</div>
+        </details>
+        <details class="sn-hub-item sn-hub-item--delivery">
+          <summary class="sn-card sn-card--delivery">
+            <div class="sn-card__icon-wrap" aria-hidden="true">🚚</div>
+            <div>
+              <div class="sn-card__name">توصيل</div>
+              <div class="sn-card__desc">توصيل من نقطة لأخرى<br>وتوصيل غاز منزلي</div>
+            </div>
+            <div class="sn-card__arrow">← اطلب</div>
+          </summary>
+          <div class="sn-hub-panel">
+            <a class="sn-hub-link" href="/delivery-services.html?service=car_transport"><span class="sn-hub-link__ic" aria-hidden="true">🚗</span>نقل مركبات</a>
+            <a class="sn-hub-link" href="/delivery-services.html?service=local_delivery"><span class="sn-hub-link__ic" aria-hidden="true">📦</span>توصيل داخلي</a>
+            <a class="sn-hub-link" href="/delivery-services.html?service=furniture"><span class="sn-hub-link__ic" aria-hidden="true">🛋️</span>نقل أثاث</a>
+            <a class="sn-hub-link" href="/delivery-services.html?service=gas_delivery"><span class="sn-hub-link__ic" aria-hidden="true">🔥</span>توصيل غاز</a>
+            <a class="sn-hub-link" href="/dashboard#dashDeliveryTitle"><span class="sn-hub-link__ic" aria-hidden="true">🗺️</span>طلب من الخريطة</a>
           </div>
-          <div class="sn-card__arrow">← اطلب</div>
-        </a>
-        <a class="sn-card sn-card--services" href="/services" role="listitem">
-          <div class="sn-card__icon-wrap" aria-hidden="true">🔧</div>
-          <div>
-            <div class="sn-card__name">خدمات</div>
-            <div class="sn-card__desc">سباكة، كهرباء، تنظيف<br>وخدمات منزلية متنوعة</div>
+        </details>
+        <details class="sn-hub-item sn-hub-item--services">
+          <summary class="sn-card sn-card--services">
+            <div class="sn-card__icon-wrap" aria-hidden="true">🔧</div>
+            <div>
+              <div class="sn-card__name">خدمات</div>
+              <div class="sn-card__desc">سباكة، كهرباء، تنظيف<br>وخدمات منزلية متنوعة</div>
+            </div>
+            <div class="sn-card__arrow">← احجز</div>
+          </summary>
+          <div class="sn-hub-panel">
+            <a class="sn-hub-link" href="/services?type=plumber"><span class="sn-hub-link__ic" aria-hidden="true">🔧</span>سباك</a>
+            <a class="sn-hub-link" href="/services?type=electrician"><span class="sn-hub-link__ic" aria-hidden="true">⚡</span>كهربائي</a>
+            <a class="sn-hub-link" href="/services?type=nursery"><span class="sn-hub-link__ic" aria-hidden="true">🪴</span>مشتل</a>
+            <a class="sn-hub-link" href="/services?type=ac_technician"><span class="sn-hub-link__ic" aria-hidden="true">❄️</span>فني مكيفات</a>
+            <a class="sn-hub-link" href="/services?type=cleaning_villa"><span class="sn-hub-link__ic" aria-hidden="true">🧼</span>غسيل درج فيلا</a>
+            <a class="sn-hub-link" href="/services?type=cleaning_building"><span class="sn-hub-link__ic" aria-hidden="true">🏢</span>غسيل درج عمارة</a>
+            <a class="sn-hub-link" href="/services"><span class="sn-hub-link__ic" aria-hidden="true">▦</span>كل الخدمات</a>
           </div>
-          <div class="sn-card__arrow">← احجز</div>
-        </a>
+        </details>
       </div>
 
       <div class="sn-trust" role="list" aria-label="مزايا المنصة">
@@ -3030,7 +3078,9 @@
       })();
     </script>
     <script src="/assets/guestBrowse.js"></script>
+    <script src="/assets/ervenow-toggle.js"></script>
     <script src="/assets/guest-shell.js"></script>
+    <script src="/assets/sn-home-hub.js"></script>
     <script>
       function goLogin() {
         window.location.href = "/login";

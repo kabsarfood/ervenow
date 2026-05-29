@@ -1256,7 +1256,7 @@
         var SERVICE_ORDER = ["car_transport", "local_delivery", "gas_delivery", "furniture"];
 
         var state = {
-          service: "car_transport",
+          service: null,
           pickup: null,
           dropoff: null,
           mapTarget: null,
@@ -1268,9 +1268,24 @@
 
         function qs() {
           var p = new URLSearchParams(location.search);
-          var s = (p.get("service") || "car_transport").toLowerCase();
+          if (!p.has("service")) return null;
+          var s = String(p.get("service") || "")
+            .trim()
+            .toLowerCase();
+          if (!s) return null;
           if (s === "pickup_truck" || s === "vehicle_transfer") return "car_transport";
           return s;
+        }
+
+        function renderPickService() {
+          clearPreviewMaps();
+          var mount = document.getElementById("dsFormMount");
+          if (!mount) return;
+          mount.innerHTML =
+            "<div class='ds-coming' role='status'>" +
+            "<strong>اختر نوع خدمة التوصيل</strong><br>" +
+            "اضغط على أحد الخيارات أعلاه (نقل مركبات، توصيل داخلي، …) لبدء الطلب." +
+            "</div>";
         }
 
         function authHeaders() {
@@ -1307,10 +1322,10 @@
             b.type = "button";
             b.className =
               "ds-svc" +
-              (s.id === state.service ? " is-active" : "") +
+              (state.service && s.id === state.service ? " is-active" : "") +
               (s.ready ? "" : " is-soon");
             b.setAttribute("role", "tab");
-            b.setAttribute("aria-selected", s.id === state.service ? "true" : "false");
+            b.setAttribute("aria-selected", state.service && s.id === state.service ? "true" : "false");
             b.innerHTML =
               '<span class="ds-svc__badge' +
               (s.ready ? "" : " ds-svc__badge--soon") +
@@ -1327,6 +1342,17 @@
               (SERVICE_DESC[s.id] || "") +
               "</span>";
             b.onclick = function () {
+              if (state.service === s.id) {
+                state.service = null;
+                try {
+                  history.replaceState({}, "", location.pathname + location.hash);
+                } catch (e) {
+                  location.search = "";
+                }
+                renderChips();
+                renderForms();
+                return;
+              }
               location.search = "?service=" + encodeURIComponent(s.id);
             };
             el.appendChild(b);
@@ -1573,6 +1599,10 @@
         }
 
         function renderForms() {
+          if (!state.service) {
+            renderPickService();
+            return;
+          }
           if (state.service === "car_transport") {
             renderCarForm();
             return;

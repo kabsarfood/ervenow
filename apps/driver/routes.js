@@ -220,7 +220,7 @@ router.post("/send-otp", async (req, res) => {
     let sent = false;
     try {
       sent = await sendOTP(digits, code, {
-        message: `رمز دخول المندوب ERVENOW: ${code}`,
+        contextLine: "المندوب",
         type: "otp_driver",
       });
     } catch (e) {

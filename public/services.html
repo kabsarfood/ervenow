@@ -853,9 +853,14 @@
       }
 
       function syncServiceHeader() {
-        var meta = serviceCategoryMeta(activeFilter);
         var sub = document.getElementById("servicesHeaderSub");
-        if (sub && meta.desc) sub.textContent = meta.desc;
+        if (!sub) return;
+        if (activeFilter == null) {
+          sub.textContent = "اختر تصنيف الخدمة من الشريط أعلاه لعرض المزوّدين.";
+          return;
+        }
+        var meta = serviceCategoryMeta(activeFilter);
+        if (meta.desc) sub.textContent = meta.desc;
       }
 
       function displayName(store) {
@@ -897,7 +902,7 @@
           );
 
         var allStores = [];
-        var activeFilter = "all";
+        var activeFilter = null;
         var SKELETON_COUNT = 8;
         var geoFilterEl = document.getElementById("storesGeoFilter");
         try {
@@ -912,13 +917,28 @@
           });
         }
 
+        function hasCategorySelected() {
+          return activeFilter != null && String(activeFilter).length > 0;
+        }
+
+        function renderPickCategory() {
+          container.className = "stores-grid";
+          container.removeAttribute("aria-busy");
+          container.innerHTML =
+            '<div class="stores-empty" role="status">' +
+            '<div class="stores-empty__icon" aria-hidden="true">🔧</div>' +
+            "<h2>اختر تصنيف الخدمة</h2>" +
+            "<p>اضغط على أحد التصنيفات أعلاه — أو «كل الخدمات» لعرض كل المزوّدين.</p>" +
+            "</div>";
+        }
+
         function renderCategoryBarActive() {
           if (!categoryBar) return;
           var chips = categoryBar.querySelectorAll(".stores-cuisine-chip");
           for (var i = 0; i < chips.length; i++) {
             var c = chips[i];
-            var f = c.getAttribute("data-filter") || "all";
-            var on = f === activeFilter;
+            var f = c.getAttribute("data-filter") || "";
+            var on = hasCategorySelected() && f === activeFilter;
             c.classList.toggle("is-active", on);
             c.setAttribute("aria-selected", on ? "true" : "false");
           }
@@ -929,7 +949,7 @@
           var html = "";
           for (var i = 0; i < SERVICE_CATEGORIES.length; i++) {
             var it = SERVICE_CATEGORIES[i];
-            var on = it.filter === activeFilter;
+            var on = hasCategorySelected() && it.filter === activeFilter;
             html +=
               '<button type="button" class="stores-cuisine-chip' +
               (on ? " is-active" : "") +
@@ -948,7 +968,18 @@
         }
 
         function setCategoryChip(btn) {
-          activeFilter = btn.getAttribute("data-filter") || "all";
+          if (!btn.hasAttribute("data-filter")) return;
+          var f = btn.getAttribute("data-filter") || "all";
+          if (hasCategorySelected() && f === activeFilter) {
+            activeFilter = null;
+            if (searchEl) searchEl.disabled = true;
+            renderCategoryBarActive();
+            syncServiceHeader();
+            renderPickCategory();
+            return;
+          }
+          activeFilter = f;
+          if (searchEl) searchEl.disabled = false;
           renderCategoryBarActive();
           syncServiceHeader();
           if (window.__svcSelectOrderType) window.__svcSelectOrderType(activeFilter);
@@ -1026,16 +1057,18 @@
           if (clearBtn) {
             clearBtn.addEventListener("click", function () {
               if (searchEl) searchEl.value = "";
-              activeFilter = "all";
+              activeFilter = null;
+              if (searchEl) searchEl.disabled = true;
               renderCategoryBarActive();
               syncServiceHeader();
-              load();
+              renderPickCategory();
             });
           }
           wireRequestServiceBtn();
         }
 
         function applyFilters() {
+          if (!hasCategorySelected()) return [];
           var q = searchEl ? searchEl.value : "";
           return allStores.filter(function (s) {
             if (!s || !s.id) return false;
@@ -1127,11 +1160,17 @@
 
         if (searchEl) {
           searchEl.addEventListener("input", function () {
+            if (!hasCategorySelected()) return;
             if (allStores.length) renderList();
           });
         }
 
         async function load() {
+          if (!hasCategorySelected()) {
+            renderPickCategory();
+            if (searchEl) searchEl.disabled = true;
+            return;
+          }
           renderSkeleton();
           if (searchEl) searchEl.disabled = true;
           try {
@@ -1177,7 +1216,7 @@
         }
 
         function browseTypeForFilter() {
-          if (activeFilter === "all") return "plumber";
+          if (!hasCategorySelected() || activeFilter === "all") return "plumber";
           return activeFilter;
         }
 
@@ -1226,7 +1265,15 @@
 
         buildCategoryBar();
         syncServiceHeader();
-        if (!applyQueryFromUrl()) load();
+        if (searchEl) searchEl.disabled = !hasCategorySelected();
+        if (applyQueryFromUrl()) {
+          if (searchEl) searchEl.disabled = false;
+          load();
+        } else if (!hasCategorySelected()) {
+          renderPickCategory();
+        } else {
+          load();
+        }
       })();
     </script>
     <script>

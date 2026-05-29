@@ -1,6 +1,13 @@
 const twilio = require("twilio");
 const { normalizePhone } = require("./phone");
 
+/** آخر خطأ Twilio (لرسائل أوضح في OTP) */
+let lastWhatsAppError = null;
+
+function getLastWhatsAppError() {
+  return lastWhatsAppError;
+}
+
 function getTwilioClient() {
   const sid = process.env.TWILIO_ACCOUNT_SID;
   const token = process.env.TWILIO_AUTH_TOKEN;
@@ -34,8 +41,16 @@ async function sendWhatsApp({ to, message }) {
   }
   const toWa = "whatsapp:+" + digits;
   const body = String(message || "");
-  await client.messages.create({ from, to: toWa, body });
-  return true;
+  lastWhatsAppError = null;
+  try {
+    await client.messages.create({ from, to: toWa, body });
+    return true;
+  } catch (err) {
+    lastWhatsAppError = err;
+    const code = err && (err.code || err.status);
+    console.error("[sendWhatsApp] Twilio:", code, err.message || err);
+    return false;
+  }
 }
 
-module.exports = { sendWhatsApp };
+module.exports = { sendWhatsApp, getLastWhatsAppError };

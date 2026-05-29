@@ -2,178 +2,262 @@
 <html lang="ar" dir="rtl">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#f8f4ee" />
     <title>ERVENOW | تسجيل متجر</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/assets/styles.css" />
+    <link rel="stylesheet" href="/assets/guest-shell.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <style>
-      .reg-section {
-        margin-top: 20px;
-        padding-top: 16px;
-        border-top: 1px solid rgba(0, 0, 0, 0.08);
-      }
-      .reg-section:first-of-type {
-        margin-top: 0;
-        padding-top: 0;
-        border-top: none;
-      }
-      .reg-section h2 {
-        margin: 0 0 12px;
-        font-size: 1.05rem;
-        font-weight: 800;
-      }
-      #map {
-        height: 300px;
-        border-radius: 12px;
-        border: 1px solid rgba(0, 0, 0, 0.12);
-        margin-top: 8px;
-      }
-      .map-actions {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        margin-top: 10px;
-      }
-      #msg.msg.ok {
-        white-space: pre-line;
-      }
-    </style>
+    <link rel="stylesheet" href="/assets/register-store-page.css" />
   </head>
-  <body>
-    <div class="layout">
-      <p><a href="/">← الرئيسية</a></p>
-      <h1>تسجيل متجر جديد</h1>
-      <p class="sub">
-        <strong>موقع المتجر إجباري.</strong> بعد موافقة الإدارة يُفعَّل لمتجرك
-        <a href="/store-dashboard">صفحة تحكم مستقلة</a>
-        — سجّل الدخول كـ «تاجر» بنفس الجوال لإدارة الشعار، صور المنتجات، الأسعار، والعروض.
-      </p>
-
-      <details class="card" style="margin-bottom: 16px; padding: 12px 14px">
-        <summary style="cursor: pointer; font-weight: 700">ظهرت رسالة «جدول stores غير موجود»؟ (للمشرف)</summary>
-        <ol class="sub" style="margin: 12px 0 0; padding-inline-start: 1.25rem; line-height: 1.7">
-          <li>افتح <strong>Supabase</strong> → مشروعك → <strong>SQL Editor</strong>.</li>
-          <li>نفّذ بالترتيب: <code>shared/migration_stores.sql</code> ثم <code>shared/migration_store_marketplace.sql</code> و
-            <code>shared/migration_store_location_delivery.sql</code> ثم <code>shared/migration_stores_platform.sql</code> ثم عند الحاجة
-            <code>shared/migration_stores_email.sql</code> (عمود البريد + تقليل أخطاء schema cache) ثم
-            <code>shared/migration_categories.sql</code> لأقسام المطاعم والبقالة الديناميكية، ثم عند الحاجة
-            <code>shared/migration_category_usage.sql</code> لتتبع الاستخدام والترتيب الذكي، وعند الحاجة
-            <code>shared/migration_store_merchant_hub.sql</code> لبيانات بروفايل التاجر في لوحة المتجر.</li>
-          <li>بعد أي <code>ALTER TABLE</code>: من Supabase → <strong>Settings → API</strong> استخدم <strong>Reload schema</strong> إن وُجد، ثم أعد تحميل الصفحة.</li>
-        </ol>
-      </details>
-
-      <div class="card">
-        <section class="reg-section" aria-labelledby="h-store-data">
-          <h2 id="h-store-data">1 — بيانات المتجر</h2>
-          <label for="name">اسم المتجر</label>
-          <input id="name" type="text" autocomplete="organization" />
-
-          <label for="type" style="margin-top: 12px">فئة النشاط</label>
-          <select id="type">
-            <option value="restaurant">مطعم</option>
-            <option value="pharmacy">صيدلية</option>
-            <option value="supermarket">سوبرماركت</option>
-            <option value="other">غيره</option>
-          </select>
-
-          <div id="restaurantCategoryWrap" style="display: none; margin-top: 12px">
-            <label for="restaurant_category">تصنيف المطعم</label>
-            <select id="restaurant_category">
-              <option value="">— اختر التصنيف —</option>
-            </select>
+  <body class="guest-shell-page reg-store-page">
+    <header class="dash-site-header">
+      <div class="dash-site-header__inner">
+        <div class="dash-site-header__brand">
+          <a class="dash-site-header__logo" href="/">
+            ERVENOW
+            <span class="dash-site-header__logo-dot" aria-hidden="true"></span>
+          </a>
+          <p class="dash-site-header__tag" id="guestShellPageTag">تسجيل متجر</p>
+        </div>
+        <nav class="dash-site-header__nav" aria-label="التنقل الرئيسي">
+          <div class="dash-site-header__links">
+            <a class="dash-site-header__link" href="/" data-nav="home">الرئيسية</a>
+            <a class="dash-site-header__link" href="/dashboard" data-nav="guest">لوحة الزائر</a>
+            <a class="dash-site-header__link" href="/login?role=merchant" data-nav="login" class="dash-site-header__link--cta">دخول التاجر</a>
           </div>
-
-          <div id="marketCategoryWrap" style="display: none; margin-top: 12px">
-            <label for="store_category">قسم البقالة الرئيسي</label>
-            <select id="store_category">
-              <option value="">— اختر التصنيف —</option>
-            </select>
-          </div>
-
-          <label for="phone" style="margin-top: 12px">رقم الجوال</label>
-          <input id="phone" type="tel" inputmode="tel" placeholder="05xxxxxxxx" maxlength="10" />
-        </section>
-
-        <section class="reg-section" aria-labelledby="h-map">
-          <h2 id="h-map">2 — الموقع على الخريطة</h2>
-          <p class="sub" style="margin-top: 0">انقر على الخريطة أو اسحب الدبوس. لا يُقبل الإرسال بدون تحديد نقطة.</p>
-          <div id="map"></div>
-          <div class="map-actions">
-            <button type="button" class="btn btn-ghost" id="btnMyLocation">استخدم موقعي</button>
-          </div>
-          <p class="sub" id="mapHint" style="margin-top: 6px">لم يُحدد موقع بعد.</p>
-          <input type="hidden" id="lat" />
-          <input type="hidden" id="lng" />
-
-          <label for="address" style="margin-top: 12px">العنوان التفصيلي</label>
-          <textarea id="address" rows="3" placeholder="يُقترح من الخريطة ويمكنك تعديله"></textarea>
-        </section>
-
-        <section class="reg-section" aria-labelledby="h-radius">
-          <h2 id="h-radius">3 — نطاق التوصيل</h2>
-          <label for="delivery_radius_km">من موقع المتجر (كم)</label>
-          <select id="delivery_radius_km">
-            <option value="5">5 كم</option>
-            <option value="10">10 كم</option>
-            <option value="15">15 كم</option>
-            <option value="20">20 كم</option>
-            <option value="30">30 كم</option>
-          </select>
-        </section>
-
-        <section class="reg-section" aria-labelledby="h-logo">
-          <h2 id="h-logo">4 — شعار المتجر</h2>
-          <label for="logo_file">صورة الشعار (اختياري)</label>
-          <input id="logo_file" type="file" accept="image/*" />
-          <p class="sub" style="margin-top: 4px">يُضغط تلقائياً قبل الرفع.</p>
-        </section>
-
-        <section class="reg-section" aria-labelledby="h-opt">
-          <h2 id="h-opt">5 — بيانات اختيارية</h2>
-          <details class="sub">
-            <summary>سجل تجاري وبريد</summary>
-            <label for="email" style="margin-top: 8px">البريد</label>
-            <input id="email" type="email" />
-            <label for="commercial_registration" style="margin-top: 8px">السجل التجاري (نص)</label>
-            <input id="commercial_registration" type="text" name="commercial_registration" />
-            <label for="cr_file" style="margin-top: 8px">صورة السجل</label>
-            <input id="cr_file" type="file" accept="image/*" />
-          </details>
-        </section>
-
-        <section class="reg-section" aria-labelledby="h-payout">
-          <h2 id="h-payout">6 — بيانات الحساب البنكي ووسائل الدفع (اختياري)</h2>
-          <p class="sub" style="margin-top: 0">
-            تُستخدم لاحقاً لتسوية أرباح المتجر. يمكن تركها فارغة وإكمالها بعد الموافقة من الإعدادات.
-          </p>
-          <label for="storePayoutCountry">دولة الحساب البنكي</label>
-          <select id="storePayoutCountry">
-            <option value="SA">السعودية — قائمة بنوك المملكة</option>
-            <option value="XX">خارج السعودية — اسم البنك والآيبان يدوياً</option>
-          </select>
-          <label for="storePayoutBankSelect" style="margin-top: 12px">اسم البنك (السعودية)</label>
-          <select id="storePayoutBankSelect"></select>
-          <div id="storePayoutBankOtherWrap" style="margin-top: 12px; display: none">
-            <label for="storePayoutBankOther" id="storePayoutBankOtherLabel">اسم البنك</label>
-            <input id="storePayoutBankOther" type="text" maxlength="200" placeholder="اسم البنك" />
-          </div>
-          <label for="storePayoutIban" style="margin-top: 12px">رقم الآيبان (IBAN)</label>
-          <input id="storePayoutIban" type="text" maxlength="34" placeholder="SA…" dir="ltr" style="text-align: left" />
-          <label for="storePayoutStc" style="margin-top: 12px">STC Pay (اختياري)</label>
-          <input id="storePayoutStc" type="tel" inputmode="numeric" maxlength="10" placeholder="05xxxxxxxx" />
-          <label style="margin-top: 12px; display: flex; align-items: center; gap: 8px; font-weight: 700; cursor: pointer">
-            <input id="storePayoutCrypto" type="checkbox" />
-            <span>أرغب في إتاحة استلام مستقبلي بالعملات المشفرة عند تفعيل الخدمة</span>
-          </label>
-        </section>
-
-        <button type="button" class="btn btn-primary" id="btnSend" style="margin-top: 24px">إرسال الطلب</button>
-
-        <div class="msg" id="msg" style="display: none"></div>
+        </nav>
+        <a class="dash-site-header__btn dash-site-header__btn--primary" href="/login?role=merchant" id="switchAccount">تسجيل الدخول</a>
       </div>
+    </header>
+
+    <div class="guest-section-hero" aria-labelledby="regStoreHeroTitle">
+      <div class="guest-section-hero__inner">
+        <p class="guest-section-hero__eyebrow">انضم إلى ERVENOW</p>
+        <h1 class="guest-section-hero__title" id="regStoreHeroTitle">تسجيل متجر جديد</h1>
+        <p class="guest-section-hero__sub">
+          سجّل نشاطك على المنصة — بعد موافقة الإدارة تحصل على لوحة تحكم مستقلة لإدارة الشعار، المنتجات، الأسعار، والعروض.
+        </p>
+      </div>
+    </div>
+
+    <div class="dash-main">
+      <div class="layout reg-store-layout reg-store-page">
+        <ul class="reg-store-perks" aria-label="مزايا التسجيل">
+          <li class="reg-store-perks__item"><span class="reg-store-perks__ic" aria-hidden="true">✓</span> مراجعة واعتماد الإدارة</li>
+          <li class="reg-store-perks__item"><span class="reg-store-perks__ic" aria-hidden="true">🏪</span> لوحة تحكم للتاجر</li>
+          <li class="reg-store-perks__item"><span class="reg-store-perks__ic" aria-hidden="true">📍</span> نطاق توصيل حسب موقعك</li>
+        </ul>
+
+        <div class="reg-store-intro card">
+          <p class="reg-store-intro__lead">
+            <strong>موقع المتجر على الخريطة إجباري.</strong>
+            بعد التفعيل ادخل من
+            <a href="/store-dashboard">صفحة تحكم المتجر</a>
+            بنفس جوال التسجيل (صفة تاجر).
+          </p>
+          <details class="reg-store-admin">
+            <summary>ظهرت رسالة «جدول stores غير موجود»؟ (للمشرف التقني)</summary>
+            <div class="reg-store-admin__body">
+              <ol>
+                <li>افتح <strong>Supabase</strong> → مشروعك → <strong>SQL Editor</strong>.</li>
+                <li>
+                  نفّذ بالترتيب:
+                  <code>shared/migration_stores.sql</code>،
+                  <code>shared/migration_store_marketplace.sql</code>،
+                  <code>shared/migration_store_location_delivery.sql</code>،
+                  <code>shared/migration_stores_platform.sql</code>، وعند الحاجة
+                  <code>shared/migration_stores_email.sql</code>،
+                  <code>shared/migration_categories.sql</code>،
+                  <code>shared/migration_category_usage.sql</code>،
+                  <code>shared/migration_store_merchant_hub.sql</code>.
+                </li>
+                <li>بعد <code>ALTER TABLE</code>: من Supabase → <strong>Settings → API</strong> استخدم <strong>Reload schema</strong> ثم أعد تحميل الصفحة.</li>
+              </ol>
+            </div>
+          </details>
+        </div>
+
+        <div class="card reg-store-form-card">
+          <section class="reg-store-section" aria-labelledby="h-store-data">
+            <div class="reg-store-section__head">
+              <span class="reg-store-section__num" aria-hidden="true">1</span>
+              <div>
+                <h2 class="reg-store-section__title" id="h-store-data">بيانات المتجر</h2>
+                <p class="reg-store-section__hint">الاسم، النشاط، والجوال للتواصل والتفعيل.</p>
+              </div>
+            </div>
+            <label for="name">اسم المتجر</label>
+            <input id="name" type="text" autocomplete="organization" />
+
+            <div class="field-gap">
+              <label for="type">فئة النشاط</label>
+              <select id="type">
+                <option value="restaurant">مطعم</option>
+                <option value="pharmacy">صيدلية</option>
+                <option value="supermarket">سوبرماركت</option>
+                <option value="other">غيره</option>
+              </select>
+            </div>
+
+            <div id="restaurantCategoryWrap" class="field-gap" style="display: none">
+              <label for="restaurant_category">تصنيف المطعم</label>
+              <select id="restaurant_category">
+                <option value="">— اختر التصنيف —</option>
+              </select>
+            </div>
+
+            <div id="marketCategoryWrap" class="field-gap" style="display: none">
+              <label for="store_category">قسم البقالة الرئيسي</label>
+              <select id="store_category">
+                <option value="">— اختر التصنيف —</option>
+              </select>
+            </div>
+
+            <div class="field-gap">
+              <label for="phone">رقم الجوال</label>
+              <input id="phone" type="tel" inputmode="tel" placeholder="05xxxxxxxx" maxlength="10" />
+            </div>
+          </section>
+
+          <section class="reg-store-section" aria-labelledby="h-map">
+            <div class="reg-store-section__head">
+              <span class="reg-store-section__num" aria-hidden="true">2</span>
+              <div>
+                <h2 class="reg-store-section__title" id="h-map">الموقع على الخريطة</h2>
+                <p class="reg-store-section__hint">انقر على الخريطة أو اسحب الدبوس — لا يُقبل الإرسال بدون تحديد نقطة.</p>
+              </div>
+            </div>
+            <div class="reg-store-map-wrap">
+              <div id="map" role="application" aria-label="خريطة موقع المتجر"></div>
+            </div>
+            <div class="reg-store-map-actions">
+              <button type="button" class="btn btn-ghost" id="btnMyLocation">استخدم موقعي الحالي</button>
+            </div>
+            <p class="reg-store-map-status" id="mapHint">لم يُحدد موقع بعد.</p>
+            <input type="hidden" id="lat" />
+            <input type="hidden" id="lng" />
+
+            <div class="field-gap">
+              <label for="address">العنوان التفصيلي</label>
+              <textarea id="address" rows="3" placeholder="يُقترح من الخريطة ويمكنك تعديله"></textarea>
+            </div>
+          </section>
+
+          <section class="reg-store-section" aria-labelledby="h-radius">
+            <div class="reg-store-section__head">
+              <span class="reg-store-section__num" aria-hidden="true">3</span>
+              <div>
+                <h2 class="reg-store-section__title" id="h-radius">نطاق التوصيل</h2>
+                <p class="reg-store-section__hint">المسافة من موقع المتجر التي تغطيها طلبات التوصيل.</p>
+              </div>
+            </div>
+            <label for="delivery_radius_km">نطاق التوصيل (كم)</label>
+            <select id="delivery_radius_km">
+              <option value="5">5 كم</option>
+              <option value="10">10 كم</option>
+              <option value="15">15 كم</option>
+              <option value="20">20 كم</option>
+              <option value="30">30 كم</option>
+            </select>
+          </section>
+
+          <section class="reg-store-section" aria-labelledby="h-logo">
+            <div class="reg-store-section__head">
+              <span class="reg-store-section__num" aria-hidden="true">4</span>
+              <div>
+                <h2 class="reg-store-section__title" id="h-logo">شعار المتجر</h2>
+                <p class="reg-store-section__hint">اختياري — يُضغط تلقائياً قبل الرفع.</p>
+              </div>
+            </div>
+            <label for="logo_file">صورة الشعار</label>
+            <input id="logo_file" type="file" accept="image/*" />
+          </section>
+
+          <section class="reg-store-section" aria-labelledby="h-opt">
+            <div class="reg-store-section__head">
+              <span class="reg-store-section__num" aria-hidden="true">5</span>
+              <div>
+                <h2 class="reg-store-section__title" id="h-opt">بيانات اختيارية</h2>
+                <p class="reg-store-section__hint">سجل تجاري وبريد — يمكن إكمالها لاحقاً.</p>
+              </div>
+            </div>
+            <details class="reg-store-optional">
+              <summary>عرض حقول السجل التجاري والبريد</summary>
+              <div class="field-gap">
+                <label for="email">البريد الإلكتروني</label>
+                <input id="email" type="email" autocomplete="email" />
+              </div>
+              <div class="field-gap">
+                <label for="commercial_registration">السجل التجاري (نص)</label>
+                <input id="commercial_registration" type="text" name="commercial_registration" />
+              </div>
+              <div class="field-gap">
+                <label for="cr_file">صورة السجل التجاري</label>
+                <input id="cr_file" type="file" accept="image/*" />
+              </div>
+            </details>
+          </section>
+
+          <section class="reg-store-section" aria-labelledby="h-payout">
+            <div class="reg-store-section__head">
+              <span class="reg-store-section__num" aria-hidden="true">6</span>
+              <div>
+                <h2 class="reg-store-section__title" id="h-payout">الحساب البنكي ووسائل الدفع</h2>
+                <p class="reg-store-section__hint">اختياري — لتسوية الأرباح بعد الموافقة.</p>
+              </div>
+            </div>
+            <div class="reg-store-payout">
+              <label for="storePayoutCountry">دولة الحساب البنكي</label>
+              <select id="storePayoutCountry">
+                <option value="SA">السعودية — قائمة بنوك المملكة</option>
+                <option value="XX">خارج السعودية — اسم البنك والآيبان يدوياً</option>
+              </select>
+              <div class="field-gap">
+                <label for="storePayoutBankSelect">اسم البنك (السعودية)</label>
+                <select id="storePayoutBankSelect"></select>
+              </div>
+              <div id="storePayoutBankOtherWrap" class="field-gap" style="display: none">
+                <label for="storePayoutBankOther" id="storePayoutBankOtherLabel">اسم البنك</label>
+                <input id="storePayoutBankOther" type="text" maxlength="200" placeholder="اسم البنك" />
+              </div>
+              <div class="field-gap">
+                <label for="storePayoutIban">رقم الآيبان (IBAN)</label>
+                <input id="storePayoutIban" type="text" maxlength="34" placeholder="SA…" dir="ltr" style="text-align: left" />
+              </div>
+              <div class="field-gap">
+                <label for="storePayoutStc">STC Pay (اختياري)</label>
+                <input id="storePayoutStc" type="tel" inputmode="numeric" maxlength="10" placeholder="05xxxxxxxx" />
+              </div>
+              <label class="reg-store-check field-gap">
+                <input id="storePayoutCrypto" type="checkbox" />
+                <span>أرغب في إتاحة استلام مستقبلي بالعملات المشفرة عند تفعيل الخدمة</span>
+              </label>
+            </div>
+          </section>
+
+          <div class="reg-store-submit-wrap">
+            <button type="button" class="btn btn-primary" id="btnSend">إرسال طلب التسجيل</button>
+            <div class="msg" id="msg" style="display: none" role="status" aria-live="polite"></div>
+          </div>
+        </div>
+      </div>
+
+      <footer class="dash-site-footer">
+        <div class="dash-site-footer__logo">ERVENOW</div>
+        <nav class="dash-site-footer__links" aria-label="روابط سفلية">
+          <a class="dash-site-footer__link" href="/restaurants">مطاعم</a>
+          <a class="dash-site-footer__link" href="/stores">متاجر</a>
+          <a class="dash-site-footer__link" href="/delivery-services.html">توصيل</a>
+          <a class="dash-site-footer__link" href="/services">خدمات</a>
+          <a class="dash-site-footer__link" href="/dashboard">لوحة الزائر</a>
+          <a class="dash-site-footer__link" href="/">الرئيسية</a>
+        </nav>
+        <p class="dash-site-footer__copy">© 2026 ERVENOW — جميع الحقوق محفوظة</p>
+      </footer>
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -181,6 +265,11 @@
     <script src="/assets/payoutRegistration.js"></script>
     <script src="/assets/api-config.js"></script>
     <script src="/assets/api.js"></script>
+    <script src="/assets/ervenow-toggle.js"></script>
+    <script src="/assets/guest-shell.js"></script>
+    <script>
+      ErvenowGuestShell.init({ activeNav: "home", pageTag: "تسجيل متجر" });
+    </script>
     <script>
       var latEl = document.getElementById("lat");
       var lngEl = document.getElementById("lng");
@@ -195,6 +284,7 @@
         el.style.display = "block";
         el.className = "msg " + (isOk ? "ok" : "err");
         el.textContent = text;
+        el.scrollIntoView({ behavior: "smooth", block: "nearest" });
       }
 
       function normalizePhoneInput() {
@@ -378,6 +468,9 @@
           var p = marker.getLatLng();
           setCoords(p.lat, p.lng, true);
         });
+        setTimeout(function () {
+          if (map) map.invalidateSize();
+        }, 200);
       }
 
       document.getElementById("btnMyLocation").onclick = function () {
@@ -524,7 +617,7 @@
           show(String(e.message || e), false);
         } finally {
           btn.disabled = false;
-          btn.textContent = "إرسال الطلب";
+          btn.textContent = "إرسال طلب التسجيل";
         }
       };
 

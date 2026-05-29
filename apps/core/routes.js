@@ -6,6 +6,8 @@ const { ok, fail } = require("../../shared/utils/helpers");
 const { toE164, toStorageDigits, isErvnowSaudiMobileE164 } = require("../../shared/utils/phone");
 const { createServiceClient, getDatabaseConfigHint } = require("../../shared/config/supabase");
 const { sendOTP } = require("../../shared/services/whatsappService");
+const { getLastWhatsAppError } = require("../../shared/utils/whatsapp");
+const { buildAuthOtpMessage } = require("../../shared/messages/authWhatsApp");
 const {
   OTP_SCOPE,
   otpBackendMode,
@@ -417,14 +419,14 @@ router.post("/send-otp", async (req, res) => {
     let sent = false;
     try {
       sent = await sendOTP(digits, code, {
-        message:
-          role === "admin"
-            ? `رمز دخول لوحة إدارة ERVENOW: ${code}`
-            : `رمز دخول ERVENOW: ${code}`,
+        message: buildAuthOtpMessage(
+          code,
+          role === "admin" ? "لوحة الإدارة" : "تسجيل الدخول"
+        ),
         type: role === "admin" ? "otp_admin" : "otp_login",
       });
     } catch (waErr) {
-      console.error("[ERVENOW] send-otp whatsapp error:", waErr?.message || waErr);
+      console.error("[ERVENOW] send-otp whatsapp error:", waErr?.code, waErr?.message || waErr);
       sent = false;
     }
     if (!sent) {
@@ -439,13 +441,23 @@ router.post("/send-otp", async (req, res) => {
         process.env.TWILIO_AUTH_TOKEN &&
         (process.env.TWILIO_WHATSAPP_NUMBER || process.env.TWILIO_WHATSAPP_FROM)
       );
-      return fail(
-        res,
-        twilioReady
-          ? "تعذر إرسال رمز واتساب (تحقق من Twilio ورقم المستلم في Sandbox إن وُجد)"
-          : "تعذر إرسال رمز واتساب — غير مضبوط على الخادم: TWILIO_ACCOUNT_SID و TWILIO_AUTH_TOKEN و TWILIO_WHATSAPP_NUMBER",
-        503
-      );
+      const waErr = getLastWhatsAppError();
+      const waCode = waErr && (waErr.code || waErr.status);
+      let userMsg =
+        "تعذر إرسال رمز واتساب — غير مضبوط على الخادم: TWILIO_ACCOUNT_SID و TWILIO_AUTH_TOKEN و TWILIO_WHATSAPP_NUMBER";
+      if (twilioReady) {
+        if (Number(waCode) === 63038) {
+          userMsg =
+            "تم تجاوز حد رسائل واتساب اليومي في Twilio (خطأ 63038). انتظر حتى 24 ساعة أو رقِّ الحساب من لوحة Twilio.";
+        } else if (Number(waCode) === 63016 || Number(waCode) === 21608) {
+          userMsg =
+            "رقم الجوال غير مسجّل في Twilio Sandbox — أرسل join <كود> إلى رقم Sandbox من واتسابك أولاً.";
+        } else {
+          userMsg =
+            "تعذر إرسال رمز واتساب (تحقق من Twilio ورقم المستلم في Sandbox إن وُجد)";
+        }
+      }
+      return fail(res, userMsg, 503);
     }
     const payload = {
       ok: true,

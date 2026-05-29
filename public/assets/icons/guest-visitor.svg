@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+  <defs>
+    <linearGradient id="gv-bg" x1="10" y1="6" x2="54" y2="58" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#d4a76a"/>
+      <stop offset="0.55" stop-color="#b9872f"/>
+      <stop offset="1" stop-color="#5c3d1f"/>
+    </linearGradient>
+    <linearGradient id="gv-pin" x1="38" y1="10" x2="50" y2="34" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#fff4dc"/>
+      <stop offset="1" stop-color="#e8c078"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="18" fill="url(#gv-bg)"/>
+  <circle cx="26" cy="25" r="10" fill="#fffef8"/>
+  <path
+    d="M12 54c3-11 12.5-16 14-16s11 5 14 16"
+    stroke="#fffef8"
+    stroke-width="4.5"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+  <path
+    d="M44 16c0-4.2-3.4-7.6-7.6-7.6S28.8 11.8 28.8 16c0 5.7 7.6 13.2 7.6 13.2s7.6-7.5 7.6-13.2z"
+    fill="url(#gv-pin)"
+  />
+  <circle cx="44" cy="16" r="3.2" fill="#3d2213"/>
+  <path d="M8 30h6" stroke="#f8d78a" stroke-width="2.5" stroke-linecap="round" opacity="0.9"/>
+  <path d="M5 34h5" stroke="#f8d78a" stroke-width="2" stroke-linecap="round" opacity="0.7"/>
+  <path d="M3 38h4" stroke="#f8d78a" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/>
+</svg>

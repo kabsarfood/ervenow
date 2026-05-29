@@ -1,5 +1,5 @@
 /**
- * تدفق OTP موحّد: زر واحد (إرسال الكود ← تسجيل الدخول) + إظهار حقل الرمز بعد الإرسال + تركيز تلقائي
+ * تدفق OTP موحّد: زر واحد (إرسال الرمز ← تسجيل الدخول) + إظهار حقل الرمز بعد الإرسال + تركيز تلقائي
  */
 (function (global) {
   function el(id) {
@@ -27,7 +27,7 @@
 
     var labels = Object.assign(
       {
-        send: "إرسال الكود",
+        send: "إرسال الرمز",
         verify: "تسجيل الدخول",
         sending: "جارٍ الإرسال…",
         verifying: "جارٍ التحقق…",
@@ -79,7 +79,7 @@
           focusCode();
         });
       } else {
-        btn.textContent = textOf(labels.send, "إرسال الكود");
+        btn.textContent = textOf(labels.send, "إرسال الرمز");
         btn.disabled = !phoneValid();
         if (codeGroup) codeGroup.hidden = true;
         updateIntro(false);
@@ -124,7 +124,7 @@
             if (typeof cfg.onPhoneInvalid === "function") cfg.onPhoneInvalid(phoneEl);
             return;
           }
-          var sendLabel = textOf(labels.send, "إرسال الكود");
+          var sendLabel = textOf(labels.send, "إرسال الرمز");
           btn.disabled = true;
           btn.textContent = textOf(labels.sending, "جارٍ الإرسال…");
           try {
@@ -169,7 +169,7 @@
       refreshLabels: function () {
         if (otpSent) btn.textContent = textOf(labels.verify, "تسجيل الدخول");
         else {
-          btn.textContent = textOf(labels.send, "إرسال الكود");
+          btn.textContent = textOf(labels.send, "إرسال الرمز");
           btn.disabled = !phoneValid();
         }
         updateIntro(otpSent);

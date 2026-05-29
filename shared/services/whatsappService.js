@@ -4,6 +4,7 @@
 
 const { sendWhatsApp } = require("../utils/whatsapp");
 const { normalizePhone } = require("../utils/phone");
+const { buildAuthOtpMessage } = require("../messages/authWhatsApp");
 const {
   buildCustomerMessageOrderAccepted,
   buildCustomerMessageOrderPickedUp,
@@ -199,9 +200,7 @@ async function sendSupportMenu(user) {
 async function sendOTP(phone, code, opts = {}) {
   const c = String(code ?? "").trim();
   if (!c || c.length > 12) return false;
-  const body =
-    opts.message ||
-    `🔐 رمز التحقق ERVENOW:\n\n${c}\n\nلا تشاركه مع أحد.`;
+  const body = opts.message || buildAuthOtpMessage(c, opts.contextLine);
   return sendTyped(phone, body, opts.type || "otp");
 }
 

@@ -203,10 +203,27 @@ body.guest-shell-page.stores-page {
   color: var(--brown, #3d2213);
   font-weight: 800;
 }
+.dash-site-header__link--cta {
+  margin-inline-start: 6px;
+  padding: 7px 14px;
+  background: var(--gold, #b9872f);
+  color: #fff !important;
+  font-weight: 800;
+  border-radius: 10px;
+  box-shadow: 0 3px 12px rgba(185, 135, 47, 0.35);
+}
+.dash-site-header__link--cta:hover {
+  background: #a97b3a;
+  color: #fff !important;
+}
+.dash-site-header__link--cta.is-active {
+  background: #a97b3a;
+  color: #fff !important;
+}
 .dash-site-header__btn {
   flex: 0 0 auto;
-  padding: 6px 12px;
-  border-radius: 9px;
+  padding: 8px 14px;
+  border-radius: 10px;
   font-size: 0.8rem;
   font-weight: 700;
   font-family: inherit;
@@ -214,6 +231,10 @@ body.guest-shell-page.stores-page {
   border: none;
   cursor: pointer;
   white-space: nowrap;
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 .dash-site-header__btn--primary {
   background: var(--gold, #b9872f);
@@ -265,26 +286,36 @@ body.guest-shell-page.stores-page {
     padding: 4px;
   }
   .dash-site-header__link {
-    padding: 8px 10px;
-    font-size: 0.78rem;
-    min-height: 36px;
-    display: inline-flex;
-    align-items: center;
-  }
-  #switchAccount {
-    grid-column: 1 / -1;
-    grid-row: 3;
-    width: 100%;
-    text-align: center;
+    padding: 10px 12px;
+    font-size: 0.8rem;
     min-height: 44px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
   }
+  .dash-site-header__link--cta {
+    min-height: 44px;
+    padding: 10px 16px;
+  }
+  .dash-site-header__inner > .dash-site-header__btn,
+  .dash-site-header__inner > .dash-site-header__btn--primary,
+  .dash-site-header__inner > #switchAccount {
+    grid-column: 1 / -1;
+    grid-row: 3;
+    width: 100%;
+    text-align: center;
+    min-height: 48px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 16px;
+    font-size: 0.88rem;
+    box-sizing: border-box;
+  }
   .dash-header-cart,
   .dash-header-wallet {
-    min-height: 40px;
-    min-width: 40px;
+    min-height: 44px;
+    min-width: 44px;
   }
   .dash-site-header__logo {
     font-size: 1.1rem;

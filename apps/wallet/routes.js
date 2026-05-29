@@ -6,6 +6,7 @@ const { requireAuth } = require("../../shared/middleware/auth");
 const { requireRole } = require("../../shared/middleware/roles");
 const { ok, fail } = require("../../shared/utils/helpers");
 const { sendWhatsApp } = require("../../shared/utils/whatsapp");
+const { buildAuthOtpMessage } = require("../../shared/messages/authWhatsApp");
 const { stripIban, ibanFingerprintFromPlain } = require("../../shared/utils/payoutUniqueness");
 const {
   OTP_SCOPE,
@@ -294,7 +295,7 @@ router.post("/withdraw/send-otp", requireAuth, requireRole(...PAYOUT_ROLES), asy
     try {
       sent = await sendWhatsApp({
         to: phone,
-        message: `رمز سحب المحفظة ERVENOW: ${code}`,
+        message: buildAuthOtpMessage(code, "سحب المحفظة"),
       });
     } catch (_e) {
       sent = false;

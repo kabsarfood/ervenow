@@ -7,9 +7,8 @@
     opts = opts && typeof opts === "object" ? opts : {};
     var r = String(role || "").toLowerCase();
     if (r === "user") r = "customer";
-    var links = [{ key: "guest", href: "/dashboard", label: "لوحة الزائر" }];
-    var ordersHref = r === "driver" || r === "admin" ? "/orders" : "/dashboard";
-    links.push({ key: "orders", href: ordersHref, label: "الطلبات" });
+    var links = [{ key: "home", href: "/", label: "الرئيسية" }];
+    links.push({ key: "guest", href: "/dashboard", label: "لوحة الزائر" });
     var controlHref = "/admin-login";
     if (r === "admin" && opts.authenticated) controlHref = "/admin-dashboard";
     links.push({
@@ -17,12 +16,14 @@
       href: controlHref,
       label: "لوحة التحكم",
     });
-    links.push({
-      key: "my_orders",
-      href: r === "driver" ? "/driver" : "/dashboard",
-      label: "طلباتي",
-    });
-    links.push({ key: "home", href: "/", label: "الرئيسية" });
+    if (!opts.authenticated) {
+      links.push({
+        key: "login",
+        href: "/login?role=customer",
+        label: "دخول",
+        cta: true,
+      });
+    }
     return links;
   }
 
@@ -202,12 +203,15 @@
   }
 
   function lpNavLinkHtml(link) {
+    var cls = link.cta ? ' class="lp-nav__cta"' : "";
     return (
       '<a href="' +
       link.href +
       '" data-nav="' +
       link.key +
-      '">' +
+      '"' +
+      cls +
+      ">" +
       link.label +
       "</a>"
     );
@@ -227,7 +231,9 @@
       mobileQuick.innerHTML = buildNavLinks(role, opts)
         .map(function (l) {
           return (
-            '<a role="menuitem" class="lp-dd-item" href="' +
+            '<a role="menuitem" class="lp-dd-item' +
+            (l.cta ? " lp-dd-item--cta" : "") +
+            '" href="' +
             l.href +
             '" data-nav="' +
             l.key +
@@ -252,9 +258,13 @@
 
   function navLinkHtml(link, activeNav) {
     var on = link.key === activeNav;
-    return (
-      '<a class="dash-site-header__link' +
+    var cls =
+      "dash-site-header__link" +
       (on ? " is-active" : "") +
+      (link.cta ? " dash-site-header__link--cta" : "");
+    return (
+      '<a class="' +
+      cls +
       '" href="' +
       link.href +
       '" data-nav="' +
@@ -356,6 +366,26 @@
     document.head.appendChild(s);
   }
 
+  function loadToggleUi(cb) {
+    if (global.ErvenowToggle) {
+      global.ErvenowToggle.boot();
+      if (cb) cb();
+      return;
+    }
+    if (document.querySelector('script[src*="ervenow-toggle.js"]')) {
+      if (cb) cb();
+      return;
+    }
+    var s = document.createElement("script");
+    s.src = "/assets/ervenow-toggle.js";
+    s.async = true;
+    s.onload = function () {
+      if (global.ErvenowToggle) global.ErvenowToggle.boot();
+      if (cb) cb();
+    };
+    document.head.appendChild(s);
+  }
+
   function init(opts) {
     opts = opts || {};
     _activeNavKey = opts.activeNav || "";
@@ -366,6 +396,7 @@
     paintHeaderNav(_activeNavKey, "", { authenticated: hasToken() });
     paintIndexNav("", { authenticated: hasToken() });
     refreshCartBadge();
+    loadToggleUi();
     loadPlatformAccessScript();
     loadAccountDestScript();
     whenPlatformApiReady(function () {

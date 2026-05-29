@@ -372,7 +372,7 @@
               method: "POST",
               body: { phone: e164, role: "admin" },
             });
-            if (!j || j.ok === false) throw new Error((j && j.error) || "تعذر إرسال الكود");
+            if (!j || j.ok === false) throw new Error((j && j.error) || "تعذر إرسال الرمز");
             setMsg("تم إرسال رمز واتساب. صلاحية الرمز 5 دقائق.", "ok");
           } catch (e) {
             setMsg(mapOtpError(e.message || "فشل الإرسال"), "err");

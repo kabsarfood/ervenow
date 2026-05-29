@@ -523,7 +523,7 @@
         <div class="guest-section-hero__inner">
           <p class="guest-section-hero__eyebrow">أهلاً بك في ERVENOW</p>
           <h1 class="guest-section-hero__title">اكتشف المتاجر</h1>
-          <p class="guest-section-hero__sub">متاجر معتمدة — بحث، فلاتر، وتجربة قريبة من تطبيقات التوصيل الكبرى</p>
+          <p class="guest-section-hero__sub">سوبرماركت - صيدليات - خضار - وأكثر - مصنفة و معتمدة</p>
         </div>
       </div>
 
@@ -549,7 +549,6 @@
           <span class="stores-restaurant-cuisine-block__emoji" aria-hidden="true">🛒</span>
           <div>
             <p class="stores-restaurant-cuisine-block__title">تصنيفات المتاجر</p>
-            <p class="stores-restaurant-cuisine-block__sub">سوبرماركت، صيدليات، خضار، وأكثر.</p>
           </div>
         </div>
         <div class="stores-cuisine-scroll" id="storesCategoryBar" role="tablist" aria-label="تصنيف المتجر"></div>
@@ -725,7 +724,7 @@
           );
 
         var allStores = [];
-        var activeFilter = "all";
+        var activeFilter = null;
         var SKELETON_COUNT = 8;
         var geoFilterEl = document.getElementById("storesGeoFilter");
         try {
@@ -740,13 +739,28 @@
           });
         }
 
+        function hasCategorySelected() {
+          return activeFilter != null && String(activeFilter).length > 0;
+        }
+
+        function renderPickCategory() {
+          container.className = "stores-grid";
+          container.removeAttribute("aria-busy");
+          container.innerHTML =
+            '<div class="stores-empty" role="status">' +
+            '<div class="stores-empty__icon" aria-hidden="true">🛒</div>' +
+            "<h2>اختر تصنيف المتجر</h2>" +
+            "<p>اضغط على أحد التصنيفات أعلاه — سوبر ماركت، صيدليات، خضار، وأكثر — لعرض المتاجر المتاحة.</p>" +
+            "</div>";
+        }
+
         function renderCategoryBarActive() {
           if (!categoryBar) return;
           var chips = categoryBar.querySelectorAll(".stores-cuisine-chip");
           for (var i = 0; i < chips.length; i++) {
             var c = chips[i];
-            var f = c.getAttribute("data-filter") || "all";
-            var on = f === activeFilter;
+            var f = c.getAttribute("data-filter") || "";
+            var on = hasCategorySelected() && f === activeFilter;
             c.classList.toggle("is-active", on);
             c.setAttribute("aria-selected", on ? "true" : "false");
           }
@@ -757,7 +771,7 @@
           var html = "";
           for (var i = 0; i < STORE_CATEGORIES.length; i++) {
             var it = STORE_CATEGORIES[i];
-            var on = it.filter === activeFilter;
+            var on = hasCategorySelected() && it.filter === activeFilter;
             html +=
               '<button type="button" class="stores-cuisine-chip' +
               (on ? " is-active" : "") +
@@ -776,7 +790,17 @@
         }
 
         function setCategoryChip(btn) {
-          activeFilter = btn.getAttribute("data-filter") || "all";
+          if (!btn.hasAttribute("data-filter")) return;
+          var f = btn.getAttribute("data-filter") || "";
+          if (hasCategorySelected() && f === activeFilter) {
+            activeFilter = null;
+            if (searchEl) searchEl.disabled = true;
+            renderCategoryBarActive();
+            renderPickCategory();
+            return;
+          }
+          activeFilter = f;
+          if (searchEl) searchEl.disabled = false;
           renderCategoryBarActive();
           load();
         }
@@ -837,7 +861,7 @@
               '<div class="stores-empty" role="status">' +
               '<div class="stores-empty__icon" aria-hidden="true">🔎</div>' +
               "<h2>لا نتائج</h2>" +
-              "<p>جرّب كلمات أخرى، أو امسح البحث، أو اختر تصنيف &laquo;الكل&raquo;.</p>" +
+              "<p>جرّب كلمات أخرى، أو امسح البحث، أو اختر تصنيفاً آخر.</p>" +
               '<div class="stores-empty__actions">' +
               '<button type="button" class="btn btn-primary" id="btnClearFilters">مسح البحث والفلتر</button>' +
               "</div></div>";
@@ -851,14 +875,16 @@
           if (clearBtn) {
             clearBtn.addEventListener("click", function () {
               if (searchEl) searchEl.value = "";
-              activeFilter = "all";
+              activeFilter = null;
+              if (searchEl) searchEl.disabled = true;
               renderCategoryBarActive();
-              load();
+              renderPickCategory();
             });
           }
         }
 
         function applyFilters() {
+          if (!hasCategorySelected()) return [];
           var q = searchEl ? searchEl.value : "";
           return allStores.filter(function (s) {
             if (!s || !s.id) return false;
@@ -950,11 +976,17 @@
 
         if (searchEl) {
           searchEl.addEventListener("input", function () {
+            if (!hasCategorySelected()) return;
             if (allStores.length) renderList();
           });
         }
 
         async function load() {
+          if (!hasCategorySelected()) {
+            renderPickCategory();
+            if (searchEl) searchEl.disabled = true;
+            return;
+          }
           renderSkeleton();
           if (searchEl) searchEl.disabled = true;
           try {
@@ -1033,6 +1065,10 @@
             return true;
           }
           if (type === "minimarket") type = "supermarket";
+          if (type === "all") {
+            activeFilter = "all";
+            buildCategoryBar();
+          }
           var valid = ["supermarket", "pharmacy", "vegetables", "flowers_gifts", "sweets", "home_business"];
           if (valid.indexOf(type) !== -1) {
             activeFilter = type;
@@ -1042,7 +1078,14 @@
         }
 
         buildCategoryBar();
-        if (!applyQueryFromUrl()) load();
+        if (applyQueryFromUrl()) return;
+        if (hasCategorySelected()) {
+          if (searchEl) searchEl.disabled = false;
+          load();
+        } else {
+          if (searchEl) searchEl.disabled = true;
+          renderPickCategory();
+        }
       })();
     </script>
   </body>

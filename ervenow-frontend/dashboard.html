@@ -36,6 +36,10 @@
         text-decoration: none;
       }
       .dash-alert a:hover { text-decoration: underline; }
+      .dash-alert--guest .dash-guest-badge {
+        width: 100%;
+        margin-bottom: 0;
+      }
       .delivery-form {
         display: grid;
         gap: 10px;
@@ -238,10 +242,11 @@
         gap: 10px 14px;
       }
       .dash-profile-card__avatar {
-        width: 44px;
-        height: 44px;
-        border-radius: 14px;
-        background: linear-gradient(135deg, #b9872f, #7a5a1f);
+        width: 48px;
+        height: 48px;
+        border-radius: 16px;
+        background: linear-gradient(145deg, #f5ede2 0%, #fffefb 100%);
+        border: 2px solid rgba(185, 135, 47, 0.35);
         color: #fffef8;
         display: inline-flex;
         align-items: center;
@@ -249,6 +254,45 @@
         font-size: 1.2rem;
         font-weight: 900;
         flex-shrink: 0;
+        box-shadow: 0 4px 14px rgba(45, 26, 14, 0.1);
+        overflow: hidden;
+      }
+      .dash-profile-card__avatar img.erv-guest-icon {
+        width: 100%;
+        height: 100%;
+        display: block;
+        object-fit: cover;
+        border-radius: 14px;
+      }
+      .dash-guest-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 12px;
+        padding: 10px 14px;
+        border-radius: 14px;
+        background: linear-gradient(135deg, #fffefb 0%, #f5ede2 100%);
+        border: 1px solid rgba(185, 135, 47, 0.22);
+        box-shadow: 0 4px 16px rgba(45, 26, 14, 0.06);
+      }
+      .dash-guest-badge__icon {
+        width: 40px;
+        height: 40px;
+        flex-shrink: 0;
+        border-radius: 12px;
+        overflow: hidden;
+      }
+      .dash-guest-badge__icon img {
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+      .dash-guest-badge__text {
+        margin: 0;
+        font-size: 0.88rem;
+        font-weight: 700;
+        color: var(--brown, #3d2213);
+        line-height: 1.45;
       }
       .dash-profile-card__meta {
         flex: 1;
@@ -737,6 +781,7 @@
       .dash-tabs__nav button {
         flex: 1 1 calc(50% - 4px);
         min-width: 0;
+        min-height: 44px;
         padding: 11px 10px;
         border-radius: 999px;
         border: 1px solid rgba(61, 34, 19, 0.12);
@@ -747,6 +792,11 @@
         cursor: pointer;
         color: var(--brown, #3d2213);
         transition: background 0.15s, color 0.15s, border-color 0.15s;
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: rgba(185, 135, 47, 0.15);
+        position: relative;
+        z-index: 2;
+        pointer-events: auto;
       }
       @media (min-width: 520px) {
         .dash-tabs__nav button { flex: 1 1 calc(25% - 6px); }
@@ -759,6 +809,9 @@
       }
       .dash-tabs__panel[hidden] {
         display: none !important;
+      }
+      .dash-tabs__panel.is-open {
+        display: block;
       }
       .dash-tabs__empty {
         margin: 4px 0 0;
@@ -876,7 +929,8 @@
         }
         .dash-site-footer__link {
           font-size: 0.8rem;
-          padding: 4px 2px;
+          padding: 8px 6px;
+          min-height: 44px;
         }
         .cat-card--map[open] #pickupDropMap {
           min-height: 220px;
@@ -940,12 +994,10 @@
         </div>
         <nav class="dash-site-header__nav" aria-label="التنقل الرئيسي">
           <div class="dash-site-header__links">
-            <a class="dash-site-header__link is-active" href="/dashboard" data-nav="guest" aria-current="page">لوحة الزائر</a>
-            <a class="dash-site-header__link" href="/restaurants" data-nav="restaurants">مطاعم</a>
-            <a class="dash-site-header__link" href="/stores" data-nav="stores">متاجر</a>
-            <a class="dash-site-header__link" href="/delivery-services.html" data-nav="delivery">توصيل</a>
-            <a class="dash-site-header__link" href="/services" data-nav="services">خدمات</a>
             <a class="dash-site-header__link" href="/" data-nav="home">الرئيسية</a>
+            <a class="dash-site-header__link is-active" href="/dashboard" data-nav="guest" aria-current="page">لوحة الزائر</a>
+            <a class="dash-site-header__link" href="/admin-login" data-nav="control">لوحة التحكم</a>
+            <a class="dash-site-header__link dash-site-header__link--cta" href="/login?role=customer" data-nav="login">دخول</a>
           </div>
         </nav>
         <div class="dash-site-header__tools">
@@ -970,7 +1022,7 @@
 
       <div class="card dash-profile-card" id="profileCard" style="display: none" aria-label="حسابك">
         <div class="dash-profile-card__row">
-          <span class="dash-profile-card__avatar" id="profileAvatar" aria-hidden="true">👤</span>
+          <span class="dash-profile-card__avatar" id="profileAvatar" aria-hidden="true"></span>
           <div class="dash-profile-card__meta">
             <span class="badge badge--role" id="roleBadge"></span>
             <p class="dash-profile-card__phone" id="phoneLine"></p>
@@ -1003,7 +1055,7 @@
       <section class="card dash-tabs-card" aria-labelledby="dashTabsTitle">
         <h2 class="dash-section-title" id="dashTabsTitle">تفاصيل سريعة</h2>
         <p class="dash-section-hint">اضغط على قسم (مطاعم، متاجر، خدمات، توصيل) لعرض الخيارات</p>
-        <div class="dash-tabs">
+        <div class="dash-tabs" data-erv-toggle-tabs data-erv-tabs-empty="dashTabsEmpty">
           <div class="dash-tabs__nav" role="tablist" aria-label="أقسام المنصة">
             <button type="button" role="tab" id="tab-restaurants" data-tab="restaurants" aria-selected="false" aria-controls="panel-restaurants">مطاعم</button>
             <button type="button" role="tab" id="tab-stores" data-tab="stores" aria-selected="false" aria-controls="panel-stores">متاجر</button>
@@ -1131,7 +1183,7 @@
                     <div class="btn-row">
                       <button class="btn btn-ghost" type="button" onclick="calculate()">احسب المسافة</button>
                       <button id="createBtn" class="btn btn-primary" type="button" onclick="createOrder()" disabled>
-                        إنشاء الطلب
+                        أضف للسلة والدفع
                       </button>
                     </div>
                     <div class="delivery-stats">
@@ -1176,11 +1228,13 @@
     </div>
 
     <script src="/assets/cart.js"></script>
+    <script src="/assets/service-cart.js"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="/assets/api-config.js"></script>
     <script src="/assets/api.js"></script>
     <script src="/assets/guestBrowse.js"></script>
     <script src="/assets/guest-shell.js"></script>
+    <script src="/assets/ervenow-toggle.js"></script>
     <script>ErvenowGuestShell.init({ activeNav: "guest", pageTag: "لوحة زائر المنصة" });</script>
     <script>
       function dashHasToken() {
@@ -1537,75 +1591,107 @@
         }
       }
 
+      async function resolveDashCustomerPhone() {
+        var phone = "";
+        try {
+          if (dashHasToken() && window.PlatformAPI && typeof PlatformAPI.api === "function") {
+            var me = await PlatformAPI.api("/api/core/me");
+            phone = String(
+              (me && me.profile && me.profile.phone) ||
+                (me && me.user && me.user.phone) ||
+                ""
+            ).trim();
+          }
+        } catch (e) {}
+        return phone;
+      }
+
+      async function buildMapCartItem() {
+        var from = document.getElementById("from").value.trim();
+        var to = document.getElementById("to").value.trim();
+        if (!km) await calculate();
+        if (!km) throw new Error("احسب المسافة أولاً");
+        var pricing = calcDeliveryPricing(km);
+        var phone = await resolveDashCustomerPhone();
+        return {
+          type: "delivery",
+          title: "توصيل من الخريطة",
+          price: pricing.fee,
+          customer_phone: phone,
+          data: {
+            pickup_address: from,
+            drop_address: to,
+            from: from,
+            to: to,
+            location: to,
+            pickup_lat: fromLL ? fromLL.lat : null,
+            pickup_lng: fromLL ? fromLL.lng : null,
+            drop_lat: toLL ? toLL.lat : null,
+            drop_lng: toLL ? toLL.lng : null,
+            distance_km: Math.round(km * 100) / 100,
+            delivery_fee: pricing.fee,
+            platform_fee: pricing.platformFee,
+            driver_earning: pricing.driverNet,
+            vehicle_type: getSelectedVehicleType(),
+            customer_phone: phone,
+            payment_status: "unpaid",
+            source: "dashboard_map",
+            qty: 1,
+          },
+        };
+      }
+
       async function createOrder() {
         var btn = document.getElementById("createBtn");
         var result = document.getElementById("result");
         try {
-          if (!dashHasToken()) {
-            result.innerText = "❌ سجّل الدخول أولاً لإنشاء طلب التوصيل.";
-            return;
-          }
           var from = document.getElementById("from").value.trim();
           var to = document.getElementById("to").value.trim();
           if (!from || !to) {
             result.innerText = "❌ أدخل موقع الاستلام والتسليم أولاً";
             return;
           }
-          if (!km) await calculate();
+          if (!fromLL || !toLL) {
+            await calculate();
+          }
           if (!km) return;
 
+          if (!dashHasToken()) {
+            try {
+              var draft = await buildMapCartItem();
+              sessionStorage.setItem("ervenow:pending-map-cart", JSON.stringify(draft));
+            } catch (e0) {}
+            window.location.href =
+              "/login?mode=register&role=customer&next=" + encodeURIComponent("/cart");
+            return;
+          }
+
           btn.disabled = true;
-          btn.innerText = "جارٍ إنشاء الطلب...";
+          btn.innerText = "جارٍ الإضافة للسلة...";
 
-          var pricing = calcDeliveryPricing(km);
-          var idemKey =
-            window.crypto && window.crypto.randomUUID
-              ? window.crypto.randomUUID()
-              : "idem-" + Date.now() + "-" + Math.random().toString(36).slice(2, 12);
-          var data = await window.PlatformAPI.api("/api/delivery/orders", {
-            method: "POST",
-            idempotencyKey: idemKey,
-            body: {
-              pickup_address: from,
-              drop_address: to,
-              order_total: 0,
-              delivery_fee: pricing.fee,
-              platform_fee: pricing.platformFee,
-              driver_earning: pricing.driverNet,
-              vehicle_type: getSelectedVehicleType(),
-              pickup_lat: fromLL ? fromLL.lat : null,
-              pickup_lng: fromLL ? fromLL.lng : null,
-              drop_lat: toLL ? toLL.lat : null,
-              drop_lng: toLL ? toLL.lng : null,
-            },
+          var item = await buildMapCartItem();
+          if (!item.customer_phone) {
+            result.innerText =
+              "❌ أضف رقم جوالك في الملف الشخصي أولاً، أو سجّل بحساب يحتوي جوالاً.";
+            return;
+          }
+
+          if (!window.ErvenowServiceCart || typeof ErvenowServiceCart.add !== "function") {
+            throw new Error("تعذر تحميل السلة — حدّث الصفحة");
+          }
+
+          var cartRes = ErvenowServiceCart.add(item, {
+            message:
+              "تمت إضافة طلب التوصيل من الخريطة — أكمل الدفع في السلة لاعتماد الطلب وإرساله للمندوبين.",
           });
-
-          if (data.ok) {
-            var orderId = data.order.id;
-            var orderNumber = data.order.order_number || orderId;
-            result.innerText = "✅ تم إنشاء الطلب: " + orderNumber;
-            result.innerText += "\nجاري فتح التتبع...";
-            document.getElementById("from").value = "";
-            document.getElementById("to").value = "";
-            km = 0;
-            fromLL = null;
-            toLL = null;
-            document.getElementById("distance").innerText = "المسافة: —";
-            document.getElementById("price").innerText = "السعر: —";
-            document.getElementById("platformFeeLine").innerText = "عمولة المنصة (15%): —";
-            document.getElementById("driverNetLine").innerText = "صافي المندوب: —";
-            enableCreate();
-            run();
-            setTimeout(function () {
-              window.location.href = "/track?id=" + encodeURIComponent(orderId);
-            }, 1000);
-          } else {
-            throw new Error("فشل إنشاء الطلب");
+          if (!cartRes.ok) {
+            result.innerText = "❌ " + (cartRes.message || "تعذر الإضافة للسلة");
+            return;
           }
         } catch (e) {
-          result.innerText = "❌ " + (e.message || "تعذّر إنشاء الطلب");
+          result.innerText = "❌ " + (e.message || "تعذّر إضافة الطلب للسلة");
         } finally {
-          btn.innerText = "إنشاء الطلب";
+          btn.innerText = "أضف للسلة والدفع";
           enableCreate();
         }
       }
@@ -1621,9 +1707,40 @@
         return map[role] || role;
       }
 
-      function roleAvatar(role) {
-        var map = { admin: "⚙️", customer: "👤", driver: "🚗", merchant: "🏪", provider: "🔧" };
-        return map[role] || "👤";
+      var GUEST_ICON_SRC = "/assets/icons/guest-visitor.svg";
+
+      function roleAvatarEmoji(role) {
+        var map = { admin: "⚙️", driver: "🚗", merchant: "🏪", provider: "🔧" };
+        return map[role] || "•";
+      }
+
+      function applyProfileAvatar(role) {
+        var avatar = document.getElementById("profileAvatar");
+        if (!avatar) return;
+        var r = String(role || "").toLowerCase();
+        if (r === "customer" || r === "user") {
+          avatar.innerHTML =
+            '<img class="erv-guest-icon" src="' +
+            GUEST_ICON_SRC +
+            '" width="48" height="48" alt="" decoding="async" />';
+        } else {
+          avatar.textContent = roleAvatarEmoji(r);
+          avatar.style.background = "linear-gradient(135deg, #b9872f, #7a5a1f)";
+        }
+      }
+
+      function guestIconImg(size, className) {
+        return (
+          '<img class="erv-guest-icon' +
+          (className ? " " + className : "") +
+          '" src="' +
+          GUEST_ICON_SRC +
+          '" width="' +
+          size +
+          '" height="' +
+          size +
+          '" alt="" decoding="async" />'
+        );
       }
 
       function showDashAlert(kind, html) {
@@ -1711,7 +1828,12 @@
           if (document.getElementById("profileCard")) document.getElementById("profileCard").style.display = "none";
           showDashAlert(
             "guest",
-            "أنت تتصفّح كزائر — استكشف الأقسام وحسّب المسافة. لتنفيذ طلب توصيل <a href=\"/login?role=customer\">سجّل الدخول</a>."
+            '<div class="dash-guest-badge">' +
+              '<span class="dash-guest-badge__icon">' +
+              guestIconImg(40) +
+              "</span>" +
+              '<p class="dash-guest-badge__text">أنت تتصفّح كزائر — استكشف الأقسام وحسّب المسافة. لتنفيذ طلب توصيل <a href=\"/login?role=customer\">سجّل الدخول</a>.</p>' +
+              "</div>"
           );
           if (window.ErvenowGuestShell && ErvenowGuestShell.refreshAuthHeader) {
             ErvenowGuestShell.refreshAuthHeader();
@@ -1737,8 +1859,7 @@
           document.getElementById("profileCard").style.display = "block";
           document.getElementById("roleBadge").textContent = roleLabelAr(role);
           document.getElementById("phoneLine").textContent = me.user.phone || me.user.email || me.user.id;
-          var avatar = document.getElementById("profileAvatar");
-          if (avatar) avatar.textContent = roleAvatar(role);
+          applyProfileAvatar(role);
           if (window.ErvenowGuestShell && ErvenowGuestShell.refreshAuthHeader) {
             ErvenowGuestShell.refreshAuthHeader();
           } else {
@@ -1753,32 +1874,10 @@
       }
 
       function activateDashTab(tabKey) {
-        var nav = document.querySelector(".dash-tabs__nav");
-        if (!nav) return;
-        var key = tabKey != null ? String(tabKey).trim() : "";
-        var tabs = nav.querySelectorAll('[role="tab"]');
-        var panels = document.querySelectorAll(".dash-tabs__panel");
-        var empty = document.getElementById("dashTabsEmpty");
-        if (!key) {
-          tabs.forEach(function (t) {
-            t.setAttribute("aria-selected", "false");
-            t.classList.remove("is-active");
-          });
-          panels.forEach(function (p) {
-            p.hidden = true;
-          });
-          if (empty) empty.hidden = false;
-          return;
+        var root = document.querySelector(".dash-tabs");
+        if (root && root.__ervActivateTab) {
+          return root.__ervActivateTab(tabKey != null ? String(tabKey).trim() : "");
         }
-        if (empty) empty.hidden = true;
-        tabs.forEach(function (t) {
-          var active = t.getAttribute("data-tab") === key;
-          t.setAttribute("aria-selected", active ? "true" : "false");
-          t.classList.toggle("is-active", active);
-        });
-        panels.forEach(function (p) {
-          p.hidden = p.id !== "panel-" + key;
-        });
       }
 
       function openDashMapQuick(opts) {
@@ -1799,16 +1898,11 @@
       }
 
       (function initDashTabs() {
-        var nav = document.querySelector(".dash-tabs__nav");
-        if (!nav) return;
-        var tabs = nav.querySelectorAll('[role="tab"]');
-        tabs.forEach(function (tab) {
-          tab.addEventListener("click", function () {
-            var key = tab.getAttribute("data-tab");
-            var isOpen = tab.getAttribute("aria-selected") === "true";
-            activateDashTab(isOpen ? "" : key);
-          });
-        });
+        var root = document.querySelector(".dash-tabs");
+        if (!root) return;
+        if (window.ErvenowToggle && ErvenowToggle.bindTabGroup) {
+          ErvenowToggle.bindTabGroup(root);
+        }
         activateDashTab("");
         document.querySelectorAll("[data-dash-map-jump], a[href*='#dashDeliveryTitle']").forEach(function (link) {
           link.addEventListener("click", function (e) {

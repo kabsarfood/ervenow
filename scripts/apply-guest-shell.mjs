@@ -360,8 +360,7 @@ for (const dir of dirs) {
     "اكتشف المطاعم",
     `          <p class="guest-section-hero__eyebrow">أهلاً بك في ERVENOW</p>
           <h1 class="guest-section-hero__title">اكتشف ألذ الأكلات</h1>
-          <p class="guest-section-hero__sub">مطاعم معتمدة — تصنيفات المطابخ، بحث بالاسم، وتوصيل لبابك</p>
-          <p class="guest-section-hero__hint">يظهر المطعم هنا بعد <strong>موافقة الإدارة</strong> وتفعيله على المنصة.</p>`
+          <p class="guest-section-hero__sub">مطاعم معتمدة ومطابخ مصنفة - التوصيل لحد باب بيتك</p>`
   );
 
   patchCatalog(
@@ -370,7 +369,7 @@ for (const dir of dirs) {
     "اكتشف المتاجر",
     `          <p class="guest-section-hero__eyebrow">أهلاً بك في ERVENOW</p>
           <h1 class="guest-section-hero__title">اكتشف المتاجر</h1>
-          <p class="guest-section-hero__sub">متاجر معتمدة — بحث، فلاتر، وتجربة قريبة من تطبيقات التوصيل الكبرى</p>`
+          <p class="guest-section-hero__sub">سوبرماركت - صيدليات - خضار - وأكثر - مصنفة و معتمدة</p>`
   );
 
   patchCatalog(

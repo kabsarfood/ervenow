@@ -523,8 +523,7 @@
         <div class="guest-section-hero__inner">
           <p class="guest-section-hero__eyebrow">أهلاً بك في ERVENOW</p>
           <h1 class="guest-section-hero__title">اكتشف ألذ الأكلات</h1>
-          <p class="guest-section-hero__sub">مطاعم معتمدة — تصنيفات المطابخ، بحث بالاسم، وتوصيل لبابك</p>
-          <p class="guest-section-hero__hint">يظهر المطعم هنا بعد <strong>موافقة الإدارة</strong> وتفعيله على المنصة.</p>
+          <p class="guest-section-hero__sub">مطاعم معتمدة ومطابخ مصنفة - التوصيل لحد باب بيتك</p>
         </div>
       </div>
 
@@ -756,13 +755,28 @@
           });
         }
 
+        function hasCuisineSelected() {
+          return activeCuisine !== null;
+        }
+
+        function renderPickCuisine() {
+          container.className = "stores-grid";
+          container.removeAttribute("aria-busy");
+          container.innerHTML =
+            '<div class="stores-empty" role="status">' +
+            '<div class="stores-empty__icon" aria-hidden="true">🍽️</div>' +
+            "<h2>اختر تصنيف المطبخ</h2>" +
+            "<p>اضغط على أحد التصنيفات أعلاه — أو «الكل» لعرض كل المطاعم المعتمدة.</p>" +
+            "</div>";
+        }
+
         function renderCuisineBarActive() {
           if (!cuisineBar) return;
           var chips = cuisineBar.querySelectorAll(".stores-cuisine-chip");
           for (var i = 0; i < chips.length; i++) {
             var c = chips[i];
             var slug = c.getAttribute("data-cuisine") || "";
-            var on = (!activeCuisine && !slug) || (activeCuisine && slug === activeCuisine);
+            var on = hasCuisineSelected() && slug === activeCuisine;
             c.classList.toggle("is-active", on);
             c.setAttribute("aria-selected", on ? "true" : "false");
           }
@@ -771,7 +785,7 @@
         function buildCuisineBar() {
           if (!cuisineBar) return;
           var html =
-            '<button type="button" class="stores-cuisine-chip is-active" data-cuisine="" role="tab" aria-selected="true">' +
+            '<button type="button" class="stores-cuisine-chip" data-cuisine="" role="tab" aria-selected="false">' +
             '<span class="stores-cuisine-chip__icon" aria-hidden="true">▦</span><span>الكل</span></button>';
           for (var i = 0; i < RESTAURANT_CUISINES.length; i++) {
             var it = RESTAURANT_CUISINES[i];
@@ -789,8 +803,17 @@
         }
 
         function setCuisineFromChip(btn) {
-          var slug = btn.getAttribute("data-cuisine");
-          activeCuisine = slug ? String(slug) : null;
+          if (!btn.hasAttribute("data-cuisine")) return;
+          var slug = String(btn.getAttribute("data-cuisine") || "");
+          if (hasCuisineSelected() && slug === activeCuisine) {
+            activeCuisine = null;
+            if (searchEl) searchEl.disabled = true;
+            renderCuisineBarActive();
+            renderPickCuisine();
+            return;
+          }
+          activeCuisine = slug;
+          if (searchEl) searchEl.disabled = false;
           renderCuisineBarActive();
           load();
         }
@@ -866,8 +889,9 @@
             clearBtn.addEventListener("click", function () {
               if (searchEl) searchEl.value = "";
               activeCuisine = null;
+              if (searchEl) searchEl.disabled = true;
               renderCuisineBarActive();
-              load();
+              renderPickCuisine();
             });
           }
         }
@@ -957,11 +981,17 @@
 
         if (searchEl) {
           searchEl.addEventListener("input", function () {
+            if (!hasCuisineSelected()) return;
             if (allStores.length) renderList();
           });
         }
 
         async function load() {
+          if (!hasCuisineSelected()) {
+            renderPickCuisine();
+            if (searchEl) searchEl.disabled = true;
+            return;
+          }
           renderSkeleton();
           if (searchEl) searchEl.disabled = true;
           try {
@@ -973,7 +1003,7 @@
               parts.push("user_lng=" + encodeURIComponent(geo.lng));
             }
             parts.push("type=restaurant");
-            if (activeCuisine) {
+            if (activeCuisine && String(activeCuisine).length > 0) {
               parts.push("category=" + encodeURIComponent(activeCuisine));
             }
             var qs = parts.length ? "?" + parts.join("&") : "";
@@ -994,7 +1024,7 @@
 
             if (data.browse_masked) guestNote.style.display = "block";
             allStores = Array.isArray(data.stores) ? data.stores : [];
-            if (activeCuisine) {
+            if (activeCuisine && String(activeCuisine).length > 0) {
               allStores = allStores.filter(function (s) {
                 return storeMatchesCuisineChip(s, activeCuisine);
               });
@@ -1035,7 +1065,9 @@
               setCuisineFromChip(t);
             });
           }
-          load();
+          if (searchEl) searchEl.disabled = !hasCuisineSelected();
+          if (!hasCuisineSelected()) renderPickCuisine();
+          else load();
         });
       })();
     </script>

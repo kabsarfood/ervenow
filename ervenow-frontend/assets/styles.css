@@ -529,3 +529,5 @@ textarea {
     background: linear-gradient(180deg, rgba(28, 22, 18, 0.92), rgba(22, 18, 14, 0.96));
   }
 }
+
+@import url("/assets/responsive-site.css");

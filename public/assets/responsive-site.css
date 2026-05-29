@@ -1,0 +1,249 @@
+/**
+ * ERVENOW — تحسينات جوال وتابلت (بطاقات، عناوين، هيدر، فوتر، أزرار)
+ * يُحمَّل عبر styles.css على معظم الصفحات.
+ */
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  overflow-x: hidden;
+}
+
+img,
+video,
+svg {
+  max-width: 100%;
+  height: auto;
+}
+
+/* ——— بطاقات ونماذج عامة ——— */
+@media (max-width: 1024px) {
+  .layout {
+    max-width: 100%;
+    padding-inline: max(14px, env(safe-area-inset-left, 14px)) max(14px, env(safe-area-inset-right, 14px));
+    padding-block: clamp(16px, 3vw, 24px) clamp(28px, 5vw, 40px);
+  }
+
+  .card,
+  .auth-card {
+    padding: clamp(16px, 4vw, 22px);
+    border-radius: clamp(14px, 3vw, 18px);
+  }
+
+  h1 {
+    font-size: clamp(1.2rem, 4.5vw, 1.65rem);
+    line-height: 1.25;
+  }
+
+  .sub {
+    font-size: clamp(0.88rem, 2.8vw, 0.95rem);
+    line-height: 1.55;
+  }
+
+  .btn {
+    min-height: 44px;
+    padding: 12px 18px;
+    font-size: clamp(0.9rem, 2.5vw, 0.95rem);
+  }
+
+  .btn-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .btn-row .btn {
+    width: 100%;
+  }
+
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+    min-height: 44px;
+    padding: 12px 14px;
+  }
+
+  .grid-apps {
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 150px), 1fr));
+    gap: 12px;
+  }
+}
+
+@media (max-width: 767px) {
+  .card {
+    margin-bottom: 12px;
+    box-shadow: 0 6px 20px rgba(45, 26, 14, 0.06);
+  }
+
+  .auth-form-intro {
+    font-size: 0.9rem;
+    line-height: 1.55;
+  }
+
+  .auth-mode-tabs__btn {
+    min-height: 48px;
+    font-size: 0.88rem;
+  }
+}
+
+/* ——— الصفحة الرئيسية (lp-*) ——— */
+@media (max-width: 900px) {
+  .lp-header__inner {
+    padding-inline: max(12px, env(safe-area-inset-left, 12px)) max(12px, env(safe-area-inset-right, 12px));
+  }
+
+  .lp-nav a {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 14px;
+    font-size: clamp(0.8rem, 2.5vw, 0.88rem);
+  }
+
+  .lp-footer {
+    padding-inline: max(16px, env(safe-area-inset-left, 16px)) max(16px, env(safe-area-inset-right, 16px));
+    padding-bottom: max(28px, env(safe-area-inset-bottom, 24px));
+  }
+
+  .lp-footer__inner {
+    gap: clamp(20px, 5vw, 32px);
+  }
+
+  .lp-footer__links a,
+  .lp-footer__contact a {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .lp-body {
+    padding-bottom: max(5rem, calc(env(safe-area-inset-bottom, 0px) + 4.5rem));
+  }
+
+  #authArea .btn,
+  #authArea a.btn {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+/* ——— أقسام ابدأ الآن / الرئيسية (sn-*) ——— */
+@media (max-width: 1024px) {
+  .sn-section {
+    padding-inline: max(14px, env(safe-area-inset-left, 14px)) max(14px, env(safe-area-inset-right, 14px));
+  }
+
+  .sn-section__title {
+    font-size: clamp(1.2rem, 4.2vw, 1.45rem);
+    margin-bottom: clamp(18px, 4vw, 28px);
+    line-height: 1.3;
+  }
+
+  .sn-section__label {
+    font-size: clamp(0.78rem, 2.2vw, 0.82rem);
+  }
+
+  .sn-hero {
+    padding-inline: max(16px, env(safe-area-inset-left, 16px)) max(16px, env(safe-area-inset-right, 16px));
+  }
+
+  .sn-hero__title {
+    font-size: clamp(1.55rem, 5.5vw, 2.4rem);
+  }
+
+  .sn-hero__sub {
+    font-size: clamp(0.9rem, 2.8vw, 1.05rem);
+    padding-inline: 4px;
+  }
+
+  .sn-hero__cta {
+    min-height: 48px;
+    width: min(100%, 320px);
+    padding: 14px 24px;
+  }
+
+  .sn-card {
+    padding: clamp(20px, 5vw, 28px) clamp(12px, 3vw, 16px);
+  }
+
+  .sn-card__icon-wrap {
+    width: clamp(56px, 14vw, 68px);
+    height: clamp(56px, 14vw, 68px);
+    font-size: clamp(1.5rem, 5vw, 2rem);
+  }
+
+  .sn-card__name {
+    font-size: clamp(0.95rem, 3vw, 1.05rem);
+  }
+
+  .sn-card__desc {
+    font-size: clamp(0.75rem, 2.4vw, 0.8rem);
+  }
+}
+
+@media (min-width: 481px) and (max-width: 900px) {
+  .sn-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .sn-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .sn-card {
+    flex-direction: row;
+    align-items: center;
+    text-align: right;
+    padding: 16px 14px;
+    gap: 12px;
+  }
+
+  .sn-card__icon-wrap {
+    flex-shrink: 0;
+  }
+
+  .sn-card > div:not(.sn-card__icon-wrap):not(.sn-card__arrow) {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .sn-card__name,
+  .sn-card__desc {
+    text-align: right;
+  }
+
+  .sn-card__arrow {
+    opacity: 1;
+    transform: none;
+    flex-shrink: 0;
+  }
+}
+
+@media (max-width: 380px) {
+  .sn-trust {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ——— بانر التسجيل / الدخول ——— */
+@media (max-width: 767px) {
+  .auth-sn-hero {
+    padding: clamp(28px, 7vw, 40px) max(14px, env(safe-area-inset-left, 14px)) clamp(32px, 7vw, 48px)
+      max(14px, env(safe-area-inset-right, 14px));
+  }
+
+  .auth-page__main {
+    padding-inline: max(12px, env(safe-area-inset-left, 12px)) max(12px, env(safe-area-inset-right, 12px));
+  }
+}
