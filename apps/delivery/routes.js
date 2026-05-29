@@ -104,6 +104,26 @@ async function attachDriverCarType(sb, order) {
 
 router.get("/health", (_req, res) => ok(res, { service: "delivery" }));
 
+/** POST /resolve-maps-link — فك روابط Google Maps (بما فيها maps.app.goo.gl) */
+router.post("/resolve-maps-link", optionalAuth, async (req, res) => {
+  try {
+    const url = String(req.body?.url || "").trim();
+    if (!url) return fail(res, "url مطلوب", 400);
+    const { resolveMapsLink } = require("../../shared/utils/mapsUrlParser");
+    const out = await resolveMapsLink(url);
+    if (!out) {
+      return fail(
+        res,
+        "تعذر قراءة الإحداثيات من الرابط. انسخ رابط «مشاركة» من Google Maps أو حدد الموقع على الخريطة.",
+        400
+      );
+    }
+    return ok(res, out);
+  } catch (e) {
+    return fail(res, e.message || String(e), 500);
+  }
+});
+
 router.get("/orders", optionalAuth, async (req, res) => {
   try {
     const sb = req.supabase || createServiceClient();

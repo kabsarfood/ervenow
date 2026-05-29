@@ -25,6 +25,11 @@ const {
 } = require("../../shared/utils/ledgerWallet");
 const { createServiceClient } = require("../../shared/config/supabase");
 const { assertWithdrawSystemEnabled } = require("../../shared/utils/platformFeatureFlags");
+const { loadPlatformPaySettings, assertWithdrawEnabledPay } = require("../../shared/services/platformPaySettings");
+const {
+  createTopupRequest,
+  redeemTopupCode,
+} = require("../../shared/services/walletTopupService");
 
 const router = express.Router();
 const MIN_WITHDRAW = 20;
@@ -57,6 +62,28 @@ function clientIp(req) {
 
 async function operationalWalletPayload(req) {
   return getWalletPayloadWithLedgerFallback(req.supabase, req.appUser.id, req.appUser.role);
+}
+
+async function guardWithdrawEnabled(req) {
+  const sbSvc = createServiceClient();
+  if (sbSvc) await assertWithdrawEnabledPay(sbSvc);
+}
+
+function mapLedgerTxForWalletUi(t) {
+  const dir = String(t.direction || "").toLowerCase();
+  const rawType = String(t.type || "").toLowerCase();
+  let displayType = rawType;
+  if (dir === "credit") {
+    displayType = rawType === "earning" ? "earning" : "credit";
+  } else if (dir === "debit") {
+    displayType = rawType === "withdraw" ? "withdraw" : "debit";
+  }
+  return {
+    ...t,
+    type: displayType,
+    direction: dir || t.direction,
+    note: t.note || t.description || null,
+  };
 }
 
 async function validateWithdrawRequest(req, amount) {
@@ -123,12 +150,7 @@ router.get("/transactions", requireAuth, requireRole(...WALLET_READ_ROLES), asyn
       req.appUser.role,
       Number(req.query?.limit) || 100
     );
-    const rows = (transactions || []).map(function (t) {
-      return {
-        ...t,
-        note: t.note || t.description || null,
-      };
-    });
+    const rows = (transactions || []).map(mapLedgerTxForWalletUi);
     ok(res, { transactions: rows, wallet_mode: "ledger", source: "ervenow_ledger_transactions" });
   } catch (e) {
     fail(res, e.message, 500);
@@ -214,6 +236,48 @@ router.post("/ledger/refund", requireAuth, requireRole("admin"), async (req, res
   }
 });
 
+router.get("/pay-settings", requireAuth, requireRole(...WALLET_READ_ROLES), async (req, res) => {
+  try {
+    const sb = req.supabase || createServiceClient();
+    const settings = await loadPlatformPaySettings(sb);
+    return ok(res, { settings });
+  } catch (e) {
+    return fail(res, e.message || "تعذر تحميل الإعدادات", 500);
+  }
+});
+
+router.post("/topup-request", requireAuth, requireRole(...WALLET_READ_ROLES), async (req, res) => {
+  try {
+    const result = await createTopupRequest(req.supabase, req.appUser, req.body || {});
+    return ok(res, result);
+  } catch (e) {
+    return fail(res, e.message || "تعذر إنشاء طلب الشحن", e.statusCode || 500);
+  }
+});
+
+router.post("/redeem-code", requireAuth, requireRole(...WALLET_READ_ROLES), async (req, res) => {
+  try {
+    const code = req.body?.code;
+    const result = await redeemTopupCode(req.supabase, req.appUser, code);
+    return ok(res, result);
+  } catch (e) {
+    return fail(res, e.message || "تعذر تفعيل الكود", e.statusCode || 500);
+  }
+});
+
+router.post("/transfer", requireAuth, requireRole(...WALLET_READ_ROLES), async (req, res) => {
+  try {
+    const sb = req.supabase || createServiceClient();
+    const settings = await loadPlatformPaySettings(sb);
+    if (!settings.wallet_transfer_enabled) {
+      return fail(res, "التحويل غير متاح حالياً", 403);
+    }
+    return fail(res, "التحويل بين المستخدمين غير مفعّل في هذه النسخة", 501);
+  } catch (e) {
+    return fail(res, e.message || "تعذر التحويل", e.statusCode || 500);
+  }
+});
+
 router.get("/withdraw", requireAuth, requireRole(...PAYOUT_ROLES), async (req, res) => {
   try {
     const { rows, source } = await listLedgerWithdrawRequests(req.supabase, req.appUser.id, {
@@ -227,6 +291,7 @@ router.get("/withdraw", requireAuth, requireRole(...PAYOUT_ROLES), async (req, r
 
 router.post("/withdraw", requireAuth, requireRole(...PAYOUT_ROLES), async (req, res) => {
   try {
+    await guardWithdrawEnabled(req);
     const sbSvc = createServiceClient();
     if (sbSvc) await assertWithdrawSystemEnabled(sbSvc);
 
@@ -271,6 +336,7 @@ router.post("/withdraw", requireAuth, requireRole(...PAYOUT_ROLES), async (req, 
 
 router.post("/withdraw/send-otp", requireAuth, requireRole(...PAYOUT_ROLES), async (req, res) => {
   try {
+    await guardWithdrawEnabled(req);
     const amount = Number(req.body?.amount);
     const { ibanRaw } = await validateWithdrawRequest(req, amount);
 
@@ -330,6 +396,7 @@ router.post("/withdraw/send-otp", requireAuth, requireRole(...PAYOUT_ROLES), asy
 
 router.post("/withdraw/confirm-otp", requireAuth, requireRole(...PAYOUT_ROLES), async (req, res) => {
   try {
+    await guardWithdrawEnabled(req);
     const sbSvc = createServiceClient();
     if (sbSvc) await assertWithdrawSystemEnabled(sbSvc);
 

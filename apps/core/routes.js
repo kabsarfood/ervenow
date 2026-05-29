@@ -750,4 +750,28 @@ router.get("/checkout-payment-methods", async (_req, res) => {
   }
 });
 
+/** وسائل الدفع + إعدادات ERVENOW PAY — للواجهة العامة */
+router.get("/wallet-pay-settings", async (_req, res) => {
+  try {
+    const sb = createServiceClient();
+    const { loadPlatformPaySettings } = require("../../shared/services/platformPaySettings");
+    const settings = await loadPlatformPaySettings(sb);
+    ok(res, { settings });
+  } catch (e) {
+    fail(res, e.message || String(e), 500);
+  }
+});
+
+/** @deprecated استخدم /wallet-pay-settings */
+router.get("/settings", async (_req, res) => {
+  try {
+    const sb = createServiceClient();
+    const { loadPlatformPaySettings } = require("../../shared/services/platformPaySettings");
+    const settings = await loadPlatformPaySettings(sb);
+    ok(res, { settings });
+  } catch (e) {
+    fail(res, e.message || String(e), 500);
+  }
+});
+
 module.exports = router;

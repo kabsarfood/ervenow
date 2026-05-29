@@ -1406,6 +1406,9 @@
       var deliveryInputMode = "links";
       var pickupMapsUrl = "";
       var dropMapsUrl = "";
+      var fromDistrictLabel = "";
+      var toDistrictLabel = "";
+      var reverseGeoCache = {};
       var selectType = null;
       var geoCache = {};
       var map = null;
@@ -1559,23 +1562,43 @@
         return { typeKey: typeKey, qty: qty, note: note, label: label };
       }
 
+      async function resolveMapsLinkInput(linkText) {
+        var DM = window.ErvenowDeliveryMap;
+        var raw = String(linkText || "").trim();
+        if (!raw || !DM) return null;
+        if (DM.resolveMapsLinkAsync) {
+          var resolved = await DM.resolveMapsLinkAsync(raw);
+          if (resolved && resolved.ll) return resolved;
+          if (resolved && resolved.error) {
+            var err = new Error(resolved.error);
+            err.code = "MAPS_LINK_PARSE";
+            throw err;
+          }
+        }
+        var ll = DM.parseMapsUrl(raw);
+        if (ll) {
+          return {
+            ll: ll,
+            mapsUrl: /^https?:\/\//i.test(raw) ? raw : DM.buildGoogleMapsUrl(ll.lat, ll.lng),
+          };
+        }
+        return null;
+      }
+
       async function resolveLocationFromField(text, linkFieldId) {
         var DM = window.ErvenowDeliveryMap;
         var raw = String(text || "").trim();
         if (!raw) return null;
         var linkEl = linkFieldId ? document.getElementById(linkFieldId) : null;
         var linkVal = linkEl ? String(linkEl.value || "").trim() : "";
-        if (DM && linkVal) {
-          var fromLink = DM.parseMapsUrl(linkVal);
-          if (fromLink) return { ll: fromLink, mapsUrl: linkVal };
+        if (linkVal) {
+          var fromDedicated = await resolveMapsLinkInput(linkVal);
+          if (fromDedicated) return { ll: fromDedicated.ll, mapsUrl: fromDedicated.mapsUrl };
         }
         if (DM) {
-          var fromMaps = DM.parseMapsUrl(raw);
-          if (fromMaps) {
-            return {
-              ll: fromMaps,
-              mapsUrl: DM.buildGoogleMapsUrl(fromMaps.lat, fromMaps.lng) || raw,
-            };
+          var fromMapsResolved = await resolveMapsLinkInput(raw);
+          if (fromMapsResolved) {
+            return { ll: fromMapsResolved.ll, mapsUrl: fromMapsResolved.mapsUrl };
           }
           var fromPair = DM.parseLatLngPair(raw);
           if (fromPair) {
@@ -1590,26 +1613,38 @@
       }
 
       async function applyMapLinks() {
-        var fromLink = String(document.getElementById("fromLink").value || "").trim();
-        var toLink = String(document.getElementById("toLink").value || "").trim();
-        if (!fromLink || !toLink) {
-          document.getElementById("result").innerText = "❌ الصق رابط الاستلام ورابط التسليم.";
-          return;
+        var resultEl = document.getElementById("result");
+        try {
+          var fromLink = String(document.getElementById("fromLink").value || "").trim();
+          var toLink = String(document.getElementById("toLink").value || "").trim();
+          if (!fromLink || !toLink) {
+            resultEl.innerText = "❌ الصق رابط الاستلام ورابط التسليم.";
+            return;
+          }
+          var DM = window.ErvenowDeliveryMap;
+          if (!DM) throw new Error("تعذر تحميل أدوات الخريطة");
+          resultEl.innerText = "جارٍ فك روابط Google Maps ورسم المسار…";
+          var fromResolved = await resolveMapsLinkInput(fromLink);
+          var toResolved = await resolveMapsLinkInput(toLink);
+          if (!fromResolved || !toResolved) {
+            resultEl.innerText =
+              "❌ تعذر قراءة الإحداثيات. الصق رابط maps.app.goo.gl (مثل رابط المشاركة) مع تشغيل الخادم، أو حدد على الخريطة.";
+            return;
+          }
+          fromLL = fromResolved.ll;
+          toLL = toResolved.ll;
+          pickupMapsUrl = fromResolved.mapsUrl || DM.buildGoogleMapsUrl(fromLL.lat, fromLL.lng);
+          dropMapsUrl = toResolved.mapsUrl || DM.buildGoogleMapsUrl(toLL.lat, toLL.lng);
+          fromDistrictLabel = await reverseGeocodeDistrict(fromLL.lat, fromLL.lng);
+          toDistrictLabel = await reverseGeocodeDistrict(toLL.lat, toLL.lng);
+          document.getElementById("from").value =
+            fromDistrictLabel && fromDistrictLabel !== "—" ? fromDistrictLabel : "موقع الاستلام";
+          document.getElementById("to").value =
+            toDistrictLabel && toDistrictLabel !== "—" ? toDistrictLabel : "موقع التسليم";
+          await drawRouteAndPricing();
+        } catch (e) {
+          resultEl.innerText = "❌ " + (e.message || "تعذر قراءة الرابط");
         }
-        var DM = window.ErvenowDeliveryMap;
-        if (!DM) throw new Error("تعذر تحميل أدوات الخريطة");
-        fromLL = DM.parseMapsUrl(fromLink);
-        toLL = DM.parseMapsUrl(toLink);
-        if (!fromLL || !toLL) {
-          document.getElementById("result").innerText =
-            "❌ تعذر قراءة الإحداثيات من الرابط. انسخ رابط «مشاركة» من Google Maps (يحتوي موقعاً على الخريطة) أو استخدم وضع «تحديد على الخريطة».";
-          return;
-        }
-        pickupMapsUrl = fromLink.indexOf("http") === 0 ? fromLink : DM.buildGoogleMapsUrl(fromLL.lat, fromLL.lng);
-        dropMapsUrl = toLink.indexOf("http") === 0 ? toLink : DM.buildGoogleMapsUrl(toLL.lat, toLL.lng);
-        document.getElementById("from").value = pickupMapsUrl;
-        document.getElementById("to").value = dropMapsUrl;
-        await drawRouteAndPricing();
       }
 
       async function drawRouteAndPricing() {
@@ -1724,6 +1759,8 @@
         document.getElementById("result").innerText = "";
         pickupMapsUrl = "";
         dropMapsUrl = "";
+        fromDistrictLabel = "";
+        toDistrictLabel = "";
         selectType = null;
         updateLiveMapPreview();
         updateSelectButtonsUi();
@@ -1821,6 +1858,42 @@
         return p;
       }
 
+      function isMapsUrl(s) {
+        var t = String(s || "").trim();
+        return /^(https?:\/\/)/i.test(t) || /google\.com\/maps|maps\.app\.goo|goo\.gl\/maps/i.test(t);
+      }
+
+      function humanLocationText(s) {
+        var t = String(s || "").trim();
+        return t && !isMapsUrl(t) ? t : "";
+      }
+
+      async function reverseGeocodeDistrict(lat, lng) {
+        var key = Number(lat).toFixed(5) + "," + Number(lng).toFixed(5);
+        if (reverseGeoCache[key]) return reverseGeoCache[key];
+        var url =
+          "https://nominatim.openstreetmap.org/reverse?format=json&lat=" +
+          lat +
+          "&lon=" +
+          lng +
+          "&accept-language=ar";
+        var r = await fetch(url, { headers: { "Accept-Language": "ar" } });
+        var j = await r.json();
+        var a = (j && j.address) || {};
+        var name =
+          a.suburb ||
+          a.neighbourhood ||
+          a.quarter ||
+          a.city_district ||
+          a.district ||
+          a.city ||
+          a.town ||
+          a.village ||
+          "";
+        reverseGeoCache[key] = name || "—";
+        return reverseGeoCache[key];
+      }
+
       async function getRoute(a, b) {
         var url =
           "https://router.project-osrm.org/route/v1/driving/" +
@@ -1859,9 +1932,12 @@
           toLL = toResolved.ll;
           pickupMapsUrl = fromResolved.mapsUrl || "";
           dropMapsUrl = toResolved.mapsUrl || "";
+          fromDistrictLabel = humanLocationText(from) || (await reverseGeocodeDistrict(fromLL.lat, fromLL.lng));
+          toDistrictLabel = humanLocationText(to) || (await reverseGeocodeDistrict(toLL.lat, toLL.lng));
           await drawRouteAndPricing();
         } catch (e) {
-          document.getElementById("result").innerText = "❌ " + (e.message || "تعذر حساب المسافة");
+          document.getElementById("result").innerText =
+            "❌ " + (e.message || "تعذر حساب المسافة");
           enableCreate();
         }
       }
@@ -1897,17 +1973,29 @@
         var DM = window.ErvenowDeliveryMap;
         if (!pickupMapsUrl && DM && fromLL) pickupMapsUrl = DM.buildGoogleMapsUrl(fromLL.lat, fromLL.lng);
         if (!dropMapsUrl && DM && toLL) dropMapsUrl = DM.buildGoogleMapsUrl(toLL.lat, toLL.lng);
+        var fromLabel = fromDistrictLabel || humanLocationText(from);
+        var toLabel = toDistrictLabel || humanLocationText(to);
+        if ((!fromLabel || fromLabel === "—") && fromLL) {
+          fromLabel = await reverseGeocodeDistrict(fromLL.lat, fromLL.lng);
+        }
+        if ((!toLabel || toLabel === "—") && toLL) {
+          toLabel = await reverseGeocodeDistrict(toLL.lat, toLL.lng);
+        }
+        if (fromLabel === "—") fromLabel = "موقع الاستلام";
+        if (toLabel === "—") toLabel = "موقع التسليم";
         return {
           type: "delivery",
           title: "توصيل من الخريطة — " + product.label,
           price: pricing.fee,
           customer_phone: phone,
           data: {
-            pickup_address: from || pickupMapsUrl,
-            drop_address: to || dropMapsUrl,
-            from: from || pickupMapsUrl,
-            to: to || dropMapsUrl,
-            location: to || dropMapsUrl,
+            pickup_address: fromLabel,
+            drop_address: toLabel,
+            from: fromLabel,
+            to: toLabel,
+            location: toLabel,
+            pickup_district_label: fromLabel,
+            drop_district_label: toLabel,
             pickup_maps_url: pickupMapsUrl,
             drop_maps_url: dropMapsUrl,
             pickup_lat: fromLL ? fromLL.lat : null,

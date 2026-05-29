@@ -807,6 +807,167 @@
         font-weight: 600;
         line-height: 1.4;
       }
+
+      /* ——— ERVENOW PAY: شحن + كود ——— */
+      .wallet-redeem-panel {
+        margin-bottom: 1.15rem;
+      }
+
+      .wallet-redeem-row {
+        display: flex;
+        flex-direction: column;
+        gap: 0.65rem;
+      }
+
+      @media (min-width: 480px) {
+        .wallet-redeem-row {
+          flex-direction: row;
+          align-items: stretch;
+        }
+
+        .wallet-redeem-row input {
+          flex: 1;
+        }
+
+        .wallet-redeem-row .wallet-btn {
+          width: auto;
+          min-width: 140px;
+        }
+      }
+
+      .wallet-modal-backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 10000;
+        background: rgba(29, 18, 10, 0.55);
+        display: none;
+        align-items: flex-end;
+        justify-content: center;
+        padding: max(0.75rem, env(safe-area-inset-bottom)) max(0.75rem, env(safe-area-inset-right))
+          max(0.75rem, env(safe-area-inset-bottom)) max(0.75rem, env(safe-area-inset-left));
+      }
+
+      .wallet-modal-backdrop.is-open {
+        display: flex;
+      }
+
+      .wallet-modal {
+        width: 100%;
+        max-width: 440px;
+        background: var(--w-surface);
+        border-radius: var(--w-radius-card);
+        padding: clamp(1rem, 4vw, 1.35rem);
+        box-shadow: var(--w-shadow-card);
+        border: 1px solid rgba(91, 55, 29, 0.12);
+        max-height: min(90dvh, 640px);
+        overflow-y: auto;
+      }
+
+      .wallet-modal-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        margin-bottom: 0.85rem;
+      }
+
+      .wallet-modal-head h2 {
+        margin: 0;
+        font-size: 1.05rem;
+        font-weight: 800;
+        color: var(--w-primary);
+      }
+
+      .wallet-modal-close {
+        min-width: var(--w-touch);
+        min-height: var(--w-touch);
+        border: none;
+        border-radius: 12px;
+        background: rgba(91, 55, 29, 0.08);
+        color: var(--w-primary);
+        font-size: 1.25rem;
+        cursor: pointer;
+      }
+
+      .wallet-stc-box {
+        background: linear-gradient(135deg, rgba(91, 55, 29, 0.08), rgba(212, 167, 106, 0.15));
+        border: 1px dashed rgba(91, 55, 29, 0.25);
+        border-radius: var(--w-radius-sm);
+        padding: 0.85rem 1rem;
+        margin: 0.75rem 0 1rem;
+        text-align: center;
+      }
+
+      .wallet-stc-box strong {
+        display: block;
+        font-size: 0.82rem;
+        color: var(--w-muted);
+        margin-bottom: 0.35rem;
+      }
+
+      .wallet-stc-num {
+        font-size: 1.35rem;
+        font-weight: 800;
+        color: var(--w-primary);
+        direction: ltr;
+        unicode-bidi: isolate;
+        letter-spacing: 0.04em;
+      }
+
+      .wallet-amount-pills {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin: 0.65rem 0 0.85rem;
+      }
+
+      .wallet-amount-pill {
+        min-height: 40px;
+        padding: 0 0.85rem;
+        border-radius: 999px;
+        border: 1px solid rgba(91, 55, 29, 0.2);
+        background: #fff;
+        font-family: inherit;
+        font-weight: 800;
+        font-size: 0.85rem;
+        color: var(--w-primary);
+        cursor: pointer;
+      }
+
+      .wallet-amount-pill.is-selected {
+        background: var(--w-primary);
+        color: #fff;
+        border-color: var(--w-primary);
+      }
+
+      .wallet-toast {
+        position: fixed;
+        bottom: max(1rem, env(safe-area-inset-bottom));
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 10001;
+        max-width: min(420px, calc(100vw - 2rem));
+        padding: 0.85rem 1rem;
+        border-radius: 12px;
+        font-weight: 800;
+        font-size: 0.9rem;
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
+        display: none;
+      }
+
+      .wallet-toast.show {
+        display: block;
+      }
+
+      .wallet-toast.ok {
+        background: var(--w-success);
+        color: #fff;
+      }
+
+      .wallet-toast.err {
+        background: var(--w-danger);
+        color: #fff;
+      }
     </style>
     <script>
       (function () {
@@ -859,8 +1020,8 @@
                 <div class="wallet-badge" aria-hidden="true">★ محفظة نشطة</div>
                 <p class="wallet-user" id="userNameLine" hidden></p>
                 <div class="wallet-actions">
-                  <button type="button" class="wallet-btn wallet-btn--gold" id="btnStartWithdraw">سحب الأرباح</button>
-                  <button type="button" class="wallet-btn wallet-btn--outline" id="btnTopup">＋ شحن الرصيد</button>
+                  <button type="button" class="wallet-btn wallet-btn--gold" id="btnStartWithdraw" style="display: none">سحب الأرباح</button>
+                  <button type="button" class="wallet-btn wallet-btn--gold" id="btnTopup">＋ شحن الرصيد</button>
                 </div>
               </div>
             </section>
@@ -894,6 +1055,16 @@
             </aside>
           </div>
         </div>
+
+        <section class="wallet-panel wallet-redeem-panel" id="redeemCard" style="display: none">
+          <h2>تفعيل كود الشحن</h2>
+          <p class="wallet-hint" style="margin-top: 0">أدخل الكود الذي وصلك عبر واتساب بعد موافقة الإدارة على التحويل.</p>
+          <div class="wallet-redeem-row">
+            <input type="text" id="redeemCodeInput" inputmode="text" autocomplete="off" placeholder="مثال: EW-100-XXXXXX" translate="no" />
+            <button type="button" class="wallet-btn wallet-btn--gold" id="btnRedeemCode">تفعيل الرصيد</button>
+          </div>
+          <div class="wallet-msg" id="redeemMsg" role="status"></div>
+        </section>
 
         <section class="wallet-panel" id="withdrawCard" style="display: none">
           <h2>طلب سحب</h2>
@@ -991,6 +1162,35 @@
       </main>
     </div>
 
+    <div class="wallet-modal-backdrop" id="topupModal" aria-hidden="true">
+      <div class="wallet-modal" role="dialog" aria-labelledby="topupModalTitle" aria-modal="true">
+        <div class="wallet-modal-head">
+          <h2 id="topupModalTitle">شحن عبر STC Pay</h2>
+          <button type="button" class="wallet-modal-close" id="topupModalClose" aria-label="إغلاق">×</button>
+        </div>
+        <p class="wallet-hint" style="margin-top: 0">حوّل المبلغ إلى رقم STC Pay أدناه، ثم اضغط «تم التحويل».</p>
+        <div class="wallet-stc-box">
+          <strong>رقم STC Pay للتحويل</strong>
+          <div class="wallet-stc-num" id="topupStcNumber">—</div>
+        </div>
+        <label>
+          <span style="display: block; font-size: 0.78rem; font-weight: 800; color: var(--w-muted); margin-bottom: 0.35rem">المبلغ (ر.س)</span>
+          <input type="number" id="topupAmountInput" min="30" step="1" placeholder="100" />
+        </label>
+        <div class="wallet-amount-pills" id="topupAmountPills" aria-label="مبالغ سريعة"></div>
+        <label style="display: block; margin-top: 0.75rem">
+          <span style="display: block; font-size: 0.78rem; font-weight: 800; color: var(--w-muted); margin-bottom: 0.35rem">جوالك (لإرسال الكود)</span>
+          <input type="tel" id="topupPhoneInput" inputmode="tel" autocomplete="tel" placeholder="05xxxxxxxx" />
+        </label>
+        <div class="wallet-row-actions" style="margin-top: 1rem">
+          <button type="button" class="wallet-btn wallet-btn--gold" id="btnTopupSubmit">تم التحويل — طلب الشحن</button>
+        </div>
+        <div class="wallet-msg" id="topupMsg" role="status"></div>
+      </div>
+    </div>
+
+    <div class="wallet-toast" id="walletToast" role="status" aria-live="polite"></div>
+
     <script src="/assets/api-config.js"></script>
     <script src="/assets/api.js"></script>
     <script>
@@ -1032,6 +1232,22 @@
       const elWithdrawOtpBlock = document.getElementById("withdrawOtpBlock");
       const elWithdrawOtp = document.getElementById("withdrawOtp");
       const elBtnConfirmWithdraw = document.getElementById("btnConfirmWithdraw");
+      const elRedeemCard = document.getElementById("redeemCard");
+      const elRedeemCodeInput = document.getElementById("redeemCodeInput");
+      const elBtnRedeemCode = document.getElementById("btnRedeemCode");
+      const elRedeemMsg = document.getElementById("redeemMsg");
+      const elTopupModal = document.getElementById("topupModal");
+      const elTopupStcNumber = document.getElementById("topupStcNumber");
+      const elTopupAmountInput = document.getElementById("topupAmountInput");
+      const elTopupPhoneInput = document.getElementById("topupPhoneInput");
+      const elTopupAmountPills = document.getElementById("topupAmountPills");
+      const elTopupMsg = document.getElementById("topupMsg");
+      const elBtnTopupSubmit = document.getElementById("btnTopupSubmit");
+      const elWalletToast = document.getElementById("walletToast");
+
+      var paySettings = null;
+      var walletLoadFailed = false;
+      var toastTimer = null;
 
       function getStoredPhone() {
         var p = localStorage.getItem("userPhone");

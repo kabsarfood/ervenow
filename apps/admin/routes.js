@@ -60,6 +60,17 @@ const {
   toAutoFreezeBalance,
   loadAutoFreezeSettings,
 } = require("../../shared/services/autoFreeze");
+const {
+  loadPlatformPaySettings,
+  savePlatformPaySettings,
+  PAY_SETTING_KEYS,
+} = require("../../shared/services/platformPaySettings");
+const {
+  listTopupRequests,
+  listTopupCodes,
+  approveTopupRequest,
+  rejectTopupRequest,
+} = require("../../shared/services/walletTopupService");
 
 const ADMIN_PUBLIC_ROOT = path.join(__dirname, "../../public");
 
@@ -2761,6 +2772,134 @@ router.patch(
       return ok(res, { debt: data });
     } catch (e) {
       return fail(res, e.message || String(e), 500);
+    }
+  }
+);
+
+/** ——— ERVENOW PAY ——— */
+
+router.get(
+  "/topup-requests",
+  requireAuth,
+  requireRole("admin"),
+  requireAdminPermission("finance"),
+  async (req, res) => {
+    try {
+      const sb = createServiceClient();
+      if (!sb) return fail(res, "قاعدة البيانات غير جاهزة", 503);
+      const requests = await listTopupRequests(sb, {
+        status: req.query?.status,
+        limit: Number(req.query?.limit) || 100,
+      });
+      return ok(res, { requests });
+    } catch (e) {
+      return fail(res, e.message || String(e), e.statusCode || 500);
+    }
+  }
+);
+
+router.get(
+  "/topup-codes",
+  requireAuth,
+  requireRole("admin"),
+  requireAdminPermission("finance"),
+  async (req, res) => {
+    try {
+      const sb = createServiceClient();
+      if (!sb) return fail(res, "قاعدة البيانات غير جاهزة", 503);
+      const codes = await listTopupCodes(sb, { limit: Number(req.query?.limit) || 100 });
+      return ok(res, { codes });
+    } catch (e) {
+      return fail(res, e.message || String(e), e.statusCode || 500);
+    }
+  }
+);
+
+router.post(
+  "/topup-approve/:id",
+  requireAuth,
+  requireRole("admin"),
+  requireAdminPermission("finance"),
+  async (req, res) => {
+    try {
+      const sb = createServiceClient();
+      if (!sb) return fail(res, "قاعدة البيانات غير جاهزة", 503);
+      const result = await approveTopupRequest(sb, req.params.id, req.body?.note);
+      return ok(res, result);
+    } catch (e) {
+      return fail(res, e.message || String(e), e.statusCode || 500);
+    }
+  }
+);
+
+router.post(
+  "/topup-reject/:id",
+  requireAuth,
+  requireRole("admin"),
+  requireAdminPermission("finance"),
+  async (req, res) => {
+    try {
+      const sb = createServiceClient();
+      if (!sb) return fail(res, "قاعدة البيانات غير جاهزة", 503);
+      const result = await rejectTopupRequest(sb, req.params.id, req.body?.note);
+      return ok(res, result);
+    } catch (e) {
+      return fail(res, e.message || String(e), e.statusCode || 500);
+    }
+  }
+);
+
+router.get(
+  "/pay-settings",
+  requireAuth,
+  requireRole("admin"),
+  requireAdminPermission("finance"),
+  async (_req, res) => {
+    try {
+      const sb = createServiceClient();
+      if (!sb) return fail(res, "قاعدة البيانات غير جاهزة", 503);
+      const settings = await loadPlatformPaySettings(sb);
+      return ok(res, { settings, keys: [...PAY_SETTING_KEYS] });
+    } catch (e) {
+      return fail(res, e.message || String(e), 500);
+    }
+  }
+);
+
+router.post(
+  "/pay-settings",
+  requireAuth,
+  requireRole("admin"),
+  requireAdminPermission("finance"),
+  async (req, res) => {
+    try {
+      const sb = createServiceClient();
+      if (!sb) return fail(res, "قاعدة البيانات غير جاهزة", 503);
+      const raw = req.body?.settings && typeof req.body.settings === "object" ? req.body.settings : req.body || {};
+      const settings = await savePlatformPaySettings(sb, raw);
+      return ok(res, { settings, message: "تم حفظ إعدادات ERVENOW PAY" });
+    } catch (e) {
+      return fail(res, e.message || String(e), e.statusCode || 400);
+    }
+  }
+);
+
+router.post(
+  "/settings",
+  requireAuth,
+  requireRole("admin"),
+  requireAdminPermission("finance"),
+  async (req, res) => {
+    try {
+      const sb = createServiceClient();
+      if (!sb) return fail(res, "قاعدة البيانات غير جاهزة", 503);
+      const raw = req.body?.settings && typeof req.body.settings === "object" ? req.body.settings : req.body || {};
+      const hasPayKey = Object.keys(raw).some((k) => PAY_SETTING_KEYS.includes(k));
+      if (!hasPayKey) return fail(res, "لا توجد إعدادات ERVENOW PAY في الطلب", 400);
+      const settings = await savePlatformPaySettings(sb, raw);
+      return ok(res, { settings, message: "تم حفظ الإعدادات" });
+    } catch (e) {
+      return fail(res, e.message || String(e), e.statusCode || 400);
     }
   }
 );

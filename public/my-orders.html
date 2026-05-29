@@ -90,6 +90,30 @@
         color: var(--muted, #5c4a3d);
         line-height: 1.5;
       }
+      .my-order-route {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px 12px;
+        margin-top: 4px;
+      }
+      @media (max-width: 520px) {
+        .my-order-route {
+          grid-template-columns: 1fr;
+        }
+      }
+      .my-order-route__item {
+        margin: 0;
+        font-size: 0.86rem;
+        color: var(--muted, #5c4a3d);
+        line-height: 1.45;
+      }
+      .my-order-route__item strong {
+        color: var(--brown, #3d2213);
+        font-weight: 800;
+      }
+      .my-order-route__item.is-loading {
+        opacity: 0.65;
+      }
       .my-order-actions {
         display: flex;
         flex-wrap: wrap;
@@ -120,6 +144,60 @@
         background: rgba(185, 28, 28, 0.08);
         color: #b91c1c;
         font-weight: 700;
+      }
+      .my-orders-toggle-wrap {
+        margin-bottom: 12px;
+        padding: 0;
+        overflow: hidden;
+      }
+      .my-orders-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        width: 100%;
+        padding: 14px 16px;
+        border: 0;
+        border-radius: 14px;
+        background: transparent;
+        font: inherit;
+        font-weight: 800;
+        color: var(--brown, #3d2213);
+        cursor: pointer;
+        text-align: inherit;
+      }
+      .my-orders-toggle__main {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 0;
+      }
+      .my-orders-toggle__count {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 1.5rem;
+        padding: 2px 8px;
+        border-radius: 999px;
+        background: rgba(185, 135, 47, 0.14);
+        color: var(--brown, #3d2213);
+        font-size: 0.78rem;
+        font-weight: 900;
+      }
+      .my-orders-toggle__chev {
+        flex-shrink: 0;
+        font-size: 0.72rem;
+        opacity: 0.7;
+        transition: transform 0.22s ease;
+      }
+      .my-orders-toggle.is-open .my-orders-toggle__chev {
+        transform: rotate(180deg);
+      }
+      .my-orders-panel {
+        margin-top: 0;
+      }
+      .my-orders-panel[hidden] {
+        display: none !important;
       }
     </style>
   </head>
@@ -166,13 +244,27 @@
 
         <div id="myOrdersContent" hidden>
           <div id="myOrdersMsg" role="alert"></div>
-          <div class="card" style="margin-bottom: 12px">
-            <button type="button" class="btn btn-ghost" id="myOrdersRefresh">تحديث القائمة</button>
+          <div class="card my-orders-toggle-wrap">
+            <button
+              type="button"
+              class="my-orders-toggle btn btn-ghost"
+              id="myOrdersRefresh"
+              aria-expanded="false"
+              aria-controls="myOrdersPanel"
+            >
+              <span class="my-orders-toggle__main">
+                <span id="myOrdersToggleLabel">تحديث القائمة</span>
+                <span class="my-orders-toggle__count" id="myOrdersCount" hidden>0</span>
+              </span>
+              <span class="my-orders-toggle__chev" aria-hidden="true">▼</span>
+            </button>
           </div>
-          <div id="myOrdersSections"></div>
-          <div id="myOrdersEmpty" class="my-orders-empty" hidden>
-            <p>عذراً، لا يوجد طلب حالياً.</p>
-            <a class="btn btn-primary" href="/dashboard">ابدأ طلباً جديداً</a>
+          <div id="myOrdersPanel" class="my-orders-panel" hidden>
+            <div id="myOrdersSections"></div>
+            <div id="myOrdersEmpty" class="my-orders-empty" hidden>
+              <p>عذراً، لا يوجد طلب حالياً.</p>
+              <a class="btn btn-primary" href="/dashboard">ابدأ طلباً جديداً</a>
+            </div>
           </div>
         </div>
       </div>
@@ -219,28 +311,208 @@
           .replace(/"/g, "&quot;");
       }
 
+      var districtCache = {};
+
+      function orderData(o) {
+        var d = o && o.data;
+        if (d && typeof d === "object") return d;
+        if (typeof d === "string") {
+          try {
+            return JSON.parse(d);
+          } catch (e) {}
+        }
+        return {};
+      }
+
+      function isMapsUrl(s) {
+        var t = String(s || "").trim();
+        return /^(https?:\/\/)/i.test(t) || /google\.com\/maps|maps\.app\.goo|goo\.gl\/maps/i.test(t);
+      }
+
+      function humanLocationText(s) {
+        var t = String(s || "").trim();
+        return t && !isMapsUrl(t) ? t : "";
+      }
+
+      function pickDistrictFromData(d, side) {
+        if (!d || typeof d !== "object") return "";
+        if (side === "pickup") {
+          return humanLocationText(
+            d.pickup_district_label || d.from_city || (d.pickup && d.pickup.district) || ""
+          );
+        }
+        return humanLocationText(
+          d.drop_district_label || d.to_city || (d.drop && d.drop.district) || ""
+        );
+      }
+
+      function pickAddressLabel(o, side) {
+        var d = orderData(o);
+        var fromData = pickDistrictFromData(d, side);
+        if (fromData) return fromData;
+        var raw = side === "pickup" ? o.pickup_address : o.drop_address;
+        var human = humanLocationText(raw);
+        if (human) return human;
+        var alt =
+          side === "pickup"
+            ? humanLocationText(d.from || d.pickup_address)
+            : humanLocationText(d.to || d.drop_address || d.location);
+        return alt || "";
+      }
+
+      function orderDistanceKm(o) {
+        var d = orderData(o);
+        var km = Number(o.distance_km != null ? o.distance_km : d.distance_km);
+        return Number.isFinite(km) && km >= 0 ? km : null;
+      }
+
+      function orderPrice(o) {
+        var d = orderData(o);
+        var candidates = [o.delivery_fee, o.order_total, o.total_amount, o.total_with_vat, d.delivery_fee];
+        for (var i = 0; i < candidates.length; i++) {
+          var n = Number(candidates[i]);
+          if (Number.isFinite(n) && n >= 0) return n;
+        }
+        return null;
+      }
+
+      function formatDistance(km) {
+        if (km == null) return "—";
+        return km.toFixed(2) + " كم";
+      }
+
+      function formatPrice(amount) {
+        if (amount == null) return "—";
+        return amount.toFixed(2) + " ر.س";
+      }
+
+      function orderCustomerPhone(o) {
+        var d = orderData(o);
+        return String(o.customer_phone || d.customer_phone || "").trim();
+      }
+
+      function formatCustomerPhone(phone) {
+        if (!phone) return "—";
+        var d = String(phone).replace(/\D/g, "");
+        if (d.startsWith("9665") && d.length === 12) return "0" + d.slice(3);
+        if (d.startsWith("5") && d.length === 9) return "0" + d;
+        if (d.startsWith("05") && d.length === 10) return d;
+        return String(phone).trim() || "—";
+      }
+
+      async function reverseGeocodeDistrict(lat, lng) {
+        var key = Number(lat).toFixed(5) + "," + Number(lng).toFixed(5);
+        if (districtCache[key]) return districtCache[key];
+        var url =
+          "https://nominatim.openstreetmap.org/reverse?format=json&lat=" +
+          lat +
+          "&lon=" +
+          lng +
+          "&accept-language=ar";
+        var r = await fetch(url, { headers: { "Accept-Language": "ar" } });
+        var j = await r.json();
+        var a = (j && j.address) || {};
+        var name =
+          a.suburb ||
+          a.neighbourhood ||
+          a.quarter ||
+          a.city_district ||
+          a.district ||
+          a.city ||
+          a.town ||
+          a.village ||
+          "";
+        districtCache[key] = name || "—";
+        return districtCache[key];
+      }
+
+      async function resolveDistrictLabel(o, side) {
+        var label = pickAddressLabel(o, side);
+        if (label) return label;
+        var lat = Number(side === "pickup" ? o.pickup_lat : o.drop_lat);
+        var lng = Number(side === "pickup" ? o.pickup_lng : o.drop_lng);
+        if (!Number.isFinite(lat) || !Number.isFinite(lng)) return "—";
+        return await reverseGeocodeDistrict(lat, lng);
+      }
+
       function renderOrderCard(o) {
         var st = orderStatusMeta(o);
         var num = o.order_number || String(o.id || "").slice(0, 8);
-        var from = o.pickup_address || "—";
-        var to = o.drop_address || "—";
-        var price = Number(o.total_amount != null ? o.total_amount : o.order_total);
-        var priceStr = Number.isFinite(price) ? price.toFixed(2) + " ر.س" : "—";
+        var from = pickAddressLabel(o, "pickup") || "…";
+        var to = pickAddressLabel(o, "drop") || "…";
+        var needsGeo = !pickAddressLabel(o, "pickup") || !pickAddressLabel(o, "drop");
+        var km = orderDistanceKm(o);
+        var price = orderPrice(o);
+        var customerPhone = formatCustomerPhone(orderCustomerPhone(o));
         var trackId = o.order_number || o.id;
+        var cardId = "my-order-" + String(o.id || num).replace(/[^a-zA-Z0-9_-]/g, "");
         return (
-          '<article class="my-order-card">' +
+          '<article class="my-order-card" id="' +
+          esc(cardId) +
+          '" data-order-id="' +
+          esc(o.id || "") +
+          '">' +
           '<div class="my-order-card__top">' +
-          '<span class="my-order-card__id">#' + esc(num) + "</span>" +
-          '<span class="my-order-badge ' + st.cls + '">' + esc(st.label) + "</span>" +
+          '<span class="my-order-card__id">#' +
+          esc(num) +
+          "</span>" +
+          '<span class="my-order-badge ' +
+          st.cls +
+          '">' +
+          esc(st.label) +
+          "</span>" +
           "</div>" +
-          '<p class="my-order-meta">من: ' + esc(from) + "</p>" +
-          '<p class="my-order-meta">إلى: ' + esc(to) + "</p>" +
-          '<p class="my-order-meta">الإجمالي: ' + esc(priceStr) + "</p>" +
+          '<div class="my-order-route">' +
+          '<p class="my-order-route__item' +
+          (needsGeo && from === "…" ? " is-loading" : "") +
+          '" data-route-part="from"><strong>من:</strong> <span data-route-value="from">' +
+          esc(from) +
+          "</span></p>" +
+          '<p class="my-order-route__item' +
+          (needsGeo && to === "…" ? " is-loading" : "") +
+          '" data-route-part="to"><strong>إلى:</strong> <span data-route-value="to">' +
+          esc(to) +
+          "</span></p>" +
+          '<p class="my-order-route__item"><strong>المسافة:</strong> ' +
+          esc(formatDistance(km)) +
+          "</p>" +
+          '<p class="my-order-route__item"><strong>السعر:</strong> ' +
+          esc(formatPrice(price)) +
+          "</p>" +
+          '<p class="my-order-route__item"><strong>جوال طالب الخدمة:</strong> ' +
+          esc(customerPhone) +
+          "</p>" +
+          "</div>" +
           '<div class="my-order-actions">' +
-          '<a class="btn btn-primary" href="/track?id=' + encodeURIComponent(trackId) + '">تتبع الطلب</a>' +
+          '<a class="btn btn-primary" href="/track?id=' +
+          encodeURIComponent(trackId) +
+          '">تتبع الطلب</a>' +
           "</div>" +
           "</article>"
         );
+      }
+
+      async function enrichOrderDistricts(orders) {
+        for (var i = 0; i < (orders || []).length; i++) {
+          var o = orders[i];
+          if (!o || !o.id) continue;
+          var card = document.getElementById("my-order-" + String(o.id).replace(/[^a-zA-Z0-9_-]/g, ""));
+          if (!card) continue;
+          var sides = ["pickup", "drop"];
+          for (var s = 0; s < sides.length; s++) {
+            var side = sides[s];
+            if (pickAddressLabel(o, side)) continue;
+            var label = await resolveDistrictLabel(o, side);
+            var part = side === "pickup" ? "from" : "to";
+            var span = card.querySelector('[data-route-value="' + part + '"]');
+            var row = card.querySelector('[data-route-part="' + part + '"]');
+            if (span) span.textContent = label;
+            if (row) row.classList.remove("is-loading");
+            await new Promise(function (resolve) {
+              setTimeout(resolve, 350);
+            });
+          }
+        }
       }
 
       function renderSections(orders) {
@@ -282,6 +554,34 @@
 
         document.getElementById("myOrdersSections").innerHTML = html;
         document.getElementById("myOrdersEmpty").hidden = orders.length > 0;
+        updateOrdersCount(orders.length);
+      }
+
+      var ordersPanelOpen = false;
+
+      function updateOrdersCount(count) {
+        var badge = document.getElementById("myOrdersCount");
+        if (!badge) return;
+        if (count > 0) {
+          badge.hidden = false;
+          badge.textContent = String(count);
+        } else {
+          badge.hidden = true;
+          badge.textContent = "0";
+        }
+      }
+
+      function setOrdersPanelOpen(open) {
+        ordersPanelOpen = !!open;
+        var panel = document.getElementById("myOrdersPanel");
+        var btn = document.getElementById("myOrdersRefresh");
+        var label = document.getElementById("myOrdersToggleLabel");
+        if (panel) panel.hidden = !ordersPanelOpen;
+        if (btn) {
+          btn.setAttribute("aria-expanded", ordersPanelOpen ? "true" : "false");
+          btn.classList.toggle("is-open", ordersPanelOpen);
+        }
+        if (label) label.textContent = ordersPanelOpen ? "إخفاء القائمة" : "تحديث القائمة";
       }
 
       function showMsg(t) {
@@ -296,11 +596,14 @@
         el.textContent = t;
       }
 
-      async function loadMyOrders() {
+      async function loadMyOrders(options) {
+        var opts = options || {};
+        var openAfterLoad = !!opts.openAfterLoad;
         showMsg("");
         if (!window.PlatformAPI || !PlatformAPI.getToken()) {
           document.getElementById("myOrdersLogin").hidden = false;
           document.getElementById("myOrdersContent").hidden = true;
+          setOrdersPanelOpen(false);
           return;
         }
         document.getElementById("myOrdersLogin").hidden = true;
@@ -321,14 +624,26 @@
           var j = await PlatformAPI.api("/api/delivery/orders");
           var orders = Array.isArray(j.orders) ? j.orders : [];
           renderSections(orders);
+          if (openAfterLoad) setOrdersPanelOpen(true);
+          enrichOrderDistricts(orders);
         } catch (e) {
           showMsg((e && e.message) || "تعذّر تحميل الطلبات");
         }
       }
 
-      document.getElementById("myOrdersRefresh").onclick = loadMyOrders;
-      loadMyOrders();
-      window.addEventListener("ervenow:auth-changed", loadMyOrders);
+      function toggleOrdersPanel() {
+        if (ordersPanelOpen) {
+          setOrdersPanelOpen(false);
+          return;
+        }
+        loadMyOrders({ openAfterLoad: true });
+      }
+
+      document.getElementById("myOrdersRefresh").onclick = toggleOrdersPanel;
+      loadMyOrders({ openAfterLoad: false });
+      window.addEventListener("ervenow:auth-changed", function () {
+        loadMyOrders({ openAfterLoad: ordersPanelOpen });
+      });
     </script>
   </body>
 </html>

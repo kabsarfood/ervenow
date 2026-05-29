@@ -577,6 +577,60 @@ body.driver-wallet-page {
 .drv-wallet-tx:last-child {
   margin-bottom: 0;
 }
+.drv-wallet-panel--tx {
+  padding: 0;
+  overflow: hidden;
+}
+.drv-wallet-tx-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  padding: 16px 18px;
+  border: 0;
+  border-radius: 16px;
+  background: transparent;
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--brown, #3d2213);
+  cursor: pointer;
+  text-align: inherit;
+}
+.drv-wallet-tx-toggle__main {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.drv-wallet-tx-toggle__count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.5rem;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(185, 135, 47, 0.14);
+  color: var(--brown, #3d2213);
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+.drv-wallet-tx-toggle__chev {
+  flex-shrink: 0;
+  font-size: 0.72rem;
+  opacity: 0.7;
+  transition: transform 0.22s ease;
+}
+.drv-wallet-tx-toggle.is-open .drv-wallet-tx-toggle__chev {
+  transform: rotate(180deg);
+}
+.drv-wallet-tx-panel {
+  padding: 0 18px 16px;
+}
+.drv-wallet-tx-panel[hidden] {
+  display: none !important;
+}
 .drv-toast {
   position: fixed;
   bottom: max(16px, env(safe-area-inset-bottom));

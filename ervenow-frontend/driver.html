@@ -76,6 +76,7 @@
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="/assets/osrm-route-leaflet.js"></script>
     <script src="/assets/api-config.js"></script>
     <script src="/assets/api.js"></script>
     <script src="/assets/driver-nav.js"></script>
@@ -297,22 +298,7 @@
         }
       }
 
-      async function getRoute(a, b) {
-        var url =
-          "https://router.project-osrm.org/route/v1/driving/" +
-          a.lng +
-          "," +
-          a.lat +
-          ";" +
-          b.lng +
-          "," +
-          b.lat +
-          "?overview=full&geometries=geojson";
-        var r = await fetch(url);
-        var j = await r.json();
-        if (!j.routes || !j.routes[0]) throw new Error("تعذر حساب المسار");
-        return j.routes[0];
-      }
+      var routeLineReq = 0;
 
       async function updateRouteLine(order) {
         initDriverMap();
@@ -332,16 +318,32 @@
 
         var routeKey = [pLat.toFixed(6), pLng.toFixed(6), dLat.toFixed(6), dLng.toFixed(6)].join("|");
         if (routeLine && lastRouteKey === routeKey) return;
+
+        var reqId = ++routeLineReq;
         try {
-          var route = await getRoute({ lat: pLat, lng: pLng }, { lat: dLat, lng: dLng });
-          if (routeLine) map.removeLayer(routeLine);
-          routeLine = L.geoJSON(route.geometry, {
-            style: { color: "#2563eb", weight: 4, opacity: 0.85 },
-          }).addTo(map);
+          if (!window.ErvenowOsrmRoute || !ErvenowOsrmRoute.drawOnMap) throw new Error("osrm_module");
+          if (routeLine) {
+            map.removeLayer(routeLine);
+            routeLine = null;
+          }
+          var res = await ErvenowOsrmRoute.drawOnMap(
+            map,
+            { lat: pLat, lng: pLng },
+            { lat: dLat, lng: dLng },
+            {
+              fitBounds: false,
+              style: { color: "#2563eb", weight: 6 },
+            }
+          );
+          if (reqId !== routeLineReq) {
+            if (res.layer) map.removeLayer(res.layer);
+            return;
+          }
+          routeLine = res.layer;
           lastRouteKey = routeKey;
           if (pickupMarker && dropMarker) {
             var group = L.featureGroup([pickupMarker, dropMarker, routeLine]);
-            map.fitBounds(group.getBounds(), { padding: [24, 24] });
+            map.fitBounds(group.getBounds(), { padding: [24, 24], maxZoom: 16 });
           }
         } catch (e) {}
       }

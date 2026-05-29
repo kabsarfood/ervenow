@@ -8,224 +8,8 @@
     <title>ERVENOW | السلة</title>
     <link rel="stylesheet" href="/assets/styles.css" />
     <link rel="stylesheet" href="/assets/guest-shell.css" />
-    <style>
-      .cart-page-hero {
-        margin-bottom: 14px;
-      }
-      .cart-page-hero h1 {
-        margin: 0 0 6px;
-        font-size: clamp(1.2rem, 3vw, 1.45rem);
-        font-weight: 900;
-        color: var(--brown);
-      }
-      .cart-page-hero p {
-        margin: 0;
-        font-size: 0.9rem;
-        color: var(--muted);
-        font-weight: 600;
-        line-height: 1.55;
-      }
-      .cart-grid {
-        display: grid;
-        grid-template-columns: minmax(0, 1.65fr) minmax(260px, 1fr);
-        gap: 14px;
-        align-items: start;
-      }
-      .cart-items-card {
-        min-height: 120px;
-      }
-      .cart-items-card .lp-cart-panel__list {
-        padding: 0;
-      }
-      .lp-cart-line {
-        margin-bottom: 12px;
-        padding: 14px;
-        border-radius: 12px;
-        background: var(--card, #fffefb);
-        border: 1px solid var(--border);
-      }
-      .lp-cart-line__top {
-        display: flex;
-        align-items: flex-start;
-        gap: 8px;
-        flex-wrap: wrap;
-      }
-      .lp-cart-line__badge {
-        font-size: 0.68rem;
-        font-weight: 800;
-        padding: 3px 8px;
-        border-radius: 999px;
-      }
-      .lp-cart-line__badge--product {
-        background: rgba(46, 125, 50, 0.12);
-        color: #1b5e20;
-      }
-      .lp-cart-line__badge--delivery {
-        background: rgba(25, 118, 210, 0.12);
-        color: #0d47a1;
-      }
-      .lp-cart-line__badge--service {
-        background: rgba(185, 135, 47, 0.2);
-        color: #5c3710;
-      }
-      .lp-cart-line__title {
-        flex: 1;
-        min-width: 0;
-        font-size: 1rem;
-        font-weight: 800;
-        color: var(--brown);
-      }
-      .lp-cart-line__meta {
-        margin: 8px 0 0;
-        font-size: 0.82rem;
-        color: var(--muted);
-        line-height: 1.5;
-      }
-      .lp-cart-line__foot {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 10px;
-        margin-top: 10px;
-        padding-top: 8px;
-        border-top: 1px dashed rgba(61, 34, 19, 0.1);
-        flex-wrap: wrap;
-      }
-      .lp-cart-line__price {
-        font-weight: 800;
-        color: var(--brown);
-      }
-      .lp-cart-line__remove,
-      .lp-cart-line__qty-btn {
-        font-family: inherit;
-        font-size: 0.78rem;
-        font-weight: 700;
-        cursor: pointer;
-        border-radius: 8px;
-        border: 1px solid var(--border);
-        background: rgba(255, 254, 251, 0.95);
-        color: var(--muted);
-        padding: 6px 12px;
-      }
-      .lp-cart-line__qty {
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-        border: 1px solid var(--border);
-        border-radius: 10px;
-        padding: 2px;
-      }
-      .lp-cart-line__qty-btn {
-        width: 28px;
-        height: 28px;
-        padding: 0;
-        border: none;
-        font-size: 1rem;
-        color: var(--brown);
-      }
-      .lp-cart-line__qty-val {
-        min-width: 1.5rem;
-        text-align: center;
-        font-weight: 800;
-      }
-      .cart-page-empty {
-        text-align: center;
-        padding: 28px 16px;
-      }
-      .cart-page-empty p {
-        margin: 0 0 14px;
-        color: var(--muted);
-        font-weight: 700;
-        line-height: 1.55;
-      }
-      .cart-page-empty__actions {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        justify-content: center;
-      }
-      .cart-page-empty__actions a {
-        font-size: 0.85rem;
-        font-weight: 800;
-        padding: 8px 14px;
-        border-radius: 10px;
-        border: 1px solid rgba(185, 135, 47, 0.35);
-        background: var(--card);
-        color: var(--brown);
-        text-decoration: none;
-      }
-      .cart-checkout-col {
-        position: sticky;
-        top: 12px;
-      }
-      .cart-checkout-col--dim {
-        opacity: 0.72;
-        pointer-events: none;
-      }
-      .erv-cart-fin {
-        margin-top: 10px;
-        padding: 12px;
-        border-radius: 12px;
-        background: var(--card);
-        border: 1px solid var(--border);
-      }
-      .erv-cart-fin .erv-fin-row {
-        display: flex;
-        align-items: baseline;
-        justify-content: space-between;
-        gap: 10px;
-        margin: 6px 0;
-        font-size: 0.82rem;
-        font-weight: 700;
-        color: var(--muted);
-      }
-      .erv-cart-fin .erv-fin-row--grand {
-        margin-top: 8px;
-        padding-top: 8px;
-        border-top: 1px dashed rgba(61, 34, 19, 0.12);
-        font-size: 0.92rem;
-        color: var(--brown);
-      }
-      .erv-cart-fin .erv-fin-val {
-        font-weight: 800;
-        color: var(--brown);
-        font-variant-numeric: tabular-nums;
-      }
-      .erv-cart-fin .erv-fin-note {
-        margin: 4px 0 0;
-        font-size: 0.72rem;
-        color: var(--muted);
-        line-height: 1.4;
-      }
-      .erv-cart-fin .erv-fin-note[hidden],
-      #cartFinBox[hidden],
-      #cartPagePaySection[hidden] {
-        display: none !important;
-      }
-      .erv-cart-fin-details summary {
-        font-size: 0.72rem;
-        font-weight: 700;
-        color: var(--muted);
-        cursor: pointer;
-        list-style: none;
-      }
-      .erv-cart-fin-details summary::-webkit-details-marker {
-        display: none;
-      }
-      .lp-cart-panel__cur {
-        color: var(--gold);
-        font-weight: 700;
-        font-size: 0.72rem;
-      }
-      @media (max-width: 860px) {
-        .cart-grid {
-          grid-template-columns: 1fr;
-        }
-        .cart-checkout-col {
-          position: static;
-        }
-      }
-    </style>
+    <link rel="stylesheet" href="/assets/cart-luxe.css" />
+    <link rel="stylesheet" href="/assets/cart-page.css" />
   </head>
   <body class="guest-shell-page">
     <header class="dash-site-header">
@@ -262,10 +46,10 @@
     </header>
 
     <div class="dash-main">
-      <div class="layout">
+      <div class="layout cart-page-wrap">
         <div class="cart-page-hero">
-          <h1>سلة الطلب</h1>
-          <p>راجع الأصناف والأسعار، اختر الدفع، ثم أكمل الطلب. لطلبات المتجر حدّد موقع التوصيل أدناه.</p>
+          <h1>سلة التسوق</h1>
+          <p id="cartItemsCount">لا توجد قطع في السلة</p>
         </div>
 
         <div class="card" id="guestCartBanner" style="display: none; margin-bottom: 12px; background: #fff8ee; border-color: #e8d4bc">
@@ -276,37 +60,53 @@
         </div>
 
         <div class="cart-grid">
-          <div class="card cart-items-card">
-            <div class="badge">الأصناف</div>
-            <p class="sub" id="cartItemsCount" style="margin-top: 8px">لا توجد قطع في السلة</p>
-            <div id="cartList" class="lp-cart-panel__list" style="margin-top: 10px"></div>
-            <div id="cartPageEmpty" class="cart-page-empty">
-              <p>السلة فارغة — تصفّح المتاجر أو الخدمات وأضف ما تحتاجه.</p>
+          <section class="cart-panel cart-items-card">
+            <header class="cart-panel__head">
+              <div class="cart-panel__head-left">
+                <span class="cart-panel__icon" aria-hidden="true">🛒</span>
+                <h2 class="cart-panel__title">المنتجات في سلتك</h2>
+              </div>
+            </header>
+            <div class="cart-panel__body">
+              <div id="cartList" class="lp-cart-panel__list"></div>
+              <div id="cartPageEmpty" class="cart-page-empty">
+              <div class="cart-page-empty__icon" aria-hidden="true">🛒</div>
+              <h3 class="cart-page-empty__title">سلتك فارغة</h3>
+              <p class="cart-page-empty__text">ابدأ التسوق الآن وأضف ما تحتاجه من متاجرنا وخدماتنا.</p>
+              <a class="cart-page-empty__cta" href="/stores">ابدأ التسوق الآن</a>
               <div class="cart-page-empty__actions">
                 <a href="/stores">متاجر</a>
                 <a href="/services">خدمات</a>
                 <a href="/delivery-services.html">توصيل</a>
                 <a href="/start-now.html">ابدأ طلباً</a>
               </div>
+              </div>
             </div>
-          </div>
+          </section>
 
-          <div class="card cart-checkout-col cart-checkout-col--dim" id="cartCheckoutCol">
-            <div class="badge">الدفع والملخص</div>
+          <div class="cart-sidebar-stack">
+          <aside class="cart-panel cart-checkout-col cart-checkout-col--dim" id="cartCheckoutCol">
+            <header class="cart-panel__head">
+              <div class="cart-panel__head-left">
+                <span class="cart-panel__icon" aria-hidden="true">💰</span>
+                <h2 class="cart-panel__title">ملخص الطلب</h2>
+              </div>
+            </header>
+            <div class="cart-panel__body">
             <div class="erv-cart-fin" id="cartFinBox" hidden>
               <div class="erv-fin-row">
-                <span>المجموع الفرعي</span>
+                <span class="erv-fin-row__label"><span class="erv-fin-row__icon" aria-hidden="true">💰</span> المجموع الفرعي</span>
                 <span class="erv-fin-val" id="cartFinSub">٠٫٠٠ <small class="lp-cart-panel__cur">ر.س</small></span>
               </div>
               <div class="erv-fin-row">
-                <span>أجرة التوصيل</span>
+                <span class="erv-fin-row__label"><span class="erv-fin-row__icon" aria-hidden="true">🚚</span> أجرة التوصيل</span>
                 <span class="erv-fin-val" id="cartFinDel">٠٫٠٠ <small class="lp-cart-panel__cur">ر.س</small></span>
               </div>
               <p id="cartFinDelNote" class="erv-fin-note" hidden>
                 لطلبات المتجر: اضغط «تحديد موقعي GPS» أدناه لحساب أجرة التوصيل (كم × 2.3 ر.س).
               </p>
               <div class="erv-fin-row">
-                <span>ضريبة القيمة المضافة (15%)</span>
+                <span class="erv-fin-row__label">القيمة المضافة 15%</span>
                 <span class="erv-fin-val" id="cartFinVat">٠٫٠٠ <small class="lp-cart-panel__cur">ر.س</small></span>
               </div>
               <details class="erv-cart-fin-details">
@@ -320,27 +120,27 @@
                 </p>
               </details>
               <div class="erv-fin-row erv-fin-row--grand">
-                <span>الإجمالي المستحق</span>
+                <span class="erv-fin-row__label">المجموع الكلي</span>
                 <span class="erv-fin-val" id="cartFinGrand">٠٫٠٠ <small class="lp-cart-panel__cur">ر.س</small></span>
               </div>
             </div>
-            <div id="cartPagePaySection" hidden>
-              <p class="sub lp-cart-panel__pay-label" style="margin: 10px 0 4px">وسائل الدفع</p>
-              <div id="cartPayIcons" class="erv-pay-cards" role="radiogroup" aria-label="اختر وسيلة الدفع"></div>
-              <div id="cartEwPayDetail" class="erv-pay-ew-detail" hidden>
-                <div class="erv-pay-ew-detail__row">
-                  <span class="erv-pay-ew-detail__label">رصيد المحفظة</span>
-                  <strong class="erv-pay-ew-detail__bal" id="cartEwPayBalance">—</strong>
-                  <span class="erv-pay-ew-detail__cur">ر.س</span>
-                </div>
-                <p class="erv-pay-ew-detail__tagline">⚡ دفع فوري وآمن</p>
-              </div>
             </div>
-            <div class="btn-row" style="margin-top: 10px; flex-direction: column; align-items: stretch">
-              <button class="btn btn-primary" type="button" id="checkoutBtn" onclick="checkout()">إتمام الطلب</button>
-              <button class="btn btn-ghost" type="button" id="clearBtn" onclick="clearAllCart()">تفريغ السلة</button>
-              <a class="btn btn-ghost" href="/">استمر بالتسوق</a>
+          </aside>
+
+          <aside class="cart-panel cart-checkout-actions-panel" id="cartCheckoutActionsPanel" hidden>
+            <div class="cart-panel__body">
+            <div class="cart-checkout-actions">
+              <button class="cart-checkout-primary cart-checkout-primary--desktop" type="button" id="checkoutBtn" onclick="checkout()">إتمام الطلب</button>
+              <button class="cart-checkout-secondary" type="button" id="clearBtn" onclick="clearAllCart()">تفريغ السلة</button>
+              <a class="cart-checkout-secondary" href="/">استمر بالتسوق</a>
             </div>
+            <div class="cart-trust">
+              <span class="cart-trust__item">🔒 دفع آمن</span>
+              <span class="cart-trust__item">⚡ توصيل سريع</span>
+              <span class="cart-trust__item">🛡️ محمي</span>
+            </div>
+            </div>
+          </aside>
           </div>
         </div>
 
@@ -369,6 +169,14 @@
         </nav>
         <p class="dash-site-footer__copy">© 2026 ERVENOW — جميع الحقوق محفوظة</p>
       </footer>
+    </div>
+
+    <div class="cart-mobile-bar" id="cartMobileBar" hidden>
+      <div class="cart-mobile-bar__sum">
+        <span class="cart-mobile-bar__sum-label">المجموع الكلي</span>
+        <strong class="cart-mobile-bar__sum-val" id="cartMobileGrand">٠٫٠٠ <small class="lp-cart-panel__cur">ر.س</small></strong>
+      </div>
+      <button class="cart-mobile-bar__btn" type="button" id="cartMobileCheckoutBtn" onclick="checkout()">بدء الدفع</button>
     </div>
 
     <script src="/assets/guestBrowse.js"></script>
@@ -573,6 +381,7 @@
         }
 
         const btn = document.getElementById("checkoutBtn");
+
         const token =
           (window.PlatformAPI && typeof window.PlatformAPI.getToken === "function" && window.PlatformAPI.getToken()) ||
           localStorage.getItem("token") ||
@@ -593,6 +402,7 @@
           btn.disabled = true;
           btn.innerText = "جارٍ الإرسال...";
         }
+        if (typeof syncCartCheckoutButtons === "function") syncCartCheckoutButtons();
 
         var idemKey = checkoutIdempotencyKey();
 
@@ -636,6 +446,8 @@
             btn.disabled = false;
             btn.innerText = "إتمام الطلب";
           }
+          if (typeof syncCartCheckoutButtons === "function") syncCartCheckoutButtons();
+          if (typeof syncCartPageCheckoutBtn === "function") syncCartPageCheckoutBtn();
         }
       });
       window.checkout = checkout;

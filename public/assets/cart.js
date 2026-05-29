@@ -250,11 +250,17 @@ function renderCartLineHtml(item) {
           ? "عدد القطع: " + escCartHtml(String(data.product_qty))
           : "× " + qty) +
         "</span>";
+  var thumbIcon = { product: "🛍", delivery: "🚚", service: "⚡" };
   return (
     '<article class="lp-cart-line" data-cart-id="' +
     idAttr +
     '">' +
-    '<div class="lp-cart-line__top">' +
+    '<div class="lp-cart-line__row">' +
+    '<div class="lp-cart-line__thumb"><span class="lp-cart-line__thumb-icon" aria-hidden="true">' +
+    (thumbIcon[kind] || "📦") +
+    "</span></div>" +
+    '<div class="lp-cart-line__main">' +
+    '<div class="lp-cart-line__head">' +
     '<span class="lp-cart-line__badge lp-cart-line__badge--' +
     kind +
     '">' +
@@ -265,14 +271,19 @@ function renderCartLineHtml(item) {
     "</strong>" +
     "</div>" +
     (metaBits.length ? '<p class="lp-cart-line__meta">' + metaBits.join(" · ") + "</p>" : "") +
-    '<div class="lp-cart-line__foot">' +
+    '<div class="lp-cart-line__actions">' +
     qtyBlock +
-    '<span class="lp-cart-line__price">' +
-    priceStr +
-    " ر.س</span>" +
     '<button type="button" class="lp-cart-line__remove" data-cart-remove="' +
     idAttr +
-    '" aria-label="حذف من السلة">حذف</button>' +
+    '" aria-label="حذف من السلة">' +
+    '<span class="lp-cart-line__remove-icon" aria-hidden="true">🗑</span> حذف</button>' +
+    "</div>" +
+    "</div>" +
+    '<div class="lp-cart-line__aside">' +
+    '<span class="lp-cart-line__price">' +
+    priceStr +
+    " <small>ر.س</small></span>" +
+    "</div>" +
     "</div>" +
     "</article>"
   );
@@ -304,6 +315,39 @@ function adjustCartQty(id, delta) {
   if (typeof window.renderCartPage === "function") window.renderCartPage();
 }
 
+function setLpCartPayStep(active) {
+  var panel = document.getElementById("lpCartPanel");
+  if (panel) panel.classList.toggle("lp-cart-panel--pay-step", !!active);
+}
+
+function syncLpCartCheckoutBtn() {
+  var btn = document.getElementById("lpCartCheckoutBtn");
+  if (!btn) return;
+  btn.disabled = !getCart().length;
+  btn.textContent = "إتمام العملية";
+}
+
+function syncCartPageCheckoutBtn() {
+  var btn = document.getElementById("checkoutBtn");
+  if (!btn) return;
+  btn.disabled = !getCart().length;
+  btn.textContent = "إتمام الطلب";
+  syncCartCheckoutButtons();
+}
+
+function resetLpCartPayStep() {
+  setLpCartPayStep(false);
+  syncLpCartCheckoutBtn();
+}
+
+function resetCartPagePayStep() {
+  window.__cartCheckoutPayStep = false;
+  syncCartPageCheckoutBtn();
+}
+
+window.resetLpCartPayStep = resetLpCartPayStep;
+window.resetCartPagePayStep = resetCartPagePayStep;
+
 function setCartPanelHasItems(hasItems) {
   var panel = document.getElementById("lpCartPanel");
   if (panel) panel.classList.toggle("lp-cart-panel--empty", !hasItems);
@@ -311,10 +355,14 @@ function setCartPanelHasItems(hasItems) {
     var el = document.getElementById(id);
     if (el) el.hidden = !hasItems;
   });
-  var paySection = document.getElementById("cartPagePaySection");
-  if (paySection) paySection.hidden = !hasItems;
+  if (!hasItems) {
+    resetLpCartPayStep();
+    resetCartPagePayStep();
+  }
   var finBox = document.getElementById("cartFinBox");
   if (finBox) finBox.hidden = !hasItems;
+  var cartActionsPanel = document.getElementById("cartCheckoutActionsPanel");
+  if (cartActionsPanel) cartActionsPanel.hidden = !hasItems;
   var checkoutCol = document.getElementById("cartCheckoutCol");
   if (checkoutCol) checkoutCol.classList.toggle("cart-checkout-col--dim", !hasItems);
 }
@@ -322,26 +370,8 @@ function setCartPanelHasItems(hasItems) {
 function updateCartPanelHeader(cart) {
   var title = document.getElementById("lpCartDialogTitle");
   var sub = document.getElementById("lpCartPanelSub");
-  var badge = document.getElementById("lpCartItemBadge");
-  var n = cartTotalPieceCount(cart);
-  if (badge) {
-    badge.textContent = String(n);
-    badge.hidden = !n;
-  }
-  if (!title) return;
-  if (!cart.length) {
-    title.textContent = "سلتك";
-    if (sub) {
-      sub.textContent = "أضف منتجات أو خدمات من المنصة، ثم أكمل الدفع من هنا أو من صفحة السلة.";
-      sub.hidden = false;
-    }
-  } else {
-    title.textContent = "سلتك · " + n + (n === 1 ? " قطعة" : " قطع");
-    if (sub) {
-      sub.textContent = "الأسعار كما أُضيفت من المتجر أو حاسبة الخدمات — راجع ثم تابع.";
-      sub.hidden = false;
-    }
-  }
+  if (title) title.textContent = "السلة";
+  if (sub) sub.hidden = true;
 }
 
 /** ضريبة القيمة المضافة وعمولة المنصة — نفس ترتيب checkout للمتاجر (ضريبة على البضاعة + التوصيل) */
@@ -424,7 +454,9 @@ function zeroCartFinancialsUi() {
   ];
   ids.forEach(function (id) {
     var el = document.getElementById(id);
-    if (el) el.innerHTML = ervMoneyCellHtml(0);
+    if (!el) return;
+    if (id === "lpCartComm") el.textContent = ervFmtMoney(0);
+    else el.innerHTML = ervMoneyCellHtml(0);
   });
   ["lpCartDelNote", "cartFinDelNote"].forEach(function (nid) {
     var n = document.getElementById(nid);
@@ -469,13 +501,13 @@ function applyCartFinancialsToUi(b, opts) {
   applyDel("lpCartDel", "cartFinDel", "lpCartDelNote", "cartFinDelNote");
   setMoney("lpCartVat", b.vat);
   setMoney("cartFinVat", b.vat);
-  setMoney("lpCartComm", b.platformCommission);
+  var commEl = document.getElementById("lpCartComm");
+  if (commEl) commEl.textContent = ervFmtMoney(b.platformCommission);
   setMoney("cartFinComm", b.platformCommission);
   setMoney("lpCartTotal", b.grandTotal);
   setMoney("cartFinGrand", b.grandTotal);
-  ["lpCartPayIcons", "cartPayIcons"].forEach(function (id) {
-    if (document.getElementById(id)) renderPaymentMethodCardsInto(id);
-  });
+  syncLpCartCheckoutBtn();
+  syncCartPageCheckoutBtn();
 }
 
 window.computeErvCartBreakdown = computeErvCartBreakdown;
@@ -617,10 +649,24 @@ function clearPaymentMethodIconContainers() {
     var el = document.getElementById(id);
     if (el) el.innerHTML = "";
   });
+  ["lpCartPaySelect", "cartPaySelect"].forEach(function (id) {
+    var sel = document.getElementById(id);
+    if (!sel) return;
+    sel.innerHTML = "";
+    var ph = document.createElement("option");
+    ph.value = "";
+    ph.setAttribute("data-pay-placeholder", "1");
+    ph.textContent = "— اختر وسيلة الدفع —";
+    sel.appendChild(ph);
+    var wrapId = payLuxeWrapId(id);
+    var wrap = wrapId ? document.getElementById(wrapId) : null;
+    if (wrap) wrap.innerHTML = "";
+  });
   ["lpCartEwPayDetail", "cartEwPayDetail"].forEach(function (eid) {
     var e = document.getElementById(eid);
     if (e) e.hidden = true;
   });
+  window.__ervCartSelectedPayment = null;
 }
 
 async function fetchWalletBalanceForCart() {
@@ -654,7 +700,50 @@ async function fetchWalletBalanceForCart() {
   }
 }
 
+function setSelectedPaymentFromSelect(selectId, method) {
+  var sel = document.getElementById(selectId);
+  if (!sel) return;
+  sel.value = method || "";
+  if (!method) {
+    window.__ervCartSelectedPayment = null;
+    var ew0 = document.getElementById(selectId === "lpCartPaySelect" ? "lpCartEwPayDetail" : "cartEwPayDetail");
+    if (ew0) ew0.hidden = true;
+    syncPayLuxeTrigger(selectId, "");
+    syncLpCartCheckoutBtn();
+    syncCartPageCheckoutBtn();
+    return;
+  }
+  try {
+    localStorage.setItem("erv_cart_payment_method", method);
+  } catch (e2) {}
+  window.__ervCartSelectedPayment = method;
+
+  var ewMap = { lpCartPaySelect: "lpCartEwPayDetail", cartPaySelect: "cartEwPayDetail" };
+  var balMap = { lpCartPaySelect: "lpCartEwPayBalance", cartPaySelect: "cartEwPayBalance" };
+  var ewEl = document.getElementById(ewMap[selectId]);
+  var balEl = document.getElementById(balMap[selectId]);
+  if (method === "ew_pay" && ewEl) {
+    ewEl.hidden = false;
+    if (balEl) balEl.textContent = "…";
+    fetchWalletBalanceForCart().then(function (bal) {
+      var ew = document.getElementById(ewMap[selectId]);
+      if (!balEl || !ew || ew.hidden) return;
+      balEl.textContent = bal == null || !Number.isFinite(bal) ? "—" : ervFmtMoney(bal);
+    });
+  } else if (ewEl) {
+    ewEl.hidden = true;
+  }
+  syncPayLuxeTrigger(selectId, method);
+  syncLpCartCheckoutBtn();
+  syncCartPageCheckoutBtn();
+}
+
 function setSelectedPaymentForContainer(containerId, method) {
+  var selMap = { lpCartPayIcons: "lpCartPaySelect", cartPayIcons: "cartPaySelect" };
+  if (selMap[containerId] && document.getElementById(selMap[containerId])) {
+    setSelectedPaymentFromSelect(selMap[containerId], method);
+    return;
+  }
   var root = document.getElementById(containerId);
   if (!root) return;
   root.querySelectorAll(".erv-pay-card").forEach(function (b) {
@@ -794,8 +883,224 @@ function renderPaymentMethodIconsInto(containerId) {
   renderPaymentMethodCardsInto(containerId);
 }
 
+var ERV_PAY_LUXE_WRAP = { lpCartPaySelect: "lpCartPayLuxeWrap", cartPaySelect: "cartPayLuxeWrap" };
+
+var ERV_PAY_LUXE_GROUPS = [
+  { label: "محفظة المنصة", keys: ["ew_pay"] },
+  { label: "البطاقات والمحافظ", keys: ["mada", "visa", "mastercard", "apple_pay", "stc_pay"] },
+  { label: "الدفع عند الاستلام", keys: ["cash_on_delivery"] },
+  { label: "تقسيط بدون فوائد", keys: ["tabby", "tamara"] },
+];
+
+function payLuxeWrapId(selectId) {
+  return ERV_PAY_LUXE_WRAP[selectId] || "";
+}
+
+function payLuxeAccentClass(key) {
+  if (key === "ew_pay") return "erv-pay-luxe__opt--ew";
+  if (key === "tabby") return "erv-pay-luxe__opt--tabby";
+  if (key === "tamara") return "erv-pay-luxe__opt--tamara";
+  if (key === "mada") return "erv-pay-luxe__opt--mada";
+  return "";
+}
+
+function payLuxeIconHtml(key) {
+  var src = ERV_PAY_ICON_SRC[key];
+  if (!src) return '<span aria-hidden="true">💳</span>';
+  var meta = paymentCardDisplay(key);
+  return '<img src="' + src + '" alt="' + meta.title + '" loading="lazy" />';
+}
+
+function closeAllPayLuxePickers(exceptSelectId) {
+  Object.keys(ERV_PAY_LUXE_WRAP).forEach(function (selectId) {
+    if (exceptSelectId && selectId === exceptSelectId) return;
+    var wrap = document.getElementById(payLuxeWrapId(selectId));
+    if (!wrap) return;
+    var root = wrap.querySelector(".erv-pay-luxe");
+    var trigger = wrap.querySelector(".erv-pay-luxe__trigger");
+    if (root) root.classList.remove("erv-pay-luxe--open");
+    if (trigger) trigger.setAttribute("aria-expanded", "false");
+  });
+}
+
+function syncPayLuxeTrigger(selectId, method) {
+  var wrap = document.getElementById(payLuxeWrapId(selectId));
+  if (!wrap) return;
+
+  wrap.querySelectorAll(".erv-pay-luxe__opt").forEach(function (opt) {
+    var on = opt.getAttribute("data-pay-method") === method;
+    opt.classList.toggle("erv-pay-luxe__opt--selected", on);
+    opt.setAttribute("aria-selected", on ? "true" : "false");
+  });
+}
+
+function ensurePayLuxeShell(selectId) {
+  var wrapId = payLuxeWrapId(selectId);
+  var wrap = document.getElementById(wrapId);
+  if (!wrap || wrap.querySelector(".erv-pay-luxe")) return wrap;
+
+  wrap.innerHTML =
+    '<div class="erv-pay-luxe erv-pay-luxe--inline" data-select-id="' +
+    selectId +
+    '">' +
+    '<div class="erv-pay-luxe__shell">' +
+    '<div class="erv-pay-luxe__head">' +
+    '<div class="erv-pay-luxe__head-text">' +
+    '<span class="erv-pay-luxe__eyebrow">ERVENOW PAY</span>' +
+    '<span class="erv-pay-luxe__title">بطاقة الدفع</span>' +
+    "</div>" +
+    '<div class="erv-pay-luxe__badges">' +
+    '<span class="erv-pay-luxe__badge">🔒 آمن</span>' +
+    '<span class="erv-pay-luxe__badge">⚡ فوري</span>' +
+    "</div>" +
+    "</div>" +
+    '<div class="erv-pay-luxe__body">' +
+    '<p class="erv-pay-luxe__pick-label">اختر وسيلة الدفع المناسبة</p>' +
+    '<div class="erv-pay-luxe__panel erv-pay-luxe__panel--inline" role="listbox" aria-label="وسائل الدفع"></div>' +
+    '<p class="erv-pay-luxe__foot">' +
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>' +
+    "معاملات مشفّرة · محمية بمعايير الدفع الآمن" +
+    "</p>" +
+    "</div></div></div>";
+
+  return wrap;
+}
+
+function buildPayLuxeOptions(selectId, ordered) {
+  var wrap = ensurePayLuxeShell(selectId);
+  if (!wrap) return;
+  var panel = wrap.querySelector(".erv-pay-luxe__panel");
+  if (!panel) return;
+  panel.innerHTML = "";
+
+  var used = {};
+  ERV_PAY_LUXE_GROUPS.forEach(function (group) {
+    var keys = group.keys.filter(function (k) {
+      return ordered.indexOf(k) >= 0;
+    });
+    if (!keys.length) return;
+    keys.forEach(function (k) {
+      used[k] = true;
+    });
+
+    var groupEl = document.createElement("div");
+    groupEl.className = "erv-pay-luxe__group";
+    var label = document.createElement("p");
+    label.className = "erv-pay-luxe__group-label";
+    label.textContent = group.label;
+    groupEl.appendChild(label);
+
+    keys.forEach(function (key) {
+      var meta = paymentCardDisplay(key);
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "erv-pay-luxe__opt " + payLuxeAccentClass(key);
+      btn.setAttribute("role", "option");
+      btn.setAttribute("data-pay-method", key);
+      btn.setAttribute("aria-selected", "false");
+      btn.innerHTML =
+        '<span class="erv-pay-luxe__opt-icon">' +
+        payLuxeIconHtml(key) +
+        "</span>" +
+        '<span class="erv-pay-luxe__opt-copy">' +
+        '<span class="erv-pay-luxe__opt-title">' +
+        meta.title +
+        "</span>" +
+        (meta.hint ? '<span class="erv-pay-luxe__opt-hint">' + meta.hint + "</span>" : "") +
+        "</span>" +
+        '<span class="erv-pay-luxe__opt-check" aria-hidden="true"></span>';
+      btn.addEventListener("click", function (e) {
+        e.stopPropagation();
+        setSelectedPaymentFromSelect(selectId, key);
+      });
+      groupEl.appendChild(btn);
+    });
+    panel.appendChild(groupEl);
+  });
+
+  ordered.forEach(function (key) {
+    if (used[key]) return;
+    var meta = paymentCardDisplay(key);
+    var btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "erv-pay-luxe__opt " + payLuxeAccentClass(key);
+    btn.setAttribute("role", "option");
+    btn.setAttribute("data-pay-method", key);
+    btn.setAttribute("aria-selected", "false");
+    btn.innerHTML =
+      '<span class="erv-pay-luxe__opt-icon">' +
+      payLuxeIconHtml(key) +
+      "</span>" +
+      '<span class="erv-pay-luxe__opt-copy">' +
+      '<span class="erv-pay-luxe__opt-title">' +
+      meta.title +
+      "</span>" +
+      (meta.hint ? '<span class="erv-pay-luxe__opt-hint">' + meta.hint + "</span>" : "") +
+      "</span>" +
+      '<span class="erv-pay-luxe__opt-check" aria-hidden="true"></span>';
+    btn.addEventListener("click", function (e) {
+      e.stopPropagation();
+      setSelectedPaymentFromSelect(selectId, key);
+    });
+    panel.appendChild(btn);
+  });
+}
+
+function renderPaymentMethodDropdownInto(selectId) {
+  var sel = document.getElementById(selectId);
+  if (!sel) return;
+  var gen = (__ervPayCardsRenderGen[selectId] || 0) + 1;
+  __ervPayCardsRenderGen[selectId] = gen;
+  sel.innerHTML = "";
+  var ph = document.createElement("option");
+  ph.value = "";
+  ph.setAttribute("data-pay-placeholder", "1");
+  ph.textContent = "— اختر وسيلة الدفع —";
+  sel.appendChild(ph);
+
+  ensurePayLuxeShell(selectId);
+  syncPayLuxeTrigger(selectId, "");
+
+  var ewMap = { lpCartPaySelect: "lpCartEwPayDetail", cartPaySelect: "cartEwPayDetail" };
+  var ew0 = document.getElementById(ewMap[selectId]);
+  if (ew0) ew0.hidden = true;
+
+  resolveCartPaymentMethodsForUi().then(function (methods) {
+    if (__ervPayCardsRenderGen[selectId] !== gen) return;
+    sel = document.getElementById(selectId);
+    if (!sel) return;
+    var ordered = ERV_PAYMENT_KEYS_ORDER.filter(function (key) {
+      return methods[key];
+    });
+    ordered.forEach(function (key) {
+      var d = paymentCardDisplay(key);
+      var opt = document.createElement("option");
+      opt.value = key;
+      opt.textContent = d.hint ? d.title + " — " + d.hint : d.title;
+      sel.appendChild(opt);
+    });
+    buildPayLuxeOptions(selectId, ordered);
+    var saved = null;
+    try {
+      saved = localStorage.getItem("erv_cart_payment_method");
+    } catch (e3) {}
+    var first = ordered[0];
+    var pick = saved && methods[saved] ? saved : "";
+    if (pick) setSelectedPaymentFromSelect(selectId, pick);
+    else syncPayLuxeTrigger(selectId, "");
+  });
+}
+
+function handleLpCartCheckoutClick() {
+  if (!getCart().length) return;
+  window.location.href = "/cart";
+}
+
 window.renderPaymentMethodCardsInto = renderPaymentMethodCardsInto;
 window.renderPaymentMethodIconsInto = renderPaymentMethodIconsInto;
+window.renderPaymentMethodDropdownInto = renderPaymentMethodDropdownInto;
+window.handleLpCartCheckoutClick = handleLpCartCheckoutClick;
+window.setSelectedPaymentFromSelect = setSelectedPaymentFromSelect;
 window.resolveCartPaymentMethodsForUi = resolveCartPaymentMethodsForUi;
 window.getSelectedCartPaymentMethod = function () {
   return window.__ervCartSelectedPayment || null;
@@ -816,8 +1121,7 @@ function renderCartLinesList(listEl, cart) {
     return;
   }
   listEl.innerHTML = cart.map(renderCartLineHtml).join("");
-  if (cart.length > 8) listEl.classList.add("lp-cart-panel__list--scroll");
-  else listEl.classList.remove("lp-cart-panel__list--scroll");
+  listEl.classList.add("lp-cart-panel__list--scroll");
 }
 
 /** يملأ لوحة السلة في الهيدر إن وُجدت في الصفحة */
@@ -845,8 +1149,28 @@ function renderHeaderCartPreview() {
   if (emptyCta) emptyCta.hidden = true;
   renderCartLinesList(list, cart);
   applyCartFinancialsToUi(computeErvCartBreakdown(cart, resolveCartDeliveryFeeArg(cart)));
-  var co = document.getElementById("lpCartCheckoutBtn");
-  if (co) co.disabled = false;
+  syncLpCartCheckoutBtn();
+}
+
+function syncCartCheckoutButtons() {
+  var main = document.getElementById("checkoutBtn");
+  var mobile = document.getElementById("cartMobileCheckoutBtn");
+  if (!main || !mobile) return;
+  mobile.textContent = main.textContent;
+  mobile.disabled = !!main.disabled;
+}
+
+function syncCartMobileBar(cart, breakdown) {
+  var bar = document.getElementById("cartMobileBar");
+  if (!bar) return;
+  var has = cart && cart.length;
+  bar.hidden = !has;
+  document.body.classList.toggle("cart-page-has-items", !!has);
+  if (has && breakdown && breakdown.grandTotal != null) {
+    var el = document.getElementById("cartMobileGrand");
+    if (el) el.innerHTML = ervFmtMoney(breakdown.grandTotal) + ' <small class="lp-cart-panel__cur">ر.س</small>';
+  }
+  syncCartCheckoutButtons();
 }
 
 /** صفحة السلة الكاملة — يُستدعى من cart.html */
@@ -865,6 +1189,7 @@ function renderCartPage(opts) {
     if (emptyBlock) emptyBlock.hidden = false;
     if (countEl) countEl.textContent = "لا توجد قطع في السلة";
     applyCartFinancialsToUi({}, { empty: true });
+    syncCartMobileBar([], null);
     delete window.__ervCartDeliveryFee;
     if (typeof window.refreshGuestCartBanner === "function") window.refreshGuestCartBanner();
     if (typeof window.refreshStoreDeliveryCard === "function") window.refreshStoreDeliveryCard();
@@ -875,16 +1200,22 @@ function renderCartPage(opts) {
   var totalQty = cartTotalPieceCount(cart);
   if (countEl) countEl.textContent = totalQty + (totalQty === 1 ? " قطعة" : " قطع");
   renderCartLinesList(list, cart);
-  applyCartFinancialsToUi(computeErvCartBreakdown(cart, resolveCartDeliveryFeeArg(cart)));
+  var breakdown = computeErvCartBreakdown(cart, resolveCartDeliveryFeeArg(cart));
+  applyCartFinancialsToUi(breakdown);
+  syncCartMobileBar(cart, breakdown);
   if (typeof window.refreshGuestCartBanner === "function") window.refreshGuestCartBanner();
   if (typeof window.refreshStoreDeliveryCard === "function") window.refreshStoreDeliveryCard();
   if (!opts.skipDeliveryRefresh && typeof window.refreshCartDeliveryFee === "function") {
     void window.refreshCartDeliveryFee();
   }
+  syncCartPageCheckoutBtn();
 }
 
 window.renderCartPage = renderCartPage;
 window.renderCartLineHtml = renderCartLineHtml;
+window.syncCartCheckoutButtons = syncCartCheckoutButtons;
+window.syncCartPageCheckoutBtn = syncCartPageCheckoutBtn;
+window.syncLpCartCheckoutBtn = syncLpCartCheckoutBtn;
 
 function safeClick(fn) {
   let locked = false;
@@ -930,11 +1261,29 @@ function showError(msg) {
 }
 
 document.addEventListener("click", function (ev) {
+  if (ev.target.closest && ev.target.closest(".erv-pay-luxe")) return;
+  closeAllPayLuxePickers();
+});
+
+document.addEventListener("keydown", function (ev) {
+  if (ev.key === "Escape") closeAllPayLuxePickers();
+});
+
+document.addEventListener("click", function (ev) {
   var btn = ev.target.closest && ev.target.closest(".erv-pay-card[data-pay-method]");
   if (!btn) return;
   var root = btn.closest(".erv-pay-cards");
   if (!root || !root.id) return;
   setSelectedPaymentForContainer(root.id, btn.getAttribute("data-pay-method"));
+});
+
+document.addEventListener("change", function (ev) {
+  var sel = ev.target;
+  if (!sel || !sel.classList || !sel.classList.contains("erv-pay-select")) return;
+  if (!sel.id) return;
+  var method = sel.value;
+  if (method) setSelectedPaymentFromSelect(sel.id, method);
+  else window.__ervCartSelectedPayment = null;
 });
 
 document.addEventListener("click", function (e) {

@@ -311,10 +311,23 @@ async function runCheckoutInsert(sb, appUser, body, options) {
       if (Number.isFinite(plat) && Number.isFinite(plng) && Number.isFinite(dlat) && Number.isFinite(dlng)) {
         const deliveryFee =
           Number(d0.delivery_fee) >= 0 ? Number(d0.delivery_fee) : total;
-        row.pickup_address =
-          String(d0.pickup_address || d0.from || "").trim() || "موقع الاستلام";
-        row.drop_address =
-          String(d0.drop_address || d0.to || d0.location || "").trim() || "موقع التسليم";
+        const isMapsLike = (s) =>
+          /^(https?:\/\/)/i.test(String(s || "").trim()) ||
+          /google\.com\/maps|maps\.app\.goo|goo\.gl\/maps/i.test(String(s || ""));
+        const pickupLabel =
+          String(d0.pickup_district_label || "").trim() ||
+          (() => {
+            const raw = String(d0.pickup_address || d0.from || "").trim();
+            return raw && !isMapsLike(raw) ? raw : "";
+          })();
+        const dropLabel =
+          String(d0.drop_district_label || "").trim() ||
+          (() => {
+            const raw = String(d0.drop_address || d0.to || d0.location || "").trim();
+            return raw && !isMapsLike(raw) ? raw : "";
+          })();
+        row.pickup_address = pickupLabel || "موقع الاستلام";
+        row.drop_address = dropLabel || "موقع التسليم";
         row.pickup_lat = plat;
         row.pickup_lng = plng;
         row.drop_lat = dlat;
@@ -339,16 +352,18 @@ async function runCheckoutInsert(sb, appUser, body, options) {
         row.notes = productLabel
           ? `توصيل من الخريطة | ${productLabel}`
           : "توصيل من الخريطة";
-        if (d0.pickup_maps_url || d0.drop_maps_url || d0.product_category) {
-          row.data = Object.assign({}, row.data && typeof row.data === "object" ? row.data : {}, {
-            source: "dashboard_map",
-            pickup_maps_url: d0.pickup_maps_url || null,
-            drop_maps_url: d0.drop_maps_url || null,
-            product_category: d0.product_category || null,
-            product_qty: d0.product_qty != null ? d0.product_qty : null,
-            product_label: productLabel || null,
-          });
-        }
+        row.data = Object.assign({}, row.data && typeof row.data === "object" ? row.data : {}, {
+          source: d0.source || "dashboard_map",
+          pickup_district_label: pickupLabel || null,
+          drop_district_label: dropLabel || null,
+          pickup_maps_url: d0.pickup_maps_url || null,
+          drop_maps_url: d0.drop_maps_url || null,
+          product_category: d0.product_category || null,
+          product_qty: d0.product_qty != null ? d0.product_qty : null,
+          product_label: productLabel || null,
+          distance_km: row.distance_km,
+          delivery_fee: row.delivery_fee,
+        });
       }
     }
 

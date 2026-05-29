@@ -472,6 +472,7 @@ const ORDERS_LIST_COLUMNS_FULL =
   "id,customer_id,driver_id,status,delivery_status,order_number,created_at,updated_at," +
   "pickup_address,drop_address,pickup_lat,pickup_lng,drop_lat,drop_lng," +
   "series_source,external_order_id,customer_phone,delivery_fee,distance_km," +
+  "order_total,total_amount,total_with_vat,data," +
   "order_type,service_type," +
   "store_id,store_name,store_address";
 
@@ -480,6 +481,7 @@ const ORDERS_LIST_COLUMNS_MINIMAL =
   "id,customer_id,driver_id,status,delivery_status,order_number,created_at,updated_at," +
   "pickup_address,drop_address,pickup_lat,pickup_lng,drop_lat,drop_lng," +
   "series_source,external_order_id,customer_phone,delivery_fee,distance_km," +
+  "order_total,total_amount,total_with_vat,data," +
   "order_type,service_type";
 
 async function listOrders(sb, appUser) {

@@ -49,12 +49,23 @@
           <p class="muted" id="otpHint"></p>
         </div>
 
-        <div class="drv-wallet-panel">
-          <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px">
-            <h3 style="margin: 0">سجل العمليات</h3>
-            <button class="drv-wallet-btn drv-wallet-btn--ghost" id="refreshBtn" type="button" style="min-height: 38px; padding: 8px 14px">تحديث</button>
+        <div class="drv-wallet-panel drv-wallet-panel--tx">
+          <button
+            type="button"
+            class="drv-wallet-tx-toggle"
+            id="txToggleBtn"
+            aria-expanded="false"
+            aria-controls="txPanel"
+          >
+            <span class="drv-wallet-tx-toggle__main">
+              <span id="txToggleLabel">سجل العمليات</span>
+              <span class="drv-wallet-tx-toggle__count" id="txCount" hidden>0</span>
+            </span>
+            <span class="drv-wallet-tx-toggle__chev" aria-hidden="true">▼</span>
+          </button>
+          <div id="txPanel" class="drv-wallet-tx-panel" hidden>
+            <div id="txList"><p class="muted">جارٍ التحميل…</p></div>
           </div>
-          <div id="txList"><p class="muted">جارٍ التحميل…</p></div>
         </div>
       </div>
       <div id="driverShellFooter"></div>
@@ -143,15 +154,48 @@
         }
       }
 
-      async function loadTransactions() {
+      var txPanelOpen = false;
+
+      function updateTxCount(count) {
+        var badge = document.getElementById("txCount");
+        if (!badge) return;
+        if (count > 0) {
+          badge.hidden = false;
+          badge.textContent = String(count);
+        } else {
+          badge.hidden = true;
+          badge.textContent = "0";
+        }
+      }
+
+      function setTxPanelOpen(open) {
+        txPanelOpen = !!open;
+        var panel = document.getElementById("txPanel");
+        var btn = document.getElementById("txToggleBtn");
+        var label = document.getElementById("txToggleLabel");
+        if (panel) panel.hidden = !txPanelOpen;
+        if (btn) {
+          btn.setAttribute("aria-expanded", txPanelOpen ? "true" : "false");
+          btn.classList.toggle("is-open", txPanelOpen);
+        }
+        if (label) label.textContent = txPanelOpen ? "إخفاء سجل العمليات" : "سجل العمليات";
+      }
+
+      async function loadTransactions(options) {
+        var opts = options || {};
+        var openAfterLoad = !!opts.openAfterLoad;
         var box = document.getElementById("txList");
-        box.innerHTML = '<p class="muted">جارٍ التحميل…</p>';
+        if (txPanelOpen || openAfterLoad) {
+          box.innerHTML = '<p class="muted">جارٍ التحميل…</p>';
+        }
         try {
           var j = await window.PlatformAPI.api("/api/wallet/transactions");
           var rows = j.transactions || [];
+          updateTxCount(rows.length);
           box.innerHTML = "";
           if (!rows.length) {
             box.innerHTML = '<div class="drv-empty-state">لا توجد عمليات بعد</div>';
+            if (openAfterLoad) setTxPanelOpen(true);
             return;
           }
           rows.forEach(function (t) {
@@ -183,9 +227,21 @@
               "</div>";
             box.appendChild(div);
           });
+          if (openAfterLoad) setTxPanelOpen(true);
         } catch (e) {
-          box.innerHTML = '<div class="drv-empty-state">لا توجد عمليات</div>';
+          updateTxCount(0);
+          if (txPanelOpen || openAfterLoad) {
+            box.innerHTML = '<div class="drv-empty-state">لا توجد عمليات</div>';
+          }
         }
+      }
+
+      function toggleTxPanel() {
+        if (txPanelOpen) {
+          setTxPanelOpen(false);
+          return;
+        }
+        loadTransactions({ openAfterLoad: true });
       }
 
       var otpLockTimer = null;
@@ -283,7 +339,7 @@
           document.getElementById("otpHint").textContent = "";
           setConfirmLock(0);
           await loadWallet();
-          await loadTransactions();
+          await loadTransactions({ openAfterLoad: txPanelOpen });
         } catch (e) {
           var lockSec2 = extractLockSeconds(e.message);
           if (lockSec2 > 0) setConfirmLock(lockSec2);
@@ -291,13 +347,10 @@
         }
       });
 
-      document.getElementById("refreshBtn").onclick = function () {
-        loadWallet();
-        loadTransactions();
-      };
+      document.getElementById("txToggleBtn").onclick = toggleTxPanel;
 
       loadWallet();
-      loadTransactions();
+      loadTransactions({ openAfterLoad: false });
     </script>
   </body>
 </html>

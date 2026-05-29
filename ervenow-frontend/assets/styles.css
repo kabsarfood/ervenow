@@ -226,6 +226,634 @@ textarea {
   margin: 0;
 }
 
+/* ——— إطار السلة الذهبي (مطابق لبطاقة الدفع) ——— */
+.lp-cart-panel__surface {
+  position: relative;
+  background:
+    radial-gradient(ellipse 120% 80% at 100% 0%, rgba(201, 162, 39, 0.14), transparent 55%),
+    radial-gradient(ellipse 90% 60% at 0% 100%, rgba(185, 135, 47, 0.1), transparent 50%),
+    linear-gradient(168deg, #fffefb 0%, #faf6ef 48%, #f3ebe0 100%);
+}
+
+.lp-cart-panel__surface::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 38%,
+    rgba(255, 255, 255, 0.42) 48%,
+    transparent 58%
+  );
+  opacity: 0.38;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.lp-cart-panel__surface > * {
+  position: relative;
+  z-index: 1;
+}
+
+.lp-cart-card {
+  border-radius: 18px;
+  border: 1px solid transparent;
+  background:
+    linear-gradient(165deg, rgba(255, 255, 255, 0.97), rgba(250, 246, 238, 0.93)) padding-box,
+    linear-gradient(
+      135deg,
+      rgba(232, 197, 106, 0.92) 0%,
+      rgba(185, 135, 47, 0.52) 42%,
+      rgba(122, 90, 31, 0.72) 100%
+    )
+    border-box;
+  box-shadow:
+    0 12px 32px rgba(45, 26, 14, 0.09),
+    0 0 0 1px rgba(255, 255, 255, 0.45) inset,
+    0 0 28px rgba(201, 162, 39, 0.1);
+}
+
+.lp-cart-card--pay {
+  box-shadow:
+    0 14px 36px rgba(45, 26, 14, 0.11),
+    0 0 0 1px rgba(255, 255, 255, 0.5) inset,
+    0 0 36px rgba(201, 162, 39, 0.14);
+}
+
+/* ——— بطاقة الدفع الفاخرة (ERVENOW Luxe Pay) ——— */
+.lp-cart-pay-section {
+  margin-bottom: 14px;
+}
+
+.lp-cart-pay-section[hidden] {
+  display: none !important;
+}
+
+.erv-pay-luxe-wrap {
+  position: relative;
+  z-index: 5;
+}
+
+.erv-pay-luxe {
+  position: relative;
+  border-radius: 22px;
+  padding: 2px;
+  background: linear-gradient(
+    135deg,
+    rgba(232, 197, 106, 0.95) 0%,
+    rgba(185, 135, 47, 0.55) 38%,
+    rgba(122, 90, 31, 0.75) 100%
+  );
+  box-shadow:
+    0 22px 48px rgba(45, 26, 14, 0.18),
+    0 0 0 1px rgba(255, 255, 255, 0.35) inset,
+    0 0 40px rgba(201, 162, 39, 0.12);
+}
+
+.erv-pay-luxe__shell {
+  position: relative;
+  overflow: hidden;
+  border-radius: 20px;
+  background:
+    radial-gradient(ellipse 120% 80% at 100% 0%, rgba(201, 162, 39, 0.14), transparent 55%),
+    radial-gradient(ellipse 90% 60% at 0% 100%, rgba(185, 135, 47, 0.1), transparent 50%),
+    linear-gradient(168deg, #fffefb 0%, #faf6ef 48%, #f3ebe0 100%);
+}
+
+.erv-pay-luxe__shell::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 38%,
+    rgba(255, 255, 255, 0.45) 48%,
+    transparent 58%
+  );
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+.erv-pay-luxe__head {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid rgba(185, 135, 47, 0.16);
+}
+
+.erv-pay-luxe__head-text {
+  min-width: 0;
+}
+
+.erv-pay-luxe__eyebrow {
+  display: block;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #9a7228;
+  margin-bottom: 3px;
+}
+
+.erv-pay-luxe__title {
+  display: block;
+  font-size: 1rem;
+  font-weight: 900;
+  color: #3d2213;
+  line-height: 1.25;
+}
+
+.erv-pay-luxe__badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+.erv-pay-luxe__badge {
+  font-size: 0.62rem;
+  font-weight: 800;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: rgba(201, 162, 39, 0.16);
+  color: #5c3710;
+  border: 1px solid rgba(185, 135, 47, 0.28);
+  white-space: nowrap;
+}
+
+.erv-pay-luxe__body {
+  position: relative;
+  padding: 12px 14px 14px;
+}
+
+.erv-pay-luxe__trigger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 14px;
+  border: 1px solid rgba(185, 135, 47, 0.28);
+  border-radius: 16px;
+  background: linear-gradient(165deg, rgba(255, 255, 255, 0.92), rgba(250, 246, 238, 0.88));
+  box-shadow:
+    0 10px 28px rgba(45, 26, 14, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.85);
+  cursor: pointer;
+  font-family: inherit;
+  text-align: start;
+  transition:
+    transform 0.22s ease,
+    box-shadow 0.25s ease,
+    border-color 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.erv-pay-luxe__trigger:hover {
+  transform: translateY(-1px);
+  border-color: rgba(201, 162, 39, 0.55);
+  box-shadow:
+    0 14px 34px rgba(155, 111, 37, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.erv-pay-luxe__trigger:focus-visible {
+  outline: 2px solid rgba(201, 162, 39, 0.75);
+  outline-offset: 2px;
+}
+
+.erv-pay-luxe--open .erv-pay-luxe__trigger {
+  border-color: rgba(201, 162, 39, 0.72);
+  box-shadow:
+    0 0 0 3px rgba(201, 162, 39, 0.16),
+    0 12px 30px rgba(155, 111, 37, 0.12);
+}
+
+.erv-pay-luxe__trigger-icon {
+  flex-shrink: 0;
+  width: 52px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14px;
+  background: linear-gradient(145deg, #fffdfa, #f5efe4);
+  border: 1px solid rgba(185, 135, 47, 0.22);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.erv-pay-luxe__trigger-icon img {
+  width: auto;
+  height: 26px;
+  max-width: 42px;
+  object-fit: contain;
+}
+
+.erv-pay-luxe__trigger-icon--placeholder {
+  font-size: 1.35rem;
+  line-height: 1;
+  opacity: 0.55;
+}
+
+.erv-pay-luxe__trigger-copy {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.erv-pay-luxe__trigger-kicker {
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #9a7228;
+  margin-bottom: 2px;
+}
+
+.erv-pay-luxe__trigger-value {
+  display: block;
+  font-size: 0.98rem;
+  font-weight: 800;
+  color: #3d2213;
+  line-height: 1.35;
+}
+
+.erv-pay-luxe__trigger-hint {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: #6e5a4a;
+  line-height: 1.35;
+}
+
+.erv-pay-luxe__trigger-chev {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: rgba(201, 162, 39, 0.14);
+  position: relative;
+}
+
+.erv-pay-luxe__trigger-chev::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid #7a5a1f;
+  border-bottom: 2px solid #7a5a1f;
+  transform: rotate(45deg) translateY(-2px);
+  transition: transform 0.25s ease;
+}
+
+.erv-pay-luxe--open .erv-pay-luxe__trigger-chev::after {
+  transform: rotate(-135deg) translateY(2px);
+}
+
+.erv-pay-luxe__pick-label {
+  margin: 0 0 10px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #6e5a4a;
+  text-align: center;
+}
+
+.erv-pay-luxe__panel--inline {
+  position: static;
+  left: auto;
+  right: auto;
+  top: auto;
+  z-index: auto;
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: none;
+  max-height: min(280px, 42vh);
+  margin: 0 0 10px;
+  padding: 6px;
+}
+
+/* داخل سلة الهيدر: عرض كامل لوسائل الدفع بدون قصّ */
+.lp-cart-pay-section .erv-pay-luxe--inline .erv-pay-luxe__shell {
+  overflow: visible;
+}
+
+.lp-cart-pay-section .erv-pay-luxe__panel--inline {
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+  transform: none !important;
+  max-height: none;
+  overflow: visible;
+  border: 1px solid rgba(185, 135, 47, 0.22);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45);
+}
+
+.lp-cart-panel--pay-step .lp-cart-stack {
+  max-height: none;
+}
+
+.lp-cart-panel--pay-step .lp-cart-card__body--items {
+  max-height: min(22vh, 168px);
+  min-height: 72px;
+}
+
+.lp-cart-panel--pay-step .lp-cart-card--items,
+.lp-cart-panel--pay-step .lp-cart-card--fin,
+.lp-cart-panel--pay-step .lp-cart-card--pay {
+  flex-shrink: 0;
+}
+
+.lp-cart-panel--pay-step .lp-cart-card--pay,
+.lp-cart-panel--pay-step .lp-cart-card--pay .lp-cart-card__body--pay,
+.lp-cart-panel--pay-step .lp-cart-pay-section {
+  overflow: visible;
+}
+
+.erv-pay-luxe--inline .erv-pay-luxe__trigger {
+  display: none;
+}
+
+.erv-pay-luxe--inline .erv-pay-luxe__panel {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: none;
+}
+
+.erv-pay-luxe__panel {
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  top: calc(100% - 6px);
+  z-index: 20;
+  max-height: min(52vh, 360px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 8px;
+  border-radius: 18px;
+  border: 1px solid rgba(185, 135, 47, 0.28);
+  background: linear-gradient(180deg, rgba(255, 254, 251, 0.99), rgba(248, 244, 238, 0.98));
+  box-shadow:
+    0 24px 56px rgba(45, 26, 14, 0.2),
+    0 0 0 1px rgba(255, 255, 255, 0.6) inset;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(-8px) scale(0.98);
+  transform-origin: top center;
+  transition:
+    opacity 0.24s ease,
+    transform 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+    visibility 0s linear 0.28s;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(91, 55, 29, 0.35) transparent;
+}
+
+.erv-pay-luxe--open .erv-pay-luxe__panel {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
+  transition:
+    opacity 0.24s ease,
+    transform 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+    visibility 0s;
+}
+
+.erv-pay-luxe__group {
+  margin-bottom: 8px;
+}
+
+.erv-pay-luxe__group:last-child {
+  margin-bottom: 0;
+}
+
+.erv-pay-luxe__group-label {
+  margin: 4px 8px 8px;
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #9a7228;
+}
+
+.erv-pay-luxe__opt {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 12px;
+  margin-bottom: 6px;
+  border: 1px solid rgba(61, 34, 19, 0.08);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.72);
+  cursor: pointer;
+  font-family: inherit;
+  text-align: start;
+  transition:
+    transform 0.18s ease,
+    border-color 0.18s ease,
+    background 0.18s ease,
+    box-shadow 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.erv-pay-luxe__opt:last-child {
+  margin-bottom: 0;
+}
+
+.erv-pay-luxe__opt:hover {
+  transform: translateY(-1px);
+  border-color: rgba(201, 162, 39, 0.42);
+  background: rgba(255, 252, 245, 0.98);
+  box-shadow: 0 8px 22px rgba(45, 26, 14, 0.07);
+}
+
+.erv-pay-luxe__opt--selected {
+  border-color: rgba(201, 162, 39, 0.78);
+  background: linear-gradient(135deg, rgba(255, 252, 245, 0.98), rgba(250, 244, 232, 0.95));
+  box-shadow:
+    0 0 0 1px rgba(201, 162, 39, 0.22),
+    0 10px 24px rgba(155, 111, 37, 0.1);
+}
+
+.erv-pay-luxe__opt-icon {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background: linear-gradient(145deg, #fffdfa, #f0e8da);
+  border: 1px solid rgba(185, 135, 47, 0.16);
+}
+
+.erv-pay-luxe__opt-icon img {
+  width: auto;
+  height: 22px;
+  max-width: 38px;
+  object-fit: contain;
+}
+
+.erv-pay-luxe__opt--ew .erv-pay-luxe__opt-icon {
+  background: linear-gradient(145deg, #2a1810, #1a1008);
+  border-color: rgba(201, 162, 39, 0.35);
+}
+
+.erv-pay-luxe__opt--tabby .erv-pay-luxe__opt-icon {
+  background: linear-gradient(145deg, #0f766e, #115e59);
+}
+
+.erv-pay-luxe__opt--tamara .erv-pay-luxe__opt-icon {
+  background: linear-gradient(145deg, #831843, #9d174d);
+}
+
+.erv-pay-luxe__opt-copy {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.erv-pay-luxe__opt-title {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: #3d2213;
+  line-height: 1.3;
+}
+
+.erv-pay-luxe__opt-hint {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #6e5a4a;
+  line-height: 1.35;
+}
+
+.erv-pay-luxe__opt-check {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  border: 2px solid rgba(185, 135, 47, 0.28);
+  position: relative;
+  opacity: 0.35;
+  transition:
+    opacity 0.18s ease,
+    background 0.18s ease,
+    border-color 0.18s ease;
+}
+
+.erv-pay-luxe__opt--selected .erv-pay-luxe__opt-check {
+  opacity: 1;
+  background: linear-gradient(135deg, #c9a227, #7a5a1f);
+  border-color: transparent;
+}
+
+.erv-pay-luxe__opt--selected .erv-pay-luxe__opt-check::after {
+  content: "";
+  position: absolute;
+  left: 6px;
+  top: 2px;
+  width: 5px;
+  height: 10px;
+  border-right: 2px solid #fffef8;
+  border-bottom: 2px solid #fffef8;
+  transform: rotate(45deg);
+}
+
+.erv-pay-luxe__foot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 10px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #8a735f;
+}
+
+.erv-pay-luxe__foot svg {
+  width: 14px;
+  height: 14px;
+  opacity: 0.75;
+}
+
+.erv-pay-select-native {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+  clip: rect(0, 0, 0, 0);
+}
+
+.erv-pay-ew-detail--luxe {
+  margin-top: 12px;
+  margin-bottom: 0;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(255, 252, 245, 0.98), rgba(248, 241, 229, 0.92));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+@media (max-width: 520px) {
+  .erv-pay-luxe__head {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .erv-pay-luxe__badges {
+    justify-content: flex-start;
+  }
+  .erv-pay-luxe__panel {
+    max-height: min(46vh, 300px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .erv-pay-luxe__trigger,
+  .erv-pay-luxe__panel,
+  .erv-pay-luxe__opt,
+  .erv-pay-luxe__trigger-chev::after {
+    transition: none;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .erv-pay-luxe__shell {
+    background:
+      radial-gradient(ellipse 120% 80% at 100% 0%, rgba(201, 162, 39, 0.12), transparent 55%),
+      linear-gradient(168deg, #241c16 0%, #1a1410 100%);
+  }
+  .erv-pay-luxe__title,
+  .erv-pay-luxe__trigger-value,
+  .erv-pay-luxe__opt-title {
+    color: #faf6ef;
+  }
+  .erv-pay-luxe__trigger {
+    background: linear-gradient(165deg, rgba(36, 28, 22, 0.96), rgba(24, 18, 14, 0.92));
+    border-color: rgba(212, 167, 106, 0.28);
+  }
+  .erv-pay-luxe__panel {
+    background: linear-gradient(180deg, rgba(30, 24, 20, 0.99), rgba(22, 18, 14, 0.98));
+    border-color: rgba(212, 167, 106, 0.25);
+  }
+  .erv-pay-luxe__opt {
+    background: rgba(28, 22, 18, 0.88);
+    border-color: rgba(212, 167, 106, 0.12);
+  }
+  .erv-pay-luxe__opt-hint,
+  .erv-pay-luxe__trigger-hint {
+    color: rgba(255, 248, 238, 0.62);
+  }
+}
+
 /* بطاقات الدفع — السلة (رئيسية + صفحة السلة) */
 .lp-cart-panel__pay-label {
   margin: 0 0 12px;
@@ -519,8 +1147,9 @@ textarea {
   flex-shrink: 0;
   padding: 14px 16px 18px;
   padding-bottom: max(16px, env(safe-area-inset-bottom, 0px));
-  border-top: 1px solid rgba(61, 34, 19, 0.08);
-  background: linear-gradient(180deg, rgba(255, 254, 251, 0.65), #fffefb);
+  border-top: 1px solid rgba(185, 135, 47, 0.14);
+  background: linear-gradient(180deg, rgba(255, 254, 251, 0.72), rgba(248, 244, 238, 0.95));
+  overflow: visible;
 }
 
 @media (prefers-color-scheme: dark) {
