@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ERVENOW Hero Banner Preview</title>
+    <style>
+      :root {
+        --bg: #04070d;
+        --card: #0c131d;
+        --line: #1f2a38;
+        --green: #74f04a;
+        --text: #eef7ee;
+        --muted: #9fb3a1;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: "Cairo", system-ui, sans-serif;
+        background:
+          radial-gradient(1000px 480px at 120% -10%, rgba(116, 240, 74, 0.2), transparent 50%),
+          radial-gradient(700px 380px at -20% 85%, rgba(116, 240, 74, 0.1), transparent 55%),
+          var(--bg);
+        color: var(--text);
+        display: grid;
+        place-items: center;
+        padding: 20px;
+      }
+      .shell {
+        width: min(1100px, 100%);
+        border-radius: 20px;
+        border: 1px solid var(--line);
+        background: linear-gradient(180deg, rgba(12, 19, 29, 0.94), rgba(6, 10, 16, 0.98));
+        box-shadow: 0 20px 70px rgba(0, 0, 0, 0.45);
+        overflow: hidden;
+      }
+      .head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 14px 18px;
+        border-bottom: 1px solid var(--line);
+      }
+      .head h1 {
+        margin: 0;
+        font-size: 1rem;
+        font-weight: 800;
+      }
+      .hint {
+        color: var(--muted);
+        font-size: 0.86rem;
+      }
+      .hero {
+        position: relative;
+        height: min(62vw, 430px);
+        min-height: 250px;
+        overflow: hidden;
+      }
+      .track {
+        display: flex;
+        width: 400%;
+        height: 100%;
+        animation: slide 18s infinite;
+      }
+      .slide {
+        width: 100%;
+        height: 100%;
+        position: relative;
+        isolation: isolate;
+      }
+      .slide img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+        filter: saturate(1.05) contrast(1.02);
+        transform: scale(1.03);
+      }
+      .overlay {
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+        background: linear-gradient(100deg, rgba(0, 0, 0, 0.67) 8%, rgba(0, 0, 0, 0.2) 52%, rgba(0, 0, 0, 0.68) 96%);
+      }
+      .content {
+        position: absolute;
+        z-index: 2;
+        inset-inline: 0;
+        bottom: 0;
+        padding: clamp(16px, 3vw, 26px);
+      }
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        border-radius: 999px;
+        border: 1px solid rgba(116, 240, 74, 0.5);
+        background: rgba(8, 14, 9, 0.75);
+        color: #baf8a8;
+        font-size: 0.82rem;
+        font-weight: 700;
+      }
+      .title {
+        margin: 10px 0 6px;
+        font-weight: 900;
+        line-height: 1.25;
+        font-size: clamp(1.15rem, 3.6vw, 2rem);
+      }
+      .sub {
+        margin: 0;
+        color: #d4e3d4;
+        font-size: clamp(0.86rem, 2.1vw, 1.02rem);
+      }
+      .dots {
+        position: absolute;
+        z-index: 3;
+        inset-inline-end: 16px;
+        inset-block-end: 16px;
+        display: flex;
+        gap: 6px;
+      }
+      .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.35);
+        animation: pulse 18s infinite;
+      }
+      .dot:nth-child(2) {
+        animation-delay: 4.5s;
+      }
+      .dot:nth-child(3) {
+        animation-delay: 9s;
+      }
+      .dot:nth-child(4) {
+        animation-delay: 13.5s;
+      }
+      @keyframes slide {
+        0%, 20% { transform: translateX(0%); }
+        25%, 45% { transform: translateX(25%); }
+        50%, 70% { transform: translateX(50%); }
+        75%, 95% { transform: translateX(75%); }
+        100% { transform: translateX(0%); }
+      }
+      @keyframes pulse {
+        0%, 20% { background: #8ef26f; box-shadow: 0 0 0 5px rgba(142, 242, 111, 0.22); }
+        25%, 100% { background: rgba(255, 255, 255, 0.35); box-shadow: none; }
+      }
+      .caption {
+        padding: 12px 18px 18px;
+        color: var(--muted);
+        font-size: 0.84rem;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .track, .dot { animation: none; }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="shell">
+      <header class="head">
+        <h1>معاينة بنر متحرك — ERVENOW</h1>
+        <div class="hint">نسخة تجريبية فقط (بدون نشر)</div>
+      </header>
+      <section class="hero" aria-label="بنر متحرك تجريبي">
+        <div class="track">
+          <article class="slide">
+            <img src="file:///C:/Users/USER/.cursor/projects/c-Users-USER-Desktop-ervenow/assets/c__Users_USER_AppData_Roaming_Cursor_User_workspaceStorage_7557c87fa852483d1fead6d87a52f93f_images____________1_-1009db46-d254-443f-b6c4-bc8feb0710a6.png" alt="ERVENOW Slide 1" />
+            <div class="overlay"></div>
+            <div class="content">
+              <span class="chip">🍽️ + 🛒 + 🚚 + 🔧</span>
+              <h2 class="title">كل خدماتك في مكان واحد</h2>
+              <p class="sub">جرب تجربة تفاعلية سريعة: مطاعم، متاجر، توصيل وخدمات منزلية.</p>
+            </div>
+          </article>
+          <article class="slide">
+            <img src="file:///C:/Users/USER/.cursor/projects/c-Users-USER-Desktop-ervenow/assets/c__Users_USER_AppData_Roaming_Cursor_User_workspaceStorage_7557c87fa852483d1fead6d87a52f93f_images____________1_-1009db46-d254-443f-b6c4-bc8feb0710a6.png" alt="ERVENOW Slide 2" />
+            <div class="overlay"></div>
+            <div class="content">
+              <span class="chip">🚗 تنقل ذكي</span>
+              <h2 class="title">حياة أسهل مع ERVENOW</h2>
+              <p class="sub">حركة واضحة، هوية أقوى، وتجربة أكثر حيوية على الصفحة الرئيسية.</p>
+            </div>
+          </article>
+          <article class="slide">
+            <img src="file:///C:/Users/USER/.cursor/projects/c-Users-USER-Desktop-ervenow/assets/c__Users_USER_AppData_Roaming_Cursor_User_workspaceStorage_7557c87fa852483d1fead6d87a52f93f_images____________1_-1009db46-d254-443f-b6c4-bc8feb0710a6.png" alt="ERVENOW Slide 3" />
+            <div class="overlay"></div>
+            <div class="content">
+              <span class="chip">⚡ توصيل سريع</span>
+              <h2 class="title">نوصلك... ونوصل طلباتك</h2>
+              <p class="sub">بنر بصري متحرك يعرض الخدمات الأساسية بدون تشتيت.</p>
+            </div>
+          </article>
+          <article class="slide">
+            <img src="file:///C:/Users/USER/.cursor/projects/c-Users-USER-Desktop-ervenow/assets/c__Users_USER_AppData_Roaming_Cursor_User_workspaceStorage_7557c87fa852483d1fead6d87a52f93f_images____________1_-1009db46-d254-443f-b6c4-bc8feb0710a6.png" alt="ERVENOW Slide 4" />
+            <div class="overlay"></div>
+            <div class="content">
+              <span class="chip">🛡️ مدفوعات آمنة</span>
+              <h2 class="title">منصة واحدة... فرص لا محدودة</h2>
+              <p class="sub">تصميم غني بالحركة الناعمة ليحول الواجهة من جامدة إلى حيّة.</p>
+            </div>
+          </article>
+        </div>
+        <div class="dots" aria-hidden="true">
+          <span class="dot"></span>
+          <span class="dot"></span>
+          <span class="dot"></span>
+          <span class="dot"></span>
+        </div>
+      </section>
+      <div class="caption">إذا ترغب، أحوله في الخطوة التالية إلى نسخة فيديو/GIF قصيرة بنفس الإيقاع.</div>
+    </main>
+  </body>
+</html>

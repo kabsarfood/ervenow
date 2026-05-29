@@ -402,6 +402,10 @@ if (servePublicUi) {
     res.sendFile(path.join(publicPath, "driver-app.html"));
   });
 
+  app.get("/my-orders", (_req, res) => {
+    res.sendFile(path.join(publicPath, "my-orders.html"));
+  });
+
   app.get("/orders", (_req, res) => {
     res.sendFile(path.join(publicPath, "orders.html"));
   });

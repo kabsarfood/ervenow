@@ -375,6 +375,7 @@
     <script src="/assets/api-config.js"></script>
     <script src="/assets/api.js"></script>
     <script src="/assets/cart.js"></script>
+    <script src="/assets/service-cart.js"></script>
     <script src="/assets/guest-shell.js"></script>
     <script>
       ErvenowGuestShell.init({ activeNav: "guest", pageTag: "السلة" });
@@ -386,7 +387,23 @@
           var item = JSON.parse(raw);
           sessionStorage.removeItem("ervenow:pending-map-cart");
           if (!item || !item.type) return;
-          addToCart(item);
+          if (window.ErvenowServiceCart && typeof ErvenowServiceCart.validateSaPhone === "function") {
+            var ph = ErvenowServiceCart.validateSaPhone(
+              item.customer_phone || (item.data && item.data.customer_phone)
+            );
+            if (ph) {
+              item.customer_phone = ph;
+              if (item.data) item.data.customer_phone = ph;
+            }
+          }
+          var added = typeof addToCart === "function" ? addToCart(item) : { ok: false };
+          if (!added || added.ok === false) {
+            sessionStorage.setItem(
+              "ervenow:cart-flash",
+              (added && added.message) || "تعذر إضافة طلب التوصيل — أعد المحاولة من لوحة الزائر."
+            );
+            return;
+          }
           sessionStorage.setItem(
             "ervenow:cart-flash",
             "تمت إضافة طلب التوصيل من الخريطة — أكمل الدفع لاعتماد الطلب."
@@ -452,43 +469,61 @@
       };
 
       async function refreshCartDeliveryFee() {
+        var cart = getCart();
+        var prevFee = window.__ervCartDeliveryFee;
+        var nextFee = prevFee;
+
         try {
-          delete window.__ervCartDeliveryFee;
-          var cart = getCart();
           if (!cartNeedsStoreGeo(cart)) {
-            window.__ervCartDeliveryFee = 0;
-            if (typeof renderCartPage === "function") renderCartPage();
+            nextFee = 0;
+          } else if (pendingGeo.lat == null || pendingGeo.lng == null) {
+            delete window.__ervCartDeliveryFee;
+            if (typeof renderCartPage === "function") {
+              renderCartPage({ skipDeliveryRefresh: true });
+            }
             return;
+          } else {
+            var sid = null;
+            cart.forEach(function (i) {
+              var d = i && i.data;
+              if (d && d.store_id && !sid) sid = String(d.store_id);
+            });
+            if (!sid || !window.PlatformAPI || typeof PlatformAPI.apiUrl !== "function") {
+              delete window.__ervCartDeliveryFee;
+            } else {
+              var url =
+                PlatformAPI.apiUrl("/api/store/public/" + encodeURIComponent(sid)) +
+                "?user_lat=" +
+                encodeURIComponent(pendingGeo.lat) +
+                "&user_lng=" +
+                encodeURIComponent(pendingGeo.lng);
+              var res = await fetch(url);
+              var j = await res.json().catch(function () {
+                return {};
+              });
+              var km = j && j.store && j.store.distance_km;
+              if (typeof km === "number" && Number.isFinite(km)) {
+                nextFee = Math.round(km * 2.3 * 100) / 100;
+              } else {
+                delete window.__ervCartDeliveryFee;
+                nextFee = undefined;
+              }
+            }
           }
-          if (pendingGeo.lat == null || pendingGeo.lng == null) {
-            if (typeof renderCartPage === "function") renderCartPage();
-            return;
-          }
-          var sid = null;
-          cart.forEach(function (i) {
-            var d = i && i.data;
-            if (d && d.store_id && !sid) sid = String(d.store_id);
-          });
-          if (!sid || !window.PlatformAPI || typeof PlatformAPI.apiUrl !== "function") {
-            if (typeof renderCartPage === "function") renderCartPage();
-            return;
-          }
-          var url =
-            PlatformAPI.apiUrl("/api/store/public/" + encodeURIComponent(sid)) +
-            "?user_lat=" +
-            encodeURIComponent(pendingGeo.lat) +
-            "&user_lng=" +
-            encodeURIComponent(pendingGeo.lng);
-          var res = await fetch(url);
-          var j = await res.json().catch(function () {
-            return {};
-          });
-          var km = j && j.store && j.store.distance_km;
-          if (typeof km === "number" && Number.isFinite(km)) {
-            window.__ervCartDeliveryFee = Math.round(km * 2.3 * 100) / 100;
-          }
-        } catch (e) {}
-        if (typeof renderCartPage === "function") renderCartPage();
+        } catch (e) {
+          /* keep previous fee on error */
+        }
+
+        var feeChanged = nextFee !== prevFee;
+        if (nextFee === undefined) {
+          delete window.__ervCartDeliveryFee;
+        } else {
+          window.__ervCartDeliveryFee = nextFee;
+        }
+
+        if (feeChanged && typeof renderCartPage === "function") {
+          renderCartPage({ skipDeliveryRefresh: true });
+        }
       }
       window.refreshCartDeliveryFee = refreshCartDeliveryFee;
 

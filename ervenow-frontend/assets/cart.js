@@ -33,14 +33,30 @@ function findStoreProductLineIndex(cart, storeId, productId) {
   });
 }
 
+function isMapDeliveryCartItem(item) {
+  var d = item && item.data;
+  if (!d || typeof d !== "object") return false;
+  if (String(d.source || "") === "dashboard_map") return true;
+  return (
+    String(item.type || "") === "delivery" &&
+    Number.isFinite(Number(d.pickup_lat)) &&
+    Number.isFinite(Number(d.drop_lat))
+  );
+}
+
 function addToCart(item) {
   const cart = getCart();
+  if (isMapDeliveryCartItem(item)) {
+    for (var mi = cart.length - 1; mi >= 0; mi -= 1) {
+      if (isMapDeliveryCartItem(cart[mi])) cart.splice(mi, 1);
+    }
+  }
   var newSid = item && item.data && item.data.store_id ? String(item.data.store_id).trim() : "";
   if (newSid) {
     var existingIds = getCartStoreIds();
     if (existingIds.size > 0 && !existingIds.has(newSid)) {
       alert("لا يمكن خلط منتجات من متجرين مختلفين. أفرغ السلة أو أتمّم الطلب أولاً.");
-      return;
+      return { ok: false, message: "لا يمكن خلط منتجات من متجرين مختلفين" };
     }
   }
 
@@ -61,7 +77,7 @@ function addToCart(item) {
         data: Object.assign({}, cur.data || {}, { qty: newQty, unit_price: unit }),
       });
       saveCart(cart);
-      return;
+      return { ok: true };
     }
   }
 
@@ -73,23 +89,37 @@ function addToCart(item) {
   );
   if (exists) {
     alert("تمت إضافة هذا العنصر مسبقًا");
-    return;
+    return { ok: false, message: "تمت إضافة هذا العنصر مسبقًا" };
   }
-  var initQty = Math.max(1, Math.min(99, Number(item.data && item.data.qty) || 1));
+  var dataIn = item.data && typeof item.data === "object" ? Object.assign({}, item.data) : {};
+  var initQty = 1;
+  if (isMapDeliveryCartItem(item)) {
+    initQty = 1;
+    if (dataIn.product_qty == null && dataIn.qty != null) {
+      dataIn.product_qty = dataIn.qty;
+    }
+    dataIn.qty = 1;
+  } else {
+    initQty = Math.max(1, Math.min(99, Number(dataIn.qty) || 1));
+  }
   var unitFromItem =
-    Number(item.data && item.data.unit_price) ||
+    Number(dataIn.unit_price) ||
     (Number(item.price) && initQty > 0 ? Number(item.price) / initQty : 0);
-  cart.push({
+  var line = {
     id: Date.now(),
     type: item.type,
     title: item.title,
     price: Number(item.price) || 0,
-    data: Object.assign({}, item.data || {}, {
+    data: Object.assign({}, dataIn, {
       qty: initQty,
       unit_price: Number.isFinite(unitFromItem) && unitFromItem > 0 ? unitFromItem : undefined,
     }),
-  });
+  };
+  if (item.customer_phone) line.customer_phone = String(item.customer_phone).trim();
+  if (item.payment_status) line.payment_status = item.payment_status;
+  cart.push(line);
   saveCart(cart);
+  return { ok: true };
 }
 
 function removeFromCart(id) {
@@ -114,6 +144,7 @@ function updateCartCount() {
 
 /** أنواع طلبات التوصيل في السلة (browse) */
 var ERV_DELIVERY_TYPES = {
+  delivery: 1,
   vehicle_transfer: 1,
   car_transport: 1,
   internal_delivery: 1,
@@ -138,7 +169,23 @@ function escCartHtml(s) {
 }
 
 function cartItemQty(item) {
+  if (isMapDeliveryCartItem(item)) return 1;
   return Math.max(1, Math.min(99, Number(item.data && item.data.qty) || 1));
+}
+
+function shortMapsLabel(urlOrText) {
+  var s = String(urlOrText || "").trim();
+  if (!s) return "";
+  if (/^https?:\/\//i.test(s)) {
+    try {
+      var u = new URL(s);
+      if (u.searchParams.get("q")) return "خريطة: " + u.searchParams.get("q").slice(0, 48);
+      return "رابط خريطة";
+    } catch (e) {
+      return "رابط خريطة";
+    }
+  }
+  return s.length > 56 ? s.slice(0, 53) + "…" : s;
 }
 
 function cartTotalPieceCount(cart) {
@@ -158,10 +205,30 @@ function renderCartLineHtml(item) {
     if (data.unit_price != null && Number.isFinite(Number(data.unit_price)))
       metaBits.push("الوحدة: " + Number(data.unit_price).toFixed(2) + " ر.س");
   } else {
-    if (data.from && data.to)
-      metaBits.push("من " + escCartHtml(data.from) + " إلى " + escCartHtml(data.to));
-    else if (data.district) metaBits.push("الحي: " + escCartHtml(data.district));
-    if (data.location) metaBits.push("تفاصيل: " + escCartHtml(data.location));
+    if (data.product_label) {
+      metaBits.push("المحتوى: " + escCartHtml(data.product_label));
+    } else if (data.product_category) {
+      var pq = data.product_qty != null ? data.product_qty : data.qty;
+      metaBits.push(
+        "المحتوى: " +
+          escCartHtml(String(data.product_category)) +
+          (pq ? " × " + escCartHtml(String(pq)) : "")
+      );
+    }
+    if (data.pickup_maps_url || data.drop_maps_url) {
+      if (data.pickup_maps_url)
+        metaBits.push("الاستلام: " + escCartHtml(shortMapsLabel(data.pickup_maps_url)));
+      if (data.drop_maps_url)
+        metaBits.push("التسليم: " + escCartHtml(shortMapsLabel(data.drop_maps_url)));
+    } else if (data.from && data.to) {
+      metaBits.push(
+        "من " + escCartHtml(shortMapsLabel(data.from)) + " → " + escCartHtml(shortMapsLabel(data.to))
+      );
+    } else if (data.district) metaBits.push("الحي: " + escCartHtml(data.district));
+    if (data.location && !data.drop_maps_url) metaBits.push("تفاصيل: " + escCartHtml(data.location));
+    if (data.distance_km != null && Number.isFinite(Number(data.distance_km))) {
+      metaBits.push("المسافة: " + escCartHtml(Number(data.distance_km).toFixed(2)) + " كم");
+    }
   }
   var priceStr = ervFmtMoney(Number(item.price) || 0);
   var idAttr = escCartHtml(String(item.id));
@@ -178,7 +245,11 @@ function renderCartLineHtml(item) {
         idAttr +
         '" aria-label="زيادة الكمية">+</button>' +
         "</div>"
-      : '<span class="lp-cart-line__qty-static">× ' + qty + "</span>";
+      : '<span class="lp-cart-line__qty-static">' +
+        (isMapDeliveryCartItem(item) && data.product_qty
+          ? "عدد القطع: " + escCartHtml(String(data.product_qty))
+          : "× " + qty) +
+        "</span>";
   return (
     '<article class="lp-cart-line" data-cart-id="' +
     idAttr +
@@ -402,8 +473,9 @@ function applyCartFinancialsToUi(b, opts) {
   setMoney("cartFinComm", b.platformCommission);
   setMoney("lpCartTotal", b.grandTotal);
   setMoney("cartFinGrand", b.grandTotal);
-  renderPaymentMethodCardsInto("lpCartPayIcons");
-  renderPaymentMethodCardsInto("cartPayIcons");
+  ["lpCartPayIcons", "cartPayIcons"].forEach(function (id) {
+    if (document.getElementById(id)) renderPaymentMethodCardsInto(id);
+  });
 }
 
 window.computeErvCartBreakdown = computeErvCartBreakdown;
@@ -649,9 +721,13 @@ function buildPaymentCardButton(key, opts) {
   return btn;
 }
 
+var __ervPayCardsRenderGen = {};
+
 function renderPaymentMethodCardsInto(containerId) {
   var root = document.getElementById(containerId);
   if (!root) return;
+  var gen = (__ervPayCardsRenderGen[containerId] || 0) + 1;
+  __ervPayCardsRenderGen[containerId] = gen;
   root.innerHTML = "";
   var ewMap = { lpCartPayIcons: "lpCartEwPayDetail", cartPayIcons: "cartEwPayDetail" };
   var ewId = ewMap[containerId];
@@ -660,6 +736,9 @@ function renderPaymentMethodCardsInto(containerId) {
     if (ew0) ew0.hidden = true;
   }
   resolveCartPaymentMethodsForUi().then(function (methods) {
+    if (__ervPayCardsRenderGen[containerId] !== gen) return;
+    root = document.getElementById(containerId);
+    if (!root) return;
     var ordered = ERV_PAYMENT_KEYS_ORDER.filter(function (key) {
       return methods[key] && ERV_PAY_ICON_SRC[key];
     });
@@ -771,7 +850,8 @@ function renderHeaderCartPreview() {
 }
 
 /** صفحة السلة الكاملة — يُستدعى من cart.html */
-function renderCartPage() {
+function renderCartPage(opts) {
+  opts = opts && typeof opts === "object" ? opts : {};
   var list = document.getElementById("cartList");
   var countEl = document.getElementById("cartItemsCount");
   var emptyBlock = document.getElementById("cartPageEmpty");
@@ -798,7 +878,9 @@ function renderCartPage() {
   applyCartFinancialsToUi(computeErvCartBreakdown(cart, resolveCartDeliveryFeeArg(cart)));
   if (typeof window.refreshGuestCartBanner === "function") window.refreshGuestCartBanner();
   if (typeof window.refreshStoreDeliveryCard === "function") window.refreshStoreDeliveryCard();
-  if (typeof window.refreshCartDeliveryFee === "function") void window.refreshCartDeliveryFee();
+  if (!opts.skipDeliveryRefresh && typeof window.refreshCartDeliveryFee === "function") {
+    void window.refreshCartDeliveryFee();
+  }
 }
 
 window.renderCartPage = renderCartPage;

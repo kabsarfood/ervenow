@@ -335,7 +335,20 @@ async function runCheckoutInsert(sb, appUser, body, options) {
         row.order_total = Math.round(deliveryFee * 100) / 100;
         row.total_amount = row.order_total;
         row.vehicle_type = String(d0.vehicle_type || "").trim() || null;
-        row.notes = "توصيل من الخريطة";
+        const productLabel = String(d0.product_label || "").trim();
+        row.notes = productLabel
+          ? `توصيل من الخريطة | ${productLabel}`
+          : "توصيل من الخريطة";
+        if (d0.pickup_maps_url || d0.drop_maps_url || d0.product_category) {
+          row.data = Object.assign({}, row.data && typeof row.data === "object" ? row.data : {}, {
+            source: "dashboard_map",
+            pickup_maps_url: d0.pickup_maps_url || null,
+            drop_maps_url: d0.drop_maps_url || null,
+            product_category: d0.product_category || null,
+            product_qty: d0.product_qty != null ? d0.product_qty : null,
+            product_label: productLabel || null,
+          });
+        }
       }
     }
 

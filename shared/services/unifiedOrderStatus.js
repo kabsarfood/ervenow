@@ -162,6 +162,16 @@ async function patchUnifiedOrderStatus(sb, entityId, nextStatusRaw, appUser) {
       ) {
         logger.warn({ orderId: id, result: providerCreditRow }, "[unifiedOrderStatus] provider ledger credit");
       }
+      const driverCreditRow = financial.driver_credit;
+      if (
+        driverCreditRow &&
+        driverCreditRow.ok !== true &&
+        driverCreditRow.ok !== "true" &&
+        driverCreditRow.reason !== "settled_via_rpc" &&
+        !driverCreditRow.skipped
+      ) {
+        logger.warn({ orderId: id, result: driverCreditRow }, "[unifiedOrderStatus] driver ledger credit");
+      }
     }
 
     await afterStatusSideEffects(sb, data, current, nextStatus, financial.settlement);
@@ -171,6 +181,7 @@ async function patchUnifiedOrderStatus(sb, entityId, nextStatusRaw, appUser) {
       entity: "order",
       settlement: financial.settlement,
       provider_credit: financial.provider_credit,
+      driver_credit: financial.driver_credit,
     };
   }
 }

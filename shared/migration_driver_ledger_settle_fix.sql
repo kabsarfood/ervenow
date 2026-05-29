@@ -115,13 +115,6 @@ BEGIN
     );
   END IF;
 
-  IF o.merchant_id IS NOT NULL AND amt_merchant > 0 THEN
-    wid_merchant := public.ervenow_ledger_ensure_wallet(o.merchant_id, 'merchant');
-    PERFORM public.ervenow_ledger_append_completed(
-      wid_merchant, 'deposit', 'credit', amt_merchant, ref_prefix || ':merchant', 'صافي تاجر'
-    );
-  END IF;
-
   RETURN jsonb_build_object(
     'ok', true, 'reason', 'settled',
     'driver', amt_driver, 'platform', amt_platform, 'merchant', amt_merchant

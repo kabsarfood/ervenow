@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>ERVENOW | طلباتي</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/assets/styles.css" />
+    <link rel="stylesheet" href="/assets/guest-shell.css" />
+    <style>
+      .my-orders-hero {
+        margin-bottom: 16px;
+        padding: clamp(18px, 4vw, 24px);
+        border-radius: 18px;
+        border: 1px solid var(--border, rgba(61, 34, 19, 0.12));
+        background: linear-gradient(145deg, #fffefb 0%, #f5ebe0 55%, #efe3d4 100%);
+        box-shadow: 0 10px 32px rgba(45, 26, 14, 0.08);
+      }
+      .my-orders-hero h1 {
+        margin: 0 0 8px;
+        font-size: clamp(1.2rem, 4vw, 1.5rem);
+        font-weight: 900;
+        color: var(--brown, #3d2213);
+      }
+      .my-orders-hero p {
+        margin: 0;
+        color: var(--muted, #5c4a3d);
+        font-weight: 600;
+        line-height: 1.55;
+      }
+      .my-orders-section {
+        margin-bottom: 14px;
+      }
+      .my-orders-section h2 {
+        margin: 0 0 10px;
+        font-size: 1rem;
+        font-weight: 800;
+        color: var(--brown, #3d2213);
+      }
+      .my-order-card {
+        border: 1px solid rgba(61, 34, 19, 0.1);
+        border-radius: 14px;
+        padding: 14px;
+        margin-bottom: 10px;
+        background: #fffefb;
+      }
+      .my-order-card__top {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 8px;
+        margin-bottom: 8px;
+      }
+      .my-order-card__id {
+        font-weight: 900;
+        color: var(--brown, #3d2213);
+      }
+      .my-order-badge {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-size: 0.75rem;
+        font-weight: 800;
+      }
+      .my-order-badge--wait {
+        background: #fff7ed;
+        color: #c2410c;
+        border: 1px solid #fed7aa;
+      }
+      .my-order-badge--active {
+        background: #eff6ff;
+        color: #1d4ed8;
+        border: 1px solid #bfdbfe;
+      }
+      .my-order-badge--done {
+        background: #f0fdf4;
+        color: #15803d;
+        border: 1px solid #bbf7d0;
+      }
+      .my-order-badge--cancel {
+        background: #fef2f2;
+        color: #b91c1c;
+        border: 1px solid #fecaca;
+      }
+      .my-order-meta {
+        margin: 0;
+        font-size: 0.86rem;
+        color: var(--muted, #5c4a3d);
+        line-height: 1.5;
+      }
+      .my-order-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 10px;
+      }
+      .my-orders-empty {
+        text-align: center;
+        padding: 28px 16px;
+        border-radius: 14px;
+        border: 1px dashed rgba(185, 135, 47, 0.35);
+        background: rgba(255, 254, 251, 0.9);
+      }
+      .my-orders-empty p {
+        margin: 0 0 12px;
+        font-weight: 700;
+        color: var(--brown-mid, #5c4a3d);
+      }
+      .my-orders-login {
+        text-align: center;
+        padding: 32px 16px;
+      }
+      #myOrdersMsg {
+        display: none;
+        margin-bottom: 12px;
+        padding: 12px;
+        border-radius: 12px;
+        background: rgba(185, 28, 28, 0.08);
+        color: #b91c1c;
+        font-weight: 700;
+      }
+    </style>
+  </head>
+  <body class="guest-shell-page">
+    <header class="dash-site-header">
+      <div class="dash-site-header__inner">
+        <div class="dash-site-header__brand">
+          <a class="dash-site-header__logo" href="/">
+            ERVENOW
+            <span class="dash-site-header__logo-dot" aria-hidden="true"></span>
+          </a>
+          <p class="dash-site-header__tag" id="guestShellPageTag">طلباتي</p>
+        </div>
+        <nav class="dash-site-header__nav" aria-label="التنقل الرئيسي">
+          <div class="dash-site-header__links">
+            <a class="dash-site-header__link" href="/" data-nav="home">الرئيسية</a>
+            <a class="dash-site-header__link" href="/dashboard" data-nav="guest">لوحة الزائر</a>
+            <a class="dash-site-header__link is-active" href="/my-orders" data-nav="my_orders" aria-current="page">طلباتي</a>
+            <a class="dash-site-header__link" href="/admin-login" data-nav="control">لوحة التحكم</a>
+          </div>
+        </nav>
+        <div class="dash-site-header__tools">
+          <a class="dash-header-cart" href="/cart" aria-label="السلة">
+            <span aria-hidden="true">🛒</span>
+            <span class="dash-header-cart__label">السلة</span>
+            <span class="dash-header-cart__badge" id="cartCount" data-empty="true">0</span>
+          </a>
+        </div>
+        <a class="dash-site-header__btn dash-site-header__btn--primary" href="/login?role=customer" id="switchAccount">تسجيل الدخول</a>
+      </div>
+    </header>
+
+    <div class="dash-main">
+      <div class="layout">
+        <section class="my-orders-hero">
+          <h1>طلباتي</h1>
+          <p>هنا تظهر طلباتك التي أنشأتها — بانتظار قبول مندوب، أو قيد التوصيل، أو المكتملة.</p>
+        </section>
+
+        <div id="myOrdersLogin" class="card my-orders-login" hidden>
+          <p class="sub" style="margin: 0 0 12px">سجّل الدخول لعرض طلباتك ومتابعتها.</p>
+          <a class="btn btn-primary" href="/login?mode=register&amp;role=customer&amp;next=%2Fmy-orders">تسجيل الدخول</a>
+        </div>
+
+        <div id="myOrdersContent" hidden>
+          <div id="myOrdersMsg" role="alert"></div>
+          <div class="card" style="margin-bottom: 12px">
+            <button type="button" class="btn btn-ghost" id="myOrdersRefresh">تحديث القائمة</button>
+          </div>
+          <div id="myOrdersSections"></div>
+          <div id="myOrdersEmpty" class="my-orders-empty" hidden>
+            <p>عذراً، لا يوجد طلب حالياً.</p>
+            <a class="btn btn-primary" href="/dashboard">ابدأ طلباً جديداً</a>
+          </div>
+        </div>
+      </div>
+
+      <footer class="dash-site-footer">
+        <div class="dash-site-footer__logo">ERVENOW</div>
+        <nav class="dash-site-footer__links" aria-label="روابط سفلية">
+          <a class="dash-site-footer__link" href="/dashboard">لوحة الزائر</a>
+          <a class="dash-site-footer__link" href="/cart">السلة</a>
+          <a class="dash-site-footer__link" href="/">الرئيسية</a>
+        </nav>
+        <p class="dash-site-footer__copy">© 2026 ERVENOW</p>
+      </footer>
+    </div>
+
+    <script src="/assets/api-config.js"></script>
+    <script src="/assets/api.js"></script>
+    <script src="/assets/cart.js"></script>
+    <script src="/assets/guest-shell.js"></script>
+    <script>
+      ErvenowGuestShell.init({ activeNav: "my_orders", pageTag: "طلباتي" });
+
+      function orderStatusMeta(o) {
+        var ds = String(o.delivery_status || o.status || "").toLowerCase();
+        if (ds === "cancelled" || ds === "canceled") {
+          return { label: "ملغى", cls: "my-order-badge--cancel", group: "done" };
+        }
+        if (ds === "delivered" || ds === "completed") {
+          return { label: "تم التسليم", cls: "my-order-badge--done", group: "done" };
+        }
+        if (o.driver_id && (ds === "accepted" || ds === "picked" || ds === "delivering")) {
+          return { label: "قيد التوصيل", cls: "my-order-badge--active", group: "active" };
+        }
+        if (!o.driver_id && (ds === "new" || ds === "pending" || ds === "draft")) {
+          return { label: "بانتظار مندوب", cls: "my-order-badge--wait", group: "wait" };
+        }
+        return { label: ds || "قيد المعالجة", cls: "my-order-badge--active", group: "active" };
+      }
+
+      function esc(s) {
+        return String(s || "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/"/g, "&quot;");
+      }
+
+      function renderOrderCard(o) {
+        var st = orderStatusMeta(o);
+        var num = o.order_number || String(o.id || "").slice(0, 8);
+        var from = o.pickup_address || "—";
+        var to = o.drop_address || "—";
+        var price = Number(o.total_amount != null ? o.total_amount : o.order_total);
+        var priceStr = Number.isFinite(price) ? price.toFixed(2) + " ر.س" : "—";
+        var trackId = o.order_number || o.id;
+        return (
+          '<article class="my-order-card">' +
+          '<div class="my-order-card__top">' +
+          '<span class="my-order-card__id">#' + esc(num) + "</span>" +
+          '<span class="my-order-badge ' + st.cls + '">' + esc(st.label) + "</span>" +
+          "</div>" +
+          '<p class="my-order-meta">من: ' + esc(from) + "</p>" +
+          '<p class="my-order-meta">إلى: ' + esc(to) + "</p>" +
+          '<p class="my-order-meta">الإجمالي: ' + esc(priceStr) + "</p>" +
+          '<div class="my-order-actions">' +
+          '<a class="btn btn-primary" href="/track?id=' + encodeURIComponent(trackId) + '">تتبع الطلب</a>' +
+          "</div>" +
+          "</article>"
+        );
+      }
+
+      function renderSections(orders) {
+        var wait = [];
+        var active = [];
+        var done = [];
+        (orders || []).forEach(function (o) {
+          var g = orderStatusMeta(o).group;
+          if (g === "wait") wait.push(o);
+          else if (g === "done") done.push(o);
+          else active.push(o);
+        });
+
+        var html = "";
+        if (wait.length) {
+          html +=
+            '<section class="my-orders-section"><h2>بانتظار قبول مندوب (' +
+            wait.length +
+            ")</h2>" +
+            wait.map(renderOrderCard).join("") +
+            "</section>";
+        }
+        if (active.length) {
+          html +=
+            '<section class="my-orders-section"><h2>قيد التنفيذ (' +
+            active.length +
+            ")</h2>" +
+            active.map(renderOrderCard).join("") +
+            "</section>";
+        }
+        if (done.length) {
+          html +=
+            '<section class="my-orders-section"><h2>سابقة (' +
+            done.length +
+            ")</h2>" +
+            done.map(renderOrderCard).join("") +
+            "</section>";
+        }
+
+        document.getElementById("myOrdersSections").innerHTML = html;
+        document.getElementById("myOrdersEmpty").hidden = orders.length > 0;
+      }
+
+      function showMsg(t) {
+        var el = document.getElementById("myOrdersMsg");
+        if (!el) return;
+        if (!t) {
+          el.style.display = "none";
+          el.textContent = "";
+          return;
+        }
+        el.style.display = "block";
+        el.textContent = t;
+      }
+
+      async function loadMyOrders() {
+        showMsg("");
+        if (!window.PlatformAPI || !PlatformAPI.getToken()) {
+          document.getElementById("myOrdersLogin").hidden = false;
+          document.getElementById("myOrdersContent").hidden = true;
+          return;
+        }
+        document.getElementById("myOrdersLogin").hidden = true;
+        document.getElementById("myOrdersContent").hidden = false;
+
+        try {
+          var me = await PlatformAPI.api("/api/core/me");
+          var role = String((me.profile && me.profile.role) || "").toLowerCase();
+          if (role === "driver") {
+            window.location.replace("/orders");
+            return;
+          }
+          if (role === "admin") {
+            window.location.replace("/admin-dashboard");
+            return;
+          }
+
+          var j = await PlatformAPI.api("/api/delivery/orders");
+          var orders = Array.isArray(j.orders) ? j.orders : [];
+          renderSections(orders);
+        } catch (e) {
+          showMsg((e && e.message) || "تعذّر تحميل الطلبات");
+        }
+      }
+
+      document.getElementById("myOrdersRefresh").onclick = loadMyOrders;
+      loadMyOrders();
+      window.addEventListener("ervenow:auth-changed", loadMyOrders);
+    </script>
+  </body>
+</html>

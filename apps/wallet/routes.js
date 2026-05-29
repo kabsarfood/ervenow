@@ -123,7 +123,13 @@ router.get("/transactions", requireAuth, requireRole(...WALLET_READ_ROLES), asyn
       req.appUser.role,
       Number(req.query?.limit) || 100
     );
-    ok(res, { transactions, wallet_mode: "ledger", source: "ervenow_ledger_transactions" });
+    const rows = (transactions || []).map(function (t) {
+      return {
+        ...t,
+        note: t.note || t.description || null,
+      };
+    });
+    ok(res, { transactions: rows, wallet_mode: "ledger", source: "ervenow_ledger_transactions" });
   } catch (e) {
     fail(res, e.message, 500);
   }

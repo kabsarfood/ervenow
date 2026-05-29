@@ -91,6 +91,58 @@
       .delivery-stats p {
         margin: 0;
       }
+      .delivery-mode-tabs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin: 4px 0 2px;
+      }
+      .delivery-mode-tab {
+        flex: 1 1 calc(50% - 4px);
+        min-width: 140px;
+        padding: 10px 12px;
+        border-radius: 12px;
+        border: 1px solid rgba(61, 34, 19, 0.14);
+        background: #fff;
+        font-family: inherit;
+        font-size: 0.88rem;
+        font-weight: 800;
+        cursor: pointer;
+        color: var(--brown, #3d2213);
+      }
+      .delivery-mode-tab.is-active {
+        background: linear-gradient(135deg, #3d2213, #5c3d28);
+        color: #f8f4ee;
+        border-color: rgba(185, 135, 47, 0.45);
+      }
+      .delivery-mode-panel[hidden] {
+        display: none !important;
+      }
+      .delivery-product-row {
+        display: grid;
+        grid-template-columns: 1fr minmax(72px, 88px);
+        gap: 10px;
+        align-items: end;
+      }
+      @media (max-width: 520px) {
+        .delivery-product-row {
+          grid-template-columns: 1fr;
+        }
+      }
+      .delivery-live-map-link {
+        display: inline-block;
+        margin-top: 4px;
+        font-weight: 800;
+        color: var(--gold, #b9872f);
+        text-decoration: none;
+      }
+      .delivery-live-map-link:hover {
+        text-decoration: underline;
+      }
+      #pickupDropMap.map-selecting {
+        outline: 3px solid rgba(185, 135, 47, 0.55);
+        outline-offset: 2px;
+      }
       .delivery-dropdown {
         border: 1px solid rgba(0, 0, 0, 0.08);
         border-radius: 12px;
@@ -1115,67 +1167,155 @@
                 <div class="delivery-panel">
                   <h2 class="delivery-panel__title">🚚 طلب توصيل</h2>
                   <div class="delivery-form">
+                    <div class="delivery-mode-tabs" role="tablist" aria-label="طريقة تحديد المواقع">
+                      <button
+                        type="button"
+                        class="delivery-mode-tab is-active"
+                        id="tabModeLinks"
+                        data-mode="links"
+                        onclick="setDeliveryMode('links')"
+                      >
+                        📎 روابط الموقع
+                      </button>
+                      <button
+                        type="button"
+                        class="delivery-mode-tab"
+                        id="tabModeMap"
+                        data-mode="map"
+                        onclick="setDeliveryMode('map')"
+                      >
+                        🗺️ تحديد على الخريطة
+                      </button>
+                    </div>
                     <select id="vehicleType" onchange="recalculatePricePreview()">
                       <option value="bike">دراجة نارية (0 - 7 كم = 15 ريال)</option>
                       <option value="car" selected>سيارة (0 - 7 كم = 22 ريال)</option>
                     </select>
-                    <div class="delivery-locs">
+                    <div class="delivery-product-row">
                       <div class="delivery-loc-block">
-                        <label class="delivery-loc-label" for="from">من — الاستلام</label>
-                        <input
-                          id="from"
-                          type="text"
-                          autocomplete="street-address"
-                          placeholder="عنوان أو lat,lng"
-                          oninput="handleLocationInputChange()"
-                        />
-                        <div class="delivery-loc-actions">
-                          <button
-                            class="btn btn-ghost map-action-btn"
-                            id="btnSelectFrom"
-                            type="button"
-                            onclick="selectMode('from')"
-                            title="تحديد على الخريطة"
-                          >
-                            🗺 خريطة
-                          </button>
-                          <button
-                            class="btn btn-ghost map-action-btn"
-                            type="button"
-                            onclick="openGoogleMapsFor('from')"
-                            title="فتح في Google Maps"
-                          >
-                            🗺 Google
-                          </button>
-                        </div>
+                        <label class="delivery-loc-label" for="mapProductType">نوع المحتوى</label>
+                        <select id="mapProductType">
+                          <option value="clothes">ملابس</option>
+                          <option value="bag">شنطة / حقيبة</option>
+                          <option value="groceries">مواد غذائية</option>
+                          <option value="kitchenware">أواني</option>
+                          <option value="documents">مستندات</option>
+                          <option value="electronics">إلكترونيات</option>
+                          <option value="other">أخرى</option>
+                        </select>
                       </div>
                       <div class="delivery-loc-block">
-                        <label class="delivery-loc-label" for="to">إلى — التسليم</label>
-                        <input
-                          id="to"
-                          type="text"
-                          autocomplete="street-address"
-                          placeholder="عنوان أو lat,lng"
-                          oninput="handleLocationInputChange()"
-                        />
-                        <div class="delivery-loc-actions">
-                          <button
-                            class="btn btn-ghost map-action-btn"
-                            id="btnSelectTo"
-                            type="button"
-                            onclick="selectMode('to')"
-                            title="تحديد على الخريطة"
-                          >
-                            🗺 خريطة
-                          </button>
-                          <button
-                            class="btn btn-ghost map-action-btn"
-                            type="button"
-                            onclick="openGoogleMapsFor('to')"
-                            title="فتح في Google Maps"
-                          >
-                            🗺 Google
-                          </button>
+                        <label class="delivery-loc-label" for="mapProductQty">العدد</label>
+                        <input id="mapProductQty" type="number" min="1" max="99" value="1" inputmode="numeric" />
+                      </div>
+                    </div>
+                    <div class="delivery-loc-block">
+                      <label class="delivery-loc-label" for="mapProductNote">تفاصيل إضافية (اختياري)</label>
+                      <input
+                        id="mapProductNote"
+                        type="text"
+                        maxlength="120"
+                        placeholder="مثال: صندوق أواني زجاجية"
+                      />
+                    </div>
+                    <div class="delivery-loc-block" id="mapPhoneBlock">
+                      <label class="delivery-loc-label" for="mapCustomerPhone">جوالك للتواصل</label>
+                      <input id="mapCustomerPhone" type="tel" inputmode="numeric" maxlength="10" placeholder="05xxxxxxxx" />
+                    </div>
+                    <div id="deliveryModeLinks" class="delivery-mode-panel">
+                      <div class="delivery-locs">
+                        <div class="delivery-loc-block">
+                          <label class="delivery-loc-label" for="fromLink">رابط موقع الاستلام</label>
+                          <input
+                            id="fromLink"
+                            type="url"
+                            inputmode="url"
+                            placeholder="الصق رابط Google Maps للمرسل"
+                            oninput="handleLocationInputChange()"
+                          />
+                          <div class="delivery-loc-actions">
+                            <button class="btn btn-ghost map-action-btn" type="button" onclick="pasteMapLink('fromLink')">
+                              📋 لصق
+                            </button>
+                          </div>
+                        </div>
+                        <div class="delivery-loc-block">
+                          <label class="delivery-loc-label" for="toLink">رابط موقع التسليم</label>
+                          <input
+                            id="toLink"
+                            type="url"
+                            inputmode="url"
+                            placeholder="الصق رابط Google Maps للمستلم"
+                            oninput="handleLocationInputChange()"
+                          />
+                          <div class="delivery-loc-actions">
+                            <button class="btn btn-ghost map-action-btn" type="button" onclick="pasteMapLink('toLink')">
+                              📋 لصق
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                      <button class="btn btn-ghost" type="button" onclick="applyMapLinks()">تطبيق الروابط ورسم المسار</button>
+                    </div>
+                    <div id="deliveryModeMap" class="delivery-mode-panel" hidden>
+                      <div class="delivery-locs">
+                        <div class="delivery-loc-block">
+                          <label class="delivery-loc-label" for="from">من — الاستلام</label>
+                          <input
+                            id="from"
+                            type="text"
+                            autocomplete="street-address"
+                            placeholder="عنوان أو lat,lng"
+                            oninput="handleLocationInputChange()"
+                          />
+                          <div class="delivery-loc-actions">
+                            <button
+                              class="btn btn-ghost map-action-btn"
+                              id="btnSelectFrom"
+                              type="button"
+                              onclick="selectMode('from')"
+                              title="تحديد على الخريطة"
+                            >
+                              🗺 خريطة
+                            </button>
+                            <button
+                              class="btn btn-ghost map-action-btn"
+                              type="button"
+                              onclick="openGoogleMapsFor('from')"
+                              title="فتح في Google Maps"
+                            >
+                              🗺 Google
+                            </button>
+                          </div>
+                        </div>
+                        <div class="delivery-loc-block">
+                          <label class="delivery-loc-label" for="to">إلى — التسليم</label>
+                          <input
+                            id="to"
+                            type="text"
+                            autocomplete="street-address"
+                            placeholder="عنوان أو lat,lng"
+                            oninput="handleLocationInputChange()"
+                          />
+                          <div class="delivery-loc-actions">
+                            <button
+                              class="btn btn-ghost map-action-btn"
+                              id="btnSelectTo"
+                              type="button"
+                              onclick="selectMode('to')"
+                              title="تحديد على الخريطة"
+                            >
+                              🗺 خريطة
+                            </button>
+                            <button
+                              class="btn btn-ghost map-action-btn"
+                              type="button"
+                              onclick="openGoogleMapsFor('to')"
+                              title="فتح في Google Maps"
+                            >
+                              🗺 Google
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -1191,6 +1331,11 @@
                       <p id="price" class="sub">السعر: —</p>
                       <p id="platformFeeLine" class="sub">عمولة المنصة (15%): —</p>
                       <p id="driverNetLine" class="sub">صافي المندوب: —</p>
+                      <p id="liveMapLine" class="sub" hidden>
+                        <a id="liveMapPreview" class="delivery-live-map-link" href="#" target="_blank" rel="noopener noreferrer"
+                          >🗺️ معاينة المسار على الخريطة</a
+                        >
+                      </p>
                     </div>
                     <p id="result" class="sub" style="margin: 0"></p>
                   </div>
@@ -1229,6 +1374,7 @@
 
     <script src="/assets/cart.js"></script>
     <script src="/assets/service-cart.js"></script>
+    <script src="/assets/delivery-map-order.js"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="/assets/api-config.js"></script>
     <script src="/assets/api.js"></script>
@@ -1257,6 +1403,9 @@
       var km = 0;
       var fromLL = null;
       var toLL = null;
+      var deliveryInputMode = "links";
+      var pickupMapsUrl = "";
+      var dropMapsUrl = "";
       var selectType = null;
       var geoCache = {};
       var map = null;
@@ -1341,7 +1490,147 @@
       function enableCreate() {
         var btn = document.getElementById("createBtn");
         if (!btn) return;
-        btn.disabled = !(km > 0 && fromLL && toLL && dashHasToken());
+        btn.disabled = !(km > 0 && fromLL && toLL);
+      }
+
+      function setDeliveryMode(mode) {
+        deliveryInputMode = mode === "map" ? "map" : "links";
+        var linksPanel = document.getElementById("deliveryModeLinks");
+        var mapPanel = document.getElementById("deliveryModeMap");
+        var tabLinks = document.getElementById("tabModeLinks");
+        var tabMap = document.getElementById("tabModeMap");
+        if (linksPanel) linksPanel.hidden = deliveryInputMode !== "links";
+        if (mapPanel) mapPanel.hidden = deliveryInputMode !== "map";
+        if (tabLinks) tabLinks.classList.toggle("is-active", deliveryInputMode === "links");
+        if (tabMap) tabMap.classList.toggle("is-active", deliveryInputMode === "map");
+        initMap();
+        refreshMapSize();
+        var res = document.getElementById("result");
+        if (res) {
+          res.innerText =
+            deliveryInputMode === "links"
+              ? "الصق رابطي Google Maps ثم «تطبيق الروابط ورسم المسار»."
+              : "اضغط «خريطة» للاستلام ثم للتسليم، أو أدخل عنواناً واضغط «احسب المسافة».";
+        }
+      }
+
+      async function pasteMapLink(inputId) {
+        var el = document.getElementById(inputId);
+        if (!el) return;
+        try {
+          var t = await navigator.clipboard.readText();
+          if (t) {
+            el.value = String(t).trim();
+            handleLocationInputChange();
+          }
+        } catch (e) {
+          el.focus();
+          document.getElementById("result").innerText = "الصق الرابط يدوياً (Ctrl+V) في الحقل.";
+        }
+      }
+
+      function updateLiveMapPreview() {
+        var line = document.getElementById("liveMapLine");
+        var a = document.getElementById("liveMapPreview");
+        if (!line || !a) return;
+        if (fromLL && toLL && window.ErvenowDeliveryMap) {
+          var u =
+            "https://www.google.com/maps/dir/" +
+            encodeURIComponent(fromLL.lat + "," + fromLL.lng) +
+            "/" +
+            encodeURIComponent(toLL.lat + "," + toLL.lng);
+          a.href = u;
+          line.hidden = false;
+        } else {
+          line.hidden = true;
+          a.removeAttribute("href");
+        }
+      }
+
+      function getMapProductPayload() {
+        var typeEl = document.getElementById("mapProductType");
+        var qtyEl = document.getElementById("mapProductQty");
+        var noteEl = document.getElementById("mapProductNote");
+        var typeKey = (typeEl && typeEl.value) || "other";
+        var qty = (qtyEl && qtyEl.value) || 1;
+        var note = (noteEl && noteEl.value) || "";
+        var DM = window.ErvenowDeliveryMap;
+        var label = DM ? DM.formatProductLine(typeKey, qty, note) : "طلب توصيل";
+        return { typeKey: typeKey, qty: qty, note: note, label: label };
+      }
+
+      async function resolveLocationFromField(text, linkFieldId) {
+        var DM = window.ErvenowDeliveryMap;
+        var raw = String(text || "").trim();
+        if (!raw) return null;
+        var linkEl = linkFieldId ? document.getElementById(linkFieldId) : null;
+        var linkVal = linkEl ? String(linkEl.value || "").trim() : "";
+        if (DM && linkVal) {
+          var fromLink = DM.parseMapsUrl(linkVal);
+          if (fromLink) return { ll: fromLink, mapsUrl: linkVal };
+        }
+        if (DM) {
+          var fromMaps = DM.parseMapsUrl(raw);
+          if (fromMaps) {
+            return {
+              ll: fromMaps,
+              mapsUrl: DM.buildGoogleMapsUrl(fromMaps.lat, fromMaps.lng) || raw,
+            };
+          }
+          var fromPair = DM.parseLatLngPair(raw);
+          if (fromPair) {
+            return {
+              ll: fromPair,
+              mapsUrl: DM.buildGoogleMapsUrl(fromPair.lat, fromPair.lng),
+            };
+          }
+        }
+        var geo = await geocode(raw);
+        return { ll: geo, mapsUrl: DM ? DM.buildGoogleMapsUrl(geo.lat, geo.lng) : "" };
+      }
+
+      async function applyMapLinks() {
+        var fromLink = String(document.getElementById("fromLink").value || "").trim();
+        var toLink = String(document.getElementById("toLink").value || "").trim();
+        if (!fromLink || !toLink) {
+          document.getElementById("result").innerText = "❌ الصق رابط الاستلام ورابط التسليم.";
+          return;
+        }
+        var DM = window.ErvenowDeliveryMap;
+        if (!DM) throw new Error("تعذر تحميل أدوات الخريطة");
+        fromLL = DM.parseMapsUrl(fromLink);
+        toLL = DM.parseMapsUrl(toLink);
+        if (!fromLL || !toLL) {
+          document.getElementById("result").innerText =
+            "❌ تعذر قراءة الإحداثيات من الرابط. انسخ رابط «مشاركة» من Google Maps (يحتوي موقعاً على الخريطة) أو استخدم وضع «تحديد على الخريطة».";
+          return;
+        }
+        pickupMapsUrl = fromLink.indexOf("http") === 0 ? fromLink : DM.buildGoogleMapsUrl(fromLL.lat, fromLL.lng);
+        dropMapsUrl = toLink.indexOf("http") === 0 ? toLink : DM.buildGoogleMapsUrl(toLL.lat, toLL.lng);
+        document.getElementById("from").value = pickupMapsUrl;
+        document.getElementById("to").value = dropMapsUrl;
+        await drawRouteAndPricing();
+      }
+
+      async function drawRouteAndPricing() {
+        if (!fromLL || !toLL) return;
+        initMap();
+        var route = await getRoute(fromLL, toLL);
+        km = route.distance / 1000;
+        document.getElementById("distance").innerText = "المسافة: " + km.toFixed(2) + " كم (مسار الشوارع)";
+        renderPricingStats(km);
+        document.getElementById("result").innerText = "";
+        if (map) {
+          if (markerFrom) map.removeLayer(markerFrom);
+          markerFrom = L.marker([fromLL.lat, fromLL.lng]).addTo(map).bindPopup("📍 الاستلام");
+          if (markerTo) map.removeLayer(markerTo);
+          markerTo = L.marker([toLL.lat, toLL.lng]).addTo(map).bindPopup("📍 التسليم");
+          if (routeLine) map.removeLayer(routeLine);
+          routeLine = L.geoJSON(route.geometry, { style: { color: "#2563eb", weight: 5 } }).addTo(map);
+          showMap();
+        }
+        updateLiveMapPreview();
+        enableCreate();
       }
 
       function updateSelectButtonsUi() {
@@ -1433,7 +1722,10 @@
         document.getElementById("platformFeeLine").innerText = "عمولة المنصة (15%): —";
         document.getElementById("driverNetLine").innerText = "صافي المندوب: —";
         document.getElementById("result").innerText = "";
+        pickupMapsUrl = "";
+        dropMapsUrl = "";
         selectType = null;
+        updateLiveMapPreview();
         updateSelectButtonsUi();
         enableCreate();
       }
@@ -1474,10 +1766,12 @@
         var lat = e.latlng.lat;
         var lng = e.latlng.lng;
 
+        var DM = window.ErvenowDeliveryMap;
         if (selectType === "from") {
           fromLL = { lat: lat, lng: lng };
           var fromAddress = await reverseGeocode(lat, lng);
           document.getElementById("from").value = fromAddress || lat.toFixed(6) + "," + lng.toFixed(6);
+          pickupMapsUrl = DM ? DM.buildGoogleMapsUrl(lat, lng) : "";
           if (markerFrom) map.removeLayer(markerFrom);
           markerFrom = L.marker([lat, lng]).addTo(map).bindPopup("📍 الاستلام");
         }
@@ -1486,6 +1780,7 @@
           toLL = { lat: lat, lng: lng };
           var toAddress = await reverseGeocode(lat, lng);
           document.getElementById("to").value = toAddress || lat.toFixed(6) + "," + lng.toFixed(6);
+          dropMapsUrl = DM ? DM.buildGoogleMapsUrl(lat, lng) : "";
           if (markerTo) map.removeLayer(markerTo);
           markerTo = L.marker([lat, lng]).addTo(map).bindPopup("📍 التسليم");
         }
@@ -1495,17 +1790,10 @@
 
         if (fromLL && toLL) {
           try {
-            var route = await getRoute(fromLL, toLL);
-            km = route.distance / 1000;
-            document.getElementById("distance").innerText = "المسافة: " + km.toFixed(2) + " كم";
-            renderPricingStats(km);
-            if (routeLine) map.removeLayer(routeLine);
-            routeLine = L.geoJSON(route.geometry, {
-              style: { color: "blue", weight: 5 },
-            }).addTo(map);
-            document.getElementById("result").innerText = "";
-            showMap();
-            enableCreate();
+            var DM = window.ErvenowDeliveryMap;
+            if (DM && !pickupMapsUrl) pickupMapsUrl = DM.buildGoogleMapsUrl(fromLL.lat, fromLL.lng);
+            if (DM && !dropMapsUrl) dropMapsUrl = DM.buildGoogleMapsUrl(toLL.lat, toLL.lng);
+            await drawRouteAndPricing();
           } catch (err) {
             document.getElementById("result").innerText = "❌ " + (err.message || "تعذر حساب المسافة");
           }
@@ -1513,14 +1801,8 @@
       }
 
       function parseLatLngInput(v) {
-        var s = String(v || "").trim();
-        if (!s.includes(",")) return null;
-        var parts = s.split(",");
-        if (parts.length !== 2) return null;
-        var lat = parseFloat(parts[0].trim());
-        var lng = parseFloat(parts[1].trim());
-        if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
-        return { lat: lat, lng: lng };
+        var DM = window.ErvenowDeliveryMap;
+        return DM ? DM.parseLatLngPair(v) : null;
       }
 
       async function geocode(q) {
@@ -1558,33 +1840,26 @@
 
       async function calculate() {
         try {
+          initMap();
+          var fromResolved;
+          var toResolved;
+          if (deliveryInputMode === "links") {
+            await applyMapLinks();
+            return;
+          }
           var from = document.getElementById("from").value.trim();
           var to = document.getElementById("to").value.trim();
           if (!from || !to) {
             alert("أدخل موقع الاستلام والتسليم أولاً");
             return;
           }
-
-          fromLL = parseLatLngInput(from) || (await geocode(from));
-          toLL = parseLatLngInput(to) || (await geocode(to));
-          var route = await getRoute(fromLL, toLL);
-          km = route.distance / 1000;
-
-          document.getElementById("distance").innerText = "المسافة: " + km.toFixed(2) + " كم";
-          renderPricingStats(km);
-          document.getElementById("result").innerText = "";
-          if (map) {
-            if (markerFrom) map.removeLayer(markerFrom);
-            markerFrom = L.marker([fromLL.lat, fromLL.lng]).addTo(map).bindPopup("📍 الاستلام");
-            if (markerTo) map.removeLayer(markerTo);
-            markerTo = L.marker([toLL.lat, toLL.lng]).addTo(map).bindPopup("📍 التسليم");
-            if (routeLine) map.removeLayer(routeLine);
-            routeLine = L.geoJSON(route.geometry, {
-              style: { color: "blue", weight: 5 },
-            }).addTo(map);
-          }
-          showMap();
-          enableCreate();
+          fromResolved = await resolveLocationFromField(from, null);
+          toResolved = await resolveLocationFromField(to, null);
+          fromLL = fromResolved.ll;
+          toLL = toResolved.ll;
+          pickupMapsUrl = fromResolved.mapsUrl || "";
+          dropMapsUrl = toResolved.mapsUrl || "";
+          await drawRouteAndPricing();
         } catch (e) {
           document.getElementById("result").innerText = "❌ " + (e.message || "تعذر حساب المسافة");
           enableCreate();
@@ -1609,21 +1884,32 @@
       async function buildMapCartItem() {
         var from = document.getElementById("from").value.trim();
         var to = document.getElementById("to").value.trim();
-        if (!km) await calculate();
+        if (!km || !fromLL || !toLL) await calculate();
         if (!km) throw new Error("احسب المسافة أولاً");
         var pricing = calcDeliveryPricing(km);
         var phone = await resolveDashCustomerPhone();
+        var phoneInput = document.getElementById("mapCustomerPhone");
+        if (!phone && phoneInput) phone = String(phoneInput.value || "").trim();
+        if (window.ErvenowServiceCart && typeof ErvenowServiceCart.validateSaPhone === "function") {
+          phone = ErvenowServiceCart.validateSaPhone(phone) || phone;
+        }
+        var product = getMapProductPayload();
+        var DM = window.ErvenowDeliveryMap;
+        if (!pickupMapsUrl && DM && fromLL) pickupMapsUrl = DM.buildGoogleMapsUrl(fromLL.lat, fromLL.lng);
+        if (!dropMapsUrl && DM && toLL) dropMapsUrl = DM.buildGoogleMapsUrl(toLL.lat, toLL.lng);
         return {
           type: "delivery",
-          title: "توصيل من الخريطة",
+          title: "توصيل من الخريطة — " + product.label,
           price: pricing.fee,
           customer_phone: phone,
           data: {
-            pickup_address: from,
-            drop_address: to,
-            from: from,
-            to: to,
-            location: to,
+            pickup_address: from || pickupMapsUrl,
+            drop_address: to || dropMapsUrl,
+            from: from || pickupMapsUrl,
+            to: to || dropMapsUrl,
+            location: to || dropMapsUrl,
+            pickup_maps_url: pickupMapsUrl,
+            drop_maps_url: dropMapsUrl,
             pickup_lat: fromLL ? fromLL.lat : null,
             pickup_lng: fromLL ? fromLL.lng : null,
             drop_lat: toLL ? toLL.lat : null,
@@ -1636,6 +1922,10 @@
             customer_phone: phone,
             payment_status: "unpaid",
             source: "dashboard_map",
+            product_category: product.typeKey,
+            product_qty: product.qty,
+            product_note: product.note,
+            product_label: product.label,
             qty: 1,
           },
         };
@@ -1657,10 +1947,29 @@
           if (!km) return;
 
           if (!dashHasToken()) {
+            var draft;
             try {
-              var draft = await buildMapCartItem();
+              draft = await buildMapCartItem();
+            } catch (e0) {
+              result.innerText = "❌ " + (e0.message || "أكمل المواقع والمسافة أولاً");
+              return;
+            }
+            if (!draft.customer_phone) {
+              result.innerText = "❌ أدخل جوالك السعودي (05xxxxxxxx) قبل المتابعة.";
+              return;
+            }
+            if (window.ErvenowServiceCart && typeof ErvenowServiceCart.validateSaPhone === "function") {
+              var guestPh = ErvenowServiceCart.validateSaPhone(draft.customer_phone);
+              if (!guestPh) {
+                result.innerText = "❌ أدخل جوالاً سعودياً صحيحاً (05xxxxxxxx).";
+                return;
+              }
+              draft.customer_phone = guestPh;
+              if (draft.data) draft.data.customer_phone = guestPh;
+            }
+            try {
               sessionStorage.setItem("ervenow:pending-map-cart", JSON.stringify(draft));
-            } catch (e0) {}
+            } catch (e1) {}
             window.location.href =
               "/login?mode=register&role=customer&next=" + encodeURIComponent("/cart");
             return;
@@ -1671,8 +1980,7 @@
 
           var item = await buildMapCartItem();
           if (!item.customer_phone) {
-            result.innerText =
-              "❌ أضف رقم جوالك في الملف الشخصي أولاً، أو سجّل بحساب يحتوي جوالاً.";
+            result.innerText = "❌ أدخل جوالك السعودي (05xxxxxxxx) في الحقل أعلاه.";
             return;
           }
 
@@ -1892,6 +2200,7 @@
         }
         if (details && details.open) {
           setActiveServiceCard("delivery");
+          setDeliveryMode(deliveryInputMode || "links");
           initMap();
           refreshMapSize();
         }

@@ -5,9 +5,11 @@
   "use strict";
 
   function validateSaPhone(phone) {
-    var p = String(phone || "").replace(/\s/g, "");
-    if (!/^05\d{8}$/.test(p)) return null;
-    return p;
+    var d = String(phone || "").replace(/\s/g, "").replace(/\D/g, "");
+    if (/^05\d{8}$/.test(d)) return d;
+    if (/^9665\d{8}$/.test(d)) return "0" + d.slice(3);
+    if (/^5\d{8}$/.test(d)) return "0" + d;
+    return null;
   }
 
   function parsePrice(val) {
@@ -30,6 +32,9 @@
       return { ok: false, message: "أدخل رقم جوال سعودي صحيح (05xxxxxxxx)" };
     }
     item.customer_phone = phone;
+    if (item.data && typeof item.data === "object") {
+      item.data.customer_phone = phone;
+    }
     var price = parsePrice(item.price);
     var zeroOk = { delivery: 1, restaurant: 1, food: 1 };
     if (price <= 0 && !zeroOk[item.type]) {
@@ -37,7 +42,14 @@
     }
     item.price = price;
     item.payment_status = item.payment_status || "unpaid";
-    global.addToCart(item);
+    var addResult =
+      typeof global.addToCart === "function" ? global.addToCart(item) : { ok: false, message: "السلة غير متوفرة" };
+    if (!addResult || addResult.ok === false) {
+      return {
+        ok: false,
+        message: (addResult && addResult.message) || "تعذر الإضافة للسلة",
+      };
+    }
     if (opts.redirect !== false) {
       var msg = opts.message || "تمت الإضافة للسلة — أكمل الدفع ثم يُخصَّص مندوب/مزود للتوصيل أو الخدمة.";
       try {

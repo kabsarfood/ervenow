@@ -96,8 +96,18 @@
       return true;
     }
 
+    if (role === "customer" && (path === "/orders" || path.indexOf("/orders/") === 0)) {
+      location.replace("/my-orders");
+      return true;
+    }
+
     if (!access.can_access_driver_dispatch && (path === "/orders" || path.indexOf("/orders/") === 0)) {
-      location.replace("/dashboard");
+      location.replace(hasToken() ? "/my-orders" : "/login?role=customer&next=" + encodeURIComponent("/my-orders"));
+      return true;
+    }
+
+    if (role === "driver" && (path === "/my-orders" || path.indexOf("/my-orders/") === 0)) {
+      location.replace("/orders");
       return true;
     }
 
@@ -115,9 +125,12 @@
     if (access.can_access_driver_dispatch) {
       link.setAttribute("href", "/orders");
       link.hidden = false;
+      var txtD = link.querySelector(".lp-dd-link__text");
+      if (txtD) txtD.textContent = role === "driver" ? "طلباتي" : "الطلبات";
       return;
     }
-    link.setAttribute("href", "/dashboard");
+    link.setAttribute("href", hasToken() ? "/my-orders" : "/login?role=customer&next=" + encodeURIComponent("/my-orders"));
+    link.hidden = false;
     if (badge) badge.style.display = "none";
     var txt = link.querySelector(".lp-dd-link__text");
     if (txt) txt.textContent = "طلباتي";

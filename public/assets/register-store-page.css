@@ -202,11 +202,54 @@ body.guest-shell-page.reg-store-page {
   margin-top: 14px;
 }
 
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.reg-store-map-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.reg-store-map-search {
+  flex: 1 1 180px;
+  min-width: 0;
+  padding: 11px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(61, 34, 19, 0.14);
+  background: #fffefb;
+  font-family: inherit;
+  font-size: 0.95rem;
+}
+
+.reg-store-map-toolbar .btn {
+  flex-shrink: 0;
+  min-height: 44px;
+}
+
 .reg-store-map-wrap {
   border-radius: 16px;
   overflow: hidden;
   border: 1px solid rgba(185, 135, 47, 0.25);
   box-shadow: 0 6px 24px rgba(45, 26, 14, 0.08);
+}
+
+.reg-store-map-legend {
+  margin: 10px 0 0;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--muted, #5c4a3d);
+  line-height: 1.5;
 }
 
 .reg-store-page #map {
@@ -237,6 +280,48 @@ body.guest-shell-page.reg-store-page {
   font-size: 0.86rem;
   font-weight: 700;
   color: var(--brown-mid, #5c4a3d);
+}
+
+.reg-store-map-status.is-ok {
+  background: rgba(46, 125, 74, 0.1);
+  border-color: rgba(46, 125, 74, 0.28);
+  color: #1e5631;
+}
+
+.reg-store-map-status.is-pending {
+  background: rgba(185, 135, 47, 0.08);
+  border-color: rgba(185, 135, 47, 0.22);
+}
+
+/* دبابيس خريطة ERVENOW */
+.erv-store-map__pin {
+  background: transparent;
+  border: none;
+}
+
+.erv-store-map__pin--new span {
+  display: block;
+  width: 28px;
+  height: 36px;
+  background: linear-gradient(180deg, #e8c078 0%, #b9872f 55%, #7a5a1f 100%);
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+  box-shadow: 0 4px 12px rgba(45, 26, 14, 0.35);
+  border: 2px solid #fffef8;
+}
+
+.erv-store-map__pin--existing span {
+  display: block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #9a8475;
+  border: 2px solid #fffef8;
+  box-shadow: 0 1px 4px rgba(45, 26, 14, 0.25);
+}
+
+.erv-store-map .leaflet-container {
+  font-family: inherit;
 }
 
 .reg-store-optional {

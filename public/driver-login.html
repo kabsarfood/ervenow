@@ -61,6 +61,11 @@
             autocomplete="tel-national"
           />
 
+          <div class="auth-dev-panel" id="driverDevPanel" aria-label="وضع التطوير">
+            <p class="auth-dev-panel__label">وضع التطوير</p>
+            <button type="button" class="auth-dev-direct" id="driverDevDirectBtn">_ الدخول المباشر</button>
+          </div>
+
           <div class="auth-code-group" id="codeGroup" hidden>
             <label for="loginCode">رمز واتساب</label>
             <input
@@ -82,6 +87,18 @@
           <a class="auth-join-link" href="/login?mode=register&amp;role=driver">
             لم تُعتمد بعد؟ قدّم طلب الانضمام كمندوب توصيل
           </a>
+
+          <nav class="auth-portal-nav" aria-label="بوابات الدخول">
+            <p class="auth-portal-nav__title">دخول بوابة أخرى</p>
+            <div class="auth-portal-nav__grid">
+              <a class="auth-portal-nav__link" href="/login?role=customer">👤 دخول الزائر</a>
+              <a class="auth-portal-nav__link" href="/login?role=merchant">🏪 دخول التاجر</a>
+              <a class="auth-portal-nav__link" href="/login?role=service">🔧 مقدّم الخدمة</a>
+              <a class="auth-portal-nav__link is-current" href="/driver-login" aria-current="page">🚗 دخول المندوب</a>
+              <a class="auth-portal-nav__link" href="/admin-login">🔐 دخول الإدارة</a>
+              <a class="auth-portal-nav__link" href="/dashboard">🗺️ لوحة الزائر</a>
+            </div>
+          </nav>
         </div>
       </div>
     </main>
@@ -100,6 +117,7 @@
     <script src="/assets/api-config.js"></script>
     <script src="/assets/api.js"></script>
     <script src="/assets/auth-otp-flow.js"></script>
+    <script src="/assets/auth-dev-direct.js"></script>
     <script>
       function showInlineMsg(text, isOk) {
         var el = document.getElementById("msg");
@@ -127,6 +145,11 @@
         return /^05\d{8}$/.test(String(v || "").replace(/\D/g, ""));
       }
 
+      function phoneToE164(phoneEl) {
+        var p = normalizePhoneInput(phoneEl);
+        return p ? "+966" + p.slice(1) : "";
+      }
+
       function mapOtpError(msg) {
         var m = String(msg || "");
         if (m.indexOf("منتهي") !== -1 || m.indexOf("غير صحيح") !== -1) {
@@ -140,6 +163,10 @@
         codeId: "loginCode",
         codeGroupId: "codeGroup",
         btnId: "driverAuthBtn",
+        devDirectBtnId: "driverDevDirectBtn",
+        onDevCodeStep: function () {
+          showInlineMsg("أدخل رمز الدخول يدوياً ثم اضغط تسجيل الدخول.", true);
+        },
         introId: "driverAuthIntro",
         introSend: "أدخل رقم جوالك السعودي ثم اضغط إرسال الرمز.",
         introVerify: "أدخل رمز واتساب ثم اضغط تسجيل الدخول.",
@@ -160,7 +187,7 @@
           try {
             await window.PlatformAPI.api("/api/driver/send-otp", {
               method: "POST",
-              body: { phone: normalizePhoneInput(phoneEl) },
+              body: { phone: phoneToE164(phoneEl) },
             });
             showInlineMsg("تم إرسال الرمز عبر واتساب. صلاحية الرمز 5 دقائق.", true);
           } catch (e) {
@@ -174,7 +201,7 @@
           try {
             j = await window.PlatformAPI.api("/api/driver/verify-otp", {
               method: "POST",
-              body: { phone: normalizePhoneInput(phoneEl), code: (codeEl.value || "").trim() },
+              body: { phone: phoneToE164(phoneEl), code: (codeEl.value || "").trim() },
             });
             if (!j.token) throw new Error("لم يتم إصدار جلسة");
           } catch (e) {
@@ -209,6 +236,9 @@
           }, 500);
         },
       });
+      if (window.ErvenowAuthDevDirect) {
+        ErvenowAuthDevDirect.initDevDirectButton("driverDevDirectBtn");
+      }
 
       if (window.PlatformAPI && PlatformAPI.getToken()) {
         var qs0 = new URLSearchParams(location.search);

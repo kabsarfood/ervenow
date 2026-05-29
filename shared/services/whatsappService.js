@@ -12,6 +12,12 @@ const {
   buildPublicTrackUrl,
   sendDeliveryCustomerWhatsApp,
 } = require("../messages/deliveryCustomerWhatsApp");
+const {
+  isMapDeliveryOrder,
+  productLineFromOrder,
+  pickupLinkFromOrder,
+  dropLinkFromOrder,
+} = require("../utils/deliveryMapOrder");
 
 function publicBaseUrl() {
   return String(process.env.ERVENOW_PUBLIC_URL || "").trim().replace(/\/$/, "");
@@ -76,26 +82,47 @@ async function sendOrderAcceptedToDriverWhatsApp(order, driverPhone) {
   const pingUrl = `${base}/api/driver/ping-arrival/${idEnc}`;
   const completeUrl = `${base}/api/driver/complete-order/${idEnc}`;
 
-  const full =
-    `━━━━━━━━━━━━━━━━\n` +
-    `🌟 ERVENOW — تم قبول الطلب\n` +
-    `━━━━━━━━━━━━━━━━\n\n` +
-    `📦 الطلب\n` +
-    `رقم الطلب: ${orderNumber}\n\n` +
-    `━━━━━━━━━━━━━━━━\n` +
-    `📍 الاستلام (خرائط Google)\n` +
-    `${pickup}\n\n` +
-    `━━━━━━━━━━━━━━━━\n` +
-    `📍 التسليم (خرائط Google)\n` +
-    `${drop}\n\n` +
-    `━━━━━━━━━━━━━━━━\n` +
-    `⚡ ابدأ من هنا\n` +
-    `▶️ فتح تطبيق المندوب:\n${appUrl}\n\n` +
-    `━━━━━━━━━━━━━━━━\n` +
-    `🛠 بعد تسجيل الدخول في التطبيق\n` +
-    `• إبلاغ الوصول (POST):\n${pingUrl}\n\n` +
-    `• إتمام التسليم (POST):\n${completeUrl}\n\n` +
-    `— فريق ERVENOW`;
+  let full;
+  if (isMapDeliveryOrder(order)) {
+    const productLine = productLineFromOrder(order);
+    const pickupMap = pickupLinkFromOrder(order) || pickup;
+    const dropMap = dropLinkFromOrder(order) || drop;
+    const fee =
+      Number(order.delivery_fee) ||
+      Number(order.driver_earning) ||
+      Number(order.total_amount) ||
+      0;
+    const liveMap = appUrl || buildDriverOrderDeepLink(order.id);
+    full =
+      `ERVENOW ترحب بكم\n\n` +
+      `طلب توصيل رقم ${orderNumber}\n\n` +
+      `${productLine}\n\n` +
+      `موقع الاستلام:\n${pickupMap}\n\n` +
+      `موقع التسليم:\n${dropMap}\n\n` +
+      `🗺️ خريطة حية:\n${liveMap}\n\n` +
+      `القيمة: ${Number(fee).toFixed(2)} ريال`;
+  } else {
+    full =
+      `━━━━━━━━━━━━━━━━\n` +
+      `🌟 ERVENOW — تم قبول الطلب\n` +
+      `━━━━━━━━━━━━━━━━\n\n` +
+      `📦 الطلب\n` +
+      `رقم الطلب: ${orderNumber}\n\n` +
+      `━━━━━━━━━━━━━━━━\n` +
+      `📍 الاستلام (خرائط Google)\n` +
+      `${pickup}\n\n` +
+      `━━━━━━━━━━━━━━━━\n` +
+      `📍 التسليم (خرائط Google)\n` +
+      `${drop}\n\n` +
+      `━━━━━━━━━━━━━━━━\n` +
+      `⚡ ابدأ من هنا\n` +
+      `▶️ فتح تطبيق المندوب:\n${appUrl}\n\n` +
+      `━━━━━━━━━━━━━━━━\n` +
+      `🛠 بعد تسجيل الدخول في التطبيق\n` +
+      `• إبلاغ الوصول (POST):\n${pingUrl}\n\n` +
+      `• إتمام التسليم (POST):\n${completeUrl}\n\n` +
+      `— فريق ERVENOW`;
+  }
 
   let ok = await sendWhatsApp({ to: digits, message: full });
   if (!ok) {

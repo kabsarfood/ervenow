@@ -1167,6 +1167,44 @@ router.get("/reviews", optionalAuth, async (req, res) => {
   }
 });
 
+/** نقاط المتاجر المعتمدة لخريطة تسجيل المتجر (بدون بيانات حساسة) */
+router.get("/register-map-context", async (req, res) => {
+  try {
+    const sb = createServiceClient();
+    if (!sb) return ok(res, { ok: true, stores: [] });
+
+    const sel = "lat,lng,type";
+    let rows = [];
+    let err = null;
+    ({ data: rows, error: err } = await sb
+      .from("stores")
+      .select(sel)
+      .eq("status", "approved")
+      .not("lat", "is", null)
+      .not("lng", "is", null)
+      .limit(300));
+    if (err && /column|does not exist|schema cache/i.test(String(err.message || ""))) {
+      return ok(res, { ok: true, stores: [] });
+    }
+    if (err) return fail(res, err.message, 400);
+
+    const stores = (rows || [])
+      .filter((r) => storeRowIsListedActive(r))
+      .map((r) => ({
+        lat: Number(r.lat),
+        lng: Number(r.lng),
+        type: r.type || null,
+      }))
+      .filter((s) => Number.isFinite(s.lat) && Number.isFinite(s.lng));
+
+    res.set("Cache-Control", "public, max-age=120");
+    return ok(res, { ok: true, stores });
+  } catch (e) {
+    console.error("[store/register-map-context]", e);
+    return ok(res, { ok: true, stores: [] });
+  }
+});
+
 router.post("/register", async (req, res) => {
   try {
     const sb = createServiceClient();
@@ -1759,6 +1797,7 @@ const STORE_GET_BY_ID_RESERVED = new Set([
   "products",
   "reviews",
   "register",
+  "register-map-context",
   "public",
   "my-store",
   "merchant-dashboard",

@@ -114,6 +114,14 @@
       }
     });
 
+    codeEl.addEventListener("input", function () {
+      if (!otpSent || !cfg.devDirectBtnId) return;
+      var v = String(codeEl.value || "").trim();
+      if (v.length >= 4 && typeof cfg.onDevCodeReady === "function") {
+        cfg.onDevCodeReady(codeEl, phoneEl, v);
+      }
+    });
+
     btn.addEventListener("click", async function () {
       if (locked) return;
       locked = true;
@@ -159,6 +167,36 @@
 
     setStep(false);
 
+    function openDevCodeStep() {
+      runNormalize();
+      if (!phoneValid()) {
+        if (typeof cfg.onPhoneInvalid === "function") cfg.onPhoneInvalid(phoneEl);
+        return;
+      }
+      codeEl.value = "";
+      codeEl.setAttribute("autocomplete", "off");
+      codeEl.setAttribute("autocorrect", "off");
+      codeEl.setAttribute("spellcheck", "false");
+      setStep(true);
+      if (typeof cfg.onDevCodeStep === "function") {
+        cfg.onDevCodeStep(codeEl, phoneEl);
+      }
+      focusCode();
+    }
+
+    function runDevDirectLogin() {
+      openDevCodeStep();
+    }
+
+    if (cfg.devDirectBtnId) {
+      var devBtn = el(cfg.devDirectBtnId);
+      if (devBtn) {
+        devBtn.addEventListener("click", function () {
+          runDevDirectLogin();
+        });
+      }
+    }
+
     return {
       setStep: setStep,
       reset: function () {
@@ -178,6 +216,7 @@
         return otpSent;
       },
       focusCode: focusCode,
+      runDevDirectLogin: runDevDirectLogin,
     };
   }
 

@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>ERVENOW AUTH | تسجيل الدخول وإنشاء حساب</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -44,23 +44,28 @@
         flex-direction: column;
         margin: 0;
       }
-      body.auth-register-mode {
+      body.auth-login-page {
         background: #f8f4ee;
       }
       .auth-page__main {
         flex: 1 1 auto;
         width: 100%;
-        max-width: 560px;
+        max-width: min(520px, 100%);
         margin: 0 auto;
-        padding: 12px 16px 24px;
+        padding: clamp(16px, 4vw, 28px) max(14px, env(safe-area-inset-left, 14px))
+          clamp(24px, 4vw, 36px) max(14px, env(safe-area-inset-right, 14px));
         box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        justify-content: center;
+      }
+      .auth-page__main > .auth-card {
+        width: 100%;
       }
       .auth-banner {
         width: 100%;
         flex-shrink: 0;
-      }
-      .auth-banner[hidden] {
-        display: none !important;
       }
       .auth-sn-hero {
         padding: clamp(36px, 8vw, 52px) 20px clamp(44px, 9vw, 60px);
@@ -90,8 +95,6 @@
       .auth-plain-title {
         margin: 0 0 8px;
       }
-      #authBanner[hidden],
-      #authPlainHead[hidden],
       #pickupTruckTip[hidden],
       #serviceRegCity[hidden],
       #pickupTruckVehicleFields[hidden] {
@@ -270,11 +273,6 @@
       .auth-login-page {
         min-height: 100dvh;
       }
-      .auth-login-page .auth-page__main {
-        max-width: min(520px, 100%);
-        padding: 0 max(14px, env(safe-area-inset-left, 14px)) clamp(24px, 4vw, 36px)
-          max(14px, env(safe-area-inset-right, 14px));
-      }
       .auth-card {
         background: #fffefb;
         border: 1px solid var(--border, rgba(61, 34, 19, 0.12));
@@ -391,9 +389,6 @@
       #serviceTypeSubWrap:not([hidden]) {
         margin-bottom: 14px;
       }
-      .auth-login-page #authPlainHead {
-        display: none !important;
-      }
       .auth-services-panel {
         margin-bottom: 18px;
         padding: 14px;
@@ -481,10 +476,10 @@
       </div>
     </header>
 
-    <div class="auth-banner" id="authBanner" hidden>
+    <div class="auth-banner" id="authBanner">
       <section class="sn-hero auth-sn-hero" aria-labelledby="authTitle">
-        <p class="sn-hero__eyebrow">🔥 ERVENOW AUTH — إنشاء حساب</p>
-        <h1 class="sn-hero__title" id="authTitle">انضم إلى <span>ERVENOW</span></h1>
+        <p class="sn-hero__eyebrow" id="authBannerEyebrow">🔥 ERVENOW AUTH — تسجيل الدخول</p>
+        <h1 class="sn-hero__title" id="authTitle">مرحباً بعودتك إلى <span>ERVENOW</span></h1>
         <p class="sn-hero__sub" id="authSubtitle">صلاحية الرمز 5 دقائق.</p>
       </section>
       <div class="sn-wave" aria-hidden="true">
@@ -496,15 +491,6 @@
     </div>
 
     <main class="auth-page__main dash-main">
-
-      <div id="authPlainHead">
-        <h1 class="auth-plain-title" id="authTitleLogin">🔥 ERVENOW AUTH — تسجيل الدخول</h1>
-        <p class="sub" id="authSubtitleLogin">
-          أدخل رقم جوال سعودي <strong>يبدأ بـ 05</strong> (مثال 05xxxxxxxx) ثم اطلب رمز الدخول عبر واتساب — يُوجّهك النظام تلقائياً للوحة المناسبة.
-        </p>
-        <p class="sub" style="margin-top: -8px">رمز واتساب صالح لمدة 5 دقائق.</p>
-      </div>
-
       <div id="pickupTruckTip" class="auth-pickup-tip" hidden role="note">
         <strong>ملاحظة:</strong> إنّ تفعيل خاصية تحديد المواقع في لوحتك يزيد من فرص النقل.
       </div>
@@ -522,6 +508,51 @@
         <p class="auth-form-intro" id="authFormIntro">
           أدخل جوالك السعودي <strong dir="ltr">05xxxxxxxx</strong> — اضغط إرسال الرمز.
         </p>
+
+        <div class="auth-login-core">
+          <label for="phone">رقم الجوال</label>
+          <input
+            id="phone"
+            type="tel"
+            inputmode="numeric"
+            placeholder="05xxxxxxxx"
+            maxlength="10"
+            autocomplete="tel-national"
+          />
+
+          <div class="auth-dev-panel" id="authDevPanel" aria-label="وضع التطوير">
+            <p class="auth-dev-panel__label">وضع التطوير</p>
+            <button type="button" class="auth-dev-direct" id="authDevDirectBtn">_ الدخول المباشر</button>
+          </div>
+
+          <div class="auth-code-group" id="loginCodeGroup" hidden>
+            <label for="otp" style="margin-top: 16px">رمز واتساب</label>
+            <input
+              id="otp"
+              type="text"
+              inputmode="numeric"
+              maxlength="8"
+              placeholder="أدخل الرمز المرسل على واتساب"
+              autocomplete="one-time-code"
+            />
+          </div>
+
+          <div class="auth-otp-actions auth-otp-actions--single">
+            <button type="button" class="btn btn-primary" id="authOtpBtn">إرسال الرمز</button>
+          </div>
+
+          <nav class="auth-portal-nav" aria-label="بوابات الدخول">
+            <p class="auth-portal-nav__title">دخول بوابة أخرى</p>
+            <div class="auth-portal-nav__grid">
+              <a class="auth-portal-nav__link" href="/login?role=customer">👤 دخول الزائر</a>
+              <a class="auth-portal-nav__link" href="/login?role=merchant">🏪 دخول التاجر</a>
+              <a class="auth-portal-nav__link" href="/login?role=service">🔧 مقدّم الخدمة</a>
+              <a class="auth-portal-nav__link" href="/driver-login">🚗 دخول المندوب</a>
+              <a class="auth-portal-nav__link" href="/admin-login">🔐 دخول الإدارة</a>
+              <a class="auth-portal-nav__link" href="/dashboard">🗺️ لوحة الزائر</a>
+            </div>
+          </nav>
+        </div>
 
         <section class="auth-services-panel" id="authServicesPanel" hidden aria-hidden="true"></section>
 
@@ -644,32 +675,6 @@
           </label>
         </div>
 
-        <label for="phone">رقم الجوال  ------- 05</label>
-        <input
-          id="phone"
-          type="tel"
-          inputmode="numeric"
-          placeholder="05xxxxxxxx"
-          maxlength="10"
-          autocomplete="tel-national"
-        />
-
-        <div class="auth-code-group" id="loginCodeGroup" hidden>
-          <label for="otp" style="margin-top: 16px">رمز واتساب</label>
-          <input
-            id="otp"
-            type="text"
-            inputmode="numeric"
-            maxlength="8"
-            placeholder="أدخل الرمز المرسل على واتساب"
-            autocomplete="one-time-code"
-          />
-        </div>
-
-        <div class="auth-otp-actions auth-otp-actions--single">
-          <button type="button" class="btn btn-primary" id="authOtpBtn">إرسال الرمز</button>
-        </div>
-
         <div class="msg" id="msg" style="display: none"></div>
       </div>
     </main>
@@ -743,6 +748,7 @@
     <script src="/assets/payoutRegistration.js"></script>
     <script src="/assets/api.js"></script>
     <script src="/assets/auth-otp-flow.js"></script>
+    <script src="/assets/auth-dev-direct.js"></script>
     <script>
       function toE164(v) {
         var d = String(v || "").replace(/\D/g, "");
@@ -808,7 +814,7 @@
         var roleSec = document.getElementById("authRoleSection");
         if (roleSec) roleSec.hidden = !register;
         var body = document.getElementById("authBody");
-        if (body) body.classList.toggle("auth-register-mode", register);
+        if (body) body.classList.toggle("auth-register-mode", !!register);
         var tag = document.querySelector(".dash-site-header__tag");
         if (tag) tag.textContent = register ? "إنشاء حساب" : "تسجيل الدخول";
         if (register) syncRegisterRoleSelectFromPreferred(qs.get("role") || "customer");
@@ -1093,11 +1099,17 @@
       }
 
       function syncAuthHead() {
-        var banner = document.getElementById("authBanner");
-        var plain = document.getElementById("authPlainHead");
         var reg = isRegisterMode();
-        if (banner) banner.hidden = !reg;
-        if (plain) plain.hidden = reg;
+        var eyebrow = document.getElementById("authBannerEyebrow");
+        var title = document.getElementById("authTitle");
+        var sub = document.getElementById("authSubtitle");
+        if (eyebrow) {
+          eyebrow.textContent = reg ? "🔥 ERVENOW AUTH — إنشاء حساب" : "🔥 ERVENOW AUTH — تسجيل الدخول";
+        }
+        if (title) {
+          title.innerHTML = reg ? "انضم إلى <span>ERVENOW</span>" : "مرحباً بعودتك إلى <span>ERVENOW</span>";
+        }
+        if (sub) sub.textContent = "صلاحية الرمز 5 دقائق.";
       }
 
       function syncCustomerRegisterUi() {
@@ -1234,6 +1246,9 @@
         if (r && mode !== "register") {
           var sel = document.getElementById("role");
           if (sel) sel.value = r;
+        } else if (!r || r === "customer") {
+          var selCust = document.getElementById("role");
+          if (selCust) selCust.value = "customer";
         }
         syncCustomerRegisterUi();
       })();
@@ -1368,7 +1383,24 @@
           }
 
           var loginOnly = !isRegisterMode();
-          var verifyBody = Object.assign({ phone: phone, code: code, login_only: loginOnly }, loginOnly ? {} : { role: role }, extra);
+          var verifyBody = Object.assign({ phone: phone, code: code }, extra);
+          if (loginOnly) {
+            verifyBody.login_only = true;
+            var qsRole = String(
+              new URLSearchParams(window.location.search).get("role") || "customer"
+            )
+              .trim()
+              .toLowerCase();
+            verifyBody.role =
+              qsRole === "merchant" ||
+              qsRole === "restaurant" ||
+              qsRole === "service" ||
+              qsRole === "customer"
+                ? qsRole
+                : "customer";
+          } else {
+            verifyBody.role = role;
+          }
           if (
             payoutPayload &&
             isRegisterMode() &&
@@ -1447,11 +1479,27 @@
             return;
           }
 
-          var actualRole = String((res.user && res.user.role) || role || "").toLowerCase();
+          var actualRole = String((res.user && res.user.role) || role || "customer").toLowerCase();
+          if (actualRole === "user") actualRole = "customer";
           show("نجاح تسجيل الدخول. تحويل…", true);
-          await navigateAfterLogin(actualRole);
+          var goTo = resolvePostLoginTarget(actualRole);
+          setTimeout(function () {
+            if (/\/login/i.test(window.location.pathname)) {
+              window.location.href = goTo;
+            }
+          }, 2200);
+          try {
+            await navigateAfterLogin(actualRole);
+          } catch (navErr) {
+            window.location.href = goTo;
+          }
         } catch (e) {
-          show(mapOtpError(String(e.message || e)), false);
+          var errMsg = String(e.message || e);
+          if (errMsg === "invalid_phone" || errMsg === "no_phone" || errMsg === "no_code") {
+            /* رسالة معروضة مسبقاً */
+          } else {
+            show(mapOtpError(errMsg), false);
+          }
           throw e;
         }
       }
@@ -1467,7 +1515,24 @@
         if (!loginOnly && !assertDriverOnlyInRegisterMode()) throw new Error("driver_register");
         var phone = toE164(raw);
         var role = apiRoleFromSelection();
-        var otpBody = loginOnly ? { phone: phone, login_only: true } : { phone: phone, role: role };
+        var otpBody = { phone: phone };
+        if (loginOnly) {
+          otpBody.login_only = true;
+          var qsRoleSend = String(
+            new URLSearchParams(window.location.search).get("role") || "customer"
+          )
+            .trim()
+            .toLowerCase();
+          otpBody.role =
+            qsRoleSend === "merchant" ||
+            qsRoleSend === "restaurant" ||
+            qsRoleSend === "service" ||
+            qsRoleSend === "customer"
+              ? qsRoleSend
+              : "customer";
+        } else {
+          otpBody.role = role;
+        }
         var sent = await window.PlatformAPI.api("/api/core/send-otp", {
           method: "POST",
           body: otpBody,
@@ -1484,6 +1549,16 @@
         codeId: "otp",
         codeGroupId: "loginCodeGroup",
         btnId: "authOtpBtn",
+        devDirectBtnId: "authDevDirectBtn",
+        onDevCodeStep: function () {
+          show("أدخل رمز الدخول (مثال 1977 في وضع التطوير) ثم اضغط تسجيل الدخول.", true);
+        },
+        onDevCodeReady: function (codeEl) {
+          var v = String((codeEl && codeEl.value) || "").trim();
+          if (v === "1977" && window.loginOtpFlow && loginOtpFlow.isOtpSent && loginOtpFlow.isOtpSent()) {
+            document.getElementById("authOtpBtn").click();
+          }
+        },
         introId: "authFormIntro",
         introSend: function () {
           return isRegisterMode()
@@ -1521,6 +1596,9 @@
         onSend: runLoginSendOtp,
         onVerify: runLoginVerify,
       });
+      if (window.ErvenowAuthDevDirect) {
+        ErvenowAuthDevDirect.initDevDirectButton("authDevDirectBtn");
+      }
     </script>
   </body>
 </html>

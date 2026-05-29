@@ -2381,9 +2381,9 @@
               role="menuitem"
               id="lpQuickOrdersLink"
               class="lp-dd-item lp-dd-orders"
-              href="/orders"
-              aria-label="الطلبات"
-              ><span class="lp-dd-ic" aria-hidden="true">📋</span><span class="lp-dd-link__text">الطلبات</span
+              href="/my-orders"
+              aria-label="طلباتي"
+              ><span class="lp-dd-ic" aria-hidden="true">📋</span><span class="lp-dd-link__text">طلباتي</span
               ><span class="lp-dd-badge" id="ordersBadge">0</span></a
             >
             <a role="menuitem" class="lp-dd-item" href="/track" aria-label="الخريطة الحية"
@@ -2425,6 +2425,9 @@
               ><span class="lp-dd-ic" aria-hidden="true">&#127978;</span><span class="lp-dd-link__text">طلبات الخدمات</span></a
             >
             <a role="menuitem" class="lp-dd-item" href="/driver" aria-label="لوحة المندوب" data-nav-role="driver" hidden
+              ><span class="lp-dd-ic" aria-hidden="true">&#128663;</span><span class="lp-dd-link__text">لوحة المندوب</span></a
+            >
+            <a role="menuitem" class="lp-dd-item" href="/orders" aria-label="طلبات المنصة" data-nav-role="driver" hidden
               ><span class="lp-dd-ic" aria-hidden="true">&#128663;</span><span class="lp-dd-link__text">طلباتي</span></a
             >
 
@@ -2586,7 +2589,7 @@
       <h2 class="sn-section__title" id="home-cats-title">اختر ما يناسبك</h2>
 
       <div class="sn-grid sn-home-hub" id="snHomeHub">
-        <details class="sn-hub-item sn-hub-item--restaurants">
+        <details class="sn-hub-item sn-hub-item--restaurants" name="ervenow-home-hub">
           <summary class="sn-card sn-card--restaurants">
             <div class="sn-card__icon-wrap" aria-hidden="true">🍽️</div>
             <div>
@@ -2604,7 +2607,7 @@
             <a class="sn-hub-link" href="/restaurants"><span class="sn-hub-link__ic" aria-hidden="true">▦</span>كل المطاعم</a>
           </div>
         </details>
-        <details class="sn-hub-item sn-hub-item--stores">
+        <details class="sn-hub-item sn-hub-item--stores" name="ervenow-home-hub">
           <summary class="sn-card sn-card--stores">
             <div class="sn-card__icon-wrap" aria-hidden="true">🛒</div>
             <div>
@@ -2623,7 +2626,7 @@
             <a class="sn-hub-link" href="/stores?type=all"><span class="sn-hub-link__ic" aria-hidden="true">▦</span>كل المتاجر</a>
           </div>
         </details>
-        <details class="sn-hub-item sn-hub-item--delivery">
+        <details class="sn-hub-item sn-hub-item--delivery" name="ervenow-home-hub">
           <summary class="sn-card sn-card--delivery">
             <div class="sn-card__icon-wrap" aria-hidden="true">🚚</div>
             <div>
@@ -2640,7 +2643,7 @@
             <a class="sn-hub-link" href="/dashboard#dashDeliveryTitle"><span class="sn-hub-link__ic" aria-hidden="true">🗺️</span>طلب من الخريطة</a>
           </div>
         </details>
-        <details class="sn-hub-item sn-hub-item--services">
+        <details class="sn-hub-item sn-hub-item--services" name="ervenow-home-hub">
           <summary class="sn-card sn-card--services">
             <div class="sn-card__icon-wrap" aria-hidden="true">🔧</div>
             <div>
@@ -2699,143 +2702,6 @@
     </section>
 
     <main>
-      <section class="lp-section lp-wrap lp-reveal" id="services" aria-labelledby="services-title">
-        <p class="sn-section__label">تصفّح بالتفصيل</p>
-        <h2 class="lp-section__title" id="services-title">خدمات المنصة</h2>
-        <p class="lp-section__lead">كل ما تحتاجه — من الطلب حتى باب زائر المنصة.</p>
-        <div class="lp-services__grid">
-          <h3 style="grid-column: 1 / -1; margin: 0">🍽️ مطاعم</h3>
-          <a class="lp-card" href="/restaurants?category=shawarma_grill">
-            <span class="lp-card__icon" aria-hidden="true">🌯</span>
-            <h3 class="lp-card__title">شاورما ومشاوي</h3>
-            <p class="lp-card__text">مطاعم الشاورما والمشاوي المعتمدة.</p>
-          </a>
-          <a class="lp-card" href="/restaurants?category=kabsa_bukhari">
-            <span class="lp-card__icon" aria-hidden="true">🍚</span>
-            <h3 class="lp-card__title">كبسة وبخاري</h3>
-            <p class="lp-card__text">أطباق الكبسة والبخاري والمندي.</p>
-          </a>
-          <a class="lp-card" href="/restaurants?category=burger_broasted">
-            <span class="lp-card__icon" aria-hidden="true">🍔</span>
-            <h3 class="lp-card__title">بروستد وبرقر</h3>
-            <p class="lp-card__text">مطاعم البرقر والبروستد.</p>
-          </a>
-          <a class="lp-card" href="/restaurants?category=seafood">
-            <span class="lp-card__icon" aria-hidden="true">🐟</span>
-            <h3 class="lp-card__title">ماكولات بحرية</h3>
-            <p class="lp-card__text">أسماك ومأكولات بحرية طازجة.</p>
-          </a>
-          <a class="lp-card" href="/restaurants?category=cafe_sweets">
-            <span class="lp-card__icon" aria-hidden="true">☕</span>
-            <h3 class="lp-card__title">قهوة وحلا</h3>
-            <p class="lp-card__text">مقاهي وحلويات وعصائر.</p>
-          </a>
-          <a class="lp-card" href="/restaurants">
-            <span class="lp-card__icon" aria-hidden="true">▦</span>
-            <h3 class="lp-card__title">كل المطاعم</h3>
-            <p class="lp-card__text">تصفّح جميع المطاعم المعتمدة.</p>
-          </a>
-          <h3 style="grid-column: 1 / -1; margin: 0">🛒 متاجر</h3>
-          <a class="lp-card" href="/stores">
-            <span class="lp-card__icon" aria-hidden="true">🏪</span>
-            <h3 class="lp-card__title">كل المتاجر</h3>
-            <p class="lp-card__text">سوبرماركت، صيدليات، خضار، وأكثر.</p>
-          </a>
-          <a class="lp-card" href="/stores?type=supermarket" data-type="supermarket">
-            <span class="lp-card__icon" aria-hidden="true">🛒</span>
-            <h3 class="lp-card__title">سوبر ماركت</h3>
-            <p class="lp-card__text">مشتريات يومية سريعة عبر نفس المنصة.</p>
-          </a>
-          <a class="lp-card" href="/stores?type=pharmacy" data-type="pharmacy">
-            <span class="lp-card__icon" aria-hidden="true">💊</span>
-            <h3 class="lp-card__title">صيدليات</h3>
-            <p class="lp-card__text">طلبات الأدوية والمنتجات الصحية بسهولة.</p>
-          </a>
-          <a class="lp-card" href="/stores?type=vegetables" data-type="vegetables">
-            <span class="lp-card__icon" aria-hidden="true">🥬</span>
-            <h3 class="lp-card__title">خضار</h3>
-            <p class="lp-card__text">توريد منتجات طازجة مباشرة لزائر المنصة.</p>
-          </a>
-          <a class="lp-card" href="/stores?type=flowers_gifts" data-type="flowers_gifts">
-            <span class="lp-card__icon" aria-hidden="true">💐</span>
-            <h3 class="lp-card__title">ورود وهدايا</h3>
-            <p class="lp-card__text">هدايا وتنسيقات ورد مع توصيل مرن.</p>
-          </a>
-          <a class="lp-card" href="/stores?type=sweets" data-type="sweets">
-            <span class="lp-card__icon" aria-hidden="true">🍰</span>
-            <h3 class="lp-card__title">حلويات</h3>
-            <p class="lp-card__text">طلبات حلويات ومناسبات بسرعة.</p>
-          </a>
-          <a class="lp-card" href="/stores?type=home_business" data-type="home_business">
-            <span class="lp-card__icon" aria-hidden="true">🏠</span>
-            <h3 class="lp-card__title">أسر منتجة</h3>
-            <p class="lp-card__text">دعم المنتجات المنزلية عبر الطلب المباشر.</p>
-          </a>
-          <h3 id="services-delivery" style="grid-column: 1 / -1; margin: 0">🚚 توصيل</h3>
-          <a class="lp-card" href="/delivery-services.html?service=car_transport" data-type="vehicle_transfer">
-            <span class="lp-card__icon" aria-hidden="true">🚗</span>
-            <h3 class="lp-card__title">نقل مركبات</h3>
-            <p class="lp-card__text">نظام موحد — داخلي وخارجي مع تسعير واضح.</p>
-          </a>
-          <a class="lp-card" href="/delivery-services.html?service=local_delivery" data-type="internal_delivery">
-            <span class="lp-card__icon" aria-hidden="true">📦</span>
-            <h3 class="lp-card__title">توصيل داخلي</h3>
-            <p class="lp-card__text">نموذج موحد (قيد التفعيل التدريجي).</p>
-          </a>
-          <a class="lp-card" href="/delivery-services.html?service=car_transport" data-type="pickup_truck">
-            <span class="lp-card__icon" aria-hidden="true">🛻</span>
-            <h3 class="lp-card__title">ونيت</h3>
-            <p class="lp-card__text">يُدار عبر نقل المركبات الموحد.</p>
-          </a>
-          <a class="lp-card" href="/delivery-services.html?service=furniture" data-type="furniture_move">
-            <span class="lp-card__icon" aria-hidden="true">🛋️</span>
-            <h3 class="lp-card__title">نقل أثاث</h3>
-            <p class="lp-card__text">نموذج موحد (قريباً).</p>
-          </a>
-          <a class="lp-card" href="/delivery-services.html?service=gas_delivery" data-type="gas_delivery">
-            <span class="lp-card__icon" aria-hidden="true">🔥</span>
-            <h3 class="lp-card__title">توصيل غاز</h3>
-            <p class="lp-card__text">نموذج موحد (قريباً).</p>
-          </a>
-          <h3 id="services-home" style="grid-column: 1 / -1; margin: 0">🔧 خدمات</h3>
-          <a class="lp-card" href="/services">
-            <span class="lp-card__icon" aria-hidden="true">🔧</span>
-            <h3 class="lp-card__title">كل الخدمات</h3>
-            <p class="lp-card__text">سباك، كهرباء، تكييف، تنظيف، وأكثر.</p>
-          </a>
-          <a class="lp-card" href="/services?type=plumber" data-type="plumber">
-            <span class="lp-card__icon" aria-hidden="true">🔧</span>
-            <h3 class="lp-card__title">سباك</h3>
-            <p class="lp-card__text">حجز فني سباكة بخطوات بسيطة.</p>
-          </a>
-          <a class="lp-card" href="/services?type=electrician" data-type="electrician">
-            <span class="lp-card__icon" aria-hidden="true">⚡</span>
-            <h3 class="lp-card__title">كهربائي</h3>
-            <p class="lp-card__text">خدمات الصيانة الكهربائية المنزلية.</p>
-          </a>
-          <a class="lp-card" href="/services?type=nursery" data-type="nursery">
-            <span class="lp-card__icon" aria-hidden="true">🪴</span>
-            <h3 class="lp-card__title">مشتل</h3>
-            <p class="lp-card__text">نباتات ولوازم زراعية عند الطلب.</p>
-          </a>
-          <a class="lp-card" href="/services?type=ac_technician" data-type="ac_technician">
-            <span class="lp-card__icon" aria-hidden="true">❄️</span>
-            <h3 class="lp-card__title">فني مكيفات</h3>
-            <p class="lp-card__text">صيانة وتنظيف المكيفات ميدانيًا.</p>
-          </a>
-          <a class="lp-card" href="/services?type=cleaning_villa" data-type="cleaning_villa">
-            <span class="lp-card__icon" aria-hidden="true">🧼</span>
-            <h3 class="lp-card__title">غسيل درج فيلا</h3>
-            <p class="lp-card__text">60 ريال — سعر ثابت.</p>
-          </a>
-          <a class="lp-card" href="/services?type=cleaning_building" data-type="cleaning_building">
-            <span class="lp-card__icon" aria-hidden="true">🏢</span>
-            <h3 class="lp-card__title">غسيل درج عمارة</h3>
-            <p class="lp-card__text">120 ريال — 3 أدوار.</p>
-          </a>
-        </div>
-      </section>
-
       <section class="lp-section lp-wrap lp-reveal" id="register-store-cta" aria-labelledby="register-store-title">
         <h2 class="lp-section__title" id="register-store-title">&#127978; 🚀 ابدأ البيع الآن على ERVENOW</h2>
         <p class="lp-section__lead">انضم إلى منصة ERVENOW وابدأ استقبال الطلبات من العملاء</p>
@@ -3320,7 +3186,10 @@
         var quickOrders = document.getElementById("lpQuickOrdersLink");
         if (!token) {
           applyStartMenuAuthState(false);
-          if (quickOrders) quickOrders.setAttribute("href", "/dashboard");
+          if (quickOrders) {
+            quickOrders.setAttribute("href", "/login?role=customer&next=" + encodeURIComponent("/my-orders"));
+            quickOrders.hidden = false;
+          }
           await refreshHeaderWallet("", "");
           clearHeaderUserMid();
           setQuickLogoutVisible(false);
@@ -3346,11 +3215,15 @@
             var serviceType = me.profile && me.profile.service_type;
             applyStartMenuAuthState(true, role);
             if (quickOrders) {
-              if (role === "driver" || role === "admin") {
+              quickOrders.hidden = false;
+              if (role === "driver") {
                 quickOrders.setAttribute("href", "/orders");
-                quickOrders.hidden = false;
+              } else if (role === "admin") {
+                quickOrders.setAttribute("href", "/admin-dashboard");
+                var qtxtA = quickOrders.querySelector(".lp-dd-link__text");
+                if (qtxtA) qtxtA.textContent = "الطلبات";
               } else {
-                quickOrders.setAttribute("href", "/dashboard");
+                quickOrders.setAttribute("href", "/my-orders");
                 var qtxt = quickOrders.querySelector(".lp-dd-link__text");
                 if (qtxt) qtxt.textContent = "طلباتي";
               }
@@ -3507,6 +3380,22 @@
               role = String((me.access && me.access.role) || (me.profile && me.profile.role) || "").toLowerCase();
             } catch (meErr) {
               role = "";
+            }
+            if (role === "customer" || role === "user") {
+              badge.style.display = "";
+              var headersC = { Authorization: "Bearer " + token };
+              var resC = await fetch(window.PlatformAPI.apiUrl("/api/delivery/orders"), { headers: headersC });
+              var dataC = await resC.json().catch(function () {
+                return {};
+              });
+              if (dataC.ok && Array.isArray(dataC.orders)) {
+                var pendingC = dataC.orders.filter(function (o) {
+                  var ds = String(o.delivery_status || o.status || "").toLowerCase();
+                  return !o.driver_id && (ds === "pending" || ds === "new" || ds === "draft");
+                }).length;
+                badge.innerText = String(pendingC);
+              }
+              return;
             }
             if (role !== "driver" && role !== "admin") {
               badge.style.display = "none";

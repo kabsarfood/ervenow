@@ -38,9 +38,6 @@
       <div class="guest-section-hero__inner">
         <p class="guest-section-hero__eyebrow">انضم إلى ERVENOW</p>
         <h1 class="guest-section-hero__title" id="regStoreHeroTitle">تسجيل متجر جديد</h1>
-        <p class="guest-section-hero__sub">
-          سجّل نشاطك على المنصة — بعد موافقة الإدارة تحصل على لوحة تحكم مستقلة لإدارة الشعار، المنتجات، الأسعار، والعروض.
-        </p>
       </div>
     </div>
 
@@ -53,32 +50,7 @@
         </ul>
 
         <div class="reg-store-intro card">
-          <p class="reg-store-intro__lead">
-            <strong>موقع المتجر على الخريطة إجباري.</strong>
-            بعد التفعيل ادخل من
-            <a href="/store-dashboard">صفحة تحكم المتجر</a>
-            بنفس جوال التسجيل (صفة تاجر).
-          </p>
-          <details class="reg-store-admin">
-            <summary>ظهرت رسالة «جدول stores غير موجود»؟ (للمشرف التقني)</summary>
-            <div class="reg-store-admin__body">
-              <ol>
-                <li>افتح <strong>Supabase</strong> → مشروعك → <strong>SQL Editor</strong>.</li>
-                <li>
-                  نفّذ بالترتيب:
-                  <code>shared/migration_stores.sql</code>،
-                  <code>shared/migration_store_marketplace.sql</code>،
-                  <code>shared/migration_store_location_delivery.sql</code>،
-                  <code>shared/migration_stores_platform.sql</code>، وعند الحاجة
-                  <code>shared/migration_stores_email.sql</code>،
-                  <code>shared/migration_categories.sql</code>،
-                  <code>shared/migration_category_usage.sql</code>،
-                  <code>shared/migration_store_merchant_hub.sql</code>.
-                </li>
-                <li>بعد <code>ALTER TABLE</code>: من Supabase → <strong>Settings → API</strong> استخدم <strong>Reload schema</strong> ثم أعد تحميل الصفحة.</li>
-              </ol>
-            </div>
-          </details>
+          <p class="reg-store-intro__lead">تحديد موقع المتجر يزيد من فرص البيع.</p>
         </div>
 
         <div class="card reg-store-form-card">
@@ -128,16 +100,28 @@
               <span class="reg-store-section__num" aria-hidden="true">2</span>
               <div>
                 <h2 class="reg-store-section__title" id="h-map">الموقع على الخريطة</h2>
-                <p class="reg-store-section__hint">انقر على الخريطة أو اسحب الدبوس — لا يُقبل الإرسال بدون تحديد نقطة.</p>
+                <p class="reg-store-section__hint">حدد موقع متجرك على خريطة ERVENOW — النقاط الرمادية تمثل متاجراً معتمدة.</p>
               </div>
             </div>
-            <div class="reg-store-map-wrap">
-              <div id="map" role="application" aria-label="خريطة موقع المتجر"></div>
+            <div class="reg-store-map-toolbar">
+              <label class="visually-hidden" for="regStoreMapSearch">بحث عن عنوان</label>
+              <input
+                type="search"
+                id="regStoreMapSearch"
+                class="reg-store-map-search"
+                placeholder="ابحث عن حي أو شارع…"
+                autocomplete="off"
+              />
+              <button type="button" class="btn btn-ghost" id="btnMapSearch">بحث</button>
+            </div>
+            <div class="reg-store-map-wrap erv-store-map">
+              <div id="map" role="application" aria-label="خريطة ERVENOW لتحديد موقع المتجر"></div>
             </div>
             <div class="reg-store-map-actions">
               <button type="button" class="btn btn-ghost" id="btnMyLocation">استخدم موقعي الحالي</button>
             </div>
-            <p class="reg-store-map-status" id="mapHint">لم يُحدد موقع بعد.</p>
+            <p class="reg-store-map-legend">🟡 دبوس ذهبي = موقع متجرك &nbsp;|&nbsp; ⚪ نقاط رمادية = متاجر معتمدة على المنصة</p>
+            <p class="reg-store-map-status is-pending" id="mapHint">انقر على الخريطة لتحديد موقع متجرك.</p>
             <input type="hidden" id="lat" />
             <input type="hidden" id="lng" />
 
@@ -261,6 +245,7 @@
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="/assets/ervenow-store-map.js"></script>
     <script src="/assets/compressImage.js"></script>
     <script src="/assets/payoutRegistration.js"></script>
     <script src="/assets/api-config.js"></script>
@@ -276,8 +261,7 @@
       var mapHint = document.getElementById("mapHint");
       var crDataUrl = null;
       var crFileName = null;
-      var map = null;
-      var marker = null;
+      var storeMap = null;
 
       function show(text, isOk) {
         var el = document.getElementById("msg");
@@ -299,36 +283,6 @@
 
       function isValidSaudiPhone05(v) {
         return /^05\d{8}$/.test(String(v || ""));
-      }
-
-      function setCoords(lat, lng, reverseLookup) {
-        latEl.value = String(lat);
-        lngEl.value = String(lng);
-        if (mapHint) mapHint.textContent = "تم تحديد الموقع على الخريطة.";
-        if (marker && map) {
-          marker.setLatLng([lat, lng]);
-          map.panTo([lat, lng]);
-        }
-        if (reverseLookup) reverseGeocode(lat, lng);
-      }
-
-      function reverseGeocode(lat, lng) {
-        var addrEl = document.getElementById("address");
-        var url =
-          "https://nominatim.openstreetmap.org/reverse?format=json&lat=" +
-          encodeURIComponent(lat) +
-          "&lon=" +
-          encodeURIComponent(lng) +
-          "&accept-language=ar";
-        fetch(url, { headers: { Accept: "application/json" } })
-          .then(function (r) {
-            return r.json();
-          })
-          .then(function (j) {
-            var d = j && j.display_name ? String(j.display_name).trim() : "";
-            if (d && (!addrEl.value || addrEl.value.length < 8)) addrEl.value = d;
-          })
-          .catch(function () {});
       }
 
       document.getElementById("cr_file").onchange = function (ev) {
@@ -451,43 +405,19 @@
         });
       })();
 
-      function initMap() {
-        var start = [24.7136, 46.6753];
-        map = L.map("map").setView(start, 12);
-        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-          maxZoom: 19,
-          attribution: "&copy; OpenStreetMap",
-        }).addTo(map);
-        marker = L.marker(start, { draggable: true }).addTo(map);
-        setCoords(start[0], start[1], true);
-
-        map.on("click", function (e) {
-          setCoords(e.latlng.lat, e.latlng.lng, true);
+      if (window.ErvenowStoreMap) {
+        storeMap = ErvenowStoreMap.create({
+          mapId: "map",
+          latInput: latEl,
+          lngInput: lngEl,
+          addressInput: document.getElementById("address"),
+          statusEl: mapHint,
+          radiusSelectId: "delivery_radius_km",
+          myLocationBtnId: "btnMyLocation",
+          searchInputId: "regStoreMapSearch",
+          searchBtnId: "btnMapSearch",
         });
-        marker.on("dragend", function () {
-          var p = marker.getLatLng();
-          setCoords(p.lat, p.lng, true);
-        });
-        setTimeout(function () {
-          if (map) map.invalidateSize();
-        }, 200);
       }
-
-      document.getElementById("btnMyLocation").onclick = function () {
-        if (!navigator.geolocation) {
-          show("المتصفح لا يدعم تحديد الموقع.", false);
-          return;
-        }
-        navigator.geolocation.getCurrentPosition(
-          function (pos) {
-            setCoords(pos.coords.latitude, pos.coords.longitude, true);
-          },
-          function () {
-            show("تعذر الحصول على موقعك — فعّل أذونات الموقع للمتصفح.", false);
-          },
-          { enableHighAccuracy: true, maximumAge: 8000, timeout: 20000 }
-        );
-      };
 
       document.getElementById("btnSend").onclick = async function () {
         var btn = document.getElementById("btnSend");
@@ -521,8 +451,8 @@
             show("أدخل رقم سعودي صحيح يبدأ بـ 05", false);
             return;
           }
-          if (!lat || !lng) {
-            show("حدد موقع المتجر على الخريطة أو اضغط «استخدم موقعي».", false);
+          if (!lat || !lng || (storeMap && !storeMap.hasCoords())) {
+            show("حدد موقع متجرك على خريطة ERVENOW (نقرة على الخريطة أو «استخدم موقعي»).", false);
             return;
           }
           if (!address || address.length < 4) {
@@ -621,7 +551,6 @@
         }
       };
 
-      initMap();
     </script>
   </body>
 </html>

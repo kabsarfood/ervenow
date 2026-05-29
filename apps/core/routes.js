@@ -24,6 +24,8 @@ const {
   pickDefaultDestination,
 } = require("../../shared/utils/loginDestinations");
 const { accessFlagsForRole } = require("../../shared/utils/platformAccessPolicy");
+const { isDevOtpBypassCode } = require("../../shared/utils/devOtpBypass");
+const { canonicalPhoneDigits, findUserByPhone } = require("../../shared/utils/userPhoneLookup");
 
 const router = express.Router();
 const OTP_TTL_MS = 5 * 60 * 1000;
@@ -196,6 +198,7 @@ async function upsertDriverByPhone(
   serviceVehicle,
   options = {}
 ) {
+  phoneDigits = canonicalPhoneDigits(phoneDigits) || String(phoneDigits || "").replace(/\D/g, "");
   const loginOnly = options.loginOnly === true;
   const role = ALLOWED_USER_ROLES.has(preferredRole) ? preferredRole : "customer";
   const serviceType = role === "service" ? normalizeServiceType(preferredServiceType) : null;
@@ -210,39 +213,28 @@ async function upsertDriverByPhone(
 
   let existing = null;
   let selErr = null;
-  let firstSel = await sb
-    .from("users")
-    .select("id, role, status, phone, service_type, updated_at, name")
-    .eq("phone", phoneDigits)
-    .maybeSingle();
-  if (firstSel.error && isMissingNameColumnError(firstSel.error)) {
-    firstSel = await sb
-      .from("users")
-      .select("id, role, status, phone, service_type, updated_at")
-      .eq("phone", phoneDigits)
-      .maybeSingle();
+  let found = await findUserByPhone(
+    sb,
+    phoneDigits,
+    "id, role, status, phone, service_type, updated_at, name"
+  );
+  if (found.error && isMissingNameColumnError(found.error)) {
+    found = await findUserByPhone(sb, phoneDigits, "id, role, status, phone, service_type, updated_at");
   }
-  if (firstSel.error && isMissingStatusColumnError(firstSel.error)) {
-    let fallbackSel = await sb
-      .from("users")
-      .select("id, role, phone, service_type, updated_at, name")
-      .eq("phone", phoneDigits)
-      .maybeSingle();
-    if (fallbackSel.error && isMissingNameColumnError(fallbackSel.error)) {
-      fallbackSel = await sb
-        .from("users")
-        .select("id, role, phone, service_type, updated_at")
-        .eq("phone", phoneDigits)
-        .maybeSingle();
+  if (found.error && isMissingStatusColumnError(found.error)) {
+    found = await findUserByPhone(sb, phoneDigits, "id, role, phone, service_type, updated_at, name");
+    if (found.error && isMissingNameColumnError(found.error)) {
+      found = await findUserByPhone(sb, phoneDigits, "id, role, phone, service_type, updated_at");
     }
-    existing = fallbackSel.data || null;
-    selErr = fallbackSel.error || null;
-  } else {
-    existing = firstSel.data || null;
-    selErr = firstSel.error || null;
   }
-
+  existing = found.data || null;
+  selErr = found.error || null;
   if (selErr) return { data: null, error: selErr };
+
+  if (existing?.id && existing.phone && existing.phone !== phoneDigits) {
+    await sb.from("users").update({ phone: phoneDigits, updated_at: new Date().toISOString() }).eq("id", existing.id);
+    existing.phone = phoneDigits;
+  }
 
   const now = new Date().toISOString();
 
@@ -251,7 +243,7 @@ async function upsertDriverByPhone(
       String(existing.status || "").toLowerCase() === "blocked" ||
       String(existing.role || "").toLowerCase() === "blocked"
     ) {
-      return { data: existing, error: null };
+      return { data: existing, error: new Error("الحساب محظور من الإدارة") };
     }
     if (loginOnly) {
       const touch = await sb.from("users").update({ updated_at: now }).eq("id", existing.id).select().single();
@@ -346,9 +338,11 @@ router.get("/health", (_req, res) => {
 router.get("/public-config", (_req, res) => {
   try {
     const { getUrl, getAnonKey } = require("../../shared/config/supabase");
+    const { allowDevOtpBypass } = require("../../shared/utils/devOtpBypass");
     ok(res, {
       supabaseUrl: getUrl(),
       supabaseAnonKey: getAnonKey(),
+      dev_otp_enabled: allowDevOtpBypass(),
     });
   } catch (e) {
     fail(res, e.message || "config error", 500);
@@ -389,7 +383,7 @@ router.post("/send-otp", async (req, res) => {
       );
     }
 
-    const digits = toStorageDigits(e164);
+    const digits = canonicalPhoneDigits(toStorageDigits(e164));
     const loginOnly = req.body?.login_only === true || req.body?.login_only === "true";
     const role = loginOnly ? "login" : roleIn || "customer";
     if (roleIn === "admin") {
@@ -476,9 +470,8 @@ router.post("/verify-otp", async (req, res) => {
     const raw = req.body?.phone;
     const codeIn = String(req.body?.code || "").trim();
     const loginOnly = req.body?.login_only === true || req.body?.login_only === "true";
-    const wantRole = loginOnly
-      ? "customer"
-      : String(req.body?.role || "customer").trim().toLowerCase();
+    const roleIn = String(req.body?.role || "customer").trim().toLowerCase();
+    const wantRole = ALLOWED_USER_ROLES.has(roleIn) ? roleIn : "customer";
 
     const e164 = toE164(raw);
     if (!e164) return fail(res, "رقم الجوال غير صالح", 400);
@@ -498,8 +491,10 @@ router.post("/verify-otp", async (req, res) => {
       return fail(res, pe.message || "بيانات الحساب البنكي غير صالحة", 400);
     }
 
-    const digits = toStorageDigits(e164);
-    if (wantRole === "admin") {
+    const digits = canonicalPhoneDigits(toStorageDigits(e164));
+    const devBypass = isDevOtpBypassCode(codeIn);
+
+    if (wantRole === "admin" && !devBypass) {
       if (!isAllowedAdminPhoneDigits(digits)) {
         return fail(res, "غير مصرح لهذا الرقم بدخول لوحة الإدارة", 403);
       }
@@ -508,21 +503,48 @@ router.post("/verify-otp", async (req, res) => {
     const key = otpKey(loginOnly ? "login" : wantRole, digits);
     const mode = otpBackendMode();
     const sbOtp = mode === "supabase" ? createServiceClient() : null;
-    const checked = await verifyOtpChallenge({
-      sb: sbOtp,
-      mode,
-      scope: OTP_SCOPE.CORE_LOGIN,
-      subjectKey: key,
-      code: codeIn,
-    });
-    if (!checked.ok) {
-      const lockCase = /قفل|محاولات كثيرة/i.test(String(checked.error || ""));
-      return fail(res, checked.error || "رمز واتساب غير صحيح أو منتهي", lockCase ? 429 : 400, {
-        attempts_remaining: checked.attemptsRemaining,
-      });
+    const sbEarly = createServiceClient();
+
+    let existingRole = null;
+    if (sbEarly) {
+      const exFound = await findUserByPhone(sbEarly, digits, "role, status");
+      if (!exFound.error && exFound.data) {
+        if (String(exFound.data.status || "").toLowerCase() === "blocked") {
+          return fail(res, "الحساب محظور من الإدارة", 403);
+        }
+        existingRole = String(exFound.data.role || "").toLowerCase();
+      }
     }
 
-    const sb = createServiceClient();
+    const STAFF_LOGIN_ROLES = new Set(["admin", "driver", "merchant", "restaurant", "service"]);
+    let otpPassed = false;
+    if (devBypass) {
+      if (wantRole === "admin" || wantRole === "driver") {
+        otpPassed = true;
+      } else if (loginOnly) {
+        otpPassed = true;
+      } else if (wantRole === "customer" || STAFF_LOGIN_ROLES.has(wantRole)) {
+        otpPassed = true;
+      }
+    }
+
+    if (!otpPassed) {
+      const checked = await verifyOtpChallenge({
+        sb: sbOtp,
+        mode,
+        scope: OTP_SCOPE.CORE_LOGIN,
+        subjectKey: key,
+        code: codeIn,
+      });
+      if (!checked.ok) {
+        const lockCase = /قفل|محاولات كثيرة/i.test(String(checked.error || ""));
+        return fail(res, checked.error || "رمز واتساب غير صحيح أو منتهي", lockCase ? 429 : 400, {
+          attempts_remaining: checked.attemptsRemaining,
+        });
+      }
+    }
+
+    const sb = sbEarly || createServiceClient();
     if (!sb) {
       return fail(
         res,
@@ -531,22 +553,33 @@ router.post("/verify-otp", async (req, res) => {
       );
     }
 
+    let roleForSession = wantRole;
+    if (loginOnly && devBypass && existingRole && STAFF_LOGIN_ROLES.has(existingRole)) {
+      roleForSession = existingRole;
+    } else if (loginOnly && !existingRole) {
+      roleForSession = wantRole === "customer" || !STAFF_LOGIN_ROLES.has(wantRole) ? "customer" : wantRole;
+    } else if (devBypass && wantRole === "admin") {
+      roleForSession = "admin";
+    }
+
     const wantServiceType = req.body?.service_type;
     const displayName =
-      wantRole === "customer" || wantRole === "service" ? String(req.body?.name || "").trim() : "";
+      roleForSession === "customer" || roleForSession === "service"
+        ? String(req.body?.name || "").trim()
+        : "";
     const serviceDistrict =
-      wantRole === "service"
+      roleForSession === "service"
         ? String(req.body?.service_district || req.body?.service_city || req.body?.district || "").trim()
         : "";
-    if (wantRole === "service" && !normalizeServiceType(wantServiceType)) {
+    if (roleForSession === "service" && !normalizeServiceType(wantServiceType)) {
       return fail(res, "اختر نوع الخدمة من القائمة", 400);
     }
-    if (wantRole === "service" && !serviceDistrict) {
+    if (roleForSession === "service" && !serviceDistrict) {
       const st = normalizeServiceType(wantServiceType);
       return fail(res, st === "pickup_truck" ? "اختر المدينة" : "أدخل الحي الذي تخدمه", 400);
     }
     let serviceVehicle = null;
-    if (wantRole === "service" && normalizeServiceType(wantServiceType) === "pickup_truck") {
+    if (roleForSession === "service" && normalizeServiceType(wantServiceType) === "pickup_truck") {
       const parsedVehicle = parsePickupVehiclePayload(req.body);
       if (!parsedVehicle.ok) return fail(res, parsedVehicle.error, 400);
       serviceVehicle = parsedVehicle.data;
@@ -554,12 +587,12 @@ router.post("/verify-otp", async (req, res) => {
     const { data: userRow, error: dbErr } = await upsertDriverByPhone(
       sb,
       digits,
-      wantRole,
+      roleForSession,
       wantServiceType,
       displayName,
       serviceDistrict,
       serviceVehicle,
-      { loginOnly }
+      { loginOnly: loginOnly && !!existingRole }
     );
     if (dbErr) {
       console.error("[ERVENOW] verify-otp DB:", dbErr);
@@ -576,9 +609,18 @@ router.post("/verify-otp", async (req, res) => {
       return fail(res, "فشل إنشاء المستخدم في قاعدة البيانات", 500);
     }
 
+    if (
+      String(userRow.status || "").toLowerCase() === "blocked" ||
+      String(userRow.role || "").toLowerCase() === "blocked"
+    ) {
+      return fail(res, "الحساب محظور من الإدارة", 403);
+    }
+
+    const sessionPhone = canonicalPhoneDigits(userRow.phone || digits) || digits;
+
     const payoutPatch = payoutRowForUsers(payoutParsed);
     const payoutRoles = new Set(["merchant", "restaurant", "service"]);
-    if (payoutRoles.has(String(wantRole).toLowerCase()) && Object.keys(payoutPatch).length) {
+    if (payoutRoles.has(String(roleForSession).toLowerCase()) && Object.keys(payoutPatch).length) {
       if (payoutParsed.iban) {
         try {
           await assertPayoutIbanGloballyAvailable(sb, payoutParsed.iban, {
@@ -598,7 +640,7 @@ router.post("/verify-otp", async (req, res) => {
       }
     }
 
-    const token = signPlatformToken(userRow.id, digits, userRow.role || wantRole);
+    const token = signPlatformToken(userRow.id, sessionPhone, userRow.role || roleForSession);
     attachSiteSessionCookie(req, res, token);
 
     ok(res, {

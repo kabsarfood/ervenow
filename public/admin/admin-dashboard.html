@@ -5,32 +5,86 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>لوحة الإدارة | ERVENOW</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <meta name="theme-color" content="#5b371d" />
+    <meta name="theme-color" content="#3d2213" />
+    <link rel="stylesheet" href="/assets/styles.css" />
+    <link rel="stylesheet" href="/assets/guest-shell.css" />
+    <link rel="stylesheet" href="/assets/admin-dashboard-shell.css" />
     <link rel="stylesheet" href="/admin/admin-dashboard.css" />
   </head>
-  <body>
-    <div class="wrap">
-      <div class="topbar">
-        <h1>لوحة إدارة ERVENOW</h1>
-        <div id="filter-ui">
-          <a href="/" class="btn btn-ghost">← الرئيسية</a>
-          <select id="range" onchange="loadStats()">
+  <body class="admin-shell-page">
+    <header class="dash-site-header admin-site-header">
+      <div class="dash-site-header__inner">
+        <div class="dash-site-header__brand">
+          <a class="dash-site-header__logo" href="/">
+            ERVENOW
+            <span class="dash-site-header__logo-dot" aria-hidden="true"></span>
+          </a>
+          <p class="dash-site-header__tag">لوحة الإدارة</p>
+        </div>
+        <nav class="dash-site-header__nav" aria-label="التنقل">
+          <div class="dash-site-header__links">
+            <a class="dash-site-header__link" href="/">الرئيسية</a>
+            <a class="dash-site-header__link" href="/dashboard">لوحة الزائر</a>
+            <a class="dash-site-header__link is-active" href="/admin-dashboard" aria-current="page">لوحة التحكم</a>
+          </div>
+        </nav>
+        <div class="admin-header-tools" id="filter-ui">
+          <select id="range" onchange="loadStats()" aria-label="الفترة الزمنية">
             <option value="today">اليوم</option>
             <option value="week">هذا الأسبوع</option>
             <option value="month">هذا الشهر</option>
           </select>
-          <a href="/admin/branding" class="btn btn-ghost" title="الهوية البصرية">🎨 الهوية</a>
-          <a href="/admin/categories" class="btn btn-ghost" title="أقسام المطاعم والبقالة">📂 الأقسام</a>
-          <a href="/admin/withdrawals" class="btn btn-ghost" title="طلبات سحب المندوبين والمتاجر">💸 السحب</a>
+          <a href="/admin/branding" class="btn btn-ghost" title="الهوية البصرية">🎨 <span class="hide-mobile">الهوية</span></a>
+          <a href="/admin/categories" class="btn btn-ghost" title="الأقسام">📂 <span class="hide-mobile">الأقسام</span></a>
+          <a href="/admin/withdrawals" class="btn btn-ghost" title="السحب">💸 <span class="hide-mobile">السحب</span></a>
           <button type="button" class="btn btn-ghost" id="siteMaintenanceBtn" title="وضع الصيانة للزوار">
-            تعطيل الموقع
+            ⏸ <span class="hide-mobile">الموقع</span>
           </button>
           <button type="button" class="btn btn-ghost" id="logoutAdminBtn">خروج</button>
         </div>
       </div>
-      <p class="sub" id="adminWho">—</p>
+    </header>
+
+    <div class="dash-main admin-dash-main">
+      <div class="wrap admin-layout">
+        <section class="admin-hero" aria-labelledby="adminHeroTitle">
+          <div class="admin-hero__grid">
+            <div>
+              <p class="admin-hero__eyebrow">مركز القيادة · ERVENOW</p>
+              <h1 class="admin-hero__title" id="adminHeroTitle">لوحة إدارة المنصة</h1>
+              <p class="admin-hero__lead">
+                راقب الطلبات والخريطة الحية، وافق على المتاجر والمناديب، وتابع المالية — بنفس روح تجربة زائر المنصة، بلمسة تنفيذية أوضح.
+              </p>
+              <div class="admin-hero__chips">
+                <a class="admin-hero-chip" href="#liveDashboard">📊 التشغيل الحي</a>
+                <a class="admin-hero-chip" href="#" data-panel-jump="panelOrders">🧾 الطلبات</a>
+                <a class="admin-hero-chip" href="#" data-panel-jump="panelStores">🏪 المتاجر</a>
+                <a class="admin-hero-chip" href="/dashboard">👤 لوحة الزائر</a>
+              </div>
+            </div>
+            <div class="admin-hero__art" aria-hidden="true">
+              <img
+                src="https://images.unsplash.com/photo-1556761175-5973dc0f32e7?auto=format&fit=crop&w=640&q=80"
+                alt=""
+                width="400"
+                height="260"
+                loading="lazy"
+                decoding="async"
+                style="width:100%;max-height:220px;object-fit:cover;border-radius:16px;border:1px solid rgba(61,34,19,0.1);box-shadow:0 12px 32px rgba(45,26,14,0.12)"
+              />
+            </div>
+          </div>
+        </section>
+
+        <div class="admin-profile-card" id="adminProfileCard">
+          <span class="admin-profile-card__avatar" aria-hidden="true">⚙️</span>
+          <div class="admin-profile-card__meta">
+            <span class="admin-profile-card__role">مسؤول النظام</span>
+            <p class="admin-profile-card__who sub" id="adminWho">—</p>
+          </div>
+        </div>
 
       <section class="live-dash" id="liveDashboard" aria-label="لوحة التشغيل">
         <div class="live-dash-head">
@@ -185,8 +239,9 @@
         </div>
       </div>
 
-      <nav class="dash-nav" aria-label="أقسام اللوحة">
-        <h2 class="dash-zone-title">الأقسام</h2>
+      <section class="admin-sections-card dash-nav" aria-label="أقسام اللوحة">
+        <h2 class="dash-zone-title">اختر القسم</h2>
+        <p class="sub" style="margin: 0 0 4px">اضغط على بطاقة لفتح إدارة الطلبات، المتاجر، المندوبين، والمالية.</p>
         <div class="panel-switcher">
           <button type="button" class="panel-btn" data-panel="panelOrders">
             🧾 الطلبات
@@ -226,9 +281,9 @@
           <button type="button" class="panel-btn" data-panel="panelSettings" id="panelSettingsBtn">
             ⚙️ الإعدادات
           </button>
-          <button type="button" class="panel-btn panel-btn-close" id="closePanelsBtn">إغلاق الأقسام</button>
+          <button type="button" class="panel-btn panel-btn-close" id="closePanelsBtn">✕ إغلاق</button>
         </div>
-      </nav>
+      </section>
 
       <div class="grid admin-panel" id="panelOrders">
         <div class="card">
@@ -413,7 +468,20 @@
           </table>
         </div>
       </div>
+      </div>
     </div>
+
+    <footer class="dash-site-footer admin-site-footer">
+      <div class="admin-site-footer__logo">ERVENOW</div>
+      <nav class="admin-site-footer__links" aria-label="روابط سريعة">
+        <a class="admin-site-footer__link" href="/">الرئيسية</a>
+        <a class="admin-site-footer__link" href="/dashboard">لوحة الزائر</a>
+        <a class="admin-site-footer__link" href="/admin-dashboard">لوحة الإدارة</a>
+        <a class="admin-site-footer__link" href="/admin/branding">الهوية</a>
+        <a class="admin-site-footer__link" href="/orders">الطلبات</a>
+      </nav>
+      <p class="admin-site-footer__copy">© 2026 ERVENOW — لوحة الإدارة</p>
+    </footer>
 
     <div id="financeDrawerBackdrop" class="finance-drawer-backdrop" hidden>
       <aside class="finance-drawer" id="financeDrawer" role="dialog" aria-labelledby="financeDrawerTitle">
@@ -497,5 +565,18 @@
     <script src="https://cdn.socket.io/4.8.1/socket.io.min.js" crossorigin="anonymous"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script type="module" src="/admin/admin-dashboard.js"></script>
+    <script>
+      document.querySelectorAll("[data-panel-jump]").forEach(function (link) {
+        link.addEventListener("click", function (e) {
+          var panelId = link.getAttribute("data-panel-jump");
+          if (!panelId) return;
+          e.preventDefault();
+          var btn = document.querySelector('.panel-btn[data-panel="' + panelId + '"]');
+          if (btn) btn.click();
+          var el = document.getElementById(panelId);
+          if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+        });
+      });
+    </script>
   </body>
 </html>

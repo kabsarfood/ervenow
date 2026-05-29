@@ -45,6 +45,7 @@ const {
   listLedgerWalletTransactions,
 } = require("../../shared/utils/ledgerWallet");
 const { isLedgerOnlyMode } = require("../../shared/utils/financeMode");
+const { runDeliveredFinancialSettlement } = require("../../shared/services/deliveredFinancialSettlement");
 const {
   updateFinancialFeatureFlag,
   listFinancialFeatureFlagsArray,
@@ -888,7 +889,7 @@ router.get("/finance-summary", requireAuth, requireRole("admin"), requireAdminPe
       return fail(
         res,
         summary.reason === "migration_missing"
-          ? "نفّذ migration_unified_finance_ledger.sql و migration_ervenow_ledger_withdraw_requests.sql في Supabase"
+          ? "نفّذ migration_bootstrap_ledger_finance.sql و migration_ervenow_ledger_withdraw_requests.sql في Supabase"
           : "تعذر جلب الملخص المالي",
         summary.reason === "migration_missing" ? 503 : 500,
         { reason: summary.reason, detail: summary.detail || null }
@@ -899,6 +900,58 @@ router.get("/finance-summary", requireAuth, requireRole("admin"), requireAdminPe
     return fail(res, e.message, 500);
   }
 });
+
+/**
+ * POST /api/admin/finance/reconcile-delivered
+ * إعادة تسوية طلبات مُسلَّمة (أجر مندوب / عمولة / تاجر) — للطلبات التي لم تُسجَّل مالياً.
+ */
+router.post(
+  "/finance/reconcile-delivered",
+  requireAuth,
+  requireRole("admin"),
+  requireAdminPermission("finance"),
+  async (req, res) => {
+    try {
+      const sb = createServiceClient() || req.supabase;
+      const body = req.body || {};
+      const limit = Math.min(Math.max(Number(body.limit) || 40, 1), 150);
+      const orderId = body.order_id != null ? String(body.order_id).trim() : "";
+
+      let query = sb
+        .from("orders")
+        .select("*")
+        .in("delivery_status", ["delivered", "completed"])
+        .order("updated_at", { ascending: false })
+        .limit(limit);
+
+      if (orderId) {
+        query = sb.from("orders").select("*").eq("id", orderId).limit(1);
+      }
+
+      const { data: orders, error: qErr } = await query;
+      if (qErr) return fail(res, qErr.message, 400);
+
+      const results = [];
+      for (const order of orders || []) {
+        const fin = await runDeliveredFinancialSettlement(sb, order, "admin:reconcile-delivered");
+        results.push({
+          order_id: order.id,
+          order_number: order.order_number || null,
+          settlement: fin.settlement,
+          driver_credit: fin.driver_credit,
+        });
+      }
+
+      return ok(res, {
+        reconciled: results.length,
+        results,
+        note: "تأكد من تنفيذ shared/migration_bootstrap_ledger_finance.sql في Supabase إن ظهر migration_missing",
+      });
+    } catch (e) {
+      return fail(res, e.message, 500);
+    }
+  }
+);
 
 /** POST /api/admin/withdraw/approve — موافقة سحب ledger (withdraw_requests) */
 router.post("/withdraw/approve", requireAuth, requireRole("admin"), requireAdminPermission("finance"), async (req, res) => {

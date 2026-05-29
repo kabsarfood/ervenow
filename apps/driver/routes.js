@@ -22,6 +22,7 @@ const {
   verifyOtpChallenge,
   invalidateOtpChallenge,
 } = require("../../shared/services/otpChallengeService");
+const { isDevOtpBypassCode } = require("../../shared/utils/devOtpBypass");
 const {
   sendOTP,
   sendOrderAcceptedToCustomer,
@@ -88,6 +89,38 @@ function signDriverToken(userId, phoneDigits) {
   return jwt.sign({ sub: userId, phone: phoneDigits, role: "driver" }, secret, {
     expiresIn: "7d",
   });
+}
+
+/** وضع التطوير فقط — لا يُستدعى إلا مع رمز تجاوز OTP */
+async function ensureDriverForDevLogin(sb, phoneDigits) {
+  let { data: drv, error } = await sb
+    .from("drivers")
+    .select("*")
+    .eq("phone", phoneDigits)
+    .maybeSingle();
+  if (error) throw error;
+  if (!drv) {
+    const stub = {
+      name: "مندوب (وضع تطوير)",
+      phone: phoneDigits,
+      iqama: "DEV" + String(phoneDigits).slice(-7),
+      car_type: "car",
+      plate_number: "DEV",
+      status: "approved",
+      active: true,
+    };
+    const ins = await sb.from("drivers").upsert(stub, { onConflict: "phone" }).select().single();
+    if (ins.error) throw ins.error;
+    return ins.data;
+  }
+  const upd = await sb
+    .from("drivers")
+    .update({ status: "approved", active: true, updated_at: nowIso() })
+    .eq("id", drv.id)
+    .select()
+    .single();
+  if (!upd.error && upd.data) return upd.data;
+  return { ...drv, status: "approved", active: true };
 }
 
 async function getApprovedDriverByPhone(sb, phoneDigits) {
@@ -250,27 +283,43 @@ router.post("/verify-otp", async (req, res) => {
     if (!code) return fail(res, "أدخل رمز الدخول", 400);
     const digits = toStorageDigits(e164);
 
+    const devBypass = isDevOtpBypassCode(code);
     const mode = otpBackendMode();
-    const checked = await verifyOtpChallenge({
-      sb: req.supabase,
-      mode,
-      scope: OTP_SCOPE.DRIVER_LOGIN,
-      subjectKey: digits,
-      code,
-    });
-    if (!checked.ok) {
-      const lockCase = /قفل|محاولات كثيرة/i.test(String(checked.error || ""));
-      return fail(res, checked.error || "رمز غير صحيح أو منتهي", lockCase ? 429 : 400);
+    if (!devBypass) {
+      const checked = await verifyOtpChallenge({
+        sb: req.supabase,
+        mode,
+        scope: OTP_SCOPE.DRIVER_LOGIN,
+        subjectKey: digits,
+        code,
+      });
+      if (!checked.ok) {
+        const lockCase = /قفل|محاولات كثيرة/i.test(String(checked.error || ""));
+        return fail(res, checked.error || "رمز غير صحيح أو منتهي", lockCase ? 429 : 400);
+      }
     }
 
-    const { data: drv, error: dErr } = await req.supabase
-      .from("drivers")
-      .select("*")
-      .eq("phone", digits)
-      .maybeSingle();
-    if (dErr) return fail(res, dErr.message, 400);
-    if (!drv) return fail(res, "المندوب غير مسجل", 403);
-    if (String(drv.status || "") !== "approved" || drv.active !== true) {
+    let drv;
+    if (devBypass) {
+      try {
+        drv = await ensureDriverForDevLogin(req.supabase, digits);
+      } catch (devErr) {
+        return fail(res, devErr.message || "تعذّر تجهيز حساب المندوب للتطوير", 400);
+      }
+    } else {
+      const { data, error: dErr } = await req.supabase
+        .from("drivers")
+        .select("*")
+        .eq("phone", digits)
+        .maybeSingle();
+      if (dErr) return fail(res, dErr.message, 400);
+      drv = data;
+      if (!drv) return fail(res, "المندوب غير مسجل", 403);
+    }
+    if (
+      !devBypass &&
+      (String(drv.status || "") !== "approved" || drv.active !== true)
+    ) {
       return fail(res, "الحساب بانتظار الموافقة أو موقوف", 403);
     }
 
@@ -480,12 +529,23 @@ router.get("/orders", requireAuth, async (req, res) => {
 
 router.get("/wallet", requireAuth, requireRole("driver"), async (req, res) => {
   try {
+    const { listLedgerWalletTransactions } = require("../../shared/utils/ledgerWallet");
     const payload = await getWalletPayloadWithLedgerFallback(req.supabase, req.appUser.id, "driver");
     const freeze = await getDriverFreezeFlags(req.supabase, req.appUser.id);
+    let last_transactions = [];
+    try {
+      last_transactions = await listLedgerWalletTransactions(req.supabase, req.appUser.id, "driver", 15);
+      last_transactions = (last_transactions || []).map(function (t) {
+        return { ...t, note: t.note || t.description || null };
+      });
+    } catch (_txErr) {}
     return ok(res, {
       ...payload,
+      last_transactions,
       is_frozen: freeze.is_frozen,
       warning: freeze.warning,
+      setup_required: !!payload.setup_required,
+      message: payload.message || null,
     });
   } catch (e) {
     return fail(res, e.message, 500);

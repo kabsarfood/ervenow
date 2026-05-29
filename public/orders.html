@@ -517,12 +517,13 @@
         try {
           var me = await window.PlatformAPI.api("/api/core/me");
           meUser = me.user || {};
-          var role = me.profile && me.profile.role;
+          var role = String((me.profile && me.profile.role) || "").toLowerCase();
+          if (role === "customer" || role === "user") {
+            location.replace("/my-orders");
+            return;
+          }
           if (role !== "driver" && role !== "admin") {
-            showMsg("طابور طلبات المندوبين غير متاح — تابع طلباتك من لوحة الزائر أو التتبع.");
-            setTimeout(function () {
-              location.replace("/dashboard");
-            }, 2200);
+            location.replace("/dashboard");
             return;
           }
           var phone = meUser.phone || (me.profile && me.profile.name) || meUser.id || "—";

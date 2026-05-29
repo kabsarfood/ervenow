@@ -48,7 +48,8 @@ async function tryClaimSettlement(sb, entityId, entityType, settlementKind, meta
         return true;
       }
       console.warn("[settlement_guard] claim error:", error.message || error);
-      return isLedgerOnlyMode() ? false : true;
+      /* ledger idempotent — لا نمنع التسوية بسبب فشل claim */
+      return true;
     }
     return data === true;
   } catch (e) {
@@ -59,7 +60,7 @@ async function tryClaimSettlement(sb, entityId, entityType, settlementKind, meta
       return true;
     }
     console.warn("[settlement_guard] claim exception:", e.message || e);
-    return isLedgerOnlyMode() ? false : true;
+    return true;
   }
 }
 

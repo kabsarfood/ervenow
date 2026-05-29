@@ -106,9 +106,21 @@
         document.getElementById("statEarned").textContent = fmtMoney(earned) + " ر.س";
         document.getElementById("statWithdrawn").textContent = fmtMoney(withdrawn) + " ر.س";
         var hint = document.getElementById("balanceHint");
-        if (hint && w && w.note) {
-          hint.style.display = "block";
-          hint.textContent = String(w.note);
+        if (hint) {
+          var msg =
+            (w && w.message) ||
+            (w && w.setup_required
+              ? "نظام المحفظة غير مفعّل على الخادم — تواصل مع الإدارة لتفعيل هجرة ledger"
+              : "") ||
+            (w && w.note) ||
+            "";
+          if (msg) {
+            hint.style.display = "block";
+            hint.textContent = String(msg);
+          } else {
+            hint.style.display = "none";
+            hint.textContent = "";
+          }
         }
         if (window.ErvenowDriverNav && ErvenowDriverNav.refreshBalanceChip) {
           ErvenowDriverNav.refreshBalanceChip();

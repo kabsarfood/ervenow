@@ -9,6 +9,13 @@
     if (r === "user") r = "customer";
     var links = [{ key: "home", href: "/", label: "الرئيسية" }];
     links.push({ key: "guest", href: "/dashboard", label: "لوحة الزائر" });
+    if (opts.authenticated) {
+      if (r === "driver") {
+        links.push({ key: "my_orders", href: "/orders", label: "طلباتي" });
+      } else if (r === "customer" || r === "user" || !r) {
+        links.push({ key: "my_orders", href: "/my-orders", label: "طلباتي" });
+      }
+    }
     var controlHref = "/admin-login";
     if (r === "admin" && opts.authenticated) controlHref = "/admin-dashboard";
     links.push({
