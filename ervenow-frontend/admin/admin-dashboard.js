@@ -4,6 +4,7 @@ globalThis.__ERVENOW_FETCH_TIMEOUT_MS = 30000;
 import "./modules/shared.js";
 import "./modules/dashboard.js";
 import "./modules/finance.js";
+import "./modules/ervenow-pay.js";
 import "./modules/orders.js";
 import "./modules/drivers.js";
 import "./modules/settings.js";

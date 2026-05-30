@@ -1249,6 +1249,122 @@
       var walletLoadFailed = false;
       var toastTimer = null;
 
+      function showToast(text, kind) {
+        if (!elWalletToast) return;
+        elWalletToast.textContent = text || "";
+        elWalletToast.className = "wallet-toast show " + (kind === "ok" ? "ok" : "err");
+        if (toastTimer) clearTimeout(toastTimer);
+        toastTimer = setTimeout(function () {
+          elWalletToast.classList.remove("show");
+        }, 4000);
+      }
+
+      function txIsCredit(row) {
+        var dir = String(row.direction || "").toLowerCase();
+        if (dir === "credit") return true;
+        if (dir === "debit") return false;
+        var type = String(row.type || "").toLowerCase();
+        return type === "earning" || type === "credit" || type === "deposit" || type === "refund";
+      }
+
+      async function loadPaySettings() {
+        try {
+          var j = await window.PlatformAPI.api("/api/core/wallet-pay-settings");
+          paySettings = j.settings || j;
+        } catch (e1) {
+          try {
+            var j2 = await window.PlatformAPI.api("/api/wallet/pay-settings");
+            paySettings = j2.settings || j2;
+          } catch (e2) {
+            paySettings = {
+              wallet_topup_enabled: true,
+              wallet_withdraw_enabled: false,
+              stcpay_enabled: true,
+              min_topup_amount: 30,
+              max_topup_amount: 5000,
+              stcpay_display_number: "0505745650",
+            };
+          }
+        }
+        applyPaySettingsUi();
+      }
+
+      function applyPaySettingsUi() {
+        var s = paySettings || {};
+        var topupOn = s.wallet_topup_enabled !== false;
+        var withdrawOn = s.wallet_withdraw_enabled === true;
+        if (elBtnTopup) {
+          elBtnTopup.style.display = topupOn && s.stcpay_enabled !== false ? "" : "none";
+        }
+        if (elBtnStartWithdraw) {
+          elBtnStartWithdraw.style.display = withdrawOn ? "" : "none";
+        }
+        if (elRedeemCard) {
+          elRedeemCard.style.display = topupOn ? "" : "none";
+        }
+        if (elTopupStcNumber && s.stcpay_display_number) {
+          elTopupStcNumber.textContent = String(s.stcpay_display_number);
+        }
+        if (elTopupAmountInput && s.min_topup_amount != null) {
+          elTopupAmountInput.min = String(s.min_topup_amount);
+        }
+        if (elTopupAmountInput && s.max_topup_amount != null) {
+          elTopupAmountInput.max = String(s.max_topup_amount);
+        }
+        renderTopupAmountPills();
+      }
+
+      function renderTopupAmountPills() {
+        if (!elTopupAmountPills) return;
+        var s = paySettings || {};
+        var min = Number(s.min_topup_amount) || 30;
+        var max = Number(s.max_topup_amount) || 5000;
+        var candidates = [50, 100, 200, 500, 1000].filter(function (n) {
+          return n >= min && n <= max;
+        });
+        elTopupAmountPills.innerHTML = "";
+        candidates.forEach(function (amt) {
+          var b = document.createElement("button");
+          b.type = "button";
+          b.className = "wallet-amount-pill";
+          b.textContent = amt + " ر.س";
+          b.addEventListener("click", function () {
+            elTopupAmountPills.querySelectorAll(".wallet-amount-pill").forEach(function (p) {
+              p.classList.remove("is-selected");
+            });
+            b.classList.add("is-selected");
+            if (elTopupAmountInput) elTopupAmountInput.value = String(amt);
+          });
+          elTopupAmountPills.appendChild(b);
+        });
+      }
+
+      function openTopupModal() {
+        if (!paySettings || paySettings.wallet_topup_enabled === false) {
+          showToast("خدمة شحن الرصيد غير متاحة حالياً", "err");
+          return;
+        }
+        if (paySettings.stcpay_enabled === false) {
+          showToast("STC Pay غير متاح حالياً", "err");
+          return;
+        }
+        setMsg(elTopupMsg, "", "");
+        if (elTopupPhoneInput && !elTopupPhoneInput.value) {
+          elTopupPhoneInput.value = getStoredPhone();
+        }
+        if (elTopupModal) {
+          elTopupModal.classList.add("is-open");
+          elTopupModal.setAttribute("aria-hidden", "false");
+        }
+      }
+
+      function closeTopupModal() {
+        if (elTopupModal) {
+          elTopupModal.classList.remove("is-open");
+          elTopupModal.setAttribute("aria-hidden", "true");
+        }
+      }
+
       function getStoredPhone() {
         var p = localStorage.getItem("userPhone");
         return p ? String(p).trim() : "";
@@ -1388,6 +1504,7 @@
       }
 
       async function loadWallet() {
+        walletLoadFailed = false;
         try {
           var data = await window.PlatformAPI.api("/api/wallet");
           lastBalanceNum = data.balance != null ? Number(data.balance) : 0;
@@ -1401,20 +1518,20 @@
           elTxCard.style.display = "";
           elWithdrawCard.style.display = "none";
         } catch (e) {
-          lastBalanceNum = 0;
+          walletLoadFailed = true;
+          lastBalanceNum = null;
           balanceMasked = false;
           renderBalanceDisplay();
-          elKpiEarned.textContent = fmtNum(0);
-          elKpiWithdrawn.textContent = fmtNum(0);
+          elKpiEarned.textContent = "—";
+          elKpiWithdrawn.textContent = "—";
           elKpiSection.style.display = "";
           elTxCard.style.display = "";
-          elLoadHint.textContent = e.message || "تعذّر المزامنة — يُعرض رصيد 0";
+          elLoadHint.textContent = e.message || "تعذّر تحميل الرصيد — حاول «تحديث»";
         }
       }
 
       function appendTxRow(row) {
-        var type = String(row.type || "").toLowerCase();
-        var isIn = type === "earning" || type === "credit";
+        var isIn = txIsCredit(row);
         var raw = row.amount != null && !isNaN(Number(row.amount)) ? Number(row.amount) : 0;
         var absStr = fmtNum(Math.abs(raw));
         var signClass = isIn ? "wallet-tx-amt--pos" : "wallet-tx-amt--neg";
@@ -1464,8 +1581,8 @@
           list.forEach(function (row) {
             var tr = document.createElement("tr");
             var type = String(row.type || "");
-            var tLower = type.toLowerCase();
-            var pillClass = tLower === "earning" || tLower === "credit" ? "type-credit" : "type-debit";
+            var isIn = txIsCredit(row);
+            var pillClass = isIn ? "type-credit" : "type-debit";
             var note = row.note != null ? String(row.note) : "—";
             tr.innerHTML =
               '<td><span class="type-pill ' +
@@ -1499,9 +1616,10 @@
         elLoadHint.textContent = "جاري التحميل…";
         setMsg(elWithdrawMsg, "", "");
         try {
+          await loadPaySettings();
           await loadWallet();
           await loadTransactions();
-          elLoadHint.textContent = "تم التحديث.";
+          if (!walletLoadFailed) elLoadHint.textContent = "تم التحديث.";
         } catch (e) {
           elLoadHint.textContent = e.message || "خطأ";
         }
@@ -1526,7 +1644,70 @@
       });
 
       elBtnTopup.addEventListener("click", function () {
-        alert("ميزة شحن الرصيد قيد التطوير — سنوفرها قريباً.");
+        openTopupModal();
+      });
+
+      document.getElementById("topupModalClose").addEventListener("click", closeTopupModal);
+      elTopupModal.addEventListener("click", function (ev) {
+        if (ev.target === elTopupModal) closeTopupModal();
+      });
+
+      elBtnTopupSubmit.addEventListener("click", async function () {
+        var amt = Number(elTopupAmountInput && elTopupAmountInput.value);
+        var phone = String(elTopupPhoneInput && elTopupPhoneInput.value ? elTopupPhoneInput.value : "").trim();
+        var min = Number((paySettings && paySettings.min_topup_amount) || 30);
+        var max = Number((paySettings && paySettings.max_topup_amount) || 5000);
+        if (!Number.isFinite(amt) || amt < min) {
+          setMsg(elTopupMsg, "الحد الأدنى للشحن " + min + " ريال.", "err");
+          return;
+        }
+        if (amt > max) {
+          setMsg(elTopupMsg, "الحد الأعلى للشحن " + max + " ريال.", "err");
+          return;
+        }
+        if (!phone) {
+          setMsg(elTopupMsg, "أدخل رقم جوالك لاستلام الكود.", "err");
+          return;
+        }
+        elBtnTopupSubmit.disabled = true;
+        setMsg(elTopupMsg, "جاري إرسال الطلب…", "ok");
+        try {
+          var r = await window.PlatformAPI.api("/api/wallet/topup-request", {
+            method: "POST",
+            body: { amount: amt, phone: phone },
+          });
+          setMsg(elTopupMsg, r.message || "تم إرسال طلب الشحن.", "ok");
+          showToast("تم إرسال طلب الشحن — انتظر موافقة الإدارة", "ok");
+          closeTopupModal();
+        } catch (e) {
+          setMsg(elTopupMsg, e.message || "تعذّر إرسال الطلب", "err");
+        } finally {
+          elBtnTopupSubmit.disabled = false;
+        }
+      });
+
+      elBtnRedeemCode.addEventListener("click", async function () {
+        var code = String(elRedeemCodeInput && elRedeemCodeInput.value ? elRedeemCodeInput.value : "").trim();
+        if (!code) {
+          setMsg(elRedeemMsg, "أدخل كود الشحن.", "err");
+          return;
+        }
+        elBtnRedeemCode.disabled = true;
+        setMsg(elRedeemMsg, "جاري التفعيل…", "ok");
+        try {
+          var r = await window.PlatformAPI.api("/api/wallet/redeem-code", {
+            method: "POST",
+            body: { code: code },
+          });
+          setMsg(elRedeemMsg, r.message || "تم شحن الرصيد.", "ok");
+          showToast(r.message || "تم شحن الرصيد بنجاح ✅", "ok");
+          if (elRedeemCodeInput) elRedeemCodeInput.value = "";
+          await refreshAll();
+        } catch (e) {
+          setMsg(elRedeemMsg, e.message || "تعذّر تفعيل الكود", "err");
+        } finally {
+          elBtnRedeemCode.disabled = false;
+        }
       });
 
       elBtnScrollTx.addEventListener("click", function () {

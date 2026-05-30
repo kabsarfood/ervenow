@@ -55,6 +55,26 @@ body.admin-shell-page {
   border: 1px solid rgba(212, 167, 106, 0.45);
 }
 
+/* أدوات الهيدر — نفس مظهر وروابط «لوحة التحكم» */
+.admin-site-header .admin-header-tool-link,
+.admin-site-header button.admin-header-tool-link {
+  border: 1px solid transparent;
+  background: transparent;
+  cursor: pointer;
+  font-family: inherit;
+  color: #f8f0e4;
+}
+
+.admin-site-header .admin-header-tool-link:hover,
+.admin-site-header button.admin-header-tool-link:hover {
+  background: rgba(185, 135, 47, 0.22);
+  color: #fff8ee;
+}
+
+.admin-site-header .admin-header-tool-link span {
+  color: inherit;
+}
+
 .admin-site-header .dash-site-header__btn--primary {
   background: linear-gradient(135deg, var(--admin-gold) 0%, #8f6a35 100%);
   color: #fff;
@@ -94,20 +114,35 @@ body.admin-shell-page {
   border-radius: 10px;
 }
 
-.admin-header-tools .btn-ghost {
+/* أدوات الشريط العلوي — لون خط موحّد (هوية ERVENOW على الخلفية الداكنة) */
+.admin-site-header .admin-header-tools .btn,
+.admin-site-header .admin-header-tools .btn-ghost,
+.admin-site-header .admin-header-tools a.btn-ghost,
+.admin-site-header .admin-header-tools button.btn-ghost {
   border-color: rgba(212, 167, 106, 0.45);
   background: rgba(255, 255, 255, 0.06);
-  color: #f5e6c8;
+  color: #f8f0e4;
+  font-weight: 700;
 }
 
-.admin-header-tools .btn-ghost:hover {
-  background: rgba(185, 135, 47, 0.2);
+.admin-site-header .admin-header-tools .btn-ghost:hover,
+.admin-site-header .admin-header-tools a.btn-ghost:hover,
+.admin-site-header .admin-header-tools button.btn-ghost:hover {
+  background: rgba(185, 135, 47, 0.22);
+  color: #fff8ee;
+  border-color: rgba(212, 167, 106, 0.55);
 }
 
-.admin-header-tools a.btn-ghost {
+.admin-site-header .admin-header-tools a.btn-ghost {
   text-decoration: none;
   display: inline-flex;
   align-items: center;
+  gap: 0.35rem;
+}
+
+.admin-site-header .admin-header-tools .btn-ghost span,
+.admin-site-header .admin-header-tools a.btn-ghost span {
+  color: inherit;
 }
 
 .admin-dash-main {
@@ -387,7 +422,9 @@ body.admin-shell-page {
   filter: brightness(1.06);
 }
 
-.admin-shell-page .btn-ghost {
+/* أزرار شفافة داخل المحتوى فقط — لا تُطبَّق على شريط الهيدر */
+.admin-dash-main .btn-ghost,
+.admin-layout .btn-ghost {
   border-color: rgba(185, 135, 47, 0.35);
   color: var(--admin-brown-mid);
 }

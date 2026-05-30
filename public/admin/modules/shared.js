@@ -273,6 +273,7 @@ app.applyPermissionVisibility = function () {
     panelJobs: "jobs",
     panelAdminAccounts: "admin_accounts",
     panelSettings: null,
+    panelErvenowPay: "finance",
     financePanel: "finance",
   };
   var btns = document.querySelectorAll(".panel-btn");
@@ -296,6 +297,7 @@ app.applyPermissionVisibility = function () {
   var fin = app.hasPermission("finance");
   var finBtn = document.getElementById("financePanelBtn");
   if (finBtn) finBtn.style.display = fin ? "" : "none";
+  if (typeof app.applyErvenowPayVisibility === "function") app.applyErvenowPayVisibility();
   var lfp = document.getElementById("ledgerFinancePanel");
   if (lfp) lfp.style.display = fin ? "block" : "none";
   var fcw = document.getElementById("financeFeatureControlWrap");
@@ -353,6 +355,8 @@ app.loadPanelById = function (panelId) {
       return done(app.loadAdminAccounts());
     case "panelSettings":
       return done(app.loadSettingsPanel());
+    case "panelErvenowPay":
+      return done(app.loadErvenowPayPanel());
     case "financePanel":
       return done(app.loadFinancePanel());
     default:

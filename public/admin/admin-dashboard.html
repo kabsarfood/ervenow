@@ -36,13 +36,13 @@
             <option value="week">هذا الأسبوع</option>
             <option value="month">هذا الشهر</option>
           </select>
-          <a href="/admin/branding" class="btn btn-ghost" title="الهوية البصرية">🎨 <span class="hide-mobile">الهوية</span></a>
-          <a href="/admin/categories" class="btn btn-ghost" title="الأقسام">📂 <span class="hide-mobile">الأقسام</span></a>
-          <a href="/admin/withdrawals" class="btn btn-ghost" title="السحب">💸 <span class="hide-mobile">السحب</span></a>
-          <button type="button" class="btn btn-ghost" id="siteMaintenanceBtn" title="وضع الصيانة للزوار">
+          <a href="/admin/branding" class="dash-site-header__link admin-header-tool-link" title="الهوية البصرية">🎨 <span class="hide-mobile">الهوية</span></a>
+          <a href="/admin/categories" class="dash-site-header__link admin-header-tool-link" title="الأقسام">📂 <span class="hide-mobile">الأقسام</span></a>
+          <a href="/admin/withdrawals" class="dash-site-header__link admin-header-tool-link" title="السحب">💸 <span class="hide-mobile">السحب</span></a>
+          <button type="button" class="dash-site-header__link admin-header-tool-link" id="siteMaintenanceBtn" title="وضع الصيانة للزوار">
             ⏸ <span class="hide-mobile">الموقع</span>
           </button>
-          <button type="button" class="btn btn-ghost" id="logoutAdminBtn">خروج</button>
+          <button type="button" class="dash-site-header__link admin-header-tool-link" id="logoutAdminBtn">خروج</button>
         </div>
       </div>
     </header>
@@ -281,6 +281,10 @@
           <button type="button" class="panel-btn" data-panel="panelSettings" id="panelSettingsBtn">
             ⚙️ الإعدادات
           </button>
+          <button type="button" class="panel-btn" data-panel="panelErvenowPay" id="panelErvenowPayBtn" style="display:none">
+            🔥 ERVENOW PAY
+            <span class="panel-badge zero" id="badgeTopupPending">0</span>
+          </button>
           <button type="button" class="panel-btn panel-btn-close" id="closePanelsBtn">✕ إغلاق</button>
         </div>
       </section>
@@ -389,6 +393,62 @@
           <strong>إدارة الأدمنات</strong>
           <p class="sub">حسابات الأدمن المحدودة — قبول / حظر / خروج</p>
           <button type="button" class="btn btn-ghost" id="openAdminAccountsBtn">فتح إدارة الأدمنات</button>
+        </div>
+      </div>
+
+      <div class="card admin-panel" id="panelErvenowPay">
+        <div class="panel-toolbar">
+          <strong class="panel-title">🔥 ERVENOW PAY</strong>
+          <div class="panel-toolbar-actions">
+            <button type="button" class="btn btn-primary" id="reloadErvenowPayBtn">تحديث</button>
+          </div>
+        </div>
+
+        <div class="card" style="margin-bottom: 12px">
+          <h3 style="margin: 0 0 8px">إعدادات ERVENOW PAY</h3>
+          <p class="ledger-tx-updated" id="ervenowPaySettingsHint">—</p>
+          <div id="ervenowPaySettingsForm" class="finance-feature-control-list"></div>
+          <button type="button" class="btn btn-primary" id="saveErvenowPaySettingsBtn" style="margin-top: 10px">حفظ الإعدادات</button>
+        </div>
+
+        <div class="card" style="margin-bottom: 12px">
+          <h3 style="margin: 0 0 8px">📊 طلبات الشحن</h3>
+          <div class="finance-table-wrap">
+            <table class="finance-table" aria-label="طلبات شحن المحفظة">
+              <thead>
+                <tr>
+                  <th>الجوال</th>
+                  <th>المبلغ</th>
+                  <th>الحالة</th>
+                  <th>التاريخ</th>
+                  <th>إجراء</th>
+                </tr>
+              </thead>
+              <tbody id="topupRequestsBody">
+                <tr><td colspan="5" class="finance-msg">جارٍ التحميل…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 style="margin: 0 0 8px">🔑 أكواد الشحن</h3>
+          <div class="finance-table-wrap">
+            <table class="finance-table" aria-label="أكواد شحن المحفظة">
+              <thead>
+                <tr>
+                  <th>الكود</th>
+                  <th>المبلغ</th>
+                  <th>الجوال</th>
+                  <th>الحالة</th>
+                  <th>ينتهي</th>
+                </tr>
+              </thead>
+              <tbody id="topupCodesBody">
+                <tr><td colspan="5" class="finance-msg">جارٍ التحميل…</td></tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 

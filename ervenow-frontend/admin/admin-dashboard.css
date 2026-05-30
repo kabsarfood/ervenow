@@ -82,7 +82,8 @@ h1 {
   background: #5b371d;
   color: #fff;
 }
-.btn-ghost {
+.admin-dash-main .btn-ghost,
+.admin-layout .btn-ghost {
   border: 1px solid #5b371d;
   background: #fff;
   color: #5b371d;
@@ -1412,4 +1413,23 @@ select {
     min-height: 44px;
     margin-top: 4px;
   }
+}
+
+/* شريط الهيدر — لون خط مثل «لوحة التحكم» (يتجاوز styles.css .btn-ghost) */
+.admin-site-header .dash-site-header__link,
+.admin-site-header .admin-header-tool-link,
+.admin-site-header #filter-ui .dash-site-header__link,
+.admin-site-header #filter-ui a,
+.admin-site-header #filter-ui button {
+  color: #f8f0e4 !important;
+  -webkit-text-fill-color: #f8f0e4 !important;
+}
+
+.admin-site-header #filter-ui a {
+  text-decoration: none !important;
+}
+
+.admin-site-header #filter-ui .hide-mobile,
+.admin-site-header #filter-ui .dash-site-header__link span {
+  color: inherit !important;
 }

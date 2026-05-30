@@ -25,7 +25,7 @@ const DEFAULT_PAY_SETTINGS = Object.freeze({
   visa_enabled: "false",
   min_topup_amount: "30",
   max_topup_amount: "5000",
-  stcpay_display_number: String(process.env.ERVENOW_STC_PAY_NUMBER || "0500000000").trim(),
+  stcpay_display_number: String(process.env.ERVENOW_STC_PAY_NUMBER || "0505745650").trim(),
 });
 
 function isMissingSettingsTable(err) {
