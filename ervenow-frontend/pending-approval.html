@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ERVENOW | بانتظار الموافقة</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/assets/styles.css" />
+    <style>
+      .pending-wrap {
+        max-width: 520px;
+        margin: 48px auto;
+        padding: 28px 24px;
+        text-align: center;
+      }
+      .pending-icon {
+        font-size: 3rem;
+        line-height: 1;
+        margin-bottom: 12px;
+      }
+      .pending-wrap h1 {
+        margin: 0 0 10px;
+        font-size: 1.35rem;
+      }
+      .pending-wrap p {
+        margin: 0 0 16px;
+        color: rgba(61, 34, 19, 0.78);
+        line-height: 1.65;
+      }
+      .pending-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        justify-content: center;
+        margin-top: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="layout">
+      <div class="card pending-wrap">
+        <div class="pending-icon" aria-hidden="true">⏳</div>
+        <h1>حسابك بانتظار موافقة الإدارة</h1>
+        <p>
+          تم استلام طلب التسجيل بنجاح. لا يمكن الدخول إلى لوحة التحكم أو المحفظة أو تنفيذ الطلبات المالية حتى يعتمد
+          فريق ERVENOW حسابك.
+        </p>
+        <p class="sub" id="pendingPhone">—</p>
+        <div class="pending-actions">
+          <a class="btn btn-primary" href="/">الرئيسية</a>
+          <a class="btn btn-ghost" href="/login">تسجيل الدخول</a>
+        </div>
+      </div>
+    </div>
+    <script src="/assets/api-config.js"></script>
+    <script src="/assets/api.js"></script>
+    <script>
+      (function () {
+        try {
+          var p = localStorage.getItem("userPhone") || "";
+          if (p) document.getElementById("pendingPhone").textContent = "الجوال: " + p;
+        } catch (e) {}
+        try {
+          localStorage.removeItem("token");
+          localStorage.removeItem("userId");
+        } catch (e2) {}
+        if (window.PlatformAPI && window.PlatformAPI.setToken) window.PlatformAPI.setToken("");
+        document.cookie = "auth_token=; path=/; max-age=0; SameSite=Lax";
+      })();
+    </script>
+  </body>
+</html>

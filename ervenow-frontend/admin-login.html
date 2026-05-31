@@ -329,11 +329,6 @@
             <input id="phone" type="tel" inputmode="numeric" autocomplete="tel-national" maxlength="10" placeholder="05xxxxxxxx" dir="ltr" />
           </div>
 
-          <div class="auth-dev-panel" id="adminDevPanel" aria-label="وضع التطوير">
-            <p class="auth-dev-panel__label">وضع التطوير</p>
-            <button type="button" class="auth-dev-direct" id="adminDevDirectBtn">_ الدخول المباشر</button>
-          </div>
-
           <div class="auth-code-group" id="adminCodeGroup" hidden>
             <div class="admin-field">
               <label for="code">رمز واتساب</label>
@@ -372,7 +367,6 @@
     </script>
     <script src="/assets/api.js"></script>
     <script src="/assets/auth-otp-flow.js"></script>
-    <script src="/assets/auth-dev-direct.js"></script>
     <script>
       function getAnyToken() {
         return (
@@ -440,10 +434,6 @@
         codeId: "code",
         codeGroupId: "adminCodeGroup",
         btnId: "adminAuthBtn",
-        devDirectBtnId: "adminDevDirectBtn",
-        onDevCodeStep: function () {
-          setMsg("أدخل رمز الدخول يدوياً ثم اضغط دخول لوحة التحكم.", "ok");
-        },
         introId: "adminAuthIntro",
         introSend: "أدخل الجوال المصرّح ثم اضغط إرسال رمز واتساب. صلاحية الرمز 5 دقائق.",
         introVerify: "أدخل رمز واتساب ثم اضغط دخول لوحة التحكم.",
@@ -525,9 +515,6 @@
       document.getElementById("phone").addEventListener("blur", function () {
         document.getElementById("phone").value = normalizeAdminPhone(document.getElementById("phone").value);
       });
-      if (window.ErvenowAuthDevDirect) {
-        ErvenowAuthDevDirect.initDevDirectButton("adminDevDirectBtn");
-      }
     </script>
   </body>
 </html>

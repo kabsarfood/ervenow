@@ -270,9 +270,12 @@ app.applyPermissionVisibility = function () {
     panelComplaints: "complaints",
     panelCustomers: "customers",
     panelStores: "stores",
+    panelApprovals: null,
     panelJobs: "jobs",
     panelAdminAccounts: "admin_accounts",
     panelSettings: null,
+    panelOffers: "dashboard",
+    panelServices: "providers",
     panelErvenowPay: "finance",
     financePanel: "finance",
   };
@@ -287,6 +290,13 @@ app.applyPermissionVisibility = function () {
         app.hasPermission("finance") ||
         app.hasPermission("dashboard") ||
         app.hasPermission("admin_accounts");
+    } else if (panelId === "panelApprovals") {
+      show =
+        app.hasPermission("customers") ||
+        app.hasPermission("stores") ||
+        app.hasPermission("drivers") ||
+        app.hasPermission("providers") ||
+        app.hasPermission("dashboard");
     } else if (need) {
       show = app.hasPermission(need);
     }
@@ -298,6 +308,8 @@ app.applyPermissionVisibility = function () {
   var finBtn = document.getElementById("financePanelBtn");
   if (finBtn) finBtn.style.display = fin ? "" : "none";
   if (typeof app.applyErvenowPayVisibility === "function") app.applyErvenowPayVisibility();
+  if (typeof app.applyOffersPanelVisibility === "function") app.applyOffersPanelVisibility();
+  if (typeof app.applyServicesPanelVisibility === "function") app.applyServicesPanelVisibility();
   var lfp = document.getElementById("ledgerFinancePanel");
   if (lfp) lfp.style.display = fin ? "block" : "none";
   var fcw = document.getElementById("financeFeatureControlWrap");
@@ -349,12 +361,18 @@ app.loadPanelById = function (panelId) {
       return done(app.loadCustomers());
     case "panelStores":
       return done(app.loadStores());
+    case "panelApprovals":
+      return done(app.loadApprovalsPanel());
     case "panelJobs":
       return done(app.loadJobs());
     case "panelAdminAccounts":
       return done(app.loadAdminAccounts());
     case "panelSettings":
       return done(app.loadSettingsPanel());
+    case "panelOffers":
+      return done(app.loadOffersPanel());
+    case "panelServices":
+      return done(app.loadServicesPanel());
     case "panelErvenowPay":
       return done(app.loadErvenowPayPanel());
     case "financePanel":

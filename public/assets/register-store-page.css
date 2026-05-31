@@ -415,3 +415,119 @@ body.guest-shell-page.reg-store-page {
     margin-bottom: 6px;
   }
 }
+
+/* ——— تصنيفات المطعم (أزرار) ——— */
+.reg-store-cuisine-block {
+  margin-top: 4px;
+  padding: 16px 14px;
+  border-radius: 16px;
+  border: 1px solid rgba(185, 135, 47, 0.28);
+  background: linear-gradient(145deg, #fffefb 0%, #f8f0e6 100%);
+  box-shadow: 0 6px 22px rgba(45, 26, 14, 0.06);
+}
+
+.reg-store-cuisine-block__head {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.reg-store-cuisine-block__emoji {
+  font-size: 1.6rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.reg-store-cuisine-block__title {
+  margin: 0 0 4px;
+  font-size: 1rem;
+  font-weight: 900;
+  color: var(--brown, #3d2213);
+}
+
+.reg-store-cuisine-block__sub {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.55;
+  color: var(--muted, #5c4a3d);
+}
+
+.reg-store-cuisine-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
+  gap: 10px;
+}
+
+.reg-store-cuisine-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 88px;
+  padding: 12px 10px;
+  border-radius: 14px;
+  border: 2px solid rgba(61, 34, 19, 0.1);
+  background: #fff;
+  font-family: inherit;
+  cursor: pointer;
+  text-align: center;
+  transition: border-color 0.15s, background 0.15s, box-shadow 0.15s, transform 0.12s;
+}
+
+.reg-store-cuisine-chip:hover {
+  border-color: rgba(185, 135, 47, 0.45);
+  box-shadow: 0 6px 18px rgba(45, 26, 14, 0.08);
+  transform: translateY(-1px);
+}
+
+.reg-store-cuisine-chip.is-active {
+  border-color: var(--gold, #b9872f);
+  background: linear-gradient(145deg, #fff9ee, #f3e4cc);
+  box-shadow: 0 8px 24px rgba(185, 135, 47, 0.22);
+}
+
+.reg-store-cuisine-chip__icon {
+  font-size: 1.75rem;
+  line-height: 1;
+}
+
+.reg-store-cuisine-chip__label {
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: var(--brown, #3d2213);
+  line-height: 1.35;
+}
+
+.reg-store-cuisine-hint {
+  margin: 12px 0 0;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #8b5a2b;
+}
+
+.reg-store-cuisine-hint.is-ok {
+  color: #1e5631;
+}
+
+.reg-store-category-select-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (max-width: 480px) {
+  .reg-store-cuisine-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .reg-store-cuisine-chip {
+    min-height: 80px;
+  }
+}

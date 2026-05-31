@@ -3,21 +3,22 @@
 -- يضيف التصنيفات الجديدة ويحدّث الأسماء؛ يُبقي slugs القديمة للمتاجر الموجودة.
 -- =============================================================================
 
-INSERT INTO public.categories (type, scope, slug, name_ar, sort_order, is_active)
+INSERT INTO public.categories (type, scope, slug, name_ar, icon, sort_order, is_active)
 VALUES
-  ('restaurant', 'store', 'kabsa_bukhari', 'مطاعم كبسة وبخاري', 10, true),
-  ('restaurant', 'store', 'shawarma_grill', 'مطاعم شاورما ومشاوي', 20, true),
-  ('restaurant', 'store', 'seafood', 'مطاعم سمك', 30, true),
-  ('restaurant', 'store', 'burger', 'مطاعم برقر', 40, true),
-  ('restaurant', 'store', 'broasted', 'مطاعم بروستد', 50, true),
-  ('restaurant', 'store', 'pizza', 'مطاعم بيتزا', 60, true),
-  ('restaurant', 'store', 'cafe', 'مقاهي', 70, true),
-  ('restaurant', 'store', 'sweets', 'حلويات', 80, true),
-  ('restaurant', 'store', 'home_producers', 'أسر منتجة', 90, true)
+  ('restaurant', 'store', 'kabsa_bukhari', 'مطاعم كبسة وبخاري', '🍚', 10, true),
+  ('restaurant', 'store', 'shawarma_grill', 'مطاعم شاورما ومشاوي', '🌯', 20, true),
+  ('restaurant', 'store', 'seafood', 'مطاعم سمك', '🐟', 30, true),
+  ('restaurant', 'store', 'burger', 'مطاعم برقر', '🍔', 40, true),
+  ('restaurant', 'store', 'broasted', 'مطاعم بروستد', '🍗', 50, true),
+  ('restaurant', 'store', 'pizza', 'مطاعم بيتزا', '🍕', 60, true),
+  ('restaurant', 'store', 'cafe', 'مقاهي', '☕', 70, true),
+  ('restaurant', 'store', 'sweets', 'حلويات', '🍰', 80, true),
+  ('restaurant', 'store', 'home_producers', 'أسر منتجة', '🏠', 90, true)
 ON CONFLICT (slug) DO UPDATE SET
   name_ar = EXCLUDED.name_ar,
   type = EXCLUDED.type,
   scope = EXCLUDED.scope,
+  icon = EXCLUDED.icon,
   sort_order = EXCLUDED.sort_order,
   is_active = true,
   updated_at = now();

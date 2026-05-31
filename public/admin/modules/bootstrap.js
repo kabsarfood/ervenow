@@ -7,6 +7,7 @@ import "./orders.js";
 import "./drivers.js";
 import "./sockets.js";
 import "./panels.js";
+import "./approvals.js";
 
 document.getElementById("reloadDriversBtn").onclick = app.loadDrivers;
 document.getElementById("reloadComplaintsBtn").onclick = app.loadComplaints;
@@ -21,6 +22,12 @@ var reloadFinanceBtn = document.getElementById("reloadFinanceBtn");
 if (reloadFinanceBtn) reloadFinanceBtn.onclick = app.loadFinancePanel;
 var reloadErvenowPayBtn = document.getElementById("reloadErvenowPayBtn");
 if (reloadErvenowPayBtn) reloadErvenowPayBtn.onclick = app.loadErvenowPayPanel;
+var reloadOffersBtn = document.getElementById("reloadOffersBtn");
+if (reloadOffersBtn) reloadOffersBtn.onclick = app.loadOffersPanel;
+var saveOffersBtn = document.getElementById("saveOffersBtn");
+if (saveOffersBtn) saveOffersBtn.onclick = app.safeClick(app.saveOffersPanel);
+var reloadServicesBtn = document.getElementById("reloadServicesBtn");
+if (reloadServicesBtn) reloadServicesBtn.onclick = app.loadServicesPanel;
 var saveErvenowPaySettingsBtn = document.getElementById("saveErvenowPaySettingsBtn");
 if (saveErvenowPaySettingsBtn) saveErvenowPaySettingsBtn.onclick = app.safeClick(app.saveErvenowPaySettings);
 var reloadSettingsBtn = document.getElementById("reloadSettingsBtn");
@@ -39,6 +46,7 @@ var searchBind = [
   ["searchComplaints", app.renderComplaints],
   ["searchCustomers", app.renderCustomers],
   ["searchStores", app.renderStores],
+  ["searchApprovals", app.renderApprovalsList],
   ["searchJobs", app.renderJobs],
   ["searchAdminAccounts", app.renderAdminAccounts],
   ["financeSearch", app.renderFinanceTable],
@@ -92,6 +100,38 @@ if (closeBtn) {
   if (app.hasPermission("dashboard")) app.loadStats();
   else if (app.hasPermission("finance")) app.loadLedgerFinanceSummary();
   if (app.hasPermission("orders")) app.loadRecentOrders();
+  if (app.hasPermission("drivers")) app.loadDrivers();
+  if (
+    app.hasPermission("customers") ||
+    app.hasPermission("stores") ||
+    app.hasPermission("drivers") ||
+    app.hasPermission("providers")
+  ) {
+    void app.loadApprovalsPanel();
+  }
+  if (app.hasPermission("finance") && typeof app.refreshTopupPendingBadgeOnly === "function") {
+    void app.refreshTopupPendingBadgeOnly();
+  }
+  var offersHeader = document.getElementById("adminHeaderOffers");
+  if (offersHeader) {
+    offersHeader.addEventListener("click", function (e) {
+      e.preventDefault();
+      app.showPanel("panelOffers");
+      void app.loadOffersPanel();
+      var el = document.getElementById("panelOffers");
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }
+  var payHeader = document.getElementById("adminNavErvenowPay");
+  if (payHeader) {
+    payHeader.addEventListener("click", function (e) {
+      e.preventDefault();
+      app.showPanel("panelErvenowPay");
+      void app.loadErvenowPayPanel();
+      var el = document.getElementById("panelErvenowPay");
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }
   app.setupExecUi();
   app.initAdminDashboardSocket();
   app.startAdminAlertsTimer();
@@ -111,6 +151,7 @@ if (closeBtn) {
     if (app.hasPermission("finance")) {
       app.loadFinancialFeatureFlags();
       app.loadLedgerFinanceSummary();
+      if (typeof app.refreshTopupPendingBadgeOnly === "function") void app.refreshTopupPendingBadgeOnly();
     }
   }, app.LEDGER_TX_POLL_MS);
 })();

@@ -302,12 +302,14 @@
         overscroll-behavior: none;
       }
 
+      /* إزالة سياق التكديس من الهيدر حتى تغطي الضبابية من الهيدر إلى الفوتر */
       body.lp-cart-no-scroll .lp-header {
         z-index: auto;
         backdrop-filter: none;
         -webkit-backdrop-filter: none;
       }
 
+      /* السلة فوق الضبابية — في منتصف الشاشة عند الفتح */
       #lpCartWrap.lp-cart-wrap--portaled {
         position: fixed;
         inset: 0;
@@ -393,6 +395,7 @@
         display: none !important;
       }
 
+      /* طبقة ضبابية على مستوى الصفحة كاملة (تُنقل إلى body عبر JS) */
       .lp-cart-backdrop {
         position: fixed;
         inset: 0;
@@ -1095,6 +1098,8 @@
         margin-bottom: 6px;
       }
 
+      #lpCartSummary[hidden],
+      #lpCartFooter[hidden],
       .lp-cart-panel__summary[hidden],
       .lp-cart-panel__footer[hidden] {
         display: none !important;
@@ -2768,8 +2773,8 @@
             </div>
             <div class="lp-dd-sep-mobile" role="separator" hidden></div>
 
-            <a role="menuitem" class="lp-dd-item" href="/admin-login" aria-label="لوحة التحكم" id="lpNavControlMenu"
-              ><span class="lp-dd-ic" aria-hidden="true">&#128272;</span><span class="lp-dd-link__text">لوحة التحكم</span></a
+            <a role="menuitem" class="lp-dd-item" href="/track" aria-label="تتبع الحي" id="lpNavControlMenu"
+              ><span class="lp-dd-ic" aria-hidden="true">📍</span><span class="lp-dd-link__text">تتبع الحي</span></a
             >
             <a role="menuitem" class="lp-dd-item" href="/services-provider.html" aria-label="لوحة مزود الخدمة" data-nav-role="service" hidden
               ><span class="lp-dd-ic" aria-hidden="true">&#127978;</span><span class="lp-dd-link__text">طلبات الخدمات</span></a
@@ -2892,7 +2897,7 @@
           <nav class="lp-nav" aria-label="التنقل الرئيسي">
             <a href="/" data-nav="home">الرئيسية</a>
             <a href="/dashboard" data-nav="guest">لوحة الزائر</a>
-            <a href="/admin-login" data-nav="control">لوحة التحكم</a>
+            <a href="/track" data-nav="track">تتبع الحي</a>
             <a href="/login?role=customer" data-nav="login" class="lp-nav__cta">دخول</a>
           </nav>
         </div>
@@ -2939,11 +2944,15 @@
             <div class="sn-card__arrow">← اكتشف</div>
           </summary>
           <div class="sn-hub-panel">
-            <a class="sn-hub-link" href="/restaurants?category=shawarma_grill"><span class="sn-hub-link__ic" aria-hidden="true">🌯</span>شاورما ومشاوي</a>
-            <a class="sn-hub-link" href="/restaurants?category=kabsa_bukhari"><span class="sn-hub-link__ic" aria-hidden="true">🍚</span>كبسة وبخاري</a>
-            <a class="sn-hub-link" href="/restaurants?category=burger_broasted"><span class="sn-hub-link__ic" aria-hidden="true">🍔</span>بروستد وبرقر</a>
-            <a class="sn-hub-link" href="/restaurants?category=seafood"><span class="sn-hub-link__ic" aria-hidden="true">🐟</span>ماكولات بحرية</a>
-            <a class="sn-hub-link" href="/restaurants?category=cafe_sweets"><span class="sn-hub-link__ic" aria-hidden="true">☕</span>قهوة وحلا</a>
+            <a class="sn-hub-link" href="/restaurants?category=kabsa_bukhari"><span class="sn-hub-link__ic" aria-hidden="true">🍚</span>مطاعم كبسة وبخاري</a>
+            <a class="sn-hub-link" href="/restaurants?category=shawarma_grill"><span class="sn-hub-link__ic" aria-hidden="true">🌯</span>مطاعم شاورما ومشاوي</a>
+            <a class="sn-hub-link" href="/restaurants?category=seafood"><span class="sn-hub-link__ic" aria-hidden="true">🐟</span>مطاعم سمك</a>
+            <a class="sn-hub-link" href="/restaurants?category=burger"><span class="sn-hub-link__ic" aria-hidden="true">🍔</span>مطاعم برقر</a>
+            <a class="sn-hub-link" href="/restaurants?category=broasted"><span class="sn-hub-link__ic" aria-hidden="true">🍗</span>مطاعم بروستد</a>
+            <a class="sn-hub-link" href="/restaurants?category=pizza"><span class="sn-hub-link__ic" aria-hidden="true">🍕</span>مطاعم بيتزا</a>
+            <a class="sn-hub-link" href="/restaurants?category=cafe"><span class="sn-hub-link__ic" aria-hidden="true">☕</span>مقاهي</a>
+            <a class="sn-hub-link" href="/restaurants?category=sweets"><span class="sn-hub-link__ic" aria-hidden="true">🍰</span>حلويات</a>
+            <a class="sn-hub-link" href="/restaurants?category=home_producers"><span class="sn-hub-link__ic" aria-hidden="true">🏠</span>أسر منتجة</a>
             <a class="sn-hub-link" href="/restaurants"><span class="sn-hub-link__ic" aria-hidden="true">▦</span>كل المطاعم</a>
           </div>
         </details>

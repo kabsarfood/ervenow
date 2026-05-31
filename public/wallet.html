@@ -1193,6 +1193,10 @@
 
     <script src="/assets/api-config.js"></script>
     <script src="/assets/api.js"></script>
+    <script src="/assets/auth-account-guard.js"></script>
+    <script>
+      void ErvenowAuthGuard.ensureApprovedAccount({ loginUrl: "/login" });
+    </script>
     <script>
       if (!window.PlatformAPI || !window.PlatformAPI.getToken()) {
         window.location.replace("/login");
@@ -1677,7 +1681,12 @@
             body: { amount: amt, phone: phone },
           });
           setMsg(elTopupMsg, r.message || "تم إرسال طلب الشحن.", "ok");
-          showToast("تم إرسال طلب الشحن — انتظر موافقة الإدارة", "ok");
+          if (r.auto_fulfilled) {
+            showToast(r.message || "تم شحن الرصيد تلقائياً ✅", "ok");
+            if (typeof loadWallet === "function") loadWallet();
+          } else {
+            showToast("تم إرسال طلب الشحن — انتظر موافقة الإدارة", "ok");
+          }
           closeTopupModal();
         } catch (e) {
           setMsg(elTopupMsg, e.message || "تعذّر إرسال الطلب", "err");

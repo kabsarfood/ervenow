@@ -31,6 +31,7 @@ const { createPublicSiteOtpGate, isPrivateOtpGate } = require("../shared/middlew
 const { createSiteMaintenanceMiddleware } = require("../shared/middleware/siteMaintenanceGate");
 const { pushToErvenow } = require("../shared/utils/ervenowPush");
 const { startRetryNotificationsWorker } = require("../apps/driver/retryNotifications");
+const { startClosedOrdersPurgeWorker } = require("../apps/delivery/purgeClosedOrders");
 const { createServiceClient } = require("../shared/config/supabase");
 const { register, metrics } = require("../shared/utils/metrics");
 const { logger } = require("../shared/utils/logger");
@@ -580,6 +581,12 @@ app.use((err, _req, res, _next) => {
           "[boot] تقديم الواجهة من public/ رغم SERVE_STATIC≠1 — للـ API فقط على / عيّن HIDE_PUBLIC_UI=1"
         );
       }
+      const { allowDevOtpBypass } = require("../shared/utils/devOtpBypass");
+      if (allowDevOtpBypass()) {
+        console.warn(
+          "[boot] ⚠ ALLOW_DEV_OTP مفعّل — تجاوز OTP (رمز التطوير) نشط. عطّله في الإنتاج: ALLOW_DEV_OTP=false"
+        );
+      }
       if (!serveStatic && isProd && !String(process.env.CORS_ORIGINS || "").trim() && !originsFromPublicSiteUrl().length) {
         console.warn(
           "[boot] عرّف CORS_ORIGINS أو ERVENOW_PUBLIC_URL (يُضاف أصل الموقع تلقائياً للـ CORS) وإلا المتصفح قد يمنع طلبات API من نطاق آخر."
@@ -587,6 +594,7 @@ app.use((err, _req, res, _next) => {
       }
     });
     startRetryNotificationsWorker();
+    startClosedOrdersPurgeWorker();
     console.log("[boot] Socket.IO tracking: /socket.io/");
   } catch (e) {
     console.error("[boot] schema check failed:", e && (e.message || e));

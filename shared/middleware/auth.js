@@ -1,6 +1,12 @@
 const jwt = require("jsonwebtoken");
 const { createServiceClient } = require("../config/supabase");
 const { extractBearer } = require("../utils/helpers");
+const {
+  isUserAccountPending,
+  isPendingAuthAllowedPath,
+  pendingApprovalErrorPayload,
+  accountApprovedFlag,
+} = require("../utils/accountApproval");
 
 const ROLES = ["driver", "customer", "admin", "restaurant", "merchant", "service", "user"];
 
@@ -132,6 +138,14 @@ async function requireAuth(req, res, next) {
       return res.status(403).json({ ok: false, error: "الحساب محظور من الإدارة" });
     }
 
+    if (
+      String(effectiveRole || "").toLowerCase() !== "admin" &&
+      isUserAccountPending(effectiveStatus) &&
+      !isPendingAuthAllowedPath(req)
+    ) {
+      return res.status(403).json(pendingApprovalErrorPayload());
+    }
+
     // backward compatibility for transitional roles
     if (String(effectiveRole || "").toLowerCase() === "user") {
       effectiveRole = "customer";
@@ -144,6 +158,7 @@ async function requireAuth(req, res, next) {
       phone: req.authUser.phone,
       role: effectiveRole,
       status: effectiveStatus,
+      approved: accountApprovedFlag(effectiveStatus, effectiveRole),
       ...(displayName ? { name: displayName } : {}),
     };
     next();

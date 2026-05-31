@@ -12,9 +12,13 @@ const {
   parseAutoFreezeConfig,
 } = require("../utils/platformFeatureFlags");
 const { isLedgerOnlyMode } = require("../utils/financeMode");
-const { getDriverLedgerOwedBalance } = require("../utils/ledgerWallet");
-
 const DEFAULT_WARN = 50;
+
+/** قراءة متأخرة لتجنّب circular dependency مع ledgerWallet */
+async function getDriverLedgerOwedBalanceLazy(sb, driverId) {
+  const { getDriverLedgerOwedBalance } = require("../utils/ledgerWallet");
+  return getDriverLedgerOwedBalance(sb, driverId);
+}
 const DEFAULT_FREEZE = 100;
 
 /**
@@ -70,7 +74,7 @@ async function getDriverFreezeFlags(sb, driverId, balanceOwed) {
   let owed = balanceOwed;
   if (owed == null && sb && driverId) {
     owed = isLedgerOnlyMode()
-      ? await getDriverLedgerOwedBalance(sb, driverId)
+      ? await getDriverLedgerOwedBalanceLazy(sb, driverId)
       : await require("./driverCommissionLedger").getDriverCommissionBalance(sb, driverId);
   }
 
@@ -155,7 +159,7 @@ async function enrichDriversWithAutoFreeze(sb, drivers) {
   if (userIds.length) {
     if (isLedgerOnlyMode()) {
       for (const uid of userIds) {
-        balanceByUser.set(String(uid), await getDriverLedgerOwedBalance(sb, uid));
+        balanceByUser.set(String(uid), await getDriverLedgerOwedBalanceLazy(sb, uid));
       }
     } else {
       const { data: wallets } = await sb

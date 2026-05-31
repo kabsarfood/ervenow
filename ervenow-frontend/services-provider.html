@@ -172,6 +172,10 @@
 
     <script src="/assets/api-config.js"></script>
     <script src="/assets/api.js"></script>
+    <script src="/assets/auth-account-guard.js"></script>
+    <script>
+      void ErvenowAuthGuard.ensureApprovedAccount({ loginUrl: "/login?role=service" });
+    </script>
     <script>
       var SVC_PAY_ROWS = [
         { key: "ew_pay", label: "EW PAY", src: "/assets/pay-ew.svg" },

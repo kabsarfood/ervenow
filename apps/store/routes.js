@@ -20,7 +20,24 @@ const {
   restaurantCategoryDisplayAr,
   restaurantRowMatchesCuisineFilter,
 } = require("../../shared/restaurantCategories");
-const { normalizeProductCategory, isMarketStoreType, productCategoryLabelAr } = require("../../shared/marketProductCategories");
+const {
+  isMarketStoreType,
+  productCategoryLabelAr,
+  PRODUCT_CATEGORY_ICONS,
+  normalizeProductCategory,
+} = require("../../shared/marketProductCategories");
+const {
+  productCatalogTypeForStoreType,
+  labelForProductSlug,
+  iconForProductSlug,
+  storeSupportsProductCategoryBrowse,
+} = require("../../shared/productCategoryTypes");
+const {
+  fetchProductCategoryCatalog,
+  resolveProductCategorySlug,
+  fetchMergedProductCategorySlugs,
+} = require("../../shared/categoriesDb");
+const { productRowWithImages, productImageUrlsFromRow } = require("../../shared/utils/productImages");
 const {
   resolvePublicCategorySlug,
   fetchMergedRestaurantCategorySlugs,
@@ -124,6 +141,46 @@ async function uploadToStoreBucket(sb, storeId, subfolder, base64, originalName)
   }
   const { data: pub } = sb.storage.from(bucket).getPublicUrl(objectPath);
   return pub && pub.publicUrl ? pub.publicUrl : null;
+}
+
+const MAX_PRODUCT_IMAGES = 6;
+
+async function uploadProductImagesFromBody(sb, storeId, body) {
+  const urls = [];
+  if (body?.image_base64) {
+    const u = await uploadToStoreBucket(
+      sb,
+      storeId,
+      "products",
+      body.image_base64,
+      body.image_file_name || "product.jpg"
+    );
+    if (u) urls.push(u);
+  }
+  const extras = Array.isArray(body?.images_base64) ? body.images_base64 : [];
+  const names = Array.isArray(body?.images_file_names) ? body.images_file_names : [];
+  for (let i = 0; i < extras.length && urls.length < MAX_PRODUCT_IMAGES; i++) {
+    const b64 = extras[i];
+    if (!b64 || typeof b64 !== "string" || b64.length < 40) continue;
+    const u = await uploadToStoreBucket(sb, storeId, "products", b64, names[i] || "product-" + (i + 1) + ".jpg");
+    if (u && !urls.includes(u)) urls.push(u);
+  }
+  return urls;
+}
+
+async function fetchMerchantHubPublic(sb, storeId) {
+  let banner_url = null;
+  let bio = null;
+  const hubRes = await sb.from("store_merchant_hub").select("banner_url,bio").eq("store_id", storeId).maybeSingle();
+  if (!hubRes.error && hubRes.data) {
+    banner_url = hubRes.data.banner_url || null;
+    bio = hubRes.data.bio != null ? String(hubRes.data.bio).trim() || null : null;
+  }
+  return { banner_url, bio };
+}
+
+function mapProductsForApi(rows) {
+  return (rows || []).map((r) => productRowWithImages(r));
 }
 
 async function notifyAdminWhatsApp({ name, phoneDisplay, typeLabel, mapsUrl, requestId, payoutSummary, cuisineLine }) {
@@ -295,7 +352,7 @@ function maskStoreRowForGuest(row, index, labelOpts) {
     type: row.type || null,
     category: catRaw || row.type || null,
     category_label_ar: cuisine || TYPE_LABEL_AR[row.type] || null,
-    ...(isMarketStoreType(row.type) ? { supports_product_categories: true } : {}),
+    ...(storeSupportsProductCategoryBrowse(row.type) ? { supports_product_categories: true } : {}),
   };
 }
 
@@ -319,12 +376,13 @@ function publicStoreRow(row, labelOpts) {
     average_rating: Number(row.average_rating) || 0,
     rating_count: Number(row.rating_count) || 0,
     total_orders: Number(row.total_orders) || 0,
+    profile_views: Number(row.profile_views) || 0,
   };
   if (row.is_active != null) o.is_active = !!row.is_active;
   if (row.distance_km != null && Number.isFinite(Number(row.distance_km))) {
     o.distance_km = Number(row.distance_km);
   }
-  if (isMarketStoreType(row.type)) o.supports_product_categories = true;
+  if (storeSupportsProductCategoryBrowse(row.type)) o.supports_product_categories = true;
   return o;
 }
 
@@ -395,7 +453,7 @@ router.get("/my-store", requireAuth, requireMerchantRole, async (req, res) => {
     if (!sb) return fail(res, "الخادم غير مهيأ لقاعدة البيانات", 503);
     const digits = normalizePhone(req.appUser.phone);
     const extendedSel =
-      "id,name,phone,type,category,status,is_active,logo_url,lat,lng,location_text,address,delivery_radius_km,average_rating,rating_count,total_orders,bank_name,bank_country_code,bank_last4,bank_verified,stc_pay_phone,payout_crypto_interest";
+      "id,name,phone,type,category,status,is_active,logo_url,lat,lng,location_text,address,delivery_radius_km,average_rating,rating_count,total_orders,profile_views,bank_name,bank_country_code,bank_last4,bank_verified,stc_pay_phone,payout_crypto_interest";
     let row = null;
     let err = null;
     ({ data: row, error: err } = await sb.from("stores").select(extendedSel).eq("phone", digits).eq("status", "approved").maybeSingle());
@@ -724,7 +782,7 @@ async function getPublicStoreById(req, res) {
     }
 
     const extendedSel =
-      "id,name,phone,type,category,lat,lng,status,is_active,logo_url,location_text,address,delivery_radius_km,average_rating,rating_count,total_orders";
+      "id,name,phone,type,category,lat,lng,status,is_active,logo_url,location_text,address,delivery_radius_km,average_rating,rating_count,total_orders,profile_views";
     let row = null;
     let err = null;
     ({ data: row, error: err } = await sb.from("stores").select(extendedSel).eq("id", id).maybeSingle());
@@ -735,6 +793,12 @@ async function getPublicStoreById(req, res) {
     if (!row || String(row.status || "").toLowerCase() !== "approved") {
       return fail(res, "المتجر غير متاح", 404);
     }
+    void sb
+      .from("stores")
+      .update({ profile_views: (Number(row.profile_views) || 0) + 1 })
+      .eq("id", id)
+      .then(() => {})
+      .catch(() => {});
     if (Object.prototype.hasOwnProperty.call(row, "is_active") && row.is_active === false) {
       return fail(res, "المتجر غير متاح", 404);
     }
@@ -759,10 +823,14 @@ async function getPublicStoreById(req, res) {
       console.warn("[store/public] product count:", pc.error.message);
     }
 
+    const hubPublic = mask ? { banner_url: null, bio: null } : await fetchMerchantHubPublic(sb, id);
+
     if (!mask) {
       const out = {
         ...publicStoreRow(row),
         product_count: productCount,
+        banner_url: hubPublic.banner_url,
+        bio: hubPublic.bio,
       };
       if (Number.isFinite(qLat) && Number.isFinite(qLng) && row.lat != null && row.lng != null) {
         const slat = Number(row.lat);
@@ -807,6 +875,86 @@ async function getPublicStoreById(req, res) {
 
 router.get("/public/:id", optionalAuth, getPublicStoreById);
 
+router.get("/product-category-options", optionalAuth, async (req, res) => {
+  try {
+    const sb = createServiceClient();
+    if (!sb) return fail(res, "الخادم غير مهيأ لقاعدة البيانات", 503);
+    const storeId = String(req.query.store_id || "").trim();
+    if (!storeId) return fail(res, "store_id مطلوب", 400);
+
+    const got = await loadApprovedStore(sb, storeId);
+    if (got.error) return fail(res, got.error, 404);
+
+    const catalogType = productCatalogTypeForStoreType(got.store.type);
+    const options = await fetchProductCategoryCatalog(sb, catalogType);
+
+    return ok(res, {
+      catalog_type: catalogType,
+      store_type: got.store.type || null,
+      options,
+    });
+  } catch (e) {
+    console.error("[store/product-category-options]", e);
+    return fail(res, e.message || "خطأ في الخادم", 500);
+  }
+});
+
+router.get("/product-categories", optionalAuth, async (req, res) => {
+  try {
+    const sb = createServiceClient();
+    if (!sb) return fail(res, "الخادم غير مهيأ لقاعدة البيانات", 503);
+    const storeId = String(req.query.store_id || "").trim();
+    if (!storeId) return fail(res, "store_id مطلوب", 400);
+
+    const got = await loadApprovedStore(sb, storeId);
+    if (got.error) return fail(res, got.error, 404);
+
+    const catalogType = productCatalogTypeForStoreType(got.store.type);
+
+    const { data, error } = await sb
+      .from("store_products")
+      .select("category")
+      .eq("store_id", storeId)
+      .eq("active", true)
+      .not("category", "is", null);
+
+    if (error) {
+      if (isStoreProductsMissing(error)) return ok(res, { categories: [], catalog_type: catalogType });
+      return fail(res, error.message, 400);
+    }
+
+    const mergedSlugs = await fetchMergedProductCategorySlugs(sb, catalogType);
+    const counts = new Map();
+    for (const r of data || []) {
+      const raw = String(r.category || "")
+        .trim()
+        .toLowerCase();
+      if (!raw) continue;
+      const slug = mergedSlugs.has(raw) ? raw : null;
+      if (!slug) continue;
+      counts.set(slug, (counts.get(slug) || 0) + 1);
+    }
+
+    const categories = [...counts.entries()]
+      .map(([slug, count]) => ({
+        slug,
+        label: labelForProductSlug(catalogType, slug, null) || productCategoryLabelAr(slug) || slug,
+        icon: iconForProductSlug(catalogType, slug, null) || PRODUCT_CATEGORY_ICONS[slug] || "📦",
+        count,
+      }))
+      .sort((a, b) => b.count - a.count || String(a.label).localeCompare(String(b.label), "ar"));
+
+    return ok(res, {
+      categories,
+      catalog_type: catalogType,
+      total_products_with_category: (data || []).length,
+    });
+  } catch (e) {
+    console.error("[store/product-categories]", e);
+    return fail(res, e.message || "خطأ في الخادم", 500);
+  }
+});
+
 router.get("/products", optionalAuth, async (req, res) => {
   try {
     const sb = createServiceClient();
@@ -819,7 +967,13 @@ router.get("/products", optionalAuth, async (req, res) => {
 
     const limit = Math.min(60, Math.max(1, Number(req.query.limit) || 24));
     const offset = Math.max(0, Number(req.query.offset) || 0);
-    const catFilter = normalizeProductCategory(req.query.category);
+    const catalogType = productCatalogTypeForStoreType(got.store.type);
+    const catFilter = req.query.category
+      ? await resolveProductCategorySlug(sb, catalogType, req.query.category)
+      : null;
+    if (req.query.category && !catFilter) {
+      return fail(res, "قسم المنتج غير صالح لهذا النوع من المتاجر", 400);
+    }
 
     const base = () =>
       sb
@@ -847,7 +1001,13 @@ router.get("/products", optionalAuth, async (req, res) => {
       if (isStoreProductsMissing(error)) return ok(res, { products: [], total: 0, note: "نفّذ migration_store_marketplace.sql" });
       return fail(res, error.message, 400);
     }
-    return ok(res, { products: data || [], total: count ?? (data || []).length, limit, offset, category: catFilter || null });
+    return ok(res, {
+      products: mapProductsForApi(data || []),
+      total: count ?? (data || []).length,
+      limit,
+      offset,
+      category: catFilter || null,
+    });
   } catch (e) {
     console.error("[store/products/get]", e);
     return fail(res, e.message || "خطأ في الخادم", 500);
@@ -870,10 +1030,8 @@ router.post("/products", requireAuth, requireMerchantRole, async (req, res) => {
     if (own.error) return fail(res, own.error, 403);
     await ensureOwnerLinked(sb, own.store, req.appUser.id);
 
-    let imageUrl = null;
-    if (req.body?.image_base64) {
-      imageUrl = await uploadToStoreBucket(sb, storeId, "products", req.body.image_base64, req.body.image_file_name || "product.jpg");
-    }
+    const imageUrls = await uploadProductImagesFromBody(sb, storeId, req.body);
+    const imageUrl = imageUrls[0] || null;
 
     let offer_price =
       req.body?.offer_price != null && req.body.offer_price !== "" ? Number(req.body.offer_price) : null;
@@ -883,10 +1041,11 @@ router.post("/products", requireAuth, requireMerchantRole, async (req, res) => {
       if (offer_price === 0) offer_price = null;
     }
 
+    const catalogType = productCatalogTypeForStoreType(own.store.type);
     let productCategory = null;
     if (req.body?.category != null && String(req.body.category).trim() !== "") {
-      productCategory = normalizeProductCategory(req.body.category);
-      if (!productCategory) return fail(res, "قسم المنتج غير صالح", 400);
+      productCategory = await resolveProductCategorySlug(sb, catalogType, req.body.category);
+      if (!productCategory) return fail(res, "قسم المنتج غير صالح لهذا النوع من المتجر", 400);
     }
 
     let stockVal = null;
@@ -912,6 +1071,7 @@ router.post("/products", requireAuth, requireMerchantRole, async (req, res) => {
       ...(stockVal != null ? { stock: stockVal } : {}),
       ...(ratingVal != null ? { rating: ratingVal } : {}),
       image_url: imageUrl,
+      ...(imageUrls.length ? { image_urls: imageUrls } : {}),
       active: true,
       sort_order: Number.isFinite(sortOrder) ? sortOrder : 0,
       updated_at: new Date().toISOString(),
@@ -920,21 +1080,22 @@ router.post("/products", requireAuth, requireMerchantRole, async (req, res) => {
     let { data, error } = await sb.from("store_products").insert(row).select("*").single();
     if (
       error &&
-      /category|stock|rating|column .* does not exist|schema cache/i.test(String(error.message || ""))
+      /category|stock|rating|image_urls|column .* does not exist|schema cache/i.test(String(error.message || ""))
     ) {
       const rowMin = { ...row };
       delete rowMin.category;
       delete rowMin.stock;
       delete rowMin.rating;
+      delete rowMin.image_urls;
       ({ data, error } = await sb.from("store_products").insert(rowMin).select("*").single());
     }
     if (error) {
       if (isStoreProductsMissing(error)) return fail(res, "جدول المنتجات غير جاهز — نفّذ migration_store_marketplace.sql", 400);
       return fail(res, error.message, 400);
     }
-    if (productCategory) void incrementCategoryUsage("market", productCategory);
+    if (productCategory) void incrementCategoryUsage(catalogType, productCategory);
     listCache = { key: "", at: 0, payload: null };
-    return ok(res, { product: data });
+    return ok(res, { product: productRowWithImages(data) });
   } catch (e) {
     console.error("[store/products/post]", e);
     return fail(res, e.message || "خطأ في الخادم", 500);
@@ -950,7 +1111,7 @@ router.put("/products/:id", requireAuth, requireMerchantRole, async (req, res) =
 
     const { data: existing, error: exErr } = await sb
       .from("store_products")
-      .select("store_id,price,offer_price,category")
+      .select("store_id,price,offer_price,category,image_url,image_urls")
       .eq("id", productId)
       .maybeSingle();
     if (exErr || !existing) return fail(res, "المنتج غير موجود", 404);
@@ -975,12 +1136,13 @@ router.put("/products/:id", requireAuth, requireMerchantRole, async (req, res) =
       if (Number.isFinite(s)) patch.sort_order = s;
     }
     if (req.body?.active != null) patch.active = !!req.body.active;
+    const catalogType = productCatalogTypeForStoreType(own.store.type);
     if (req.body?.category !== undefined) {
       if (req.body.category === null || req.body.category === "") {
         patch.category = null;
       } else {
-        const c = normalizeProductCategory(req.body.category);
-        if (!c) return fail(res, "قسم المنتج غير صالح", 400);
+        const c = await resolveProductCategorySlug(sb, catalogType, req.body.category);
+        if (!c) return fail(res, "قسم المنتج غير صالح لهذا النوع من المتجر", 400);
         patch.category = c;
       }
     }
@@ -1015,7 +1177,13 @@ router.put("/products/:id", requireAuth, requireMerchantRole, async (req, res) =
         patch.offer_price = op === 0 ? null : op;
       }
     }
-    if (req.body?.image_base64) {
+    if (Array.isArray(req.body?.images_base64) && req.body.images_base64.length) {
+      const urls = await uploadProductImagesFromBody(sb, existing.store_id, req.body);
+      if (urls.length) {
+        patch.image_urls = urls;
+        patch.image_url = urls[0];
+      }
+    } else if (req.body?.image_base64) {
       const url = await uploadToStoreBucket(
         sb,
         existing.store_id,
@@ -1023,7 +1191,15 @@ router.put("/products/:id", requireAuth, requireMerchantRole, async (req, res) =
         req.body.image_base64,
         req.body.image_file_name || "product.jpg"
       );
-      if (url) patch.image_url = url;
+      if (url) {
+        const prev = productImageUrlsFromRow(existing);
+        const merged = [url];
+        prev.forEach((u) => {
+          if (u && u !== url && !merged.includes(u)) merged.push(u);
+        });
+        patch.image_url = url;
+        patch.image_urls = merged.slice(0, MAX_PRODUCT_IMAGES);
+      }
     }
 
     const resolvedPrice = patch.price != null ? Number(patch.price) : Number(existing.price) || 0;
@@ -1046,12 +1222,13 @@ router.put("/products/:id", requireAuth, requireMerchantRole, async (req, res) =
     let { data, error } = await sb.from("store_products").update(patch).eq("id", productId).select("*").single();
     if (
       error &&
-      /category|stock|rating|column .* does not exist|schema cache/i.test(String(error.message || ""))
+      /category|stock|rating|image_urls|column .* does not exist|schema cache/i.test(String(error.message || ""))
     ) {
       const patchMin = { ...patch };
       delete patchMin.category;
       delete patchMin.stock;
       delete patchMin.rating;
+      delete patchMin.image_urls;
       ({ data, error } = await sb.from("store_products").update(patchMin).eq("id", productId).select("*").single());
     }
     if (error) return fail(res, error.message, 400);
@@ -1062,9 +1239,9 @@ router.put("/products/:id", requireAuth, requireMerchantRole, async (req, res) =
         patch.category === null || patch.category === ""
           ? ""
           : String(patch.category).trim().toLowerCase();
-      if (newCat && newCat !== prevCat) void incrementCategoryUsage("market", newCat);
+      if (newCat && newCat !== prevCat) void incrementCategoryUsage(catalogType, newCat);
     }
-    return ok(res, { product: data });
+    return ok(res, { product: productRowWithImages(data) });
   } catch (e) {
     console.error("[store/products/put]", e);
     return fail(res, e.message || "خطأ في الخادم", 500);
@@ -1467,7 +1644,7 @@ router.get("/merchant-dashboard", requireAuth, requireMerchantRole, async (req, 
     const sb = createServiceClient();
     if (!sb) return fail(res, "الخادم غير مهيأ لقاعدة البيانات", 503);
     const digits = normalizePhone(req.appUser.phone);
-    const extStore = "id,name,phone,status,total_orders,type,category,logo_url";
+    const extStore = "id,name,phone,status,total_orders,type,category,logo_url,average_rating,rating_count,profile_views";
     let st = null;
     let sErr = null;
     ({ data: st, error: sErr } = await sb.from("stores").select(extStore).eq("phone", digits).eq("status", "approved").maybeSingle());
@@ -1541,6 +1718,9 @@ router.get("/merchant-dashboard", requireAuth, requireMerchantRole, async (req, 
         category: st.category || null,
         logo_url: st.logo_url || null,
         total_orders: st.total_orders != null ? Number(st.total_orders) : null,
+        average_rating: st.average_rating != null ? Number(st.average_rating) : 0,
+        rating_count: st.rating_count != null ? Number(st.rating_count) : 0,
+        profile_views: st.profile_views != null ? Number(st.profile_views) : 0,
       },
       wallet,
       transactions,
@@ -1795,6 +1975,8 @@ router.post("/withdrawals", requireAuth, requireMerchantRole, async (req, res) =
 /** GET /api/store/:id — نفس استجابة /public/:id (يُسجّل آخراً حتى لا يتعارض مع /products وغيره) */
 const STORE_GET_BY_ID_RESERVED = new Set([
   "products",
+  "product-categories",
+  "product-category-options",
   "reviews",
   "register",
   "register-map-context",

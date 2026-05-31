@@ -7,6 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/assets/styles.css" />
+    <link rel="stylesheet" href="/assets/ervenow-responsive.css" />
     <style>
       .cat-toolbar {
         display: flex;
@@ -56,6 +57,49 @@
         border-radius: 8px;
         border: 1px solid rgba(0, 0, 0, 0.12);
       }
+      .layout {
+        max-width: min(960px, 100%);
+        margin: 0 auto;
+        padding: clamp(12px, 3vw, 20px) max(12px, env(safe-area-inset-right, 12px))
+          clamp(24px, 4vw, 40px) max(12px, env(safe-area-inset-left, 12px));
+        box-sizing: border-box;
+      }
+      @media (max-width: 640px) {
+        .top-nav {
+          flex-direction: column;
+          align-items: stretch;
+          gap: 10px;
+        }
+        .top-nav .btn-row {
+          flex-wrap: wrap;
+        }
+        .top-nav .btn {
+          min-height: 44px;
+          flex: 1 1 auto;
+        }
+        .cat-toolbar {
+          flex-direction: column;
+          align-items: stretch;
+        }
+        .cat-toolbar select,
+        .cat-toolbar .btn {
+          width: 100%;
+          min-height: 44px;
+        }
+        .cat-form-grid {
+          grid-template-columns: 1fr;
+        }
+        .cat-form-grid input,
+        .cat-form-grid select {
+          font-size: 16px;
+          min-height: 44px;
+        }
+        #btnAdd,
+        #btnSaveEdit {
+          width: 100%;
+          min-height: 48px;
+        }
+      }
     </style>
   </head>
   <body>
@@ -70,23 +114,29 @@
       </div>
 
       <p class="sub">
-        مطاعم = <code>type=restaurant</code> + <code>scope=store</code> (عرض/تسجيل متجر). بقالة = <code>type=market</code> +
-        <code>scope=product</code> (أقسام المنتجات). نفّذ: <code>shared/migration_categories.sql</code>
+        أقسام المنتجات تظهر في لوحة المتجر وصفحة <code>store.html</code> حسب نوع المتجر. أضف أو عدّل من هنا — نفّذ:
+        <code>migration_categories.sql</code> ثم <code>migration_categories_extended_types.sql</code>
       </p>
 
       <div class="card">
         <div class="cat-toolbar">
           <label>
-            النطاق
+            نوع الأقسام
             <select id="scopeType">
-              <option value="restaurant">مطاعم</option>
-              <option value="market">بقالة / أسواق</option>
+              <option value="restaurant|store">🍽️ مطاعم — تصنيف المتجر (تسجيل)</option>
+              <option value="restaurant|product">🍽️ مطاعم — أقسام القائمة/المنتجات</option>
+              <option value="market|product">🛒 سوبرماركت / بقالة</option>
+              <option value="pharmacy|product">💊 صيدليات</option>
+              <option value="services|product">🔧 مزودو الخدمات</option>
+              <option value="transport|product">🚚 شركات النقل</option>
+              <option value="fuel|product">⛽ محطات / غاز</option>
+              <option value="clothing|product">👔 ملابس وأزياء</option>
             </select>
           </label>
           <button type="button" class="btn btn-primary" id="btnReload">تحديث القائمة</button>
         </div>
         <div id="listMsg" class="sub" style="min-height: 1.2em"></div>
-        <div class="cat-table-wrap">
+        <div class="cat-table-wrap erw-table-scroll">
           <table class="cat-table" id="catTable" aria-label="الأقسام">
             <thead>
               <tr>
@@ -158,7 +208,13 @@
         listMsg.textContent = "جارٍ التحميل…";
         tbody.innerHTML = "";
         try {
-          var j = await window.PlatformAPI.api("/api/admin/categories?type=" + encodeURIComponent(scope()));
+          var sp = scopeParts();
+          var j = await window.PlatformAPI.api(
+            "/api/admin/categories?type=" +
+              encodeURIComponent(sp.type) +
+              "&scope=" +
+              encodeURIComponent(sp.scope)
+          );
           var rows = j.categories || [];
           listMsg.textContent = rows.length ? "" : "لا توجد صفوف (أو الجدول غير منشأ).";
           for (var i = 0; i < rows.length; i++) {
@@ -256,7 +312,7 @@
         var name_ar = document.getElementById("newLabel").value.trim();
         var icon = document.getElementById("newIcon").value.trim();
         var sort_order = Number(document.getElementById("newSort").value);
-        var sc = scope() === "market" ? "product" : "store";
+        var sp = scopeParts();
         if (!slug || !name_ar) {
           formMsg.textContent = "أدخل slug والاسم.";
           return;
@@ -265,8 +321,8 @@
           await window.PlatformAPI.api("/api/admin/categories", {
             method: "POST",
             body: {
-              type: scope(),
-              scope: sc,
+              type: sp.type,
+              scope: sp.scope,
               slug: slug,
               name_ar: name_ar,
               icon: icon || undefined,

@@ -46,9 +46,12 @@ app.renderDrivers = function () {
     item.className = "item";
     item.innerHTML =
       "<strong>" + (d.name || "بدون اسم") + "</strong>" +
-      "<div>الجوال: " + (d.phone || "—") + "</div>" +
-      "<div>المركبة: " + (d.car_type || "—") + " | اللوحة: " + (d.plate_number || "—") + "</div>" +
-      "<div>الحالة: " + (d.status || "pending") + "</div>";
+      "<div>رقم الجوال: " + (d.phone || "—") + "</div>" +
+      "<div>تاريخ التسجيل: " + app.fmtWhen(d.created_at) + "</div>" +
+      "<div>نوع الحساب: مندوب</div>" +
+      "<div>حالة الحساب: " + (d.status || "pending") + "</div>" +
+      "<div>آخر نشاط: " + app.fmtWhen(d.updated_at || d.created_at) + "</div>" +
+      "<div>المركبة: " + (d.car_type || "—") + " | اللوحة: " + (d.plate_number || "—") + "</div>";
     var row = document.createElement("div");
     row.className = "row";
     var ds = String(d.status || "").toLowerCase();
@@ -63,13 +66,25 @@ app.renderDrivers = function () {
         try { await app.updateDriver(d.id, "activate-driver"); app.showSuccess("تم تفعيل المندوب"); app.loadDrivers(); } catch (e) { app.showError(e.message || "فشل"); }
       })));
     } else {
-      row.appendChild(app.mkAction("موافقة", "btn-primary", app.safeClick(async function () {
+      row.appendChild(app.mkAction("✅ اعتماد", "btn-primary", app.safeClick(async function () {
         try { await app.updateDriver(d.id, "approve-driver"); app.showSuccess("تمت الموافقة"); app.loadDrivers(); } catch (e) { app.showError(e.message || "فشل"); }
       })));
-      row.appendChild(app.mkAction("رفض", "btn-ghost", app.safeClick(async function () {
+      row.appendChild(app.mkAction("❌ رفض", "btn-ghost", app.safeClick(async function () {
         try { await app.updateDriver(d.id, "reject-driver"); app.showSuccess("تم الرفض"); app.loadDrivers(); } catch (e) { app.showError(e.message || "فشل"); }
       })));
     }
+    row.appendChild(app.mkAction("👁️ عرض التفاصيل", "btn-ghost", app.safeClick(function () {
+      alert(
+        "الاسم: " + (d.name || "—") + "\nالجوال: " + (d.phone || "—") + "\nالحالة: " + (d.status || "pending") + "\nتاريخ التسجيل: " + app.fmtWhen(d.created_at)
+      );
+    })));
+    var waD = document.createElement("a");
+    waD.className = "btn btn-ghost";
+    waD.href = "https://wa.me/" + String(d.phone || "").replace(/\D/g, "").replace(/^05/, "9665").replace(/^5(\d{8})$/, "9665$1");
+    waD.target = "_blank";
+    waD.rel = "noopener";
+    waD.textContent = "📞 تواصل";
+    row.appendChild(waD);
     item.appendChild(row);
     list.appendChild(item);
   });

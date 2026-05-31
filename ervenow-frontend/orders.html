@@ -151,7 +151,11 @@
 
     <script src="/assets/api-config.js"></script>
     <script src="/assets/api.js"></script>
+    <script src="/assets/auth-account-guard.js"></script>
     <script src="/assets/driver-nav.js"></script>
+    <script>
+      void ErvenowAuthGuard.ensureApprovedAccount({ loginUrl: "/driver-login" });
+    </script>
     <script>
       ErvenowDriverNav.mount({
         activeNav: "orders",

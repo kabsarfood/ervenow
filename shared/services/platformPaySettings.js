@@ -13,6 +13,7 @@ const PAY_SETTING_KEYS = Object.freeze([
   "min_topup_amount",
   "max_topup_amount",
   "stcpay_display_number",
+  "wallet_topup_auto_approve",
 ]);
 
 const DEFAULT_PAY_SETTINGS = Object.freeze({
@@ -26,6 +27,7 @@ const DEFAULT_PAY_SETTINGS = Object.freeze({
   min_topup_amount: "30",
   max_topup_amount: "5000",
   stcpay_display_number: String(process.env.ERVENOW_STC_PAY_NUMBER || "0505745650").trim(),
+  wallet_topup_auto_approve: "false",
 });
 
 function isMissingSettingsTable(err) {
@@ -70,6 +72,7 @@ function toPublicPaySettings(map) {
     min_topup_amount: parseNumberSetting(m.min_topup_amount, 30),
     max_topup_amount: parseNumberSetting(m.max_topup_amount, 5000),
     stcpay_display_number: String(m.stcpay_display_number || DEFAULT_PAY_SETTINGS.stcpay_display_number).trim(),
+    wallet_topup_auto_approve: isTruthySetting(m.wallet_topup_auto_approve),
   };
 }
 
@@ -108,6 +111,7 @@ async function getPaySetting(sb, key) {
   if (k === "min_topup_amount") return String(all.min_topup_amount);
   if (k === "max_topup_amount") return String(all.max_topup_amount);
   if (k === "stcpay_display_number") return all.stcpay_display_number;
+  if (k === "wallet_topup_auto_approve") return all.wallet_topup_auto_approve ? "true" : "false";
   return DEFAULT_PAY_SETTINGS[k] ?? null;
 }
 

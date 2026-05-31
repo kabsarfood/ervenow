@@ -283,43 +283,27 @@ router.post("/verify-otp", async (req, res) => {
     if (!code) return fail(res, "أدخل رمز الدخول", 400);
     const digits = toStorageDigits(e164);
 
-    const devBypass = isDevOtpBypassCode(code);
     const mode = otpBackendMode();
-    if (!devBypass) {
-      const checked = await verifyOtpChallenge({
-        sb: req.supabase,
-        mode,
-        scope: OTP_SCOPE.DRIVER_LOGIN,
-        subjectKey: digits,
-        code,
-      });
-      if (!checked.ok) {
-        const lockCase = /قفل|محاولات كثيرة/i.test(String(checked.error || ""));
-        return fail(res, checked.error || "رمز غير صحيح أو منتهي", lockCase ? 429 : 400);
-      }
+    const checked = await verifyOtpChallenge({
+      sb: req.supabase,
+      mode,
+      scope: OTP_SCOPE.DRIVER_LOGIN,
+      subjectKey: digits,
+      code,
+    });
+    if (!checked.ok) {
+      const lockCase = /قفل|محاولات كثيرة/i.test(String(checked.error || ""));
+      return fail(res, checked.error || "رمز غير صحيح أو منتهي", lockCase ? 429 : 400);
     }
 
-    let drv;
-    if (devBypass) {
-      try {
-        drv = await ensureDriverForDevLogin(req.supabase, digits);
-      } catch (devErr) {
-        return fail(res, devErr.message || "تعذّر تجهيز حساب المندوب للتطوير", 400);
-      }
-    } else {
-      const { data, error: dErr } = await req.supabase
-        .from("drivers")
-        .select("*")
-        .eq("phone", digits)
-        .maybeSingle();
-      if (dErr) return fail(res, dErr.message, 400);
-      drv = data;
-      if (!drv) return fail(res, "المندوب غير مسجل", 403);
-    }
-    if (
-      !devBypass &&
-      (String(drv.status || "") !== "approved" || drv.active !== true)
-    ) {
+    const { data: drv, error: dErr } = await req.supabase
+      .from("drivers")
+      .select("*")
+      .eq("phone", digits)
+      .maybeSingle();
+    if (dErr) return fail(res, dErr.message, 400);
+    if (!drv) return fail(res, "المندوب غير مسجل", 403);
+    if (String(drv.status || "") !== "approved" || drv.active !== true) {
       return fail(res, "الحساب بانتظار الموافقة أو موقوف", 403);
     }
 

@@ -6,8 +6,13 @@ const { mapAppRoleToLedgerWalletRole } = require("./ervenowLedgerWallet");
 const { round2 } = require("./operationalWallet");
 const { isLedgerOnlyMode, legacyFinanceDisabledMessage } = require("./financeMode");
 const { isFeatureEnabled, isFeatureAuto, loadFinancialFeatureFlags } = require("./platformFeatureFlags");
-const { listAutoFreezeDashboardAlerts } = require("../services/autoFreeze");
 const { buildDebtPaymentLink } = require("./debtPaymentLink");
+
+/** تجنّب circular dependency مع autoFreeze (يستورد ledgerWallet أيضاً) */
+function getListAutoFreezeDashboardAlerts() {
+  const { listAutoFreezeDashboardAlerts } = require("../services/autoFreeze");
+  return listAutoFreezeDashboardAlerts;
+}
 const { processDebtNotifyFromFinanceSummary } = require("../services/financialDebtNotify");
 
 function isMissingLedgerSchemaError(err) {
@@ -532,8 +537,11 @@ async function getAdminFinanceSummaryFromLedger(sb) {
 
     let financial_alerts = ledgerAlerts;
     if (isFeatureAuto(flags.auto_freeze)) {
-      const freezeAlerts = await listAutoFreezeDashboardAlerts(sb);
-      financial_alerts = [...freezeAlerts, ...ledgerAlerts].slice(0, 40);
+      const listFreezeAlerts = getListAutoFreezeDashboardAlerts();
+      if (typeof listFreezeAlerts === "function") {
+        const freezeAlerts = await listFreezeAlerts(sb);
+        financial_alerts = [...freezeAlerts, ...ledgerAlerts].slice(0, 40);
+      }
     }
 
     if (alertsEnabled || isFeatureAuto(flags.auto_freeze)) {

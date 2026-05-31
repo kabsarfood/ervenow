@@ -5,11 +5,13 @@
 const { createServiceClient } = require("./config/supabase");
 const { isCategoriesTableMissing } = require("./categoriesDb");
 
+const { PRODUCT_CATALOG_TYPE_SET } = require("./productCategoryTypes");
+
 function normalizeUsageType(t) {
   const x = String(t || "")
     .trim()
     .toLowerCase();
-  if (x === "restaurant" || x === "market") return x;
+  if (x === "restaurant" || x === "market" || PRODUCT_CATALOG_TYPE_SET.has(x)) return x;
   return null;
 }
 

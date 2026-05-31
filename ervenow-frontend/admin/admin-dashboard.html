@@ -26,7 +26,10 @@
         <nav class="dash-site-header__nav" aria-label="التنقل">
           <div class="dash-site-header__links">
             <a class="dash-site-header__link" href="/">الرئيسية</a>
-            <a class="dash-site-header__link" href="/dashboard">لوحة الزائر</a>
+            <a class="dash-site-header__link admin-nav-pay" href="#" id="adminNavErvenowPay" style="display:none" title="ERVENOW PAY">
+              🔥 ERVENOW PAY
+              <span class="admin-nav-pay__badge zero" id="navTopupPendingBadge" hidden>0</span>
+            </a>
             <a class="dash-site-header__link is-active" href="/admin-dashboard" aria-current="page">لوحة التحكم</a>
           </div>
         </nav>
@@ -38,6 +41,7 @@
           </select>
           <a href="/admin/branding" class="dash-site-header__link admin-header-tool-link" title="الهوية البصرية">🎨 <span class="hide-mobile">الهوية</span></a>
           <a href="/admin/categories" class="dash-site-header__link admin-header-tool-link" title="الأقسام">📂 <span class="hide-mobile">الأقسام</span></a>
+          <a href="#" class="dash-site-header__link admin-header-tool-link" id="adminHeaderOffers" title="عروض لوحة الزائر">🎁 <span class="hide-mobile">العروض</span></a>
           <a href="/admin/withdrawals" class="dash-site-header__link admin-header-tool-link" title="السحب">💸 <span class="hide-mobile">السحب</span></a>
           <button type="button" class="dash-site-header__link admin-header-tool-link" id="siteMaintenanceBtn" title="وضع الصيانة للزوار">
             ⏸ <span class="hide-mobile">الموقع</span>
@@ -61,6 +65,8 @@
                 <a class="admin-hero-chip" href="#liveDashboard">📊 التشغيل الحي</a>
                 <a class="admin-hero-chip" href="#" data-panel-jump="panelOrders">🧾 الطلبات</a>
                 <a class="admin-hero-chip" href="#" data-panel-jump="panelStores">🏪 المتاجر</a>
+                <a class="admin-hero-chip" href="#" data-panel-jump="panelOffers">🎁 العروض</a>
+                <a class="admin-hero-chip" href="#" data-panel-jump="panelErvenowPay" id="adminHeroPayChip" style="display:none">🔥 ERVENOW PAY</a>
                 <a class="admin-hero-chip" href="/dashboard">👤 لوحة الزائر</a>
               </div>
             </div>
@@ -259,8 +265,15 @@
             🏪 المتاجر
             <span class="panel-badge zero" id="badgeStores">0</span>
           </button>
-          <button type="button" class="panel-btn panel-btn--soon" disabled title="قريباً">
+          <button type="button" class="panel-btn" data-panel="panelApprovals" id="panelApprovalsBtn">
+            ✅ موافقات التسجيل
+            <span class="panel-badge zero" id="badgeApprovals">0</span>
+          </button>
+          <button type="button" class="panel-btn" data-panel="panelServices" id="panelServicesBtn" style="display:none">
             🧑‍🔧 الخدمات
+          </button>
+          <button type="button" class="panel-btn" data-panel="panelOffers" id="panelOffersBtn">
+            🎁 العروض
           </button>
           <button type="button" class="panel-btn" data-panel="panelNotifications">
             📡 الإشعارات
@@ -348,6 +361,49 @@
         <div id="customersList"></div>
       </div>
 
+      <div class="card admin-panel" id="panelApprovals">
+        <div class="panel-toolbar">
+          <strong class="panel-title">لوحة موافقات التسجيل</strong>
+          <div class="panel-toolbar-actions">
+            <select id="approvalsFilterType" class="search-input" aria-label="فلتر النوع">
+              <option value="all">كل الأنواع</option>
+              <option value="customer">متسوق</option>
+              <option value="store">متجر</option>
+              <option value="service">مزود خدمة</option>
+              <option value="driver">مندوب</option>
+            </select>
+            <select id="approvalsFilterStatus" class="search-input" aria-label="فلتر الحالة">
+              <option value="all">كل الحالات</option>
+              <option value="new">جديد (48 ساعة)</option>
+              <option value="pending">قيد المراجعة</option>
+              <option value="approved">معتمد</option>
+              <option value="rejected">مرفوض</option>
+            </select>
+            <input id="searchApprovals" class="search-input" placeholder="بحث: اسم / جوال" />
+            <button class="btn btn-primary" id="reloadApprovalsBtn" type="button">تحديث</button>
+          </div>
+        </div>
+        <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 14px">
+          <div class="card" style="margin: 0; padding: 12px">
+            <div class="sub">طلبات جديدة</div>
+            <div class="stat" id="approvalsStatNew">0</div>
+          </div>
+          <div class="card" style="margin: 0; padding: 12px">
+            <div class="sub">قيد المراجعة</div>
+            <div class="stat" id="approvalsStatReview">0</div>
+          </div>
+          <div class="card" style="margin: 0; padding: 12px">
+            <div class="sub">معتمدة</div>
+            <div class="stat" id="approvalsStatApproved">0</div>
+          </div>
+          <div class="card" style="margin: 0; padding: 12px">
+            <div class="sub">مرفوضة</div>
+            <div class="stat" id="approvalsStatRejected">0</div>
+          </div>
+        </div>
+        <div id="approvalsList"></div>
+      </div>
+
       <div class="card admin-panel" id="panelStores">
         <div class="panel-toolbar">
           <strong class="panel-title">بوابة المتاجر (قبول/رفض)</strong>
@@ -394,6 +450,28 @@
           <p class="sub">حسابات الأدمن المحدودة — قبول / حظر / خروج</p>
           <button type="button" class="btn btn-ghost" id="openAdminAccountsBtn">فتح إدارة الأدمنات</button>
         </div>
+      </div>
+
+      <div class="card admin-panel" id="panelOffers">
+        <div class="panel-toolbar">
+          <strong class="panel-title">🎁 عروض لوحة الزائر</strong>
+          <div class="panel-toolbar-actions">
+            <button type="button" class="btn btn-primary" id="reloadOffersBtn">تحديث</button>
+            <button type="button" class="btn btn-ghost" id="saveOffersBtn">حفظ العروض</button>
+          </div>
+        </div>
+        <p class="ledger-tx-updated" id="offersPanelHint">—</p>
+        <div id="offersEditor"></div>
+      </div>
+
+      <div class="card admin-panel" id="panelServices">
+        <div class="panel-toolbar">
+          <strong class="panel-title">🧑‍🔧 مزودو الخدمات</strong>
+          <div class="panel-toolbar-actions">
+            <button type="button" class="btn btn-primary" id="reloadServicesBtn">تحديث</button>
+          </div>
+        </div>
+        <div id="servicesProvidersList"></div>
       </div>
 
       <div class="card admin-panel" id="panelErvenowPay">
@@ -604,6 +682,47 @@
       </div>
     </div>
 
+    <div id="storeSetupBackdrop" class="exec-modal-backdrop" hidden>
+      <div class="exec-modal store-setup-modal" role="dialog" aria-labelledby="storeSetupTitle">
+        <h3 id="storeSetupTitle">تجهيز صفحة المتجر</h3>
+        <p class="exec-modal-sub" id="storeSetupSubtitle">
+          إعداد الصفحة نيابة عن التاجر — شعار، غلاف، نبذة، ثم الاعتماد على الموقع.
+        </p>
+        <p class="exec-modal-sub" id="storeSetupLinks" style="margin-top: 0"></p>
+        <form id="storeSetupForm" class="store-setup-form">
+          <input type="hidden" id="storeSetupId" />
+          <label>اسم المتجر <input type="text" id="storeSetupName" required /></label>
+          <label>الجوال <input type="text" id="storeSetupPhone" readonly dir="ltr" /></label>
+          <label>نوع المتجر
+            <select id="storeSetupType">
+              <option value="restaurant">مطعم</option>
+              <option value="pharmacy">صيدلية</option>
+              <option value="supermarket">سوبرماركت</option>
+              <option value="minimarket">بقالة</option>
+              <option value="other">أخرى</option>
+            </select>
+          </label>
+          <label id="storeSetupCatWrap">
+            <span id="storeSetupCatLabel">تصنيف المطعم / القسم</span>
+            <select id="storeSetupCategory" aria-label="تصنيف المتجر"></select>
+          </label>
+          <label>وصف الموقع (نص) <input type="text" id="storeSetupLocation" /></label>
+          <label>العنوان <input type="text" id="storeSetupAddress" /></label>
+          <label>نبذة للزوار <textarea id="storeSetupBio" rows="3" placeholder="مثال: وجبات منزلية، توصيل سريع…"></textarea></label>
+          <div class="store-setup-media">
+            <label>شعار المتجر <input type="file" id="storeSetupLogo" accept="image/*" /></label>
+            <label>صورة الغلاف <input type="file" id="storeSetupBanner" accept="image/*" /></label>
+          </div>
+          <p class="sub" id="storeSetupPreview" style="margin: 0"></p>
+        </form>
+        <div class="exec-modal-foot store-setup-foot">
+          <button type="button" class="exec-btn exec-btn--ghost" id="storeSetupCloseBtn">إلغاء</button>
+          <button type="button" class="btn btn-ghost" id="storeSetupSaveBtn">حفظ التعديلات</button>
+          <button type="button" class="btn btn-primary" id="storeSetupSaveApproveBtn">حفظ واعتماد</button>
+        </div>
+      </div>
+    </div>
+
     <div id="execModalBackdrop" class="exec-modal-backdrop" hidden>
       <div class="exec-modal" role="dialog" aria-labelledby="execModalTitle">
         <h3 id="execModalTitle">تعيين مندوب</h3>
@@ -622,6 +741,7 @@
 
     <script src="/assets/api-config.js"></script>
     <script src="/assets/api.js"></script>
+    <script src="/assets/compressImage.js"></script>
     <script src="https://cdn.socket.io/4.8.1/socket.io.min.js" crossorigin="anonymous"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script type="module" src="/admin/admin-dashboard.js"></script>

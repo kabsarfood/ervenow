@@ -66,18 +66,46 @@ app.renderCustomers = function () {
     item.className = "item";
     var status = String(u.status || "active").toLowerCase();
     var blocked = status === "blocked";
+    var pending = status === "pending";
+    var rejected = status === "rejected";
+    var stLabel = blocked ? "محظور" : pending ? "بانتظار الموافقة" : rejected ? "مرفوض" : "معتمد";
     item.innerHTML =
       "<strong>" + (u.name || "زائر المنصة") + "</strong>" +
-      "<div>الجوال: " + (u.phone || "—") + "</div>" +
-      "<div>الحالة: " + (blocked ? "محظور" : "نشط") + "</div>";
+      "<div>رقم الجوال: " + (u.phone || "—") + "</div>" +
+      "<div>تاريخ التسجيل: " + app.fmtWhen(u.created_at) + "</div>" +
+      "<div>نوع الحساب: متسوق</div>" +
+      "<div>حالة الحساب: " + stLabel + "</div>" +
+      "<div>آخر نشاط: " + app.fmtWhen(u.updated_at || u.created_at) + "</div>";
     var row = document.createElement("div");
     row.className = "row";
-    row.appendChild(app.mkAction("حظر", "btn-ghost", app.safeClick(async function () {
-      try { await app.PlatformAPI.api("/api/admin/block-customer", { method: "POST", body: { id: u.id } }); app.showSuccess("تم حظر حساب زائر المنصة"); app.loadCustomers(); } catch (e) { app.showError(e.message || "فشل"); }
+    if (pending) {
+      row.appendChild(app.mkAction("✅ اعتماد", "btn-primary", app.safeClick(async function () {
+        try { await app.PlatformAPI.api("/api/admin/activate-customer", { method: "POST", body: { id: u.id } }); app.showSuccess("تم اعتماد المتسوق"); app.loadCustomers(); } catch (e) { app.showError(e.message || "فشل"); }
+      })));
+      row.appendChild(app.mkAction("❌ رفض", "btn-ghost", app.safeClick(async function () {
+        try { await app.PlatformAPI.api("/api/admin/reject-user", { method: "POST", body: { id: u.id } }); app.showSuccess("تم الرفض"); app.loadCustomers(); } catch (e) { app.showError(e.message || "فشل"); }
+      })));
+    } else if (!blocked && !rejected) {
+      row.appendChild(app.mkAction("حظر", "btn-ghost", app.safeClick(async function () {
+        try { await app.PlatformAPI.api("/api/admin/block-customer", { method: "POST", body: { id: u.id } }); app.showSuccess("تم حظر حساب زائر المنصة"); app.loadCustomers(); } catch (e) { app.showError(e.message || "فشل"); }
+      })));
+    } else {
+      row.appendChild(app.mkAction("تفعيل", "btn-primary", app.safeClick(async function () {
+        try { await app.PlatformAPI.api("/api/admin/activate-customer", { method: "POST", body: { id: u.id } }); app.showSuccess("تم تفعيل حساب زائر المنصة"); app.loadCustomers(); } catch (e) { app.showError(e.message || "فشل"); }
+      })));
+    }
+    row.appendChild(app.mkAction("👁️ عرض التفاصيل", "btn-ghost", app.safeClick(function () {
+      alert(
+        "الاسم: " + (u.name || "—") + "\nالجوال: " + (u.phone || "—") + "\nالحالة: " + stLabel + "\nتاريخ التسجيل: " + app.fmtWhen(u.created_at)
+      );
     })));
-    row.appendChild(app.mkAction("تفعيل", "btn-primary", app.safeClick(async function () {
-      try { await app.PlatformAPI.api("/api/admin/activate-customer", { method: "POST", body: { id: u.id } }); app.showSuccess("تم تفعيل حساب زائر المنصة"); app.loadCustomers(); } catch (e) { app.showError(e.message || "فشل"); }
-    })));
+    var wa = document.createElement("a");
+    wa.className = "btn btn-ghost";
+    wa.href = "https://wa.me/" + String(u.phone || "").replace(/\D/g, "").replace(/^05/, "9665").replace(/^5(\d{8})$/, "9665$1");
+    wa.target = "_blank";
+    wa.rel = "noopener";
+    wa.textContent = "📞 تواصل";
+    row.appendChild(wa);
     item.appendChild(row);
     list.appendChild(item);
   });
@@ -112,11 +140,16 @@ app.renderStores = function () {
     item.className = "item";
     item.innerHTML =
       "<strong>" + (s.name || "—") + "</strong>" +
-      "<div>الجوال: " + (s.phone || "—") + "</div>" +
-      "<div>النوع: " + (s.type || "—") + "</div>" +
-      "<div>الحالة: " + (s.status || "pending") + "</div>";
+      "<div>رقم الجوال: " + (s.phone || "—") + "</div>" +
+      "<div>تاريخ التسجيل: " + app.fmtWhen(s.created_at) + "</div>" +
+      "<div>نوع الحساب: " + (s.type || "متجر") + "</div>" +
+      "<div>حالة الحساب: " + (s.status || "pending") + "</div>" +
+      "<div>آخر نشاط: " + app.fmtWhen(s.updated_at || s.created_at) + "</div>";
     var row = document.createElement("div");
     row.className = "row";
+    row.appendChild(app.mkAction("تعديل", "btn-ghost", app.safeClick(function () {
+      app.openStoreSetup(s.id);
+    })));
     row.appendChild(app.mkAction("قبول", "btn-primary", app.safeClick(async function () {
       try {
         var res = await app.PlatformAPI.api("/api/admin/store-requests/" + encodeURIComponent(s.id), {
@@ -154,6 +187,181 @@ app.renderStores = function () {
   });
   if (!rows.length) list.innerHTML = '<div class="item">لا توجد طلبات متاجر مطابقة</div>';
 }
+
+var __storeSetupRestaurantOptions = [];
+
+app.closeStoreSetup = function () {
+  var bd = document.getElementById("storeSetupBackdrop");
+  if (bd) bd.hidden = true;
+};
+
+app.fillStoreSetupCategorySelect = function (type, current) {
+  var sel = document.getElementById("storeSetupCategory");
+  var wrap = document.getElementById("storeSetupCatWrap");
+  if (!sel || !wrap) return;
+  var t = String(type || "").toLowerCase();
+  sel.innerHTML = '<option value="">— بدون —</option>';
+  var lbl = document.getElementById("storeSetupCatLabel");
+  if (lbl) lbl.textContent = t === "restaurant" ? "تصنيف المطعم" : "قسم البقالة / المتجر";
+  if (t === "restaurant") {
+    __storeSetupRestaurantOptions.forEach(function (o) {
+      var opt = document.createElement("option");
+      opt.value = o.slug;
+      opt.textContent = (o.label || o.slug);
+      sel.appendChild(opt);
+    });
+  } else {
+    var marketOpts = [
+      ["vegetables", "خضار وفواكه"],
+      ["meat", "لحوم"],
+      ["dairy", "ألبان"],
+      ["bakery", "مخبوزات"],
+      ["drinks", "مشروبات"],
+      ["snacks", "سناكات"],
+      ["frozen", "مجمدات"],
+      ["cleaning", "منظفات"],
+    ];
+    marketOpts.forEach(function (pair) {
+      var opt = document.createElement("option");
+      opt.value = pair[0];
+      opt.textContent = pair[1];
+      sel.appendChild(opt);
+    });
+  }
+  if (current) sel.value = String(current);
+};
+
+app.openStoreSetup = async function (storeId) {
+  var bd = document.getElementById("storeSetupBackdrop");
+  if (!bd || !storeId) return;
+  try {
+    var j = await app.PlatformAPI.api("/api/admin/store-requests/" + encodeURIComponent(storeId) + "/setup");
+    var st = j.store || {};
+    __storeSetupRestaurantOptions = j.restaurant_category_options || [];
+    document.getElementById("storeSetupId").value = st.id || storeId;
+    document.getElementById("storeSetupName").value = st.name || "";
+    document.getElementById("storeSetupPhone").value = st.phone || "";
+    document.getElementById("storeSetupType").value = st.type || "restaurant";
+    document.getElementById("storeSetupLocation").value = st.location_text || "";
+    document.getElementById("storeSetupAddress").value = st.address || "";
+    document.getElementById("storeSetupBio").value = (j.merchant_hub && j.merchant_hub.bio) || "";
+    var sub = document.getElementById("storeSetupSubtitle");
+    if (sub) {
+      sub.textContent =
+        "الحالة: " +
+        (st.status || "pending") +
+        " — يمكنك إعداد الصفحة للتاجر غير المتمرس ثم الاعتماد.";
+    }
+    var links = document.getElementById("storeSetupLinks");
+    if (links) {
+      var pub = j.public_store_url || (st.id ? "/store.html?id=" + encodeURIComponent(st.id) : "/stores");
+      links.innerHTML =
+        '<a href="' +
+        pub +
+        '" target="_blank" rel="noopener">معاينة صفحة العملاء</a> · ' +
+        '<a href="/store-dashboard" target="_blank" rel="noopener">لوحة التاجر</a>';
+    }
+    var prev = document.getElementById("storeSetupPreview");
+    if (prev) {
+      var bits = [];
+      if (st.logo_url) bits.push("شعار: مرفوع");
+      if (j.merchant_hub && j.merchant_hub.banner_url) bits.push("غلاف: مرفوع");
+      prev.textContent = bits.length ? bits.join(" · ") : "لم يُرفع شعار/غلاف بعد — أضفهما أدناه.";
+    }
+    app.fillStoreSetupCategorySelect(st.type, st.category || "");
+    var approveBtn = document.getElementById("storeSetupSaveApproveBtn");
+    if (approveBtn) {
+      approveBtn.style.display =
+        String(st.status || "").toLowerCase() === "approved" ? "none" : "inline-flex";
+    }
+    document.getElementById("storeSetupLogo").value = "";
+    document.getElementById("storeSetupBanner").value = "";
+    bd.hidden = false;
+  } catch (e) {
+    app.showError(e.message || "تعذر تحميل بيانات المتجر");
+  }
+};
+
+app.saveStoreSetup = async function (approveAfter) {
+  var id = document.getElementById("storeSetupId").value.trim();
+  if (!id) return;
+  var body = {
+    name: document.getElementById("storeSetupName").value.trim(),
+    type: document.getElementById("storeSetupType").value,
+    location_text: document.getElementById("storeSetupLocation").value.trim(),
+    address: document.getElementById("storeSetupAddress").value.trim(),
+    bio: document.getElementById("storeSetupBio").value.trim(),
+  };
+  var cat = document.getElementById("storeSetupCategory").value.trim();
+  if (body.type === "restaurant") body.restaurant_category = cat || null;
+  else body.category = cat || null;
+  if (approveAfter) body.approve = true;
+
+  var logoF = document.getElementById("storeSetupLogo").files && document.getElementById("storeSetupLogo").files[0];
+  var bannerF =
+    document.getElementById("storeSetupBanner").files && document.getElementById("storeSetupBanner").files[0];
+  try {
+    if (logoF && window.compressImageToDataUrl) {
+      body.logo_base64 = await window.compressImageToDataUrl(logoF, 0.72, 1280);
+      body.logo_file_name = logoF.name || "logo.jpg";
+    } else if (logoF) {
+      body.logo_base64 = await new Promise(function (res, rej) {
+        var r = new FileReader();
+        r.onload = function () {
+          res(r.result);
+        };
+        r.onerror = rej;
+        r.readAsDataURL(logoF);
+      });
+      body.logo_file_name = logoF.name || "logo.jpg";
+    }
+    if (bannerF && window.compressImageToDataUrl) {
+      body.banner_base64 = await window.compressImageToDataUrl(bannerF, 0.72, 1600);
+      body.banner_file_name = bannerF.name || "banner.jpg";
+    } else if (bannerF) {
+      body.banner_base64 = await new Promise(function (res, rej) {
+        var r = new FileReader();
+        r.onload = function () {
+          res(r.result);
+        };
+        r.onerror = rej;
+        r.readAsDataURL(bannerF);
+      });
+      body.banner_file_name = bannerF.name || "banner.jpg";
+    }
+    var j = await app.PlatformAPI.api("/api/admin/store-requests/" + encodeURIComponent(id) + "/setup", {
+      method: "PUT",
+      body: body,
+    });
+    app.showSuccess(j.message || (approveAfter ? "تم الحفظ والاعتماد" : "تم الحفظ"));
+    app.closeStoreSetup();
+    app.loadStores();
+  } catch (e) {
+    app.showError(e.message || "فشل الحفظ");
+  }
+};
+
+(function wireStoreSetupModal() {
+  var bd = document.getElementById("storeSetupBackdrop");
+  if (!bd) return;
+  document.getElementById("storeSetupCloseBtn").onclick = app.closeStoreSetup;
+  bd.addEventListener("click", function (ev) {
+    if (ev.target === bd) app.closeStoreSetup();
+  });
+  document.getElementById("storeSetupSaveBtn").onclick = app.safeClick(function () {
+    return app.saveStoreSetup(false);
+  });
+  document.getElementById("storeSetupSaveApproveBtn").onclick = app.safeClick(function () {
+    if (!confirm("حفظ الصفحة واعتماد المتجر على الموقع؟")) return;
+    return app.saveStoreSetup(true);
+  });
+  var typeEl = document.getElementById("storeSetupType");
+  if (typeEl) {
+    typeEl.onchange = function () {
+      app.fillStoreSetupCategorySelect(typeEl.value, "");
+    };
+  }
+})();
 
 app.loadJobs = async function () {
   try {

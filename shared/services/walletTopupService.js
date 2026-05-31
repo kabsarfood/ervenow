@@ -115,10 +115,39 @@ async function createTopupRequest(sb, appUser, body) {
     throw error;
   }
 
-  return {
+  const base = {
     request: data,
-    message: "تم إرسال طلب الشحن — سيتم إرسال كود واتساب بعد موافقة الإدارة",
     stcpay_display_number: settings.stcpay_display_number,
+  };
+
+  if (settings.wallet_topup_auto_approve) {
+    try {
+      const approval = await approveTopupRequest(sb, data.id, "auto");
+      const redeem = await redeemTopupCode(sb, appUser, approval.code);
+      return {
+        ...base,
+        auto_fulfilled: true,
+        approved: true,
+        code: approval.code,
+        amount_credited: Number(redeem.amount) || amount,
+        whatsapp_sent: approval.whatsapp_sent,
+        message: `تم شحن ${(Number(redeem.amount) || amount).toFixed(2)} ر.س في محفظتك تلقائياً ✅`,
+      };
+    } catch (autoErr) {
+      return {
+        ...base,
+        auto_fulfilled: false,
+        message:
+          "تم إرسال طلب الشحن — تعذّر الشحن التلقائي، ستراجعه الإدارة (" +
+          String(autoErr.message || autoErr) +
+          ")",
+      };
+    }
+  }
+
+  return {
+    ...base,
+    message: "تم إرسال طلب الشحن — سيتم إرسال كود واتساب بعد موافقة الإدارة",
   };
 }
 

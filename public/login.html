@@ -520,11 +520,6 @@
             autocomplete="tel-national"
           />
 
-          <div class="auth-dev-panel" id="authDevPanel" aria-label="وضع التطوير">
-            <p class="auth-dev-panel__label">وضع التطوير</p>
-            <button type="button" class="auth-dev-direct" id="authDevDirectBtn">_ الدخول المباشر</button>
-          </div>
-
           <div class="auth-code-group" id="loginCodeGroup" hidden>
             <label for="otp" style="margin-top: 16px">رمز واتساب</label>
             <input
@@ -748,7 +743,6 @@
     <script src="/assets/payoutRegistration.js"></script>
     <script src="/assets/api.js"></script>
     <script src="/assets/auth-otp-flow.js"></script>
-    <script src="/assets/auth-dev-direct.js"></script>
     <script>
       function toE164(v) {
         var d = String(v || "").replace(/\D/g, "");
@@ -1207,6 +1201,14 @@
 
       function mapOtpError(msg) {
         var m = String(msg || "");
+        if (m.indexOf("غير مسجّل") !== -1 || m.indexOf("not_registered") !== -1) {
+          return "رقم الجوال غير مسجّل — استخدم «إنشاء حساب» أولاً.";
+        }
+        if (m.indexOf("بانتظار موافقة") !== -1) {
+          setTimeout(function () {
+            window.location.href = "/pending-approval.html";
+          }, 900);
+        }
         if (m.indexOf("منتهي") !== -1 || m.indexOf("غير صحيح") !== -1) {
           return "رمز واتساب غير صحيح أو منتهي. صلاحية الرمز 5 دقائق.";
         }
@@ -1418,6 +1420,21 @@
             show("فشل التحقق", false);
             throw new Error("verify_failed");
           }
+
+          if (res.pending_approval || (res.user && String(res.user.status || "").toLowerCase() === "pending")) {
+            try {
+              localStorage.removeItem("token");
+              localStorage.removeItem("userId");
+              localStorage.removeItem("userPhone");
+            } catch (lsClr) {}
+            window.PlatformAPI.setToken("");
+            show(res.message || "تم استلام طلبك — بانتظار موافقة الإدارة", true);
+            setTimeout(function () {
+              window.location.href = "/pending-approval.html";
+            }, 1200);
+            return;
+          }
+
           var token = res.token;
           if (!token) {
             show("فشل التحقق", false);
@@ -1549,16 +1566,6 @@
         codeId: "otp",
         codeGroupId: "loginCodeGroup",
         btnId: "authOtpBtn",
-        devDirectBtnId: "authDevDirectBtn",
-        onDevCodeStep: function () {
-          show("أدخل رمز الدخول (مثال 1977 في وضع التطوير) ثم اضغط تسجيل الدخول.", true);
-        },
-        onDevCodeReady: function (codeEl) {
-          var v = String((codeEl && codeEl.value) || "").trim();
-          if (v === "1977" && window.loginOtpFlow && loginOtpFlow.isOtpSent && loginOtpFlow.isOtpSent()) {
-            document.getElementById("authOtpBtn").click();
-          }
-        },
         introId: "authFormIntro",
         introSend: function () {
           return isRegisterMode()
@@ -1596,9 +1603,6 @@
         onSend: runLoginSendOtp,
         onVerify: runLoginVerify,
       });
-      if (window.ErvenowAuthDevDirect) {
-        ErvenowAuthDevDirect.initDevDirectButton("authDevDirectBtn");
-      }
     </script>
   </body>
 </html>

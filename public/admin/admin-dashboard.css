@@ -1433,3 +1433,57 @@ select {
 .admin-site-header #filter-ui .dash-site-header__link span {
   color: inherit !important;
 }
+
+.store-setup-modal {
+  max-width: min(520px, 96vw);
+  max-height: min(92vh, 900px);
+  overflow-y: auto;
+}
+.store-setup-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 10px;
+}
+.store-setup-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-weight: 700;
+  font-size: 0.88rem;
+}
+.store-setup-form input,
+.store-setup-form select,
+.store-setup-form textarea {
+  font: inherit;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  min-height: 44px;
+}
+.store-setup-form textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+.store-setup-media {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.store-setup-foot {
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+.store-setup-foot .btn,
+.store-setup-foot .exec-btn {
+  min-height: 44px;
+}
+@media (max-width: 640px) {
+  .store-setup-media {
+    grid-template-columns: 1fr;
+  }
+  .store-setup-foot .btn {
+    flex: 1 1 100%;
+  }
+}

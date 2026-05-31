@@ -16,13 +16,25 @@
         links.push({ key: "my_orders", href: "/my-orders", label: "طلباتي" });
       }
     }
-    var controlHref = "/admin-login";
-    if (r === "admin" && opts.authenticated) controlHref = "/admin-dashboard";
-    links.push({
-      key: "control",
-      href: controlHref,
-      label: "لوحة التحكم",
-    });
+    if (r === "admin" && opts.authenticated) {
+      links.push({
+        key: "control",
+        href: "/admin-dashboard",
+        label: "لوحة التحكم",
+      });
+    } else if (r === "driver" && opts.authenticated) {
+      links.push({
+        key: "track",
+        href: "/driver-app",
+        label: "تتبع الحي",
+      });
+    } else {
+      links.push({
+        key: "track",
+        href: "/track",
+        label: "تتبع الحي",
+      });
+    }
     if (!opts.authenticated) {
       links.push({
         key: "login",
@@ -250,6 +262,21 @@
           );
         })
         .join("");
+    }
+    var controlMenu = document.getElementById("lpNavControlMenu");
+    if (controlMenu) {
+      var extra = buildNavLinks(role, opts).filter(function (l) {
+        return l.key === "track" || l.key === "control";
+      })[0];
+      if (extra) {
+        controlMenu.href = extra.href;
+        controlMenu.setAttribute("aria-label", extra.label);
+        controlMenu.setAttribute("data-nav", extra.key);
+        var ic = controlMenu.querySelector(".lp-dd-ic");
+        if (ic) ic.textContent = extra.key === "track" ? "📍" : "🔒";
+        var txt = controlMenu.querySelector(".lp-dd-link__text");
+        if (txt) txt.textContent = extra.label;
+      }
     }
   }
 

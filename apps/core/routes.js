@@ -24,8 +24,12 @@ const {
   pickDefaultDestination,
 } = require("../../shared/utils/loginDestinations");
 const { accessFlagsForRole } = require("../../shared/utils/platformAccessPolicy");
-const { isDevOtpBypassCode } = require("../../shared/utils/devOtpBypass");
 const { canonicalPhoneDigits, findUserByPhone } = require("../../shared/utils/userPhoneLookup");
+const {
+  isUserAccountApproved,
+  isUserAccountPending,
+  accountApprovedFlag,
+} = require("../../shared/utils/accountApproval");
 
 const router = express.Router();
 const OTP_TTL_MS = 5 * 60 * 1000;
@@ -280,9 +284,10 @@ async function upsertDriverByPhone(
     ...(trimmedDistrict && role === "service" ? { service_district: trimmedDistrict } : {}),
     ...(applyVehicle ? serviceVehicle : {}),
   };
+  const initialStatus = role === "admin" ? "active" : "pending";
   const withStatusInsert = await sb
     .from("users")
-    .insert({ ...insertRow, status: "active" })
+    .insert({ ...insertRow, status: initialStatus })
     .select()
     .single();
   if (!withStatusInsert.error) return withStatusInsert;
@@ -293,7 +298,7 @@ async function upsertDriverByPhone(
     delete insertNoVehicle.service_vehicle_model;
     const retryVehicle = await sb
       .from("users")
-      .insert({ ...insertNoVehicle, status: "active" })
+      .insert({ ...insertNoVehicle, status: initialStatus })
       .select()
       .single();
     if (!retryVehicle.error) return retryVehicle;
@@ -306,7 +311,7 @@ async function upsertDriverByPhone(
     const { name: _drop, ...insertNoName } = insertRow;
     const retry = await sb
       .from("users")
-      .insert({ ...insertNoName, status: "active" })
+      .insert({ ...insertNoName, status: initialStatus })
       .select()
       .single();
     if (!retry.error) return retry;
@@ -357,6 +362,19 @@ router.get("/platform-branding", async (_req, res) => {
     const settings = await platformBranding.loadBranding(sb);
     res.set("Cache-Control", "public, max-age=30");
     return ok(res, { settings });
+  } catch (e) {
+    return fail(res, e.message || String(e), 500);
+  }
+});
+
+const platformOffers = require("../../shared/utils/platformOffersStore");
+
+router.get("/platform-offers", async (_req, res) => {
+  try {
+    const sb = createServiceClient();
+    const offers = await platformOffers.loadOffers(sb);
+    res.set("Cache-Control", "public, max-age=30");
+    return ok(res, { offers });
   } catch (e) {
     return fail(res, e.message || String(e), 500);
   }
@@ -492,9 +510,8 @@ router.post("/verify-otp", async (req, res) => {
     }
 
     const digits = canonicalPhoneDigits(toStorageDigits(e164));
-    const devBypass = isDevOtpBypassCode(codeIn);
 
-    if (wantRole === "admin" && !devBypass) {
+    if (wantRole === "admin") {
       if (!isAllowedAdminPhoneDigits(digits)) {
         return fail(res, "غير مصرح لهذا الرقم بدخول لوحة الإدارة", 403);
       }
@@ -505,43 +522,37 @@ router.post("/verify-otp", async (req, res) => {
     const sbOtp = mode === "supabase" ? createServiceClient() : null;
     const sbEarly = createServiceClient();
 
-    let existingRole = null;
+    let existingUser = null;
     if (sbEarly) {
-      const exFound = await findUserByPhone(sbEarly, digits, "role, status");
+      const exFound = await findUserByPhone(sbEarly, digits, "id, role, status, phone, name, service_type");
       if (!exFound.error && exFound.data) {
         if (String(exFound.data.status || "").toLowerCase() === "blocked") {
           return fail(res, "الحساب محظور من الإدارة", 403);
         }
-        existingRole = String(exFound.data.role || "").toLowerCase();
+        existingUser = exFound.data;
       }
     }
+    const existingRole = existingUser ? String(existingUser.role || "").toLowerCase() : null;
 
     const STAFF_LOGIN_ROLES = new Set(["admin", "driver", "merchant", "restaurant", "service"]);
-    let otpPassed = false;
-    if (devBypass) {
-      if (wantRole === "admin" || wantRole === "driver") {
-        otpPassed = true;
-      } else if (loginOnly) {
-        otpPassed = true;
-      } else if (wantRole === "customer" || STAFF_LOGIN_ROLES.has(wantRole)) {
-        otpPassed = true;
-      }
+    const checked = await verifyOtpChallenge({
+      sb: sbOtp,
+      mode,
+      scope: OTP_SCOPE.CORE_LOGIN,
+      subjectKey: key,
+      code: codeIn,
+    });
+    if (!checked.ok) {
+      const lockCase = /قفل|محاولات كثيرة/i.test(String(checked.error || ""));
+      return fail(res, checked.error || "رمز واتساب غير صحيح أو منتهي", lockCase ? 429 : 400, {
+        attempts_remaining: checked.attemptsRemaining,
+      });
     }
 
-    if (!otpPassed) {
-      const checked = await verifyOtpChallenge({
-        sb: sbOtp,
-        mode,
-        scope: OTP_SCOPE.CORE_LOGIN,
-        subjectKey: key,
-        code: codeIn,
+    if (loginOnly && !existingUser) {
+      return fail(res, "رقم الجوال غير مسجّل. أنشئ حساباً من صفحة التسجيل أولاً.", 403, {
+        not_registered: true,
       });
-      if (!checked.ok) {
-        const lockCase = /قفل|محاولات كثيرة/i.test(String(checked.error || ""));
-        return fail(res, checked.error || "رمز واتساب غير صحيح أو منتهي", lockCase ? 429 : 400, {
-          attempts_remaining: checked.attemptsRemaining,
-        });
-      }
     }
 
     const sb = sbEarly || createServiceClient();
@@ -554,12 +565,10 @@ router.post("/verify-otp", async (req, res) => {
     }
 
     let roleForSession = wantRole;
-    if (loginOnly && devBypass && existingRole && STAFF_LOGIN_ROLES.has(existingRole)) {
+    if (loginOnly && existingRole && STAFF_LOGIN_ROLES.has(existingRole)) {
       roleForSession = existingRole;
-    } else if (loginOnly && !existingRole) {
-      roleForSession = wantRole === "customer" || !STAFF_LOGIN_ROLES.has(wantRole) ? "customer" : wantRole;
-    } else if (devBypass && wantRole === "admin") {
-      roleForSession = "admin";
+    } else if (loginOnly) {
+      roleForSession = existingRole || "customer";
     }
 
     const wantServiceType = req.body?.service_type;
@@ -592,7 +601,7 @@ router.post("/verify-otp", async (req, res) => {
       displayName,
       serviceDistrict,
       serviceVehicle,
-      { loginOnly: loginOnly && !!existingRole }
+      { loginOnly: loginOnly && !!existingUser }
     );
     if (dbErr) {
       console.error("[ERVENOW] verify-otp DB:", dbErr);
@@ -614,6 +623,39 @@ router.post("/verify-otp", async (req, res) => {
       String(userRow.role || "").toLowerCase() === "blocked"
     ) {
       return fail(res, "الحساب محظور من الإدارة", 403);
+    }
+
+    const userStatus = String(userRow.status || "").toLowerCase();
+    const userRole = String(userRow.role || roleForSession || "").toLowerCase();
+    const rejected = userStatus === "rejected";
+    if (rejected) {
+      return fail(res, "تم رفض طلب التسجيل — تواصل مع الإدارة", 403, { rejected: true });
+    }
+
+    if (loginOnly && isUserAccountPending(userRow.status)) {
+      return fail(res, "الحساب بانتظار موافقة الإدارة", 403, {
+        pending_approval: true,
+        approved: false,
+      });
+    }
+
+    const needsApproval =
+      userRole !== "admin" && String(userRow.status || "").toLowerCase() === "pending";
+    if (needsApproval) {
+      return ok(res, {
+        success: true,
+        pending_approval: true,
+        approved: false,
+        message: "تم استلام طلبك — بانتظار موافقة الإدارة",
+        user: {
+          id: userRow.id,
+          phone: userRow.phone,
+          role: userRow.role,
+          status: userRow.status || "pending",
+          service_type: userRow.service_type || null,
+          name: userRow.name || null,
+        },
+      });
     }
 
     const sessionPhone = canonicalPhoneDigits(userRow.phone || digits) || digits;
@@ -646,12 +688,15 @@ router.post("/verify-otp", async (req, res) => {
     ok(res, {
       success: true,
       token,
+      approved: true,
       user: {
         id: userRow.id,
         phone: userRow.phone,
         role: userRow.role,
+        status: userRow.status || "active",
         service_type: userRow.service_type || null,
         name: userRow.name || null,
+        approved: true,
       },
     });
   } catch (e) {
@@ -665,6 +710,7 @@ router.post("/verify-otp", async (req, res) => {
 });
 
 router.get("/me", requireAuth, (req, res) => {
+  const approved = accountApprovedFlag(req.appUser.status, req.appUser.role);
   ok(res, {
     user: {
       id: req.authUser.id,
@@ -672,7 +718,9 @@ router.get("/me", requireAuth, (req, res) => {
       name: req.appUser.name || null,
     },
     profile: req.appUser,
-    access: accessFlagsForRole(req.appUser.role),
+    approved,
+    pending_approval: isUserAccountPending(req.appUser.status),
+    access: approved ? accessFlagsForRole(req.appUser.role) : { ...accessFlagsForRole(req.appUser.role), can_place_orders: false },
   });
 });
 

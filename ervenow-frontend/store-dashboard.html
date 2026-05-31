@@ -7,6 +7,9 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/assets/styles.css" />
+    <link rel="stylesheet" href="/assets/guest-shell.css" />
+    <link rel="stylesheet" href="/assets/store-shell.css" />
+    <link rel="stylesheet" href="/assets/ervenow-responsive.css" />
     <style>
       :root {
         --portal-ink: #2a1810;
@@ -14,24 +17,9 @@
         --portal-card: rgba(255, 252, 248, 0.96);
         --portal-radius: 18px;
       }
-      body.portal-page {
-        margin: 0;
+      body.store-shell-page {
         font-family: "Cairo", system-ui, sans-serif;
-        background: linear-gradient(165deg, #faf4ee 0%, #f0e6dc 45%, #ebe2d8 100%);
         color: var(--portal-ink);
-        min-height: 100vh;
-      }
-      .portal-shell {
-        max-width: 920px;
-        margin: 0 auto;
-        padding: 20px 18px 48px;
-      }
-      .portal-back {
-        margin-bottom: 14px;
-        font-weight: 600;
-      }
-      .portal-back a {
-        color: #5c4030;
       }
       .portal-hero {
         position: relative;
@@ -206,8 +194,203 @@
       }
       #walletAnchor,
       #brandingAnchor,
-      #productsAnchor {
-        scroll-margin-top: 16px;
+      #productsAnchor,
+      #visitorPreviewAnchor,
+      #reviewsAnchor,
+      #storeSupport,
+      #withdrawCard {
+        scroll-margin-top: 72px;
+      }
+      .portal-kpi-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 12px;
+        margin-bottom: 18px;
+      }
+      .portal-kpi {
+        border-radius: 16px;
+        background: var(--portal-card);
+        border: 1px solid rgba(61, 34, 19, 0.08);
+        box-shadow: 0 8px 28px rgba(42, 24, 16, 0.06);
+        padding: 14px 16px;
+        text-align: center;
+      }
+      .portal-kpi__lbl {
+        display: block;
+        font-size: 0.78rem;
+        font-weight: 700;
+        color: #6b5548;
+        margin-bottom: 6px;
+      }
+      .portal-kpi__val {
+        display: block;
+        font-size: 1.5rem;
+        font-weight: 900;
+        color: #3d2213;
+        line-height: 1.1;
+      }
+      .portal-kpi__sub {
+        display: block;
+        font-size: 0.72rem;
+        font-weight: 600;
+        color: #8b735f;
+        margin-top: 4px;
+      }
+      .portal-preview-card {
+        margin-bottom: 18px;
+      }
+      .portal-preview-card h2 {
+        margin: 0 0 6px;
+      }
+      .portal-preview-note {
+        margin: 0 0 14px;
+        font-size: 0.86rem;
+        color: #5c4638;
+        line-height: 1.5;
+      }
+      .store-preview {
+        border-radius: 18px;
+        overflow: hidden;
+        border: 1px solid rgba(61, 34, 19, 0.1);
+        background: #fffcfa;
+        box-shadow: 0 12px 40px rgba(42, 24, 16, 0.08);
+        margin-bottom: 16px;
+      }
+      .store-preview__banner {
+        aspect-ratio: 21 / 9;
+        min-height: 120px;
+        background: linear-gradient(120deg, #efe6dc, #e8d9cc);
+        background-size: cover;
+        background-position: center;
+      }
+      .store-preview__body {
+        display: flex;
+        gap: 14px;
+        align-items: flex-start;
+        padding: 16px 18px 18px;
+        flex-wrap: wrap;
+      }
+      .store-preview__logo {
+        width: 72px;
+        height: 72px;
+        border-radius: 16px;
+        object-fit: cover;
+        border: 2px solid rgba(255, 248, 238, 0.95);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+        background: #fff8ee;
+        flex-shrink: 0;
+      }
+      .store-preview__name {
+        margin: 0 0 6px;
+        font-size: 1.2rem;
+        font-weight: 900;
+        color: #3d2213;
+      }
+      .store-preview__meta {
+        margin: 0 0 8px;
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: #7a6558;
+      }
+      .store-preview__bio {
+        margin: 0;
+        font-size: 0.86rem;
+        line-height: 1.55;
+        color: #5c4638;
+      }
+      .portal-product-catalog {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        gap: 12px;
+        margin-top: 12px;
+      }
+      .portal-product-card {
+        border-radius: 16px;
+        overflow: hidden;
+        background: #fffefb;
+        border: 1px solid rgba(61, 34, 19, 0.08);
+        box-shadow: 0 6px 22px rgba(42, 24, 16, 0.06);
+        display: flex;
+        flex-direction: column;
+      }
+      .portal-product-card__img {
+        aspect-ratio: 4 / 3;
+        background: #f0e6dc;
+        object-fit: cover;
+        width: 100%;
+        display: block;
+      }
+      .portal-product-card__img--empty {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        color: #c9a227;
+      }
+      .portal-product-card__body {
+        padding: 10px 12px 12px;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+      .portal-product-card__name {
+        font-size: 0.88rem;
+        font-weight: 800;
+        color: #3d2213;
+        line-height: 1.35;
+        margin: 0;
+      }
+      .portal-product-card__price {
+        font-size: 0.95rem;
+        font-weight: 900;
+        color: #3d2213;
+        margin: 0;
+      }
+      .portal-product-card__offer {
+        font-size: 0.8rem;
+        font-weight: 800;
+        color: #1e5631;
+        margin: 0;
+      }
+      .portal-product-card__old {
+        font-size: 0.75rem;
+        color: #8b735f;
+        text-decoration: line-through;
+      }
+      .portal-reviews-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-top: 10px;
+      }
+      .portal-review-item {
+        padding: 12px 14px;
+        border-radius: 14px;
+        background: rgba(255, 252, 248, 0.9);
+        border: 1px solid rgba(61, 34, 19, 0.06);
+      }
+      .portal-review-item__stars {
+        font-weight: 900;
+        color: #b9872f;
+        font-size: 0.9rem;
+      }
+      .portal-review-item__text {
+        margin: 6px 0 0;
+        font-size: 0.86rem;
+        color: #5c4638;
+        line-height: 1.5;
+      }
+      .portal-review-item__date {
+        margin-top: 6px;
+        font-size: 0.72rem;
+        color: #8b735f;
+      }
+      .portal-preview-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 12px;
       }
       .portal-nav {
         display: flex;
@@ -241,16 +424,107 @@
         gap: 14px;
         margin-top: 8px;
       }
+
+      .portal-hero__text h1 {
+        font-size: clamp(1.15rem, 4vw, 1.45rem);
+      }
+
+      .portal-nav {
+        -webkit-overflow-scrolling: touch;
+      }
+
+      @media (max-width: 1024px) {
+        .portal-kpi-row {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        .portal-product-catalog {
+          grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        }
+      }
+
+      @media (max-width: 640px) {
+        .portal-hero__inner {
+          flex-direction: column;
+          align-items: flex-start;
+          padding: 18px 14px 16px;
+        }
+        .portal-logo {
+          width: 72px;
+          height: 72px;
+        }
+        .portal-kpi-row {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 10px;
+        }
+        .portal-kpi__val {
+          font-size: 1.25rem;
+        }
+        .portal-nav {
+          flex-wrap: nowrap;
+          overflow-x: auto;
+          margin-inline: -4px;
+          padding-bottom: 6px;
+        }
+        .portal-nav a {
+          flex-shrink: 0;
+          min-height: 44px;
+          display: inline-flex;
+          align-items: center;
+          padding: 10px 14px;
+        }
+        .portal-product-catalog {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 10px;
+        }
+        .portal-preview-actions {
+          flex-direction: column;
+        }
+        .portal-preview-actions .btn,
+        .portal-preview-actions a.btn {
+          width: 100%;
+          justify-content: center;
+          min-height: 48px;
+        }
+        .portal-actions .btn,
+        .portal-actions a.btn {
+          min-height: 48px;
+          flex: 1 1 auto;
+          min-width: min(100%, 200px);
+        }
+        .store-preview__body {
+          padding: 14px;
+        }
+        .portal-card {
+          padding: 14px;
+        }
+        #formCard input,
+        #formCard select,
+        #formCard textarea,
+        #hubBio {
+          font-size: 16px;
+        }
+        .hub-pay-row {
+          min-height: 44px;
+        }
+      }
+
+      @media (max-width: 380px) {
+        .portal-kpi-row,
+        .portal-product-catalog {
+          grid-template-columns: 1fr;
+        }
+      }
     </style>
   </head>
-  <body class="portal-page">
-    <div class="portal-shell">
-      <p class="portal-back"><a href="/">← الرئيسية</a> · <a href="/merchant-dashboard">تفاصيل الطلبات والإيرادات</a></p>
-
+  <body class="guest-shell-page store-shell-page">
+    <div id="storeShellHeader"></div>
+    <div class="dash-main">
+      <div class="store-shell-layout">
       <p class="sub" id="hint" style="margin-bottom: 16px">
-        بعد موافقة الإدارة على متجرك، سجّل الدخول من
+        بوابة الشركاء لـ <strong>المتاجر، المطاعم، الصيدليات، المحطات، شركات النقل، ومزودي الخدمات</strong>.
+        بعد موافقة الإدارة، سجّل الدخول من
         <a href="/login?role=merchant">تسجيل الدخول</a>
-        كـ «تاجر» بنفس رقم الجوال — ستفتح <strong>صفحة تحكم خاصة بمتجرك</strong> لإدارة الشعار، صور المنتجات، الأسعار، والعروض.
+        بنفس رقم الجوال — ستفتح لوحة تحكم خاصة لإدارة الشعار، المنتجات، الأسعار، المحفظة، والعروض.
       </p>
 
       <div id="portalMain" style="display: none">
@@ -276,11 +550,71 @@
           </div>
         </header>
 
-        <nav class="portal-nav" aria-label="أقسام لوحة التحكم">
-          <a href="#brandingAnchor">الشعار والصور</a>
-          <a href="#productsAnchor">المنتجات والعروض</a>
+        <nav class="portal-nav erw-chip-scroll" aria-label="أقسام لوحة التحكم">
+          <a href="#visitorPreviewAnchor">معاينة للزوار</a>
+          <a href="#brandingAnchor">الشعار والغلاف</a>
+          <a href="#productsAnchor">المنتجات والأسعار</a>
+          <a href="#reviewsAnchor">التقييمات</a>
           <a href="#walletAnchor">المحفظة</a>
         </nav>
+
+        <div class="portal-kpi-row" aria-label="إحصائيات الظهور">
+          <div class="portal-kpi">
+            <span class="portal-kpi__lbl">⭐ التقييم</span>
+            <span class="portal-kpi__val" id="statRating">—</span>
+            <span class="portal-kpi__sub" id="statRatingSub">من تقييمات المتسوقين</span>
+          </div>
+          <div class="portal-kpi">
+            <span class="portal-kpi__lbl">👁 مشاهدات الصفحة</span>
+            <span class="portal-kpi__val" id="statViews">—</span>
+            <span class="portal-kpi__sub">فتح صفحة المتجر العامة</span>
+          </div>
+          <div class="portal-kpi">
+            <span class="portal-kpi__lbl">📦 منتجات نشطة</span>
+            <span class="portal-kpi__val" id="statProductsKpi">—</span>
+            <span class="portal-kpi__sub">ظاهرة للزوار</span>
+          </div>
+          <div class="portal-kpi">
+            <span class="portal-kpi__lbl">🧾 طلبات</span>
+            <span class="portal-kpi__val" id="statOrdersKpi">—</span>
+            <span class="portal-kpi__sub">عبر المنصة</span>
+          </div>
+        </div>
+
+        <section class="portal-card portal-preview-card" id="visitorPreviewAnchor">
+          <h2>كما يراها الزوار والمتسوقون</h2>
+          <p class="portal-preview-note">
+            معاينة مباشرة لصفحة متجرك العامة — الغلاف، الشعار، المنتجات والأسعار كما تظهر في
+            <strong>store.html</strong>.
+          </p>
+          <div class="store-preview" id="storeVisitorPreview">
+            <div class="store-preview__banner" id="previewBanner"></div>
+            <div class="store-preview__body">
+              <img class="store-preview__logo" id="previewLogo" src="" alt="" width="72" height="72" />
+              <div>
+                <h3 class="store-preview__name" id="previewName">—</h3>
+                <p class="store-preview__meta" id="previewMeta">—</p>
+                <p class="store-preview__bio" id="previewBio"></p>
+              </div>
+            </div>
+          </div>
+          <h3 style="margin: 0 0 10px; font-size: 1rem; font-weight: 800; color: #3d2213">منتجاتك (معاينة)</h3>
+          <div class="portal-product-catalog" id="previewProductGrid">
+            <p class="sub" style="margin: 0">جارٍ التحميل…</p>
+          </div>
+          <div class="portal-preview-actions erw-stack-sm">
+            <a class="btn btn-primary" id="publicLinkPreview" href="#" target="_blank" rel="noopener">فتح الصفحة العامة</a>
+            <button type="button" class="btn btn-ghost" id="btnRefreshPreview">تحديث المعاينة</button>
+          </div>
+        </section>
+
+        <section class="portal-card" id="reviewsAnchor" style="margin-bottom: 18px">
+          <h2 style="margin: 0 0 8px">تقييمات المتسوقين</h2>
+          <p class="sub" style="margin: 0 0 12px">آخر آراء الزوار عن متجرك — تظهر أيضاً في صفحة المتجر العامة.</p>
+          <div class="portal-reviews-list" id="storeReviewsList">
+            <p class="sub" style="margin: 0">لا توجد تقييمات بعد.</p>
+          </div>
+        </section>
 
         <div class="portal-grid">
           <div class="portal-card" id="walletAnchor">
@@ -346,24 +680,20 @@
             <input id="pOffer" type="number" min="0" step="0.01" placeholder="مثال: 9.99" />
             <label for="pSort" style="margin-top: 10px">ترتيب العرض</label>
             <input id="pSort" type="number" step="1" value="0" />
-            <label for="pCategory" style="margin-top: 10px">قسم المنتج (سوبرماركت / بقالة)</label>
+            <label for="pCategory" id="pCategoryLabel" style="margin-top: 10px">قسم المنتج</label>
             <select id="pCategory">
               <option value="">— بدون قسم —</option>
-              <option value="vegetables">خضار وفواكه</option>
-              <option value="meat">لحوم</option>
-              <option value="dairy">ألبان</option>
-              <option value="bakery">مخبوزات</option>
-              <option value="drinks">مشروبات</option>
-              <option value="snacks">سناكات</option>
-              <option value="frozen">مجمدات</option>
-              <option value="cleaning">منظفات</option>
             </select>
+            <p class="sub" id="pCategoryHint" style="margin-top: 4px">تُحمَّل الأقسام حسب نوع متجرك — يمكن للإدارة إضافة أقسام من لوحة «إدارة الأقسام».</p>
             <label for="pStock" style="margin-top: 10px">المخزون (فراغ = بدون حد صريح)</label>
             <input id="pStock" type="number" min="0" step="1" placeholder="مثال: 20" />
             <label for="pRating" style="margin-top: 10px">تقييم عرض المنتج 0–5 (اختياري)</label>
             <input id="pRating" type="number" min="0" max="5" step="0.1" placeholder="مثال: 4.5" />
-            <label for="pImg" style="margin-top: 10px">صورة المنتج (اختياري — يُضغط تلقائياً)</label>
+            <label for="pImg" style="margin-top: 10px">صورة رئيسية للمنتج (اختياري)</label>
             <input id="pImg" type="file" accept="image/*" />
+            <label for="pImgs" style="margin-top: 10px">صور إضافية (حتى 5 — تظهر في صفحة المتجر)</label>
+            <input id="pImgs" type="file" accept="image/*" multiple />
+            <p class="sub" style="margin-top: 4px">اختر عدة صور معاً أو صورة رئيسية + إضافية — يُضغط تلقائياً.</p>
             <div class="row" style="margin-top: 12px; gap: 8px; flex-wrap: wrap">
               <button type="button" class="btn btn-primary" id="btnSave">حفظ المنتج</button>
               <button type="button" class="btn btn-ghost" id="btnReset">مسح النموذج</button>
@@ -373,8 +703,9 @@
 
         <div class="portal-panel">
           <div class="card" id="listCard">
-            <h2 style="margin: 0 0 12px">منتجاتك</h2>
-            <div id="plist"></div>
+            <h2 style="margin: 0 0 12px">إدارة المنتجات (صور وأسعار)</h2>
+            <p class="sub" style="margin: 0 0 12px">كل منتج يظهر للزوار بالصورة والسعر — اضغط تعديل للتحديث.</p>
+            <div class="portal-product-catalog" id="plist"></div>
           </div>
         </div>
 
@@ -391,13 +722,77 @@
       </div>
 
       <div class="msg" id="msg" style="display: none"></div>
+      </div>
+
+      <section class="store-support" id="storeSupport" aria-labelledby="storeSupportTitle">
+        <div class="store-support__card">
+          <h2 class="store-support__head" id="storeSupportTitle">تواصل مع منصة ERVENOW</h2>
+          <p class="store-support__sub">
+            نحن بجانبك في التفعيل، إدارة المنتجات، العمولات، السحب، وشركات النقل والمحطات والصيدليات — اختر القناة الأنسب.
+          </p>
+          <div class="store-support__grid">
+            <a class="store-support__tile" href="https://wa.me/966505745650?text=%D9%85%D8%B1%D8%AD%D8%A8%D8%A7%20ERVENOW%20%E2%80%94%20%D8%A7%D8%B3%D8%AA%D9%81%D8%B3%D8%A7%D8%B1%20%D9%85%D9%86%20%D8%A8%D9%88%D8%A7%D8%A8%D8%A9%20%D8%A7%D9%84%D8%B4%D8%B1%D9%8A%D9%83" target="_blank" rel="noopener">
+              <strong>💬 واتساب الدعم</strong>
+              <span>رد سريع على الاستفسارات والتفعيل والمشاكل التشغيلية.</span>
+              <em>0505745650</em>
+            </a>
+            <a class="store-support__tile" href="mailto:support@ervenow.com">
+              <strong>✉️ البريد الإلكتروني</strong>
+              <span>للطلبات الرسمية، المرفقات، وملاحظات الإدارة.</span>
+              <em>support@ervenow.com</em>
+            </a>
+            <a class="store-support__tile" href="/partner-portal.html">
+              <strong>🤝 بوابة الشركاء</strong>
+              <span>انضمام متاجر، مطاعm، شركات توصيل، ومحطات — الشروط والمسارات.</span>
+              <em>partner-portal</em>
+            </a>
+            <a class="store-support__tile" href="/register-store.html">
+              <strong>🏪 تسجيل شريك جديد</strong>
+              <span>متجر، مطعم، صيدلية، أو محطة — قدّم طلب انضمام للمراجعة.</span>
+              <em>register-store</em>
+            </a>
+            <a class="store-support__tile" href="/merchant-dashboard">
+              <strong>📊 الطلبات والإيرادات</strong>
+              <span>تفاصيل الطلبات، الإيرادات، والتقارير المالية.</span>
+              <em>merchant-dashboard</em>
+            </a>
+            <a class="store-support__tile" href="#withdrawCard">
+              <strong>💸 سحب الأرباح</strong>
+              <span>تقديم طلب سحب من المحفظة ومتابعة حالة الطلبات.</span>
+              <em>من لوحتك</em>
+            </a>
+            <a class="store-support__tile" href="#walletAnchor">
+              <strong>💰 المحفظة المالية</strong>
+              <span>رصيدك، الإيرادات المجمّعة، وتاريخ الحركات.</span>
+              <em>wallet</em>
+            </a>
+            <a class="store-support__tile" href="/services-provider">
+              <strong>🔧 مزودو الخدمات</strong>
+              <span>شركات المناديب، النقليات، والخدمات الميدانية.</span>
+              <em>services-provider</em>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <div id="storeShellFooter"></div>
     </div>
 
     <script src="/assets/compressImage.js"></script>
     <script src="/assets/api-config.js"></script>
     <script src="/assets/api.js"></script>
+    <script src="/assets/auth-account-guard.js"></script>
+    <script src="/assets/store-shell.js"></script>
+    <script>
+      void ErvenowAuthGuard.ensureApprovedAccount({ loginUrl: "/login?role=merchant" });
+    </script>
+    <script>
+      ErvenowStoreShell.mountShell({ activeNav: "store" });
+    </script>
     <script>
       var storeId = null;
+      var storeType = "";
+      var productCategoryOptions = [];
       var HUB_PAY_ROWS = [
         { key: "ew_pay", label: "EW PAY", src: "/assets/pay-ew.svg" },
         { key: "mada", label: "مدى", src: "/assets/pay-mada.svg" },
@@ -483,6 +878,42 @@
         return TYPE_AR[k] || k || "—";
       }
 
+      var CATALOG_TYPE_AR = {
+        restaurant: "مطاعم — قائمة/منتجات",
+        market: "سوبرماركت / بقالة",
+        pharmacy: "صيدليات",
+        services: "مزودو الخدمات",
+        transport: "شركات النقل",
+        fuel: "محطات / غاز",
+        clothing: "ملابس وأزياء",
+      };
+
+      async function loadProductCategoryOptions() {
+        var sel = document.getElementById("pCategory");
+        var lbl = document.getElementById("pCategoryLabel");
+        if (!sel || !storeId) return;
+        sel.innerHTML = '<option value="">— بدون قسم —</option>';
+        try {
+          var data = await window.PlatformAPI.api(
+            "/api/store/product-category-options?store_id=" + encodeURIComponent(storeId)
+          );
+          productCategoryOptions = data.options || [];
+          var catType = data.catalog_type || "";
+          if (lbl) {
+            lbl.textContent =
+              "قسم المنتج" + (CATALOG_TYPE_AR[catType] ? " (" + CATALOG_TYPE_AR[catType] + ")" : "");
+          }
+          productCategoryOptions.forEach(function (o) {
+            var opt = document.createElement("option");
+            opt.value = o.slug;
+            opt.textContent = (o.icon ? o.icon + " " : "") + (o.label || o.slug);
+            sel.appendChild(opt);
+          });
+        } catch (e) {
+          if (lbl) lbl.textContent = "قسم المنتج";
+        }
+      }
+
       function fmtDate(iso) {
         if (!iso) return "—";
         try {
@@ -490,6 +921,177 @@
           return isNaN(d.getTime()) ? "—" : d.toLocaleString("ar-SA", { dateStyle: "short", timeStyle: "short" });
         } catch (e) {
           return "—";
+        }
+      }
+
+      function starsHtml(n) {
+        var r = Math.max(0, Math.min(5, Number(n) || 0));
+        var full = Math.round(r);
+        var out = "";
+        for (var i = 0; i < 5; i++) out += i < full ? "★" : "☆";
+        return out + " " + r.toFixed(1);
+      }
+
+      function productThumbUrl(p) {
+        if (!p) return "";
+        if (p.image_urls && p.image_urls.length) return String(p.image_urls[0] || "").trim();
+        return p.image_url ? String(p.image_url).trim() : "";
+      }
+
+      function renderProductCardHtml(p, opts) {
+        opts = opts || {};
+        var price = Number(p.price) || 0;
+        var offer = p.offer_price != null && Number(p.offer_price) > 0 ? Number(p.offer_price) : null;
+        var thumb = productThumbUrl(p);
+        var extra =
+          p.image_urls && p.image_urls.length > 1
+            ? '<span class="sub" style="font-size:0.72rem;display:block;margin-top:2px">+' +
+              (p.image_urls.length - 1) +
+              " صور</span>"
+            : "";
+        var imgBlock = thumb
+          ? '<img class="portal-product-card__img" src="' + esc(thumb) + '" alt="" loading="lazy" />' + extra
+          : '<div class="portal-product-card__img portal-product-card__img--empty" aria-hidden="true">🛒</div>';
+        var priceHtml =
+          offer != null && offer < price
+            ? '<p class="portal-product-card__offer">' +
+              offer.toFixed(2) +
+              ' ر.س</p><p class="portal-product-card__old">' +
+              price.toFixed(2) +
+              " ر.س</p>"
+            : '<p class="portal-product-card__price">' + price.toFixed(2) + " ر.س</p>";
+        var actions = "";
+        if (opts.manage) {
+          actions =
+            '<div class="row" style="gap:6px;margin-top:8px;flex-wrap:wrap">' +
+            '<button type="button" class="btn btn-ghost btn-edit" data-id="' +
+            esc(p.id) +
+            '">تعديل</button>' +
+            '<button type="button" class="btn btn-ghost btn-del" data-id="' +
+            esc(p.id) +
+            '">حذف</button></div>';
+        }
+        return (
+          '<article class="portal-product-card">' +
+          imgBlock +
+          '<div class="portal-product-card__body">' +
+          '<p class="portal-product-card__name">' +
+          esc(p.name) +
+          "</p>" +
+          priceHtml +
+          (p.rating != null && Number(p.rating) > 0
+            ? '<p class="sub" style="margin:4px 0 0;font-size:0.75rem">⭐ ' + Number(p.rating).toFixed(1) + "</p>"
+            : "") +
+          actions +
+          "</div></article>"
+        );
+      }
+
+      function applyVisitorPreview(s, hub) {
+        var banner = document.getElementById("previewBanner");
+        var logo = document.getElementById("previewLogo");
+        var defSvg =
+          "data:image/svg+xml," +
+          encodeURIComponent(
+            '<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160"><rect fill="#f5ebe0" width="160" height="160" rx="24"/><text x="50%" y="52%" dominant-baseline="middle" text-anchor="middle" fill="#c9a227" font-family="sans-serif" font-size="15" font-weight="700">ERVENOW</text></svg>'
+          );
+        if (banner) {
+          if (hub && hub.banner_url) {
+            banner.style.backgroundImage = 'url("' + String(hub.banner_url).replace(/"/g, '\\"') + '")';
+          } else {
+            banner.style.backgroundImage = "";
+          }
+        }
+        if (logo) {
+          logo.onerror = function () {
+            logo.src = defSvg;
+          };
+          logo.src = (s && s.logo_url) || defSvg;
+        }
+        var pn = document.getElementById("previewName");
+        var pm = document.getElementById("previewMeta");
+        var pb = document.getElementById("previewBio");
+        if (pn) pn.textContent = (s && s.name) || "متجرك";
+        if (pm) {
+          var avg = Number(s && s.average_rating) || 0;
+          var rc = Number(s && s.rating_count) || 0;
+          pm.textContent =
+            typeLabel(s && s.type) +
+            " · " +
+            (s && s.category_label_ar ? s.category_label_ar : s && s.category ? s.category : "—") +
+            (rc > 0 ? " · " + starsHtml(avg) + " (" + rc + " تقييم)" : " · بدون تقييمات بعد");
+        }
+        if (pb) pb.textContent = (hub && hub.bio && String(hub.bio).trim()) || "أضف نبذة عن متجرك من قسم الشعار والغلاف.";
+      }
+
+      function renderStoreInsights(s) {
+        var avg = Number(s && s.average_rating) || 0;
+        var rc = Number(s && s.rating_count) || 0;
+        var views = Number(s && s.profile_views) || 0;
+        var orders = Number(s && s.total_orders) || 0;
+        var rEl = document.getElementById("statRating");
+        var rSub = document.getElementById("statRatingSub");
+        if (rEl) rEl.textContent = rc > 0 ? avg.toFixed(1) : "—";
+        if (rSub) rSub.textContent = rc > 0 ? rc + " تقييم من المتسوقين" : "لا تقييمات بعد";
+        var vEl = document.getElementById("statViews");
+        if (vEl) vEl.textContent = String(views);
+        var oEl = document.getElementById("statOrdersKpi");
+        if (oEl) oEl.textContent = String(orders);
+      }
+
+      async function loadStoreReviews() {
+        var box = document.getElementById("storeReviewsList");
+        if (!box || !storeId) return;
+        try {
+          var data = await window.PlatformAPI.api(
+            "/api/store/reviews?store_id=" + encodeURIComponent(storeId) + "&limit=8"
+          );
+          var rows = data.reviews || [];
+          if (!rows.length) {
+            box.innerHTML = '<p class="sub" style="margin:0">لا توجد تقييمات بعد — شجّع عملاءك على التقييم بعد الطلب.</p>';
+            return;
+          }
+          box.innerHTML = rows
+            .map(function (r) {
+              return (
+                '<div class="portal-review-item">' +
+                '<div class="portal-review-item__stars">' +
+                starsHtml(r.rating) +
+                "</div>" +
+                (r.comment
+                  ? '<p class="portal-review-item__text">' + esc(r.comment) + "</p>"
+                  : '<p class="portal-review-item__text sub">بدون تعليق نصي</p>') +
+                '<div class="portal-review-item__date">' +
+                esc(fmtDate(r.created_at)) +
+                "</div></div>"
+              );
+            })
+            .join("");
+        } catch (e) {
+          box.innerHTML =
+            '<p class="sub" style="margin:0">تعذّر تحميل التقييمات — ' + esc(String((e && e.message) || e)) + "</p>";
+        }
+      }
+
+      function renderPreviewProducts(rows) {
+        var grid = document.getElementById("previewProductGrid");
+        if (!grid) return;
+        if (!rows.length) {
+          grid.innerHTML = '<p class="sub" style="margin:0">لا منتجات بعد — أضف منتجات ليظهرها الزوار.</p>';
+          return;
+        }
+        grid.innerHTML = rows.slice(0, 8).map(function (p) {
+          return renderProductCardHtml(p, {});
+        }).join("");
+      }
+
+      function wirePublicLinks(href) {
+        var pub = document.getElementById("publicLink");
+        var pub2 = document.getElementById("publicLinkPreview");
+        if (pub) pub.href = href;
+        if (pub2) pub2.href = href;
+        if (window.ErvenowStoreShell && ErvenowStoreShell.setPublicStoreUrl) {
+          ErvenowStoreShell.setPublicStoreUrl(href);
         }
       }
 
@@ -521,6 +1123,7 @@
           var s = my.store;
           var hub = my.merchant_hub || null;
           storeId = s.id;
+          storeType = s.type || "";
 
           document.getElementById("portalMain").style.display = "block";
           document.getElementById("hint").style.display = "none";
@@ -544,8 +1147,9 @@
           if (hub && hub.bio != null) document.getElementById("hubBio").value = hub.bio;
           applyHubPaymentCheckboxes(hub);
 
-          var pub = document.getElementById("publicLink");
-          pub.href = "/store.html?id=" + encodeURIComponent(storeId);
+          renderStoreInsights(s);
+          applyVisitorPreview(s, hub);
+          wirePublicLinks("/store.html?id=" + encodeURIComponent(storeId));
           var panelNote = document.getElementById("panelUrlNote");
           var panelLink = document.getElementById("panelUrlLink");
           if (panelNote && panelLink) {
@@ -559,9 +1163,21 @@
             var w = dash.wallet || {};
             document.getElementById("walletBal").textContent = (Number(w.balance) || 0).toFixed(2);
             document.getElementById("walletCur").textContent = w.currency_code === "SAR" || !w.currency_code ? "ريال" : String(w.currency_code);
+            if (window.ErvenowStoreShell && ErvenowStoreShell.refreshWallet) {
+              ErvenowStoreShell.refreshWallet(Number(w.balance) || 0);
+            }
             var agg = dash.aggregates || {};
             document.getElementById("statOrders").textContent = String(agg.orders_count != null ? agg.orders_count : "0");
             document.getElementById("statProducts").textContent = String(agg.products_active_count != null ? agg.products_active_count : "0");
+            var pk = document.getElementById("statProductsKpi");
+            if (pk) pk.textContent = String(agg.products_active_count != null ? agg.products_active_count : "0");
+            if (dash.store) {
+              if (dash.store.profile_views != null) {
+                var vEl = document.getElementById("statViews");
+                if (vEl) vEl.textContent = String(Number(dash.store.profile_views) || 0);
+              }
+              if (dash.store.average_rating != null) renderStoreInsights(Object.assign({}, s, dash.store));
+            }
             document.getElementById("statRev").textContent =
               (Number(agg.revenue_orders_sum) || 0).toFixed(2) + " ر.س";
 
@@ -594,7 +1210,9 @@
             document.getElementById("walletTx").innerHTML = "";
           }
 
+          await loadProductCategoryOptions();
           await loadProducts();
+          await loadStoreReviews();
           await loadWithdrawals();
 
           if (window.location.hash === "#wallet") {
@@ -642,6 +1260,7 @@
           var h = r.merchant_hub;
           var st = r.store;
           if (h && h.banner_url) applyHeroBanner(h.banner_url);
+          applyVisitorPreview(st, h);
           if (st && st.logo_url) {
             var logoEl = document.getElementById("heroLogo");
             if (logoEl) logoEl.src = st.logo_url;
@@ -656,46 +1275,15 @@
           "/api/store/products?store_id=" + encodeURIComponent(storeId) + "&limit=60&offset=0"
         );
         var rows = data.products || [];
+        renderPreviewProducts(rows);
         var box = document.getElementById("plist");
         if (!rows.length) {
           box.innerHTML = '<p class="sub">لا منتجات بعد</p>';
           return;
         }
-        box.innerHTML = rows
-          .map(function (p) {
-            var thumb = p.image_url
-              ? '<img src="' + esc(p.image_url) + '" alt="" loading="lazy" style="width:72px;height:72px;object-fit:cover;border-radius:12px" />'
-              : "";
-            return (
-              '<div class="card" style="padding:12px;margin-bottom:10px;display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap">' +
-              thumb +
-              "<div style=\"flex:1;min-width:160px\">" +
-              "<strong>" +
-              esc(p.name) +
-              "</strong>" +
-              '<p class="sub">' +
-              esc(p.description || "") +
-              "</p>" +
-              "<div>" +
-              (Number(p.price) || 0).toFixed(2) +
-              " ريال" +
-              (p.offer_price != null && Number(p.offer_price) > 0 && Number(p.offer_price) < Number(p.price)
-                ? " · عرض: " + Number(p.offer_price).toFixed(2)
-                : "") +
-              (p.category ? " · قسم: " + esc(p.category) : "") +
-              (p.stock != null && p.stock !== "" ? " · مخزون: " + esc(String(p.stock)) : "") +
-              "</div></div>" +
-              '<div class="row" style="gap:6px">' +
-              '<button type="button" class="btn btn-ghost btn-edit" data-id="' +
-              esc(p.id) +
-              '">تعديل</button>' +
-              '<button type="button" class="btn btn-ghost btn-del" data-id="' +
-              esc(p.id) +
-              '">حذف</button>' +
-              "</div></div>"
-            );
-          })
-          .join("");
+        box.innerHTML = rows.map(function (p) {
+          return renderProductCardHtml(p, { manage: true });
+        }).join("");
 
         box.querySelectorAll(".btn-edit").forEach(function (btn) {
           btn.onclick = function () {
@@ -718,6 +1306,8 @@
             document.getElementById("pRating").value =
               p.rating != null && p.rating !== "" && Number.isFinite(Number(p.rating)) ? String(p.rating) : "";
             document.getElementById("pImg").value = "";
+            var pImgsE = document.getElementById("pImgs");
+            if (pImgsE) pImgsE.value = "";
             document.getElementById("formCard").scrollIntoView({ behavior: "smooth", block: "start" });
           };
         });
@@ -747,6 +1337,8 @@
         document.getElementById("pStock").value = "";
         document.getElementById("pRating").value = "";
         document.getElementById("pImg").value = "";
+        var pImgs = document.getElementById("pImgs");
+        if (pImgs) pImgs.value = "";
       };
 
       document.getElementById("btnSave").onclick = async function () {
@@ -788,15 +1380,33 @@
         } else if (editId) {
           body.offer_price = null;
         }
-        var fileInput = document.getElementById("pImg");
-        var f = fileInput.files && fileInput.files[0];
-        if (f) {
-          try {
-            body.image_base64 = await window.compressImageToDataUrl(f, 0.72, 1280);
-            body.image_file_name = f.name || "product.jpg";
-          } catch (ce) {
-            return show(String(ce.message || ce), false);
+        try {
+          var primaryIn = document.getElementById("pImg");
+          var multiIn = document.getElementById("pImgs");
+          var files = [];
+          if (primaryIn.files && primaryIn.files[0]) files.push(primaryIn.files[0]);
+          if (multiIn.files && multiIn.files.length) {
+            for (var fi = 0; fi < multiIn.files.length && files.length < 6; fi++) {
+              files.push(multiIn.files[fi]);
+            }
           }
+          if (files.length) {
+            var b64s = [];
+            var names = [];
+            for (var fj = 0; fj < files.length; fj++) {
+              b64s.push(await window.compressImageToDataUrl(files[fj], 0.72, 1280));
+              names.push(files[fj].name || "product-" + (fj + 1) + ".jpg");
+            }
+            if (b64s.length > 1) {
+              body.images_base64 = b64s;
+              body.images_file_names = names;
+            } else {
+              body.image_base64 = b64s[0];
+              body.image_file_name = names[0];
+            }
+          }
+        } catch (ce) {
+          return show(String(ce.message || ce), false);
         }
         try {
           if (editId) {
@@ -856,6 +1466,33 @@
           await loadWithdrawals();
         } catch (e) {
           show(String(e.message || e), false);
+        }
+      };
+
+      document.getElementById("btnRefreshPreview").onclick = async function () {
+        if (!storeId) return;
+        try {
+          var my = await window.PlatformAPI.api("/api/store/my-store");
+          var s = my.store;
+          var hub = my.merchant_hub;
+          applyVisitorPreview(s, hub);
+          if (hub && hub.banner_url) applyHeroBanner(hub.banner_url);
+          try {
+            var dash = await window.PlatformAPI.api("/api/store/merchant-dashboard");
+            if (dash.store) renderStoreInsights(Object.assign({}, s, dash.store));
+            else renderStoreInsights(s);
+            var pk = document.getElementById("statProductsKpi");
+            if (pk && dash.aggregates) {
+              pk.textContent = String(dash.aggregates.products_active_count != null ? dash.aggregates.products_active_count : "0");
+            }
+          } catch (de) {
+            renderStoreInsights(s);
+          }
+          await loadProducts();
+          await loadStoreReviews();
+          show("تم تحديث المعاينة", true);
+        } catch (e) {
+          show(String((e && e.message) || e), false);
         }
       };
 

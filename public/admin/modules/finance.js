@@ -161,16 +161,22 @@ app.loadLedgerFinanceSummary = async function () {
     app.ledgerFinanceSummary = j;
     app.applyLedgerFinanceSummary(j);
   } catch (e) {
+    var errMsg = e.message || "تعذّر تحميل الملخص من ervenow_ledger — تحقق من الهجرات";
     if (hint) {
       hint.style.display = "block";
-      hint.textContent = e.message || "تعذّر تحميل الملخص من ervenow_ledger — تحقق من الهجرات";
+      hint.textContent = errMsg;
     }
     var txBody = document.getElementById("ledgerTransactionsBody");
     if (txBody) {
       txBody.innerHTML =
-        '<tr><td colspan="6" class="finance-msg">' +
-        (e.message || "تعذّر تحميل العمليات") +
+        '<tr><td colspan="6" class="finance-msg finance-msg--error">' +
+        app.escapeHtml(errMsg) +
         "</td></tr>";
+    }
+    var alertRoot = document.getElementById("financialAlertsList");
+    if (alertRoot) {
+      alertRoot.innerHTML =
+        '<p class="financial-alert-empty">' + app.escapeHtml(errMsg) + "</p>";
     }
   }
 }
@@ -900,7 +906,7 @@ app.submitFinanceCollect = async function () {
 
 app.setupFinanceDrawerUi = function () {
   var closeBtn = document.getElementById("financeDrawerCloseBtn");
-  if (closeBtn) closeBtn.onclick = closeFinanceDrawer;
+  if (closeBtn) closeBtn.onclick = app.closeFinanceDrawer;
   var backdrop = document.getElementById("financeDrawerBackdrop");
   if (backdrop) {
     backdrop.addEventListener("click", function (ev) {
@@ -908,11 +914,11 @@ app.setupFinanceDrawerUi = function () {
     });
   }
   var collectBtn = document.getElementById("financeCollectBtn");
-  if (collectBtn) collectBtn.onclick = submitFinanceCollect;
+  if (collectBtn) collectBtn.onclick = app.submitFinanceCollect;
   var collectAllBtn = document.getElementById("financeCollectAllBtn");
-  if (collectAllBtn) collectAllBtn.onclick = collectAllFinanceDebts;
+  if (collectAllBtn) collectAllBtn.onclick = app.collectAllFinanceDebts;
   var copyRefBtn = document.getElementById("financeReceiptCopyBtn");
-  if (copyRefBtn) copyRefBtn.onclick = copyFinanceReceiptRef;
+  if (copyRefBtn) copyRefBtn.onclick = app.copyFinanceReceiptRef;
   var remindBtn = document.getElementById("financeRemindBtn");
   if (remindBtn) {
     remindBtn.onclick = function () {
@@ -921,13 +927,13 @@ app.setupFinanceDrawerUi = function () {
   }
   var amtInp = document.getElementById("financeCollectAmount");
   if (amtInp) {
-    amtInp.addEventListener("input", updateFinanceRoundingHint);
-    amtInp.addEventListener("change", updateFinanceRoundingHint);
+    amtInp.addEventListener("input", app.updateFinanceRoundingHint);
+    amtInp.addEventListener("change", app.updateFinanceRoundingHint);
   }
   var exportBtn = document.getElementById("financeExportCsvBtn");
-  if (exportBtn) exportBtn.onclick = exportFinanceDailyReportCsv;
+  if (exportBtn) exportBtn.onclick = app.exportFinanceDailyReportCsv;
   var bulkCancel = document.getElementById("financeBulkCancelBtn");
-  if (bulkCancel) bulkCancel.onclick = closeFinanceBulkModal;
+  if (bulkCancel) bulkCancel.onclick = app.closeFinanceBulkModal;
   var bulkNext = document.getElementById("financeBulkNextBtn");
   if (bulkNext) {
     bulkNext.onclick = function () {
@@ -952,7 +958,7 @@ app.setupFinanceDrawerUi = function () {
     bulkChk.onchange = function () {
       bulkExec.disabled = !bulkChk.checked;
     };
-    bulkExec.onclick = runBulkCollectExec;
+    bulkExec.onclick = app.runBulkCollectExec;
   }
   var bulkBackdrop = document.getElementById("financeBulkModalBackdrop");
   if (bulkBackdrop) {

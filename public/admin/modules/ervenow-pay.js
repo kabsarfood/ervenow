@@ -36,6 +36,7 @@ app.renderErvenowPaySettingsForm = function (settings) {
   var s = settings || {};
   var toggles = [
     { key: "wallet_topup_enabled", label: "تفعيل الشحن" },
+    { key: "wallet_topup_auto_approve", label: "شحن تلقائي (بدون موافقة يدوية)" },
     { key: "wallet_withdraw_enabled", label: "تفعيل السحب" },
     { key: "wallet_transfer_enabled", label: "تفعيل التحويل" },
     { key: "payment_gateways_enabled", label: "تفعيل بوابات الدفع" },
@@ -233,6 +234,18 @@ app.updateTopupPendingBadge = function (rows) {
     return String(r.status || "").toLowerCase() === "pending";
   }).length;
   app.setBadge("badgeTopupPending", n);
+  var navBadge = document.getElementById("navTopupPendingBadge");
+  if (navBadge) {
+    if (n > 0) {
+      navBadge.hidden = false;
+      navBadge.textContent = String(n);
+      navBadge.classList.remove("zero");
+    } else {
+      navBadge.hidden = true;
+      navBadge.textContent = "0";
+      navBadge.classList.add("zero");
+    }
+  }
 };
 
 app.loadErvenowPayPanel = async function () {
@@ -255,6 +268,18 @@ app.applyErvenowPayVisibility = function () {
   var show = app.hasPermission("finance");
   var btn = document.getElementById("panelErvenowPayBtn");
   var panel = document.getElementById("panelErvenowPay");
+  var navLink = document.getElementById("adminNavErvenowPay");
+  var heroChip = document.getElementById("adminHeroPayChip");
   if (btn) btn.style.display = show ? "" : "none";
+  if (navLink) navLink.style.display = show ? "" : "none";
+  if (heroChip) heroChip.style.display = show ? "" : "none";
   if (panel && !show) panel.style.display = "none";
+};
+
+app.refreshTopupPendingBadgeOnly = async function () {
+  if (!app.hasPermission("finance")) return;
+  try {
+    var reqs = await app.PlatformAPI.api("/api/admin/topup-requests");
+    app.updateTopupPendingBadge(reqs.requests || []);
+  } catch (_e) {}
 };

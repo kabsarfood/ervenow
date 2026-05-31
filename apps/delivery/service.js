@@ -509,7 +509,7 @@ async function listOrders(sb, appUser) {
       .select(cols)
       .eq("customer_id", appUser.id)
       .order("created_at", { ascending: false })
-      .limit(50);
+      .limit(120);
   };
 
   let r = await runSelect(ORDERS_LIST_COLUMNS_FULL);

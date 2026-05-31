@@ -76,10 +76,29 @@
             </div>
 
             <div id="restaurantCategoryWrap" class="field-gap" style="display: none">
-              <label for="restaurant_category">تصنيف المطعم</label>
-              <select id="restaurant_category">
-                <option value="">— اختر التصنيف —</option>
-              </select>
+              <div class="reg-store-cuisine-block" aria-labelledby="regStoreCuisineTitle">
+                <div class="reg-store-cuisine-block__head">
+                  <span class="reg-store-cuisine-block__emoji" aria-hidden="true">🍽️</span>
+                  <div>
+                    <p class="reg-store-cuisine-block__title" id="regStoreCuisineTitle">تصنيفات المطعم</p>
+                    <p class="reg-store-cuisine-block__sub">
+                      اختر تصنيفاً واحداً — يظهر مطعمك في بحث وتصفية
+                      <strong>المطاعم</strong> للزوار والمتسوقين (كبسة، شاورما، برقر…).
+                    </p>
+                  </div>
+                </div>
+                <div
+                  class="reg-store-cuisine-grid"
+                  id="restaurantCategoryPicker"
+                  role="radiogroup"
+                  aria-labelledby="regStoreCuisineTitle"
+                  aria-required="true"
+                ></div>
+                <p class="reg-store-cuisine-hint" id="restaurantCategoryHint">لم يُختر تصنيف بعد.</p>
+                <select id="restaurant_category" class="reg-store-category-select-hidden" tabindex="-1" aria-hidden="true">
+                  <option value="">— اختر التصنيف —</option>
+                </select>
+              </div>
             </div>
 
             <div id="marketCategoryWrap" class="field-gap" style="display: none">
@@ -250,6 +269,7 @@
     <script src="/assets/payoutRegistration.js"></script>
     <script src="/assets/api-config.js"></script>
     <script src="/assets/api.js"></script>
+    <script src="/assets/restaurant-cuisines.js"></script>
     <script src="/assets/ervenow-toggle.js"></script>
     <script src="/assets/guest-shell.js"></script>
     <script>
@@ -309,7 +329,9 @@
         var type = document.getElementById("type").value;
         if (wrapR && selR) {
           wrapR.style.display = type === "restaurant" ? "block" : "none";
-          if (type !== "restaurant") selR.selectedIndex = 0;
+          if (type !== "restaurant") {
+            setRestaurantCategorySelection("");
+          }
         }
         if (wrapM && selM) {
           wrapM.style.display = type === "supermarket" ? "block" : "none";
@@ -337,9 +359,89 @@
         list.forEach(function (c) {
           var o = document.createElement("option");
           o.value = c.slug;
-          o.textContent = (c.icon ? c.icon + " " : "") + (c.name_ar || c.label_ar || c.slug);
+          o.textContent = (c.icon ? c.icon + " " : "") + (c.name_ar || c.label_ar || c.label || c.slug);
           sel.appendChild(o);
         });
+      }
+
+      function restaurantCategoriesFallback() {
+        if (window.ErvenowRestaurantCuisines && ErvenowRestaurantCuisines.list) {
+          return ErvenowRestaurantCuisines.list.map(function (it) {
+            return { slug: it.slug, name_ar: it.label, icon: it.icon };
+          });
+        }
+        return [
+          { slug: "kabsa_bukhari", name_ar: "مطاعم كبسة وبخاري", icon: "🍚" },
+          { slug: "shawarma_grill", name_ar: "مطاعم شاورما ومشاوي", icon: "🌯" },
+          { slug: "seafood", name_ar: "مطاعم سمك", icon: "🐟" },
+          { slug: "burger", name_ar: "مطاعم برقر", icon: "🍔" },
+          { slug: "broasted", name_ar: "مطاعم بروستد", icon: "🍗" },
+          { slug: "pizza", name_ar: "مطاعم بيتزا", icon: "🍕" },
+          { slug: "cafe", name_ar: "مقاهي", icon: "☕" },
+          { slug: "sweets", name_ar: "حلويات", icon: "🍰" },
+          { slug: "home_producers", name_ar: "أسر منتجة", icon: "🏠" },
+        ];
+      }
+
+      function setRestaurantCategorySelection(slug) {
+        var sel = document.getElementById("restaurant_category");
+        var picker = document.getElementById("restaurantCategoryPicker");
+        var hint = document.getElementById("restaurantCategoryHint");
+        var v = String(slug || "").trim().toLowerCase();
+        if (sel) sel.value = v;
+        if (picker) {
+          picker.querySelectorAll(".reg-store-cuisine-chip").forEach(function (btn) {
+            var on = (btn.getAttribute("data-slug") || "") === v;
+            btn.classList.toggle("is-active", on);
+            btn.setAttribute("aria-checked", on ? "true" : "false");
+          });
+        }
+        if (hint) {
+          if (!v) {
+            hint.textContent = "لم يُختر تصنيف بعد.";
+            hint.classList.remove("is-ok");
+          } else {
+            var active = picker && picker.querySelector('.reg-store-cuisine-chip[data-slug="' + v + '"]');
+            var label = active ? active.querySelector(".reg-store-cuisine-chip__label") : null;
+            hint.textContent = "التصنيف المختار: " + (label ? label.textContent.trim() : v);
+            hint.classList.add("is-ok");
+          }
+        }
+      }
+
+      function populateRestaurantCategoryPicker(categories) {
+        var picker = document.getElementById("restaurantCategoryPicker");
+        var sel = document.getElementById("restaurant_category");
+        if (!picker || !sel) return;
+        var list = dedupeCategoriesBySlug(categories && categories.length ? categories : restaurantCategoriesFallback());
+        populateCategorySelect(sel, list);
+        picker.innerHTML = list
+          .map(function (c) {
+            var slug = String(c.slug || "").trim().toLowerCase();
+            var icon = c.icon || "";
+            var label = c.name_ar || c.label_ar || c.label || slug;
+            return (
+              '<button type="button" class="reg-store-cuisine-chip" data-slug="' +
+              slug +
+              '" role="radio" aria-checked="false">' +
+              '<span class="reg-store-cuisine-chip__icon" aria-hidden="true">' +
+              icon +
+              "</span>" +
+              '<span class="reg-store-cuisine-chip__label">' +
+              label +
+              "</span></button>"
+            );
+          })
+          .join("");
+        if (!picker.getAttribute("data-wired")) {
+          picker.setAttribute("data-wired", "1");
+          picker.addEventListener("click", function (e) {
+            var btn = e.target.closest(".reg-store-cuisine-chip");
+            if (!btn) return;
+            setRestaurantCategorySelection(btn.getAttribute("data-slug") || "");
+          });
+        }
+        setRestaurantCategorySelection(sel.value || "");
       }
 
       async function fillCategorySelects() {
@@ -359,7 +461,7 @@
           var selR = document.getElementById("restaurant_category");
           if (selR) {
             var catsR = Array.isArray(j1 && j1.categories) ? j1.categories : [];
-            populateCategorySelect(selR, catsR);
+            populateRestaurantCategoryPicker(catsR.length ? catsR : restaurantCategoriesFallback());
           }
           var r2 = await fetch(base("/api/categories?type=market&list=canonical&sort=manual"));
           var j2 = await r2.json();
@@ -370,6 +472,7 @@
           }
         } catch (e) {
           console.warn("[register-store] categories", e);
+          populateRestaurantCategoryPicker(restaurantCategoriesFallback());
         } finally {
           fillCategorySelectsInFlight = false;
         }

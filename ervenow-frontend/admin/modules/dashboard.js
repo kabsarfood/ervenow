@@ -381,9 +381,9 @@ app.adminMapDotIcon = function (color, opts) {
 
 app.ensureLiveMap = function () {
   if (app.liveMap || typeof L === "undefined") return;
-  var el = document.getElementById("app.liveMap");
+  var el = document.getElementById("liveMap");
   if (!el) return;
-  app.liveMap = L.map("app.liveMap", { zoomControl: true }).setView([24.7136, 46.6753], 11);
+  app.liveMap = L.map("liveMap", { zoomControl: true }).setView([24.7136, 46.6753], 11);
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
     attribution: "&copy; OpenStreetMap",
     maxZoom: 19,

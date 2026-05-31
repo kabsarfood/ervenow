@@ -138,7 +138,8 @@ VALUES
   ('visa_enabled', 'false', 'boolean', 'تفعيل Visa', now()),
   ('min_topup_amount', '30', 'number', 'الحد الأدنى للشحن (ر.س)', now()),
   ('max_topup_amount', '5000', 'number', 'الحد الأعلى للشحن (ر.س)', now()),
-  ('stcpay_display_number', '0505745650', 'string', 'رقم STC Pay للتحويل', now())
+  ('stcpay_display_number', '0505745650', 'string', 'رقم STC Pay للتحويل', now()),
+  ('wallet_topup_auto_approve', 'false', 'boolean', 'شحن تلقائي بدون موافقة يدوية', now())
 ON CONFLICT (key) DO NOTHING;
 
 -- تحديث الرقم إن كان ما زال القيمة الافتراضية القديمة

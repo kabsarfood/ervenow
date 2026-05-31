@@ -199,6 +199,54 @@
       .my-orders-panel[hidden] {
         display: none !important;
       }
+      .my-orders-tabs {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 12px;
+        padding: 4px;
+        border-radius: 14px;
+        background: rgba(61, 34, 19, 0.06);
+        border: 1px solid rgba(61, 34, 19, 0.08);
+      }
+      .my-orders-tab {
+        flex: 1 1 0;
+        min-height: 44px;
+        padding: 10px 12px;
+        border: 0;
+        border-radius: 10px;
+        background: transparent;
+        font: inherit;
+        font-size: 0.86rem;
+        font-weight: 800;
+        color: rgba(61, 34, 19, 0.72);
+        cursor: pointer;
+        transition: background 0.15s, color 0.15s, box-shadow 0.15s;
+      }
+      .my-orders-tab.is-active {
+        background: #fffefb;
+        color: var(--brown, #3d2213);
+        box-shadow: 0 4px 14px rgba(45, 28, 14, 0.08);
+      }
+      .my-orders-tab__count {
+        display: inline-block;
+        margin-inline-start: 4px;
+        font-size: 0.78rem;
+        opacity: 0.85;
+      }
+      .my-orders-tab-note {
+        margin: 0 0 12px;
+        padding: 10px 12px;
+        border-radius: 12px;
+        background: rgba(185, 135, 47, 0.08);
+        border: 1px solid rgba(185, 135, 47, 0.18);
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: var(--muted, #5c4a3d);
+        line-height: 1.5;
+      }
+      .my-orders-tab-panel[hidden] {
+        display: none !important;
+      }
     </style>
   </head>
   <body class="guest-shell-page">
@@ -216,7 +264,7 @@
             <a class="dash-site-header__link" href="/" data-nav="home">الرئيسية</a>
             <a class="dash-site-header__link" href="/dashboard" data-nav="guest">لوحة الزائر</a>
             <a class="dash-site-header__link is-active" href="/my-orders" data-nav="my_orders" aria-current="page">طلباتي</a>
-            <a class="dash-site-header__link" href="/admin-login" data-nav="control">لوحة التحكم</a>
+            <a class="dash-site-header__link" href="/track" data-nav="track">تتبع الحي</a>
           </div>
         </nav>
         <div class="dash-site-header__tools">
@@ -234,7 +282,7 @@
       <div class="layout">
         <section class="my-orders-hero">
           <h1>طلباتي</h1>
-          <p>هنا تظهر طلباتك التي أنشأتها — بانتظار قبول مندوب، أو قيد التوصيل، أو المكتملة.</p>
+          <p>طلباتك النشطة (جديدة أو قيد التوصيل) في «الطلبات الجديدة». بعد التسليم تنتقل إلى «الطلبات المغلقة» كمرجع — وتُحذف تلقائياً بعد سنة.</p>
         </section>
 
         <div id="myOrdersLogin" class="card my-orders-login" hidden>
@@ -260,10 +308,45 @@
             </button>
           </div>
           <div id="myOrdersPanel" class="my-orders-panel" hidden>
-            <div id="myOrdersSections"></div>
-            <div id="myOrdersEmpty" class="my-orders-empty" hidden>
-              <p>عذراً، لا يوجد طلب حالياً.</p>
-              <a class="btn btn-primary" href="/dashboard">ابدأ طلباً جديداً</a>
+            <div class="my-orders-tabs" role="tablist" aria-label="تصنيف الطلبات">
+              <button
+                type="button"
+                class="my-orders-tab is-active"
+                id="myOrdersTabOpen"
+                role="tab"
+                aria-selected="true"
+                aria-controls="myOrdersTabPanelOpen"
+              >
+                الطلبات الجديدة
+                <span class="my-orders-tab__count" id="myOrdersOpenCount">(0)</span>
+              </button>
+              <button
+                type="button"
+                class="my-orders-tab"
+                id="myOrdersTabClosed"
+                role="tab"
+                aria-selected="false"
+                aria-controls="myOrdersTabPanelClosed"
+              >
+                الطلبات المغلقة
+                <span class="my-orders-tab__count" id="myOrdersClosedCount">(0)</span>
+              </button>
+            </div>
+            <p class="my-orders-tab-note" id="myOrdersTabNote">
+              الطلبات الجديدة: كل ما أنشأته وما زال بانتظار مندوب أو قيد التوصيل.
+            </p>
+            <div id="myOrdersTabPanelOpen" class="my-orders-tab-panel" role="tabpanel">
+              <div id="myOrdersSectionsOpen"></div>
+              <div id="myOrdersEmptyOpen" class="my-orders-empty" hidden>
+                <p>لا توجد طلبات نشطة حالياً.</p>
+                <a class="btn btn-primary" href="/dashboard">ابدأ طلباً جديداً</a>
+              </div>
+            </div>
+            <div id="myOrdersTabPanelClosed" class="my-orders-tab-panel" role="tabpanel" hidden>
+              <div id="myOrdersSectionsClosed"></div>
+              <div id="myOrdersEmptyClosed" class="my-orders-empty" hidden>
+                <p>لا توجد طلبات مغلقة بعد.</p>
+              </div>
             </div>
           </div>
         </div>
@@ -282,26 +365,46 @@
 
     <script src="/assets/api-config.js"></script>
     <script src="/assets/api.js"></script>
+    <script src="/assets/auth-account-guard.js"></script>
     <script src="/assets/cart.js"></script>
     <script src="/assets/guest-shell.js"></script>
     <script>
       ErvenowGuestShell.init({ activeNav: "my_orders", pageTag: "طلباتي" });
 
+      (function () {
+        if (!window.PlatformAPI || !window.PlatformAPI.getToken()) return;
+        void ErvenowAuthGuard.ensureApprovedAccount();
+      })();
+
       function orderStatusMeta(o) {
         var ds = String(o.delivery_status || o.status || "").toLowerCase();
         if (ds === "cancelled" || ds === "canceled") {
-          return { label: "ملغى", cls: "my-order-badge--cancel", group: "done" };
+          return { label: "ملغى", cls: "my-order-badge--cancel", bucket: "closed" };
         }
         if (ds === "delivered" || ds === "completed") {
-          return { label: "تم التسليم", cls: "my-order-badge--done", group: "done" };
+          return { label: "تم التسليم", cls: "my-order-badge--done", bucket: "closed" };
         }
         if (o.driver_id && (ds === "accepted" || ds === "picked" || ds === "delivering")) {
-          return { label: "قيد التوصيل", cls: "my-order-badge--active", group: "active" };
+          return { label: "قيد التوصيل", cls: "my-order-badge--active", bucket: "open" };
         }
         if (!o.driver_id && (ds === "new" || ds === "pending" || ds === "draft")) {
-          return { label: "بانتظار مندوب", cls: "my-order-badge--wait", group: "wait" };
+          return { label: "بانتظار مندوب", cls: "my-order-badge--wait", bucket: "open" };
         }
-        return { label: ds || "قيد المعالجة", cls: "my-order-badge--active", group: "active" };
+        return { label: ds || "قيد المعالجة", cls: "my-order-badge--active", bucket: "open" };
+      }
+
+      function isOrderClosed(o) {
+        return orderStatusMeta(o).bucket === "closed";
+      }
+
+      function splitOrders(orders) {
+        var open = [];
+        var closed = [];
+        (orders || []).forEach(function (o) {
+          if (isOrderClosed(o)) closed.push(o);
+          else open.push(o);
+        });
+        return { open: open, closed: closed };
       }
 
       function esc(s) {
@@ -391,6 +494,17 @@
         return String(o.customer_phone || d.customer_phone || "").trim();
       }
 
+      function orderRecipientPhone(o) {
+        var d = orderData(o);
+        return String(
+          o.recipient_phone ||
+            d.recipient_phone ||
+            d.map_recipient_phone ||
+            d.recipientPhone ||
+            ""
+        ).trim();
+      }
+
       function formatCustomerPhone(phone) {
         if (!phone) return "—";
         var d = String(phone).replace(/\D/g, "");
@@ -444,6 +558,7 @@
         var km = orderDistanceKm(o);
         var price = orderPrice(o);
         var customerPhone = formatCustomerPhone(orderCustomerPhone(o));
+        var recipientPhone = formatCustomerPhone(orderRecipientPhone(o));
         var trackId = o.order_number || o.id;
         var cardId = "my-order-" + String(o.id || num).replace(/[^a-zA-Z0-9_-]/g, "");
         return (
@@ -482,6 +597,9 @@
           '<p class="my-order-route__item"><strong>جوال طالب الخدمة:</strong> ' +
           esc(customerPhone) +
           "</p>" +
+          '<p class="my-order-route__item"><strong>جوال مستلم الطلب:</strong> ' +
+          esc(recipientPhone) +
+          "</p>" +
           "</div>" +
           '<div class="my-order-actions">' +
           '<a class="btn btn-primary" href="/track?id=' +
@@ -515,46 +633,73 @@
         }
       }
 
+      var cachedOrders = [];
+      var activeOrdersTab = "open";
+
+      function renderOrderList(orders, containerId, emptyId, emptyMessage) {
+        var el = document.getElementById(containerId);
+        var emptyEl = document.getElementById(emptyId);
+        if (!el) return;
+        if (!orders.length) {
+          el.innerHTML = "";
+          if (emptyEl) {
+            emptyEl.hidden = false;
+            var p = emptyEl.querySelector("p");
+            if (p && emptyMessage) p.textContent = emptyMessage;
+          }
+          return;
+        }
+        if (emptyEl) emptyEl.hidden = true;
+        el.innerHTML =
+          '<section class="my-orders-section">' + orders.map(renderOrderCard).join("") + "</section>";
+      }
+
+      function setActiveOrdersTab(tab) {
+        activeOrdersTab = tab === "closed" ? "closed" : "open";
+        var tabOpen = document.getElementById("myOrdersTabOpen");
+        var tabClosed = document.getElementById("myOrdersTabClosed");
+        var panelOpen = document.getElementById("myOrdersTabPanelOpen");
+        var panelClosed = document.getElementById("myOrdersTabPanelClosed");
+        var note = document.getElementById("myOrdersTabNote");
+        if (tabOpen) {
+          tabOpen.classList.toggle("is-active", activeOrdersTab === "open");
+          tabOpen.setAttribute("aria-selected", activeOrdersTab === "open" ? "true" : "false");
+        }
+        if (tabClosed) {
+          tabClosed.classList.toggle("is-active", activeOrdersTab === "closed");
+          tabClosed.setAttribute("aria-selected", activeOrdersTab === "closed" ? "true" : "false");
+        }
+        if (panelOpen) panelOpen.hidden = activeOrdersTab !== "open";
+        if (panelClosed) panelClosed.hidden = activeOrdersTab !== "closed";
+        if (note) {
+          note.textContent =
+            activeOrdersTab === "closed"
+              ? "الطلبات المُسلّمة والملغاة — مرجع للاستفسار. تُحذف تلقائياً من المنصة بعد مرور سنة على إغلاقها."
+              : "الطلبات الجديدة: كل ما أنشأته وما زال بانتظار مندوب أو قيد التوصيل. عند التسليم تنتقل إلى «الطلبات المغلقة».";
+        }
+      }
+
       function renderSections(orders) {
-        var wait = [];
-        var active = [];
-        var done = [];
-        (orders || []).forEach(function (o) {
-          var g = orderStatusMeta(o).group;
-          if (g === "wait") wait.push(o);
-          else if (g === "done") done.push(o);
-          else active.push(o);
-        });
-
-        var html = "";
-        if (wait.length) {
-          html +=
-            '<section class="my-orders-section"><h2>بانتظار قبول مندوب (' +
-            wait.length +
-            ")</h2>" +
-            wait.map(renderOrderCard).join("") +
-            "</section>";
-        }
-        if (active.length) {
-          html +=
-            '<section class="my-orders-section"><h2>قيد التنفيذ (' +
-            active.length +
-            ")</h2>" +
-            active.map(renderOrderCard).join("") +
-            "</section>";
-        }
-        if (done.length) {
-          html +=
-            '<section class="my-orders-section"><h2>سابقة (' +
-            done.length +
-            ")</h2>" +
-            done.map(renderOrderCard).join("") +
-            "</section>";
-        }
-
-        document.getElementById("myOrdersSections").innerHTML = html;
-        document.getElementById("myOrdersEmpty").hidden = orders.length > 0;
-        updateOrdersCount(orders.length);
+        cachedOrders = Array.isArray(orders) ? orders.slice() : [];
+        var parts = splitOrders(cachedOrders);
+        renderOrderList(
+          parts.open,
+          "myOrdersSectionsOpen",
+          "myOrdersEmptyOpen",
+          "لا توجد طلبات نشطة حالياً."
+        );
+        renderOrderList(
+          parts.closed,
+          "myOrdersSectionsClosed",
+          "myOrdersEmptyClosed",
+          "لا توجد طلبات مغلقة بعد."
+        );
+        var openCountEl = document.getElementById("myOrdersOpenCount");
+        var closedCountEl = document.getElementById("myOrdersClosedCount");
+        if (openCountEl) openCountEl.textContent = "(" + parts.open.length + ")";
+        if (closedCountEl) closedCountEl.textContent = "(" + parts.closed.length + ")";
+        updateOrdersCount(parts.open.length);
+        setActiveOrdersTab(activeOrdersTab);
       }
 
       var ordersPanelOpen = false;
@@ -640,6 +785,12 @@
       }
 
       document.getElementById("myOrdersRefresh").onclick = toggleOrdersPanel;
+      document.getElementById("myOrdersTabOpen").onclick = function () {
+        setActiveOrdersTab("open");
+      };
+      document.getElementById("myOrdersTabClosed").onclick = function () {
+        setActiveOrdersTab("closed");
+      };
       loadMyOrders({ openAfterLoad: false });
       window.addEventListener("ervenow:auth-changed", function () {
         loadMyOrders({ openAfterLoad: ordersPanelOpen });

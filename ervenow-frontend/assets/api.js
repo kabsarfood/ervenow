@@ -85,12 +85,27 @@
 
   function humanizeHttpError(status, j) {
     var raw = j && (j.error || j.message) ? String(j.error || j.message).trim() : "";
+    if (raw && /[\u0600-\u06FF]/.test(raw)) return raw;
     if (status === 401) return "انتهت الجلسة — سجّل الدخول من جديد.";
-    if (status === 403) return "لا صلاحية لتنفيذ هذا الإجراء.";
+    if (status === 403) {
+      if (j && j.pending_approval) return raw || "الحساب بانتظار موافقة الإدارة";
+      if (j && j.not_registered) return raw || "رقم الجوال غير مسجّل — أنشئ حساباً أولاً.";
+      if (j && j.rejected) return raw || "تم رفض طلب التسجيل";
+      return raw || "لا صلاحية لتنفيذ هذا الإجراء.";
+    }
     if (status === 404) return "المورد غير موجود أو لم يعد متاحاً.";
     if (status === 429) return "طلبات كثيرة — انتظر قليلاً ثم أعد المحاولة.";
     if (raw && /[\u0600-\u06FF]/.test(raw)) return raw;
-    if (status >= 500 && status <= 599) return "الخادم مشغول حالياً — أعد المحاولة بعد لحظات.";
+    if (j && j.reason === "migration_missing") {
+      return raw || "نفّذ هجرات ervenow_ledger في Supabase (راجع لوحة الإدارة).";
+    }
+    if (j && j.detail && typeof j.detail === "string" && /[\u0600-\u06FF]/.test(j.detail)) {
+      return j.detail;
+    }
+    if (status >= 500 && status <= 599) {
+      if (raw && raw !== "Internal server error") return raw;
+      return "الخادم مشغول حالياً — أعد المحاولة بعد لحظات.";
+    }
     if (raw) return raw;
     return "تعذّر إكمال الطلب (" + status + "). أعد المحاولة.";
   }
@@ -331,6 +346,23 @@
         lastJson = j;
 
         if (r.ok) return j;
+
+        if (r.status === 403 && j && j.pending_approval) {
+          try {
+            localStorage.removeItem(TOKEN_KEY);
+            localStorage.removeItem(LEGACY_TOKEN_KEY);
+            localStorage.removeItem(FALLBACK_TOKEN_KEY);
+          } catch (clr) {}
+          emit("ervenow:auth-changed", { token: null });
+          if (typeof w !== "undefined" && w.location && !/\/pending-approval/i.test(w.location.pathname)) {
+            w.location.href = "/pending-approval.html";
+          }
+          throw new Error(humanizeHttpError(r.status, j));
+        }
+
+        if (r.status === 403 && j && j.not_registered) {
+          throw new Error(humanizeHttpError(r.status, j));
+        }
 
         var msg = humanizeHttpError(r.status, j);
         if (attempt < totalAttempts - 1 && shouldRetryHttpStatus(r.status)) {

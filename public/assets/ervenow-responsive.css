@@ -1,0 +1,92 @@
+/**
+ * ERVENOW — أساس التصميم المتجاوب (جوال · تابلت · كمبيوتر)
+ * اربطه بعد styles.css في الصفحات العامة واللوحات.
+ */
+
+:root {
+  --erw-break-mobile: 640px;
+  --erw-break-tablet: 1024px;
+  --erw-touch-min: 44px;
+  --erw-touch-primary: 48px;
+  --erw-page-pad: clamp(12px, 3vw, 22px);
+}
+
+/* حقول — منع zoom تلقائي على iOS */
+@media (max-width: 640px) {
+  input:not([type="checkbox"]):not([type="radio"]),
+  select,
+  textarea {
+    font-size: max(16px, 1em);
+  }
+}
+
+/* أزرار وروابط تفاعلية */
+.erw-touch,
+.btn,
+button[type="button"]:not(.prod-qty-btn):not(.prod-gallery__dot),
+a.btn {
+  min-height: var(--erw-touch-min);
+}
+
+.btn-primary,
+.store-order-btn,
+.btn-add-cart {
+  min-height: var(--erw-touch-primary);
+}
+
+/* صفوف أزرار تتحول لعمود على الجوال */
+@media (max-width: 640px) {
+  .row.erw-stack-sm,
+  .portal-preview-actions,
+  .portal-actions.erw-stack-sm {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .row.erw-stack-sm > .btn,
+  .portal-preview-actions > .btn,
+  .portal-preview-actions > a.btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* جداول قابلة للتمرير */
+.erw-table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin: 0 calc(-1 * var(--erw-page-pad));
+  padding: 0 var(--erw-page-pad);
+}
+
+@media (max-width: 640px) {
+  .erw-table-scroll table {
+    min-width: 520px;
+  }
+}
+
+/* شرائط تصنيفات أفقية */
+.erw-chip-scroll {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  flex-wrap: nowrap;
+  padding: 4px 2px 10px;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x proximity;
+}
+
+.erw-chip-scroll > * {
+  flex: 0 0 auto;
+  scroll-snap-align: start;
+}
+
+/* تقليل الحركة */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

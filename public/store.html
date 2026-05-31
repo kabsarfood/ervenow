@@ -8,6 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/assets/styles.css" />
     <link rel="stylesheet" href="/assets/guest-shell.css" />
+    <link rel="stylesheet" href="/assets/ervenow-responsive.css" />
     <style>
       :root {
         --sp-radius: 22px;
@@ -57,8 +58,34 @@
         display: block;
       }
 
+      .store-header__logo-wrap {
+        position: absolute;
+        bottom: -40px;
+        inset-inline-start: 20px;
+        z-index: 2;
+      }
+
+      .store-header__logo {
+        width: 88px;
+        height: 88px;
+        border-radius: 20px;
+        border: 3px solid #fffefb;
+        object-fit: cover;
+        background: #fffefb;
+        box-shadow: 0 10px 32px rgba(42, 24, 16, 0.22);
+        display: block;
+      }
+
       .store-header__content {
-        padding: 20px 20px 22px;
+        padding: 52px 20px 22px;
+      }
+
+      .store-header__bio {
+        margin: 0 0 14px;
+        font-size: 0.92rem;
+        line-height: 1.55;
+        color: #5c4638;
+        font-weight: 600;
       }
 
       .store-header__content h1 {
@@ -241,6 +268,70 @@
         }
       }
 
+      @media (min-width: 641px) and (max-width: 1024px) {
+        .prod-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        .store-header__logo {
+          width: 76px;
+          height: 76px;
+        }
+      }
+
+      @media (max-width: 640px) {
+        .store-shell {
+          padding: 14px max(12px, env(safe-area-inset-right, 12px)) 48px
+            max(12px, env(safe-area-inset-left, 12px));
+        }
+        .store-header__banner {
+          aspect-ratio: 16 / 9;
+          min-height: 120px;
+        }
+        .store-header__logo-wrap {
+          bottom: -32px;
+          inset-inline-start: 14px;
+        }
+        .store-header__logo {
+          width: 64px;
+          height: 64px;
+          border-radius: 16px;
+        }
+        .store-header__content {
+          padding: 40px 14px 18px;
+        }
+        .store-order-btn {
+          max-width: none;
+          min-height: 48px;
+        }
+        .store-section-head {
+          flex-direction: column;
+          align-items: stretch;
+        }
+        .store-cart-link {
+          justify-content: center;
+          min-height: 48px;
+        }
+        .store-prod-cat__scroll {
+          flex-wrap: nowrap;
+        }
+        .store-prod-cat__chip {
+          min-height: 44px;
+          padding: 10px 14px;
+        }
+        .btn-add-cart {
+          min-height: 48px;
+          font-size: 1rem;
+        }
+        .prod-qty-btn {
+          min-width: 44px;
+          min-height: 44px;
+        }
+        .prod-qty-input {
+          min-height: 44px;
+          font-size: 16px;
+        }
+      }
+
       @media (max-width: 480px) {
         .prod-grid {
           grid-template-columns: 1fr;
@@ -276,11 +367,63 @@
         background: linear-gradient(145deg, #f0ebe3, #e8dfd4);
       }
 
-      .prod-card__media img {
+      .prod-card__media img,
+      .prod-gallery__img {
         width: 100%;
         height: 100%;
         object-fit: cover;
         display: block;
+      }
+
+      .prod-gallery {
+        position: relative;
+        width: 100%;
+        height: 100%;
+      }
+
+      .prod-gallery__img {
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+        transition: opacity 0.25s;
+        pointer-events: none;
+      }
+
+      .prod-gallery__img.is-active {
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      .prod-gallery__dots {
+        position: absolute;
+        bottom: 10px;
+        inset-inline: 0;
+        display: flex;
+        justify-content: center;
+        gap: 6px;
+        z-index: 2;
+      }
+
+      .prod-gallery__dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        border: none;
+        padding: 0;
+        background: rgba(255, 255, 255, 0.55);
+        cursor: pointer;
+      }
+
+      .prod-gallery__dot.is-on {
+        background: #fffefb;
+        box-shadow: 0 0 0 2px rgba(61, 34, 19, 0.25);
+      }
+
+      .prod-card__cat {
+        margin: 0;
+        font-size: 0.78rem;
+        font-weight: 800;
+        color: #7a6558;
       }
 
       .prod-card__placeholder {
@@ -545,10 +688,14 @@
         <div class="store-header">
           <div class="store-header__banner">
             <img id="storeBannerImg" src="" alt="" width="920" height="394" decoding="async" fetchpriority="high" />
+            <div class="store-header__logo-wrap" id="storeLogoWrap" hidden>
+              <img class="store-header__logo" id="storeLogoImg" src="" alt="" width="88" height="88" decoding="async" />
+            </div>
           </div>
           <div class="store-header__content">
             <h1 id="storeTitle">—</h1>
             <p id="storeCategory" class="store-header__cat">—</p>
+            <p id="storeBio" class="store-header__bio" hidden></p>
             <p id="storeDistLine" class="store-header__dist">📍 — كم</p>
             <p id="storeRatingLine" class="store-header__rating">—</p>
             <p class="sub" id="storeAddressLine" style="margin: 0 0 14px"></p>
@@ -564,7 +711,7 @@
         </div>
         <div id="productCategoryStrip" class="store-prod-cat" style="display: none" aria-hidden="true">
           <p class="store-prod-cat__title">أقسام المنتجات</p>
-          <div class="store-prod-cat__scroll" id="productCategoryChips" role="tablist" aria-label="تصنيف المنتجات"></div>
+          <div class="store-prod-cat__scroll erw-chip-scroll" id="productCategoryChips" role="tablist" aria-label="تصنيف المنتجات"></div>
         </div>
         <div id="products" class="prod-grid"></div>
         <div class="row" style="margin-top: 14px; gap: 8px; flex-wrap: wrap">
@@ -632,6 +779,9 @@
       var lastProducts = [];
       var activeProductCategory = null;
       var supportsProductCategories = false;
+      var storeProductCategories = [];
+      var storeCategoryOptions = [];
+      var storeCatalogType = "";
 
       var PRODUCT_MARKET_CATEGORIES = [
         { slug: "", icon: "▦", label: "الكل" },
@@ -681,6 +831,109 @@
         var off = p.offer_price != null && p.offer_price !== "" ? Number(p.offer_price) : NaN;
         if (Number.isFinite(off) && off > 0 && off < base) return off;
         return base;
+      }
+
+      function productImageUrls(p) {
+        if (!p) return [];
+        var urls = [];
+        if (p.image_urls && p.image_urls.length) {
+          p.image_urls.forEach(function (u) {
+            u = String(u || "").trim();
+            if (u && urls.indexOf(u) < 0) urls.push(u);
+          });
+        }
+        var primary = p.image_url != null ? String(p.image_url).trim() : "";
+        if (primary && urls.indexOf(primary) < 0) urls.unshift(primary);
+        return urls.slice(0, 8);
+      }
+
+      function productCategoryLabel(slug) {
+        if (!slug) return "";
+        var s = String(slug).trim().toLowerCase();
+        var hit = storeCategoryOptions.find(function (c) {
+          return c.slug === s;
+        });
+        if (hit) return hit.label;
+        hit = storeProductCategories.find(function (c) {
+          return c.slug === s;
+        });
+        if (hit) return hit.label;
+        hit = PRODUCT_MARKET_CATEGORIES.find(function (c) {
+          return c.slug === s;
+        });
+        return hit ? hit.label : s;
+      }
+
+      async function loadStoreCategoryOptions() {
+        if (!storeId) return;
+        try {
+          var res = await fetch(
+            window.PlatformAPI.apiUrl(
+              "/api/store/product-category-options?store_id=" + encodeURIComponent(storeId)
+            )
+          );
+          var data = await res.json().catch(function () {
+            return {};
+          });
+          storeCategoryOptions = data.options || [];
+          storeCatalogType = data.catalog_type || "";
+          if (storeCategoryOptions.length) {
+            supportsProductCategories = true;
+            storeProductCategories = [{ slug: "", icon: "▦", label: "الكل" }].concat(
+              storeCategoryOptions.map(function (o) {
+                return { slug: o.slug, icon: o.icon || "📦", label: o.label || o.slug };
+              })
+            );
+          }
+          setupProductCategoryStrip();
+        } catch (e) {
+          setupProductCategoryStrip();
+        }
+      }
+
+      function productMediaHtml(p) {
+        var urls = productImageUrls(p);
+        if (!urls.length) {
+          return '<div class="prod-card__placeholder" aria-hidden="true"></div>';
+        }
+        if (urls.length === 1) {
+          return (
+            '<img src="' +
+            esc(urls[0]) +
+            '" alt="' +
+            esc(p.name) +
+            '" loading="lazy" decoding="async" />'
+          );
+        }
+        var imgs = urls
+          .map(function (u, i) {
+            return (
+              '<img class="prod-gallery__img' +
+              (i === 0 ? " is-active" : "") +
+              '" src="' +
+              esc(u) +
+              '" alt="' +
+              esc(p.name) +
+              '" data-gi="' +
+              i +
+              '" loading="lazy" decoding="async" />'
+            );
+          })
+          .join("");
+        var dots = urls
+          .map(function (_u, i) {
+            return (
+              '<button type="button" class="prod-gallery__dot' +
+              (i === 0 ? " is-on" : "") +
+              '" data-gi="' +
+              i +
+              '" aria-label="صورة ' +
+              (i + 1) +
+              '"></button>'
+            );
+          })
+          .join("");
+        return '<div class="prod-gallery">' + imgs + '<div class="prod-gallery__dots">' + dots + "</div></div>";
       }
 
       var defaultBanner =
@@ -733,7 +986,13 @@
         var strip = document.getElementById("productCategoryStrip");
         var box = document.getElementById("productCategoryChips");
         if (!strip || !box) return;
-        if (!supportsProductCategories) {
+        var chips =
+          storeProductCategories.length > 1
+            ? storeProductCategories
+            : supportsProductCategories
+              ? PRODUCT_MARKET_CATEGORIES
+              : [];
+        if (chips.length <= 1) {
           strip.style.display = "none";
           strip.setAttribute("aria-hidden", "true");
           box.innerHTML = "";
@@ -741,7 +1000,7 @@
         }
         strip.style.display = "block";
         strip.removeAttribute("aria-hidden");
-        var html = PRODUCT_MARKET_CATEGORIES.map(function (c) {
+        var html = chips.map(function (c) {
           var active = (activeProductCategory || "") === (c.slug || "");
           return (
             '<button type="button" class="store-prod-cat__chip' +
@@ -758,6 +1017,36 @@
           );
         }).join("");
         box.innerHTML = html;
+      }
+
+      async function loadProductCategories() {
+        if (!storeId) return;
+        try {
+          var res = await fetch(
+            window.PlatformAPI.apiUrl(
+              "/api/store/product-categories?store_id=" + encodeURIComponent(storeId)
+            )
+          );
+          var data = await res.json().catch(function () {
+            return {};
+          });
+          var cats = data.categories || [];
+          if (cats.length) {
+            storeProductCategories = [{ slug: "", icon: "▦", label: "الكل" }].concat(
+              cats.map(function (c) {
+                return {
+                  slug: c.slug,
+                  icon: c.icon || "📦",
+                  label: (c.label || c.slug) + (c.count ? " (" + c.count + ")" : ""),
+                };
+              })
+            );
+            supportsProductCategories = true;
+          }
+          setupProductCategoryStrip();
+        } catch (e) {
+          setupProductCategoryStrip();
+        }
       }
 
       function addProductToCart(p, qty) {
@@ -862,10 +1151,11 @@
         storeMeta.type = store.type || "supermarket";
         supportsProductCategories = !!store.supports_product_categories;
         activeProductCategory = null;
-        setupProductCategoryStrip();
+        storeProductCategories = [];
 
         var title = store.label || store.name || "متجر";
         document.getElementById("storeTitle").textContent = title;
+        document.getElementById("storeHeaderWrap").style.display = "block";
 
         var catLine;
         if (store.category_label_ar) {
@@ -897,14 +1187,46 @@
           store.address || store.location_text || "";
 
         var imgEl = document.getElementById("storeBannerImg");
+        var logoWrap = document.getElementById("storeLogoWrap");
+        var logoEl = document.getElementById("storeLogoImg");
+        var defLogo =
+          "data:image/svg+xml," +
+          encodeURIComponent(
+            '<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160"><rect fill="#f5ebe0" width="160" height="160" rx="24"/><text x="50%" y="52%" dominant-baseline="middle" text-anchor="middle" fill="#c9a227" font-family="sans-serif" font-size="15" font-weight="700">ERVENOW</text></svg>'
+          );
         imgEl.onerror = function () {
           imgEl.onerror = null;
           imgEl.src = defaultBanner;
         };
-        if (store.logo_url) {
+        if (store.banner_url) {
+          imgEl.src = store.banner_url;
+        } else if (store.logo_url) {
           imgEl.src = store.logo_url;
         } else {
           imgEl.src = defaultBanner;
+        }
+        if (logoEl) {
+          logoEl.onerror = function () {
+            logoEl.onerror = null;
+            logoEl.src = defLogo;
+          };
+          if (store.logo_url) {
+            logoEl.src = store.logo_url;
+            if (logoWrap) logoWrap.hidden = false;
+          } else if (logoWrap) {
+            logoWrap.hidden = true;
+          }
+        }
+        var bioEl = document.getElementById("storeBio");
+        if (bioEl) {
+          var bio = store.bio != null ? String(store.bio).trim() : "";
+          if (bio) {
+            bioEl.textContent = bio;
+            bioEl.hidden = false;
+          } else {
+            bioEl.textContent = "";
+            bioEl.hidden = true;
+          }
         }
 
         document.getElementById("orderBtn").onclick = function () {
@@ -939,10 +1261,12 @@
             var stockN = p.stock != null && p.stock !== "" ? Number(p.stock) : null;
             var hasStockCap = stockN != null && Number.isFinite(stockN);
             var available = p.active !== false && (!hasStockCap || stockN > 0);
-            var im = p.image_url
-              ? '<img src="' + esc(p.image_url) + '" alt="' + esc(p.name) + '" loading="lazy" decoding="async" />'
-              : '<div class="prod-card__placeholder" aria-hidden="true"></div>';
+            var im = productMediaHtml(p);
             var cardClass = "prod-card" + (available ? "" : " prod-card--unavailable");
+            var catSlug = p.category != null ? String(p.category).trim().toLowerCase() : "";
+            var catBlock = catSlug
+              ? '<p class="prod-card__cat">' + esc(productCategoryLabel(catSlug)) + "</p>"
+              : "";
             var unit = effectiveUnitPrice(p);
             var base = Number(p.price) || 0;
             var hasOffer = unit < base && base > 0;
@@ -992,6 +1316,7 @@
               '<h3 class="prod-card__title">' +
               esc(p.name) +
               "</h3>" +
+              catBlock +
               descBlock +
               ratingBlock +
               stockBlock +
@@ -1021,6 +1346,18 @@
 
       document.getElementById("products").addEventListener("click", function (ev) {
         var card = ev.target.closest(".prod-card");
+        var dot = ev.target.closest(".prod-gallery__dot");
+        if (dot && card) {
+          ev.preventDefault();
+          var gi = dot.getAttribute("data-gi");
+          card.querySelectorAll(".prod-gallery__img").forEach(function (img) {
+            img.classList.toggle("is-active", img.getAttribute("data-gi") === gi);
+          });
+          card.querySelectorAll(".prod-gallery__dot").forEach(function (d) {
+            d.classList.toggle("is-on", d.getAttribute("data-gi") === gi);
+          });
+          return;
+        }
         var minus = ev.target.closest(".prod-qty-minus");
         var plus = ev.target.closest(".prod-qty-plus");
         if (minus || plus) {
@@ -1153,6 +1490,8 @@
         } catch (e) {}
         try {
           await loadStore();
+          await loadStoreCategoryOptions();
+          await loadProductCategories();
           await loadProducts(false);
           await loadReviews();
         } catch (e) {

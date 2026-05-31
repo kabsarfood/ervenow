@@ -11,6 +11,7 @@ const { readStateAsync, writeState } = require("../../shared/utils/siteMaintenan
 const { normalizePhone } = require("../../shared/utils/phone");
 const { createServiceClient } = require("../../shared/config/supabase");
 const platformBranding = require("../../shared/utils/platformBrandingStore");
+const platformOffers = require("../../shared/utils/platformOffersStore");
 const checkoutPaymentMethods = require("../../shared/utils/checkoutPaymentMethods");
 const { sanitizeDriverOrStoreRowForApi, sanitizeDriverOrStoreListForApi } = require("../../shared/utils/bankApiSafe");
 const {
@@ -20,8 +21,18 @@ const {
   isCategoriesTableMissing,
   CATEGORY_SCOPE_STORE,
   CATEGORY_SCOPE_PRODUCT,
+  isStoreScopeCategory,
+  isProductScopeCategory,
+  PRODUCT_CATALOG_TYPE_SET,
 } = require("../../shared/categoriesDb");
 const { recordStoreCategoryUsageOnApprove } = require("../../shared/categoryUsage");
+const { uploadToStoreBucket } = require("../../shared/utils/storeFileUpload");
+const {
+  normalizeRestaurantCategory,
+  restaurantCategoryLabelAr,
+  RESTAURANT_CATEGORY_KEYS,
+} = require("../../shared/restaurantCategories");
+const { normalizeProductCategory, isMarketStoreType } = require("../../shared/marketProductCategories");
 const { acceptOrder } = require("../delivery/service");
 const { broadcastOrderPatch, orderPatchFromRow } = require("../../shared/lib/trackingSocket");
 const {
@@ -225,6 +236,11 @@ async function linkStoreOwnerAfterApprove(sb, store) {
     const r = String(u.role || "").toLowerCase();
     if (!["merchant", "restaurant", "admin"].includes(r)) {
       await sb.from("users").update({ role: "merchant", updated_at: new Date().toISOString() }).eq("id", u.id);
+    }
+    try {
+      await syncUserStatusByPhone(sb, phoneDigits, "active");
+    } catch (syncErr) {
+      console.warn("[admin/linkStoreOwner] user status:", syncErr && (syncErr.message || syncErr));
     }
   } catch (e) {
     console.warn("[admin/linkStoreOwner]", e && (e.message || e));
@@ -589,6 +605,29 @@ router.post("/checkout-payment-methods", requireAuth, requireRole("admin"), requ
   }
 });
 
+router.get("/platform-offers", requireAuth, requireRole("admin"), requireAdminPermission("dashboard"), async (_req, res) => {
+  try {
+    const sb = createServiceClient();
+    if (!sb) return fail(res, "قاعدة البيانات غير جاهزة", 503);
+    const offers = await platformOffers.loadOffers(sb, { includeInactive: true });
+    return ok(res, { offers });
+  } catch (e) {
+    return fail(res, e.message || String(e), 500);
+  }
+});
+
+router.post("/platform-offers", requireAuth, requireRole("admin"), requireAdminPermission("dashboard"), async (req, res) => {
+  try {
+    const sb = createServiceClient();
+    if (!sb) return fail(res, "قاعدة البيانات غير جاهزة", 503);
+    const raw = req.body?.offers && typeof req.body.offers === "object" ? req.body.offers : req.body || {};
+    const offers = await platformOffers.applyOffersPatch(sb, raw, { publicRoot: ADMIN_PUBLIC_ROOT });
+    return ok(res, { offers, message: "تم حفظ عروض المنصة" });
+  } catch (e) {
+    return fail(res, e.message || String(e), 400);
+  }
+});
+
 router.get("/me", requireAuth, requireRole("admin"), async (req, res) => {
   try {
     const p = getAdminProfileByPhone(req.appUser?.phone);
@@ -908,7 +947,14 @@ router.get("/finance-summary", requireAuth, requireRole("admin"), requireAdminPe
     }
     return ok(res, summary);
   } catch (e) {
-    return fail(res, e.message, 500);
+    console.error("[admin/finance-summary]", e);
+    const detail = String((e && e.message) || e || "");
+    const friendly = /not a function/i.test(detail)
+      ? "خطأ تحميل الملخص المالي — أعد تشغيل الخادم (تم إصلاح تبعية دائرية في النظام)"
+      : detail
+        ? `تعذر جلب الملخص المالي: ${detail}`
+        : "تعذر جلب الملخص المالي";
+    return fail(res, friendly, 500, { reason: "finance_summary_error", detail });
   }
 });
 
@@ -1305,6 +1351,192 @@ router.get("/store-requests", requireAuth, requireRole("admin"), requireAdminPer
   }
 });
 
+function isStoreMerchantHubMissing(err) {
+  if (!err) return false;
+  const msg = String(err.message || err.details || "");
+  return /store_merchant_hub|schema cache|relation .*store_merchant_hub/i.test(msg);
+}
+
+function normalizeStoreCategoryForAdmin(storeType, raw) {
+  const c = String(raw || "").trim();
+  if (!c) return null;
+  const t = String(storeType || "").trim().toLowerCase();
+  if (t === "restaurant") {
+    return normalizeRestaurantCategory(c) || c.toLowerCase().slice(0, 64);
+  }
+  if (isMarketStoreType(t)) {
+    return normalizeProductCategory(c) || c.toLowerCase().slice(0, 64);
+  }
+  return c.toLowerCase().slice(0, 64);
+}
+
+async function fetchMerchantHubSafe(sb, storeId) {
+  const hubRes = await sb
+    .from("store_merchant_hub")
+    .select("bio,banner_url,updated_at")
+    .eq("store_id", storeId)
+    .maybeSingle();
+  if (hubRes.error) {
+    if (isStoreMerchantHubMissing(hubRes.error)) return { hub: null };
+    return { error: hubRes.error.message };
+  }
+  return { hub: hubRes.data || null };
+}
+
+router.get(
+  "/store-requests/:id/setup",
+  requireAuth,
+  requireRole("admin"),
+  requireAdminPermission("stores"),
+  async (req, res) => {
+    try {
+      const id = String(req.params.id || "").trim();
+      if (!id) return fail(res, "id مطلوب", 400);
+      const { data: row, error } = await req.supabase.from("stores").select("*").eq("id", id).maybeSingle();
+      if (error) return fail(res, error.message, 400);
+      if (!row) return fail(res, "المتجر غير موجود", 404);
+      const hubOut = await fetchMerchantHubSafe(req.supabase, id);
+      if (hubOut.error) return fail(res, hubOut.error, 400);
+      const store = sanitizeDriverOrStoreRowForApi(row);
+      const cat = store.category != null ? String(store.category) : "";
+      return ok(res, {
+        store,
+        merchant_hub: hubOut.hub,
+        category_label_ar:
+          String(store.type || "").toLowerCase() === "restaurant"
+            ? restaurantCategoryLabelAr(cat) || cat
+            : cat,
+        restaurant_category_options: RESTAURANT_CATEGORY_KEYS.map((slug) => ({
+          slug,
+          label: restaurantCategoryLabelAr(slug) || slug,
+        })),
+        ...storeMerchantPanelPaths(row),
+      });
+    } catch (e) {
+      console.error("[admin/store-setup/get]", e);
+      return fail(res, e.message || "خطأ في الخادم", 500);
+    }
+  }
+);
+
+router.put(
+  "/store-requests/:id/setup",
+  requireAuth,
+  requireRole("admin"),
+  requireAdminPermission("stores"),
+  async (req, res) => {
+    try {
+      const id = String(req.params.id || "").trim();
+      if (!id) return fail(res, "id مطلوب", 400);
+      const b = req.body || {};
+      const { data: existing, error: exErr } = await req.supabase.from("stores").select("*").eq("id", id).maybeSingle();
+      if (exErr) return fail(res, exErr.message, 400);
+      if (!existing) return fail(res, "المتجر غير موجود", 404);
+
+      const patch = { updated_at: new Date().toISOString() };
+      if (b.name != null) {
+        const nm = String(b.name).trim();
+        if (!nm) return fail(res, "اسم المتجر مطلوب", 400);
+        patch.name = nm;
+      }
+      if (b.type != null) {
+        const t = String(b.type).trim().toLowerCase();
+        if (!t) return fail(res, "نوع المتجر مطلوب", 400);
+        patch.type = t;
+      }
+      const resolvedType = patch.type != null ? patch.type : existing.type;
+      if (b.category !== undefined || b.restaurant_category !== undefined) {
+        const rawCat =
+          b.restaurant_category != null && String(b.restaurant_category).trim() !== ""
+            ? b.restaurant_category
+            : b.category;
+        if (rawCat === null || rawCat === "") {
+          patch.category = null;
+        } else {
+          const cat = normalizeStoreCategoryForAdmin(resolvedType, rawCat);
+          if (!cat) return fail(res, "تصنيف المتجر غير صالح", 400);
+          patch.category = cat;
+        }
+      }
+      if (b.location_text !== undefined) patch.location_text = String(b.location_text || "").trim() || null;
+      if (b.address !== undefined) patch.address = String(b.address || "").trim() || null;
+      if (b.lat !== undefined && b.lat !== null && b.lat !== "") {
+        const lat = Number(b.lat);
+        if (Number.isFinite(lat)) patch.lat = lat;
+      }
+      if (b.lng !== undefined && b.lng !== null && b.lng !== "") {
+        const lng = Number(b.lng);
+        if (Number.isFinite(lng)) patch.lng = lng;
+      }
+
+      const sb = createServiceClient() || req.supabase;
+      if (b.logo_base64 && String(b.logo_base64).length > 40) {
+        const logoUrl = await uploadToStoreBucket(
+          sb,
+          id,
+          "logo",
+          b.logo_base64,
+          b.logo_file_name || "logo.jpg"
+        );
+        if (logoUrl) patch.logo_url = logoUrl;
+      }
+
+      const { data: storeRow, error: upErr } = await updateStoreWithOptionalActive(req.supabase, id, patch);
+      if (upErr) return fail(res, upErr.message, 400);
+
+      let bioNext;
+      let bannerNext;
+      if (Object.prototype.hasOwnProperty.call(b, "bio")) {
+        bioNext = String(b.bio ?? "").trim() || null;
+      }
+      if (b.banner_base64 && String(b.banner_base64).length > 40) {
+        const url = await uploadToStoreBucket(sb, id, "banner", b.banner_base64, b.banner_file_name || "banner.jpg");
+        if (url) bannerNext = url;
+      }
+
+      if (bioNext !== undefined || bannerNext !== undefined) {
+        const hubOut = await fetchMerchantHubSafe(req.supabase, id);
+        if (hubOut.error) return fail(res, hubOut.error, 400);
+        const merged = {
+          store_id: id,
+          bio: bioNext !== undefined ? bioNext : hubOut.hub?.bio ?? null,
+          banner_url: bannerNext !== undefined ? bannerNext : hubOut.hub?.banner_url ?? null,
+          updated_at: new Date().toISOString(),
+        };
+        const { error: hubErr } = await req.supabase.from("store_merchant_hub").upsert(merged, { onConflict: "store_id" });
+        if (hubErr && !isStoreMerchantHubMissing(hubErr)) {
+          return fail(res, hubErr.message, 400);
+        }
+      }
+
+      let finalStore = storeRow;
+      if (b.approve === true && String(storeRow.status || "").toLowerCase() !== "approved") {
+        const { data: approved, error: aErr } = await updateStoreWithOptionalActive(req.supabase, id, {
+          status: "approved",
+          is_active: true,
+          updated_at: new Date().toISOString(),
+        });
+        if (aErr) return fail(res, aErr.message, 400);
+        finalStore = approved;
+        await linkStoreOwnerAfterApprove(req.supabase, approved);
+        recordStoreCategoryUsageOnApprove(approved);
+        await notifyStoreApprovedWhatsApp(approved);
+      }
+
+      const hubFinal = await fetchMerchantHubSafe(req.supabase, id);
+      return ok(res, {
+        store: sanitizeDriverOrStoreRowForApi(finalStore),
+        merchant_hub: hubFinal.hub,
+        ...storeMerchantPanelPaths(finalStore),
+        message: b.approve ? "تم حفظ الصفحة واعتماد المتجر" : "تم حفظ بيانات المتجر",
+      });
+    } catch (e) {
+      console.error("[admin/store-setup/put]", e);
+      return fail(res, e.message || "خطأ في الخادم", 500);
+    }
+  }
+);
+
 router.patch("/store-requests/:id", requireAuth, requireRole("admin"), requireAdminPermission("stores"), async (req, res) => {
   try {
     const id = String(req.params.id || "").trim();
@@ -1505,6 +1737,11 @@ router.post("/reject-driver", requireAuth, requireRole("admin"), requireAdminPer
       .select()
       .single();
     if (error) return fail(res, error.message, 400);
+    try {
+      if (data?.phone) await syncUserStatusByPhone(req.supabase, data.phone, "rejected");
+    } catch (syncErr) {
+      console.warn("[admin/reject-driver] user status:", syncErr && (syncErr.message || syncErr));
+    }
     return ok(res, { driver: sanitizeDriverOrStoreRowForApi(data) });
   } catch (e) {
     return fail(res, e.message || String(e), 500);
@@ -1556,11 +1793,29 @@ router.post("/activate-driver", requireAuth, requireRole("admin"), requireAdminP
   }
 });
 
+router.get("/registration-approvals", requireAuth, requireRole("admin"), async (req, res) => {
+  try {
+    const profile = getAdminProfileByPhone(req.appUser?.phone);
+    const need = ["customers", "stores", "drivers", "providers", "dashboard"];
+    if (!need.some((p) => profile.permissions.includes(p))) {
+      return fail(res, "Insufficient admin permission", 403);
+    }
+    const { loadRegistrationApprovalItems } = require("../../shared/services/registrationApprovals");
+    const payload = await loadRegistrationApprovalItems(req.supabase, {
+      type: req.query.type || "all",
+      status: req.query.status || "all",
+    });
+    return ok(res, payload);
+  } catch (e) {
+    return fail(res, e.message || String(e), 500);
+  }
+});
+
 router.get("/customers", requireAuth, requireRole("admin"), requireAdminPermission("customers"), async (req, res) => {
   try {
     const first = await req.supabase
       .from("users")
-      .select("id, phone, role, status, created_at")
+      .select("id, phone, role, status, name, created_at, updated_at")
       .in("role", ["customer", "user"])
       .order("created_at", { ascending: false })
       .limit(500);
@@ -1617,15 +1872,44 @@ router.post("/block-customer", requireAuth, requireRole("admin"), requireAdminPe
   }
 });
 
-router.post("/activate-customer", requireAuth, requireRole("admin"), requireAdminPermission("customers"), async (req, res) => {
+router.post("/reject-user", requireAuth, requireRole("admin"), async (req, res) => {
   try {
+    const profile = getAdminProfileByPhone(req.appUser?.phone);
+    if (!profile.permissions.some((p) => ["customers", "providers", "dashboard"].includes(p))) {
+      return fail(res, "Insufficient admin permission", 403);
+    }
     const id = String(req.body?.id || "").trim();
     if (!id) return fail(res, "id required", 400);
     const first = await req.supabase
       .from("users")
-      .update({ role: "customer", status: "active", updated_at: new Date().toISOString() })
+      .update({ status: "rejected", updated_at: new Date().toISOString() })
       .eq("id", id)
-      .select("id, phone, role, status, created_at")
+      .select("id, phone, role, status, name, created_at, updated_at")
+      .single();
+    if (!first.error) return ok(res, { user: first.data });
+    if (isSchemaMissingError(first.error)) {
+      return fail(res, "عمود users.status غير موجود — نفّذ migration_users_status.sql", 400);
+    }
+    return fail(res, first.error.message, 400);
+  } catch (e) {
+    return fail(res, e.message || String(e), 500);
+  }
+});
+
+router.post("/activate-customer", requireAuth, requireRole("admin"), requireAdminPermission("customers"), async (req, res) => {
+  try {
+    const id = String(req.body?.id || "").trim();
+    if (!id) return fail(res, "id required", 400);
+    const roleIn = String(req.body?.role || "").trim().toLowerCase();
+    const patch = { status: "active", updated_at: new Date().toISOString() };
+    if (roleIn === "service") patch.role = "service";
+    else if (roleIn === "merchant" || roleIn === "restaurant") patch.role = roleIn;
+    else patch.role = "customer";
+    const first = await req.supabase
+      .from("users")
+      .update(patch)
+      .eq("id", id)
+      .select("id, phone, role, status, name, created_at, updated_at")
       .single();
     if (!first.error) return ok(res, { customer: first.data });
     if (isSchemaMissingError(first.error)) {
@@ -1991,13 +2275,24 @@ router.get(
   async (req, res) => {
     try {
       const scope = normalizeScopeType(req.query.type);
-      if (!scope) return fail(res, "أرسل type=restaurant أو type=market", 400);
+      if (!scope) {
+        return fail(
+          res,
+          "أرسل type: restaurant | market | pharmacy | services | transport | fuel | clothing",
+          400
+        );
+      }
+      const scopeFilter = String(req.query.scope || "").trim().toLowerCase();
       const sb = createServiceClient();
       if (!sb) return fail(res, "الخادم غير مهيأ لقاعدة البيانات", 503);
-      const { data, error } = await sb
+      let q = sb
         .from("categories")
         .select("id,type,scope,slug,name_ar,icon,image_url,sort_order,is_active,usage_count,last_used_at,created_at,updated_at")
-        .eq("type", scope)
+        .eq("type", scope);
+      if (scopeFilter === "store" || scopeFilter === "product") {
+        q = q.eq("scope", scopeFilter);
+      }
+      const { data, error } = await q
         .order("usage_count", { ascending: false })
         .order("sort_order", { ascending: true })
         .order("name_ar", { ascending: true });
@@ -2008,12 +2303,14 @@ router.get(
         if (!/usage_count|last_used_at|column|schema cache/i.test(String(error.message || ""))) {
           return fail(res, error.message, 400);
         }
-        const r2 = await sb
+        let q2 = sb
           .from("categories")
           .select("id,type,scope,slug,name_ar,icon,image_url,sort_order,is_active,created_at,updated_at")
-          .eq("type", scope)
-          .order("sort_order", { ascending: true })
-          .order("name_ar", { ascending: true });
+          .eq("type", scope);
+        if (scopeFilter === "store" || scopeFilter === "product") {
+          q2 = q2.eq("scope", scopeFilter);
+        }
+        const r2 = await q2.order("sort_order", { ascending: true }).order("name_ar", { ascending: true });
         if (r2.error) {
           if (isCategoriesTableMissing(r2.error)) {
             return ok(res, { ok: true, categories: [], note: "نفّذ shared/migration_categories.sql في Supabase" });
@@ -2044,11 +2341,12 @@ router.post(
       const catScope = normalizeCategoryScope(body.scope, type);
       if (!type || !slug || !name_ar) return fail(res, "type و slug و name_ar (أو label_ar) مطلوبة", 400);
       if (!catScope) return fail(res, "scope غير صالح — استخدم store أو product", 400);
-      if (type === "restaurant" && catScope !== CATEGORY_SCOPE_STORE) {
-        return fail(res, "أقسام المطاعم يجب أن تكون scope=store", 400);
-      }
-      if (type === "market" && catScope !== CATEGORY_SCOPE_PRODUCT) {
-        return fail(res, "أقسام البقالة يجب أن تكون scope=product", 400);
+      if (type === "restaurant" && catScope === CATEGORY_SCOPE_STORE) {
+        /* تصنيف مطبخ المتجر (تسجيل/تصفح) */
+      } else if (catScope === CATEGORY_SCOPE_PRODUCT && PRODUCT_CATALOG_TYPE_SET.has(type)) {
+        /* قسم منتج / قائمة — كل الأنواع بما فيها مطاعم */
+      } else {
+        return fail(res, "تركيبة type/scope غير صالحة — راجع دليل الأقسام", 400);
       }
       const icon =
         body.icon != null && String(body.icon).trim() !== "" ? String(body.icon).trim().slice(0, 32) : null;
