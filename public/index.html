@@ -3,6 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <script src="/assets/viewport-fit.js"></script>
     <meta
       name="description"
       content="ERVENOW — نربط المطاعم والمتاجر والعملاء والمناديب في نظام ذكي واحد. يتم تفعيل الحساب بعد المراجعة واعتماده من إدارة ERVENOW."
@@ -340,8 +341,9 @@
         right: auto;
         width: min(580px, calc(100vw - 24px));
         max-height: min(
+          88vh,
           88dvh,
-          calc(100dvh - 24px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))
+          calc(var(--erw-viewport-h, 100dvh) - 24px - env(safe-area-inset-top, 0px) - var(--erw-safe-bottom, 12px))
         );
         pointer-events: auto;
         z-index: 1;
@@ -357,8 +359,9 @@
         inset-inline-end: auto;
         width: min(580px, calc(100vw - 24px));
         max-height: min(
+          88vh,
           88dvh,
-          calc(100dvh - 24px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))
+          calc(var(--erw-viewport-h, 100dvh) - 24px - env(safe-area-inset-top, 0px) - var(--erw-safe-bottom, 12px))
         );
         transform: none;
       }
@@ -506,8 +509,9 @@
 
       #lpCartWrap.lp-cart-wrap--portaled .lp-cart-panel__surface {
         max-height: min(
+          88vh,
           88dvh,
-          calc(100dvh - 24px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))
+          calc(var(--erw-viewport-h, 100dvh) - 24px - env(safe-area-inset-top, 0px) - var(--erw-safe-bottom, 12px))
         );
       }
 
@@ -3345,6 +3349,8 @@
             mountCartLayers();
             panel.classList.add("lp-cart-panel--open");
             document.body.classList.add("lp-cart-no-scroll");
+            if (window.ErvenowViewport && ErvenowViewport.lockScroll) ErvenowViewport.lockScroll();
+            if (window.ErvenowViewport && ErvenowViewport.refresh) ErvenowViewport.refresh();
             panel.setAttribute("aria-hidden", "false");
             btn.setAttribute("aria-expanded", "true");
             if (typeof renderHeaderCartPreview === "function") renderHeaderCartPreview();
@@ -3352,6 +3358,7 @@
             panel.classList.remove("lp-cart-panel--open");
             unmountCartLayers();
             document.body.classList.remove("lp-cart-no-scroll");
+            if (window.ErvenowViewport && ErvenowViewport.unlockScroll) ErvenowViewport.unlockScroll();
             panel.setAttribute("aria-hidden", "true");
             btn.setAttribute("aria-expanded", "false");
             if (typeof window.resetLpCartPayStep === "function") window.resetLpCartPayStep();

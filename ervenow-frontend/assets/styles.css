@@ -20,6 +20,8 @@ body {
   color: var(--erv-text, var(--brown));
   line-height: 1.5;
   min-height: 100vh;
+  min-height: 100dvh;
+  min-height: calc(var(--erw-vh, 1vh) * 100);
 }
 
 a {

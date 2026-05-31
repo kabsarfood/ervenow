@@ -998,7 +998,7 @@ body.driver-page .msg.err {
   inset-inline: 0;
   bottom: 0;
   z-index: 10050;
-  padding: 12px 14px calc(14px + env(safe-area-inset-bottom, 0px));
+  padding: 12px 14px var(--erw-safe-bottom, max(12px, env(safe-area-inset-bottom, 12px)));
   background: linear-gradient(180deg, transparent, rgba(43, 23, 13, 0.94));
 }
 
@@ -1060,7 +1060,7 @@ body.driver-page .msg.err {
 }
 
 body.driver-nav-dock-active .dash-main .layout {
-  padding-bottom: calc(130px + env(safe-area-inset-bottom, 0px));
+  padding-bottom: calc(130px + var(--erw-safe-bottom, max(12px, env(safe-area-inset-bottom, 12px))));
 }
 
 body.driver-ultra-mode #driverRatingLine {

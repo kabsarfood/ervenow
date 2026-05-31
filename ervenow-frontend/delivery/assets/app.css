@@ -39,6 +39,8 @@ body{
   line-height:1.5;
   color:var(--text);
   min-height:100vh;
+  min-height:100dvh;
+  min-height:calc(var(--erw-vh, 1vh) * 100);
   width:100%;
   max-width:100%;
   background:
@@ -84,6 +86,8 @@ body{
   max-width:100%;
   width:100%;
   min-height:100vh;
+  min-height:100dvh;
+  min-height:calc(var(--erw-vh, 1vh) * 100);
   box-sizing:border-box;
 }
 

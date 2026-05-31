@@ -4,6 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="description" content="يتم تفعيل الحساب بعد المراجعة واعتماده من إدارة ERVENOW." />
+    <script src="/assets/viewport-fit.js"></script>
     <title>ERVENOW | لوحة زائر المنصة</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
@@ -167,6 +168,7 @@
       }
       body.dash-map-modal-open {
         overflow: hidden;
+        touch-action: none;
       }
       body.dash-map-modal-open #dashDeliveryTitle[open] {
         position: fixed;
@@ -266,8 +268,8 @@
       }
       @media (max-height: 700px) {
         body.dash-map-modal-open #dashDeliveryTitle[open] {
-          height: calc(100dvh - 16px);
-          max-height: calc(100dvh - 16px);
+          height: calc(var(--erw-viewport-h, 100dvh) - 16px);
+          max-height: calc(var(--erw-viewport-h, 100dvh) - 16px);
           top: 50%;
         }
         body.dash-map-modal-open #dashDeliveryTitle[open] .map-canvas-form #pickupDropMap,
@@ -2192,7 +2194,7 @@
       @media (max-width: 767px) {
         :root {
           --dash-map-h: clamp(168px, 32dvh, 228px);
-          --dash-map-dock-h: max(76px, calc(68px + env(safe-area-inset-bottom, 0px)));
+          --dash-map-dock-h: max(76px, calc(68px + var(--erw-safe-bottom, max(12px, env(safe-area-inset-bottom, 12px)))));
         }
         body.dash-map-modal-open #dashDeliveryTitle[open] > .delivery-panel--luxe {
           flex: 1 1 auto;
@@ -2250,7 +2252,7 @@
           bottom: 0;
           z-index: 10055;
           margin: 0;
-          padding: 10px max(12px, env(safe-area-inset-left, 12px)) max(10px, env(safe-area-inset-bottom, 10px)) max(12px, env(safe-area-inset-right, 12px));
+          padding: 10px max(12px, env(safe-area-inset-left, 12px)) var(--erw-safe-bottom, max(12px, env(safe-area-inset-bottom, 12px))) max(12px, env(safe-area-inset-right, 12px));
           background: linear-gradient(180deg, rgba(255, 254, 251, 0.94) 0%, #fffefb 30%);
           backdrop-filter: blur(14px);
           -webkit-backdrop-filter: blur(14px);
@@ -3729,12 +3731,15 @@
         var backdrop = document.getElementById("dashMapBackdrop");
         if (open) {
           document.body.classList.add("dash-map-modal-open");
+          if (window.ErvenowViewport && ErvenowViewport.lockScroll) ErvenowViewport.lockScroll();
           if (backdrop) {
             backdrop.hidden = false;
             backdrop.setAttribute("aria-hidden", "false");
           }
+          if (window.ErvenowViewport && ErvenowViewport.refresh) ErvenowViewport.refresh();
         } else {
           document.body.classList.remove("dash-map-modal-open");
+          if (window.ErvenowViewport && ErvenowViewport.unlockScroll) ErvenowViewport.unlockScroll();
           if (backdrop) {
             backdrop.hidden = true;
             backdrop.setAttribute("aria-hidden", "true");

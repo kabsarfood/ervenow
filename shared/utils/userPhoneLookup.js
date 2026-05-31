@@ -64,7 +64,7 @@ function isMissingUsersColumnError(err) {
   return /users\.(status|name|service_type)|column .* does not exist|Could not find the .*column/i.test(msg);
 }
 
-async function findUserByPhone(sb, phoneDigits, columns = "id, role, status, phone, service_type, updated_at, name") {
+async function findUserByPhone(sb, phoneDigits, columns = "id, role, status, phone, service_type, updated_at") {
   if (!sb) return { data: null, error: new Error("no supabase") };
   const variants = phoneLookupVariants(phoneDigits);
   if (!variants.length) return { data: null, error: null };
@@ -112,6 +112,7 @@ module.exports = {
   canonicalPhoneDigits,
   phoneLookupVariants,
   phonesEquivalent,
+  isMissingUsersColumnError,
   findUserByPhone,
   findUserByPhoneResilient,
 };

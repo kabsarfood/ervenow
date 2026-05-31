@@ -3,6 +3,8 @@
 .track-body {
   margin: 0;
   min-height: 100vh;
+  min-height: 100dvh;
+  min-height: calc(var(--erw-vh, 1vh) * 100);
   background:
     radial-gradient(1200px 800px at 20% 10%, rgba(118, 75, 40, 0.08), transparent 55%),
     radial-gradient(900px 600px at 80% 30%, rgba(235, 222, 197, 0.45), transparent 55%),

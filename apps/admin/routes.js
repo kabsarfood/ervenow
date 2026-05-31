@@ -10,6 +10,11 @@ const { getRiyadhDate } = require("../delivery/service");
 const { readStateAsync, writeState } = require("../../shared/utils/siteMaintenanceStore");
 const { normalizePhone } = require("../../shared/utils/phone");
 const { findUserByPhone } = require("../../shared/utils/userPhoneLookup");
+const {
+  fetchUserByIdResilient,
+  patchUserByIdForAdmin,
+  SELECT_CORE,
+} = require("../../shared/utils/usersAdminPatch");
 const { createServiceClient } = require("../../shared/config/supabase");
 const platformBranding = require("../../shared/utils/platformBrandingStore");
 const platformOffers = require("../../shared/utils/platformOffersStore");
@@ -506,44 +511,49 @@ async function syncUserRoleByPhone(sb, phone, role) {
 }
 
 async function syncUserStatusByPhone(sb, phone, status) {
-  const found = await findUserByPhone(sb, phone, "id, phone, role, status");
-  if (!found.data?.id) return;
-  const userId = found.data.id;
-  const prevRole = String(found.data.role || "").toLowerCase();
-  const first = await sb
-    .from("users")
-    .update({ status, updated_at: new Date().toISOString() })
-    .eq("id", userId);
-  if (!first.error) return;
-  if (isSchemaMissingError(first.error)) {
-    if (status === "blocked") {
-      const fbBlock = await sb
-        .from("users")
-        .update({ role: "blocked", updated_at: new Date().toISOString() })
-        .eq("id", userId);
-      if (fbBlock.error) throw fbBlock.error;
-      return;
+  try {
+    const found = await findUserByPhone(sb, phone, "id, phone, role, status");
+    if (found.error && !isSchemaMissingError(found.error)) return;
+    if (!found.data?.id) return;
+    const userId = found.data.id;
+    const prevRole = String(found.data.role || "").toLowerCase();
+    const first = await sb
+      .from("users")
+      .update({ status, updated_at: new Date().toISOString() })
+      .eq("id", userId);
+    if (!first.error) return;
+    if (isSchemaMissingError(first.error)) {
+      if (status === "blocked") {
+        const fbBlock = await sb
+          .from("users")
+          .update({ role: "blocked", updated_at: new Date().toISOString() })
+          .eq("id", userId);
+        if (fbBlock.error) console.warn("[syncUserStatusByPhone] block fallback:", fbBlock.error.message);
+        return;
+      }
+      if (status === "active") {
+        const restoreRole =
+          prevRole && prevRole !== "blocked" ? found.data.role : "customer";
+        const fbActive = await sb
+          .from("users")
+          .update({ role: restoreRole, updated_at: new Date().toISOString() })
+          .eq("id", userId);
+        if (fbActive.error) console.warn("[syncUserStatusByPhone] activate fallback:", fbActive.error.message);
+        return;
+      }
+      if (status === "rejected") {
+        const fbReject = await sb
+          .from("users")
+          .update({ role: "customer", updated_at: new Date().toISOString() })
+          .eq("id", userId);
+        if (fbReject.error) console.warn("[syncUserStatusByPhone] reject fallback:", fbReject.error.message);
+        return;
+      }
     }
-    if (status === "active") {
-      const restoreRole =
-        prevRole && prevRole !== "blocked" ? found.data.role : "customer";
-      const fbActive = await sb
-        .from("users")
-        .update({ role: restoreRole, updated_at: new Date().toISOString() })
-        .eq("id", userId);
-      if (fbActive.error) throw fbActive.error;
-      return;
-    }
-    if (status === "rejected") {
-      const fbReject = await sb
-        .from("users")
-        .update({ role: "customer", updated_at: new Date().toISOString() })
-        .eq("id", userId);
-      if (fbReject.error) throw fbReject.error;
-      return;
-    }
+    console.warn("[syncUserStatusByPhone]", first.error.message || first.error);
+  } catch (e) {
+    console.warn("[syncUserStatusByPhone]", e && (e.message || e));
   }
-  throw first.error;
 }
 
 router.get("/site-maintenance", requireAuth, requireRole("admin"), async (_req, res) => {
@@ -1823,11 +1833,13 @@ router.get("/registration-approvals", requireAuth, requireRole("admin"), async (
   }
 });
 
+const USER_ADMIN_ROW_SELECT = SELECT_CORE;
+
 router.get("/customers", requireAuth, requireRole("admin"), requireAdminPermission("customers"), async (req, res) => {
   try {
     const first = await req.supabase
       .from("users")
-      .select("id, phone, role, status, name, created_at, updated_at")
+      .select(USER_ADMIN_ROW_SELECT)
       .in("role", ["customer", "user", "blocked"])
       .order("created_at", { ascending: false })
       .limit(500);
@@ -1865,11 +1877,7 @@ router.post("/block-customer", requireAuth, requireRole("admin"), requireAdminPe
     const sb = createServiceClient() || req.supabase;
     const id = String(req.body?.id || "").trim();
     if (!id) return fail(res, "id required", 400);
-    const existing = await sb
-      .from("users")
-      .select("id, phone, role, status")
-      .eq("id", id)
-      .maybeSingle();
+    const existing = await fetchUserByIdResilient(sb, id);
     if (existing.error) return fail(res, existing.error.message, 400);
     if (!existing.data) return fail(res, "الحساب غير موجود", 404);
     const keepRole =
@@ -1879,37 +1887,16 @@ router.post("/block-customer", requireAuth, requireRole("admin"), requireAdminPe
       )
         ? existing.data.role
         : "customer";
-    const first = await sb
-      .from("users")
-      .update({
-        status: "blocked",
-        role: keepRole,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", id)
-      .select("id, phone, role, status, name, created_at, updated_at")
-      .single();
-    if (!first.error) {
-      if (first.data?.phone) await syncUserStatusByPhone(sb, first.data.phone, "blocked");
-      return ok(res, { customer: { ...first.data, status: "blocked" } });
+    let patched = await patchUserByIdForAdmin(sb, id, {
+      status: "blocked",
+      role: keepRole,
+    });
+    if (patched.error && isSchemaMissingError(patched.error)) {
+      patched = await patchUserByIdForAdmin(sb, id, { role: "blocked" });
     }
-    if (isSchemaMissingError(first.error)) {
-      const fallback = await sb
-        .from("users")
-        .update({ role: "blocked", updated_at: new Date().toISOString() })
-        .eq("id", id)
-        .select("id, phone, role, name, created_at, updated_at")
-        .single();
-      if (fallback.error) return fail(res, fallback.error.message, 400);
-      if (fallback.data?.phone) await syncUserStatusByPhone(sb, fallback.data.phone, "blocked");
-      return ok(res, {
-        customer: {
-          ...fallback.data,
-          status: "blocked",
-        },
-      });
-    }
-    return fail(res, first.error.message, 400);
+    if (patched.error) return fail(res, patched.error.message || String(patched.error), 400);
+    if (patched.data?.phone) await syncUserStatusByPhone(sb, patched.data.phone, "blocked");
+    return ok(res, { customer: { ...patched.data, status: "blocked" } });
   } catch (e) {
     return fail(res, e.message || String(e), 500);
   }
@@ -1923,17 +1910,14 @@ router.post("/reject-user", requireAuth, requireRole("admin"), async (req, res) 
     }
     const id = String(req.body?.id || "").trim();
     if (!id) return fail(res, "id required", 400);
-    const first = await req.supabase
-      .from("users")
-      .update({ status: "rejected", updated_at: new Date().toISOString() })
-      .eq("id", id)
-      .select("id, phone, role, status, name, created_at, updated_at")
-      .single();
-    if (!first.error) return ok(res, { user: first.data });
-    if (isSchemaMissingError(first.error)) {
+    const sb = createServiceClient() || req.supabase;
+    const patched = await patchUserByIdForAdmin(sb, id, { status: "rejected" });
+    if (patched.error && isSchemaMissingError(patched.error)) {
       return fail(res, "عمود users.status غير موجود — نفّذ migration_users_status.sql", 400);
     }
-    return fail(res, first.error.message, 400);
+    if (patched.error) return fail(res, patched.error.message || String(patched.error), 400);
+    if (patched.data?.phone) await syncUserStatusByPhone(sb, patched.data.phone, "rejected");
+    return ok(res, { user: { ...patched.data, status: "rejected" } });
   } catch (e) {
     return fail(res, e.message || String(e), 500);
   }
@@ -1944,47 +1928,23 @@ router.post("/activate-customer", requireAuth, requireRole("admin"), requireAdmi
     const sb = createServiceClient() || req.supabase;
     const id = String(req.body?.id || "").trim();
     if (!id) return fail(res, "id required", 400);
-    const existing = await sb
-      .from("users")
-      .select("id, phone, role, status")
-      .eq("id", id)
-      .maybeSingle();
+    const existing = await fetchUserByIdResilient(sb, id);
     if (existing.error) return fail(res, existing.error.message, 400);
     if (!existing.data) return fail(res, "الحساب غير موجود", 404);
     const roleIn = String(req.body?.role || "").trim().toLowerCase();
     const prevRole = String(existing.data.role || "").toLowerCase();
-    const patch = { status: "active", updated_at: new Date().toISOString() };
+    const patch = { status: "active" };
     if (roleIn === "service") patch.role = "service";
     else if (roleIn === "merchant" || roleIn === "restaurant") patch.role = roleIn;
     else if (prevRole && prevRole !== "blocked" && prevRole !== "user") patch.role = existing.data.role;
     else patch.role = "customer";
-    const first = await sb
-      .from("users")
-      .update(patch)
-      .eq("id", id)
-      .select("id, phone, role, status, name, created_at, updated_at")
-      .single();
-    if (!first.error) {
-      if (first.data?.phone) await syncUserStatusByPhone(sb, first.data.phone, "active");
-      return ok(res, { customer: { ...first.data, status: "active" } });
+    let patched = await patchUserByIdForAdmin(sb, id, patch);
+    if (patched.error && isSchemaMissingError(patched.error)) {
+      patched = await patchUserByIdForAdmin(sb, id, { role: patch.role || "customer" });
     }
-    if (isSchemaMissingError(first.error)) {
-      const fallback = await sb
-        .from("users")
-        .update({ role: "customer", updated_at: new Date().toISOString() })
-        .eq("id", id)
-        .select("id, phone, role, name, created_at, updated_at")
-        .single();
-      if (fallback.error) return fail(res, fallback.error.message, 400);
-      if (fallback.data?.phone) await syncUserStatusByPhone(sb, fallback.data.phone, "active");
-      return ok(res, {
-        customer: {
-          ...fallback.data,
-          status: "active",
-        },
-      });
-    }
-    return fail(res, first.error.message, 400);
+    if (patched.error) return fail(res, patched.error.message || String(patched.error), 400);
+    if (patched.data?.phone) await syncUserStatusByPhone(sb, patched.data.phone, "active");
+    return ok(res, { customer: { ...patched.data, status: "active" } });
   } catch (e) {
     return fail(res, e.message || String(e), 500);
   }
