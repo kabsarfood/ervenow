@@ -24,8 +24,10 @@
     if (me.approved === true) return true;
     if (me.pending_approval === true) return false;
     var st = String((me.profile && me.profile.status) || "").toLowerCase();
+    var role = String((me.profile && me.profile.role) || "").toLowerCase();
+    if (role === "blocked" || st === "blocked") return false;
     if (st === "active") return true;
-    if (st === "pending" || st === "rejected" || st === "blocked") return false;
+    if (st === "pending" || st === "rejected") return false;
     return me.approved !== false;
   }
 
@@ -47,15 +49,26 @@
       var me = await global.PlatformAPI.api("/api/core/me");
       if (!isApprovedMe(me)) {
         clearSession();
+        var st = String((me && me.profile && me.profile.status) || "").toLowerCase();
+        var role = String((me && me.profile && me.profile.role) || "").toLowerCase();
+        if (st === "blocked" || role === "blocked") {
+          global.location.replace("/blocked-complaints.html");
+          return null;
+        }
         global.location.replace(pendingUrl);
         return null;
       }
       return me;
     } catch (e) {
       var msg = String((e && e.message) || e || "");
+      if (/محظور|blocked/i.test(msg)) {
+        clearSession();
+        global.location.replace("/blocked-complaints.html");
+        return null;
+      }
       if (/401|403|Missing Authorization|Invalid or expired|بانتظار موافقة|قيد المراجعة|pending/i.test(msg)) {
         clearSession();
-        global.location.replace(/بانتظار|قيد المراجعة|pending|403/i.test(msg) ? pendingUrl : loginUrl);
+        global.location.replace(/بانتظار|قيد المراجعة|pending|403/i.test(msg) && !/محظور|blocked/i.test(msg) ? pendingUrl : loginUrl);
         return null;
       }
       if (options.softFail) return null;

@@ -34,9 +34,10 @@ function normalizeAccountStatus(status, role) {
 
 function isUserAccountApproved(status, role) {
   const st = rawStatus(status);
-  if (st === "blocked" || st === "rejected" || st === "pending") return false;
+  const r = String(role || "").trim().toLowerCase();
+  if (r === "blocked" || st === "blocked" || st === "rejected" || st === "pending") return false;
   if (st === "active") return true;
-  if (String(role || "").trim().toLowerCase() === "admin") return true;
+  if (r === "admin") return true;
   return true;
 }
 

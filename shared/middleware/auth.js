@@ -134,8 +134,13 @@ async function requireAuth(req, res, next) {
       }
     } catch (_e) {}
 
-    if (String(effectiveStatus || "").toLowerCase() === "blocked" && !isBlockedAllowedPath(req)) {
-      return res.status(403).json({ ok: false, error: "الحساب محظور من الإدارة" });
+    if (
+      String(effectiveStatus || "").toLowerCase() === "blocked" ||
+      String(effectiveRole || "").toLowerCase() === "blocked"
+    ) {
+      if (!isBlockedAllowedPath(req)) {
+        return res.status(403).json({ ok: false, error: "الحساب محظور من الإدارة", blocked: true });
+      }
     }
 
     if (

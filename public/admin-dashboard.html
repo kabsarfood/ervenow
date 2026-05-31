@@ -2240,7 +2240,7 @@
         } else {
           b.className = "btn btn-ghost";
           b.textContent = "تعطيل الموقع";
-          b.title = "إظهار «تحت التطوير» لجميع زوار الموقع";
+          b.title = "إظهار «تحت التطوير» على ervenow.com فقط — localhost للتطوير";
         }
       }
 
@@ -2264,7 +2264,7 @@
         touchAdminActivity();
         try {
           var next = !siteMaintenanceEnabled;
-          if (next && !confirm("سيتم إظهار رسالة «تحت التطوير» لجميع زوار الموقع. لوحة الإدارة تبقى متاحة. متابعة؟")) {
+          if (next && !confirm("سيتم إظهار «تحت التطوير» على ervenow.com / www.ervenow.com فقط. localhost:4000 يبقى للتطوير. لوحة الإدارة تبقى متاحة. متابعة؟")) {
             return;
           }
           var j = await window.PlatformAPI.api("/api/admin/site-maintenance", {
@@ -2273,7 +2273,7 @@
           });
           updateSiteMaintenanceBtn(j.enabled);
           showSuccess(
-            j.enabled ? "الموقع معطّل للزوار — يظهر «تحت التطوير»" : "تم تفعيل الموقع للزوار"
+            j.enabled ? "الموقع معطّل على ervenow.com — localhost للتطوير" : "تم تفعيل الموقع للزوار على الإنتاج"
           );
         } catch (e) {
           showError(e.message || "فشل تحديث وضع الموقع");
@@ -2405,8 +2405,8 @@
         var el = document.getElementById("settingsMaintenanceStatus");
         if (!el) return;
         el.textContent = siteMaintenanceEnabled
-          ? "الموقع معطّل للزوار — «تحت التطوير»"
-          : "الموقع مفعّل للزوار";
+          ? "الموقع معطّل على ervenow.com — «تحت التطوير»"
+          : "الموقع مفعّل للزوار على الإنتاج";
       }
 
       async function loadSettingsPanel() {
@@ -3617,10 +3617,28 @@
 
       function mkAction(label, cls, fn) {
         var b = document.createElement("button");
+        b.type = "button";
         b.className = "btn " + cls;
         b.innerText = label;
         b.onclick = fn;
         return b;
+      }
+
+      function safeClick(fn) {
+        var locked = false;
+        return async function () {
+          if (locked) return;
+          locked = true;
+          try {
+            await fn.apply(this, arguments);
+          } finally {
+            locked = false;
+          }
+        };
+      }
+
+      function confirmAccountBlock() {
+        return window.confirm("حظر هذا الحساب؟ لن يتمكن من تسجيل الدخول أو استخدام خدمات المنصة.");
       }
 
       function fmtMoney(v) {
@@ -5088,21 +5106,28 @@
           row.className = "row";
           var ds = String(d.status || "").toLowerCase();
           var isApprovedActive = ds === "approved" && d.active === true;
-          var isBlocked = ds === "blocked" || d.active === false;
+          var isBlocked = ds === "blocked";
+          var isPending = ds === "pending" || ds === "";
+          var isRejected = ds === "rejected";
           if (isApprovedActive) {
             row.appendChild(mkAction("حظر", "btn-ghost", safeClick(async function () {
-              try { await updateDriver(d.id, "block-driver"); showSuccess("تم حظر المندوب"); loadDrivers(); } catch (e) { showError(e.message || "فشل"); }
+              if (!confirmAccountBlock()) return;
+              try { await updateDriver(d.id, "block-driver"); showSuccess("تم حظر المندوب — لا يمكنه الدخول"); loadDrivers(); } catch (e) { showError(e.message || "فشل"); }
             })));
-          } else if (isBlocked) {
+          } else if (isBlocked || isRejected) {
             row.appendChild(mkAction("تفعيل", "btn-primary", safeClick(async function () {
               try { await updateDriver(d.id, "activate-driver"); showSuccess("تم تفعيل المندوب"); loadDrivers(); } catch (e) { showError(e.message || "فشل"); }
             })));
-          } else {
+          } else if (isPending) {
             row.appendChild(mkAction("موافقة", "btn-primary", safeClick(async function () {
               try { await updateDriver(d.id, "approve-driver"); showSuccess("تمت الموافقة"); loadDrivers(); } catch (e) { showError(e.message || "فشل"); }
             })));
             row.appendChild(mkAction("رفض", "btn-ghost", safeClick(async function () {
               try { await updateDriver(d.id, "reject-driver"); showSuccess("تم الرفض"); loadDrivers(); } catch (e) { showError(e.message || "فشل"); }
+            })));
+          } else {
+            row.appendChild(mkAction("تفعيل", "btn-primary", safeClick(async function () {
+              try { await updateDriver(d.id, "activate-driver"); showSuccess("تم تفعيل المندوب"); loadDrivers(); } catch (e) { showError(e.message || "فشل"); }
             })));
           }
           item.appendChild(row);
@@ -5134,19 +5159,41 @@
           var item = document.createElement("div");
           item.className = "item";
           var status = String(u.status || "active").toLowerCase();
-          var blocked = status === "blocked";
+          var role = String(u.role || "").toLowerCase();
+          var blocked = status === "blocked" || role === "blocked";
+          var pending = status === "pending";
+          var rejected = status === "rejected";
+          var stLabel = blocked ? "محظور" : pending ? "بانتظار الموافقة" : rejected ? "مرفوض" : "معتمد";
           item.innerHTML =
             "<strong>" + (u.name || "زائر المنصة") + "</strong>" +
             "<div>الجوال: " + (u.phone || "—") + "</div>" +
-            "<div>الحالة: " + (blocked ? "محظور" : "نشط") + "</div>";
+            "<div>الحالة: " + stLabel + "</div>";
           var row = document.createElement("div");
           row.className = "row";
-          row.appendChild(mkAction("حظر", "btn-ghost", safeClick(async function () {
-            try { await window.PlatformAPI.api("/api/admin/block-customer", { method: "POST", body: { id: u.id } }); showSuccess("تم حظر حساب زائر المنصة"); loadCustomers(); } catch (e) { showError(e.message || "فشل"); }
-          })));
-          row.appendChild(mkAction("تفعيل", "btn-primary", safeClick(async function () {
-            try { await window.PlatformAPI.api("/api/admin/activate-customer", { method: "POST", body: { id: u.id } }); showSuccess("تم تفعيل حساب زائر المنصة"); loadCustomers(); } catch (e) { showError(e.message || "فشل"); }
-          })));
+          if (pending) {
+            row.appendChild(mkAction("اعتماد", "btn-primary", safeClick(async function () {
+              try { await window.PlatformAPI.api("/api/admin/activate-customer", { method: "POST", body: { id: u.id } }); showSuccess("تم اعتماد المتسوق"); loadCustomers(); } catch (e) { showError(e.message || "فشل"); }
+            })));
+            row.appendChild(mkAction("رفض", "btn-ghost", safeClick(async function () {
+              try { await window.PlatformAPI.api("/api/admin/reject-user", { method: "POST", body: { id: u.id } }); showSuccess("تم الرفض"); loadCustomers(); } catch (e) { showError(e.message || "فشل"); }
+            })));
+          } else if (!blocked && !rejected) {
+            row.appendChild(mkAction("حظر", "btn-ghost", safeClick(async function () {
+              if (!confirmAccountBlock()) return;
+              try { await window.PlatformAPI.api("/api/admin/block-customer", { method: "POST", body: { id: u.id } }); showSuccess("تم حظر الحساب"); loadCustomers(); } catch (e) { showError(e.message || "فشل"); }
+            })));
+          } else {
+            row.appendChild(mkAction("تفعيل", "btn-primary", safeClick(async function () {
+              try {
+                await window.PlatformAPI.api("/api/admin/activate-customer", {
+                  method: "POST",
+                  body: { id: u.id, role: role === "service" ? role : "customer" },
+                });
+                showSuccess("تم تفعيل الحساب");
+                loadCustomers();
+              } catch (e) { showError(e.message || "فشل"); }
+            })));
+          }
           item.appendChild(row);
           list.appendChild(item);
         });

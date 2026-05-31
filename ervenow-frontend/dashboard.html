@@ -2155,6 +2155,128 @@
         }
       }
 
+      /* ── من الخريطة — جوال: مرونة، ظهور كامل، شريط سفلي ثابت ── */
+      :root {
+        --dash-map-h: 260px;
+        --dash-map-dock-h: 76px;
+      }
+      .map-canvas-fold__summary {
+        list-style: none;
+        cursor: pointer;
+      }
+      .map-canvas-fold__summary::-webkit-details-marker {
+        display: none;
+      }
+      .map-canvas-fold__summary::after {
+        content: "▾";
+        float: inline-start;
+        font-size: 0.85rem;
+        opacity: 0.55;
+        transition: transform 0.2s ease;
+      }
+      .map-canvas-fold:not([open]) .map-canvas-fold__summary::after {
+        transform: rotate(-90deg);
+      }
+      .map-canvas-fold__content {
+        padding-top: 2px;
+      }
+      @media (min-width: 768px) {
+        .map-canvas-fold--shipment .map-canvas-fold__summary {
+          pointer-events: none;
+          cursor: default;
+        }
+        .map-canvas-fold--shipment .map-canvas-fold__summary::after {
+          display: none;
+        }
+      }
+      @media (max-width: 767px) {
+        :root {
+          --dash-map-h: clamp(168px, 32dvh, 228px);
+          --dash-map-dock-h: max(76px, calc(68px + env(safe-area-inset-bottom, 0px)));
+        }
+        body.dash-map-modal-open #dashDeliveryTitle[open] > .delivery-panel--luxe {
+          flex: 1 1 auto;
+          min-height: 0;
+          width: 100%;
+        }
+        body.dash-map-modal-open .delivery-panel__subtitle {
+          display: none;
+        }
+        body.dash-map-modal-open .delivery-panel__header {
+          padding: 12px clamp(44px, 12vw, 52px) 10px 14px;
+        }
+        body.dash-map-modal-open .delivery-panel__title {
+          font-size: clamp(0.92rem, 4.2vw, 1.05rem);
+        }
+        body.dash-map-modal-open #dashDeliveryTitle[open] .delivery-panel__body {
+          padding-inline: max(10px, env(safe-area-inset-left, 10px)) max(10px, env(safe-area-inset-right, 10px));
+          padding-bottom: calc(var(--dash-map-dock-h) + 16px);
+          scroll-padding-bottom: calc(var(--dash-map-dock-h) + 20px);
+        }
+        body.dash-map-modal-open #dashDeliveryTitle[open] .map-canvas-grid,
+        .cat-card--map[open] .map-canvas-grid {
+          grid-template-areas:
+            "route"
+            "actions"
+            "shipment";
+          gap: 12px;
+        }
+        .map-canvas-route-col {
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+        }
+        .map-canvas-cell--map {
+          order: -1;
+        }
+        body.dash-map-modal-open .map-canvas-cell,
+        .cat-card--map[open] .map-canvas-cell {
+          border-radius: 16px;
+          box-shadow: 0 6px 22px rgba(45, 28, 14, 0.09);
+          border-color: rgba(185, 135, 47, 0.22);
+        }
+        .map-canvas-cell--map #pickupDropMap,
+        .map-canvas-cell--map #pickupDropMap.leaflet-container,
+        body.dash-map-modal-open #dashDeliveryTitle[open] .map-canvas-form #pickupDropMap,
+        body.dash-map-modal-open #dashDeliveryTitle[open] .map-canvas-form #pickupDropMap.leaflet-container,
+        .cat-card--map[open] .map-canvas-form #pickupDropMap {
+          height: var(--dash-map-h) !important;
+          min-height: var(--dash-map-h) !important;
+        }
+        body.dash-map-modal-open #dashDeliveryTitle[open] .map-canvas-footer {
+          position: fixed;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          z-index: 10055;
+          margin: 0;
+          padding: 10px max(12px, env(safe-area-inset-left, 12px)) max(10px, env(safe-area-inset-bottom, 10px)) max(12px, env(safe-area-inset-right, 12px));
+          background: linear-gradient(180deg, rgba(255, 254, 251, 0.94) 0%, #fffefb 30%);
+          backdrop-filter: blur(14px);
+          -webkit-backdrop-filter: blur(14px);
+          border-top: 1px solid rgba(185, 135, 47, 0.3);
+          box-shadow: 0 -14px 36px rgba(45, 28, 14, 0.16);
+          grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+          gap: 10px;
+        }
+        body.dash-map-modal-open #dashDeliveryTitle[open] .map-canvas-price-box {
+          min-height: 48px;
+          padding: 6px 8px;
+        }
+        body.dash-map-modal-open #dashDeliveryTitle[open] .map-canvas-cart-btn {
+          min-height: 48px;
+          font-size: 0.9rem;
+        }
+        .map-canvas-apply-btn {
+          min-height: 50px;
+          font-size: 0.9rem;
+        }
+        .map-canvas-loc-box {
+          padding: 12px;
+          border-radius: 14px;
+        }
+      }
+
     </style>
   </head>
   <body class="guest-shell-page">
@@ -2326,7 +2448,9 @@
                   <div class="delivery-form delivery-form--luxe map-canvas-form">
                     <div class="map-canvas-grid">
                       <section class="map-canvas-cell map-canvas-cell--shipment">
-                        <h3 class="map-canvas-cell__title">تفاصيل الشحنة</h3>
+                        <details class="map-canvas-fold map-canvas-fold--shipment" open>
+                        <summary class="map-canvas-cell__title map-canvas-fold__summary">تفاصيل الشحنة</summary>
+                        <div class="map-canvas-fold__content">
                         <label class="map-canvas-label" for="vehicleType">نوع المركبة</label>
                         <select id="vehicleType" onchange="recalculatePricePreview()">
                           <option value="bike">دراجة نارية (0 - 7 كم = 15 ريال)</option>
@@ -2357,6 +2481,8 @@
                         </div>
                         <label class="map-canvas-label" for="mapProductNote">تفاصيل إضافية (اختياري)</label>
                         <input id="mapProductNote" type="text" maxlength="120" placeholder="مثال: صندوق أواني زجاجية" />
+                        </div>
+                        </details>
                       </section>
 
                       <div class="map-canvas-route-col">
@@ -2446,8 +2572,6 @@
                     </p>
                     <p id="result" class="sub delivery-result--luxe map-canvas-result"></p>
                     <input type="hidden" id="mapCustomerPhone" value="" />
-                  </div>
-
                   </div>
                   </div>
                 </div>
@@ -2742,7 +2866,17 @@
 
       function scrollToMapRoutes() {
         var el = document.getElementById("mapCanvasActions");
-        if (el) el.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        if (!el) return;
+        var panel = el.closest(".delivery-panel__body");
+        var mobile = window.matchMedia("(max-width: 767px)").matches;
+        if (panel && mobile) {
+          var panelRect = panel.getBoundingClientRect();
+          var elRect = el.getBoundingClientRect();
+          var nextTop = panel.scrollTop + (elRect.top - panelRect.top) - 12;
+          panel.scrollTo({ top: Math.max(0, nextTop), behavior: "smooth" });
+          return;
+        }
+        el.scrollIntoView({ behavior: "smooth", block: mobile ? "start" : "nearest" });
       }
 
       function saveMapLinkField(inputId) {

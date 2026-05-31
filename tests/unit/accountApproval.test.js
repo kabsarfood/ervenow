@@ -30,3 +30,8 @@ test("legacy empty status is treated as active", () => {
   assert.equal(isUserAccountPending(null), false);
   assert.equal(isUserAccountPending("pending"), true);
 });
+
+test("blocked role or status is not approved", () => {
+  assert.equal(isUserAccountApproved("blocked", "customer"), false);
+  assert.equal(isUserAccountApproved("active", "blocked"), false);
+});

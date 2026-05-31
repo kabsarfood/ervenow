@@ -263,10 +263,19 @@ a.btn {
     max-height: 100dvh;
     border-radius: 0;
     padding-top: max(0px, var(--erw-safe-top));
+    padding-bottom: 0;
   }
 
   body.dash-map-modal-open .dash-map-backdrop:not([hidden]) {
     background: rgba(10, 6, 3, 0.88);
+  }
+
+  body.dash-map-modal-open #dashDeliveryTitle[open] .map-canvas-mode-btn {
+    min-height: 48px;
+  }
+
+  body.dash-map-modal-open #dashDeliveryTitle[open] .map-canvas-row-2 {
+    grid-template-columns: 1fr;
   }
 }
 

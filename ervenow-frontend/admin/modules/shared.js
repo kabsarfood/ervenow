@@ -385,10 +385,15 @@ app.loadPanelById = function (panelId) {
 
 app.mkAction = function (label, cls, fn) {
   var b = document.createElement("button");
+  b.type = "button";
   b.className = "btn " + cls;
   b.innerText = label;
   b.onclick = fn;
   return b;
+}
+
+app.confirmAccountBlock = function () {
+  return window.confirm("حظر هذا الحساب؟ لن يتمكن من تسجيل الدخول أو استخدام خدمات المنصة.");
 }
 
 app.fmtMoney = function (v) {

@@ -9,6 +9,7 @@ const { storeApprovedBody } = require("../../shared/messages/storeWhatsApp");
 const { getRiyadhDate } = require("../delivery/service");
 const { readStateAsync, writeState } = require("../../shared/utils/siteMaintenanceStore");
 const { normalizePhone } = require("../../shared/utils/phone");
+const { findUserByPhone } = require("../../shared/utils/userPhoneLookup");
 const { createServiceClient } = require("../../shared/config/supabase");
 const platformBranding = require("../../shared/utils/platformBrandingStore");
 const platformOffers = require("../../shared/utils/platformOffersStore");
@@ -495,39 +496,50 @@ function isEmployeeApplicationsTableMissing(err) {
 }
 
 async function syncUserRoleByPhone(sb, phone, role) {
-  const digits = String(phone || "").replace(/\D/g, "");
-  if (!digits || !role) return;
+  const found = await findUserByPhone(sb, phone, "id, phone, role");
+  if (!found.data?.id) return;
   const { error } = await sb
     .from("users")
     .update({ role, updated_at: new Date().toISOString() })
-    .eq("phone", digits);
+    .eq("id", found.data.id);
   if (error) throw error;
 }
 
 async function syncUserStatusByPhone(sb, phone, status) {
-  const digits = String(phone || "").replace(/\D/g, "");
-  if (!digits || !status) return;
+  const found = await findUserByPhone(sb, phone, "id, phone, role, status");
+  if (!found.data?.id) return;
+  const userId = found.data.id;
+  const prevRole = String(found.data.role || "").toLowerCase();
   const first = await sb
     .from("users")
     .update({ status, updated_at: new Date().toISOString() })
-    .eq("phone", digits);
+    .eq("id", userId);
   if (!first.error) return;
   if (isSchemaMissingError(first.error)) {
-    // backward compatibility before users.status migration
     if (status === "blocked") {
       const fbBlock = await sb
         .from("users")
         .update({ role: "blocked", updated_at: new Date().toISOString() })
-        .eq("phone", digits);
+        .eq("id", userId);
       if (fbBlock.error) throw fbBlock.error;
       return;
     }
     if (status === "active") {
+      const restoreRole =
+        prevRole && prevRole !== "blocked" ? found.data.role : "customer";
       const fbActive = await sb
         .from("users")
-        .update({ role: "customer", updated_at: new Date().toISOString() })
-        .eq("phone", digits);
+        .update({ role: restoreRole, updated_at: new Date().toISOString() })
+        .eq("id", userId);
       if (fbActive.error) throw fbActive.error;
+      return;
+    }
+    if (status === "rejected") {
+      const fbReject = await sb
+        .from("users")
+        .update({ role: "customer", updated_at: new Date().toISOString() })
+        .eq("id", userId);
+      if (fbReject.error) throw fbReject.error;
       return;
     }
   }
@@ -1816,10 +1828,18 @@ router.get("/customers", requireAuth, requireRole("admin"), requireAdminPermissi
     const first = await req.supabase
       .from("users")
       .select("id, phone, role, status, name, created_at, updated_at")
-      .in("role", ["customer", "user"])
+      .in("role", ["customer", "user", "blocked"])
       .order("created_at", { ascending: false })
       .limit(500);
-    if (!first.error) return ok(res, { customers: first.data || [] });
+    if (!first.error) {
+      const customers = (first.data || []).map((u) => {
+        const st = String(u.status || "").toLowerCase();
+        const rl = String(u.role || "").toLowerCase();
+        if (st === "blocked" || rl === "blocked") return { ...u, status: "blocked" };
+        return u;
+      });
+      return ok(res, { customers });
+    }
     if (isSchemaMissingError(first.error)) {
       const fallback = await req.supabase
         .from("users")
@@ -1844,11 +1864,27 @@ router.post("/block-customer", requireAuth, requireRole("admin"), requireAdminPe
   try {
     const id = String(req.body?.id || "").trim();
     if (!id) return fail(res, "id required", 400);
+    const existing = await req.supabase
+      .from("users")
+      .select("id, phone, role, status")
+      .eq("id", id)
+      .maybeSingle();
+    const keepRole =
+      existing.data &&
+      ["customer", "user", "service", "merchant", "restaurant"].includes(
+        String(existing.data.role || "").toLowerCase()
+      )
+        ? existing.data.role
+        : "customer";
     const first = await req.supabase
       .from("users")
-      .update({ status: "blocked", updated_at: new Date().toISOString() })
+      .update({
+        status: "blocked",
+        role: keepRole,
+        updated_at: new Date().toISOString(),
+      })
       .eq("id", id)
-      .select("id, phone, role, status, created_at")
+      .select("id, phone, role, status, created_at, updated_at")
       .single();
     if (!first.error) return ok(res, { customer: first.data });
     if (isSchemaMissingError(first.error)) {

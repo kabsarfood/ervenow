@@ -526,8 +526,10 @@ router.post("/verify-otp", async (req, res) => {
     if (sbEarly) {
       const exFound = await findUserByPhoneResilient(sbEarly, digits);
       if (exFound.data) {
-        if (String(exFound.data.status || "").toLowerCase() === "blocked") {
-          return fail(res, "الحساب محظور من الإدارة", 403);
+        const exSt = String(exFound.data.status || "").toLowerCase();
+        const exRole = String(exFound.data.role || "").toLowerCase();
+        if (exSt === "blocked" || exRole === "blocked") {
+          return fail(res, "الحساب محظور من الإدارة", 403, { blocked: true });
         }
         existingUser = exFound.data;
       } else if (exFound.error && !isMissingStatusColumnError(exFound.error)) {
@@ -624,7 +626,7 @@ router.post("/verify-otp", async (req, res) => {
       String(userRow.status || "").toLowerCase() === "blocked" ||
       String(userRow.role || "").toLowerCase() === "blocked"
     ) {
-      return fail(res, "الحساب محظور من الإدارة", 403);
+      return fail(res, "الحساب محظور من الإدارة", 403, { blocked: true });
     }
 
     const userStatus = String(userRow.status || "").toLowerCase();

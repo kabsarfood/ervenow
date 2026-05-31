@@ -2,6 +2,41 @@ const { readState } = require("../utils/siteMaintenanceStore");
 
 const ADMIN_UI_PREFIXES = ["/admin-login", "/admin-dashboard", "/admin-finance", "/admin-approvals", "/admin/branding"];
 
+/** نطاقات الإنتاج التي يُطبَّق عليها «تعطيل الموقع» — localhost مستثنى دائماً */
+function getMaintenanceHostnames() {
+  const raw = String(process.env.SITE_MAINTENANCE_HOSTS || "").trim().toLowerCase();
+  if (raw) {
+    return raw
+      .split(",")
+      .map((s) => s.trim().split(":")[0])
+      .filter(Boolean);
+  }
+  try {
+    const u = new URL(String(process.env.ERVENOW_PUBLIC_URL || "").trim());
+    const h = u.hostname.toLowerCase();
+    if (h && h !== "localhost" && h !== "127.0.0.1") {
+      const apex = h.startsWith("www.") ? h.slice(4) : h;
+      const www = h.startsWith("www.") ? h : `www.${h}`;
+      return [...new Set([h, apex, www].filter(Boolean))];
+    }
+  } catch (_) {
+    /* ignore */
+  }
+  return ["ervenow.com", "www.ervenow.com"];
+}
+
+function isMaintenanceHostname(hostname) {
+  const h = String(hostname || "").trim().toLowerCase().split(":")[0];
+  if (!h) return false;
+  if (h === "localhost" || h === "127.0.0.1") return false;
+  const list = getMaintenanceHostnames();
+  return list.some((x) => x === h);
+}
+
+function maintenanceActiveForRequest(req) {
+  return isMaintenanceHostname(req.hostname);
+}
+
 const MAINTENANCE_HTML = `<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -41,6 +76,7 @@ function shouldBlockPublicPage(req) {
   const m = req.method;
   if (m !== "GET" && m !== "HEAD") return false;
   if (!readState()) return false;
+  if (!maintenanceActiveForRequest(req)) return false;
   const rawPath = String(req.path || "").split("?")[0];
   const lower = rawPath.toLowerCase();
   if (lower.startsWith("/api/")) return false;
@@ -59,4 +95,9 @@ function createSiteMaintenanceMiddleware(servePublicUi) {
   };
 }
 
-module.exports = { createSiteMaintenanceMiddleware };
+module.exports = {
+  createSiteMaintenanceMiddleware,
+  getMaintenanceHostnames,
+  isMaintenanceHostname,
+  maintenanceActiveForRequest,
+};

@@ -303,6 +303,9 @@ router.post("/verify-otp", async (req, res) => {
       .maybeSingle();
     if (dErr) return fail(res, dErr.message, 400);
     if (!drv) return fail(res, "المندوب غير مسجل", 403);
+    if (String(drv.status || "").toLowerCase() === "blocked") {
+      return fail(res, "الحساب محظور من الإدارة", 403, { blocked: true });
+    }
     if (String(drv.status || "") !== "approved" || drv.active !== true) {
       return fail(res, "الحساب بانتظار الموافقة أو موقوف", 403);
     }

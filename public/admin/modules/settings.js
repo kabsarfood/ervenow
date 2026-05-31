@@ -85,7 +85,7 @@ app.updateSiteMaintenanceBtn = function (enabled) {
   } else {
     b.className = "btn btn-ghost";
     b.textContent = "تعطيل الموقع";
-    b.title = "إظهار «تحت التطوير» لجميع زوار الموقع";
+    b.title = "إظهار «تحت التطوير» على ervenow.com فقط — localhost للتطوير";
   }
 }
 
@@ -109,7 +109,7 @@ app.toggleSiteMaintenance = async function () {
   app.touchAdminActivity();
   try {
     var next = !app.siteMaintenanceEnabled;
-    if (next && !confirm("سيتم إظهار رسالة «تحت التطوير» لجميع زوار الموقع. لوحة الإدارة تبقى متاحة. متابعة؟")) {
+    if (next && !confirm("سيتم إظهار «تحت التطوير» على ervenow.com / www.ervenow.com فقط. localhost:4000 يبقى للتطوير. لوحة الإدارة تبقى متاحة. متابعة؟")) {
       return;
     }
     var j = await app.PlatformAPI.api("/api/admin/site-maintenance", {
@@ -118,7 +118,7 @@ app.toggleSiteMaintenance = async function () {
     });
     app.updateSiteMaintenanceBtn(j.enabled);
     app.showSuccess(
-      j.enabled ? "الموقع معطّل للزوار — يظهر «تحت التطوير»" : "تم تفعيل الموقع للزوار"
+      j.enabled ? "الموقع معطّل على ervenow.com — localhost للتطوير" : "تم تفعيل الموقع للزوار على الإنتاج"
     );
   } catch (e) {
     app.showError(e.message || "فشل تحديث وضع الموقع");
@@ -186,8 +186,8 @@ app.updateSettingsMaintenanceStatus = function () {
   var el = document.getElementById("settingsMaintenanceStatus");
   if (!el) return;
   el.textContent = app.siteMaintenanceEnabled
-    ? "الموقع معطّل للزوار — «تحت التطوير»"
-    : "الموقع مفعّل للزوار";
+    ? "الموقع معطّل على ervenow.com — «تحت التطوير»"
+    : "الموقع مفعّل للزوار على الإنتاج";
 }
 
 app.loadSettingsPanel = async function () {

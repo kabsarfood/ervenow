@@ -56,21 +56,36 @@ app.renderDrivers = function () {
     row.className = "row";
     var ds = String(d.status || "").toLowerCase();
     var isApprovedActive = ds === "approved" && d.active === true;
-    var isBlocked = ds === "blocked" || d.active === false;
+    var isBlocked = ds === "blocked";
+    var isPending = ds === "pending" || ds === "";
+    var isRejected = ds === "rejected";
     if (isApprovedActive) {
       row.appendChild(app.mkAction("حظر", "btn-ghost", app.safeClick(async function () {
-        try { await app.updateDriver(d.id, "block-driver"); app.showSuccess("تم حظر المندوب"); app.loadDrivers(); } catch (e) { app.showError(e.message || "فشل"); }
+        if (!app.confirmAccountBlock()) return;
+        try {
+          await app.updateDriver(d.id, "block-driver");
+          app.showSuccess("تم حظر المندوب — لا يمكنه الدخول أو استلام الطلبات");
+          app.loadDrivers();
+        } catch (e) { app.showError(e.message || "فشل"); }
       })));
-    } else if (isBlocked) {
+    } else if (isBlocked || isRejected) {
       row.appendChild(app.mkAction("تفعيل", "btn-primary", app.safeClick(async function () {
-        try { await app.updateDriver(d.id, "activate-driver"); app.showSuccess("تم تفعيل المندوب"); app.loadDrivers(); } catch (e) { app.showError(e.message || "فشل"); }
+        try {
+          await app.updateDriver(d.id, "activate-driver");
+          app.showSuccess("تم تفعيل المندوب — يمكنه الدخول واستلام الطلبات");
+          app.loadDrivers();
+        } catch (e) { app.showError(e.message || "فشل"); }
       })));
-    } else {
+    } else if (isPending) {
       row.appendChild(app.mkAction("✅ اعتماد", "btn-primary", app.safeClick(async function () {
         try { await app.updateDriver(d.id, "approve-driver"); app.showSuccess("تمت الموافقة"); app.loadDrivers(); } catch (e) { app.showError(e.message || "فشل"); }
       })));
       row.appendChild(app.mkAction("❌ رفض", "btn-ghost", app.safeClick(async function () {
         try { await app.updateDriver(d.id, "reject-driver"); app.showSuccess("تم الرفض"); app.loadDrivers(); } catch (e) { app.showError(e.message || "فشل"); }
+      })));
+    } else {
+      row.appendChild(app.mkAction("تفعيل", "btn-primary", app.safeClick(async function () {
+        try { await app.updateDriver(d.id, "activate-driver"); app.showSuccess("تم تفعيل المندوب"); app.loadDrivers(); } catch (e) { app.showError(e.message || "فشل"); }
       })));
     }
     row.appendChild(app.mkAction("👁️ عرض التفاصيل", "btn-ghost", app.safeClick(function () {

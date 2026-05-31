@@ -65,7 +65,8 @@ app.renderCustomers = function () {
     var item = document.createElement("div");
     item.className = "item";
     var status = String(u.status || "active").toLowerCase();
-    var blocked = status === "blocked";
+    var role = String(u.role || "").toLowerCase();
+    var blocked = status === "blocked" || role === "blocked";
     var pending = status === "pending";
     var rejected = status === "rejected";
     var stLabel = blocked ? "محظور" : pending ? "بانتظار الموافقة" : rejected ? "مرفوض" : "معتمد";
@@ -87,11 +88,23 @@ app.renderCustomers = function () {
       })));
     } else if (!blocked && !rejected) {
       row.appendChild(app.mkAction("حظر", "btn-ghost", app.safeClick(async function () {
-        try { await app.PlatformAPI.api("/api/admin/block-customer", { method: "POST", body: { id: u.id } }); app.showSuccess("تم حظر حساب زائر المنصة"); app.loadCustomers(); } catch (e) { app.showError(e.message || "فشل"); }
+        if (!app.confirmAccountBlock()) return;
+        try {
+          await app.PlatformAPI.api("/api/admin/block-customer", { method: "POST", body: { id: u.id } });
+          app.showSuccess("تم حظر الحساب — لا يمكنه الدخول أو استخدام المنصة");
+          app.loadCustomers();
+        } catch (e) { app.showError(e.message || "فشل"); }
       })));
     } else {
       row.appendChild(app.mkAction("تفعيل", "btn-primary", app.safeClick(async function () {
-        try { await app.PlatformAPI.api("/api/admin/activate-customer", { method: "POST", body: { id: u.id } }); app.showSuccess("تم تفعيل حساب زائر المنصة"); app.loadCustomers(); } catch (e) { app.showError(e.message || "فشل"); }
+        try {
+          await app.PlatformAPI.api("/api/admin/activate-customer", {
+            method: "POST",
+            body: { id: u.id, role: role === "service" || role === "merchant" || role === "restaurant" ? role : "customer" },
+          });
+          app.showSuccess("تم تفعيل الحساب — يمكنه استخدام المنصة");
+          app.loadCustomers();
+        } catch (e) { app.showError(e.message || "فشل"); }
       })));
     }
     row.appendChild(app.mkAction("👁️ عرض التفاصيل", "btn-ghost", app.safeClick(function () {
