@@ -480,38 +480,7 @@ body.cart-page-has-items {
 }
 
 /* ——— Responsive ——— */
-@media (max-width: 860px) {
-  .cart-grid {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
-
-  .cart-sidebar-stack {
-    position: static;
-  }
-
-  .cart-checkout-col {
-    position: static;
-  }
-
-  .cart-checkout-actions .cart-checkout-primary--desktop {
-    display: none;
-  }
-
-  body.cart-page-has-items .cart-mobile-bar:not([hidden]) {
-    display: flex;
-  }
-}
-
-@media (min-width: 861px) {
-  .cart-mobile-bar {
-    display: none !important;
-  }
-
-  body.cart-page-has-items {
-    padding-bottom: 0;
-  }
-}
+/* responsive cart grid/mobile bar: see ervenow-responsive.css (1024px) */
 
 @media (prefers-reduced-motion: reduce) {
   .cart-checkout-primary,

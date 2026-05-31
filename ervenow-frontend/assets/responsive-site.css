@@ -230,6 +230,13 @@ svg {
   }
 }
 
+@media (max-width: 640px) {
+  .layout {
+    padding-inline: max(12px, env(safe-area-inset-left, 12px)) max(12px, env(safe-area-inset-right, 12px));
+    padding-bottom: max(28px, calc(20px + env(safe-area-inset-bottom, 0px)));
+  }
+}
+
 @media (max-width: 380px) {
   .sn-trust {
     grid-template-columns: 1fr;

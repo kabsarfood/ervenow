@@ -24,7 +24,7 @@ const {
   pickDefaultDestination,
 } = require("../../shared/utils/loginDestinations");
 const { accessFlagsForRole } = require("../../shared/utils/platformAccessPolicy");
-const { canonicalPhoneDigits, findUserByPhone } = require("../../shared/utils/userPhoneLookup");
+const { canonicalPhoneDigits, findUserByPhone, findUserByPhoneResilient } = require("../../shared/utils/userPhoneLookup");
 const {
   isUserAccountApproved,
   isUserAccountPending,
@@ -396,7 +396,7 @@ router.post("/send-otp", async (req, res) => {
     if (!e164 || !isErvnowSaudiMobileE164(e164)) {
       return fail(
         res,
-        "رقم غير صالح — أدخل رقم سعودي يبدأ بـ 05 (مثال 05xxxxxxxx)",
+        "رقم غير صالح — أدخل 05xxxxxxxx أو 9665xxxxxxxx",
         400
       );
     }
@@ -496,7 +496,7 @@ router.post("/verify-otp", async (req, res) => {
     if (!isErvnowSaudiMobileE164(e164)) {
       return fail(
         res,
-        "رقم غير صالح — يجب أن يبدأ بـ 05 (مثال 05xxxxxxxx)",
+        "رقم غير صالح — أدخل 05xxxxxxxx أو 9665xxxxxxxx",
         400
       );
     }
@@ -524,12 +524,14 @@ router.post("/verify-otp", async (req, res) => {
 
     let existingUser = null;
     if (sbEarly) {
-      const exFound = await findUserByPhone(sbEarly, digits, "id, role, status, phone, name, service_type");
-      if (!exFound.error && exFound.data) {
+      const exFound = await findUserByPhoneResilient(sbEarly, digits);
+      if (exFound.data) {
         if (String(exFound.data.status || "").toLowerCase() === "blocked") {
           return fail(res, "الحساب محظور من الإدارة", 403);
         }
         existingUser = exFound.data;
+      } else if (exFound.error && !isMissingStatusColumnError(exFound.error)) {
+        console.error("[ERVENOW] verify-otp user lookup:", exFound.error.message || exFound.error);
       }
     }
     const existingRole = existingUser ? String(existingUser.role || "").toLowerCase() : null;
@@ -633,7 +635,7 @@ router.post("/verify-otp", async (req, res) => {
     }
 
     if (loginOnly && isUserAccountPending(userRow.status)) {
-      return fail(res, "الحساب بانتظار موافقة الإدارة", 403, {
+      return fail(res, "يتم تفعيل الحساب بعد المراجعة واعتماده من إدارة ERVENOW.", 403, {
         pending_approval: true,
         approved: false,
       });
@@ -646,7 +648,8 @@ router.post("/verify-otp", async (req, res) => {
         success: true,
         pending_approval: true,
         approved: false,
-        message: "تم استلام طلبك — بانتظار موافقة الإدارة",
+        message:
+          "تم استلام طلب التسجيل بنجاح. حسابك قيد المراجعة من إدارة ERVENOW، وسيتم إشعارك فور اعتماد الحساب وتفعيله.",
         user: {
           id: userRow.id,
           phone: userRow.phone,
@@ -760,7 +763,7 @@ router.post("/users/sync", requireAuth, async (req, res) => {
       const e164 = toE164(phone);
       if (e164) {
         if (!isErvnowSaudiMobileE164(e164)) {
-          return fail(res, "رقم الجوال يجب أن يبدأ بـ 05", 400);
+          return fail(res, "رقم غير صالح — أدخل 05xxxxxxxx أو 9665xxxxxxxx", 400);
         }
         phone = toStorageDigits(e164);
       }

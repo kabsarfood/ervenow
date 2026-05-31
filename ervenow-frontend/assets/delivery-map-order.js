@@ -14,6 +14,14 @@
     other: "أخرى",
   };
 
+  function normalizeCoords(ll) {
+    if (!ll || !Number.isFinite(ll.lat) || !Number.isFinite(ll.lng)) return null;
+    return {
+      lat: Math.round(ll.lat * 1e6) / 1e6,
+      lng: Math.round(ll.lng * 1e6) / 1e6,
+    };
+  }
+
   function parseLatLngPair(s) {
     var t = String(s || "")
       .trim()
@@ -83,12 +91,25 @@
     if (!raw) return null;
 
     var direct = parseLatLngPair(raw);
-    if (direct) return direct;
+    if (direct) return normalizeCoords(direct);
 
     var urlStr = normalizeHttpUrl(raw);
 
     var from3d = parse3d4d(urlStr);
-    if (from3d) return from3d;
+    if (from3d) return normalizeCoords(from3d);
+
+    if (/maps\.apple\.com/i.test(urlStr)) {
+      try {
+        var appleUrl = new URL(urlStr);
+        var appleKeys = ["ll", "q", "sll"];
+        for (var ak = 0; ak < appleKeys.length; ak++) {
+          var appleQ = appleUrl.searchParams.get(appleKeys[ak]);
+          if (!appleQ) continue;
+          var appleLl = parseLatLngPair(String(appleQ).replace(/^loc:/i, "").trim());
+          if (appleLl) return normalizeCoords(appleLl);
+        }
+      } catch (eApple) {}
+    }
 
     var patterns = [
       /@(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)(?:[,/]|z|\?|$)/i,
@@ -112,7 +133,7 @@
         var lat = parseFloat(m[1]);
         var lng = parseFloat(m[2]);
         if (Number.isFinite(lat) && Number.isFinite(lng) && Math.abs(lat) <= 90 && Math.abs(lng) <= 180) {
-          return { lat: lat, lng: lng };
+          return normalizeCoords({ lat: lat, lng: lng });
         }
       }
     }
@@ -129,7 +150,7 @@
       }
       var pathMatch = u.pathname.match(/@(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/);
       if (pathMatch) {
-        return { lat: parseFloat(pathMatch[1]), lng: parseFloat(pathMatch[2]) };
+        return normalizeCoords({ lat: parseFloat(pathMatch[1]), lng: parseFloat(pathMatch[2]) });
       }
     } catch (e) {}
 
@@ -152,7 +173,12 @@
   function isShortMapsLink(input) {
     var s = String(input || "").trim();
     var n = normalizeHttpUrl(s) || s;
-    return /maps\.app\.goo\.gl\//i.test(n) || /\/goo\.gl\/[a-zA-Z0-9]/i.test(n) || /^https?:\/\/g\.co\//i.test(n);
+    return (
+      /maps\.app\.goo\.gl\//i.test(n) ||
+      /\/goo\.gl\/[a-zA-Z0-9]/i.test(n) ||
+      /^https?:\/\/g\.co\//i.test(n) ||
+      /share\.google\.com\//i.test(n)
+    );
   }
 
   /**
@@ -175,7 +201,7 @@
       }
     }
 
-    if (!/maps|google|goo\.gl|g\.co/i.test(raw)) {
+    if (!/maps|google|goo\.gl|g\.co|apple\.com/i.test(raw)) {
       return null;
     }
 

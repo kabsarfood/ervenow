@@ -88,7 +88,7 @@
     if (raw && /[\u0600-\u06FF]/.test(raw)) return raw;
     if (status === 401) return "انتهت الجلسة — سجّل الدخول من جديد.";
     if (status === 403) {
-      if (j && j.pending_approval) return raw || "الحساب بانتظار موافقة الإدارة";
+      if (j && j.pending_approval) return raw || "يتم تفعيل الحساب بعد المراجعة واعتماده من إدارة ERVENOW.";
       if (j && j.not_registered) return raw || "رقم الجوال غير مسجّل — أنشئ حساباً أولاً.";
       if (j && j.rejected) return raw || "تم رفض طلب التسجيل";
       return raw || "لا صلاحية لتنفيذ هذا الإجراء.";

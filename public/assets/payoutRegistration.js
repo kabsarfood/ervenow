@@ -38,8 +38,9 @@
   }
 
   function norm05(v) {
+    if (window.ErvenowSaPhone) return ErvenowSaPhone.toLocal05(v);
     var d = String(v || "").replace(/\D/g, "");
-    if (d.startsWith("9665")) d = "0" + d.slice(3);
+    if (/^9665\d{8}$/.test(d)) d = "0" + d.slice(3);
     else if (d.startsWith("5") && d.length === 9) d = "0" + d;
     return d.slice(0, 10);
   }
@@ -131,6 +132,7 @@
     }
 
     var iban = ibanInput ? strip(ibanInput.value).toUpperCase() : "";
+    if (stcInput && window.ErvenowSaPhone) ErvenowSaPhone.formatField(stcInput);
     var stc = stcInput ? norm05(stcInput.value) : "";
     var crypto = !!(cryptoCheckbox && cryptoCheckbox.checked);
 
@@ -148,7 +150,7 @@
         if (!bank_name) throw new Error("أدخل اسم البنك عند إدخال الآيبان");
       }
     }
-    if (stc && !/^05\d{8}$/.test(stc)) throw new Error("رقم STC Pay يجب أن يبدأ بـ 05 ومكوّناً من 10 أرقام");
+    if (stc && !/^05\d{8}$/.test(stc)) throw new Error("رقم STC Pay غير صالح — 05xxxxxxxx أو 9665xxxxxxxx");
 
     var out = {
       bank_country_code: bank_country_code,

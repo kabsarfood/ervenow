@@ -60,7 +60,7 @@ function isPendingAuthAllowedPath(req) {
 function pendingApprovalErrorPayload() {
   return {
     ok: false,
-    error: "الحساب بانتظار موافقة الإدارة",
+    error: "يتم تفعيل الحساب بعد المراجعة واعتماده من إدارة ERVENOW.",
     pending_approval: true,
     approved: false,
   };

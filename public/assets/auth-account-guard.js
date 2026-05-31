@@ -53,9 +53,9 @@
       return me;
     } catch (e) {
       var msg = String((e && e.message) || e || "");
-      if (/401|403|Missing Authorization|Invalid or expired|بانتظار موافقة|pending/i.test(msg)) {
+      if (/401|403|Missing Authorization|Invalid or expired|بانتظار موافقة|قيد المراجعة|pending/i.test(msg)) {
         clearSession();
-        global.location.replace(/بانتظار|pending|403/i.test(msg) ? pendingUrl : loginUrl);
+        global.location.replace(/بانتظار|قيد المراجعة|pending|403/i.test(msg) ? pendingUrl : loginUrl);
         return null;
       }
       if (options.softFail) return null;

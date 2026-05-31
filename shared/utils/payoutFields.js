@@ -12,7 +12,7 @@ function stripSpaces(s) {
 
 function normalizeSaudiMobile05(v) {
   let d = String(v || "").replace(/\D/g, "");
-  if (d.startsWith("9665")) d = "0" + d.slice(3);
+  if (/^9665\d{8}$/.test(d)) d = "0" + d.slice(3);
   else if (d.startsWith("5") && d.length === 9) d = "0" + d;
   return d.slice(0, 10);
 }
@@ -74,7 +74,7 @@ function parseOptionalPayoutPayload(body) {
     throw new Error("رقم الحساب طويل جداً");
   }
   if (stc_pay_phone && !/^05\d{8}$/.test(stc_pay_phone)) {
-    throw new Error("رقم STC Pay يجب أن يكون سعودياً يبدأ بـ 05 (10 أرقام)");
+    throw new Error("رقم STC Pay غير صالح — 05xxxxxxxx أو 9665xxxxxxxx");
   }
 
   if (!iban && !bank_name && !stc_pay_phone && !payout_crypto_interest && !bank_account_number && !bank_swift_code && !bank_account_name) {

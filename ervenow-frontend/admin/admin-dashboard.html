@@ -187,29 +187,34 @@
             <p class="financial-alert-empty">جارٍ التحميل…</p>
           </div>
         </div>
-        <div class="ledger-tx-table-wrap">
-          <h3 style="margin: 16px 0 8px; font-size: 1rem; color: #5b371d">آخر العمليات المالية</h3>
-          <p class="ledger-tx-updated" id="ledgerTxLastUpdated">—</p>
-          <div class="finance-table-wrap">
-            <table class="finance-table" aria-label="آخر عمليات ervenow_ledger">
-              <thead>
-                <tr>
-                  <th>type</th>
-                  <th>direction</th>
-                  <th>amount</th>
-                  <th>user_id</th>
-                  <th>reference_id</th>
-                  <th>created_at</th>
-                </tr>
-              </thead>
-              <tbody id="ledgerTransactionsBody">
-                <tr>
-                  <td colspan="6" class="finance-msg">جارٍ التحميل…</td>
-                </tr>
-              </tbody>
-            </table>
+        <details class="ledger-tx-collapse" id="ledgerTxCollapse">
+          <summary class="ledger-tx-collapse__toggle">
+            <span class="ledger-tx-collapse__title">آخر العمليات المالية</span>
+            <span class="ledger-tx-collapse__hint">عرض / إخفاء</span>
+          </summary>
+          <div class="ledger-tx-collapse__body">
+            <p class="ledger-tx-updated" id="ledgerTxLastUpdated">—</p>
+            <div class="finance-table-wrap">
+              <table class="finance-table" aria-label="آخر عمليات ervenow_ledger">
+                <thead>
+                  <tr>
+                    <th>type</th>
+                    <th>direction</th>
+                    <th>amount</th>
+                    <th>user_id</th>
+                    <th>reference_id</th>
+                    <th>created_at</th>
+                  </tr>
+                </thead>
+                <tbody id="ledgerTransactionsBody">
+                  <tr>
+                    <td colspan="6" class="finance-msg">جارٍ التحميل…</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
+        </details>
       </div>
 
       <div class="card" id="treasuryPanel" style="display: none; margin-bottom: 14px">

@@ -29,7 +29,7 @@
     }
     var phone = validateSaPhone(item && item.customer_phone);
     if (!phone) {
-      return { ok: false, message: "أدخل رقم جوال سعودي صحيح (05xxxxxxxx)" };
+      return { ok: false, message: "أدخل رقم جوال سعودي صحيح (05xxxxxxxx أو 9665xxxxxxxx)" };
     }
     item.customer_phone = phone;
     if (item.data && typeof item.data === "object") {

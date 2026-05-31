@@ -44,6 +44,11 @@ describe("mapsUrlParser", () => {
     expect(parseMapsUrl("https://maps.app.goo.gl/zPFemAXvgC9pvBPT6")).toBeNull();
   });
 
+  test("apple maps ll=", () => {
+    var ll = parseMapsUrl("https://maps.apple.com/?ll=24.7136,46.6753");
+    expect(ll).toEqual({ lat: 24.7136, lng: 46.6753 });
+  });
+
   test(
     "resolves maps.app.goo.gl via redirect (network)",
     async () => {

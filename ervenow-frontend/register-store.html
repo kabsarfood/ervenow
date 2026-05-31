@@ -110,7 +110,7 @@
 
             <div class="field-gap">
               <label for="phone">رقم الجوال</label>
-              <input id="phone" type="tel" inputmode="tel" placeholder="05xxxxxxxx" maxlength="10" />
+              <input id="phone" type="tel" inputmode="tel" placeholder="05xxxxxxxx أو 9665xxxxxxxx" maxlength="12" />
             </div>
           </section>
 
@@ -233,7 +233,7 @@
               </div>
               <div class="field-gap">
                 <label for="storePayoutStc">STC Pay (اختياري)</label>
-                <input id="storePayoutStc" type="tel" inputmode="numeric" maxlength="10" placeholder="05xxxxxxxx" />
+                <input id="storePayoutStc" type="tel" inputmode="numeric" maxlength="12" placeholder="05xxxxxxxx أو 9665xxxxxxxx" />
               </div>
               <label class="reg-store-check field-gap">
                 <input id="storePayoutCrypto" type="checkbox" />
@@ -268,6 +268,7 @@
     <script src="/assets/compressImage.js"></script>
     <script src="/assets/payoutRegistration.js"></script>
     <script src="/assets/api-config.js"></script>
+    <script src="/assets/sa-phone-input.js"></script>
     <script src="/assets/api.js"></script>
     <script src="/assets/restaurant-cuisines.js"></script>
     <script src="/assets/ervenow-toggle.js"></script>
@@ -293,16 +294,32 @@
 
       function normalizePhoneInput() {
         var el = document.getElementById("phone");
+        if (window.ErvenowSaPhone) return ErvenowSaPhone.formatField(el);
         var d = String(el.value || "").replace(/\D/g, "");
-        if (d.startsWith("9665")) d = "0" + d.slice(3);
-        else if (d.startsWith("5") && d.length === 9) d = "0" + d;
-        if (d.length > 10) d = d.slice(0, 10);
-        el.value = d;
-        return d;
+        if (d.startsWith("9665")) {
+          el.value = d.length >= 12 ? "0" + d.slice(3, 12) : d.slice(0, 12);
+        } else {
+          if (d.startsWith("5") && d.length === 9) d = "0" + d;
+          el.value = d.slice(0, 10);
+        }
+        return el.value;
       }
 
       function isValidSaudiPhone05(v) {
-        return /^05\d{8}$/.test(String(v || ""));
+        return window.ErvenowSaPhone ? ErvenowSaPhone.isValid(v) : /^05\d{8}$/.test(String(v || ""));
+      }
+
+      function normalizeStcPhoneInput() {
+        var el = document.getElementById("storePayoutStc");
+        if (window.ErvenowSaPhone) return ErvenowSaPhone.formatField(el);
+        var d = String(el.value || "").replace(/\D/g, "");
+        if (d.startsWith("9665")) {
+          el.value = d.length >= 12 ? "0" + d.slice(3, 12) : d.slice(0, 12);
+        } else {
+          if (d.startsWith("5") && d.length === 9) d = "0" + d;
+          el.value = d.slice(0, 10);
+        }
+        return el.value;
       }
 
       document.getElementById("cr_file").onchange = function (ev) {
@@ -486,13 +503,8 @@
       syncRestaurantCategoryField();
       fillCategorySelects();
 
-      document.getElementById("storePayoutStc").addEventListener("input", function () {
-        var el = document.getElementById("storePayoutStc");
-        var d = String(el.value || "").replace(/\D/g, "");
-        if (d.startsWith("9665")) d = "0" + d.slice(3);
-        else if (d.startsWith("5") && d.length === 9) d = "0" + d;
-        el.value = d.slice(0, 10);
-      });
+      document.getElementById("storePayoutStc").addEventListener("input", normalizeStcPhoneInput);
+      document.getElementById("storePayoutStc").addEventListener("blur", normalizeStcPhoneInput);
 
       (function initStorePayoutUi() {
         if (!window.ERVENOW_PAYOUT_UI) return;
@@ -551,7 +563,7 @@
             return;
           }
           if (!isValidSaudiPhone05(phone)) {
-            show("أدخل رقم سعودي صحيح يبدأ بـ 05", false);
+            show(ErvenowSaPhone ? ErvenowSaPhone.invalidMessage() : "أدخل رقم سعودي صحيح", false);
             return;
           }
           if (!lat || !lng || (storeMap && !storeMap.hasCoords())) {
@@ -643,7 +655,7 @@
           var okMsg =
             j.message ||
             (j.headline && j.subline ? j.headline + "\n" + j.subline : "") ||
-            "✅ تم تسجيل المتجر\n⏳ بانتظار الموافقة";
+            "✅ تم تسجيل المتجر\n⏳ حسابك قيد المراجعة من إدارة ERVENOW";
           if (j.id) okMsg += "\n\nمعرّف الطلب: " + j.id;
           show(okMsg, true);
         } catch (e) {

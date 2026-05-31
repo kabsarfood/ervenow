@@ -3,6 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="description" content="يتم تفعيل الحساب بعد المراجعة واعتماده من إدارة ERVENOW." />
     <title>ERVENOW | لوحة زائر المنصة</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
@@ -132,6 +133,10 @@
         .delivery-product-row {
           grid-template-columns: 1fr;
         }
+        .delivery-mode-tab {
+          flex: 1 1 100%;
+          min-width: 0;
+        }
       }
       .delivery-live-map-link {
         display: inline-block;
@@ -255,7 +260,8 @@
       @media (min-width: 900px) {
         body.dash-map-modal-open #dashDeliveryTitle[open] {
           width: min(calc((100vw - 32px) * 0.9), 728px);
-          max-height: min(90dvh, 864px);
+          height: 900px;
+          max-height: 900px;
         }
       }
       @media (max-height: 700px) {
@@ -709,17 +715,25 @@
         grid-template-columns: 1fr;
         grid-template-areas:
           "shipment"
-          "method"
-          "map"
+          "route"
           "actions";
+      }
+      .map-canvas-route-col {
+        grid-area: route;
+        display: flex;
+        flex-direction: column;
+        gap: clamp(6px, 1.1vw, 8px);
+        min-width: 0;
       }
       @media (min-width: 640px) {
         .map-canvas-grid {
           grid-template-columns: 1fr 1fr;
           grid-template-areas:
-            "method shipment"
-            "map actions";
+            "route shipment"
+            "route actions";
           align-items: start;
+          column-gap: clamp(10px, 2vw, 14px);
+          row-gap: clamp(10px, 2vw, 14px);
         }
       }
       @media (min-width: 900px) {
@@ -735,18 +749,16 @@
         min-width: 0;
       }
       .map-canvas-cell--shipment { grid-area: shipment; }
-      .map-canvas-cell--method { grid-area: method; }
+      .map-canvas-cell--actions { grid-area: actions; }
       .map-canvas-cell--map {
-        grid-area: map;
         padding: 8px;
         display: flex;
         flex-direction: column;
-        align-self: start;
         min-height: 0;
         overflow: visible;
+        gap: clamp(8px, 1.5vw, 10px);
       }
       .map-canvas-cell--actions {
-        grid-area: actions;
         display: flex;
         flex-direction: column;
         gap: 10px;
@@ -1005,26 +1017,36 @@
       }
       .map-canvas-apply-btn {
         width: 100%;
-        min-height: 44px;
+        min-height: 48px;
         padding: 10px 12px;
+        margin-top: 4px;
         border: 0;
         border-radius: 10px;
         background: linear-gradient(135deg, #d8e8d0, #c5d4bc);
         font-family: inherit;
-        font-size: 0.8rem;
-        font-weight: 800;
+        font-size: 0.82rem;
+        font-weight: 900;
         color: var(--brown, #3d2213);
         cursor: pointer;
         line-height: 1.35;
         flex-shrink: 0;
+        box-shadow: 0 3px 12px rgba(45, 26, 14, 0.08);
+      }
+      .map-canvas-apply-btn:disabled {
+        opacity: 0.65;
+        cursor: wait;
       }
       .map-canvas-footer {
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 8px;
-        margin-top: 8px;
+        margin-top: 0;
         margin-bottom: 0;
         flex-shrink: 0;
+        width: 100%;
+      }
+      .map-canvas-cell--map .map-canvas-footer {
+        padding-top: 2px;
       }
       body.dash-map-modal-open #dashDeliveryTitle[open] .map-canvas-form {
         gap: clamp(6px, 1.2vw, 8px);
@@ -2337,6 +2359,7 @@
                         <input id="mapProductNote" type="text" maxlength="120" placeholder="مثال: صندوق أواني زجاجية" />
                       </section>
 
+                      <div class="map-canvas-route-col">
                       <section class="map-canvas-cell map-canvas-cell--method">
                         <h3 class="map-canvas-cell__title">تحديد المسار عن طريق</h3>
                         <div class="map-canvas-mode-btns" role="tablist" aria-label="طريقة تحديد المواقع">
@@ -2358,7 +2381,16 @@
 
                       <section class="map-canvas-cell map-canvas-cell--map">
                         <div id="pickupDropMap" aria-label="خريطة المسار"></div>
+                        <div class="map-canvas-footer">
+                          <div class="map-canvas-price-box" aria-live="polite">
+                            <span class="map-canvas-price-box__label">السعر</span>
+                            <strong class="map-canvas-price-box__val" id="price">—</strong>
+                            <span class="map-canvas-price-box__dist" id="distance">—</span>
+                          </div>
+                          <button id="createBtn" class="map-canvas-cart-btn" type="button" onclick="createOrder()" disabled>أضف إلى السلة</button>
+                        </div>
                       </section>
+                      </div>
 
                       <section class="map-canvas-cell map-canvas-cell--actions map-canvas-actions" id="mapCanvasActions" data-route-mode="map">
                         <div id="deliveryModeLinks" class="map-canvas-route-panel" hidden>
@@ -2397,15 +2429,14 @@
                             </div>
                           </div>
                         </div>
-                        <button type="button" class="map-canvas-apply-btn" onclick="applyMapRoute()">انقر هنا لتطبيق الروابط و رسم المسار</button>
-                        <div class="map-canvas-footer">
-                          <div class="map-canvas-price-box" aria-live="polite">
-                            <span class="map-canvas-price-box__label">السعر</span>
-                            <strong class="map-canvas-price-box__val" id="price">—</strong>
-                            <span class="map-canvas-price-box__dist" id="distance">—</span>
-                          </div>
-                          <button id="createBtn" class="map-canvas-cart-btn" type="button" onclick="createOrder()" disabled>أضف إلى السلة</button>
-                        </div>
+                        <button
+                          type="button"
+                          class="map-canvas-apply-btn"
+                          id="btnApplyMapRoute"
+                          onclick="applyMapRoute()"
+                        >
+                          انقر هنا لتطبيق الروابط و رسم المسار
+                        </button>
                         <p id="platformFeeLine" hidden aria-hidden="true">—</p>
                         <p id="driverNetLine" hidden aria-hidden="true">—</p>
                       </section>
@@ -2659,6 +2690,7 @@
           tabMap.setAttribute("aria-selected", deliveryInputMode === "map" ? "true" : "false");
         }
         if (actions) actions.setAttribute("data-route-mode", deliveryInputMode);
+        updateApplyBtnLabel();
         if (deliveryInputMode === "links") {
           selectType = null;
           updateSelectButtonsUi();
@@ -2673,9 +2705,39 @@
         if (res) {
           res.innerText =
             deliveryInputMode === "links"
-              ? "الصق رابطي الاستلام والتسليم ثم «تطبيق الروابط و رسم المسار»."
-              : "اضغط «خريطة» للاستلام ثم للتسليم، ثم «تطبيق الروابط و رسم المسار».";
+              ? "الصق رابطي الاستلام والتسليم ثم اضغط «انقر هنا لتطبيق الروابط و رسم المسار»."
+              : "حدّد الاستلام والتسليم على الخريطة ثم اضغط «تطبيق المواقع ورسم المسار».";
         }
+      }
+
+      function updateApplyBtnLabel() {
+        var btn = document.getElementById("btnApplyMapRoute");
+        if (!btn || btn.disabled) return;
+        btn.textContent =
+          deliveryInputMode === "links"
+            ? "انقر هنا لتطبيق الروابط و رسم المسار"
+            : "تطبيق المواقع ورسم المسار";
+      }
+
+      function mapHaversineM(a, b) {
+        if (!a || !b) return Infinity;
+        var R = 6371000;
+        var p = Math.PI / 180;
+        var dLat = (b.lat - a.lat) * p;
+        var dLng = (b.lng - a.lng) * p;
+        var x =
+          Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+          Math.cos(a.lat * p) * Math.cos(b.lat * p) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+        return 2 * R * Math.asin(Math.sqrt(x));
+      }
+
+      function roundMapCoord(n) {
+        return Math.round(Number(n) * 1e6) / 1e6;
+      }
+
+      function normalizeMapLL(ll) {
+        if (!ll) return null;
+        return { lat: roundMapCoord(ll.lat), lng: roundMapCoord(ll.lng) };
       }
 
       function scrollToMapRoutes() {
@@ -2690,14 +2752,28 @@
           if (res) res.innerText = "❌ الصق الرابط أولاً";
           return;
         }
-        if (res) res.innerText = "✓ تم حفظ الرابط — اضغط «تطبيق الروابط و رسم المسار»";
+        if (res) res.innerText = "✓ تم حفظ الرابط";
       }
 
       async function applyMapRoute() {
-        if (deliveryInputMode === "links") {
-          await applyMapLinks();
-        } else {
-          await calculate();
+        var btn = document.getElementById("btnApplyMapRoute");
+        var prevLabel = btn ? btn.textContent : "";
+        if (btn) {
+          btn.disabled = true;
+          btn.textContent = "جارٍ تطبيق المواقع ورسم المسار…";
+        }
+        try {
+          if (deliveryInputMode === "links") {
+            await applyMapLinks();
+          } else {
+            await calculate();
+          }
+        } finally {
+          if (btn) {
+            btn.disabled = false;
+            btn.textContent = prevLabel || "";
+            updateApplyBtnLabel();
+          }
         }
       }
 
@@ -2758,21 +2834,44 @@
         if (!raw || !DM) return null;
         if (DM.resolveMapsLinkAsync) {
           var resolved = await DM.resolveMapsLinkAsync(raw);
-          if (resolved && resolved.ll) return resolved;
+          if (resolved && resolved.ll) {
+            return {
+              ll: normalizeMapLL(resolved.ll),
+              mapsUrl: resolved.mapsUrl || DM.buildGoogleMapsUrl(resolved.ll.lat, resolved.ll.lng),
+            };
+          }
           if (resolved && resolved.error) {
-            var err = new Error(resolved.error);
-            err.code = "MAPS_LINK_PARSE";
-            throw err;
+            return { error: resolved.error };
           }
         }
         var ll = DM.parseMapsUrl(raw);
         if (ll) {
+          ll = normalizeMapLL(ll);
           return {
             ll: ll,
             mapsUrl: /^https?:\/\//i.test(raw) ? raw : DM.buildGoogleMapsUrl(ll.lat, ll.lng),
           };
         }
         return null;
+      }
+
+      async function resolveMapsLinkField(linkText, fieldLabel) {
+        var raw = String(linkText || "").trim();
+        if (!raw) {
+          throw new Error("❌ " + fieldLabel + ": الصق رابط Google Maps أولاً.");
+        }
+        var resolved = await resolveMapsLinkInput(raw);
+        if (resolved && resolved.error) {
+          throw new Error("❌ " + fieldLabel + ": " + resolved.error);
+        }
+        if (!resolved || !resolved.ll) {
+          throw new Error(
+            "❌ " +
+              fieldLabel +
+              ": تعذر قراءة الإحداثيات. استخدم «مشاركة» من Google Maps (maps.app.goo.gl) أو lat,lng."
+          );
+        }
+        return resolved;
       }
 
       async function resolveLocationFromField(text, linkFieldId) {
@@ -2804,27 +2903,38 @@
 
       async function applyMapLinks() {
         var resultEl = document.getElementById("result");
+        var fromInput = document.getElementById("fromLink");
+        var toInput = document.getElementById("toLink");
         try {
-          var fromLink = String(document.getElementById("fromLink").value || "").trim();
-          var toLink = String(document.getElementById("toLink").value || "").trim();
+          var fromLink = String(fromInput && fromInput.value ? fromInput.value : "").trim();
+          var toLink = String(toInput && toInput.value ? toInput.value : "").trim();
           if (!fromLink || !toLink) {
-            resultEl.innerText = "❌ الصق رابط الاستلام ورابط التسليم.";
+            resultEl.innerText = "❌ الصق رابط الاستلام ورابط التسليم في الحقلين أعلاه.";
             return;
           }
           var DM = window.ErvenowDeliveryMap;
           if (!DM) throw new Error("تعذر تحميل أدوات الخريطة");
-          resultEl.innerText = "جارٍ فك روابط Google Maps ورسم المسار…";
-          var fromResolved = await resolveMapsLinkInput(fromLink);
-          var toResolved = await resolveMapsLinkInput(toLink);
-          if (!fromResolved || !toResolved) {
-            resultEl.innerText =
-              "❌ تعذر قراءة الإحداثيات. الصق رابط maps.app.goo.gl (مثل رابط المشاركة) مع تشغيل الخادم، أو حدد على الخريطة.";
+          resultEl.innerText = "جارٍ فك روابط Google Maps وتحديد نقاط الاستلام والتسليم بدقة…";
+          var fromResolved;
+          var toResolved;
+          try {
+            fromResolved = await resolveMapsLinkField(fromLink, "الاستلام");
+            toResolved = await resolveMapsLinkField(toLink, "التسليم");
+          } catch (fieldErr) {
+            resultEl.innerText = fieldErr.message || "❌ تعذر قراءة أحد الروابط";
+            return;
+          }
+          var sepM = mapHaversineM(fromResolved.ll, toResolved.ll);
+          if (!Number.isFinite(sepM) || sepM < 30) {
+            resultEl.innerText = "❌ نقطتا الاستلام والتسليم متقاربتان جداً — تحقق من الرابطين.";
             return;
           }
           fromLL = fromResolved.ll;
           toLL = toResolved.ll;
           pickupMapsUrl = fromResolved.mapsUrl || DM.buildGoogleMapsUrl(fromLL.lat, fromLL.lng);
           dropMapsUrl = toResolved.mapsUrl || DM.buildGoogleMapsUrl(toLL.lat, toLL.lng);
+          if (fromInput) fromInput.value = pickupMapsUrl;
+          if (toInput) toInput.value = dropMapsUrl;
           fromDistrictLabel = await reverseGeocodeDistrict(fromLL.lat, fromLL.lng);
           toDistrictLabel = await reverseGeocodeDistrict(toLL.lat, toLL.lng);
           document.getElementById("from").value =
@@ -2832,6 +2942,10 @@
           document.getElementById("to").value =
             toDistrictLabel && toDistrictLabel !== "—" ? toDistrictLabel : "موقع التسليم";
           await drawRouteAndPricing();
+          resultEl.innerText =
+            "✓ تم تحديد الاستلام والتسليم — المسافة " +
+            (km ? km.toFixed(2) : "—") +
+            " كم. راجع الخريطة ثم «أضف إلى السلة».";
         } catch (e) {
           resultEl.innerText = "❌ " + (e.message || "تعذر قراءة الرابط");
         }
@@ -3229,8 +3343,8 @@
           if (!fromLL || !toLL) {
             result.innerText =
               deliveryInputMode === "links"
-                ? "❌ الصق رابطي الاستلام والتسليم ثم «تطبيق الروابط و رسم المسار»."
-                : "❌ حدّد نقطة الاستلام والتسليم على الخريطة ثم «تطبيق الروابط و رسم المسار».";
+                ? "❌ الصق رابطي الاستلام والتسليم ثم اضغط «انقر هنا لتطبيق الروابط و رسم المسار»."
+                : "❌ حدّد نقطة الاستلام والتسليم على الخريطة ثم «تطبيق المواقع ورسم المسار».";
             return;
           }
           if (!km) return;
@@ -3429,7 +3543,7 @@
               '<span class="dash-guest-badge__icon">' +
               guestIconImg(40) +
               "</span>" +
-              '<p class="dash-guest-badge__text">أنت تتصفّح كزائر — استكشف الأقسام وحسّب المسافة. لتنفيذ طلب توصيل <a href=\"/login?role=customer\">سجّل الدخول</a>.</p>' +
+              '<p class="dash-guest-badge__text">أنت تتصفّح كزائر — استكشف الأقسام وحسّب المسافة. لتنفيذ طلب توصيل <a href=\"/login?role=customer\">سجّل الدخول</a>. يتم تفعيل الحساب بعد المراجعة واعتماده من إدارة ERVENOW.</p>' +
               "</div>"
           );
           if (window.ErvenowGuestShell && ErvenowGuestShell.refreshAuthHeader) {
@@ -3613,6 +3727,7 @@
         }
       });
       setDeliveryMode("map");
+      updateApplyBtnLabel();
     </script>
   </body>
 </html>

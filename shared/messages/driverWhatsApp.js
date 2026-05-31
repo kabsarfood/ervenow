@@ -15,8 +15,8 @@ function driverPendingRegistrationBody(displayName) {
   const enWho = who ? `${who}, ` : "";
   return (
     `ERVENOW Delivery\n\n` +
-    `${arWho}أهلاً بكم في منصة ارفينو دلفري، بانتظار الموافقة. نتمنى لكم يوماً جميلاً.\n\n` +
-    `${enWho}Welcome to Ervenow Delivery — your registration is pending approval. We wish you a nice day.`
+    `${arWho}أهلاً بكم في منصة ارفينو دلفري. تم استلام طلب التسجيل — حسابك قيد المراجعة من إدارة ERVENOW.\n\n` +
+    `${enWho}Welcome to Ervenow Delivery — your registration was received and is under review by ERVENOW.`
   );
 }
 

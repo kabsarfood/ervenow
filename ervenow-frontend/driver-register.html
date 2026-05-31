@@ -1,8 +1,8 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ar" dir="rtl">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>طلب الانضمام كمندوب | ERVENOW</title>
     <link rel="stylesheet" href="/assets/styles.css" />
   </head>
@@ -11,7 +11,7 @@
       <p><a href="/">← الرئيسية</a> · <a href="/driver-login">دخول المندوبين المعتمدين</a></p>
       <h1>طلب الانضمام — مندوب توصيل</h1>
       <p class="sub">
-        أرسل بياناتك للمراجعة. بعد موافقة الإدارة يمكنك تسجيل الدخول من
+        أرسل بياناتك للمراجعة. يتم تفعيل الحساب بعد المراجعة واعتماده من إدارة ERVENOW، ثم يمكنك تسجيل الدخول من
         <a href="/driver-login">بوابة المندوب</a> برمز واتساب فقط.
       </p>
 
@@ -20,7 +20,7 @@
         <input id="regName" type="text" placeholder="اسم المندوب" />
 
         <label for="regPhone" style="margin-top: 12px">رقم الجوال (05…)</label>
-        <input id="regPhone" type="tel" inputmode="numeric" maxlength="10" placeholder="05xxxxxxxx" />
+        <input id="regPhone" type="tel" inputmode="numeric" maxlength="12" placeholder="05xxxxxxxx أو 9665xxxxxxxx" />
 
         <label for="regIqama" style="margin-top: 12px">رقم الهوية / الإقامة</label>
         <input id="regIqama" type="text" placeholder="رقم الإقامة أو البطاقة" />
@@ -44,6 +44,7 @@
     </div>
 
     <script src="/assets/api-config.js"></script>
+    <script src="/assets/sa-phone-input.js"></script>
     <script src="/assets/api.js"></script>
     <script>
       function show(text, ok) {
@@ -54,8 +55,15 @@
       }
 
       function normalizePhone(v) {
+        var el = document.getElementById("regPhone");
+        if (window.ErvenowSaPhone && el) {
+          el.value = v;
+          ErvenowSaPhone.formatField(el);
+          return ErvenowSaPhone.toLocal05(el.value);
+        }
         var d = String(v || "").replace(/\D/g, "");
-        if (d.startsWith("9665")) d = "0" + d.slice(3);
+        if (d.startsWith("9665") && d.length >= 12) d = "0" + d.slice(3, 12);
+        else if (d.startsWith("9665")) d = "0" + d.slice(3);
         else if (d.startsWith("5") && d.length === 9) d = "0" + d;
         return d.slice(0, 10);
       }
@@ -70,8 +78,8 @@
         if (!name || !iqama || !carType || !plate) {
           return show("أكمل جميع الحقول", false);
         }
-        if (!/^05\d{8}$/.test(phoneRaw)) {
-          return show("أدخل جوال سعودي يبدأ بـ 05 (10 أرقام)", false);
+        if (!ErvenowSaPhone || !ErvenowSaPhone.isValid(phoneRaw)) {
+          return show(ErvenowSaPhone ? ErvenowSaPhone.invalidMessage() : "أدخل جوال سعودي صحيح", false);
         }
 
         var btn = document.getElementById("registerBtn");
@@ -88,7 +96,10 @@
               plate_number: plate,
             },
           });
-          show("تم استلام طلبك — بانتظار موافقة الإدارة. بعد الموافقة استخدم «دخول المندوبين» برمز واتساب.", true);
+          show(
+            "تم استلام طلب التسجيل بنجاح. حسابك قيد المراجعة من إدارة ERVENOW، وسيتم إشعارك فور اعتماد الحساب وتفعيله. بعد الاعتماد استخدم «دخول المندوبين» برمز واتساب.",
+            true
+          );
         } catch (e) {
           show(String(e.message || e || "تعذّر الإرسال"), false);
         } finally {

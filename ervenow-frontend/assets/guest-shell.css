@@ -162,8 +162,9 @@ body.guest-shell-page.stores-page {
   }
   .dash-header-cart,
   .dash-header-wallet {
-    padding: 6px 9px;
-    min-width: 36px;
+    padding: 8px 10px;
+    min-width: 44px;
+    min-height: 44px;
   }
 }
 .dash-site-header__links {
@@ -541,10 +542,23 @@ body.guest-shell-page.stores-page {
 @media (min-width: 641px) and (max-width: 1024px) {
   .dash-site-header__inner {
     gap: 10px;
+    flex-wrap: wrap;
   }
   .dash-site-header__link {
-    padding: 7px 9px;
-    font-size: 0.8rem;
+    padding: 9px 11px;
+    font-size: 0.82rem;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .dash-header-cart,
+  .dash-header-wallet {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  .dash-site-header__btn {
+    min-height: 44px;
   }
   .dash-main .layout {
     padding-inline: max(18px, env(safe-area-inset-left, 18px)) max(18px, env(safe-area-inset-right, 18px));

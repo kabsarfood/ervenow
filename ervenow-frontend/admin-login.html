@@ -326,7 +326,7 @@
 
           <div class="admin-field">
             <label for="phone">رقم الجوال</label>
-            <input id="phone" type="tel" inputmode="numeric" autocomplete="tel-national" maxlength="10" placeholder="05xxxxxxxx" dir="ltr" />
+            <input id="phone" type="tel" inputmode="numeric" autocomplete="tel-national" maxlength="12" placeholder="05xxxxxxxx أو 9665xxxxxxxx" dir="ltr" />
           </div>
 
           <div class="auth-code-group" id="adminCodeGroup" hidden>
@@ -366,6 +366,7 @@
       window.__ERVENOW_FETCH_TIMEOUT_MS = 20000;
     </script>
     <script src="/assets/api.js"></script>
+    <script src="/assets/sa-phone-input.js"></script>
     <script src="/assets/auth-otp-flow.js"></script>
     <script>
       function getAnyToken() {
@@ -397,6 +398,11 @@
       })();
 
       function normalizeAdminPhone(v) {
+        if (window.ErvenowSaPhone) {
+          var el = document.getElementById("phone");
+          if (el) ErvenowSaPhone.formatField(el);
+          return ErvenowSaPhone.toLocal05(el ? el.value : v);
+        }
         var d = String(v || "").replace(/\D/g, "");
         if (d.startsWith("9665") && d.length === 12) return "0" + d.slice(3);
         if (d.startsWith("5") && d.length === 9) return "0" + d;
@@ -404,7 +410,7 @@
       }
 
       function isValid05(v) {
-        return /^05\d{8}$/.test(normalizeAdminPhone(v));
+        return window.ErvenowSaPhone ? ErvenowSaPhone.isValid(v) : /^05\d{8}$/.test(normalizeAdminPhone(v));
       }
 
       function setMsg(text, kind) {
@@ -424,6 +430,12 @@
       }
 
       function phoneToE164(phoneEl) {
+        if (window.ErvenowSaPhone) {
+          ErvenowSaPhone.formatField(phoneEl);
+          var e164 = ErvenowSaPhone.toE164(phoneEl.value);
+          if (e164) phoneEl.value = ErvenowSaPhone.toLocal05(phoneEl.value);
+          return e164 || "";
+        }
         var phone = normalizeAdminPhone(phoneEl.value || "");
         phoneEl.value = phone;
         return "+966" + phone.slice(1);
@@ -449,7 +461,7 @@
           return phoneEl.value;
         },
         onPhoneInvalid: function () {
-          setMsg("أدخل رقم سعودي يبدأ بـ 05 (10 أرقام)", "err");
+          setMsg(ErvenowSaPhone ? ErvenowSaPhone.invalidMessage() : "أدخل رقم سعودي صحيح", "err");
         },
         onVerifyNeedsCode: function (codeEl) {
           if (!(codeEl.value || "").trim()) {
@@ -478,7 +490,7 @@
           var e164 = phoneToE164(phoneEl);
           var code = (codeEl.value || "").trim();
           if (!isValid05(normalizeAdminPhone(phoneEl.value))) {
-            setMsg("أدخل رقم سعودي يبدأ بـ 05 (10 أرقام)", "err");
+            setMsg(ErvenowSaPhone ? ErvenowSaPhone.invalidMessage() : "أدخل رقم سعودي صحيح", "err");
             throw new Error("invalid_phone");
           }
           try {

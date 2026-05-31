@@ -4,6 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>ERVENOW AUTH | تسجيل الدخول وإنشاء حساب</title>
+    <meta name="description" content="يتم تفعيل الحساب بعد المراجعة واعتماده من إدارة ERVENOW." />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet" />
@@ -515,8 +516,8 @@
             id="phone"
             type="tel"
             inputmode="numeric"
-            placeholder="05xxxxxxxx"
-            maxlength="10"
+            placeholder="05xxxxxxxx أو 9665xxxxxxxx"
+            maxlength="12"
             autocomplete="tel-national"
           />
 
@@ -581,7 +582,7 @@
 
         <div id="serviceRegisterFields" class="driver-register-fields">
           <p class="sub" id="serviceRegIntro" style="margin-top: 0">
-            بيانات مقدّم الخدمة — بعد التأكيد تُفتح لوحتك لاستقبال الطلبات في منطقتك.
+            بيانات مقدّم الخدمة للمراجعة. بعد اعتماد الطلب من إدارة ERVENOW تُفتح لوحتك لاستقبال الطلبات في منطقتك.
           </p>
           <label for="serviceRegName">الاسم</label>
           <input id="serviceRegName" type="text" maxlength="120" placeholder="اسمك أو اسم النشاط" autocomplete="name" />
@@ -662,7 +663,7 @@
           <input id="payoutIban" type="text" inputmode="text" maxlength="34" placeholder="SA — ثم 22 رقماً للسعودية" dir="ltr" style="text-align: left" />
 
           <label for="payoutStc" style="margin-top: 12px">STC Pay (اختياري)</label>
-          <input id="payoutStc" type="tel" inputmode="numeric" maxlength="10" placeholder="05xxxxxxxx" />
+          <input id="payoutStc" type="tel" inputmode="numeric" maxlength="12" placeholder="05xxxxxxxx أو 9665xxxxxxxx" />
 
           <label style="margin-top: 12px; display: flex; align-items: center; gap: 8px; font-weight: 700; cursor: pointer">
             <input id="payoutCrypto" type="checkbox" />
@@ -742,20 +743,15 @@
     <script src="/assets/guestBrowse.js"></script>
     <script src="/assets/payoutRegistration.js"></script>
     <script src="/assets/api.js"></script>
+    <script src="/assets/sa-phone-input.js"></script>
     <script src="/assets/auth-otp-flow.js"></script>
     <script>
       function toE164(v) {
-        var d = String(v || "").replace(/\D/g, "");
-        if (d.startsWith("9665") && d.length === 12) return "+" + d;
-        if (d.startsWith("05") && d.length === 10) return "+966" + d.slice(1);
-        return null;
+        return window.ErvenowSaPhone ? ErvenowSaPhone.toE164(v) : null;
       }
 
       function isValid05(v) {
-        var p = toE164(v);
-        if (!p) return false;
-        var d = p.replace(/\D/g, "");
-        return /^9665\d{8}$/.test(d);
+        return window.ErvenowSaPhone ? ErvenowSaPhone.isValid(v) : false;
       }
 
       function show(text, isOk) {
@@ -796,8 +792,8 @@
         var intro = document.getElementById("authFormIntro");
         if (intro) {
           intro.textContent = register
-            ? "اختر صفة حسابك ، ثم أدخل جوالك السعودي - اضغط إرسال الرمز ."
-            : "أدخل جوالك السعودي 05xxxxxxxx — اضغط إرسال الرمز.";
+            ? "أدخل بياناتك وأكمل التحقق عبر OTP. بعد مراجعة الطلب واعتماده من إدارة ERVENOW سيتم تفعيل حسابك وإشعارك بذلك."
+            : "أدخل جوالك السعودي 05xxxxxxxx أو 9665xxxxxxxx — اضغط إرسال الرمز.";
         }
         if (window.loginOtpFlow && loginOtpFlow.refreshLabels) loginOtpFlow.refreshLabels();
         var servicesPanel = document.getElementById("authServicesPanel");
@@ -1202,9 +1198,9 @@
       function mapOtpError(msg) {
         var m = String(msg || "");
         if (m.indexOf("غير مسجّل") !== -1 || m.indexOf("not_registered") !== -1) {
-          return "رقم الجوال غير مسجّل — استخدم «إنشاء حساب» أولاً.";
+          return "رقم الجوال غير مسجّل — تأكد أنك على تبويب «تسجيل الدخول» (وليس إنشاء حساب)، وأن الرقم مطابق لما في حسابك. إن لم يكن لديك حساب استخدم «إنشاء حساب».";
         }
-        if (m.indexOf("بانتظار موافقة") !== -1) {
+        if (m.indexOf("بانتظار موافقة") !== -1 || m.indexOf("قيد المراجعة") !== -1 || m.indexOf("pending_approval") !== -1) {
           setTimeout(function () {
             window.location.href = "/pending-approval.html";
           }, 900);
@@ -1217,12 +1213,8 @@
 
       function normalizeInputPhone() {
         var el = document.getElementById("phone");
-        var d = String(el.value || "").replace(/\D/g, "");
-        if (d.startsWith("9665")) d = "0" + d.slice(3);
-        else if (d.startsWith("5") && d.length === 9) d = "0" + d;
-        if (d.length > 10) d = d.slice(0, 10);
-        el.value = d;
-        return d;
+        if (window.ErvenowSaPhone) return ErvenowSaPhone.formatField(el);
+        return el ? el.value : "";
       }
 
       document.getElementById("phone").addEventListener("input", normalizeInputPhone);
@@ -1279,6 +1271,15 @@
           ibanWrap: null,
           bankOtherLabel: document.getElementById("payoutBankOtherLabel"),
         });
+        var payoutStcEl = document.getElementById("payoutStc");
+        if (payoutStcEl && window.ErvenowSaPhone) {
+          payoutStcEl.addEventListener("input", function () {
+            ErvenowSaPhone.formatField(payoutStcEl);
+          });
+          payoutStcEl.addEventListener("blur", function () {
+            ErvenowSaPhone.formatField(payoutStcEl);
+          });
+        }
       })();
 
       function collectRegisterPayoutPayload() {
@@ -1299,7 +1300,7 @@
           normalizeInputPhone();
           var raw = document.getElementById("phone").value;
           if (!isValid05(raw)) {
-            show("أدخل رقم سعودي يبدأ بـ 05 (10 أرقام مثال 05xxxxxxxx)", false);
+            show(ErvenowSaPhone ? ErvenowSaPhone.invalidMessage() : "أدخل رقم سعودي صحيح", false);
             throw new Error("invalid_phone");
           }
           if (!assertDriverOnlyInRegisterMode()) throw new Error("driver_register");
@@ -1428,7 +1429,11 @@
               localStorage.removeItem("userPhone");
             } catch (lsClr) {}
             window.PlatformAPI.setToken("");
-            show(res.message || "تم استلام طلبك — بانتظار موافقة الإدارة", true);
+            show(
+              res.message ||
+                "تم استلام طلب التسجيل بنجاح. حسابك قيد المراجعة من إدارة ERVENOW، وسيتم إشعارك فور اعتماد الحساب وتفعيله.",
+              true
+            );
             setTimeout(function () {
               window.location.href = "/pending-approval.html";
             }, 1200);
@@ -1489,7 +1494,10 @@
               console.warn("localStorage:", lsErr);
             }
             window.PlatformAPI.setToken("");
-            show("تم استلام طلبك — بانتظار موافقة الإدارة. بعد الموافقة سجّل الدخول من «دخول المندوب».", true);
+            show(
+              "تم استلام طلب التسجيل بنجاح. حسابك قيد المراجعة من إدارة ERVENOW، وسيتم إشعارك فور اعتماد الحساب وتفعيله. بعد الاعتماد سجّل الدخول من «دخول المندوب».",
+              true
+            );
             setTimeout(function () {
               window.location.href = "/driver-login";
             }, 1400);
@@ -1525,7 +1533,7 @@
         normalizeInputPhone();
         var raw = document.getElementById("phone").value;
         if (!isValid05(raw)) {
-          show("أدخل رقم سعودي يبدأ بـ 05 (10 أرقام مثال 05xxxxxxxx)", false);
+          show(ErvenowSaPhone ? ErvenowSaPhone.invalidMessage() : "أدخل رقم سعودي صحيح", false);
           throw new Error("invalid_phone");
         }
         var loginOnly = !isRegisterMode();
@@ -1570,7 +1578,7 @@
         introSend: function () {
           return isRegisterMode()
             ? "اختر صفة حسابك ، ثم أدخل جوالك السعودي - اضغط إرسال الرمز ."
-            : "أدخل جوالك السعودي 05xxxxxxxx — اضغط إرسال الرمز.";
+            : "أدخل جوالك السعودي 05xxxxxxxx أو 9665xxxxxxxx — اضغط إرسال الرمز.";
         },
         introVerify: function () {
           return isRegisterMode()
@@ -1591,7 +1599,7 @@
           return phoneInput.value;
         },
         onPhoneInvalid: function () {
-          show("أدخل رقم سعودي يبدأ بـ 05 (10 أرقام مثال 05xxxxxxxx)", false);
+          show(ErvenowSaPhone ? ErvenowSaPhone.invalidMessage() : "أدخل رقم سعودي صحيح", false);
         },
         onVerifyNeedsCode: function (codeInput) {
           if (!(codeInput.value || "").trim()) {

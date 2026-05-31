@@ -6,7 +6,8 @@ function toE164(input) {
   const d = raw.replace(/\D/g, "");
   if (!d) return null;
   if (raw.includes("+") && d.startsWith("966")) return "+" + d;
-  if (d.startsWith("966") && d.length >= 12) return "+" + d;
+  if (d.startsWith("9665") && d.length === 12) return "+" + d;
+  if (d.startsWith("966") && d.length >= 12) return "+" + d.slice(0, 12);
   if (d.startsWith("05") && d.length >= 10) return "+966" + d.slice(1);
   if (d.startsWith("5") && d.length === 9) return "+966" + d;
   return null;
