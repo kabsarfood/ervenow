@@ -485,6 +485,10 @@ select {
   background: #dcfce7;
   color: #15803d;
 }
+.finance-status-badge--pending {
+  background: #fef3c7;
+  color: #b45309;
+}
 .finance-btn-collect {
   background: #5b371d;
   color: #fff;

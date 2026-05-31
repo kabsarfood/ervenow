@@ -1862,13 +1862,16 @@ router.get("/customers", requireAuth, requireRole("admin"), requireAdminPermissi
 
 router.post("/block-customer", requireAuth, requireRole("admin"), requireAdminPermission("customers"), async (req, res) => {
   try {
+    const sb = createServiceClient() || req.supabase;
     const id = String(req.body?.id || "").trim();
     if (!id) return fail(res, "id required", 400);
-    const existing = await req.supabase
+    const existing = await sb
       .from("users")
       .select("id, phone, role, status")
       .eq("id", id)
       .maybeSingle();
+    if (existing.error) return fail(res, existing.error.message, 400);
+    if (!existing.data) return fail(res, "الحساب غير موجود", 404);
     const keepRole =
       existing.data &&
       ["customer", "user", "service", "merchant", "restaurant"].includes(
@@ -1876,7 +1879,7 @@ router.post("/block-customer", requireAuth, requireRole("admin"), requireAdminPe
       )
         ? existing.data.role
         : "customer";
-    const first = await req.supabase
+    const first = await sb
       .from("users")
       .update({
         status: "blocked",
@@ -1884,17 +1887,21 @@ router.post("/block-customer", requireAuth, requireRole("admin"), requireAdminPe
         updated_at: new Date().toISOString(),
       })
       .eq("id", id)
-      .select("id, phone, role, status, created_at, updated_at")
+      .select("id, phone, role, status, name, created_at, updated_at")
       .single();
-    if (!first.error) return ok(res, { customer: first.data });
+    if (!first.error) {
+      if (first.data?.phone) await syncUserStatusByPhone(sb, first.data.phone, "blocked");
+      return ok(res, { customer: { ...first.data, status: "blocked" } });
+    }
     if (isSchemaMissingError(first.error)) {
-      const fallback = await req.supabase
+      const fallback = await sb
         .from("users")
         .update({ role: "blocked", updated_at: new Date().toISOString() })
         .eq("id", id)
-        .select("id, phone, role, created_at")
+        .select("id, phone, role, name, created_at, updated_at")
         .single();
       if (fallback.error) return fail(res, fallback.error.message, 400);
+      if (fallback.data?.phone) await syncUserStatusByPhone(sb, fallback.data.phone, "blocked");
       return ok(res, {
         customer: {
           ...fallback.data,
@@ -1934,28 +1941,42 @@ router.post("/reject-user", requireAuth, requireRole("admin"), async (req, res) 
 
 router.post("/activate-customer", requireAuth, requireRole("admin"), requireAdminPermission("customers"), async (req, res) => {
   try {
+    const sb = createServiceClient() || req.supabase;
     const id = String(req.body?.id || "").trim();
     if (!id) return fail(res, "id required", 400);
+    const existing = await sb
+      .from("users")
+      .select("id, phone, role, status")
+      .eq("id", id)
+      .maybeSingle();
+    if (existing.error) return fail(res, existing.error.message, 400);
+    if (!existing.data) return fail(res, "الحساب غير موجود", 404);
     const roleIn = String(req.body?.role || "").trim().toLowerCase();
+    const prevRole = String(existing.data.role || "").toLowerCase();
     const patch = { status: "active", updated_at: new Date().toISOString() };
     if (roleIn === "service") patch.role = "service";
     else if (roleIn === "merchant" || roleIn === "restaurant") patch.role = roleIn;
+    else if (prevRole && prevRole !== "blocked" && prevRole !== "user") patch.role = existing.data.role;
     else patch.role = "customer";
-    const first = await req.supabase
+    const first = await sb
       .from("users")
       .update(patch)
       .eq("id", id)
       .select("id, phone, role, status, name, created_at, updated_at")
       .single();
-    if (!first.error) return ok(res, { customer: first.data });
+    if (!first.error) {
+      if (first.data?.phone) await syncUserStatusByPhone(sb, first.data.phone, "active");
+      return ok(res, { customer: { ...first.data, status: "active" } });
+    }
     if (isSchemaMissingError(first.error)) {
-      const fallback = await req.supabase
+      const fallback = await sb
         .from("users")
         .update({ role: "customer", updated_at: new Date().toISOString() })
         .eq("id", id)
-        .select("id, phone, role, created_at")
+        .select("id, phone, role, name, created_at, updated_at")
         .single();
       if (fallback.error) return fail(res, fallback.error.message, 400);
+      if (fallback.data?.phone) await syncUserStatusByPhone(sb, fallback.data.phone, "active");
       return ok(res, {
         customer: {
           ...fallback.data,

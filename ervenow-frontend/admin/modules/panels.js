@@ -53,6 +53,40 @@ app.loadCustomers = async function () {
   }
 }
 
+app.blockCustomerAccount = async function (u) {
+  if (!u || !u.id) return;
+  if (!app.confirmAccountBlock()) return;
+  var j = await app.PlatformAPI.api("/api/admin/block-customer", { method: "POST", body: { id: u.id } });
+  var c = j.customer || {};
+  app.patchCustomerInCache(u.id, {
+    status: c.status || "blocked",
+    role: c.role || u.role,
+    updated_at: c.updated_at || new Date().toISOString(),
+  });
+  app.renderCustomers();
+  app.showSuccess("تم حظر الحساب — الحالة: محظور");
+}
+
+app.activateCustomerAccount = async function (u, meta, opts) {
+  if (!u || !u.id) return;
+  opts = opts || {};
+  meta = meta || app.customerAccountMeta(u);
+  if (!opts.skipConfirm && !app.confirmAccountActivate()) return;
+  var role = meta.role === "service" || meta.role === "merchant" || meta.role === "restaurant" ? meta.role : "customer";
+  var j = await app.PlatformAPI.api("/api/admin/activate-customer", {
+    method: "POST",
+    body: { id: u.id, role: role },
+  });
+  var c = j.customer || {};
+  app.patchCustomerInCache(u.id, {
+    status: c.status || "active",
+    role: c.role || role,
+    updated_at: c.updated_at || new Date().toISOString(),
+  });
+  app.renderCustomers();
+  app.showSuccess(opts.successMessage || "تم تفعيل الحساب — الحالة: معتمد");
+}
+
 app.renderCustomers = function () {
   var list = document.getElementById("customersList");
   if (!list) return;
@@ -64,52 +98,41 @@ app.renderCustomers = function () {
   rows.forEach(function (u) {
     var item = document.createElement("div");
     item.className = "item";
-    var status = String(u.status || "active").toLowerCase();
-    var role = String(u.role || "").toLowerCase();
-    var blocked = status === "blocked" || role === "blocked";
-    var pending = status === "pending";
-    var rejected = status === "rejected";
-    var stLabel = blocked ? "محظور" : pending ? "بانتظار الموافقة" : rejected ? "مرفوض" : "معتمد";
+    var meta = app.customerAccountMeta(u);
     item.innerHTML =
       "<strong>" + (u.name || "زائر المنصة") + "</strong>" +
       "<div>رقم الجوال: " + (u.phone || "—") + "</div>" +
       "<div>تاريخ التسجيل: " + app.fmtWhen(u.created_at) + "</div>" +
       "<div>نوع الحساب: متسوق</div>" +
-      "<div>حالة الحساب: " + stLabel + "</div>" +
+      '<div>حالة الحساب: <span class="finance-status-badge ' + meta.badgeCls + '">' + meta.stLabel + "</span></div>" +
       "<div>آخر نشاط: " + app.fmtWhen(u.updated_at || u.created_at) + "</div>";
     var row = document.createElement("div");
     row.className = "row";
-    if (pending) {
+    if (meta.pending) {
       row.appendChild(app.mkAction("✅ اعتماد", "btn-primary", app.safeClick(async function () {
-        try { await app.PlatformAPI.api("/api/admin/activate-customer", { method: "POST", body: { id: u.id } }); app.showSuccess("تم اعتماد المتسوق"); app.loadCustomers(); } catch (e) { app.showError(e.message || "فشل"); }
+        try {
+          await app.activateCustomerAccount(u, meta, { skipConfirm: true, successMessage: "تم اعتماد المتسوق — الحالة: معتمد" });
+        } catch (e) { app.showError(e.message || "فشل"); }
       })));
       row.appendChild(app.mkAction("❌ رفض", "btn-ghost", app.safeClick(async function () {
         try { await app.PlatformAPI.api("/api/admin/reject-user", { method: "POST", body: { id: u.id } }); app.showSuccess("تم الرفض"); app.loadCustomers(); } catch (e) { app.showError(e.message || "فشل"); }
       })));
-    } else if (!blocked && !rejected) {
-      row.appendChild(app.mkAction("حظر", "btn-ghost", app.safeClick(async function () {
-        if (!app.confirmAccountBlock()) return;
-        try {
-          await app.PlatformAPI.api("/api/admin/block-customer", { method: "POST", body: { id: u.id } });
-          app.showSuccess("تم حظر الحساب — لا يمكنه الدخول أو استخدام المنصة");
-          app.loadCustomers();
-        } catch (e) { app.showError(e.message || "فشل"); }
+    } else if (meta.blocked) {
+      row.appendChild(app.mkAction("تفعيل", "btn-primary", app.safeClick(async function () {
+        try { await app.activateCustomerAccount(u, meta); } catch (e) { app.showError(e.message || "فشل"); }
+      })));
+    } else if (meta.rejected) {
+      row.appendChild(app.mkAction("تفعيل", "btn-primary", app.safeClick(async function () {
+        try { await app.activateCustomerAccount(u, meta); } catch (e) { app.showError(e.message || "فشل"); }
       })));
     } else {
-      row.appendChild(app.mkAction("تفعيل", "btn-primary", app.safeClick(async function () {
-        try {
-          await app.PlatformAPI.api("/api/admin/activate-customer", {
-            method: "POST",
-            body: { id: u.id, role: role === "service" || role === "merchant" || role === "restaurant" ? role : "customer" },
-          });
-          app.showSuccess("تم تفعيل الحساب — يمكنه استخدام المنصة");
-          app.loadCustomers();
-        } catch (e) { app.showError(e.message || "فشل"); }
+      row.appendChild(app.mkAction("حظر", "btn-ghost", app.safeClick(async function () {
+        try { await app.blockCustomerAccount(u); } catch (e) { app.showError(e.message || "فشل"); }
       })));
     }
     row.appendChild(app.mkAction("👁️ عرض التفاصيل", "btn-ghost", app.safeClick(function () {
       alert(
-        "الاسم: " + (u.name || "—") + "\nالجوال: " + (u.phone || "—") + "\nالحالة: " + stLabel + "\nتاريخ التسجيل: " + app.fmtWhen(u.created_at)
+        "الاسم: " + (u.name || "—") + "\nالجوال: " + (u.phone || "—") + "\nالحالة: " + meta.stLabel + "\nتاريخ التسجيل: " + app.fmtWhen(u.created_at)
       );
     })));
     var wa = document.createElement("a");

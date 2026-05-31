@@ -396,6 +396,37 @@ app.confirmAccountBlock = function () {
   return window.confirm("حظر هذا الحساب؟ لن يتمكن من تسجيل الدخول أو استخدام خدمات المنصة.");
 }
 
+app.confirmAccountActivate = function () {
+  return window.confirm("تفعيل هذا الحساب؟ سيتمكن من تسجيل الدخول واستخدام المنصة.");
+}
+
+/** حالة زائر/متسوق في لوحة إدارة الزوار */
+app.customerAccountMeta = function (u) {
+  var status = String((u && u.status) || "active").trim().toLowerCase();
+  var role = String((u && u.role) || "").trim().toLowerCase();
+  var blocked = status === "blocked" || role === "blocked";
+  var pending = status === "pending";
+  var rejected = status === "rejected";
+  var approved = !blocked && !pending && !rejected;
+  var stLabel = blocked ? "محظور" : pending ? "بانتظار الموافقة" : rejected ? "مرفوض" : "معتمد";
+  var badgeCls = blocked
+    ? "finance-status-badge--blocked"
+    : pending
+      ? "finance-status-badge--pending"
+      : rejected
+        ? "finance-status-badge--blocked"
+        : "finance-status-badge--active";
+  return { status: status, role: role, blocked: blocked, pending: pending, rejected: rejected, approved: approved, stLabel: stLabel, badgeCls: badgeCls };
+}
+
+app.patchCustomerInCache = function (id, patch) {
+  if (!id) return;
+  app.cacheCustomers = (app.cacheCustomers || []).map(function (row) {
+    if (row.id !== id) return row;
+    return Object.assign({}, row, patch || {});
+  });
+}
+
 app.fmtMoney = function (v) {
   var n = Number(v || 0);
   return n.toLocaleString("ar-SA", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " ريال";
