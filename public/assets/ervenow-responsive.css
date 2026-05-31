@@ -24,6 +24,27 @@ html {
   height: -webkit-fill-available;
 }
 
+@media (max-width: 1024px) {
+  html {
+    touch-action: pan-x pan-y;
+  }
+
+  body {
+    touch-action: pan-x pan-y;
+  }
+
+  a,
+  button,
+  input,
+  select,
+  textarea,
+  label,
+  [role="button"],
+  .btn {
+    touch-action: manipulation;
+  }
+}
+
 body {
   min-width: 0;
   min-height: 100vh;
