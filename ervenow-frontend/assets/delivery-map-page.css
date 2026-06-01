@@ -1,9 +1,12 @@
 /* ERVENOW — صفحة طلب التوصيل من الخريطة (Mobile First) */
 :root {
-  --delivery-map-h: clamp(280px, 52vh, 520px);
+  --delivery-map-h: clamp(260px, 38vh, 420px);
 }
 body.delivery-map-page {
   background: #f3ebe0;
+  overflow-x: clip;
+  overscroll-behavior-y: contain;
+  touch-action: pan-y;
 }
 .delivery-map-main {
   flex: 1;
@@ -40,7 +43,10 @@ body.delivery-map-page {
   min-height: 0;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
+  overscroll-behavior-y: contain;
+  overscroll-behavior-x: none;
+  touch-action: pan-y;
+  scroll-behavior: smooth;
 }
 .delivery-panel__back {
   position: absolute;
@@ -68,7 +74,9 @@ body.delivery-map-page {
 .delivery-map-page .delivery-panel__body {
   padding: clamp(10px, 2vw, 14px);
 }
+.delivery-map-page .map-canvas-map-stage #pickupDropMap,
 .delivery-map-page .map-canvas-cell--map #pickupDropMap,
+.delivery-map-page .map-canvas-map-stage #pickupDropMap.leaflet-container,
 .delivery-map-page .map-canvas-cell--map #pickupDropMap.leaflet-container {
   height: var(--delivery-map-h) !important;
   min-height: var(--delivery-map-h) !important;
@@ -161,21 +169,68 @@ body.delivery-map-page {
   .delivery-map-page .delivery-panel__subtitle {
     display: none;
   }
-  /* نفس تخطيط نموذج 1 «الخريطة ( انقر هنا )» في كل الأوضاء */
+  /* تمرير واحد للصفحة — بدون scroll داخل scroll */
+  .delivery-map-page__shell {
+    overflow: visible;
+    min-height: auto;
+  }
+  .delivery-map-page .delivery-panel--luxe {
+    min-height: auto;
+  }
+  .delivery-map-page__scroll {
+    overflow: visible;
+    flex: none;
+    min-height: auto;
+  }
+  .delivery-map-main {
+    flex: none;
+    min-height: auto;
+  }
+  .delivery-map-page .map-canvas-form {
+    overflow-x: clip;
+    touch-action: pan-y;
+  }
+  /* ترتيب الجوال: طريقة → أدوات → خريطة → إحصاءات → شحنة → زر السلة */
   .delivery-map-page .map-canvas-grid {
     grid-template-areas:
-      "map"
       "method"
       "actions"
-      "shipment";
+      "map"
+      "stats"
+      "shipment"
+      "cta";
   }
-  .delivery-map-page .map-canvas-footer {
-    position: sticky;
-    bottom: 0;
-    z-index: 3;
-    background: linear-gradient(180deg, rgba(255, 254, 251, 0.94) 0%, #fffefb 30%);
-    border-top: 1px solid rgba(185, 135, 47, 0.22);
-    padding-bottom: max(4px, env(safe-area-inset-bottom, 0px));
+  .delivery-map-page .map-canvas-cell--map,
+  .delivery-map-page .map-canvas-cell--map .map-canvas-footer {
+    display: contents;
+  }
+  .delivery-map-page .map-canvas-map-stage {
+    grid-area: map;
+    border: 1px solid rgba(61, 34, 19, 0.12);
+    border-radius: 14px;
+    background: #fffefb;
+    padding: 8px;
+    min-width: 0;
+    overflow: hidden;
+  }
+  .delivery-map-page .map-canvas-stats {
+    grid-area: stats;
+    min-width: 0;
+  }
+  .delivery-map-page .map-canvas-cta {
+    grid-area: cta;
+    min-width: 0;
+    padding-bottom: max(8px, env(safe-area-inset-bottom, 0px));
+  }
+  .delivery-map-page .map-canvas-stats .map-canvas-price-box {
+    width: 100%;
+  }
+  .delivery-map-page .map-canvas-cta .map-canvas-cart-btn {
+    width: 100%;
+  }
+  .delivery-map-page #pickupDropMap,
+  .delivery-map-page #pickupDropMap.leaflet-container {
+    touch-action: none;
   }
 }
 
@@ -341,6 +396,7 @@ body.delivery-map-page {
         text-align: center;
         text-decoration: underline;
       }
+      .delivery-map-page .map-canvas-map-stage #pickupDropMap,
       .delivery-map-page .map-canvas-cell--map #pickupDropMap {
         flex: 1 1 auto;
         width: 100%;
@@ -350,6 +406,7 @@ body.delivery-map-page {
         max-height: none;
         box-shadow: none;
       }
+      .delivery-map-page .map-canvas-map-stage #pickupDropMap.leaflet-container,
       .delivery-map-page .map-canvas-cell--map #pickupDropMap.leaflet-container {
         flex: 1 1 auto;
         width: 100% !important;
@@ -516,24 +573,25 @@ body.delivery-map-page {
         opacity: 0.65;
         cursor: wait;
       }
-      .map-canvas-footer {
+      .delivery-map-page .map-canvas-footer {
         display: grid;
         grid-template-columns: 1fr 1fr;
-        gap: 8px;
+        gap: clamp(6px, 1.2vw, 8px);
         margin-top: auto;
         margin-bottom: 0;
         flex-shrink: 0;
         width: 100%;
-        position: sticky;
-        bottom: 0;
-        z-index: 2;
-        background: linear-gradient(180deg, rgba(255, 254, 251, 0.92) 0%, #fffefb 40%);
+        position: static;
         padding-top: 8px;
+        padding-bottom: clamp(4px, 1vw, 8px);
+        background: transparent;
       }
-      .map-canvas-cell--map .map-canvas-footer {
+      .delivery-map-page .map-canvas-cell--map .map-canvas-footer {
         padding-top: 2px;
-        gap: clamp(6px, 1.2vw, 8px);
-        padding-bottom: clamp(6px, 1.5vw, 10px);
+      }
+      .delivery-map-page .map-canvas-stats,
+      .delivery-map-page .map-canvas-cta {
+        min-width: 0;
       }
       .map-canvas-price-box {
         display: flex;
@@ -558,11 +616,13 @@ body.delivery-map-page {
         color: var(--brown, #3d2213);
         line-height: 1.2;
       }
-      .map-canvas-price-box__dist {
+      .map-canvas-price-box__dist,
+      .map-canvas-price-box__time {
         font-size: 0.68rem;
         font-weight: 700;
         color: rgba(61, 34, 19, 0.55);
         margin-top: 2px;
+        line-height: 1.35;
       }
       .map-canvas-cart-btn {
         min-height: 52px;
@@ -591,11 +651,18 @@ body.delivery-map-page {
       .map-canvas-result {
         margin: 0;
       }
+      @media (max-width: 767px) {
+        .delivery-map-page .map-canvas-grid[data-route-mode="links"] {
+          grid-template-areas:
+            "method"
+            "map"
+            "stats"
+            "shipment"
+            "cta";
+        }
+      }
       @media (max-width: 420px) {
         .map-canvas-row-2 {
-          grid-template-columns: 1fr;
-        }
-        .map-canvas-footer {
           grid-template-columns: 1fr;
         }
         .map-canvas-mode-btn {

@@ -137,14 +137,21 @@
                               </section>
         
                               <section class="map-canvas-cell map-canvas-cell--map">
-                                <div id="pickupDropMap" aria-label="خريطة المسار"></div>
+                                <div class="map-canvas-map-stage">
+                                  <div id="pickupDropMap" aria-label="خريطة المسار"></div>
+                                </div>
                                 <div class="map-canvas-footer">
-                                  <div class="map-canvas-price-box" aria-live="polite">
-                                    <span class="map-canvas-price-box__label">السعر</span>
-                                    <strong class="map-canvas-price-box__val" id="price">—</strong>
-                                    <span class="map-canvas-price-box__dist" id="distance">—</span>
+                                  <div class="map-canvas-stats" aria-live="polite">
+                                    <div class="map-canvas-price-box">
+                                      <span class="map-canvas-price-box__label">السعر</span>
+                                      <strong class="map-canvas-price-box__val" id="price">—</strong>
+                                      <span class="map-canvas-price-box__dist" id="distance">—</span>
+                                      <span class="map-canvas-price-box__time" id="routeDuration">—</span>
+                                    </div>
                                   </div>
-                                  <button id="createBtn" class="map-canvas-cart-btn" type="button" onclick="createOrder()" disabled>أضف إلى السلة</button>
+                                  <div class="map-canvas-cta">
+                                    <button id="createBtn" class="map-canvas-cart-btn" type="button" onclick="createOrder()" disabled>أضف إلى السلة</button>
+                                  </div>
                                 </div>
                               </section>
                               </div>

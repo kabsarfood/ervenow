@@ -32,6 +32,54 @@
       var baseSatellite = null;
       var clientLocation = null;
       var selectButtons = { from: "btnSelectFrom", to: "btnSelectTo" };
+      var routeCache = {};
+      var lastDrawnRouteKey = "";
+      var refreshMapSizeTimer = null;
+      var resizeObserverPaused = false;
+
+      function isMobileMapLayout() {
+        try {
+          return window.matchMedia("(max-width: 767px)").matches;
+        } catch (e) {
+          return false;
+        }
+      }
+
+      function getMapScrollRoot() {
+        if (isMobileMapLayout()) {
+          return document.scrollingElement || document.documentElement;
+        }
+        return document.querySelector(".delivery-map-page__scroll");
+      }
+
+      function routeEndpointsKey(a, b) {
+        if (!a || !b) return "";
+        return (
+          roundMapCoord(a.lat) +
+          "," +
+          roundMapCoord(a.lng) +
+          "|" +
+          roundMapCoord(b.lat) +
+          "," +
+          roundMapCoord(b.lng)
+        );
+      }
+
+      function formatRouteDuration(seconds) {
+        var sec = Number(seconds);
+        if (!Number.isFinite(sec) || sec <= 0) return "—";
+        var mins = Math.max(1, Math.round(sec / 60));
+        if (mins < 60) return "≈ " + mins + " د";
+        var h = Math.floor(mins / 60);
+        var m = mins % 60;
+        return m ? "≈ " + h + " س " + m + " د" : "≈ " + h + " س";
+      }
+
+      function renderRouteDuration(seconds) {
+        var el = document.getElementById("routeDuration");
+        if (!el) return;
+        el.textContent = formatRouteDuration(seconds);
+      }
 
       function getSelectedVehicleType() {
         var el = document.getElementById("vehicleType");
@@ -65,18 +113,47 @@
         if (km > 0) renderPricingStats(km);
       }
 
+      function bindMapTouchIsolation() {
+        if (!map || map._erwTouchBound) return;
+        map._erwTouchBound = true;
+        var container = map.getContainer();
+        if (!container || !L || !L.DomEvent) return;
+        L.DomEvent.disableClickPropagation(container);
+        L.DomEvent.disableScrollPropagation(container);
+        if (map.touchZoom && map.touchZoom.enable) map.touchZoom.enable();
+        if (map.dragging && map.dragging.enable) map.dragging.enable();
+        if (map.scrollWheelZoom && map.scrollWheelZoom.disable) map.scrollWheelZoom.disable();
+        if (map.doubleClickZoom && map.doubleClickZoom.disable) map.doubleClickZoom.disable();
+        if (map.boxZoom && map.boxZoom.disable) map.boxZoom.disable();
+      }
+
       function initMap() {
         if (map || typeof L === "undefined") return;
-        map = L.map("pickupDropMap").setView([24.7136, 46.6753], 11);
+        map = L.map("pickupDropMap", {
+          zoomControl: true,
+          scrollWheelZoom: false,
+          tap: true,
+          touchZoom: true,
+          dragging: true,
+          inertia: true,
+          updateWhenIdle: true,
+          updateWhenZooming: false,
+        }).setView([24.7136, 46.6753], 11);
         baseTerrain = L.tileLayer("https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png", {
           attribution: "&copy; OpenStreetMap contributors, SRTM | OpenTopoMap",
           maxZoom: 17,
+          updateWhenIdle: true,
+          updateWhenZooming: false,
+          keepBuffer: 2,
         });
         baseSatellite = L.tileLayer(
           "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
           {
             attribution: "Tiles &copy; Esri",
             maxZoom: 19,
+            updateWhenIdle: true,
+            updateWhenZooming: false,
+            keepBuffer: 2,
           }
         );
         baseSatellite.addTo(map);
@@ -89,6 +166,7 @@
           { position: "topright" }
         ).addTo(map);
         map.on("click", onMapClick);
+        bindMapTouchIsolation();
         tryInitClientLocation();
         map.whenReady(function () {
           refreshMapSize(true);
@@ -113,18 +191,12 @@
 
       function refreshMapSize(refit) {
         if (!map) return;
-        function invalidate() {
+        clearTimeout(refreshMapSizeTimer);
+        refreshMapSizeTimer = setTimeout(function () {
           if (!map) return;
           map.invalidateSize({ animate: false, pan: false });
           if (refit) refitMapView();
-        }
-        invalidate();
-        if (typeof requestAnimationFrame === "function") {
-          requestAnimationFrame(invalidate);
-        }
-        setTimeout(invalidate, 80);
-        setTimeout(invalidate, 200);
-        setTimeout(invalidate, 450);
+        }, refit ? 100 : 60);
       }
 
       var mapResizeObserverBound = false;
@@ -138,10 +210,11 @@
         mapResizeObserverBound = true;
         var timer = null;
         var observer = new ResizeObserver(function () {
+          if (resizeObserverPaused) return;
           clearTimeout(timer);
           timer = setTimeout(function () {
-            refreshMapSize(true);
-          }, 60);
+            refreshMapSize(false);
+          }, 120);
         });
         observer.observe(mapEl);
         if (mapCell) observer.observe(mapCell);
@@ -187,10 +260,12 @@
         }
         initMap();
         bindMapResizeObserver();
-        refreshMapSize(true);
-        setTimeout(function () {
-          refreshMapSize(true);
-        }, 180);
+        refreshMapSize(false);
+        if (typeof requestAnimationFrame === "function") {
+          requestAnimationFrame(function () {
+            refreshMapSize(true);
+          });
+        }
         var res = document.getElementById("result");
         if (res) {
           res.innerText =
@@ -234,7 +309,7 @@
             ? document.getElementById("deliveryModeLinks") || document.querySelector(".map-canvas-cell--method")
             : document.getElementById("mapCanvasActions");
         if (!el) return;
-        var panel = document.querySelector(".delivery-map-page__scroll");
+        var panel = getMapScrollRoot();
         if (panel && mobile) {
           var panelRect = panel.getBoundingClientRect();
           var elRect = el.getBoundingClientRect();
@@ -243,6 +318,31 @@
           return;
         }
         el.scrollIntoView({ behavior: "smooth", block: mobile ? "start" : "nearest" });
+      }
+
+      function upsertMapMarker(kind, lat, lng, popupText) {
+        if (!map) return null;
+        var pos = [lat, lng];
+        if (kind === "from") {
+          if (!markerFrom) markerFrom = L.marker(pos).addTo(map);
+          else markerFrom.setLatLng(pos);
+          markerFrom.bindPopup(popupText);
+          return markerFrom;
+        }
+        if (!markerTo) markerTo = L.marker(pos).addTo(map);
+        else markerTo.setLatLng(pos);
+        markerTo.bindPopup(popupText);
+        return markerTo;
+      }
+
+      function setRouteLineGeometry(geometry) {
+        if (!map || !geometry) return;
+        if (routeLine) {
+          routeLine.clearLayers();
+          routeLine.addData(geometry);
+          return;
+        }
+        routeLine = L.geoJSON(geometry, { style: { color: "#2563eb", weight: 5 } }).addTo(map);
       }
 
       function saveMapLinkField(inputId) {
@@ -454,18 +554,20 @@
       async function drawRouteAndPricing() {
         if (!fromLL || !toLL) return;
         initMap();
+        var drawKey = routeEndpointsKey(fromLL, toLL);
         var route = await getRoute(fromLL, toLL);
         km = route.distance / 1000;
         document.getElementById("distance").innerText = km.toFixed(2) + " كم";
+        renderRouteDuration(route.duration);
         renderPricingStats(km);
         document.getElementById("result").innerText = "";
         if (map) {
-          if (markerFrom) map.removeLayer(markerFrom);
-          markerFrom = L.marker([fromLL.lat, fromLL.lng]).addTo(map).bindPopup("📍 الاستلام");
-          if (markerTo) map.removeLayer(markerTo);
-          markerTo = L.marker([toLL.lat, toLL.lng]).addTo(map).bindPopup("📍 التسليم");
-          if (routeLine) map.removeLayer(routeLine);
-          routeLine = L.geoJSON(route.geometry, { style: { color: "#2563eb", weight: 5 } }).addTo(map);
+          upsertMapMarker("from", fromLL.lat, fromLL.lng, "📍 الاستلام");
+          upsertMapMarker("to", toLL.lat, toLL.lng, "📍 التسليم");
+          if (drawKey !== lastDrawnRouteKey || !routeLine) {
+            setRouteLineGeometry(route.geometry);
+            lastDrawnRouteKey = drawKey;
+          }
           showMap();
         }
         updateLiveMapPreview();
@@ -558,7 +660,9 @@
           routeLine = null;
         }
         document.getElementById("distance").innerText = "—";
+        renderRouteDuration(0);
         document.getElementById("price").innerText = "—";
+        lastDrawnRouteKey = "";
         document.getElementById("platformFeeLine").innerText = "—";
         document.getElementById("driverNetLine").innerText = "—";
         document.getElementById("result").innerText = "";
@@ -614,8 +718,7 @@
           var fromAddress = await reverseGeocode(lat, lng);
           document.getElementById("from").value = fromAddress || lat.toFixed(6) + "," + lng.toFixed(6);
           pickupMapsUrl = DM ? DM.buildGoogleMapsUrl(lat, lng) : "";
-          if (markerFrom) map.removeLayer(markerFrom);
-          markerFrom = L.marker([lat, lng]).addTo(map).bindPopup("📍 الاستلام");
+          upsertMapMarker("from", lat, lng, "📍 الاستلام");
         }
 
         if (selectType === "to") {
@@ -623,8 +726,7 @@
           var toAddress = await reverseGeocode(lat, lng);
           document.getElementById("to").value = toAddress || lat.toFixed(6) + "," + lng.toFixed(6);
           dropMapsUrl = DM ? DM.buildGoogleMapsUrl(lat, lng) : "";
-          if (markerTo) map.removeLayer(markerTo);
-          markerTo = L.marker([lat, lng]).addTo(map).bindPopup("📍 التسليم");
+          upsertMapMarker("to", lat, lng, "📍 التسليم");
         }
 
         selectType = null;
@@ -700,6 +802,8 @@
       }
 
       async function getRoute(a, b) {
+        var key = routeEndpointsKey(a, b);
+        if (key && routeCache[key]) return routeCache[key];
         var url =
           "https://router.project-osrm.org/route/v1/driving/" +
           a.lng +
@@ -713,6 +817,7 @@
         var r = await fetch(url);
         var j = await r.json();
         if (!j.routes || !j.routes[0]) throw new Error("فشل حساب المسار");
+        if (key) routeCache[key] = j.routes[0];
         return j.routes[0];
       }
 
@@ -919,12 +1024,21 @@
     initMap();
     bindMapResizeObserver();
     refreshMapSize(true);
-    setTimeout(function () {
-      refreshMapSize(true);
-    }, 200);
+    var resizeTimer = null;
     global.addEventListener("resize", function () {
-      refreshMapSize(true);
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(function () {
+        refreshMapSize(true);
+      }, 150);
     });
+    if (map) {
+      map.on("movestart zoomstart", function () {
+        resizeObserverPaused = true;
+      });
+      map.on("moveend zoomend", function () {
+        resizeObserverPaused = false;
+      });
+    }
     global.addEventListener("storage", function (ev) {
       if (ev.key === "cart" && typeof global.updateCartCount === "function") {
         global.updateCartCount();
