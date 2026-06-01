@@ -19,7 +19,7 @@ alwaysApply: true
 
 ## إلزامي في كل صفحة/مكوّن
 
-1. **viewport**: `<meta name="viewport" content="width=device-width, initial-scale=1" />`
+1. **viewport**: `<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover" />` + `/assets/viewport-fit.js`
 2. **لمس مريح**: أزرار وروابط تفاعلية `min-height: 44px` (يفضل 48px للأزرار الرئيسية)
 3. **منع تكبير iOS**: حقول النماذج `font-size: 16px` على الجوال
 4. **safe-area**: حواف `env(safe-area-inset-*)` للشاشات ذات النتوء
@@ -30,7 +30,7 @@ alwaysApply: true
 
 ## CSS مشترك
 
-اربط `/assets/ervenow-responsive.css` مع `styles.css` / `guest-shell.css` في الصفحات العامة واللوحات.
+اربط `/assets/ervenow-responsive.css` مع `styles.css` / `guest-shell.css` في الصفحات العامة واللوحات. `styles.css` يستورد أيضاً `responsive-audit-base.css`. للصفحات بدون styles.css أضف `responsive-audit-base.css` + `viewport-fit.js`.
 
 ## عند المراجعة
 

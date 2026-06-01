@@ -364,7 +364,16 @@ function setCartPanelHasItems(hasItems) {
   var cartActionsPanel = document.getElementById("cartCheckoutActionsPanel");
   if (cartActionsPanel) cartActionsPanel.hidden = !hasItems;
   var checkoutCol = document.getElementById("cartCheckoutCol");
-  if (checkoutCol) checkoutCol.classList.toggle("cart-checkout-col--dim", !hasItems);
+  if (checkoutCol) {
+    checkoutCol.classList.toggle("cart-checkout-col--dim", !hasItems);
+    checkoutCol.hidden = !hasItems;
+  }
+  var sidebar = document.querySelector(".cart-page-wrap .cart-sidebar-stack");
+  if (sidebar) sidebar.hidden = !hasItems;
+  var itemsCard = document.querySelector(".cart-page-wrap .cart-items-card");
+  if (itemsCard) itemsCard.classList.toggle("cart-items-card--empty", !hasItems);
+  document.body.classList.toggle("cart-page-is-empty", !hasItems);
+  document.body.classList.toggle("cart-page-has-items", !!hasItems);
 }
 
 function updateCartPanelHeader(cart) {

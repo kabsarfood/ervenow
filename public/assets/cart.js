@@ -138,7 +138,11 @@ function updateCartCount() {
     renderHeaderCartPreview();
   } catch (e) {}
   try {
-    if (document.getElementById("cartList") && typeof renderCartPage === "function") renderCartPage();
+    if (
+      (document.getElementById("cartList") || document.getElementById("lpCartLines")) &&
+      typeof renderCartPage === "function"
+    )
+      renderCartPage();
   } catch (e2) {}
 }
 
@@ -328,7 +332,7 @@ function syncLpCartCheckoutBtn() {
 }
 
 function syncCartPageCheckoutBtn() {
-  var btn = document.getElementById("checkoutBtn");
+  var btn = document.getElementById("checkoutBtn") || document.getElementById("lpCartCheckoutBtn");
   if (!btn) return;
   btn.disabled = !getCart().length;
   btn.textContent = "إتمام الطلب";
@@ -364,7 +368,22 @@ function setCartPanelHasItems(hasItems) {
   var cartActionsPanel = document.getElementById("cartCheckoutActionsPanel");
   if (cartActionsPanel) cartActionsPanel.hidden = !hasItems;
   var checkoutCol = document.getElementById("cartCheckoutCol");
-  if (checkoutCol) checkoutCol.classList.toggle("cart-checkout-col--dim", !hasItems);
+  if (checkoutCol) {
+    checkoutCol.classList.toggle("cart-checkout-col--dim", !hasItems);
+    checkoutCol.hidden = !hasItems;
+  }
+  var sidebar = document.querySelector(".cart-page-wrap .cart-sidebar-stack");
+  if (sidebar) sidebar.hidden = !hasItems;
+  var itemsCard = document.querySelector(".cart-page-wrap .cart-items-card");
+  if (itemsCard) itemsCard.classList.toggle("cart-items-card--empty", !hasItems);
+  var lpSummary = document.getElementById("lpCartSummary");
+  var lpFooter = document.getElementById("lpCartFooter");
+  if (lpSummary) lpSummary.hidden = !hasItems;
+  if (lpFooter) lpFooter.hidden = !hasItems;
+  var lpPanel = document.getElementById("lpCartPageRoot") || document.getElementById("lpCartPanel");
+  if (lpPanel) lpPanel.classList.toggle("lp-cart-panel--empty", !hasItems);
+  document.body.classList.toggle("cart-page-is-empty", !hasItems);
+  document.body.classList.toggle("cart-page-has-items", !!hasItems);
 }
 
 function updateCartPanelHeader(cart) {
@@ -1169,6 +1188,8 @@ function syncCartMobileBar(cart, breakdown) {
   if (has && breakdown && breakdown.grandTotal != null) {
     var el = document.getElementById("cartMobileGrand");
     if (el) el.innerHTML = ervFmtMoney(breakdown.grandTotal) + ' <small class="lp-cart-panel__cur">ر.س</small>';
+    var lpTotal = document.getElementById("lpCartTotal");
+    if (lpTotal) lpTotal.innerHTML = ervMoneyCellHtml(breakdown.grandTotal);
   }
   syncCartCheckoutButtons();
 }
@@ -1176,17 +1197,24 @@ function syncCartMobileBar(cart, breakdown) {
 /** صفحة السلة الكاملة — يُستدعى من cart.html */
 function renderCartPage(opts) {
   opts = opts && typeof opts === "object" ? opts : {};
-  var list = document.getElementById("cartList");
+  var list = document.getElementById("lpCartLines") || document.getElementById("cartList");
   var countEl = document.getElementById("cartItemsCount");
-  var emptyBlock = document.getElementById("cartPageEmpty");
+  var emptyMsg = document.getElementById("lpCartEmpty");
+  var emptyCta = document.getElementById("lpCartEmptyCta");
+  var legacyEmpty = document.getElementById("cartPageEmpty");
   if (!list) return;
 
   var cart = getCart();
   setCartPanelHasItems(!!cart.length);
+  if (document.getElementById("lpCartPanel") && typeof renderHeaderCartPreview === "function") {
+    renderHeaderCartPreview();
+  }
 
   if (!cart.length) {
-    list.innerHTML = "";
-    if (emptyBlock) emptyBlock.hidden = false;
+    renderCartLinesList(list, []);
+    if (emptyMsg) emptyMsg.hidden = false;
+    if (emptyCta) emptyCta.hidden = false;
+    if (legacyEmpty) legacyEmpty.hidden = false;
     if (countEl) countEl.textContent = "لا توجد قطع في السلة";
     applyCartFinancialsToUi({}, { empty: true });
     syncCartMobileBar([], null);
@@ -1196,7 +1224,9 @@ function renderCartPage(opts) {
     return;
   }
 
-  if (emptyBlock) emptyBlock.hidden = true;
+  if (emptyMsg) emptyMsg.hidden = true;
+  if (emptyCta) emptyCta.hidden = true;
+  if (legacyEmpty) legacyEmpty.hidden = true;
   var totalQty = cartTotalPieceCount(cart);
   if (countEl) countEl.textContent = totalQty + (totalQty === 1 ? " قطعة" : " قطع");
   renderCartLinesList(list, cart);

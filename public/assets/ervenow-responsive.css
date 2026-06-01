@@ -530,6 +530,10 @@ a.btn {
     align-items: start;
   }
 
+  body.cart-page-is-empty .cart-grid {
+    grid-template-columns: 1fr;
+  }
+
   .cart-checkout-col {
     position: sticky;
     top: calc(64px + var(--erw-safe-top));
