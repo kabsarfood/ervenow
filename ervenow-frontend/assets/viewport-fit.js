@@ -44,6 +44,16 @@
     }, 280);
   }
 
+  function syncSiteHeaderHeight() {
+    var header = document.querySelector(".dash-site-header");
+    if (!header) return;
+    var rect = header.getBoundingClientRect();
+    var h = Math.ceil(rect.height);
+    if (h > 0) {
+      document.documentElement.style.setProperty("--erw-header-h", h + "px");
+    }
+  }
+
   function setViewportVars() {
     var vv = global.visualViewport;
     var h = vv && vv.height > 0 ? vv.height : global.innerHeight;
@@ -54,6 +64,7 @@
     root.style.setProperty("--erw-viewport-h", h + "px");
     root.style.setProperty("--erw-viewport-w", w + "px");
     root.classList.add("erw-viewport-ready");
+    syncSiteHeaderHeight();
     if (vv && vv.scale > 1.02) resetViewportScale();
   }
 
@@ -114,11 +125,28 @@
     global.visualViewport.addEventListener("scroll", clampHorizontalScroll, { passive: true });
   }
 
+  global.addEventListener("DOMContentLoaded", function () {
+    syncSiteHeaderHeight();
+    global.setTimeout(syncSiteHeaderHeight, 120);
+  });
+
+  if (typeof ResizeObserver !== "undefined") {
+    global.addEventListener("DOMContentLoaded", function () {
+      var header = document.querySelector(".dash-site-header");
+      if (!header) return;
+      var ro = new ResizeObserver(function () {
+        syncSiteHeaderHeight();
+      });
+      ro.observe(header);
+    });
+  }
+
   global.ErvenowViewport = {
     refresh: setViewportVars,
     resetScale: resetViewportScale,
     clampHorizontal: clampHorizontalScroll,
     lockScroll: lockScroll,
     unlockScroll: unlockScroll,
+    syncHeaderHeight: syncSiteHeaderHeight,
   };
 })(window);

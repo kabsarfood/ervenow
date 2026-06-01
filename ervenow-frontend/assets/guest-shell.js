@@ -213,6 +213,12 @@
     }
   }
 
+  function syncHeaderLayoutMetrics() {
+    if (global.ErvenowViewport && typeof ErvenowViewport.syncHeaderHeight === "function") {
+      ErvenowViewport.syncHeaderHeight();
+    }
+  }
+
   function paintHeaderNav(activeNav, role, opts) {
     var box = document.querySelector(".dash-site-header__links");
     if (!box) return;
@@ -221,6 +227,7 @@
         return navLinkHtml(l, activeNav || "");
       })
       .join("\n");
+    syncHeaderLayoutMetrics();
   }
 
   function lpNavLinkHtml(link) {
@@ -382,6 +389,7 @@
     if (headerMount) headerMount.outerHTML = renderHeader(opts);
     if (footerMount) footerMount.outerHTML = renderFooter();
     init(opts);
+    syncHeaderLayoutMetrics();
   }
 
   function loadPlatformAccessScript() {

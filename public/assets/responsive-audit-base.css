@@ -59,6 +59,9 @@ body {
   /* شرائط أفقية — التمرير داخلها فقط */
   .erw-chip-scroll,
   .stores-cuisine-scroll,
+  .dash-site-header,
+  .dash-site-header__inner,
+  .dash-site-header__nav,
   .dash-site-header__links,
   [class*="scroll-x"],
   [class*="chip-scroll"],

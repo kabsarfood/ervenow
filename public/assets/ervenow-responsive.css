@@ -213,25 +213,7 @@ a.btn {
     padding-bottom: max(20px, var(--erw-safe-bottom));
   }
 
-  .dash-site-header__links {
-    flex-wrap: wrap;
-    overflow-x: visible;
-    justify-content: stretch;
-    gap: 6px;
-  }
-
-  .dash-site-header__link {
-    flex: 1 1 calc(50% - 4px);
-    min-width: calc(50% - 4px);
-    text-align: center;
-    justify-content: center;
-  }
-
-  .dash-site-header__link--cta {
-    flex: 1 1 100%;
-    min-width: 100%;
-    margin-inline-start: 0;
-  }
+  /* تخطيط الهيدر على الجوال: guest-shell.css (@media max-width 640px) */
 
   .dash-site-footer {
     padding-bottom: max(22px, calc(16px + var(--erw-safe-bottom)));
