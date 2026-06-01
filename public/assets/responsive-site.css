@@ -9,7 +9,14 @@ html {
 }
 
 body {
-  overflow-x: hidden;
+  overflow-x: clip;
+  max-width: 100%;
+}
+
+@supports not (overflow-x: clip) {
+  body {
+    overflow-x: hidden;
+  }
 }
 
 img,

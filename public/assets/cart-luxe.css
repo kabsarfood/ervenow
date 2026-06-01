@@ -400,7 +400,7 @@
 /* ——— Portaled sizing ——— */
 #lpCartWrap.lp-cart-wrap--portaled .lp-cart-panel,
 #lpCartWrap.lp-cart-wrap--portaled .lp-cart-panel.lp-cart-panel--open {
-  width: min(520px, calc(100vw - 20px));
+  width: min(520px, calc(100% - 20px));
 }
 
 @media (max-width: 480px) {

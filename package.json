@@ -13,6 +13,7 @@
     "test:ci": "jest --ci",
     "migrate:platform-settings": "node scripts/run-migration-platform-settings.js",
     "migrate:users-name-optional": "node scripts/run-migration-users-name-optional.js",
+    "responsive:audit": "node scripts/apply-responsive-audit.js",
     "migrate:wallet-topup-pay": "node scripts/run-migration-wallet-topup-pay.js",
     "migrate:stores-steps-10-15": "node scripts/run-migration-stores-steps-10-15.js",
     "migrate:finance:bundle": "node scripts/bundle-finance-migrations.js",

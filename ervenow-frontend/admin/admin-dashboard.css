@@ -534,7 +534,7 @@ select {
   display: none !important;
 }
 .finance-drawer {
-  width: min(420px, 100vw);
+  width: min(420px, 100%);
   max-width: 100%;
   background: #fff;
   box-shadow: -8px 0 32px rgba(45, 26, 14, 0.2);
@@ -1454,7 +1454,7 @@ select {
     font-size: 0.88rem;
   }
   .finance-drawer {
-    width: 100vw;
+    width: 100%;
   }
   .item {
     padding: 12px;

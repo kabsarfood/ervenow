@@ -1,8 +1,6 @@
 /**
- * ERVENOW — ثبات الشاشة على الجوال (Samsung/Android/iOS)
- * - ارتفاع حقيقي (--erw-vh)
- * - منع التكبير/التصغير باللمس
- * - إعادة المقياس الطبيعي بعد تدوير الشاشة
+ * ERVENOW — ثبات الشاشة (iOS Safari · Android · Edge)
+ * ارتفاع حقيقي + منع التكبير + منع الاهتزاز الأفقي
  */
 (function (global) {
   if (global.__ervViewportReady) return;
@@ -26,14 +24,23 @@
     }
   }
 
+  function clampHorizontalScroll() {
+    var dx = global.scrollX || document.documentElement.scrollLeft || 0;
+    if (dx !== 0) {
+      global.scrollTo(0, global.scrollY || document.documentElement.scrollTop || 0);
+    }
+  }
+
   function resetViewportScale() {
     enforceViewportMeta();
+    clampHorizontalScroll();
     var meta = document.querySelector('meta[name="viewport"]');
     if (!meta) return;
     meta.setAttribute("content", VIEWPORT_LOCKED + ", shrink-to-fit=no");
     global.setTimeout(function () {
       meta.setAttribute("content", VIEWPORT_LOCKED);
       setViewportVars();
+      clampHorizontalScroll();
     }, 280);
   }
 
@@ -79,13 +86,19 @@
 
   enforceViewportMeta();
   setViewportVars();
+  clampHorizontalScroll();
 
   document.addEventListener("gesturestart", blockGestureZoom, { passive: false });
   document.addEventListener("gesturechange", blockGestureZoom, { passive: false });
   document.addEventListener("gestureend", blockGestureZoom, { passive: false });
   document.addEventListener("touchmove", blockPinchZoom, { passive: false });
+  global.addEventListener("scroll", clampHorizontalScroll, { passive: true });
+  document.addEventListener("scroll", clampHorizontalScroll, { passive: true });
 
-  global.addEventListener("resize", setViewportVars, { passive: true });
+  global.addEventListener("resize", function () {
+    setViewportVars();
+    clampHorizontalScroll();
+  }, { passive: true });
   global.addEventListener("orientationchange", function () {
     global.setTimeout(resetViewportScale, 120);
   });
@@ -94,13 +107,17 @@
   });
 
   if (global.visualViewport) {
-    global.visualViewport.addEventListener("resize", setViewportVars, { passive: true });
-    global.visualViewport.addEventListener("scroll", setViewportVars, { passive: true });
+    global.visualViewport.addEventListener("resize", function () {
+      setViewportVars();
+      clampHorizontalScroll();
+    }, { passive: true });
+    global.visualViewport.addEventListener("scroll", clampHorizontalScroll, { passive: true });
   }
 
   global.ErvenowViewport = {
     refresh: setViewportVars,
     resetScale: resetViewportScale,
+    clampHorizontal: clampHorizontalScroll,
     lockScroll: lockScroll,
     unlockScroll: unlockScroll,
   };

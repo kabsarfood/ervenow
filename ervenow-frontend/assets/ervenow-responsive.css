@@ -24,6 +24,29 @@ html {
   height: -webkit-fill-available;
 }
 
+@media (max-width: 1024px) {
+  html {
+    touch-action: pan-y;
+    overscroll-behavior-x: none;
+  }
+
+  body {
+    touch-action: pan-y;
+    overscroll-behavior-x: none;
+  }
+
+  a,
+  button,
+  input,
+  select,
+  textarea,
+  label,
+  [role="button"],
+  .btn {
+    touch-action: manipulation;
+  }
+}
+
 body {
   min-width: 0;
   min-height: 100vh;
@@ -274,17 +297,33 @@ a.btn {
     left: 0;
     top: 0;
     transform: none;
-    width: 100vw;
-    width: 100dvw;
-    height: 100vh;
+    width: 100%;
+    max-width: 100%;
     height: 100dvh;
-    height: var(--erw-viewport-h, 100dvh);
-    max-height: 100vh;
-    max-height: 100dvh;
     max-height: var(--erw-viewport-h, 100dvh);
+    min-height: 0;
     border-radius: 0;
-    padding-top: var(--erw-safe-top);
+    padding-top: 0;
     padding-bottom: 0;
+  }
+
+  body.dash-map-modal-open .delivery-panel__header {
+    padding-top: max(10px, env(safe-area-inset-top, 0px));
+  }
+
+  body.dash-map-modal-open #dashDeliveryTitle[open] .delivery-panel__body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+  }
+
+  body.dash-map-modal-open #dashDeliveryTitle[open] .map-canvas-grid {
+    grid-template-areas:
+      "map"
+      "method"
+      "actions"
+      "shipment";
+    grid-auto-rows: minmax(min-content, auto);
   }
 
   body.dash-map-modal-open .dash-map-backdrop:not([hidden]) {
@@ -370,7 +409,7 @@ a.btn {
   }
 
   .lp-cart-panel {
-    width: min(100vw, 420px);
+    width: min(100%, 420px);
     max-width: 100%;
   }
 
@@ -429,7 +468,7 @@ a.btn {
   }
 
   body.dash-map-modal-open #dashDeliveryTitle[open] .map-canvas-footer {
-    background: #fffefb;
+    background: linear-gradient(180deg, rgba(255, 254, 251, 0.96) 0%, #fffefb 45%);
   }
 
   .dash-site-header {
@@ -505,7 +544,7 @@ a.btn {
   }
 
   .lp-cart-panel {
-    width: min(520px, calc(100vw - 32px));
+    width: min(520px, calc(100% - 32px));
     max-height: min(85vh, 85dvh, calc(var(--erw-viewport-h, 100dvh) - 32px));
   }
 }

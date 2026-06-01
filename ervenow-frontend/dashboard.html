@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover" />
     <meta name="description" content="يتم تفعيل الحساب بعد المراجعة واعتماده من إدارة ERVENOW." />
     <script src="/assets/viewport-fit.js"></script>
     <title>ERVENOW | لوحة زائر المنصة</title>
@@ -176,14 +176,15 @@
         left: 50%;
         top: 50%;
         transform: translate(-50%, -50%);
-        width: min(calc((100vw - 20px) * 0.9), 520px);
-        height: min(92dvh, 828px);
-        max-height: min(92dvh, 828px);
+        width: min(calc((100% - 20px) * 0.9), 520px);
+        /* max-height فقط — لا height ثابت يقصّ المحتوى */
+        height: auto;
+        max-height: min(92dvh, var(--erw-viewport-h, 100dvh));
+        min-height: 0;
         display: flex;
         flex-direction: column;
         margin: 0;
         padding: 0;
-        min-height: 0;
         border-radius: 22px;
         border: 1px solid rgba(212, 168, 74, 0.38);
         box-shadow:
@@ -198,7 +199,6 @@
       body.dash-map-modal-open #dashDeliveryTitle[open] .delivery-panel--luxe {
         flex: 1 1 auto;
         min-height: 0;
-        max-height: 100%;
         display: flex;
         flex-direction: column;
         overflow: hidden;
@@ -223,7 +223,7 @@
       }
       body.dash-map-modal-open #dashDeliveryTitle[open] .map-canvas-cell--map {
         height: auto;
-        min-height: 0;
+        min-height: auto;
         flex: none;
         align-self: start;
         overflow: visible;
@@ -241,8 +241,8 @@
         flex: none !important;
         max-height: none !important;
         width: 100% !important;
-        height: 260px !important;
-        min-height: 260px !important;
+        height: var(--dash-map-h, 260px) !important;
+        min-height: var(--dash-map-h, 260px) !important;
       }
       body.dash-map-modal-open #dashDeliveryTitle[open] .map-canvas-form #result,
       body.dash-map-modal-open #dashDeliveryTitle[open] .map-canvas-form .map-canvas-live-link {
@@ -259,17 +259,26 @@
           transform: translate(-50%, -50%);
         }
       }
+      @media (min-width: 768px) {
+        body.dash-map-modal-open #dashDeliveryTitle[open] {
+          width: min(calc((100% - 32px) * 0.94), 920px);
+          max-height: min(94dvh, 920px);
+        }
+        body.dash-map-modal-open #dashDeliveryTitle[open] .map-canvas-form #pickupDropMap,
+        body.dash-map-modal-open #dashDeliveryTitle[open] .map-canvas-form #pickupDropMap.leaflet-container {
+          height: var(--dash-map-h) !important;
+          min-height: var(--dash-map-h) !important;
+        }
+      }
       @media (min-width: 900px) {
         body.dash-map-modal-open #dashDeliveryTitle[open] {
-          width: min(calc((100vw - 32px) * 0.9), 728px);
-          height: 900px;
-          max-height: 900px;
+          width: min(calc((100% - 32px) * 0.94), 960px);
         }
       }
       @media (max-height: 700px) {
         body.dash-map-modal-open #dashDeliveryTitle[open] {
-          height: calc(var(--erw-viewport-h, 100dvh) - 16px);
           max-height: calc(var(--erw-viewport-h, 100dvh) - 16px);
+          min-height: 0;
           top: 50%;
         }
         body.dash-map-modal-open #dashDeliveryTitle[open] .map-canvas-form #pickupDropMap,
@@ -450,12 +459,14 @@
         overscroll-behavior: contain;
         -webkit-overflow-scrolling: touch;
         padding-top: clamp(12px, 2.5vw, 16px);
-        padding-bottom: clamp(32px, 5vw, 44px);
+        padding-bottom: clamp(16px, 3vw, 24px);
         background: linear-gradient(180deg, #efe3d4 0%, #f6ede2 6%, #faf4eb 14%, #fffefb 100%);
       }
       .delivery-panel__body {
-        flex: 1;
+        flex: 1 1 auto;
+        min-height: 0;
         overflow-y: auto;
+        overflow-x: hidden;
         -webkit-overflow-scrolling: touch;
         padding: clamp(14px, 3vw, 18px);
         padding-bottom: clamp(16px, 3.2vw, 22px);
@@ -715,27 +726,45 @@
         display: grid;
         gap: clamp(10px, 2vw, 14px);
         grid-template-columns: 1fr;
+        grid-auto-rows: minmax(min-content, auto);
+        align-items: stretch;
         grid-template-areas:
-          "shipment"
-          "route"
-          "actions";
+          "map"
+          "method"
+          "actions"
+          "shipment";
       }
       .map-canvas-route-col {
-        grid-area: route;
-        display: flex;
-        flex-direction: column;
-        gap: clamp(6px, 1.1vw, 8px);
-        min-width: 0;
+        display: contents;
       }
-      @media (min-width: 640px) {
+      .map-canvas-cell--shipment { grid-area: shipment; }
+      .map-canvas-cell--method { grid-area: method; }
+      .map-canvas-cell--actions { grid-area: actions; }
+      .map-canvas-cell--map { grid-area: map; }
+      @media (min-width: 768px) {
+        :root {
+          --dash-map-h: clamp(340px, 52vh, 480px);
+        }
         .map-canvas-grid {
-          grid-template-columns: 1fr 1fr;
+          grid-template-columns: minmax(0, 1.45fr) minmax(0, 0.55fr);
           grid-template-areas:
-            "route shipment"
-            "route actions";
+            "map method"
+            "map shipment"
+            "map actions";
           align-items: start;
-          column-gap: clamp(10px, 2vw, 14px);
-          row-gap: clamp(10px, 2vw, 14px);
+          column-gap: clamp(12px, 2vw, 16px);
+          row-gap: clamp(10px, 1.8vw, 14px);
+        }
+        .map-canvas-cell--map {
+          align-self: stretch;
+          min-height: 100%;
+        }
+        .map-canvas-cell--map #pickupDropMap,
+        .map-canvas-cell--map #pickupDropMap.leaflet-container {
+          flex: 1 1 auto;
+          height: var(--dash-map-h) !important;
+          min-height: var(--dash-map-h) !important;
+          max-height: none !important;
         }
       }
       @media (min-width: 900px) {
@@ -756,7 +785,7 @@
         padding: 8px;
         display: flex;
         flex-direction: column;
-        min-height: 0;
+        min-height: auto;
         overflow: visible;
         gap: clamp(8px, 1.5vw, 10px);
       }
@@ -766,6 +795,7 @@
         gap: 10px;
         padding-bottom: clamp(14px, 2.8vw, 18px);
         overflow: visible;
+        min-height: auto;
         box-sizing: border-box;
       }
       body.dash-map-modal-open #dashDeliveryTitle[open] .map-canvas-cell--actions {
@@ -901,15 +931,15 @@
         gap: 10px;
         flex: 0 1 auto;
       }
-      .map-canvas-actions[data-route-mode="map"] .map-canvas-loc-box--pickup {
+      .map-canvas-grid[data-route-mode="map"] .map-canvas-loc-box--pickup {
         background: rgba(120, 120, 120, 0.07);
         border-color: rgba(100, 100, 100, 0.35);
       }
-      .map-canvas-actions[data-route-mode="map"] .map-canvas-loc-box--drop {
+      .map-canvas-grid[data-route-mode="map"] .map-canvas-loc-box--drop {
         background: rgba(196, 30, 58, 0.06);
         border-color: rgba(196, 30, 58, 0.35);
       }
-      .map-canvas-actions[data-route-mode="map"] .map-canvas-coord-input {
+      .map-canvas-grid[data-route-mode="map"] .map-canvas-coord-input {
         position: absolute;
         width: 1px;
         height: 1px;
@@ -920,25 +950,41 @@
         white-space: nowrap;
         border: 0;
       }
-      .map-canvas-actions[data-route-mode="links"] .map-canvas-loc-box--pickup {
-        background: rgba(196, 30, 58, 0.06);
-        border-color: rgba(196, 30, 58, 0.4);
-      }
-      .map-canvas-actions[data-route-mode="links"] .map-canvas-loc-box--drop {
+      .map-canvas-grid[data-route-mode="links"] .map-canvas-loc-box--pickup {
         background: rgba(45, 90, 61, 0.08);
         border-color: rgba(45, 90, 61, 0.4);
       }
-      .map-canvas-actions[data-route-mode="links"] .map-canvas-map-only {
+      .map-canvas-grid[data-route-mode="links"] .map-canvas-loc-box--drop {
+        background: rgba(196, 30, 58, 0.06);
+        border-color: rgba(196, 30, 58, 0.4);
+      }
+      .map-canvas-grid[data-route-mode="links"] .map-canvas-map-only {
         display: none !important;
       }
-      .map-canvas-actions[data-route-mode="map"] .map-canvas-links-only {
+      .map-canvas-grid[data-route-mode="map"] .map-canvas-links-only {
         display: none !important;
       }
-      .map-canvas-actions[data-route-mode="links"] .map-canvas-apply-btn {
+      .map-canvas-grid[data-route-mode="map"] .map-canvas-apply-btn,
+      .map-canvas-grid[data-route-mode="map"] .map-canvas-links-apply,
+      .map-canvas-grid[data-route-mode="map"] #deliveryModeLinks {
+        display: none !important;
+      }
+      .map-canvas-grid[data-route-mode="links"] .map-canvas-apply-btn,
+      .map-canvas-grid[data-route-mode="links"] .map-canvas-links-apply {
+        display: block;
         background: linear-gradient(135deg, #e8e0d4, #d4c4a8);
       }
-      .map-canvas-actions[data-route-mode="map"] .map-canvas-apply-btn {
-        background: linear-gradient(135deg, #d8e8d0, #c5d4bc);
+      .map-canvas-grid[data-route-mode="links"] .map-canvas-cell--actions {
+        display: none;
+      }
+      .map-canvas-route-panel--inline {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin: 2px 0 4px;
+      }
+      .map-canvas-route-panel--inline[hidden] {
+        display: none !important;
       }
       .map-canvas-loc-box {
         padding: 10px 12px;
@@ -1042,10 +1088,15 @@
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 8px;
-        margin-top: 0;
+        margin-top: auto;
         margin-bottom: 0;
         flex-shrink: 0;
         width: 100%;
+        position: sticky;
+        bottom: 0;
+        z-index: 2;
+        background: linear-gradient(180deg, rgba(255, 254, 251, 0.92) 0%, #fffefb 40%);
+        padding-top: 8px;
       }
       .map-canvas-cell--map .map-canvas-footer {
         padding-top: 2px;
@@ -1128,11 +1179,9 @@
         }
       }
       @media (min-width: 640px) {
-        .map-canvas-cell--map {
-          min-height: 0;
-        }
+        .map-canvas-cell--map,
         .map-canvas-cell--actions {
-          min-height: 0;
+          min-height: auto;
         }
       }
       .map-canvas-form #pickupDropMap {
@@ -1251,7 +1300,7 @@
         top: calc(100% + 8px);
         right: 0;
         left: auto;
-        width: min(100vw - 32px, 420px);
+        width: min(100% - 32px, 420px);
         max-height: min(70vh, 520px);
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
@@ -1609,7 +1658,7 @@
       }
       body.dash-map-modal-open #dashDeliveryTitle[open] {
         grid-column: unset;
-        width: min(calc((100vw - 20px) * 0.9), 520px);
+        width: min(calc((100% - 20px) * 0.9), 520px);
         max-width: none;
         box-shadow:
           0 0 0 1px rgba(255, 255, 255, 0.07) inset,
@@ -1618,7 +1667,7 @@
       }
       @media (min-width: 900px) {
         body.dash-map-modal-open #dashDeliveryTitle[open] {
-          width: min(calc((100vw - 32px) * 0.9), 728px);
+          width: min(calc((100% - 32px) * 0.9), 728px);
         }
       }
       .cat-card__summary {
@@ -2160,7 +2209,6 @@
       /* ── من الخريطة — جوال: مرونة، ظهور كامل، شريط سفلي ثابت ── */
       :root {
         --dash-map-h: 260px;
-        --dash-map-dock-h: 76px;
       }
       .map-canvas-fold__summary {
         list-style: none;
@@ -2193,8 +2241,19 @@
       }
       @media (max-width: 767px) {
         :root {
-          --dash-map-h: clamp(168px, 32dvh, 228px);
-          --dash-map-dock-h: max(76px, calc(68px + var(--erw-safe-bottom, max(12px, env(safe-area-inset-bottom, 12px)))));
+          --dash-map-h: clamp(210px, 40dvh, 300px);
+        }
+        body.dash-map-modal-open #dashDeliveryTitle[open] {
+          left: 0;
+          top: 0;
+          transform: none;
+          width: 100%;
+          max-width: 100%;
+          height: 100dvh;
+          max-height: var(--erw-viewport-h, 100dvh);
+          min-height: 0;
+          border-radius: 0;
+          padding-top: 0;
         }
         body.dash-map-modal-open #dashDeliveryTitle[open] > .delivery-panel--luxe {
           flex: 1 1 auto;
@@ -2205,31 +2264,50 @@
           display: none;
         }
         body.dash-map-modal-open .delivery-panel__header {
-          padding: 12px clamp(44px, 12vw, 52px) 10px 14px;
+          padding: max(10px, env(safe-area-inset-top, 0px)) clamp(44px, 12vw, 52px) 8px 14px;
+          flex-shrink: 0;
         }
         body.dash-map-modal-open .delivery-panel__title {
           font-size: clamp(0.92rem, 4.2vw, 1.05rem);
         }
         body.dash-map-modal-open #dashDeliveryTitle[open] .delivery-panel__body {
+          padding-top: 8px;
           padding-inline: max(10px, env(safe-area-inset-left, 10px)) max(10px, env(safe-area-inset-right, 10px));
-          padding-bottom: calc(var(--dash-map-dock-h) + 16px);
-          scroll-padding-bottom: calc(var(--dash-map-dock-h) + 20px);
+          padding-bottom: max(12px, var(--erw-safe-bottom, 12px));
+          scroll-padding-bottom: 16px;
         }
         body.dash-map-modal-open #dashDeliveryTitle[open] .map-canvas-grid,
         .cat-card--map[open] .map-canvas-grid {
           grid-template-areas:
-            "route"
+            "map"
+            "method"
             "actions"
             "shipment";
-          gap: 12px;
-        }
-        .map-canvas-route-col {
-          display: flex;
-          flex-direction: column;
           gap: 10px;
         }
-        .map-canvas-cell--map {
-          order: -1;
+        body.dash-map-modal-open #dashDeliveryTitle[open] .map-canvas-grid[data-route-mode="links"],
+        .cat-card--map[open] .map-canvas-grid[data-route-mode="links"] {
+          --dash-map-h: clamp(128px, 20dvh, 160px);
+          grid-template-areas:
+            "method"
+            "map"
+            "shipment";
+        }
+        .map-canvas-grid[data-route-mode="links"] .map-canvas-routes-link {
+          display: none;
+        }
+        .map-canvas-grid[data-route-mode="links"] .map-canvas-phone-row {
+          margin-top: 2px;
+        }
+        .map-canvas-grid[data-route-mode="links"] .map-canvas-route-panel--inline {
+          gap: 6px;
+          margin: 0 0 2px;
+        }
+        .map-canvas-grid[data-route-mode="links"] .map-canvas-cell--method {
+          padding: 10px 12px;
+        }
+        .map-canvas-grid[data-route-mode="links"] .map-canvas-mode-btns {
+          margin-bottom: 6px;
         }
         body.dash-map-modal-open .map-canvas-cell,
         .cat-card--map[open] .map-canvas-cell {
@@ -2244,20 +2322,20 @@
         .cat-card--map[open] .map-canvas-form #pickupDropMap {
           height: var(--dash-map-h) !important;
           min-height: var(--dash-map-h) !important;
+          max-height: var(--dash-map-h) !important;
+          flex-shrink: 0;
         }
         body.dash-map-modal-open #dashDeliveryTitle[open] .map-canvas-footer {
-          position: fixed;
-          left: 0;
-          right: 0;
+          position: sticky;
+          left: auto;
+          right: auto;
           bottom: 0;
-          z-index: 10055;
+          z-index: 3;
           margin: 0;
-          padding: 10px max(12px, env(safe-area-inset-left, 12px)) var(--erw-safe-bottom, max(12px, env(safe-area-inset-bottom, 12px))) max(12px, env(safe-area-inset-right, 12px));
+          padding: 10px 0 max(4px, env(safe-area-inset-bottom, 0px));
           background: linear-gradient(180deg, rgba(255, 254, 251, 0.94) 0%, #fffefb 30%);
-          backdrop-filter: blur(14px);
-          -webkit-backdrop-filter: blur(14px);
-          border-top: 1px solid rgba(185, 135, 47, 0.3);
-          box-shadow: 0 -14px 36px rgba(45, 28, 14, 0.16);
+          border-top: 1px solid rgba(185, 135, 47, 0.22);
+          box-shadow: 0 -8px 24px rgba(45, 28, 14, 0.08);
           grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
           gap: 10px;
         }
@@ -2448,9 +2526,9 @@
                   </header>
                   <div class="delivery-panel__body">
                   <div class="delivery-form delivery-form--luxe map-canvas-form">
-                    <div class="map-canvas-grid">
+                    <div class="map-canvas-grid" data-route-mode="map">
                       <section class="map-canvas-cell map-canvas-cell--shipment">
-                        <details class="map-canvas-fold map-canvas-fold--shipment" open>
+                        <details class="map-canvas-fold map-canvas-fold--shipment">
                         <summary class="map-canvas-cell__title map-canvas-fold__summary">تفاصيل الشحنة</summary>
                         <div class="map-canvas-fold__content">
                         <label class="map-canvas-label" for="vehicleType">نوع المركبة</label>
@@ -2500,6 +2578,24 @@
                             <span class="map-canvas-mode-btn__text">روابط الموقع ( انقر هنا )</span>
                           </button>
                         </div>
+                        <div id="deliveryModeLinks" class="map-canvas-route-panel map-canvas-route-panel--inline" hidden>
+                          <div class="map-canvas-loc-box map-canvas-loc-box--pickup">
+                            <p class="map-canvas-loc-box__title">من الاستلام</p>
+                            <input id="fromLink" type="url" inputmode="url" placeholder="الصق رابط موقع الاستلام هنا" oninput="handleLocationInputChange()" />
+                          </div>
+                          <div class="map-canvas-loc-box map-canvas-loc-box--drop">
+                            <p class="map-canvas-loc-box__title">إلى التسليم</p>
+                            <input id="toLink" type="url" inputmode="url" placeholder="الصق رابط موقع التسليم هنا" oninput="handleLocationInputChange()" />
+                          </div>
+                          <button
+                            type="button"
+                            class="map-canvas-apply-btn map-canvas-links-apply"
+                            id="btnApplyMapRoute"
+                            onclick="applyMapRoute()"
+                          >
+                            انقر هنا لتطبيق الروابط و رسم المسار
+                          </button>
+                        </div>
                         <div class="map-canvas-row-2 map-canvas-phone-row">
                           <input id="mapSenderPhone" type="tel" inputmode="numeric" maxlength="10" placeholder="جوال المرسل" aria-label="جوال المرسل" oninput="syncMapCustomerPhone()" />
                           <input id="mapRecipientPhone" type="tel" inputmode="numeric" maxlength="10" placeholder="جوال المرسل إليه" aria-label="جوال المرسل إليه" />
@@ -2521,24 +2617,6 @@
                       </div>
 
                       <section class="map-canvas-cell map-canvas-cell--actions map-canvas-actions" id="mapCanvasActions" data-route-mode="map">
-                        <div id="deliveryModeLinks" class="map-canvas-route-panel" hidden>
-                          <div class="map-canvas-loc-box map-canvas-loc-box--pickup">
-                            <p class="map-canvas-loc-box__title">من الاستلام</p>
-                            <input id="fromLink" type="url" inputmode="url" placeholder="الصق رابط موقع الاستلام هنا" oninput="handleLocationInputChange()" />
-                            <div class="map-canvas-loc-box__actions map-canvas-links-only">
-                              <button type="button" class="map-canvas-mini-btn" onclick="saveMapLinkField('fromLink')">احفظ</button>
-                              <button type="button" class="map-canvas-mini-btn map-canvas-mini-btn--ghost" onclick="pasteMapLink('fromLink')">لصق</button>
-                            </div>
-                          </div>
-                          <div class="map-canvas-loc-box map-canvas-loc-box--drop">
-                            <p class="map-canvas-loc-box__title">إلى التسليم</p>
-                            <input id="toLink" type="url" inputmode="url" placeholder="الصق رابط موقع التسليم هنا" oninput="handleLocationInputChange()" />
-                            <div class="map-canvas-loc-box__actions map-canvas-links-only">
-                              <button type="button" class="map-canvas-mini-btn" onclick="saveMapLinkField('toLink')">احفظ</button>
-                              <button type="button" class="map-canvas-mini-btn map-canvas-mini-btn--ghost" onclick="pasteMapLink('toLink')">لصق</button>
-                            </div>
-                          </div>
-                        </div>
                         <div id="deliveryModeMap" class="map-canvas-route-panel">
                           <div class="map-canvas-loc-box map-canvas-loc-box--pickup">
                             <p class="map-canvas-loc-box__title">من الاستلام</p>
@@ -2557,14 +2635,6 @@
                             </div>
                           </div>
                         </div>
-                        <button
-                          type="button"
-                          class="map-canvas-apply-btn"
-                          id="btnApplyMapRoute"
-                          onclick="applyMapRoute()"
-                        >
-                          انقر هنا لتطبيق الروابط و رسم المسار
-                        </button>
                         <p id="platformFeeLine" hidden aria-hidden="true">—</p>
                         <p id="driverNetLine" hidden aria-hidden="true">—</p>
                       </section>
@@ -2816,6 +2886,8 @@
           tabMap.setAttribute("aria-selected", deliveryInputMode === "map" ? "true" : "false");
         }
         if (actions) actions.setAttribute("data-route-mode", deliveryInputMode);
+        var grid = document.querySelector(".map-canvas-grid");
+        if (grid) grid.setAttribute("data-route-mode", deliveryInputMode);
         updateApplyBtnLabel();
         if (deliveryInputMode === "links") {
           selectType = null;
@@ -2832,17 +2904,14 @@
           res.innerText =
             deliveryInputMode === "links"
               ? "الصق رابطي الاستلام والتسليم ثم اضغط «انقر هنا لتطبيق الروابط و رسم المسار»."
-              : "حدّد الاستلام والتسليم على الخريطة ثم اضغط «تطبيق المواقع ورسم المسار».";
+              : "اضغط «خريطة» عند الاستلام أو التسليم ثم اختر النقطتين على الخريطة.";
         }
       }
 
       function updateApplyBtnLabel() {
         var btn = document.getElementById("btnApplyMapRoute");
-        if (!btn || btn.disabled) return;
-        btn.textContent =
-          deliveryInputMode === "links"
-            ? "انقر هنا لتطبيق الروابط و رسم المسار"
-            : "تطبيق المواقع ورسم المسار";
+        if (!btn || btn.disabled || deliveryInputMode !== "links") return;
+        btn.textContent = "انقر هنا لتطبيق الروابط و رسم المسار";
       }
 
       function mapHaversineM(a, b) {
@@ -2867,10 +2936,13 @@
       }
 
       function scrollToMapRoutes() {
-        var el = document.getElementById("mapCanvasActions");
+        var mobile = window.matchMedia("(max-width: 767px)").matches;
+        var el =
+          deliveryInputMode === "links"
+            ? document.getElementById("deliveryModeLinks") || document.querySelector(".map-canvas-cell--method")
+            : document.getElementById("mapCanvasActions");
         if (!el) return;
         var panel = el.closest(".delivery-panel__body");
-        var mobile = window.matchMedia("(max-width: 767px)").matches;
         if (panel && mobile) {
           var panelRect = panel.getBoundingClientRect();
           var elRect = el.getBoundingClientRect();
@@ -3480,7 +3552,7 @@
             result.innerText =
               deliveryInputMode === "links"
                 ? "❌ الصق رابطي الاستلام والتسليم ثم اضغط «انقر هنا لتطبيق الروابط و رسم المسار»."
-                : "❌ حدّد نقطة الاستلام والتسليم على الخريطة ثم «تطبيق المواقع ورسم المسار».";
+                : "❌ اختر نقطة الاستلام والتسليم على الخريطة (زر «خريطة» ثم النقر على الخريطة).";
             return;
           }
           if (!km) return;
