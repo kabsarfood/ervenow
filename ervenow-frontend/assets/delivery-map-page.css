@@ -161,12 +161,13 @@ body.delivery-map-page {
   .delivery-map-page .delivery-panel__subtitle {
     display: none;
   }
-  .delivery-map-page .map-canvas-grid[data-route-mode="links"] {
-    --delivery-map-h: clamp(128px, 20dvh, 160px);
-    grid-template-areas: "method" "map" "shipment";
-  }
-  .delivery-map-page .map-canvas-grid[data-route-mode="links"] .map-canvas-cell--actions {
-    display: none;
+  /* نفس تخطيط نموذج 1 «الخريطة ( انقر هنا )» في كل الأوضاء */
+  .delivery-map-page .map-canvas-grid {
+    grid-template-areas:
+      "map"
+      "method"
+      "actions"
+      "shipment";
   }
   .delivery-map-page .map-canvas-footer {
     position: sticky;
@@ -204,29 +205,9 @@ body.delivery-map-page {
       .map-canvas-cell--actions { grid-area: actions; }
       .map-canvas-cell--map { grid-area: map; }
       @media (min-width: 768px) {
-        :root {
-          --dash-map-h: clamp(340px, 52vh, 480px);
-        }
-        .map-canvas-grid {
-          grid-template-columns: minmax(0, 1.45fr) minmax(0, 0.55fr);
-          grid-template-areas:
-            "map method"
-            "map shipment"
-            "map actions";
-          align-items: start;
-          column-gap: clamp(12px, 2vw, 16px);
-          row-gap: clamp(10px, 1.8vw, 14px);
-        }
-        .map-canvas-cell--map {
+        .delivery-map-page .map-canvas-cell--map {
           align-self: stretch;
           min-height: 100%;
-        }
-        .map-canvas-cell--map #pickupDropMap,
-        .map-canvas-cell--map #pickupDropMap.leaflet-container {
-          flex: 1 1 auto;
-          height: var(--dash-map-h) !important;
-          min-height: var(--dash-map-h) !important;
-          max-height: none !important;
         }
       }
       @media (min-width: 900px) {
@@ -259,8 +240,6 @@ body.delivery-map-page {
         overflow: visible;
         min-height: auto;
         box-sizing: border-box;
-      }
-        padding-bottom: clamp(18px, 3.5vw, 24px);
       }
       .map-canvas-cell__title {
         margin: 0 0 10px;
@@ -362,24 +341,18 @@ body.delivery-map-page {
         text-align: center;
         text-decoration: underline;
       }
-      .map-canvas-cell--map #pickupDropMap {
-        flex: none;
+      .delivery-map-page .map-canvas-cell--map #pickupDropMap {
+        flex: 1 1 auto;
         width: 100%;
-        height: 260px;
-        min-height: 260px;
         border-radius: 10px;
         border: 1px solid rgba(61, 34, 19, 0.1);
         overflow: hidden;
-      }
-      .map-canvas-cell--map #pickupDropMap.leaflet-container {
-        flex: none;
-        width: 100% !important;
-        height: 260px !important;
-        min-height: 260px;
-      }
-        min-height: 260px;
         max-height: none;
         box-shadow: none;
+      }
+      .delivery-map-page .map-canvas-cell--map #pickupDropMap.leaflet-container {
+        flex: 1 1 auto;
+        width: 100% !important;
       }
       .map-canvas-route-panel[hidden] {
         display: none !important;
@@ -559,13 +532,8 @@ body.delivery-map-page {
       }
       .map-canvas-cell--map .map-canvas-footer {
         padding-top: 2px;
-      }
         gap: clamp(6px, 1.2vw, 8px);
         padding-bottom: clamp(6px, 1.5vw, 10px);
-      }
-        margin: clamp(6px, 1.2vw, 8px) 0 0;
-      }
-        margin: clamp(4px, 1vw, 6px) 0 0;
       }
       .map-canvas-price-box {
         display: flex;
@@ -640,9 +608,10 @@ body.delivery-map-page {
           min-height: auto;
         }
       }
-      .map-canvas-form #pickupDropMap {
+      .delivery-map-page .map-canvas-form #pickupDropMap {
         max-height: none !important;
       }
+      .delivery-map-page .map-canvas-cell--map {
         display: flex !important;
         flex-direction: column !important;
       }
