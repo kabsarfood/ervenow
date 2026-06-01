@@ -231,7 +231,6 @@ picture {
 }
 
 @media (min-width: 321px) and (max-width: 414px) {
-  .dash-hero__title,
   .guest-section-hero__title,
   h1 {
     font-size: clamp(1.15rem, 5vw, 1.45rem);

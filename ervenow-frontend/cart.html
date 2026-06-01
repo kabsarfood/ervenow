@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="/assets/styles.css" />
     <link rel="stylesheet" href="/assets/guest-shell.css" />
     <link rel="stylesheet" href="/assets/cart-luxe.css" />
+    <link rel="stylesheet" href="/assets/cart-shell.css" />
     <link rel="stylesheet" href="/assets/cart-page.css" />
   </head>
   <body class="guest-shell-page">
@@ -51,7 +52,7 @@
       <div class="layout cart-page-wrap">
         <div class="cart-page-hero">
           <h1>سلة التسوق</h1>
-          <p id="cartItemsCount">لا توجد قطع في السلة</p>
+          <p id="cartItemsCount" class="cart-page-hero__count">لا توجد قطع في السلة</p>
         </div>
 
         <div class="card" id="guestCartBanner" style="display: none; margin-bottom: 12px; background: #fff8ee; border-color: #e8d4bc">
@@ -61,90 +62,16 @@
           </p>
         </div>
 
-        <div class="cart-grid">
-          <section class="cart-panel cart-items-card">
-            <header class="cart-panel__head">
-              <div class="cart-panel__head-left">
-                <span class="cart-panel__icon" aria-hidden="true">🛒</span>
-                <h2 class="cart-panel__title">المنتجات في سلتك</h2>
-              </div>
-            </header>
-            <div class="cart-panel__body">
-              <div id="cartList" class="lp-cart-panel__list"></div>
-              <div id="cartPageEmpty" class="cart-page-empty">
-              <div class="cart-page-empty__icon" aria-hidden="true">🛒</div>
-              <h3 class="cart-page-empty__title">سلتك فارغة</h3>
-              <p class="cart-page-empty__text">ابدأ التسوق الآن وأضف ما تحتاجه من متاجرنا وخدماتنا.</p>
-              <a class="cart-page-empty__cta" href="/stores">ابدأ التسوق الآن</a>
-              <div class="cart-page-empty__actions">
-                <a href="/stores">متاجر</a>
-                <a href="/services">خدمات</a>
-                <a href="/delivery-services.html">توصيل</a>
-                <a href="/start-now.html">ابدأ طلباً</a>
-              </div>
-              </div>
-            </div>
-          </section>
+        <div
+          class="lp-cart-panel lp-cart-panel--page lp-cart-panel--empty"
+          id="lpCartPageRoot"
+          role="region"
+          aria-label="سلة التسوق"
+        ></div>
 
-          <div class="cart-sidebar-stack">
-          <aside class="cart-panel cart-checkout-col cart-checkout-col--dim" id="cartCheckoutCol">
-            <header class="cart-panel__head">
-              <div class="cart-panel__head-left">
-                <span class="cart-panel__icon" aria-hidden="true">💰</span>
-                <h2 class="cart-panel__title">ملخص الطلب</h2>
-              </div>
-            </header>
-            <div class="cart-panel__body">
-            <div class="erv-cart-fin" id="cartFinBox" hidden>
-              <div class="erv-fin-row">
-                <span class="erv-fin-row__label"><span class="erv-fin-row__icon" aria-hidden="true">💰</span> المجموع الفرعي</span>
-                <span class="erv-fin-val" id="cartFinSub">٠٫٠٠ <small class="lp-cart-panel__cur">ر.س</small></span>
-              </div>
-              <div class="erv-fin-row">
-                <span class="erv-fin-row__label"><span class="erv-fin-row__icon" aria-hidden="true">🚚</span> أجرة التوصيل</span>
-                <span class="erv-fin-val" id="cartFinDel">٠٫٠٠ <small class="lp-cart-panel__cur">ر.س</small></span>
-              </div>
-              <p id="cartFinDelNote" class="erv-fin-note" hidden>
-                لطلبات المتجر: اضغط «تحديد موقعي GPS» أدناه لحساب أجرة التوصيل (كم × 2.3 ر.س).
-              </p>
-              <div class="erv-fin-row">
-                <span class="erv-fin-row__label">القيمة المضافة 15%</span>
-                <span class="erv-fin-val" id="cartFinVat">٠٫٠٠ <small class="lp-cart-panel__cur">ر.س</small></span>
-              </div>
-              <details class="erv-cart-fin-details">
-                <summary>تفاصيل إضافية (عمولة المنصة)</summary>
-                <div class="erv-fin-row">
-                  <span>عمولة المنصة (7%)</span>
-                  <span class="erv-fin-val" id="cartFinComm">٠٫٠٠ <small class="lp-cart-panel__cur">ر.س</small></span>
-                </div>
-                <p class="erv-fin-note" style="margin-top: 2px">
-                  تُقتطع من التاجر أو مزود الخدمة — لا تُضاف إلى ما تدفعه.
-                </p>
-              </details>
-              <div class="erv-fin-row erv-fin-row--grand">
-                <span class="erv-fin-row__label">المجموع الكلي</span>
-                <span class="erv-fin-val" id="cartFinGrand">٠٫٠٠ <small class="lp-cart-panel__cur">ر.س</small></span>
-              </div>
-            </div>
-            </div>
-          </aside>
-
-          <aside class="cart-panel cart-checkout-actions-panel" id="cartCheckoutActionsPanel" hidden>
-            <div class="cart-panel__body">
-            <div class="cart-checkout-actions">
-              <button class="cart-checkout-primary cart-checkout-primary--desktop" type="button" id="checkoutBtn" onclick="checkout()">إتمام الطلب</button>
-              <button class="cart-checkout-secondary" type="button" id="clearBtn" onclick="clearAllCart()">تفريغ السلة</button>
-              <a class="cart-checkout-secondary" href="/">استمر بالتسوق</a>
-            </div>
-            <div class="cart-trust">
-              <span class="cart-trust__item">🔒 دفع آمن</span>
-              <span class="cart-trust__item">⚡ توصيل سريع</span>
-              <span class="cart-trust__item">🛡️ محمي</span>
-            </div>
-            </div>
-          </aside>
-          </div>
-        </div>
+        <p class="cart-page-tools" id="cartPageTools" hidden>
+          <button type="button" class="cart-checkout-secondary" id="clearBtn" onclick="clearAllCart()">تفريغ السلة</button>
+        </p>
 
         <div class="card" id="storeDeliveryCard" style="display: none; margin-top: 12px">
           <div class="badge">موقع التوصيل (طلبات المتاجر)</div>
@@ -165,7 +92,7 @@
           <a class="dash-site-footer__link" href="/stores">متاجر</a>
           <a class="dash-site-footer__link" href="/delivery-services.html">توصيل</a>
           <a class="dash-site-footer__link" href="/services">خدمات</a>
-          <a class="dash-site-footer__link" href="/dashboard#dashDeliveryTitle">طلب من الخريطة</a>
+          <a class="dash-site-footer__link" href="/delivery-map">طلب من الخريطة</a>
           <a class="dash-site-footer__link" href="/start-now.html">ابدأ الآن</a>
           <a class="dash-site-footer__link" href="/">الرئيسية</a>
         </nav>
@@ -185,10 +112,33 @@
     <script src="/assets/api-config.js"></script>
     <script src="/assets/api.js"></script>
     <script src="/assets/cart.js"></script>
+    <script src="/assets/cart-ui.js"></script>
     <script src="/assets/service-cart.js"></script>
     <script src="/assets/guest-shell.js"></script>
     <script>
       ErvenowGuestShell.init({ activeNav: "guest", pageTag: "السلة" });
+
+      (function mountCartPageUi() {
+        var root = document.getElementById("lpCartPageRoot");
+        if (!root || !window.ErvenowCartUI) return;
+        root.innerHTML = ErvenowCartUI.cartPanelInnerHtml({
+          continueHref: "/dashboard",
+          checkoutId: "lpCartCheckoutBtn",
+          showFullFin: true,
+        });
+        var checkoutBtn = document.getElementById("lpCartCheckoutBtn");
+        if (checkoutBtn) checkoutBtn.addEventListener("click", function () { if (typeof checkout === "function") checkout(); });
+        var tools = document.getElementById("cartPageTools");
+        function syncTools() {
+          if (tools) tools.hidden = !getCart().length;
+        }
+        syncTools();
+        var _render = window.renderCartPage;
+        window.renderCartPage = function (opts) {
+          if (typeof _render === "function") _render(opts);
+          syncTools();
+        };
+      })();
 
       (function restorePendingMapCart() {
         try {

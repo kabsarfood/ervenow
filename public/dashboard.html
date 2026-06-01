@@ -10,8 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/assets/styles.css" />
     <link rel="stylesheet" href="/assets/guest-shell.css" />
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <style>
+        <style>
       .dash-alert {
         display: none;
         margin: 0 0 14px;
@@ -46,7 +45,6 @@
         display: grid;
         gap: 10px;
       }
-      .delivery-form.map-canvas-form {
         display: flex;
         flex-direction: column;
       }
@@ -139,163 +137,27 @@
           min-width: 0;
         }
       }
-      .delivery-live-map-link {
         display: inline-block;
         margin-top: 4px;
         font-weight: 800;
         color: var(--gold, #b9872f);
         text-decoration: none;
       }
-      .delivery-live-map-link:hover {
         text-decoration: underline;
       }
 
-      /* ── توصيل من الخريطة: بطاقة فاخرة + نافذة تركيز ── */
-      .dash-map-backdrop {
-        position: fixed;
-        inset: 0;
-        z-index: 10040;
-        background: rgba(10, 6, 3, 0.72);
-        opacity: 0;
-        visibility: hidden;
-        pointer-events: none;
-        transition: opacity 0.32s ease, visibility 0.32s ease;
-      }
-      .dash-map-backdrop:not([hidden]) {
-        opacity: 1;
-        visibility: visible;
-        pointer-events: auto;
-      }
-      body.dash-map-modal-open {
-        overflow: hidden;
-        touch-action: none;
-      }
-      body.dash-map-modal-open #dashDeliveryTitle[open] {
-        position: fixed;
-        z-index: 10050;
-        left: 50%;
-        top: 50%;
-        transform: translate(-50%, -50%);
-        width: min(calc((100% - 20px) * 0.9), 520px);
-        /* max-height فقط — لا height ثابت يقصّ المحتوى */
-        height: auto;
-        max-height: min(92dvh, var(--erw-viewport-h, 100dvh));
-        min-height: 0;
+      .cat-card--map-link {
         display: flex;
         flex-direction: column;
-        margin: 0;
-        padding: 0;
-        border-radius: 22px;
-        border: 1px solid rgba(212, 168, 74, 0.38);
-        box-shadow:
-          0 0 0 1px rgba(255, 255, 255, 0.07) inset,
-          0 40px 100px rgba(0, 0, 0, 0.5),
-          0 16px 40px rgba(61, 34, 19, 0.22);
-        background: linear-gradient(168deg, #fffefb 0%, #faf4eb 38%, #f3e8d8 100%);
-        overflow: hidden;
-        grid-column: unset;
-        animation: dashMapModalIn 0.36s cubic-bezier(0.22, 1, 0.36, 1);
-      }
-      body.dash-map-modal-open #dashDeliveryTitle[open] .delivery-panel--luxe {
-        flex: 1 1 auto;
-        min-height: 0;
-        display: flex;
-        flex-direction: column;
-        overflow: hidden;
-      }
-      /* ── إصلاح جذري: map-canvas داخل النافذة — لا flex-shrink ولا grid قديم ── */
-      body.dash-map-modal-open #dashDeliveryTitle[open] .map-canvas-form {
-        display: flex !important;
-        flex-direction: column !important;
-        flex: none !important;
-        min-height: auto !important;
-        height: auto !important;
-        grid-template-columns: unset !important;
-        gap: clamp(8px, 1.5vw, 12px);
-        padding-bottom: clamp(8px, 2vw, 14px);
-      }
-      body.dash-map-modal-open #dashDeliveryTitle[open] .map-canvas-grid {
-        display: grid !important;
-        flex: none !important;
-        min-height: auto !important;
-        height: auto !important;
-        align-items: start;
-      }
-      body.dash-map-modal-open #dashDeliveryTitle[open] .map-canvas-cell--map {
-        height: auto;
-        min-height: auto;
-        flex: none;
-        align-self: start;
-        overflow: visible;
-      }
-      body.dash-map-modal-open #dashDeliveryTitle[open] .map-canvas-cell--actions {
-        height: auto;
-        align-self: start;
-        overflow: visible;
-        padding-bottom: clamp(20px, 3.5vw, 28px);
-      }
-      body.dash-map-modal-open #dashDeliveryTitle[open] .map-canvas-form #pickupDropMap,
-      body.dash-map-modal-open #dashDeliveryTitle[open] .map-canvas-form #pickupDropMap.leaflet-container {
-        grid-column: unset !important;
-        grid-row: unset !important;
-        flex: none !important;
-        max-height: none !important;
-        width: 100% !important;
-        height: var(--dash-map-h, 260px) !important;
-        min-height: var(--dash-map-h, 260px) !important;
-      }
-      body.dash-map-modal-open #dashDeliveryTitle[open] .map-canvas-form #result,
-      body.dash-map-modal-open #dashDeliveryTitle[open] .map-canvas-form .map-canvas-live-link {
-        grid-column: unset !important;
-        flex-shrink: 0;
-      }
-      @keyframes dashMapModalIn {
-        from {
-          opacity: 0;
-          transform: translate(-50%, -48%);
-        }
-        to {
-          opacity: 1;
-          transform: translate(-50%, -50%);
-        }
-      }
-      @media (min-width: 768px) {
-        body.dash-map-modal-open #dashDeliveryTitle[open] {
-          width: min(calc((100% - 32px) * 0.94), 920px);
-          max-height: min(94dvh, 920px);
-        }
-        body.dash-map-modal-open #dashDeliveryTitle[open] .map-canvas-form #pickupDropMap,
-        body.dash-map-modal-open #dashDeliveryTitle[open] .map-canvas-form #pickupDropMap.leaflet-container {
-          height: var(--dash-map-h) !important;
-          min-height: var(--dash-map-h) !important;
-        }
-      }
-      @media (min-width: 900px) {
-        body.dash-map-modal-open #dashDeliveryTitle[open] {
-          width: min(calc((100% - 32px) * 0.94), 960px);
-        }
-      }
-      @media (max-height: 700px) {
-        body.dash-map-modal-open #dashDeliveryTitle[open] {
-          max-height: calc(var(--erw-viewport-h, 100dvh) - 16px);
-          min-height: 0;
-          top: 50%;
-        }
-        body.dash-map-modal-open #dashDeliveryTitle[open] .map-canvas-form #pickupDropMap,
-        body.dash-map-modal-open #dashDeliveryTitle[open] .map-canvas-form #pickupDropMap.leaflet-container {
-          height: 220px !important;
-          min-height: 220px !important;
-        }
-      }
-      body.dash-map-modal-open #dashDeliveryTitle[open] > .cat-card__summary {
-        display: none;
-      }
-      .cat-card--map .cat-card__summary {
+        align-items: flex-start;
+        gap: 6px;
+        text-decoration: none;
+        color: inherit;
         position: relative;
         background: linear-gradient(145deg, #fffefb 0%, #f6ede2 55%, #efe3d4 100%);
         border-radius: 14px;
       }
-      .cat-card--map .cat-card__badge {
+      .cat-card--map-link .cat-card__badge {
         display: inline-flex;
         align-items: center;
         gap: 4px;
@@ -303,899 +165,14 @@
         border-radius: 999px;
         font-size: 0.68rem;
         font-weight: 900;
-        letter-spacing: 0.02em;
         color: #fffefb;
         background: linear-gradient(135deg, #b9872f 0%, #d4a84a 100%);
-        box-shadow: 0 2px 8px rgba(185, 135, 47, 0.35);
       }
-      .delivery-panel--luxe {
-        display: flex;
-        flex-direction: column;
-        min-height: 0;
-        flex: 1;
-      }
-      .delivery-panel__header {
-        position: relative;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 12px;
-        padding: clamp(16px, 3vw, 20px) clamp(48px, 8vw, 56px) 12px;
-        background: linear-gradient(135deg, #3d2213 0%, #2b170d 72%, #1f1008 100%);
-        color: #f8f4ee;
-        flex-shrink: 0;
-        text-align: center;
-        overflow: hidden;
-      }
-      body.dash-map-modal-open .delivery-panel--luxe {
-        gap: 0;
-      }
-      body.dash-map-modal-open .cat-card--map .delivery-panel {
-        margin: 0;
-        padding: 0;
-        border-top: 0;
-      }
-      body.dash-map-modal-open .delivery-panel__header {
-        padding: clamp(18px, 3.5vw, 24px) clamp(48px, 8vw, 56px) clamp(16px, 3vw, 20px);
-        background: linear-gradient(155deg, #4a2c1a 0%, #3d2213 38%, #2b170d 72%, #181008 100%);
-        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
-      }
-      body.dash-map-modal-open .delivery-panel__header::before {
-        content: "";
-        position: absolute;
-        inset: 0;
-        background: linear-gradient(180deg, rgba(255, 255, 255, 0.1) 0%, transparent 42%);
-        pointer-events: none;
-      }
-      body.dash-map-modal-open .delivery-panel__header::after {
-        content: "";
-        position: absolute;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        height: 4px;
-        background: linear-gradient(
-          90deg,
-          rgba(212, 168, 74, 0.15) 0%,
-          #c9983a 18%,
-          #f0d78a 50%,
-          #c9983a 82%,
-          rgba(212, 168, 74, 0.15) 100%
-        );
-      }
-      .delivery-panel__brand {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 0;
-        min-width: 0;
-      }
-      .delivery-panel__icon-wrap {
-        display: none;
-      }
-      body.dash-map-modal-open .delivery-panel__brand {
-        position: relative;
-        z-index: 1;
-        gap: 6px;
-      }
-      body.dash-map-modal-open .delivery-panel__icon-wrap {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 42px;
-        height: 42px;
-        border-radius: 14px;
-        font-size: 1.25rem;
-        background: linear-gradient(145deg, rgba(212, 168, 74, 0.28) 0%, rgba(255, 255, 255, 0.08) 100%);
-        border: 1px solid rgba(240, 215, 138, 0.45);
-        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.22);
-      }
-      .delivery-panel__title {
-        margin: 0;
-        font-size: clamp(1.02rem, 2.6vw, 1.15rem);
-        font-weight: 900;
-        line-height: 1.3;
-        color: #fffefb;
-      }
-      body.dash-map-modal-open .delivery-panel__title {
-        font-size: clamp(1.06rem, 2.8vw, 1.2rem);
-        letter-spacing: 0.02em;
-        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.28);
-      }
-      .delivery-panel__subtitle {
-        margin: 4px 0 0;
-        font-size: 0.8rem;
-        font-weight: 600;
-        color: rgba(248, 244, 238, 0.78);
-        line-height: 1.45;
-      }
-      body.dash-map-modal-open .delivery-panel__subtitle {
-        margin-top: 6px;
-        font-size: clamp(0.74rem, 2vw, 0.82rem);
-        font-weight: 700;
-        color: rgba(240, 215, 138, 0.92);
-        letter-spacing: 0.01em;
-      }
-      body.dash-map-modal-open .delivery-panel__close {
-        z-index: 2;
-        border-color: rgba(240, 215, 138, 0.35);
-        background: rgba(255, 255, 255, 0.07);
-        backdrop-filter: blur(6px);
-      }
-      body.dash-map-modal-open .delivery-panel__close:hover {
-        background: rgba(255, 255, 255, 0.14);
-        border-color: rgba(240, 215, 138, 0.55);
-      }
-      .delivery-panel__close {
-        position: absolute;
-        inset-inline-start: clamp(12px, 2.5vw, 16px);
-        top: 50%;
-        transform: translateY(-50%);
-        flex-shrink: 0;
-        width: 40px;
-        height: 40px;
-        border: 1px solid rgba(255, 255, 255, 0.18);
-        border-radius: 12px;
-        background: rgba(255, 255, 255, 0.08);
-        color: #f8f4ee;
-        font-size: 1.35rem;
-        line-height: 1;
-        cursor: pointer;
-        font-family: inherit;
-        transition: background 0.15s, transform 0.12s;
-        touch-action: manipulation;
-      }
-      .delivery-panel__close:hover {
-        background: rgba(255, 255, 255, 0.16);
-      }
-      .delivery-panel__close:active {
-        transform: translateY(-50%) scale(0.94);
-      }
-      body.dash-map-modal-open #dashDeliveryTitle[open] .delivery-panel__body {
-        flex: 1 1 auto;
-        min-height: 0;
-        overflow-x: hidden;
-        overflow-y: auto;
-        overscroll-behavior: contain;
-        -webkit-overflow-scrolling: touch;
-        padding-top: clamp(12px, 2.5vw, 16px);
-        padding-bottom: clamp(16px, 3vw, 24px);
-        background: linear-gradient(180deg, #efe3d4 0%, #f6ede2 6%, #faf4eb 14%, #fffefb 100%);
-      }
-      .delivery-panel__body {
-        flex: 1 1 auto;
-        min-height: 0;
-        overflow-y: auto;
-        overflow-x: hidden;
-        -webkit-overflow-scrolling: touch;
-        padding: clamp(14px, 3vw, 18px);
-        padding-bottom: clamp(16px, 3.2vw, 22px);
-      }
-      .delivery-form--luxe {
-        gap: clamp(12px, 2.5vw, 16px);
-      }
-      .delivery-form--luxe select,
-      .delivery-form--luxe input[type="text"],
-      .delivery-form--luxe input[type="url"],
-      .delivery-form--luxe input[type="tel"],
-      .delivery-form--luxe input[type="number"] {
-        width: 100%;
-        min-height: 48px;
-        padding: 11px 14px;
-        border-radius: 12px;
-        border: 1px solid rgba(61, 34, 19, 0.14);
-        background: #fffefb;
-        font-family: inherit;
-        font-size: 0.92rem;
-        font-weight: 600;
-        color: var(--brown, #3d2213);
-        box-shadow: 0 1px 0 rgba(255, 255, 255, 0.8) inset;
-        transition: border-color 0.15s, box-shadow 0.15s;
-      }
-      .delivery-form--luxe select:focus,
-      .delivery-form--luxe input:focus {
-        outline: none;
-        border-color: rgba(185, 135, 47, 0.55);
-        box-shadow: 0 0 0 3px rgba(185, 135, 47, 0.18);
-      }
-      .delivery-section-card {
-        padding: clamp(12px, 2.5vw, 14px);
-        border-radius: 16px;
-        border: 1px solid rgba(61, 34, 19, 0.1);
-        background: rgba(255, 254, 251, 0.92);
-        box-shadow: 0 2px 12px rgba(45, 28, 14, 0.05);
-      }
-      .delivery-section-card__title {
-        margin: 0 0 10px;
-        font-size: 0.78rem;
-        font-weight: 900;
-        text-transform: uppercase;
-        letter-spacing: 0.06em;
-        color: rgba(61, 34, 19, 0.55);
-      }
-      .delivery-section-card__title--hot {
-        color: var(--brown, #3d2213);
-        font-size: 0.82rem;
-      }
-      .delivery-vehicle-pick {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 10px;
-      }
-      .delivery-vehicle-opt {
-        display: flex;
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 4px;
-        padding: 12px 14px;
-        border-radius: 14px;
-        border: 2px solid rgba(61, 34, 19, 0.12);
-        background: #fffefb;
-        font-family: inherit;
-        cursor: pointer;
-        text-align: right;
-        transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
-        touch-action: manipulation;
-      }
-      .delivery-vehicle-opt strong {
-        font-size: 0.92rem;
-        font-weight: 900;
-        color: var(--brown, #3d2213);
-      }
-      .delivery-vehicle-opt span {
-        font-size: 0.74rem;
-        font-weight: 700;
-        color: rgba(61, 34, 19, 0.62);
-        line-height: 1.35;
-      }
-      .delivery-vehicle-opt.is-active {
-        border-color: rgba(185, 135, 47, 0.65);
-        background: linear-gradient(145deg, #fffefb, #f8f0e4);
-        box-shadow: 0 4px 16px rgba(185, 135, 47, 0.2);
-      }
-      .delivery-order-clock {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        padding: 12px 14px;
-        border-radius: 14px;
-        border: 1px solid rgba(61, 34, 19, 0.1);
-        background: linear-gradient(135deg, rgba(61, 34, 19, 0.04), rgba(185, 135, 47, 0.1));
-      }
-      .delivery-order-clock__icon {
-        flex-shrink: 0;
-        width: 42px;
-        height: 42px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 12px;
-        font-size: 1.2rem;
-        background: rgba(255, 255, 255, 0.85);
-        border: 1px solid rgba(185, 135, 47, 0.25);
-      }
-      .delivery-order-clock__label {
-        display: block;
-        font-size: 0.72rem;
-        font-weight: 800;
-        color: rgba(61, 34, 19, 0.55);
-        margin-bottom: 2px;
-      }
-      .delivery-order-clock__value {
-        display: block;
-        margin: 0;
-        font-size: clamp(0.82rem, 2.2vw, 0.92rem);
-        font-weight: 800;
-        color: var(--brown, #3d2213);
-        line-height: 1.45;
-      }
-      .delivery-mode-tabs--luxe {
-        margin: 0;
-        padding: 4px;
-        border-radius: 14px;
-        background: rgba(61, 34, 19, 0.06);
-        border: 1px solid rgba(61, 34, 19, 0.08);
-      }
-      .delivery-mode-tab--luxe {
-        border-radius: 10px;
-        border: 0;
-        background: transparent;
-        box-shadow: none;
-      }
-      .delivery-mode-tab--luxe.is-active {
-        background: linear-gradient(135deg, #3d2213, #5c3d28);
-        box-shadow: 0 4px 14px rgba(45, 28, 14, 0.22);
-      }
-      .delivery-loc-label {
-        font-size: 0.8rem;
-        font-weight: 800;
-        color: rgba(61, 34, 19, 0.72);
-      }
-      .map-action-btn--luxe {
-        border-radius: 10px;
-        font-weight: 800;
-        border: 1px solid rgba(61, 34, 19, 0.12);
-        background: #fffefb;
-      }
-      .delivery-apply-links {
-        width: 100%;
-        min-height: 46px;
-        border-radius: 12px;
-        font-weight: 800;
-        border: 1px dashed rgba(185, 135, 47, 0.45);
-        background: rgba(185, 135, 47, 0.08);
-        color: var(--brown, #3d2213);
-      }
-      .delivery-stats--luxe {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 10px;
-        margin: 0;
-      }
-      @media (min-width: 560px) {
-        .delivery-stats--luxe {
-          grid-template-columns: repeat(4, minmax(0, 1fr));
-        }
-      }
-      .delivery-stat-card {
-        padding: 12px 10px;
-        border-radius: 14px;
-        text-align: center;
-        background: linear-gradient(160deg, #fffefb, #f8f0e4);
-        border: 1px solid rgba(185, 135, 47, 0.22);
-        box-shadow: 0 2px 10px rgba(45, 28, 14, 0.06);
-      }
-      .delivery-stat-card--price {
-        grid-column: 1 / -1;
-        background: linear-gradient(135deg, #3d2213 0%, #4a2d1a 100%);
-        border-color: rgba(212, 168, 74, 0.4);
-      }
-      .delivery-stat-card--price .delivery-stat-card__value {
-        color: #f5d78e;
-        font-size: clamp(1.1rem, 3vw, 1.28rem);
-      }
-      .delivery-stat-card__label {
-        display: block;
-        font-size: 0.68rem;
-        font-weight: 800;
-        color: rgba(61, 34, 19, 0.55);
-        margin-bottom: 4px;
-      }
-      .delivery-stat-card--price .delivery-stat-card__label {
-        color: rgba(248, 244, 238, 0.65);
-      }
-      .delivery-stat-card__value {
-        display: block;
-        margin: 0;
-        font-size: 0.82rem;
-        font-weight: 800;
-        color: var(--brown, #3d2213);
-        line-height: 1.35;
-      }
-      .delivery-stat-card--price .delivery-stat-card__value {
-        font-weight: 900;
-      }
-      .delivery-btn-row--luxe {
-        display: grid;
-        grid-template-columns: 1fr 1.35fr;
-        gap: 10px;
-        margin-top: 4px;
-      }
-      @media (max-width: 480px) {
-        .delivery-btn-row--luxe {
-          grid-template-columns: 1fr;
-        }
-      }
-      .delivery-btn-row--luxe .btn-calc {
-        min-height: 50px;
-        border-radius: 14px;
-        font-weight: 800;
-      }
-      .delivery-btn-row--luxe #createBtn {
-        min-height: 52px;
-        border-radius: 14px;
-        font-size: 1rem;
-        font-weight: 900;
-        box-shadow: 0 8px 24px rgba(185, 135, 47, 0.35);
-      }
-      .delivery-btn-row--luxe #createBtn:disabled {
-        box-shadow: none;
-        opacity: 0.55;
-      }
-      .delivery-result--luxe {
-        margin: 0;
-        padding: 10px 12px;
-        border-radius: 12px;
-        font-size: 0.86rem;
-        font-weight: 700;
-        text-align: center;
-        min-height: 0;
-      }
-      .delivery-result--luxe:not(:empty) {
-        background: rgba(185, 135, 47, 0.1);
-        border: 1px solid rgba(185, 135, 47, 0.22);
+      .cat-card--map-link:hover {
+        border-color: rgba(185, 135, 47, 0.45);
+        box-shadow: 0 10px 28px rgba(45, 28, 14, 0.12);
       }
 
-      /* ── Canva: شبكة 2×2 — من الخريطة ── */
-      .map-canvas-form {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-      }
-      .map-canvas-grid {
-        display: grid;
-        gap: clamp(10px, 2vw, 14px);
-        grid-template-columns: 1fr;
-        grid-auto-rows: minmax(min-content, auto);
-        align-items: stretch;
-        grid-template-areas:
-          "map"
-          "method"
-          "actions"
-          "shipment";
-      }
-      .map-canvas-route-col {
-        display: contents;
-      }
-      .map-canvas-cell--shipment { grid-area: shipment; }
-      .map-canvas-cell--method { grid-area: method; }
-      .map-canvas-cell--actions { grid-area: actions; }
-      .map-canvas-cell--map { grid-area: map; }
-      @media (min-width: 768px) {
-        :root {
-          --dash-map-h: clamp(340px, 52vh, 480px);
-        }
-        .map-canvas-grid {
-          grid-template-columns: minmax(0, 1.45fr) minmax(0, 0.55fr);
-          grid-template-areas:
-            "map method"
-            "map shipment"
-            "map actions";
-          align-items: start;
-          column-gap: clamp(12px, 2vw, 16px);
-          row-gap: clamp(10px, 1.8vw, 14px);
-        }
-        .map-canvas-cell--map {
-          align-self: stretch;
-          min-height: 100%;
-        }
-        .map-canvas-cell--map #pickupDropMap,
-        .map-canvas-cell--map #pickupDropMap.leaflet-container {
-          flex: 1 1 auto;
-          height: var(--dash-map-h) !important;
-          min-height: var(--dash-map-h) !important;
-          max-height: none !important;
-        }
-      }
-      @media (min-width: 900px) {
-        .map-canvas-grid {
-          gap: 14px;
-        }
-      }
-      .map-canvas-cell {
-        border: 1px solid rgba(61, 34, 19, 0.12);
-        border-radius: 14px;
-        background: #fffefb;
-        padding: clamp(10px, 2.2vw, 14px);
-        min-width: 0;
-      }
-      .map-canvas-cell--shipment { grid-area: shipment; }
-      .map-canvas-cell--actions { grid-area: actions; }
-      .map-canvas-cell--map {
-        padding: 8px;
-        display: flex;
-        flex-direction: column;
-        min-height: auto;
-        overflow: visible;
-        gap: clamp(8px, 1.5vw, 10px);
-      }
-      .map-canvas-cell--actions {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        padding-bottom: clamp(14px, 2.8vw, 18px);
-        overflow: visible;
-        min-height: auto;
-        box-sizing: border-box;
-      }
-      body.dash-map-modal-open #dashDeliveryTitle[open] .map-canvas-cell--actions {
-        padding-bottom: clamp(18px, 3.5vw, 24px);
-      }
-      .map-canvas-cell__title {
-        margin: 0 0 10px;
-        padding-bottom: 8px;
-        font-size: clamp(0.88rem, 2.2vw, 0.96rem);
-        font-weight: 900;
-        color: var(--brown, #3d2213);
-        border-bottom: 2px solid rgba(61, 34, 19, 0.12);
-      }
-      .map-canvas-label {
-        display: block;
-        margin: 0 0 4px;
-        font-size: 0.72rem;
-        font-weight: 800;
-        color: rgba(61, 34, 19, 0.65);
-      }
-      .map-canvas-cell select,
-      .map-canvas-cell input[type="text"],
-      .map-canvas-cell input[type="url"],
-      .map-canvas-cell input[type="tel"],
-      .map-canvas-cell input[type="number"] {
-        width: 100%;
-        min-height: 42px;
-        margin-bottom: 8px;
-        padding: 9px 12px;
-        border-radius: 10px;
-        border: 1px solid rgba(61, 34, 19, 0.14);
-        background: #fff;
-        font-family: inherit;
-        font-size: 0.88rem;
-        font-weight: 600;
-        color: var(--brown, #3d2213);
-      }
-      .map-canvas-row-2 {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 8px;
-      }
-      .map-canvas-mode-btns {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-        margin-bottom: 10px;
-      }
-      .map-canvas-mode-btn {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        width: 100%;
-        min-height: 46px;
-        padding: 10px 12px;
-        border-radius: 999px;
-        border: 2px solid rgba(26, 26, 26, 0.85);
-        background: #fff;
-        font-family: inherit;
-        font-size: 0.84rem;
-        font-weight: 800;
-        color: var(--brown, #3d2213);
-        cursor: pointer;
-        text-align: right;
-        transition: background 0.15s, border-color 0.15s, color 0.15s;
-        touch-action: manipulation;
-      }
-      .map-canvas-mode-btn__num {
-        flex-shrink: 0;
-        width: 26px;
-        height: 26px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 50%;
-        background: #1a1a1a;
-        color: #fff;
-        font-size: 0.78rem;
-        font-weight: 900;
-      }
-      .map-canvas-mode-btn.is-active {
-        border-color: transparent;
-        color: #fffefb;
-      }
-      .map-canvas-mode-btn[data-mode="map"].is-active {
-        background: linear-gradient(135deg, #c41e3a, #9b1830);
-      }
-      .map-canvas-mode-btn[data-mode="links"].is-active {
-        background: linear-gradient(135deg, #2d5a3d, #1e3d28);
-      }
-      .map-canvas-routes-link {
-        display: block;
-        width: 100%;
-        margin-top: 4px;
-        padding: 8px;
-        border: 0;
-        background: transparent;
-        font-family: inherit;
-        font-size: 0.82rem;
-        font-weight: 800;
-        color: #c41e3a;
-        cursor: pointer;
-        text-align: center;
-        text-decoration: underline;
-      }
-      .map-canvas-cell--map #pickupDropMap {
-        flex: none;
-        width: 100%;
-        height: 260px;
-        min-height: 260px;
-        border-radius: 10px;
-        border: 1px solid rgba(61, 34, 19, 0.1);
-        overflow: hidden;
-      }
-      .map-canvas-cell--map #pickupDropMap.leaflet-container {
-        flex: none;
-        width: 100% !important;
-        height: 260px !important;
-        min-height: 260px;
-      }
-      body.dash-map-modal-open .map-canvas-cell--map #pickupDropMap,
-      body.dash-map-modal-open .map-canvas-cell--map #pickupDropMap.leaflet-container {
-        min-height: 260px;
-        max-height: none;
-        box-shadow: none;
-      }
-      .map-canvas-route-panel[hidden] {
-        display: none !important;
-      }
-      .map-canvas-route-panel:not([hidden]) {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        flex: 0 1 auto;
-      }
-      .map-canvas-grid[data-route-mode="map"] .map-canvas-loc-box--pickup {
-        background: rgba(120, 120, 120, 0.07);
-        border-color: rgba(100, 100, 100, 0.35);
-      }
-      .map-canvas-grid[data-route-mode="map"] .map-canvas-loc-box--drop {
-        background: rgba(196, 30, 58, 0.06);
-        border-color: rgba(196, 30, 58, 0.35);
-      }
-      .map-canvas-grid[data-route-mode="map"] .map-canvas-coord-input {
-        position: absolute;
-        width: 1px;
-        height: 1px;
-        padding: 0;
-        margin: -1px;
-        overflow: hidden;
-        clip: rect(0, 0, 0, 0);
-        white-space: nowrap;
-        border: 0;
-      }
-      .map-canvas-grid[data-route-mode="links"] .map-canvas-loc-box--pickup {
-        background: rgba(45, 90, 61, 0.08);
-        border-color: rgba(45, 90, 61, 0.4);
-      }
-      .map-canvas-grid[data-route-mode="links"] .map-canvas-loc-box--drop {
-        background: rgba(196, 30, 58, 0.06);
-        border-color: rgba(196, 30, 58, 0.4);
-      }
-      .map-canvas-grid[data-route-mode="links"] .map-canvas-map-only {
-        display: none !important;
-      }
-      .map-canvas-grid[data-route-mode="map"] .map-canvas-links-only {
-        display: none !important;
-      }
-      .map-canvas-grid[data-route-mode="map"] .map-canvas-apply-btn,
-      .map-canvas-grid[data-route-mode="map"] .map-canvas-links-apply,
-      .map-canvas-grid[data-route-mode="map"] #deliveryModeLinks {
-        display: none !important;
-      }
-      .map-canvas-grid[data-route-mode="links"] .map-canvas-apply-btn,
-      .map-canvas-grid[data-route-mode="links"] .map-canvas-links-apply {
-        display: block;
-        background: linear-gradient(135deg, #e8e0d4, #d4c4a8);
-      }
-      .map-canvas-grid[data-route-mode="links"] .map-canvas-cell--actions {
-        display: none;
-      }
-      .map-canvas-route-panel--inline {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-        margin: 2px 0 4px;
-      }
-      .map-canvas-route-panel--inline[hidden] {
-        display: none !important;
-      }
-      .map-canvas-loc-box {
-        padding: 10px 12px;
-        border-radius: 10px;
-        border: 2px solid rgba(61, 34, 19, 0.12);
-      }
-      .map-canvas-loc-box--pickup {
-        background: rgba(45, 90, 61, 0.08);
-        border-color: rgba(45, 90, 61, 0.35);
-      }
-      .map-canvas-loc-box--drop {
-        background: rgba(196, 30, 58, 0.06);
-        border-color: rgba(196, 30, 58, 0.35);
-      }
-      .map-canvas-loc-box__title {
-        margin: 0 0 6px;
-        font-size: 0.82rem;
-        font-weight: 900;
-        color: var(--brown, #3d2213);
-      }
-      .map-canvas-loc-box__hint {
-        margin: 0 0 8px;
-        font-size: 0.72rem;
-        font-weight: 600;
-        color: rgba(61, 34, 19, 0.6);
-        line-height: 1.4;
-      }
-      .map-canvas-loc-box input {
-        margin-bottom: 8px !important;
-      }
-      .map-canvas-loc-box__actions {
-        display: flex;
-        gap: 8px;
-      }
-      .map-canvas-mini-btn {
-        flex: 1;
-        min-height: 38px;
-        border-radius: 8px;
-        border: 1px solid rgba(61, 34, 19, 0.2);
-        background: #fff;
-        font-family: inherit;
-        font-size: 0.82rem;
-        font-weight: 800;
-        cursor: pointer;
-      }
-      .map-canvas-mini-btn--ghost {
-        background: rgba(255, 255, 255, 0.7);
-      }
-      .map-canvas-map-btn {
-        width: 100%;
-        min-height: 40px;
-        border-radius: 8px;
-        border: 2px solid;
-        background: #fff;
-        font-family: inherit;
-        font-size: 0.86rem;
-        font-weight: 900;
-        cursor: pointer;
-      }
-      .map-canvas-map-btn--pickup {
-        border-color: rgba(45, 90, 61, 0.5);
-        color: #2d5a3d;
-      }
-      .map-canvas-map-btn--drop {
-        border-color: rgba(196, 30, 58, 0.45);
-        color: #9b1830;
-      }
-      .map-canvas-map-btn.is-active {
-        background: linear-gradient(135deg, #3d2213, #5c3d28);
-        color: #fffefb;
-        border-color: transparent;
-      }
-      .map-canvas-phone-row input {
-        margin-bottom: 0 !important;
-        text-align: center;
-        font-weight: 800;
-        font-size: 0.82rem;
-      }
-      .map-canvas-apply-btn {
-        width: 100%;
-        min-height: 48px;
-        padding: 10px 12px;
-        margin-top: 4px;
-        border: 0;
-        border-radius: 10px;
-        background: linear-gradient(135deg, #d8e8d0, #c5d4bc);
-        font-family: inherit;
-        font-size: 0.82rem;
-        font-weight: 900;
-        color: var(--brown, #3d2213);
-        cursor: pointer;
-        line-height: 1.35;
-        flex-shrink: 0;
-        box-shadow: 0 3px 12px rgba(45, 26, 14, 0.08);
-      }
-      .map-canvas-apply-btn:disabled {
-        opacity: 0.65;
-        cursor: wait;
-      }
-      .map-canvas-footer {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 8px;
-        margin-top: auto;
-        margin-bottom: 0;
-        flex-shrink: 0;
-        width: 100%;
-        position: sticky;
-        bottom: 0;
-        z-index: 2;
-        background: linear-gradient(180deg, rgba(255, 254, 251, 0.92) 0%, #fffefb 40%);
-        padding-top: 8px;
-      }
-      .map-canvas-cell--map .map-canvas-footer {
-        padding-top: 2px;
-      }
-      body.dash-map-modal-open #dashDeliveryTitle[open] .map-canvas-form {
-        gap: clamp(6px, 1.2vw, 8px);
-        padding-bottom: clamp(6px, 1.5vw, 10px);
-      }
-      body.dash-map-modal-open #dashDeliveryTitle[open] .map-canvas-result {
-        margin: clamp(6px, 1.2vw, 8px) 0 0;
-      }
-      body.dash-map-modal-open #dashDeliveryTitle[open] .map-canvas-live-link {
-        margin: clamp(4px, 1vw, 6px) 0 0;
-      }
-      .map-canvas-price-box {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        min-height: 52px;
-        padding: 8px;
-        border-radius: 10px;
-        background: linear-gradient(135deg, #e8dcc8, #d4c4a8);
-        border: 1px solid rgba(185, 135, 47, 0.35);
-        text-align: center;
-      }
-      .map-canvas-price-box__label {
-        font-size: 0.72rem;
-        font-weight: 800;
-        color: rgba(61, 34, 19, 0.65);
-      }
-      .map-canvas-price-box__val {
-        font-size: clamp(1rem, 2.8vw, 1.15rem);
-        font-weight: 900;
-        color: var(--brown, #3d2213);
-        line-height: 1.2;
-      }
-      .map-canvas-price-box__dist {
-        font-size: 0.68rem;
-        font-weight: 700;
-        color: rgba(61, 34, 19, 0.55);
-        margin-top: 2px;
-      }
-      .map-canvas-cart-btn {
-        min-height: 52px;
-        border: 0;
-        border-radius: 10px;
-        background: linear-gradient(135deg, #c4b498, #a89878);
-        font-family: inherit;
-        font-size: 0.88rem;
-        font-weight: 900;
-        color: #fff;
-        cursor: pointer;
-        transition: opacity 0.15s, transform 0.12s;
-      }
-      .map-canvas-cart-btn:not(:disabled) {
-        background: linear-gradient(135deg, #3d2213, #5c3d28);
-        box-shadow: 0 6px 18px rgba(61, 34, 19, 0.25);
-      }
-      .map-canvas-cart-btn:disabled {
-        opacity: 0.55;
-        cursor: not-allowed;
-      }
-      .map-canvas-live-link {
-        margin: 0;
-        text-align: center;
-      }
-      .map-canvas-result {
-        margin: 0;
-      }
-      @media (max-width: 420px) {
-        .map-canvas-row-2 {
-          grid-template-columns: 1fr;
-        }
-        .map-canvas-footer {
-          grid-template-columns: 1fr;
-        }
-        .map-canvas-mode-btn {
-          min-height: 48px;
-        }
-      }
-      @media (min-width: 640px) {
-        .map-canvas-cell--map,
-        .map-canvas-cell--actions {
-          min-height: auto;
-        }
-      }
-      .map-canvas-form #pickupDropMap {
-        max-height: none !important;
-      }
-      body.dash-map-modal-open .cat-card--map[open] .delivery-form.map-canvas-form {
-        display: flex !important;
-        flex-direction: column !important;
-      }
-
-      #pickupDropMap.map-selecting {
-        outline: 3px solid rgba(185, 135, 47, 0.55);
-        outline-offset: 2px;
-      }
       .delivery-dropdown {
         border: 1px solid rgba(0, 0, 0, 0.08);
         border-radius: 12px;
@@ -1230,19 +207,15 @@
       .app-tile.is-active strong {
         color: #f8f4ee;
       }
-      .delivery-dropdown .delivery-panel {
         padding: 0 12px 12px;
       }
-      .delivery-dropdown[open] .delivery-panel {
         padding: 8px 14px 14px;
       }
-      #pickupDropMap {
         min-height: 260px;
         border-radius: 12px;
         border: 1px solid rgba(0, 0, 0, 0.12);
         overflow: hidden;
       }
-      #pickupDropMap.map-selecting {
         box-shadow: 0 0 0 3px rgba(185, 135, 47, 0.35);
       }
       .map-action-btn.is-active {
@@ -1250,7 +223,6 @@
         color: #f8f4ee;
         border-color: rgba(185, 135, 47, 0.45);
       }
-      .delivery-dropdown[open] #pickupDropMap {
         min-height: 360px;
       }
 
@@ -1465,59 +437,6 @@
           max-height: min(65vh, 480px);
         }
       }
-      .dash-hero__grid {
-        display: grid;
-        grid-template-columns: 1fr minmax(160px, 36%);
-        gap: clamp(14px, 3vw, 24px);
-        align-items: center;
-      }
-      @media (max-width: 720px) {
-        .dash-hero__grid {
-          grid-template-columns: 1fr;
-          gap: 16px;
-        }
-      }
-      @media (min-width: 721px) and (max-width: 900px) {
-        .dash-hero__grid {
-          grid-template-columns: 1fr minmax(150px, 34%);
-        }
-      }
-      .dash-hero__title {
-        margin: 0 0 10px;
-        font-size: clamp(1.25rem, 4vw, 1.75rem);
-        font-weight: 800;
-        color: var(--brown, #3d2213);
-        line-height: 1.25;
-      }
-      .dash-hero__lead {
-        margin: 0;
-        font-size: clamp(0.92rem, 2.4vw, 1.02rem);
-        line-height: 1.65;
-        color: rgba(45, 30, 20, 0.88);
-      }
-      .dash-hero__art {
-        border-radius: 14px;
-        overflow: hidden;
-        box-shadow: 0 10px 32px rgba(45, 28, 14, 0.12);
-        aspect-ratio: 16 / 10;
-        max-height: clamp(160px, 32vw, 280px);
-        width: 100%;
-        max-width: 520px;
-        margin-inline: auto;
-      }
-      @media (min-width: 721px) {
-        .dash-hero__art {
-          margin-inline: 0;
-          max-width: none;
-        }
-      }
-      .dash-hero__art img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        display: block;
-      }
-
       .horiz-scroll-wrap {
         margin-top: 10px;
         margin-inline: calc(-1 * clamp(6px, 2vw, 12px));
@@ -1645,18 +564,15 @@
         color: rgba(45, 30, 20, 0.72);
         line-height: 1.35;
       }
-      .cat-card--map {
         padding: 0;
         min-height: 100px;
       }
-      .cat-card--map[open] {
         grid-column: 1 / -1;
         width: 100%;
         max-width: 100%;
         border-color: rgba(185, 135, 47, 0.42);
         box-shadow: 0 10px 28px rgba(45, 28, 14, 0.1);
       }
-      body.dash-map-modal-open #dashDeliveryTitle[open] {
         grid-column: unset;
         width: min(calc((100% - 20px) * 0.9), 520px);
         max-width: none;
@@ -1666,7 +582,6 @@
           0 16px 40px rgba(61, 34, 19, 0.22);
       }
       @media (min-width: 900px) {
-        body.dash-map-modal-open #dashDeliveryTitle[open] {
           width: min(calc((100% - 32px) * 0.9), 728px);
         }
       }
@@ -1682,53 +597,42 @@
       .cat-card__summary::-webkit-details-marker {
         display: none;
       }
-      .cat-card--map[open] > .cat-card__summary {
         background: linear-gradient(180deg, #3d2213 0%, #2b170d 100%);
         color: #f8f4ee;
         border-bottom: 1px solid rgba(185, 135, 47, 0.28);
       }
-      .cat-card--map[open] > .cat-card__summary strong,
-      .cat-card--map[open] > .cat-card__summary span {
         color: #f8f4ee;
       }
-      .cat-card--map .delivery-panel {
         margin: 0;
         padding: clamp(12px, 2.5vw, 16px);
         border-top: 1px solid rgba(61, 34, 19, 0.08);
       }
-      .cat-card--map .delivery-panel__title {
         margin: 0 0 10px;
         font-size: clamp(1rem, 2.4vw, 1.12rem);
         font-weight: 800;
         color: var(--brown, #3d2213);
       }
-      .cat-card--map[open] .delivery-form:not(.map-canvas-form) {
         display: grid;
         gap: clamp(10px, 2vw, 14px);
         width: 100%;
         max-width: 100%;
       }
-      .cat-card--map[open] .delivery-form:not(.map-canvas-form) > select {
         grid-column: 1 / -1;
         width: 100%;
       }
-      .cat-card--map[open] .delivery-locs {
         grid-column: 1 / -1;
       }
-      .cat-card--map[open] .delivery-form:not(.map-canvas-form) #pickupDropMap {
         grid-column: 1 / -1;
         width: 100%;
         min-height: clamp(200px, 34vw, 280px);
         max-height: 320px;
       }
-      .cat-card--map[open] .map-canvas-form #pickupDropMap {
         grid-column: unset;
         max-height: none !important;
         width: 100%;
         height: 260px;
         min-height: 260px;
       }
-      .cat-card--map[open] .btn-row {
         grid-column: 1 / -1;
         display: flex;
         flex-wrap: wrap;
@@ -1736,37 +640,29 @@
         flex-direction: row;
         align-items: stretch;
       }
-      .cat-card--map[open] .btn-row .btn {
         flex: 1 1 140px;
         min-width: 0;
         width: auto;
       }
-      .cat-card--map[open] .delivery-stats {
         grid-column: 1 / -1;
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 8px 12px;
       }
-      .cat-card--map[open] .delivery-stats .sub {
         font-size: 0.84rem;
       }
-      .cat-card--map[open] .delivery-form:not(.map-canvas-form) #result {
         grid-column: 1 / -1;
       }
       @media (min-width: 768px) {
-        .cat-card--map[open] .delivery-form:not(.map-canvas-form) {
           grid-template-columns: minmax(0, 1fr) minmax(280px, 1.15fr);
           align-items: start;
         }
-        .cat-card--map[open] .delivery-form:not(.map-canvas-form) > select {
           grid-row: 1;
         }
-        .cat-card--map[open] .delivery-locs {
           grid-column: 1;
           grid-row: 2;
           align-self: start;
         }
-        .cat-card--map[open] .delivery-form:not(.map-canvas-form) #pickupDropMap {
           grid-column: 2;
           grid-row: 2 / span 2;
           min-height: 280px;
@@ -1774,17 +670,14 @@
           height: 100%;
           align-self: stretch;
         }
-        .cat-card--map[open] .btn-row {
           grid-column: 1;
           grid-row: 3;
           align-self: end;
         }
-        .cat-card--map[open] .delivery-stats {
           grid-column: 1 / -1;
           grid-row: 4;
           grid-template-columns: repeat(4, minmax(0, 1fr));
         }
-        .cat-card--map[open] #result:not(.map-canvas-result) {
           grid-column: 1 / -1;
           grid-row: 5;
         }
@@ -1853,10 +746,6 @@
       .dash-map-quick .btn-row .btn {
         min-height: 48px;
         font-size: 1rem;
-      }
-      .dash-hero.card {
-        background: linear-gradient(135deg, #fffefb 0%, #f5ede2 55%, #f8f4ee 100%);
-        border-color: rgba(61, 34, 19, 0.1);
       }
       .guest-offers-carousel {
         margin-bottom: 14px;
@@ -2124,15 +1013,6 @@
         font-size: 0.88rem;
       }
       @media (max-width: 767px) {
-        .dash-hero__grid {
-          text-align: center;
-        }
-        .dash-hero__title {
-          font-size: clamp(1.15rem, 5vw, 1.45rem);
-        }
-        .dash-hero__art {
-          max-height: min(42vw, 200px);
-        }
         .dash-tabs__nav button {
           min-height: 44px;
           font-size: 0.84rem;
@@ -2153,22 +1033,17 @@
           padding: 8px 6px;
           min-height: 44px;
         }
-        .cat-card--map[open] .map-canvas-form #pickupDropMap {
           max-height: none !important;
           min-height: 260px;
           height: 260px;
         }
-        .cat-card--map[open] .map-canvas-form #result {
           grid-column: unset;
           grid-row: unset;
         }
-        .cat-card--map[open] .delivery-stats {
           grid-template-columns: 1fr;
         }
-        .cat-card--map[open] .btn-row {
           flex-direction: column;
         }
-        .cat-card--map[open] .btn-row .btn {
           width: 100%;
         }
       }
@@ -2185,9 +1060,6 @@
         }
         .cat-grid {
           grid-template-columns: repeat(3, minmax(0, 1fr));
-        }
-        .dash-hero__grid {
-          grid-template-columns: 1.1fr 0.9fr;
         }
         .dash-tabs__nav button {
           min-height: 42px;
@@ -2208,42 +1080,32 @@
 
       /* ── من الخريطة — جوال: مرونة، ظهور كامل، شريط سفلي ثابت ── */
       :root {
-        --dash-map-h: 260px;
       }
-      .map-canvas-fold__summary {
         list-style: none;
         cursor: pointer;
       }
-      .map-canvas-fold__summary::-webkit-details-marker {
         display: none;
       }
-      .map-canvas-fold__summary::after {
         content: "▾";
         float: inline-start;
         font-size: 0.85rem;
         opacity: 0.55;
         transition: transform 0.2s ease;
       }
-      .map-canvas-fold:not([open]) .map-canvas-fold__summary::after {
         transform: rotate(-90deg);
       }
-      .map-canvas-fold__content {
         padding-top: 2px;
       }
       @media (min-width: 768px) {
-        .map-canvas-fold--shipment .map-canvas-fold__summary {
           pointer-events: none;
           cursor: default;
         }
-        .map-canvas-fold--shipment .map-canvas-fold__summary::after {
           display: none;
         }
       }
       @media (max-width: 767px) {
         :root {
-          --dash-map-h: clamp(210px, 40dvh, 300px);
         }
-        body.dash-map-modal-open #dashDeliveryTitle[open] {
           left: 0;
           top: 0;
           transform: none;
@@ -2255,29 +1117,22 @@
           border-radius: 0;
           padding-top: 0;
         }
-        body.dash-map-modal-open #dashDeliveryTitle[open] > .delivery-panel--luxe {
           flex: 1 1 auto;
           min-height: 0;
           width: 100%;
         }
-        body.dash-map-modal-open .delivery-panel__subtitle {
           display: none;
         }
-        body.dash-map-modal-open .delivery-panel__header {
           padding: max(10px, env(safe-area-inset-top, 0px)) clamp(44px, 12vw, 52px) 8px 14px;
           flex-shrink: 0;
         }
-        body.dash-map-modal-open .delivery-panel__title {
           font-size: clamp(0.92rem, 4.2vw, 1.05rem);
         }
-        body.dash-map-modal-open #dashDeliveryTitle[open] .delivery-panel__body {
           padding-top: 8px;
           padding-inline: max(10px, env(safe-area-inset-left, 10px)) max(10px, env(safe-area-inset-right, 10px));
           padding-bottom: max(12px, var(--erw-safe-bottom, 12px));
           scroll-padding-bottom: 16px;
         }
-        body.dash-map-modal-open #dashDeliveryTitle[open] .map-canvas-grid,
-        .cat-card--map[open] .map-canvas-grid {
           grid-template-areas:
             "map"
             "method"
@@ -2285,47 +1140,28 @@
             "shipment";
           gap: 10px;
         }
-        body.dash-map-modal-open #dashDeliveryTitle[open] .map-canvas-grid[data-route-mode="links"],
-        .cat-card--map[open] .map-canvas-grid[data-route-mode="links"] {
-          --dash-map-h: clamp(128px, 20dvh, 160px);
           grid-template-areas:
             "method"
             "map"
             "shipment";
         }
-        .map-canvas-grid[data-route-mode="links"] .map-canvas-routes-link {
           display: none;
         }
-        .map-canvas-grid[data-route-mode="links"] .map-canvas-phone-row {
           margin-top: 2px;
         }
-        .map-canvas-grid[data-route-mode="links"] .map-canvas-route-panel--inline {
           gap: 6px;
           margin: 0 0 2px;
         }
-        .map-canvas-grid[data-route-mode="links"] .map-canvas-cell--method {
           padding: 10px 12px;
         }
-        .map-canvas-grid[data-route-mode="links"] .map-canvas-mode-btns {
           margin-bottom: 6px;
         }
-        body.dash-map-modal-open .map-canvas-cell,
-        .cat-card--map[open] .map-canvas-cell {
           border-radius: 16px;
           box-shadow: 0 6px 22px rgba(45, 28, 14, 0.09);
           border-color: rgba(185, 135, 47, 0.22);
         }
-        .map-canvas-cell--map #pickupDropMap,
-        .map-canvas-cell--map #pickupDropMap.leaflet-container,
-        body.dash-map-modal-open #dashDeliveryTitle[open] .map-canvas-form #pickupDropMap,
-        body.dash-map-modal-open #dashDeliveryTitle[open] .map-canvas-form #pickupDropMap.leaflet-container,
-        .cat-card--map[open] .map-canvas-form #pickupDropMap {
-          height: var(--dash-map-h) !important;
-          min-height: var(--dash-map-h) !important;
-          max-height: var(--dash-map-h) !important;
           flex-shrink: 0;
         }
-        body.dash-map-modal-open #dashDeliveryTitle[open] .map-canvas-footer {
           position: sticky;
           left: auto;
           right: auto;
@@ -2339,19 +1175,15 @@
           grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
           gap: 10px;
         }
-        body.dash-map-modal-open #dashDeliveryTitle[open] .map-canvas-price-box {
           min-height: 48px;
           padding: 6px 8px;
         }
-        body.dash-map-modal-open #dashDeliveryTitle[open] .map-canvas-cart-btn {
           min-height: 48px;
           font-size: 0.9rem;
         }
-        .map-canvas-apply-btn {
           min-height: 50px;
           font-size: 0.9rem;
         }
-        .map-canvas-loc-box {
           padding: 12px;
           border-radius: 14px;
         }
@@ -2389,13 +1221,11 @@
             <span class="dash-header-cart__badge" id="cartCount" data-empty="true">0</span>
           </a>
         </div>
-        <a class="dash-site-header__btn dash-site-header__btn--primary" href="/login?role=customer" id="switchAccount">تسجيل الدخول</a>
+        <a class="dash-site-header__btn dash-site-header__btn--primary switch-account--nav-only" href="/login?role=customer" id="switchAccount">تسجيل الدخول</a>
       </div>
     </header>
 
-    <div id="dashMapBackdrop" class="dash-map-backdrop" hidden aria-hidden="true"></div>
-
-    <div class="dash-main">
+        <div class="dash-main">
     <div class="layout">
       <div class="dash-alert dash-alert--guest" id="dashStatus" style="display: none" role="status" aria-live="polite"></div>
 
@@ -2410,27 +1240,6 @@
       </div>
 
       <main id="dashMain">
-      <section class="card dash-hero" aria-labelledby="dashHeroTitle">
-        <div class="dash-hero__grid">
-          <div>
-            <h2 class="dash-hero__title" id="dashHeroTitle">أهلاً بكم في منصة ارفينو</h2>
-            <p class="dash-hero__lead">
-              تصفّح الأقسام من التبويبات أدناه، أو أنشئ طلب توصيل مباشرة من الخريطة داخل «تفاصيل سريعة».
-            </p>
-          </div>
-          <div class="dash-hero__art">
-            <img
-              src="https://images.unsplash.com/photo-1526367790999-0150786686a2?auto=format&fit=crop&w=800&q=80"
-              alt="تسوق وتوصيل"
-              width="400"
-              height="250"
-              loading="lazy"
-              decoding="async"
-            />
-          </div>
-        </div>
-      </section>
-
       <section class="card guest-offers-carousel" id="guestOffersCarousel" hidden aria-label="عروض المنصة"></section>
 
       <section class="card dash-tabs-card" aria-labelledby="dashTabsTitle">
@@ -2506,148 +1315,12 @@
               <a class="cat-card" href="/delivery-services.html?service=local_delivery"><span class="cat-card__icon" aria-hidden="true">📦</span><strong>توصيل داخلي</strong><span>داخل الأحياء.</span></a>
               <a class="cat-card" href="/delivery-services.html?service=furniture"><span class="cat-card__icon" aria-hidden="true">🛋️</span><strong>نقل أثاث</strong><span>جدولة مرنة.</span></a>
               <a class="cat-card" href="/delivery-services.html?service=gas_delivery"><span class="cat-card__icon" aria-hidden="true">🔥</span><strong>توصيل غاز</strong><span>عند الطلب.</span></a>
-              <details class="cat-card cat-card--map" id="dashDeliveryTitle">
-                <summary class="cat-card__summary" id="tileDelivery" data-service="delivery">
-                  <span class="cat-card__icon" aria-hidden="true">🗺️</span>
-                  <strong>من الخريطة</strong>
-                  <span class="cat-card__badge" aria-hidden="true">⚡ فوري</span>
-                  <span>احسب المسافة وأضف للسلة في دقائق.</span>
-                </summary>
-                <div class="delivery-panel delivery-panel--luxe" role="dialog" aria-modal="true" aria-labelledby="dashMapDialogTitle">
-                  <header class="delivery-panel__header">
-                    <div class="delivery-panel__brand">
-                      <span class="delivery-panel__icon-wrap" aria-hidden="true">🗺️</span>
-                      <div>
-                        <h2 class="delivery-panel__title" id="dashMapDialogTitle">طلب توصيل من الخريطة</h2>
-                        <p class="delivery-panel__subtitle">حدّد المسار - راجع السعر - و أكمل الطلب</p>
-                      </div>
-                    </div>
-                    <button type="button" class="delivery-panel__close" id="dashMapCloseBtn" aria-label="إغلاق">×</button>
-                  </header>
-                  <div class="delivery-panel__body">
-                  <div class="delivery-form delivery-form--luxe map-canvas-form">
-                    <div class="map-canvas-grid" data-route-mode="map">
-                      <section class="map-canvas-cell map-canvas-cell--shipment">
-                        <details class="map-canvas-fold map-canvas-fold--shipment">
-                        <summary class="map-canvas-cell__title map-canvas-fold__summary">تفاصيل الشحنة</summary>
-                        <div class="map-canvas-fold__content">
-                        <label class="map-canvas-label" for="vehicleType">نوع المركبة</label>
-                        <select id="vehicleType" onchange="recalculatePricePreview()">
-                          <option value="bike">دراجة نارية (0 - 7 كم = 15 ريال)</option>
-                          <option value="car" selected>سيارة (0 - 7 كم = 22 ريال)</option>
-                        </select>
-                        <label class="map-canvas-label" for="mapDriverVisibility">حدد ظهور طلبك للمناديب</label>
-                        <select id="mapDriverVisibility">
-                          <option value="now" selected>فوري — يظهر للمناديب الآن</option>
-                          <option value="scheduled">مجدول (قريباً)</option>
-                        </select>
-                        <div class="map-canvas-row-2">
-                          <div>
-                            <label class="map-canvas-label" for="mapProductType">نوع المحتوى</label>
-                            <select id="mapProductType">
-                              <option value="clothes">ملابس</option>
-                              <option value="bag">شنطة / حقيبة</option>
-                              <option value="groceries">مواد غذائية</option>
-                              <option value="kitchenware">أواني</option>
-                              <option value="documents">مستندات</option>
-                              <option value="electronics">إلكترونيات</option>
-                              <option value="other">أخرى</option>
-                            </select>
-                          </div>
-                          <div>
-                            <label class="map-canvas-label" for="mapProductQty">العدد</label>
-                            <input id="mapProductQty" type="number" min="1" max="99" value="1" inputmode="numeric" />
-                          </div>
-                        </div>
-                        <label class="map-canvas-label" for="mapProductNote">تفاصيل إضافية (اختياري)</label>
-                        <input id="mapProductNote" type="text" maxlength="120" placeholder="مثال: صندوق أواني زجاجية" />
-                        </div>
-                        </details>
-                      </section>
-
-                      <div class="map-canvas-route-col">
-                      <section class="map-canvas-cell map-canvas-cell--method">
-                        <h3 class="map-canvas-cell__title">تحديد المسار عن طريق</h3>
-                        <div class="map-canvas-mode-btns" role="tablist" aria-label="طريقة تحديد المواقع">
-                          <button type="button" class="map-canvas-mode-btn is-active" id="tabModeMap" data-mode="map" onclick="setDeliveryMode('map')">
-                            <span class="map-canvas-mode-btn__num" aria-hidden="true">1</span>
-                            <span class="map-canvas-mode-btn__text">الخريطة ( انقر هنا )</span>
-                          </button>
-                          <button type="button" class="map-canvas-mode-btn" id="tabModeLinks" data-mode="links" onclick="setDeliveryMode('links')">
-                            <span class="map-canvas-mode-btn__num" aria-hidden="true">2</span>
-                            <span class="map-canvas-mode-btn__text">روابط الموقع ( انقر هنا )</span>
-                          </button>
-                        </div>
-                        <div id="deliveryModeLinks" class="map-canvas-route-panel map-canvas-route-panel--inline" hidden>
-                          <div class="map-canvas-loc-box map-canvas-loc-box--pickup">
-                            <p class="map-canvas-loc-box__title">من الاستلام</p>
-                            <input id="fromLink" type="url" inputmode="url" placeholder="الصق رابط موقع الاستلام هنا" oninput="handleLocationInputChange()" />
-                          </div>
-                          <div class="map-canvas-loc-box map-canvas-loc-box--drop">
-                            <p class="map-canvas-loc-box__title">إلى التسليم</p>
-                            <input id="toLink" type="url" inputmode="url" placeholder="الصق رابط موقع التسليم هنا" oninput="handleLocationInputChange()" />
-                          </div>
-                          <button
-                            type="button"
-                            class="map-canvas-apply-btn map-canvas-links-apply"
-                            id="btnApplyMapRoute"
-                            onclick="applyMapRoute()"
-                          >
-                            انقر هنا لتطبيق الروابط و رسم المسار
-                          </button>
-                        </div>
-                        <div class="map-canvas-row-2 map-canvas-phone-row">
-                          <input id="mapSenderPhone" type="tel" inputmode="numeric" maxlength="10" placeholder="جوال المرسل" aria-label="جوال المرسل" oninput="syncMapCustomerPhone()" />
-                          <input id="mapRecipientPhone" type="tel" inputmode="numeric" maxlength="10" placeholder="جوال المرسل إليه" aria-label="جوال المرسل إليه" />
-                        </div>
-                        <button type="button" class="map-canvas-routes-link" onclick="scrollToMapRoutes()">مسارات الشحنة</button>
-                      </section>
-
-                      <section class="map-canvas-cell map-canvas-cell--map">
-                        <div id="pickupDropMap" aria-label="خريطة المسار"></div>
-                        <div class="map-canvas-footer">
-                          <div class="map-canvas-price-box" aria-live="polite">
-                            <span class="map-canvas-price-box__label">السعر</span>
-                            <strong class="map-canvas-price-box__val" id="price">—</strong>
-                            <span class="map-canvas-price-box__dist" id="distance">—</span>
-                          </div>
-                          <button id="createBtn" class="map-canvas-cart-btn" type="button" onclick="createOrder()" disabled>أضف إلى السلة</button>
-                        </div>
-                      </section>
-                      </div>
-
-                      <section class="map-canvas-cell map-canvas-cell--actions map-canvas-actions" id="mapCanvasActions" data-route-mode="map">
-                        <div id="deliveryModeMap" class="map-canvas-route-panel">
-                          <div class="map-canvas-loc-box map-canvas-loc-box--pickup">
-                            <p class="map-canvas-loc-box__title">من الاستلام</p>
-                            <p class="map-canvas-loc-box__hint map-canvas-map-only">فعل زر خريطة واختر منها نقطة الإرسال</p>
-                            <input id="from" class="map-canvas-coord-input" type="text" autocomplete="street-address" placeholder="عنوان أو lat,lng" tabindex="-1" aria-hidden="true" oninput="handleLocationInputChange()" />
-                            <div class="map-canvas-loc-box__actions map-canvas-map-only">
-                              <button type="button" class="map-canvas-map-btn map-canvas-map-btn--pickup" id="btnSelectFrom" onclick="selectMode('from')">خريطة</button>
-                            </div>
-                          </div>
-                          <div class="map-canvas-loc-box map-canvas-loc-box--drop">
-                            <p class="map-canvas-loc-box__title">إلى التسليم</p>
-                            <p class="map-canvas-loc-box__hint map-canvas-map-only">فعل زر خريطة واختر منها نقطة الاستقبال</p>
-                            <input id="to" class="map-canvas-coord-input" type="text" autocomplete="street-address" placeholder="عنوان أو lat,lng" tabindex="-1" aria-hidden="true" oninput="handleLocationInputChange()" />
-                            <div class="map-canvas-loc-box__actions map-canvas-map-only">
-                              <button type="button" class="map-canvas-map-btn map-canvas-map-btn--drop" id="btnSelectTo" onclick="selectMode('to')">خريطة</button>
-                            </div>
-                          </div>
-                        </div>
-                        <p id="platformFeeLine" hidden aria-hidden="true">—</p>
-                        <p id="driverNetLine" hidden aria-hidden="true">—</p>
-                      </section>
-                    </div>
-                    <p id="liveMapLine" class="map-canvas-live-link" hidden>
-                      <a id="liveMapPreview" class="delivery-live-map-link" href="#" target="_blank" rel="noopener noreferrer">🗺️ معاينة المسار على الخريطة</a>
-                    </p>
-                    <p id="result" class="sub delivery-result--luxe map-canvas-result"></p>
-                    <input type="hidden" id="mapCustomerPhone" value="" />
-                  </div>
-                  </div>
-                </div>
-              </details>
+                            <a class="cat-card cat-card--map-link" href="/delivery-map" data-dash-map-jump>
+                <span class="cat-card__icon" aria-hidden="true">🗺️</span>
+                <strong>من الخريطة</strong>
+                <span class="cat-card__badge" aria-hidden="true">⚡ فوري</span>
+                <span>احسب المسافة وأضف للسلة في دقائق.</span>
+              </a>
             </div>
           </div>
 
@@ -2671,7 +1344,7 @@
         <a class="dash-site-footer__link" href="/stores">متاجر</a>
         <a class="dash-site-footer__link" href="/delivery-services.html">توصيل</a>
         <a class="dash-site-footer__link" href="/services">خدمات</a>
-        <a class="dash-site-footer__link" href="/dashboard#dashDeliveryTitle">من الخريطة</a>
+        <a class="dash-site-footer__link" href="/delivery-map">من الخريطة</a>
         <a class="dash-site-footer__link" href="/start-now.html">ابدأ الآن</a>
         <a class="dash-site-footer__link" href="/">الرئيسية</a>
       </nav>
@@ -2681,8 +1354,6 @@
 
     <script src="/assets/cart.js"></script>
     <script src="/assets/service-cart.js"></script>
-    <script src="/assets/delivery-map-order.js"></script>
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="/assets/api-config.js"></script>
     <script src="/assets/api.js"></script>
     <script src="/assets/auth-account-guard.js"></script>
@@ -2718,901 +1389,6 @@
           if (key === serviceKey) tile.classList.add("is-active");
           else tile.classList.remove("is-active");
         });
-      }
-
-      var km = 0;
-      var fromLL = null;
-      var toLL = null;
-      var deliveryInputMode = "map";
-      var pickupMapsUrl = "";
-      var dropMapsUrl = "";
-      var fromDistrictLabel = "";
-      var toDistrictLabel = "";
-      var reverseGeoCache = {};
-      var selectType = null;
-      var geoCache = {};
-      var map = null;
-      var markerFrom = null;
-      var markerTo = null;
-      var markerUser = null;
-      var routeLine = null;
-      var baseTerrain = null;
-      var baseSatellite = null;
-      var clientLocation = null;
-      var selectButtons = { from: "btnSelectFrom", to: "btnSelectTo" };
-
-      function getSelectedVehicleType() {
-        var el = document.getElementById("vehicleType");
-        var v = (el && el.value) || "car";
-        return v === "bike" ? "bike" : "car";
-      }
-
-      function calcDeliveryPricing(kmValue) {
-        var kmNum = Number(kmValue) || 0;
-        var vehicleType = getSelectedVehicleType();
-        var fee = kmNum <= 7 ? (vehicleType === "bike" ? 15 : 22) : kmNum * 2.3;
-        fee = Math.round(fee * 100) / 100;
-        var platformFee = Math.round(fee * 0.15 * 100) / 100;
-        var driverNet = Math.round((fee - platformFee) * 100) / 100;
-        return { fee: fee, platformFee: platformFee, driverNet: driverNet };
-      }
-
-      function renderPricingStats(kmValue) {
-        var p = calcDeliveryPricing(kmValue);
-        var priceEl = document.getElementById("price");
-        var distEl = document.getElementById("distance");
-        if (priceEl) priceEl.innerText = p.fee.toFixed(2) + " ر.س";
-        if (distEl) distEl.innerText = Number(kmValue).toFixed(2) + " كم";
-        var pf = document.getElementById("platformFeeLine");
-        var dn = document.getElementById("driverNetLine");
-        if (pf) pf.innerText = p.platformFee.toFixed(2) + " ر.س (15%)";
-        if (dn) dn.innerText = p.driverNet.toFixed(2) + " ر.س";
-      }
-
-      function recalculatePricePreview() {
-        if (km > 0) renderPricingStats(km);
-      }
-
-      function initMap() {
-        if (map || typeof L === "undefined") return;
-        map = L.map("pickupDropMap").setView([24.7136, 46.6753], 11);
-        baseTerrain = L.tileLayer("https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png", {
-          attribution: "&copy; OpenStreetMap contributors, SRTM | OpenTopoMap",
-          maxZoom: 17,
-        });
-        baseSatellite = L.tileLayer(
-          "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
-          {
-            attribution: "Tiles &copy; Esri",
-            maxZoom: 19,
-          }
-        );
-        baseSatellite.addTo(map);
-        L.control.layers(
-          {
-            "أقمار صناعية": baseSatellite,
-            "تضاريس": baseTerrain,
-          },
-          null,
-          { position: "topright" }
-        ).addTo(map);
-        map.on("click", onMapClick);
-        tryInitClientLocation();
-        map.whenReady(function () {
-          refreshMapSize(true);
-        });
-      }
-
-      function refitMapView() {
-        if (!map) return;
-        try {
-          if (routeLine) {
-            map.fitBounds(routeLine.getBounds(), { padding: [30, 30] });
-            return;
-          }
-          var layers = [];
-          if (markerFrom) layers.push(markerFrom);
-          if (markerTo) layers.push(markerTo);
-          if (layers.length) {
-            map.fitBounds(L.featureGroup(layers).getBounds(), { padding: [30, 30] });
-          }
-        } catch (e) {}
-      }
-
-      function refreshMapSize(refit) {
-        if (!map) return;
-        function invalidate() {
-          if (!map) return;
-          map.invalidateSize({ animate: false, pan: false });
-          if (refit) refitMapView();
-        }
-        invalidate();
-        if (typeof requestAnimationFrame === "function") {
-          requestAnimationFrame(invalidate);
-        }
-        setTimeout(invalidate, 80);
-        setTimeout(invalidate, 200);
-        setTimeout(invalidate, 450);
-      }
-
-      var mapResizeObserverBound = false;
-      function bindMapResizeObserver() {
-        if (mapResizeObserverBound || typeof ResizeObserver === "undefined") return;
-        var mapEl = document.getElementById("pickupDropMap");
-        var mapCell = document.querySelector(".map-canvas-cell--map");
-        var actionsEl = document.getElementById("mapCanvasActions");
-        var details = document.getElementById("dashDeliveryTitle");
-        if (!mapEl) return;
-        mapResizeObserverBound = true;
-        var timer = null;
-        var observer = new ResizeObserver(function () {
-          if (!details || !details.open) return;
-          clearTimeout(timer);
-          timer = setTimeout(function () {
-            refreshMapSize(true);
-          }, 60);
-        });
-        observer.observe(mapEl);
-        if (mapCell) observer.observe(mapCell);
-        if (actionsEl) observer.observe(actionsEl);
-      }
-
-      function showMap() {
-        if (!map || !routeLine) return;
-        map.fitBounds(routeLine.getBounds(), { padding: [30, 30] });
-      }
-
-      function enableCreate() {
-        var btn = document.getElementById("createBtn");
-        if (!btn) return;
-        btn.disabled = !(km > 0 && fromLL && toLL);
-      }
-
-      function setDeliveryMode(mode) {
-        deliveryInputMode = mode === "map" ? "map" : "links";
-        var linksPanel = document.getElementById("deliveryModeLinks");
-        var mapPanel = document.getElementById("deliveryModeMap");
-        var tabLinks = document.getElementById("tabModeLinks");
-        var tabMap = document.getElementById("tabModeMap");
-        var actions = document.getElementById("mapCanvasActions");
-        if (linksPanel) linksPanel.hidden = deliveryInputMode !== "links";
-        if (mapPanel) mapPanel.hidden = deliveryInputMode !== "map";
-        if (tabLinks) {
-          tabLinks.classList.toggle("is-active", deliveryInputMode === "links");
-          tabLinks.setAttribute("aria-selected", deliveryInputMode === "links" ? "true" : "false");
-        }
-        if (tabMap) {
-          tabMap.classList.toggle("is-active", deliveryInputMode === "map");
-          tabMap.setAttribute("aria-selected", deliveryInputMode === "map" ? "true" : "false");
-        }
-        if (actions) actions.setAttribute("data-route-mode", deliveryInputMode);
-        var grid = document.querySelector(".map-canvas-grid");
-        if (grid) grid.setAttribute("data-route-mode", deliveryInputMode);
-        updateApplyBtnLabel();
-        if (deliveryInputMode === "links") {
-          selectType = null;
-          updateSelectButtonsUi();
-        }
-        initMap();
-        bindMapResizeObserver();
-        refreshMapSize(true);
-        setTimeout(function () {
-          refreshMapSize(true);
-        }, 180);
-        var res = document.getElementById("result");
-        if (res) {
-          res.innerText =
-            deliveryInputMode === "links"
-              ? "الصق رابطي الاستلام والتسليم ثم اضغط «انقر هنا لتطبيق الروابط و رسم المسار»."
-              : "اضغط «خريطة» عند الاستلام أو التسليم ثم اختر النقطتين على الخريطة.";
-        }
-      }
-
-      function updateApplyBtnLabel() {
-        var btn = document.getElementById("btnApplyMapRoute");
-        if (!btn || btn.disabled || deliveryInputMode !== "links") return;
-        btn.textContent = "انقر هنا لتطبيق الروابط و رسم المسار";
-      }
-
-      function mapHaversineM(a, b) {
-        if (!a || !b) return Infinity;
-        var R = 6371000;
-        var p = Math.PI / 180;
-        var dLat = (b.lat - a.lat) * p;
-        var dLng = (b.lng - a.lng) * p;
-        var x =
-          Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-          Math.cos(a.lat * p) * Math.cos(b.lat * p) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
-        return 2 * R * Math.asin(Math.sqrt(x));
-      }
-
-      function roundMapCoord(n) {
-        return Math.round(Number(n) * 1e6) / 1e6;
-      }
-
-      function normalizeMapLL(ll) {
-        if (!ll) return null;
-        return { lat: roundMapCoord(ll.lat), lng: roundMapCoord(ll.lng) };
-      }
-
-      function scrollToMapRoutes() {
-        var mobile = window.matchMedia("(max-width: 767px)").matches;
-        var el =
-          deliveryInputMode === "links"
-            ? document.getElementById("deliveryModeLinks") || document.querySelector(".map-canvas-cell--method")
-            : document.getElementById("mapCanvasActions");
-        if (!el) return;
-        var panel = el.closest(".delivery-panel__body");
-        if (panel && mobile) {
-          var panelRect = panel.getBoundingClientRect();
-          var elRect = el.getBoundingClientRect();
-          var nextTop = panel.scrollTop + (elRect.top - panelRect.top) - 12;
-          panel.scrollTo({ top: Math.max(0, nextTop), behavior: "smooth" });
-          return;
-        }
-        el.scrollIntoView({ behavior: "smooth", block: mobile ? "start" : "nearest" });
-      }
-
-      function saveMapLinkField(inputId) {
-        var el = document.getElementById(inputId);
-        var res = document.getElementById("result");
-        if (!el || !String(el.value || "").trim()) {
-          if (res) res.innerText = "❌ الصق الرابط أولاً";
-          return;
-        }
-        if (res) res.innerText = "✓ تم حفظ الرابط";
-      }
-
-      async function applyMapRoute() {
-        var btn = document.getElementById("btnApplyMapRoute");
-        var prevLabel = btn ? btn.textContent : "";
-        if (btn) {
-          btn.disabled = true;
-          btn.textContent = "جارٍ تطبيق المواقع ورسم المسار…";
-        }
-        try {
-          if (deliveryInputMode === "links") {
-            await applyMapLinks();
-          } else {
-            await calculate();
-          }
-        } finally {
-          if (btn) {
-            btn.disabled = false;
-            btn.textContent = prevLabel || "";
-            updateApplyBtnLabel();
-          }
-        }
-      }
-
-      function syncMapCustomerPhone() {
-        var sender = document.getElementById("mapSenderPhone");
-        var hidden = document.getElementById("mapCustomerPhone");
-        if (sender && hidden) hidden.value = String(sender.value || "").trim();
-      }
-
-      async function pasteMapLink(inputId) {
-        var el = document.getElementById(inputId);
-        if (!el) return;
-        try {
-          var t = await navigator.clipboard.readText();
-          if (t) {
-            el.value = String(t).trim();
-            handleLocationInputChange();
-          }
-        } catch (e) {
-          el.focus();
-          document.getElementById("result").innerText = "الصق الرابط يدوياً (Ctrl+V) في الحقل.";
-        }
-      }
-
-      function updateLiveMapPreview() {
-        var line = document.getElementById("liveMapLine");
-        var a = document.getElementById("liveMapPreview");
-        if (!line || !a) return;
-        if (fromLL && toLL && window.ErvenowDeliveryMap) {
-          var u =
-            "https://www.google.com/maps/dir/" +
-            encodeURIComponent(fromLL.lat + "," + fromLL.lng) +
-            "/" +
-            encodeURIComponent(toLL.lat + "," + toLL.lng);
-          a.href = u;
-          line.hidden = false;
-        } else {
-          line.hidden = true;
-          a.removeAttribute("href");
-        }
-      }
-
-      function getMapProductPayload() {
-        var typeEl = document.getElementById("mapProductType");
-        var qtyEl = document.getElementById("mapProductQty");
-        var noteEl = document.getElementById("mapProductNote");
-        var typeKey = (typeEl && typeEl.value) || "other";
-        var qty = (qtyEl && qtyEl.value) || 1;
-        var note = (noteEl && noteEl.value) || "";
-        var DM = window.ErvenowDeliveryMap;
-        var label = DM ? DM.formatProductLine(typeKey, qty, note) : "طلب توصيل";
-        return { typeKey: typeKey, qty: qty, note: note, label: label };
-      }
-
-      async function resolveMapsLinkInput(linkText) {
-        var DM = window.ErvenowDeliveryMap;
-        var raw = String(linkText || "").trim();
-        if (!raw || !DM) return null;
-        if (DM.resolveMapsLinkAsync) {
-          var resolved = await DM.resolveMapsLinkAsync(raw);
-          if (resolved && resolved.ll) {
-            return {
-              ll: normalizeMapLL(resolved.ll),
-              mapsUrl: resolved.mapsUrl || DM.buildGoogleMapsUrl(resolved.ll.lat, resolved.ll.lng),
-            };
-          }
-          if (resolved && resolved.error) {
-            return { error: resolved.error };
-          }
-        }
-        var ll = DM.parseMapsUrl(raw);
-        if (ll) {
-          ll = normalizeMapLL(ll);
-          return {
-            ll: ll,
-            mapsUrl: /^https?:\/\//i.test(raw) ? raw : DM.buildGoogleMapsUrl(ll.lat, ll.lng),
-          };
-        }
-        return null;
-      }
-
-      async function resolveMapsLinkField(linkText, fieldLabel) {
-        var raw = String(linkText || "").trim();
-        if (!raw) {
-          throw new Error("❌ " + fieldLabel + ": الصق رابط Google Maps أولاً.");
-        }
-        var resolved = await resolveMapsLinkInput(raw);
-        if (resolved && resolved.error) {
-          throw new Error("❌ " + fieldLabel + ": " + resolved.error);
-        }
-        if (!resolved || !resolved.ll) {
-          throw new Error(
-            "❌ " +
-              fieldLabel +
-              ": تعذر قراءة الإحداثيات. استخدم «مشاركة» من Google Maps (maps.app.goo.gl) أو lat,lng."
-          );
-        }
-        return resolved;
-      }
-
-      async function resolveLocationFromField(text, linkFieldId) {
-        var DM = window.ErvenowDeliveryMap;
-        var raw = String(text || "").trim();
-        if (!raw) return null;
-        var linkEl = linkFieldId ? document.getElementById(linkFieldId) : null;
-        var linkVal = linkEl ? String(linkEl.value || "").trim() : "";
-        if (linkVal) {
-          var fromDedicated = await resolveMapsLinkInput(linkVal);
-          if (fromDedicated) return { ll: fromDedicated.ll, mapsUrl: fromDedicated.mapsUrl };
-        }
-        if (DM) {
-          var fromMapsResolved = await resolveMapsLinkInput(raw);
-          if (fromMapsResolved) {
-            return { ll: fromMapsResolved.ll, mapsUrl: fromMapsResolved.mapsUrl };
-          }
-          var fromPair = DM.parseLatLngPair(raw);
-          if (fromPair) {
-            return {
-              ll: fromPair,
-              mapsUrl: DM.buildGoogleMapsUrl(fromPair.lat, fromPair.lng),
-            };
-          }
-        }
-        var geo = await geocode(raw);
-        return { ll: geo, mapsUrl: DM ? DM.buildGoogleMapsUrl(geo.lat, geo.lng) : "" };
-      }
-
-      async function applyMapLinks() {
-        var resultEl = document.getElementById("result");
-        var fromInput = document.getElementById("fromLink");
-        var toInput = document.getElementById("toLink");
-        try {
-          var fromLink = String(fromInput && fromInput.value ? fromInput.value : "").trim();
-          var toLink = String(toInput && toInput.value ? toInput.value : "").trim();
-          if (!fromLink || !toLink) {
-            resultEl.innerText = "❌ الصق رابط الاستلام ورابط التسليم في الحقلين أعلاه.";
-            return;
-          }
-          var DM = window.ErvenowDeliveryMap;
-          if (!DM) throw new Error("تعذر تحميل أدوات الخريطة");
-          resultEl.innerText = "جارٍ فك روابط Google Maps وتحديد نقاط الاستلام والتسليم بدقة…";
-          var fromResolved;
-          var toResolved;
-          try {
-            fromResolved = await resolveMapsLinkField(fromLink, "الاستلام");
-            toResolved = await resolveMapsLinkField(toLink, "التسليم");
-          } catch (fieldErr) {
-            resultEl.innerText = fieldErr.message || "❌ تعذر قراءة أحد الروابط";
-            return;
-          }
-          var sepM = mapHaversineM(fromResolved.ll, toResolved.ll);
-          if (!Number.isFinite(sepM) || sepM < 30) {
-            resultEl.innerText = "❌ نقطتا الاستلام والتسليم متقاربتان جداً — تحقق من الرابطين.";
-            return;
-          }
-          fromLL = fromResolved.ll;
-          toLL = toResolved.ll;
-          pickupMapsUrl = fromResolved.mapsUrl || DM.buildGoogleMapsUrl(fromLL.lat, fromLL.lng);
-          dropMapsUrl = toResolved.mapsUrl || DM.buildGoogleMapsUrl(toLL.lat, toLL.lng);
-          if (fromInput) fromInput.value = pickupMapsUrl;
-          if (toInput) toInput.value = dropMapsUrl;
-          fromDistrictLabel = await reverseGeocodeDistrict(fromLL.lat, fromLL.lng);
-          toDistrictLabel = await reverseGeocodeDistrict(toLL.lat, toLL.lng);
-          document.getElementById("from").value =
-            fromDistrictLabel && fromDistrictLabel !== "—" ? fromDistrictLabel : "موقع الاستلام";
-          document.getElementById("to").value =
-            toDistrictLabel && toDistrictLabel !== "—" ? toDistrictLabel : "موقع التسليم";
-          await drawRouteAndPricing();
-          resultEl.innerText =
-            "✓ تم تحديد الاستلام والتسليم — المسافة " +
-            (km ? km.toFixed(2) : "—") +
-            " كم. راجع الخريطة ثم «أضف إلى السلة».";
-        } catch (e) {
-          resultEl.innerText = "❌ " + (e.message || "تعذر قراءة الرابط");
-        }
-      }
-
-      async function drawRouteAndPricing() {
-        if (!fromLL || !toLL) return;
-        initMap();
-        var route = await getRoute(fromLL, toLL);
-        km = route.distance / 1000;
-        document.getElementById("distance").innerText = km.toFixed(2) + " كم";
-        renderPricingStats(km);
-        document.getElementById("result").innerText = "";
-        if (map) {
-          if (markerFrom) map.removeLayer(markerFrom);
-          markerFrom = L.marker([fromLL.lat, fromLL.lng]).addTo(map).bindPopup("📍 الاستلام");
-          if (markerTo) map.removeLayer(markerTo);
-          markerTo = L.marker([toLL.lat, toLL.lng]).addTo(map).bindPopup("📍 التسليم");
-          if (routeLine) map.removeLayer(routeLine);
-          routeLine = L.geoJSON(route.geometry, { style: { color: "#2563eb", weight: 5 } }).addTo(map);
-          showMap();
-        }
-        updateLiveMapPreview();
-        enableCreate();
-        refreshMapSize(true);
-      }
-
-      function updateSelectButtonsUi() {
-        Object.keys(selectButtons).forEach(function (k) {
-          var id = selectButtons[k];
-          var el = document.getElementById(id);
-          if (!el) return;
-          if (selectType === k) el.classList.add("is-active");
-          else el.classList.remove("is-active");
-        });
-        var mapEl = document.getElementById("pickupDropMap");
-        if (mapEl) {
-          if (selectType) mapEl.classList.add("map-selecting");
-          else mapEl.classList.remove("map-selecting");
-        }
-      }
-
-      function setClientLocationMarker(lat, lng) {
-        if (!map) return;
-        if (markerUser) {
-          markerUser.setLatLng([lat, lng]);
-        } else {
-          markerUser = L.circleMarker([lat, lng], {
-            radius: 7,
-            weight: 2,
-            color: "#2563eb",
-            fillColor: "#60a5fa",
-            fillOpacity: 0.9,
-          })
-            .addTo(map)
-            .bindPopup("📍 موقعك الحالي");
-        }
-      }
-
-      async function reverseGeocode(lat, lng) {
-        try {
-          var url =
-            "https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=" +
-            encodeURIComponent(lat) +
-            "&lon=" +
-            encodeURIComponent(lng) +
-            "&accept-language=ar";
-          var r = await fetch(url, {
-            headers: { "Accept-Language": "ar" },
-          });
-          var j = await r.json();
-          return String(j && j.display_name ? j.display_name : "").trim();
-        } catch (e) {
-          return "";
-        }
-      }
-
-      function tryInitClientLocation() {
-        if (!navigator.geolocation || clientLocation) return;
-        navigator.geolocation.getCurrentPosition(
-          function (pos) {
-            var lat = pos.coords.latitude;
-            var lng = pos.coords.longitude;
-            clientLocation = { lat: lat, lng: lng };
-            if (map) {
-              map.setView([lat, lng], 14);
-              setClientLocationMarker(lat, lng);
-            }
-          },
-          function () {},
-          { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
-        );
-      }
-
-      function handleLocationInputChange() {
-        km = 0;
-        fromLL = null;
-        toLL = null;
-        selectType = null;
-        if (map && markerFrom) {
-          map.removeLayer(markerFrom);
-          markerFrom = null;
-        }
-        if (map && markerTo) {
-          map.removeLayer(markerTo);
-          markerTo = null;
-        }
-        if (map && routeLine) {
-          map.removeLayer(routeLine);
-          routeLine = null;
-        }
-        document.getElementById("distance").innerText = "—";
-        document.getElementById("price").innerText = "—";
-        document.getElementById("platformFeeLine").innerText = "—";
-        document.getElementById("driverNetLine").innerText = "—";
-        document.getElementById("result").innerText = "";
-        pickupMapsUrl = "";
-        dropMapsUrl = "";
-        fromDistrictLabel = "";
-        toDistrictLabel = "";
-        selectType = null;
-        updateLiveMapPreview();
-        updateSelectButtonsUi();
-        enableCreate();
-      }
-
-      function selectMode(type) {
-        selectType = type;
-        updateSelectButtonsUi();
-        document.getElementById("result").innerText =
-          type === "from" ? "📍 اختر نقطة الاستلام على الخريطة" : "📍 اختر نقطة التسليم على الخريطة";
-      }
-
-      function openGoogleMapsFor(kind) {
-        initMap();
-        var isFrom = kind === "from";
-        var ll = isFrom ? fromLL : toLL;
-        var input = document.getElementById(isFrom ? "from" : "to");
-        var val = input ? String(input.value || "").trim() : "";
-        var url;
-        if (ll && Number.isFinite(ll.lat) && Number.isFinite(ll.lng)) {
-          url = "https://www.google.com/maps?q=" + encodeURIComponent(ll.lat + "," + ll.lng);
-        } else if (val) {
-          url = "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(val);
-        } else {
-          url = "https://www.google.com/maps";
-        }
-        window.open(url, "_blank", "noopener,noreferrer");
-        var res = document.getElementById("result");
-        if (res) {
-          res.innerText =
-            "🗺 انسخ من Google إلى خانة «" +
-            (isFrom ? "الاستلام" : "التسليم") +
-            "» ثم اضغط «احسب المسافة».";
-        }
-      }
-
-      async function onMapClick(e) {
-        if (!selectType) return;
-        var lat = e.latlng.lat;
-        var lng = e.latlng.lng;
-
-        var DM = window.ErvenowDeliveryMap;
-        if (selectType === "from") {
-          fromLL = { lat: lat, lng: lng };
-          var fromAddress = await reverseGeocode(lat, lng);
-          document.getElementById("from").value = fromAddress || lat.toFixed(6) + "," + lng.toFixed(6);
-          pickupMapsUrl = DM ? DM.buildGoogleMapsUrl(lat, lng) : "";
-          if (markerFrom) map.removeLayer(markerFrom);
-          markerFrom = L.marker([lat, lng]).addTo(map).bindPopup("📍 الاستلام");
-        }
-
-        if (selectType === "to") {
-          toLL = { lat: lat, lng: lng };
-          var toAddress = await reverseGeocode(lat, lng);
-          document.getElementById("to").value = toAddress || lat.toFixed(6) + "," + lng.toFixed(6);
-          dropMapsUrl = DM ? DM.buildGoogleMapsUrl(lat, lng) : "";
-          if (markerTo) map.removeLayer(markerTo);
-          markerTo = L.marker([lat, lng]).addTo(map).bindPopup("📍 التسليم");
-        }
-
-        selectType = null;
-        updateSelectButtonsUi();
-
-        if (fromLL && toLL) {
-          try {
-            var DM = window.ErvenowDeliveryMap;
-            if (DM && !pickupMapsUrl) pickupMapsUrl = DM.buildGoogleMapsUrl(fromLL.lat, fromLL.lng);
-            if (DM && !dropMapsUrl) dropMapsUrl = DM.buildGoogleMapsUrl(toLL.lat, toLL.lng);
-            await drawRouteAndPricing();
-          } catch (err) {
-            document.getElementById("result").innerText = "❌ " + (err.message || "تعذر حساب المسافة");
-          }
-        }
-      }
-
-      function parseLatLngInput(v) {
-        var DM = window.ErvenowDeliveryMap;
-        return DM ? DM.parseLatLngPair(v) : null;
-      }
-
-      async function geocode(q) {
-        if (geoCache[q]) return geoCache[q];
-        // ملاحظة إنتاج: Nominatim عليه limits؛ الأفضل API مدفوع أو caching على الخادم.
-        var url = "https://nominatim.openstreetmap.org/search?format=json&q=" + encodeURIComponent(q);
-        var r = await fetch(url, {
-          headers: {
-            "Accept-Language": "ar",
-          },
-        });
-        var j = await r.json();
-        if (!j || !j[0]) throw new Error("تعذر تحديد الموقع");
-        var p = { lat: parseFloat(j[0].lat), lng: parseFloat(j[0].lon) };
-        geoCache[q] = p;
-        return p;
-      }
-
-      function isMapsUrl(s) {
-        var t = String(s || "").trim();
-        return /^(https?:\/\/)/i.test(t) || /google\.com\/maps|maps\.app\.goo|goo\.gl\/maps/i.test(t);
-      }
-
-      function humanLocationText(s) {
-        var t = String(s || "").trim();
-        return t && !isMapsUrl(t) ? t : "";
-      }
-
-      async function reverseGeocodeDistrict(lat, lng) {
-        var key = Number(lat).toFixed(5) + "," + Number(lng).toFixed(5);
-        if (reverseGeoCache[key]) return reverseGeoCache[key];
-        var url =
-          "https://nominatim.openstreetmap.org/reverse?format=json&lat=" +
-          lat +
-          "&lon=" +
-          lng +
-          "&accept-language=ar";
-        var r = await fetch(url, { headers: { "Accept-Language": "ar" } });
-        var j = await r.json();
-        var a = (j && j.address) || {};
-        var name =
-          a.suburb ||
-          a.neighbourhood ||
-          a.quarter ||
-          a.city_district ||
-          a.district ||
-          a.city ||
-          a.town ||
-          a.village ||
-          "";
-        reverseGeoCache[key] = name || "—";
-        return reverseGeoCache[key];
-      }
-
-      async function getRoute(a, b) {
-        var url =
-          "https://router.project-osrm.org/route/v1/driving/" +
-          a.lng +
-          "," +
-          a.lat +
-          ";" +
-          b.lng +
-          "," +
-          b.lat +
-          "?overview=full&geometries=geojson";
-        var r = await fetch(url);
-        var j = await r.json();
-        if (!j.routes || !j.routes[0]) throw new Error("فشل حساب المسار");
-        return j.routes[0];
-      }
-
-      async function calculate() {
-        try {
-          initMap();
-          var fromResolved;
-          var toResolved;
-          if (deliveryInputMode === "links") {
-            await applyMapLinks();
-            return;
-          }
-          var from = document.getElementById("from").value.trim();
-          var to = document.getElementById("to").value.trim();
-          if (!from || !to) {
-            alert("أدخل موقع الاستلام والتسليم أولاً");
-            return;
-          }
-          fromResolved = await resolveLocationFromField(from, null);
-          toResolved = await resolveLocationFromField(to, null);
-          fromLL = fromResolved.ll;
-          toLL = toResolved.ll;
-          pickupMapsUrl = fromResolved.mapsUrl || "";
-          dropMapsUrl = toResolved.mapsUrl || "";
-          fromDistrictLabel = humanLocationText(from) || (await reverseGeocodeDistrict(fromLL.lat, fromLL.lng));
-          toDistrictLabel = humanLocationText(to) || (await reverseGeocodeDistrict(toLL.lat, toLL.lng));
-          await drawRouteAndPricing();
-        } catch (e) {
-          document.getElementById("result").innerText =
-            "❌ " + (e.message || "تعذر حساب المسافة");
-          enableCreate();
-        }
-      }
-
-      async function resolveDashCustomerPhone() {
-        var phone = "";
-        try {
-          if (dashHasToken() && window.PlatformAPI && typeof PlatformAPI.api === "function") {
-            var me = await PlatformAPI.api("/api/core/me");
-            phone = String(
-              (me && me.profile && me.profile.phone) ||
-                (me && me.user && me.user.phone) ||
-                ""
-            ).trim();
-          }
-        } catch (e) {}
-        return phone;
-      }
-
-      async function buildMapCartItem() {
-        var from = document.getElementById("from").value.trim();
-        var to = document.getElementById("to").value.trim();
-        if (!km || !fromLL || !toLL) await calculate();
-        if (!km) throw new Error("احسب المسافة أولاً");
-        var pricing = calcDeliveryPricing(km);
-        syncMapCustomerPhone();
-        var phone = await resolveDashCustomerPhone();
-        var senderEl = document.getElementById("mapSenderPhone");
-        var recipientEl = document.getElementById("mapRecipientPhone");
-        if (!phone && senderEl) phone = String(senderEl.value || "").trim();
-        var recipientPhone = recipientEl ? String(recipientEl.value || "").trim() : "";
-        if (window.ErvenowServiceCart && typeof ErvenowServiceCart.validateSaPhone === "function") {
-          phone = ErvenowServiceCart.validateSaPhone(phone) || phone;
-          recipientPhone = ErvenowServiceCart.validateSaPhone(recipientPhone) || recipientPhone;
-        }
-        var visEl = document.getElementById("mapDriverVisibility");
-        var driverVisibility = visEl ? String(visEl.value || "now") : "now";
-        var product = getMapProductPayload();
-        var DM = window.ErvenowDeliveryMap;
-        if (!pickupMapsUrl && DM && fromLL) pickupMapsUrl = DM.buildGoogleMapsUrl(fromLL.lat, fromLL.lng);
-        if (!dropMapsUrl && DM && toLL) dropMapsUrl = DM.buildGoogleMapsUrl(toLL.lat, toLL.lng);
-        var fromLabel = fromDistrictLabel || humanLocationText(from);
-        var toLabel = toDistrictLabel || humanLocationText(to);
-        if ((!fromLabel || fromLabel === "—") && fromLL) {
-          fromLabel = await reverseGeocodeDistrict(fromLL.lat, fromLL.lng);
-        }
-        if ((!toLabel || toLabel === "—") && toLL) {
-          toLabel = await reverseGeocodeDistrict(toLL.lat, toLL.lng);
-        }
-        if (fromLabel === "—") fromLabel = "موقع الاستلام";
-        if (toLabel === "—") toLabel = "موقع التسليم";
-        return {
-          type: "delivery",
-          title: "توصيل من الخريطة — " + product.label,
-          price: pricing.fee,
-          customer_phone: phone,
-          data: {
-            pickup_address: fromLabel,
-            drop_address: toLabel,
-            from: fromLabel,
-            to: toLabel,
-            location: toLabel,
-            pickup_district_label: fromLabel,
-            drop_district_label: toLabel,
-            pickup_maps_url: pickupMapsUrl,
-            drop_maps_url: dropMapsUrl,
-            pickup_lat: fromLL ? fromLL.lat : null,
-            pickup_lng: fromLL ? fromLL.lng : null,
-            drop_lat: toLL ? toLL.lat : null,
-            drop_lng: toLL ? toLL.lng : null,
-            distance_km: Math.round(km * 100) / 100,
-            delivery_fee: pricing.fee,
-            platform_fee: pricing.platformFee,
-            driver_earning: pricing.driverNet,
-            vehicle_type: getSelectedVehicleType(),
-            customer_phone: phone,
-            recipient_phone: recipientPhone,
-            driver_visibility: driverVisibility,
-            payment_status: "unpaid",
-            source: "dashboard_map",
-            product_category: product.typeKey,
-            product_qty: product.qty,
-            product_note: product.note,
-            product_label: product.label,
-            qty: 1,
-          },
-        };
-      }
-
-      async function createOrder() {
-        var btn = document.getElementById("createBtn");
-        var result = document.getElementById("result");
-        try {
-          syncMapCustomerPhone();
-          if (!fromLL || !toLL || !km) {
-            await applyMapRoute();
-          }
-          if (!fromLL || !toLL) {
-            result.innerText =
-              deliveryInputMode === "links"
-                ? "❌ الصق رابطي الاستلام والتسليم ثم اضغط «انقر هنا لتطبيق الروابط و رسم المسار»."
-                : "❌ اختر نقطة الاستلام والتسليم على الخريطة (زر «خريطة» ثم النقر على الخريطة).";
-            return;
-          }
-          if (!km) return;
-
-          if (!dashHasToken()) {
-            var draft;
-            try {
-              draft = await buildMapCartItem();
-            } catch (e0) {
-              result.innerText = "❌ " + (e0.message || "أكمل المواقع والمسافة أولاً");
-              return;
-            }
-            if (!draft.customer_phone) {
-              result.innerText = "❌ أدخل جوال المرسل (05xxxxxxxx) قبل المتابعة.";
-              return;
-            }
-            if (window.ErvenowServiceCart && typeof ErvenowServiceCart.validateSaPhone === "function") {
-              var guestPh = ErvenowServiceCart.validateSaPhone(draft.customer_phone);
-              if (!guestPh) {
-                result.innerText = "❌ أدخل جوالاً سعودياً صحيحاً (05xxxxxxxx).";
-                return;
-              }
-              draft.customer_phone = guestPh;
-              if (draft.data) draft.data.customer_phone = guestPh;
-            }
-            try {
-              sessionStorage.setItem("ervenow:pending-map-cart", JSON.stringify(draft));
-            } catch (e1) {}
-            window.location.href =
-              "/login?mode=register&role=customer&next=" + encodeURIComponent("/cart");
-            return;
-          }
-
-          btn.disabled = true;
-          btn.innerText = "جارٍ الإضافة للسلة...";
-
-          var item = await buildMapCartItem();
-          if (!item.customer_phone) {
-            result.innerText = "❌ أدخل جوال المرسل (05xxxxxxxx).";
-            return;
-          }
-
-          if (!window.ErvenowServiceCart || typeof ErvenowServiceCart.add !== "function") {
-            throw new Error("تعذر تحميل السلة — حدّث الصفحة");
-          }
-
-          var cartRes = ErvenowServiceCart.add(item, {
-            message:
-              "تمت إضافة طلب التوصيل من الخريطة — أكمل الدفع في السلة لاعتماد الطلب وإرساله للمندوبين.",
-          });
-          if (!cartRes.ok) {
-            result.innerText = "❌ " + (cartRes.message || "تعذر الإضافة للسلة");
-            return;
-          }
-        } catch (e) {
-          result.innerText = "❌ " + (e.message || "تعذّر إضافة الطلب للسلة");
-        } finally {
-          btn.innerText = "أضف إلى السلة";
-          enableCreate();
-        }
       }
 
       function roleLabelAr(role) {
@@ -3758,7 +1534,6 @@
             ErvenowGuestShell.refreshAuthHeader();
           }
           refreshDashCartBadge();
-          enableCreate();
           return;
         }
         try {
@@ -3789,56 +1564,12 @@
           refreshDashHeaderWallet("");
         }
         refreshDashCartBadge();
-        enableCreate();
       }
 
       function activateDashTab(tabKey) {
         var root = document.querySelector(".dash-tabs");
         if (root && root.__ervActivateTab) {
           return root.__ervActivateTab(tabKey != null ? String(tabKey).trim() : "");
-        }
-      }
-
-      function setDashMapModalOpen(open) {
-        var backdrop = document.getElementById("dashMapBackdrop");
-        if (open) {
-          document.body.classList.add("dash-map-modal-open");
-          if (window.ErvenowViewport && ErvenowViewport.lockScroll) ErvenowViewport.lockScroll();
-          if (backdrop) {
-            backdrop.hidden = false;
-            backdrop.setAttribute("aria-hidden", "false");
-          }
-          if (window.ErvenowViewport && ErvenowViewport.refresh) ErvenowViewport.refresh();
-        } else {
-          document.body.classList.remove("dash-map-modal-open");
-          if (window.ErvenowViewport && ErvenowViewport.unlockScroll) ErvenowViewport.unlockScroll();
-          if (backdrop) {
-            backdrop.hidden = true;
-            backdrop.setAttribute("aria-hidden", "true");
-          }
-        }
-      }
-
-      function openDashMapQuick(opts) {
-        opts = opts || {};
-        activateDashTab("delivery");
-        var details = document.getElementById("dashDeliveryTitle");
-        if (details && opts.openForm) details.open = true;
-        if (details && details.open) {
-          setDashMapModalOpen(true);
-          setActiveServiceCard("delivery");
-          setDeliveryMode(deliveryInputMode || "map");
-          initMap();
-          bindMapResizeObserver();
-          refreshMapSize(true);
-          requestAnimationFrame(function () {
-            var closeBtn = document.getElementById("dashMapCloseBtn");
-            if (closeBtn) closeBtn.focus();
-          });
-        } else if (details) {
-          requestAnimationFrame(function () {
-            details.scrollIntoView({ behavior: "smooth", block: "start" });
-          });
         }
       }
 
@@ -3849,66 +1580,15 @@
           ErvenowToggle.bindTabGroup(root);
         }
         activateDashTab("");
-        document.querySelectorAll("[data-dash-map-jump], a[href*='#dashDeliveryTitle']").forEach(function (link) {
-          link.addEventListener("click", function (e) {
-            var href = link.getAttribute("href") || "";
-            if (href.indexOf("dashDeliveryTitle") === -1) return;
-            if (link.closest("#dashDeliveryTitle")) return;
-            e.preventDefault();
-            openDashMapQuick({ openForm: false });
-          });
-        });
-        if (location.hash === "#dashDeliveryTitle") {
-          openDashMapQuick({ openForm: true });
-        }
-        window.addEventListener("hashchange", function () {
-          if (location.hash === "#dashDeliveryTitle") openDashMapQuick({ openForm: true });
-        });
-      })();
-
-      (function initServiceCardsUi() {
-        var deliveryDetails = document.getElementById("dashDeliveryTitle");
-        var backdrop = document.getElementById("dashMapBackdrop");
-        var closeBtn = document.getElementById("dashMapCloseBtn");
-
-        function closeDashMapModal() {
-          if (deliveryDetails) deliveryDetails.open = false;
-        }
-
-        if (deliveryDetails) {
-          deliveryDetails.addEventListener("toggle", function () {
-            if (deliveryDetails.open) {
-              setDashMapModalOpen(true);
-              setActiveServiceCard("delivery");
-              setDeliveryMode(deliveryInputMode || "map");
-              initMap();
-              bindMapResizeObserver();
-              refreshMapSize(true);
-              requestAnimationFrame(function () {
-                refreshMapSize(true);
-                requestAnimationFrame(function () {
-                  refreshMapSize(true);
-                  if (closeBtn) closeBtn.focus();
-                });
-              });
-            } else {
-              setDashMapModalOpen(false);
-              setActiveServiceCard("");
-            }
+        var mapJump = document.querySelector("[data-dash-map-jump]");
+        if (mapJump) {
+          mapJump.addEventListener("click", function () {
+            activateDashTab("delivery");
           });
         }
-        if (backdrop) {
-          backdrop.addEventListener("click", closeDashMapModal);
+        if (location.hash === "#delivery-map" || location.hash === "#dashDeliveryTitle") {
+          activateDashTab("delivery");
         }
-        if (closeBtn) {
-          closeBtn.addEventListener("click", closeDashMapModal);
-        }
-        document.addEventListener("keydown", function (e) {
-          if (e.key === "Escape" && deliveryDetails && deliveryDetails.open) {
-            e.preventDefault();
-            closeDashMapModal();
-          }
-        });
       })();
 
       run();
@@ -3916,29 +1596,6 @@
       window.addEventListener("storage", function (ev) {
         if (ev.key === "cart") refreshDashCartBadge();
       });
-      window.addEventListener("resize", function () {
-        var details = document.getElementById("dashDeliveryTitle");
-        if (details && details.open) refreshMapSize(true);
-      });
-
-      window.addEventListener("ervenow-api-retry", function (ev) {
-        var d = ev.detail || {};
-        var btn = document.getElementById("createBtn");
-        var result = document.getElementById("result");
-        if (!btn || !btn.disabled || !result) return;
-        if (String(d.path || "").indexOf("/api/delivery/orders") === -1) return;
-        result.innerText =
-          "جارٍ إنشاء الطلب… (إعادة محاولة " + d.attempt + " من " + d.maxAttempts + ")";
-      });
-      window.addEventListener("ervenow-offline-queued", function () {
-        var result = document.getElementById("result");
-        if (result) {
-          result.innerText =
-            "⚠ لا يوجد اتصال: اُحتفظ بالطلب محلياً وسيُرسل تلقائياً عند عودة الشبكة.";
-        }
-      });
-      setDeliveryMode("map");
-      updateApplyBtnLabel();
     </script>
   </body>
 </html>

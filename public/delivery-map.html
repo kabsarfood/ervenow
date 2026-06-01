@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="description" content="حدّد مسار التوصيل على الخريطة أو عبر روابط Google Maps — احسب المسافة والسعر وأضف الطلب للسلة." />
+    <script src="/assets/viewport-fit.js"></script>
+    <title>ERVENOW | طلب توصيل من الخريطة</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/assets/styles.css" />
+    <link rel="stylesheet" href="/assets/guest-shell.css" />
+    <link rel="stylesheet" href="/assets/delivery-map-page.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  </head>
+  <body class="guest-shell-page delivery-map-page">
+    <header class="dash-site-header">
+      <div class="dash-site-header__inner">
+        <div class="dash-site-header__brand">
+          <a class="dash-site-header__logo" href="/">ERVENOW<span class="dash-site-header__logo-dot" aria-hidden="true"></span></a>
+          <p class="dash-site-header__tag" id="guestShellPageTag">طلب من الخريطة</p>
+        </div>
+        <nav class="dash-site-header__nav" aria-label="التنقل الرئيسي">
+          <div class="dash-site-header__links">
+            <a class="dash-site-header__link" href="/" data-nav="home">الرئيسية</a>
+            <a class="dash-site-header__link" href="/dashboard" data-nav="guest">لوحة الزائر</a>
+            <a class="dash-site-header__link" href="/track" data-nav="track">تتبع الحي</a>
+            <a class="dash-site-header__link dash-site-header__link--cta" href="/login?role=customer" data-nav="login">دخول</a>
+          </div>
+        </nav>
+        <div class="dash-site-header__tools">
+          <a class="dash-header-wallet" id="dashHeaderWallet" href="/wallet.html" hidden aria-label="المحفظة">
+            <span class="dash-header-wallet__label">محفظة</span>
+            <span class="dash-header-wallet__val" id="dashHeaderWalletAmount">—</span>
+            <span class="dash-header-wallet__cur">ر.س</span>
+          </a>
+          <a class="dash-header-cart" href="/cart" aria-label="السلة — الدفع">
+            <span aria-hidden="true">🛒</span>
+            <span class="dash-header-cart__label">السلة</span>
+            <span class="dash-header-cart__badge" id="cartCount" data-empty="true">0</span>
+          </a>
+        </div>
+        <a class="dash-site-header__btn dash-site-header__btn--primary switch-account--nav-only" href="/login?role=customer" id="switchAccount">تسجيل الدخول</a>
+      </div>
+    </header>
+
+    <main class="delivery-map-main" id="deliveryMapMain">
+      <div class="delivery-map-page__shell">
+        <div class="delivery-panel delivery-panel--luxe" aria-labelledby="dashMapDialogTitle">
+                          <header class="delivery-panel__header">
+                            <div class="delivery-panel__brand">
+                              <span class="delivery-panel__icon-wrap" aria-hidden="true">🗺️</span>
+                              <div>
+                                <h2 class="delivery-panel__title" id="dashMapDialogTitle">طلب توصيل من الخريطة</h2>
+                                <p class="delivery-panel__subtitle">حدّد المسار - راجع السعر - و أكمل الطلب</p>
+                              </div>
+                            </div>
+                            <a class="delivery-panel__back" href="/dashboard" aria-label="العودة إلى لوحة الزائر">← رجوع</a>
+                          </header>
+                          <div class="delivery-panel__body delivery-map-page__scroll">
+                          <div class="delivery-form delivery-form--luxe map-canvas-form">
+                            <div class="map-canvas-grid" data-route-mode="map">
+                              <section class="map-canvas-cell map-canvas-cell--shipment">
+                                <details class="map-canvas-fold map-canvas-fold--shipment">
+                                <summary class="map-canvas-cell__title map-canvas-fold__summary">تفاصيل الشحنة</summary>
+                                <div class="map-canvas-fold__content">
+                                <label class="map-canvas-label" for="vehicleType">نوع المركبة</label>
+                                <select id="vehicleType" onchange="recalculatePricePreview()">
+                                  <option value="bike">دراجة نارية (0 - 7 كم = 15 ريال)</option>
+                                  <option value="car" selected>سيارة (0 - 7 كم = 22 ريال)</option>
+                                </select>
+                                <label class="map-canvas-label" for="mapDriverVisibility">حدد ظهور طلبك للمناديب</label>
+                                <select id="mapDriverVisibility">
+                                  <option value="now" selected>فوري — يظهر للمناديب الآن</option>
+                                  <option value="scheduled">مجدول (قريباً)</option>
+                                </select>
+                                <div class="map-canvas-row-2">
+                                  <div>
+                                    <label class="map-canvas-label" for="mapProductType">نوع المحتوى</label>
+                                    <select id="mapProductType">
+                                      <option value="clothes">ملابس</option>
+                                      <option value="bag">شنطة / حقيبة</option>
+                                      <option value="groceries">مواد غذائية</option>
+                                      <option value="kitchenware">أواني</option>
+                                      <option value="documents">مستندات</option>
+                                      <option value="electronics">إلكترونيات</option>
+                                      <option value="other">أخرى</option>
+                                    </select>
+                                  </div>
+                                  <div>
+                                    <label class="map-canvas-label" for="mapProductQty">العدد</label>
+                                    <input id="mapProductQty" type="number" min="1" max="99" value="1" inputmode="numeric" />
+                                  </div>
+                                </div>
+                                <label class="map-canvas-label" for="mapProductNote">تفاصيل إضافية (اختياري)</label>
+                                <input id="mapProductNote" type="text" maxlength="120" placeholder="مثال: صندوق أواني زجاجية" />
+                                </div>
+                                </details>
+                              </section>
+        
+                              <div class="map-canvas-route-col">
+                              <section class="map-canvas-cell map-canvas-cell--method">
+                                <h3 class="map-canvas-cell__title">تحديد المسار عن طريق</h3>
+                                <div class="map-canvas-mode-btns" role="tablist" aria-label="طريقة تحديد المواقع">
+                                  <button type="button" class="map-canvas-mode-btn is-active" id="tabModeMap" data-mode="map" onclick="setDeliveryMode('map')">
+                                    <span class="map-canvas-mode-btn__num" aria-hidden="true">1</span>
+                                    <span class="map-canvas-mode-btn__text">الخريطة ( انقر هنا )</span>
+                                  </button>
+                                  <button type="button" class="map-canvas-mode-btn" id="tabModeLinks" data-mode="links" onclick="setDeliveryMode('links')">
+                                    <span class="map-canvas-mode-btn__num" aria-hidden="true">2</span>
+                                    <span class="map-canvas-mode-btn__text">روابط الموقع ( انقر هنا )</span>
+                                  </button>
+                                </div>
+                                <div id="deliveryModeLinks" class="map-canvas-route-panel map-canvas-route-panel--inline" hidden>
+                                  <div class="map-canvas-loc-box map-canvas-loc-box--pickup">
+                                    <p class="map-canvas-loc-box__title">من الاستلام</p>
+                                    <input id="fromLink" type="url" inputmode="url" placeholder="الصق رابط موقع الاستلام هنا" oninput="handleLocationInputChange()" />
+                                  </div>
+                                  <div class="map-canvas-loc-box map-canvas-loc-box--drop">
+                                    <p class="map-canvas-loc-box__title">إلى التسليم</p>
+                                    <input id="toLink" type="url" inputmode="url" placeholder="الصق رابط موقع التسليم هنا" oninput="handleLocationInputChange()" />
+                                  </div>
+                                  <button
+                                    type="button"
+                                    class="map-canvas-apply-btn map-canvas-links-apply"
+                                    id="btnApplyMapRoute"
+                                    onclick="applyMapRoute()"
+                                  >
+                                    انقر هنا لتطبيق الروابط و رسم المسار
+                                  </button>
+                                </div>
+                                <div class="map-canvas-row-2 map-canvas-phone-row">
+                                  <input id="mapSenderPhone" type="tel" inputmode="numeric" maxlength="10" placeholder="جوال المرسل" aria-label="جوال المرسل" oninput="syncMapCustomerPhone()" />
+                                  <input id="mapRecipientPhone" type="tel" inputmode="numeric" maxlength="10" placeholder="جوال المرسل إليه" aria-label="جوال المرسل إليه" />
+                                </div>
+                                <button type="button" class="map-canvas-routes-link" onclick="scrollToMapRoutes()">مسارات الشحنة</button>
+                              </section>
+        
+                              <section class="map-canvas-cell map-canvas-cell--map">
+                                <div id="pickupDropMap" aria-label="خريطة المسار"></div>
+                                <div class="map-canvas-footer">
+                                  <div class="map-canvas-price-box" aria-live="polite">
+                                    <span class="map-canvas-price-box__label">السعر</span>
+                                    <strong class="map-canvas-price-box__val" id="price">—</strong>
+                                    <span class="map-canvas-price-box__dist" id="distance">—</span>
+                                  </div>
+                                  <button id="createBtn" class="map-canvas-cart-btn" type="button" onclick="createOrder()" disabled>أضف إلى السلة</button>
+                                </div>
+                              </section>
+                              </div>
+        
+                              <section class="map-canvas-cell map-canvas-cell--actions map-canvas-actions" id="mapCanvasActions" data-route-mode="map">
+                                <div id="deliveryModeMap" class="map-canvas-route-panel">
+                                  <div class="map-canvas-loc-box map-canvas-loc-box--pickup">
+                                    <p class="map-canvas-loc-box__title">من الاستلام</p>
+                                    <p class="map-canvas-loc-box__hint map-canvas-map-only">فعل زر خريطة واختر منها نقطة الإرسال</p>
+                                    <input id="from" class="map-canvas-coord-input" type="text" autocomplete="street-address" placeholder="عنوان أو lat,lng" tabindex="-1" aria-hidden="true" oninput="handleLocationInputChange()" />
+                                    <div class="map-canvas-loc-box__actions map-canvas-map-only">
+                                      <button type="button" class="map-canvas-map-btn map-canvas-map-btn--pickup" id="btnSelectFrom" onclick="selectMode('from')">خريطة</button>
+                                    </div>
+                                  </div>
+                                  <div class="map-canvas-loc-box map-canvas-loc-box--drop">
+                                    <p class="map-canvas-loc-box__title">إلى التسليم</p>
+                                    <p class="map-canvas-loc-box__hint map-canvas-map-only">فعل زر خريطة واختر منها نقطة الاستقبال</p>
+                                    <input id="to" class="map-canvas-coord-input" type="text" autocomplete="street-address" placeholder="عنوان أو lat,lng" tabindex="-1" aria-hidden="true" oninput="handleLocationInputChange()" />
+                                    <div class="map-canvas-loc-box__actions map-canvas-map-only">
+                                      <button type="button" class="map-canvas-map-btn map-canvas-map-btn--drop" id="btnSelectTo" onclick="selectMode('to')">خريطة</button>
+                                    </div>
+                                  </div>
+                                </div>
+                                <p id="platformFeeLine" hidden aria-hidden="true">—</p>
+                                <p id="driverNetLine" hidden aria-hidden="true">—</p>
+                              </section>
+                            </div>
+                            <p id="liveMapLine" class="map-canvas-live-link" hidden>
+                              <a id="liveMapPreview" class="delivery-live-map-link" href="#" target="_blank" rel="noopener noreferrer">🗺️ معاينة المسار على الخريطة</a>
+                            </p>
+                            <p id="result" class="sub delivery-result--luxe map-canvas-result"></p>
+                            <input type="hidden" id="mapCustomerPhone" value="" />
+                          </div>
+                          </div>
+                        </div>
+                      
+      </div>
+    </main>
+
+    <script src="/assets/cart.js"></script>
+    <script src="/assets/service-cart.js"></script>
+    <script src="/assets/delivery-map-order.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="/assets/api-config.js"></script>
+    <script src="/assets/api.js"></script>
+    <script src="/assets/auth-account-guard.js"></script>
+    <script src="/assets/guestBrowse.js"></script>
+    <script src="/assets/guest-shell.js"></script>
+    <script src="/assets/delivery-map-page.js"></script>
+    <script>
+      ErvenowGuestShell.init({ activeNav: "guest", pageTag: "طلب من الخريطة" });
+      (function () {
+        if (!window.PlatformAPI || !window.PlatformAPI.getToken()) return;
+        void ErvenowAuthGuard.ensureApprovedAccount();
+      })();
+    </script>
+  </body>
+</html>

@@ -39,11 +39,23 @@
   color: var(--brown);
 }
 
-.cart-page-hero p {
+.cart-page-hero p,
+.cart-page-hero__count {
   margin: 0;
   font-size: 0.88rem;
   color: var(--gold);
   font-weight: 800;
+}
+
+.cart-page-tools {
+  display: flex;
+  justify-content: center;
+  margin-top: 12px;
+}
+
+.cart-page-tools .cart-checkout-secondary {
+  min-height: 44px;
+  padding: 10px 20px;
 }
 
 /* ——— Grid ——— */

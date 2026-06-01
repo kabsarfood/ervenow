@@ -339,12 +339,6 @@ a.btn {
   }
 }
 
-@media (max-width: 480px) {
-  .dash-hero__grid {
-    grid-template-columns: 1fr !important;
-  }
-}
-
 /* ——— تسجيل الدخول ——— */
 @media (max-width: 640px) {
   body.auth-page,
@@ -501,12 +495,6 @@ a.btn {
     flex: 0 1 auto;
     min-width: 0;
     min-height: var(--erw-touch-min);
-  }
-
-  .dash-hero__grid {
-    grid-template-columns: 1fr 1fr !important;
-    gap: 16px;
-    align-items: center;
   }
 
   .dash-tabs__nav {

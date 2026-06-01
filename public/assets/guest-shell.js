@@ -145,7 +145,8 @@
     if (!switchAccount) return;
     switchAccount.style.display = "";
     switchAccount.textContent = "تسجيل الدخول";
-    switchAccount.className = "dash-site-header__btn dash-site-header__btn--primary";
+    switchAccount.className =
+      "dash-site-header__btn dash-site-header__btn--primary switch-account--nav-only";
     switchAccount.setAttribute("href", "/login?role=customer");
     switchAccount.removeAttribute("aria-label");
   }
@@ -162,6 +163,7 @@
     switchAccount.style.display = "";
     switchAccount.textContent = home.short || "حسابي";
     switchAccount.className = "dash-site-header__btn dash-site-header__btn--primary";
+    switchAccount.classList.remove("switch-account--nav-only");
     switchAccount.setAttribute("href", home.path);
     switchAccount.setAttribute("aria-label", "فتح " + (home.label || "لوحة حسابك"));
     switchAccount.setAttribute("title", home.label || "");
@@ -349,7 +351,7 @@
       '<span class="dash-header-cart__badge" id="cartCount" data-empty="true">0</span>' +
       "</a>" +
       "</div>" +
-      '<a class="dash-site-header__btn dash-site-header__btn--primary" href="/login?role=customer" id="switchAccount">تسجيل الدخول</a>' +
+      '<a class="dash-site-header__btn dash-site-header__btn--primary switch-account--nav-only" href="/login?role=customer" id="switchAccount">تسجيل الدخول</a>' +
       "</div>" +
       "</header>"
     );
@@ -364,7 +366,7 @@
       '<a class="dash-site-footer__link" href="/stores">متاجر</a>' +
       '<a class="dash-site-footer__link" href="/delivery-services.html">توصيل</a>' +
       '<a class="dash-site-footer__link" href="/services">خدمات</a>' +
-      '<a class="dash-site-footer__link" href="/dashboard#dashDeliveryTitle">طلب من الخريطة</a>' +
+      '<a class="dash-site-footer__link" href="/delivery-map">طلب من الخريطة</a>' +
       '<a class="dash-site-footer__link" href="/start-now.html">ابدأ الآن</a>' +
       '<a class="dash-site-footer__link" href="/">الرئيسية</a>' +
       "</nav>" +

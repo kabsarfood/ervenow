@@ -371,25 +371,83 @@
   background: rgba(248, 244, 238, 0.8);
 }
 
-/* ——— Empty state ——— */
+/* ——— Empty state (منبثقة + صفحة) ——— */
+.lp-cart-panel--empty .lp-cart-card--items .lp-cart-card__body--items {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  min-height: min(220px, 42vh);
+  padding: 20px 16px 24px;
+}
+
 .lp-cart-panel__empty {
-  padding: 28px 16px;
+  width: 100%;
+  margin: 0;
+  padding: 0 12px 14px;
   font-size: 0.9rem;
+  line-height: 1.5;
+  text-align: center;
+  color: var(--muted, #5c4a3d);
 }
 
 .lp-cart-panel__empty-cta {
-  margin-top: 14px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: stretch;
+  align-content: center;
+  gap: 10px;
+  width: 100%;
+  max-width: 340px;
+  margin: 0 auto;
+}
+
+.lp-cart-panel__empty-cta[hidden] {
+  display: none !important;
 }
 
 .lp-cart-panel__empty-btn {
+  flex: 1 1 calc(50% - 5px);
+  min-width: calc(50% - 5px);
+  box-sizing: border-box;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  text-decoration: none;
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 800;
+  padding: 10px 12px;
   border-radius: 10px;
-  font-size: 0.8rem;
+  border: 1px solid rgba(185, 135, 47, 0.35);
+  background: rgba(255, 254, 251, 0.95);
+  color: var(--brown, #3d2213);
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.lp-cart-panel__empty-btn:hover {
+  background: rgba(201, 162, 39, 0.16);
+  border-color: rgba(185, 135, 47, 0.5);
 }
 
 .lp-cart-panel__empty-btn--primary {
   background: linear-gradient(135deg, #b9872f, #7a5a1f);
   color: #fffef8;
   border-color: transparent;
+}
+
+.lp-cart-panel__empty-btn--primary:hover {
+  filter: brightness(1.05);
+  border-color: transparent;
+}
+
+#lpCartWrap.lp-cart-wrap--portaled .lp-cart-panel--empty .lp-cart-card--items .lp-cart-card__body--items {
+  min-height: min(200px, 38vh);
 }
 
 .lp-cart-card--pay .lp-cart-card__body--pay {
@@ -414,4 +472,49 @@
     text-align: start;
     margin-top: -4px;
   }
+}
+
+/* ——— صفحة السلة الكاملة (نفس مكوّن اللوحة) ——— */
+.lp-cart-panel--page {
+  width: 100%;
+  max-width: min(640px, 100%);
+  margin: 0 auto;
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: none;
+  position: relative;
+  top: auto;
+  inset-inline-end: auto;
+  max-height: none;
+  padding: 2px;
+}
+
+.lp-cart-panel--page .lp-cart-panel__surface {
+  max-height: none;
+}
+
+.lp-cart-panel--page .lp-cart-stack {
+  max-height: none;
+}
+
+.lp-cart-panel--page .lp-cart-card--items .lp-cart-card__body--items {
+  max-height: none;
+  overflow: visible;
+}
+
+.lp-cart-panel--page.lp-cart-panel--empty .lp-cart-card--items .lp-cart-card__body--items {
+  min-height: min(48dvh, 400px);
+}
+
+.lp-cart-panel--page .lp-cart-panel__empty {
+  padding: clamp(24px, 6vw, 40px) 20px 12px;
+}
+
+.lp-cart-panel--page .lp-cart-panel__empty-cta {
+  max-width: 380px;
+}
+
+body.cart-page-is-empty .cart-page-hero__count {
+  color: var(--gold, #b9872f);
 }

@@ -459,6 +459,14 @@ if (servePublicUi) {
     res.sendFile(path.join(publicPath, "dashboard.html"));
   });
 
+  app.get(["/delivery-map", "/delivery-map.html"], (_req, res) => {
+    res.sendFile(path.join(publicPath, "delivery-map.html"));
+  });
+
+  app.get(["/delivery-request", "/delivery-request.html"], (_req, res) => {
+    res.redirect(301, "/delivery-map");
+  });
+
   app.get("/start-now", (_req, res) => {
     res.sendFile(path.join(publicPath, "start-now.html"));
   });

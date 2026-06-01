@@ -320,6 +320,10 @@ body.guest-shell-page.stores-page {
     font-size: 0.88rem;
     box-sizing: border-box;
   }
+  /* زائر: «دخول» في التبويبات — إخفاء الزر الطويل أسفل الهيدر */
+  body.guest-shell-page #switchAccount.switch-account--nav-only {
+    display: none !important;
+  }
   .dash-header-cart,
   .dash-header-wallet {
     min-height: 44px;

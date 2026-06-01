@@ -145,7 +145,8 @@
     if (!switchAccount) return;
     switchAccount.style.display = "";
     switchAccount.textContent = "تسجيل الدخول";
-    switchAccount.className = "dash-site-header__btn dash-site-header__btn--primary";
+    switchAccount.className =
+      "dash-site-header__btn dash-site-header__btn--primary switch-account--nav-only";
     switchAccount.setAttribute("href", "/login?role=customer");
     switchAccount.removeAttribute("aria-label");
   }
@@ -162,6 +163,7 @@
     switchAccount.style.display = "";
     switchAccount.textContent = home.short || "حسابي";
     switchAccount.className = "dash-site-header__btn dash-site-header__btn--primary";
+    switchAccount.classList.remove("switch-account--nav-only");
     switchAccount.setAttribute("href", home.path);
     switchAccount.setAttribute("aria-label", "فتح " + (home.label || "لوحة حسابك"));
     switchAccount.setAttribute("title", home.label || "");
@@ -349,7 +351,7 @@
       '<span class="dash-header-cart__badge" id="cartCount" data-empty="true">0</span>' +
       "</a>" +
       "</div>" +
-      '<a class="dash-site-header__btn dash-site-header__btn--primary" href="/login?role=customer" id="switchAccount">تسجيل الدخول</a>' +
+      '<a class="dash-site-header__btn dash-site-header__btn--primary switch-account--nav-only" href="/login?role=customer" id="switchAccount">تسجيل الدخول</a>' +
       "</div>" +
       "</header>"
     );
@@ -364,7 +366,7 @@
       '<a class="dash-site-footer__link" href="/stores">متاجر</a>' +
       '<a class="dash-site-footer__link" href="/delivery-services.html">توصيل</a>' +
       '<a class="dash-site-footer__link" href="/services">خدمات</a>' +
-      '<a class="dash-site-footer__link" href="/dashboard#dashDeliveryTitle">طلب من الخريطة</a>' +
+      '<a class="dash-site-footer__link" href="/delivery-map">طلب من الخريطة</a>' +
       '<a class="dash-site-footer__link" href="/start-now.html">ابدأ الآن</a>' +
       '<a class="dash-site-footer__link" href="/">الرئيسية</a>' +
       "</nav>" +
@@ -420,6 +422,56 @@
     document.head.appendChild(s);
   }
 
+  function ensureCartStyles() {
+    if (!document.querySelector('link[href*="cart-luxe.css"]')) {
+      var l1 = document.createElement("link");
+      l1.rel = "stylesheet";
+      l1.href = "/assets/cart-luxe.css";
+      document.head.appendChild(l1);
+    }
+    if (!document.querySelector('link[href*="cart-shell.css"]')) {
+      var l2 = document.createElement("link");
+      l2.rel = "stylesheet";
+      l2.href = "/assets/cart-shell.css";
+      document.head.appendChild(l2);
+    }
+  }
+
+  function mountUnifiedHeaderCart() {
+    if (document.getElementById("lpCartWrap")) return;
+    var tools = document.querySelector(".dash-site-header__tools");
+    var link = tools && tools.querySelector(".dash-header-cart");
+    if (tools && link && global.ErvenowCartUI) {
+      global.ErvenowCartUI.mountGuestHeaderCart(tools, link);
+    }
+  }
+
+  function loadCartUi(cb) {
+    if (!document.body.classList.contains("guest-shell-page")) {
+      if (cb) cb();
+      return;
+    }
+    ensureCartStyles();
+    if (global.ErvenowCartUI) {
+      mountUnifiedHeaderCart();
+      if (cb) cb();
+      return;
+    }
+    if (document.querySelector('script[src*="cart-ui.js"]')) {
+      mountUnifiedHeaderCart();
+      if (cb) cb();
+      return;
+    }
+    var s = document.createElement("script");
+    s.src = "/assets/cart-ui.js";
+    s.async = true;
+    s.onload = function () {
+      mountUnifiedHeaderCart();
+      if (cb) cb();
+    };
+    document.head.appendChild(s);
+  }
+
   function init(opts) {
     opts = opts || {};
     _activeNavKey = opts.activeNav || "";
@@ -431,6 +483,7 @@
     paintIndexNav("", { authenticated: hasToken() });
     refreshCartBadge();
     loadToggleUi();
+    loadCartUi();
     loadPlatformAccessScript();
     loadAccountDestScript();
     whenPlatformApiReady(function () {

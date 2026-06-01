@@ -248,9 +248,34 @@
       .my-orders-tab-panel[hidden] {
         display: none !important;
       }
+      /* فوتر ثابت أسفل الشاشة عند قصر المحتوى */
+      body.guest-shell-page.my-orders-page {
+        display: flex;
+        flex-direction: column;
+        min-height: 100dvh;
+        min-height: var(--erw-viewport-h, 100dvh);
+      }
+      body.my-orders-page > .dash-site-header {
+        flex-shrink: 0;
+      }
+      body.my-orders-page > .dash-main {
+        flex: 1 1 auto;
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        min-height: 0;
+      }
+      body.my-orders-page .dash-main .layout {
+        flex: 1 1 auto;
+      }
+      body.my-orders-page .dash-main > .dash-site-footer {
+        margin-top: auto;
+        flex-shrink: 0;
+        width: 100%;
+      }
     </style>
   </head>
-  <body class="guest-shell-page">
+  <body class="guest-shell-page my-orders-page">
     <header class="dash-site-header">
       <div class="dash-site-header__inner">
         <div class="dash-site-header__brand">
@@ -283,7 +308,7 @@
       <div class="layout">
         <section class="my-orders-hero">
           <h1>طلباتي</h1>
-          <p>طلباتك النشطة (جديدة أو قيد التوصيل) في «الطلبات الجديدة». بعد التسليم تنتقل إلى «الطلبات المغلقة» كمرجع — وتُحذف تلقائياً بعد سنة.</p>
+          <p>الطلبات النشطة في «الطلبات الجديدة». الطلبات المُسلّمة والملغاة معاً في «الطلبات المغلقة» — وتُحذف تلقائياً بعد سنة.</p>
         </section>
 
         <div id="myOrdersLogin" class="card my-orders-login" hidden>
@@ -329,7 +354,7 @@
                 aria-selected="false"
                 aria-controls="myOrdersTabPanelClosed"
               >
-                الطلبات المغلقة
+                مُسلّمة وملغاة
                 <span class="my-orders-tab__count" id="myOrdersClosedCount">(0)</span>
               </button>
             </div>
@@ -377,14 +402,43 @@
         void ErvenowAuthGuard.ensureApprovedAccount();
       })();
 
+      function orderStatusKey(o) {
+        return String((o && o.delivery_status) || (o && o.status) || "")
+          .toLowerCase()
+          .trim();
+      }
+
+      function orderFinanceStatus(o) {
+        return String((o && o.status) || "")
+          .toLowerCase()
+          .trim();
+      }
+
+      function isCancelledOrder(o) {
+        var ds = orderStatusKey(o);
+        var st = orderFinanceStatus(o);
+        if (/cancel/.test(ds) || /cancel/.test(st)) return true;
+        return (
+          ds === "cancelled_by_customer" ||
+          ds === "canceled_by_customer" ||
+          st === "cancelled" ||
+          st === "canceled"
+        );
+      }
+
+      function isDeliveredOrder(o) {
+        var ds = orderStatusKey(o);
+        return ds === "delivered" || ds === "completed" || ds === "closed";
+      }
+
       function orderStatusMeta(o) {
-        var ds = String(o.delivery_status || o.status || "").toLowerCase();
-        if (ds === "cancelled" || ds === "canceled") {
+        if (isCancelledOrder(o)) {
           return { label: "ملغى", cls: "my-order-badge--cancel", bucket: "closed" };
         }
-        if (ds === "delivered" || ds === "completed") {
+        if (isDeliveredOrder(o)) {
           return { label: "تم التسليم", cls: "my-order-badge--done", bucket: "closed" };
         }
+        var ds = orderStatusKey(o);
         if (o.driver_id && (ds === "accepted" || ds === "picked" || ds === "delivering")) {
           return { label: "قيد التوصيل", cls: "my-order-badge--active", bucket: "open" };
         }
@@ -398,12 +452,24 @@
         return orderStatusMeta(o).bucket === "closed";
       }
 
+      function orderSortTime(o) {
+        var t = (o && (o.updated_at || o.created_at)) || "";
+        var n = Date.parse(t);
+        return Number.isFinite(n) ? n : 0;
+      }
+
       function splitOrders(orders) {
         var open = [];
         var closed = [];
         (orders || []).forEach(function (o) {
           if (isOrderClosed(o)) closed.push(o);
           else open.push(o);
+        });
+        open.sort(function (a, b) {
+          return orderSortTime(b) - orderSortTime(a);
+        });
+        closed.sort(function (a, b) {
+          return orderSortTime(b) - orderSortTime(a);
         });
         return { open: open, closed: closed };
       }
@@ -675,8 +741,8 @@
         if (note) {
           note.textContent =
             activeOrdersTab === "closed"
-              ? "الطلبات المُسلّمة والملغاة — مرجع للاستفسار. تُحذف تلقائياً من المنصة بعد مرور سنة على إغلاقها."
-              : "الطلبات الجديدة: كل ما أنشأته وما زال بانتظار مندوب أو قيد التوصيل. عند التسليم تنتقل إلى «الطلبات المغلقة».";
+              ? "كل الطلبات المُسلّمة والملغاة في قائمة واحدة — مرجع للاستفسار. تُحذف تلقائياً بعد سنة."
+              : "الطلبات الجديدة: بانتظار مندوب أو قيد التوصيل. بعد التسليم أو الإلغاء تنتقل إلى «مُسلّمة وملغاة».";
         }
       }
 

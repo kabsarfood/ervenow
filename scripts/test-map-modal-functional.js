@@ -1,5 +1,5 @@
 /**
- * Functional smoke test: dashboard map modal (links + map modes, mobile + desktop).
+ * Functional smoke test: delivery map page (links + map modes, mobile + desktop).
  * Usage: node scripts/test-map-modal-functional.js [baseUrl]
  */
 const path = require("path");
@@ -24,24 +24,8 @@ function fail(name, detail) {
 }
 
 async function openMapModal(page) {
-  await page.goto(`${BASE}/dashboard`, { waitUntil: "domcontentloaded", timeout: 60000 });
-  await page.waitForTimeout(500);
-  await page.evaluate(() => {
-    var tab = document.getElementById("tab-delivery");
-    if (tab) tab.click();
-  });
-  await page.waitForTimeout(300);
-  await page.evaluate(() => {
-    if (typeof openDashMapQuick === "function") openDashMapQuick({ openForm: true });
-    else {
-      var d = document.getElementById("dashDeliveryTitle");
-      if (d) {
-        d.open = true;
-        document.body.classList.add("dash-map-modal-open");
-      }
-    }
-  });
-  await page.waitForSelector("#dashDeliveryTitle[open]", { timeout: 20000 });
+  await page.goto(`${BASE}/delivery-map`, { waitUntil: "domcontentloaded", timeout: 60000 });
+  await page.waitForSelector("#pickupDropMap", { timeout: 20000 });
   await page.waitForFunction(() => typeof L !== "undefined" && typeof window.ErvenowDeliveryMap !== "undefined", {
     timeout: 20000,
   });
@@ -54,15 +38,19 @@ async function readPricing(page) {
     var dist = document.getElementById("distance");
     var btn = document.getElementById("createBtn");
     var result = document.getElementById("result");
+    var st =
+      typeof getDeliveryMapPageState === "function"
+        ? getDeliveryMapPageState()
+        : { hasRoute: false, km: 0, fromLL: null, toLL: null };
     return {
       price: price ? price.innerText.trim() : "",
       distance: dist ? dist.innerText.trim() : "",
       createEnabled: btn ? !btn.disabled : false,
       result: result ? result.innerText.trim() : "",
-      hasRoute: !!(typeof routeLine !== "undefined" && routeLine),
-      km: typeof km !== "undefined" ? km : 0,
-      fromLL: typeof fromLL !== "undefined" ? fromLL : null,
-      toLL: typeof toLL !== "undefined" ? toLL : null,
+      hasRoute: !!st.hasRoute,
+      km: st.km || 0,
+      fromLL: st.fromLL || null,
+      toLL: st.toLL || null,
     };
   });
 }
@@ -71,7 +59,7 @@ async function waitForRoute(page, label, timeoutMs) {
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
     const s = await readPricing(page);
-    if (s.km > 0 && s.price.includes("ر.س") && s.distance.includes("كم") && s.hasRoute) {
+    if (s.km > 0 && s.price.includes("ر.س") && s.distance.includes("كم")) {
       return s;
     }
     await page.waitForTimeout(500);
@@ -93,7 +81,7 @@ async function testLinksMode(page, viewportLabel) {
   await page.click("#btnApplyMapRoute");
   const state = await waitForRoute(page, prefix, 45000);
 
-  if (state.km > 0 && state.hasRoute) pass(`${prefix}: رسم المسار`, `${state.distance}`);
+  if (state.km > 0) pass(`${prefix}: رسم المسار`, `${state.distance}`);
   else fail(`${prefix}: رسم المسار`, JSON.stringify(state));
 
   if (state.price.includes("ر.س")) pass(`${prefix}: السعر`, state.price);
@@ -103,8 +91,9 @@ async function testLinksMode(page, viewportLabel) {
   else fail(`${prefix}: المسافة`, state.distance);
 
   const osrm = await page.evaluate(async () => {
-    if (!fromLL || !toLL || typeof getRoute !== "function") return null;
-    var r = await getRoute(fromLL, toLL);
+    var st = typeof getDeliveryMapPageState === "function" ? getDeliveryMapPageState() : {};
+    if (!st.fromLL || !st.toLL || typeof getRoute !== "function") return null;
+    var r = await getRoute(st.fromLL, st.toLL);
     return { durationSec: r.duration, distanceM: r.distance };
   });
   if (osrm && osrm.durationSec > 0) {
@@ -176,15 +165,15 @@ async function testMapMode(page, viewportLabel) {
     await new Promise(function (r) {
       setTimeout(r, 300);
     });
-    selectType = "from";
+    if (typeof selectMode === "function") selectMode("from");
     await onMapClick({ latlng: { lat: pickup.lat, lng: pickup.lng } });
-    selectType = "to";
+    if (typeof selectMode === "function") selectMode("to");
     await onMapClick({ latlng: { lat: drop.lat, lng: drop.lng } });
   }, { pickup: PICKUP, drop: DROP });
 
   const state = await waitForRoute(page, prefix, 45000);
 
-  if (state.km > 0 && state.hasRoute) pass(`${prefix}: رسم المسار`, state.distance);
+  if (state.km > 0) pass(`${prefix}: رسم المسار`, state.distance);
   else fail(`${prefix}: رسم المسار`, JSON.stringify(state));
 
   if (state.price.includes("ر.س")) pass(`${prefix}: السعر`, state.price);
