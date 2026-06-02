@@ -93,6 +93,109 @@
           </div>
         </div>
 
+        <section class="command-center" id="commandCenter" aria-label="ERVENOW COMMAND CENTER">
+          <div class="command-center__head">
+            <h2 class="dash-zone-title">⚙️ ERVENOW COMMAND CENTER</h2>
+            <p class="sub">صورة فورية لحالة المنصة خلال ثوانٍ — اضغط أي بطاقة للانتقال إلى القسم المرتبط.</p>
+          </div>
+
+          <div class="command-center__grid command-center__grid--ops">
+            <button type="button" class="command-kpi-card command-kpi-card--primary" data-command-panel="panelOrders">
+              <span class="command-kpi-card__label">📦 طلبات اليوم</span>
+              <strong class="command-kpi-card__value" id="ccOrdersToday">—</strong>
+              <span class="command-kpi-card__hint">/api/admin/stats</span>
+            </button>
+            <button type="button" class="command-kpi-card command-kpi-card--primary" data-command-panel="panelOrders">
+              <span class="command-kpi-card__label">🚚 الطلبات النشطة الآن</span>
+              <strong class="command-kpi-card__value" id="ccOrdersActive">—</strong>
+              <span class="command-kpi-card__hint">/api/admin/stats</span>
+            </button>
+            <button type="button" class="command-kpi-card command-kpi-card--primary" data-command-panel="panelApprovals">
+              <span class="command-kpi-card__label">📥 بانتظار الموافقة</span>
+              <strong class="command-kpi-card__value" id="ccApprovalsPending">—</strong>
+              <span class="command-kpi-card__hint">/api/admin/registration-approvals</span>
+            </button>
+            <button type="button" class="command-kpi-card command-kpi-card--primary" data-command-panel="panelNotifications">
+              <span class="command-kpi-card__label">🔔 إشعارات جديدة</span>
+              <strong class="command-kpi-card__value" id="ccNotificationsUnread">—</strong>
+              <span class="command-kpi-card__hint">/api/notifications/unread-count</span>
+            </button>
+          </div>
+
+          <div class="command-center__grid">
+            <button type="button" class="command-kpi-card" data-command-panel="panelStores">
+              <span class="command-kpi-card__label">🏪 المتاجر</span>
+              <strong class="command-kpi-card__value" id="ccStoresTotal">—</strong>
+            </button>
+            <button type="button" class="command-kpi-card" data-command-panel="panelDrivers">
+              <span class="command-kpi-card__label">🛵 المناديب</span>
+              <strong class="command-kpi-card__value" id="ccDriversTotal">—</strong>
+            </button>
+            <button type="button" class="command-kpi-card" data-command-panel="panelServices">
+              <span class="command-kpi-card__label">🛠️ مزودو الخدمات</span>
+              <strong class="command-kpi-card__value" id="ccProvidersTotal">—</strong>
+            </button>
+            <button type="button" class="command-kpi-card" data-command-panel="panelCustomers">
+              <span class="command-kpi-card__label">🛍️ العملاء</span>
+              <strong class="command-kpi-card__value" id="ccCustomersTotal">—</strong>
+            </button>
+          </div>
+
+          <div class="command-center__grid">
+            <button type="button" class="command-kpi-card" data-command-panel="panelErvenowPay">
+              <span class="command-kpi-card__label">⚡ ERVENOW PAY (معلّق)</span>
+              <strong class="command-kpi-card__value" id="ccTopupPending">—</strong>
+              <span class="command-kpi-card__hint">
+                معتمد اليوم: <strong id="ccTopupApprovedToday">—</strong> · مرفوض اليوم: <strong id="ccTopupRejectedToday">—</strong>
+              </span>
+            </button>
+            <button type="button" class="command-kpi-card" data-command-panel="financePanel">
+              <span class="command-kpi-card__label">💰 الخزينة (Platform Treasury KPI)</span>
+              <strong class="command-kpi-card__value" id="ccTreasuryTotal">—</strong>
+              <span class="command-kpi-card__hint">رصيد محاسبة المنصة من /api/admin/platform-treasury</span>
+            </button>
+            <button type="button" class="command-kpi-card" data-command-href="/admin/withdrawals">
+              <span class="command-kpi-card__label">🏦 السحوبات المعلقة</span>
+              <strong class="command-kpi-card__value" id="ccWithdrawalsPending">—</strong>
+            </button>
+            <button type="button" class="command-kpi-card" data-command-panel="financePanel">
+              <span class="command-kpi-card__label">📈 العمولات</span>
+              <strong class="command-kpi-card__value" id="ccCommissionsTotal">—</strong>
+            </button>
+          </div>
+
+          <div class="command-alert-strip" id="commandAlertStrip">
+            <button type="button" class="command-alert-chip" data-command-panel="panelApprovals">
+              ⚠️ موافقات معلقة: <strong id="ccAlertApprovals">—</strong>
+            </button>
+            <button type="button" class="command-alert-chip" data-command-href="/admin/withdrawals">
+              ⚠️ طلبات سحب معلقة: <strong id="ccAlertWithdrawals">—</strong>
+            </button>
+            <button type="button" class="command-alert-chip" data-command-panel="panelErvenowPay">
+              ⚠️ عمليات ERVENOW PAY معلقة: <strong id="ccAlertTopup">—</strong>
+            </button>
+            <button type="button" class="command-alert-chip" data-command-panel="panelNotifications">
+              ⚠️ إشعارات حرجة: <strong id="ccAlertNotifications">—</strong>
+            </button>
+          </div>
+
+          <div class="command-center__grid">
+            <div class="command-kpi-card command-health-card">
+              <span class="command-kpi-card__label">🩺 SYSTEM HEALTH</span>
+              <div class="command-health-list">
+                <div class="command-health-item"><span>Database</span><strong id="ccHealthDatabase">—</strong></div>
+                <div class="command-health-item"><span>Notifications</span><strong id="ccHealthNotifications">—</strong></div>
+                <div class="command-health-item"><span>Wallet</span><strong id="ccHealthWallet">—</strong></div>
+                <div class="command-health-item"><span>ERVENOW PAY</span><strong id="ccHealthPay">—</strong></div>
+                <div class="command-health-item"><span>Delivery</span><strong id="ccHealthDelivery">—</strong></div>
+                <div class="command-health-item"><span>Maps</span><strong id="ccHealthMaps">—</strong></div>
+                <div class="command-health-item"><span>Approvals</span><strong id="ccHealthApprovals">—</strong></div>
+              </div>
+              <span class="command-kpi-card__hint">🟢 متاح · 🟡 بطيء · 🔴 غير متاح</span>
+            </div>
+          </div>
+        </section>
+
       <section class="live-dash" id="liveDashboard" aria-label="لوحة التشغيل">
         <div class="live-dash-head">
           <span class="live-pulse" aria-hidden="true"></span>

@@ -144,7 +144,7 @@
         internal_delivery: "📦",
         pickup_truck: "🛻",
         furniture_move: "🛋️",
-        gas_delivery: "🔥",
+        gas_delivery: "🚚",
       };
 
       const requestTypes = Object.keys(serviceLabels);
@@ -322,7 +322,7 @@
         box.style.display = "block";
 
         const title = serviceLabels[safeType] || "خدمة";
-        const icon = serviceIcons[safeType] || "🧾";
+        const icon = serviceIcons[safeType] || "📦";
         const defaultItem = safeType === "gas_delivery" ? "تبديل غاز" : "طلب " + title;
 
         let extraFields = "";

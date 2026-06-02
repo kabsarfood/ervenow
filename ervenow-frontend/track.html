@@ -332,11 +332,11 @@
           style="margin: 10px 0; font-size: 1.4rem; letter-spacing: 0.2em; cursor: pointer; user-select: none"
           role="group"
         >
-          <span data-n="1">⭐</span>
-          <span data-n="2">⭐</span>
-          <span data-n="3">⭐</span>
-          <span data-n="4">⭐</span>
-          <span data-n="5">⭐</span>
+          <span data-n="1">📊</span>
+          <span data-n="2">📊</span>
+          <span data-n="3">📊</span>
+          <span data-n="4">📊</span>
+          <span data-n="5">📊</span>
         </div>
         <textarea id="rateReview" rows="3" placeholder="اكتب رأيك"></textarea>
         <div class="btn-row" style="margin-top: 10px">
@@ -2990,7 +2990,7 @@
             if (!oid) return;
             var mEl = document.getElementById("rateMsg");
             if (selectedRate < 1) {
-              if (mEl) mEl.textContent = "اختر من ⭐ لنجمة واحدة حتى 5 نجوم.";
+              if (mEl) mEl.textContent = "اختر من 📊 لتقييم واحد حتى 5 تقييمات.";
               return;
             }
             if (mEl) mEl.textContent = "جارٍ الإرسال…";

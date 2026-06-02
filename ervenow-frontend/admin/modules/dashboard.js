@@ -379,6 +379,15 @@ app.adminMapDotIcon = function (color, opts) {
   });
 }
 
+app.storeTypeColor = function (type) {
+  var t = String(type || "").toLowerCase();
+  if (t === "restaurant") return "#eab308";
+  if (t === "supermarket" || t === "market") return "#22c55e";
+  if (t === "pharmacy") return "#06b6d4";
+  if (t === "flower") return "#ec4899";
+  return "#9ca3af";
+}
+
 app.ensureLiveMap = function () {
   if (app.liveMap || typeof L === "undefined") return;
   var el = document.getElementById("liveMap");
@@ -437,7 +446,39 @@ app.syncLiveMapMarkers = function () {
 
   var wantedDrivers = {};
   var wantedOrders = {};
+  var wantedStores = {};
   var bounds = [];
+
+  var storeRows = Array.isArray(app.cacheMapStores) ? app.cacheMapStores : [];
+  for (var si = 0; si < storeRows.length; si++) {
+    var st = storeRows[si];
+    if (!st || st.id == null) continue;
+    var sla = Number(st.lat);
+    var sln = Number(st.lng);
+    if (!Number.isFinite(sla) || !Number.isFinite(sln)) continue;
+    var sk = "store:" + String(st.id);
+    wantedStores[sk] = true;
+    var sName = app.escapeHtml(st.name || "متجر");
+    var sStatus = app.escapeHtml(st.status || "approved");
+    var sType = app.escapeHtml(st.type || "store");
+    var sPhone = app.escapeHtml(st.phone || "—");
+    var sColor = app.storeTypeColor(st.type);
+    app.upsertLiveMapMarker(
+      app.liveMapOrderMarkers,
+      sk,
+      sla,
+      sln,
+      app.adminMapDotIcon(sColor, { size: 12, pulse: true }),
+      '<div class="admin-map-popup"><strong>🏪 ' + sName + '</strong><div class="admin-popup-row">النوع: ' +
+        sType +
+        '</div><div class="admin-popup-row">الجوال: ' +
+        sPhone +
+        '</div><div class="admin-popup-row">الحالة: ' +
+        sStatus +
+        "</div></div>"
+    );
+    bounds.push([sla, sln]);
+  }
 
   if (app.hasPermission("drivers")) {
     for (var di = 0; di < app.cacheDrivers.length; di++) {
@@ -549,7 +590,7 @@ app.syncLiveMapMarkers = function () {
     if (!wantedDrivers[k]) app.removeLiveMapMarker(app.liveMapDriverMarkers, k);
   });
   Object.keys(app.liveMapOrderMarkers).forEach(function (k) {
-    if (!wantedOrders[k]) app.removeLiveMapMarker(app.liveMapOrderMarkers, k);
+    if (!wantedOrders[k] && !wantedStores[k]) app.removeLiveMapMarker(app.liveMapOrderMarkers, k);
   });
 
   if (bounds.length === 1) {
@@ -634,6 +675,19 @@ app.refreshLiveDriversAndMap = async function () {
       }
     } else drvEl.textContent = "—";
   }
+  try {
+    var sj = await app.PlatformAPI.api("/api/admin/store-requests");
+    var srows = Array.isArray(sj.requests) ? sj.requests : [];
+    app.cacheMapStores = srows.filter(function (s) {
+      if (!s) return false;
+      var st = String(s.status || "").toLowerCase();
+      var lat = Number(s.lat);
+      var lng = Number(s.lng);
+      return (st === "approved" || st === "active") && Number.isFinite(lat) && Number.isFinite(lng);
+    });
+  } catch (_se) {
+    app.cacheMapStores = [];
+  }
   app.syncLiveMapMarkers();
 }
 
@@ -674,4 +728,203 @@ app.loadStats = async function () {
   } catch (e) {
     app.showError(e.message || "فشل تحميل الإحصائيات");
   }
+}
+
+app.commandSetValue = function (id, value) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = value != null && value !== "" ? String(value) : "—";
+}
+
+app.commandSetMoney = function (id, value) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = app.fmtMoney(value || 0);
+}
+
+app.commandSetHealth = function (id, state) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  if (!state || !state.ok) {
+    el.textContent = "🔴";
+    return;
+  }
+  el.textContent = state.slow ? "🟡" : "🟢";
+}
+
+app.openCommandPanel = function (panelId, href) {
+  if (href) {
+    window.location.href = href;
+    return;
+  }
+  if (!panelId) return;
+  app.showPanel(panelId);
+  Promise.resolve(app.loadPanelById(panelId)).then(function () {
+    var el = document.getElementById(panelId);
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+}
+
+app.wireCommandCenter = function () {
+  if (app.commandCenterWired) return;
+  app.commandCenterWired = true;
+  document.querySelectorAll("[data-command-panel], [data-command-href]").forEach(function (el) {
+    el.addEventListener("click", function () {
+      var panelId = el.getAttribute("data-command-panel") || "";
+      var href = el.getAttribute("data-command-href") || "";
+      app.openCommandPanel(panelId, href);
+    });
+  });
+}
+
+app.isOperationalStore = function (row) {
+  var s = String((row && row.status) || "").toLowerCase();
+  return s === "approved" || s === "active";
+}
+
+app.isOperationalDriver = function (row) {
+  if (!row) return false;
+  var s = String(row.status || "").toLowerCase();
+  var activeFlag = row.active === true;
+  return activeFlag || s === "approved" || s === "active";
+}
+
+app.isTodayDate = function (iso) {
+  if (!iso) return false;
+  try {
+    var d = new Date(iso);
+    var now = new Date();
+    return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+  } catch (_e) {
+    return false;
+  }
+}
+
+app.getCommandCenterMetrics = async function () {
+  var rangeEl = document.getElementById("range");
+  var range = rangeEl && rangeEl.value ? rangeEl.value : "today";
+  var reqs = [
+    app.PlatformAPI.api("/api/admin/stats?range=" + encodeURIComponent(range)),
+    app.PlatformAPI.api("/api/admin/registration-approvals?type=all&status=all"),
+    app.PlatformAPI.api("/api/notifications/unread-count"),
+    app.PlatformAPI.api("/api/admin/store-requests"),
+    app.PlatformAPI.api("/api/admin/drivers"),
+    app.PlatformAPI.api("/api/admin/providers"),
+    app.PlatformAPI.api("/api/admin/customers"),
+    app.PlatformAPI.api("/api/admin/topup-requests"),
+    app.PlatformAPI.api("/api/admin/platform-treasury"),
+    app.PlatformAPI.api("/api/admin/finance-summary"),
+    app.PlatformAPI.api("/api/admin/withdrawals/drivers"),
+    app.PlatformAPI.api("/api/admin/withdrawals/stores"),
+  ];
+  var res = await Promise.allSettled(reqs);
+  var stats = res[0].status === "fulfilled" ? res[0].value : {};
+  var approvals = res[1].status === "fulfilled" ? res[1].value : {};
+  var unread = res[2].status === "fulfilled" ? res[2].value : {};
+  var stores = res[3].status === "fulfilled" ? res[3].value : {};
+  var drivers = res[4].status === "fulfilled" ? res[4].value : {};
+  var providers = res[5].status === "fulfilled" ? res[5].value : {};
+  var customers = res[6].status === "fulfilled" ? res[6].value : {};
+  var topups = res[7].status === "fulfilled" ? res[7].value : {};
+  var treasury = res[8].status === "fulfilled" ? res[8].value : {};
+  var financeSummary = res[9].status === "fulfilled" ? res[9].value : {};
+  var wdDrivers = res[10].status === "fulfilled" ? res[10].value : {};
+  var wdStores = res[11].status === "fulfilled" ? res[11].value : {};
+
+  var storeRows = Array.isArray(stores.requests) ? stores.requests : [];
+  var driverRows = Array.isArray(drivers.drivers) ? drivers.drivers : [];
+  var topupRows = Array.isArray(topups.requests) ? topups.requests : [];
+  var wdRows = []
+    .concat(Array.isArray(wdDrivers.withdrawals) ? wdDrivers.withdrawals : [])
+    .concat(Array.isArray(wdStores.withdrawals) ? wdStores.withdrawals : []);
+
+  var pendingTopups = 0;
+  var approvedTopupsToday = 0;
+  var rejectedTopupsToday = 0;
+  topupRows.forEach(function (r) {
+    var st = String((r && r.status) || "").toLowerCase();
+    if (st === "pending") pendingTopups += 1;
+    if (app.isTodayDate(r && r.created_at)) {
+      if (st === "approved") approvedTopupsToday += 1;
+      if (st === "rejected") rejectedTopupsToday += 1;
+    }
+  });
+
+  var pendingWithdrawals = wdRows.filter(function (r) {
+    return String((r && r.status) || "").toLowerCase() === "pending";
+  }).length;
+
+  return {
+    ordersToday: Number(stats.ordersToday != null ? stats.ordersToday : stats.today_orders) || 0,
+    activeOrders: Number(stats.activeOrders != null ? stats.activeOrders : stats.active_orders) || 0,
+    pendingApprovals: Number((approvals.summary && approvals.summary.in_review) || 0,
+    ),
+    unreadNotifications: Number(unread.unread_count) || 0,
+    activeStores: storeRows.filter(app.isOperationalStore).length,
+    activeDrivers: driverRows.filter(app.isOperationalDriver).length,
+    providers: Array.isArray(providers.providers) ? providers.providers.length : 0,
+    customers: Array.isArray(customers.customers) ? customers.customers.length : 0,
+    pendingPayOperations: pendingTopups,
+    approvedPayToday: approvedTopupsToday,
+    rejectedPayToday: rejectedTopupsToday,
+    treasuryBalance: Number((treasury.treasury && treasury.treasury.platform_accounting_balance) || 0),
+    pendingWithdrawals: pendingWithdrawals,
+    platformCommission: Number(financeSummary.platform_commission_total || 0),
+  };
+}
+
+app.probeHealth = async function (url, slowMs) {
+  var start = Date.now();
+  try {
+    await app.PlatformAPI.api(url);
+    var elapsed = Date.now() - start;
+    return { ok: true, slow: elapsed > (slowMs || 1200), ms: elapsed };
+  } catch (_e) {
+    return { ok: false, slow: false, ms: Date.now() - start };
+  }
+}
+
+app.loadSystemHealth = async function () {
+  var probes = await Promise.all([
+    app.probeHealth("/api/admin/stats?range=today", 1200),
+    app.probeHealth("/api/notifications/unread-count", 1200),
+    app.probeHealth("/api/admin/platform-treasury", 1200),
+    app.probeHealth("/api/admin/topup-requests", 1200),
+    app.probeHealth("/api/admin/orders", 1200),
+    app.probeHealth("/api/admin/drivers", 1200),
+    app.probeHealth("/api/admin/registration-approvals?type=all&status=all", 1200),
+  ]);
+  app.commandSetHealth("ccHealthDatabase", probes[0]);
+  app.commandSetHealth("ccHealthNotifications", probes[1]);
+  app.commandSetHealth("ccHealthWallet", probes[2]);
+  app.commandSetHealth("ccHealthPay", probes[3]);
+  app.commandSetHealth("ccHealthDelivery", probes[4]);
+  app.commandSetHealth("ccHealthMaps", probes[5]);
+  app.commandSetHealth("ccHealthApprovals", probes[6]);
+}
+
+app.loadCommandCenter = async function () {
+  app.wireCommandCenter();
+  try {
+    var m = await app.getCommandCenterMetrics();
+    app.commandSetValue("ccOrdersToday", m.ordersToday);
+    app.commandSetValue("ccOrdersActive", m.activeOrders);
+    app.commandSetValue("ccApprovalsPending", m.pendingApprovals);
+    app.commandSetValue("ccNotificationsUnread", m.unreadNotifications);
+    app.commandSetValue("ccStoresTotal", m.activeStores);
+    app.commandSetValue("ccDriversTotal", m.activeDrivers);
+    app.commandSetValue("ccProvidersTotal", m.providers);
+    app.commandSetValue("ccCustomersTotal", m.customers);
+    app.commandSetValue("ccTopupPending", m.pendingPayOperations);
+    app.commandSetValue("ccTopupApprovedToday", m.approvedPayToday);
+    app.commandSetValue("ccTopupRejectedToday", m.rejectedPayToday);
+    app.commandSetMoney("ccTreasuryTotal", m.treasuryBalance);
+    app.commandSetValue("ccWithdrawalsPending", m.pendingWithdrawals);
+    app.commandSetMoney("ccCommissionsTotal", m.platformCommission);
+    app.commandSetValue("ccAlertApprovals", m.pendingApprovals);
+    app.commandSetValue("ccAlertWithdrawals", m.pendingWithdrawals);
+    app.commandSetValue("ccAlertTopup", m.pendingPayOperations);
+    app.commandSetValue("ccAlertNotifications", m.unreadNotifications);
+  } catch (_e) {}
+  void app.loadSystemHealth();
 }

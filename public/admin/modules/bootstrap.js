@@ -99,6 +99,7 @@ if (closeBtn) {
   app.showPanel("");
   if (app.hasPermission("dashboard")) app.loadStats();
   else if (app.hasPermission("finance")) app.loadLedgerFinanceSummary();
+  void app.loadCommandCenter();
   if (app.hasPermission("orders")) app.loadRecentOrders();
   if (app.hasPermission("drivers")) app.loadDrivers();
   if (
@@ -146,6 +147,7 @@ if (closeBtn) {
       app.loadStats();
       void app.refreshLiveDashboard();
     }
+    void app.loadCommandCenter();
   }, app.STATS_POLL_MS);
   setInterval(function () {
     if (app.hasPermission("finance")) {

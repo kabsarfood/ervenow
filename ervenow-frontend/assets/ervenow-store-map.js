@@ -45,6 +45,7 @@
     this.radiusCircle = null;
     this.hasLocation = false;
     this.contextLayer = L.layerGroup();
+    this.nameInput = null;
     this._init();
   }
 
@@ -61,6 +62,7 @@
     this.radiusSelect = this.opts.radiusSelectId
       ? document.getElementById(this.opts.radiusSelectId)
       : null;
+    this.nameInput = this.opts.nameInputId ? document.getElementById(this.opts.nameInputId) : null;
 
     if (this.latInput) this.latInput.value = "";
     if (this.lngInput) this.lngInput.value = "";
@@ -94,6 +96,11 @@
     if (this.radiusSelect) {
       this.radiusSelect.addEventListener("change", function () {
         self._updateRadiusCircle();
+      });
+    }
+    if (this.nameInput) {
+      this.nameInput.addEventListener("input", function () {
+        self._syncStorePinLabel();
       });
     }
 
@@ -172,6 +179,7 @@
     this.marker.setLatLng([lat, lng]);
     this.marker.setOpacity(1);
     this.marker.setInteractive(true);
+    this._syncStorePinLabel();
     this._setStatus("تم تحديد موقع متجرك — الدائرة تمثل نطاق التوصيل.", true);
     this._updateRadiusCircle();
     this.map.panTo([lat, lng], { animate: true });
@@ -180,6 +188,18 @@
     if (typeof this.opts.onPlace === "function") {
       this.opts.onPlace(lat, lng);
     }
+  };
+
+  ErvenowStoreMap.prototype._syncStorePinLabel = function () {
+    if (!this.marker) return;
+    var storeName = this.nameInput ? String(this.nameInput.value || "").trim() : "";
+    var label = storeName || "متجر جديد";
+    this.marker.bindTooltip(label, {
+      direction: "top",
+      offset: [0, -28],
+      opacity: 0.96,
+      permanent: true,
+    });
   };
 
   ErvenowStoreMap.prototype._reverseGeocode = function (lat, lng) {

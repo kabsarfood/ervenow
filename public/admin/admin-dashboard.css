@@ -203,6 +203,121 @@ select {
   border-radius: 10px;
   margin-bottom: 10px;
 }
+
+.command-center {
+  margin-top: 14px;
+  margin-bottom: 14px;
+  padding: 14px;
+  border-radius: 16px;
+  border: 1px solid #e5d8cb;
+  background: linear-gradient(180deg, #fffefb 0%, #f8f0e6 100%);
+}
+
+.command-center__head .sub {
+  margin: 4px 0 0;
+}
+
+.command-center__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.command-center__grid--ops {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.command-kpi-card {
+  border: 1px solid #d9c8b7;
+  border-radius: 12px;
+  background: #fff;
+  color: #3d2213;
+  padding: 12px;
+  text-align: right;
+  font-family: inherit;
+  cursor: pointer;
+  min-height: 84px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+}
+
+.command-kpi-card:hover {
+  border-color: #b9872f;
+  background: #fffaf2;
+}
+
+.command-kpi-card--primary {
+  border-color: #cda56a;
+  background: linear-gradient(135deg, #fff 0%, #fff5e6 100%);
+}
+
+.command-kpi-card__label {
+  font-size: 0.86rem;
+  color: #6f5441;
+  font-weight: 700;
+}
+
+.command-kpi-card__value {
+  font-size: 1.22rem;
+  font-weight: 900;
+  color: #5b371d;
+}
+
+.command-kpi-card__hint {
+  font-size: 0.74rem;
+  color: #8a6a50;
+}
+
+.command-alert-strip {
+  margin-top: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.command-alert-chip {
+  border: 1px solid #e3b07b;
+  border-radius: 999px;
+  background: #fff4e8;
+  color: #7a3e16;
+  padding: 8px 12px;
+  font-family: inherit;
+  font-weight: 800;
+  cursor: pointer;
+  min-height: 40px;
+}
+
+.command-alert-chip strong {
+  color: #b91c1c;
+}
+
+.command-health-card {
+  cursor: default;
+}
+
+.command-health-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.command-health-item {
+  border: 1px solid #e8ddd4;
+  border-radius: 10px;
+  padding: 8px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  background: #fffdfa;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #5b371d;
+}
 .panel-empty {
   padding: 16px;
   text-align: center;

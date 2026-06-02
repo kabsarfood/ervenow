@@ -507,9 +507,7 @@
           </button>
         </div>
 
-        <p class="auth-form-intro" id="authFormIntro">
-          أدخل جوالك السعودي <strong dir="ltr">05xxxxxxxx</strong> — اضغط إرسال الرمز.
-        </p>
+        <p class="auth-form-intro" id="authFormIntro"></p>
 
         <div class="auth-login-core">
           <label for="phone">رقم الجوال</label>
@@ -517,7 +515,7 @@
             id="phone"
             type="tel"
             inputmode="numeric"
-            placeholder="05xxxxxxxx أو 9665xxxxxxxx"
+            placeholder="******05"
             maxlength="12"
             autocomplete="tel-national"
           />
@@ -538,17 +536,6 @@
             <button type="button" class="btn btn-primary" id="authOtpBtn">إرسال الرمز</button>
           </div>
 
-          <nav class="auth-portal-nav" aria-label="بوابات الدخول">
-            <p class="auth-portal-nav__title">دخول بوابة أخرى</p>
-            <div class="auth-portal-nav__grid">
-              <a class="auth-portal-nav__link" href="/login?role=customer">🛍️ عميل</a>
-              <a class="auth-portal-nav__link" href="/login?role=merchant">🏪 متجر</a>
-              <a class="auth-portal-nav__link" href="/login?role=service">🛠️ مزود خدمة</a>
-              <a class="auth-portal-nav__link" href="/driver-login">🛵 مندوب</a>
-              <a class="auth-portal-nav__link" href="/admin-login">⚙️ لوحة الإدارة</a>
-              <a class="auth-portal-nav__link" href="/dashboard">🧭 زائر</a>
-            </div>
-          </nav>
         </div>
 
         <section class="auth-services-panel" id="authServicesPanel" hidden aria-hidden="true"></section>
@@ -794,7 +781,7 @@
         if (intro) {
           intro.textContent = register
             ? "أدخل بياناتك وأكمل التحقق عبر OTP. بعد مراجعة الطلب واعتماده من إدارة ERVENOW سيتم تفعيل حسابك وإشعارك بذلك."
-            : "أدخل جوالك السعودي 05xxxxxxxx أو 9665xxxxxxxx — اضغط إرسال الرمز.";
+            : "";
         }
         if (window.loginOtpFlow && loginOtpFlow.refreshLabels) loginOtpFlow.refreshLabels();
         var servicesPanel = document.getElementById("authServicesPanel");
@@ -1579,7 +1566,7 @@
         introSend: function () {
           return isRegisterMode()
             ? "اختر صفة حسابك ، ثم أدخل جوالك السعودي - اضغط إرسال الرمز ."
-            : "أدخل جوالك السعودي 05xxxxxxxx أو 9665xxxxxxxx — اضغط إرسال الرمز.";
+            : "";
         },
         introVerify: function () {
           return isRegisterMode()

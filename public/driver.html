@@ -567,7 +567,7 @@
         var a = Math.max(0, Math.min(5, Number(avg) || 0));
         var full = Math.floor(a);
         var half = a % 1 >= 0.5 && full < 5;
-        var stars = "⭐".repeat(full);
+        var stars = "📊".repeat(full);
         if (half) stars += "☆";
         var used = full + (half ? 1 : 0);
         stars += "✩".repeat(5 - used);
