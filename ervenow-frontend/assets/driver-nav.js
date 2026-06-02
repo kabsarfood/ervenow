@@ -42,6 +42,7 @@
       links +
       "</div></nav>" +
       '<div class="dash-site-header__tools">' +
+      '<div id="driverHeaderNotifications"></div>' +
       '<a class="drv-tool-balance" id="drvHeaderBalance" href="/driver-wallet" hidden aria-label="الرصيد">' +
       '<span class="drv-tool-balance__label">الرصيد</span>' +
       '<span class="drv-tool-balance__val" id="drvHeaderBalanceAmount">—</span>' +
@@ -50,6 +51,35 @@
       '<a class="dash-site-header__btn dash-site-header__btn--primary" href="/driver-login" id="driverLogout">خروج</a>' +
       "</div></header>"
     );
+  }
+
+  function ensureNotificationCenterAssets() {
+    if (!document.querySelector('link[data-erv-notification-center-css="1"]')) {
+      var l = document.createElement("link");
+      l.rel = "stylesheet";
+      l.href = "/assets/notification-center.css";
+      l.setAttribute("data-erv-notification-center-css", "1");
+      document.head.appendChild(l);
+    }
+    if (!document.querySelector('script[data-erv-notification-center-js="1"]')) {
+      var s = document.createElement("script");
+      s.src = "/assets/notification-center.js";
+      s.defer = true;
+      s.setAttribute("data-erv-notification-center-js", "1");
+      document.head.appendChild(s);
+    }
+  }
+
+  function mountNotificationCenter() {
+    if (!global.PlatformAPI || !PlatformAPI.getToken || !PlatformAPI.getToken()) return;
+    var host = document.getElementById("driverHeaderNotifications");
+    if (!host || host.getAttribute("data-erv-notif-mounted") === "1") return;
+    if (!global.ErvenowNotificationCenter || typeof global.ErvenowNotificationCenter.mount !== "function") {
+      setTimeout(mountNotificationCenter, 120);
+      return;
+    }
+    host.setAttribute("data-erv-notif-mounted", "1");
+    global.ErvenowNotificationCenter.mount({ mount: host, key: "driver-shell-header" });
   }
 
   function renderHero(opts) {
@@ -130,6 +160,7 @@
     if (headerMount) headerMount.outerHTML = renderHeader(opts.activeNav || "driver", opts.pageTag);
     if (heroMount && opts.hero !== false) heroMount.outerHTML = renderHero(opts.hero || {});
     if (footerMount) footerMount.outerHTML = renderFooter();
+    ensureNotificationCenterAssets();
     wireLogout();
     if (!document.querySelector("script[data-erv-platform-access]")) {
       var ps = document.createElement("script");
@@ -140,6 +171,7 @@
     }
     if (global.PlatformAPI && PlatformAPI.getToken && PlatformAPI.getToken()) {
       refreshBalanceChip();
+      mountNotificationCenter();
     }
   }
 

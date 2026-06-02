@@ -12,6 +12,7 @@ const { isOrderPaymentGateRequired } = require("../../shared/utils/orderPaymentG
 const { createDeliveryOrderFromBody, isPaidFromRequestBody } = require("../delivery/service");
 const { enqueueDeliveryJob } = require("../../queues/deliveryQueue");
 const { bumpDeliveryOrdersListEpoch } = require("../../shared/utils/deliveryOrdersListCache");
+const { createNotification } = require("../../shared/services/notificationService");
 
 /**
  * @typedef {"delivery"|"order"} DeliveryEntryPoint
@@ -125,6 +126,29 @@ async function runUnifiedDeliveryOnlyCreate({ sb, appUser, body, idempotencyKey,
     await bumpDeliveryOrdersListEpoch();
   } else if (data) {
     await bumpDeliveryOrdersListEpoch();
+  }
+
+  if (data && appUser && appUser.id) {
+    try {
+      await createNotification(sb, {
+        recipient_type: "customer",
+        recipient_id: appUser.id,
+        title: "تم استلام طلبك",
+        message: "تم إنشاء الطلب بنجاح وهو الآن قيد المعالجة.",
+        type: "order",
+        source: "delivery",
+        payload: {
+          order_id: data.id,
+          order_number: data.order_number || null,
+          delivery_status: data.delivery_status || null,
+        },
+      });
+    } catch (notifyErr) {
+      logger.warn(
+        { err: notifyErr.message || String(notifyErr), orderId: data.id },
+        "[deliveryOrderCreateShared] customer create notification"
+      );
+    }
   }
 
   return {

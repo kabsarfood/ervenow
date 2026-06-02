@@ -111,6 +111,7 @@
           <p class="sub" id="panelSub" style="margin: 4px 0 0">—</p>
         </div>
         <div class="btn-row">
+          <div id="providerHeaderNotification"></div>
           <button type="button" class="sp-bell" id="bellBtn" aria-label="الطلبات">
             🔔
             <span class="sp-bell__badge" id="bellBadge" hidden>0</span>
@@ -173,6 +174,8 @@
 
     <script src="/assets/api-config.js"></script>
     <script src="/assets/api.js"></script>
+    <link rel="stylesheet" href="/assets/notification-center.css" />
+    <script src="/assets/notification-center.js"></script>
     <script src="/assets/auth-account-guard.js"></script>
     <script>
       void ErvenowAuthGuard.ensureApprovedAccount({ loginUrl: "/login?role=service" });
@@ -494,6 +497,9 @@
         if (!token) {
           location.href = "/login?mode=register&role=customer";
           return;
+        }
+        if (window.ErvenowNotificationCenter && ErvenowNotificationCenter.mount) {
+          ErvenowNotificationCenter.mount({ mount: "#providerHeaderNotification", key: "provider-header" });
         }
         loadDashboard();
         loadSvcPaySettings();

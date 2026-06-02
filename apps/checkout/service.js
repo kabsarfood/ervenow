@@ -16,6 +16,11 @@ const {
 } = require("../../shared/utils/orderDedup");
 const { createServiceOrder } = require("../../shared/services/serviceOrderCreate");
 const { canPlaceOrders, driverOrderPlacementError } = require("../../shared/utils/platformAccessPolicy");
+const {
+  applyErvenowPayForCheckoutOrders,
+  isErvenowPayMethod,
+} = require("../../shared/services/ervenowPayCheckout");
+const { createNotification } = require("../../shared/services/notificationService");
 
 function normalizedGroup(typeRaw) {
   const type = String(typeRaw || "")
@@ -114,11 +119,12 @@ async function runCheckoutInsert(sb, appUser, body, options) {
       ? String(opts.checkoutIdempotencyKey).trim().slice(0, 256)
       : null;
   const usePaymentGate = Boolean(opts.applyPaymentGate) && isOrderPaymentGateRequired();
-  const paymentConfirmed = usePaymentGate ? isPaidFromRequestBody(body) : false;
-  const allowDispatchPipeline = usePaymentGate ? paymentConfirmed : true;
+  const paymentConfirmed = useErvenowPay ? false : usePaymentGate ? isPaidFromRequestBody(body) : false;
+  const allowDispatchPipeline = useErvenowPay ? true : usePaymentGate ? paymentConfirmed : true;
   const openDeliveryStatus = allowDispatchPipeline ? "pending" : "draft";
-  const payment_status = paymentConfirmed ? "paid" : "pending";
+  const payment_status = useErvenowPay ? "pending" : paymentConfirmed ? "paid" : "pending";
   const payment_method = normalizeOrderPaymentMethod(body);
+  const useErvenowPay = isErvenowPayMethod(payment_method);
 
   const items = Array.isArray(body?.items) ? body.items : [];
   if (!items.length) {
@@ -426,6 +432,36 @@ async function runCheckoutInsert(sb, appUser, body, options) {
           "[checkout/service] store post-checkout"
         );
       }
+      try {
+        const digits = String(storeRowForCheckout.phone || "").replace(/\D/g, "");
+        if (digits) {
+          const { data: merchantUser } = await sb
+            .from("users")
+            .select("id, role")
+            .eq("phone", digits)
+            .maybeSingle();
+          if (merchantUser && merchantUser.id) {
+            await createNotification(sb, {
+              recipient_type: "store",
+              recipient_id: merchantUser.id,
+              title: "طلب جديد",
+              message: "لديك طلب جديد بانتظار المعالجة.",
+              type: "order",
+              source: "store",
+              payload: {
+                order_id: data.id,
+                order_number: data.order_number || null,
+                store_id: data.store_id || null,
+              },
+            });
+          }
+        }
+      } catch (notifyErr) {
+        logger.warn(
+          { err: notifyErr.message || String(notifyErr), orderId: data.id },
+          "[checkout/service] store notification"
+        );
+      }
     }
 
     const shouldDispatch = (type === "delivery" || singleStoreId) && openDeliveryStatus === "pending";
@@ -441,6 +477,40 @@ async function runCheckoutInsert(sb, appUser, body, options) {
         logger.error(
           { err: queueErr && (queueErr.message || String(queueErr)), orderId: data.id },
           "[checkout/service] enqueue checkout-dispatch"
+        );
+      }
+    }
+  }
+
+  if (useErvenowPay && results.length) {
+    const payResult = await applyErvenowPayForCheckoutOrders(sb, appUser.id, results);
+    if (!payResult.ok) {
+      return {
+        ok: false,
+        message: payResult.message || "رصيد المحفظة غير كافٍ",
+        status: payResult.reason === "insufficient_balance" ? 402 : 400,
+        balance: payResult.balance,
+        required: payResult.required,
+      };
+    }
+    for (const order of results) {
+      const oid = order && order.id;
+      if (!oid) continue;
+      try {
+        await sb
+          .from("orders")
+          .update({
+            payment_status: "paid",
+            payment_method: "ew_pay",
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", oid);
+        order.payment_status = "paid";
+        order.payment_method = "ew_pay";
+      } catch (upErr) {
+        logger.error(
+          { err: upErr && (upErr.message || String(upErr)), orderId: oid },
+          "[checkout] ew_pay payment_status update"
         );
       }
     }

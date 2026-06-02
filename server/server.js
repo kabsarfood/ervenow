@@ -27,6 +27,7 @@ const categoriesRoutes = require("../apps/categories/routes");
 const invoiceRoutes = require("../apps/invoice/routes");
 const whatsappRoutes = require("../apps/whatsapp/routes");
 const payRoutes = require("../apps/pay/routes");
+const notificationsRoutes = require("../apps/notifications/routes");
 const { createPublicSiteOtpGate, isPrivateOtpGate } = require("../shared/middleware/publicSiteOtpGate");
 const { createSiteMaintenanceMiddleware } = require("../shared/middleware/siteMaintenanceGate");
 const { pushToErvenow } = require("../shared/utils/ervenowPush");
@@ -285,6 +286,7 @@ app.use("/api/test", commissionTestRoutes);
 app.use("/api/invoice", invoiceRoutes);
 app.use("/api/whatsapp", whatsappRoutes);
 app.use("/api/pay", payRoutes);
+app.use("/api/notifications", notificationsRoutes);
 
 /** بوابة واجهة الموقع (OTP) — بعد كل مسارات API؛ لا تعيق GET /api/* ولا /socket.io ولا /assets */
 app.use(createPublicSiteOtpGate(servePublicUi));
@@ -313,6 +315,7 @@ app.get("/api/health", (_req, res) => {
       "/api/categories",
       "/api/invoice",
       "/api/whatsapp",
+      "/api/notifications",
     ],
   });
 });

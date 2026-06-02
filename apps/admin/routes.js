@@ -88,6 +88,7 @@ const {
   approveTopupRequest,
   rejectTopupRequest,
 } = require("../../shared/services/walletTopupService");
+const { createNotification } = require("../../shared/services/notificationService");
 
 const ADMIN_PUBLIC_ROOT = path.join(__dirname, "../../public");
 
@@ -1058,6 +1059,24 @@ router.post("/withdraw/approve", requireAuth, requireRole("admin"), requireAdmin
 
     const row = typeof rpcData === "object" && rpcData !== null && !Array.isArray(rpcData) ? rpcData : {};
     if (row.ok === true || row.ok === "true") {
+      try {
+        const reqQ = await req.supabase
+          .from("ervenow_withdraw_requests")
+          .select("user_id")
+          .eq("id", id)
+          .maybeSingle();
+        const userId = reqQ && reqQ.data && reqQ.data.user_id ? String(reqQ.data.user_id) : null;
+        if (userId) {
+          await notifyWalletApprovedWithdraw(req.supabase, "driver", userId, {
+            amount: Number(row.amount || 0),
+            currency: "SAR",
+            reference: id,
+            wallet_id: row.wallet_id || null,
+          });
+        }
+      } catch (notifyErr) {
+        console.warn("[admin/withdraw/approve] wallet notify:", notifyErr && (notifyErr.message || notifyErr));
+      }
       return ok(res, { result: row, source: "ervenow_ledger" });
     }
     return fail(res, String(row.reason || "approve_failed"), 400, { result: row });
@@ -1102,6 +1121,24 @@ router.post("/withdraws/:id/approve", requireAuth, requireRole("admin"), require
 
     const row = typeof rpcData === "object" && rpcData !== null && !Array.isArray(rpcData) ? rpcData : {};
     if (row.ok === true || row.ok === "true") {
+      try {
+        const reqQ = await req.supabase
+          .from("ervenow_withdraw_requests")
+          .select("user_id")
+          .eq("id", id)
+          .maybeSingle();
+        const userId = reqQ && reqQ.data && reqQ.data.user_id ? String(reqQ.data.user_id) : null;
+        if (userId) {
+          await notifyWalletApprovedWithdraw(req.supabase, "driver", userId, {
+            amount: Number(row.amount || 0),
+            currency: "SAR",
+            reference: id,
+            wallet_id: row.wallet_id || null,
+          });
+        }
+      } catch (notifyErr) {
+        console.warn("[admin/withdraws/:id/approve] wallet notify:", notifyErr && (notifyErr.message || notifyErr));
+      }
       return ok(res, { ok: true, reason: row.reason || "debited", amount: row.amount });
     }
 
@@ -1221,6 +1258,24 @@ router.post("/withdrawals/:id/approve", requireAuth, requireRole("admin"), requi
       if (rpcErr) return fail(res, rpcErr.message || String(rpcErr), 400);
       const row = typeof rpcData === "object" && rpcData !== null && !Array.isArray(rpcData) ? rpcData : {};
       if (row.ok === true || row.ok === "true") {
+        try {
+          const reqQ = await req.supabase
+            .from("ervenow_withdraw_requests")
+            .select("user_id")
+            .eq("id", id)
+            .maybeSingle();
+          const userId = reqQ && reqQ.data && reqQ.data.user_id ? String(reqQ.data.user_id) : null;
+          if (userId) {
+            await notifyWalletApprovedWithdraw(req.supabase, "driver", userId, {
+              amount: Number(row.amount || 0),
+              currency: "SAR",
+              reference: id,
+              wallet_id: row.wallet_id || null,
+            });
+          }
+        } catch (notifyErr) {
+          console.warn("[admin/withdrawals/:id/approve driver] wallet notify:", notifyErr && (notifyErr.message || notifyErr));
+        }
         return ok(res, { ok: true, kind: "driver", reason: row.reason || "debited", amount: row.amount });
       }
       const reason = String(row.reason || "unknown");
@@ -1242,6 +1297,33 @@ router.post("/withdrawals/:id/approve", requireAuth, requireRole("admin"), requi
     }
     const row = typeof rpcData === "object" && rpcData !== null && !Array.isArray(rpcData) ? rpcData : {};
     if (row.ok === true || row.ok === "true") {
+      try {
+        const wq = await req.supabase
+          .from("store_withdrawals")
+          .select("store_id")
+          .eq("id", id)
+          .maybeSingle();
+        const storeId = wq && wq.data && wq.data.store_id ? String(wq.data.store_id) : null;
+        if (storeId) {
+          const sq = await req.supabase
+            .from("stores")
+            .select("phone")
+            .eq("id", storeId)
+            .maybeSingle();
+          const ownerId = await findUserIdByPhoneSafe(req.supabase, sq && sq.data && sq.data.phone);
+          if (ownerId) {
+            await notifyWalletApprovedWithdraw(req.supabase, "store", ownerId, {
+              amount: Number(row.amount || 0),
+              currency: "SAR",
+              reference: id,
+              wallet_id: row.wallet_id || null,
+              store_id: storeId,
+            });
+          }
+        }
+      } catch (notifyErr) {
+        console.warn("[admin/withdrawals/:id/approve store] wallet notify:", notifyErr && (notifyErr.message || notifyErr));
+      }
       return ok(res, { ok: true, kind: "store", reason: row.reason || "approved", amount: row.amount });
     }
     const reason = String(row.reason || "unknown");
@@ -1344,6 +1426,33 @@ router.post(
 
       const row = typeof rpcData === "object" && rpcData !== null && !Array.isArray(rpcData) ? rpcData : {};
       if (row.ok === true || row.ok === "true") {
+        try {
+          const wq = await req.supabase
+            .from("store_withdrawals")
+            .select("store_id")
+            .eq("id", id)
+            .maybeSingle();
+          const storeId = wq && wq.data && wq.data.store_id ? String(wq.data.store_id) : null;
+          if (storeId) {
+            const sq = await req.supabase
+              .from("stores")
+              .select("phone")
+              .eq("id", storeId)
+              .maybeSingle();
+            const ownerId = await findUserIdByPhoneSafe(req.supabase, sq && sq.data && sq.data.phone);
+            if (ownerId) {
+              await notifyWalletApprovedWithdraw(req.supabase, "store", ownerId, {
+                amount: Number(row.amount || 0),
+                currency: "SAR",
+                reference: id,
+                wallet_id: row.wallet_id || null,
+                store_id: storeId,
+              });
+            }
+          }
+        } catch (notifyErr) {
+          console.warn("[admin/store-withdrawals/:id/approve] wallet notify:", notifyErr && (notifyErr.message || notifyErr));
+        }
         return ok(res, { ok: true, reason: row.reason || "approved", amount: row.amount });
       }
 
@@ -1577,6 +1686,32 @@ router.patch("/store-requests/:id", requireAuth, requireRole("admin"), requireAd
     if (status === "approved") await linkStoreOwnerAfterApprove(req.supabase, data);
     if (status === "approved") recordStoreCategoryUsageOnApprove(data);
     if (status === "approved") await notifyStoreApprovedWhatsApp(data);
+    try {
+      const storeOwnerId = await findUserIdByPhoneSafe(req.supabase, data && data.phone);
+      if (storeOwnerId) {
+        if (status === "approved") {
+          await notifyAccountLifecycle(
+            req.supabase,
+            "store",
+            storeOwnerId,
+            "تم تفعيل الحساب",
+            "تم اعتماد حسابك ويمكنك الآن استخدام خدمات المنصة.",
+            { scope: "store", store_id: data.id || null, status }
+          );
+        } else if (status === "rejected") {
+          await notifyAccountLifecycle(
+            req.supabase,
+            "store",
+            storeOwnerId,
+            "تم رفض الطلب",
+            "تم رفض طلب التسجيل. يمكنك مراجعة الإدارة لمعرفة التفاصيل.",
+            { scope: "store", store_id: data.id || null, status }
+          );
+        }
+      }
+    } catch (notifyErr) {
+      console.warn("[admin/store-requests/:id] account notify:", notifyErr && (notifyErr.message || notifyErr));
+    }
     return ok(res, {
       request: sanitizeDriverOrStoreRowForApi(data),
       ...(status === "approved" ? storeMerchantPanelPaths(data) : {}),
@@ -1601,6 +1736,21 @@ router.post("/approve-store", requireAuth, requireRole("admin"), requireAdminPer
     await linkStoreOwnerAfterApprove(req.supabase, data);
     recordStoreCategoryUsageOnApprove(data);
     await notifyStoreApprovedWhatsApp(data);
+    try {
+      const storeOwnerId = await findUserIdByPhoneSafe(req.supabase, data && data.phone);
+      if (storeOwnerId) {
+        await notifyAccountLifecycle(
+          req.supabase,
+          "store",
+          storeOwnerId,
+          "تم تفعيل الحساب",
+          "تم اعتماد حسابك ويمكنك الآن استخدام خدمات المنصة.",
+          { scope: "store", store_id: data.id || null, status: "approved" }
+        );
+      }
+    } catch (notifyErr) {
+      console.warn("[admin/approve-store] account notify:", notifyErr && (notifyErr.message || notifyErr));
+    }
     return ok(res, {
       store: sanitizeDriverOrStoreRowForApi(data),
       ...storeMerchantPanelPaths(data),
@@ -1621,6 +1771,21 @@ router.post("/reject-store", requireAuth, requireRole("admin"), requireAdminPerm
     });
     if (error) {
       return fail(res, error.message || String(error), 400);
+    }
+    try {
+      const storeOwnerId = await findUserIdByPhoneSafe(req.supabase, data && data.phone);
+      if (storeOwnerId) {
+        await notifyAccountLifecycle(
+          req.supabase,
+          "store",
+          storeOwnerId,
+          "تم رفض الطلب",
+          "تم رفض طلب التسجيل. يمكنك مراجعة الإدارة لمعرفة التفاصيل.",
+          { scope: "store", store_id: data.id || null, status: "rejected" }
+        );
+      }
+    } catch (notifyErr) {
+      console.warn("[admin/reject-store] account notify:", notifyErr && (notifyErr.message || notifyErr));
     }
     return ok(res, { store: sanitizeDriverOrStoreRowForApi(data) });
   } catch (e) {
@@ -1643,6 +1808,21 @@ router.patch("/store/:id/approve", requireAuth, requireRole("admin"), requireAdm
     await linkStoreOwnerAfterApprove(req.supabase, data);
     recordStoreCategoryUsageOnApprove(data);
     await notifyStoreApprovedWhatsApp(data);
+    try {
+      const storeOwnerId = await findUserIdByPhoneSafe(req.supabase, data && data.phone);
+      if (storeOwnerId) {
+        await notifyAccountLifecycle(
+          req.supabase,
+          "store",
+          storeOwnerId,
+          "تم تفعيل الحساب",
+          "تم اعتماد حسابك ويمكنك الآن استخدام خدمات المنصة.",
+          { scope: "store", store_id: data.id || null, status: "approved" }
+        );
+      }
+    } catch (notifyErr) {
+      console.warn("[admin/store/:id/approve] account notify:", notifyErr && (notifyErr.message || notifyErr));
+    }
     return ok(res, {
       store: sanitizeDriverOrStoreRowForApi(data),
       ...storeMerchantPanelPaths(data),
@@ -1699,6 +1879,78 @@ async function resolveDriverUserIdForAssign(sb, body) {
   return { error: "مندوب غير معروف" };
 }
 
+async function notifyOrderAssignment(sb, orderRow, driverUserId) {
+  if (!sb || !orderRow) return;
+  const orderId = orderRow.id;
+  const orderNumber = orderRow.order_number || null;
+
+  if (orderRow.customer_id) {
+    await createNotification(sb, {
+      recipient_type: "customer",
+      recipient_id: orderRow.customer_id,
+      title: "تم تعيين مندوب",
+      message: "تم إسناد مندوب لتوصيل طلبك.",
+      type: "delivery",
+      source: "admin",
+      payload: {
+        order_id: orderId,
+        order_number: orderNumber,
+        driver_id: driverUserId || null,
+      },
+    });
+  }
+
+  if (driverUserId) {
+    await createNotification(sb, {
+      recipient_type: "driver",
+      recipient_id: driverUserId,
+      title: "مهمة جديدة",
+      message: "تم إسناد طلب جديد إليك.",
+      type: "delivery",
+      source: "admin",
+      payload: {
+        order_id: orderId,
+        order_number: orderNumber,
+      },
+    });
+  }
+}
+
+async function notifyAccountLifecycle(sb, recipientType, recipientId, title, message, payload) {
+  if (!sb || !recipientType || !recipientId) return;
+  await createNotification(sb, {
+    recipient_type: recipientType,
+    recipient_id: recipientId,
+    title,
+    message,
+    type: "account",
+    source: "admin",
+    payload: payload && typeof payload === "object" ? payload : {},
+  });
+}
+
+async function findUserIdByPhoneSafe(sb, phone) {
+  try {
+    const found = await findUserByPhone(sb, phone, "id, role, phone");
+    return found && found.data && found.data.id ? String(found.data.id) : null;
+  } catch {
+    return null;
+  }
+}
+
+async function notifyWalletApprovedWithdraw(sb, recipientType, recipientId, payload) {
+  if (!sb || !recipientType || !recipientId) return;
+  await createNotification(sb, {
+    recipient_type: recipientType,
+    recipient_id: recipientId,
+    title: "تم اعتماد السحب",
+    message: "تم اعتماد طلب السحب المالي الخاص بك.",
+    type: "wallet",
+    source: "wallet",
+    payload: payload && typeof payload === "object" ? payload : {},
+  });
+}
+
 router.get("/drivers", requireAuth, requireRole("admin"), requireAdminPermission("drivers"), async (req, res) => {
   try {
     const { data, error } = await req.supabase
@@ -1742,6 +1994,21 @@ router.post("/approve-driver", requireAuth, requireRole("admin"), requireAdminPe
     } catch (waErr) {
       console.error("[admin/approve-driver] WhatsApp:", waErr && (waErr.message || String(waErr)));
     }
+    try {
+      const userId = await findUserIdByPhoneSafe(req.supabase, data && data.phone);
+      if (userId) {
+        await notifyAccountLifecycle(
+          req.supabase,
+          "driver",
+          userId,
+          "تم تفعيل الحساب",
+          "تم اعتماد حسابك ويمكنك الآن استخدام خدمات المنصة.",
+          { scope: "driver", driver_id: data.id || null, status: "approved" }
+        );
+      }
+    } catch (notifyErr) {
+      console.warn("[admin/approve-driver] account notify:", notifyErr && (notifyErr.message || notifyErr));
+    }
     return ok(res, { driver: sanitizeDriverOrStoreRowForApi(data) });
   } catch (e) {
     return fail(res, e.message || String(e), 500);
@@ -1763,6 +2030,21 @@ router.post("/reject-driver", requireAuth, requireRole("admin"), requireAdminPer
       if (data?.phone) await syncUserStatusByPhone(req.supabase, data.phone, "rejected");
     } catch (syncErr) {
       console.warn("[admin/reject-driver] user status:", syncErr && (syncErr.message || syncErr));
+    }
+    try {
+      const userId = await findUserIdByPhoneSafe(req.supabase, data && data.phone);
+      if (userId) {
+        await notifyAccountLifecycle(
+          req.supabase,
+          "driver",
+          userId,
+          "تم رفض الطلب",
+          "تم رفض طلب التسجيل. يمكنك مراجعة الإدارة لمعرفة التفاصيل.",
+          { scope: "driver", driver_id: data.id || null, status: "rejected" }
+        );
+      }
+    } catch (notifyErr) {
+      console.warn("[admin/reject-driver] account notify:", notifyErr && (notifyErr.message || notifyErr));
     }
     return ok(res, { driver: sanitizeDriverOrStoreRowForApi(data) });
   } catch (e) {
@@ -1786,6 +2068,21 @@ router.post("/block-driver", requireAuth, requireRole("admin"), requireAdminPerm
     } catch (e) {
       console.error("[admin/block-driver] user status sync:", e && (e.message || e));
     }
+    try {
+      const userId = await findUserIdByPhoneSafe(req.supabase, data && data.phone);
+      if (userId) {
+        await notifyAccountLifecycle(
+          req.supabase,
+          "driver",
+          userId,
+          "تم تعليق الحساب",
+          "تم إيقاف حسابك مؤقتاً. يرجى التواصل مع الإدارة.",
+          { scope: "driver", driver_id: data.id || null, status: "blocked" }
+        );
+      }
+    } catch (notifyErr) {
+      console.warn("[admin/block-driver] account notify:", notifyErr && (notifyErr.message || notifyErr));
+    }
     return ok(res, { driver: sanitizeDriverOrStoreRowForApi(data) });
   } catch (e) {
     return fail(res, e.message || String(e), 500);
@@ -1808,6 +2105,21 @@ router.post("/activate-driver", requireAuth, requireRole("admin"), requireAdminP
       await syncUserStatusByPhone(req.supabase, data?.phone, "active");
     } catch (e) {
       console.error("[admin/activate-driver] user role sync:", e && (e.message || e));
+    }
+    try {
+      const userId = await findUserIdByPhoneSafe(req.supabase, data && data.phone);
+      if (userId) {
+        await notifyAccountLifecycle(
+          req.supabase,
+          "driver",
+          userId,
+          "تم إعادة التفعيل",
+          "تمت إعادة تفعيل حسابك ويمكنك متابعة استخدام المنصة.",
+          { scope: "driver", driver_id: data.id || null, status: "active" }
+        );
+      }
+    } catch (notifyErr) {
+      console.warn("[admin/activate-driver] account notify:", notifyErr && (notifyErr.message || notifyErr));
     }
     return ok(res, { driver: sanitizeDriverOrStoreRowForApi(data) });
   } catch (e) {
@@ -1896,6 +2208,27 @@ router.post("/block-customer", requireAuth, requireRole("admin"), requireAdminPe
     }
     if (patched.error) return fail(res, patched.error.message || String(patched.error), 400);
     if (patched.data?.phone) await syncUserStatusByPhone(sb, patched.data.phone, "blocked");
+    try {
+      if (patched.data && patched.data.id) {
+        const role = String(patched.data.role || "").toLowerCase();
+        const recipientType =
+          role === "service"
+            ? "provider"
+            : role === "merchant" || role === "restaurant"
+              ? "store"
+              : "customer";
+        await notifyAccountLifecycle(
+          sb,
+          recipientType,
+          patched.data.id,
+          "تم تعليق الحساب",
+          "تم إيقاف حسابك مؤقتاً. يرجى التواصل مع الإدارة.",
+          { scope: "user", status: "blocked" }
+        );
+      }
+    } catch (notifyErr) {
+      console.warn("[admin/block-customer] account notify:", notifyErr && (notifyErr.message || notifyErr));
+    }
     return ok(res, { customer: { ...patched.data, status: "blocked" } });
   } catch (e) {
     return fail(res, e.message || String(e), 500);
@@ -1917,6 +2250,27 @@ router.post("/reject-user", requireAuth, requireRole("admin"), async (req, res) 
     }
     if (patched.error) return fail(res, patched.error.message || String(patched.error), 400);
     if (patched.data?.phone) await syncUserStatusByPhone(sb, patched.data.phone, "rejected");
+    try {
+      if (patched.data && patched.data.id) {
+        const role = String(patched.data.role || "").toLowerCase();
+        const recipientType =
+          role === "service"
+            ? "provider"
+            : role === "merchant" || role === "restaurant"
+              ? "store"
+              : "customer";
+        await notifyAccountLifecycle(
+          sb,
+          recipientType,
+          patched.data.id,
+          "تم رفض الطلب",
+          "تم رفض طلب التسجيل. يمكنك مراجعة الإدارة لمعرفة التفاصيل.",
+          { scope: "user", status: "rejected" }
+        );
+      }
+    } catch (notifyErr) {
+      console.warn("[admin/reject-user] account notify:", notifyErr && (notifyErr.message || notifyErr));
+    }
     return ok(res, { user: { ...patched.data, status: "rejected" } });
   } catch (e) {
     return fail(res, e.message || String(e), 500);
@@ -1944,6 +2298,31 @@ router.post("/activate-customer", requireAuth, requireRole("admin"), requireAdmi
     }
     if (patched.error) return fail(res, patched.error.message || String(patched.error), 400);
     if (patched.data?.phone) await syncUserStatusByPhone(sb, patched.data.phone, "active");
+    try {
+      if (patched.data && patched.data.id) {
+        const role = String(patched.data.role || "").toLowerCase();
+        const recipientType =
+          role === "service"
+            ? "provider"
+            : role === "merchant" || role === "restaurant"
+              ? "store"
+              : "customer";
+        const isReactivation =
+          String(existing.data && existing.data.status || "").toLowerCase() === "blocked";
+        await notifyAccountLifecycle(
+          sb,
+          recipientType,
+          patched.data.id,
+          isReactivation ? "تم إعادة التفعيل" : "تم تفعيل الحساب",
+          isReactivation
+            ? "تمت إعادة تفعيل حسابك ويمكنك متابعة استخدام المنصة."
+            : "تم اعتماد حسابك ويمكنك الآن استخدام خدمات المنصة.",
+          { scope: "user", status: "active", role: patched.data.role || null }
+        );
+      }
+    } catch (notifyErr) {
+      console.warn("[admin/activate-customer] account notify:", notifyErr && (notifyErr.message || notifyErr));
+    }
     return ok(res, { customer: { ...patched.data, status: "active" } });
   } catch (e) {
     return fail(res, e.message || String(e), 500);
@@ -2106,6 +2485,11 @@ router.post(
         error = r2.error;
       }
       if (error) return fail(res, error.message || "تعذر تعيين المندوب", 400);
+      try {
+        await notifyOrderAssignment(req.supabase, data, resolved.userId);
+      } catch (notifyErr) {
+        console.warn("[admin/assign-driver] notify:", notifyErr && (notifyErr.message || notifyErr));
+      }
       if (data && data.id) broadcastOrderPatch(String(data.id), orderPatchFromRow(data));
       return ok(res, { order: data, driver_user_id: resolved.userId });
     } catch (e) {
@@ -2148,6 +2532,11 @@ router.post(
         .select()
         .single();
       if (error) return fail(res, error.message || "تعذر تحويل المندوب", 400);
+      try {
+        await notifyOrderAssignment(req.supabase, data, resolved.userId);
+      } catch (notifyErr) {
+        console.warn("[admin/transfer-driver] notify:", notifyErr && (notifyErr.message || notifyErr));
+      }
       if (data && data.id) broadcastOrderPatch(String(data.id), orderPatchFromRow(data));
       return ok(res, { order: data, driver_user_id: resolved.userId });
     } catch (e) {

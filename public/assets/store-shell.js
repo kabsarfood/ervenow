@@ -153,6 +153,7 @@
       "</div>" +
       "</nav>" +
       '<div class="dash-site-header__tools store-site-header__tools">' +
+      '<div id="storeHeaderNotifications"></div>' +
       '<a class="dash-header-wallet store-header-wallet" id="storeHeaderWallet" href="#walletAnchor" aria-label="المحفظة المالية">' +
       '<span class="dash-header-wallet__icon" aria-hidden="true">💰</span>' +
       '<span class="dash-header-wallet__meta">' +
@@ -177,6 +178,35 @@
       "</div>" +
       "</header>"
     );
+  }
+
+  function ensureNotificationCenterAssets() {
+    if (!document.querySelector('link[data-erv-notification-center-css="1"]')) {
+      var l = document.createElement("link");
+      l.rel = "stylesheet";
+      l.href = "/assets/notification-center.css";
+      l.setAttribute("data-erv-notification-center-css", "1");
+      document.head.appendChild(l);
+    }
+    if (!document.querySelector('script[data-erv-notification-center-js="1"]')) {
+      var s = document.createElement("script");
+      s.src = "/assets/notification-center.js";
+      s.defer = true;
+      s.setAttribute("data-erv-notification-center-js", "1");
+      document.head.appendChild(s);
+    }
+  }
+
+  function mountNotificationCenter() {
+    if (!hasToken()) return;
+    var host = document.getElementById("storeHeaderNotifications");
+    if (!host || host.getAttribute("data-erv-notif-mounted") === "1") return;
+    if (!global.ErvenowNotificationCenter || typeof global.ErvenowNotificationCenter.mount !== "function") {
+      setTimeout(mountNotificationCenter, 120);
+      return;
+    }
+    host.setAttribute("data-erv-notif-mounted", "1");
+    global.ErvenowNotificationCenter.mount({ mount: host, key: "store-shell-header" });
   }
 
   function renderFooter() {
@@ -358,6 +388,7 @@
       setAccountButton(true, role, profile.service_type);
       paintNav(_opts.activeNav || "store", true, role);
       await refreshWalletFromApi(role);
+      mountNotificationCenter();
     } catch (e) {
       _sessionRole = "merchant";
       setAccountButton(false);
@@ -392,6 +423,7 @@
       var tag = document.getElementById("storeShellPageTag");
       if (tag) tag.textContent = opts.pageTag;
     }
+    ensureNotificationCenterAssets();
     loadAccountDestScript();
     whenPlatformApiReady(function () {
       initAuthHeader();

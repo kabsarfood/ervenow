@@ -35,6 +35,7 @@
           </div>
         </nav>
         <div class="admin-header-tools" id="filter-ui">
+          <div id="adminHeaderNotification"></div>
           <select id="range" onchange="loadStats()" aria-label="الفترة الزمنية">
             <option value="today">اليوم</option>
             <option value="week">هذا الأسبوع</option>
@@ -747,10 +748,26 @@
 
     <script src="/assets/api-config.js"></script>
     <script src="/assets/api.js"></script>
+    <link rel="stylesheet" href="/assets/notification-center.css" />
+    <script src="/assets/notification-center.js"></script>
     <script src="/assets/compressImage.js"></script>
     <script src="https://cdn.socket.io/4.8.1/socket.io.min.js" crossorigin="anonymous"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script type="module" src="/admin/admin-dashboard.js"></script>
+    <script>
+      (function initAdminNotifications() {
+        var host = document.getElementById("adminHeaderNotification");
+        if (!host) return;
+        function run() {
+          if (!window.ErvenowNotificationCenter || !ErvenowNotificationCenter.mount) {
+            setTimeout(run, 120);
+            return;
+          }
+          ErvenowNotificationCenter.mount({ mount: host, key: "admin-header" });
+        }
+        run();
+      })();
+    </script>
     <script>
       document.querySelectorAll("[data-panel-jump]").forEach(function (link) {
         link.addEventListener("click", function (e) {

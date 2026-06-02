@@ -111,7 +111,11 @@
     clampHorizontalScroll();
   }, { passive: true });
   global.addEventListener("orientationchange", function () {
-    global.setTimeout(resetViewportScale, 120);
+    global.setTimeout(function () {
+      resetViewportScale();
+      syncSiteHeaderHeight();
+    }, 120);
+    global.setTimeout(syncSiteHeaderHeight, 320);
   });
   global.addEventListener("pageshow", function (ev) {
     if (ev.persisted) resetViewportScale();

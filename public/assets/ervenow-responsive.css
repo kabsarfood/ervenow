@@ -224,7 +224,7 @@ a.btn {
   }
 }
 
-@media (min-width: 641px) and (max-width: 1024px) {
+@media (min-width: 641px) and (max-width: 1024px) and (min-height: 501px) {
   .dash-site-header__link,
   .dash-site-header__btn,
   .dash-header-cart,
@@ -452,8 +452,8 @@ a.btn {
   }
 }
 
-/* ——— تابلت (641–1024) ——— */
-@media (min-width: 641px) and (max-width: 1024px) {
+/* ——— تابلت (641–1024) — ارتفاع كافٍ فقط (يستثني آيفون أفقي) ——— */
+@media (min-width: 641px) and (max-width: 1024px) and (min-height: 501px) {
   .layout {
     max-width: min(960px, 100%);
     padding-inline: max(18px, env(safe-area-inset-left, 18px)) max(18px, env(safe-area-inset-right, 18px));

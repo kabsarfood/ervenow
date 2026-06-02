@@ -156,6 +156,7 @@ function isPaidFromRequestBody(body) {
 function normalizeOrderPaymentMethod(body) {
   const b = body && typeof body === "object" ? body : {};
   const m = String(b.payment_method || "").trim().toLowerCase();
+  if (m === "ew_pay") return "ew_pay";
   if (m === "mada" || m === "stcpay" || m === "cash") return m;
   return null;
 }

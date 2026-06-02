@@ -264,46 +264,60 @@ body.guest-shell-page.stores-page {
     font-size: 0.84rem;
   }
 }
-/* جوال (iPhone / Android) — تخطيط هيدر واحد متناسق مع المنصة */
-@media (max-width: 640px) {
-  .dash-site-header {
+/* جوال + آيفون أفقي — هيدر ثابت متناسق (لا يُطبَّق على تابلت عمودي ≥502px) */
+@media (max-width: 640px), ((max-width: 932px) and (max-height: 500px) and (pointer: coarse)) {
+  body.guest-shell-page {
+    padding-top: var(--erw-header-h, 0px);
+  }
+  body.guest-shell-page .dash-site-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    max-width: 100%;
+    z-index: 200;
     padding-top: env(safe-area-inset-top, 0px);
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
     background: #f8f4ee;
     box-shadow: 0 2px 12px rgba(45, 26, 14, 0.06);
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
   }
-  .dash-site-header__inner {
+  body.guest-shell-page .dash-site-header__inner {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
     grid-template-rows: auto auto;
+    grid-template-areas:
+      "brand tools"
+      "nav nav";
     gap: 8px;
     padding: 8px 0 10px;
     align-items: center;
     min-height: 0;
+    width: 100%;
   }
-  .dash-site-header__brand {
-    grid-column: 1;
-    grid-row: 1;
+  body.guest-shell-page .dash-site-header__brand {
+    grid-area: brand;
     min-width: 0;
   }
-  .dash-site-header__tools {
-    grid-column: 2;
-    grid-row: 1;
+  body.guest-shell-page .dash-site-header__tools {
+    grid-area: tools;
     align-self: center;
     flex-shrink: 0;
+    justify-self: end;
   }
-  .dash-site-header__nav {
-    grid-column: 1 / -1;
-    grid-row: 2;
+  body.guest-shell-page .dash-site-header__nav {
+    grid-area: nav;
     width: 100%;
     min-width: 0;
     flex-direction: row;
     align-items: stretch;
   }
-  .dash-site-header__links {
+  body.guest-shell-page .dash-site-header__links {
     display: flex;
-    flex-wrap: nowrap;
+    flex-wrap: nowrap !important;
     align-items: center;
     width: 100%;
     max-width: 100%;
@@ -316,9 +330,10 @@ body.guest-shell-page.stores-page {
     gap: 0;
     justify-content: flex-start;
   }
-  .dash-site-header__link {
-    flex: 0 0 auto;
-    min-width: max-content;
+  body.guest-shell-page .dash-site-header__link {
+    flex: 0 0 auto !important;
+    min-width: max-content !important;
+    width: auto !important;
     padding: 10px 12px;
     font-size: 0.8rem;
     min-height: 44px;
@@ -326,16 +341,17 @@ body.guest-shell-page.stores-page {
     align-items: center;
     justify-content: center;
   }
-  .dash-site-header__link--cta {
-    flex: 0 0 auto;
-    min-width: max-content;
+  body.guest-shell-page .dash-site-header__link--cta {
+    flex: 0 0 auto !important;
+    min-width: max-content !important;
+    width: auto !important;
     min-height: 44px;
     padding: 10px 16px;
     margin-inline-start: 6px;
   }
-  .dash-site-header__inner > .dash-site-header__btn,
-  .dash-site-header__inner > .dash-site-header__btn--primary,
-  .dash-site-header__inner > #switchAccount {
+  body.guest-shell-page .dash-site-header__inner > .dash-site-header__btn,
+  body.guest-shell-page .dash-site-header__inner > .dash-site-header__btn--primary,
+  body.guest-shell-page .dash-site-header__inner > #switchAccount {
     grid-column: 1 / -1;
     grid-row: 3;
     width: 100%;
@@ -348,36 +364,32 @@ body.guest-shell-page.stores-page {
     font-size: 0.88rem;
     box-sizing: border-box;
   }
-  /* زائر: «دخول» في التبويبات — إخفاء الزر الطويل أسفل الهيدر */
   body.guest-shell-page #switchAccount.switch-account--nav-only {
     display: none !important;
   }
-  .dash-header-cart,
-  .dash-header-wallet {
+  body.guest-shell-page .dash-header-cart,
+  body.guest-shell-page .dash-header-wallet,
+  body.guest-shell-page .dash-header-cart-btn {
     min-height: 44px;
     min-width: 44px;
   }
-  .dash-site-header__logo {
+  body.guest-shell-page .dash-site-header__logo {
     font-size: clamp(1rem, 4.2vw, 1.12rem);
     max-width: 100%;
     overflow: hidden;
     text-overflow: ellipsis;
   }
-  .dash-site-header__tag {
+  body.guest-shell-page .dash-site-header__tag {
     font-size: 0.68rem;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-}
-
-/* iOS Safari — طبقة تركيب ثابتة تحت Dynamic Island (بدون تغيير التخطيط) */
-@supports (-webkit-touch-callout: none) {
-  @media (max-width: 640px) {
-    .dash-site-header {
-      transform: translateZ(0);
-      -webkit-transform: translateZ(0);
-    }
+  body.guest-shell-page .dash-cart-wrap,
+  body.guest-shell-page .lp-cart-wrap.dash-cart-wrap {
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
   }
 }
 .dash-main > .dash-site-footer {
@@ -587,8 +599,8 @@ body.guest-shell-page.stores-page {
   }
 }
 
-/* تابلت */
-@media (min-width: 641px) and (max-width: 1024px) {
+/* تابلت (يستثني آيفون أفقي) */
+@media (min-width: 641px) and (max-width: 1024px) and (min-height: 501px) {
   .dash-site-header__inner {
     gap: 10px;
     flex-wrap: wrap;

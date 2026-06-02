@@ -2883,6 +2883,31 @@
 
                   <section id="lpCartFooter" class="lp-cart-card lp-cart-card--pay" hidden>
                     <div class="lp-cart-card__body lp-cart-card__body--pay">
+                      <div class="lp-cart-pay-section" id="lpCartPaySection">
+                        <h3 class="lp-cart-pay-section__title">وسيلة الدفع</h3>
+                        <div id="lpCartPayIcons" class="erv-pay-cards" role="group" aria-label="وسائل الدفع"></div>
+                        <select id="lpCartPaySelect" class="erv-pay-select" hidden aria-hidden="true" tabindex="-1"></select>
+                        <div id="lpCartPayLuxeWrap" class="erv-pay-luxe-wrap" hidden></div>
+                        <div id="lpCartEwPayDetail" class="erv-ew-pay-card" hidden>
+                          <div class="erv-ew-pay-card__rows">
+                            <div class="erv-ew-pay-card__row">
+                              <span class="erv-ew-pay-card__label">الرصيد المتاح</span>
+                              <strong class="erv-ew-pay-card__val" id="lpCartEwPayAvail">—</strong>
+                            </div>
+                            <div class="erv-ew-pay-card__row">
+                              <span class="erv-ew-pay-card__label">قيمة الطلب</span>
+                              <strong class="erv-ew-pay-card__val" id="lpCartEwPayOrder">—</strong>
+                            </div>
+                            <div class="erv-ew-pay-card__row erv-ew-pay-card__row--after">
+                              <span class="erv-ew-pay-card__label">الرصيد بعد العملية</span>
+                              <strong class="erv-ew-pay-card__val" id="lpCartEwPayAfter">—</strong>
+                            </div>
+                          </div>
+                          <p id="lpCartEwPayInsufficient" class="erv-ew-pay-card__warn" hidden>رصيد المحفظة غير كافٍ</p>
+                          <a id="lpCartEwPayTopup" class="erv-ew-pay-card__topup" href="/wallet.html" hidden>شحن المحفظة</a>
+                          <span id="lpCartEwPayBalance" class="visually-hidden" aria-hidden="true"></span>
+                        </div>
+                      </div>
                       <button type="button" class="lp-cart-panel__checkout" id="lpCartCheckoutBtn" disabled>إتمام العملية</button>
                       <div class="lp-cart-trust" aria-hidden="false">
                         <span class="lp-cart-trust__item">🔒 دفع آمن</span>

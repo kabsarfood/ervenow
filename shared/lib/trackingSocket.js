@@ -15,6 +15,19 @@ function safeOrderRoomId(orderId) {
   return "order:" + s;
 }
 
+function safeUserRoomIdByRecipient(recipientType, recipientId) {
+  const t = String(recipientType || "").trim().toLowerCase();
+  const id = String(recipientId || "").trim();
+  if (!t || !id) return null;
+  return `notif:${t}:${id}`;
+}
+
+function safeUserRoomIdByUserId(userId) {
+  const id = String(userId || "").trim();
+  if (!id) return null;
+  return `notif:user:${id}`;
+}
+
 /** حد أدنى ~2 ثانية بين بث موقع نفس المندوب (REST + Socket يشتركان في نفس العداد). */
 const driverLocationLastBroadcast = new Map();
 
@@ -96,6 +109,45 @@ function broadcastOrderLive(orderId, payload) {
   trackingIo.to(room).emit("order:live", { orderId: oid, ...(payload && typeof payload === "object" ? payload : {}) });
 }
 
+function broadcastNotificationNew(roomOrRecipientType, recipientId, payload) {
+  if (!trackingIo) return;
+  const room = recipientId == null
+    ? String(roomOrRecipientType || "").trim()
+    : safeUserRoomIdByRecipient(roomOrRecipientType, recipientId);
+  if (!room) return;
+  trackingIo.to(room).emit("notification:new", payload && typeof payload === "object" ? payload : {});
+}
+
+function broadcastNotificationRead(roomOrRecipientType, recipientIdOrPayload, maybePayload) {
+  if (!trackingIo) return;
+  const room = maybePayload == null
+    ? String(roomOrRecipientType || "").trim()
+    : safeUserRoomIdByRecipient(roomOrRecipientType, recipientIdOrPayload);
+  const payload = maybePayload == null ? recipientIdOrPayload : maybePayload;
+  if (!room) return;
+  trackingIo.to(room).emit("notification:read", payload && typeof payload === "object" ? payload : {});
+}
+
+function roomForRecipient(recipientType, recipientId) {
+  return safeUserRoomIdByRecipient(recipientType, recipientId);
+}
+
+function roomForAppUser(appUser) {
+  if (!appUser || !appUser.id) return null;
+  const role = String(appUser.role || "customer").toLowerCase();
+  const recipientType =
+    role === "merchant" || role === "restaurant"
+      ? "store"
+      : role === "service"
+        ? "provider"
+        : role === "admin"
+          ? "admin"
+          : role === "driver"
+            ? "driver"
+            : "customer";
+  return safeUserRoomIdByRecipient(recipientType, appUser.id);
+}
+
 async function fetchOrderForTracking(sb, orderId) {
   const id = String(orderId || "").trim();
   if (!id) return null;
@@ -132,6 +184,23 @@ function attachTrackingSocket(io) {
   });
 
   io.on("connection", (socket) => {
+    const uidRoom = safeUserRoomIdByUserId(socket.data.userId);
+    if (uidRoom) socket.join(uidRoom);
+
+    const role = String(socket.data.role || "customer").toLowerCase();
+    const mappedRecipientType =
+      role === "merchant" || role === "restaurant"
+        ? "store"
+        : role === "service"
+          ? "provider"
+          : role === "admin"
+            ? "admin"
+            : role === "driver"
+              ? "driver"
+              : "customer";
+    const notifRoom = safeUserRoomIdByRecipient(mappedRecipientType, socket.data.userId);
+    if (notifRoom) socket.join(notifRoom);
+
     socket.on("join:order", async (orderId) => {
       const room = safeOrderRoomId(orderId);
       if (!room) return;
@@ -217,4 +286,8 @@ module.exports = {
   broadcastDriverUpdate,
   broadcastOrderPatch,
   broadcastOrderLive,
+  broadcastNotificationNew,
+  broadcastNotificationRead,
+  roomForRecipient,
+  roomForAppUser,
 };

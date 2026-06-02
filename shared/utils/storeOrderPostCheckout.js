@@ -49,7 +49,13 @@ async function runStoreCheckoutSideEffects({ order, groupItems, storeRow }) {
   const goodsPlatformFee = Math.round(orderTotal * commissionRate * 100) / 100;
   const net = Math.round((orderTotal - goodsPlatformFee) * 100) / 100;
   const pay = String(order.payment_status || "").trim().toLowerCase();
-  if (pay === "paid" && net > 0 && storeRow?.phone) {
+  const payMethod = String(order.payment_method || "").trim().toLowerCase();
+  if (payMethod === "ew_pay") {
+    logger.info(
+      { orderId: order.id },
+      "[storePostCheckout] skip immediate merchant deposit — ERVENOW PAY pending until delivery"
+    );
+  } else if (pay === "paid" && net > 0 && storeRow?.phone) {
     const digits = String(storeRow.phone).replace(/\D/g, "");
     const { data: merchantUser } = await svc
       .from("users")

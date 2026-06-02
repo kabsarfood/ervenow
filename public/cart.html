@@ -332,6 +332,25 @@
           return;
         }
 
+        var payMethod =
+          typeof window.getSelectedCartPaymentMethod === "function"
+            ? window.getSelectedCartPaymentMethod()
+            : null;
+        if (!payMethod) {
+          showError("اختر وسيلة الدفع");
+          return;
+        }
+        if (payMethod === "ew_pay" && typeof window.validateEwPayCheckout === "function") {
+          var ewCheck = window.validateEwPayCheckout();
+          if (!ewCheck.ok) {
+            showError(ewCheck.message || "رصيد المحفظة غير كافٍ");
+            if (typeof window.loadEwPayBalanceForCart === "function") {
+              void window.loadEwPayBalanceForCart();
+            }
+            return;
+          }
+        }
+
         const btn = document.getElementById("checkoutBtn");
 
         const token =
@@ -359,7 +378,11 @@
         var idemKey = checkoutIdempotencyKey();
 
         try {
-          var payload = { items: cart };
+          var payload = { items: cart, payment_method: payMethod };
+          if (payMethod === "ew_pay") {
+            payload.paid = true;
+            payload.payment_status = "paid";
+          }
           if (cartNeedsStoreGeo(cart)) {
             if (pendingGeo.lat == null || pendingGeo.lng == null) {
               showError("اضغط «تحديد موقعي GPS» لإتمام طلب المتجر والتحقق من نطاق التوصيل");
@@ -386,6 +409,13 @@
           renderCartPage();
         } catch (e) {
           var msg = String((e && e.message) || "حدث خطأ، حاول مرة أخرى");
+          if (/رصيد|غير كاف|insufficient/i.test(msg)) {
+            showError(msg);
+            if (typeof window.loadEwPayBalanceForCart === "function") {
+              void window.loadEwPayBalanceForCart();
+            }
+            return;
+          }
           if (/401|غير مصرح|token/i.test(msg)) {
             window.location.href =
               "/login?mode=register&role=customer&next=" + encodeURIComponent("/cart");

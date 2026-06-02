@@ -14,6 +14,7 @@ const { logger } = require("../utils/logger");
 const { broadcastOrderPatch, orderPatchFromRow } = require("../lib/trackingSocket");
 const { bumpDeliveryOrdersListEpoch } = require("../utils/deliveryOrdersListCache");
 const { enqueueDeliveryJob } = require("../../queues/deliveryQueue");
+const { createNotification } = require("./notificationService");
 
 async function enqueueJobForPublishedOrder(order) {
   if (!order?.id) return;
@@ -51,9 +52,10 @@ function canPatchOrderStatus(order, appUser, nextStatus) {
   return false;
 }
 
-async function afterStatusSideEffects(sb, order, previousStatus, nextStatus, settlementRow) {
+async function afterStatusSideEffects(sb, order, previousStatus, nextStatus, financialResult) {
   const ds = normalizeIncomingStatus(nextStatus);
   const prevDs = normalizeIncomingStatus(previousStatus);
+  const settlementRow = financialResult && financialResult.settlement ? financialResult.settlement : financialResult || {};
 
   if (prevDs === DELIVERY_STATUS.DRAFT && ds === DELIVERY_STATUS.PENDING) {
     try {
@@ -70,6 +72,95 @@ async function afterStatusSideEffects(sb, order, previousStatus, nextStatus, set
         logger.warn({ err: nErr.message || String(nErr), orderId: order.id }, "[smart-collection]")
       );
     } catch (_e) {}
+  }
+
+  if (ds === DELIVERY_STATUS.DELIVERED && order.customer_id) {
+    try {
+      await createNotification(sb, {
+        recipient_type: "customer",
+        recipient_id: order.customer_id,
+        title: "اكتمل الطلب",
+        message: "تم تسليم الطلب بنجاح.",
+        type: "delivery",
+        source: "delivery",
+        payload: {
+          order_id: order.id,
+          order_number: order.order_number || null,
+          delivery_status: order.delivery_status || null,
+        },
+      });
+    } catch (notifyErr) {
+      logger.warn(
+        { err: notifyErr.message || String(notifyErr), orderId: order.id },
+        "[unifiedOrderStatus] delivered notification"
+      );
+    }
+  }
+
+  if (ds === DELIVERY_STATUS.DELIVERED) {
+    const driverAmount =
+      settlementRow && Number.isFinite(Number(settlementRow.driver)) ? Number(settlementRow.driver) : null;
+    if (order.driver_id && driverAmount != null && driverAmount > 0) {
+      try {
+        await createNotification(sb, {
+          recipient_type: "driver",
+          recipient_id: order.driver_id,
+          title: "تمت تسوية مالية",
+          message: "تم تحديث الرصيد بعد تنفيذ التسوية المالية.",
+          type: "payment",
+          source: "wallet",
+          payload: {
+            amount: driverAmount,
+            currency: "SAR",
+            reference: order.id,
+            wallet_id: settlementRow.driver_wallet_id || null,
+            order_id: order.id,
+          },
+        });
+      } catch (notifyErr) {
+        logger.warn(
+          { err: notifyErr.message || String(notifyErr), orderId: order.id },
+          "[unifiedOrderStatus] driver settlement notification"
+        );
+      }
+    }
+  }
+
+  if (ds === DELIVERY_STATUS.DELIVERED) {
+    const providerCredit = financialResult && financialResult.provider_credit ? financialResult.provider_credit : null;
+    const providerAmount = providerCredit && Number.isFinite(Number(providerCredit.amount))
+      ? Number(providerCredit.amount)
+      : null;
+    const providerId = getOrderProviderId(order);
+    if (
+      providerId &&
+      providerAmount != null &&
+      providerAmount > 0 &&
+      (providerCredit.ok === true || providerCredit.ok === "true" || providerCredit.reason === "duplicate")
+    ) {
+      try {
+        await createNotification(sb, {
+          recipient_type: "provider",
+          recipient_id: providerId,
+          title: "تمت تسوية مالية",
+          message: "تم تحديث الرصيد بعد تنفيذ التسوية المالية.",
+          type: "payment",
+          source: "wallet",
+          payload: {
+            amount: providerAmount,
+            currency: "SAR",
+            reference: order.id,
+            wallet_id: providerCredit.wallet_id || null,
+            order_id: order.id,
+          },
+        });
+      } catch (notifyErr) {
+        logger.warn(
+          { err: notifyErr.message || String(notifyErr), orderId: order.id },
+          "[unifiedOrderStatus] provider settlement notification"
+        );
+      }
+    }
   }
 
   if (order.id) {
@@ -174,7 +265,7 @@ async function patchUnifiedOrderStatus(sb, entityId, nextStatusRaw, appUser) {
       }
     }
 
-    await afterStatusSideEffects(sb, data, current, nextStatus, financial.settlement);
+    await afterStatusSideEffects(sb, data, current, nextStatus, financial);
     return {
       data,
       error: null,

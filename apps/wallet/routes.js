@@ -30,6 +30,7 @@ const {
   createTopupRequest,
   redeemTopupCode,
 } = require("../../shared/services/walletTopupService");
+const { createNotification } = require("../../shared/services/notificationService");
 
 const router = express.Router();
 const MIN_WITHDRAW = 20;
@@ -37,6 +38,15 @@ const WITHDRAW_OTP_TTL_MS = 5 * 60 * 1000;
 
 const WALLET_READ_ROLES = ["driver", "restaurant", "merchant", "service", "customer", "admin"];
 const PAYOUT_ROLES = ["driver", "restaurant", "merchant", "service"];
+
+function walletRecipientTypeByRole(role) {
+  const r = String(role || "").toLowerCase();
+  if (r === "driver") return "driver";
+  if (r === "merchant" || r === "restaurant") return "store";
+  if (r === "service") return "provider";
+  if (r === "admin") return "admin";
+  return "customer";
+}
 
 function isValidIBAN(iban) {
   return /^SA\d{22}$/i.test(iban);
@@ -72,17 +82,34 @@ async function guardWithdrawEnabled(req) {
 function mapLedgerTxForWalletUi(t) {
   const dir = String(t.direction || "").toLowerCase();
   const rawType = String(t.type || "").toLowerCase();
+  const desc = String(t.description || t.note || "");
+  const ref = String(t.reference_id || "");
   let displayType = rawType;
   if (dir === "credit") {
     displayType = rawType === "earning" ? "earning" : "credit";
   } else if (dir === "debit") {
     displayType = rawType === "withdraw" ? "withdraw" : "debit";
   }
+  let type_label = null;
+  if (rawType === "payment" && dir === "debit" && /ervenow pay/i.test(desc)) {
+    type_label = "شراء عبر ERVENOW PAY";
+  } else if (rawType === "payment" && dir === "debit" && ref.startsWith("pay:order:")) {
+    type_label = "شراء عبر ERVENOW PAY";
+  }
+  const orderMatch = ref.match(/^pay:order:([0-9a-f-]{36})$/i);
   return {
     ...t,
     type: displayType,
     direction: dir || t.direction,
     note: t.note || t.description || null,
+    type_label,
+    order_id: orderMatch ? orderMatch[1] : null,
+    status_label:
+      String(t.status || "").toLowerCase() === "pending"
+        ? "معلّق"
+        : String(t.status || "").toLowerCase() === "completed"
+          ? "مكتمل"
+          : String(t.status || "") || null,
   };
 }
 
@@ -177,7 +204,25 @@ router.post("/ledger/deposit", requireAuth, requireRole("admin"), async (req, re
     });
     if (error) return fail(res, error.message, 400);
     const row = typeof data === "object" && data !== null && !Array.isArray(data) ? data : {};
-    if (row.ok === true || row.ok === "true") return ok(res, { result: row, wallet_mode: "ledger" });
+    if (row.ok === true || row.ok === "true") {
+      try {
+        await createNotification(req.supabase, {
+          recipient_type: walletRecipientTypeByRole(roleHint),
+          recipient_id: userId,
+          title: "تم شحن المحفظة",
+          message: "تم إضافة الرصيد إلى محفظتك بنجاح.",
+          type: "wallet",
+          source: "wallet",
+          payload: {
+            amount: Number(amount || 0),
+            currency: "SAR",
+            reference: reference_id,
+            wallet_id: row.wallet_id || null,
+          },
+        });
+      } catch (_e) {}
+      return ok(res, { result: row, wallet_mode: "ledger" });
+    }
     return fail(res, String(row.reason || "deposit_failed"), 400);
   } catch (e) {
     fail(res, e.message, 500);
@@ -229,7 +274,25 @@ router.post("/ledger/refund", requireAuth, requireRole("admin"), async (req, res
     });
     if (error) return fail(res, error.message, 400);
     const row = typeof data === "object" && data !== null && !Array.isArray(data) ? data : {};
-    if (row.ok === true || row.ok === "true") return ok(res, { result: row, wallet_mode: "ledger" });
+    if (row.ok === true || row.ok === "true") {
+      try {
+        await createNotification(req.supabase, {
+          recipient_type: walletRecipientTypeByRole(req.body?.role || "customer"),
+          recipient_id: userId,
+          title: "تم استرداد مبلغ",
+          message: "تمت إعادة المبلغ إلى محفظتك.",
+          type: "wallet",
+          source: "wallet",
+          payload: {
+            amount: Number(amount || 0),
+            currency: "SAR",
+            reference: reference_id,
+            wallet_id: row.wallet_id || null,
+          },
+        });
+      } catch (_e) {}
+      return ok(res, { result: row, wallet_mode: "ledger" });
+    }
     return fail(res, String(row.reason || "refund_failed"), 400);
   } catch (e) {
     fail(res, e.message, 500);
@@ -249,6 +312,24 @@ router.get("/pay-settings", requireAuth, requireRole(...WALLET_READ_ROLES), asyn
 router.post("/topup-request", requireAuth, requireRole(...WALLET_READ_ROLES), async (req, res) => {
   try {
     const result = await createTopupRequest(req.supabase, req.appUser, req.body || {});
+    if (result && result.auto_fulfilled === true) {
+      try {
+        await createNotification(req.supabase, {
+          recipient_type: walletRecipientTypeByRole(req.appUser.role),
+          recipient_id: req.appUser.id,
+          title: "تم شحن المحفظة",
+          message: "تم إضافة الرصيد إلى محفظتك بنجاح.",
+          type: "wallet",
+          source: "wallet",
+          payload: {
+            amount: Number(result.amount_credited || req.body?.amount || 0),
+            currency: "SAR",
+            reference: result.code || null,
+            wallet_id: null,
+          },
+        });
+      } catch (_e) {}
+    }
     return ok(res, result);
   } catch (e) {
     return fail(res, e.message || "تعذر إنشاء طلب الشحن", e.statusCode || 500);
@@ -259,6 +340,22 @@ router.post("/redeem-code", requireAuth, requireRole(...WALLET_READ_ROLES), asyn
   try {
     const code = req.body?.code;
     const result = await redeemTopupCode(req.supabase, req.appUser, code);
+    try {
+      await createNotification(req.supabase, {
+        recipient_type: walletRecipientTypeByRole(req.appUser.role),
+        recipient_id: req.appUser.id,
+        title: "تم شحن المحفظة",
+        message: "تم إضافة الرصيد إلى محفظتك بنجاح.",
+        type: "wallet",
+        source: "wallet",
+        payload: {
+          amount: Number(result.amount || 0),
+          currency: "SAR",
+          reference: result.code || String(code || "").trim() || null,
+          wallet_id: null,
+        },
+      });
+    } catch (_e) {}
     return ok(res, result);
   } catch (e) {
     return fail(res, e.message || "تعذر تفعيل الكود", e.statusCode || 500);

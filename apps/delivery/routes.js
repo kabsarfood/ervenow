@@ -40,6 +40,7 @@ const {
   broadcastOrderPatch,
   orderPatchFromRow,
 } = require("../../shared/lib/trackingSocket");
+const { createNotification } = require("../../shared/services/notificationService");
 
 const router = express.Router();
 
@@ -338,6 +339,28 @@ router.post("/orders/:id/accept", requireAuth, requireRole("driver"), async (req
 
       if (data.customer_phone) {
         await sendOrderAcceptedToCustomer(data, driverInfo);
+      }
+      if (data.customer_id) {
+        try {
+          await createNotification(req.supabase, {
+            recipient_type: "customer",
+            recipient_id: data.customer_id,
+            title: "تم قبول الطلب",
+            message: "تم قبول طلبك وبدء تجهيزه.",
+            type: "order",
+            source: "delivery",
+            payload: {
+              order_id: data.id,
+              order_number: data.order_number || null,
+              driver_id: data.driver_id || req.appUser.id,
+            },
+          });
+        } catch (notifyErr) {
+          logger.warn(
+            { err: notifyErr.message || String(notifyErr), orderId: data.id },
+            "[delivery/accept] customer notification"
+          );
+        }
       }
 
       const providerPhone =
