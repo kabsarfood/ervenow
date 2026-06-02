@@ -262,51 +262,6 @@
       .auth-dev-direct:hover {
         background: rgba(212, 168, 75, 0.32);
       }
-      .auth-portal-nav {
-        margin-top: 18px;
-        padding-top: 14px;
-        border-top: 1px solid rgba(212, 168, 75, 0.22);
-      }
-      .auth-portal-nav__title {
-        margin: 0 0 10px;
-        text-align: center;
-        font-size: 0.76rem;
-        font-weight: 800;
-        letter-spacing: 0.04em;
-        color: rgba(255, 255, 255, 0.72);
-      }
-      .auth-portal-nav__grid {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 8px;
-      }
-      @media (min-width: 420px) {
-        .auth-portal-nav__grid {
-          grid-template-columns: repeat(3, minmax(0, 1fr));
-        }
-      }
-      .auth-portal-nav__link {
-        display: block;
-        padding: 9px 8px;
-        border-radius: 11px;
-        border: 1px solid rgba(212, 168, 75, 0.35);
-        background: rgba(255, 255, 255, 0.08);
-        color: #fffef8;
-        font-size: 0.78rem;
-        font-weight: 800;
-        line-height: 1.35;
-        text-align: center;
-        text-decoration: none;
-      }
-      .auth-portal-nav__link:hover {
-        background: rgba(212, 168, 75, 0.22);
-        border-color: rgba(212, 168, 75, 0.55);
-      }
-      .auth-portal-nav__link.is-current {
-        background: linear-gradient(135deg, rgba(212, 168, 75, 0.35), rgba(212, 168, 75, 0.18));
-        border-color: rgba(245, 230, 184, 0.65);
-        pointer-events: none;
-      }
     </style>
       <link rel="stylesheet" href="/assets/responsive-audit-base.css" />
   </head>
@@ -328,7 +283,7 @@
 
           <div class="admin-field">
             <label for="phone">رقم الجوال</label>
-            <input id="phone" type="tel" inputmode="numeric" autocomplete="tel-national" maxlength="12" placeholder="05xxxxxxxx أو 9665xxxxxxxx" dir="ltr" />
+            <input id="phone" type="tel" inputmode="numeric" autocomplete="tel-national" maxlength="12" placeholder="0505745650" value="0505745650" dir="ltr" />
           </div>
 
           <div class="auth-code-group" id="adminCodeGroup" hidden>
@@ -343,18 +298,6 @@
           </div>
 
           <p id="msg" role="status" aria-live="polite"></p>
-
-          <nav class="auth-portal-nav" aria-label="بوابات الدخول">
-            <p class="auth-portal-nav__title">دخول بوابة أخرى</p>
-            <div class="auth-portal-nav__grid">
-              <a class="auth-portal-nav__link" href="/login?role=customer">👤 دخول الزائر</a>
-              <a class="auth-portal-nav__link" href="/login?role=merchant">🏪 دخول التاجر</a>
-              <a class="auth-portal-nav__link" href="/login?role=service">🔧 مقدّم الخدمة</a>
-              <a class="auth-portal-nav__link" href="/driver-login">🚗 دخول المندوب</a>
-              <a class="auth-portal-nav__link is-current" href="/admin-login" aria-current="page">🔐 دخول الإدارة</a>
-              <a class="auth-portal-nav__link" href="/dashboard">🗺️ لوحة الزائر</a>
-            </div>
-          </nav>
 
           <footer class="admin-login-card__foot">
             <a href="/">← العودة للرئيسية</a>

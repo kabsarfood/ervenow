@@ -480,7 +480,7 @@
 
     <div class="auth-banner" id="authBanner">
       <section class="sn-hero auth-sn-hero" aria-labelledby="authTitle">
-        <p class="sn-hero__eyebrow" id="authBannerEyebrow">🔥 ERVENOW AUTH — تسجيل الدخول</p>
+        <p class="sn-hero__eyebrow" id="authBannerEyebrow">🧭 ERVENOW AUTH — تسجيل الدخول</p>
         <h1 class="sn-hero__title" id="authTitle">مرحباً بعودتك إلى <span>ERVENOW</span></h1>
         <p class="sn-hero__sub" id="authSubtitle">صلاحية الرمز 5 دقائق.</p>
       </section>
@@ -541,12 +541,12 @@
           <nav class="auth-portal-nav" aria-label="بوابات الدخول">
             <p class="auth-portal-nav__title">دخول بوابة أخرى</p>
             <div class="auth-portal-nav__grid">
-              <a class="auth-portal-nav__link" href="/login?role=customer">👤 دخول الزائر</a>
-              <a class="auth-portal-nav__link" href="/login?role=merchant">🏪 دخول التاجر</a>
-              <a class="auth-portal-nav__link" href="/login?role=service">🔧 مقدّم الخدمة</a>
-              <a class="auth-portal-nav__link" href="/driver-login">🚗 دخول المندوب</a>
-              <a class="auth-portal-nav__link" href="/admin-login">🔐 دخول الإدارة</a>
-              <a class="auth-portal-nav__link" href="/dashboard">🗺️ لوحة الزائر</a>
+              <a class="auth-portal-nav__link" href="/login?role=customer">🛍️ عميل</a>
+              <a class="auth-portal-nav__link" href="/login?role=merchant">🏪 متجر</a>
+              <a class="auth-portal-nav__link" href="/login?role=service">🛠️ مزود خدمة</a>
+              <a class="auth-portal-nav__link" href="/driver-login">🛵 مندوب</a>
+              <a class="auth-portal-nav__link" href="/admin-login">⚙️ لوحة الإدارة</a>
+              <a class="auth-portal-nav__link" href="/dashboard">🧭 زائر</a>
             </div>
           </nav>
         </div>
@@ -563,11 +563,11 @@
         <div id="roleWrap">
         <label for="role" id="roleLabel">نوع الحساب</label>
         <select id="role" aria-hidden="true" tabindex="-1">
-          <option value="customer">زائر المنصة</option>
-          <option value="driver">مندوب توصيل</option>
-          <option value="merchant">متجر</option>
+          <option value="customer">🧭 زائر المنصة</option>
+          <option value="driver">🛵 مندوب توصيل</option>
+          <option value="merchant">🏪 متجر</option>
           <option value="restaurant">مطعم</option>
-          <option value="service">مزود خدمة</option>
+          <option value="service">🛠️ مزود خدمة</option>
         </select>
 
         <div id="serviceTypeSubWrap" class="driver-register-fields" hidden>
@@ -815,8 +815,8 @@
       }
 
       var REGISTER_ROLE_OPTIONS = [
-        { value: "customer", label: "زائر المنصة" },
-        { value: "driver", label: "سائق توصيل (مندوب)" },
+        { value: "customer", label: "🧭 زائر المنصة" },
+        { value: "driver", label: "🛵 سائق توصيل (مندوب)" },
         { value: "pickup_truck", label: "سطحة / نقل مركبات" },
         { value: "plumber", label: "سباك" },
         { value: "ac_technician", label: "فني مكيفات" },
@@ -948,9 +948,9 @@
         var sel = document.getElementById("role");
         if (!sel || !isRegisterMode()) return;
         sel.innerHTML =
-          '<option value="customer">زائر</option>' +
-          '<option value="driver">مندوب توصيل</option>' +
-          '<option value="service">مقدم خدمة</option>';
+          '<option value="customer">🧭 زائر</option>' +
+          '<option value="driver">🛵 مندوب توصيل</option>' +
+          '<option value="service">🛠️ مقدم خدمة</option>';
         var want = String(preferred || "customer").trim();
         if (isServiceTypeValue(want)) {
           sel.value = "service";
@@ -1095,7 +1095,7 @@
         var title = document.getElementById("authTitle");
         var sub = document.getElementById("authSubtitle");
         if (eyebrow) {
-          eyebrow.textContent = reg ? "🔥 ERVENOW AUTH — إنشاء حساب" : "🔥 ERVENOW AUTH — تسجيل الدخول";
+          eyebrow.textContent = reg ? "🧭 ERVENOW AUTH — إنشاء حساب" : "🧭 ERVENOW AUTH — تسجيل الدخول";
         }
         if (title) {
           title.innerHTML = reg ? "انضم إلى <span>ERVENOW</span>" : "مرحباً بعودتك إلى <span>ERVENOW</span>";

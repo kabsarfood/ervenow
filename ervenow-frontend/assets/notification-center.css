@@ -169,6 +169,16 @@
   color: #816c5c;
 }
 
+@media (min-width: 1025px) {
+  #dashHeaderNotifications,
+  #storeHeaderNotifications,
+  #driverHeaderNotifications,
+  #adminHeaderNotification,
+  #providerHeaderNotification {
+    order: 99;
+  }
+}
+
 @keyframes ervNotifBellPulse {
   0%,
   100% {

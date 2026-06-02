@@ -22,16 +22,16 @@
             ERVENOW
             <span class="dash-site-header__logo-dot" aria-hidden="true"></span>
           </a>
-          <p class="dash-site-header__tag">لوحة الإدارة</p>
+          <p class="dash-site-header__tag">⚙️ لوحة الإدارة</p>
         </div>
         <nav class="dash-site-header__nav" aria-label="التنقل">
           <div class="dash-site-header__links">
             <a class="dash-site-header__link" href="/">الرئيسية</a>
             <a class="dash-site-header__link admin-nav-pay" href="#" id="adminNavErvenowPay" style="display:none" title="ERVENOW PAY">
-              🔥 ERVENOW PAY
+              ⚡ ERVENOW PAY
               <span class="admin-nav-pay__badge zero" id="navTopupPendingBadge" hidden>0</span>
             </a>
-            <a class="dash-site-header__link is-active" href="/admin-dashboard" aria-current="page">لوحة التحكم</a>
+            <a class="dash-site-header__link is-active" href="/admin-dashboard" aria-current="page">⚙️ لوحة التحكم</a>
           </div>
         </nav>
         <div class="admin-header-tools" id="filter-ui">
@@ -64,11 +64,11 @@
               </p>
               <div class="admin-hero__chips">
                 <a class="admin-hero-chip" href="#liveDashboard">📊 التشغيل الحي</a>
-                <a class="admin-hero-chip" href="#" data-panel-jump="panelOrders">🧾 الطلبات</a>
+                <a class="admin-hero-chip" href="#" data-panel-jump="panelOrders">📦 الطلبات</a>
                 <a class="admin-hero-chip" href="#" data-panel-jump="panelStores">🏪 المتاجر</a>
                 <a class="admin-hero-chip" href="#" data-panel-jump="panelOffers">🎁 العروض</a>
-                <a class="admin-hero-chip" href="#" data-panel-jump="panelErvenowPay" id="adminHeroPayChip" style="display:none">🔥 ERVENOW PAY</a>
-                <a class="admin-hero-chip" href="/dashboard">👤 لوحة الزائر</a>
+                <a class="admin-hero-chip" href="#" data-panel-jump="panelErvenowPay" id="adminHeroPayChip" style="display:none">⚡ ERVENOW PAY</a>
+                <a class="admin-hero-chip" href="/dashboard">🧭 لوحة الزائر</a>
               </div>
             </div>
             <div class="admin-hero__art" aria-hidden="true">
@@ -152,7 +152,7 @@
           <div id="liveSmartAlerts" class="live-smart-alerts live-dash-msg">لا توجد تنبيهات حالياً.</div>
         </div>
         <p class="sub" style="margin: 10px 0 0; opacity: 0.85">
-          قائمة الطلبات الكاملة: افتح قسم <strong>🧾 الطلبات</strong> من الأسفل.
+          قائمة الطلبات الكاملة: افتح قسم <strong>📦 الطلبات</strong> من الأسفل.
         </p>
       </section>
 
@@ -256,7 +256,7 @@
         <p class="sub" style="margin: 0 0 4px">اضغط على بطاقة لفتح إدارة الطلبات، المتاجر، المندوبين، والمالية.</p>
         <div class="panel-switcher">
           <button type="button" class="panel-btn" data-panel="panelOrders">
-            🧾 الطلبات
+            📦 الطلبات
             <span class="panel-badge zero" id="badgeOrders">0</span>
           </button>
           <button type="button" class="panel-btn" data-panel="financePanel" id="financePanelBtn" style="display:none">
@@ -282,7 +282,7 @@
             🎁 العروض
           </button>
           <button type="button" class="panel-btn" data-panel="panelNotifications">
-            📡 الإشعارات
+            🔔 الإشعارات
             <span class="panel-badge zero" id="badgeNotifications">0</span>
           </button>
           <button type="button" class="panel-btn" data-panel="panelComplaints">
@@ -301,7 +301,7 @@
             ⚙️ الإعدادات
           </button>
           <button type="button" class="panel-btn" data-panel="panelErvenowPay" id="panelErvenowPayBtn" style="display:none">
-            🔥 ERVENOW PAY
+            ⚡ ERVENOW PAY
             <span class="panel-badge zero" id="badgeTopupPending">0</span>
           </button>
           <button type="button" class="panel-btn panel-btn-close" id="closePanelsBtn">✕ إغلاق</button>
@@ -324,7 +324,7 @@
       <div class="grid admin-panel" id="panelNotifications">
         <div class="card">
           <div class="panel-toolbar">
-            <h3 class="panel-title">📡 إشعارات المندوبين</h3>
+            <h3 class="panel-title">🔔 إشعارات المندوبين</h3>
             <div class="panel-toolbar-actions">
               <input id="searchNotifications" class="search-input" placeholder="بحث: اسم / جوال" />
               <button class="btn btn-primary" id="reloadNotificationsBtn">تحديث</button>
@@ -336,7 +336,7 @@
 
       <div class="card admin-panel" id="panelDrivers">
         <div class="panel-toolbar">
-          <strong class="panel-title">إدارة المناديب</strong>
+          <strong class="panel-title">🛵 إدارة المناديب</strong>
           <div class="panel-toolbar-actions">
             <input id="searchDrivers" class="search-input" placeholder="بحث: اسم / جوال" />
             <button class="btn btn-primary" id="reloadDriversBtn">تحديث</button>
@@ -412,7 +412,7 @@
 
       <div class="card admin-panel" id="panelStores">
         <div class="panel-toolbar">
-          <strong class="panel-title">بوابة المتاجر (قبول/رفض)</strong>
+          <strong class="panel-title">🏪 بوابة المتاجر (قبول/رفض)</strong>
           <div class="panel-toolbar-actions">
             <input id="searchStores" class="search-input" placeholder="بحث: اسم / جوال" />
             <button class="btn btn-primary" id="reloadStoresBtn">تحديث</button>
@@ -482,7 +482,7 @@
 
       <div class="card admin-panel" id="panelErvenowPay">
         <div class="panel-toolbar">
-          <strong class="panel-title">🔥 ERVENOW PAY</strong>
+          <strong class="panel-title">⚡ ERVENOW PAY</strong>
           <div class="panel-toolbar-actions">
             <button type="button" class="btn btn-primary" id="reloadErvenowPayBtn">تحديث</button>
           </div>

@@ -20,7 +20,7 @@
       links.push({
         key: "control",
         href: "/admin-dashboard",
-        label: "لوحة التحكم",
+        label: "⚙️ لوحة التحكم",
       });
     } else if (r === "driver" && opts.authenticated) {
       links.push({
