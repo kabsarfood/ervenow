@@ -239,7 +239,10 @@
 
           var pub = document.getElementById("publicStoreLink");
           if (s.id) {
-            var storeUrl = "/store.html?id=" + encodeURIComponent(s.id);
+            var storeUrl =
+              window.ErvenowStoreShell && ErvenowStoreShell.buildPublicStoreUrl
+                ? ErvenowStoreShell.buildPublicStoreUrl(s.id)
+                : "/store.html?id=" + encodeURIComponent(s.id) + "&preview=1";
             pub.href = storeUrl;
             if (window.ErvenowStoreShell && ErvenowStoreShell.setPublicStoreUrl) {
               ErvenowStoreShell.setPublicStoreUrl(storeUrl);

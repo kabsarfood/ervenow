@@ -17,6 +17,18 @@
   var _publicStoreUrl = "";
   var _sessionRole = "store";
 
+  function appendStorePreviewParam(url) {
+    var u = String(url || "").trim();
+    if (!u) return u;
+    if (/[?&]preview=/.test(u)) return u;
+    return u + (u.indexOf("?") >= 0 ? "&" : "?") + "preview=1";
+  }
+
+  function buildPublicStoreUrl(storeId) {
+    if (!storeId) return "";
+    return appendStorePreviewParam("/store.html?id=" + encodeURIComponent(storeId));
+  }
+
   function isStoreAccountRole(role) {
     var r = String(role || "").trim().toLowerCase();
     return r === "store" || r === "merchant" || r === "restaurant";
@@ -563,9 +575,11 @@
       amountEl.textContent = fmtMoney(balance);
     },
     setPublicStoreUrl: function (url) {
-      _publicStoreUrl = String(url || "").trim();
+      _publicStoreUrl = appendStorePreviewParam(String(url || "").trim());
       paintNav(_opts.activeNav || "store", hasToken(), _sessionRole);
     },
+    buildPublicStoreUrl: buildPublicStoreUrl,
+    appendStorePreviewParam: appendStorePreviewParam,
     refreshAuthHeader: function () {
       whenPlatformApiReady(initAuthHeader);
     },

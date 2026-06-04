@@ -1,6 +1,7 @@
 (function (global) {
   var TOKEN_STORAGE_KEYS = ["ervenow_access_token", "erwenow_access_token", "token"];
   var _activeNavKey = "";
+  var _storePreviewMode = false;
 
   /** روابط الهيدر حسب الدور (من القائمة → الهيدر) */
   function buildNavLinks(role, opts) {
@@ -207,7 +208,25 @@
     }
   }
 
+  function paintStorePreviewHeader() {
+    var nav = document.querySelector(".dash-site-header__nav");
+    if (nav) nav.hidden = true;
+    var tools = document.querySelector(".dash-site-header__tools");
+    if (tools) tools.hidden = true;
+    var switchAccount = document.getElementById("switchAccount");
+    if (switchAccount) switchAccount.hidden = true;
+    var links = document.querySelector(".dash-site-header__links");
+    if (links) links.innerHTML = "";
+    var logo = document.querySelector(".dash-site-header__logo");
+    if (logo) logo.setAttribute("href", "/store-dashboard");
+    syncHeaderLayoutMetrics();
+  }
+
   async function initAuthHeader() {
+    if (_storePreviewMode) {
+      paintStorePreviewHeader();
+      return;
+    }
     var switchAccount = document.getElementById("switchAccount");
     if (!hasToken()) {
       setAccountButtonLoggedOut(switchAccount);
@@ -532,11 +551,17 @@
 
   function init(opts) {
     opts = opts || {};
+    _storePreviewMode = !!(opts.storePreview || (global.ErvenowStorePreview && ErvenowStorePreview.isActive()));
     normalizeSiteHeaderDomOrder();
     _activeNavKey = opts.activeNav || "";
     if (opts.pageTag) {
       var tag = document.getElementById("guestShellPageTag");
       if (tag) tag.textContent = opts.pageTag;
+    }
+    if (_storePreviewMode) {
+      paintStorePreviewHeader();
+      syncHeaderLayoutMetrics();
+      return;
     }
     paintHeaderNav(_activeNavKey, "", { authenticated: hasToken() });
     paintIndexNav("", { authenticated: hasToken() });

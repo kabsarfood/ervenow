@@ -1075,12 +1075,16 @@
       }
 
       function wirePublicLinks(href) {
+        var previewHref =
+          window.ErvenowStoreShell && ErvenowStoreShell.appendStorePreviewParam
+            ? ErvenowStoreShell.appendStorePreviewParam(href)
+            : href + (href.indexOf("?") >= 0 ? "&" : "?") + "preview=1";
         var pub = document.getElementById("publicLink");
         var pub2 = document.getElementById("publicLinkPreview");
-        if (pub) pub.href = href;
-        if (pub2) pub2.href = href;
+        if (pub) pub.href = previewHref;
+        if (pub2) pub2.href = previewHref;
         if (window.ErvenowStoreShell && ErvenowStoreShell.setPublicStoreUrl) {
-          ErvenowStoreShell.setPublicStoreUrl(href);
+          ErvenowStoreShell.setPublicStoreUrl(previewHref);
         }
       }
 
