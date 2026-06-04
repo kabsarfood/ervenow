@@ -116,6 +116,31 @@ function isLegacyOrUnknownRestaurantCategory(value, storeType) {
   return !RESTAURANT_CATEGORY_SET.has(s);
 }
 
+/** فلاتر الواجهة: slug مطبخ → قيم category مقبولة (قديمة + جديدة) */
+const RESTAURANT_CUISINE_FILTER_ALIASES = {
+  kabsa_bukhari: ["kabsa_bukhari", "kabsa", "bukhari_mandi"],
+  shawarma_grill: ["shawarma_grill", "shawarma", "grill"],
+  burger: ["burger", "burger_broasted"],
+  broasted: ["broasted", "burger_broasted"],
+  cafe: ["cafe", "dessert_cafe", "breakfast_bakery"],
+  sweets: ["sweets", "dessert_cafe"],
+};
+
+function restaurantCategoryMatchesCuisineSlug(categoryValue, cuisineSlug) {
+  const want = String(cuisineSlug || "")
+    .trim()
+    .toLowerCase();
+  if (!want) return true;
+  const c = String(categoryValue || "")
+    .trim()
+    .toLowerCase();
+  if (!c) return false;
+  if (c === want) return true;
+  const aliases = RESTAURANT_CUISINE_FILTER_ALIASES[want];
+  if (aliases && aliases.includes(c)) return true;
+  return false;
+}
+
 /** هل يطابق فلتر المطبخ المطلوب (slug معتمد فقط)؟ allowedSlugs اختياري: دمج أقسام من قاعدة البيانات */
 function restaurantRowMatchesCuisineFilter(row, cuisineSlug, allowedSlugs) {
   const want = String(cuisineSlug || "")
@@ -123,15 +148,27 @@ function restaurantRowMatchesCuisineFilter(row, cuisineSlug, allowedSlugs) {
     .toLowerCase();
   const valid = allowedSlugs && allowedSlugs.size ? allowedSlugs : RESTAURANT_CATEGORY_SET;
   if (!want || !valid.has(want)) return true;
-  if (String(row.type || "")
+  if (!storeRowCountsAsRestaurant(row)) return false;
+  const c = String(row.category || "")
     .trim()
-    .toLowerCase() !== "restaurant") {
-    return false;
+    .toLowerCase();
+  return restaurantCategoryMatchesCuisineSlug(c, want);
+}
+
+/** مطعم للعرض في قوائم «مطاعم» — type=restaurant أو تصنيف مطبخ معروف */
+function storeRowCountsAsRestaurant(row) {
+  if (!row) return false;
+  if (
+    String(row.type || "")
+      .trim()
+      .toLowerCase() === "restaurant"
+  ) {
+    return true;
   }
   const c = String(row.category || "")
     .trim()
     .toLowerCase();
-  return c === want;
+  return isRestaurantCategoryKey(c);
 }
 
 module.exports = {
@@ -140,10 +177,13 @@ module.exports = {
   RESTAURANT_CATEGORY_LABEL_AR,
   RESTAURANT_CATEGORY_ICONS,
   RESTAURANT_CATEGORY_SET,
+  RESTAURANT_CUISINE_FILTER_ALIASES,
   isRestaurantCategoryKey,
   normalizeRestaurantCategory,
   restaurantCategoryLabelAr,
   restaurantCategoryDisplayAr,
   isLegacyOrUnknownRestaurantCategory,
+  restaurantCategoryMatchesCuisineSlug,
   restaurantRowMatchesCuisineFilter,
+  storeRowCountsAsRestaurant,
 };

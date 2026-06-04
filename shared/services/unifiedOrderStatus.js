@@ -41,7 +41,7 @@ function canPatchOrderStatus(order, appUser, nextStatus) {
     ].includes(next);
   }
 
-  if (["merchant", "restaurant"].includes(u.role) && order.merchant_id === u.id) {
+  if (["store", "merchant", "restaurant"].includes(u.role) && order.merchant_id === u.id) {
     return next === DELIVERY_STATUS.ACCEPTED;
   }
 
@@ -280,6 +280,7 @@ async function patchUnifiedOrderStatus(sb, entityId, nextStatusRaw, appUser) {
 module.exports = {
   patchUnifiedOrderStatus,
   canPatchOrderStatus,
+  afterStatusSideEffects,
   getOrderDeliveryStatus,
   normalizeIncomingStatus,
 };

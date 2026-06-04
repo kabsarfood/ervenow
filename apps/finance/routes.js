@@ -89,7 +89,11 @@ router.get("/orders", requireAuth, async (req, res) => {
       /* no filter */
     } else if (req.appUser.role === "customer") {
       q = q.eq("customer_id", req.appUser.id);
-    } else if (req.appUser.role === "merchant" || req.appUser.role === "restaurant") {
+    } else if (
+      req.appUser.role === "store" ||
+      req.appUser.role === "merchant" ||
+      req.appUser.role === "restaurant"
+    ) {
       q = q.eq("merchant_id", req.appUser.id);
     } else if (req.appUser.role === "driver") {
       q = q.eq("driver_id", req.appUser.id);

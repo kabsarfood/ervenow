@@ -21,10 +21,16 @@
         gap: 10px;
         align-items: center;
       }
+      .browse-wrap {
+        min-width: 0;
+        max-width: 100%;
+      }
       .browse-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr));
         gap: 12px;
+        min-width: 0;
+        max-width: 100%;
       }
       .browse-empty {
         color: var(--muted);
@@ -168,61 +174,12 @@
     <script src="/assets/guest-shell.js"></script>
     <script>
       ErvenowGuestShell.init({ activeNav: "guest", pageTag: "التصفح" });
-    </script>
-    <script src="/assets/guestBrowse.js"></script>
-    <script src="/assets/cart.js"></script>
-    <script id="cart">
       function clearCart() {
-        saveCart([]);
-        renderCart();
+        if (window.ErvenowCart) ErvenowCart.clear();
       }
-
-      function renderCart() {
-        const el = document.getElementById("cartList");
-        if (!el) return;
-        const items = getCart();
-        if (!items.length) {
-          el.innerHTML = '<p class="browse-empty">السلة فارغة حالياً</p>';
-          return;
-        }
-        el.innerHTML = items
-          .map(function (i) {
-            var hidePhones = window.ErvenowGuestBrowse && ErvenowGuestBrowse.isAnonymousGuest();
-            var district = i.data && i.data.district ? i.data.district : "—";
-            if (hidePhones) district = "—";
-            const qty = i.data && i.data.qty ? i.data.qty : 1;
-            return (
-              '<div class="card" style="margin-bottom:8px">' +
-              "<strong>" +
-              (i.title || "طلب") +
-              "</strong>" +
-              "<div>الحي: " +
-              district +
-              "</div>" +
-              "<div>الكمية: " +
-              qty +
-              "</div>" +
-              "</div>"
-            );
-          })
-          .join("");
-      }
-
       function goCheckout() {
-        const cart = getCart();
-        if (!cart.length) {
-          alert("السلة فارغة");
-          return;
-        }
-        var tok =
-          (typeof localStorage !== "undefined" &&
-            (localStorage.getItem("token") ||
-              localStorage.getItem("ervenow_access_token") ||
-              localStorage.getItem("erwenow_access_token"))) ||
-          "";
-        if (!tok || !String(tok).trim()) {
-          window.location.href =
-            "/login?mode=register&role=customer&next=" + encodeURIComponent("/cart");
+        if (window.ErvenowCart && typeof ErvenowCart.goCheckout === "function") {
+          ErvenowCart.goCheckout();
           return;
         }
         window.location.href = "/cart";
@@ -529,7 +486,7 @@
           return;
         }
 
-        addToCart({
+        ErvenowCart.add({
           type: safeType,
           title: finalTitle,
           price: totalAmountNum,
@@ -659,7 +616,7 @@
 
     <script id="init">
       browseGuestNotice();
-      renderCart();
+      if (window.ErvenowCart) ErvenowCart.render();
       loadData();
     </script>
   </body>

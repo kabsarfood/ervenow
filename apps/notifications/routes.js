@@ -24,7 +24,7 @@ function fail(res, message, code = 400) {
 
 function mapRoleToRecipientType(role) {
   const r = String(role || "").toLowerCase();
-  if (r === "merchant" || r === "restaurant") return "store";
+  if (r === "store" || r === "merchant" || r === "restaurant") return "store";
   if (r === "service") return "provider";
   if (r === "admin") return "admin";
   if (r === "driver") return "driver";

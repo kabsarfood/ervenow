@@ -10,7 +10,7 @@ function guardLegacyWalletService() {
 
 function walletOwnerTypeForRole(role) {
   if (role === "driver") return "driver";
-  if (role === "merchant" || role === "restaurant") return "merchant";
+  if (role === "store" || role === "merchant" || role === "restaurant") return "store";
   if (role === "service") return "service";
   if (role === "customer") return "customer";
   return "customer";

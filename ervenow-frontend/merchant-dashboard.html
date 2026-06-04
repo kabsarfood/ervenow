@@ -4,146 +4,179 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover" />
     <script src="/assets/viewport-fit.js"></script>
-    <title>ERVENOW | لوحة الطلبات والإيرادات</title>
+    <title>ERVENOW | الطلبات والإيرادات</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/assets/styles.css" />
-    <style>
-      .md-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 14px;
-        margin-bottom: 20px;
-      }
-      .md-stat {
-        border-radius: 16px;
-        padding: 16px 18px;
-        background: linear-gradient(145deg, #fffefb, #faf6f0);
-        border: 1px solid rgba(61, 34, 19, 0.08);
-        box-shadow: 0 8px 28px rgba(42, 24, 16, 0.06);
-      }
-      .md-stat strong {
-        display: block;
-        font-size: 1.45rem;
-        font-weight: 800;
-        color: #3d2213;
-        margin-top: 4px;
-      }
-      .md-stat span {
-        font-size: 0.88rem;
-        color: #6b5347;
-        font-weight: 700;
-      }
-      .md-table-wrap {
-        overflow-x: auto;
-        border-radius: 14px;
-        border: 1px solid rgba(61, 34, 19, 0.08);
-      }
-      table.md-table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 0.9rem;
-      }
-      .md-table th,
-      .md-table td {
-        padding: 10px 12px;
-        text-align: right;
-        border-bottom: 1px solid rgba(61, 34, 19, 0.06);
-      }
-      .md-table th {
-        background: #f5f0ea;
-        font-weight: 800;
-        color: #3d2213;
-      }
-      .md-table tr:last-child td {
-        border-bottom: none;
-      }
-      .md-actions {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-        margin: 12px 0 18px;
-      }
-    </style>
+    <link rel="stylesheet" href="/assets/guest-shell.css" />
+    <link rel="stylesheet" href="/assets/store-shell.css" />
+    <link rel="stylesheet" href="/assets/ervenow-responsive.css" />
+    <link rel="stylesheet" href="/assets/merchant-dashboard.css" />
   </head>
-  <body>
-    <div class="layout">
-      <p><a href="/">← الرئيسية</a> · <a href="/store-dashboard">بوابة المتجر</a></p>
-      <h1>لوحة الطلبات والإيرادات</h1>
-      <p class="sub" id="hint">
-        سجّل الدخول كتاجر (نفس جوال المتجر المعتمد).
-        <a href="/login?role=merchant">تسجيل الدخول</a>
-      </p>
+  <body class="guest-shell-page store-shell-page">
+    <div id="storeShellHeader"></div>
 
-      <div id="main" style="display: none">
-        <div class="card" style="margin-bottom: 14px">
-          <h2 style="margin: 0 0 6px" id="storeName">—</h2>
-          <p class="sub" id="storePhone">—</p>
-          <div class="md-actions">
-            <a class="btn btn-primary" href="/store-dashboard">العودة لبوابة المتجر</a>
-            <a class="btn btn-ghost" id="publicStoreLink" href="#" target="_blank" rel="noopener">صفحة المتجر</a>
-          </div>
+    <div class="dash-main">
+      <div class="store-shell-layout">
+        <div class="md-login-card" id="hint">
+          <h1>📊 الطلبات والإيرادات</h1>
+          <p class="sub" style="margin: 0">
+            سجّل الدخول كتاجر بنفس جوال المتجر المعتمد لعرض الطلبات، الإيرادات، وسجل الإيداعات.
+          </p>
+          <a class="btn btn-primary" href="/login?role=store">تسجيل دخول المتجر</a>
+          <a class="btn btn-ghost" href="/store-dashboard" style="margin-inline-start: 8px">بوابة المتجر</a>
         </div>
 
-        <div class="md-grid">
-          <div class="md-stat">
-            <span>طلبات في القائمة</span>
-            <strong id="statOrders">0</strong>
+        <div id="main" style="display: none">
+          <header class="md-hero" aria-labelledby="mdHeroTitle">
+            <div class="md-hero__shade" aria-hidden="true"></div>
+            <div class="md-hero__inner">
+              <h1 id="mdHeroTitle">📊 الطلبات والإيرادات</h1>
+              <p class="md-hero__sub" id="storePhone">—</p>
+              <p class="md-hero__sub" id="storeMetaLine" style="margin-top: 4px"></p>
+              <div class="md-hero__actions">
+                <a class="btn btn-primary" href="/store-dashboard">لوحة تحكم المتجر</a>
+                <a class="btn btn-ghost" id="publicStoreLink" href="#" target="_blank" rel="noopener">صفحة المتجر للعملاء</a>
+                <a class="btn btn-ghost" href="/store-dashboard#walletAnchor">المحفظة المالية</a>
+              </div>
+            </div>
+          </header>
+
+          <nav class="portal-nav erw-chip-scroll" aria-label="أقسام التقارير">
+            <a href="#mdStats">الإحصائيات</a>
+            <a href="#mdOrders">آخر الطلبات</a>
+            <a href="#mdTx">سجل الإيداعات</a>
+            <a href="/store-dashboard#productsAnchor">المنتجات</a>
+            <a href="#storeSupport">الدعم</a>
+          </nav>
+
+          <div class="portal-kpi-row" id="mdStats" aria-label="ملخص سريع">
+            <div class="portal-kpi">
+              <span class="portal-kpi__lbl">📦 طلبات في القائمة</span>
+              <span class="portal-kpi__val" id="statOrders">0</span>
+              <span class="portal-kpi__sub">من جدول الطلبات</span>
+            </div>
+            <div class="portal-kpi">
+              <span class="portal-kpi__lbl">🛍 منتجات نشطة</span>
+              <span class="portal-kpi__val" id="statProducts">0</span>
+              <span class="portal-kpi__sub">ظاهرة للزوار</span>
+            </div>
+            <div class="portal-kpi">
+              <span class="portal-kpi__lbl">💰 مجموع سلال الطلبات</span>
+              <span class="portal-kpi__val" id="statRevenue">0.00</span>
+              <span class="portal-kpi__sub">ريال — مرجع من الطلبات</span>
+            </div>
+            <div class="portal-kpi">
+              <span class="portal-kpi__lbl">💳 رصيد المحفظة</span>
+              <span class="portal-kpi__val" id="statWallet">—</span>
+              <span class="portal-kpi__sub">من محفظة المتجر</span>
+            </div>
           </div>
-          <div class="md-stat">
-            <span>منتجات نشطة</span>
-            <strong id="statProducts">0</strong>
-          </div>
-          <div class="md-stat">
-            <span>مجموع سلال الطلبات (مرجع)</span>
-            <strong id="statRevenue">0.00</strong>
-            <span class="sub">ريال — من جدول الطلبات</span>
-          </div>
+
+          <section class="portal-card" id="mdOrders">
+            <h2>آخر الطلبات</h2>
+            <p class="sub" style="margin: 0 0 12px">حالة الدفع والتوصيل كما في المنصة — للتفاصيل الكاملة راجع بوابة المتجر.</p>
+            <div class="md-table-wrap">
+              <table class="md-table" id="ordersTable">
+                <thead>
+                  <tr>
+                    <th>التاريخ</th>
+                    <th>رقم الطلب</th>
+                    <th>الحالة</th>
+                    <th>الدفع</th>
+                    <th>التوصيل</th>
+                    <th>السلة</th>
+                    <th>الإجمالي</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+            <p class="sub" id="ordersEmpty" style="display: none; margin-top: 10px">لا طلبات بعد.</p>
+          </section>
+
+          <section class="portal-card" id="mdTx">
+            <h2>سجل الإيداعات</h2>
+            <p class="sub" style="margin: 0 0 12px">حركات محفظة المتجر بعد تسوية الطلبات.</p>
+            <div class="md-table-wrap">
+              <table class="md-table" id="txTable">
+                <thead>
+                  <tr>
+                    <th>التاريخ</th>
+                    <th>المبلغ</th>
+                    <th>الوصف</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+            <p class="sub" id="txEmpty" style="display: none; margin-top: 10px">
+              لا حركات بعد — نفّذ migration_store_wallet.sql ثم أول طلب مدفوع.
+            </p>
+          </section>
         </div>
 
-        <div class="card" style="margin-bottom: 16px">
-          <h2 style="margin: 0 0 12px">آخر الطلبات</h2>
-          <div class="md-table-wrap">
-            <table class="md-table" id="ordersTable">
-              <thead>
-                <tr>
-                  <th>التاريخ</th>
-                  <th>رقم الطلب</th>
-                  <th>الحالة</th>
-                  <th>الدفع</th>
-                  <th>التوصيل</th>
-                  <th>السلة</th>
-                  <th>الإجمالي</th>
-                </tr>
-              </thead>
-              <tbody></tbody>
-            </table>
-          </div>
-          <p class="sub" id="ordersEmpty" style="display: none; margin-top: 10px">لا طلبات بعد.</p>
-        </div>
-
-        <div class="card" style="margin-bottom: 16px">
-          <h2 style="margin: 0 0 12px">سجل الإيداعات</h2>
-          <div class="md-table-wrap">
-            <table class="md-table" id="txTable">
-              <thead>
-                <tr>
-                  <th>التاريخ</th>
-                  <th>المبلغ</th>
-                  <th>الوصف</th>
-                </tr>
-              </thead>
-              <tbody></tbody>
-            </table>
-          </div>
-          <p class="sub" id="txEmpty" style="display: none; margin-top: 10px">لا حركات بعد — نفّذ migration_store_wallet.sql ثم أول طلب.</p>
-        </div>
+        <div class="msg" id="msg" style="display: none"></div>
       </div>
 
-      <div class="msg" id="msg" style="display: none"></div>
+      <section class="store-support" id="storeSupport" aria-labelledby="storeSupportTitle">
+        <div class="store-support__card">
+          <h2 class="store-support__head" id="storeSupportTitle">تواصل مع منصة ERVENOW</h2>
+          <p class="store-support__sub">
+            للاستفسار عن الطلبات، الإيرادات، العمولات، أو السحب — فريق المنصة بجانبك.
+          </p>
+          <div class="store-support__grid">
+            <a
+              class="store-support__tile"
+              href="https://wa.me/966505745650?text=%D9%85%D8%B1%D8%AD%D8%A8%D8%A7%20ERVENOW%20%E2%80%94%20%D8%A7%D8%B3%D8%AA%D9%81%D8%B3%D8%A7%D8%B1%20%D9%85%D9%86%20%D8%A7%D9%84%D8%B7%D9%84%D8%A8%D8%A7%D8%AA%20%D9%88%D8%A7%D9%84%D8%A5%D9%8A%D8%B1%D8%A7%D8%AF%D8%A7%D8%AA"
+              target="_blank"
+              rel="noopener"
+            >
+              <strong>💬 واتساب الدعم</strong>
+              <span>استفسار عن الطلبات والإيرادات.</span>
+              <em>0505745650</em>
+            </a>
+            <a class="store-support__tile" href="mailto:support@ervenow.com">
+              <strong>✉️ البريد الإلكتروني</strong>
+              <span>للمراسلات الرسمية والمرفقات.</span>
+              <em>support@ervenow.com</em>
+            </a>
+            <a class="store-support__tile" href="/store-dashboard">
+              <strong>🏪 لوحة تحكم المتجر</strong>
+              <span>المنتجات، المحفظة، والسحب.</span>
+              <em>store-dashboard</em>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <div id="storeShellFooter"></div>
     </div>
 
     <script src="/assets/api-config.js"></script>
     <script src="/assets/api.js"></script>
+    <script src="/assets/auth-account-guard.js"></script>
+    <script src="/assets/store-shell.js"></script>
     <script>
+      void ErvenowAuthGuard.ensureApprovedAccount({ loginUrl: "/login?role=store" });
+      ErvenowStoreShell.mountShell({
+        activeNav: "merchant",
+        pageTag: "الطلبات والإيرادات — لوحة المتجر",
+      });
+    </script>
+    <script>
+      var DELIVERY_LABELS = {
+        draft: "مسودة",
+        pending: "قيد الانتظار",
+        new: "جديد",
+        accepted: "مقبول",
+        picked: "تم الاستلام",
+        delivering: "قيد التوصيل",
+        delivered: "تم التسليم",
+        cancelled: "ملغى",
+        cancelled_by_customer: "ملغى من العميل",
+      };
+
       function show(text, ok) {
         var el = document.getElementById("msg");
         el.style.display = "block";
@@ -168,6 +201,25 @@
         }
       }
 
+      function pill(text, kind) {
+        var cls = "md-pill md-pill--" + (kind || "muted");
+        return '<span class="' + cls + '">' + esc(text) + "</span>";
+      }
+
+      function deliveryPill(status) {
+        var s = String(status || "").toLowerCase();
+        var label = DELIVERY_LABELS[s] || status || "—";
+        var kind = s === "delivered" ? "ok" : s === "delivering" || s === "accepted" ? "warn" : "muted";
+        return pill(label, kind);
+      }
+
+      function paymentPill(status) {
+        var s = String(status || "").toLowerCase();
+        var label = s === "paid" ? "مدفوع" : s === "pending" ? "معلق" : status || "—";
+        var kind = s === "paid" ? "ok" : "warn";
+        return pill(label, kind);
+      }
+
       async function boot() {
         if (!window.PlatformAPI || !window.PlatformAPI.getToken || !window.PlatformAPI.getToken()) {
           return;
@@ -178,15 +230,35 @@
           document.getElementById("main").style.display = "block";
 
           var s = data.store || {};
-          document.getElementById("storeName").textContent = s.name || "—";
+          document.getElementById("mdHeroTitle").textContent = "📊 " + (s.name || "متجري");
           document.getElementById("storePhone").textContent = s.phone ? "الجوال: " + s.phone : "";
+          var metaBits = [];
+          if (s.type) metaBits.push(s.type);
+          if (s.category_label_ar || s.category) metaBits.push(s.category_label_ar || s.category);
+          document.getElementById("storeMetaLine").textContent = metaBits.length ? metaBits.join(" · ") : "";
+
           var pub = document.getElementById("publicStoreLink");
-          if (s.id) pub.href = "/store.html?id=" + encodeURIComponent(s.id);
+          if (s.id) {
+            var storeUrl = "/store.html?id=" + encodeURIComponent(s.id);
+            pub.href = storeUrl;
+            if (window.ErvenowStoreShell && ErvenowStoreShell.setPublicStoreUrl) {
+              ErvenowStoreShell.setPublicStoreUrl(storeUrl);
+            }
+          }
 
           var agg = data.aggregates || {};
           document.getElementById("statOrders").textContent = String(agg.orders_count || 0);
           document.getElementById("statProducts").textContent = String(agg.products_active_count || 0);
           document.getElementById("statRevenue").textContent = (Number(agg.revenue_orders_sum) || 0).toFixed(2);
+
+          var wal = Number((data.wallet && data.wallet.balance) || 0);
+          document.getElementById("statWallet").textContent = wal.toLocaleString("ar-SA", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          });
+          if (window.ErvenowStoreShell && ErvenowStoreShell.refreshWallet) {
+            ErvenowStoreShell.refreshWallet(wal);
+          }
 
           var orders = data.orders || [];
           var ob = document.querySelector("#ordersTable tbody");
@@ -203,17 +275,19 @@
                 "</td><td>" +
                 esc(o.order_number || o.id) +
                 "</td><td>" +
-                esc(o.status || "—") +
+                pill(o.status || "—", "muted") +
                 "</td><td>" +
-                esc(String(o.payment_status || "—")) +
-                (o.payment_method ? " <span class=\"sub\">(" + esc(o.payment_method) + ")</span>" : "") +
+                paymentPill(o.payment_status) +
+                (o.payment_method
+                  ? ' <span class="sub">(' + esc(o.payment_method) + ")</span>"
+                  : "") +
                 "</td><td>" +
-                esc(o.delivery_status || "—") +
+                deliveryPill(o.delivery_status) +
                 "</td><td>" +
                 (Number(o.order_total) || 0).toFixed(2) +
-                "</td><td>" +
+                "</td><td><strong>" +
                 (Number(o.total_with_vat != null ? o.total_with_vat : o.total_amount) || 0).toFixed(2) +
-                "</td>";
+                "</strong></td>";
               ob.appendChild(tr);
             });
           }
@@ -227,12 +301,13 @@
             document.getElementById("txEmpty").style.display = "none";
             txs.forEach(function (t) {
               var tr = document.createElement("tr");
+              var amt = Number(t.amount) || 0;
               tr.innerHTML =
                 "<td>" +
                 esc(fmtDate(t.created_at)) +
                 "</td><td><strong>" +
-                (Number(t.amount) || 0).toFixed(2) +
-                "</strong> ريال</td><td>" +
+                amt.toFixed(2) +
+                '</strong> <span class="sub">ريال</span></td><td>' +
                 esc(t.description || "—") +
                 "</td>";
               tb.appendChild(tr);

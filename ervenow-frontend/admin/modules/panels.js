@@ -72,7 +72,13 @@ app.activateCustomerAccount = async function (u, meta, opts) {
   opts = opts || {};
   meta = meta || app.customerAccountMeta(u);
   if (!opts.skipConfirm && !app.confirmAccountActivate()) return;
-  var role = meta.role === "service" || meta.role === "merchant" || meta.role === "restaurant" ? meta.role : "customer";
+  var role =
+    meta.role === "service" ||
+    meta.role === "store" ||
+    meta.role === "merchant" ||
+    meta.role === "restaurant"
+      ? meta.role
+      : "customer";
   var j = await app.PlatformAPI.api("/api/admin/activate-customer", {
     method: "POST",
     body: { id: u.id, role: role },

@@ -5,6 +5,7 @@
   var ROLE_HOME = {
     customer: { path: "/dashboard", label: "لوحة زائر المنصة", short: "زائر المنصة" },
     driver: { path: "/driver", label: "لوحة المندوب", short: "مندوب التوصيل" },
+    store: { path: "/store-dashboard", label: "لوحة المتجر", short: "المتجر" },
     merchant: { path: "/store-dashboard", label: "لوحة المتجر", short: "التاجر" },
     restaurant: { path: "/store-dashboard", label: "لوحة المطعم", short: "المطعم" },
     service: { path: "/services-provider.html", label: "لوحة مزود الخدمة", short: "مزود خدمة" },

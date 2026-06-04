@@ -56,6 +56,7 @@ const {
 } = require("../../shared/services/smartCollectionNotify");
 const {
   getAdminFinanceSummaryFromLedger,
+  getLedgerTreasuryPanelPayload,
   listDriverDebtsFromLedger,
   collectDriverDebtViaLedger,
   getDriverLedgerOwedBalance,
@@ -241,8 +242,8 @@ async function linkStoreOwnerAfterApprove(sb, store) {
       return;
     }
     const r = String(u.role || "").toLowerCase();
-    if (!["merchant", "restaurant", "admin"].includes(r)) {
-      await sb.from("users").update({ role: "merchant", updated_at: new Date().toISOString() }).eq("id", u.id);
+    if (!["store", "merchant", "restaurant", "admin"].includes(r)) {
+      await sb.from("users").update({ role: "store", updated_at: new Date().toISOString() }).eq("id", u.id);
     }
     try {
       await syncUserStatusByPhone(sb, phoneDigits, "active");
@@ -2194,7 +2195,7 @@ router.post("/block-customer", requireAuth, requireRole("admin"), requireAdminPe
     if (!existing.data) return fail(res, "الحساب غير موجود", 404);
     const keepRole =
       existing.data &&
-      ["customer", "user", "service", "merchant", "restaurant"].includes(
+      ["customer", "user", "service", "store", "merchant", "restaurant"].includes(
         String(existing.data.role || "").toLowerCase()
       )
         ? existing.data.role
@@ -2214,7 +2215,7 @@ router.post("/block-customer", requireAuth, requireRole("admin"), requireAdminPe
         const recipientType =
           role === "service"
             ? "provider"
-            : role === "merchant" || role === "restaurant"
+            : role === "store" || role === "merchant" || role === "restaurant"
               ? "store"
               : "customer";
         await notifyAccountLifecycle(
@@ -2256,7 +2257,7 @@ router.post("/reject-user", requireAuth, requireRole("admin"), async (req, res) 
         const recipientType =
           role === "service"
             ? "provider"
-            : role === "merchant" || role === "restaurant"
+            : role === "store" || role === "merchant" || role === "restaurant"
               ? "store"
               : "customer";
         await notifyAccountLifecycle(
@@ -2289,7 +2290,9 @@ router.post("/activate-customer", requireAuth, requireRole("admin"), requireAdmi
     const prevRole = String(existing.data.role || "").toLowerCase();
     const patch = { status: "active" };
     if (roleIn === "service") patch.role = "service";
-    else if (roleIn === "merchant" || roleIn === "restaurant") patch.role = roleIn;
+    else if (roleIn === "store" || roleIn === "merchant" || roleIn === "restaurant") {
+      patch.role = roleIn === "merchant" || roleIn === "restaurant" ? roleIn : "store";
+    }
     else if (prevRole && prevRole !== "blocked" && prevRole !== "user") patch.role = existing.data.role;
     else patch.role = "customer";
     let patched = await patchUserByIdForAdmin(sb, id, patch);
@@ -2304,7 +2307,7 @@ router.post("/activate-customer", requireAuth, requireRole("admin"), requireAdmi
         const recipientType =
           role === "service"
             ? "provider"
-            : role === "merchant" || role === "restaurant"
+            : role === "store" || role === "merchant" || role === "restaurant"
               ? "store"
               : "customer";
         const isReactivation =
@@ -2340,22 +2343,28 @@ router.get("/stats", requireAuth, requireRole("admin"), requireAdminPermission("
 });
 
 router.get("/platform-treasury", requireAuth, requireRole("admin"), requireAdminPermission("finance"), async (req, res) => {
-  if (isLedgerOnlyMode()) {
-    try {
-      const summary = await getAdminFinanceSummaryFromLedger(req.supabase);
-      if (!summary.ok) return fail(res, "ledger finance-summary required", 503);
-      return ok(res, {
-        treasury: {
-          source: "ervenow_ledger",
-          platform_commission_total: summary.platform_commission_total,
-          driver_earnings_total: summary.driver_earnings_total,
-          store_earnings_total: summary.store_earnings_total,
-          service_commission_total: summary.service_commission_total,
-        },
-      });
-    } catch (e) {
-      return fail(res, e.message, 500);
+  try {
+    const sb = createServiceClient() || req.supabase;
+    const panel = await getLedgerTreasuryPanelPayload(sb);
+    if (panel.ok) {
+      return ok(res, { treasury: panel });
     }
+    if (isLedgerOnlyMode()) {
+      return fail(
+        res,
+        panel.reason === "migration_missing"
+          ? "نفّذ migration_bootstrap_ledger_finance.sql في Supabase"
+          : "ledger treasury required",
+        panel.reason === "migration_missing" ? 503 : 500,
+        { reason: panel.reason, detail: panel.detail || null }
+      );
+    }
+  } catch (e) {
+    if (isLedgerOnlyMode()) return fail(res, e.message || String(e), 500);
+  }
+
+  if (isLedgerOnlyMode()) {
+    return fail(res, "ledger treasury required", 503);
   }
   try {
     const sb = createServiceClient();
@@ -2598,7 +2607,7 @@ router.get("/providers", requireAuth, requireRole("admin"), requireAdminPermissi
     const { data: users, error: uErr } = await req.supabase
       .from("users")
       .select("id, phone, role, created_at")
-      .in("role", ["restaurant", "merchant", "service"])
+      .in("role", ["store", "restaurant", "merchant", "service"])
       .order("created_at", { ascending: false })
       .limit(500);
     if (uErr) return fail(res, uErr.message, 400);

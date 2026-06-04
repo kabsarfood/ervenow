@@ -42,10 +42,26 @@
       .lp-body {
         margin: 0;
         padding-top: 0;
-        padding-bottom: max(6.5rem, calc(env(safe-area-inset-bottom, 0px) + 5.5rem));
+        padding-bottom: max(5.5rem, calc(env(safe-area-inset-bottom, 0px) + 4.75rem));
         /* clip لا يفرض قصاً عمودياً كما يفعل hidden مع القوائم المطلقة */
         overflow-x: clip;
-        overflow-y: visible;
+        overflow-y: auto;
+        overscroll-behavior-x: none;
+        max-width: 100%;
+      }
+
+      @media (min-width: 1025px) {
+        .lp-body.lp-home-premium {
+          display: flex;
+          flex-direction: column;
+          min-height: 100dvh;
+          padding-bottom: 0;
+        }
+
+        .lp-body.lp-home-premium .lp-footer {
+          margin-top: auto;
+          width: 100%;
+        }
       }
 
       @supports not (overflow-x: clip) {
@@ -333,57 +349,7 @@
         pointer-events: auto;
       }
 
-      #lpCartWrap.lp-cart-wrap--portaled .lp-cart-panel {
-        position: relative;
-        top: auto;
-        inset-inline-end: auto;
-        left: auto;
-        right: auto;
-        width: min(580px, calc(100% - 24px));
-        max-height: min(
-          88vh,
-          88dvh,
-          calc(var(--erw-viewport-h, 100dvh) - 24px - env(safe-area-inset-top, 0px) - var(--erw-safe-bottom, 12px))
-        );
-        pointer-events: auto;
-        z-index: 1;
-        flex-shrink: 1;
-        min-height: 0;
-      }
-
-      #lpCartWrap.lp-cart-wrap--portaled .lp-cart-panel.lp-cart-panel--open {
-        position: relative;
-        top: auto;
-        left: auto;
-        right: auto;
-        inset-inline-end: auto;
-        width: min(580px, calc(100% - 24px));
-        max-height: min(
-          88vh,
-          88dvh,
-          calc(var(--erw-viewport-h, 100dvh) - 24px - env(safe-area-inset-top, 0px) - var(--erw-safe-bottom, 12px))
-        );
-        transform: none;
-      }
-
-      #lpCartWrap.lp-cart-wrap--portaled .lp-cart-stack {
-        flex: 1 1 auto;
-        min-height: 0;
-      }
-
-      #lpCartWrap.lp-cart-wrap--portaled .lp-cart-card--items .lp-cart-card__body--items {
-        max-height: min(38vh, 320px);
-      }
-
-      #lpCartWrap.lp-cart-wrap--portaled .lp-cart-panel--pay-step .lp-cart-card--items .lp-cart-card__body--items {
-        max-height: min(22vh, 168px);
-        min-height: 72px;
-      }
-
-      #lpCartWrap.lp-cart-wrap--portaled #lpCartSummary,
-      #lpCartWrap.lp-cart-wrap--portaled #lpCartFooter {
-        flex-shrink: 0;
-      }
+      /* حاوية السلة (layout): cart-shell.css */
 
       .lp-cart-pay-section {
         margin-bottom: 12px;
@@ -438,7 +404,6 @@
         inset-inline-end: 0;
         top: calc(100% + 10px);
         width: min(460px, calc(100% - 28px));
-        max-height: calc(100dvh - 88px);
         min-height: 0;
         display: flex;
         flex-direction: column;
@@ -457,7 +422,6 @@
           0 22px 48px rgba(45, 26, 14, 0.18),
           0 0 0 1px rgba(255, 255, 255, 0.35) inset,
           0 0 40px rgba(201, 162, 39, 0.12);
-        overflow: visible;
         opacity: 0;
         visibility: hidden;
         pointer-events: none;
@@ -503,18 +467,6 @@
         z-index: 1;
       }
 
-      #lpCartWrap.lp-cart-wrap--portaled .lp-cart-panel {
-        overflow: visible;
-      }
-
-      #lpCartWrap.lp-cart-wrap--portaled .lp-cart-panel__surface {
-        max-height: min(
-          88vh,
-          88dvh,
-          calc(var(--erw-viewport-h, 100dvh) - 24px - env(safe-area-inset-top, 0px) - var(--erw-safe-bottom, 12px))
-        );
-      }
-
       #lpCartWrap.lp-cart-wrap--portaled .lp-cart-panel__footer {
         overflow: visible;
         position: relative;
@@ -540,15 +492,10 @@
       }
 
       .lp-cart-stack {
-        flex: 1 1 auto;
-        min-height: 0;
-        overflow-y: auto;
-        overflow-x: hidden;
         padding: 12px 12px 14px;
         display: flex;
         flex-direction: column;
         gap: 12px;
-        -webkit-overflow-scrolling: touch;
       }
 
       .lp-cart-card {
@@ -649,9 +596,6 @@
       }
 
       .lp-cart-card__body--items {
-        min-height: 120px;
-        max-height: min(42vh, 360px);
-        overflow-y: auto;
         padding: 10px 12px 12px;
       }
 
@@ -681,40 +625,19 @@
         font-size: 1.08rem;
       }
 
-      .lp-cart-card--pay {
+      .lp-cart-card--checkout {
         box-shadow:
           0 14px 36px rgba(45, 26, 14, 0.11),
           0 0 0 1px rgba(255, 255, 255, 0.5) inset,
           0 0 36px rgba(201, 162, 39, 0.14);
       }
 
-      .lp-cart-card--pay .lp-cart-card__body--pay {
+      .lp-cart-card--checkout .lp-cart-card__body--checkout {
         padding-top: 10px;
       }
 
-      .lp-cart-card--pay .lp-cart-panel__checkout {
+      .lp-cart-card--checkout .lp-cart-panel__checkout {
         margin-top: 4px;
-      }
-
-      #lpCartWrap.lp-cart-wrap--portaled .lp-cart-stack {
-        max-height: min(72vh, calc(100dvh - 120px));
-      }
-
-      #lpCartWrap.lp-cart-wrap--portaled .lp-cart-panel--pay-step .lp-cart-stack {
-        flex: 1 1 auto;
-        min-height: 0;
-        max-height: none;
-      }
-
-      #lpCartWrap.lp-cart-wrap--portaled .lp-cart-panel--pay-step .lp-cart-card__body--items {
-        max-height: min(22vh, 168px);
-        min-height: 72px;
-      }
-
-      .lp-cart-panel--pay-step .lp-cart-card--items,
-      .lp-cart-panel--pay-step .lp-cart-card--fin,
-      .lp-cart-panel--pay-step .lp-cart-card--pay {
-        flex-shrink: 0;
       }
 
       .lp-cart-pay-section .erv-pay-luxe--inline .erv-pay-luxe__shell {
@@ -726,18 +649,21 @@
         visibility: visible !important;
         pointer-events: auto !important;
         transform: none !important;
-        max-height: none;
-        overflow: visible;
+        max-height: min(16vh, 88px) !important;
+        overflow-y: auto;
+        overflow-x: hidden;
       }
 
-      #lpCartWrap.lp-cart-wrap--portaled .lp-cart-card--pay {
+      #lpCartWrap.lp-cart-wrap--portaled .lp-cart-card--pay-methods,
+      #lpCartWrap.lp-cart-wrap--portaled .lp-cart-card--checkout {
         overflow: visible;
         position: relative;
         z-index: 5;
       }
 
-      #lpCartWrap.lp-cart-wrap--portaled .lp-cart-panel--pay-step .lp-cart-card--pay,
-      #lpCartWrap.lp-cart-wrap--portaled .lp-cart-panel--pay-step .lp-cart-card__body--pay {
+      #lpCartWrap.lp-cart-wrap--portaled .lp-cart-panel--pay-step .lp-cart-card--pay-methods,
+      #lpCartWrap.lp-cart-wrap--portaled .lp-cart-panel--pay-step .lp-cart-card--checkout,
+      #lpCartWrap.lp-cart-wrap--portaled .lp-cart-panel--pay-step .lp-cart-card__body--checkout {
         overflow: visible;
       }
 
@@ -840,29 +766,6 @@
       .lp-cart-panel__list {
         overflow: visible;
         max-height: none;
-      }
-
-      .lp-cart-panel:not(.lp-cart-panel--empty) .lp-cart-panel__list,
-      .lp-cart-panel__list.lp-cart-panel__list--scroll {
-        flex: 1 1 auto;
-        min-height: 80px;
-        max-height: min(36vh, 300px);
-        overflow-y: auto;
-        overflow-x: hidden;
-        -webkit-overflow-scrolling: touch;
-        padding-inline-end: 4px;
-        scrollbar-gutter: stable;
-        scrollbar-width: thin;
-        scrollbar-color: rgba(91, 55, 29, 0.35) transparent;
-      }
-
-      .lp-cart-panel__list.lp-cart-panel__list--scroll::-webkit-scrollbar {
-        width: 8px;
-      }
-
-      .lp-cart-panel__list.lp-cart-panel__list--scroll::-webkit-scrollbar-thumb {
-        background: rgba(91, 55, 29, 0.28);
-        border-radius: 999px;
       }
 
       .lp-cart-panel__section-title {
@@ -1103,6 +1006,7 @@
       }
 
       #lpCartSummary[hidden],
+      #lpCartPayCard[hidden],
       #lpCartFooter[hidden],
       .lp-cart-panel__summary[hidden],
       .lp-cart-panel__footer[hidden] {
@@ -1215,7 +1119,7 @@
       @media (min-width: 901px) {
         #lpCartWrap.lp-cart-wrap--portaled .lp-cart-panel,
         #lpCartWrap.lp-cart-wrap--portaled .lp-cart-panel.lp-cart-panel--open {
-          width: min(580px, calc(100% - 40px));
+          width: min(600px, calc(100vw - 40px));
         }
         .lp-cart-panel__welcome {
           padding: 18px 22px 16px;
@@ -1239,11 +1143,7 @@
       @media (max-width: 900px) {
         #lpCartWrap.lp-cart-wrap--portaled .lp-cart-panel,
         #lpCartWrap.lp-cart-wrap--portaled .lp-cart-panel.lp-cart-panel--open {
-          width: min(100%, calc(100% - 20px));
-          max-height: min(
-            90dvh,
-            calc(100dvh - 20px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))
-          );
+          width: calc(100vw - 12px);
         }
         .lp-cart-panel__welcome {
           padding: 17px 16px 15px;
@@ -2376,8 +2276,17 @@
       .lp-footer {
         background: linear-gradient(180deg, rgba(61, 34, 19, 0.07), rgba(61, 34, 19, 0.03));
         border-top: 1px solid var(--border);
-        padding: clamp(40px, 6vw, 56px) clamp(16px, 4vw, 24px) 28px;
-        margin-top: 8px;
+        padding: clamp(36px, 5vw, 52px) clamp(16px, 4vw, 24px) clamp(24px, 4vw, 36px);
+        margin-top: 0;
+        flex-shrink: 0;
+      }
+
+      .lp-home-premium main > .lp-section:last-of-type {
+        padding-bottom: clamp(28px, 5vw, 48px);
+      }
+
+      .lp-home-premium main > .lp-section.lp-wrap:last-of-type {
+        padding-bottom: clamp(32px, 5vw, 52px);
       }
 
       .lp-footer__inner {
@@ -2389,19 +2298,64 @@
         align-items: start;
       }
 
+      @media (min-width: 801px) and (max-width: 1024px) {
+        .lp-footer__inner {
+          grid-template-columns: 1fr 1fr;
+          gap: clamp(24px, 3.5vw, 32px);
+        }
+
+        .lp-footer__inner > div:first-child {
+          grid-column: 1 / -1;
+        }
+      }
+
       @media (max-width: 800px) {
+        .lp-footer {
+          padding-top: clamp(32px, 8vw, 40px);
+          padding-bottom: max(28px, calc(env(safe-area-inset-bottom, 0px) + 20px));
+        }
+
         .lp-footer__inner {
           grid-template-columns: 1fr;
+          gap: clamp(22px, 5vw, 28px);
           text-align: center;
         }
+
         .lp-footer__links {
           justify-content: center;
+          gap: 8px 16px;
+          margin-bottom: 14px;
         }
+
         .lp-footer__social {
           justify-content: center;
         }
+
         .lp-footer__contact {
           align-items: center;
+        }
+
+        .lp-footer__copy {
+          max-width: 22em;
+          margin-inline: auto;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .lp-footer__links {
+          flex-direction: column;
+          align-items: stretch;
+          gap: 4px;
+          max-width: 280px;
+          margin-inline: auto;
+        }
+
+        .lp-footer__links a {
+          justify-content: center;
+          padding: 10px 12px;
+          border-radius: 12px;
+          background: rgba(255, 254, 251, 0.65);
+          border: 1px solid rgba(61, 34, 19, 0.08);
         }
       }
 
@@ -2837,55 +2791,82 @@
             >
               <div class="lp-cart-panel__surface">
                 <header class="lp-cart-card lp-cart-card--head">
-                  <div class="lp-cart-card--head__row">
-                    <h2 id="lpCartDialogTitle" class="lp-cart-card--head__title">السلة</h2>
+                  <div class="lp-cart-card--head__bar">
+                    <a href="/" class="lp-cart-continue-link" id="lpCartContinueShop" data-erv-cart-continue>← استمرار التسوق</a>
+                    <div class="lp-cart-card--head__title-wrap">
+                      <span class="lp-cart-card--head__cart-icon" aria-hidden="true">🛒</span>
+                      <h2 id="lpCartDialogTitle" class="lp-cart-card--head__title">السلة</h2>
+                    </div>
                   </div>
-                  <a href="/" class="lp-cart-card--head__shop" id="lpCartContinueShop">استمر بالتسوق</a>
                   <p id="lpCartPanelSub" class="lp-cart-card--head__sub" hidden>أضف منتجات أو خدمات، ثم أكمل الدفع.</p>
                 </header>
 
                 <div class="lp-cart-stack">
-                  <section class="lp-cart-card lp-cart-card--items" aria-labelledby="lpCartLinesHeading">
-                    <div class="lp-cart-card__labelbar">
-                      <h3 id="lpCartLinesHeading" class="lp-cart-card__title">تفاصيل المنتجات</h3>
-                    </div>
-                    <div class="lp-cart-card__body lp-cart-card__body--items">
-                      <div id="lpCartLines" class="lp-cart-panel__list"></div>
-                      <p id="lpCartEmpty" class="lp-cart-panel__empty" hidden>السلة فارغة — ابدأ من أحد الأقسام:</p>
-                      <div id="lpCartEmptyCta" class="lp-cart-panel__empty-cta" hidden>
-                        <a class="lp-cart-panel__empty-btn" href="/stores">متاجر</a>
-                        <a class="lp-cart-panel__empty-btn" href="/services">خدمات</a>
-                        <a class="lp-cart-panel__empty-btn" href="/delivery-services.html">توصيل</a>
-                        <a class="lp-cart-panel__empty-btn lp-cart-panel__empty-btn--primary" href="/start-now.html">ابدأ طلباً</a>
+                  <section id="lpCartItemsCard" class="lp-cart-card lp-cart-card--items lp-cart-card--accordion" aria-labelledby="lpCartLinesHeading">
+                    <details class="lp-cart-accordion lp-cart-accordion--items" id="lpCartItemsAccordion" open>
+                      <summary class="lp-cart-accordion__trigger lp-cart-accordion__trigger--items">
+                        <span class="lp-cart-accordion__icon" aria-hidden="true">🛒</span>
+                        <span class="lp-cart-accordion__label" id="lpCartLinesHeading">تفاصيل المنتجات</span>
+                        <span class="lp-cart-accordion__meta" id="lpCartItemsToggleMeta">السلة فارغة</span>
+                        <span class="lp-cart-accordion__chev" aria-hidden="true"></span>
+                      </summary>
+                      <div class="lp-cart-accordion__panel lp-cart-card__body lp-cart-card__body--items">
+                        <div id="lpCartLines" class="lp-cart-panel__list"></div>
+                        <p id="lpCartEmpty" class="lp-cart-panel__empty" hidden>السلة فارغة — ابدأ من أحد الأقسام:</p>
+                        <div id="lpCartEmptyCta" class="lp-cart-panel__empty-cta" hidden>
+                          <a class="lp-cart-panel__empty-btn" href="/stores">متاجر</a>
+                          <a class="lp-cart-panel__empty-btn" href="/services">خدمات</a>
+                          <a class="lp-cart-panel__empty-btn" href="/delivery-services.html">توصيل</a>
+                          <a class="lp-cart-panel__empty-btn lp-cart-panel__empty-btn--primary" href="/start-now.html">ابدأ طلباً</a>
+                        </div>
                       </div>
-                    </div>
+                    </details>
                   </section>
 
-                  <section id="lpCartSummary" class="lp-cart-card lp-cart-card--fin" hidden>
-                    <div class="lp-cart-card__labelbar">
-                      <h3 class="lp-cart-card__title">ملخص المبالغ</h3>
-                    </div>
-                    <div class="lp-cart-card__body">
-                      <div class="lp-cart-panel__fin-row">
-                        <span>المجموع الفرعي</span>
-                        <span class="lp-cart-panel__fin-val" id="lpCartSub">٠٫٠٠ <small class="lp-cart-panel__cur">ر.س</small></span>
+                  <section id="lpCartSummary" class="lp-cart-card lp-cart-card--fin lp-cart-card--accordion" hidden>
+                    <details class="lp-cart-accordion lp-cart-accordion--fin">
+                      <summary class="lp-cart-accordion__trigger lp-cart-accordion__trigger--fin">
+                        <span class="lp-cart-accordion__icon" aria-hidden="true">💰</span>
+                        <span class="lp-cart-accordion__label">ملخص المبالغ</span>
+                        <span class="lp-cart-accordion__meta" id="lpCartFinToggleMeta">الإجمالي: ٠٫٠٠ ر.س</span>
+                        <span class="lp-cart-accordion__chev" aria-hidden="true"></span>
+                      </summary>
+                      <div class="lp-cart-accordion__panel lp-cart-card__body">
+                        <div class="lp-cart-panel__fin-row">
+                          <span>المجموع الفرعي</span>
+                          <span class="lp-cart-panel__fin-val" id="lpCartSub">٠٫٠٠ <small class="lp-cart-panel__cur">ر.س</small></span>
+                        </div>
+                        <div class="lp-cart-panel__fin-row">
+                          <span>أجرة التوصيل</span>
+                          <span class="lp-cart-panel__fin-val" id="lpCartDel">٠٫٠٠ <small class="lp-cart-panel__cur">ر.س</small></span>
+                        </div>
+                        <p id="lpCartDelNote" class="lp-cart-panel__fin-note" hidden>لطلبات المتجر: حدّد موقع التوصيل لحساب الأجرة (كم × 2.3 ر.س).</p>
+                        <div class="lp-cart-panel__fin-row">
+                          <span>الضريبة (15%)</span>
+                          <span class="lp-cart-panel__fin-val" id="lpCartVat">٠٫٠٠ <small class="lp-cart-panel__cur">ر.س</small></span>
+                        </div>
+                        <div class="lp-cart-panel__fin-row lp-cart-panel__fin-row--comm">
+                          <span>عمولة المنصة (7%)</span>
+                          <span class="lp-cart-panel__fin-val" id="lpCartComm">٠٫٠٠ <small class="lp-cart-panel__cur">ر.س</small></span>
+                        </div>
+                        <div class="lp-cart-panel__fin-row lp-cart-panel__fin-row--grand">
+                          <span>الإجمالي</span>
+                          <span class="lp-cart-panel__fin-val" id="lpCartTotal">٠٫٠٠ <small class="lp-cart-panel__cur">ر.س</small></span>
+                        </div>
                       </div>
-                      <div class="lp-cart-panel__fin-row">
-                        <span>القيمة المضافة 15%</span>
-                        <span class="lp-cart-panel__fin-val" id="lpCartVat">٠٫٠٠ <small class="lp-cart-panel__cur">ر.س</small></span>
-                      </div>
-                      <div class="lp-cart-panel__fin-row lp-cart-panel__fin-row--grand">
-                        <span>المجموع الكلي</span>
-                        <span class="lp-cart-panel__fin-val" id="lpCartTotal">٠٫٠٠ <small class="lp-cart-panel__cur">ر.س</small></span>
-                      </div>
-                    </div>
+                    </details>
                   </section>
 
-                  <section id="lpCartFooter" class="lp-cart-card lp-cart-card--pay" hidden>
-                    <div class="lp-cart-card__body lp-cart-card__body--pay">
-                      <div class="lp-cart-pay-section" id="lpCartPaySection">
-                        <h3 class="lp-cart-pay-section__title">وسيلة الدفع</h3>
-                        <div id="lpCartPayIcons" class="erv-pay-cards" role="group" aria-label="وسائل الدفع"></div>
+                  <section id="lpCartPayCard" class="lp-cart-card lp-cart-card--pay-methods lp-cart-card--accordion" hidden>
+                    <details class="lp-cart-accordion lp-cart-accordion--pay">
+                      <summary class="lp-cart-accordion__trigger lp-cart-accordion__trigger--green">
+                        <span class="lp-cart-accordion__icon" aria-hidden="true">💳</span>
+                        <span class="lp-cart-accordion__label">وسيلة الدفع</span>
+                        <span class="lp-cart-accordion__meta" id="lpCartPayToggleMeta">اختر وسيلة</span>
+                        <span class="lp-cart-accordion__chev" aria-hidden="true"></span>
+                      </summary>
+                      <div class="lp-cart-accordion__panel lp-cart-card__body lp-cart-card__body--pay-methods" id="lpCartPaySection">
+                        <div id="lpCartPayIcons" class="erv-pay-cards erv-pay-cards--cart" role="group" aria-label="وسائل الدفع"></div>
                         <select id="lpCartPaySelect" class="erv-pay-select" hidden aria-hidden="true" tabindex="-1"></select>
                         <div id="lpCartPayLuxeWrap" class="erv-pay-luxe-wrap" hidden></div>
                         <div id="lpCartEwPayDetail" class="erv-ew-pay-card" hidden>
@@ -2908,7 +2889,12 @@
                           <span id="lpCartEwPayBalance" class="visually-hidden" aria-hidden="true"></span>
                         </div>
                       </div>
-                      <button type="button" class="lp-cart-panel__checkout" id="lpCartCheckoutBtn" disabled>إتمام العملية</button>
+                    </details>
+                  </section>
+
+                  <section id="lpCartFooter" class="lp-cart-card lp-cart-card--checkout lp-cart-card--checkout-sticky" hidden>
+                    <div class="lp-cart-card__body lp-cart-card__body--checkout">
+                      <button type="button" class="lp-cart-panel__checkout" id="lpCartCheckoutBtn" disabled>إتمام الطلب</button>
                       <div class="lp-cart-trust" aria-hidden="false">
                         <span class="lp-cart-trust__item">🔒 دفع آمن</span>
                         <span class="lp-cart-trust__item">⚡ إتمام سريع</span>
@@ -3370,8 +3356,17 @@
           return panel.classList.contains("lp-cart-panel--open");
         }
 
+        function rememberCartReturnUrl() {
+          try {
+            var path = location.pathname;
+            if (!path || path === "/cart") return;
+            sessionStorage.setItem("erv_cart_return_url", path + (location.search || "") + (location.hash || ""));
+          } catch (e0) {}
+        }
+
         function setOpen(open) {
           if (open) {
+            rememberCartReturnUrl();
             mountCartLayers();
             panel.classList.add("lp-cart-panel--open");
             document.body.classList.add("lp-cart-no-scroll");
@@ -3400,8 +3395,25 @@
             setOpen(false);
           });
         }
-        if (continueShop) {
-          continueShop.addEventListener("click", function () {
+        if (continueShop && !continueShop.__ervCartContinueBound) {
+          continueShop.__ervCartContinueBound = true;
+          continueShop.addEventListener("click", function (e) {
+            var stored = "";
+            try {
+              stored = sessionStorage.getItem("erv_cart_return_url") || "";
+            } catch (e1) {}
+            if (stored && stored !== "/cart") {
+              e.preventDefault();
+              setOpen(false);
+              location.href = stored;
+              return;
+            }
+            if (history.length > 1) {
+              e.preventDefault();
+              setOpen(false);
+              history.back();
+              return;
+            }
             setOpen(false);
           });
         }
@@ -3508,7 +3520,7 @@
         if (labelEl) labelEl.textContent = "رصيدك";
         var href = "/wallet.html";
         if (role === "driver") href = "/driver-wallet";
-        if (role === "merchant" || role === "restaurant") href = "/store-dashboard#wallet";
+        if (role === "store" || role === "merchant" || role === "restaurant") href = "/store-dashboard#wallet";
         box.setAttribute("href", href);
         amountEl.textContent = "…";
         try {
@@ -3516,7 +3528,7 @@
           if (role === "driver") {
             var j = await window.PlatformAPI.api("/api/driver/wallet");
             bal = Number(j.balance) || 0;
-          } else if (role === "merchant" || role === "restaurant") {
+          } else if (role === "store" || role === "merchant" || role === "restaurant") {
             try {
               var md = await window.PlatformAPI.api("/api/store/merchant-dashboard");
               bal = Number((md.wallet && md.wallet.balance) || 0);

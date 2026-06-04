@@ -35,6 +35,17 @@
           </div>
         </nav>
         <div class="admin-header-tools" id="filter-ui">
+          <button
+            type="button"
+            class="dash-site-header__link admin-header-tool-link admin-mobile-nav-toggle"
+            id="adminMobileNavToggle"
+            aria-expanded="false"
+            aria-controls="adminMobileNavPanel"
+            aria-label="القائمة الرئيسية"
+          >
+            ☰ القائمة
+          </button>
+          <div id="adminHeaderNotification"></div>
           <select id="range" onchange="loadStats()" aria-label="الفترة الزمنية">
             <option value="today">اليوم</option>
             <option value="week">هذا الأسبوع</option>
@@ -49,6 +60,23 @@
           </button>
           <button type="button" class="dash-site-header__link admin-header-tool-link" id="logoutAdminBtn">خروج</button>
         </div>
+      </div>
+      <div class="admin-mobile-nav-panel" id="adminMobileNavPanel" hidden>
+        <a class="admin-mobile-nav-panel__link" href="/">الرئيسية</a>
+        <a class="admin-mobile-nav-panel__link" href="#" id="adminMobileNavErvenowPay" style="display:none">⚡ ERVENOW PAY</a>
+        <a class="admin-mobile-nav-panel__link is-current" href="/admin-dashboard" aria-current="page">⚙️ لوحة التحكم</a>
+        <a class="admin-mobile-nav-panel__link" href="/admin/categories">📂 الأقسام</a>
+        <button type="button" class="admin-mobile-nav-panel__link admin-mobile-nav-panel__btn" data-proxy-click="adminHeaderOffers">
+          🎁 العروض
+        </button>
+        <a class="admin-mobile-nav-panel__link" href="/admin/withdrawals">💸 السحب</a>
+        <button type="button" class="admin-mobile-nav-panel__link admin-mobile-nav-panel__btn" data-proxy-click="siteMaintenanceBtn">
+          ⏸ الموقع
+        </button>
+        <a class="admin-mobile-nav-panel__link" href="/admin/branding">🎨 الهوية</a>
+        <button type="button" class="admin-mobile-nav-panel__link admin-mobile-nav-panel__btn" data-proxy-click="logoutAdminBtn">
+          خروج
+        </button>
       </div>
     </header>
 
@@ -850,10 +878,64 @@
 
     <script src="/assets/api-config.js"></script>
     <script src="/assets/api.js"></script>
+    <link rel="stylesheet" href="/assets/notification-center.css" />
+    <script src="/assets/notification-center.js"></script>
     <script src="/assets/compressImage.js"></script>
     <script src="https://cdn.socket.io/4.8.1/socket.io.min.js" crossorigin="anonymous"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script type="module" src="/admin/admin-dashboard.js"></script>
+    <script>
+      (function initAdminNotifications() {
+        var host = document.getElementById("adminHeaderNotification");
+        if (!host) return;
+        function run() {
+          if (!window.ErvenowNotificationCenter || !ErvenowNotificationCenter.mount) {
+            setTimeout(run, 120);
+            return;
+          }
+          ErvenowNotificationCenter.mount({ mount: host, key: "admin-header" });
+        }
+        run();
+      })();
+    </script>
+    <script>
+      (function wireAdminMobileNav() {
+        var toggle = document.getElementById("adminMobileNavToggle");
+        var panel = document.getElementById("adminMobileNavPanel");
+        var payDesktop = document.getElementById("adminNavErvenowPay");
+        var payMobile = document.getElementById("adminMobileNavErvenowPay");
+        if (!toggle || !panel) return;
+        function syncPayVisibility() {
+          if (!payDesktop || !payMobile) return;
+          var show = payDesktop.style.display !== "none";
+          payMobile.style.display = show ? "" : "none";
+        }
+        syncPayVisibility();
+        setInterval(syncPayVisibility, 800);
+        toggle.addEventListener("click", function () {
+          var willOpen = panel.hidden;
+          panel.hidden = !willOpen;
+          toggle.setAttribute("aria-expanded", willOpen ? "true" : "false");
+        });
+        panel.querySelectorAll("a,button").forEach(function (item) {
+          item.addEventListener("click", function () {
+            var proxyId = item.getAttribute("data-proxy-click");
+            if (proxyId) {
+              var target = document.getElementById(proxyId);
+              if (target) target.click();
+            }
+            panel.hidden = true;
+            toggle.setAttribute("aria-expanded", "false");
+          });
+        });
+        document.addEventListener("click", function (e) {
+          if (panel.hidden) return;
+          if (panel.contains(e.target) || toggle.contains(e.target)) return;
+          panel.hidden = true;
+          toggle.setAttribute("aria-expanded", "false");
+        });
+      })();
+    </script>
     <script>
       document.querySelectorAll("[data-panel-jump]").forEach(function (link) {
         link.addEventListener("click", function (e) {

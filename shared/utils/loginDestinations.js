@@ -21,12 +21,15 @@ function canonicalAccountPath(path, role) {
 const ROLE_DESTINATIONS = {
   customer: { path: "/dashboard", label: "لوحة زائر المنصة" },
   driver: { path: DRIVER_HOME_PATH, label: "لوحة المندوب" },
+  store: { path: "/store-dashboard", label: "حساب المتجر" },
   merchant: { path: "/store-dashboard", label: "متجر" },
   restaurant: { path: "/store-dashboard", label: "مطعم" },
   service: { path: "/services-provider", label: "مزود خدمة" },
   admin: { path: "/admin-dashboard", label: "لوحة الإدارة" },
   blocked: { path: "/blocked-complaints", label: "الدعم" },
 };
+
+const STORE_PANEL_ROLES = new Set(["store", "merchant", "restaurant"]);
 
 function destinationForRole(role) {
   const r = String(role || "customer").toLowerCase();
@@ -91,11 +94,20 @@ async function resolveLoginDestinations(sb, userRow) {
         .select("id, type, status")
         .eq("phone", phone)
         .eq("status", "approved");
+      const hasApprovedStore = (stores || []).length > 0;
+      if (hasApprovedStore && !STORE_PANEL_ROLES.has(role)) {
+        addDestination(destinations, seen, { role: "store", ...ROLE_DESTINATIONS.store, extra: true });
+      }
       const types = new Set((stores || []).map((s) => String(s.type || "merchant").toLowerCase()));
-      if (types.has("restaurant") && role !== "restaurant") {
+      if (types.has("restaurant") && role !== "restaurant" && role !== "store") {
         addDestination(destinations, seen, { role: "restaurant", ...ROLE_DESTINATIONS.restaurant, extra: true });
       }
-      if ((types.has("merchant") || types.has("store") || types.size > 0) && role !== "merchant" && role !== "restaurant") {
+      if (
+        (types.has("merchant") || types.size > 0) &&
+        role !== "merchant" &&
+        role !== "restaurant" &&
+        role !== "store"
+      ) {
         if (!types.has("restaurant") || types.size > 1) {
           addDestination(destinations, seen, { role: "merchant", ...ROLE_DESTINATIONS.merchant, extra: true });
         }
@@ -139,6 +151,7 @@ module.exports = {
   DRIVER_HOME_PATH,
   canonicalAccountPath,
   ROLE_DESTINATIONS,
+  STORE_PANEL_ROLES,
   destinationForRole,
   resolveLoginDestinations,
   pickDefaultDestination,

@@ -552,8 +552,9 @@
         <select id="role" aria-hidden="true" tabindex="-1">
           <option value="customer">🧭 زائر المنصة</option>
           <option value="driver">🛵 مندوب توصيل</option>
-          <option value="merchant">🏪 متجر</option>
-          <option value="restaurant">مطعم</option>
+          <option value="store">🏪 حساب المتجر</option>
+          <option value="merchant">متجر (قديم)</option>
+          <option value="restaurant">مطعم (قديم)</option>
           <option value="service">🛠️ مزود خدمة</option>
         </select>
 
@@ -965,7 +966,7 @@
       function isMerchantRestaurantRegisterMode() {
         if (!isRegisterMode()) return false;
         var r = document.getElementById("role").value;
-        return r === "merchant" || r === "restaurant" || isServiceRegisterMode();
+        return r === "store" || r === "merchant" || r === "restaurant" || isServiceRegisterMode();
       }
 
       function syncPayoutRegisterBlock() {
@@ -1123,6 +1124,7 @@
           blocked: "/blocked-complaints",
           admin: "/admin-dashboard",
           driver: "/driver",
+          store: "/store-dashboard",
           merchant: "/store-dashboard",
           restaurant: "/store-dashboard",
           service: "/services-provider",
@@ -1383,6 +1385,7 @@
               .trim()
               .toLowerCase();
             verifyBody.role =
+              qsRole === "store" ||
               qsRole === "merchant" ||
               qsRole === "restaurant" ||
               qsRole === "service" ||
@@ -1395,7 +1398,10 @@
           if (
             payoutPayload &&
             isRegisterMode() &&
-            (roleSel === "merchant" || roleSel === "restaurant" || isServiceRegisterMode())
+            (roleSel === "store" ||
+              roleSel === "merchant" ||
+              roleSel === "restaurant" ||
+              isServiceRegisterMode())
           ) {
             verifyBody.payout = payoutPayload;
           }
@@ -1537,6 +1543,7 @@
             .trim()
             .toLowerCase();
           otpBody.role =
+            qsRoleSend === "store" ||
             qsRoleSend === "merchant" ||
             qsRoleSend === "restaurant" ||
             qsRoleSend === "service" ||

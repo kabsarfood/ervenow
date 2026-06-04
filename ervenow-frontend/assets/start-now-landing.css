@@ -340,6 +340,26 @@
   display: block;
 }
 
+.sn-hub-item--restaurants {
+  --card-color: #b9872f;
+  --card-accent: #b9872f;
+}
+
+.sn-hub-item--stores {
+  --card-color: #a97b3a;
+  --card-accent: #a97b3a;
+}
+
+.sn-hub-item--delivery {
+  --card-color: #8f6a35;
+  --card-accent: #8f6a35;
+}
+
+.sn-hub-item--services {
+  --card-color: #6f4e2b;
+  --card-accent: #6f4e2b;
+}
+
 /* display:flex على <details> يكسر إخفاء المحتوى في بعض المتصفحات */
 .sn-hub-item:not([open]) > .sn-hub-panel {
   display: none !important;
@@ -360,15 +380,13 @@
   content: "";
 }
 
-.sn-hub-item > summary.sn-card:hover,
-.sn-hub-item[open] > summary.sn-card {
+.sn-hub-item:not([open]) > summary.sn-card:hover {
   transform: translateY(-5px);
   box-shadow: var(--sn-shadow-hover);
   border-color: var(--card-color, var(--sn-gold));
 }
 
-.sn-hub-item > summary.sn-card:hover::before,
-.sn-hub-item[open] > summary.sn-card::before {
+.sn-hub-item:not([open]) > summary.sn-card:hover::before {
   opacity: 0.045;
 }
 
@@ -388,10 +406,28 @@
   transform: translateX(0);
 }
 
+/* مفتوح: بطاقة واحدة — إطار ذهبي كامل يضم الرأس والقائمة */
+.sn-hub-item[open] {
+  border: 1.5px solid var(--card-color, var(--sn-gold));
+  border-radius: var(--sn-radius-lg);
+  background: var(--sn-cream-card);
+  box-shadow: var(--sn-shadow-hover);
+  overflow: hidden;
+  transform: translateY(-5px);
+  transition: transform var(--sn-transition), box-shadow var(--sn-transition), border-color var(--sn-transition);
+}
+
 .sn-hub-item[open] > summary.sn-card {
-  border-radius: var(--sn-radius-lg) var(--sn-radius-lg) 0 0;
-  border-bottom-color: transparent;
-  margin-bottom: 0;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  transform: none;
+  margin: 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--card-color, var(--sn-gold)) 28%, transparent);
+}
+
+.sn-hub-item[open] > summary.sn-card::before {
+  opacity: 0.045;
 }
 
 .sn-hub-item[open] > .sn-hub-panel {
@@ -399,12 +435,11 @@
   grid-template-columns: 1fr;
   gap: 6px;
   padding: 10px 10px 12px;
-  margin-top: -4px;
-  border: 1.5px solid var(--sn-border);
-  border-top: none;
-  border-radius: 0 0 var(--sn-radius-lg) var(--sn-radius-lg);
-  background: var(--sn-cream-card);
-  box-shadow: var(--sn-shadow-sm);
+  margin: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
   animation: sn-hub-panel-in 0.2s ease;
 }
 
@@ -572,4 +607,32 @@
 .lp-home-premium .lp-footer {
   background: linear-gradient(180deg, #f5ede2 0%, #ebe3d6 100%);
   border-top: 1px solid var(--sn-border);
+}
+
+@media (min-width: 1025px) {
+  .lp-body.lp-home-premium {
+    display: flex;
+    flex-direction: column;
+    min-height: 100dvh;
+    padding-bottom: 0;
+  }
+
+  .lp-body.lp-home-premium .lp-footer {
+    margin-top: auto;
+    width: 100%;
+  }
+
+  .lp-home-premium .lp-footer {
+    padding-bottom: clamp(28px, 3.5vw, 40px);
+  }
+}
+
+@media (max-width: 640px) {
+  .lp-home-premium .lp-footer {
+    padding-bottom: max(24px, calc(env(safe-area-inset-bottom, 0px) + 18px));
+  }
+
+  .lp-home-premium .sn-section--stats.lp-counters {
+    margin-top: clamp(16px, 4vw, 24px);
+  }
 }

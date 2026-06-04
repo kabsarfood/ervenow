@@ -87,12 +87,14 @@
         return v === "bike" ? "bike" : "car";
       }
 
+      var ERV_PLATFORM_COMMISSION_RATE = 0.07;
+
       function calcDeliveryPricing(kmValue) {
         var kmNum = Number(kmValue) || 0;
         var vehicleType = getSelectedVehicleType();
         var fee = kmNum <= 7 ? (vehicleType === "bike" ? 15 : 22) : kmNum * 2.3;
         fee = Math.round(fee * 100) / 100;
-        var platformFee = Math.round(fee * 0.15 * 100) / 100;
+        var platformFee = Math.round(fee * ERV_PLATFORM_COMMISSION_RATE * 100) / 100;
         var driverNet = Math.round((fee - platformFee) * 100) / 100;
         return { fee: fee, platformFee: platformFee, driverNet: driverNet };
       }
@@ -105,7 +107,7 @@
         if (distEl) distEl.innerText = Number(kmValue).toFixed(2) + " كم";
         var pf = document.getElementById("platformFeeLine");
         var dn = document.getElementById("driverNetLine");
-        if (pf) pf.innerText = p.platformFee.toFixed(2) + " ر.س (15%)";
+        if (pf) pf.innerText = p.platformFee.toFixed(2) + " ر.س (7%)";
         if (dn) dn.innerText = p.driverNet.toFixed(2) + " ر.س";
       }
 

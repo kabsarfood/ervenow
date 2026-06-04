@@ -1,6 +1,48 @@
-const { readState } = require("../utils/siteMaintenanceStore");
+const siteMaintenanceStore = require("../utils/siteMaintenanceStore");
 
 const ADMIN_UI_PREFIXES = ["/admin-login", "/admin-dashboard", "/admin-finance", "/admin-approvals", "/admin/branding"];
+
+function parseHostnameFromHeader(value) {
+  const raw = String(value || "")
+    .trim()
+    .split(",")[0]
+    .trim();
+  if (!raw) return "";
+  const bracket = raw.match(/^\[([^\]]+)\](?::\d+)?$/);
+  if (bracket) return bracket[1].toLowerCase();
+  const colonCount = (raw.match(/:/g) || []).length;
+  if (colonCount === 1) {
+    const idx = raw.lastIndexOf(":");
+    const hostPart = raw.slice(0, idx);
+    const portPart = raw.slice(idx + 1);
+    if (/^\d+$/.test(portPart)) return hostPart.toLowerCase();
+  }
+  if (colonCount > 1) return raw.toLowerCase();
+  return raw.toLowerCase();
+}
+
+/** مضيفات الطلب (Host / X-Forwarded-Host / req.hostname) */
+function getRequestHostnames(req) {
+  const names = new Set();
+  const host = parseHostnameFromHeader(req && req.headers && req.headers.host);
+  const xfHost = parseHostnameFromHeader(req && req.headers && req.headers["x-forwarded-host"]);
+  const fromReq = parseHostnameFromHeader(req && req.hostname);
+  [host, xfHost, fromReq].filter(Boolean).forEach((h) => names.add(h));
+  return [...names];
+}
+
+/** بيئة تطوير محلية — لا يُطبَّق عليها وضع الصيانة أبداً */
+function isDevelopmentHost(hostname) {
+  const h = parseHostnameFromHeader(hostname);
+  if (!h) return false;
+  if (h === "localhost" || h === "127.0.0.1" || h === "::1" || h === "0.0.0.0") return true;
+  if (h.endsWith(".local")) return true;
+  if (/^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(h)) return true;
+  if (/^192\.168\.\d{1,3}\.\d{1,3}$/.test(h)) return true;
+  if (/^169\.254\.\d{1,3}\.\d{1,3}$/.test(h)) return true;
+  if (/^172\.(1[6-9]|2\d|3[0-1])\.\d{1,3}\.\d{1,3}$/.test(h)) return true;
+  return false;
+}
 
 /** نطاقات الإنتاج التي يُطبَّق عليها «تعطيل الموقع» — localhost مستثنى دائماً */
 function getMaintenanceHostnames() {
@@ -26,15 +68,18 @@ function getMaintenanceHostnames() {
 }
 
 function isMaintenanceHostname(hostname) {
-  const h = String(hostname || "").trim().toLowerCase().split(":")[0];
-  if (!h) return false;
-  if (h === "localhost" || h === "127.0.0.1") return false;
+  const h = parseHostnameFromHeader(hostname);
+  if (!h || isDevelopmentHost(h)) return false;
   const list = getMaintenanceHostnames();
   return list.some((x) => x === h);
 }
 
+/** الطلب يستهدف نطاق إنتاج (وليس بيئة تطوير محلية) */
 function maintenanceActiveForRequest(req) {
-  return isMaintenanceHostname(req.hostname);
+  const hosts = getRequestHostnames(req);
+  if (!hosts.length) return false;
+  if (hosts.some(isDevelopmentHost)) return false;
+  return hosts.some(isMaintenanceHostname);
 }
 
 const MAINTENANCE_HTML = `<!DOCTYPE html>
@@ -42,7 +87,7 @@ const MAINTENANCE_HTML = `<!DOCTYPE html>
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>تحت التطوير | ERVENOW</title>
+<title>المنصة تحت التطوير والصيانة | ERVENOW</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;800&display=swap" rel="stylesheet"/>
 <style>
@@ -57,7 +102,7 @@ mark{background:transparent;color:#5b371d;font-weight:700}
 </head>
 <body>
 <div class="box">
-<h1>تحت التطوير</h1>
+<h1>المنصة تحت التطوير والصيانة</h1>
 <p>نعمل على تحسين المنصة. نعتذر عن الإزعاج ونعود قريباً.</p>
 </div>
 </body>
@@ -75,7 +120,7 @@ function pathAllowedDuringMaintenance(p) {
 function shouldBlockPublicPage(req) {
   const m = req.method;
   if (m !== "GET" && m !== "HEAD") return false;
-  if (!readState()) return false;
+  if (!siteMaintenanceStore.readState()) return false;
   if (!maintenanceActiveForRequest(req)) return false;
   const rawPath = String(req.path || "").split("?")[0];
   const lower = rawPath.toLowerCase();
@@ -98,6 +143,9 @@ function createSiteMaintenanceMiddleware(servePublicUi) {
 module.exports = {
   createSiteMaintenanceMiddleware,
   getMaintenanceHostnames,
+  getRequestHostnames,
+  isDevelopmentHost,
   isMaintenanceHostname,
   maintenanceActiveForRequest,
+  shouldBlockPublicPage,
 };

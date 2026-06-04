@@ -144,7 +144,7 @@
     box.hidden = false;
     var href = "/wallet.html";
     if (role === "driver") href = "/driver-wallet";
-    if (role === "merchant" || role === "restaurant") href = "/store-dashboard#wallet";
+    if (role === "store" || role === "merchant" || role === "restaurant") href = "/store-dashboard#wallet";
     box.setAttribute("href", href);
     amountEl.textContent = "…";
     try {
@@ -152,7 +152,7 @@
       if (role === "driver") {
         var j = await global.PlatformAPI.api("/api/driver/wallet");
         bal = Number(j.balance) || 0;
-      } else if (role === "merchant" || role === "restaurant") {
+      } else if (role === "store" || role === "merchant" || role === "restaurant") {
         try {
           var md = await global.PlatformAPI.api("/api/store/merchant-dashboard");
           bal = Number((md.wallet && md.wallet.balance) || 0);

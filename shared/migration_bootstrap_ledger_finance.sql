@@ -383,10 +383,8 @@ BEGIN
   END IF;
   amt_driver := driver_component;
   amt_platform := round(coalesce(o.platform_fee, o.platform_commission, 0)::numeric, 2);
-  amt_merchant := round(greatest(
-    coalesce(o.total_amount, o.order_total, 0)::numeric - coalesce(amt_platform, 0) - coalesce(driver_component, 0),
-    0
-  ), 2);
+  -- صافي التاجر: إيداع عند التسليم من Node (storeMerchantLedgerCredit) — مرجع order:{id}:merchant_net
+  amt_merchant := 0;
 
   IF o.driver_id IS NOT NULL AND amt_driver > 0 THEN
     wid_driver := public.ervenow_ledger_ensure_wallet(o.driver_id, 'driver');
@@ -398,13 +396,6 @@ BEGIN
   IF amt_platform > 0 THEN
     PERFORM public.ervenow_ledger_append_completed(
       wid_platform, 'commission', 'credit', amt_platform, ref_prefix || ':commission', 'عمولة منصة'
-    );
-  END IF;
-
-  IF o.merchant_id IS NOT NULL AND amt_merchant > 0 THEN
-    wid_merchant := public.ervenow_ledger_ensure_wallet(o.merchant_id, 'merchant');
-    PERFORM public.ervenow_ledger_append_completed(
-      wid_merchant, 'deposit', 'credit', amt_merchant, ref_prefix || ':merchant', 'صافي تاجر'
     );
   END IF;
 

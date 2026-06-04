@@ -102,7 +102,7 @@ function signPlatformToken(userId, phoneDigits, role) {
 /* ======================
    upsert مستخدم (بدون Supabase Auth)
 ====================== */
-const ALLOWED_USER_ROLES = new Set(["customer", "driver", "restaurant", "merchant", "service", "admin"]);
+const ALLOWED_USER_ROLES = new Set(["customer", "driver", "store", "restaurant", "merchant", "service", "admin"]);
 const { normalizeProviderServiceType } = require("../../shared/utils/serviceProviderTypes");
 
 const ALLOWED_SERVICE_TYPES = new Set([
@@ -538,7 +538,7 @@ router.post("/verify-otp", async (req, res) => {
     }
     const existingRole = existingUser ? String(existingUser.role || "").toLowerCase() : null;
 
-    const STAFF_LOGIN_ROLES = new Set(["admin", "driver", "merchant", "restaurant", "service"]);
+    const STAFF_LOGIN_ROLES = new Set(["admin", "driver", "store", "merchant", "restaurant", "service"]);
     const checked = await verifyOtpChallenge({
       sb: sbOtp,
       mode,
@@ -666,7 +666,7 @@ router.post("/verify-otp", async (req, res) => {
     const sessionPhone = canonicalPhoneDigits(userRow.phone || digits) || digits;
 
     const payoutPatch = payoutRowForUsers(payoutParsed);
-    const payoutRoles = new Set(["merchant", "restaurant", "service"]);
+    const payoutRoles = new Set(["store", "merchant", "restaurant", "service"]);
     if (payoutRoles.has(String(roleForSession).toLowerCase()) && Object.keys(payoutPatch).length) {
       if (payoutParsed.iban) {
         try {
@@ -756,7 +756,7 @@ router.get("/login-destinations", requireAuth, async (req, res) => {
 router.post("/users/sync", requireAuth, async (req, res) => {
   try {
     const roleIn = String(req.body?.role || "").trim();
-    const allowed = ["driver", "customer", "admin", "restaurant", "merchant", "service"];
+    const allowed = ["driver", "customer", "admin", "store", "restaurant", "merchant", "service"];
     const role = allowed.includes(roleIn) ? roleIn : req.appUser.role;
     const serviceType = role === "service" ? normalizeServiceType(req.body?.service_type) : null;
 

@@ -6,6 +6,7 @@ const { getOrderProviderId } = require("../utils/orderProviderId");
 const { logger } = require("../utils/logger");
 const { SETTLEMENT_KINDS, tryClaimSettlement } = require("./settlementGuard");
 const { creditDriverOnDelivered } = require("./driverLedgerCredit");
+const { creditStoreMerchantOnDelivered } = require("./storeMerchantLedgerCredit");
 
 function parseRpcRow(data) {
   return typeof data === "object" && data !== null && !Array.isArray(data) ? data : {};
@@ -123,6 +124,7 @@ async function runDeliveredFinancialSettlement(sb, order, context = "unified:del
       settlement: { ok: false, reason: "missing_order" },
       provider_credit: null,
       driver_credit: null,
+      merchant_credit: null,
     };
   }
 
@@ -171,7 +173,22 @@ async function runDeliveredFinancialSettlement(sb, order, context = "unified:del
     }
   }
 
-  return { settlement: settlementRow, provider_credit: providerCreditRow, driver_credit: driverCreditRow };
+  const merchantCreditRow = await creditStoreMerchantOnDelivered(sb, order, settlementRow);
+  if (
+    merchantCreditRow &&
+    merchantCreditRow.ok !== true &&
+    merchantCreditRow.ok !== "true" &&
+    !merchantCreditRow.skipped
+  ) {
+    logger.warn({ orderId, result: merchantCreditRow, context }, "[deliveredFinancialSettlement] merchant credit");
+  }
+
+  return {
+    settlement: settlementRow,
+    provider_credit: providerCreditRow,
+    driver_credit: driverCreditRow,
+    merchant_credit: merchantCreditRow,
+  };
 }
 
 module.exports = {

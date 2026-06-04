@@ -218,6 +218,17 @@ body.store-shell-page .dash-main {
 }
 
 .store-footer__quick {
+  display: none !important;
+}
+
+.store-footer-link--disabled {
+  pointer-events: none;
+  cursor: default;
+  opacity: 0.45;
+  text-decoration: none;
+}
+
+.store-site-footer .store-footer__quick {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;

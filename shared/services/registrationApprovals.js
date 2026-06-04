@@ -147,7 +147,7 @@ async function loadRegistrationApprovalItems(sb, options = {}) {
         ? ["service"]
         : typeFilter === "customer"
           ? ["customer", "user"]
-          : ["customer", "user", "service", "merchant", "restaurant"];
+          : ["customer", "user", "service", "store", "merchant", "restaurant"];
     let q = await sb
       .from("users")
       .select("id, phone, role, status, name, service_type, service_district, created_at, updated_at")

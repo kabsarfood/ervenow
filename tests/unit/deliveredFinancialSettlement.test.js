@@ -41,6 +41,7 @@ describe("deliveredFinancialSettlement", () => {
     expect(rpc).toHaveBeenCalledWith("ervenow_ledger_settle_delivered_order", { p_order_id: "order-1" });
     expect(out.driver_credit.ok).toBe(true);
     expect(out.driver_credit.reason).toBe("settled_via_rpc");
+    expect(out.merchant_credit).toBeDefined();
   });
 
   test("credits driver via fallback when settle rpc returns zero driver", async () => {

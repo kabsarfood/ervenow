@@ -144,3 +144,6 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 >>>>>>> a8e1d392729b58a8789b462d30878e1ee15e791c
+
+# Local Redis 8 bootstrap (scripts/bootstrap-local-redis.ps1)
+.redis-local/

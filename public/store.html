@@ -10,6 +10,8 @@
     <link rel="stylesheet" href="/assets/styles.css" />
     <link rel="stylesheet" href="/assets/guest-shell.css" />
     <link rel="stylesheet" href="/assets/ervenow-responsive.css" />
+    <link rel="stylesheet" href="/assets/pre-cart-delivery.css" />
+    <link rel="stylesheet" href="/assets/kabsar-store-polish.css" />
     <style>
       :root {
         --sp-radius: 22px;
@@ -33,7 +35,7 @@
       }
 
       .store-header-wrap {
-        margin-bottom: 20px;
+        margin-bottom: 10px;
       }
 
       .store-header {
@@ -693,7 +695,9 @@
               <img class="store-header__logo" id="storeLogoImg" src="" alt="" width="88" height="88" decoding="async" />
             </div>
           </div>
+          <div class="store-quick-info erw-chip-scroll" id="storeQuickInfo" hidden aria-label="معلومات سريعة"></div>
           <div class="store-header__content">
+            <div class="store-status-pill store-status-pill--open" id="storeStatusPill" hidden></div>
             <h1 id="storeTitle">—</h1>
             <p id="storeCategory" class="store-header__cat">—</p>
             <p id="storeBio" class="store-header__bio" hidden></p>
@@ -705,11 +709,20 @@
         </div>
       </div>
 
-      <div class="card store-section" style="margin-bottom: 16px; padding: 18px 18px 20px">
+      <nav class="store-quick-nav" id="storeQuickNav" hidden aria-label="أقسام سريعة">
+        <p class="store-quick-nav__title">تصفّح بسرعة</p>
+        <div class="store-quick-nav__scroll erw-chip-scroll" id="storeQuickNavScroll"></div>
+      </nav>
+
+      <div class="card store-section store-section--products" id="productsSection" style="margin-bottom: 14px">
         <div class="store-section-head">
           <h2>المنتجات</h2>
-          <a href="/cart" class="store-cart-link" id="storeCartLink">🛒 السلة <span id="cartCount">0</span></a>
+          <a href="/cart" class="store-cart-link" id="storeCartLink" aria-label="السلة والمجموع">
+            <span class="store-cart-link__row">🛒 السلة (<span class="store-cart-count">0</span>)</span>
+            <span class="store-cart-link__total" id="storeCartTotal" style="display: none"></span>
+          </a>
         </div>
+        <p class="store-free-nudge" id="storeFreeNudge" role="status" aria-live="polite"></p>
         <div id="productCategoryStrip" class="store-prod-cat" style="display: none" aria-hidden="true">
           <p class="store-prod-cat__title">أقسام المنتجات</p>
           <div class="store-prod-cat__scroll erw-chip-scroll" id="productCategoryChips" role="tablist" aria-label="تصنيف المنتجات"></div>
@@ -744,6 +757,23 @@
       <div class="msg" id="msg" style="display: none"></div>
     </div>
 
+    <div id="storeProdModal" class="store-prod-modal" hidden role="dialog" aria-modal="true" aria-labelledby="storeProdModalTitle">
+      <div class="store-prod-modal__panel">
+        <div class="store-prod-modal__wrap">
+          <button type="button" class="store-prod-modal__close" id="storeProdModalClose" aria-label="إغلاق">×</button>
+          <img class="store-prod-modal__img" id="storeProdModalImg" src="" alt="" />
+        </div>
+        <div class="store-prod-modal__body">
+          <h2 class="store-prod-modal__title" id="storeProdModalTitle">—</h2>
+          <p class="store-prod-modal__desc" id="storeProdModalDesc"></p>
+          <div id="storeProdModalPrice"></div>
+          <button type="button" class="btn btn-primary" id="storeProdModalAdd" style="width: 100%; min-height: 48px; margin-top: 14px">
+            إضافة للسلة
+          </button>
+        </div>
+      </div>
+    </div>
+
     <div id="storeToast" class="store-toast" role="status" aria-live="polite"></div>
       </div>
 
@@ -763,6 +793,8 @@
     </div>
 
     <script src="/assets/cart.js"></script>
+    <script src="/assets/pre-cart-delivery.js"></script>
+    <script src="/assets/kabsar-store-polish.js"></script>
     <script src="/assets/api-config.js"></script>
     <script src="/assets/api.js"></script>
     <script src="/assets/guestBrowse.js"></script>
@@ -776,7 +808,8 @@
       var offset = 0;
       var limit = 12;
       var total = 0;
-      var storeMeta = { name: "", type: "supermarket", id: "" };
+      var storeMeta = { name: "", type: "supermarket", id: "", raw: null };
+      window.lastProducts = lastProducts;
       var lastProducts = [];
       var activeProductCategory = null;
       var supportsProductCategories = false;
@@ -1045,23 +1078,72 @@
             supportsProductCategories = true;
           }
           setupProductCategoryStrip();
+          setupQuickNavStrip();
         } catch (e) {
           setupProductCategoryStrip();
+          setupQuickNavStrip();
         }
       }
 
-      function addProductToCart(p, qty) {
+      function setupQuickNavStrip() {
+        if (!window.KabsarStorePolish || !KabsarStorePolish.renderQuickNav) return;
+        var items = storeProductCategories.filter(function (c) {
+          return c && c.slug;
+        });
+        KabsarStorePolish.renderQuickNav(items, function (slug) {
+          activeProductCategory = slug || null;
+          setupProductCategoryStrip();
+          loadProducts(false);
+        });
+      }
+
+      function polishAfterCartChange() {
+        if (window.KabsarStorePolish && storeMeta.raw) {
+          KabsarStorePolish.refresh(storeMeta.raw, storeMeta.id || storeId);
+        }
+      }
+
+      window.effectiveUnitPrice = effectiveUnitPrice;
+      window.productImageUrls = productImageUrls;
+      window.addProductToCart = addProductToCart;
+
+      async function addProductToCart(p, qty) {
         if (!storeId || !p) return;
         qty = Math.max(1, Math.min(99, parseInt(qty, 10) || 1));
         if (p.active === false) {
           showStoreToast("هذا المنتج غير متوفر حالياً", false);
           return;
         }
-        var cap = maxOrderQtyForProduct(p);
-        if (cap < 1) {
+        if (maxOrderQtyForProduct(p) < 1) {
           showStoreToast("نفد المخزون", false);
           return;
         }
+        if (window.ErvenowPreCartDelivery && ErvenowPreCartDelivery.interceptAdd) {
+          var pre = await ErvenowPreCartDelivery.interceptAdd({
+            storeId: storeId,
+            storeMeta: storeMeta,
+            product: p,
+            qty: qty,
+          });
+          if (pre.handled) {
+            if (pre.cancelled) return;
+            if (pre.error) {
+              showStoreToast(pre.error, false);
+              return;
+            }
+            if (pre.snapshot) {
+              addProductToCartWithSnapshot(p, qty, pre.snapshot);
+              return;
+            }
+          }
+        }
+        addProductToCartWithSnapshot(p, qty, {});
+      }
+
+      function addProductToCartWithSnapshot(p, qty, snapExtra) {
+        if (!storeId || !p) return;
+        qty = Math.max(1, Math.min(99, parseInt(qty, 10) || 1));
+        var cap = maxOrderQtyForProduct(p);
         var unit = effectiveUnitPrice(p);
         var title = (storeMeta.name || "متجر") + " — " + String(p.name || "منتج");
         var cart = getCart();
@@ -1069,6 +1151,16 @@
           var d = i && i.data;
           return d && String(d.store_id) === String(storeId) && String(d.product_id) === String(p.id);
         });
+        var baseData = Object.assign(
+          {
+            store_id: storeId,
+            product_id: p.id,
+            unit_price: unit,
+            store_name: storeMeta.name || "",
+            image_url: p.image_url || null,
+          },
+          snapExtra || {}
+        );
         if (idx >= 0) {
           var cur = cart[idx];
           var curQty = Number(cur.data && cur.data.qty) || 1;
@@ -1077,14 +1169,10 @@
             showStoreToast("الكمية غير متاحة", false);
             return;
           }
+          baseData.qty = newQty;
           cart[idx] = Object.assign({}, cur, {
             price: unit * newQty,
-            data: Object.assign({}, cur.data || {}, {
-              store_id: storeId,
-              product_id: p.id,
-              qty: newQty,
-              unit_price: unit,
-            }),
+            data: Object.assign({}, cur.data || {}, baseData),
           });
           saveCart(cart);
         } else {
@@ -1093,14 +1181,16 @@
             showStoreToast("الكمية غير متاحة", false);
             return;
           }
-          addToCart({
+          baseData.qty = qty;
+          ErvenowCart.add({
             type: storeMeta.type || "supermarket",
             title: title,
             price: unit * qty,
-            data: { store_id: storeId, product_id: p.id, qty: qty, unit_price: unit },
+            data: baseData,
           });
         }
         if (typeof updateCartCount === "function") updateCartCount();
+        polishAfterCartChange();
         showStoreToast(idx >= 0 ? "تم تحديث الكمية في السلة" : "تمت الإضافة إلى السلة", true);
       }
 
@@ -1150,6 +1240,7 @@
         storeMeta.id = store.id || storeId;
         storeMeta.name = store.name || store.label || "";
         storeMeta.type = store.type || "supermarket";
+        storeMeta.raw = store;
         supportsProductCategories = !!store.supports_product_categories;
         activeProductCategory = null;
         storeProductCategories = [];
@@ -1234,6 +1325,10 @@
           window.location.href = "/order.html?store_id=" + encodeURIComponent(storeMeta.id || storeId);
         };
 
+        if (window.KabsarStorePolish) {
+          KabsarStorePolish.refresh(store, storeMeta.id || storeId);
+        }
+
         if (window.PlatformAPI && window.PlatformAPI.getToken && window.PlatformAPI.getToken()) {
           document.getElementById("reviewFormWrap").style.display = "block";
           document.getElementById("reviewLoginHint").style.display = "none";
@@ -1251,14 +1346,19 @@
         } else {
           lastProducts = lastProducts.concat(rows);
         }
+        window.lastProducts = lastProducts;
 
         if (!lastProducts.length) {
           box.innerHTML = '<p class="sub">لا منتجات بعد — يمكن الطلب العام عبر زر التوصيل أعلاه.</p>';
+          if (window.KabsarStorePolish) KabsarStorePolish.applyGridSparse();
           return;
         }
 
         var html = rows
           .map(function (p) {
+            var rowIndex = lastProducts.findIndex(function (x) {
+              return String(x.id) === String(p.id);
+            });
             var stockN = p.stock != null && p.stock !== "" ? Number(p.stock) : null;
             var hasStockCap = stockN != null && Number.isFinite(stockN);
             var available = p.active !== false && (!hasStockCap || stockN > 0);
@@ -1272,21 +1372,34 @@
             var base = Number(p.price) || 0;
             var hasOffer = unit < base && base > 0;
             var badgeOffer = hasOffer
-              ? '<span class="prod-badge prod-badge--ok" style="background:linear-gradient(135deg,#b9872f,#8a6a1f)">عرض</span>'
+              ? '<span class="prod-badge prod-badge--ok" style="background:linear-gradient(135deg,#b9872f,#8a6a1f)">🏷️ عرض</span>'
               : "";
+            var badgeHot =
+              window.KabsarStorePolish && KabsarStorePolish.isPopularProduct(p, rowIndex)
+                ? '<span class="prod-badge prod-badge--hot">🔥 الأكثر طلباً</span>'
+                : "";
             var badgeOk = available ? '<span class="prod-badge prod-badge--ok">متوفر</span>' : "";
             var badgeOut = !available ? '<span class="prod-badge prod-badge--out">غير متوفر</span>' : "";
             var badgeLow =
               available && hasStockCap && stockN > 0 && stockN <= 5
                 ? '<span class="prod-badge prod-badge--ok" style="background:#6b4e1a">كمية محدودة</span>'
                 : "";
-            var priceHtml = hasOffer
-              ? '<span class="prod-card__price--old">' +
-                base.toFixed(2) +
-                '</span><span class="prod-card__price">' +
-                unit.toFixed(2) +
-                '<small>ريال</small></span>'
-              : '<div class="prod-card__price">' + unit.toFixed(2) + '<small>ريال</small></div>';
+            var badgeDel =
+              p.includes_delivery
+                ? '<span class="prod-badge prod-badge--ok" style="background:#2d6a4f">🚚 شامل التوصيل</span>'
+                : "";
+            var priceHtml =
+              window.KabsarStorePolish && KabsarStorePolish.priceHtmlEnhanced
+                ? KabsarStorePolish.priceHtmlEnhanced(p)
+                : hasOffer
+                  ? '<div class="prod-card__price-stack"><span class="prod-card__price--old">' +
+                    base.toFixed(2) +
+                    '</span><span class="prod-card__price">' +
+                    unit.toFixed(2) +
+                    '<small>ريال</small></span></div>'
+                  : '<div class="prod-card__price-stack"><span class="prod-card__price">' +
+                    unit.toFixed(2) +
+                    '<small>ريال</small></span></div>';
             var rawDesc = (p.description || "").trim();
             var descBlock = rawDesc
               ? '<p class="prod-card__desc">' + esc(rawDesc) + "</p>"
@@ -1304,10 +1417,12 @@
               '<article class="' +
               cardClass +
               '">' +
-              '<div class="prod-card__media">' +
+              '<div class="prod-card__media prod-card__media--clickable">' +
               '<div class="prod-card__badges">' +
               badgeOut +
+              badgeHot +
               badgeOffer +
+              badgeDel +
               badgeLow +
               badgeOk +
               "</div>" +
@@ -1343,6 +1458,10 @@
 
         if (append) box.innerHTML += html;
         else box.innerHTML = html;
+        if (window.KabsarStorePolish) {
+          KabsarStorePolish.applyGridSparse();
+          KabsarStorePolish.wireImageZoom();
+        }
       }
 
       document.getElementById("products").addEventListener("click", function (ev) {
@@ -1388,7 +1507,7 @@
         });
         var inp = card.querySelector(".prod-qty-input");
         var qty = parseInt(inp && inp.value, 10) || 1;
-        addProductToCart(p, qty);
+        void addProductToCart(p, qty);
         if (inp) inp.value = "1";
       });
 
@@ -1483,6 +1602,11 @@
       };
 
       (async function () {
+        if (window.ErvenowPreCartDelivery && ErvenowPreCartDelivery.loadFlags) {
+          try {
+            await ErvenowPreCartDelivery.loadFlags();
+          } catch (e) {}
+        }
         try {
           var bt = sessionStorage.getItem("ervenow_browse_type");
           if (bt) {
@@ -1495,10 +1619,18 @@
           await loadProductCategories();
           await loadProducts(false);
           await loadReviews();
+          if (window.KabsarStorePolish) {
+            KabsarStorePolish.wireImageZoom();
+            polishAfterCartChange();
+          }
         } catch (e) {
           show(String(e.message || e), false);
         }
       })();
+
+      window.addEventListener("storage", function (ev) {
+        if (ev && ev.key === "cart") polishAfterCartChange();
+      });
     </script>
   </body>
 </html>

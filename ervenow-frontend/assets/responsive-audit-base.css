@@ -159,10 +159,15 @@ body.dash-map-modal-open #dashDeliveryTitle[open],
     inset-inline: 0;
   }
 
-  .lp-cart-panel,
+  .lp-cart-panel:not(.lp-cart-panel--page) {
+    width: min(calc(100vw - 16px), 100%) !important;
+    max-width: calc(100vw - 16px) !important;
+  }
+
   #lpCartWrap.lp-cart-wrap--portaled .lp-cart-panel {
-    width: min(100%, calc(100% - 24px)) !important;
-    max-width: calc(100% - 16px) !important;
+    width: calc(100vw - 12px) !important;
+    max-width: calc(100vw - 12px) !important;
+    max-height: min(94dvh, calc(var(--erw-viewport-h, 100dvh) - 12px)) !important;
   }
 }
 
@@ -266,4 +271,146 @@ picture {
   .layout {
     max-width: min(1120px, 100%);
   }
+}
+
+/* ═══ Mobile scroll stability (ERVENOW audit) ═══ */
+body.lp-body,
+body.lp-home-premium,
+body.admin-shell-page,
+body.delivery-map-page,
+body.store-shell-page,
+body.driver-page {
+  overflow-x: clip;
+  max-width: 100%;
+  overscroll-behavior-x: none;
+}
+
+@supports not (overflow-x: clip) {
+  body.lp-body,
+  body.lp-home-premium,
+  body.admin-shell-page,
+  body.delivery-map-page,
+  body.store-shell-page,
+  body.driver-page {
+    overflow-x: hidden;
+  }
+}
+
+@media (max-width: 1024px) {
+  html,
+  body,
+  body.lp-body {
+    overflow-x: clip;
+    overscroll-behavior-x: none;
+  }
+
+  @supports not (overflow-x: clip) {
+    html,
+    body,
+    body.lp-body {
+      overflow-x: hidden;
+    }
+  }
+
+  body.lp-body {
+    overflow-y: auto;
+  }
+
+  .lp-hero-shell,
+  .sn-section,
+  .lp-section,
+  .lp-wrap,
+  .browse-wrap,
+  .portal-shell,
+  .portal-main,
+  .ds-page,
+  .ds-hero,
+  .ds-form-wrap,
+  .admin-shell,
+  .admin-main,
+  #mapShell,
+  .track-layout {
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .browse-grid,
+  .sn-grid,
+  .sn-home-hub,
+  .portal-kpi-row,
+  .portal-product-catalog,
+  .portal-brand-grid,
+  .ds-services-wrap,
+  .dash-site-header__inner,
+  .lp-footer__inner,
+  .lp-how__steps,
+  .lp-why__grid {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .browse-grid {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr));
+  }
+
+  /* شرائط أفقية — لا هوامش سالبة تدفع الصفحة */
+  .ds-services-wrap,
+  .portal-nav,
+  .erw-table-scroll,
+  .stores-cuisine-scroll,
+  .dash-site-header__links {
+    max-width: 100%;
+    overscroll-behavior-x: contain;
+  }
+
+  .erw-table-scroll {
+    margin-inline: 0;
+    padding-inline: var(--erw-page-pad, 12px);
+  }
+
+  .portal-nav {
+    margin-inline: 0;
+  }
+}
+
+/* خرائط — الحاوية فقط تمنع التمدد؛ التمرير داخل Leaflet */
+#map,
+#mapShell,
+#trackMap,
+#driverLiveMap,
+.ds-map-preview,
+.map-canvas-cell--map,
+.map-canvas-map-stage,
+.delivery-map-page__shell {
+  max-width: 100%;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.leaflet-container {
+  overflow: hidden;
+  touch-action: pan-x pan-y;
+}
+
+/* Flex: منع تمدد الأبناء */
+.row,
+.lp-header__inner,
+.dash-site-header__inner,
+.card,
+.item,
+.sn-hub-item,
+.sn-card,
+.ds-svc,
+.portal-card {
+  min-width: 0;
+}
+
+pre,
+code,
+.long-text,
+#orderNumber,
+#coords {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  max-width: 100%;
 }

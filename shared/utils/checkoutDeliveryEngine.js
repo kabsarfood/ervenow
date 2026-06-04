@@ -1,0 +1,112 @@
+/**
+ * ERVENOW DELIVERY ENGINE 1.0 — دمج snapshot السلة في checkout (بدون Ledger).
+ */
+
+const { isDeliveryEngineCheckoutEnabled } = require("./deliveryEngineFlags");
+const { buildDeliveryQuote } = require("../services/deliveryQuoteService");
+const { deliveryProviderFromFulfillment, normalizeFulfillment } = require("../services/deliveryPolicyEngine");
+const { roundMoney } = require("./platformCommission");
+
+function firstStoreItemData(groupItems) {
+  const it = groupItems && groupItems[0];
+  return it && typeof it.data === "object" && it.data ? it.data : {};
+}
+
+function useCartDeliverySnapshot(groupItems) {
+  if (!isDeliveryEngineCheckoutEnabled()) return false;
+  const d = firstStoreItemData(groupItems);
+  return d.delivery_snapshot_version === 1 && d.store_id;
+}
+
+/**
+ * @returns {Promise<{ ok: true, patch: object, storeRow, fulfillment, shouldDispatch } | { ok: false, message, status }>}
+ */
+async function resolveStoreCheckoutFromCartSnapshot(sb, groupItems, storeRowFromDb, total) {
+  const d = firstStoreItemData(groupItems);
+  const fulfillment = normalizeFulfillment(d.fulfillment_mode, storeRowFromDb.delivery_policy);
+  const provider = deliveryProviderFromFulfillment(fulfillment);
+
+  if (fulfillment === "pickup") {
+    return {
+      ok: true,
+      fulfillment,
+      provider,
+      shouldDispatch: false,
+      patch: {
+        order_total: total,
+        total_amount: total,
+        delivery_fee: 0,
+        distance_km: 0,
+        breakdown: {
+          fulfillment,
+          delivery_provider: provider,
+          delivery_policy: d.delivery_policy || "pickup",
+          delivery_free: true,
+          eta_minutes: 0,
+        },
+      },
+    };
+  }
+
+  const lat = Number(d.drop_lat);
+  const lng = Number(d.drop_lng);
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+    return { ok: false, message: "بيانات موقع التوصيل ناقصة — أعد الإضافة من المتجر", status: 400 };
+  }
+
+  const quote = await buildDeliveryQuote({
+    storeRow: storeRowFromDb,
+    drop_lat: lat,
+    drop_lng: lng,
+    fulfillment,
+    subtotal: total,
+    product_includes_delivery: !!d.includes_delivery,
+  });
+  if (!quote.ok) return { ok: false, message: quote.message, status: quote.status || 400 };
+
+  const clientFee = Number(d.delivery_fee);
+  if (Number.isFinite(clientFee) && Math.abs(clientFee - quote.delivery_fee) > 0.05) {
+    return { ok: false, message: "تغيّرت رسوم التوصيل — أعد فتح المتجر وأضف المنتج مجدداً", status: 409 };
+  }
+
+  const deliveryFee = roundMoney(quote.delivery_fee);
+  const dropAddress = String(d.drop_address || d.location || "").trim() || "عنوان التوصيل";
+  const slat = Number(storeRowFromDb.lat);
+  const slng = Number(storeRowFromDb.lng);
+
+  return {
+    ok: true,
+    fulfillment,
+    provider,
+    shouldDispatch: fulfillment === "ervenow_delivery",
+    patch: {
+      pickup_address: String(storeRowFromDb.address || storeRowFromDb.name || "").trim() || String(storeRowFromDb.name || ""),
+      pickup_lat: slat,
+      pickup_lng: slng,
+      drop_address: dropAddress,
+      drop_lat: lat,
+      drop_lng: lng,
+      drop_maps_url: d.drop_maps_url || null,
+      delivery_fee: deliveryFee,
+      distance_km: quote.distance_km,
+      order_total: total,
+      total_amount: roundMoney(total + deliveryFee),
+      driver_earning: fulfillment === "ervenow_delivery" ? deliveryFee : 0,
+      breakdown: {
+        fulfillment,
+        delivery_provider: provider,
+        delivery_policy: quote.delivery_policy,
+        delivery_free: quote.delivery_free,
+        eta_minutes: quote.eta_minutes,
+        distance_km: quote.distance_km,
+        delivery_free_reason: quote.delivery_free_reason || d.delivery_free_reason || null,
+      },
+    },
+  };
+}
+
+module.exports = {
+  useCartDeliverySnapshot,
+  resolveStoreCheckoutFromCartSnapshot,
+  firstStoreItemData,
+};

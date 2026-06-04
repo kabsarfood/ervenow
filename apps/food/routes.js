@@ -38,7 +38,7 @@ router.get("/menu", requireAuth, async (req, res) => {
   }
 });
 
-router.post("/menu", requireAuth, requireRole("restaurant", "admin"), async (req, res) => {
+router.post("/menu", requireAuth, requireRole("store", "restaurant", "merchant", "admin"), async (req, res) => {
   try {
     const { name, price } = req.body || {};
     if (!name) return fail(res, "name required");

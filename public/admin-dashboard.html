@@ -9,6 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <meta name="theme-color" content="#5b371d" />
+    <link rel="stylesheet" href="/assets/responsive-audit-base.css" />
     <style>
       /* افتراضي = سطح مكتب كالتصميم الأصلي */
       * {
@@ -19,6 +20,9 @@
         font-family: Cairo, sans-serif;
         background: #f8f4ef;
         color: #2b1f16;
+        overflow-x: hidden;
+        max-width: 100%;
+        overscroll-behavior-x: none;
       }
       .wrap {
         max-width: 1080px;
@@ -1426,7 +1430,6 @@
         }
       }
     </style>
-      <link rel="stylesheet" href="/assets/responsive-audit-base.css" />
   </head>
   <body>
     <div class="wrap">

@@ -194,10 +194,12 @@
 
       /* Service cards horizontal scroll */
       .ds-services-wrap {
-        margin: 0 -16px;
-        padding: 0 16px 4px;
+        margin: 0;
+        max-width: 100%;
+        padding: 0 max(16px, env(safe-area-inset-left, 16px)) 4px max(16px, env(safe-area-inset-right, 16px));
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
+        overscroll-behavior-x: contain;
         scrollbar-width: none;
       }
 

@@ -689,8 +689,7 @@
       }
 
       function displayName(store) {
-        if (store.masked) return String(store.label || "");
-        return String(store.name || store.label || "");
+        return String(store.name || store.label || "").trim();
       }
 
       function matchesSearch(store, query) {

@@ -7,6 +7,7 @@
     "start": "node server/server.js",
     "dev": "node server/server.js",
     "worker:delivery": "node workers/deliveryWorker.js",
+    "apply:store-branding": "node scripts/apply-store-branding-infra.mjs",
     "frontend:sync": "node scripts/sync-ervenow-frontend.js",
     "load:test": "npx artillery run tests/load/artillery.yml",
     "test": "jest",

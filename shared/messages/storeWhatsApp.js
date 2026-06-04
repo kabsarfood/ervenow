@@ -18,7 +18,7 @@ function storeApprovedBody(storeName) {
   const arWho = who ? `${who} — ` : "";
   const base = publicBaseUrl();
   const panel = base ? `${base}/store-dashboard` : "/store-dashboard";
-  const login = base ? `${base}/login?role=merchant` : "/login?role=merchant";
+  const login = base ? `${base}/login?role=store` : "/login?role=store";
   return (
     `ERVENOW\n\n` +
     `${arWho}تمت الموافقة على متجرك في المنصة.\n\n` +

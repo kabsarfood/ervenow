@@ -511,6 +511,81 @@ async function computeFinancialAlertsFromLedger(sb) {
 /**
  * @param {import("@supabase/supabase-js").SupabaseClient} sb
  */
+/**
+ * لوحة الخزينة — ledger فقط مع أسماء حقول متوافقة مع واجهة الأدمن (بدون wallets legacy).
+ * @param {import("@supabase/supabase-js").SupabaseClient} sb
+ */
+async function getLedgerTreasuryPanelPayload(sb) {
+  const summary = await getAdminFinanceSummaryFromLedger(sb);
+  if (!summary.ok) {
+    return summary;
+  }
+
+  let platformWalletBalance = 0;
+  let pendingWithdrawSum = 0;
+
+  try {
+    const { data: pw, error: pwErr } = await sb
+      .from("ervenow_ledger_wallets")
+      .select("balance")
+      .eq("is_platform", true)
+      .limit(1)
+      .maybeSingle();
+    if (!pwErr) {
+      platformWalletBalance = round2(Number(pw?.balance) || 0);
+    } else if (!isMissingLedgerSchemaError(pwErr)) {
+      throw pwErr;
+    }
+  } catch (e) {
+    if (!isMissingLedgerSchemaError(e)) throw e;
+  }
+
+  try {
+    const { data: wdRows, error: wdErr } = await sb
+      .from("withdraw_requests")
+      .select("amount")
+      .eq("status", "pending");
+    if (!wdErr) {
+      pendingWithdrawSum = round2(
+        (wdRows || []).reduce((s, r) => s + (Number(r.amount) || 0), 0)
+      );
+    } else if (/withdraw_requests|does not exist|schema cache/i.test(String(wdErr.message || ""))) {
+      const legacy = await sb
+        .from("ervenow_withdraw_requests")
+        .select("amount")
+        .eq("status", "pending");
+      if (!legacy.error) {
+        pendingWithdrawSum = round2(
+          (legacy.data || []).reduce((s, r) => s + (Number(r.amount) || 0), 0)
+        );
+      }
+    } else if (!isMissingLedgerSchemaError(wdErr)) {
+      throw wdErr;
+    }
+  } catch (e) {
+    if (!isMissingLedgerSchemaError(e)) throw e;
+  }
+
+  const driverSum = summary.driver_earnings_total;
+  const storeSum = summary.store_earnings_total;
+  const circulating = round2(platformWalletBalance + driverSum + storeSum);
+
+  return {
+    ok: true,
+    source: "ervenow_ledger",
+    platform_accounting_balance: platformWalletBalance,
+    platform_commission_total: summary.platform_commission_total,
+    ervenow_operational_balance_sum: driverSum,
+    store_wallets_balance_sum: storeSum,
+    service_commission_total: summary.service_commission_total,
+    pending_withdraw_requests_sum: pendingWithdrawSum,
+    circulating_reference_total: circulating,
+    ervenow_wallets_count: null,
+    store_wallets_count: null,
+    ledger_only: true,
+  };
+}
+
 async function getAdminFinanceSummaryFromLedger(sb) {
   if (!sb) {
     return { ok: false, reason: "missing_client" };
@@ -720,6 +795,7 @@ module.exports = {
   getLedgerUserWalletSummary,
   getWalletPayloadWithLedgerFallback,
   getAdminFinanceSummaryFromLedger,
+  getLedgerTreasuryPanelPayload,
   computeFinancialAlertsFromLedger,
   listRecentLedgerTransactionsForAdmin,
   listLedgerWithdrawRequests,

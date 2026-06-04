@@ -36,13 +36,13 @@ const router = express.Router();
 const MIN_WITHDRAW = 20;
 const WITHDRAW_OTP_TTL_MS = 5 * 60 * 1000;
 
-const WALLET_READ_ROLES = ["driver", "restaurant", "merchant", "service", "customer", "admin"];
-const PAYOUT_ROLES = ["driver", "restaurant", "merchant", "service"];
+const WALLET_READ_ROLES = ["driver", "store", "restaurant", "merchant", "service", "customer", "admin"];
+const PAYOUT_ROLES = ["driver", "store", "restaurant", "merchant", "service"];
 
 function walletRecipientTypeByRole(role) {
   const r = String(role || "").toLowerCase();
   if (r === "driver") return "driver";
-  if (r === "merchant" || r === "restaurant") return "store";
+  if (r === "store" || r === "merchant" || r === "restaurant") return "store";
   if (r === "service") return "provider";
   if (r === "admin") return "admin";
   return "customer";

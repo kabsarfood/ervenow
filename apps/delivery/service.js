@@ -89,7 +89,10 @@ function calcDeliveryPlatformFee(deliveryFee) {
 }
 
 function calcDriverEarning(deliveryFee) {
-  return Math.round(Number(deliveryFee) * 100) / 100;
+  const fee = Number(deliveryFee) || 0;
+  if (!(fee > 0)) return 0;
+  const platformCut = calcDeliveryPlatformFee(fee);
+  return Math.round((fee - platformCut) * 100) / 100;
 }
 
 /** ضريبة القيمة المضافة 15% من (قيمة الطلب + التوصيل)، خانتان عشريتان */

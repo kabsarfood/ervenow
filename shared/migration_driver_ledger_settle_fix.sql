@@ -97,10 +97,8 @@ BEGIN
 
   amt_driver := driver_component;
   amt_platform := round(coalesce(o.platform_fee, o.platform_commission, 0)::numeric, 2);
-  amt_merchant := round(greatest(
-    coalesce(o.total_amount, o.order_total, 0)::numeric - coalesce(amt_platform, 0) - coalesce(driver_component, 0),
-    0
-  ), 2);
+  -- صافي التاجر: إيداع عند التسليم من Node فقط (storeMerchantLedgerCredit) — HOTFIX-001
+  amt_merchant := 0;
 
   IF o.driver_id IS NOT NULL AND amt_driver > 0 THEN
     wid_driver := public.ervenow_ledger_ensure_wallet(o.driver_id, 'driver');

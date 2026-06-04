@@ -463,8 +463,11 @@
         .portal-nav {
           flex-wrap: nowrap;
           overflow-x: auto;
-          margin-inline: -4px;
+          margin-inline: 0;
+          max-width: 100%;
+          overscroll-behavior-x: contain;
           padding-bottom: 6px;
+          -webkit-overflow-scrolling: touch;
         }
         .portal-nav a {
           flex-shrink: 0;
@@ -524,7 +527,7 @@
       <p class="sub" id="hint" style="margin-bottom: 16px">
         بوابة الشركاء لـ <strong>المتاجر، المطاعم، الصيدليات، المحطات، شركات النقل، ومزودي الخدمات</strong>.
         بعد موافقة الإدارة، سجّل الدخول من
-        <a href="/login?role=merchant">تسجيل الدخول</a>
+        <a href="/login?role=store">تسجيل الدخول</a>
         بنفس رقم الجوال — ستفتح لوحة تحكم خاصة لإدارة الشعار، المنتجات، الأسعار، المحفظة، والعروض.
       </p>
 
@@ -742,16 +745,6 @@
               <span>للطلبات الرسمية، المرفقات، وملاحظات الإدارة.</span>
               <em>support@ervenow.com</em>
             </a>
-            <a class="store-support__tile" href="/partner-portal.html">
-              <strong>🤝 بوابة الشركاء</strong>
-              <span>انضمام متاجر، مطاعm، شركات توصيل، ومحطات — الشروط والمسارات.</span>
-              <em>partner-portal</em>
-            </a>
-            <a class="store-support__tile" href="/register-store.html">
-              <strong>🏪 تسجيل شريك جديد</strong>
-              <span>متجر، مطعم، صيدلية، أو محطة — قدّم طلب انضمام للمراجعة.</span>
-              <em>register-store</em>
-            </a>
             <a class="store-support__tile" href="/merchant-dashboard">
               <strong>📊 الطلبات والإيرادات</strong>
               <span>تفاصيل الطلبات، الإيرادات، والتقارير المالية.</span>
@@ -767,11 +760,6 @@
               <span>رصيدك، الإيرادات المجمّعة، وتاريخ الحركات.</span>
               <em>wallet</em>
             </a>
-            <a class="store-support__tile" href="/services-provider">
-              <strong>🔧 مزودو الخدمات</strong>
-              <span>شركات المناديب، النقليات، والخدمات الميدانية.</span>
-              <em>services-provider</em>
-            </a>
           </div>
         </div>
       </section>
@@ -785,7 +773,7 @@
     <script src="/assets/auth-account-guard.js"></script>
     <script src="/assets/store-shell.js"></script>
     <script>
-      void ErvenowAuthGuard.ensureApprovedAccount({ loginUrl: "/login?role=merchant" });
+      void ErvenowAuthGuard.ensureApprovedAccount({ loginUrl: "/login?role=store" });
     </script>
     <script>
       ErvenowStoreShell.mountShell({ activeNav: "store" });

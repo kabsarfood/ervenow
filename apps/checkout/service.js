@@ -21,6 +21,11 @@ const {
   isErvenowPayMethod,
 } = require("../../shared/services/ervenowPayCheckout");
 const { createNotification } = require("../../shared/services/notificationService");
+const { computePlatformCommission } = require("../../shared/utils/platformCommission");
+const {
+  useCartDeliverySnapshot,
+  resolveStoreCheckoutFromCartSnapshot,
+} = require("../../shared/utils/checkoutDeliveryEngine");
 
 function normalizedGroup(typeRaw) {
   const type = String(typeRaw || "")
@@ -257,12 +262,9 @@ async function runCheckoutInsert(sb, appUser, body, options) {
       row.idempotency_key = `${checkoutIdempotencyKey}:${type}`;
     }
 
+    let storeDispatchOverride = null;
+
     if (singleStoreId) {
-      const custLat = Number(body.customer_lat);
-      const custLng = Number(body.customer_lng);
-      if (!Number.isFinite(custLat) || !Number.isFinite(custLng)) {
-        return { ok: false, message: "حدد موقع التوصيل (GPS) لطلبات المتجر", status: 400 };
-      }
       const { data: storeRow, error: storeErr } = await sb
         .from("stores")
         .select("*")
@@ -272,39 +274,60 @@ async function runCheckoutInsert(sb, appUser, body, options) {
       if (storeErr || !storeRow || storeRow.lat == null || storeRow.lng == null) {
         return { ok: false, message: "متجر غير متاح أو بلا موقع مسجّل", status: 400 };
       }
-      const slat = Number(storeRow.lat);
-      const slng = Number(storeRow.lng);
-      const km = await routeKmWithRoughFallback(slat, slng, custLat, custLng);
-      const radius = Number(storeRow.delivery_radius_km) > 0 ? Number(storeRow.delivery_radius_km) : 5;
-      if (!Number.isFinite(km) || km > radius) {
-        return { ok: false, message: "هذا المتجر لا يغطي منطقتك", status: 400 };
+
+      if (useCartDeliverySnapshot(groupItems)) {
+        const resolved = await resolveStoreCheckoutFromCartSnapshot(sb, groupItems, storeRow, total);
+        if (!resolved.ok) {
+          return { ok: false, message: resolved.message, status: resolved.status || 400 };
+        }
+        Object.assign(row, resolved.patch);
+        row.platform_fee = computePlatformCommission(total);
+        row.notes = `متجر: ${storeRow.name || singleStoreId}`;
+        row.store_id = singleStoreId;
+        row.store_name = String(storeRow.name || "").trim() || null;
+        row.store_address = String(storeRow.address || storeRow.location_text || "").trim() || null;
+        storeRowForCheckout = storeRow;
+        storeDispatchOverride = resolved.shouldDispatch;
+      } else {
+        const custLat = Number(body.customer_lat);
+        const custLng = Number(body.customer_lng);
+        if (!Number.isFinite(custLat) || !Number.isFinite(custLng)) {
+          return { ok: false, message: "حدد موقع التوصيل (GPS) لطلبات المتجر", status: 400 };
+        }
+        const slat = Number(storeRow.lat);
+        const slng = Number(storeRow.lng);
+        const km = await routeKmWithRoughFallback(slat, slng, custLat, custLng);
+        const radius = Number(storeRow.delivery_radius_km) > 0 ? Number(storeRow.delivery_radius_km) : 5;
+        if (!Number.isFinite(km) || km > radius) {
+          return { ok: false, message: "هذا المتجر لا يغطي منطقتك", status: 400 };
+        }
+        const deliveryFee = Math.round(km * 2.3 * 100) / 100;
+        const dropAddress =
+          String(
+            body.customer_address ||
+              groupItems[0]?.data?.drop_address ||
+              groupItems[0]?.data?.location ||
+              ""
+          ).trim() || "عنوان التوصيل";
+        row.pickup_address = String(storeRow.address || storeRow.name || "").trim() || String(storeRow.name || "");
+        row.pickup_lat = slat;
+        row.pickup_lng = slng;
+        row.drop_address = dropAddress;
+        row.drop_lat = custLat;
+        row.drop_lng = custLng;
+        row.delivery_fee = deliveryFee;
+        row.distance_km = Math.round(km * 100) / 100;
+        row.order_total = total;
+        row.total_amount = Math.round((total + deliveryFee) * 100) / 100;
+        row.driver_earning = deliveryFee;
+        row.platform_fee = computePlatformCommission(total);
+        row.notes = `متجر: ${storeRow.name || singleStoreId}`;
+        row.store_id = singleStoreId;
+        row.store_name = String(storeRow.name || "").trim() || null;
+        row.store_address = String(storeRow.address || storeRow.location_text || "").trim() || null;
+        storeRowForCheckout = storeRow;
+        storeDispatchOverride = true;
       }
-      const deliveryFee = Math.round(km * 2.3 * 100) / 100;
-      const dropAddress =
-        String(
-          body.customer_address ||
-            groupItems[0]?.data?.drop_address ||
-            groupItems[0]?.data?.location ||
-            ""
-        ).trim() || "عنوان التوصيل";
-      row.pickup_address = String(storeRow.address || storeRow.name || "").trim() || String(storeRow.name || "");
-      row.pickup_lat = slat;
-      row.pickup_lng = slng;
-      row.drop_address = dropAddress;
-      row.drop_lat = custLat;
-      row.drop_lng = custLng;
-      row.delivery_fee = deliveryFee;
-      row.distance_km = Math.round(km * 100) / 100;
-      row.order_total = total;
-      row.total_amount = Math.round((total + deliveryFee) * 100) / 100;
-      row.driver_earning = deliveryFee;
-      row.platform_fee = computePlatformCommission(total);
-      row.notes = `متجر: ${storeRow.name || singleStoreId}`;
-      row.store_id = singleStoreId;
-      row.store_name = String(storeRow.name || "").trim() || null;
-      row.store_address =
-        String(storeRow.address || storeRow.location_text || "").trim() || null;
-      storeRowForCheckout = storeRow;
     } else if (type === "delivery") {
       const d0 =
         groupItems[0] && typeof groupItems[0].data === "object" && groupItems[0].data
@@ -346,7 +369,7 @@ async function runCheckoutInsert(sb, appUser, body, options) {
         row.platform_fee =
           Number(d0.platform_fee) >= 0
             ? Math.round(Number(d0.platform_fee) * 100) / 100
-            : Math.round(deliveryFee * 0.15 * 100) / 100;
+            : computePlatformCommission(deliveryFee);
         row.driver_earning =
           Number(d0.driver_earning) >= 0
             ? Math.round(Number(d0.driver_earning) * 100) / 100
@@ -464,7 +487,9 @@ async function runCheckoutInsert(sb, appUser, body, options) {
       }
     }
 
-    const shouldDispatch = (type === "delivery" || singleStoreId) && openDeliveryStatus === "pending";
+    const shouldDispatch =
+      openDeliveryStatus === "pending" &&
+      (type === "delivery" || (singleStoreId && storeDispatchOverride !== false));
     if (shouldDispatch) {
       try {
         await enqueueDeliveryJob("checkout-dispatch", {

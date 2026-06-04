@@ -198,7 +198,29 @@ function cartTotalPieceCount(cart) {
   }, 0);
 }
 
-/** سطر واحد — يُستخدم في لوحة الهيدر وصفحة السلة */
+function cartLineImageUrl(item) {
+  var d = (item && item.data) || {};
+  var u = d.image_url || d.thumb_url || d.product_image || "";
+  if (!u && Array.isArray(d.image_urls) && d.image_urls.length) u = d.image_urls[0];
+  return String(u || "").trim();
+}
+
+function cartLineThumbInner(item, kind) {
+  var url = cartLineImageUrl(item);
+  if (url) {
+    return (
+      '<img class="lp-cart-line__thumb-img" src="' +
+      escCartHtml(url) +
+      '" alt="" loading="lazy" decoding="async" />'
+    );
+  }
+  var thumbIcon = { product: "🛍", delivery: "🚚", service: "⚡" };
+  return (
+    '<span class="lp-cart-line__thumb-icon" aria-hidden="true">' + (thumbIcon[kind] || "📦") + "</span>"
+  );
+}
+
+/** سطر واحد — يُستخدم في لوحة الهيدر وصفحة السلة (ERVENOW CART UX 2.0) */
 function renderCartLineHtml(item) {
   var kind = cartLineKind(item);
   var kindLabel = { product: "منتج", delivery: "توصيل", service: "خدمة" };
@@ -254,39 +276,44 @@ function renderCartLineHtml(item) {
           ? "عدد القطع: " + escCartHtml(String(data.product_qty))
           : "× " + qty) +
         "</span>";
-  var thumbIcon = { product: "🛍", delivery: "🚚", service: "⚡" };
+  var vendor =
+    kind === "product" && (data.store_name || data.merchant_name)
+      ? String(data.store_name || data.merchant_name)
+      : "";
+  var availBadge =
+    kind === "product"
+      ? '<span class="lp-cart-line__badge lp-cart-line__badge--avail">متاح</span>'
+      : '<span class="lp-cart-line__badge lp-cart-line__badge--' + kind + '">' + kindLabel[kind] + "</span>";
   return (
-    '<article class="lp-cart-line" data-cart-id="' +
+    '<article class="lp-cart-line lp-cart-line--v2" data-cart-id="' +
     idAttr +
     '">' +
-    '<div class="lp-cart-line__row">' +
-    '<div class="lp-cart-line__thumb"><span class="lp-cart-line__thumb-icon" aria-hidden="true">' +
-    (thumbIcon[kind] || "📦") +
-    "</span></div>" +
+    '<div class="lp-cart-line__card">' +
+    '<div class="lp-cart-line__thumb">' +
+    cartLineThumbInner(item, kind) +
+    "</div>" +
     '<div class="lp-cart-line__main">' +
     '<div class="lp-cart-line__head">' +
-    '<span class="lp-cart-line__badge lp-cart-line__badge--' +
-    kind +
-    '">' +
-    kindLabel[kind] +
-    "</span>" +
+    availBadge +
     '<strong class="lp-cart-line__title">' +
     escCartHtml(item.title || "طلب") +
     "</strong>" +
     "</div>" +
+    (vendor ? '<p class="lp-cart-line__vendor">' + escCartHtml(vendor) + "</p>" : "") +
+    buildCartLineDeliveryHtml(data) +
     (metaBits.length ? '<p class="lp-cart-line__meta">' + metaBits.join(" · ") + "</p>" : "") +
-    '<div class="lp-cart-line__actions">' +
+    '<div class="lp-cart-line__foot">' +
+    '<div class="lp-cart-line__controls">' +
     qtyBlock +
     '<button type="button" class="lp-cart-line__remove" data-cart-remove="' +
     idAttr +
     '" aria-label="حذف من السلة">' +
-    '<span class="lp-cart-line__remove-icon" aria-hidden="true">🗑</span> حذف</button>' +
+    '<span class="lp-cart-line__remove-icon" aria-hidden="true">🗑</span></button>' +
     "</div>" +
-    "</div>" +
-    '<div class="lp-cart-line__aside">' +
     '<span class="lp-cart-line__price">' +
     priceStr +
-    " <small>ر.س</small></span>" +
+    ' <small class="lp-cart-line__cur">ر.س</small></span>' +
+    "</div>" +
     "</div>" +
     "</div>" +
     "</article>"
@@ -383,9 +410,13 @@ window.resetCartPagePayStep = resetCartPagePayStep;
 function setCartPanelHasItems(hasItems) {
   var panel = document.getElementById("lpCartPanel");
   if (panel) panel.classList.toggle("lp-cart-panel--empty", !hasItems);
-  ["lpCartSummary", "lpCartFooter"].forEach(function (id) {
+  ["lpCartSummary", "lpCartPayCard", "lpCartFooter"].forEach(function (id) {
     var el = document.getElementById(id);
     if (el) el.hidden = !hasItems;
+  });
+  syncLpCartUx2OpenState(hasItems);
+  document.querySelectorAll(".lp-cart-accordion--fin").forEach(function (el) {
+    if (!hasItems) el.removeAttribute("data-erv-fin-touched");
   });
   if (!hasItems) {
     resetLpCartPayStep();
@@ -405,8 +436,10 @@ function setCartPanelHasItems(hasItems) {
   var itemsCard = document.querySelector(".cart-page-wrap .cart-items-card");
   if (itemsCard) itemsCard.classList.toggle("cart-items-card--empty", !hasItems);
   var lpSummary = document.getElementById("lpCartSummary");
+  var lpPayCard = document.getElementById("lpCartPayCard");
   var lpFooter = document.getElementById("lpCartFooter");
   if (lpSummary) lpSummary.hidden = !hasItems;
+  if (lpPayCard) lpPayCard.hidden = !hasItems;
   if (lpFooter) lpFooter.hidden = !hasItems;
   var lpPanel = document.getElementById("lpCartPageRoot") || document.getElementById("lpCartPanel");
   if (lpPanel) lpPanel.classList.toggle("lp-cart-panel--empty", !hasItems);
@@ -442,8 +475,77 @@ function cartSubtotal(cart) {
 
 function cartHasStoreProducts(cart) {
   return (cart || []).some(function (i) {
-    return cartLineKind(i) === "product";
+    var d = i && i.data;
+    return cartLineKind(i) === "product" && d && d.store_id;
   });
+}
+
+function cartHasDeliverySnapshot(cart) {
+  return (cart || []).some(function (i) {
+    var d = i && i.data;
+    return d && d.store_id && d.delivery_snapshot_version === 1;
+  });
+}
+
+function resolveCartDeliveryFeeFromItems(cart) {
+  var fee = 0;
+  var seen = false;
+  (cart || []).forEach(function (it) {
+    var d = it && it.data;
+    if (!d || !d.store_id) return;
+    if (d.fulfillment_mode === "pickup") {
+      seen = true;
+      fee = 0;
+      return;
+    }
+    if (d.delivery_free || d.includes_delivery) {
+      seen = true;
+      fee = 0;
+      return;
+    }
+    if (Number.isFinite(Number(d.delivery_fee))) {
+      seen = true;
+      fee = Math.max(fee, roundMoney(Number(d.delivery_fee)));
+    }
+  });
+  if (!seen && cartHasStoreProducts(cart)) return undefined;
+  return fee;
+}
+
+function fulfillmentLabelAr(mode) {
+  var m = String(mode || "").toLowerCase();
+  if (m === "pickup") return "استلام من المتجر";
+  if (m === "store_delivery") return "توصيل بواسطة المتجر";
+  if (m === "ervenow_delivery") return "توصيل بواسطة ERVENOW";
+  return "—";
+}
+
+function buildCartLineDeliveryHtml(d) {
+  if (!d || !d.store_id || d.delivery_snapshot_version !== 1) return "";
+  var parts = ['<div class="lp-cart-line__delivery">'];
+  parts.push(
+    '<span class="lp-cart-line__delivery-row">🚚 ' + escCartHtml(fulfillmentLabelAr(d.fulfillment_mode)) + "</span>"
+  );
+  if (d.fulfillment_mode !== "pickup") {
+    if (d.drop_address)
+      parts.push('<span class="lp-cart-line__delivery-row">📍 ' + escCartHtml(d.drop_address) + "</span>");
+    if (Number.isFinite(Number(d.distance_km)))
+      parts.push(
+        '<span class="lp-cart-line__delivery-row">📏 ' + Number(d.distance_km).toFixed(1) + " كم</span>"
+      );
+    if (d.eta_minutes != null && Number.isFinite(Number(d.eta_minutes)))
+      parts.push('<span class="lp-cart-line__delivery-row">⏱️ ' + Number(d.eta_minutes) + " دقيقة</span>");
+    if (d.delivery_free || d.includes_delivery)
+      parts.push('<span class="lp-cart-line__delivery-row lp-cart-line__delivery-row--free">🎁 التوصيل مجاني</span>');
+    else if (Number.isFinite(Number(d.delivery_fee)))
+      parts.push(
+        '<span class="lp-cart-line__delivery-row">💰 رسوم التوصيل: ' +
+          Number(d.delivery_fee).toFixed(2) +
+          " ر.س</span>"
+      );
+  }
+  parts.push("</div>");
+  return parts.join("");
 }
 
 /** أجرة توصيل المتجر = كم × 2.3 ر.س (كما في apps/checkout/service.js) */
@@ -456,13 +558,25 @@ function estimateStoreDeliveryFromKm(km) {
 /**
  * @param {*} deliveryFee - رقم معروف، أو undefined إن لم يُحسب بعد (سلة متجر بدون موقع)
  */
+function cartGoodsSubtotal(cart) {
+  return roundMoney(
+    (cart || []).reduce(function (s, it) {
+      if (cartLineKind(it) !== "product") return s;
+      return s + (Number(it && it.price) || 0);
+    }, 0)
+  );
+}
+
 function computeErvCartBreakdown(cart, deliveryFee) {
   var sub = cartSubtotal(cart);
   var delKnown = Number.isFinite(Number(deliveryFee)) && Number(deliveryFee) >= 0;
   var del = delKnown ? roundMoney(Number(deliveryFee)) : 0;
   var deliveryPending = cartHasStoreProducts(cart) && !delKnown;
   var vat = roundMoney((sub + del) * ERV_VAT_RATE);
-  var platformCommission = roundMoney(sub * ERV_PLATFORM_COMMISSION_RATE);
+  var goods = cartGoodsSubtotal(cart);
+  var platformOnGoods = roundMoney(goods * ERV_PLATFORM_COMMISSION_RATE);
+  var platformOnDelivery = delKnown ? roundMoney(del * ERV_PLATFORM_COMMISSION_RATE) : 0;
+  var platformCommission = roundMoney(platformOnGoods + platformOnDelivery);
   var grandTotal = roundMoney(sub + del + vat);
   return {
     subtotal: sub,
@@ -470,7 +584,42 @@ function computeErvCartBreakdown(cart, deliveryFee) {
     deliveryPending: deliveryPending,
     vat: vat,
     platformCommission: platformCommission,
+    platformOnGoods: platformOnGoods,
+    platformOnDelivery: platformOnDelivery,
+    merchantNet: roundMoney(goods - platformOnGoods),
+    driverNet: roundMoney(del - platformOnDelivery),
     grandTotal: grandTotal,
+  };
+}
+
+/**
+ * طبقة النية المالية الموحّدة — نفس الأرقام للعرض والطلب والتسوية.
+ * @param {object[]} [cart]
+ * @param {number|undefined} deliveryFee
+ * @param {string} [paymentMethod]
+ */
+function buildFinancialIntent(cart, deliveryFee, paymentMethod) {
+  var c = cart || getCart();
+  var b = computeErvCartBreakdown(c, deliveryFee);
+  var pay =
+    String(paymentMethod || window.__ervCartSelectedPayment || "").trim() ||
+    (function () {
+      try {
+        return localStorage.getItem("erv_cart_payment_method") || "";
+      } catch (e) {
+        return "";
+      }
+    })();
+  return {
+    subtotal: b.subtotal,
+    delivery_fee: b.deliveryPending ? null : b.delivery,
+    delivery_pending: b.deliveryPending,
+    vat: b.vat,
+    platform_fee: b.platformCommission,
+    merchant_net: b.merchantNet,
+    driver_net: b.driverNet,
+    grand_total: b.deliveryPending ? null : b.grandTotal,
+    payment_method: pay,
   };
 }
 
@@ -512,6 +661,40 @@ function zeroCartFinancialsUi() {
   clearPaymentMethodIconContainers();
 }
 
+function syncLpCartAccordionMeta() {
+  var itemsMeta = document.getElementById("lpCartItemsToggleMeta");
+  if (itemsMeta) {
+    var cart = getCart();
+    if (!cart.length) itemsMeta.textContent = "السلة فارغة";
+    else {
+      var n = cartTotalPieceCount(cart);
+      itemsMeta.textContent = "عدد المنتجات (" + n + ")";
+    }
+  }
+  var finMeta = document.getElementById("lpCartFinToggleMeta");
+  if (finMeta) {
+    var cart2 = getCart();
+    if (!cart2.length) {
+      finMeta.textContent = "الإجمالي: ٠٫٠٠ ر.س";
+    } else {
+      var b = computeErvCartBreakdown(cart2, resolveCartDeliveryFeeArg(cart2));
+      finMeta.textContent = "الإجمالي: " + ervFmtMoney(b.grandTotal) + " ر.س";
+    }
+  }
+  var payMeta = document.getElementById("lpCartPayToggleMeta");
+  if (payMeta) {
+    var m = window.__ervCartSelectedPayment;
+    payMeta.textContent = m ? "💳 " + payMethodLabelAr(m) : "اختر وسيلة";
+  }
+}
+
+function syncLpCartUx2OpenState(hasItems) {
+  var finAcc = document.querySelector(".lp-cart-accordion--fin");
+  if (finAcc && hasItems && !finAcc.hasAttribute("data-erv-fin-touched")) {
+    finAcc.setAttribute("open", "");
+  }
+}
+
 function applyCartFinancialsToUi(b, opts) {
   opts = opts || {};
   var isEmpty = !!opts.empty;
@@ -524,6 +707,7 @@ function applyCartFinancialsToUi(b, opts) {
   }
   if (isEmpty) {
     zeroCartFinancialsUi();
+    syncLpCartAccordionMeta();
     return;
   }
   setMoney("lpCartSub", b.subtotal);
@@ -548,20 +732,24 @@ function applyCartFinancialsToUi(b, opts) {
   applyDel("lpCartDel", "cartFinDel", "lpCartDelNote", "cartFinDelNote");
   setMoney("lpCartVat", b.vat);
   setMoney("cartFinVat", b.vat);
-  var commEl = document.getElementById("lpCartComm");
-  if (commEl) commEl.textContent = ervFmtMoney(b.platformCommission);
+  setMoney("lpCartComm", b.platformCommission);
   setMoney("cartFinComm", b.platformCommission);
   setMoney("lpCartTotal", b.grandTotal);
   setMoney("cartFinGrand", b.grandTotal);
   if (window.__ervCartSelectedPayment === "ew_pay") refreshEwPayBalanceCards();
+  syncLpCartAccordionMeta();
   syncLpCartCheckoutBtn();
   syncCartPageCheckoutBtn();
 }
 
 window.computeErvCartBreakdown = computeErvCartBreakdown;
+window.buildFinancialIntent = buildFinancialIntent;
 window.estimateStoreDeliveryFromKm = estimateStoreDeliveryFromKm;
 window.cartSubtotal = cartSubtotal;
 window.cartHasStoreProducts = cartHasStoreProducts;
+window.cartHasDeliverySnapshot = cartHasDeliverySnapshot;
+window.resolveCartDeliveryFeeFromItems = resolveCartDeliveryFeeFromItems;
+window.cartGoodsSubtotal = cartGoodsSubtotal;
 
 var ERV_PAYMENT_KEYS_ORDER = [
   "ew_pay",
@@ -576,6 +764,19 @@ var ERV_PAYMENT_KEYS_ORDER = [
 ];
 
 var ERV_PAYMENT_BNPL = { tabby: true, tamara: true };
+
+/** مخفية في بطاقة السلة فقط (تابي / تمارا) */
+var ERV_CART_PAYMENT_HIDDEN = { tabby: true, tamara: true };
+
+function filterCartPaymentMethodsOrdered(methods) {
+  return ERV_PAYMENT_KEYS_ORDER.filter(function (key) {
+    return methods[key] && ERV_PAY_ICON_SRC[key] && !ERV_CART_PAYMENT_HIDDEN[key];
+  });
+}
+
+function cartPaymentMethodAllowed(methods, key) {
+  return !!(methods[key] && !ERV_CART_PAYMENT_HIDDEN[key]);
+}
 
 var ERV_PAY_ICON_SRC = {
   ew_pay: "/assets/pay-ew.svg",
@@ -812,7 +1013,7 @@ async function fetchWalletBalanceForCart() {
       var j = await window.PlatformAPI.api("/api/driver/wallet");
       return Number(j.balance) || 0;
     }
-    if (role === "merchant" || role === "restaurant") {
+    if (role === "store" || role === "merchant" || role === "restaurant") {
       try {
         var md = await window.PlatformAPI.api("/api/store/merchant-dashboard");
         return Number((md.wallet && md.wallet.balance) || 0);
@@ -837,6 +1038,7 @@ function setSelectedPaymentFromSelect(selectId, method) {
     var ew0 = document.getElementById(selectId === "lpCartPaySelect" ? "lpCartEwPayDetail" : "cartEwPayDetail");
     if (ew0) ew0.hidden = true;
     syncPayLuxeTrigger(selectId, "");
+    syncLpCartAccordionMeta();
     syncLpCartCheckoutBtn();
     syncCartPageCheckoutBtn();
     return;
@@ -852,6 +1054,7 @@ function setSelectedPaymentFromSelect(selectId, method) {
     refreshEwPayBalanceCards();
   }
   syncPayLuxeTrigger(selectId, method);
+  syncLpCartAccordionMeta();
   syncLpCartCheckoutBtn();
   syncCartPageCheckoutBtn();
 }
@@ -879,6 +1082,7 @@ function setSelectedPaymentForContainer(containerId, method) {
   } else {
     refreshEwPayBalanceCards();
   }
+  syncLpCartAccordionMeta();
 }
 
 function buildPaymentCardButton(key, opts) {
@@ -895,6 +1099,7 @@ function buildPaymentCardButton(key, opts) {
   if (opts.bnpl && key === "tabby") btn.classList.add("erv-pay-card--tabby");
   if (opts.bnpl && key === "tamara") btn.classList.add("erv-pay-card--tamara");
   btn.setAttribute("data-pay-method", key);
+  btn.setAttribute("aria-label", meta.title + (meta.hint ? " — " + meta.hint : ""));
   btn.setAttribute("aria-pressed", "false");
   var wrap = document.createElement("span");
   wrap.className = "erv-pay-card__icon-wrap";
@@ -936,15 +1141,9 @@ function renderPaymentMethodCardsInto(containerId) {
     if (__ervPayCardsRenderGen[containerId] !== gen) return;
     root = document.getElementById(containerId);
     if (!root) return;
-    var ordered = ERV_PAYMENT_KEYS_ORDER.filter(function (key) {
-      return methods[key] && ERV_PAY_ICON_SRC[key];
-    });
-    var gridKeys = ordered.filter(function (k) {
-      return !ERV_PAYMENT_BNPL[k];
-    });
-    var bnplKeys = ordered.filter(function (k) {
-      return ERV_PAYMENT_BNPL[k];
-    });
+    var ordered = filterCartPaymentMethodsOrdered(methods);
+    var gridKeys = ordered;
+    var bnplKeys = [];
 
     var row5 = document.createElement("div");
     row5.className = "erv-pay-cards__row erv-pay-cards__row--5";
@@ -982,7 +1181,7 @@ function renderPaymentMethodCardsInto(containerId) {
     try {
       saved = localStorage.getItem("erv_cart_payment_method");
     } catch (e3) {}
-    var pick = saved && methods[saved] ? saved : first;
+    var pick = saved && cartPaymentMethodAllowed(methods, saved) ? saved : first;
     if (pick) setSelectedPaymentForContainer(containerId, pick);
   });
 }
@@ -997,7 +1196,6 @@ var ERV_PAY_LUXE_GROUPS = [
   { label: "ERVENOW PAY", keys: ["ew_pay"] },
   { label: "البطاقات والمحافظ", keys: ["mada", "visa", "mastercard", "apple_pay", "stc_pay"] },
   { label: "الدفع عند الاستلام", keys: ["cash_on_delivery"] },
-  { label: "تقسيط بدون فوائد", keys: ["tabby", "tamara"] },
 ];
 
 function payLuxeWrapId(selectId) {
@@ -1048,7 +1246,7 @@ function ensurePayLuxeShell(selectId) {
   if (!wrap || wrap.querySelector(".erv-pay-luxe")) return wrap;
 
   wrap.innerHTML =
-    '<div class="erv-pay-luxe erv-pay-luxe--inline" data-select-id="' +
+    '<div class="erv-pay-luxe erv-pay-luxe--inline erv-pay-luxe--cart" data-select-id="' +
     selectId +
     '">' +
     '<div class="erv-pay-luxe__shell">' +
@@ -1177,9 +1375,7 @@ function renderPaymentMethodDropdownInto(selectId) {
     if (__ervPayCardsRenderGen[selectId] !== gen) return;
     sel = document.getElementById(selectId);
     if (!sel) return;
-    var ordered = ERV_PAYMENT_KEYS_ORDER.filter(function (key) {
-      return methods[key];
-    });
+    var ordered = filterCartPaymentMethodsOrdered(methods);
     ordered.forEach(function (key) {
       var d = paymentCardDisplay(key);
       var opt = document.createElement("option");
@@ -1193,7 +1389,7 @@ function renderPaymentMethodDropdownInto(selectId) {
       saved = localStorage.getItem("erv_cart_payment_method");
     } catch (e3) {}
     var first = ordered[0];
-    var pick = saved && methods[saved] ? saved : "";
+    var pick = saved && cartPaymentMethodAllowed(methods, saved) ? saved : "";
     if (pick) setSelectedPaymentFromSelect(selectId, pick);
     else syncPayLuxeTrigger(selectId, "");
   });
@@ -1233,6 +1429,10 @@ window.validateEwPayCheckout = function () {
 
 function resolveCartDeliveryFeeArg(cart) {
   if (!cartHasStoreProducts(cart)) return 0;
+  if (window.__ervDeliveryEngineCheckout && cartHasDeliverySnapshot(cart)) {
+    var snapFee = resolveCartDeliveryFeeFromItems(cart);
+    if (snapFee !== undefined) return snapFee;
+  }
   if (typeof window.__ervCartDeliveryFee === "number" && Number.isFinite(window.__ervCartDeliveryFee))
     return window.__ervCartDeliveryFee;
   return undefined;
@@ -1268,6 +1468,7 @@ function renderHeaderCartPreview() {
     if (co0) co0.disabled = true;
     applyCartFinancialsToUi({}, { empty: true });
     clearPaymentMethodIconContainers();
+    syncLpCartAccordionMeta();
     return;
   }
   if (empty) empty.hidden = true;
@@ -1277,6 +1478,7 @@ function renderHeaderCartPreview() {
   mountCartPaymentUiIfNeeded();
   if (window.__ervCartSelectedPayment === "ew_pay") loadEwPayBalanceForCart();
   else refreshEwPayBalanceCards();
+  syncLpCartAccordionMeta();
   syncLpCartCheckoutBtn();
 }
 
@@ -1326,6 +1528,7 @@ function renderCartPage(opts) {
     if (legacyEmpty) legacyEmpty.hidden = false;
     if (countEl) countEl.textContent = "لا توجد قطع في السلة";
     applyCartFinancialsToUi({}, { empty: true });
+    syncLpCartAccordionMeta();
     syncCartMobileBar([], null);
     delete window.__ervCartDeliveryFee;
     if (typeof window.refreshGuestCartBanner === "function") window.refreshGuestCartBanner();
@@ -1350,11 +1553,23 @@ function renderCartPage(opts) {
   mountCartPaymentUiIfNeeded();
   if (window.__ervCartSelectedPayment === "ew_pay") loadEwPayBalanceForCart();
   else refreshEwPayBalanceCards();
+  syncLpCartAccordionMeta();
   syncCartPageCheckoutBtn();
 }
 
 window.renderCartPage = renderCartPage;
 window.renderCartLineHtml = renderCartLineHtml;
+
+document.addEventListener(
+  "toggle",
+  function (e) {
+    var t = e.target;
+    if (t && t.classList && t.classList.contains("lp-cart-accordion--fin")) {
+      t.setAttribute("data-erv-fin-touched", "1");
+    }
+  },
+  true
+);
 window.syncCartCheckoutButtons = syncCartCheckoutButtons;
 window.syncCartPageCheckoutBtn = syncCartPageCheckoutBtn;
 window.syncLpCartCheckoutBtn = syncLpCartCheckoutBtn;
@@ -1428,6 +1643,24 @@ document.addEventListener("change", function (ev) {
   else window.__ervCartSelectedPayment = null;
 });
 
+(function loadDeliveryEngineFlagsForCart() {
+  if (typeof fetch !== "function") return;
+  var base =
+    window.PlatformAPI && typeof window.PlatformAPI.apiUrl === "function"
+      ? window.PlatformAPI.apiUrl("/api/store/delivery-engine/flags")
+      : "/api/store/delivery-engine/flags";
+  fetch(base)
+    .then(function (r) {
+      return r.json();
+    })
+    .then(function (j) {
+      if (j && j.DELIVERY_ENGINE_CHECKOUT) window.__ervDeliveryEngineCheckout = true;
+      if (typeof window.renderCartPage === "function") window.renderCartPage();
+      else if (typeof window.renderHeaderCartPreview === "function") window.renderHeaderCartPreview();
+    })
+    .catch(function () {});
+})();
+
 document.addEventListener("click", function (e) {
   var removeBtn = e.target && e.target.closest && e.target.closest("[data-cart-remove]");
   if (removeBtn) {
@@ -1443,7 +1676,72 @@ document.addEventListener("click", function (e) {
   }
 });
 
+/** مصدر الحقيقة الوحيد للسلة — ERVENOW Unified Cart */
+var ErvenowCart = {
+  STORAGE_KEY: "cart",
+  VAT_RATE: ERV_VAT_RATE,
+  PLATFORM_COMMISSION_RATE: ERV_PLATFORM_COMMISSION_RATE,
+  DELIVERY_SAR_PER_KM: ERV_DELIVERY_SAR_PER_KM,
+  get: getCart,
+  save: saveCart,
+  add: addToCart,
+  remove: removeFromCart,
+  clear: function () {
+    saveCart([]);
+    ErvenowCart.render();
+  },
+  adjustQty: adjustCartQty,
+  getStoreIds: getCartStoreIds,
+  lineKind: cartLineKind,
+  subtotal: cartSubtotal,
+  goodsSubtotal: cartGoodsSubtotal,
+  breakdown: computeErvCartBreakdown,
+  financialIntent: buildFinancialIntent,
+  render: function (opts) {
+    if (document.getElementById("cartList") || document.getElementById("lpCartPageRoot")) {
+      renderCartPage(opts);
+    } else {
+      renderHeaderCartPreview();
+    }
+  },
+  renderPanel: renderHeaderCartPreview,
+  renderPage: renderCartPage,
+  updateCount: updateCartCount,
+  goCheckout: handleLpCartCheckoutClick,
+  setDeliveryFee: function (fee) {
+    if (Number.isFinite(Number(fee)) && Number(fee) >= 0) {
+      window.__ervCartDeliveryFee = roundMoney(Number(fee));
+    } else {
+      delete window.__ervCartDeliveryFee;
+    }
+    ErvenowCart.render();
+  },
+  resolveDeliveryFee: resolveCartDeliveryFeeArg,
+  addService: function (item, opts) {
+    if (typeof window !== "undefined" && window.ErvenowServiceCart && typeof window.ErvenowServiceCart.add === "function") {
+      return window.ErvenowServiceCart.add(item, opts);
+    }
+    return { ok: false, message: "حمّل service-cart.js بعد cart.js لإضافة الخدمات" };
+  },
+};
+
+window.ErvenowCart = ErvenowCart;
+window.getCart = function () {
+  return ErvenowCart.get();
+};
+window.saveCart = function (cart) {
+  return ErvenowCart.save(cart);
+};
+window.addToCart = function (item) {
+  return ErvenowCart.add(item);
+};
+window.removeFromCart = function (id) {
+  return ErvenowCart.remove(id);
+};
+
 document.addEventListener("DOMContentLoaded", function () {
-  updateCartCount();
+  ErvenowCart.updateCount();
 });
-window.addEventListener("storage", updateCartCount);
+window.addEventListener("storage", function () {
+  ErvenowCart.updateCount();
+});

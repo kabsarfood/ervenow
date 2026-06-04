@@ -1,5 +1,5 @@
 /**
- * مساعد موحّد: إضافة خدمة/توصيل إلى السلة ثم الدفع من /cart
+ * إضافة خدمة/توصيل إلى ErvenowCart ثم الدفع من /cart
  */
 (function (global) {
   "use strict";
@@ -18,14 +18,14 @@
   }
 
   /**
-   * @param {object} item — عنصر السلة (type, name, price, …)
+   * @param {object} item
    * @param {{ redirect?: boolean, message?: string }} [opts]
-   * @returns {{ ok: boolean, message?: string }}
    */
   function addServiceToCart(item, opts) {
     opts = opts || {};
-    if (!global.addToCart || typeof global.addToCart !== "function") {
-      return { ok: false, message: "السلة غير متوفرة على هذه الصفحة" };
+    var cart = global.ErvenowCart;
+    if (!cart || typeof cart.add !== "function") {
+      return { ok: false, message: "السلة غير متوفرة — حمّل cart.js أولاً" };
     }
     var phone = validateSaPhone(item && item.customer_phone);
     if (!phone) {
@@ -42,8 +42,7 @@
     }
     item.price = price;
     item.payment_status = item.payment_status || "unpaid";
-    var addResult =
-      typeof global.addToCart === "function" ? global.addToCart(item) : { ok: false, message: "السلة غير متوفرة" };
+    var addResult = cart.add(item);
     if (!addResult || addResult.ok === false) {
       return {
         ok: false,
@@ -51,7 +50,7 @@
       };
     }
     if (opts.redirect !== false) {
-      var msg = opts.message || "تمت الإضافة للسلة — أكمل الدفع ثم يُخصَّص مندوب/مزود للتوصيل أو الخدمة.";
+      var msg = opts.message || "تمت الإضافة للسلة — أكمل الدفع من /cart";
       try {
         sessionStorage.setItem("ervenow:cart-flash", msg);
       } catch (_) {}
@@ -66,4 +65,8 @@
     parsePrice: parsePrice,
     add: addServiceToCart,
   };
+
+  if (global.ErvenowCart) {
+    global.ErvenowCart.addService = addServiceToCart;
+  }
 })(typeof window !== "undefined" ? window : global);

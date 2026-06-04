@@ -8,7 +8,8 @@ const {
   accountApprovedFlag,
 } = require("../utils/accountApproval");
 
-const ROLES = ["driver", "customer", "admin", "restaurant", "merchant", "service", "user"];
+const ROLES = ["driver", "customer", "admin", "store", "restaurant", "merchant", "service", "user"];
+const { requireStoreRole, requireMerchantRole, isStoreAccountRole, STORE_ACCOUNT_ROLES } = require("./storeRole");
 
 /**
  * يدعم الاسم الصحيح ERVENOW_JWT_SECRET والاسم القديم ERWENOW_JWT_SECRET للتوافق.
@@ -221,5 +222,14 @@ async function optionalAuth(req, res, next) {
   }
 }
 
-module.exports = { requireAuth, optionalAuth, ROLES, getJwtSecret };
+module.exports = {
+  requireAuth,
+  optionalAuth,
+  ROLES,
+  getJwtSecret,
+  requireStoreRole,
+  requireMerchantRole,
+  isStoreAccountRole,
+  STORE_ACCOUNT_ROLES,
+};
 

@@ -72,11 +72,13 @@
     document.querySelectorAll(".dash-header-cart").forEach(function (a) {
       a.style.display = "none";
     });
-    if (typeof global.addToCart === "function" && !global.__ervAddToCartWrapped) {
-      var orig = global.addToCart;
-      global.addToCart = function () {
+    if (global.ErvenowCart && typeof global.ErvenowCart.add === "function" && !global.__ervAddToCartWrapped) {
+      var orig = global.ErvenowCart.add;
+      global.ErvenowCart.add = function () {
         alert("حساب المندوب لا يمكنه إضافة طلبات — استخدم طلبات المنصة لاستلام التوصيل.");
+        return { ok: false, message: "driver_blocked" };
       };
+      global.addToCart = global.ErvenowCart.add;
       global.__ervAddToCartWrapped = true;
     }
   }

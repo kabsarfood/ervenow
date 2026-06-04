@@ -126,6 +126,7 @@
           checkoutId: "lpCartCheckoutBtn",
           showFullFin: true,
         });
+        if (ErvenowCartUI.initContinueShopping) ErvenowCartUI.initContinueShopping(null);
         var checkoutBtn = document.getElementById("lpCartCheckoutBtn");
         if (checkoutBtn) checkoutBtn.addEventListener("click", function () { if (typeof checkout === "function") checkout(); });
         var tools = document.getElementById("cartPageTools");
@@ -185,6 +186,7 @@
       window.refreshGuestCartBanner = refreshGuestCartBanner;
 
       var pendingGeo = { lat: null, lng: null };
+      var deliveryEngineFlags = null;
 
       function cartNeedsStoreGeo(cart) {
         return (cart || []).some(function (i) {
@@ -192,11 +194,24 @@
         });
       }
 
+      function cartUsesPrecartSnapshot(cart) {
+        return (
+          deliveryEngineFlags &&
+          deliveryEngineFlags.DELIVERY_ENGINE_CHECKOUT &&
+          typeof window.cartHasDeliverySnapshot === "function" &&
+          window.cartHasDeliverySnapshot(cart)
+        );
+      }
+
       function refreshStoreDeliveryCard() {
         var cart = getCart();
         var el = document.getElementById("storeDeliveryCard");
         var geoEl = document.getElementById("geoStatus");
         if (!el) return;
+        if (cartUsesPrecartSnapshot(cart)) {
+          el.style.display = "none";
+          return;
+        }
         var need = cartNeedsStoreGeo(cart);
         el.style.display = need ? "block" : "none";
         if (!need) {
@@ -234,6 +249,13 @@
         var nextFee = prevFee;
 
         try {
+          if (cartUsesPrecartSnapshot(cart) && typeof window.resolveCartDeliveryFeeFromItems === "function") {
+            nextFee = window.resolveCartDeliveryFeeFromItems(cart);
+            if (nextFee === undefined) delete window.__ervCartDeliveryFee;
+            else window.__ervCartDeliveryFee = nextFee;
+            if (typeof renderCartPage === "function") renderCartPage({ skipDeliveryRefresh: true });
+            return;
+          }
           if (!cartNeedsStoreGeo(cart)) {
             nextFee = 0;
           } else if (pendingGeo.lat == null || pendingGeo.lng == null) {
@@ -326,7 +348,7 @@
       }
 
       const checkout = safeClick(async function () {
-        const cart = getCart();
+        const cart = window.ErvenowCart ? ErvenowCart.get() : getCart();
         if (!cart.length) {
           showError("السلة فارغة");
           return;
@@ -378,12 +400,22 @@
         var idemKey = checkoutIdempotencyKey();
 
         try {
-          var payload = { items: cart, payment_method: payMethod };
+          var deliveryFee =
+            typeof window.__ervCartDeliveryFee === "number" ? window.__ervCartDeliveryFee : undefined;
+          var financialIntent =
+            window.ErvenowCart && typeof ErvenowCart.financialIntent === "function"
+              ? ErvenowCart.financialIntent(cart, deliveryFee, payMethod)
+              : null;
+          if (financialIntent && financialIntent.delivery_pending) {
+            showError("حدّد موقع التوصيل لحساب الأجرة قبل إتمام الطلب");
+            return;
+          }
+          var payload = { items: cart, payment_method: payMethod, financial_intent: financialIntent };
           if (payMethod === "ew_pay") {
             payload.paid = true;
             payload.payment_status = "paid";
           }
-          if (cartNeedsStoreGeo(cart)) {
+          if (cartNeedsStoreGeo(cart) && !cartUsesPrecartSnapshot(cart)) {
             if (pendingGeo.lat == null || pendingGeo.lng == null) {
               showError("اضغط «تحديد موقعي GPS» لإتمام طلب المتجر والتحقق من نطاق التوصيل");
               return;
@@ -395,7 +427,7 @@
               "";
           }
 
-          const data = await window.PlatformAPI.api("/api/checkout", {
+          const data = await window.PlatformAPI.api("/api/order/create", {
             method: "POST",
             body: payload,
             idempotencyKey: idemKey,
@@ -403,10 +435,13 @@
 
           clearCheckoutIdempotencyKey();
           showSuccess("تم إنشاء " + ((data.orders && data.orders.length) || 0) + " طلب");
-          localStorage.removeItem("cart");
-          delete window.__ervCartDeliveryFee;
-          updateCartCount();
-          renderCartPage();
+          if (window.ErvenowCart) ErvenowCart.clear();
+          else {
+            localStorage.removeItem("cart");
+            delete window.__ervCartDeliveryFee;
+            updateCartCount();
+            renderCartPage();
+          }
         } catch (e) {
           var msg = String((e && e.message) || "حدث خطأ، حاول مرة أخرى");
           if (/رصيد|غير كاف|insufficient/i.test(msg)) {
@@ -433,6 +468,20 @@
         }
       });
       window.checkout = checkout;
+      window.resolveCartDeliveryFeeFromItems = resolveCartDeliveryFeeFromItems;
+
+      (async function loadDeliveryEngineFlags() {
+        try {
+          if (!window.PlatformAPI || typeof PlatformAPI.apiUrl !== "function") return;
+          var res = await fetch(PlatformAPI.apiUrl("/api/store/delivery-engine/flags"));
+          var j = await res.json().catch(function () {
+            return {};
+          });
+          deliveryEngineFlags = j;
+          if (j.DELIVERY_ENGINE_CHECKOUT) window.__ervDeliveryEngineCheckout = true;
+          if (typeof renderCartPage === "function") renderCartPage();
+        } catch (e) {}
+      })();
 
       (function showCartFlash() {
         try {

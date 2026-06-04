@@ -651,13 +651,17 @@
 
       var CUISINE_COMBO =
         (window.ErvenowRestaurantCuisines && ErvenowRestaurantCuisines.CUISINE_COMBO) || {
+          kabsa_bukhari: ["kabsa_bukhari", "kabsa", "bukhari_mandi"],
           burger_broasted: ["broasted", "burger", "burger_broasted"],
           cafe_sweets: ["cafe", "sweets", "dessert_cafe"],
         };
 
       function storeMatchesCuisineChip(store, slug) {
-        if (!slug) return true;
-        if (String(store.type || "").toLowerCase() !== "restaurant") return false;
+        if (window.ErvenowRestaurantCuisines && ErvenowRestaurantCuisines.storeMatchesCuisineChip) {
+          return ErvenowRestaurantCuisines.storeMatchesCuisineChip(store, slug);
+        }
+        if (!slug) return storeCountsAsRestaurant(store);
+        if (!storeCountsAsRestaurant(store)) return false;
         var c = String(store.category || "")
           .trim()
           .toLowerCase();
@@ -719,15 +723,27 @@
       }
 
       function displayName(store) {
-        if (store.masked) return String(store.label || "");
-        return String(store.name || store.label || "");
+        return String(store.name || store.label || "").trim();
       }
 
       function matchesSearch(store, query) {
         var q = String(query || "").trim().toLowerCase();
         if (!q) return true;
-        var name = displayName(store).toLowerCase();
-        return name.indexOf(q) !== -1;
+        var bits = [
+          displayName(store),
+          store.category_label_ar || "",
+          store.category || "",
+          store.type || "",
+        ];
+        var hay = bits.join(" ").toLowerCase();
+        return hay.indexOf(q) !== -1;
+      }
+
+      function storeCountsAsRestaurant(store) {
+        if (window.ErvenowRestaurantCuisines && ErvenowRestaurantCuisines.storeCountsAsRestaurant) {
+          return ErvenowRestaurantCuisines.storeCountsAsRestaurant(store);
+        }
+        return String(store.type || "").toLowerCase() === "restaurant";
       }
 
       function getUserGeo() {
@@ -756,7 +772,7 @@
           );
 
         var allStores = [];
-        var activeCuisine = null;
+        var activeCuisine = "";
         var SKELETON_COUNT = 8;
         var cuisineBar = document.getElementById("storesCuisineBar");
         var geoFilterEl = document.getElementById("storesGeoFilter");
@@ -773,7 +789,7 @@
         }
 
         function hasCuisineSelected() {
-          return activeCuisine !== null;
+          return activeCuisine !== null && activeCuisine !== undefined;
         }
 
         function renderPickCuisine() {
@@ -917,7 +933,7 @@
           var q = searchEl ? searchEl.value : "";
           return allStores.filter(function (s) {
             if (!s || !s.id) return false;
-            if (storeBucket(s) !== "restaurant") return false;
+            if (!storeCountsAsRestaurant(s) && storeBucket(s) !== "restaurant") return false;
             return matchesSearch(s, q);
           });
         }
@@ -940,6 +956,7 @@
             var metaHtml = "";
             if (km != null) {
               var eta = etaMinutesFromKm(km);
+              var outRadius = store.within_delivery_radius === false;
               metaHtml =
                 '<div class="store-meta">' +
                 "<span>📍 " +
@@ -949,6 +966,7 @@
                 "<span>⏱ نحو " +
                 esc(String(eta)) +
                 " د توصيل</span>" +
+                (outRadius ? '<span class="store-meta__dot" aria-hidden="true">·</span><span>خارج نطاق التوصيل المعتاد</span>' : "") +
                 "</div>";
             } else {
               metaHtml =
@@ -1075,6 +1093,9 @@
         loadRestaurantCuisinesFromApi().then(function () {
           buildCuisineBar();
           applyQueryFromUrl();
+          if (activeCuisine === null || activeCuisine === undefined) activeCuisine = "";
+          renderCuisineBarActive();
+          load();
           if (cuisineBar) {
             cuisineBar.addEventListener("click", function (e) {
               var t = e.target.closest(".stores-cuisine-chip");

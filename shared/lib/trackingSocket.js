@@ -136,7 +136,7 @@ function roomForAppUser(appUser) {
   if (!appUser || !appUser.id) return null;
   const role = String(appUser.role || "customer").toLowerCase();
   const recipientType =
-    role === "merchant" || role === "restaurant"
+    role === "store" || role === "merchant" || role === "restaurant"
       ? "store"
       : role === "service"
         ? "provider"

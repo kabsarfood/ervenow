@@ -1,6 +1,6 @@
 /**
- * ERVENOW Cart Luxe — أسلوب Noon / Amazon / HungerStation
- * ألوان وخط المنصة — تصميم نظيف فاخر
+ * ERVENOW Cart Luxe — CART UX 2.0
+ * Accordion · Mobile First · هوية ERVENOW (ذهبي / بني ملكي)
  */
 
 /* ——— Header popup cart ——— */
@@ -37,7 +37,7 @@
 }
 
 .lp-cart-card--head {
-  padding: 18px 20px 14px;
+  padding: 14px 16px 12px;
   border: none;
   border-bottom: 1px solid rgba(61, 34, 19, 0.08);
   border-radius: 18px 18px 0 0;
@@ -64,15 +64,46 @@
   text-shadow: none;
 }
 
-.lp-cart-card--head__shop {
-  margin-top: 8px;
-  font-size: 0.8rem;
-  color: var(--gold);
-  font-weight: 800;
+.lp-cart-card--head__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
 }
 
-.lp-cart-card--head__shop:hover {
-  background: rgba(201, 162, 39, 0.08);
+.lp-cart-continue-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 6px 4px;
+  font-size: clamp(0.82rem, 2.6vw, 0.9rem);
+  font-weight: 800;
+  color: var(--gold, #b9872f);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.lp-cart-continue-link:hover {
+  color: #7a5a1f;
+  text-decoration: underline;
+}
+
+.lp-cart-card--head__title-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.lp-cart-card--head__cart-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  background: rgba(201, 162, 39, 0.14);
+  border: 1px solid rgba(185, 135, 47, 0.22);
 }
 
 .lp-cart-card__labelbar {
@@ -96,9 +127,9 @@
 }
 
 .lp-cart-stack {
-  padding: 14px 16px 16px;
-  gap: 10px;
-  background: #f8f4ee;
+  padding: 10px 12px 12px;
+  gap: 8px;
+  background: #f5f1ea;
 }
 
 .lp-cart-panel__list {
@@ -107,32 +138,33 @@
   gap: 8px;
 }
 
-/* ——— Product row (marketplace) ——— */
-.lp-cart-line {
+/* ——— Product card UX 2.0 ——— */
+.lp-cart-line--v2 {
   margin: 0;
   padding: 0;
   border: none;
-  border-radius: 0;
   background: transparent;
-  box-shadow: none;
-  border-bottom: 1px solid rgba(61, 34, 19, 0.07);
 }
 
-.lp-cart-line:last-child {
-  border-bottom: none;
-}
-
-.lp-cart-line__row {
+.lp-cart-line--v2 .lp-cart-line__card {
   display: grid;
-  grid-template-columns: 56px minmax(0, 1fr) auto;
+  grid-template-columns: 72px minmax(0, 1fr);
   gap: 12px;
   align-items: start;
-  padding: 12px 4px;
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(61, 34, 19, 0.08);
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(45, 26, 14, 0.04);
+}
+
+.lp-cart-panel__list {
+  gap: 10px;
 }
 
 .lp-cart-line__thumb {
-  width: 56px;
-  height: 56px;
+  width: 72px;
+  height: 72px;
   border-radius: 12px;
   background: linear-gradient(145deg, #faf6ef, #f0e8da);
   border: 1px solid rgba(185, 135, 47, 0.12);
@@ -140,11 +172,33 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  overflow: hidden;
+}
+
+.lp-cart-line__thumb-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .lp-cart-line__thumb-icon {
-  font-size: 1.35rem;
+  font-size: 1.5rem;
   line-height: 1;
+}
+
+.lp-cart-line__delivery {
+  margin: 6px 0 4px;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: #5b4a3d;
+}
+.lp-cart-line__delivery-row {
+  display: block;
+}
+.lp-cart-line__delivery-row--free {
+  color: #2d6a4f;
+  font-weight: 700;
 }
 
 .lp-cart-line__main {
@@ -166,8 +220,9 @@
   letter-spacing: 0.02em;
 }
 
+.lp-cart-line__badge--avail,
 .lp-cart-line__badge--product {
-  background: rgba(46, 125, 50, 0.1);
+  background: rgba(46, 125, 50, 0.12);
   color: #1b5e20;
 }
 
@@ -184,10 +239,18 @@
 .lp-cart-line__title {
   flex: 1;
   min-width: 0;
-  font-size: 0.92rem;
+  font-size: clamp(0.9rem, 2.8vw, 0.98rem);
   font-weight: 800;
-  line-height: 1.4;
+  line-height: 1.45;
   color: var(--brown);
+}
+
+.lp-cart-line__vendor {
+  margin: 4px 0 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--gold, #7a5a1f);
+  line-height: 1.4;
 }
 
 .lp-cart-line__meta {
@@ -201,31 +264,33 @@
   overflow: hidden;
 }
 
-.lp-cart-line__aside {
-  text-align: end;
-  flex-shrink: 0;
+.lp-cart-line__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.lp-cart-line__controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .lp-cart-line__price {
-  font-size: 0.95rem;
+  font-size: clamp(0.95rem, 3vw, 1.05rem);
   font-weight: 900;
-  color: var(--brown);
+  color: #c62828;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 
-.lp-cart-line__price small {
+.lp-cart-line__price .lp-cart-line__cur {
   font-size: 0.72rem;
   font-weight: 700;
-  color: var(--gold);
-}
-
-.lp-cart-line__actions {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-top: 10px;
-  flex-wrap: wrap;
+  color: var(--muted);
 }
 
 .lp-cart-line__qty {
@@ -238,8 +303,10 @@
 }
 
 .lp-cart-line__qty-btn {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
+  min-height: 44px;
+  min-width: 44px;
   padding: 0;
   border: none;
   background: rgba(248, 244, 238, 0.9);
@@ -272,9 +339,12 @@
 .lp-cart-line__remove {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 6px 10px;
-  min-height: auto;
+  justify-content: center;
+  gap: 0;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  min-height: 44px;
   font-family: inherit;
   font-size: 0.76rem;
   font-weight: 700;
@@ -307,6 +377,207 @@
   display: contents;
 }
 
+/* ——— Accordion: المنتجات + الملخص + الدفع ——— */
+.lp-cart-card--accordion {
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+  border: none;
+}
+
+.lp-cart-stack > .lp-cart-card--accordion {
+  margin-top: 8px;
+}
+
+.lp-cart-accordion {
+  margin: 0;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(61, 34, 19, 0.08);
+  background: rgba(255, 254, 251, 0.98);
+}
+
+.lp-cart-accordion > summary {
+  list-style: none;
+  cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.lp-cart-accordion > summary::-webkit-details-marker {
+  display: none;
+}
+
+.lp-cart-accordion__trigger {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 48px;
+  padding: 12px 14px;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.lp-cart-accordion__trigger--fin {
+  background: linear-gradient(135deg, #d4af37, #c9a227 40%, #7a5a1f);
+  color: #fffef8;
+  box-shadow: 0 4px 14px rgba(122, 90, 31, 0.22);
+}
+
+.lp-cart-accordion__trigger--green {
+  background: linear-gradient(135deg, #66bb6a, #43a047 45%, #2e7d32);
+  color: #fffef8;
+  box-shadow: 0 4px 14px rgba(46, 125, 50, 0.28);
+}
+
+.lp-cart-accordion__trigger--items {
+  background: #fff;
+  color: var(--brown, #3d2213);
+  box-shadow: none;
+  border-bottom: 1px solid rgba(61, 34, 19, 0.06);
+}
+
+.lp-cart-accordion--items:not([open]) .lp-cart-accordion__label,
+.lp-cart-accordion--items:not([open]) .lp-cart-accordion__icon {
+  display: none;
+}
+
+.lp-cart-accordion--items:not([open]) .lp-cart-accordion__meta {
+  flex: 1;
+  max-width: none;
+  text-align: right;
+  font-size: clamp(0.85rem, 2.6vw, 0.92rem);
+  opacity: 1;
+}
+
+.lp-cart-accordion--fin:not([open]) .lp-cart-accordion__label,
+.lp-cart-accordion--fin:not([open]) .lp-cart-accordion__icon {
+  display: none;
+}
+
+.lp-cart-accordion--fin:not([open]) .lp-cart-accordion__meta {
+  flex: 1;
+  max-width: none;
+  text-align: right;
+  font-size: clamp(0.85rem, 2.6vw, 0.92rem);
+  opacity: 1;
+}
+
+.lp-cart-accordion--pay:not([open]) .lp-cart-accordion__label {
+  display: none;
+}
+
+.lp-cart-accordion--pay:not([open]) .lp-cart-accordion__meta {
+  flex: 1;
+  max-width: none;
+  text-align: right;
+  font-size: clamp(0.85rem, 2.6vw, 0.92rem);
+  opacity: 1;
+}
+
+.lp-cart-accordion[open] > summary .lp-cart-accordion__meta {
+  display: none;
+}
+
+.lp-cart-accordion__icon {
+  font-size: 1.05rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.lp-cart-accordion__label {
+  font-size: clamp(0.88rem, 2.8vw, 0.96rem);
+  font-weight: 900;
+  flex: 1 1 auto;
+  text-align: right;
+  line-height: 1.45;
+}
+
+.lp-cart-accordion__meta {
+  font-size: clamp(0.72rem, 2.4vw, 0.78rem);
+  font-weight: 700;
+  opacity: 0.94;
+  white-space: nowrap;
+  max-width: 42%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.lp-cart-accordion__chev {
+  width: 9px;
+  height: 9px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg);
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+  margin-inline-start: 2px;
+  margin-bottom: 3px;
+}
+
+.lp-cart-accordion[open] > summary .lp-cart-accordion__chev {
+  transform: rotate(-135deg);
+  margin-bottom: 0;
+}
+
+.lp-cart-accordion__panel {
+  padding: 12px 14px 18px;
+  border-top: 1px solid rgba(61, 34, 19, 0.06);
+  min-height: 150px;
+  max-height: min(44vh, 300px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+.lp-cart-accordion--pay .lp-cart-accordion__panel {
+  min-height: 170px;
+  max-height: min(50vh, 340px);
+}
+
+.lp-cart-accordion--fin .lp-cart-accordion__panel.lp-cart-card__body {
+  padding: 12px 14px 18px;
+}
+
+.lp-cart-accordion--pay .lp-cart-accordion__panel.lp-cart-card__body--pay-methods {
+  padding: 12px 14px 18px;
+}
+
+.lp-cart-accordion--items .lp-cart-accordion__panel.lp-cart-card__body--items {
+  padding: 8px 12px 14px;
+  min-height: 180px;
+  max-height: min(52vh, 380px);
+}
+
+/* ——— إتمام الطلب (ثابت) ——— */
+.lp-cart-card--checkout-sticky {
+  padding: 0;
+  border-radius: 12px;
+  overflow: hidden;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+}
+
+.lp-cart-card--checkout-sticky .lp-cart-card__body--checkout {
+  padding: 4px 0 max(10px, env(safe-area-inset-bottom, 0px));
+  background: transparent;
+}
+
+.lp-cart-card--checkout-sticky .lp-cart-panel__checkout {
+  min-height: 48px;
+  background: linear-gradient(135deg, #c9a227, #b9872f 45%, #7a5a1f);
+  color: #fffef8;
+  box-shadow: 0 8px 24px rgba(122, 90, 31, 0.28);
+}
+
+.lp-cart-card--checkout-sticky .lp-cart-trust {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: none;
+}
+
 /* ——— Summary ——— */
 .lp-cart-card--fin .lp-cart-panel__fin-row {
   padding: 6px 0;
@@ -322,7 +593,7 @@
 .lp-cart-card--fin .lp-cart-panel__fin-row--grand .lp-cart-panel__fin-val {
   font-size: 1.2rem;
   font-weight: 900;
-  color: #5c3710;
+  color: #c62828;
 }
 
 /* ——— Checkout CTA ——— */
@@ -372,14 +643,15 @@
 }
 
 /* ——— Empty state (منبثقة + صفحة) ——— */
-.lp-cart-panel--empty .lp-cart-card--items .lp-cart-card__body--items {
+.lp-cart-panel--empty:not(.lp-cart-panel--page) .lp-cart-card--items .lp-cart-card__body--items {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   text-align: center;
-  min-height: min(220px, 42vh);
+  min-height: 180px;
   padding: 20px 16px 24px;
+  overflow: visible;
 }
 
 .lp-cart-panel__empty {
@@ -447,18 +719,77 @@
 }
 
 #lpCartWrap.lp-cart-wrap--portaled .lp-cart-panel--empty .lp-cart-card--items .lp-cart-card__body--items {
-  min-height: min(200px, 38vh);
+  min-height: 180px;
 }
 
-.lp-cart-card--pay .lp-cart-card__body--pay {
-  padding-top: 12px;
-  padding-bottom: 14px;
+/* ——— بطاقة وسائل الدفع (مستقلة) ——— */
+.lp-cart-card--pay-methods .lp-cart-card__body--pay-methods {
+  padding: 10px 12px 12px;
+}
+
+.lp-cart-card--pay-methods .erv-pay-cards--cart {
+  gap: 6px;
+  margin: 0;
+}
+
+.lp-cart-card--pay-methods .erv-pay-cards__row--5 {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 5px;
+}
+
+.lp-cart-card--pay-methods .erv-pay-cards__row--3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 5px;
+}
+
+.lp-cart-card--pay-methods .erv-pay-card {
+  padding: 5px 3px 4px;
+  gap: 2px;
+  border-radius: 10px;
+  min-height: 44px;
+}
+
+.lp-cart-card--pay-methods .erv-pay-card:hover {
+  transform: none;
+  box-shadow: var(--pay-card-sh);
+}
+
+.lp-cart-card--pay-methods .erv-pay-card__icon-wrap {
+  min-height: 20px;
+}
+
+.lp-cart-card--pay-methods .erv-pay-card__icon {
+  height: 14px;
+  max-height: 14px;
+  max-width: 36px;
+  border-radius: 4px;
+}
+
+.lp-cart-card--pay-methods .erv-pay-card__title,
+.lp-cart-card--pay-methods .erv-pay-card__hint {
+  display: none;
+}
+
+@media (max-width: 520px) {
+  .lp-cart-card--pay-methods .erv-pay-cards__row--5 {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 360px) {
+  .lp-cart-card--pay-methods .erv-pay-cards__row--5 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.lp-cart-card--pay-methods .erv-ew-pay-card {
+  margin-top: 8px;
 }
 
 /* ——— Portaled sizing ——— */
 #lpCartWrap.lp-cart-wrap--portaled .lp-cart-panel,
 #lpCartWrap.lp-cart-wrap--portaled .lp-cart-panel.lp-cart-panel--open {
-  width: min(520px, calc(100% - 20px));
+  width: min(600px, calc(100vw - 16px));
 }
 
 @media (max-width: 480px) {
@@ -519,13 +850,152 @@ body.cart-page-is-empty .cart-page-hero__count {
   color: var(--gold, #b9872f);
 }
 
-/* ——— ERVENOW PAY — بطاقة الرصيد في السلة ——— */
+/* ——— ERVENOW PAY — بطاقة الرصيد في السلة (مدمج ~50%) ——— */
 .lp-cart-pay-section__title {
-  margin: 0 0 10px;
-  font-size: 0.92rem;
+  margin: 0 0 3px;
+  font-size: 0.65rem;
   font-weight: 900;
   color: #3d2213;
-  line-height: 1.45;
+  line-height: 1.3;
+}
+
+/* وسائل الدفع luxe (إن وُجدت داخل البطاقة) */
+.lp-cart-card--pay-methods .erv-pay-luxe--cart,
+.lp-cart-pay-section .erv-pay-luxe--cart,
+.lp-cart-pay-section .erv-pay-luxe--inline {
+  border-radius: 8px;
+  padding: 0;
+  box-shadow: 0 2px 8px rgba(45, 26, 14, 0.06);
+}
+
+.lp-cart-pay-section .erv-pay-luxe__shell,
+.erv-pay-luxe--cart .erv-pay-luxe__shell {
+  border-radius: 7px;
+}
+
+.lp-cart-pay-section .erv-pay-luxe__head,
+.lp-cart-pay-section .erv-pay-luxe__pick-label,
+.lp-cart-pay-section .erv-pay-luxe__foot,
+.erv-pay-luxe--cart .erv-pay-luxe__head,
+.erv-pay-luxe--cart .erv-pay-luxe__pick-label,
+.erv-pay-luxe--cart .erv-pay-luxe__foot {
+  display: none;
+}
+
+.lp-cart-pay-section .erv-pay-luxe__body,
+.erv-pay-luxe--cart .erv-pay-luxe__body {
+  padding: 3px 4px 4px;
+}
+
+.lp-cart-pay-section .erv-pay-luxe__panel--inline,
+.erv-pay-luxe--cart .erv-pay-luxe__panel--inline {
+  margin: 0;
+  padding: 2px;
+  border-radius: 6px;
+}
+
+.lp-cart-pay-section .erv-pay-luxe__group,
+.erv-pay-luxe--cart .erv-pay-luxe__group {
+  margin-bottom: 2px;
+}
+
+.lp-cart-pay-section .erv-pay-luxe__group-label,
+.erv-pay-luxe--cart .erv-pay-luxe__group-label {
+  margin: 1px 4px 2px;
+  font-size: 0.5rem;
+  letter-spacing: 0.06em;
+}
+
+.lp-cart-pay-section .erv-pay-luxe__opt,
+.erv-pay-luxe--cart .erv-pay-luxe__opt {
+  gap: 4px;
+  padding: 3px 4px;
+  margin-bottom: 2px;
+  border-radius: 6px;
+  min-height: 32px;
+}
+
+.lp-cart-pay-section .erv-pay-luxe__opt:hover,
+.erv-pay-luxe--cart .erv-pay-luxe__opt:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.lp-cart-pay-section .erv-pay-luxe__opt-icon,
+.erv-pay-luxe--cart .erv-pay-luxe__opt-icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 5px;
+}
+
+.lp-cart-pay-section .erv-pay-luxe__opt-icon img,
+.erv-pay-luxe--cart .erv-pay-luxe__opt-icon img {
+  height: 10px;
+  max-width: 16px;
+}
+
+.lp-cart-pay-section .erv-pay-luxe__opt-title,
+.erv-pay-luxe--cart .erv-pay-luxe__opt-title {
+  font-size: 0.65rem;
+  line-height: 1.2;
+}
+
+.lp-cart-pay-section .erv-pay-luxe__opt-hint,
+.erv-pay-luxe--cart .erv-pay-luxe__opt-hint {
+  display: none;
+}
+
+.lp-cart-pay-section .erv-pay-luxe__opt-check,
+.erv-pay-luxe--cart .erv-pay-luxe__opt-check {
+  width: 12px;
+  height: 12px;
+  border-width: 1.5px;
+}
+
+.lp-cart-pay-section .erv-pay-luxe__opt--selected .erv-pay-luxe__opt-check::after,
+.erv-pay-luxe--cart .erv-pay-luxe__opt--selected .erv-pay-luxe__opt-check::after {
+  left: 3px;
+  top: 0;
+  width: 3px;
+  height: 6px;
+}
+
+.lp-cart-pay-section .erv-ew-pay-card,
+.lp-cart-card--pay-methods .erv-ew-pay-card {
+  margin-top: 4px;
+  padding: 5px 6px;
+  border-radius: 8px;
+}
+
+.lp-cart-pay-section .erv-ew-pay-card__rows,
+.lp-cart-card--pay-methods .erv-ew-pay-card__rows {
+  gap: 4px;
+}
+
+.lp-cart-pay-section .erv-ew-pay-card__row,
+.lp-cart-card--pay-methods .erv-ew-pay-card__row {
+  font-size: 0.65rem;
+  gap: 6px;
+}
+
+.lp-cart-pay-section .erv-ew-pay-card__val,
+.lp-cart-card--pay-methods .erv-ew-pay-card__val {
+  font-size: 0.72rem;
+}
+
+.lp-cart-pay-section .erv-ew-pay-card__warn,
+.lp-cart-card--pay-methods .erv-ew-pay-card__warn {
+  margin-top: 4px;
+  font-size: 0.65rem;
+}
+
+.lp-cart-pay-section .erv-ew-pay-card__topup,
+.lp-cart-card--pay-methods .erv-ew-pay-card__topup {
+  min-height: 36px;
+  margin-top: 4px;
+  padding: 5px 8px;
+  font-size: 0.72rem;
+  border-radius: 8px;
 }
 
 .erv-ew-pay-card {

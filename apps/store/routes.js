@@ -1,10 +1,13 @@
 const express = require("express");
-const { optionalAuth, requireAuth } = require("../../shared/middleware/auth");
+const { optionalAuth, requireAuth, requireStoreRole } = require("../../shared/middleware/auth");
 const { createServiceClient } = require("../../shared/config/supabase");
 const { ok, fail } = require("../../shared/utils/helpers");
 const { normalizePhone } = require("../../shared/utils/phone");
 const { roughDistanceKm } = require("../../shared/utils/geo");
 const { routeKmWithRoughFallback, deliveryEtaMinutesFromKm } = require("../../shared/utils/routeDistance");
+const { isDeliveryEnginePolicyEnabled } = require("../../shared/utils/deliveryEngineFlags");
+const { publicDeliveryPolicyLabels, storePolicyRowToConfig } = require("../../shared/services/deliveryPolicyEngine");
+const { deliveryEngineRouter } = require("./deliveryEngineRoutes");
 const { cacheGetJson, cacheSetJson } = require("../../shared/utils/redisCache");
 const { parseOptionalPayoutPayload, payoutRowForDriversOrStores } = require("../../shared/utils/payoutFields");
 const { sanitizeDriverOrStoreRowForApi } = require("../../shared/utils/bankApiSafe");
@@ -19,6 +22,7 @@ const {
   restaurantCategoryLabelAr,
   restaurantCategoryDisplayAr,
   restaurantRowMatchesCuisineFilter,
+  storeRowCountsAsRestaurant,
 } = require("../../shared/restaurantCategories");
 const {
   isMarketStoreType,
@@ -46,6 +50,10 @@ const {
 const { incrementCategoryUsage } = require("../../shared/categoryUsage");
 const checkoutPaymentMethods = require("../../shared/utils/checkoutPaymentMethods");
 const { getStoreWalletPayloadWithFallback } = require("../../shared/utils/ledgerWallet");
+const {
+  uploadToStoreBucket,
+  resolveStoreImageUrl,
+} = require("../../shared/utils/storeFileUpload");
 
 let twilioFactory = null;
 try {
@@ -97,53 +105,32 @@ function waFrom() {
   return n;
 }
 
-function parseBase64File(s) {
-  if (!s || typeof s !== "string") return null;
-  const m = s.match(/^data:([^;]+);base64,(.+)$/s);
-  if (m) {
-    try {
-      return { mime: m[1].trim() || "image/jpeg", buffer: Buffer.from(m[2], "base64") };
-    } catch {
-      return null;
-    }
-  }
-  try {
-    return { mime: "application/octet-stream", buffer: Buffer.from(s, "base64") };
-  } catch {
-    return null;
-  }
-}
-
-function safeFilePart(name) {
-  const n = String(name || "upload").replace(/[^a-zA-Z0-9._-]/g, "_").slice(0, 80);
-  return n || "upload";
-}
-
-function storeFilesBucket() {
-  return String(
-    process.env.ERVENOW_STORE_FILES_BUCKET || process.env.ERWENOW_STORE_FILES_BUCKET || "erwenow-store-registrations"
-  ).trim();
-}
-
-async function uploadToStoreBucket(sb, storeId, subfolder, base64, originalName) {
-  const bucket = storeFilesBucket();
-  const parsed = parseBase64File(base64);
-  if (!parsed || !parsed.buffer.length) return null;
-  const ext = parsed.mime.includes("png") ? "png" : parsed.mime.includes("webp") ? "webp" : "jpg";
-  const objectPath = `${storeId}/${subfolder}/${Date.now()}_${safeFilePart(originalName)}.${ext}`;
-  const { error: upErr } = await sb.storage.from(bucket).upload(objectPath, parsed.buffer, {
-    contentType: parsed.mime,
-    upsert: false,
-  });
-  if (upErr) {
-    console.error("[store/storage] upload:", upErr.message || upErr);
-    return null;
-  }
-  const { data: pub } = sb.storage.from(bucket).getPublicUrl(objectPath);
-  return pub && pub.publicUrl ? pub.publicUrl : null;
-}
-
 const MAX_PRODUCT_IMAGES = 6;
+
+async function upsertStoreMerchantHubBranding(sb, storeId, { banner_url, bio }) {
+  if (!storeId) return;
+  const merged = {
+    store_id: storeId,
+    updated_at: new Date().toISOString(),
+  };
+  if (banner_url) merged.banner_url = banner_url;
+  if (bio !== undefined) merged.bio = bio;
+  const { error } = await sb.from("store_merchant_hub").upsert(merged, { onConflict: "store_id" });
+  if (error && !isStoreMerchantHubMissing(error)) {
+    console.warn("[store/hub] upsert branding:", error.message || error);
+  }
+}
+
+async function attachPublicBranding(sb, storePayload, row, hubPublic) {
+  const logo_url = row && row.logo_url ? await resolveStoreImageUrl(sb, row.logo_url) : null;
+  const banner_url = hubPublic && hubPublic.banner_url ? await resolveStoreImageUrl(sb, hubPublic.banner_url) : null;
+  return {
+    ...storePayload,
+    logo_url,
+    banner_url,
+    bio: hubPublic && hubPublic.bio != null ? hubPublic.bio : null,
+  };
+}
 
 async function uploadProductImagesFromBody(sb, storeId, body) {
   const urls = [];
@@ -292,30 +279,38 @@ function sortStoresForBrowse(rows, sortMode) {
   return copy;
 }
 
-/** مسافة العميل من المتجر → فلترة بنطاق التوصيل → ترتيب: مسافة ثم تقييم ثم طلبات */
+/** مسافة العميل من المتجر → ترتيب بالقرب (لا نخفي المتاجر خارج نطاق التوصيل في قوائم التصفح) */
 function filterAndSortStoresByUser(rows, userLat, userLng) {
-  const withDist = rows
-    .filter((r) => r.lat != null && r.lng != null && Number.isFinite(Number(r.lat)) && Number.isFinite(Number(r.lng)))
-    .map((r) => {
-      const km = roughDistanceKm(userLat, userLng, Number(r.lat), Number(r.lng));
-      return { ...r, distance_km: Number.isFinite(km) ? Math.round(km * 100) / 100 : null };
-    })
-    .filter((r) => {
-      if (r.distance_km == null || !Number.isFinite(r.distance_km)) return false;
-      const radius = Number(r.delivery_radius_km) > 0 ? Number(r.delivery_radius_km) : 5;
-      return r.distance_km <= radius;
+  const withCoords = [];
+  const noCoords = [];
+  (rows || []).forEach((r) => {
+    const has =
+      r.lat != null && r.lng != null && Number.isFinite(Number(r.lat)) && Number.isFinite(Number(r.lng));
+    if (!has) {
+      noCoords.push({ ...r, distance_km: null, within_delivery_radius: null });
+      return;
+    }
+    const km = roughDistanceKm(userLat, userLng, Number(r.lat), Number(r.lng));
+    const distance_km = Number.isFinite(km) ? Math.round(km * 100) / 100 : null;
+    const radius = Number(r.delivery_radius_km) > 0 ? Number(r.delivery_radius_km) : 5;
+    withCoords.push({
+      ...r,
+      distance_km,
+      within_delivery_radius:
+        distance_km != null && Number.isFinite(distance_km) ? distance_km <= radius : null,
     });
-  withDist.sort((a, b) => {
+  });
+  withCoords.sort((a, b) => {
     const da = Number(a.distance_km);
     const db = Number(b.distance_km);
-    if (da !== db) return da - db;
+    if (Number.isFinite(da) && Number.isFinite(db) && da !== db) return da - db;
+    if (Number.isFinite(da) && !Number.isFinite(db)) return -1;
+    if (!Number.isFinite(da) && Number.isFinite(db)) return 1;
     const o = (Number(b.total_orders) || 0) - (Number(a.total_orders) || 0);
     if (o !== 0) return o;
-    const ra = Number(b.average_rating) || 0;
-    const rb = Number(a.average_rating) || 0;
-    return ra - rb;
+    return (Number(b.average_rating) || 0) - (Number(a.average_rating) || 0);
   });
-  return withDist;
+  return withCoords.concat(noCoords);
 }
 
 function categoryLabelForStoreRow(row, labelOpts) {
@@ -345,13 +340,19 @@ function maskStoreRowForGuest(row, index, labelOpts) {
   const num = 1000 + (h % 9000);
   const catRaw = row.category != null ? String(row.category).trim() : "";
   const cuisine = categoryLabelForStoreRow(row, labelOpts);
+  const displayName = row.name != null ? String(row.name).trim() : "";
   return {
     masked: true,
-    label: `محل مشارك — ${num}`,
+    name: displayName || null,
+    label: displayName || `محل مشارك — ${num}`,
     promo: GUEST_PROMOS[h % GUEST_PROMOS.length],
     type: row.type || null,
     category: catRaw || row.type || null,
     category_label_ar: cuisine || TYPE_LABEL_AR[row.type] || null,
+    logo_url: row.logo_url || null,
+    average_rating: Number(row.average_rating) || 0,
+    rating_count: Number(row.rating_count) || 0,
+    total_orders: Number(row.total_orders) || 0,
     ...(storeSupportsProductCategoryBrowse(row.type) ? { supports_product_categories: true } : {}),
   };
 }
@@ -383,13 +384,23 @@ function publicStoreRow(row, labelOpts) {
     o.distance_km = Number(row.distance_km);
   }
   if (storeSupportsProductCategoryBrowse(row.type)) o.supports_product_categories = true;
+  if (isDeliveryEnginePolicyEnabled()) {
+    o.delivery_engine = publicDeliveryPolicyLabels(storePolicyRowToConfig(row));
+  }
   return o;
 }
 
-function requireMerchantRole(req, res, next) {
-  const r = String(req.appUser?.role || "").toLowerCase();
-  if (["merchant", "restaurant", "admin"].includes(r)) return next();
-  return fail(res, "يتطلب حساب تاجر مرتبط بالمتجر", 403);
+async function resolveMerchantStoreByPhone(sb, appUser) {
+  const digits = normalizePhone(appUser.phone);
+  const { data: row, error } = await sb
+    .from("stores")
+    .select("*")
+    .eq("phone", digits)
+    .eq("status", "approved")
+    .maybeSingle();
+  if (error) return { error: error.message || "خطأ قاعدة البيانات" };
+  if (!row) return { error: "لا يوجد متجر معتمد مرتبط بجوالك" };
+  return { store: row };
 }
 
 async function loadApprovedStore(sb, storeId) {
@@ -447,7 +458,7 @@ async function recalcStoreRating(sb, storeId) {
 
 const router = express.Router();
 
-router.get("/my-store", requireAuth, requireMerchantRole, async (req, res) => {
+router.get("/my-store", requireAuth, requireStoreRole, async (req, res) => {
   try {
     const sb = createServiceClient();
     if (!sb) return fail(res, "الخادم غير مهيأ لقاعدة البيانات", 503);
@@ -483,10 +494,15 @@ router.get("/my-store", requireAuth, requireMerchantRole, async (req, res) => {
       hubRes = await sb.from("store_merchant_hub").select("bio,banner_url,updated_at").eq("store_id", row.id).maybeSingle();
     }
     if (!hubRes.error && hubRes.data) {
-      merchant_hub = hubRes.data;
+      merchant_hub = {
+        ...hubRes.data,
+        banner_url: hubRes.data.banner_url ? await resolveStoreImageUrl(sb, hubRes.data.banner_url) : null,
+      };
     } else if (hubRes.error && !isStoreMerchantHubMissing(hubRes.error)) {
       console.warn("[store/my-store] merchant_hub", hubRes.error.message || hubRes.error);
     }
+
+    if (base.logo_url) base.logo_url = await resolveStoreImageUrl(sb, base.logo_url);
 
     return ok(res, {
       store: {
@@ -539,8 +555,8 @@ router.get("/", optionalAuth, async (req, res) => {
         "sweets",
         "flowers_gifts",
       ];
-      const cacheKey = `storelist-all:${sortParam}|${mask ? "g" : "u"}|${geoKey}|c:${categoryFilter || "none"}|t:${listTypeRaw || "all"}`;
-      const redisListKey = `storelist:v1:${cacheKey}`;
+      const cacheKey = `storelist-all:v2:${sortParam}|${mask ? "g" : "u"}|${geoKey}|c:${categoryFilter || "none"}|t:${listTypeRaw || "all"}`;
+      const redisListKey = `storelist:v2:${cacheKey}`;
       const redisHit = await cacheGetJson(redisListKey);
       if (redisHit && redisHit.stores) {
         res.set("Cache-Control", "public, max-age=30");
@@ -558,7 +574,9 @@ router.get("/", optionalAuth, async (req, res) => {
       let errAll = null;
       let qList = sb.from("stores").select(extendedSelAll).eq("status", "approved");
       if (categoryFilter) {
-        qList = qList.eq("type", "restaurant").eq("category", categoryFilter);
+        qList = qList.eq("status", "approved");
+      } else if (listTypeRaw === "restaurant") {
+        /* يُصفّى لاحقاً — يشمل type=restaurant وتصنيف مطبخ (مثل كبسة) حتى لو type قديم */
       } else if (listTypeRaw === "market") {
         qList = qList.in("type", marketTypesList);
       } else if (listTypeRaw === "service") {
@@ -570,7 +588,8 @@ router.get("/", optionalAuth, async (req, res) => {
       if (errAll && /column|does not exist|schema cache/i.test(String(errAll.message || ""))) {
         let qMin = sb.from("stores").select(baseSelAll).eq("status", "approved");
         if (categoryFilter) {
-          qMin = qMin.eq("type", "restaurant").eq("category", categoryFilter);
+          /* يُصفّى في الذاكرة */
+        } else if (listTypeRaw === "restaurant") {
         } else if (listTypeRaw === "market") {
           qMin = qMin.in("type", marketTypesList);
         } else if (listTypeRaw === "service") {
@@ -585,8 +604,13 @@ router.get("/", optionalAuth, async (req, res) => {
         return fail(res, errAll.message, 400);
       }
       let rows = (rowsAll || []).filter((r) => storeRowIsListedActive(r));
+      if (listTypeRaw === "restaurant" && !categoryFilter) {
+        rows = rows.filter((r) => storeRowCountsAsRestaurant(r));
+      }
       if (categoryFilter) {
-        rows = rows.filter((r) => restaurantRowMatchesCuisineFilter(r, categoryFilter, mergedRestaurant));
+        rows = rows.filter(
+          (r) => storeRowCountsAsRestaurant(r) && restaurantRowMatchesCuisineFilter(r, categoryFilter, mergedRestaurant)
+        );
       }
       if (userPos) {
         rows = filterAndSortStoresByUser(rows, userPos.lat, userPos.lng);
@@ -646,8 +670,8 @@ router.get("/", optionalAuth, async (req, res) => {
 
     const mask = !req.appUser;
     const geoKey = userPos ? `${userPos.lat.toFixed(4)}:${userPos.lng.toFixed(4)}` : "nogeo";
-    const cacheKey = `${browseType}|${sortParam}|${mask ? "g" : "u"}|${geoKey}`;
-    const redisListKey = `storelist:v1:${cacheKey}`;
+    const cacheKey = `${browseType}|v2|${sortParam}|${mask ? "g" : "u"}|${geoKey}`;
+    const redisListKey = `storelist:v2:${cacheKey}`;
     const redisHit = await cacheGetJson(redisListKey);
     if (redisHit && redisHit.stores) {
       res.set("Cache-Control", "public, max-age=30");
@@ -728,8 +752,11 @@ router.get("/", optionalAuth, async (req, res) => {
     const stores = rows.map((row, i) => {
       if (mask) {
         const m = maskStoreRowForGuest(row, i, labelOpts2);
+        m.id = row.id;
+        m.category = row.category || row.type || null;
         if (userPos && row.distance_km != null && Number.isFinite(Number(row.distance_km))) {
           m.distance_km = Number(row.distance_km);
+          if (row.within_delivery_radius != null) m.within_delivery_radius = row.within_delivery_radius;
         }
         return m;
       }
@@ -823,15 +850,18 @@ async function getPublicStoreById(req, res) {
       console.warn("[store/public] product count:", pc.error.message);
     }
 
-    const hubPublic = mask ? { banner_url: null, bio: null } : await fetchMerchantHubPublic(sb, id);
+    const hubPublic = await fetchMerchantHubPublic(sb, id);
 
     if (!mask) {
-      const out = {
-        ...publicStoreRow(row),
-        product_count: productCount,
-        banner_url: hubPublic.banner_url,
-        bio: hubPublic.bio,
-      };
+      const out = await attachPublicBranding(
+        sb,
+        {
+          ...publicStoreRow(row),
+          product_count: productCount,
+        },
+        row,
+        hubPublic
+      );
       if (Number.isFinite(qLat) && Number.isFinite(qLng) && row.lat != null && row.lng != null) {
         const slat = Number(row.lat);
         const slng = Number(row.lng);
@@ -852,7 +882,13 @@ async function getPublicStoreById(req, res) {
     }
 
     const fake = maskStoreRowForGuest(row, 0, rowLabelOpts);
-    const maskedPayload = { store: { ...fake, id: row.id, product_count: productCount }, browse_masked: true };
+    const maskedStore = await attachPublicBranding(
+      sb,
+      { ...fake, id: row.id, product_count: productCount },
+      row,
+      hubPublic
+    );
+    const maskedPayload = { store: maskedStore, browse_masked: true };
     if (Number.isFinite(qLat) && Number.isFinite(qLng) && row.lat != null && row.lng != null) {
       const slat = Number(row.lat);
       const slng = Number(row.lng);
@@ -1014,7 +1050,7 @@ router.get("/products", optionalAuth, async (req, res) => {
   }
 });
 
-router.post("/products", requireAuth, requireMerchantRole, async (req, res) => {
+router.post("/products", requireAuth, requireStoreRole, async (req, res) => {
   try {
     const sb = createServiceClient();
     if (!sb) return fail(res, "الخادم غير مهيأ لقاعدة البيانات", 503);
@@ -1076,17 +1112,19 @@ router.post("/products", requireAuth, requireMerchantRole, async (req, res) => {
       sort_order: Number.isFinite(sortOrder) ? sortOrder : 0,
       updated_at: new Date().toISOString(),
     };
+    if (req.body?.includes_delivery != null) row.includes_delivery = !!req.body.includes_delivery;
 
     let { data, error } = await sb.from("store_products").insert(row).select("*").single();
     if (
       error &&
-      /category|stock|rating|image_urls|column .* does not exist|schema cache/i.test(String(error.message || ""))
+      /category|stock|rating|image_urls|includes_delivery|column .* does not exist|schema cache/i.test(String(error.message || ""))
     ) {
       const rowMin = { ...row };
       delete rowMin.category;
       delete rowMin.stock;
       delete rowMin.rating;
       delete rowMin.image_urls;
+      delete rowMin.includes_delivery;
       ({ data, error } = await sb.from("store_products").insert(rowMin).select("*").single());
     }
     if (error) {
@@ -1102,7 +1140,7 @@ router.post("/products", requireAuth, requireMerchantRole, async (req, res) => {
   }
 });
 
-router.put("/products/:id", requireAuth, requireMerchantRole, async (req, res) => {
+router.put("/products/:id", requireAuth, requireStoreRole, async (req, res) => {
   try {
     const sb = createServiceClient();
     if (!sb) return fail(res, "الخادم غير مهيأ لقاعدة البيانات", 503);
@@ -1136,6 +1174,7 @@ router.put("/products/:id", requireAuth, requireMerchantRole, async (req, res) =
       if (Number.isFinite(s)) patch.sort_order = s;
     }
     if (req.body?.active != null) patch.active = !!req.body.active;
+    if (req.body?.includes_delivery != null) patch.includes_delivery = !!req.body.includes_delivery;
     const catalogType = productCatalogTypeForStoreType(own.store.type);
     if (req.body?.category !== undefined) {
       if (req.body.category === null || req.body.category === "") {
@@ -1222,13 +1261,14 @@ router.put("/products/:id", requireAuth, requireMerchantRole, async (req, res) =
     let { data, error } = await sb.from("store_products").update(patch).eq("id", productId).select("*").single();
     if (
       error &&
-      /category|stock|rating|image_urls|column .* does not exist|schema cache/i.test(String(error.message || ""))
+      /category|stock|rating|image_urls|includes_delivery|column .* does not exist|schema cache/i.test(String(error.message || ""))
     ) {
       const patchMin = { ...patch };
       delete patchMin.category;
       delete patchMin.stock;
       delete patchMin.rating;
       delete patchMin.image_urls;
+      delete patchMin.includes_delivery;
       ({ data, error } = await sb.from("store_products").update(patchMin).eq("id", productId).select("*").single());
     }
     if (error) return fail(res, error.message, 400);
@@ -1248,7 +1288,7 @@ router.put("/products/:id", requireAuth, requireMerchantRole, async (req, res) =
   }
 });
 
-router.delete("/products/:id", requireAuth, requireMerchantRole, async (req, res) => {
+router.delete("/products/:id", requireAuth, requireStoreRole, async (req, res) => {
   try {
     const sb = createServiceClient();
     if (!sb) return fail(res, "الخادم غير مهيأ لقاعدة البيانات", 503);
@@ -1280,6 +1320,7 @@ router.post("/reviews", requireAuth, async (req, res) => {
     if (!["customer", "user", "admin"].includes(role)) {
       return fail(res, "التقييم متاح لعملاء المنصة فقط", 403);
     }
+    /* store / merchant / restaurant — Store Account بدون تقييم كعميل */
 
     const storeId = String(req.body?.store_id || "").trim();
     const rating = Number(req.body?.rating);
@@ -1543,13 +1584,31 @@ router.post("/register", async (req, res) => {
       if (fileUrl) await sb.from("stores").update({ file_url: fileUrl }).eq("id", requestId);
     }
 
+    let logoUploaded = false;
+    let bannerUploaded = false;
     if (b.logoFileBase64) {
       const logoUrl = await uploadToStoreBucket(sb, requestId, "logo", b.logoFileBase64, b.logoFileName || "logo.jpg");
       if (logoUrl) {
+        logoUploaded = true;
         const up = await sb.from("stores").update({ logo_url: logoUrl }).eq("id", requestId);
         if (up.error && /logo_url|column/i.test(String(up.error.message || ""))) {
           console.warn("[store/register] logo_url column missing — migration_store_marketplace.sql");
+          logoUploaded = false;
         }
+      }
+    }
+    const bannerB64 = b.bannerFileBase64 || b.coverFileBase64;
+    if (bannerB64 && String(bannerB64).length > 40) {
+      const bannerUrl = await uploadToStoreBucket(
+        sb,
+        requestId,
+        "banner",
+        bannerB64,
+        b.bannerFileName || b.coverFileName || "banner.jpg"
+      );
+      if (bannerUrl) {
+        bannerUploaded = true;
+        await upsertStoreMerchantHubBranding(sb, requestId, { banner_url: bannerUrl });
       }
     }
 
@@ -1593,6 +1652,8 @@ router.post("/register", async (req, res) => {
       id: requestId,
       status: "pending",
       is_active: false,
+      logo_uploaded: logoUploaded,
+      banner_uploaded: bannerUploaded,
       headline: "تم تسجيل المتجر",
       subline: "بانتظار الموافقة",
       message: "✅ تم تسجيل المتجر\n⏳ بانتظار الموافقة",
@@ -1617,7 +1678,7 @@ function isStoreMerchantHubMissing(err) {
   return /store_merchant_hub|schema cache|relation .*store_merchant_hub/i.test(msg);
 }
 
-router.get("/wallet", requireAuth, requireMerchantRole, async (req, res) => {
+router.get("/wallet", requireAuth, requireStoreRole, async (req, res) => {
   try {
     const sb = createServiceClient();
     if (!sb) return fail(res, "الخادم غير مهيأ لقاعدة البيانات", 503);
@@ -1639,7 +1700,7 @@ router.get("/wallet", requireAuth, requireMerchantRole, async (req, res) => {
   }
 });
 
-router.get("/merchant-dashboard", requireAuth, requireMerchantRole, async (req, res) => {
+router.get("/merchant-dashboard", requireAuth, requireStoreRole, async (req, res) => {
   try {
     const sb = createServiceClient();
     if (!sb) return fail(res, "الخادم غير مهيأ لقاعدة البيانات", 503);
@@ -1737,7 +1798,7 @@ router.get("/merchant-dashboard", requireAuth, requireMerchantRole, async (req, 
   }
 });
 
-router.patch("/merchant-hub", requireAuth, requireMerchantRole, async (req, res) => {
+router.patch("/merchant-hub", requireAuth, requireStoreRole, async (req, res) => {
   try {
     const sb = createServiceClient();
     if (!sb) return fail(res, "الخادم غير مهيأ لقاعدة البيانات", 503);
@@ -1832,7 +1893,9 @@ router.patch("/merchant-hub", requireAuth, requireMerchantRole, async (req, res)
         return fail(res, upErr2.message, 400);
       }
       listCache = { key: "", at: 0, payload: null };
-      return ok(res, { ok: true, merchant_hub: saved2 || merged });
+      const hubOut2 = saved2 || merged;
+      if (hubOut2 && hubOut2.banner_url) hubOut2.banner_url = await resolveStoreImageUrl(sb, hubOut2.banner_url);
+      return ok(res, { ok: true, merchant_hub: hubOut2 });
     }
     if (upErr) {
       if (isStoreMerchantHubMissing(upErr)) {
@@ -1841,14 +1904,16 @@ router.patch("/merchant-hub", requireAuth, requireMerchantRole, async (req, res)
       return fail(res, upErr.message, 400);
     }
     listCache = { key: "", at: 0, payload: null };
-    return ok(res, { ok: true, merchant_hub: saved || merged });
+    const hubOut = saved || merged;
+    if (hubOut && hubOut.banner_url) hubOut.banner_url = await resolveStoreImageUrl(sb, hubOut.banner_url);
+    return ok(res, { ok: true, merchant_hub: hubOut });
   } catch (e) {
     console.error("[store/merchant-hub/patch]", e);
     return fail(res, e.message || "خطأ في الخادم", 500);
   }
 });
 
-router.get("/withdrawals", requireAuth, requireMerchantRole, async (req, res) => {
+router.get("/withdrawals", requireAuth, requireStoreRole, async (req, res) => {
   try {
     const sb = createServiceClient();
     if (!sb) return fail(res, "الخادم غير مهيأ لقاعدة البيانات", 503);
@@ -1879,7 +1944,7 @@ router.get("/withdrawals", requireAuth, requireMerchantRole, async (req, res) =>
   }
 });
 
-router.post("/withdrawals", requireAuth, requireMerchantRole, async (req, res) => {
+router.post("/withdrawals", requireAuth, requireStoreRole, async (req, res) => {
   try {
     const sb = createServiceClient();
     if (!sb) return fail(res, "الخادم غير مهيأ لقاعدة البيانات", 503);
@@ -1985,6 +2050,10 @@ const STORE_GET_BY_ID_RESERVED = new Set([
   "merchant-dashboard",
   "merchant-hub",
   "withdrawals",
+  "delivery-policy",
+  "resolve-maps-link",
+  "delivery-engine",
+  "orders",
 ]);
 
 function isStoreWithdrawalsMissing(err) {
@@ -1997,5 +2066,14 @@ router.get("/:id", optionalAuth, async (req, res, next) => {
   if (!raw || STORE_GET_BY_ID_RESERVED.has(raw.toLowerCase())) return next();
   return getPublicStoreById(req, res);
 });
+
+router.use(
+  "/",
+  deliveryEngineRouter({
+    loadApprovedStore,
+    assertMerchantOwnsStore,
+    resolveMerchantStoreByPhone,
+  })
+);
 
 module.exports = router;

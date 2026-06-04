@@ -6,7 +6,7 @@
 - **Supabase:** `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`.
 - **JWT:** `ERVENOW_JWT_SECRET` (16+ حرفاً للإنتاج).
 - **البيانات البنكية المشفّرة:** `BANK_DATA_SECRET` (16+ حرفاً) في الإنتاج — انظر `server/utils/crypto.js`.
-- **Redis (موصى به للإنتاج):** `REDIS_URL` — طابور BullMQ + (مستقبلاً) rate limits مركزية.
+- **Redis (إلزامي للإنتاج مع العامل):** `REDIS_URL` — **Redis ≥ 5.0** (BullMQ لا يعمل على Redis 3.x Windows القديم). استخدم Railway Redis أو Upstash أو Memurai Developer.
 - **التواصل:** Twilio لـ OTP واتساب حسب المسارات.
 
 ## 2. تشغيل الخادم
@@ -25,6 +25,15 @@ npm run worker:delivery
 ```
 
 يتطلب `REDIS_URL` — لا يعمل العامل بدونه (انظر `workers/deliveryWorker.js`).
+
+**تطوير Windows (Redis ≥ 5):**
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/bootstrap-local-redis.ps1
+npm run worker:delivery
+```
+
+ثم تحقق: `node scripts/final-launch-closure.mjs`
 
 ## 4. OTP في الإنتاج
 

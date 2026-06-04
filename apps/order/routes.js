@@ -1,12 +1,14 @@
 const express = require("express");
 const { requireAuth } = require("../../shared/middleware/auth");
+const { isDeliveryEngineStoreOtpEnabled } = require("../../shared/utils/deliveryEngineFlags");
+const { confirmStoreDeliveryReceipt } = require("../../shared/services/storeDeliveryOtpConfirm");
 const { denyUnlessCanPlaceOrders } = require("../../shared/middleware/platformAccess");
 const { createServiceClient } = require("../../shared/config/supabase");
 const { ok, fail } = require("../../shared/utils/helpers");
 const { normalizeIdempotencyKey } = require("../../shared/utils/idempotency");
 const { deliveryOrdersCreateLimiter } = require("../../shared/middleware/apiRateLimits");
 const { bumpDeliveryOrdersListEpoch } = require("../../shared/utils/deliveryOrdersListCache");
-const { runCheckoutInsert } = require("../checkout/service");
+const { handleUnifiedCartCheckoutHttp } = require("./cartCheckoutHttp");
 const { createServiceOrder, isServiceOrderType } = require("../../shared/services/serviceOrderCreate");
 const { runUnifiedDeliveryOnlyCreate } = require("./deliveryOrderCreateShared");
 const { patchUnifiedOrderStatus, normalizeIncomingStatus } = require("../../shared/services/unifiedOrderStatus");
@@ -38,12 +40,7 @@ router.post("/create", requireAuth, denyUnlessCanPlaceOrders, deliveryOrdersCrea
     }
 
     if (items.length > 0) {
-      const out = await runCheckoutInsert(sb, req.appUser, body, { applyPaymentGate: true });
-      if (!out.ok) {
-        return fail(res, out.message, out.status || 400);
-      }
-      await bumpDeliveryOrdersListEpoch();
-      return ok(res, { orders: out.orders, mode: "cart" });
+      return handleUnifiedCartCheckoutHttp(req, res, { applyPaymentGate: true });
     }
 
     const unified = await runUnifiedDeliveryOnlyCreate({
@@ -66,6 +63,24 @@ router.post("/create", requireAuth, denyUnlessCanPlaceOrders, deliveryOrdersCrea
     });
   } catch (e) {
     fail(res, e.message || "order create failed", 500);
+  }
+});
+
+/**
+ * POST /api/order/:id/confirm-receipt — عميل يؤكد استلام توصيل المتجر برمز OTP
+ */
+router.post("/:id/confirm-receipt", requireAuth, async (req, res) => {
+  try {
+    if (!isDeliveryEngineStoreOtpEnabled()) return fail(res, "Store OTP غير مفعّل", 503);
+    const sb = req.supabase || createServiceClient();
+    if (!sb) return fail(res, "database not configured", 503);
+    const orderId = String(req.params.id || "").trim();
+    const code = req.body?.code ?? req.body?.otp;
+    const out = await confirmStoreDeliveryReceipt(sb, orderId, req.appUser, code);
+    if (!out.ok) return fail(res, out.message, out.status || 400);
+    return ok(res, { order: out.order, settlement: out.settlement || null, already: !!out.already });
+  } catch (e) {
+    return fail(res, e.message || "confirm receipt failed", 500);
   }
 });
 

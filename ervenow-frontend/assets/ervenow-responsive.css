@@ -151,8 +151,16 @@ a.btn {
 .erw-table-scroll {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
-  margin: 0 calc(-1 * var(--erw-page-pad));
-  padding: 0 var(--erw-page-pad);
+  overscroll-behavior-x: contain;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+@media (max-width: 1024px) {
+  .erw-table-scroll {
+    padding-inline: var(--erw-page-pad);
+  }
 }
 
 @media (max-width: 640px) {
@@ -384,9 +392,14 @@ a.btn {
     padding-inline: max(12px, env(safe-area-inset-left, 12px)) max(12px, env(safe-area-inset-right, 12px));
   }
 
-  .lp-cart-panel {
-    width: min(100%, 420px);
-    max-width: 100%;
+  .lp-cart-panel:not(.lp-cart-panel--page):not(#lpCartWrap.lp-cart-wrap--portaled .lp-cart-panel) {
+    width: min(calc(100vw - 16px), 100%);
+    max-width: calc(100vw - 16px);
+  }
+
+  #lpCartWrap.lp-cart-wrap--portaled .lp-cart-panel {
+    width: calc(100vw - 12px);
+    max-width: calc(100vw - 12px);
   }
 
   .lp-footer {
@@ -517,8 +530,8 @@ a.btn {
     display: none !important;
   }
 
-  .lp-cart-panel {
-    width: min(520px, calc(100% - 32px));
-    max-height: min(85vh, 85dvh, calc(var(--erw-viewport-h, 100dvh) - 32px));
+  .lp-cart-panel:not(.lp-cart-panel--page) {
+    width: min(560px, calc(100vw - 24px));
+    max-height: min(90dvh, calc(var(--erw-viewport-h, 100dvh) - 24px));
   }
 }

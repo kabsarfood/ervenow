@@ -386,7 +386,8 @@
             ErvenowServiceCart.add(item);
             return;
           }
-          addToCart(item);
+          if (window.ErvenowCart && ErvenowCart.addService) ErvenowCart.addService(item);
+          else if (window.ErvenowCart) ErvenowCart.add(item);
           location.href = "/cart";
         }
 
