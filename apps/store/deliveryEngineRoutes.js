@@ -23,9 +23,6 @@ function deliveryEngineRouter(deps) {
   const resolveMerchantStoreByPhone = deps.resolveMerchantStoreByPhone;
 
   router.get("/public/:id/delivery-quote", async (req, res) => {
-    if (!isDeliveryEnginePolicyEnabled()) {
-      return fail(res, "Delivery Engine غير مفعّل", 503);
-    }
     try {
       const sb = createServiceClient();
       if (!sb) return fail(res, "الخادم غير مهيأ لقاعدة البيانات", 503);
@@ -57,7 +54,6 @@ function deliveryEngineRouter(deps) {
   });
 
   router.post("/resolve-maps-link", async (req, res) => {
-    if (!isDeliveryEnginePolicyEnabled()) return fail(res, "Delivery Engine غير مفعّل", 503);
     try {
       const url = String(req.body?.url || req.body?.link || "").trim();
       if (!url) return fail(res, "الرابط مطلوب", 400);

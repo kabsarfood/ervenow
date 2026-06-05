@@ -2,7 +2,6 @@
  * ERVENOW DELIVERY ENGINE 1.0 — دمج snapshot السلة في checkout (بدون Ledger).
  */
 
-const { isDeliveryEngineCheckoutEnabled } = require("./deliveryEngineFlags");
 const { buildDeliveryQuote } = require("../services/deliveryQuoteService");
 const { deliveryProviderFromFulfillment, normalizeFulfillment } = require("../services/deliveryPolicyEngine");
 const { roundMoney } = require("./platformCommission");
@@ -13,9 +12,8 @@ function firstStoreItemData(groupItems) {
 }
 
 function useCartDeliverySnapshot(groupItems) {
-  if (!isDeliveryEngineCheckoutEnabled()) return false;
   const d = firstStoreItemData(groupItems);
-  return d.delivery_snapshot_version === 1 && d.store_id;
+  return d.delivery_snapshot_version === 1 && !!d.store_id;
 }
 
 /**

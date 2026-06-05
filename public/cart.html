@@ -194,8 +194,6 @@
 
       function cartUsesPrecartSnapshot(cart) {
         return (
-          deliveryEngineFlags &&
-          deliveryEngineFlags.DELIVERY_ENGINE_CHECKOUT &&
           typeof window.cartHasDeliverySnapshot === "function" &&
           window.cartHasDeliverySnapshot(cart)
         );

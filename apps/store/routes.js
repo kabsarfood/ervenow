@@ -559,7 +559,7 @@ router.get("/", optionalAuth, async (req, res) => {
         "sweets",
         "flowers_gifts",
       ];
-      const cacheKey = `storelist-all:v3:${sortParam}|${mask ? "g" : "u"}|${geoKey}|c:${categoryFilter || "none"}|t:${listTypeRaw || "all"}`;
+      const cacheKey = `storelist-all:v4:${sortParam}|${mask ? "g" : "u"}|${geoKey}|c:${categoryFilter || "none"}|t:${listTypeRaw || "all"}`;
       const redisListKey = `storelist:v2:${cacheKey}`;
       const redisHit = await cacheGetJson(redisListKey);
       if (redisHit && redisHit.stores) {
@@ -646,7 +646,6 @@ router.get("/", optionalAuth, async (req, res) => {
         if (mask) {
           const m = maskStoreRowForGuest(row, i, labelOpts);
           m.id = row.id;
-          m.category = row.category || row.type || null;
           if (userPos && row.distance_km != null && Number.isFinite(Number(row.distance_km))) {
             m.distance_km = Number(row.distance_km);
           }
@@ -661,6 +660,7 @@ router.get("/", optionalAuth, async (req, res) => {
         sort: sortParam,
         geo_filtered: !!userPos,
         list_mode: "active_only",
+        category_applied: categoryFilter || null,
       };
       listCache = { key: cacheKey, at: now, payload };
       await cacheSetJson(redisListKey, payload, LIST_CACHE_TTL_MS);
@@ -757,7 +757,6 @@ router.get("/", optionalAuth, async (req, res) => {
       if (mask) {
         const m = maskStoreRowForGuest(row, i, labelOpts2);
         m.id = row.id;
-        m.category = row.category || row.type || null;
         if (userPos && row.distance_km != null && Number.isFinite(Number(row.distance_km))) {
           m.distance_km = Number(row.distance_km);
           if (row.within_delivery_radius != null) m.within_delivery_radius = row.within_delivery_radius;

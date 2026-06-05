@@ -268,9 +268,43 @@
           </div>
         </div>
         <div class="live-map-card">
-          <h3>خريطة حية</h3>
-          <div id="liveMap" role="application" aria-label="خريطة المندوبين والطلبات"></div>
+          <div class="live-map-card__head">
+            <h3>خريطة حية</h3>
+            <div class="live-map-toolbar">
+              <label class="live-map-toolbar__label" for="liveMapCitySearch">المدينة</label>
+              <input
+                type="search"
+                id="liveMapCitySearch"
+                class="live-map-city-search"
+                list="liveMapCityList"
+                placeholder="ابحث عن مدينة..."
+                autocomplete="off"
+                aria-label="ابحث عن مدينة"
+              />
+              <datalist id="liveMapCityList"></datalist>
+              <select id="liveMapCitySelect" class="live-map-city-select" hidden aria-hidden="true" tabindex="-1">
+                <option value="all">كل المملكة</option>
+              </select>
+            </div>
+          </div>
+          <p id="liveMapCityLabel" class="live-map-city-label">كل المملكة</p>
+          <div class="live-map-hud" aria-live="polite">
+            <span class="live-map-hud__chip live-map-hud__chip--drivers"
+              >🚚 المناديب: <strong id="liveMapCountDrivers">0</strong></span
+            >
+            <span class="live-map-hud__chip live-map-hud__chip--stores"
+              >🏪 المتاجر: <strong id="liveMapCountStores">0</strong></span
+            >
+            <span class="live-map-hud__chip live-map-hud__chip--customers"
+              >👥 العملاء النشطون: <strong id="liveMapCountCustomers">0</strong></span
+            >
+            <span class="live-map-hud__chip live-map-hud__chip--orders"
+              >📦 الطلبات الجارية: <strong id="liveMapCountOrders">0</strong></span
+            >
+          </div>
+          <div id="liveMap" role="application" aria-label="خريطة المندوبين والمتاجر والطلبات"></div>
           <div class="live-map-legend">
+            <span class="lg-store">متجر</span>
             <span class="lg-driver">مندوب</span>
             <span class="lg-order">استلام</span>
             <span class="lg-drop">تسليم</span>

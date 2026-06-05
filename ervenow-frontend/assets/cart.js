@@ -516,9 +516,9 @@ function resolveCartDeliveryFeeFromItems(cart) {
 
 function fulfillmentLabelAr(mode) {
   var m = String(mode || "").toLowerCase();
-  if (m === "pickup") return "استلام من المتجر";
+  if (m === "pickup") return "الاستلام من المطعم";
   if (m === "store_delivery") return "توصيل بواسطة المتجر";
-  if (m === "ervenow_delivery") return "توصيل بواسطة ERVENOW";
+  if (m === "ervenow_delivery") return "توصيل المناديب";
   return "—";
 }
 
@@ -1431,7 +1431,7 @@ window.validateEwPayCheckout = function () {
 
 function resolveCartDeliveryFeeArg(cart) {
   if (!cartHasStoreProducts(cart)) return 0;
-  if (window.__ervDeliveryEngineCheckout && cartHasDeliverySnapshot(cart)) {
+  if (cartHasDeliverySnapshot(cart)) {
     var snapFee = resolveCartDeliveryFeeFromItems(cart);
     if (snapFee !== undefined) return snapFee;
   }

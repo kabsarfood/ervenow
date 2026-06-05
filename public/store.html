@@ -1252,6 +1252,10 @@
         storeMeta.name = store.name || store.label || "";
         storeMeta.type = store.type || "supermarket";
         storeMeta.raw = store;
+        storeMeta.lat = store.lat;
+        storeMeta.lng = store.lng;
+        storeMeta.delivery_radius_km = store.delivery_radius_km;
+        storeMeta.delivery_policy = store.delivery_policy;
         supportsProductCategories = !!store.supports_product_categories;
         activeProductCategory = null;
         storeProductCategories = [];

@@ -1059,7 +1059,7 @@
 
             if (data.browse_masked) guestNote.style.display = "block";
             allStores = Array.isArray(data.stores) ? data.stores : [];
-            if (activeCuisine && String(activeCuisine).length > 0) {
+            if (activeCuisine && String(activeCuisine).length > 0 && !data.category_applied) {
               allStores = allStores.filter(function (s) {
                 return storeMatchesCuisineChip(s, activeCuisine);
               });
