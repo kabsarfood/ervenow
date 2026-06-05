@@ -23,6 +23,7 @@ const {
   restaurantCategoryDisplayAr,
   restaurantRowMatchesCuisineFilter,
   storeRowCountsAsRestaurant,
+  resolveRestaurantBrowseCategory,
 } = require("../../shared/restaurantCategories");
 const {
   isMarketStoreType,
@@ -314,7 +315,8 @@ function filterAndSortStoresByUser(rows, userLat, userLng) {
 }
 
 function categoryLabelForStoreRow(row, labelOpts) {
-  const catRaw = row.category != null ? String(row.category).trim() : "";
+  const browseCat = resolveRestaurantBrowseCategory(row);
+  const catRaw = browseCat || (row.category != null ? String(row.category).trim() : "");
   const t = String(row.type || "")
     .trim()
     .toLowerCase();
@@ -338,7 +340,8 @@ function categoryLabelForStoreRow(row, labelOpts) {
 function maskStoreRowForGuest(row, index, labelOpts) {
   const h = simpleHash(row.id || index);
   const num = 1000 + (h % 9000);
-  const catRaw = row.category != null ? String(row.category).trim() : "";
+  const browseCat = resolveRestaurantBrowseCategory(row);
+  const catRaw = browseCat || (row.category != null ? String(row.category).trim() : "");
   const cuisine = categoryLabelForStoreRow(row, labelOpts);
   const displayName = row.name != null ? String(row.name).trim() : "";
   return {
@@ -358,7 +361,8 @@ function maskStoreRowForGuest(row, index, labelOpts) {
 }
 
 function publicStoreRow(row, labelOpts) {
-  const catRaw = row.category != null ? String(row.category).trim() : "";
+  const browseCat = resolveRestaurantBrowseCategory(row);
+  const catRaw = browseCat || (row.category != null ? String(row.category).trim() : "");
   const categoryDisplay = categoryLabelForStoreRow(row, labelOpts);
   const o = {
     masked: false,
@@ -555,7 +559,7 @@ router.get("/", optionalAuth, async (req, res) => {
         "sweets",
         "flowers_gifts",
       ];
-      const cacheKey = `storelist-all:v2:${sortParam}|${mask ? "g" : "u"}|${geoKey}|c:${categoryFilter || "none"}|t:${listTypeRaw || "all"}`;
+      const cacheKey = `storelist-all:v3:${sortParam}|${mask ? "g" : "u"}|${geoKey}|c:${categoryFilter || "none"}|t:${listTypeRaw || "all"}`;
       const redisListKey = `storelist:v2:${cacheKey}`;
       const redisHit = await cacheGetJson(redisListKey);
       if (redisHit && redisHit.stores) {
@@ -670,7 +674,7 @@ router.get("/", optionalAuth, async (req, res) => {
 
     const mask = !req.appUser;
     const geoKey = userPos ? `${userPos.lat.toFixed(4)}:${userPos.lng.toFixed(4)}` : "nogeo";
-    const cacheKey = `${browseType}|v2|${sortParam}|${mask ? "g" : "u"}|${geoKey}`;
+    const cacheKey = `${browseType}|v3|${sortParam}|${mask ? "g" : "u"}|${geoKey}`;
     const redisListKey = `storelist:v2:${cacheKey}`;
     const redisHit = await cacheGetJson(redisListKey);
     if (redisHit && redisHit.stores) {

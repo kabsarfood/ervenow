@@ -67,6 +67,39 @@ const RESTAURANT_CATEGORY_ICONS = {
 
 const RESTAURANT_CATEGORY_SET = new Set([...RESTAURANT_CATEGORY_KEYS, ...LEGACY_RESTAURANT_CATEGORY_SLUGS]);
 
+const RESTAURANT_NAME_CUISINE_HINTS = [
+  { pattern: /كبسار|kabsar|كبسة|kabsa|بخاري|bukhari|مندي|mandi/i, slug: "kabsa_bukhari" },
+  { pattern: /shawarma|شاورما|مشاوي|grill/i, slug: "shawarma_grill" },
+  { pattern: /seafood|سمك|أسماك|اسماك/i, slug: "seafood" },
+  { pattern: /burger|برجر|برقر/i, slug: "burger" },
+  { pattern: /broasted|بروست|broast/i, slug: "broasted" },
+  { pattern: /pizza|بيتza|بيتزا/i, slug: "pizza" },
+  { pattern: /cafe|café|قهو|مقه/i, slug: "cafe" },
+  { pattern: /sweet|حلو/i, slug: "sweets" },
+];
+
+function inferRestaurantCuisineFromName(name) {
+  const n = String(name || "").trim();
+  if (!n) return null;
+  for (let i = 0; i < RESTAURANT_NAME_CUISINE_HINTS.length; i += 1) {
+    if (RESTAURANT_NAME_CUISINE_HINTS[i].pattern.test(n)) {
+      return RESTAURANT_NAME_CUISINE_HINTS[i].slug;
+    }
+  }
+  return null;
+}
+
+function resolveRestaurantBrowseCategory(row) {
+  if (!row) return null;
+  const normalized = normalizeRestaurantCategory(row.category);
+  if (normalized) return normalized;
+  return inferRestaurantCuisineFromName(row.name);
+}
+
+function storeNameLooksLikeRestaurant(row) {
+  return !!inferRestaurantCuisineFromName(row && row.name);
+}
+
 function isRestaurantCategoryKey(value) {
   const s = String(value || "")
     .trim()
@@ -149,13 +182,15 @@ function restaurantRowMatchesCuisineFilter(row, cuisineSlug, allowedSlugs) {
   const valid = allowedSlugs && allowedSlugs.size ? allowedSlugs : RESTAURANT_CATEGORY_SET;
   if (!want || !valid.has(want)) return true;
   if (!storeRowCountsAsRestaurant(row)) return false;
-  const c = String(row.category || "")
-    .trim()
-    .toLowerCase();
-  return restaurantCategoryMatchesCuisineSlug(c, want);
+  const effective =
+    resolveRestaurantBrowseCategory(row) ||
+    String(row.category || "")
+      .trim()
+      .toLowerCase();
+  return restaurantCategoryMatchesCuisineSlug(effective, want);
 }
 
-/** مطعم للعرض في قوائم «مطاعم» — type=restaurant أو تصنيف مطبخ معروف */
+/** مطعم للعرض في قوائم «مطاعم» — type=restaurant أو تصنيف مطبخ معروف أو اسم مطعم معروف */
 function storeRowCountsAsRestaurant(row) {
   if (!row) return false;
   if (
@@ -168,7 +203,8 @@ function storeRowCountsAsRestaurant(row) {
   const c = String(row.category || "")
     .trim()
     .toLowerCase();
-  return isRestaurantCategoryKey(c);
+  if (isRestaurantCategoryKey(c)) return true;
+  return storeNameLooksLikeRestaurant(row);
 }
 
 module.exports = {
@@ -186,4 +222,7 @@ module.exports = {
   restaurantCategoryMatchesCuisineSlug,
   restaurantRowMatchesCuisineFilter,
   storeRowCountsAsRestaurant,
+  inferRestaurantCuisineFromName,
+  resolveRestaurantBrowseCategory,
+  storeNameLooksLikeRestaurant,
 };

@@ -19,6 +19,7 @@ const { canPlaceOrders, driverOrderPlacementError } = require("../../shared/util
 const {
   applyErvenowPayForCheckoutOrders,
   isErvenowPayMethod,
+  resolveMerchantUserIdForStore,
 } = require("../../shared/services/ervenowPayCheckout");
 const { createNotification } = require("../../shared/services/notificationService");
 const { computePlatformCommission } = require("../../shared/utils/platformCommission");
@@ -124,12 +125,12 @@ async function runCheckoutInsert(sb, appUser, body, options) {
       ? String(opts.checkoutIdempotencyKey).trim().slice(0, 256)
       : null;
   const usePaymentGate = Boolean(opts.applyPaymentGate) && isOrderPaymentGateRequired();
+  const payment_method = normalizeOrderPaymentMethod(body);
+  const useErvenowPay = isErvenowPayMethod(payment_method);
   const paymentConfirmed = useErvenowPay ? false : usePaymentGate ? isPaidFromRequestBody(body) : false;
   const allowDispatchPipeline = useErvenowPay ? true : usePaymentGate ? paymentConfirmed : true;
   const openDeliveryStatus = allowDispatchPipeline ? "pending" : "draft";
   const payment_status = useErvenowPay ? "pending" : paymentConfirmed ? "paid" : "pending";
-  const payment_method = normalizeOrderPaymentMethod(body);
-  const useErvenowPay = isErvenowPayMethod(payment_method);
 
   const items = Array.isArray(body?.items) ? body.items : [];
   if (!items.length) {
@@ -286,6 +287,8 @@ async function runCheckoutInsert(sb, appUser, body, options) {
         row.store_id = singleStoreId;
         row.store_name = String(storeRow.name || "").trim() || null;
         row.store_address = String(storeRow.address || storeRow.location_text || "").trim() || null;
+        const merchantUserId = await resolveMerchantUserIdForStore(sb, singleStoreId);
+        if (merchantUserId) row.merchant_id = merchantUserId;
         storeRowForCheckout = storeRow;
         storeDispatchOverride = resolved.shouldDispatch;
       } else {
@@ -325,6 +328,8 @@ async function runCheckoutInsert(sb, appUser, body, options) {
         row.store_id = singleStoreId;
         row.store_name = String(storeRow.name || "").trim() || null;
         row.store_address = String(storeRow.address || storeRow.location_text || "").trim() || null;
+        const merchantUserIdLegacy = await resolveMerchantUserIdForStore(sb, singleStoreId);
+        if (merchantUserIdLegacy) row.merchant_id = merchantUserIdLegacy;
         storeRowForCheckout = storeRow;
         storeDispatchOverride = true;
       }
@@ -446,7 +451,7 @@ async function runCheckoutInsert(sb, appUser, body, options) {
     if (insertErr) throw insertErr;
     results.push(data);
 
-    if (type === "store" && data?.store_id && storeRowForCheckout) {
+    if ((type === "store" || type === "restaurant") && data?.store_id && storeRowForCheckout) {
       try {
         await runStoreCheckoutSideEffects({ order: data, groupItems, storeRow: storeRowForCheckout });
       } catch (sideErr) {

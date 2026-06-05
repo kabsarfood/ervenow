@@ -172,4 +172,5 @@ module.exports = {
   isErvenowPayMethod,
   orderChargeAmount,
   merchantNetForStoreOrder,
+  resolveMerchantUserIdForStore,
 };

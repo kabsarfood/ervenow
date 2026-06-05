@@ -26,38 +26,60 @@
     sweets: ["sweets", "dessert_cafe"],
   };
 
+  var KNOWN_RESTAURANT_CATEGORIES = {
+    kabsa_bukhari: 1,
+    kabsa: 1,
+    bukhari_mandi: 1,
+    shawarma_grill: 1,
+    seafood: 1,
+    burger: 1,
+    broasted: 1,
+    pizza: 1,
+    cafe: 1,
+    sweets: 1,
+    home_producers: 1,
+    burger_broasted: 1,
+    breakfast_bakery: 1,
+    dessert_cafe: 1,
+    juice_drinks: 1,
+  };
+
+  function inferRestaurantCuisineFromName(name) {
+    var n = String(name || "").trim();
+    if (!n) return null;
+    if (/كبسار|kabsar|كبسة|kabsa|بخاري|bukhari|مندي|mandi/i.test(n)) return "kabsa_bukhari";
+    if (/shawarma|شاورما|مشاوي|grill/i.test(n)) return "shawarma_grill";
+    if (/seafood|سمك|أسماك|اسماك/i.test(n)) return "seafood";
+    if (/burger|برجر|برقر/i.test(n)) return "burger";
+    if (/broasted|بروست|broast/i.test(n)) return "broasted";
+    if (/pizza|بيتza|بيتزا/i.test(n)) return "pizza";
+    if (/cafe|café|قهو|مقه/i.test(n)) return "cafe";
+    if (/sweet|حلو/i.test(n)) return "sweets";
+    return null;
+  }
+
+  function effectiveStoreCategory(store) {
+    var c = String(store.category || "")
+      .trim()
+      .toLowerCase();
+    if (c && KNOWN_RESTAURANT_CATEGORIES[c]) return c;
+    return inferRestaurantCuisineFromName(store.name || store.label) || c;
+  }
+
   function storeCountsAsRestaurant(store) {
     if (!store) return false;
     if (String(store.type || "").toLowerCase() === "restaurant") return true;
     var c = String(store.category || "")
       .trim()
       .toLowerCase();
-    var known = {
-      kabsa_bukhari: 1,
-      kabsa: 1,
-      bukhari_mandi: 1,
-      shawarma_grill: 1,
-      seafood: 1,
-      burger: 1,
-      broasted: 1,
-      pizza: 1,
-      cafe: 1,
-      sweets: 1,
-      home_producers: 1,
-      burger_broasted: 1,
-      breakfast_bakery: 1,
-      dessert_cafe: 1,
-      juice_drinks: 1,
-    };
-    return !!known[c];
+    if (KNOWN_RESTAURANT_CATEGORIES[c]) return true;
+    return !!inferRestaurantCuisineFromName(store.name || store.label);
   }
 
   function storeMatchesCuisineChip(store, slug) {
     if (!slug) return storeCountsAsRestaurant(store);
     if (!storeCountsAsRestaurant(store)) return false;
-    var c = String(store.category || "")
-      .trim()
-      .toLowerCase();
+    var c = effectiveStoreCategory(store);
     var key = String(slug || "")
       .trim()
       .toLowerCase();
