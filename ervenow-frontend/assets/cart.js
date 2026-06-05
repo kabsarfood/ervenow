@@ -364,9 +364,14 @@ var __ervEwPayBalanceCache = null;
 function cartCheckoutBlockedByEwPay() {
   if (window.__ervCartSelectedPayment !== "ew_pay") return false;
   var grand = getCartGrandTotalForPay();
-  if (grand == null) return true;
-  if (__ervEwPayBalanceCache == null || !Number.isFinite(__ervEwPayBalanceCache)) return true;
+  /* التحقق من التوصيل/الرصيد عند النقر — لا نعطّل الزر أثناء التحميل أو قبل GPS */
+  if (grand == null) return false;
+  if (__ervEwPayBalanceCache == null || !Number.isFinite(__ervEwPayBalanceCache)) return false;
   return roundMoney(__ervEwPayBalanceCache) < roundMoney(grand);
+}
+
+function getCartCheckoutButtonEl() {
+  return document.getElementById("checkoutBtn") || document.getElementById("lpCartCheckoutBtn");
 }
 
 function syncCartCheckoutButtonState(btn, labelDefault) {
@@ -387,10 +392,7 @@ function syncLpCartCheckoutBtn() {
 }
 
 function syncCartPageCheckoutBtn() {
-  syncCartCheckoutButtonState(
-    document.getElementById("checkoutBtn") || document.getElementById("lpCartCheckoutBtn"),
-    "إتمام الطلب"
-  );
+  syncCartCheckoutButtonState(getCartCheckoutButtonEl(), "إتمام الطلب");
   syncCartCheckoutButtons();
 }
 
@@ -1483,11 +1485,18 @@ function renderHeaderCartPreview() {
 }
 
 function syncCartCheckoutButtons() {
-  var main = document.getElementById("checkoutBtn");
+  var main = getCartCheckoutButtonEl();
   var mobile = document.getElementById("cartMobileCheckoutBtn");
-  if (!main || !mobile) return;
-  mobile.textContent = main.textContent;
-  mobile.disabled = !!main.disabled;
+  if (!mobile) return;
+  if (main) {
+    mobile.textContent = main.textContent;
+    mobile.disabled = !!main.disabled;
+    return;
+  }
+  var hasItems = !!getCart().length;
+  var blocked = !hasItems || cartCheckoutBlockedByEwPay();
+  mobile.disabled = blocked;
+  mobile.textContent = hasItems ? "إتمام الطلب" : "بدء الدفع";
 }
 
 function syncCartMobileBar(cart, breakdown) {
@@ -1573,6 +1582,7 @@ document.addEventListener(
 window.syncCartCheckoutButtons = syncCartCheckoutButtons;
 window.syncCartPageCheckoutBtn = syncCartPageCheckoutBtn;
 window.syncLpCartCheckoutBtn = syncLpCartCheckoutBtn;
+window.getCartCheckoutButtonEl = getCartCheckoutButtonEl;
 
 function safeClick(fn) {
   let locked = false;
@@ -1586,6 +1596,7 @@ function safeClick(fn) {
     }
   };
 }
+window.safeClick = safeClick;
 
 function showSuccess(msg) {
   const el = document.createElement("div");

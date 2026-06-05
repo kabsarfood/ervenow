@@ -127,8 +127,6 @@
           showFullFin: true,
         });
         if (ErvenowCartUI.initContinueShopping) ErvenowCartUI.initContinueShopping(null);
-        var checkoutBtn = document.getElementById("lpCartCheckoutBtn");
-        if (checkoutBtn) checkoutBtn.addEventListener("click", function () { if (typeof checkout === "function") checkout(); });
         var tools = document.getElementById("cartPageTools");
         function syncTools() {
           if (tools) tools.hidden = !getCart().length;
@@ -373,7 +371,10 @@
           }
         }
 
-        const btn = document.getElementById("checkoutBtn");
+        const btn =
+          (typeof getCartCheckoutButtonEl === "function" && getCartCheckoutButtonEl()) ||
+          document.getElementById("lpCartCheckoutBtn") ||
+          document.getElementById("checkoutBtn");
 
         const token =
           (window.PlatformAPI && typeof window.PlatformAPI.getToken === "function" && window.PlatformAPI.getToken()) ||
@@ -469,6 +470,14 @@
       });
       window.checkout = checkout;
       window.resolveCartDeliveryFeeFromItems = resolveCartDeliveryFeeFromItems;
+
+      (function bindCartCheckoutButtons() {
+        var lpBtn = document.getElementById("lpCartCheckoutBtn");
+        var mobBtn = document.getElementById("cartMobileCheckoutBtn");
+        if (lpBtn) lpBtn.onclick = checkout;
+        if (mobBtn) mobBtn.onclick = checkout;
+        if (typeof renderCartPage === "function") renderCartPage();
+      })();
 
       (async function loadDeliveryEngineFlags() {
         try {
