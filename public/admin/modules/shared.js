@@ -282,6 +282,7 @@ app.applyPermissionVisibility = function () {
     panelAdminAccounts: "admin_accounts",
     panelSettings: null,
     panelOffers: "dashboard",
+    panelHeroBanners: "dashboard",
     panelServices: "providers",
     panelErvenowPay: "finance",
     financePanel: "finance",
@@ -316,6 +317,7 @@ app.applyPermissionVisibility = function () {
   if (finBtn) finBtn.style.display = fin ? "" : "none";
   if (typeof app.applyErvenowPayVisibility === "function") app.applyErvenowPayVisibility();
   if (typeof app.applyOffersPanelVisibility === "function") app.applyOffersPanelVisibility();
+  if (typeof app.applyHeroBannersPanelVisibility === "function") app.applyHeroBannersPanelVisibility();
   if (typeof app.applyServicesPanelVisibility === "function") app.applyServicesPanelVisibility();
   var lfp = document.getElementById("ledgerFinancePanel");
   if (lfp) lfp.style.display = fin ? "block" : "none";

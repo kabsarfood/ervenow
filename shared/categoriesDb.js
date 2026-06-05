@@ -73,12 +73,20 @@ async function fetchCategoriesFromDb(sb, type, scope) {
   return data || [];
 }
 
+let mergedRestaurantSlugsCache = { at: 0, value: null };
+const MERGED_SLUGS_CACHE_MS = 5 * 60 * 1000;
+
 async function fetchMergedRestaurantCategorySlugs(sb) {
+  const now = Date.now();
+  if (mergedRestaurantSlugsCache.value && now - mergedRestaurantSlugsCache.at < MERGED_SLUGS_CACHE_MS) {
+    return mergedRestaurantSlugsCache.value;
+  }
   const base = new Set(RESTAURANT_CATEGORY_KEYS.map((k) => String(k).toLowerCase()));
   const rows = await fetchCategoriesFromDb(sb, "restaurant", CATEGORY_SCOPE_STORE);
   rows.forEach((r) => {
     if (r && r.slug) base.add(String(r.slug).toLowerCase());
   });
+  mergedRestaurantSlugsCache = { at: now, value: base };
   return base;
 }
 

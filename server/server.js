@@ -363,10 +363,21 @@ if (servePublicUi) {
     res.sendFile(path.join(publicPath, "index.html"));
   });
 
+  const staticMaxAgeMs = isProd ? 7 * 24 * 60 * 60 * 1000 : 60 * 60 * 1000;
   app.use(
     express.static(publicPath, {
       dotfiles: "deny",
       index: false,
+      maxAge: staticMaxAgeMs,
+      setHeaders(res, filePath) {
+        const fp = String(filePath || "").replace(/\\/g, "/");
+        if (fp.includes("/assets/") || fp.includes("/uploads/")) {
+          res.setHeader(
+            "Cache-Control",
+            isProd ? "public, max-age=604800, immutable" : "public, max-age=3600"
+          );
+        }
+      },
     })
   );
 

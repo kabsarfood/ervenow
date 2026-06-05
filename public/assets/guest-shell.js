@@ -43,6 +43,13 @@
         label: "دخول",
         cta: true,
       });
+    } else {
+      links.push({
+        key: "logout",
+        href: "#",
+        label: "خروج",
+        cta: true,
+      });
     }
     return links;
   }
@@ -171,41 +178,74 @@
     }
   }
 
+  function performGuestLogout() {
+    try {
+      if (global.ErvenowAuthGuard && typeof global.ErvenowAuthGuard.clearSession === "function") {
+        global.ErvenowAuthGuard.clearSession();
+      } else {
+        try {
+          if (global.PlatformAPI && typeof global.PlatformAPI.setToken === "function") {
+            global.PlatformAPI.setToken("");
+          }
+          TOKEN_STORAGE_KEYS.forEach(function (k) {
+            try {
+              localStorage.removeItem(k);
+            } catch (_e) {}
+          });
+          localStorage.removeItem("userId");
+          localStorage.removeItem("userPhone");
+        } catch (_e2) {}
+        try {
+          document.cookie = "auth_token=; path=/; max-age=0; SameSite=Lax";
+        } catch (_e3) {}
+      }
+    } catch (_e4) {}
+    try {
+      global.dispatchEvent(new CustomEvent("ervenow:auth-changed"));
+    } catch (_e5) {}
+    try {
+      global.location.reload();
+    } catch (_e6) {
+      global.location.href = "/login?role=customer";
+    }
+  }
+
+  function wireSwitchAccountButton(btn) {
+    if (!btn || btn.getAttribute("data-erv-switch-wired") === "1") return;
+    btn.setAttribute("data-erv-switch-wired", "1");
+    btn.addEventListener("click", function (e) {
+      if (btn.getAttribute("data-erv-switch-mode") === "logout") {
+        e.preventDefault();
+        performGuestLogout();
+      }
+    });
+  }
+
   function setAccountButtonLoggedOut(switchAccount) {
     if (!switchAccount) return;
     switchAccount.style.display = "";
     switchAccount.textContent = "تسجيل الدخول";
     switchAccount.className =
       "dash-site-header__btn dash-site-header__btn--primary switch-account--nav-only";
+    switchAccount.setAttribute("data-erv-switch-mode", "login");
     switchAccount.setAttribute("href", "/login?role=customer");
     switchAccount.removeAttribute("aria-label");
+    switchAccount.removeAttribute("title");
+    wireSwitchAccountButton(switchAccount);
   }
 
-  function setAccountButtonLoggedIn(switchAccount, role, serviceType) {
+  function setAccountButtonLoggedIn(switchAccount) {
     if (!switchAccount) return;
-    role = String(role || "customer").toLowerCase();
-    if (role === "user") role = "customer";
-    if (role === "provider") role = "service";
-    var home =
-      global.ErvenowAccountDest && ErvenowAccountDest.homeFor
-        ? ErvenowAccountDest.homeFor(role, serviceType)
-        : { path: "/dashboard", label: "لوحة زائر المنصة", short: "حسابي" };
     switchAccount.style.display = "";
-    switchAccount.textContent = home.short || "حسابي";
-    switchAccount.className = "dash-site-header__btn dash-site-header__btn--primary";
+    switchAccount.textContent = "تسجيل الخروج";
+    switchAccount.className =
+      "dash-site-header__btn dash-site-header__btn--primary switch-account--logout";
     switchAccount.classList.remove("switch-account--nav-only");
-    switchAccount.setAttribute("href", home.path);
-    switchAccount.setAttribute("aria-label", "فتح " + (home.label || "لوحة حسابك"));
-    switchAccount.setAttribute("title", home.label || "");
-    if (!switchAccount.getAttribute("data-erv-account-wired")) {
-      switchAccount.setAttribute("data-erv-account-wired", "1");
-      switchAccount.addEventListener("click", function (e) {
-        if (global.ErvenowAccountDest && ErvenowAccountDest.goHome) {
-          e.preventDefault();
-          ErvenowAccountDest.goHome();
-        }
-      });
-    }
+    switchAccount.setAttribute("data-erv-switch-mode", "logout");
+    switchAccount.setAttribute("href", "#");
+    switchAccount.setAttribute("aria-label", "تسجيل الخروج");
+    switchAccount.setAttribute("title", "تسجيل الخروج");
+    wireSwitchAccountButton(switchAccount);
   }
 
   function paintStorePreviewHeader() {
@@ -244,7 +284,7 @@
       var role = (me.profile && me.profile.role) || "customer";
       role = String(role).toLowerCase();
       var serviceType = me.profile && me.profile.service_type;
-      setAccountButtonLoggedIn(switchAccount, role, serviceType);
+      setAccountButtonLoggedIn(switchAccount);
       await refreshHeaderWallet(role);
       paintHeaderNav(_activeNavKey, role, { authenticated: true });
       paintIndexNav(role, { authenticated: true });
@@ -255,7 +295,7 @@
       }
       mountNotificationCenter();
     } catch (e) {
-      setAccountButtonLoggedIn(switchAccount, "customer");
+      setAccountButtonLoggedIn(switchAccount);
       await refreshHeaderWallet("customer");
       paintHeaderNav(_activeNavKey, "", { authenticated: false });
       paintIndexNav("", { authenticated: false });
@@ -286,14 +326,44 @@
     syncHeaderLayoutMetrics();
   }
 
+  function shouldHideNavAuthLink() {
+    if (!document.getElementById("switchAccount")) return false;
+    try {
+      return !window.matchMedia(
+        "(max-width: 640px), ((max-width: 932px) and (max-height: 500px) and (pointer: coarse))"
+      ).matches;
+    } catch (e) {
+      return true;
+    }
+  }
+
+  function wireNavLogoutLinks(root) {
+    if (!root) return;
+    root.querySelectorAll('.dash-site-header__link[data-nav="logout"]').forEach(function (a) {
+      if (a.getAttribute("data-erv-logout-wired") === "1") return;
+      a.setAttribute("data-erv-logout-wired", "1");
+      a.addEventListener("click", function (e) {
+        e.preventDefault();
+        performGuestLogout();
+      });
+    });
+  }
+
   function paintHeaderNav(activeNav, role, opts) {
     var box = document.querySelector(".dash-site-header__links");
     if (!box) return;
-    box.innerHTML = buildNavLinks(role, opts)
+    var links = buildNavLinks(role, opts);
+    if (shouldHideNavAuthLink()) {
+      links = links.filter(function (l) {
+        return l.key !== "login" && l.key !== "logout";
+      });
+    }
+    box.innerHTML = links
       .map(function (l) {
         return navLinkHtml(l, activeNav || "");
       })
       .join("\n");
+    wireNavLogoutLinks(box);
     syncHeaderLayoutMetrics();
   }
 

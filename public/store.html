@@ -673,7 +673,7 @@
             <span class="dash-header-cart__badge" id="cartCount" data-empty="true">0</span>
           </a>
         </div>
-        <a class="dash-site-header__btn dash-site-header__btn--primary" href="/login?role=customer" id="switchAccount">تسجيل الدخول</a>
+        <a class="dash-site-header__btn dash-site-header__btn--primary switch-account--nav-only" href="/login?role=customer" id="switchAccount">تسجيل الدخول</a>
       </div>
     </header>
 
@@ -997,7 +997,7 @@
             function () {
               resolve(null);
             },
-            { enableHighAccuracy: false, timeout: 9000, maximumAge: 120000 }
+            { enableHighAccuracy: false, timeout: 2500, maximumAge: 300000 }
           );
         });
       }
@@ -1148,7 +1148,7 @@
             }
           }
         }
-        addProductToCartWithSnapshot(p, qty, {});
+        showStoreToast("اختر الاستلام أو التوصيل والموقع قبل الإضافة للسلة", false);
       }
 
       function addProductToCartWithSnapshot(p, qty, snapExtra) {
@@ -1172,6 +1172,9 @@
           },
           snapExtra || {}
         );
+        if (baseData.fulfillment_mode && baseData.delivery_snapshot_version == null) {
+          baseData.delivery_snapshot_version = 1;
+        }
         if (idx >= 0) {
           var cur = cart[idx];
           var curQty = Number(cur.data && cur.data.qty) || 1;
@@ -1219,12 +1222,13 @@
           .replace(/"/g, "&quot;");
       }
 
-      async function loadStore() {
+      async function loadStore(options) {
+        options = options || {};
         if (!storeId) {
-          show("معرّف المتجر غير موجود في الرابط (?id=)", false);
+          if (!options.silent) show("معرّف المتجر غير موجود في الرابط (?id=)", false);
           return;
         }
-        var geo = await getUserGeo();
+        var geo = options.geo || null;
         var geoQs = "";
         if (geo) {
           geoQs =
@@ -1244,7 +1248,7 @@
           return {};
         });
         if (!res.ok || !data.store) {
-          show(data.error || "تعذر تحميل المتجر", false);
+          if (!options.silent) show(data.error || "تعذر تحميل المتجر", false);
           return;
         }
         var store = data.store;
@@ -1618,9 +1622,7 @@
 
       (async function () {
         if (window.ErvenowPreCartDelivery && ErvenowPreCartDelivery.loadFlags) {
-          try {
-            await ErvenowPreCartDelivery.loadFlags();
-          } catch (e) {}
+          ErvenowPreCartDelivery.loadFlags().catch(function () {});
         }
         try {
           var bt = sessionStorage.getItem("ervenow_browse_type");
@@ -1630,10 +1632,15 @@
         } catch (e) {}
         try {
           await loadStore();
-          await loadStoreCategoryOptions();
-          await loadProductCategories();
-          await loadProducts(false);
-          await loadReviews();
+          await Promise.all([
+            loadStoreCategoryOptions(),
+            loadProductCategories(),
+            loadProducts(false),
+          ]);
+          loadReviews().catch(function () {});
+          getUserGeo().then(function (geo) {
+            if (geo) loadStore({ geo: geo, silent: true });
+          });
           if (window.KabsarStorePolish) {
             KabsarStorePolish.wireImageZoom();
             polishAfterCartChange();

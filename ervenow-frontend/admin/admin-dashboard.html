@@ -95,6 +95,7 @@
                 <a class="admin-hero-chip" href="#" data-panel-jump="panelOrders">📦 الطلبات</a>
                 <a class="admin-hero-chip" href="#" data-panel-jump="panelStores">🏪 المتاجر</a>
                 <a class="admin-hero-chip" href="#" data-panel-jump="panelOffers">🎁 العروض</a>
+                <a class="admin-hero-chip" href="#" data-panel-jump="panelHeroBanners">🎨 البنرات</a>
                 <a class="admin-hero-chip" href="#" data-panel-jump="panelErvenowPay" id="adminHeroPayChip" style="display:none">⚡ ERVENOW PAY</a>
                 <a class="admin-hero-chip" href="/dashboard">🧭 لوحة الزائر</a>
               </div>
@@ -446,6 +447,9 @@
           <button type="button" class="panel-btn" data-panel="panelOffers" id="panelOffersBtn">
             🎁 العروض
           </button>
+          <button type="button" class="panel-btn" data-panel="panelHeroBanners" id="panelHeroBannersBtn">
+            🎨 البنرات الرئيسية
+          </button>
           <button type="button" class="panel-btn" data-panel="panelNotifications">
             🔔 الإشعارات
             <span class="panel-badge zero" id="badgeNotifications">0</span>
@@ -633,6 +637,17 @@
         </div>
         <p class="ledger-tx-updated" id="offersPanelHint">—</p>
         <div id="offersEditor"></div>
+      </div>
+
+      <div class="card admin-panel" id="panelHeroBanners">
+        <div class="panel-toolbar">
+          <strong class="panel-title">🎨 إدارة البنرات الرئيسية</strong>
+          <div class="panel-toolbar-actions">
+            <button type="button" class="btn btn-primary" id="reloadHeroBannersBtn">تحديث</button>
+          </div>
+        </div>
+        <p class="ledger-tx-updated" id="heroBannersPanelHint">—</p>
+        <div id="heroBannersEditor"></div>
       </div>
 
       <div class="card admin-panel" id="panelServices">

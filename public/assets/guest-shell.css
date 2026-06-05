@@ -254,6 +254,16 @@ body.guest-shell-page.stores-page {
 .dash-site-header__btn--primary:hover {
   opacity: 0.9;
 }
+.dash-site-header__btn.switch-account--logout {
+  background: rgba(61, 34, 19, 0.06);
+  color: var(--brown, #3d2213);
+  border: 1.5px solid rgba(61, 34, 19, 0.22);
+  box-shadow: none;
+}
+.dash-site-header__btn.switch-account--logout:hover {
+  background: rgba(61, 34, 19, 0.1);
+  opacity: 1;
+}
 @media (min-width: 900px) {
   .dash-site-header__link {
     padding: 7px 11px;
@@ -262,6 +272,13 @@ body.guest-shell-page.stores-page {
   .dash-site-header__btn {
     padding: 7px 14px;
     font-size: 0.84rem;
+  }
+}
+/* تابلت/كمبيوتر: زر الحساب يكفي — لا نكرّر دخول/خروج في الشريط */
+@media (min-width: 641px) {
+  body.guest-shell-page .dash-site-header__link[data-nav="login"],
+  body.guest-shell-page .dash-site-header__link[data-nav="logout"] {
+    display: none !important;
   }
 }
 /* جوال + آيفون أفقي — هيدر ثابت متناسق (لا يُطبَّق على تابلت عمودي ≥502px) */
@@ -365,6 +382,9 @@ body.guest-shell-page.stores-page {
     box-sizing: border-box;
   }
   body.guest-shell-page #switchAccount.switch-account--nav-only {
+    display: none !important;
+  }
+  body.guest-shell-page #switchAccount.switch-account--logout {
     display: none !important;
   }
   body.guest-shell-page .dash-header-cart,

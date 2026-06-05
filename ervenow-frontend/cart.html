@@ -193,10 +193,21 @@
       }
 
       function cartUsesPrecartSnapshot(cart) {
-        return (
-          typeof window.cartHasDeliverySnapshot === "function" &&
-          window.cartHasDeliverySnapshot(cart)
-        );
+        return typeof window.cartHasDeliverySnapshot === "function" && window.cartHasDeliverySnapshot(cart);
+      }
+
+      function applyCartDeliveryContextFromItems(cart) {
+        if (!cartUsesPrecartSnapshot(cart) || typeof window.getCartDeliveryContext !== "function") return;
+        var ctx = window.getCartDeliveryContext(cart);
+        if (!ctx) return;
+        if (Number.isFinite(ctx.drop_lat) && Number.isFinite(ctx.drop_lng)) {
+          pendingGeo.lat = ctx.drop_lat;
+          pendingGeo.lng = ctx.drop_lng;
+        }
+        var addrEl = document.getElementById("customer_address");
+        if (addrEl && ctx.drop_address && !addrEl.value.trim()) {
+          addrEl.value = ctx.drop_address;
+        }
       }
 
       function refreshStoreDeliveryCard() {
@@ -206,6 +217,20 @@
         if (!el) return;
         if (cartUsesPrecartSnapshot(cart)) {
           el.style.display = "none";
+          applyCartDeliveryContextFromItems(cart);
+          if (geoEl) {
+            var ctx =
+              typeof window.getCartDeliveryContext === "function" ? window.getCartDeliveryContext(cart) : null;
+            if (ctx && ctx.fulfillment_mode === "pickup") {
+              geoEl.textContent = "✓ الاستلام من المطعم — تم تحديده من المتجر.";
+            } else if (ctx && ctx.drop_address) {
+              geoEl.textContent = "✓ موقع التوصيل محفوظ من المتجر: " + ctx.drop_address;
+            } else if (ctx && Number.isFinite(ctx.drop_lat)) {
+              geoEl.textContent = "✓ موقع التوصيل محفوظ من المتجر.";
+            } else {
+              geoEl.textContent = "✓ إعدادات التوصيل محفوظة من المتجر.";
+            }
+          }
           return;
         }
         var need = cartNeedsStoreGeo(cart);
@@ -246,6 +271,7 @@
 
         try {
           if (cartUsesPrecartSnapshot(cart) && typeof window.resolveCartDeliveryFeeFromItems === "function") {
+            applyCartDeliveryContextFromItems(cart);
             nextFee = window.resolveCartDeliveryFeeFromItems(cart);
             if (nextFee === undefined) delete window.__ervCartDeliveryFee;
             else window.__ervCartDeliveryFee = nextFee;
@@ -406,15 +432,42 @@
               ? ErvenowCart.financialIntent(cart, deliveryFee, payMethod)
               : null;
           if (financialIntent && financialIntent.delivery_pending) {
-            showError("حدّد موقع التوصيل لحساب الأجرة قبل إتمام الطلب");
-            return;
+            if (cartUsesPrecartSnapshot(cart)) {
+              applyCartDeliveryContextFromItems(cart);
+              var snapFee =
+                typeof window.resolveCartDeliveryFeeFromItems === "function"
+                  ? window.resolveCartDeliveryFeeFromItems(cart)
+                  : undefined;
+              if (snapFee !== undefined) {
+                window.__ervCartDeliveryFee = snapFee;
+                financialIntent =
+                  window.ErvenowCart && typeof ErvenowCart.financialIntent === "function"
+                    ? ErvenowCart.financialIntent(cart, snapFee, payMethod)
+                    : financialIntent;
+              }
+            }
+            if (financialIntent && financialIntent.delivery_pending) {
+              showError("حدّد موقع التوصيل لحساب الأجرة قبل إتمام الطلب");
+              return;
+            }
           }
           var payload = { items: cart, payment_method: payMethod, financial_intent: financialIntent };
           if (payMethod === "ew_pay") {
             payload.paid = true;
             payload.payment_status = "paid";
           }
-          if (cartNeedsStoreGeo(cart) && !cartUsesPrecartSnapshot(cart)) {
+          if (cartUsesPrecartSnapshot(cart) && typeof window.getCartDeliveryContext === "function") {
+            var delCtx = window.getCartDeliveryContext(cart);
+            if (delCtx && Number.isFinite(delCtx.drop_lat) && Number.isFinite(delCtx.drop_lng)) {
+              payload.customer_lat = delCtx.drop_lat;
+              payload.customer_lng = delCtx.drop_lng;
+              payload.customer_address =
+                delCtx.drop_address ||
+                ((document.getElementById("customer_address") &&
+                  document.getElementById("customer_address").value.trim()) ||
+                  "");
+            }
+          } else if (cartNeedsStoreGeo(cart)) {
             if (pendingGeo.lat == null || pendingGeo.lng == null) {
               showError("اضغط «تحديد موقعي GPS» لإتمام طلب المتجر والتحقق من نطاق التوصيل");
               return;

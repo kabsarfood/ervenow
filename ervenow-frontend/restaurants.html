@@ -756,7 +756,7 @@
             function () {
               resolve(null);
             },
-            { enableHighAccuracy: false, timeout: 9000, maximumAge: 120000 }
+            { enableHighAccuracy: false, timeout: 2500, maximumAge: 300000 }
           );
         });
       }
@@ -1095,7 +1095,6 @@
           applyQueryFromUrl();
           if (activeCuisine === null || activeCuisine === undefined) activeCuisine = "";
           renderCuisineBarActive();
-          load();
           if (cuisineBar) {
             cuisineBar.addEventListener("click", function (e) {
               var t = e.target.closest(".stores-cuisine-chip");

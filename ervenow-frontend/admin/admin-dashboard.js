@@ -6,6 +6,7 @@ import "./modules/dashboard.js";
 import "./modules/finance.js";
 import "./modules/ervenow-pay.js";
 import "./modules/offers.js";
+import "./modules/hero-banners.js";
 import "./modules/services.js";
 import "./modules/orders.js";
 import "./modules/drivers.js";

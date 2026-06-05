@@ -1,22 +1,55 @@
 /**
  * كاش اختياري عبر Redis (REDIS_URL). بدون Redis يُعاد null دائماً من get.
+ * عند تعذّر الاتصال يُعطّل مؤقتاً حتى لا يُعلّق مسارات API (مثل /api/stores).
  */
 let client = null;
 let clientDisabled = false;
+let redisUnavailableUntil = 0;
+
+const REDIS_OP_TIMEOUT_MS = Math.max(
+  500,
+  Math.min(5000, Number(process.env.REDIS_CACHE_OP_TIMEOUT_MS) || 1500)
+);
+const REDIS_COOLDOWN_MS = Math.max(
+  5000,
+  Math.min(120_000, Number(process.env.REDIS_CACHE_COOLDOWN_MS) || 30_000)
+);
+
+function markRedisUnavailable() {
+  redisUnavailableUntil = Date.now() + REDIS_COOLDOWN_MS;
+  if (client) {
+    try {
+      client.disconnect();
+    } catch (_) {
+      /* ignore */
+    }
+    client = null;
+  }
+}
+
+function redisIsCoolingDown() {
+  return Date.now() < redisUnavailableUntil;
+}
 
 function getClient() {
-  if (clientDisabled) return null;
+  if (clientDisabled || redisIsCoolingDown()) return null;
   const url = String(process.env.REDIS_URL || "").trim();
   if (!url) return null;
   if (!client) {
     try {
       const Redis = require("ioredis");
       client = new Redis(url, {
-        maxRetriesPerRequest: null,
+        maxRetriesPerRequest: 1,
         lazyConnect: true,
+        connectTimeout: REDIS_OP_TIMEOUT_MS,
+        enableOfflineQueue: false,
+        retryStrategy: function () {
+          return null;
+        },
       });
-      client.on("error", (err) => {
+      client.on("error", function (err) {
         console.warn("[redisCache]", err && (err.message || err));
+        markRedisUnavailable();
       });
     } catch (e) {
       clientDisabled = true;
@@ -27,40 +60,58 @@ function getClient() {
   return client;
 }
 
-async function cacheGet(key) {
+async function withRedisOp(fn, fallback) {
+  if (redisIsCoolingDown()) return fallback;
   const r = getClient();
-  if (!r) return null;
+  if (!r) return fallback;
   try {
-    if (r.status === "wait" || r.status === "end") await r.connect().catch(() => {});
-    const raw = await r.get(String(key));
-    if (raw == null) return null;
-    const n = Number(raw);
-    return Number.isFinite(n) ? n : null;
+    if (r.status === "wait" || r.status === "end") {
+      await Promise.race([
+        r.connect(),
+        new Promise(function (_, reject) {
+          setTimeout(function () {
+            reject(new Error("REDIS_CONNECT_TIMEOUT"));
+          }, REDIS_OP_TIMEOUT_MS);
+        }),
+      ]);
+    }
+    return await Promise.race([
+      fn(r),
+      new Promise(function (_, reject) {
+        setTimeout(function () {
+          reject(new Error("REDIS_OP_TIMEOUT"));
+        }, REDIS_OP_TIMEOUT_MS);
+      }),
+    ]);
   } catch {
-    return null;
+    markRedisUnavailable();
+    return fallback;
   }
+}
+
+async function cacheGet(key) {
+  const raw = await withRedisOp(function (r) {
+    return r.get(String(key));
+  }, null);
+  if (raw == null) return null;
+  const n = Number(raw);
+  return Number.isFinite(n) ? n : null;
 }
 
 async function cacheSet(key, value, ttlMs) {
-  const r = getClient();
-  if (!r) return false;
-  try {
-    if (r.status === "wait" || r.status === "end") await r.connect().catch(() => {});
+  const ok = await withRedisOp(function (r) {
     const ttl = Math.max(1, Math.floor(Number(ttlMs) || 60_000));
-    await r.set(String(key), String(value), "PX", ttl);
-    return true;
-  } catch {
-    return false;
-  }
+    return r.set(String(key), String(value), "PX", ttl);
+  }, null);
+  return ok != null;
 }
 
 async function cacheGetJson(key) {
-  const r = getClient();
-  if (!r) return null;
+  const raw = await withRedisOp(function (r) {
+    return r.get(String(key));
+  }, null);
+  if (raw == null || raw === "") return null;
   try {
-    if (r.status === "wait" || r.status === "end") await r.connect().catch(() => {});
-    const raw = await r.get(String(key));
-    if (raw == null || raw === "") return null;
     return JSON.parse(raw);
   } catch {
     return null;
@@ -68,16 +119,11 @@ async function cacheGetJson(key) {
 }
 
 async function cacheSetJson(key, obj, ttlMs) {
-  const r = getClient();
-  if (!r) return false;
-  try {
-    if (r.status === "wait" || r.status === "end") await r.connect().catch(() => {});
+  const ok = await withRedisOp(function (r) {
     const ttl = Math.max(1, Math.floor(Number(ttlMs) || 60_000));
-    await r.set(String(key), JSON.stringify(obj), "PX", ttl);
-    return true;
-  } catch {
-    return false;
-  }
+    return r.set(String(key), JSON.stringify(obj), "PX", ttl);
+  }, null);
+  return ok != null;
 }
 
 module.exports = { cacheGet, cacheSet, cacheGetJson, cacheSetJson, getClient };

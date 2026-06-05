@@ -64,18 +64,30 @@ function methodsToJsonString(obj) {
   return JSON.stringify(normalizeMethodsPartial(obj));
 }
 
+let platformPaymentMethodsCache = { at: 0, value: null };
+const PLATFORM_PAYMENT_METHODS_CACHE_MS = 60 * 1000;
+
 async function loadPlatformPaymentMethodsFromDb(sb) {
   const def = cloneDefaults();
+  const now = Date.now();
+  if (
+    platformPaymentMethodsCache.value &&
+    now - platformPaymentMethodsCache.at < PLATFORM_PAYMENT_METHODS_CACHE_MS
+  ) {
+    return platformPaymentMethodsCache.value;
+  }
   if (!sb) return normalizeMethodsPartial(def);
   const { data, error } = await sb
     .from("platform_settings")
     .select("value")
     .eq("key", "checkout_payment_methods")
     .maybeSingle();
-  if (error || !data || data.value == null || String(data.value).trim() === "") {
-    return normalizeMethodsPartial(def);
-  }
-  return normalizeMethodsPartial(parseMethodsJson(data.value) || def);
+  const out =
+    error || !data || data.value == null || String(data.value).trim() === ""
+      ? normalizeMethodsPartial(def)
+      : normalizeMethodsPartial(parseMethodsJson(data.value) || def);
+  platformPaymentMethodsCache = { at: now, value: out };
+  return out;
 }
 
 async function savePlatformPaymentMethodsToDb(sb, obj) {
@@ -90,6 +102,7 @@ async function savePlatformPaymentMethodsToDb(sb, obj) {
     throw new Error(platformSettingsHelpMessage(error));
   }
   if (error) throw error;
+  platformPaymentMethodsCache = { at: 0, value: null };
 }
 
 module.exports = {

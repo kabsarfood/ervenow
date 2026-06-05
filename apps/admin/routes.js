@@ -18,6 +18,7 @@ const {
 const { createServiceClient } = require("../../shared/config/supabase");
 const platformBranding = require("../../shared/utils/platformBrandingStore");
 const platformOffers = require("../../shared/utils/platformOffersStore");
+const heroBanners = require("../../shared/utils/heroBannerStore");
 const checkoutPaymentMethods = require("../../shared/utils/checkoutPaymentMethods");
 const { sanitizeDriverOrStoreRowForApi, sanitizeDriverOrStoreListForApi } = require("../../shared/utils/bankApiSafe");
 const {
@@ -647,6 +648,50 @@ router.post("/platform-offers", requireAuth, requireRole("admin"), requireAdminP
     const raw = req.body?.offers && typeof req.body.offers === "object" ? req.body.offers : req.body || {};
     const offers = await platformOffers.applyOffersPatch(sb, raw, { publicRoot: ADMIN_PUBLIC_ROOT });
     return ok(res, { offers, message: "تم حفظ عروض المنصة" });
+  } catch (e) {
+    return fail(res, e.message || String(e), 400);
+  }
+});
+
+router.get("/hero-banners", requireAuth, requireRole("admin"), requireAdminPermission("dashboard"), async (_req, res) => {
+  try {
+    const sb = createServiceClient();
+    if (!sb) return fail(res, "قاعدة البيانات غير جاهزة", 503);
+    const banners = await heroBanners.listBanners(sb, { includeInactive: true });
+    return ok(res, { banners });
+  } catch (e) {
+    return fail(res, e.message || String(e), 500);
+  }
+});
+
+router.post("/hero-banners", requireAuth, requireRole("admin"), requireAdminPermission("dashboard"), async (req, res) => {
+  try {
+    const sb = createServiceClient();
+    if (!sb) return fail(res, "قاعدة البيانات غير جاهزة", 503);
+    const banner = await heroBanners.createBanner(sb, req.body || {}, { publicRoot: ADMIN_PUBLIC_ROOT });
+    return ok(res, { banner, message: "تم إنشاء البنر" });
+  } catch (e) {
+    return fail(res, e.message || String(e), 400);
+  }
+});
+
+router.put("/hero-banners/:id", requireAuth, requireRole("admin"), requireAdminPermission("dashboard"), async (req, res) => {
+  try {
+    const sb = createServiceClient();
+    if (!sb) return fail(res, "قاعدة البيانات غير جاهزة", 503);
+    const banner = await heroBanners.updateBanner(sb, req.params.id, req.body || {}, { publicRoot: ADMIN_PUBLIC_ROOT });
+    return ok(res, { banner, message: "تم تحديث البنر" });
+  } catch (e) {
+    return fail(res, e.message || String(e), 400);
+  }
+});
+
+router.delete("/hero-banners/:id", requireAuth, requireRole("admin"), requireAdminPermission("dashboard"), async (req, res) => {
+  try {
+    const sb = createServiceClient();
+    if (!sb) return fail(res, "قاعدة البيانات غير جاهزة", 503);
+    const result = await heroBanners.deleteBanner(sb, req.params.id);
+    return ok(res, { ...result, message: "تم حذف البنر" });
   } catch (e) {
     return fail(res, e.message || String(e), 400);
   }

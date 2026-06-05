@@ -13,7 +13,12 @@ function firstStoreItemData(groupItems) {
 
 function useCartDeliverySnapshot(groupItems) {
   const d = firstStoreItemData(groupItems);
-  return d.delivery_snapshot_version === 1 && !!d.store_id;
+  if (!d || !d.store_id) return false;
+  if (d.delivery_snapshot_version === 1) return true;
+  if (d.fulfillment_mode) return true;
+  const lat = Number(d.drop_lat);
+  const lng = Number(d.drop_lng);
+  return Number.isFinite(lat) && Number.isFinite(lng);
 }
 
 /**

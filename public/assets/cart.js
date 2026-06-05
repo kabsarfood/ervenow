@@ -74,7 +74,7 @@ function addToCart(item) {
       var newQty = Math.min(99, (Number(cur.data && cur.data.qty) || 1) + addQty);
       cart[idx] = Object.assign({}, cur, {
         price: unit * newQty,
-        data: Object.assign({}, cur.data || {}, { qty: newQty, unit_price: unit }),
+        data: Object.assign({}, cur.data || {}, item.data || {}, { qty: newQty, unit_price: unit }),
       });
       saveCart(cart);
       return { ok: true };
@@ -482,11 +482,38 @@ function cartHasStoreProducts(cart) {
   });
 }
 
+function getFirstStoreCartLineData(cart) {
+  for (var i = 0; i < (cart || []).length; i++) {
+    var d = cart[i] && cart[i].data;
+    if (d && d.store_id && d.product_id != null && String(d.product_id).trim() !== "") return d;
+  }
+  return null;
+}
+
 function cartHasDeliverySnapshot(cart) {
   return (cart || []).some(function (i) {
     var d = i && i.data;
-    return d && d.store_id && d.delivery_snapshot_version === 1;
+    if (!d || !d.store_id) return false;
+    if (d.delivery_snapshot_version === 1) return true;
+    if (d.fulfillment_mode) return true;
+    return d.drop_lat != null && d.drop_lng != null;
   });
+}
+
+function getCartDeliveryContext(cart) {
+  var d = getFirstStoreCartLineData(cart);
+  if (!d || !cartHasDeliverySnapshot(cart)) return null;
+  return {
+    store_id: d.store_id,
+    fulfillment_mode: d.fulfillment_mode || null,
+    drop_lat: d.drop_lat != null ? Number(d.drop_lat) : null,
+    drop_lng: d.drop_lng != null ? Number(d.drop_lng) : null,
+    drop_address: String(d.drop_address || d.location || "").trim(),
+    drop_maps_url: d.drop_maps_url || null,
+    delivery_fee: Number.isFinite(Number(d.delivery_fee)) ? roundMoney(Number(d.delivery_fee)) : null,
+    delivery_free: !!d.delivery_free,
+    includes_delivery: !!d.includes_delivery,
+  };
 }
 
 function resolveCartDeliveryFeeFromItems(cart) {
@@ -495,7 +522,8 @@ function resolveCartDeliveryFeeFromItems(cart) {
   (cart || []).forEach(function (it) {
     var d = it && it.data;
     if (!d || !d.store_id) return;
-    if (d.fulfillment_mode === "pickup") {
+    var mode = String(d.fulfillment_mode || "").toLowerCase();
+    if (mode === "pickup") {
       seen = true;
       fee = 0;
       return;
@@ -510,8 +538,14 @@ function resolveCartDeliveryFeeFromItems(cart) {
       fee = Math.max(fee, roundMoney(Number(d.delivery_fee)));
     }
   });
-  if (!seen && cartHasStoreProducts(cart)) return undefined;
-  return fee;
+  if (seen) return fee;
+  if (!cartHasStoreProducts(cart)) return 0;
+  var ctx = getCartDeliveryContext(cart);
+  if (!ctx) return undefined;
+  if (String(ctx.fulfillment_mode || "").toLowerCase() === "pickup") return 0;
+  if (ctx.delivery_free || ctx.includes_delivery) return 0;
+  if (ctx.delivery_fee != null) return ctx.delivery_fee;
+  return 0;
 }
 
 function fulfillmentLabelAr(mode) {
@@ -523,7 +557,10 @@ function fulfillmentLabelAr(mode) {
 }
 
 function buildCartLineDeliveryHtml(d) {
-  if (!d || !d.store_id || d.delivery_snapshot_version !== 1) return "";
+  if (!d || !d.store_id) return "";
+  var hasSnap =
+    d.delivery_snapshot_version === 1 || d.fulfillment_mode || (d.drop_lat != null && d.drop_lng != null);
+  if (!hasSnap) return "";
   var parts = ['<div class="lp-cart-line__delivery">'];
   parts.push(
     '<span class="lp-cart-line__delivery-row">🚚 ' + escCartHtml(fulfillmentLabelAr(d.fulfillment_mode)) + "</span>"
@@ -750,6 +787,7 @@ window.estimateStoreDeliveryFromKm = estimateStoreDeliveryFromKm;
 window.cartSubtotal = cartSubtotal;
 window.cartHasStoreProducts = cartHasStoreProducts;
 window.cartHasDeliverySnapshot = cartHasDeliverySnapshot;
+window.getCartDeliveryContext = getCartDeliveryContext;
 window.resolveCartDeliveryFeeFromItems = resolveCartDeliveryFeeFromItems;
 window.cartGoodsSubtotal = cartGoodsSubtotal;
 

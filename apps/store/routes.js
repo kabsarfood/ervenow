@@ -90,7 +90,9 @@ const TYPE_LABEL_AR = {
 };
 
 const LIST_CACHE_TTL_MS = 30 * 1000;
+const STORE_PUBLIC_CACHE_TTL_MS = 45 * 1000;
 let listCache = { key: "", at: 0, payload: null };
+const storePublicCache = new Map();
 
 function getTwilioClient() {
   const sid = process.env.TWILIO_ACCOUNT_SID;
@@ -543,23 +545,11 @@ router.get("/", optionalAuth, async (req, res) => {
     if (storesListRoot) {
       const mask = !req.appUser;
       const geoKey = userPos ? `${userPos.lat.toFixed(4)}:${userPos.lng.toFixed(4)}` : "nogeo";
-      const mergedRestaurant = await fetchMergedRestaurantCategorySlugs(sb);
       const rawCatFilter = String(req.query.category || "")
         .trim()
         .toLowerCase();
-      const categoryFilter = rawCatFilter && mergedRestaurant.has(rawCatFilter) ? rawCatFilter : null;
       const listTypeRaw = String(req.query.type || "").trim().toLowerCase();
-      const marketTypesList = [
-        "supermarket",
-        "minimarket",
-        "vegetables",
-        "butcher",
-        "fish",
-        "home_business",
-        "sweets",
-        "flowers_gifts",
-      ];
-      const cacheKey = `storelist-all:v4:${sortParam}|${mask ? "g" : "u"}|${geoKey}|c:${categoryFilter || "none"}|t:${listTypeRaw || "all"}`;
+      const cacheKey = `storelist-all:v4:${sortParam}|${mask ? "g" : "u"}|${geoKey}|c:${rawCatFilter || "none"}|t:${listTypeRaw || "all"}`;
       const redisListKey = `storelist:v2:${cacheKey}`;
       const redisHit = await cacheGetJson(redisListKey);
       if (redisHit && redisHit.stores) {
@@ -571,6 +561,18 @@ router.get("/", optionalAuth, async (req, res) => {
         res.set("Cache-Control", "public, max-age=30");
         return ok(res, listCache.payload);
       }
+      const mergedRestaurant = await fetchMergedRestaurantCategorySlugs(sb);
+      const categoryFilter = rawCatFilter && mergedRestaurant.has(rawCatFilter) ? rawCatFilter : null;
+      const marketTypesList = [
+        "supermarket",
+        "minimarket",
+        "vegetables",
+        "butcher",
+        "fish",
+        "home_business",
+        "sweets",
+        "flowers_gifts",
+      ];
       const extendedSelAll =
         "id,name,phone,type,category,lat,lng,status,is_active,logo_url,location_text,address,delivery_radius_km,average_rating,rating_count,total_orders,created_at";
       const baseSelAll = "id,name,phone,type,lat,lng,status,created_at";
@@ -804,6 +806,26 @@ async function getPublicStoreById(req, res) {
     const id = String(req.params.id || "").trim();
     if (!id) return fail(res, "معرّف المتجر مطلوب", 400);
 
+    const maskEarly = !req.appUser;
+    const qLatEarly = Number(req.query.user_lat ?? req.query.userLat);
+    const qLngEarly = Number(req.query.user_lng ?? req.query.userLng);
+    const geoKeyEarly =
+      Number.isFinite(qLatEarly) && Number.isFinite(qLngEarly)
+        ? `${qLatEarly.toFixed(3)}:${qLngEarly.toFixed(3)}`
+        : "nogeo";
+    const storeCacheKey = `storepub:v1:${id}:${maskEarly ? "g" : "u"}:${geoKeyEarly}`;
+    const redisStoreKey = `store:public:${storeCacheKey}`;
+    const redisStoreHit = await cacheGetJson(redisStoreKey);
+    if (redisStoreHit && redisStoreHit.store) {
+      res.set("Cache-Control", "public, max-age=20");
+      return ok(res, redisStoreHit);
+    }
+    const memHit = storePublicCache.get(storeCacheKey);
+    if (memHit && Date.now() - memHit.at < STORE_PUBLIC_CACHE_TTL_MS && memHit.payload && memHit.payload.store) {
+      res.set("Cache-Control", "public, max-age=20");
+      return ok(res, memHit.payload);
+    }
+
     let checkoutPayResolved = checkoutPaymentMethods.cloneDefaults();
     try {
       checkoutPayResolved = await computeStoreCheckoutPaymentMethodsForPublic(sb, id);
@@ -878,10 +900,14 @@ async function getPublicStoreById(req, res) {
         }
       }
       out.checkout_payment_methods = checkoutPayResolved;
-      return ok(res, {
+      const authPayload = {
         store: out,
         browse_masked: false,
-      });
+      };
+      storePublicCache.set(storeCacheKey, { at: Date.now(), payload: authPayload });
+      await cacheSetJson(redisStoreKey, authPayload, STORE_PUBLIC_CACHE_TTL_MS);
+      res.set("Cache-Control", "public, max-age=20");
+      return ok(res, authPayload);
     }
 
     const fake = maskStoreRowForGuest(row, 0, rowLabelOpts);
@@ -905,6 +931,9 @@ async function getPublicStoreById(req, res) {
       }
     }
     maskedPayload.store.checkout_payment_methods = checkoutPayResolved;
+    storePublicCache.set(storeCacheKey, { at: Date.now(), payload: maskedPayload });
+    await cacheSetJson(redisStoreKey, maskedPayload, STORE_PUBLIC_CACHE_TTL_MS);
+    res.set("Cache-Control", "public, max-age=20");
     return ok(res, maskedPayload);
   } catch (e) {
     console.error("[store/public]", e);

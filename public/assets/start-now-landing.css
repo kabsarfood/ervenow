@@ -115,6 +115,62 @@
   color: #fff;
 }
 
+.sn-hero__cta--outline {
+  background: rgba(61, 34, 19, 0.04);
+  backdrop-filter: blur(6px);
+  border: 1.5px solid rgba(61, 34, 19, 0.2);
+  color: var(--sn-brown);
+  box-shadow: none;
+}
+
+.sn-hero__cta--outline:hover {
+  background: rgba(61, 34, 19, 0.08);
+  box-shadow: none;
+  transform: none;
+  color: var(--sn-brown);
+}
+
+.sn-hero--has-image {
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  color: #fff;
+}
+
+.sn-hero--has-image::before {
+  background: linear-gradient(
+    180deg,
+    rgba(30, 18, 10, 0.55) 0%,
+    rgba(30, 18, 10, 0.45) 55%,
+    rgba(30, 18, 10, 0.35) 100%
+  );
+}
+
+.sn-hero--has-image .sn-hero__eyebrow {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.25);
+  color: #fff;
+}
+
+.sn-hero--has-image .sn-hero__title span {
+  color: #f0d48a;
+}
+
+.sn-hero--has-image .sn-hero__sub {
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.sn-hero--has-image .sn-hero__cta--outline {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.45);
+  color: #fff;
+}
+
+.sn-hero--has-image .sn-hero__cta--outline:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+}
+
 .sn-guest-note {
   display: none;
   margin: 24px auto 0;
