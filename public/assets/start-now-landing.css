@@ -171,6 +171,169 @@
   color: #fff;
 }
 
+/* بنر واحد — حركة خفيفة على الخلفية */
+.sn-hero--ken-burns {
+  animation: snHeroKenBurns 18s ease-in-out infinite alternate;
+}
+
+@keyframes snHeroKenBurns {
+  0% {
+    background-size: 100% auto;
+    background-position: center 40%;
+  }
+  100% {
+    background-size: 112% auto;
+    background-position: center 58%;
+  }
+}
+
+/* بنرات متعددة — عرض دوّار */
+.sn-hero--carousel {
+  padding: 0;
+  min-height: clamp(320px, 58vw, 480px);
+  background: #1a1008;
+  text-align: center;
+}
+
+.sn-hero--carousel::before {
+  display: none;
+}
+
+.sn-hero-carousel__track {
+  position: relative;
+  min-height: clamp(320px, 58vw, 480px);
+}
+
+.sn-hero-carousel__slide {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.85s ease, visibility 0.85s ease;
+  pointer-events: none;
+}
+
+.sn-hero-carousel__slide.is-active {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  z-index: 1;
+}
+
+.sn-hero-carousel__bg {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  transform: scale(1.04);
+  animation: snHeroSlideZoom 14s ease-in-out infinite alternate;
+}
+
+.sn-hero-carousel__slide.is-active .sn-hero-carousel__bg {
+  animation-play-state: running;
+}
+
+.sn-hero-carousel__overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(30, 18, 10, 0.55) 0%,
+    rgba(30, 18, 10, 0.42) 55%,
+    rgba(30, 18, 10, 0.5) 100%
+  );
+}
+
+.sn-hero-carousel__body {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: clamp(320px, 58vw, 480px);
+  padding: clamp(48px, 10vw, 64px) 24px clamp(56px, 10vw, 72px);
+  color: #fff;
+}
+
+.sn-hero-carousel__dots {
+  position: absolute;
+  z-index: 3;
+  inset-inline: 0;
+  bottom: max(14px, env(safe-area-inset-bottom, 14px));
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 16px;
+}
+
+.sn-hero-carousel__dot {
+  width: 10px;
+  height: 10px;
+  min-width: 10px;
+  min-height: 10px;
+  border-radius: 50%;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.35);
+  transition: transform 0.2s, background 0.25s, box-shadow 0.25s;
+}
+
+.sn-hero-carousel__dot.is-active {
+  background: var(--sn-gold);
+  box-shadow: 0 0 0 4px rgba(185, 135, 47, 0.28);
+  transform: scale(1.08);
+}
+
+.sn-hero--carousel .sn-hero__eyebrow {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.25);
+  color: #fff;
+}
+
+.sn-hero--carousel .sn-hero__title span {
+  color: #f0d48a;
+}
+
+.sn-hero--carousel .sn-hero__sub {
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.sn-hero--carousel .sn-hero__cta--outline {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.45);
+  color: #fff;
+}
+
+.sn-hero--carousel #guestStartNote {
+  position: relative;
+  z-index: 2;
+  margin-top: -48px;
+  margin-bottom: 16px;
+}
+
+@keyframes snHeroSlideZoom {
+  0% {
+    transform: scale(1.04);
+  }
+  100% {
+    transform: scale(1.1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sn-hero--ken-burns,
+  .sn-hero-carousel__bg {
+    animation: none !important;
+  }
+
+  .sn-hero-carousel__slide {
+    transition: none;
+  }
+}
+
 .sn-guest-note {
   display: none;
   margin: 24px auto 0;

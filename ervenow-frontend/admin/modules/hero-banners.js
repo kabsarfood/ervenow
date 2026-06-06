@@ -103,7 +103,7 @@ app.renderHeroBannersEditor = function () {
   if (!root) return;
   var rows = Array.isArray(heroBannersCache) ? heroBannersCache : [];
   var html =
-    '<p class="sub" style="margin:0 0 12px">يُعرض على الصفحة الرئيسية أول بنر مفعّل حسب الترتيب ضمن فترة الجدولة. استخدم <code>|</code> في العنوان لفصل السطر المميز.</p>' +
+    '<p class="sub" style="margin:0 0 12px">يُعرض على الصفحة الرئيسية كل بنر <strong>مفعّل</strong> ضمن فترة الجدولة — بنر واحد بخلفية متحركة، أو أكثر في عرض دوّار. استخدم <code>|</code> في العنوان لفصل السطر المميز.</p>' +
     '<div id="heroBannersList"></div>' +
     '<button type="button" class="btn btn-ghost" id="heroBannersAddBtn" style="margin-top:10px">+ إضافة بنر</button>';
   root.innerHTML = html;
@@ -228,6 +228,7 @@ app.loadHeroBannersPanel = async function () {
     if (hint) hint.textContent = "GET/POST/PUT/DELETE /api/admin/hero-banners";
   } catch (e) {
     if (hint) hint.textContent = e.message || "تعذّر التحميل";
+    app.renderHeroBannersEditor();
   }
 };
 

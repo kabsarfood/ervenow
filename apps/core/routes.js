@@ -373,9 +373,9 @@ const heroBanners = require("../../shared/utils/heroBannerStore");
 router.get("/hero-banner", async (_req, res) => {
   try {
     const sb = createServiceClient();
-    const banner = await heroBanners.getActiveBanner(sb);
+    const banners = await heroBanners.getActiveBanners(sb);
     res.set("Cache-Control", "public, max-age=30");
-    return ok(res, { banner });
+    return ok(res, { banner: banners[0] || null, banners });
   } catch (e) {
     return fail(res, e.message || String(e), 500);
   }

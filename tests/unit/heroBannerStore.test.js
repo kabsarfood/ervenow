@@ -1,6 +1,7 @@
 const {
   isWithinSchedule,
   normalizeBannerRow,
+  getActiveBanners,
 } = require("../../shared/utils/heroBannerStore");
 
 describe("heroBannerStore", function () {
@@ -44,5 +45,38 @@ describe("heroBannerStore", function () {
         now
       )
     ).toBe(false);
+  });
+
+  test("getActiveBanners returns all scheduled active rows in order", async function () {
+    const rows = [
+      { id: "1", title: "A", is_active: true, sort_order: 0, starts_at: null, ends_at: null },
+      { id: "2", title: "B", is_active: true, sort_order: 1, starts_at: null, ends_at: null },
+      { id: "3", title: "C", is_active: true, sort_order: 2, starts_at: "2099-01-01T00:00:00Z", ends_at: null },
+    ];
+    const sb = {
+      from: function () {
+        return {
+          select: function () {
+            return this;
+          },
+          order: function () {
+            return this;
+          },
+          eq: function () {
+            return Promise.resolve({ data: rows, error: null });
+          },
+        };
+      },
+    };
+    const now = new Date("2026-06-05T12:00:00Z");
+    const active = await getActiveBanners(sb);
+    expect(active.map(function (b) {
+      return b.id;
+    })).toEqual(["1", "2"]);
+    expect(
+      active.every(function (b) {
+        return isWithinSchedule(b, now);
+      })
+    ).toBe(true);
   });
 });

@@ -380,6 +380,8 @@ app.loadPanelById = function (panelId) {
       return done(app.loadSettingsPanel());
     case "panelOffers":
       return done(app.loadOffersPanel());
+    case "panelHeroBanners":
+      return done(app.loadHeroBannersPanel());
     case "panelServices":
       return done(app.loadServicesPanel());
     case "panelErvenowPay":

@@ -119,10 +119,15 @@ async function listBanners(sb, { includeInactive = false } = {}) {
 }
 
 async function getActiveBanner(sb) {
+  const rows = await getActiveBanners(sb);
+  return rows[0] || null;
+}
+
+async function getActiveBanners(sb) {
   const rows = await listBanners(sb, { includeInactive: false });
-  return rows.find(function (b) {
+  return rows.filter(function (b) {
     return isWithinSchedule(b);
-  }) || null;
+  });
 }
 
 async function createBanner(sb, body, { publicRoot } = {}) {
@@ -220,6 +225,7 @@ module.exports = {
   isWithinSchedule,
   listBanners,
   getActiveBanner,
+  getActiveBanners,
   createBanner,
   updateBanner,
   deleteBanner,
