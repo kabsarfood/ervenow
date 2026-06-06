@@ -109,7 +109,6 @@
         <input id="orderPhone" type="tel" placeholder="05xxxxxxxx" dir="ltr" />
 
         <button type="button" class="btn btn-primary" id="btnCart">إضافة للسلة والدفع</button>
-        <button type="button" class="btn btn-ghost" id="btnSend" style="margin-top: 8px">إرسال مباشر (بدون سلة)</button>
         <div class="msg" id="msg" style="display: none"></div>
       </div>
     </div>
@@ -240,87 +239,10 @@
       document.getElementById("btnCart").onclick = function () {
         if (!document.getElementById("drop").value.trim()) return show("أدخل موقع التسليم", false);
         if (!window.ErvenowServiceCart) return show("تعذر تحميل السلة", false);
+        var phone = document.getElementById("orderPhone").value.trim();
+        if (!phone) return show("أدخل رقم الجوال", false);
         var r = ErvenowServiceCart.add(buildOrderCartItem());
         if (!r.ok) show(r.message || "تعذر الإضافة", false);
-      };
-
-      document.getElementById("btnSend").onclick = async function () {
-        var drop = document.getElementById("drop").value.trim();
-        if (!drop) return show("أدخل موقع التسليم", false);
-
-        var pickup = document.getElementById("pickup").value.trim();
-        var notes = document.getElementById("notes").value.trim();
-        var svc = document.getElementById("svc").value;
-        var btn = document.getElementById("btnSend");
-
-        function onRetry(ev) {
-          var d = ev.detail || {};
-          if (!btn.disabled || String(d.path || "").indexOf("/api/") === -1) return;
-          show("جارٍ الإرسال… (محاولة " + d.attempt + " من " + d.maxAttempts + ")", true);
-        }
-        window.addEventListener("ervenow-api-retry", onRetry);
-
-        try {
-          btn.disabled = true;
-          show("جارٍ الإرسال…", true);
-          var deliveryId = null;
-          var idemKey =
-            window.crypto && window.crypto.randomUUID
-              ? window.crypto.randomUUID()
-              : "idem-" + Date.now() + "-" + Math.random().toString(36).slice(2, 12);
-
-          var bodyExtra = {};
-          if (urlStoreId && String(urlStoreId).trim()) {
-            bodyExtra.store_id = String(urlStoreId).trim();
-          }
-
-          if (svc === "food") {
-            var j = await window.PlatformAPI.api("/api/food/orders", {
-              method: "POST",
-              idempotencyKey: idemKey,
-              body: Object.assign(
-                {
-                  type: "delivery",
-                  items: [{ name: "طلب سريع من المنصة", qty: 1, price: 0 }],
-                  total: 0,
-                  drop_address: drop,
-                  address: drop,
-                  pickup_address: pickup || "المطعم",
-                  notes: "مطاعم — " + (notes || ""),
-                },
-                bodyExtra
-              ),
-            });
-            deliveryId = j.delivery_order && j.delivery_order.id;
-          } else {
-            var typeLabel = { delivery: "توصيل", market: "متجر", services: "خدمات" }[svc] || svc;
-            var j2 = await window.PlatformAPI.api("/api/delivery/orders", {
-              method: "POST",
-              idempotencyKey: idemKey,
-              body: Object.assign(
-                {
-                  pickup_address: pickup,
-                  drop_address: drop,
-                  notes: "[" + typeLabel + "] " + (notes || ""),
-                },
-                bodyExtra
-              ),
-            });
-            deliveryId = j2.order && j2.order.id;
-          }
-
-          if (!deliveryId) throw new Error("لم يُرجع الخادم معرّف الطلب");
-
-          show("تم إنشاء الطلب. جاري التحويل للتتبع…", true);
-          setTimeout(function () {
-            location.href = "/track?id=" + encodeURIComponent(deliveryId);
-          }, 500);
-        } catch (e) {
-          show(String(e.message || e), false);
-        } finally {
-          window.removeEventListener("ervenow-api-retry", onRetry);
-          btn.disabled = false;
-        }
       };
     </script>
   </body>

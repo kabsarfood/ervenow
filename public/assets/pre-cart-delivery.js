@@ -473,6 +473,22 @@
                 return;
               }
               close({ ok: true, snapshot: snap, qty: qty });
+              if (
+                snap.fulfillment_mode !== "pickup" &&
+                Number.isFinite(Number(snap.drop_lat)) &&
+                Number.isFinite(Number(snap.drop_lng))
+              ) {
+                if (global.saveDeliveryLocation && typeof global.saveDeliveryLocation === "function") {
+                  global.saveDeliveryLocation({
+                    lat: Number(snap.drop_lat),
+                    lng: Number(snap.drop_lng),
+                    address: snap.drop_address || "",
+                    fulfillment_mode: snap.fulfillment_mode,
+                    store_id: snap.store_id,
+                    maps_url: snap.drop_maps_url || null,
+                  });
+                }
+              }
             } catch (e) {
               quoteErr = e.message || "تعذر إتمام الإضافة";
               busy = false;

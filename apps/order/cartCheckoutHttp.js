@@ -12,7 +12,7 @@ const { logger } = require("../../shared/utils/logger");
 const { perfLog } = require("../../shared/utils/perfLog");
 const { runCheckoutInsert } = require("../checkout/service");
 const { bumpDeliveryOrdersListEpoch } = require("../../shared/utils/deliveryOrdersListCache");
-const { setDeprecationHeaders, UNIFIED_ORDER_CREATE } = require("../../shared/middleware/deprecateLegacyRoute");
+const { deprecateLegacyOrderRoute, UNIFIED_ORDER_CREATE } = require("../../shared/middleware/deprecateLegacyRoute");
 
 /**
  * @param {import("express").Request} req
@@ -20,7 +20,7 @@ const { setDeprecationHeaders, UNIFIED_ORDER_CREATE } = require("../../shared/mi
  * @param {{ applyPaymentGate?: boolean, deprecated?: boolean }} opts
  */
 async function handleUnifiedCartCheckoutHttp(req, res, opts = {}) {
-  if (opts.deprecated) setDeprecationHeaders(res, UNIFIED_ORDER_CREATE);
+  if (opts.deprecated) deprecateLegacyOrderRoute(req, res, "POST /api/checkout", UNIFIED_ORDER_CREATE);
 
   const perfStart = Date.now();
   const idemKey = normalizeIdempotencyKey(req);

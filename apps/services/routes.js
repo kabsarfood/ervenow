@@ -222,10 +222,14 @@ router.post("/home-order", optionalAuth, async (req, res) => {
             customer_phone,
             total_amount: totalAmount,
             payment_status: "unpaid",
+            payment_mode: "cart",
           },
         },
       });
     }
+
+    const { deprecateLegacyOrderRoute, UNIFIED_ORDER_CREATE } = require("../../shared/middleware/deprecateLegacyRoute");
+    deprecateLegacyOrderRoute(req, res, "POST /api/services/home-order", UNIFIED_ORDER_CREATE);
 
     const payAfterDiag = Boolean(entry.payAfterDiagnosis);
     let payment_status = "unpaid";
@@ -277,6 +281,9 @@ router.get("/gas/pricing", (_req, res) => {
 
 router.post("/gas-order", optionalAuth, async (req, res) => {
   try {
+    const { deprecateLegacyOrderRoute, UNIFIED_ORDER_CREATE } = require("../../shared/middleware/deprecateLegacyRoute");
+    deprecateLegacyOrderRoute(req, res, "POST /api/services/gas-order", UNIFIED_ORDER_CREATE);
+
     const sb = req.supabase || createServiceClient();
     if (!sb) return fail(res, "تعذر تهيئة الاتصال بقاعدة البيانات", 503);
 

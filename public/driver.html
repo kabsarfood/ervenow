@@ -131,11 +131,12 @@
 
       var navOrderRef = null;
       var pendingOrderRef = null;
+      var pendingIsReady = false;
       var proximityTimer = null;
       var autoGateOrderId = null;
       var autoPickupSent = false;
       var autoDeliverSent = false;
-      /** pending | accepted | picked (خرج للتسليم) | delivering (إتمام) */
+      /** pending | ready | accepted | picked_up | picked | delivering */
       var driverMainActionKind = "";
 
       function haversineM(lat1, lng1, lat2, lng2) {
@@ -387,9 +388,22 @@
       }
 
       async function patchOrderStatus(orderId, status) {
-        await window.PlatformAPI.api("/api/delivery/orders/" + encodeURIComponent(orderId) + "/status", {
+        var st = String(status || "").toLowerCase();
+        if (st === "delivering") {
+          await window.PlatformAPI.api("/api/driver/start-delivery/" + encodeURIComponent(orderId), {
+            method: "POST",
+          });
+          return;
+        }
+        if (st === "delivered") {
+          await window.PlatformAPI.api("/api/driver/complete-order/" + encodeURIComponent(orderId), {
+            method: "POST",
+          });
+          return;
+        }
+        await window.PlatformAPI.api("/api/order/" + encodeURIComponent(orderId) + "/status", {
           method: "PATCH",
-          body: { status: status },
+          body: { delivery_status: status },
         });
       }
 
@@ -404,13 +418,13 @@
         var dLat = Number(o.drop_lat);
         var dLng = Number(o.drop_lng);
 
-        if (st === "accepted" && !autoPickupSent && Number.isFinite(pLat) && Number.isFinite(pLng)) {
+        if ((st === "accepted" || st === "picked_up") && !autoPickupSent && Number.isFinite(pLat) && Number.isFinite(pLng)) {
           var dp = haversineM(lat, lng, pLat, pLng);
           if (dp <= PROXIMITY_M) {
             autoPickupSent = true;
             try {
               await patchOrderStatus(o.id, "delivering");
-              speakArabic("أنت قريب من الاستلام. تم تسجيل بدء التوصيل تلقائياً.");
+              speakArabic(st === "picked_up" ? "تم استلام الطلب من المتجر. بدء التوصيل." : "أنت قريب من الاستلام. تم تسجيل بدء التوصيل تلقائياً.");
               showSuccess("تم بدء التوصيل (قرب نقطة الاستلام)");
               await loadOrders();
             } catch (e) {
@@ -606,9 +620,25 @@
         new: "جديد — بانتظار مندوب",
         pending: "في الانتظار",
         accepted: "تم استلام الطلب",
+        preparing: "قيد التجهيز",
+        ready: "جاهز للاستلام",
+        picked_up: "استلم من المتجر",
+        picked: "استلم من المتجر",
         delivering: "جاري التوصيل",
         delivered: "تم التسليم",
       };
+
+      function normStatus(o) {
+        var s = String((o && (o.delivery_status || o.status)) || "")
+          .trim()
+          .toLowerCase();
+        if (s === "picked") return "picked_up";
+        return s;
+      }
+
+      function isMine(o) {
+        return myUserId && o && o.driver_id && String(o.driver_id) === myUserId;
+      }
 
       function getDistToPickup(o) {
         if (lastLat == null || lastLng == null || !o) return null;
@@ -651,11 +681,11 @@
 
         if (po && !to) {
           var num0 = (po.order_number && String(po.order_number).trim()) || String(po.id).slice(0, 8) + "…";
-          if (chip) chip.textContent = "طلب مفتوح: " + num0;
+          if (chip) chip.textContent = (pendingIsReady ? "جاهز: " : "طلب مفتوح: ") + num0;
           main.disabled = false;
-          main.textContent = "قبول الطلب";
+          main.textContent = pendingIsReady ? "استلام الطلب" : "قبول الطلب";
           main.className = "driver-main-action mode-pending";
-          driverMainActionKind = "pending";
+          driverMainActionKind = pendingIsReady ? "ready" : "pending";
           return;
         }
 
@@ -668,12 +698,20 @@
           var dPickup = getDistToPickup(to);
           var dDrop = getDistToDrop(to);
 
-          if (st === "accepted") {
-            main.disabled =
-              !Number.isFinite(Number(to.pickup_lat)) || !Number.isFinite(Number(to.pickup_lng));
-            main.textContent = "الذهاب للاستلام";
-            main.className = "driver-main-action mode-nav";
-            driverMainActionKind = "accepted";
+          if (st === "picked_up" || st === "accepted") {
+            var nearPickup = dPickup != null && dPickup <= NEAR_DROP_MANUAL_M;
+            if (nearPickup && st === "picked_up") {
+              main.disabled = false;
+              main.textContent = "بدء التوصيل";
+              main.className = "driver-main-action mode-nav";
+              driverMainActionKind = "start_delivering";
+            } else {
+              main.disabled =
+                !Number.isFinite(Number(to.pickup_lat)) || !Number.isFinite(Number(to.pickup_lng));
+              main.textContent = st === "picked_up" ? "الذهاب للمتجر" : "الذهاب للاستلام";
+              main.className = "driver-main-action mode-nav";
+              driverMainActionKind = st === "picked_up" ? "picked_up_nav" : "accepted";
+            }
           } else if (st === "delivering") {
             var nearDrop = dDrop != null && dDrop <= NEAR_DROP_MANUAL_M;
             if (nearDrop) {
@@ -695,7 +733,7 @@
             driverMainActionKind = "";
           }
 
-          if (dPickup != null && st === "accepted") {
+          if (dPickup != null && (st === "accepted" || st === "picked_up")) {
             locStatus.textContent =
               "المسافة لنقطة الاستلام: ≈ " + Math.round(dPickup) + " م — عند " + PROXIMITY_M + "م يُكمَى بدء التوصيل تلقائياً.";
           } else if (dDrop != null && st === "delivering") {
@@ -705,11 +743,73 @@
         }
       }
 
-      function updateNavDockCombined(trackOrder, pendingOrder) {
+      function updateNavDockCombined(trackOrder, openOrder, openIsReady) {
         navOrderRef = trackOrder && trackOrder.id != null ? trackOrder : null;
-        pendingOrderRef = pendingOrder && pendingOrder.id != null ? pendingOrder : null;
+        pendingOrderRef = openOrder && openOrder.id != null ? openOrder : null;
+        pendingIsReady = !!openIsReady;
         setUltraMode(!!navOrderRef);
         refreshDockUI();
+      }
+
+      function renderOrderCard(o) {
+        var div = document.createElement("div");
+        div.className = "order-row";
+        var deliveryStatus = o.delivery_status || o.status;
+        var st = STATUS_AR[normStatus(o)] || deliveryStatus;
+        var src = (o.series_source && String(o.series_source)) || "";
+        var isKabsar = /kabsar/i.test(src);
+        var sourceTag = isKabsar ? "🍛 كبسار" : "🌐 المنصة";
+        var extLine =
+          o.external_order_id != null && String(o.external_order_id) !== ""
+            ? " — " + o.external_order_id
+            : "";
+        var phone = isLoggedIn ? o.customer_phone || "—" : "**********";
+        var body = '<p class="drv-order-card__meta-line" translate="no">' + sourceTag + extLine + "</p>";
+        if (o.store_name || o.store_id) {
+          body += '<p class="drv-order-card__meta-line" translate="no">🏪 ' + escHtml(o.store_name || "متجر") + "</p>";
+          if (o.store_address || o.pickup_address) {
+            body += "<p translate=\"no\">📍 " + escHtml(o.store_address || o.pickup_address) + "</p>";
+          }
+        }
+        body += "<p>📍 " + escHtml(o.drop_address || "—") + "</p>";
+        body += "<p>هاتف العميل: " + escHtml(phone) + "</p>";
+        var actions =
+          '<a class="drv-btn drv-btn--ghost" href="/driver-app?order=' +
+          encodeURIComponent(o.id) +
+          '#track">تتبع الحي</a>';
+        div.innerHTML = ErvenowDriverNav.orderCardHtml(o, {
+          statusLabel: st,
+          bodyHtml: body,
+          actionsHtml: actions,
+        });
+        return div;
+      }
+
+      function escHtml(s) {
+        return String(s || "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/"/g, "&quot;");
+      }
+
+      function appendSection(box, title, titleClass, items, emptyText) {
+        var sec = document.createElement("section");
+        sec.className = "driver-order-section";
+        var h = document.createElement("h3");
+        h.className = "driver-order-section__title" + (titleClass ? " " + titleClass : "");
+        h.textContent = title;
+        sec.appendChild(h);
+        if (!items.length) {
+          var p = document.createElement("p");
+          p.className = "driver-order-section__empty";
+          p.textContent = emptyText;
+          sec.appendChild(p);
+        } else {
+          items.forEach(function (o) {
+            sec.appendChild(renderOrderCard(o));
+          });
+        }
+        box.appendChild(sec);
       }
 
       async function loadOrders() {
@@ -717,6 +817,14 @@
         var box = document.getElementById("orders");
         box.innerHTML = "";
         var orders = j.orders || [];
+        var readyQueue = j.ready_queue || orders.filter(function (o) {
+          return normStatus(o) === "ready" && !o.driver_id;
+        });
+        var activeList = j.active || orders.filter(function (o) {
+          return isMine(o) && (normStatus(o) === "accepted" || normStatus(o) === "picked_up" || normStatus(o) === "delivering");
+        });
+        var completedList = j.completed || [];
+
         var ids = orders.map(function (o) {
           return o.id;
         });
@@ -730,76 +838,53 @@
         }
         knownOrders = ids;
 
-        var pendingOrder = orders.find(function (o) {
-          var s = String(o.delivery_status || o.status || "").toLowerCase();
-          return (s === "new" || s === "pending") && !o.driver_id;
-        });
+        var readyOrder = readyQueue[0] || null;
+        var legacyPending =
+          orders.find(function (o) {
+            var s = normStatus(o);
+            return (s === "new" || s === "pending") && !o.driver_id;
+          }) || null;
+        var openOrder = readyOrder || legacyPending;
 
-        function escHtml(s) {
-          return String(s || "")
-            .replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
-            .replace(/"/g, "&quot;");
-        }
-
-        if (!orders.length) {
+        if (!readyQueue.length && !activeList.length && !completedList.length && !legacyPending) {
           box.innerHTML =
             '<p class="driver-loc-status" style="margin:0">لا توجد طلبات متاحة الآن — اسحب للتحديث أو انتظر إشعاراً جديداً.</p>';
+        } else {
+          appendSection(
+            box,
+            "🟢 جاهزة للاستلام",
+            "driver-order-section__title--ready",
+            readyQueue,
+            "لا طلبات جاهزة من المتجر الآن."
+          );
+          appendSection(
+            box,
+            "🚚 قيد التوصيل",
+            "driver-order-section__title--active",
+            activeList,
+            "لا طلبات نشطة — استلم طلباً جاهزاً أو قبول طلب توصيل."
+          );
+          appendSection(
+            box,
+            "✅ مكتملة",
+            "driver-order-section__title--done",
+            completedList,
+            "لا طلبات مكتملة حديثاً."
+          );
         }
 
-        orders.forEach(function (o) {
-          var div = document.createElement("div");
-          div.className = "order-row";
-          var deliveryStatus = o.delivery_status || o.status;
-          var st = STATUS_AR[deliveryStatus] || deliveryStatus;
-          var src = (o.series_source && String(o.series_source)) || "";
-          var isKabsar = /kabsar/i.test(src);
-          var sourceTag = isKabsar ? "🍛 كبسار" : "🌐 المنصة";
-          var extLine =
-            o.external_order_id != null && String(o.external_order_id) !== ""
-              ? " — " + o.external_order_id
-              : "";
-          var phone = isLoggedIn ? (o.customer_phone || "—") : "**********";
-          var body = '<p class="drv-order-card__meta-line" translate="no">' + sourceTag + extLine + "</p>";
-          if (o.store_name || o.store_id) {
-            body += '<p class="drv-order-card__meta-line" translate="no">🏪 ' + escHtml(o.store_name || "متجر") + "</p>";
-            if (o.store_address) {
-              body += '<p translate="no">📍 ' + escHtml(o.store_address) + "</p>";
-            }
-          }
-          body += "<p>📍 " + escHtml(o.drop_address || "—") + "</p>";
-          body += "<p>هاتف العميل: " + escHtml(phone) + "</p>";
-          var actions =
-            '<a class="drv-btn drv-btn--ghost" href="/driver-app?order=' +
-            encodeURIComponent(o.id) +
-            '#track">تتبع الحي</a>';
-          div.innerHTML = ErvenowDriverNav.orderCardHtml(o, {
-            statusLabel: st,
-            bodyHtml: body,
-            actionsHtml: actions,
-          });
-          box.appendChild(div);
-        });
-
         var trackOrder =
-          orders.find(function (x) {
-            return (
-              (x.delivery_status || x.status) === "delivering" &&
-              myUserId &&
-              x.driver_id &&
-              String(x.driver_id) === myUserId
-            );
+          activeList.find(function (x) {
+            return normStatus(x) === "delivering";
           }) ||
-          orders.find(function (x) {
-            return (
-              (x.delivery_status || x.status) === "accepted" &&
-              myUserId &&
-              x.driver_id &&
-              String(x.driver_id) === myUserId
-            );
+          activeList.find(function (x) {
+            return normStatus(x) === "picked_up";
+          }) ||
+          activeList.find(function (x) {
+            return normStatus(x) === "accepted";
           });
 
-        updateNavDockCombined(trackOrder, pendingOrder);
+        updateNavDockCombined(trackOrder, openOrder, !!readyOrder);
 
         if (trackOrder) {
           updateOrderEndpoints(trackOrder);
@@ -894,7 +979,7 @@
         var to = navOrderRef;
         var kind = driverMainActionKind;
 
-        if (kind === "pending" && po && !to) {
+        if ((kind === "pending" || kind === "ready") && po && !to) {
           var oid = String(po.id != null ? po.id : "").trim();
           if (!oid) return err("معرّف الطلب مفقود");
           try {
@@ -905,8 +990,8 @@
               showError((a && a.message) || "تم استلام الطلب من مندوب آخر");
               return;
             }
-            speakArabic("تم قبول الطلب.");
-            showSuccess("تم قبول الطلب");
+            speakArabic(kind === "ready" ? "تم استلام الطلب من المتجر." : "تم قبول الطلب.");
+            showSuccess(kind === "ready" ? "تم استلام الطلب" : "تم قبول الطلب");
             await loadOrders();
           } catch (e) {
             err(e.message || String(e));
@@ -916,9 +1001,21 @@
 
         if (!to) return;
 
-        if (kind === "accepted") {
-          speakArabic("اتجه إلى نقطة الاستلام.");
+        if (kind === "accepted" || kind === "picked_up_nav") {
+          speakArabic(kind === "picked_up_nav" ? "اتجه إلى المتجر." : "اتجه إلى نقطة الاستلام.");
           openGoogleMapsDir(to.pickup_lat, to.pickup_lng);
+          return;
+        }
+
+        if (kind === "start_delivering") {
+          try {
+            await patchOrderStatus(to.id, "delivering");
+            speakArabic("بدء التوصيل.");
+            showSuccess("جاري التوصيل");
+            await loadOrders();
+          } catch (e) {
+            showError(e.message || "تعذر بدء التوصيل");
+          }
           return;
         }
 

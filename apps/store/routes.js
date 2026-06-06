@@ -25,6 +25,7 @@ const {
   storeRowCountsAsRestaurant,
   resolveRestaurantBrowseCategory,
 } = require("../../shared/restaurantCategories");
+const { countOrdersByStatus, enrichOrderForBoard } = require("../../shared/utils/storeOrderBoard");
 const {
   isMarketStoreType,
   productCategoryLabelAr,
@@ -1732,6 +1733,65 @@ router.get("/wallet", requireAuth, requireStoreRole, async (req, res) => {
   }
 });
 
+async function attachDriversToOrders(sb, orders) {
+  const ids = [...new Set((orders || []).map((o) => o.driver_id).filter(Boolean))];
+  if (!ids.length) return orders || [];
+  const { data: users } = await sb.from("users").select("id, phone, name").in("id", ids);
+  const byId = {};
+  for (const u of users || []) byId[u.id] = { phone: u.phone, name: u.name || null };
+  return (orders || []).map((o) =>
+    Object.assign({}, o, {
+      driver: o.driver_id && byId[o.driver_id] ? byId[o.driver_id] : null,
+    })
+  );
+}
+
+router.get("/order-board", requireAuth, requireStoreRole, async (req, res) => {
+  try {
+    const sb = createServiceClient();
+    if (!sb) return fail(res, "الخادم غير مهيأ لقاعدة البيانات", 503);
+    const digits = normalizePhone(req.appUser.phone);
+    const { data: st, error: sErr } = await sb
+      .from("stores")
+      .select("id,name,phone,status,type,category,logo_url,address,location_text,lat,lng")
+      .eq("phone", digits)
+      .eq("status", "approved")
+      .maybeSingle();
+    if (sErr) return fail(res, sErr.message, 400);
+    if (!st) return fail(res, "لا يوجد متجر معتمد لجوالك.", 404);
+
+    const { data: rows, error: oErr } = await sb
+      .from("orders")
+      .select(
+        "id,order_number,order_total,total_with_vat,total_amount,delivery_fee,platform_fee,status,delivery_status,created_at,breakdown,data,customer_phone,drop_address,drop_lat,drop_lng,pickup_address,pickup_lat,pickup_lng,store_id,store_name,payment_status,payment_method,driver_id"
+      )
+      .eq("store_id", st.id)
+      .order("created_at", { ascending: false })
+      .limit(150);
+
+    if (oErr) return fail(res, oErr.message, 400);
+
+    let orders = (rows || []).map(enrichOrderForBoard);
+    orders = await attachDriversToOrders(sb, orders);
+    const status_counts = countOrdersByStatus(rows || []);
+
+    const walletPayload = await getStoreWalletPayloadWithFallback(sb, req.appUser.id, st.id);
+
+    return ok(res, {
+      store: st,
+      orders,
+      status_counts,
+      wallet: {
+        balance: walletPayload.balance,
+        total_commission: walletPayload.total_commission,
+      },
+    });
+  } catch (e) {
+    console.error("[store/order-board]", e);
+    return fail(res, e.message || "خطأ في الخادم", 500);
+  }
+});
+
 router.get("/merchant-dashboard", requireAuth, requireStoreRole, async (req, res) => {
   try {
     const sb = createServiceClient();
@@ -2080,6 +2140,7 @@ const STORE_GET_BY_ID_RESERVED = new Set([
   "public",
   "my-store",
   "merchant-dashboard",
+  "order-board",
   "merchant-hub",
   "withdrawals",
   "delivery-policy",

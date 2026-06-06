@@ -206,7 +206,6 @@
             <label>طريقة السداد</label>
             <div class="gd-actions">
               <button type="button" class="btn btn-primary" id="gdPayCart">إضافة للسلة والدفع</button>
-              <button type="button" class="btn btn-solid" id="gdPayCod">الدفع عند التوصيل (مباشر)</button>
             </div>
           </div>
 
@@ -347,41 +346,15 @@
           el.style.fontWeight = "700";
         }
 
-        async function submitCod() {
-          if (!validateForm()) return;
-          var mode = currentMode();
-          showMsg("جاري إرسال الطلب...", true);
-          try {
-            var res = await fetch(window.PlatformAPI.apiUrl("/api/services/gas-order"), {
-              method: "POST",
-              headers: Object.assign({ "Content-Type": "application/json" }, authHeaders()),
-              body: JSON.stringify({
-                gas_mode: mode,
-                qty: mode === "cylinder_swap" ? document.getElementById("gdCylQty").value : 1,
-                gas_liters: mode === "central_refill" ? document.getElementById("gdLiters").value : null,
-                district: document.getElementById("gdDistrict").value.trim(),
-                location: document.getElementById("gdLocation").value.trim(),
-                customer_phone: document.getElementById("gdPhone").value.trim(),
-                pay_on_delivery: true,
-              }),
-            });
-            var j = await res.json();
-            if (!res.ok || !j.ok) throw new Error((j && (j.message || j.error)) || "فشل الإرسال");
-            showMsg(
-              "تم تسجيل الطلب — رقم: " +
-                (j.order_number || (j.booking && j.booking.service_order_number) || "—") +
-                ". تم إشعار المزودين عبر واتساب. الدفع عند التوصيل.",
-              true
-            );
-          } catch (e) {
-            showMsg(String(e.message || e), false);
-          }
-        }
-
         function goCart() {
           if (!validateForm()) return;
           var item = buildCartItem();
           item.customer_phone = document.getElementById("gdPhone").value.trim();
+          item.payment_status = "unpaid";
+          if (item.data) {
+            item.data.payment_mode = "on_service";
+            item.data.payment_status = "unpaid";
+          }
           if (window.ErvenowServiceCart && ErvenowServiceCart.add) {
             ErvenowServiceCart.add(item);
             return;
@@ -411,7 +384,6 @@
         document.getElementById("gdServiceType").onchange = toggleSubforms;
         document.getElementById("gdCylQty").onchange = updatePrice;
         document.getElementById("gdLiters").onchange = updatePrice;
-        document.getElementById("gdPayCod").onclick = submitCod;
         document.getElementById("gdPayCart").onclick = goCart;
         document.getElementById("gdBtnMap").onclick = openMap;
         document.getElementById("gdMapConfirm").onclick = function () {

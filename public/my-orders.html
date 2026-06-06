@@ -833,7 +833,7 @@
             return;
           }
 
-          var j = await PlatformAPI.api("/api/delivery/orders");
+          var j = await PlatformAPI.api("/api/order/orders");
           var orders = Array.isArray(j.orders) ? j.orders : [];
           renderSections(orders);
           if (openAfterLoad) setOrdersPanelOpen(true);

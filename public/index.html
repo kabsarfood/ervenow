@@ -254,6 +254,40 @@
         color: #fff;
       }
 
+      .lp-nav-wallet {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        min-height: 44px;
+        padding: 8px 14px;
+        border-radius: 10px;
+        border: 1px solid rgba(185, 135, 47, 0.38);
+        background: linear-gradient(145deg, rgba(255, 254, 251, 0.98), rgba(248, 241, 229, 0.92));
+        text-decoration: none;
+        color: var(--brown);
+        font-weight: 800;
+        font-size: 0.88rem;
+        font-family: inherit;
+        box-sizing: border-box;
+        gap: 6px;
+        white-space: nowrap;
+      }
+      .lp-nav-wallet__label {
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: var(--muted);
+      }
+      .lp-nav-wallet__val {
+        font-variant-numeric: tabular-nums;
+        letter-spacing: 0.02em;
+      }
+      .lp-nav-wallet__cur {
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: var(--gold);
+      }
+
       .lp-header__actions {
         display: flex;
         align-items: center;
@@ -3466,6 +3500,10 @@
       }
 
       function logout() {
+        if (window.ErvenowGuestShell && typeof ErvenowGuestShell.performGuestLogout === "function") {
+          ErvenowGuestShell.performGuestLogout();
+          return;
+        }
         localStorage.removeItem("token");
         localStorage.removeItem("ervenow_access_token");
         localStorage.removeItem("erwenow_access_token");
@@ -3617,7 +3655,7 @@
           clearHeaderUserMid();
           setQuickLogoutVisible(false);
           if (window.ErvenowGuestShell && ErvenowGuestShell.paintIndexNav) {
-            ErvenowGuestShell.paintIndexNav("");
+            ErvenowGuestShell.paintIndexNav("", { authenticated: false });
           }
         }
         var authArea = document.getElementById("authArea");
@@ -3696,7 +3734,7 @@
             setQuickLogoutVisible(true);
             await refreshHeaderWallet(token, role);
             if (window.ErvenowGuestShell && ErvenowGuestShell.paintIndexNav) {
-              ErvenowGuestShell.paintIndexNav(role);
+              ErvenowGuestShell.paintIndexNav(role, { authenticated: true });
             }
           } catch (e) {
             applyStartMenuAuthState(true, "");
@@ -3707,14 +3745,14 @@
             setQuickLogoutVisible(true);
             await refreshHeaderWallet(token, "");
             if (window.ErvenowGuestShell && ErvenowGuestShell.paintIndexNav) {
-              ErvenowGuestShell.paintIndexNav("");
+              ErvenowGuestShell.paintIndexNav("", { authenticated: true });
             }
           }
         }
       }
 
       if (window.ErvenowGuestShell && ErvenowGuestShell.paintIndexNav) {
-        ErvenowGuestShell.paintIndexNav("");
+        ErvenowGuestShell.paintIndexNav("", { authenticated: false });
       }
     </script>
     <script>
@@ -3807,7 +3845,7 @@
             if (role === "customer" || role === "user") {
               badge.style.display = "";
               var headersC = { Authorization: "Bearer " + token };
-              var resC = await fetch(window.PlatformAPI.apiUrl("/api/delivery/orders"), { headers: headersC });
+              var resC = await fetch(window.PlatformAPI.apiUrl("/api/order/orders"), { headers: headersC });
               var dataC = await resC.json().catch(function () {
                 return {};
               });
@@ -3826,7 +3864,7 @@
             }
             badge.style.display = "";
             var headers = { Authorization: "Bearer " + token };
-            var res = await fetch(window.PlatformAPI.apiUrl("/api/delivery/orders"), { headers: headers });
+            var res = await fetch(window.PlatformAPI.apiUrl("/api/order/orders"), { headers: headers });
             var data = await res.json().catch(function () {
               return {};
             });

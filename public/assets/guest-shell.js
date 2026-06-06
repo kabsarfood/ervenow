@@ -134,6 +134,34 @@
     global.ErvenowNotificationCenter.mount({ mount: host, key: "guest-shell-header" });
   }
 
+  function walletHrefForRole(role) {
+    role = String(role || "").toLowerCase();
+    if (role === "driver") return "/driver-wallet";
+    if (role === "store" || role === "merchant" || role === "restaurant") return "/store-dashboard#wallet";
+    return "/wallet.html";
+  }
+
+  async function fetchWalletBalanceForRole(role) {
+    role = String(role || "").toLowerCase();
+    var bal = 0;
+    if (role === "driver") {
+      var j = await global.PlatformAPI.api("/api/driver/wallet");
+      bal = Number(j.balance) || 0;
+    } else if (role === "store" || role === "merchant" || role === "restaurant") {
+      try {
+        var md = await global.PlatformAPI.api("/api/store/merchant-dashboard");
+        bal = Number((md.wallet && md.wallet.balance) || 0);
+      } catch (em) {
+        var w2 = await global.PlatformAPI.api("/api/wallet");
+        bal = Number(w2.balance) || 0;
+      }
+    } else {
+      var w = await global.PlatformAPI.api("/api/wallet");
+      bal = Number(w.balance) || 0;
+    }
+    return bal;
+  }
+
   async function refreshHeaderWallet(role) {
     var box = document.getElementById("dashHeaderWallet");
     var amountEl = document.getElementById("dashHeaderWalletAmount");
@@ -150,63 +178,71 @@
       return;
     }
     box.hidden = false;
-    var href = "/wallet.html";
-    if (role === "driver") href = "/driver-wallet";
-    if (role === "store" || role === "merchant" || role === "restaurant") href = "/store-dashboard#wallet";
-    box.setAttribute("href", href);
+    box.setAttribute("href", walletHrefForRole(role));
     amountEl.textContent = "…";
     try {
-      var bal = 0;
-      if (role === "driver") {
-        var j = await global.PlatformAPI.api("/api/driver/wallet");
-        bal = Number(j.balance) || 0;
-      } else if (role === "store" || role === "merchant" || role === "restaurant") {
-        try {
-          var md = await global.PlatformAPI.api("/api/store/merchant-dashboard");
-          bal = Number((md.wallet && md.wallet.balance) || 0);
-        } catch (em) {
-          var w2 = await global.PlatformAPI.api("/api/wallet");
-          bal = Number(w2.balance) || 0;
-        }
-      } else {
-        var w = await global.PlatformAPI.api("/api/wallet");
-        bal = Number(w.balance) || 0;
-      }
-      amountEl.textContent = fmtWalletMoney(bal);
+      amountEl.textContent = fmtWalletMoney(await fetchWalletBalanceForRole(role));
     } catch (e) {
       amountEl.textContent = "—";
     }
   }
 
-  function performGuestLogout() {
+  async function refreshIndexNavWallet(role) {
+    var box = document.getElementById("lpNavWallet");
+    var amountEl = document.getElementById("lpNavWalletAmount");
+    if (!box || !amountEl) return;
+    role = String(role || "").toLowerCase();
+    if (!hasToken() || role === "admin") return;
+    box.setAttribute("href", walletHrefForRole(role));
+    amountEl.textContent = "…";
+    try {
+      amountEl.textContent = fmtWalletMoney(await fetchWalletBalanceForRole(role));
+    } catch (e) {
+      amountEl.textContent = "—";
+    }
+  }
+
+  function clearGuestSessionState() {
     try {
       if (global.ErvenowAuthGuard && typeof global.ErvenowAuthGuard.clearSession === "function") {
         global.ErvenowAuthGuard.clearSession();
-      } else {
-        try {
-          if (global.PlatformAPI && typeof global.PlatformAPI.setToken === "function") {
-            global.PlatformAPI.setToken("");
-          }
-          TOKEN_STORAGE_KEYS.forEach(function (k) {
-            try {
-              localStorage.removeItem(k);
-            } catch (_e) {}
-          });
-          localStorage.removeItem("userId");
-          localStorage.removeItem("userPhone");
-        } catch (_e2) {}
-        try {
-          document.cookie = "auth_token=; path=/; max-age=0; SameSite=Lax";
-        } catch (_e3) {}
       }
+    } catch (_e) {}
+    try {
+      if (global.PlatformAPI && typeof global.PlatformAPI.setToken === "function") {
+        global.PlatformAPI.setToken("");
+      }
+    } catch (_e2) {}
+    TOKEN_STORAGE_KEYS.forEach(function (k) {
+      try {
+        localStorage.removeItem(k);
+      } catch (_e3) {}
+    });
+    try {
+      localStorage.removeItem("userId");
+      localStorage.removeItem("userPhone");
+      localStorage.removeItem("guest");
+      localStorage.removeItem("ervenow_guest_browse");
     } catch (_e4) {}
     try {
-      global.dispatchEvent(new CustomEvent("ervenow:auth-changed"));
+      if (global.ErvenowGuestBrowse && global.ErvenowGuestBrowse.setActive) {
+        global.ErvenowGuestBrowse.setActive(false);
+      }
     } catch (_e5) {}
     try {
+      document.cookie = "auth_token=; path=/; max-age=0; SameSite=Lax";
+    } catch (_e6) {}
+  }
+
+  function performGuestLogout() {
+    clearGuestSessionState();
+    try {
+      global.dispatchEvent(new CustomEvent("ervenow:auth-changed"));
+    } catch (_e) {}
+    try {
       global.location.reload();
-    } catch (_e6) {
-      global.location.href = "/login?role=customer";
+    } catch (_e2) {
+      global.location.href = "/";
     }
   }
 
@@ -339,7 +375,7 @@
 
   function wireNavLogoutLinks(root) {
     if (!root) return;
-    root.querySelectorAll('.dash-site-header__link[data-nav="logout"]').forEach(function (a) {
+    root.querySelectorAll('[data-nav="logout"]').forEach(function (a) {
       if (a.getAttribute("data-erv-logout-wired") === "1") return;
       a.setAttribute("data-erv-logout-wired", "1");
       a.addEventListener("click", function (e) {
@@ -347,6 +383,54 @@
         performGuestLogout();
       });
     });
+  }
+
+  function buildIndexNavLinks(role, opts) {
+    var links = buildNavLinks(role, opts);
+    if (opts && opts.authenticated && String(role || "").toLowerCase() !== "admin") {
+      var i = -1;
+      for (var k = 0; k < links.length; k++) {
+        if (links[k].key === "logout") {
+          i = k;
+          break;
+        }
+      }
+      var walletLink = {
+        key: "wallet",
+        href: walletHrefForRole(role),
+        label: "رصيدك",
+        walletChip: true,
+      };
+      if (i >= 0) links.splice(i, 0, walletLink);
+      else links.push(walletLink);
+    }
+    return links;
+  }
+
+  function lpNavLinkHtml(link) {
+    if (link.walletChip) {
+      return (
+        '<a class="lp-nav-wallet" id="lpNavWallet" href="' +
+        link.href +
+        '" data-nav="wallet">' +
+        '<span class="lp-nav-wallet__label">رصيدك</span> ' +
+        '<span class="lp-nav-wallet__val" id="lpNavWalletAmount">…</span> ' +
+        '<span class="lp-nav-wallet__cur">ر.س</span></a>'
+      );
+    }
+    var cls = link.cta ? ' class="lp-nav__cta"' : "";
+    var href = link.key === "logout" ? "#" : link.href;
+    return (
+      '<a href="' +
+      href +
+      '" data-nav="' +
+      link.key +
+      '"' +
+      cls +
+      ">" +
+      link.label +
+      "</a>"
+    );
   }
 
   function paintHeaderNav(activeNav, role, opts) {
@@ -367,39 +451,30 @@
     syncHeaderLayoutMetrics();
   }
 
-  function lpNavLinkHtml(link) {
-    var cls = link.cta ? ' class="lp-nav__cta"' : "";
-    return (
-      '<a href="' +
-      link.href +
-      '" data-nav="' +
-      link.key +
-      '"' +
-      cls +
-      ">" +
-      link.label +
-      "</a>"
-    );
-  }
-
   function paintIndexNav(role, opts) {
+    opts = opts && typeof opts === "object" ? opts : {};
+    var navLinks = buildIndexNavLinks(role, opts);
     var wrap = document.getElementById("lpNavWrap");
-    if (!wrap) return;
-    wrap.innerHTML =
-      '<nav class="lp-nav" aria-label="التنقل الرئيسي">' +
-      buildNavLinks(role, opts)
-        .map(lpNavLinkHtml)
-        .join("") +
-      "</nav>";
+    if (wrap) {
+      wrap.innerHTML =
+        '<nav class="lp-nav" aria-label="التنقل الرئيسي">' +
+        navLinks.map(lpNavLinkHtml).join("") +
+        "</nav>";
+      wireNavLogoutLinks(wrap);
+      if (opts.authenticated) {
+        refreshIndexNavWallet(role);
+      }
+    }
     var mobileQuick = document.getElementById("lpMobileQuickNav");
     if (mobileQuick) {
       mobileQuick.innerHTML = buildNavLinks(role, opts)
         .map(function (l) {
+          var href = l.key === "logout" ? "#" : l.href;
           return (
             '<a role="menuitem" class="lp-dd-item' +
             (l.cta ? " lp-dd-item--cta" : "") +
             '" href="' +
-            l.href +
+            href +
             '" data-nav="' +
             l.key +
             '"><span class="lp-dd-ic" aria-hidden="true">•</span><span class="lp-dd-link__text">' +
@@ -408,6 +483,7 @@
           );
         })
         .join("");
+      wireNavLogoutLinks(mobileQuick);
     }
     var controlMenu = document.getElementById("lpNavControlMenu");
     if (controlMenu) {
@@ -671,6 +747,9 @@
     paintIndexNav: paintIndexNav,
     refreshCartBadge: refreshCartBadge,
     refreshHeaderWallet: refreshHeaderWallet,
+    refreshIndexNavWallet: refreshIndexNavWallet,
+    performGuestLogout: performGuestLogout,
+    clearGuestSessionState: clearGuestSessionState,
     refreshAuthHeader: function () {
       whenPlatformApiReady(function () {
         initAuthHeader();

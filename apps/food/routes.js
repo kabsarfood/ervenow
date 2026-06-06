@@ -71,8 +71,8 @@ const { normalizeIdempotencyKey } = require("../../shared/utils/idempotency");
 /** إنشاء طلب مطعم + ربط طلب توصيل */
 router.post("/orders", requireAuth, async (req, res) => {
   try {
-    const { setDeprecationHeaders, UNIFIED_ORDER_CREATE } = require("../../shared/middleware/deprecateLegacyRoute");
-    setDeprecationHeaders(res, UNIFIED_ORDER_CREATE);
+    const { deprecateLegacyOrderRoute, UNIFIED_ORDER_CREATE } = require("../../shared/middleware/deprecateLegacyRoute");
+    deprecateLegacyOrderRoute(req, res, "POST /api/food/orders", UNIFIED_ORDER_CREATE);
     const body = req.body || {};
     const idemKey = normalizeIdempotencyKey(req);
     const isDelivery = body.type === "delivery" || !!body.address || !!body.drop_address;

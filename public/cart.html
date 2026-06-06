@@ -50,11 +50,6 @@
 
     <div class="dash-main">
       <div class="layout cart-page-wrap">
-        <div class="cart-page-hero">
-          <h1>سلة التسوق</h1>
-          <p id="cartItemsCount" class="cart-page-hero__count">لا توجد قطع في السلة</p>
-        </div>
-
         <div class="card" id="guestCartBanner" style="display: none; margin-bottom: 12px; background: #fff8ee; border-color: #e8d4bc">
           <p class="sub" style="margin: 0">
             لإتمام الطلب سجّل <strong>اسمك</strong> وجوالك ورمز واتساب. بعد إكمال التسجيل سيتم مراجعة الطلب وتفعيل الحساب.
@@ -69,19 +64,24 @@
           aria-label="سلة التسوق"
         ></div>
 
-        <p class="cart-page-tools" id="cartPageTools" hidden>
-          <button type="button" class="cart-checkout-secondary" id="clearBtn" onclick="clearAllCart()">تفريغ السلة</button>
-        </p>
-
-        <div class="card" id="storeDeliveryCard" style="display: none; margin-top: 12px">
-          <div class="badge">موقع التوصيل (طلبات المتاجر)</div>
-          <p class="sub">
-            نحتاج موقعك لحساب المسافة (<strong>أجرة التوصيل = كم × 2.3 ريال تقريباً</strong>) والتأكد أن المتجر يغطي منطقتك.
-          </p>
-          <label for="customer_address">عنوان التوصيل (نصّي)</label>
-          <textarea id="customer_address" rows="2" placeholder="الحي، الشارع، رقم الوحدة…"></textarea>
-          <button type="button" class="btn btn-ghost" id="btnGeo" style="margin-top: 10px">تحديد موقعي GPS</button>
-          <p class="sub" id="geoStatus" style="margin-top: 8px"></p>
+        <div class="card cart-delivery-loc" id="storeDeliveryCard" style="display: none; margin-top: 12px">
+          <div class="badge">موقع التوصيل</div>
+          <div id="deliveryLocSavedView">
+            <p class="sub cart-delivery-loc__display" id="deliveryLocDisplay">—</p>
+            <p class="sub cart-delivery-loc__status" id="geoStatus" style="margin-top: 8px"></p>
+            <button type="button" class="btn btn-ghost cart-delivery-loc__change" id="btnChangeLocation" style="margin-top: 10px">
+              تغيير الموقع
+            </button>
+          </div>
+          <div id="deliveryLocEditorView" hidden>
+            <p class="sub">عدّل العنوان أو حدّد GPS — لن يُطلب الموقع تلقائياً.</p>
+            <label for="customer_address">عنوان التوصيل (نصّي)</label>
+            <textarea id="customer_address" rows="2" placeholder="الحي، الشارع، رقم الوحدة…" style="font-size: 16px"></textarea>
+            <div class="cart-delivery-loc__actions" style="margin-top: 10px; display: flex; flex-wrap: wrap; gap: 8px">
+              <button type="button" class="btn btn-ghost" id="btnGeo">تحديد موقعي GPS</button>
+              <button type="button" class="btn btn-primary" id="btnSaveLocation">حفظ الموقع</button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -125,18 +125,8 @@
           continueHref: "/dashboard",
           checkoutId: "lpCartCheckoutBtn",
           showFullFin: true,
+          hidePanelHead: true,
         });
-        if (ErvenowCartUI.initContinueShopping) ErvenowCartUI.initContinueShopping(null);
-        var tools = document.getElementById("cartPageTools");
-        function syncTools() {
-          if (tools) tools.hidden = !getCart().length;
-        }
-        syncTools();
-        var _render = window.renderCartPage;
-        window.renderCartPage = function (opts) {
-          if (typeof _render === "function") _render(opts);
-          syncTools();
-        };
       })();
 
       (function restorePendingMapCart() {
@@ -183,153 +173,17 @@
       }
       window.refreshGuestCartBanner = refreshGuestCartBanner;
 
-      var pendingGeo = { lat: null, lng: null };
-      var deliveryEngineFlags = null;
+      window.__ervCartPendingGeo = { lat: null, lng: null };
 
-      function cartNeedsStoreGeo(cart) {
-        return (cart || []).some(function (i) {
-          return i && i.data && i.data.store_id;
-        });
-      }
-
-      function cartUsesPrecartSnapshot(cart) {
-        return typeof window.cartHasDeliverySnapshot === "function" && window.cartHasDeliverySnapshot(cart);
-      }
-
-      function applyCartDeliveryContextFromItems(cart) {
-        if (!cartUsesPrecartSnapshot(cart) || typeof window.getCartDeliveryContext !== "function") return;
-        var ctx = window.getCartDeliveryContext(cart);
-        if (!ctx) return;
-        if (Number.isFinite(ctx.drop_lat) && Number.isFinite(ctx.drop_lng)) {
-          pendingGeo.lat = ctx.drop_lat;
-          pendingGeo.lng = ctx.drop_lng;
-        }
-        var addrEl = document.getElementById("customer_address");
-        if (addrEl && ctx.drop_address && !addrEl.value.trim()) {
-          addrEl.value = ctx.drop_address;
-        }
-      }
-
-      function refreshStoreDeliveryCard() {
-        var cart = getCart();
-        var el = document.getElementById("storeDeliveryCard");
-        var geoEl = document.getElementById("geoStatus");
-        if (!el) return;
-        if (cartUsesPrecartSnapshot(cart)) {
-          el.style.display = "none";
-          applyCartDeliveryContextFromItems(cart);
-          if (geoEl) {
-            var ctx =
-              typeof window.getCartDeliveryContext === "function" ? window.getCartDeliveryContext(cart) : null;
-            if (ctx && ctx.fulfillment_mode === "pickup") {
-              geoEl.textContent = "✓ الاستلام من المطعم — تم تحديده من المتجر.";
-            } else if (ctx && ctx.drop_address) {
-              geoEl.textContent = "✓ موقع التوصيل محفوظ من المتجر: " + ctx.drop_address;
-            } else if (ctx && Number.isFinite(ctx.drop_lat)) {
-              geoEl.textContent = "✓ موقع التوصيل محفوظ من المتجر.";
-            } else {
-              geoEl.textContent = "✓ إعدادات التوصيل محفوظة من المتجر.";
-            }
-          }
-          return;
-        }
-        var need = cartNeedsStoreGeo(cart);
-        el.style.display = need ? "block" : "none";
-        if (!need) {
-          pendingGeo.lat = null;
-          pendingGeo.lng = null;
-          if (geoEl) geoEl.textContent = "";
-        }
-      }
-      window.refreshStoreDeliveryCard = refreshStoreDeliveryCard;
-
-      document.getElementById("btnGeo").onclick = function () {
-        var st = document.getElementById("geoStatus");
-        if (!navigator.geolocation) {
-          if (st) st.textContent = "المتصفح لا يدعم الموقع.";
-          return;
-        }
-        if (st) st.textContent = "جاري تحديد الموقع…";
-        navigator.geolocation.getCurrentPosition(
-          function (p) {
-            pendingGeo.lat = p.coords.latitude;
-            pendingGeo.lng = p.coords.longitude;
-            if (st) st.textContent = "تم حفظ موقع التوصيل.";
-            void refreshCartDeliveryFee();
-          },
-          function () {
-            if (st) st.textContent = "تعذر الوصول للموقع — تأكد من الإذن.";
-          },
-          { enableHighAccuracy: false, timeout: 12000, maximumAge: 0 }
-        );
-      };
-
-      async function refreshCartDeliveryFee() {
-        var cart = getCart();
-        var prevFee = window.__ervCartDeliveryFee;
-        var nextFee = prevFee;
-
-        try {
-          if (cartUsesPrecartSnapshot(cart) && typeof window.resolveCartDeliveryFeeFromItems === "function") {
-            applyCartDeliveryContextFromItems(cart);
-            nextFee = window.resolveCartDeliveryFeeFromItems(cart);
-            if (nextFee === undefined) delete window.__ervCartDeliveryFee;
-            else window.__ervCartDeliveryFee = nextFee;
-            if (typeof renderCartPage === "function") renderCartPage({ skipDeliveryRefresh: true });
-            return;
-          }
-          if (!cartNeedsStoreGeo(cart)) {
-            nextFee = 0;
-          } else if (pendingGeo.lat == null || pendingGeo.lng == null) {
-            delete window.__ervCartDeliveryFee;
-            if (typeof renderCartPage === "function") {
-              renderCartPage({ skipDeliveryRefresh: true });
-            }
-            return;
-          } else {
-            var sid = null;
-            cart.forEach(function (i) {
-              var d = i && i.data;
-              if (d && d.store_id && !sid) sid = String(d.store_id);
-            });
-            if (!sid || !window.PlatformAPI || typeof PlatformAPI.apiUrl !== "function") {
-              delete window.__ervCartDeliveryFee;
-            } else {
-              var url =
-                PlatformAPI.apiUrl("/api/store/public/" + encodeURIComponent(sid)) +
-                "?user_lat=" +
-                encodeURIComponent(pendingGeo.lat) +
-                "&user_lng=" +
-                encodeURIComponent(pendingGeo.lng);
-              var res = await fetch(url);
-              var j = await res.json().catch(function () {
-                return {};
-              });
-              var km = j && j.store && j.store.distance_km;
-              if (typeof km === "number" && Number.isFinite(km)) {
-                nextFee = Math.round(km * 2.3 * 100) / 100;
-              } else {
-                delete window.__ervCartDeliveryFee;
-                nextFee = undefined;
-              }
-            }
-          }
-        } catch (e) {
-          /* keep previous fee on error */
-        }
-
-        var feeChanged = nextFee !== prevFee;
-        if (nextFee === undefined) {
-          delete window.__ervCartDeliveryFee;
-        } else {
-          window.__ervCartDeliveryFee = nextFee;
-        }
-
-        if (feeChanged && typeof renderCartPage === "function") {
-          renderCartPage({ skipDeliveryRefresh: true });
-        }
-      }
-      window.refreshCartDeliveryFee = refreshCartDeliveryFee;
+      (function bindCartCheckoutButtons() {
+        if (typeof window.executeCartCheckout !== "function") return;
+        window.checkout = window.executeCartCheckout;
+        var lpBtn = document.getElementById("lpCartCheckoutBtn");
+        var mobBtn = document.getElementById("cartMobileCheckoutBtn");
+        if (lpBtn) lpBtn.onclick = window.checkout;
+        if (mobBtn) mobBtn.onclick = window.checkout;
+        if (typeof renderCartPage === "function") renderCartPage();
+      })();
 
       function removeItem(id) {
         removeFromCart(id);
@@ -338,197 +192,7 @@
       }
       window.removeItem = removeItem;
 
-      function clearAllCart() {
-        localStorage.removeItem("cart");
-        delete window.__ervCartDeliveryFee;
-        updateCartCount();
-        renderCartPage();
-        showSuccess("تم تفريغ السلة");
-      }
-      window.clearAllCart = clearAllCart;
-
-      function checkoutIdempotencyKey() {
-        var KEY = "ervenow:checkout-idem";
-        try {
-          var saved = sessionStorage.getItem(KEY);
-          if (saved && String(saved).trim()) return String(saved).trim();
-        } catch (_e) {}
-        var key =
-          window.crypto && window.crypto.randomUUID
-            ? window.crypto.randomUUID()
-            : "checkout-" + Date.now() + "-" + Math.random().toString(36).slice(2, 12);
-        try {
-          sessionStorage.setItem(KEY, key);
-        } catch (_e2) {}
-        return key;
-      }
-
-      function clearCheckoutIdempotencyKey() {
-        try {
-          sessionStorage.removeItem("ervenow:checkout-idem");
-        } catch (_e) {}
-      }
-
-      const checkout = safeClick(async function () {
-        const cart = window.ErvenowCart ? ErvenowCart.get() : getCart();
-        if (!cart.length) {
-          showError("السلة فارغة");
-          return;
-        }
-
-        var payMethod =
-          typeof window.getSelectedCartPaymentMethod === "function"
-            ? window.getSelectedCartPaymentMethod()
-            : null;
-        if (!payMethod) {
-          showError("اختر وسيلة الدفع");
-          return;
-        }
-        if (payMethod === "ew_pay" && typeof window.validateEwPayCheckout === "function") {
-          var ewCheck = window.validateEwPayCheckout();
-          if (!ewCheck.ok) {
-            showError(ewCheck.message || "رصيد المحفظة غير كافٍ");
-            if (typeof window.loadEwPayBalanceForCart === "function") {
-              void window.loadEwPayBalanceForCart();
-            }
-            return;
-          }
-        }
-
-        const btn =
-          (typeof getCartCheckoutButtonEl === "function" && getCartCheckoutButtonEl()) ||
-          document.getElementById("lpCartCheckoutBtn") ||
-          document.getElementById("checkoutBtn");
-
-        const token =
-          (window.PlatformAPI && typeof window.PlatformAPI.getToken === "function" && window.PlatformAPI.getToken()) ||
-          localStorage.getItem("token") ||
-          "";
-
-        if (!token || !String(token).trim()) {
-          window.location.href =
-            "/login?mode=register&role=customer&next=" + encodeURIComponent("/cart");
-          return;
-        }
-
-        if (!window.PlatformAPI || typeof window.PlatformAPI.api !== "function") {
-          showError("تعذّر الاتصال بالخادم — حدّث الصفحة");
-          return;
-        }
-
-        if (btn) {
-          btn.disabled = true;
-          btn.innerText = "جارٍ الإرسال...";
-        }
-        if (typeof syncCartCheckoutButtons === "function") syncCartCheckoutButtons();
-
-        var idemKey = checkoutIdempotencyKey();
-
-        try {
-          var deliveryFee =
-            typeof window.__ervCartDeliveryFee === "number" ? window.__ervCartDeliveryFee : undefined;
-          var financialIntent =
-            window.ErvenowCart && typeof ErvenowCart.financialIntent === "function"
-              ? ErvenowCart.financialIntent(cart, deliveryFee, payMethod)
-              : null;
-          if (financialIntent && financialIntent.delivery_pending) {
-            if (cartUsesPrecartSnapshot(cart)) {
-              applyCartDeliveryContextFromItems(cart);
-              var snapFee =
-                typeof window.resolveCartDeliveryFeeFromItems === "function"
-                  ? window.resolveCartDeliveryFeeFromItems(cart)
-                  : undefined;
-              if (snapFee !== undefined) {
-                window.__ervCartDeliveryFee = snapFee;
-                financialIntent =
-                  window.ErvenowCart && typeof ErvenowCart.financialIntent === "function"
-                    ? ErvenowCart.financialIntent(cart, snapFee, payMethod)
-                    : financialIntent;
-              }
-            }
-            if (financialIntent && financialIntent.delivery_pending) {
-              showError("حدّد موقع التوصيل لحساب الأجرة قبل إتمام الطلب");
-              return;
-            }
-          }
-          var payload = { items: cart, payment_method: payMethod, financial_intent: financialIntent };
-          if (payMethod === "ew_pay") {
-            payload.paid = true;
-            payload.payment_status = "paid";
-          }
-          if (cartUsesPrecartSnapshot(cart) && typeof window.getCartDeliveryContext === "function") {
-            var delCtx = window.getCartDeliveryContext(cart);
-            if (delCtx && Number.isFinite(delCtx.drop_lat) && Number.isFinite(delCtx.drop_lng)) {
-              payload.customer_lat = delCtx.drop_lat;
-              payload.customer_lng = delCtx.drop_lng;
-              payload.customer_address =
-                delCtx.drop_address ||
-                ((document.getElementById("customer_address") &&
-                  document.getElementById("customer_address").value.trim()) ||
-                  "");
-            }
-          } else if (cartNeedsStoreGeo(cart)) {
-            if (pendingGeo.lat == null || pendingGeo.lng == null) {
-              showError("اضغط «تحديد موقعي GPS» لإتمام طلب المتجر والتحقق من نطاق التوصيل");
-              return;
-            }
-            payload.customer_lat = pendingGeo.lat;
-            payload.customer_lng = pendingGeo.lng;
-            payload.customer_address =
-              (document.getElementById("customer_address") && document.getElementById("customer_address").value.trim()) ||
-              "";
-          }
-
-          const data = await window.PlatformAPI.api("/api/order/create", {
-            method: "POST",
-            body: payload,
-            idempotencyKey: idemKey,
-          });
-
-          clearCheckoutIdempotencyKey();
-          showSuccess("تم إنشاء " + ((data.orders && data.orders.length) || 0) + " طلب");
-          if (window.ErvenowCart) ErvenowCart.clear();
-          else {
-            localStorage.removeItem("cart");
-            delete window.__ervCartDeliveryFee;
-            updateCartCount();
-            renderCartPage();
-          }
-        } catch (e) {
-          var msg = String((e && e.message) || "حدث خطأ، حاول مرة أخرى");
-          if (/رصيد|غير كاف|insufficient/i.test(msg)) {
-            showError(msg);
-            if (typeof window.loadEwPayBalanceForCart === "function") {
-              void window.loadEwPayBalanceForCart();
-            }
-            return;
-          }
-          if (/401|غير مصرح|token/i.test(msg)) {
-            window.location.href =
-              "/login?mode=register&role=customer&next=" + encodeURIComponent("/cart");
-            return;
-          }
-          showError(msg);
-          return;
-        } finally {
-          if (btn) {
-            btn.disabled = false;
-            btn.innerText = "إتمام الطلب";
-          }
-          if (typeof syncCartCheckoutButtons === "function") syncCartCheckoutButtons();
-          if (typeof syncCartPageCheckoutBtn === "function") syncCartPageCheckoutBtn();
-        }
-      });
-      window.checkout = checkout;
-      window.resolveCartDeliveryFeeFromItems = resolveCartDeliveryFeeFromItems;
-
-      (function bindCartCheckoutButtons() {
-        var lpBtn = document.getElementById("lpCartCheckoutBtn");
-        var mobBtn = document.getElementById("cartMobileCheckoutBtn");
-        if (lpBtn) lpBtn.onclick = checkout;
-        if (mobBtn) mobBtn.onclick = checkout;
-        if (typeof renderCartPage === "function") renderCartPage();
-      })();
+      if (typeof initCartDeliveryLocationUi === "function") initCartDeliveryLocationUi();
 
       (async function loadDeliveryEngineFlags() {
         try {
@@ -537,8 +201,8 @@
           var j = await res.json().catch(function () {
             return {};
           });
-          deliveryEngineFlags = j;
           if (j.DELIVERY_ENGINE_CHECKOUT) window.__ervDeliveryEngineCheckout = true;
+          if (typeof hydrateDeliveryLocationForCart === "function") hydrateDeliveryLocationForCart(getCart());
           if (typeof renderCartPage === "function") renderCartPage();
         } catch (e) {}
       })();
@@ -555,8 +219,8 @@
             banner.setAttribute("role", "status");
             banner.style.cssText =
               "padding:12px 14px;border-radius:12px;background:#f0e8d8;color:#3d2213;font-weight:700;margin:0 0 12px;line-height:1.5";
-            var hero = document.querySelector(".cart-page-hero");
-            if (hero && hero.parentNode) hero.parentNode.insertBefore(banner, hero.nextSibling);
+            var wrap = document.querySelector(".cart-page-wrap");
+            if (wrap) wrap.insertBefore(banner, wrap.firstChild);
           }
           banner.textContent = msg;
         } catch (_) {}

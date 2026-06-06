@@ -9,20 +9,24 @@
     var continueHref = opts.continueHref || "/dashboard";
     var checkoutId = opts.checkoutId || "lpCartCheckoutBtn";
     var showFullFin = opts.showFullFin !== false;
+    var hidePanelHead = opts.hidePanelHead === true;
+    var headHtml = hidePanelHead
+      ? ""
+      : '<header class="lp-cart-card lp-cart-card--head">' +
+        '<div class="lp-cart-card--head__bar">' +
+        '<a href="' +
+        continueHref +
+        '" class="lp-cart-continue-link" id="lpCartContinueShop" data-erv-cart-continue>← استمرار التسوق</a>' +
+        '<div class="lp-cart-card--head__title-wrap">' +
+        '<span class="lp-cart-card--head__cart-icon" aria-hidden="true">🛒</span>' +
+        '<h2 id="lpCartDialogTitle" class="lp-cart-card--head__title">السلة</h2>' +
+        "</div>" +
+        "</div>" +
+        '<p id="lpCartPanelSub" class="lp-cart-card--head__sub" hidden>أضف منتجات أو خدمات، ثم أكمل الدفع.</p>' +
+        "</header>";
     return (
       '<div class="lp-cart-panel__surface">' +
-      '<header class="lp-cart-card lp-cart-card--head">' +
-      '<div class="lp-cart-card--head__bar">' +
-      '<a href="' +
-      continueHref +
-      '" class="lp-cart-continue-link" id="lpCartContinueShop" data-erv-cart-continue>← استمرار التسوق</a>' +
-      '<div class="lp-cart-card--head__title-wrap">' +
-      '<span class="lp-cart-card--head__cart-icon" aria-hidden="true">🛒</span>' +
-      '<h2 id="lpCartDialogTitle" class="lp-cart-card--head__title">السلة</h2>' +
-      "</div>" +
-      "</div>" +
-      '<p id="lpCartPanelSub" class="lp-cart-card--head__sub" hidden>أضف منتجات أو خدمات، ثم أكمل الدفع.</p>' +
-      "</header>" +
+      headHtml +
       '<div class="lp-cart-stack">' +
       '<section id="lpCartItemsCard" class="lp-cart-card lp-cart-card--items lp-cart-card--accordion" aria-labelledby="lpCartLinesHeading">' +
       '<details class="lp-cart-accordion lp-cart-accordion--items" id="lpCartItemsAccordion" open>' +

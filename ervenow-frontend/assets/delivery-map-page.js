@@ -1051,7 +1051,7 @@
       var btn = document.getElementById("createBtn");
       var result = document.getElementById("result");
       if (!btn || !btn.disabled || !result) return;
-      if (String(d.path || "").indexOf("/api/delivery/orders") === -1) return;
+      if (String(d.path || "").indexOf("/api/order") === -1) return;
       result.innerText =
         "جارٍ إنشاء الطلب… (إعادة محاولة " + d.attempt + " من " + d.maxAttempts + ")";
     });

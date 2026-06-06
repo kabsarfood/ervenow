@@ -2824,7 +2824,7 @@
         }
         await ensureMeRole();
         try {
-          var j = await window.PlatformAPI.api("/api/delivery/orders/" + encodeURIComponent(id));
+          var j = await window.PlatformAPI.api("/api/order/" + encodeURIComponent(id));
           if (j && j.order) {
             trackedOrderId = j.order.order_number || j.order.id || id;
             document.getElementById("oid").value = trackedOrderId;
@@ -2876,7 +2876,7 @@
           if (!lastOrder || !lastOrder.id) return;
           if (!confirm("هل أنت متأكد من إلغاء الطلب؟")) return;
           try {
-            var j = await window.PlatformAPI.api("/api/delivery/orders/" + encodeURIComponent(lastOrder.id) + "/cancel", {
+            var j = await window.PlatformAPI.api("/api/order/" + encodeURIComponent(lastOrder.id) + "/cancel", {
               method: "POST",
             });
             if (j.order) {
@@ -2995,7 +2995,7 @@
             }
             if (mEl) mEl.textContent = "جارٍ الإرسال…";
             try {
-              var j = await window.PlatformAPI.api("/api/delivery/orders/" + encodeURIComponent(oid) + "/rate", {
+              var j = await window.PlatformAPI.api("/api/order/" + encodeURIComponent(oid) + "/rate", {
                 method: "POST",
                 body: { rating: selectedRate, review: document.getElementById("rateReview").value.trim() },
               });

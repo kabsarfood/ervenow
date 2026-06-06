@@ -1292,10 +1292,51 @@
         if (paySel) {
           paySel.addEventListener("change", function () {
             var submitBtn = document.getElementById("svcSubmitBtn");
-            if (submitBtn) {
-              submitBtn.textContent = paySel.value === "cart" ? "إضافة للسلة والدفع" : "إرسال الطلب";
-            }
+            if (submitBtn) submitBtn.textContent = "إضافة للسلة والدفع";
           });
+        }
+
+        function servicePriceAmount(type) {
+          var e = entry(type);
+          if (!e) return 60;
+          if (Number.isFinite(Number(e.price))) return Number(e.price);
+          return 60;
+        }
+
+        function buildServiceCartItem(district, phone, location, pay_mode) {
+          var e = entry(selectedType);
+          var amount = servicePriceAmount(selectedType);
+          return {
+            type: selectedType,
+            title: (e && e.label) || selectedType,
+            price: amount,
+            payment_status: "unpaid",
+            customer_phone: phone,
+            data: {
+              district: district,
+              location: location,
+              customer_phone: phone,
+              total_amount: amount,
+              payment_mode: pay_mode,
+              payment_status: "unpaid",
+            },
+          };
+        }
+
+        function validateServiceForm(district, phone, location) {
+          if (!district) {
+            alert("حدد الحي");
+            return false;
+          }
+          if (!/^05\d{8}$/.test(String(phone || "").replace(/\s/g, ""))) {
+            alert("أدخل رقم جوال سعودي صحيح (05xxxxxxxx)");
+            return false;
+          }
+          if (!String(location || "").trim()) {
+            alert("حدد موقع الخدمة");
+            return false;
+          }
+          return true;
         }
 
         function entry(type) {
@@ -1330,9 +1371,7 @@
           if (inspect) paySel.value = "after_diagnosis";
           else paySel.value = "cart";
           var submitBtn = document.getElementById("svcSubmitBtn");
-          if (submitBtn) {
-            submitBtn.textContent = paySel.value === "cart" ? "إضافة للسلة والدفع" : "إرسال الطلب";
-          }
+          if (submitBtn) submitBtn.textContent = "إضافة للسلة والدفع";
         }
 
         function updatePriceHint() {
@@ -1415,65 +1454,28 @@
         }
 
         if (formEl) {
-          formEl.addEventListener("submit", async function (e) {
+          formEl.addEventListener("submit", function (e) {
             e.preventDefault();
-            if (!window.PlatformAPI || !PlatformAPI.apiUrl) return;
             var district = document.getElementById("svcDistrict").value.trim();
             var phone = document.getElementById("svcPhone").value.trim();
             var location = document.getElementById("svcLocation").value.trim();
-            var pay_mode = paySel ? paySel.value : "on_service";
+            var pay_mode = paySel ? paySel.value : "cart";
             var submitBtn = document.getElementById("svcSubmitBtn");
+            if (!validateServiceForm(district, phone, location)) return;
             if (submitBtn) submitBtn.disabled = true;
             try {
-              var headers = { "Content-Type": "application/json" };
-              var tok = PlatformAPI.getToken && PlatformAPI.getToken();
-              if (tok) headers.Authorization = "Bearer " + tok;
-              var res = await fetch(PlatformAPI.apiUrl("/api/services/home-order"), {
-                method: "POST",
-                headers: headers,
-                body: JSON.stringify({
-                  service_type: selectedType,
-                  district: district,
-                  customer_phone: phone,
-                  location: location,
-                  pay_mode: pay_mode,
-                }),
-              });
-              var data = await res.json().catch(function () {
-                return {};
-              });
-              if (!res.ok || !data.ok) {
-                alert(data.error || "تعذر إرسال الطلب");
+              var ci = buildServiceCartItem(district, phone, location, pay_mode);
+              if (window.ErvenowServiceCart && ErvenowServiceCart.add) {
+                var cartRes = ErvenowServiceCart.add(ci);
+                if (!cartRes.ok) alert(cartRes.message || "تعذر الإضافة للسلة");
                 return;
               }
-              if (data.use_cart && data.cart_item) {
-                var ci = data.cart_item;
-                ci.customer_phone = phone;
-                if (window.ErvenowServiceCart && ErvenowServiceCart.add) {
-                  var cartRes = ErvenowServiceCart.add(ci);
-                  if (!cartRes.ok) {
-                    alert(cartRes.message || "تعذر الإضافة للسلة");
-                    return;
-                  }
-                  return;
-                }
-                if (typeof addToCart === "function") {
-                  addToCart(ci);
-                  location.href = "/cart";
-                  return;
-                }
+              if (typeof addToCart === "function") {
+                addToCart(ci);
+                location.href = "/cart";
+                return;
               }
-              if (successEl) {
-                successEl.hidden = false;
-                successEl.textContent =
-                  "✅ تم إرسال الطلب بنجاح.\nرقم الطلب: " +
-                  (data.order_number || "—") +
-                  "\n" +
-                  (data.message || "سيظهر الطلب لمزودي الخدمة في حيّك — يحجزونه من لوحاتهم.");
-              }
-              formEl.reset();
-            } catch (err2) {
-              alert("تعذر إكمال الطلب. تحقق من الاتصال.");
+              alert("تعذر تحميل السلة — حدّث الصفحة");
             } finally {
               if (submitBtn) submitBtn.disabled = false;
             }

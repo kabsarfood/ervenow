@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <script src="/assets/viewport-fit.js"></script>
+    <title>ERVENOW | لوحة الطلبات</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/assets/styles.css" />
+    <link rel="stylesheet" href="/assets/guest-shell.css" />
+    <link rel="stylesheet" href="/assets/store-shell.css" />
+    <link rel="stylesheet" href="/assets/ervenow-responsive.css" />
+    <link rel="stylesheet" href="/assets/order-board.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  </head>
+  <body class="guest-shell-page store-shell-page">
+    <div id="storeShellHeader"></div>
+
+    <div class="dash-main">
+      <div class="store-shell-layout">
+        <div class="md-login-card" id="obHint">
+          <h1>📋 لوحة الطلبات</h1>
+          <p class="sub" style="margin: 0">
+            سجّل الدخول كتاجر لإدارة الطلبات فورياً — قبول، تجهيز، جاهز، وطباعة.
+          </p>
+          <a class="btn btn-primary" href="/login?role=store">تسجيل دخول المتجر</a>
+          <a class="btn btn-ghost" href="/store-dashboard" style="margin-inline-start: 8px">بوابة المتجر</a>
+        </div>
+
+        <div id="obMain" style="display: none">
+          <header class="ob-hero" aria-labelledby="obHeroTitle">
+            <div class="ob-hero__shade" aria-hidden="true"></div>
+            <div class="ob-hero__inner">
+              <h1 id="obHeroTitle">📋 لوحة الطلبات</h1>
+              <p class="ob-hero__sub" id="obStoreLine">—</p>
+              <div class="ob-hero__actions">
+                <a class="btn btn-primary" href="/store-dashboard">لوحة تحكم المتجر</a>
+                <a class="btn btn-ghost" href="/merchant-dashboard">الطلبات والإيرادات</a>
+                <a class="btn btn-ghost" id="obPublicLink" href="#" target="_blank" rel="noopener">صفحة المتجر</a>
+              </div>
+            </div>
+          </header>
+
+          <div class="ob-counters" id="obCounters" aria-label="عدادات الحالات"></div>
+
+          <div class="ob-toolbar">
+            <p class="sub" style="margin: 0" id="obFilterLabel">كل الطلبات النشطة</p>
+            <button type="button" class="btn btn-ghost" id="obRefreshBtn" style="min-height: 44px">↻ تحديث</button>
+          </div>
+
+          <div class="ob-grid" id="obGrid" aria-live="polite"></div>
+          <p class="ob-empty" id="obEmpty" style="display: none">لا طلبات في هذا القسم.</p>
+        </div>
+
+        <div class="msg" id="obMsg" style="display: none"></div>
+      </div>
+
+      <section class="store-support" id="storeSupport" aria-labelledby="storeSupportTitle">
+        <div class="store-support__card">
+          <h2 class="store-support__head" id="storeSupportTitle">تواصل مع منصة ERVENOW</h2>
+          <p class="store-support__sub">للاستفسار عن الطلبات أو التشغيل — فريق المنصة بجانبك.</p>
+          <div class="store-support__grid">
+            <a
+              class="store-support__tile"
+              href="https://wa.me/966505745650?text=%D9%85%D8%B1%D8%AD%D8%A8%D8%A7%20ERVENOW%20%E2%80%94%20%D9%84%D9%88%D8%AD%D8%A9%20%D8%A7%D9%84%D8%B7%D9%84%D8%A8%D8%A7%D8%AA"
+              target="_blank"
+              rel="noopener"
+            >
+              <strong>💬 واتساب الدعم</strong>
+              <span>استفسار عن التشغيل.</span>
+              <em>0505745650</em>
+            </a>
+            <a class="store-support__tile" href="/merchant-dashboard">
+              <strong>📊 الإيرادات</strong>
+              <span>تقارير مالية مفصّلة.</span>
+              <em>merchant-dashboard</em>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <div id="storeShellFooter"></div>
+    </div>
+
+    <div class="ob-modal-backdrop" id="obModalBackdrop" aria-hidden="true">
+      <div class="ob-modal" role="dialog" aria-modal="true" aria-labelledby="obModalTitle">
+        <div class="ob-modal__head">
+          <h2 id="obModalTitle">تفاصيل الطلب</h2>
+          <button type="button" class="ob-modal__close" id="obModalClose" aria-label="إغلاق">×</button>
+        </div>
+        <div class="ob-detail-grid" id="obModalBody"></div>
+        <div class="ob-modal__actions" id="obModalActions"></div>
+      </div>
+    </div>
+
+    <div id="obPrintRoot" style="display: none" aria-hidden="true"></div>
+
+    <script src="https://cdn.socket.io/4.8.1/socket.io.min.js" crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="/assets/api-config.js"></script>
+    <script src="/assets/api.js"></script>
+    <script src="/assets/auth-account-guard.js"></script>
+    <script src="/assets/store-shell.js"></script>
+    <script>
+      void ErvenowAuthGuard.ensureApprovedAccount({ loginUrl: "/login?role=store" });
+      ErvenowStoreShell.mountShell({
+        activeNav: "order-board",
+        pageTag: "لوحة الطلبات — تشغيل المتجر",
+      });
+    </script>
+    <script src="/assets/merchant-order-workflow.js"></script>
+    <script src="/assets/order-board.js"></script>
+  </body>
+</html>

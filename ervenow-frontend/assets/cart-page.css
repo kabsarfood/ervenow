@@ -605,3 +605,25 @@ body.cart-page-has-items {
     transition: none;
   }
 }
+
+.cart-delivery-loc__display {
+  margin: 0;
+  font-weight: 700;
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+.cart-delivery-loc__status {
+  margin: 0;
+  color: var(--muted, #6b5344);
+}
+
+.cart-delivery-loc__change,
+.cart-delivery-loc__actions .btn {
+  min-height: 44px;
+}
+
+.cart-delivery-loc textarea {
+  width: 100%;
+  font-size: 16px;
+}

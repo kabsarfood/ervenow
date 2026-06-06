@@ -198,6 +198,8 @@ router.get("/orders/:id", requireAuth, async (req, res) => {
 /** طلب توصيل موحد (خدمات منصة) — يبدأ بدعم car_transport */
 router.post("/create", requireAuth, denyUnlessCanPlaceOrders, deliveryOrdersCreateLimiter, async (req, res) => {
   try {
+    const { deprecateLegacyOrderRoute, UNIFIED_ORDER_CREATE } = require("../../shared/middleware/deprecateLegacyRoute");
+    deprecateLegacyOrderRoute(req, res, "POST /api/delivery/create", UNIFIED_ORDER_CREATE);
     const body = { ...(req.body || {}) };
     const idk = normalizeIdempotencyKey(req);
     if (idk) body.idempotency_key = idk;
@@ -281,8 +283,8 @@ router.post("/create", requireAuth, denyUnlessCanPlaceOrders, deliveryOrdersCrea
 
 router.post("/orders", requireAuth, denyUnlessCanPlaceOrders, deliveryOrdersCreateLimiter, async (req, res) => {
   try {
-    const { setDeprecationHeaders, UNIFIED_ORDER_CREATE } = require("../../shared/middleware/deprecateLegacyRoute");
-    setDeprecationHeaders(res, UNIFIED_ORDER_CREATE);
+    const { deprecateLegacyOrderRoute, UNIFIED_ORDER_CREATE } = require("../../shared/middleware/deprecateLegacyRoute");
+    deprecateLegacyOrderRoute(req, res, "POST /api/delivery/orders", UNIFIED_ORDER_CREATE);
     const body = { ...(req.body || {}) };
     delete body.idempotency_key;
 

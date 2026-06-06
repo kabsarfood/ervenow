@@ -1,5 +1,3 @@
-const { describe, it } = require("node:test");
-const assert = require("node:assert/strict");
 const {
   STORE_ACCOUNT_ROLES,
   isStoreAccountRole,
@@ -7,21 +5,21 @@ const {
 } = require("../../shared/middleware/storeRole");
 
 describe("storeRole middleware", () => {
-  it("STORE_ACCOUNT_ROLES includes store and legacy alias", () => {
-    assert.ok(STORE_ACCOUNT_ROLES.includes("store"));
-    assert.ok(STORE_ACCOUNT_ROLES.includes("merchant"));
-    assert.ok(STORE_ACCOUNT_ROLES.includes("restaurant"));
-    assert.ok(STORE_ACCOUNT_ROLES.includes("admin"));
+  test("STORE_ACCOUNT_ROLES includes store and legacy alias", () => {
+    expect(STORE_ACCOUNT_ROLES).toContain("store");
+    expect(STORE_ACCOUNT_ROLES).toContain("merchant");
+    expect(STORE_ACCOUNT_ROLES).toContain("restaurant");
+    expect(STORE_ACCOUNT_ROLES).toContain("admin");
   });
 
-  it("isStoreAccountRole accepts store and legacy", () => {
-    assert.equal(isStoreAccountRole("store"), true);
-    assert.equal(isStoreAccountRole("merchant"), true);
-    assert.equal(isStoreAccountRole("restaurant"), true);
-    assert.equal(isStoreAccountRole("customer"), false);
+  test("isStoreAccountRole accepts store and legacy", () => {
+    expect(isStoreAccountRole("store")).toBe(true);
+    expect(isStoreAccountRole("merchant")).toBe(true);
+    expect(isStoreAccountRole("restaurant")).toBe(true);
+    expect(isStoreAccountRole("customer")).toBe(false);
   });
 
-  it("normalizeStoreAccountRole lowercases", () => {
-    assert.equal(normalizeStoreAccountRole(" Store "), "store");
+  test("normalizeStoreAccountRole lowercases", () => {
+    expect(normalizeStoreAccountRole(" Store ")).toBe("store");
   });
 });

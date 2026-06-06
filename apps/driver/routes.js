@@ -40,6 +40,12 @@ const { parseOptionalPayoutPayload, payoutRowForDriversOrStores } = require("../
 const { sanitizeDriverOrStoreRowForApi } = require("../../shared/utils/bankApiSafe");
 const { filterDriverDispatchOrders } = require("../../shared/utils/driverDispatchOrders");
 const {
+  isMerchantDispatchOrder,
+  isLegacyOpenOrderForDriver,
+  isReadyQueueOrderForDriver,
+} = require("../../shared/utils/driverStoreHandoff");
+const { getOrderDeliveryStatus } = require("../../shared/domain/orders/orderStatus");
+const {
   assertPayoutIbanGloballyAvailable,
   iqamaDigitsNormalized,
   ibanFingerprintFromPlain,
@@ -459,17 +465,34 @@ router.get("/orders", requireAuth, async (req, res) => {
       .from("orders")
       .select("*")
       .eq("driver_id", driverId)
-      .in("delivery_status", ["accepted", "delivering", "picked"])
+      .in("delivery_status", ["accepted", "picked", "picked_up", "delivering"])
       .order("created_at", { ascending: false });
     if (asErr) return fail(res, asErr.message, 400);
 
-    const { data: openOrders, error: opErr } = await req.supabase
+    const { data: openLegacy, error: opErr } = await req.supabase
       .from("orders")
       .select("*")
       .is("driver_id", null)
       .in("delivery_status", ["new", "pending"])
       .order("created_at", { ascending: false });
     if (opErr) return fail(res, opErr.message, 400);
+
+    const { data: openReady, error: rdErr } = await req.supabase
+      .from("orders")
+      .select("*")
+      .is("driver_id", null)
+      .eq("delivery_status", "ready")
+      .order("created_at", { ascending: false });
+    if (rdErr) return fail(res, rdErr.message, 400);
+
+    const { data: completedRecent, error: doneErr } = await req.supabase
+      .from("orders")
+      .select("id,order_number,delivery_status,status,created_at,updated_at,store_name,drop_address")
+      .eq("driver_id", driverId)
+      .eq("delivery_status", "delivered")
+      .order("updated_at", { ascending: false })
+      .limit(12);
+    if (doneErr) return fail(res, doneErr.message, 400);
 
     const { data: activeDrivers, error: drErr } = await req.supabase
       .from("drivers")
@@ -485,7 +508,11 @@ router.get("/orders", requireAuth, async (req, res) => {
     const meLat = toNumberOrNaN(drv.lat);
     const meLng = toNumberOrNaN(drv.lng);
 
-    const visibleOpenOrders = (openOrders || []).filter((order) => {
+    const legacyCandidates = filterDriverDispatchOrders(openLegacy || []).filter(isLegacyOpenOrderForDriver);
+    const readyCandidates = filterDriverDispatchOrders(openReady || []).filter(isReadyQueueOrderForDriver);
+    const openCandidates = [...legacyCandidates, ...readyCandidates];
+
+    const visibleOpenOrders = openCandidates.filter((order) => {
       const orderLat = toNumberOrNaN(order.pickup_lat);
       const orderLng = toNumberOrNaN(order.pickup_lng);
       if (!Number.isFinite(orderLat) || !Number.isFinite(orderLng)) return true;
@@ -504,11 +531,20 @@ router.get("/orders", requireAuth, async (req, res) => {
       return allowed;
     });
 
-    const finalOrders = filterDriverDispatchOrders([
-      ...(assignedOrders || []),
-      ...visibleOpenOrders,
-    ]);
-    return ok(res, { orders: finalOrders });
+    const activeAssigned = filterDriverDispatchOrders(assignedOrders || []);
+    const finalOrders = filterDriverDispatchOrders([...activeAssigned, ...visibleOpenOrders]);
+
+    return ok(res, {
+      orders: finalOrders,
+      ready_queue: visibleOpenOrders.filter(isReadyQueueOrderForDriver),
+      legacy_open: visibleOpenOrders.filter(isLegacyOpenOrderForDriver),
+      active: activeAssigned.filter(
+        (o) =>
+          String(o.driver_id || "") === String(driverId) &&
+          ["accepted", "picked", "picked_up", "delivering"].includes(getOrderDeliveryStatus(o))
+      ),
+      completed: completedRecent || [],
+    });
   } catch (e) {
     return fail(res, e.message, 500);
   }
@@ -551,6 +587,33 @@ router.post("/accept/:id", requireAuth, async (req, res) => {
       await assertDriverCanAcceptOrders(req.supabase, driverId);
     } catch (debtErr) {
       return fail(res, debtErr.message || "تعذر قبول الطلب", debtErr.code === "DRIVER_DEBT_LIMIT" ? 403 : 400);
+    }
+
+    const { data: cur, error: curErr } = await req.supabase.from("orders").select("*").eq("id", orderId).maybeSingle();
+    if (curErr) return fail(res, curErr.message, 400);
+    if (!cur) return fail(res, "Not found", 404);
+    if (cur.driver_id) {
+      return ok(res, { accepted: false, message: "تم استلام الطلب من مندوب آخر" });
+    }
+
+    const current = getOrderDeliveryStatus(cur);
+
+    if (current === "ready" && isMerchantDispatchOrder(cur)) {
+      const out = await patchUnifiedOrderStatus(req.supabase, orderId, "picked_up", req.appUser);
+      if (out.error) {
+        const msg = out.error.message || String(out.error);
+        return fail(res, msg, msg === "Forbidden" ? 403 : 400);
+      }
+      await bumpDeliveryOrdersListEpoch();
+      return ok(res, { accepted: true, picked_up: true, order: out.data });
+    }
+
+    if (isMerchantDispatchOrder(cur)) {
+      return fail(res, "الطلب لم يصبح جاهزاً للاستلام من المتجر بعد", 400);
+    }
+
+    if (current !== "new" && current !== "pending") {
+      return fail(res, "الطلب غير متاح للاستلام", 400);
     }
 
     const { data, error } = await req.supabase
@@ -605,7 +668,7 @@ router.post("/update-location", requireAuth, async (req, res) => {
         updated_at: new Date().toISOString(),
       })
       .eq("driver_id", driverId)
-      .in("delivery_status", ["accepted", "picked", "delivering"]);
+      .in("delivery_status", ["accepted", "picked", "picked_up", "delivering"]);
     if (orderId) q = q.eq("id", orderId);
     const { data: updatedRows, error } = await q.select("id");
     if (error) return fail(res, error.message, 400);

@@ -25,8 +25,14 @@ async function runCheckoutDispatch(sb, ctx) {
   }
 
   let osrmStatus = "ok";
+  const ot = String(order.order_type || "").toLowerCase();
+  const deferDriverUntilReady = ot === "store" || ot === "restaurant";
   try {
-    await notifyNearestDrivers(sb, order);
+    if (deferDriverUntilReady) {
+      osrmStatus = "store_deferred_until_ready";
+    } else {
+      await notifyNearestDrivers(sb, order);
+    }
   } catch (notifyErr) {
     logger.error(
       { err: notifyErr && (notifyErr.message || String(notifyErr)), orderId },

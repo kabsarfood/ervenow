@@ -38,6 +38,9 @@
   font-weight: 700;
   color: rgba(255, 248, 238, 0.88);
 }
+.md-table .md-order-action {
+  white-space: nowrap;
+}
 .md-hero__actions {
   display: flex;
   flex-wrap: wrap;

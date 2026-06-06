@@ -88,6 +88,7 @@
     var role = normalizeRole(opts.role || _sessionRole);
     var links = [
       { key: "store", href: "/store-dashboard", label: "لوحة المتجر" },
+      { key: "order-board", href: "/order-board", label: "لوحة الطلبات" },
       { key: "merchant", href: "/merchant-dashboard", label: "الطلبات والإيرادات" },
     ];
     if (role === "service") {
@@ -252,6 +253,7 @@
       "<h3>خدمات أصحاب المتاجر والشركاء</h3>" +
       '<div class="store-footer__links">' +
       '<a href="/store-dashboard">لوحة المتجر</a>' +
+      '<a href="/order-board">لوحة الطلبات</a>' +
       '<a href="/merchant-dashboard">الطلبات والإيرادات</a>' +
       '<a href="#walletAnchor">المحفظة المالية</a>' +
       '<a href="#withdrawCard">سحب الأرباح</a>' +
@@ -456,7 +458,9 @@
       return;
     }
     var walletHref =
-      global.location && String(global.location.pathname || "").indexOf("merchant-dashboard") >= 0
+      global.location &&
+      (String(global.location.pathname || "").indexOf("merchant-dashboard") >= 0 ||
+        String(global.location.pathname || "").indexOf("order-board") >= 0)
         ? "/store-dashboard#walletAnchor"
         : "#walletAnchor";
     box.setAttribute("href", walletHref);

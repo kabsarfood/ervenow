@@ -49,14 +49,26 @@ describe("mapsUrlParser", () => {
     expect(ll).toEqual({ lat: 24.7136, lng: 46.6753 });
   });
 
-  test(
-    "resolves maps.app.goo.gl via redirect (network)",
-    async () => {
+  test("resolves maps.app.goo.gl via redirect (mocked fetch)", async () => {
+    const originalFetch = global.fetch;
+    global.fetch = jest.fn().mockResolvedValue({
+      status: 302,
+      ok: false,
+      headers: {
+        get: (name) =>
+          String(name).toLowerCase() === "location"
+            ? "https://www.google.com/maps/@24.7135517,46.6752957,15z"
+            : null,
+      },
+      text: async () => "",
+    });
+    try {
       var out = await resolveMapsLink("https://maps.app.goo.gl/zPFemAXvgC9pvBPT6");
       expect(out).not.toBeNull();
       expect(Number.isFinite(out.lat)).toBe(true);
       expect(Number.isFinite(out.lng)).toBe(true);
-    },
-    20000
-  );
+    } finally {
+      global.fetch = originalFetch;
+    }
+  });
 });

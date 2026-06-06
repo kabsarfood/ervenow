@@ -1,1 +1,1 @@
-/* ERVENOW: لا تُحمّل خادمًا خارجيًا — استخدم /track و /api/delivery/orders */
+/* ERVENOW: لا تُحمّل خادمًا خارجيًا — استخدم /track و /api/order */

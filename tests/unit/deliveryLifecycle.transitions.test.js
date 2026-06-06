@@ -49,7 +49,7 @@ describe("deliveryStateMachine guard (defense in depth)", () => {
 
 describe("deliveryLifecycleIndex", () => {
   test("ordering is monotonic for main path", () => {
-    const seq = ["draft", "pending", "accepted", "picked", "delivering", "delivered"];
+    const seq = ["draft", "pending", "accepted", "preparing", "ready", "picked_up", "delivering", "delivered"];
     let prev = -Infinity;
     for (const s of seq) {
       const i = deliveryLifecycleIndex(s);

@@ -1,37 +1,37 @@
-const test = require("node:test");
-const assert = require("node:assert/strict");
 const {
   isUserAccountApproved,
   isUserAccountPending,
   isPendingAuthAllowedPath,
+  normalizeAccountStatus,
 } = require("../../shared/utils/accountApproval");
 
-test("pending user is not approved", () => {
-  assert.equal(isUserAccountPending("pending"), true);
-  assert.equal(isUserAccountApproved("pending"), false);
-});
+describe("accountApproval", () => {
+  test("pending user is not approved", () => {
+    expect(isUserAccountPending("pending")).toBe(true);
+    expect(isUserAccountApproved("pending")).toBe(false);
+  });
 
-test("active user is approved", () => {
-  assert.equal(isUserAccountApproved("active"), true);
-  assert.equal(isUserAccountPending("active"), false);
-});
+  test("active user is approved", () => {
+    expect(isUserAccountApproved("active")).toBe(true);
+    expect(isUserAccountPending("active")).toBe(false);
+  });
 
-test("pending may call /api/core/me only among protected routes", () => {
-  const req = { baseUrl: "", path: "/api/core/me" };
-  assert.equal(isPendingAuthAllowedPath(req), true);
-  const req2 = { baseUrl: "/api/wallet", path: "/me" };
-  assert.equal(isPendingAuthAllowedPath(req2), false);
-});
+  test("pending may call /api/core/me only among protected routes", () => {
+    const req = { baseUrl: "", path: "/api/core/me" };
+    expect(isPendingAuthAllowedPath(req)).toBe(true);
+    const req2 = { baseUrl: "/api/wallet", path: "/me" };
+    expect(isPendingAuthAllowedPath(req2)).toBe(false);
+  });
 
-test("legacy empty status is treated as active", () => {
-  const { normalizeAccountStatus, isUserAccountApproved, isUserAccountPending } = require("../../shared/utils/accountApproval");
-  assert.equal(normalizeAccountStatus(null, "customer"), "active");
-  assert.equal(isUserAccountApproved(null, "customer"), true);
-  assert.equal(isUserAccountPending(null), false);
-  assert.equal(isUserAccountPending("pending"), true);
-});
+  test("legacy empty status is treated as active", () => {
+    expect(normalizeAccountStatus(null, "customer")).toBe("active");
+    expect(isUserAccountApproved(null, "customer")).toBe(true);
+    expect(isUserAccountPending(null)).toBe(false);
+    expect(isUserAccountPending("pending")).toBe(true);
+  });
 
-test("blocked role or status is not approved", () => {
-  assert.equal(isUserAccountApproved("blocked", "customer"), false);
-  assert.equal(isUserAccountApproved("active", "blocked"), false);
+  test("blocked role or status is not approved", () => {
+    expect(isUserAccountApproved("blocked", "customer")).toBe(false);
+    expect(isUserAccountApproved("active", "blocked")).toBe(false);
+  });
 });

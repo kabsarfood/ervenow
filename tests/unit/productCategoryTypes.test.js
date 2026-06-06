@@ -1,25 +1,25 @@
-const test = require("node:test");
-const assert = require("node:assert/strict");
 const {
   productCatalogTypeForStoreType,
   normalizeProductSlugForCatalog,
   builtinCatalogEntries,
 } = require("../../shared/productCategoryTypes");
 
-test("restaurant store maps to restaurant catalog", () => {
-  assert.equal(productCatalogTypeForStoreType("restaurant"), "restaurant");
-});
+describe("productCategoryTypes", () => {
+  test("restaurant store maps to restaurant catalog", () => {
+    expect(productCatalogTypeForStoreType("restaurant")).toBe("restaurant");
+  });
 
-test("pharmacy store maps to pharmacy catalog", () => {
-  assert.equal(productCatalogTypeForStoreType("pharmacy"), "pharmacy");
-});
+  test("pharmacy store maps to pharmacy catalog", () => {
+    expect(productCatalogTypeForStoreType("pharmacy")).toBe("pharmacy");
+  });
 
-test("restaurant catalog includes kabsa_bukhari", () => {
-  const slugs = builtinCatalogEntries("restaurant").map((e) => e.slug);
-  assert.ok(slugs.includes("kabsa_bukhari"));
-  assert.ok(slugs.includes("shawarma_grill"));
-});
+  test("restaurant catalog includes kabsa_bukhari", () => {
+    const slugs = builtinCatalogEntries("restaurant").map((e) => e.slug);
+    expect(slugs).toContain("kabsa_bukhari");
+    expect(slugs).toContain("shawarma_grill");
+  });
 
-test("normalizeProductSlugForCatalog accepts restaurant slug", () => {
-  assert.equal(normalizeProductSlugForCatalog("restaurant", "shawarma_grill"), "shawarma_grill");
+  test("normalizeProductSlugForCatalog accepts restaurant slug", () => {
+    expect(normalizeProductSlugForCatalog("restaurant", "shawarma_grill")).toBe("shawarma_grill");
+  });
 });

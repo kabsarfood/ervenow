@@ -25,13 +25,24 @@ function deliveryLifecycleIndex(s) {
   if (x === "draft") return -2;
   if (x === "new" || x === "pending") return 0;
   if (x === "accepted") return 1;
-  if (x === "picked") return 2;
-  if (x === "delivering") return 3;
-  if (x === "delivered") return 4;
+  if (x === "preparing") return 2;
+  if (x === "ready") return 3;
+  if (x === "picked" || x === "picked_up") return 4;
+  if (x === "delivering") return 5;
+  if (x === "delivered") return 6;
   return -1;
 }
 
-const DELIVERY_STATUSES = ["draft", "pending", "accepted", "picked", "delivering", "delivered"];
+const DELIVERY_STATUSES = [
+  "draft",
+  "pending",
+  "accepted",
+  "preparing",
+  "ready",
+  "picked_up",
+  "delivering",
+  "delivered",
+];
 
 function isValidDeliveryTransition(from, to) {
   const f = String(from || "")
@@ -49,8 +60,10 @@ function isValidDeliveryTransition(from, to) {
   const j = deliveryLifecycleIndex(t);
   if (i < 0 || j < 0) return false;
   if (j === i || j === i + 1) return true;
-  // تخطّي picked: مقبول → قيد التوصيل
+  // تخطّي picked_up: مقبول → قيد التوصيل (طلبات قديمة بدون تجهيز متجر)
   if (f === "accepted" && t === "delivering") return true;
+  // جاهز → استلام مباشر (اختصار)
+  if (f === "ready" && t === "delivering") return true;
   // واجهة المندوب: تسليم مباشر من «مقبول» دون المرور بـ «قيد التوصيل»
   if (t === "delivered" && f === "accepted") return true;
   return false;

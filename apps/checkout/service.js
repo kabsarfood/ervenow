@@ -6,6 +6,7 @@ const { normalizeOrderFinancialsForInsert } = require("../../shared/utils/orderT
 const { enqueueDeliveryJob } = require("../../queues/deliveryQueue");
 const { logger } = require("../../shared/utils/logger");
 const { runStoreCheckoutSideEffects } = require("../../shared/utils/storeOrderPostCheckout");
+const { broadcastStoreOrderEvent, orderPatchFromRow } = require("../../shared/lib/trackingSocket");
 const { isOrderPaymentGateRequired } = require("../../shared/utils/orderPaymentGate");
 const { isPaidFromRequestBody, normalizeOrderPaymentMethod } = require("../delivery/service");
 const { insertOrdersResilient } = require("../../shared/utils/idempotency");
@@ -458,6 +459,19 @@ async function runCheckoutInsert(sb, appUser, body, options) {
         logger.error(
           { err: sideErr && (sideErr.message || String(sideErr)), orderId: data.id },
           "[checkout/service] store post-checkout"
+        );
+      }
+      try {
+        const patch = orderPatchFromRow(data);
+        broadcastStoreOrderEvent(String(data.store_id), {
+          orderId: String(data.id),
+          store_id: data.store_id,
+          patch,
+        });
+      } catch (socketErr) {
+        logger.warn(
+          { err: socketErr.message || String(socketErr), orderId: data.id },
+          "[checkout/service] store socket broadcast"
         );
       }
       try {

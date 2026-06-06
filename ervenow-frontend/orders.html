@@ -469,7 +469,7 @@
 
       async function loadOrders() {
         try {
-          var j = await window.PlatformAPI.api("/api/delivery/orders");
+          var j = await window.PlatformAPI.api("/api/order/orders");
           var all = j.orders || [];
           var visible = all.filter(function (o) {
             var ds = String(o.delivery_status || o.status || "").toLowerCase();

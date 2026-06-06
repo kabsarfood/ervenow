@@ -1232,3 +1232,43 @@ body.driver-ultra-mode #driverMapCard #driverLiveMap {
     min-height: 46vh;
   }
 }
+
+.driver-order-section {
+  margin-bottom: 18px;
+}
+
+.driver-order-section__title {
+  margin: 0 0 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  font-size: 0.92rem;
+  font-weight: 800;
+  line-height: 1.45;
+  background: rgba(255, 252, 248, 0.92);
+  border: 1px solid rgba(61, 34, 19, 0.1);
+}
+
+.driver-order-section__title--ready {
+  background: rgba(22, 163, 74, 0.1);
+  border-color: rgba(22, 163, 74, 0.25);
+  color: #166534;
+}
+
+.driver-order-section__title--active {
+  background: rgba(37, 99, 235, 0.1);
+  border-color: rgba(37, 99, 235, 0.22);
+  color: #1e40af;
+}
+
+.driver-order-section__title--done {
+  background: rgba(107, 114, 128, 0.1);
+  border-color: rgba(107, 114, 128, 0.18);
+  color: #374151;
+}
+
+.driver-order-section__empty {
+  margin: 0 0 8px;
+  font-size: 0.85rem;
+  color: rgba(42, 24, 16, 0.62);
+  line-height: 1.45;
+}

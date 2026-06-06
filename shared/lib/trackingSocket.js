@@ -28,6 +28,12 @@ function safeUserRoomIdByUserId(userId) {
   return `notif:user:${id}`;
 }
 
+function safeStoreRoomId(storeId) {
+  const id = String(storeId || "").trim();
+  if (!id) return null;
+  return `store:${id}`;
+}
+
 /** حد أدنى ~2 ثانية بين بث موقع نفس المندوب (REST + Socket يشتركان في نفس العداد). */
 const driverLocationLastBroadcast = new Map();
 
@@ -67,6 +73,7 @@ function orderPatchFromRow(row) {
     "driver_lng",
     "driver_id",
     "order_number",
+    "store_id",
     "pickup_lat",
     "pickup_lng",
     "drop_lat",
@@ -99,6 +106,14 @@ function broadcastOrderPatch(orderId, patch) {
   if (!room) return;
   const oid = String(orderId || "").trim();
   trackingIo.to(room).emit("order:patch", { orderId: oid, patch: patch || {} });
+}
+
+/** بث لغرفة المتجر — لوحة التشغيل (store:<uuid>) */
+function broadcastStoreOrderEvent(storeId, payload) {
+  if (!trackingIo) return;
+  const room = safeStoreRoomId(storeId);
+  if (!room) return;
+  trackingIo.to(room).emit("order:patch", payload && typeof payload === "object" ? payload : {});
 }
 
 function broadcastOrderLive(orderId, payload) {
@@ -146,6 +161,31 @@ function roomForAppUser(appUser) {
             ? "driver"
             : "customer";
   return safeUserRoomIdByRecipient(recipientType, appUser.id);
+}
+
+async function joinStoreRoomForMerchant(socket) {
+  const role = String(socket.data.role || "").toLowerCase();
+  if (!["store", "merchant", "restaurant"].includes(role)) return;
+  const sb = createServiceClient();
+  if (!sb || !socket.data.userId) return;
+  try {
+    const { data: user } = await sb.from("users").select("phone").eq("id", socket.data.userId).maybeSingle();
+    if (!user || !user.phone) return;
+    const digits = String(user.phone).replace(/\D/g, "");
+    if (digits.length < 9) return;
+    const { data: st } = await sb
+      .from("stores")
+      .select("id")
+      .eq("phone", digits)
+      .eq("status", "approved")
+      .maybeSingle();
+    if (st && st.id) {
+      const room = safeStoreRoomId(st.id);
+      if (room) socket.join(room);
+    }
+  } catch {
+    /* ignore */
+  }
 }
 
 async function fetchOrderForTracking(sb, orderId) {
@@ -200,6 +240,8 @@ function attachTrackingSocket(io) {
               : "customer";
     const notifRoom = safeUserRoomIdByRecipient(mappedRecipientType, socket.data.userId);
     if (notifRoom) socket.join(notifRoom);
+
+    void joinStoreRoomForMerchant(socket);
 
     socket.on("join:order", async (orderId) => {
       const room = safeOrderRoomId(orderId);
@@ -285,6 +327,7 @@ module.exports = {
   orderPatchFromRow,
   broadcastDriverUpdate,
   broadcastOrderPatch,
+  broadcastStoreOrderEvent,
   broadcastOrderLive,
   broadcastNotificationNew,
   broadcastNotificationRead,

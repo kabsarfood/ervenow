@@ -35,7 +35,8 @@
               <p class="md-hero__sub" id="storePhone">—</p>
               <p class="md-hero__sub" id="storeMetaLine" style="margin-top: 4px"></p>
               <div class="md-hero__actions">
-                <a class="btn btn-primary" href="/store-dashboard">لوحة تحكم المتجر</a>
+                <a class="btn btn-primary" href="/order-board">لوحة الطلبات</a>
+                <a class="btn btn-ghost" href="/store-dashboard">لوحة تحكم المتجر</a>
                 <a class="btn btn-ghost" id="publicStoreLink" href="#" target="_blank" rel="noopener">صفحة المتجر للعملاء</a>
                 <a class="btn btn-ghost" href="/store-dashboard#walletAnchor">المحفظة المالية</a>
               </div>
@@ -85,6 +86,7 @@
                     <th>الحالة</th>
                     <th>الدفع</th>
                     <th>التوصيل</th>
+                    <th>إجراء</th>
                     <th>السلة</th>
                     <th>الإجمالي</th>
                   </tr>
@@ -153,6 +155,7 @@
       <div id="storeShellFooter"></div>
     </div>
 
+    <script src="https://cdn.socket.io/4.8.1/socket.io.min.js" crossorigin="anonymous"></script>
     <script src="/assets/api-config.js"></script>
     <script src="/assets/api.js"></script>
     <script src="/assets/auth-account-guard.js"></script>
@@ -164,18 +167,26 @@
         pageTag: "الطلبات والإيرادات — لوحة المتجر",
       });
     </script>
+    <script src="/assets/merchant-order-workflow.js"></script>
     <script>
       var DELIVERY_LABELS = {
         draft: "مسودة",
         pending: "قيد الانتظار",
         new: "جديد",
         accepted: "مقبول",
+        preparing: "قيد التجهيز",
+        ready: "جاهز للاستلام",
         picked: "تم الاستلام",
+        picked_up: "استلم المندوب",
         delivering: "قيد التوصيل",
         delivered: "تم التسليم",
         cancelled: "ملغى",
         cancelled_by_customer: "ملغى من العميل",
       };
+
+      var merchantStoreId = null;
+      var merchantSocket = null;
+      var refreshTimer = null;
 
       function show(text, ok) {
         var el = document.getElementById("msg");
@@ -207,10 +218,80 @@
       }
 
       function deliveryPill(status) {
+        if (window.ErvenowMerchantOrderWorkflow) return ErvenowMerchantOrderWorkflow.pillHtml(status);
         var s = String(status || "").toLowerCase();
         var label = DELIVERY_LABELS[s] || status || "—";
         var kind = s === "delivered" ? "ok" : s === "delivering" || s === "accepted" ? "warn" : "muted";
         return pill(label, kind);
+      }
+
+      function scheduleRefresh() {
+        if (refreshTimer) clearTimeout(refreshTimer);
+        refreshTimer = setTimeout(function () {
+          refreshTimer = null;
+          boot();
+        }, 400);
+      }
+
+      function renderOrderAction(o) {
+        var wf = window.ErvenowMerchantOrderWorkflow;
+        if (!wf) return "—";
+        var act = wf.nextActionFor(o.delivery_status);
+        if (!act) return '<span class="sub">—</span>';
+        return (
+          '<button type="button" class="btn btn-primary md-order-action" data-order-id="' +
+          esc(o.id) +
+          '" data-next-status="' +
+          esc(act.status) +
+          '" style="min-height:44px;font-size:0.85rem;padding:8px 12px">' +
+          esc(act.label) +
+          "</button>"
+        );
+      }
+
+      function bindOrderActions() {
+        document.querySelectorAll(".md-order-action").forEach(function (btn) {
+          btn.onclick = async function () {
+            var id = btn.getAttribute("data-order-id");
+            var next = btn.getAttribute("data-next-status");
+            if (!id || !next || !window.ErvenowMerchantOrderWorkflow) return;
+            btn.disabled = true;
+            try {
+              await ErvenowMerchantOrderWorkflow.patchOrderStatus(id, next);
+              show("تم تحديث حالة الطلب", true);
+              scheduleRefresh();
+            } catch (e) {
+              show(String((e && e.message) || e || "تعذر التحديث"), false);
+              btn.disabled = false;
+            }
+          };
+        });
+      }
+
+      function connectMerchantSocket() {
+        if (merchantSocket || typeof io === "undefined") return;
+        try {
+          merchantSocket = io({
+            path: "/socket.io/",
+            transports: ["websocket", "polling"],
+            auth: {
+              token:
+                (window.PlatformAPI && PlatformAPI.getToken && PlatformAPI.getToken()) ||
+                localStorage.getItem("ervenow_access_token") ||
+                "",
+            },
+          });
+          merchantSocket.on("order:patch", function (msg) {
+            if (!msg || !merchantStoreId) return;
+            var sid =
+              msg.store_id != null
+                ? msg.store_id
+                : msg.patch && msg.patch.store_id != null
+                  ? msg.patch.store_id
+                  : null;
+            if (String(sid || "") === String(merchantStoreId)) scheduleRefresh();
+          });
+        } catch (_e) {}
       }
 
       function paymentPill(status) {
@@ -230,6 +311,7 @@
           document.getElementById("main").style.display = "block";
 
           var s = data.store || {};
+          merchantStoreId = s.id || null;
           document.getElementById("mdHeroTitle").textContent = "📊 " + (s.name || "متجري");
           document.getElementById("storePhone").textContent = s.phone ? "الجوال: " + s.phone : "";
           var metaBits = [];
@@ -287,13 +369,18 @@
                 "</td><td>" +
                 deliveryPill(o.delivery_status) +
                 "</td><td>" +
+                renderOrderAction(o) +
+                "</td><td>" +
                 (Number(o.order_total) || 0).toFixed(2) +
                 "</td><td><strong>" +
                 (Number(o.total_with_vat != null ? o.total_with_vat : o.total_amount) || 0).toFixed(2) +
                 "</strong></td>";
               ob.appendChild(tr);
             });
+            bindOrderActions();
           }
+
+          connectMerchantSocket();
 
           var txs = data.transactions || [];
           var tb = document.querySelector("#txTable tbody");

@@ -30,6 +30,7 @@ function normalizeIncomingStatus(raw) {
   if (!s) return "";
   if (DEPRECATED_STATUS_ALIASES[s]) return DEPRECATED_STATUS_ALIASES[s];
   if (s === "cancelled_by_customer") return DELIVERY_STATUS.CANCELLED_BY_CUSTOMER;
+  if (s === "picked") return DELIVERY_STATUS.PICKED_UP;
   return s;
 }
 
