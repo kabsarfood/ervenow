@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ar" dir="rtl">
   <head>
     <meta charset="utf-8" />
@@ -1240,7 +1240,7 @@
             <span class="dash-header-wallet__val" id="dashHeaderWalletAmount">—</span>
             <span class="dash-header-wallet__cur">ر.س</span>
           </a>
-          <a class="dash-header-cart" href="/cart" aria-label="السلة — الدفع">
+          <a class="dash-header-cart" href="/checkout" aria-label="السلة — الدفع">
             <span aria-hidden="true">🛒</span>
             <span class="dash-header-cart__label">السلة</span>
             <span class="dash-header-cart__badge" id="cartCount" data-empty="true">0</span>
@@ -1374,8 +1374,8 @@
     </footer>
     </div>
 
-    <script src="/assets/cart.js"></script>
-    <script src="/assets/service-cart.js"></script>
+    <script src="/assets/order-draft-store.js"></script>
+    <script src="/assets/order-draft-badge.js"></script>
     <script src="/assets/api-config.js"></script>
     <script src="/assets/api.js"></script>
     <script src="/assets/auth-account-guard.js"></script>
@@ -1482,11 +1482,13 @@
       }
 
       function refreshDashCartBadge() {
-        if (typeof updateCartCount === "function") updateCartCount();
+        if (window.ErvenowOrderDraftBadge && typeof ErvenowOrderDraftBadge.sync === "function") {
+          ErvenowOrderDraftBadge.sync();
+          return;
+        }
         var badge = document.getElementById("cartCount");
         if (!badge) return;
-        var n = parseInt(badge.textContent, 10) || 0;
-        badge.setAttribute("data-empty", n > 0 ? "false" : "true");
+        badge.setAttribute("data-empty", "true");
       }
 
       async function refreshDashHeaderWallet(role) {
@@ -1611,7 +1613,7 @@
       run();
       refreshDashCartBadge();
       window.addEventListener("storage", function (ev) {
-        if (ev.key === "cart") refreshDashCartBadge();
+        if (ev.key === "ervenow:order-draft" || ev.key === "cart") refreshDashCartBadge();
       });
     </script>
   </body>

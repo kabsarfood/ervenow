@@ -1,6 +1,5 @@
 /**
- * بنرات الصفحة الرئيسية — /api/core/hero-banner
- * بنر واحد: خلفية متحركة (ken-burns) | أكثر من بنر: عرض دوّار تلقائي
+ * بنرات الصفحة الرئيسية — مكان مستقل تحت الهيدر وبطاقة الرئيسية
  */
 (function () {
   var CAROUSEL_MS = 6000;
@@ -34,6 +33,15 @@
     if (!parts.line1 && !parts.line2) return "";
     if (parts.line2) {
       return esc(parts.line1) + "<br><span>" + esc(parts.line2) + "</span>";
+    }
+    return esc(parts.line1);
+  }
+
+  function captionTitleHtml(title) {
+    var parts = splitTitle(title);
+    if (!parts.line1 && !parts.line2) return "";
+    if (parts.line2) {
+      return esc(parts.line1) + " — <span>" + esc(parts.line2) + "</span>";
     }
     return esc(parts.line1);
   }
@@ -74,7 +82,34 @@
     }
   }
 
-  function setCarouselSlide(section, slides, dots, idx) {
+  function getBannerShell() {
+    return {
+      wrap: document.getElementById("homeHeroBanner"),
+      inner: document.getElementById("homeHeroBannerInner"),
+    };
+  }
+
+  function showBannerShell() {
+    var shell = getBannerShell();
+    if (shell.wrap) shell.wrap.hidden = false;
+    return shell;
+  }
+
+  function updateHomeCard(banner) {
+    if (!banner) return;
+    var titleEl = document.getElementById("homeHeroTitle");
+    var subEl = document.getElementById("homeHeroSub");
+    var actionsEl = document.getElementById("homeHeroActions");
+
+    if (banner.title && titleEl) titleEl.innerHTML = titleHtml(banner.title);
+    if (banner.description && subEl) subEl.textContent = banner.description;
+    if (actionsEl) {
+      var html = actionsHtml(banner);
+      if (html) actionsEl.innerHTML = html;
+    }
+  }
+
+  function setCarouselSlide(root, slides, dots, idx) {
     if (!slides.length) return;
     carouselIndex = ((idx % slides.length) + slides.length) % slides.length;
     slides.forEach(function (slide, i) {
@@ -87,15 +122,15 @@
         dot.setAttribute("aria-selected", i === carouselIndex ? "true" : "false");
       });
     }
-    section.setAttribute("data-hero-slide", String(carouselIndex + 1));
+    if (root) root.setAttribute("data-hero-slide", String(carouselIndex + 1));
   }
 
-  function startCarousel(section, slides, dots) {
+  function startCarousel(root, slides, dots) {
     clearCarouselTimer();
-    setCarouselSlide(section, slides, dots, 0);
+    setCarouselSlide(root, slides, dots, 0);
     if (slides.length < 2 || prefersReducedMotion()) return;
     carouselTimer = setInterval(function () {
-      setCarouselSlide(section, slides, dots, carouselIndex + 1);
+      setCarouselSlide(root, slides, dots, carouselIndex + 1);
     }, CAROUSEL_MS);
   }
 
@@ -121,13 +156,8 @@
     var body = document.createElement("div");
     body.className = "sn-hero-carousel__body";
 
-    var eyebrow = document.createElement("div");
-    eyebrow.className = "sn-hero__eyebrow";
-    eyebrow.textContent = "منصة ERVENOW — خدمة واحدة لكل شيء";
-    body.appendChild(eyebrow);
-
     if (banner.title) {
-      var titleEl = document.createElement("h1");
+      var titleEl = document.createElement("h2");
       titleEl.className = "sn-hero__title";
       titleEl.innerHTML = titleHtml(banner.title);
       body.appendChild(titleEl);
@@ -155,29 +185,42 @@
     return article;
   }
 
-  function applySingleBanner(section, banner) {
+  function renderSingleBanner(inner, banner) {
+    inner.className = "sn-home-banner__inner sn-hero--single";
+    if (banner.image_url && !prefersReducedMotion()) {
+      inner.classList.add("sn-hero--ken-burns");
+    }
+    inner.innerHTML = "";
+
     if (banner.image_url) {
-      section.classList.add("sn-hero--has-image");
-      if (!prefersReducedMotion()) section.classList.add("sn-hero--ken-burns");
-      section.style.backgroundImage = 'url("' + String(banner.image_url).replace(/"/g, "%22") + '")';
+      var bg = document.createElement("div");
+      bg.className = "sn-home-banner__bg";
+      bg.style.backgroundImage = 'url("' + String(banner.image_url).replace(/"/g, "%22") + '")';
+      inner.appendChild(bg);
     }
 
-    var titleEl = document.getElementById("homeHeroTitle");
-    var subEl = document.getElementById("homeHeroSub");
-    var actionsEl = document.getElementById("homeHeroActions");
-
-    if (banner.title && titleEl) titleEl.innerHTML = titleHtml(banner.title);
-    if (banner.description && subEl) subEl.textContent = banner.description;
-    if (actionsEl) {
-      var html = actionsHtml(banner);
-      if (html) actionsEl.innerHTML = html;
+    if (banner.title || banner.description) {
+      var cap = document.createElement("div");
+      cap.className = "sn-home-banner__caption";
+      if (banner.title) {
+        var t = document.createElement("p");
+        t.className = "sn-home-banner__caption-title";
+        t.innerHTML = captionTitleHtml(banner.title);
+        cap.appendChild(t);
+      }
+      if (banner.description) {
+        var d = document.createElement("p");
+        d.className = "sn-home-banner__caption-sub";
+        d.textContent = banner.description;
+        cap.appendChild(d);
+      }
+      inner.appendChild(cap);
     }
   }
 
-  function applyCarousel(section, banners) {
-    var guestNote = document.getElementById("guestStartNote");
-    section.classList.add("sn-hero--carousel", "sn-hero--has-image");
-    section.innerHTML = "";
+  function renderCarousel(inner, banners) {
+    inner.className = "sn-home-banner__inner sn-hero--carousel";
+    inner.innerHTML = "";
 
     var track = document.createElement("div");
     track.className = "sn-hero-carousel__track";
@@ -186,7 +229,7 @@
     banners.forEach(function (banner, idx) {
       track.appendChild(buildSlide(banner, idx, banners.length));
     });
-    section.appendChild(track);
+    inner.appendChild(track);
 
     var dots = null;
     if (banners.length > 1) {
@@ -203,42 +246,44 @@
         dot.setAttribute("aria-selected", idx === 0 ? "true" : "false");
         dot.addEventListener("click", function () {
           clearCarouselTimer();
-          setCarouselSlide(section, track.querySelectorAll(".sn-hero-carousel__slide"), dots, idx);
+          var slides = track.querySelectorAll(".sn-hero-carousel__slide");
+          setCarouselSlide(inner, slides, dots, idx);
           if (!prefersReducedMotion()) {
             carouselTimer = setInterval(function () {
-              setCarouselSlide(section, track.querySelectorAll(".sn-hero-carousel__slide"), dots, carouselIndex + 1);
+              setCarouselSlide(inner, slides, dots, carouselIndex + 1);
             }, CAROUSEL_MS);
           }
         });
         dots.appendChild(dot);
       });
-      section.appendChild(dots);
+      inner.appendChild(dots);
     }
 
-    if (guestNote) section.appendChild(guestNote);
-
     var slides = track.querySelectorAll(".sn-hero-carousel__slide");
-    startCarousel(section, slides, dots);
+    startCarousel(inner, slides, dots);
 
-    section.addEventListener("mouseenter", clearCarouselTimer);
-    section.addEventListener("mouseleave", function () {
+    inner.addEventListener("mouseenter", clearCarouselTimer);
+    inner.addEventListener("mouseleave", function () {
       if (banners.length > 1 && !prefersReducedMotion()) {
-        startCarousel(section, slides, dots);
+        startCarousel(inner, slides, dots);
       }
     });
   }
 
   function applyBanners(banners) {
-    var section = document.getElementById("homeHeroSection");
-    if (!section || !Array.isArray(banners) || !banners.length) return;
+    if (!Array.isArray(banners) || !banners.length) return;
+
+    var shell = showBannerShell();
+    if (!shell.inner) return;
 
     clearCarouselTimer();
+    updateHomeCard(banners[0]);
 
     if (banners.length === 1) {
-      applySingleBanner(section, banners[0]);
+      renderSingleBanner(shell.inner, banners[0]);
       return;
     }
-    applyCarousel(section, banners);
+    renderCarousel(shell.inner, banners);
   }
 
   function loadHeroBanner() {

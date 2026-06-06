@@ -242,7 +242,7 @@ test.describe("ERVENOW smoke — service carts", () => {
     await seedAuth(page);
   });
 
-  test("gas delivery item lands in cart v2", async ({ page }) => {
+  test("gas delivery item lands in order draft", async ({ page }) => {
     await page.goto("/gas-delivery.html", { waitUntil: "domcontentloaded" });
     await page.evaluate(() => {
       document.getElementById("gdLocation").value = "24.713600,46.675300";
@@ -251,16 +251,16 @@ test.describe("ERVENOW smoke — service carts", () => {
     await page.locator("#gdPayCart").click();
 
     await expect
-      .poll(async () => page.evaluate(() => localStorage.getItem("cart")))
+      .poll(async () => page.evaluate(() => localStorage.getItem("ervenow:order-draft")))
       .toMatch(/gas_delivery/i);
   });
 
-  test("home service via service-cart", async ({ page }) => {
+  test("home service via order draft vertical", async ({ page }) => {
     await page.goto("/services.html", { waitUntil: "domcontentloaded" });
-    await page.waitForFunction(() => typeof window.ErvenowServiceCart !== "undefined");
+    await page.waitForFunction(() => typeof window.ErvenowOrderDraftVertical !== "undefined");
 
     const out = await page.evaluate(() => {
-      return window.ErvenowServiceCart.add(
+      return window.ErvenowOrderDraftVertical.commit(
         {
           type: "service",
           title: "سباك — E2E",
@@ -272,20 +272,21 @@ test.describe("ERVENOW smoke — service carts", () => {
             customer_phone: "0512345678",
           },
         },
-        { redirect: false }
+        { sourcePage: "/services", vertical: "service", redirect: false }
       );
     });
 
     expect(out.ok).toBe(true);
-    expect(await page.evaluate(() => localStorage.getItem("cart"))).toContain("plumber");
+    const draft = JSON.parse(await page.evaluate(() => localStorage.getItem("ervenow:order-draft")));
+    expect(draft.items.some((i) => i.data && i.data.service_type === "plumber")).toBe(true);
   });
 
-  test("vehicle transport via service-cart", async ({ page }) => {
+  test("vehicle transport via order draft vertical", async ({ page }) => {
     await page.goto("/delivery-services.html", { waitUntil: "domcontentloaded" });
-    await page.waitForFunction(() => typeof window.ErvenowServiceCart !== "undefined");
+    await page.waitForFunction(() => typeof window.ErvenowOrderDraftVertical !== "undefined");
 
     const out = await page.evaluate(() => {
-      return window.ErvenowServiceCart.add(
+      return window.ErvenowOrderDraftVertical.commit(
         {
           type: "delivery",
           title: "نقل مركبة — E2E",
@@ -298,13 +299,13 @@ test.describe("ERVENOW smoke — service carts", () => {
             customer_phone: "0512345678",
           },
         },
-        { redirect: false }
+        { sourcePage: "/delivery-services.html", vertical: "delivery", redirect: false }
       );
     });
 
     expect(out.ok).toBe(true);
-    const cart = JSON.parse(await page.evaluate(() => localStorage.getItem("cart")));
-    expect(cart.items.some((i) => i.data && i.data.service_type === "vehicle_transfer")).toBe(true);
+    const draft = JSON.parse(await page.evaluate(() => localStorage.getItem("ervenow:order-draft")));
+    expect(draft.items.some((i) => i.data && i.data.service_type === "vehicle_transfer")).toBe(true);
   });
 });
 

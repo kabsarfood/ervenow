@@ -667,7 +667,7 @@
             <span class="dash-header-wallet__val" id="dashHeaderWalletAmount">—</span>
             <span class="dash-header-wallet__cur">ر.س</span>
           </a>
-          <a class="dash-header-cart" href="/cart" aria-label="السلة — الدفع">
+          <a class="dash-header-cart" href="/checkout" aria-label="السلة — الدفع">
             <span aria-hidden="true">🛒</span>
             <span class="dash-header-cart__label">السلة</span>
             <span class="dash-header-cart__badge" id="cartCount" data-empty="true">0</span>
@@ -718,7 +718,7 @@
       <div class="card store-section store-section--products" id="productsSection" style="margin-bottom: 14px">
         <div class="store-section-head">
           <h2>المنتجات</h2>
-          <a href="/cart" class="store-cart-link" id="storeCartLink" aria-label="السلة والمجموع">
+          <a href="/checkout" class="store-cart-link" id="storeCartLink" aria-label="السلة والمجموع">
             <span class="store-cart-link__row">🛒 السلة (<span class="store-cart-count">0</span>)</span>
             <span class="store-cart-link__total" id="storeCartTotal" style="display: none"></span>
           </a>
@@ -793,7 +793,9 @@
     </footer>
     </div>
 
-    <script src="/assets/cart.js"></script>
+    <script src="/assets/order-draft-store.js"></script>
+    <script src="/assets/order-draft-vertical.js"></script>
+    <script src="/assets/order-draft-badge.js"></script>
     <script src="/assets/pre-cart-delivery.js"></script>
     <script src="/assets/kabsar-store-polish.js"></script>
     <script src="/assets/api-config.js"></script>
@@ -1153,59 +1155,57 @@
 
       function addProductToCartWithSnapshot(p, qty, snapExtra) {
         if (!storeId || !p) return;
+        if (!window.ErvenowOrderDraftVertical || typeof ErvenowOrderDraftVertical.commit !== "function") {
+          showStoreToast("تعذر تحميل مسودة الطلب — حدّث الصفحة", false);
+          return;
+        }
         qty = Math.max(1, Math.min(99, parseInt(qty, 10) || 1));
         var cap = maxOrderQtyForProduct(p);
+        qty = Math.min(qty, cap);
+        if (qty < 1) {
+          showStoreToast("الكمية غير متاحة", false);
+          return;
+        }
         var unit = effectiveUnitPrice(p);
         var title = (storeMeta.name || "متجر") + " — " + String(p.name || "منتج");
-        var cart = getCart();
-        var idx = cart.findIndex(function (i) {
-          var d = i && i.data;
-          return d && String(d.store_id) === String(storeId) && String(d.product_id) === String(p.id);
-        });
         var baseData = Object.assign(
           {
             store_id: storeId,
             product_id: p.id,
             unit_price: unit,
             store_name: storeMeta.name || "",
+            store_type: storeMeta.type || "",
             image_url: p.image_url || null,
+            qty: qty,
           },
           snapExtra || {}
         );
         if (baseData.fulfillment_mode && baseData.delivery_snapshot_version == null) {
           baseData.delivery_snapshot_version = 1;
         }
-        if (idx >= 0) {
-          var cur = cart[idx];
-          var curQty = Number(cur.data && cur.data.qty) || 1;
-          var newQty = Math.min(cap, curQty + qty);
-          if (newQty < 1) {
-            showStoreToast("الكمية غير متاحة", false);
-            return;
-          }
-          baseData.qty = newQty;
-          cart[idx] = Object.assign({}, cur, {
-            price: unit * newQty,
-            data: Object.assign({}, cur.data || {}, baseData),
-          });
-          saveCart(cart);
-        } else {
-          qty = Math.min(qty, cap);
-          if (qty < 1) {
-            showStoreToast("الكمية غير متاحة", false);
-            return;
-          }
-          baseData.qty = qty;
-          ErvenowCart.add({
+        var vertical =
+          String(storeMeta.type || "").toLowerCase() === "restaurant" ? "restaurant" : "store";
+        var res = ErvenowOrderDraftVertical.commit(
+          {
             type: storeMeta.type || "supermarket",
             title: title,
             price: unit * qty,
             data: baseData,
-          });
+          },
+          {
+            sourcePage: "/store",
+            vertical: vertical,
+            message: "تمت إضافة المنتج — أكمل تأكيد الطلب",
+          }
+        );
+        if (!res.ok) {
+          showStoreToast(res.message || "تعذر الإضافة للمسودة", false);
+          return;
         }
-        if (typeof updateCartCount === "function") updateCartCount();
+        if (typeof ErvenowOrderDraftVertical.syncHeaderBadge === "function") {
+          ErvenowOrderDraftVertical.syncHeaderBadge();
+        }
         polishAfterCartChange();
-        showStoreToast(idx >= 0 ? "تم تحديث الكمية في السلة" : "تمت الإضافة إلى السلة", true);
       }
 
       function show(text, ok) {

@@ -246,16 +246,21 @@
     };
   }
 
-  function getCartItems() {
-    return typeof global.getCart === "function"
-      ? global.getCart()
-      : global.ErvenowCart && global.ErvenowCart.get
-        ? global.ErvenowCart.get()
-        : [];
+  function getDraftItems() {
+    if (global.ErvenowOrderDraftVertical && typeof ErvenowOrderDraftVertical.getItems === "function") {
+      return ErvenowOrderDraftVertical.getItems();
+    }
+    if (global.ErvenowOrderDraft && typeof ErvenowOrderDraft.readDraft === "function") {
+      return ErvenowOrderDraft.readDraft().items || [];
+    }
+    return [];
   }
 
   function assertCartCompatible(snapshot) {
-    var cart = getCartItems();
+    if (global.ErvenowOrderDraftVertical && ErvenowOrderDraftVertical.assertSnapshotCompatible) {
+      return ErvenowOrderDraftVertical.assertSnapshotCompatible(getDraftItems(), snapshot);
+    }
+    var cart = getDraftItems();
     if (!cart || !cart.length) return { ok: true };
     var sid = String(snapshot.store_id || "");
     for (var i = 0; i < cart.length; i++) {
@@ -280,7 +285,7 @@
   }
 
   function reuseSnapshotFromCart(ctx) {
-    var cart = getCartItems();
+    var cart = getDraftItems();
     var storeId = String(ctx.storeId || "");
     for (var i = 0; i < cart.length; i++) {
       var d = cart[i] && cart[i].data;
@@ -478,8 +483,11 @@
                 Number.isFinite(Number(snap.drop_lat)) &&
                 Number.isFinite(Number(snap.drop_lng))
               ) {
-                if (global.saveDeliveryLocation && typeof global.saveDeliveryLocation === "function") {
-                  global.saveDeliveryLocation({
+                if (
+                  global.ErvenowOrderDraftVertical &&
+                  typeof ErvenowOrderDraftVertical.saveCustomerLocation === "function"
+                ) {
+                  ErvenowOrderDraftVertical.saveCustomerLocation({
                     lat: Number(snap.drop_lat),
                     lng: Number(snap.drop_lng),
                     address: snap.drop_address || "",

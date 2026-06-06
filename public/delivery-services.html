@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ar" dir="rtl">
   <head>
     <meta charset="utf-8" />
@@ -1085,7 +1085,7 @@
             <span class="dash-header-wallet__val" id="dashHeaderWalletAmount">—</span>
             <span class="dash-header-wallet__cur">ر.س</span>
           </a>
-          <a class="dash-header-cart" href="/cart" aria-label="السلة — الدفع">
+          <a class="dash-header-cart" href="/checkout" aria-label="السلة — الدفع">
             <span aria-hidden="true">🛒</span>
             <span class="dash-header-cart__label">السلة</span>
             <span class="dash-header-cart__badge" id="cartCount" data-empty="true">0</span>
@@ -1181,8 +1181,8 @@
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="/assets/cart.js"></script>
-    <script src="/assets/service-cart.js"></script>
+    <script src="/assets/order-draft-store.js"></script>
+    <script src="/assets/order-draft-vertical.js"></script>
     <script src="/assets/api-config.js"></script>
     <script src="/assets/api.js"></script>
     <script src="/assets/guestBrowse.js"></script>
@@ -1580,7 +1580,7 @@
             "<p id='dsEstimate' aria-live='polite'></p>" +
             "<div class='ds-submit-wrap'>" +
             "<button type='submit' id='dsSubmit' class='ds-btn-cart-primary'>🛒 إضافة للسلة والدفع</button>" +
-            "<a href='/cart' class='ds-btn-cart-secondary'>عرض السلة</a>" +
+            "<a href='/checkout' class='ds-btn-cart-secondary'>تأكيد الطلب</a>" +
             "</div>" +
             "</form>";
 
@@ -1662,19 +1662,25 @@
               return;
             }
           }
-          if (!window.ErvenowServiceCart || !ErvenowServiceCart.add) {
-            err.textContent = "تعذر تحميل السلة. حدّث الصفحة.";
+          if (!window.ErvenowOrderDraftVertical || typeof ErvenowOrderDraftVertical.commit !== "function") {
+            err.textContent = "تعذر تحميل مسودة الطلب. حدّث الصفحة.";
             err.style.display = "block";
             return;
           }
-          var result = ErvenowServiceCart.add(buildCarCartItem());
+          var result = ErvenowOrderDraftVertical.commit(buildCarCartItem(), {
+            sourcePage: "/delivery-services",
+            vertical: "vehicle",
+            redirect: false,
+            message: "تمت إضافة طلب النقل — أكمل تأكيد الطلب",
+          });
           if (!result.ok) {
-            err.textContent = result.message || "تعذر الإضافة للسلة";
+            err.textContent = result.message || "تعذر الإضافة للمسودة";
             err.style.display = "block";
             return;
           }
-          ok.textContent = "تمت الإضافة للسلة — أكمل الدفع ثم يُخصَّص مندوب للنقل.";
+          ok.textContent = "تمت الإضافة — جاري التوجيه لتأكيد الطلب…";
           ok.style.display = "block";
+          window.location.href = "/checkout";
         }
 
         document.getElementById("dsMapConfirm").onclick = confirmMap;

@@ -386,6 +386,10 @@ function renderCartLineHtml(item) {
     }
   }
   var priceStr = ervFmtMoney(Number(item.price) || 0);
+  var titleText = item.title || "طلب";
+  if (document.body.classList.contains("cart-checkout-v3")) {
+    titleText = qty + " × " + titleText;
+  }
   var idAttr = escCartHtml(String(item.id));
   var qtyBlock =
     kind === "product"
@@ -413,8 +417,12 @@ function renderCartLineHtml(item) {
     kind === "product"
       ? '<span class="lp-cart-line__badge lp-cart-line__badge--avail">متاح</span>'
       : '<span class="lp-cart-line__badge lp-cart-line__badge--' + kind + '">' + kindLabel[kind] + "</span>";
+  var lineClass =
+    "lp-cart-line lp-cart-line--v2" + (document.body.classList.contains("cart-checkout-v3") ? " item" : "");
   return (
-    '<article class="lp-cart-line lp-cart-line--v2" data-cart-id="' +
+    '<article class="' +
+    lineClass +
+    '" data-cart-id="' +
     idAttr +
     '">' +
     '<div class="lp-cart-line__card">' +
@@ -425,7 +433,7 @@ function renderCartLineHtml(item) {
     '<div class="lp-cart-line__head">' +
     availBadge +
     '<strong class="lp-cart-line__title">' +
-    escCartHtml(item.title || "طلب") +
+    escCartHtml(titleText) +
     "</strong>" +
     "</div>" +
     (vendor ? '<p class="lp-cart-line__vendor">' + escCartHtml(vendor) + "</p>" : "") +
@@ -520,8 +528,100 @@ function syncLpCartCheckoutBtn() {
   syncCartCheckoutButtonState(document.getElementById("lpCartCheckoutBtn"), "إتمام العملية");
 }
 
+function formatCheckoutOrderPreviewRef() {
+  var key = "";
+  try {
+    key = sessionStorage.getItem("ervenow:checkout-idem") || "";
+  } catch (_e) {}
+  if (key && String(key).trim()) {
+    var short = String(key).replace(/[^a-zA-Z0-9-]/g, "").slice(0, 16).toUpperCase();
+    return "#EW-" + short;
+  }
+  var d = new Date();
+  var pad = function (n) {
+    return String(n).padStart(2, "0");
+  };
+  return "#EW-" + String(d.getFullYear()).slice(2) + pad(d.getMonth() + 1) + pad(d.getDate()) + "-جديد";
+}
+
+function syncCheckoutV3Chrome(cart, breakdown) {
+  if (!document.body.classList.contains("cart-checkout-v3")) return;
+  cart = cart || getCart();
+  var header = document.getElementById("cartCheckoutHeader");
+  var storeCard = document.getElementById("cartCheckoutStoreCard");
+  var deliveryCard = document.getElementById("cartCheckoutDeliveryCard");
+  var orderRef = document.getElementById("cartCheckoutOrderRef");
+  var hasItems = !!cart.length;
+  if (header) header.hidden = !hasItems;
+  if (storeCard) storeCard.hidden = !hasItems;
+  if (deliveryCard) deliveryCard.hidden = !hasItems;
+  if (orderRef && hasItems) orderRef.textContent = formatCheckoutOrderPreviewRef();
+  var nameEl = document.getElementById("cartStoreName");
+  var metaEl = document.getElementById("cartStoreMeta");
+  if (!hasItems) return;
+  var storeName = "";
+  var storeIcon = "🏪";
+  var eta = null;
+  cart.forEach(function (it) {
+    var d = (it && it.data) || {};
+    if (!storeName && (d.store_name || d.merchant_name)) {
+      storeName = String(d.store_name || d.merchant_name);
+      var st = String(d.store_type || "").toLowerCase();
+      if (st === "restaurant" || /مطعم|مأكولات|restaurant/i.test(storeName)) storeIcon = "🍽️";
+    }
+    if (eta == null && d.eta_minutes != null && Number.isFinite(Number(d.eta_minutes))) {
+      eta = Number(d.eta_minutes);
+    }
+  });
+  if (!storeName) {
+    var hasDelivery = cart.some(function (it) {
+      return cartLineKind(it) === "delivery";
+    });
+    var hasService = cart.some(function (it) {
+      return cartLineKind(it) === "service";
+    });
+    storeName = hasDelivery ? "طلب توصيل ERVENOW" : hasService ? "طلب خدمة ERVENOW" : "طلب ERVENOW";
+    storeIcon = hasDelivery ? "🚚" : "📦";
+  }
+  if (nameEl) nameEl.textContent = storeIcon + " " + storeName;
+  var metaParts = [];
+  var mode = getCartFulfillmentMode(cart);
+  if (mode) metaParts.push("🚚 " + fulfillmentLabelAr(mode));
+  if (eta != null) metaParts.push("⏱️ " + eta + " دقيقة");
+  if (metaEl) metaEl.textContent = metaParts.length ? metaParts.join(" • ") : "—";
+  var typeEl = document.getElementById("cartDeliveryTypeLabel");
+  if (typeEl) typeEl.textContent = mode ? fulfillmentLabelAr(mode) : "—";
+  if (breakdown) {
+    var feeEl = document.getElementById("cartDeliveryFeeDisplay");
+    if (feeEl) {
+      feeEl.innerHTML = breakdown.deliveryPending
+        ? '<span class="lp-cart-panel__pending">—</span>'
+        : ervMoneyCellHtml(breakdown.delivery);
+    }
+  }
+}
+
 function syncCartPageCheckoutBtn() {
-  syncCartCheckoutButtonState(getCartCheckoutButtonEl(), "إتمام الطلب");
+  var btn = getCartCheckoutButtonEl();
+  if (btn && document.body.classList.contains("cart-checkout-v3")) {
+    var hasItems = !!getCart().length;
+    var blocked = !hasItems || cartCheckoutBlockedByEwPay();
+    btn.disabled = blocked;
+    if (hasItems) {
+      var b = computeErvCartBreakdown(getCart(), resolveCartDeliveryFeeArg(getCart()));
+      var amt = b.deliveryPending ? "…" : ervFmtMoney(b.grandTotal) + " ر.س";
+      btn.textContent = "تأكيد الطلب • " + amt;
+    } else {
+      btn.textContent = "تأكيد الطلب";
+    }
+    if (hasItems && window.__ervCartSelectedPayment === "ew_pay" && cartCheckoutBlockedByEwPay()) {
+      btn.setAttribute("aria-disabled", "true");
+    } else {
+      btn.removeAttribute("aria-disabled");
+    }
+  } else {
+    syncCartCheckoutButtonState(btn, "إتمام الطلب");
+  }
   syncCartCheckoutButtons();
 }
 
@@ -572,16 +672,21 @@ function setCartPanelHasItems(hasItems) {
   if (lpSummary) lpSummary.hidden = !hasItems;
   if (lpPayCard) lpPayCard.hidden = !hasItems;
   if (lpFooter) lpFooter.hidden = !hasItems;
+  var deliveryV3 = document.getElementById("cartCheckoutDeliveryCard");
+  if (deliveryV3) deliveryV3.hidden = !hasItems;
   var lpPanel = document.getElementById("lpCartPageRoot") || document.getElementById("lpCartPanel");
   if (lpPanel) lpPanel.classList.toggle("lp-cart-panel--empty", !hasItems);
   document.body.classList.toggle("cart-page-is-empty", !hasItems);
   document.body.classList.toggle("cart-page-has-items", !!hasItems);
+  syncCheckoutV3Chrome(hasItems ? getCart() : [], null);
 }
 
 function updateCartPanelHeader(cart) {
   var title = document.getElementById("lpCartDialogTitle");
   var sub = document.getElementById("lpCartPanelSub");
-  if (title) title.textContent = "السلة";
+  if (title) {
+    title.textContent = document.body.classList.contains("cart-checkout-v3") ? "🛒 إتمام الطلب" : "السلة";
+  }
   if (sub) sub.hidden = true;
 }
 
@@ -1084,6 +1189,12 @@ function applyCartFinancialsToUi(b, opts) {
     }
   }
   applyDel("lpCartDel", "cartFinDel", "lpCartDelNote", "cartFinDelNote");
+  var feeDisp = document.getElementById("cartDeliveryFeeDisplay");
+  if (feeDisp) {
+    feeDisp.innerHTML = b.deliveryPending
+      ? '<span class="lp-cart-panel__pending">—</span>'
+      : ervMoneyCellHtml(b.delivery);
+  }
   setMoney("lpCartVat", b.vat);
   setMoney("cartFinVat", b.vat);
   setMoney("lpCartComm", b.platformCommission);
@@ -1092,6 +1203,7 @@ function applyCartFinancialsToUi(b, opts) {
   setMoney("cartFinGrand", b.grandTotal);
   if (window.__ervCartSelectedPayment === "ew_pay") refreshEwPayBalanceCards();
   syncLpCartAccordionMeta();
+  syncCheckoutV3Chrome(getCart(), b);
   syncLpCartCheckoutBtn();
   syncCartPageCheckoutBtn();
 }
@@ -1433,6 +1545,7 @@ function setSelectedPaymentForContainer(containerId, method) {
   root.querySelectorAll(".erv-pay-card").forEach(function (b) {
     var on = b.getAttribute("data-pay-method") === method;
     b.classList.toggle("erv-pay-card--selected", on);
+    b.classList.toggle("payment-option--selected", on);
     b.setAttribute("aria-pressed", on ? "true" : "false");
   });
   persistCartPaymentMethod(method);
@@ -1445,15 +1558,32 @@ function setSelectedPaymentForContainer(containerId, method) {
   syncLpCartAccordionMeta();
 }
 
+function checkoutV3PayLabel(key, meta) {
+  var v3PayLabels = {
+    ew_pay: "💰 ERVENOW",
+    stc_pay: "📱 STC Pay",
+    mada: "💳 مدى",
+    apple_pay: " Apple Pay",
+    visa: "💳 Visa",
+    mastercard: "💳 Mastercard",
+    cash_on_delivery: "💵 عند الاستلام",
+    tabby: "📅 Tabby",
+    tamara: "📅 Tamara",
+  };
+  return v3PayLabels[key] || (meta && meta.title) || key;
+}
+
 function buildPaymentCardButton(key, opts) {
   opts = opts || {};
   var src = ERV_PAY_ICON_SRC[key];
   if (!src) return null;
   var meta = paymentCardDisplay(key);
+  var isV3 = document.body.classList.contains("cart-checkout-v3");
   var btn = document.createElement("button");
   btn.type = "button";
   btn.className =
     "erv-pay-card" +
+    (isV3 ? " payment-option" : "") +
     (key === "ew_pay" ? " erv-pay-card--ew" : "") +
     (opts.bnpl ? " erv-pay-card--bnpl" : "");
   if (opts.bnpl && key === "tabby") btn.classList.add("erv-pay-card--tabby");
@@ -1461,6 +1591,17 @@ function buildPaymentCardButton(key, opts) {
   btn.setAttribute("data-pay-method", key);
   btn.setAttribute("aria-label", meta.title + (meta.hint ? " — " + meta.hint : ""));
   btn.setAttribute("aria-pressed", "false");
+  if (isV3) {
+    var radio = document.createElement("span");
+    radio.className = "radio";
+    radio.setAttribute("aria-hidden", "true");
+    btn.appendChild(radio);
+    var payLabel = document.createElement("span");
+    payLabel.className = "payment-label";
+    payLabel.textContent = checkoutV3PayLabel(key, meta);
+    btn.appendChild(payLabel);
+    return btn;
+  }
   var wrap = document.createElement("span");
   wrap.className = "erv-pay-card__icon-wrap";
   var img = document.createElement("img");
@@ -1768,11 +1909,11 @@ function renderPaymentMethodDropdownInto(selectId) {
 function handleLpCartCheckoutClick() {
   if (!getCart().length) return;
   var path = (window.location.pathname || "").replace(/\/+$/, "") || "/";
-  if (path === "/cart" && typeof window.executeCartCheckout === "function") {
+  if ((path === "/cart" || path === "/checkout") && typeof window.executeCartCheckout === "function") {
     void window.executeCartCheckout();
     return;
   }
-  window.location.href = "/cart";
+  window.location.href = "/checkout";
 }
 
 window.renderPaymentMethodCardsInto = renderPaymentMethodCardsInto;
@@ -1960,7 +2101,9 @@ function syncCartDeliveryLocationUi() {
     if (editorView) editorView.hidden = true;
     var label = loc.address || loc.lat.toFixed(5) + "، " + loc.lng.toFixed(5);
     var modeLabel = fulfillmentLabelAr(getCartFulfillmentMode(cart));
-    if (displayEl) displayEl.textContent = "📍 " + label;
+    if (displayEl) {
+      displayEl.textContent = document.body.classList.contains("cart-checkout-v3") ? label : "📍 " + label;
+    }
     if (statusEl) statusEl.textContent = modeLabel ? "✓ " + modeLabel : "✓ موقع التوصيل محفوظ";
     return;
   }
@@ -1968,8 +2111,8 @@ function syncCartDeliveryLocationUi() {
   if (savedView) savedView.hidden = !loc;
   if (editorView) editorView.hidden = false;
   if (loc && displayEl) {
-    displayEl.textContent =
-      "📍 " + (loc.address || loc.lat.toFixed(5) + "، " + loc.lng.toFixed(5));
+    var locLabel = loc.address || loc.lat.toFixed(5) + "، " + loc.lng.toFixed(5);
+    displayEl.textContent = document.body.classList.contains("cart-checkout-v3") ? locLabel : "📍 " + locLabel;
   }
   if (statusEl) {
     statusEl.textContent = loc
@@ -2122,6 +2265,7 @@ function renderCartPage(opts) {
   syncCartMobileBar(cart, breakdown);
   if (typeof window.refreshGuestCartBanner === "function") window.refreshGuestCartBanner();
   syncCartDeliveryLocationUi();
+  syncCheckoutV3Chrome(cart, breakdown);
   if (!opts.skipDeliveryRefresh && typeof refreshCartDeliveryFee === "function") {
     void refreshCartDeliveryFee();
   }
@@ -2233,7 +2377,7 @@ async function runExecuteCartCheckout() {
     "";
 
   if (!token || !String(token).trim()) {
-    window.location.href = "/login?mode=register&role=customer&next=" + encodeURIComponent("/cart");
+    window.location.href = "/login?mode=register&role=customer&next=" + encodeURIComponent("/checkout");
     return;
   }
 
@@ -2348,7 +2492,7 @@ async function runExecuteCartCheckout() {
       return;
     }
     if (/401|غير مصرح|token/i.test(msg)) {
-      window.location.href = "/login?mode=register&role=customer&next=" + encodeURIComponent("/cart");
+      window.location.href = "/login?mode=register&role=customer&next=" + encodeURIComponent("/checkout");
       return;
     }
     showError(msg);

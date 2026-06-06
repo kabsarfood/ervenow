@@ -157,8 +157,27 @@ svg {
     font-size: clamp(0.78rem, 2.2vw, 0.82rem);
   }
 
+  .sn-home-card {
+    padding-inline: max(12px, env(safe-area-inset-left, 12px)) max(12px, env(safe-area-inset-right, 12px));
+  }
+
+  .sn-home-card__inner {
+    padding: clamp(22px, 5vw, 32px) clamp(16px, 4vw, 24px);
+  }
+
+  .sn-home-banner {
+    padding-inline: max(12px, env(safe-area-inset-left, 12px)) max(12px, env(safe-area-inset-right, 12px));
+  }
+
+  .sn-home-banner__inner,
+  .sn-home-banner__inner .sn-hero-carousel__track,
+  .sn-hero-carousel__body {
+    min-height: clamp(140px, 44vw, 220px);
+    aspect-ratio: 16 / 10;
+  }
+
   .sn-hero {
-    padding-inline: max(16px, env(safe-area-inset-left, 16px)) max(16px, env(safe-area-inset-right, 16px));
+    padding-inline: 0;
   }
 
   .sn-hero__title {

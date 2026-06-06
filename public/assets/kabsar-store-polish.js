@@ -129,8 +129,16 @@
     box.classList.toggle("prod-grid--sparse", n > 0 && n <= 2);
   }
 
+  function draftItems() {
+    if (global.ErvenowOrderDraft && typeof global.ErvenowOrderDraft.readDraft === "function") {
+      var draft = global.ErvenowOrderDraft.readDraft();
+      return draft && Array.isArray(draft.items) ? draft.items : [];
+    }
+    return typeof global.getCart === "function" ? global.getCart() : [];
+  }
+
   function cartForStore(storeId) {
-    var cart = typeof global.getCart === "function" ? global.getCart() : [];
+    var cart = draftItems();
     var count = 0;
     var sub = 0;
     (cart || []).forEach(function (it) {
@@ -155,14 +163,11 @@
       totalEl.style.display = c.count > 0 ? "block" : "none";
     }
     var headerBadges = document.querySelectorAll(".dash-header-cart__badge#cartCount");
+    var totalCount = draftItems().reduce(function (s, i) {
+      return s + (Number(i && i.data && i.data.qty) || 1);
+    }, 0);
     headerBadges.forEach(function (el) {
-      el.textContent = String(
-        typeof global.getCart === "function"
-          ? global.getCart().reduce(function (s, i) {
-              return s + (Number(i && i.data && i.data.qty) || 1);
-            }, 0)
-          : c.count
-      );
+      el.textContent = String(totalCount);
     });
   }
 

@@ -32,6 +32,8 @@
       "/dashboard",
       "/cart",
       "/cart.html",
+      "/checkout",
+      "/checkout.html",
       "/stores",
       "/restaurants",
       "/services",

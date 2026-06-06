@@ -1,0 +1,55 @@
+/**
+ * Checkout Cutover — Draft Badge (replaces Mini Cart indicator)
+ */
+.erv-draft-badge,
+.lp-draft-checkout-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(201, 162, 39, 0.45);
+  background: rgba(255, 250, 243, 0.95);
+  color: inherit;
+  text-decoration: none;
+  font-weight: 700;
+  line-height: 1.4;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.erv-draft-badge:hover,
+.lp-draft-checkout-badge:hover {
+  border-color: #c9a227;
+  box-shadow: 0 4px 14px rgba(42, 24, 16, 0.1);
+}
+
+.erv-draft-badge__count,
+.lp-draft-checkout-badge__count,
+.dash-header-cart__badge#cartCount {
+  min-width: 1.5rem;
+  text-align: center;
+}
+
+.erv-draft-badge__total,
+.lp-draft-checkout-badge__total {
+  font-size: 0.85rem;
+  color: #6b5348;
+  white-space: nowrap;
+}
+
+.erv-draft-badge__total:empty,
+.lp-draft-checkout-badge__total[hidden] {
+  display: none;
+}
+
+.dash-header-cart__badge[data-empty="true"] {
+  opacity: 0.55;
+}
+
+@media (max-width: 640px) {
+  .erv-draft-badge__total,
+  .lp-draft-checkout-badge__total {
+    display: none !important;
+  }
+}

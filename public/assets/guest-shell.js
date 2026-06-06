@@ -98,11 +98,13 @@
   }
 
   function refreshCartBadge() {
-    if (typeof global.updateCartCount === "function") global.updateCartCount();
+    if (global.ErvenowOrderDraftBadge && typeof global.ErvenowOrderDraftBadge.sync === "function") {
+      global.ErvenowOrderDraftBadge.sync();
+      return;
+    }
     var badge = document.getElementById("cartCount");
     if (!badge) return;
-    var n = parseInt(badge.textContent, 10) || 0;
-    badge.setAttribute("data-empty", n > 0 ? "false" : "true");
+    badge.setAttribute("data-empty", "true");
   }
 
   function ensureNotificationCenterAssets() {
@@ -561,9 +563,9 @@
       '<span class="dash-header-wallet__val" id="dashHeaderWalletAmount">—</span>' +
       '<span class="dash-header-wallet__cur">ر.س</span>' +
       "</a>" +
-      '<a class="dash-header-cart" href="/cart" aria-label="السلة — الدفع">' +
+      '<a class="dash-header-cart" href="/checkout" aria-label="تأكيد الطلب — الدفع">' +
       '<span aria-hidden="true">🛒</span>' +
-      '<span class="dash-header-cart__label">السلة</span>' +
+      '<span class="dash-header-cart__label">الطلب</span>' +
       '<span class="dash-header-cart__badge" id="cartCount" data-empty="true">0</span>' +
       "</a>" +
       "</div>" +
@@ -644,55 +646,35 @@
     document.head.appendChild(s);
   }
 
-  function ensureCartStyles() {
-    if (!document.querySelector('link[href*="cart-luxe.css"]')) {
-      var l1 = document.createElement("link");
-      l1.rel = "stylesheet";
-      l1.href = "/assets/cart-luxe.css";
-      document.head.appendChild(l1);
-    }
-    if (!document.querySelector('link[href*="cart-shell.css"]')) {
-      var l2 = document.createElement("link");
-      l2.rel = "stylesheet";
-      l2.href = "/assets/cart-shell.css";
-      document.head.appendChild(l2);
-    }
-  }
-
-  function mountUnifiedHeaderCart() {
-    if (document.getElementById("lpCartWrap")) return;
-    var tools = document.querySelector(".dash-site-header__tools");
-    var link = tools && tools.querySelector(".dash-header-cart");
-    if (tools && link && global.ErvenowCartUI) {
-      global.ErvenowCartUI.mountGuestHeaderCart(tools, link);
-      normalizeSiteHeaderDomOrder();
-    }
-  }
-
-  function loadCartUi(cb) {
+  function loadDraftBadge(cb) {
     if (!document.body.classList.contains("guest-shell-page")) {
       if (cb) cb();
       return;
     }
-    ensureCartStyles();
-    if (global.ErvenowCartUI) {
-      mountUnifiedHeaderCart();
+    if (global.ErvenowOrderDraftBadge) {
+      if (typeof global.ErvenowOrderDraftBadge.boot === "function") global.ErvenowOrderDraftBadge.boot();
+      else if (typeof global.ErvenowOrderDraftBadge.sync === "function") global.ErvenowOrderDraftBadge.sync();
       if (cb) cb();
       return;
     }
-    if (document.querySelector('script[src*="cart-ui.js"]')) {
-      mountUnifiedHeaderCart();
+    if (document.querySelector('script[src*="order-draft-badge.js"]')) {
       if (cb) cb();
       return;
     }
-    var s = document.createElement("script");
-    s.src = "/assets/cart-ui.js";
-    s.async = true;
-    s.onload = function () {
-      mountUnifiedHeaderCart();
-      if (cb) cb();
+    var s1 = document.createElement("script");
+    s1.src = "/assets/order-draft-store.js";
+    s1.async = true;
+    s1.onload = function () {
+      var s2 = document.createElement("script");
+      s2.src = "/assets/order-draft-badge.js";
+      s2.async = true;
+      s2.onload = function () {
+        refreshCartBadge();
+        if (cb) cb();
+      };
+      document.head.appendChild(s2);
     };
-    document.head.appendChild(s);
+    document.head.appendChild(s1);
   }
 
   function init(opts) {
@@ -713,7 +695,7 @@
     paintIndexNav("", { authenticated: hasToken() });
     refreshCartBadge();
     loadToggleUi();
-    loadCartUi();
+    loadDraftBadge();
     ensureNotificationCenterAssets();
     loadPlatformAccessScript();
     loadAccountDestScript();

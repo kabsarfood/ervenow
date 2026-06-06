@@ -56,7 +56,18 @@ async function handleUnifiedCartCheckoutHttp(req, res, opts = {}) {
       checkoutIdempotencyKey: idemKey,
     });
     if (!insertResult.ok) {
-      return res.status(insertResult.status || 400).json({ ok: false, message: insertResult.message });
+      const failStatus = insertResult.status || 400;
+      if (idemKey && idemClaimed && sb && failStatus >= 400 && failStatus < 500) {
+        try {
+          await releaseCheckoutIdempotency(sb, req.appUser.id, idemKey);
+        } catch (relErr) {
+          logger.error(
+            { err: relErr && (relErr.message || String(relErr)) },
+            "[cart-checkout] idempotency release after 4xx"
+          );
+        }
+      }
+      return res.status(failStatus).json({ ok: false, message: insertResult.message });
     }
 
     await bumpDeliveryOrdersListEpoch();

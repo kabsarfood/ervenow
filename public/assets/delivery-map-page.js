@@ -968,25 +968,28 @@
               result.innerText = "❌ أدخل جوال المرسل (05xxxxxxxx) قبل المتابعة.";
               return;
             }
-            if (window.ErvenowServiceCart && typeof ErvenowServiceCart.validateSaPhone === "function") {
-              var guestPh = ErvenowServiceCart.validateSaPhone(draft.customer_phone);
-              if (!guestPh) {
-                result.innerText = "❌ أدخل جوالاً سعودياً صحيحاً (05xxxxxxxx).";
-                return;
-              }
-              draft.customer_phone = guestPh;
-              if (draft.data) draft.data.customer_phone = guestPh;
+            var validatePhone =
+              (global.ErvenowOrderDraftVertical && ErvenowOrderDraftVertical.validateSaPhone) ||
+              function () {
+                return null;
+              };
+            var guestPh = validatePhone(draft.customer_phone);
+            if (!guestPh) {
+              result.innerText = "❌ أدخل جوالاً سعودياً صحيحاً (05xxxxxxxx).";
+              return;
             }
+            draft.customer_phone = guestPh;
+            if (draft.data) draft.data.customer_phone = guestPh;
             try {
-              sessionStorage.setItem("ervenow:pending-map-cart", JSON.stringify(draft));
+              sessionStorage.setItem("ervenow:pending-map-draft", JSON.stringify(draft));
             } catch (e1) {}
             window.location.href =
-              "/login?mode=register&role=customer&next=" + encodeURIComponent("/cart");
+              "/login?mode=register&role=customer&next=" + encodeURIComponent("/checkout");
             return;
           }
 
           btn.disabled = true;
-          btn.innerText = "جارٍ الإضافة للسلة...";
+          btn.innerText = "جارٍ الإضافة للمسودة...";
 
           var item = await buildMapCartItem();
           if (!item.customer_phone) {
@@ -994,20 +997,21 @@
             return;
           }
 
-          if (!window.ErvenowServiceCart || typeof ErvenowServiceCart.add !== "function") {
-            throw new Error("تعذر تحميل السلة — حدّث الصفحة");
+          if (!global.ErvenowOrderDraftVertical || typeof ErvenowOrderDraftVertical.commit !== "function") {
+            throw new Error("تعذر تحميل مسودة الطلب — حدّث الصفحة");
           }
 
-          var cartRes = ErvenowServiceCart.add(item, {
-            message:
-              "تمت إضافة طلب التوصيل من الخريطة — أكمل الدفع في السلة لاعتماد الطلب وإرساله للمندوبين.",
+          var draftRes = ErvenowOrderDraftVertical.commit(item, {
+            sourcePage: "/delivery-map",
+            vertical: "map_delivery",
+            message: "تمت إضافة طلب الخريطة — أكمل تأكيد الطلب",
           });
-          if (!cartRes.ok) {
-            result.innerText = "❌ " + (cartRes.message || "تعذر الإضافة للسلة");
+          if (!draftRes.ok) {
+            result.innerText = "❌ " + (draftRes.message || "تعذر الإضافة للمسودة");
             return;
           }
         } catch (e) {
-          result.innerText = "❌ " + (e.message || "تعذّر إضافة الطلب للسلة");
+          result.innerText = "❌ " + (e.message || "تعذّر إضافة الطلب للمسودة");
         } finally {
           btn.innerText = "أضف إلى السلة";
           enableCreate();
@@ -1020,7 +1024,9 @@
     if (global.ErvenowGuestShell && ErvenowGuestShell.refreshAuthHeader) {
       ErvenowGuestShell.refreshAuthHeader();
     }
-    if (typeof global.updateCartCount === "function") global.updateCartCount();
+    if (global.ErvenowOrderDraftVertical && typeof ErvenowOrderDraftVertical.syncHeaderBadge === "function") {
+      ErvenowOrderDraftVertical.syncHeaderBadge();
+    }
     setDeliveryMode("map");
     updateApplyBtnLabel();
     initMap();

@@ -2668,8 +2668,7 @@
         border: 0;
       }
     </style>
-    <link rel="stylesheet" href="/assets/cart-luxe.css" />
-    <link rel="stylesheet" href="/assets/cart-shell.css" />
+    <link rel="stylesheet" href="/assets/order-draft-badge.css" />
   </head>
   <body class="lp-body lp-home-premium">
     <header class="lp-header" id="top">
@@ -2802,144 +2801,11 @@
               <span class="lp-header-wallet__cur">ر.س</span>
             </span>
           </a>
-          <div class="lp-cart-wrap" id="lpCartWrap">
-            <button
-              type="button"
-              class="cart-btn"
-              id="lpCartToggle"
-              aria-expanded="false"
-              aria-controls="lpCartPanel"
-              aria-haspopup="dialog"
-            >
-              <span aria-hidden="true">🛒</span>
-              <span id="cartCount">0</span>
-            </button>
-            <div class="lp-cart-backdrop" id="lpCartBackdrop" aria-hidden="true"></div>
-            <div
-              class="lp-cart-panel lp-cart-panel--empty"
-              id="lpCartPanel"
-              role="dialog"
-              aria-modal="true"
-              aria-labelledby="lpCartDialogTitle"
-              aria-hidden="true"
-            >
-              <div class="lp-cart-panel__surface">
-                <header class="lp-cart-card lp-cart-card--head">
-                  <div class="lp-cart-card--head__bar">
-                    <a href="/" class="lp-cart-continue-link" id="lpCartContinueShop" data-erv-cart-continue>← استمرار التسوق</a>
-                    <div class="lp-cart-card--head__title-wrap">
-                      <span class="lp-cart-card--head__cart-icon" aria-hidden="true">🛒</span>
-                      <h2 id="lpCartDialogTitle" class="lp-cart-card--head__title">السلة</h2>
-                    </div>
-                  </div>
-                  <p id="lpCartPanelSub" class="lp-cart-card--head__sub" hidden>أضف منتجات أو خدمات، ثم أكمل الدفع.</p>
-                </header>
-
-                <div class="lp-cart-stack">
-                  <section id="lpCartItemsCard" class="lp-cart-card lp-cart-card--items lp-cart-card--accordion" aria-labelledby="lpCartLinesHeading">
-                    <details class="lp-cart-accordion lp-cart-accordion--items" id="lpCartItemsAccordion" open>
-                      <summary class="lp-cart-accordion__trigger lp-cart-accordion__trigger--items">
-                        <span class="lp-cart-accordion__icon" aria-hidden="true">🛒</span>
-                        <span class="lp-cart-accordion__label" id="lpCartLinesHeading">تفاصيل المنتجات</span>
-                        <span class="lp-cart-accordion__meta" id="lpCartItemsToggleMeta">السلة فارغة</span>
-                        <span class="lp-cart-accordion__chev" aria-hidden="true"></span>
-                      </summary>
-                      <div class="lp-cart-accordion__panel lp-cart-card__body lp-cart-card__body--items">
-                        <div id="lpCartLines" class="lp-cart-panel__list"></div>
-                        <p id="lpCartEmpty" class="lp-cart-panel__empty" hidden>السلة فارغة — ابدأ من أحد الأقسام:</p>
-                        <div id="lpCartEmptyCta" class="lp-cart-panel__empty-cta" hidden>
-                          <a class="lp-cart-panel__empty-btn" href="/stores">متاجر</a>
-                          <a class="lp-cart-panel__empty-btn" href="/services">خدمات</a>
-                          <a class="lp-cart-panel__empty-btn" href="/delivery-services.html">توصيل</a>
-                          <a class="lp-cart-panel__empty-btn lp-cart-panel__empty-btn--primary" href="/start-now.html">ابدأ طلباً</a>
-                        </div>
-                      </div>
-                    </details>
-                  </section>
-
-                  <section id="lpCartSummary" class="lp-cart-card lp-cart-card--fin lp-cart-card--accordion" hidden>
-                    <details class="lp-cart-accordion lp-cart-accordion--fin">
-                      <summary class="lp-cart-accordion__trigger lp-cart-accordion__trigger--fin">
-                        <span class="lp-cart-accordion__icon" aria-hidden="true">💰</span>
-                        <span class="lp-cart-accordion__label">ملخص المبالغ</span>
-                        <span class="lp-cart-accordion__meta" id="lpCartFinToggleMeta">الإجمالي: ٠٫٠٠ ر.س</span>
-                        <span class="lp-cart-accordion__chev" aria-hidden="true"></span>
-                      </summary>
-                      <div class="lp-cart-accordion__panel lp-cart-card__body">
-                        <div class="lp-cart-panel__fin-row">
-                          <span>المجموع الفرعي</span>
-                          <span class="lp-cart-panel__fin-val" id="lpCartSub">٠٫٠٠ <small class="lp-cart-panel__cur">ر.س</small></span>
-                        </div>
-                        <div class="lp-cart-panel__fin-row">
-                          <span>أجرة التوصيل</span>
-                          <span class="lp-cart-panel__fin-val" id="lpCartDel">٠٫٠٠ <small class="lp-cart-panel__cur">ر.س</small></span>
-                        </div>
-                        <p id="lpCartDelNote" class="lp-cart-panel__fin-note" hidden>لطلبات المتجر: حدّد موقع التوصيل لحساب الأجرة (كم × 2.3 ر.س).</p>
-                        <div class="lp-cart-panel__fin-row">
-                          <span>الضريبة (15%)</span>
-                          <span class="lp-cart-panel__fin-val" id="lpCartVat">٠٫٠٠ <small class="lp-cart-panel__cur">ر.س</small></span>
-                        </div>
-                        <div class="lp-cart-panel__fin-row lp-cart-panel__fin-row--comm">
-                          <span>عمولة المنصة (7%)</span>
-                          <span class="lp-cart-panel__fin-val" id="lpCartComm">٠٫٠٠ <small class="lp-cart-panel__cur">ر.س</small></span>
-                        </div>
-                        <div class="lp-cart-panel__fin-row lp-cart-panel__fin-row--grand">
-                          <span>الإجمالي</span>
-                          <span class="lp-cart-panel__fin-val" id="lpCartTotal">٠٫٠٠ <small class="lp-cart-panel__cur">ر.س</small></span>
-                        </div>
-                      </div>
-                    </details>
-                  </section>
-
-                  <section id="lpCartPayCard" class="lp-cart-card lp-cart-card--pay-methods lp-cart-card--accordion" hidden>
-                    <details class="lp-cart-accordion lp-cart-accordion--pay">
-                      <summary class="lp-cart-accordion__trigger lp-cart-accordion__trigger--green">
-                        <span class="lp-cart-accordion__icon" aria-hidden="true">💳</span>
-                        <span class="lp-cart-accordion__label">وسيلة الدفع</span>
-                        <span class="lp-cart-accordion__meta" id="lpCartPayToggleMeta">اختر وسيلة</span>
-                        <span class="lp-cart-accordion__chev" aria-hidden="true"></span>
-                      </summary>
-                      <div class="lp-cart-accordion__panel lp-cart-card__body lp-cart-card__body--pay-methods" id="lpCartPaySection">
-                        <div id="lpCartPayIcons" class="erv-pay-cards erv-pay-cards--cart" role="group" aria-label="وسائل الدفع"></div>
-                        <select id="lpCartPaySelect" class="erv-pay-select" hidden aria-hidden="true" tabindex="-1"></select>
-                        <div id="lpCartPayLuxeWrap" class="erv-pay-luxe-wrap" hidden></div>
-                        <div id="lpCartEwPayDetail" class="erv-ew-pay-card" hidden>
-                          <div class="erv-ew-pay-card__rows">
-                            <div class="erv-ew-pay-card__row">
-                              <span class="erv-ew-pay-card__label">الرصيد المتاح</span>
-                              <strong class="erv-ew-pay-card__val" id="lpCartEwPayAvail">—</strong>
-                            </div>
-                            <div class="erv-ew-pay-card__row">
-                              <span class="erv-ew-pay-card__label">قيمة الطلب</span>
-                              <strong class="erv-ew-pay-card__val" id="lpCartEwPayOrder">—</strong>
-                            </div>
-                            <div class="erv-ew-pay-card__row erv-ew-pay-card__row--after">
-                              <span class="erv-ew-pay-card__label">الرصيد بعد العملية</span>
-                              <strong class="erv-ew-pay-card__val" id="lpCartEwPayAfter">—</strong>
-                            </div>
-                          </div>
-                          <p id="lpCartEwPayInsufficient" class="erv-ew-pay-card__warn" hidden>رصيد المحفظة غير كافٍ</p>
-                          <a id="lpCartEwPayTopup" class="erv-ew-pay-card__topup" href="/wallet.html" hidden>شحن المحفظة</a>
-                          <span id="lpCartEwPayBalance" class="visually-hidden" aria-hidden="true"></span>
-                        </div>
-                      </div>
-                    </details>
-                  </section>
-
-                  <section id="lpCartFooter" class="lp-cart-card lp-cart-card--checkout lp-cart-card--checkout-sticky" hidden>
-                    <div class="lp-cart-card__body lp-cart-card__body--checkout">
-                      <button type="button" class="lp-cart-panel__checkout" id="lpCartCheckoutBtn" disabled>إتمام الطلب</button>
-                      <div class="lp-cart-trust" aria-hidden="false">
-                        <span class="lp-cart-trust__item">🔒 دفع آمن</span>
-                        <span class="lp-cart-trust__item">⚡ إتمام سريع</span>
-                        <span class="lp-cart-trust__item">🛡️ محمي</span>
-                      </div>
-                    </div>
-                  </section>
-                </div>
-              </div>
-            </div>
-          </div>
+          <a class="lp-draft-checkout-badge" href="/checkout" id="indexDraftBadge" aria-label="تأكيد الطلب">
+            <span aria-hidden="true">🛒</span>
+            <span class="lp-draft-checkout-badge__count" id="cartCount" data-empty="true">0</span>
+            <span class="lp-draft-checkout-badge__total" id="indexDraftTotal" hidden></span>
+          </a>
           <div id="authArea"></div>
         </div>
         </div>
@@ -2954,21 +2820,27 @@
       </div>
     </header>
 
-    <section class="sn-hero" id="homeHeroSection" aria-labelledby="homeHeroTitle">
-      <div class="sn-hero__eyebrow">منصة ERVENOW — خدمة واحدة لكل شيء</div>
-      <h1 class="sn-hero__title" id="homeHeroTitle">
-        اطلب أي خدمة<br>
-        <span>الآن وبسهولة</span>
-      </h1>
-      <p class="sn-hero__sub" id="homeHeroSub">كل ما تحتاجة — في مكان واحد.</p>
-      <div class="sn-hero__actions" id="homeHeroActions">
-        <a class="sn-hero__cta" href="/start-now">اطلب الآن</a>
+    <section class="sn-home-card sn-hero" id="homeHeroSection" aria-labelledby="homeHeroTitle">
+      <div class="sn-home-card__inner">
+        <div class="sn-hero__eyebrow">منصة ERVENOW — خدمة واحدة لكل شيء</div>
+        <h1 class="sn-hero__title" id="homeHeroTitle">
+          اطلب أي خدمة<br>
+          <span>الآن وبسهولة</span>
+        </h1>
+        <p class="sn-hero__sub" id="homeHeroSub">كل ما تحتاجة — في مكان واحد.</p>
+        <div class="sn-hero__actions" id="homeHeroActions">
+          <a class="sn-hero__cta" href="/start-now">اطلب الآن</a>
+        </div>
+        <p id="guestStartNote" class="sn-guest-note">
+          وضع زائر — تصفّح العروض بحرية. لإتمام الطلب
+          <a href="/login" style="color:var(--sn-gold);font-weight:800;text-decoration:none">سجّل دخولك</a>
+          برمز واتساب. يتم تفعيل الحساب بعد المراجعة واعتماده من إدارة ERVENOW.
+        </p>
       </div>
-      <p id="guestStartNote" class="sn-guest-note">
-        وضع زائر — تصفّح العروض بحرية. لإتمام الطلب
-        <a href="/login" style="color:var(--sn-gold);font-weight:800;text-decoration:none">سجّل دخولك</a>
-        برمز واتساب. يتم تفعيل الحساب بعد المراجعة واعتماده من إدارة ERVENOW.
-      </p>
+    </section>
+
+    <section class="sn-home-banner" id="homeHeroBanner" hidden aria-label="بنرات العروض">
+      <div class="sn-home-banner__inner" id="homeHeroBannerInner"></div>
     </section>
 
     <div class="sn-wave" aria-hidden="true">
@@ -3223,7 +3095,8 @@
     </footer>
 
     <audio id="newOrderSound" src="/sound.mp3" preload="none"></audio>
-    <script src="/assets/cart.js"></script>
+    <script src="/assets/order-draft-store.js"></script>
+    <script src="/assets/order-draft-badge.js"></script>
 
     <script>
       (function () {
@@ -3349,123 +3222,6 @@
     <script>
       function goLogin() {
         window.location.href = "/login";
-      }
-
-      function initLpHeaderCart() {
-        var wrap = document.getElementById("lpCartWrap");
-        var btn = document.getElementById("lpCartToggle");
-        var panel = document.getElementById("lpCartPanel");
-        var backdrop = document.getElementById("lpCartBackdrop");
-        var checkout = document.getElementById("lpCartCheckoutBtn");
-        var continueShop = document.getElementById("lpCartContinueShop");
-        if (!wrap || !btn || !panel) return;
-
-        var wrapHome = null;
-
-        function mountCartLayers() {
-          if (!wrapHome) {
-            wrapHome = { parent: wrap.parentNode, next: wrap.nextSibling };
-          }
-          if (backdrop) {
-            document.body.appendChild(backdrop);
-            backdrop.classList.add("lp-cart-backdrop--open");
-            backdrop.setAttribute("aria-hidden", "false");
-          }
-          document.body.appendChild(wrap);
-          wrap.classList.add("lp-cart-wrap--portaled");
-        }
-
-        function unmountCartLayers() {
-          if (backdrop) {
-            backdrop.classList.remove("lp-cart-backdrop--open");
-            backdrop.setAttribute("aria-hidden", "true");
-          }
-          wrap.classList.remove("lp-cart-wrap--portaled");
-          if (wrapHome && wrapHome.parent) {
-            wrapHome.parent.insertBefore(wrap, wrapHome.next);
-          }
-        }
-
-        function isOpen() {
-          return panel.classList.contains("lp-cart-panel--open");
-        }
-
-        function rememberCartReturnUrl() {
-          try {
-            var path = location.pathname;
-            if (!path || path === "/cart") return;
-            sessionStorage.setItem("erv_cart_return_url", path + (location.search || "") + (location.hash || ""));
-          } catch (e0) {}
-        }
-
-        function setOpen(open) {
-          if (open) {
-            rememberCartReturnUrl();
-            mountCartLayers();
-            panel.classList.add("lp-cart-panel--open");
-            document.body.classList.add("lp-cart-no-scroll");
-            if (window.ErvenowViewport && ErvenowViewport.lockScroll) ErvenowViewport.lockScroll();
-            if (window.ErvenowViewport && ErvenowViewport.refresh) ErvenowViewport.refresh();
-            panel.setAttribute("aria-hidden", "false");
-            btn.setAttribute("aria-expanded", "true");
-            if (typeof renderHeaderCartPreview === "function") renderHeaderCartPreview();
-          } else {
-            panel.classList.remove("lp-cart-panel--open");
-            unmountCartLayers();
-            document.body.classList.remove("lp-cart-no-scroll");
-            if (window.ErvenowViewport && ErvenowViewport.unlockScroll) ErvenowViewport.unlockScroll();
-            panel.setAttribute("aria-hidden", "true");
-            btn.setAttribute("aria-expanded", "false");
-            if (typeof window.resetLpCartPayStep === "function") window.resetLpCartPayStep();
-          }
-        }
-
-        btn.addEventListener("click", function (e) {
-          e.stopPropagation();
-          setOpen(!isOpen());
-        });
-        if (backdrop) {
-          backdrop.addEventListener("click", function () {
-            setOpen(false);
-          });
-        }
-        if (continueShop && !continueShop.__ervCartContinueBound) {
-          continueShop.__ervCartContinueBound = true;
-          continueShop.addEventListener("click", function (e) {
-            var stored = "";
-            try {
-              stored = sessionStorage.getItem("erv_cart_return_url") || "";
-            } catch (e1) {}
-            if (stored && stored !== "/cart") {
-              e.preventDefault();
-              setOpen(false);
-              location.href = stored;
-              return;
-            }
-            if (history.length > 1) {
-              e.preventDefault();
-              setOpen(false);
-              history.back();
-              return;
-            }
-            setOpen(false);
-          });
-        }
-        document.addEventListener("click", function (e) {
-          if (isOpen() && !wrap.contains(e.target)) setOpen(false);
-        });
-        document.addEventListener("keydown", function (e) {
-          if (e.key === "Escape" && isOpen()) setOpen(false);
-        });
-        if (checkout) {
-          checkout.addEventListener("click", function () {
-            if (typeof window.handleLpCartCheckoutClick === "function") {
-              window.handleLpCartCheckoutClick();
-              return;
-            }
-            window.location.href = "/cart";
-          });
-        }
       }
 
       function goRegister() {
@@ -3895,11 +3651,6 @@
         }
 
         checkAuth();
-        if (typeof initLpHeaderCart === "function") initLpHeaderCart();
-        window.addEventListener("storage", function () {
-          if (typeof updateCartCount === "function") updateCartCount();
-        });
-        if (typeof updateCartCount === "function") updateCartCount();
         setInterval(loadOrdersCount, 5000);
         loadOrdersCount();
       })();

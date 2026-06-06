@@ -1,4 +1,4 @@
-/**
+﻿/**
  * ERVENOW Cart Page — Noon / Amazon style layout
  */
 
@@ -627,3 +627,5 @@ body.cart-page-has-items {
   width: 100%;
   font-size: 16px;
 }
+
+/* Checkout V3 styles: see cart-checkout-v3.css */

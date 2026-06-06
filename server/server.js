@@ -533,7 +533,11 @@ if (servePublicUi) {
   });
 
   app.get("/cart", (_req, res) => {
-    res.sendFile(path.join(publicPath, "cart.html"));
+    res.redirect(302, "/checkout");
+  });
+
+  app.get("/checkout", (_req, res) => {
+    res.sendFile(path.join(publicPath, "checkout.html"));
   });
 
   app.get("/services-provider", (_req, res) => {
