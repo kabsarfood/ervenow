@@ -1,6 +1,7 @@
 -- =============================================================================
 -- بنرات الصفحة الرئيسية (Hero Banner) — إدارة من لوحة الإدارة
--- نفّذ في Supabase → SQL Editor ثم Reload schema عند الحاجة.
+-- نفّذ في Supabase → SQL Editor، أو من الطرفية:
+--   npm run migrate:hero-banners
 -- =============================================================================
 
 CREATE TABLE IF NOT EXISTS public.hero_banners (
@@ -24,5 +25,7 @@ CREATE INDEX IF NOT EXISTS idx_hero_banners_active_sort
   ON public.hero_banners (is_active, sort_order);
 
 COMMENT ON TABLE public.hero_banners IS 'بنرات الصفحة الرئيسية — يُعرض أول بنر نشط حسب الترتيب والجدولة';
+
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.hero_banners TO service_role;
 
 NOTIFY pgrst, 'reload schema';

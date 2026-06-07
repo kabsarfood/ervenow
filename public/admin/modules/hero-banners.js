@@ -225,7 +225,7 @@ app.loadHeroBannersPanel = async function () {
     var j = await app.PlatformAPI.api("/api/admin/hero-banners");
     heroBannersCache = j.banners || [];
     app.renderHeroBannersEditor();
-    if (hint) hint.textContent = "GET/POST/PUT/DELETE /api/admin/hero-banners";
+    if (hint) hint.textContent = "تظهر البنرات النشطة في شريط شرائح أعلى الصفحة الرئيسية (/). أضف صورة غلاف + فعّل «نشط».";
   } catch (e) {
     if (hint) hint.textContent = e.message || "تعذّر التحميل";
     app.renderHeroBannersEditor();

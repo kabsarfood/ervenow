@@ -166,14 +166,15 @@ svg {
   }
 
   .sn-home-banner {
-    padding-inline: max(12px, env(safe-area-inset-left, 12px)) max(12px, env(safe-area-inset-right, 12px));
+    padding-inline: 0;
   }
 
   .sn-home-banner__inner,
   .sn-home-banner__inner .sn-hero-carousel__track,
-  .sn-hero-carousel__body {
-    min-height: clamp(140px, 44vw, 220px);
-    aspect-ratio: 16 / 10;
+  .sn-hero-carousel__body,
+  .sn-hero-carousel__slide {
+    min-height: clamp(132px, 42vw, 200px);
+    aspect-ratio: 16 / 9;
   }
 
   .sn-hero {

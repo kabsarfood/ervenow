@@ -1,10 +1,11 @@
 /**
- * بنرات الصفحة الرئيسية — مكان مستقل تحت الهيدر وبطاقة الرئيسية
+ * بنرات الصفحة الرئيسية — شريط شرائح تحت الهيدر (/api/core/hero-banner)
  */
 (function () {
-  var CAROUSEL_MS = 6000;
+  var CAROUSEL_MS = 5500;
   var carouselTimer = null;
   var carouselIndex = 0;
+  var carouselState = null;
 
   function esc(s) {
     return String(s == null ? "" : s)
@@ -95,6 +96,13 @@
     return shell;
   }
 
+  function filterUsableBanners(banners) {
+    if (!Array.isArray(banners)) return [];
+    return banners.filter(function (b) {
+      return b && (String(b.image_url || "").trim() || String(b.title || "").trim());
+    });
+  }
+
   function updateHomeCard(banner) {
     if (!banner) return;
     var titleEl = document.getElementById("homeHeroTitle");
@@ -109,29 +117,98 @@
     }
   }
 
-  function setCarouselSlide(root, slides, dots, idx) {
-    if (!slides.length) return;
-    carouselIndex = ((idx % slides.length) + slides.length) % slides.length;
-    slides.forEach(function (slide, i) {
+  function trackTranslateX(viewport, index) {
+    var w = viewport ? viewport.clientWidth : 0;
+    if (!w) return "translateX(0)";
+    var isRtl = false;
+    try {
+      isRtl = getComputedStyle(viewport).direction === "rtl";
+    } catch (_e) {}
+    var offset = index * w;
+    return isRtl ? "translateX(" + offset + "px)" : "translateX(-" + offset + "px)";
+  }
+
+  function setCarouselSlide(state, idx) {
+    if (!state || !state.slides.length) return;
+    carouselIndex = ((idx % state.slides.length) + state.slides.length) % state.slides.length;
+    state.slides.forEach(function (slide, i) {
       slide.classList.toggle("is-active", i === carouselIndex);
       slide.setAttribute("aria-hidden", i === carouselIndex ? "false" : "true");
     });
-    if (dots) {
-      dots.querySelectorAll(".sn-hero-carousel__dot").forEach(function (dot, i) {
+    if (state.track && state.viewport) {
+      state.track.style.transform = trackTranslateX(state.viewport, carouselIndex);
+    }
+    if (state.dots) {
+      state.dots.querySelectorAll(".sn-hero-carousel__dot").forEach(function (dot, i) {
         dot.classList.toggle("is-active", i === carouselIndex);
         dot.setAttribute("aria-selected", i === carouselIndex ? "true" : "false");
       });
     }
-    if (root) root.setAttribute("data-hero-slide", String(carouselIndex + 1));
+    if (state.root) state.root.setAttribute("data-hero-slide", String(carouselIndex + 1));
   }
 
-  function startCarousel(root, slides, dots) {
+  function startCarousel(state) {
     clearCarouselTimer();
-    setCarouselSlide(root, slides, dots, 0);
-    if (slides.length < 2 || prefersReducedMotion()) return;
+    setCarouselSlide(state, carouselIndex);
+    if (!state || state.slides.length < 2 || prefersReducedMotion()) return;
     carouselTimer = setInterval(function () {
-      setCarouselSlide(root, slides, dots, carouselIndex + 1);
+      setCarouselSlide(state, carouselIndex + 1);
     }, CAROUSEL_MS);
+  }
+
+  function wireCarouselNav(state) {
+    if (!state || state.slides.length < 2) return;
+    if (state.prevBtn) {
+      state.prevBtn.addEventListener("click", function () {
+        clearCarouselTimer();
+        setCarouselSlide(state, carouselIndex - 1);
+        startCarousel(state);
+      });
+    }
+    if (state.nextBtn) {
+      state.nextBtn.addEventListener("click", function () {
+        clearCarouselTimer();
+        setCarouselSlide(state, carouselIndex + 1);
+        startCarousel(state);
+      });
+    }
+    if (state.viewport) {
+      var touchStartX = null;
+      state.viewport.addEventListener(
+        "touchstart",
+        function (ev) {
+          touchStartX = ev.changedTouches && ev.changedTouches[0] ? ev.changedTouches[0].clientX : null;
+        },
+        { passive: true }
+      );
+      state.viewport.addEventListener(
+        "touchend",
+        function (ev) {
+          if (touchStartX == null) return;
+          var endX = ev.changedTouches && ev.changedTouches[0] ? ev.changedTouches[0].clientX : touchStartX;
+          var dx = endX - touchStartX;
+          if (Math.abs(dx) < 42) return;
+          clearCarouselTimer();
+          var isRtl = false;
+          try {
+            isRtl = getComputedStyle(state.viewport).direction === "rtl";
+          } catch (_e2) {}
+          if (isRtl ? dx > 0 : dx < 0) {
+            setCarouselSlide(state, carouselIndex + 1);
+          } else {
+            setCarouselSlide(state, carouselIndex - 1);
+          }
+          startCarousel(state);
+          touchStartX = null;
+        },
+        { passive: true }
+      );
+    }
+    window.addEventListener("resize", function () {
+      if (state && state.viewport && state.track) {
+        state.track.style.transform = trackTranslateX(state.viewport, carouselIndex);
+      }
+    });
   }
 
   function buildSlide(banner, idx, total) {
@@ -141,11 +218,22 @@
     article.setAttribute("aria-hidden", idx === 0 ? "false" : "true");
     if (idx === 0) article.classList.add("is-active");
 
+    var linkUrl = banner.button1_url || banner.button2_url || "";
+
     if (banner.image_url) {
       var bg = document.createElement("div");
       bg.className = "sn-hero-carousel__bg";
       bg.style.backgroundImage = 'url("' + String(banner.image_url).replace(/"/g, "%22") + '")';
-      article.appendChild(bg);
+      if (linkUrl && !banner.title && !banner.description && !actionsHtml(banner)) {
+        var linkWrap = document.createElement("a");
+        linkWrap.className = "sn-hero-carousel__cover-link";
+        linkWrap.href = linkUrl;
+        linkWrap.setAttribute("aria-label", "فتح العرض");
+        linkWrap.appendChild(bg);
+        article.appendChild(linkWrap);
+      } else {
+        article.appendChild(bg);
+      }
     }
 
     var overlay = document.createElement("div");
@@ -178,7 +266,7 @@
       body.appendChild(actionsEl);
     }
 
-    article.appendChild(body);
+    if (body.childNodes.length) article.appendChild(body);
     if (total > 1) {
       article.setAttribute("aria-label", "بنر " + (idx + 1) + " من " + total);
     }
@@ -221,6 +309,11 @@
   function renderCarousel(inner, banners) {
     inner.className = "sn-home-banner__inner sn-hero--carousel";
     inner.innerHTML = "";
+    carouselIndex = 0;
+
+    var viewport = document.createElement("div");
+    viewport.className = "sn-hero-carousel__viewport";
+    viewport.setAttribute("dir", "rtl");
 
     var track = document.createElement("div");
     track.className = "sn-hero-carousel__track";
@@ -229,7 +322,27 @@
     banners.forEach(function (banner, idx) {
       track.appendChild(buildSlide(banner, idx, banners.length));
     });
-    inner.appendChild(track);
+    viewport.appendChild(track);
+    inner.appendChild(viewport);
+
+    var prevBtn = null;
+    var nextBtn = null;
+    if (banners.length > 1) {
+      prevBtn = document.createElement("button");
+      prevBtn.type = "button";
+      prevBtn.className = "sn-hero-carousel__nav sn-hero-carousel__nav--prev";
+      prevBtn.setAttribute("aria-label", "البنر السابق");
+      prevBtn.textContent = "›";
+
+      nextBtn = document.createElement("button");
+      nextBtn.type = "button";
+      nextBtn.className = "sn-hero-carousel__nav sn-hero-carousel__nav--next";
+      nextBtn.setAttribute("aria-label", "البنر التالي");
+      nextBtn.textContent = "‹";
+
+      inner.appendChild(prevBtn);
+      inner.appendChild(nextBtn);
+    }
 
     var dots = null;
     if (banners.length > 1) {
@@ -246,13 +359,8 @@
         dot.setAttribute("aria-selected", idx === 0 ? "true" : "false");
         dot.addEventListener("click", function () {
           clearCarouselTimer();
-          var slides = track.querySelectorAll(".sn-hero-carousel__slide");
-          setCarouselSlide(inner, slides, dots, idx);
-          if (!prefersReducedMotion()) {
-            carouselTimer = setInterval(function () {
-              setCarouselSlide(inner, slides, dots, carouselIndex + 1);
-            }, CAROUSEL_MS);
-          }
+          setCarouselSlide(carouselState, idx);
+          startCarousel(carouselState);
         });
         dots.appendChild(dot);
       });
@@ -260,30 +368,43 @@
     }
 
     var slides = track.querySelectorAll(".sn-hero-carousel__slide");
-    startCarousel(inner, slides, dots);
+    carouselState = {
+      root: inner,
+      viewport: viewport,
+      track: track,
+      slides: slides,
+      dots: dots,
+      prevBtn: prevBtn,
+      nextBtn: nextBtn,
+    };
+
+    wireCarouselNav(carouselState);
+    startCarousel(carouselState);
 
     inner.addEventListener("mouseenter", clearCarouselTimer);
     inner.addEventListener("mouseleave", function () {
       if (banners.length > 1 && !prefersReducedMotion()) {
-        startCarousel(inner, slides, dots);
+        startCarousel(carouselState);
       }
     });
   }
 
   function applyBanners(banners) {
-    if (!Array.isArray(banners) || !banners.length) return;
+    var usable = filterUsableBanners(banners);
+    if (!usable.length) return;
 
     var shell = showBannerShell();
     if (!shell.inner) return;
 
     clearCarouselTimer();
-    updateHomeCard(banners[0]);
+    carouselState = null;
+    updateHomeCard(usable[0]);
 
-    if (banners.length === 1) {
-      renderSingleBanner(shell.inner, banners[0]);
+    if (usable.length === 1) {
+      renderSingleBanner(shell.inner, usable[0]);
       return;
     }
-    renderCarousel(shell.inner, banners);
+    renderCarousel(shell.inner, usable);
   }
 
   function loadHeroBanner() {

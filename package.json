@@ -21,7 +21,8 @@
     "migrate:stores-steps-10-15": "node scripts/run-migration-stores-steps-10-15.js",
     "migrate:finance:bundle": "node scripts/bundle-finance-migrations.js",
     "migrate:finance": "node scripts/run-finance-migrations.js",
-    "migrate:ervenow-pay-checkout": "node scripts/run-migration-ervenow-pay-checkout.js"
+    "migrate:ervenow-pay-checkout": "node scripts/run-migration-ervenow-pay-checkout.js",
+    "migrate:hero-banners": "node scripts/run-migration-hero-banners.js"
   },
   "engines": {
     "node": ">=20"

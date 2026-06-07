@@ -191,12 +191,13 @@
   color: #fff;
 }
 
-/* ══ بنر الرئيسية — تحت الهيدر وبطاقة الرئيسية ═══════════ */
+/* ══ بنر الرئيسية — شريط شرائح تحت الهيدر مباشرة ═══════════ */
 .sn-home-banner {
-  max-width: 1000px;
-  margin: 0 auto;
-  padding: 0 max(16px, env(safe-area-inset-right, 16px)) clamp(20px, 4vw, 28px)
-    max(16px, env(safe-area-inset-left, 16px));
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: clamp(10px, 2vw, 16px) max(0px, env(safe-area-inset-right, 0px)) clamp(14px, 2.5vw, 20px)
+    max(0px, env(safe-area-inset-left, 0px));
 }
 
 .sn-home-banner[hidden] {
@@ -206,12 +207,15 @@
 .sn-home-banner__inner {
   position: relative;
   overflow: hidden;
-  border-radius: var(--sn-radius-lg, 18px);
-  border: 1px solid rgba(61, 34, 19, 0.12);
-  box-shadow: 0 12px 40px rgba(45, 26, 10, 0.12);
+  border-radius: 0;
+  border: none;
+  border-block-end: 1px solid rgba(61, 34, 19, 0.1);
+  box-shadow: 0 8px 28px rgba(45, 26, 10, 0.1);
   background: #1a1008;
-  min-height: clamp(160px, 38vw, 280px);
-  aspect-ratio: 21 / 9;
+  min-height: clamp(148px, 32vw, 260px);
+  aspect-ratio: 21 / 8;
+  max-width: 100%;
+  margin: 0 auto;
 }
 
 .sn-home-banner__inner.sn-hero--single {
@@ -271,49 +275,89 @@
   }
 }
 
-/* بنرات متعددة — عرض دوّار */
+/* بنرات متعددة — شريط شرائح أفقي */
 .sn-home-banner__inner.sn-hero--carousel {
   padding: 0;
-  min-height: clamp(160px, 38vw, 280px);
-  aspect-ratio: 21 / 9;
+  min-height: clamp(148px, 32vw, 260px);
+  aspect-ratio: 21 / 8;
   text-align: center;
 }
 
-.sn-hero--carousel {
-  padding: 0;
-  background: #1a1008;
-  text-align: center;
-}
-
-.sn-hero--carousel::before {
-  display: none;
+.sn-hero-carousel__viewport {
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+  min-height: inherit;
+  touch-action: pan-y pinch-zoom;
+  direction: ltr;
 }
 
 .sn-home-banner__inner .sn-hero-carousel__track {
-  position: relative;
-  min-height: clamp(160px, 38vw, 280px);
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
   height: 100%;
+  min-height: clamp(148px, 32vw, 260px);
+  transition: transform 0.62s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform;
 }
 
 .sn-hero-carousel__track {
   position: relative;
-  min-height: clamp(160px, 38vw, 280px);
+  min-height: clamp(148px, 32vw, 260px);
 }
 
 .sn-hero-carousel__slide {
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-  visibility: hidden;
-  transition: opacity 0.85s ease, visibility 0.85s ease;
-  pointer-events: none;
-}
-
-.sn-hero-carousel__slide.is-active {
+  position: relative;
+  flex: 0 0 100%;
+  width: 100%;
+  min-width: 100%;
+  min-height: clamp(148px, 32vw, 260px);
+  direction: rtl;
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
+}
+
+.sn-hero-carousel__slide.is-active {
   z-index: 1;
+}
+
+.sn-hero-carousel__nav {
+  position: absolute;
+  z-index: 4;
+  top: 50%;
+  transform: translateY(-50%);
+  width: clamp(40px, 10vw, 48px);
+  height: clamp(40px, 10vw, 48px);
+  min-height: 44px;
+  min-width: 44px;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.35rem;
+  line-height: 1;
+  color: #fff;
+  background: rgba(20, 12, 6, 0.45);
+  backdrop-filter: blur(4px);
+  transition: background 0.2s, transform 0.2s;
+}
+
+.sn-hero-carousel__nav:hover,
+.sn-hero-carousel__nav:focus-visible {
+  background: rgba(20, 12, 6, 0.72);
+  outline: none;
+}
+
+.sn-hero-carousel__nav--prev {
+  inset-inline-start: max(8px, env(safe-area-inset-left, 8px));
+}
+
+.sn-hero-carousel__nav--next {
+  inset-inline-end: max(8px, env(safe-area-inset-right, 8px));
 }
 
 .sn-hero-carousel__bg {
@@ -348,10 +392,29 @@
   flex-direction: column;
   align-items: center;
   justify-content: flex-end;
-  min-height: clamp(160px, 38vw, 280px);
+  min-height: clamp(148px, 32vw, 260px);
   height: 100%;
   padding: clamp(12px, 3vw, 20px) clamp(14px, 3vw, 22px);
   color: #fff;
+}
+
+.sn-hero-carousel__cover-link {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: block;
+  text-decoration: none;
+}
+
+.sn-hero-carousel__cover-link .sn-hero-carousel__bg {
+  position: absolute;
+  inset: 0;
+}
+
+.sn-hero--carousel {
+  padding: 0;
+  background: #1a1008;
+  text-align: center;
 }
 
 .sn-hero-carousel__dots {

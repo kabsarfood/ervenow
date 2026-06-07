@@ -163,7 +163,7 @@ async function createBanner(sb, body, { publicRoot } = {}) {
   const { data, error } = await sb.from("hero_banners").insert(row).select(SELECT_COLS).maybeSingle();
   if (error) {
     if (isHeroBannersTableMissing(error)) {
-      throw new Error("جدول hero_banners غير موجود — نفّذ shared/migration_hero_banners.sql");
+      throw new Error("جدول hero_banners غير موجود — نفّذ: npm run migrate:hero-banners أو shared/migration_hero_banners.sql في SQL Editor");
     }
     throw error;
   }
@@ -180,7 +180,7 @@ async function updateBanner(sb, id, body, { publicRoot } = {}) {
     .maybeSingle();
   if (fetchErr) {
     if (isHeroBannersTableMissing(fetchErr)) {
-      throw new Error("جدول hero_banners غير موجود — نفّذ shared/migration_hero_banners.sql");
+      throw new Error("جدول hero_banners غير موجود — نفّذ: npm run migrate:hero-banners أو shared/migration_hero_banners.sql في SQL Editor");
     }
     throw fetchErr;
   }
@@ -212,7 +212,7 @@ async function deleteBanner(sb, id) {
   const { error } = await sb.from("hero_banners").delete().eq("id", bannerId);
   if (error) {
     if (isHeroBannersTableMissing(error)) {
-      throw new Error("جدول hero_banners غير موجود — نفّذ shared/migration_hero_banners.sql");
+      throw new Error("جدول hero_banners غير موجود — نفّذ: npm run migrate:hero-banners أو shared/migration_hero_banners.sql في SQL Editor");
     }
     throw error;
   }
