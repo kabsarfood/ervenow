@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="/assets/guest-shell.css" />
     <link rel="stylesheet" href="/assets/store-shell.css" />
     <link rel="stylesheet" href="/assets/ervenow-responsive.css" />
+    <link rel="stylesheet" href="/assets/live-store-map.css" />
     <style>
       :root {
         --portal-ink: #2a1810;
@@ -639,6 +640,30 @@
           </div>
         </div>
 
+        <div class="portal-panel" id="storeLocationAnchor">
+          <div class="card">
+            <h2 style="margin: 0 0 8px">موقع النشاط على الخريطة</h2>
+            <p class="sub" style="margin-top: 0">
+              يظهر موقعك في الخريطة الحية للعملاء بعد الاعتماد. الصق رابط Google Maps أو حدّد موقعك الحالي.
+            </p>
+            <div class="store-loc-paste__row">
+              <input
+                type="url"
+                id="storeLocMapsUrl"
+                dir="ltr"
+                placeholder="https://maps.app.goo.gl/... أو lat,lng"
+                autocomplete="off"
+              />
+              <button type="button" class="btn btn-ghost" id="btnPasteStoreLoc">📋 لصق رابط الموقع</button>
+            </div>
+            <div class="store-loc-actions">
+              <button type="button" class="btn btn-ghost" id="btnStoreLocGps">📍 تحديد الموقع الحالي</button>
+              <button type="button" class="btn btn-primary" id="btnSaveStoreLoc">حفظ الموقع</button>
+            </div>
+            <p class="store-loc-status is-pending" id="storeLocStatus">—</p>
+          </div>
+        </div>
+
         <div class="portal-panel" id="brandingAnchor">
           <div class="card" id="profileCard">
             <h2 style="margin: 0 0 10px">الشعار والصور</h2>
@@ -1143,6 +1168,26 @@
           renderStoreInsights(s);
           applyVisitorPreview(s, hub);
           wirePublicLinks("/store.html?id=" + encodeURIComponent(storeId));
+
+          var locUrlEl = document.getElementById("storeLocMapsUrl");
+          var locStatusEl = document.getElementById("storeLocStatus");
+          if (locUrlEl) {
+            locUrlEl.value =
+              s.maps_url ||
+              (s.lat != null && s.lng != null
+                ? "https://www.google.com/maps?q=" + encodeURIComponent(String(s.lat) + "," + String(s.lng))
+                : "");
+          }
+          if (locStatusEl) {
+            if (s.lat != null && s.lng != null) {
+              locStatusEl.textContent = "الموقع الحالي: " + s.lat + ", " + s.lng;
+              locStatusEl.className = "store-loc-status is-ok";
+            } else {
+              locStatusEl.textContent = "لم يُحدَّد موقع بعد — أضف رابط Google Maps.";
+              locStatusEl.className = "store-loc-status is-pending";
+            }
+          }
+
           var panelNote = document.getElementById("panelUrlNote");
           var panelLink = document.getElementById("panelUrlLink");
           if (panelNote && panelLink) {
@@ -1486,6 +1531,76 @@
           show("تم تحديث المعاينة", true);
         } catch (e) {
           show(String((e && e.message) || e), false);
+        }
+      };
+
+      document.getElementById("btnPasteStoreLoc").onclick = async function () {
+        var input = document.getElementById("storeLocMapsUrl");
+        var statusEl = document.getElementById("storeLocStatus");
+        if (!input) return;
+        try {
+          var clip = await navigator.clipboard.readText();
+          if (clip && String(clip).trim()) input.value = String(clip).trim();
+          else show("الحافظة فارغة — انسخ رابط Google Maps أولاً", false);
+        } catch (_e) {
+          show("اضغط Ctrl+V في حقل الرابط أو الصق يدوياً", false);
+        }
+        if (statusEl) {
+          statusEl.textContent = input.value.trim() ? "تم لصق الرابط — اضغط «حفظ الموقع»" : "—";
+          statusEl.className = "store-loc-status is-pending";
+        }
+      };
+
+      document.getElementById("btnStoreLocGps").onclick = function () {
+        var statusEl = document.getElementById("storeLocStatus");
+        if (!navigator.geolocation) {
+          show("المتصفح لا يدعم تحديد الموقع", false);
+          return;
+        }
+        if (statusEl) statusEl.textContent = "جاري تحديد موقعك…";
+        navigator.geolocation.getCurrentPosition(
+          function (pos) {
+            var lat = pos.coords.latitude;
+            var lng = pos.coords.longitude;
+            var input = document.getElementById("storeLocMapsUrl");
+            if (input) input.value = lat + "," + lng;
+            if (statusEl) {
+              statusEl.textContent = "تم تحديد الموقع: " + lat.toFixed(5) + ", " + lng.toFixed(5) + " — اضغط حفظ";
+              statusEl.className = "store-loc-status is-ok";
+            }
+          },
+          function () {
+            show("تعذر الوصول لموقعك — فعّل GPS أو الصق رابط Maps", false);
+          },
+          { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
+        );
+      };
+
+      document.getElementById("btnSaveStoreLoc").onclick = async function () {
+        if (!storeId) return show("لا يوجد متجر مرتبط", false);
+        var raw = document.getElementById("storeLocMapsUrl").value.trim();
+        if (!raw) return show("أدخل رابط Google Maps أو lat,lng", false);
+        var body = {};
+        if (/^https?:\/\//i.test(raw) || /maps\.|goo\.gl|google\.com/i.test(raw)) {
+          body.maps_url = raw;
+        } else if (/^-?\d+(\.\d+)?\s*,\s*-?\d+(\.\d+)?$/.test(raw)) {
+          var parts = raw.split(",");
+          body.lat = Number(parts[0].trim());
+          body.lng = Number(parts[1].trim());
+        } else {
+          body.maps_url = raw;
+        }
+        try {
+          var j = await window.PlatformAPI.api("/api/store/location", { method: "PATCH", body: body });
+          var st = j.store || {};
+          var statusEl = document.getElementById("storeLocStatus");
+          if (statusEl && st.lat != null && st.lng != null) {
+            statusEl.textContent = "✓ تم الحفظ: " + st.lat + ", " + st.lng;
+            statusEl.className = "store-loc-status is-ok";
+          }
+          show(j.message || "تم حفظ الموقع", true);
+        } catch (e) {
+          show(String(e.message || e), false);
         }
       };
 

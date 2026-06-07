@@ -139,6 +139,7 @@ if (closeBtn) {
   app.initAdminDashboardSocket();
   app.startAdminAlertsTimer();
   void app.refreshLiveDashboard();
+  if (app.hasPermission("dashboard")) void app.loadMapCategoryColors();
   app.updateLiveSocketPulse();
   if (app.hasPermission("finance")) {
     app.loadFinancialFeatureFlags();

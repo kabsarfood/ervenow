@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <script src="/assets/viewport-fit.js"></script>
+    <title>ERVENOW | الخريطة الحية</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/assets/styles.css" />
+    <link rel="stylesheet" href="/assets/guest-shell.css" />
+    <link rel="stylesheet" href="/assets/ervenow-responsive.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+    <link rel="stylesheet" href="/assets/live-store-map.css" />
+    <script src="/assets/api-config.js"></script>
+    <script src="/assets/api.js"></script>
+    <script src="/assets/applyBranding.js"></script>
+  </head>
+  <body class="guest-shell-page erv-live-map-page">
+    <header class="dash-site-header">
+      <div class="dash-site-header__inner">
+        <div class="dash-site-header__brand">
+          <a class="dash-site-header__logo" href="/">ERVENOW</a>
+        </div>
+        <nav class="dash-site-header__nav" aria-label="التنقل">
+          <a href="/">الرئيسية</a>
+          <a href="/dashboard">لوحة الزائر</a>
+          <a href="/live-map" aria-current="page">الخريطة الحية</a>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <div class="erv-live-map-head">
+        <h1>الخريطة الحية</h1>
+        <p>استكشف المطاعم والمتاجر والصيدليات ومزودي الخدمات القريبة — للأعضاء المسجّلين فقط.</p>
+      </div>
+
+      <div id="liveMapLoginGate" class="erv-live-map-gate" hidden>
+        <div class="erv-live-map-gate__card">
+          <p>سجّل الدخول لاستعراض الأنشطة القريبة منك والطلب منها مباشرة.</p>
+          <div class="erv-live-map-gate__actions">
+            <a class="btn btn-primary" href="/login?role=customer&amp;next=%2Flive-map">تسجيل الدخول</a>
+            <a class="btn btn-ghost" href="/login?mode=register&amp;role=customer&amp;next=%2Flive-map">إنشاء حساب</a>
+          </div>
+        </div>
+      </div>
+
+      <div id="liveMapShell">
+        <div id="liveMap" role="application" aria-label="خريطة الأنشطة"></div>
+      </div>
+    </main>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+    <script src="/assets/live-store-map.js"></script>
+  </body>
+</html>

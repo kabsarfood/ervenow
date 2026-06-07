@@ -355,11 +355,12 @@ router.get("/public-config", (_req, res) => {
 });
 
 const platformBranding = require("../../shared/utils/platformBrandingStore");
+const { mergeMapColorsIntoBranding } = require("../../shared/utils/mapCategoryColors");
 
 router.get("/platform-branding", async (_req, res) => {
   try {
     const sb = createServiceClient();
-    const settings = await platformBranding.loadBranding(sb);
+    const settings = mergeMapColorsIntoBranding(await platformBranding.loadBranding(sb));
     res.set("Cache-Control", "public, max-age=30");
     return ok(res, { settings });
   } catch (e) {

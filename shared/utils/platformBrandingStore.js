@@ -8,7 +8,13 @@ const BRANDING_KEYS = [
   "accent_color",
   "background_color",
   "text_color",
+  "map_color_restaurant",
+  "map_color_store",
+  "map_color_pharmacy",
+  "map_color_service",
 ];
+
+const { DEFAULT_MAP_COLORS } = require("./mapCategoryColors");
 
 const DEFAULT_BRANDING = {
   logo_url: "",
@@ -17,6 +23,10 @@ const DEFAULT_BRANDING = {
   accent_color: "#d4a76a",
   background_color: "#f8f5f0",
   text_color: "#2b1f16",
+  map_color_restaurant: DEFAULT_MAP_COLORS.map_color_restaurant,
+  map_color_store: DEFAULT_MAP_COLORS.map_color_store,
+  map_color_pharmacy: DEFAULT_MAP_COLORS.map_color_pharmacy,
+  map_color_service: DEFAULT_MAP_COLORS.map_color_service,
 };
 
 function isMissingPlatformSettingsTable(err) {

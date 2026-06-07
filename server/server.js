@@ -489,6 +489,10 @@ if (servePublicUi) {
     res.sendFile(path.join(publicPath, "track.html"));
   });
 
+  app.get("/live-map", (_req, res) => {
+    res.sendFile(path.join(publicPath, "live-map.html"));
+  });
+
   app.get("/order", (_req, res) => {
     res.sendFile(path.join(publicPath, "order.html"));
   });

@@ -1244,7 +1244,7 @@ select {
   vertical-align: middle;
 }
 .live-map-legend .lg-store::before {
-  background: #eab308;
+  background: var(--admin-map-color-store, var(--accent, currentColor));
 }
 .live-map-legend .lg-driver::before {
   background: #3b82f6;

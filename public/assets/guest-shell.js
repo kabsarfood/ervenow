@@ -31,9 +31,9 @@
       });
     } else {
       links.push({
-        key: "track",
-        href: "/track",
-        label: "تتبع الحي",
+        key: "live_map",
+        href: "/live-map",
+        label: "الخريطة الحية",
       });
     }
     if (!opts.authenticated) {

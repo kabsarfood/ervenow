@@ -1095,7 +1095,7 @@
       }
 
       function trackingEligible(ds) {
-        return ["accepted", "delivering", "picked"].includes(ds);
+        return ["picked_up", "picked", "delivering"].includes(String(ds || "").toLowerCase());
       }
 
       function evaluateArrivedAtDropoff(order, distM) {
@@ -1663,8 +1663,8 @@
           onWayTimeoutId = setTimeout(function () {
             onWayTimeoutId = null;
             if (!lastOrder || String(lastOrder.id || "") !== orderId) return;
-            var st = String(lastOrder.delivery_status || lastOrder.status || "");
-            if (!["accepted", "delivering", "picked"].includes(st)) return;
+            var st = String(lastOrder.delivery_status || lastOrder.status || "").toLowerCase();
+            if (!trackingEligible(st)) return;
             if (notifiedOnWay) return;
             notifiedOnWay = true;
             showTrackToast("🚚 المندوب في الطريق إليك");
@@ -2077,6 +2077,10 @@
 
       function updateDriverMarker(lat, lng, opts) {
         opts = opts || {};
+        if (lastOrder) {
+          var dsGuard = String(lastOrder.delivery_status || lastOrder.status || "").toLowerCase();
+          if (dsGuard === "delivered" || !trackingEligible(dsGuard)) return;
+        }
         if (lat == null || lng == null) return;
         var rawLa = Number(lat);
         var rawLn = Number(lng);
@@ -2634,13 +2638,19 @@
           }
         }
         var hasDriverLocation = lat != null && lng != null && !Number.isNaN(Number(lat)) && !Number.isNaN(Number(lng));
-        if (deliveryStatus === "delivered" && hasDropPoint) {
-          updateDriverMarker(dropLat, dropLng, { refocusMap: !hadDriverMarker });
-          updateDropMarker(dropLat, dropLng);
-          document.getElementById("coords").textContent =
-            "📍 تم التسليم عند نقطة النهاية: " + dropLat + " ، " + dropLng;
+        var dsMap = String(deliveryStatus || "").toLowerCase();
+        if (dsMap === "delivered") {
+          clearDriverMarker(false);
+          clearDriverTrail();
+          if (hasDropPoint) {
+            updateDropMarker(dropLat, dropLng);
+            document.getElementById("coords").textContent =
+              "📍 تم التسليم عند نقطة النهاية: " + dropLat + " ، " + dropLng;
+          } else {
+            document.getElementById("coords").textContent = "✅ تم التسليم";
+          }
           document.getElementById("coordsMeta").textContent = "";
-        } else if (order.driver_lat && order.driver_lng && hasDriverLocation) {
+        } else if (trackingEligible(dsMap) && hasDriverLocation) {
           var dsMapOnly = String(order.delivery_status || order.status || "").toLowerCase();
           var mapFromSocketOnly =
             trackSocket &&

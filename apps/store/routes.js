@@ -9,6 +9,9 @@ const { isDeliveryEnginePolicyEnabled } = require("../../shared/utils/deliveryEn
 const { publicDeliveryPolicyLabels, storePolicyRowToConfig } = require("../../shared/services/deliveryPolicyEngine");
 const { deliveryEngineRouter } = require("./deliveryEngineRoutes");
 const { applyMapsUrlToStorePatch, storeHasOfficialLocation } = require("../../shared/utils/storeMapsLocation");
+const platformBranding = require("../../shared/utils/platformBrandingStore");
+const { mergeMapColorsIntoBranding } = require("../../shared/utils/mapCategoryColors");
+const { liveMapStorePayload } = require("../../shared/utils/liveMapStorePayload");
 const { cacheGetJson, cacheSetJson } = require("../../shared/utils/redisCache");
 const { parseOptionalPayoutPayload, payoutRowForDriversOrStores } = require("../../shared/utils/payoutFields");
 const { sanitizeDriverOrStoreRowForApi } = require("../../shared/utils/bankApiSafe");
@@ -1420,6 +1423,107 @@ router.get("/reviews", optionalAuth, async (req, res) => {
   }
 });
 
+/** الخريطة الحية — أنشطة ضمن حدود الخريطة (يتطلب تسجيل دخول) */
+router.get("/live-map/stores", requireAuth, async (req, res) => {
+  try {
+    const sb = createServiceClient();
+    if (!sb) return fail(res, "الخادم غير مهيأ لقاعدة البيانات", 503);
+
+    const north = Number(req.query.north);
+    const south = Number(req.query.south);
+    const east = Number(req.query.east);
+    const west = Number(req.query.west);
+    const hasBounds =
+      Number.isFinite(north) &&
+      Number.isFinite(south) &&
+      Number.isFinite(east) &&
+      Number.isFinite(west);
+
+    let query = sb
+      .from("stores")
+      .select(
+        "id,name,type,category,lat,lng,maps_url,logo_url,address,location_text,is_active,status,average_rating,rating_count,delivery_radius_km"
+      )
+      .eq("status", "approved")
+      .eq("is_active", true)
+      .not("lat", "is", null)
+      .not("lng", "is", null)
+      .limit(400);
+
+    if (hasBounds) {
+      const minLat = Math.min(north, south);
+      const maxLat = Math.max(north, south);
+      const minLng = Math.min(east, west);
+      const maxLng = Math.max(east, west);
+      query = query.gte("lat", minLat).lte("lat", maxLat).gte("lng", minLng).lte("lng", maxLng);
+    }
+
+    const { data, error } = await query;
+    if (error) return fail(res, error.message, 400);
+
+    const branding = mergeMapColorsIntoBranding(await platformBranding.loadBranding(sb));
+    const stores = (data || [])
+      .filter(storeRowIsListedActive)
+      .map(function (row) {
+        return liveMapStorePayload(row, { branding: branding });
+      })
+      .filter(Boolean);
+
+    res.set("Cache-Control", "private, max-age=15");
+    return ok(res, {
+      stores: stores,
+      map_colors: {
+        restaurant: branding.map_color_restaurant,
+        store: branding.map_color_store,
+        pharmacy: branding.map_color_pharmacy,
+        service: branding.map_color_service,
+      },
+    });
+  } catch (e) {
+    console.error("[store/live-map/stores]", e);
+    return fail(res, e.message || "خطأ في الخادم", 500);
+  }
+});
+
+/** تحديث موقع النشاط من لوحة التاجر */
+router.patch("/location", requireAuth, requireStoreRole, async (req, res) => {
+  try {
+    const sb = createServiceClient();
+    if (!sb) return fail(res, "الخادم غير مهيأ", 503);
+    const got = await resolveMerchantStoreByPhone(sb, req.appUser);
+    if (got.error) return fail(res, got.error, 403);
+    const store = got.store;
+    const b = req.body || {};
+    const patch = { updated_at: new Date().toISOString() };
+
+    if (b.maps_url != null && String(b.maps_url).trim()) {
+      const mapsGot = await applyMapsUrlToStorePatch(patch, b.maps_url);
+      if (!mapsGot.ok) return fail(res, mapsGot.message, 400);
+    } else if (b.lat != null && b.lng != null) {
+      const lat = Number(b.lat);
+      const lng = Number(b.lng);
+      if (!storeHasOfficialLocation({ lat: lat, lng: lng })) {
+        return fail(res, "إحداثيات غير صالحة", 400);
+      }
+      patch.lat = lat;
+      patch.lng = lng;
+      patch.maps_url =
+        b.maps_url && String(b.maps_url).trim()
+          ? String(b.maps_url).trim()
+          : "https://www.google.com/maps?q=" + encodeURIComponent(String(lat) + "," + String(lng));
+    } else {
+      return fail(res, "أدخل رابط الموقع أو استخدم «تحديد الموقع الحالي»", 400);
+    }
+
+    const { data, error } = await sb.from("stores").update(patch).eq("id", store.id).select("*").single();
+    if (error) return fail(res, error.message, 400);
+    return ok(res, { store: sanitizeDriverOrStoreRowForApi(data), message: "تم تحديث موقع النشاط على الخريطة" });
+  } catch (e) {
+    console.error("[store/location/patch]", e);
+    return fail(res, e.message || "خطأ في الخادم", 500);
+  }
+});
+
 /** نقاط المتاجر المعتمدة لخريطة تسجيل المتجر (بدون بيانات حساسة) */
 router.get("/register-map-context", async (req, res) => {
   try {
@@ -2155,6 +2259,8 @@ router.post("/withdrawals", requireAuth, requireStoreRole, async (req, res) => {
 /** GET /api/store/:id — نفس استجابة /public/:id (يُسجّل آخراً حتى لا يتعارض مع /products وغيره) */
 const STORE_GET_BY_ID_RESERVED = new Set([
   "products",
+  "live-map",
+  "location",
   "product-categories",
   "product-category-options",
   "reviews",

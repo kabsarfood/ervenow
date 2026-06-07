@@ -380,13 +380,50 @@ app.adminMapDotIcon = function (color, opts) {
 }
 
 app.storeTypeColor = function (type) {
+  var cat = app.mapCategoryFromStoreType(type);
+  var c = app.mapCategoryColors && app.mapCategoryColors[cat];
+  if (c && /^#[0-9A-Fa-f]{6}$/.test(String(c).trim())) return String(c).trim();
+  try {
+    var v = getComputedStyle(document.documentElement).getPropertyValue("--accent").trim();
+    if (v) return v;
+  } catch (_e) {}
+  return "currentColor";
+};
+
+app.mapCategoryColors = {};
+
+app.mapCategoryFromStoreType = function (type) {
   var t = String(type || "").toLowerCase();
-  if (t === "restaurant") return "#eab308";
-  if (t === "supermarket" || t === "market") return "#22c55e";
-  if (t === "pharmacy") return "#06b6d4";
-  if (t === "flower") return "#ec4899";
-  return "#9ca3af";
-}
+  if (t === "restaurant") return "restaurant";
+  if (t === "pharmacy") return "pharmacy";
+  if (t === "services" || t === "service") return "service";
+  return "store";
+};
+
+app.applyLiveMapLegendColors = function () {
+  var c = app.mapCategoryColors || {};
+  var root = document.documentElement;
+  if (c.store) root.style.setProperty("--admin-map-color-store", c.store);
+  if (c.restaurant) root.style.setProperty("--admin-map-color-restaurant", c.restaurant);
+  if (c.pharmacy) root.style.setProperty("--admin-map-color-pharmacy", c.pharmacy);
+  if (c.service) root.style.setProperty("--admin-map-color-service", c.service);
+};
+
+app.loadMapCategoryColors = async function () {
+  if (!app.hasPermission("dashboard")) return;
+  try {
+    var j = await app.PlatformAPI.api("/api/admin/platform-settings");
+    var s = (j && j.settings) || {};
+    app.mapCategoryColors = {
+      restaurant: s.map_color_restaurant,
+      store: s.map_color_store,
+      pharmacy: s.map_color_pharmacy,
+      service: s.map_color_service,
+    };
+    app.applyLiveMapLegendColors();
+    if (typeof app.syncLiveMapMarkers === "function") app.syncLiveMapMarkers();
+  } catch (_e) {}
+};
 
 app.ADMIN_SA_CITIES = [
   { id: "all", label: "كل المملكة", lat: 24.0, lng: 45.0, zoom: 6, radiusKm: null },
@@ -946,6 +983,7 @@ app.refreshLiveDashboard = async function () {
   if (app.liveTickBusy) return;
   app.liveTickBusy = true;
   try {
+    await app.loadMapCategoryColors();
     await app.refreshLiveDriversAndMap();
     if (app.hasPermission("orders")) app.renderSmartAlerts();
     app.updateLiveClock();
