@@ -892,7 +892,19 @@
             <span id="storeSetupCatLabel">تصنيف المطعم / القسم</span>
             <select id="storeSetupCategory" aria-label="تصنيف المتجر"></select>
           </label>
-          <label>وصف الموقع (نص) <input type="text" id="storeSetupLocation" /></label>
+          <label id="storeSetupMapsWrap">
+            <span>رابط موقع المتجر على Google Maps <strong aria-hidden="true">*</strong></span>
+            <input
+              type="url"
+              id="storeSetupMapsUrl"
+              dir="ltr"
+              required
+              placeholder="https://maps.app.goo.gl/... أو lat,lng"
+              autocomplete="off"
+            />
+          </label>
+          <p class="sub" id="storeSetupMapsStatus" style="margin: 0"></p>
+          <label>وصف الموقع (نص اختياري) <input type="text" id="storeSetupLocation" /></label>
           <label>العنوان <input type="text" id="storeSetupAddress" /></label>
           <label>نبذة للزوار <textarea id="storeSetupBio" rows="3" placeholder="مثال: وجبات منزلية، توصيل سريع…"></textarea></label>
           <div class="store-setup-media">

@@ -94,6 +94,7 @@ async function resolveStoreCheckoutFromCartSnapshot(sb, groupItems, storeRowFrom
       pickup_address: String(storeRowFromDb.address || storeRowFromDb.name || "").trim() || String(storeRowFromDb.name || ""),
       pickup_lat: slat,
       pickup_lng: slng,
+      pickup_maps_url: storeRowFromDb.maps_url ? String(storeRowFromDb.maps_url).trim() : null,
       drop_address: dropAddress,
       drop_lat: lat,
       drop_lng: lng,

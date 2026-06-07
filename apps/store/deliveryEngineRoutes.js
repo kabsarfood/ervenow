@@ -61,7 +61,7 @@ function deliveryEngineRouter(deps) {
       if (!out || !Number.isFinite(out.lat) || !Number.isFinite(out.lng)) {
         return fail(res, "تعذر استخراج الإحداثيات من الرابط", 400);
       }
-      return ok(res, { lat: out.lat, lng: out.lng, maps_url: url });
+      return ok(res, { lat: out.lat, lng: out.lng, maps_url: out.resolved_url || url });
     } catch (e) {
       return fail(res, e.message || "خطأ", 500);
     }

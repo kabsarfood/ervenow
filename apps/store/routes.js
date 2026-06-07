@@ -8,6 +8,7 @@ const { routeKmWithRoughFallback, deliveryEtaMinutesFromKm } = require("../../sh
 const { isDeliveryEnginePolicyEnabled } = require("../../shared/utils/deliveryEngineFlags");
 const { publicDeliveryPolicyLabels, storePolicyRowToConfig } = require("../../shared/services/deliveryPolicyEngine");
 const { deliveryEngineRouter } = require("./deliveryEngineRoutes");
+const { applyMapsUrlToStorePatch, storeHasOfficialLocation } = require("../../shared/utils/storeMapsLocation");
 const { cacheGetJson, cacheSetJson } = require("../../shared/utils/redisCache");
 const { parseOptionalPayoutPayload, payoutRowForDriversOrStores } = require("../../shared/utils/payoutFields");
 const { sanitizeDriverOrStoreRowForApi } = require("../../shared/utils/bankApiSafe");
@@ -377,6 +378,7 @@ function publicStoreRow(row, labelOpts) {
     category_label_ar: categoryDisplay || TYPE_LABEL_AR[row.type] || null,
     lat: row.lat,
     lng: row.lng,
+    maps_url: row.maps_url || null,
     address: row.address || row.location_text || null,
     delivery_radius_km: Number(row.delivery_radius_km) > 0 ? Number(row.delivery_radius_km) : 5,
     logo_url: row.logo_url || null,
@@ -1470,6 +1472,7 @@ router.post("/register", async (req, res) => {
     const commercial_registration = String(b.commercial_registration || "").trim() || null;
     const location_text = String(b.location_text || "").trim() || null;
     const address = String(b.address || "").trim();
+    const mapsUrlInput = String(b.maps_url || b.mapsUrl || "").trim();
     const type = String(b.type || "").trim().toLowerCase();
     const restaurantCategoryRaw = String(b.restaurant_category || b.restaurantCategory || "").trim().toLowerCase();
     const storeCategorySlug = String(b.category || b.store_category || "").trim().toLowerCase();
@@ -1481,10 +1484,20 @@ router.post("/register", async (req, res) => {
     if (lng != null && lng !== "") lng = Number(lng);
     else lng = null;
 
+    if (mapsUrlInput) {
+      const locPatch = {};
+      const mapsGot = await applyMapsUrlToStorePatch(locPatch, mapsUrlInput);
+      if (!mapsGot.ok) return fail(res, mapsGot.message, 400);
+      if (mapsGot.applied) {
+        lat = locPatch.lat;
+        lng = locPatch.lng;
+      }
+    }
+
     if (!name || name.length < 2) return fail(res, "اسم المتجر مطلوب", 400);
     if (!address || address.length < 4) return fail(res, "عنوان المتجر مطلوب", 400);
-    if (lat == null || lng == null || Number.isNaN(lat) || Number.isNaN(lng)) {
-      return fail(res, "يجب تحديد موقع المتجر على الخريطة", 400);
+    if (!storeHasOfficialLocation({ lat, lng })) {
+      return fail(res, "يجب لصق رابط موقع المتجر على Google Maps أو تحديده على الخريطة", 400);
     }
     if (Math.abs(lat) > 90 || Math.abs(lng) > 180) {
       return fail(res, "إحداثيات الموقع غير صالحة", 400);
@@ -1548,6 +1561,14 @@ router.post("/register", async (req, res) => {
       ...payoutCols,
     };
 
+    if (mapsUrlInput) {
+      const urlPatch = {};
+      const urlGot = await applyMapsUrlToStorePatch(urlPatch, mapsUrlInput);
+      if (urlGot.ok && urlGot.maps_url) row.maps_url = urlGot.maps_url;
+    } else if (lat != null && lng != null) {
+      row.maps_url = `https://www.google.com/maps?q=${encodeURIComponent(String(lat) + "," + String(lng))}`;
+    }
+
     if (location_text) row.location_text = location_text;
 
     let insertedRow = null;
@@ -1555,7 +1576,7 @@ router.post("/register", async (req, res) => {
     ({ data: insertedRow, error: insErr } = await sb.from("stores").insert(row).select("id").single());
     if (
       insErr &&
-      /location_text|address|delivery_radius_km|is_active|category|commercial_registration|\bemail\b|file_url|\blat\b|\blng\b|bank_country|bank_name|bank_iban|bank_account|bank_swift|bank_last4|bank_verified|bank_added|bank_account_name|\biban\b|stc_pay|payout_crypto|column .* does not exist|schema cache/i.test(
+      /location_text|address|delivery_radius_km|is_active|category|commercial_registration|\bemail\b|file_url|\blat\b|\blng\b|maps_url|bank_country|bank_name|bank_iban|bank_account|bank_swift|bank_last4|bank_verified|bank_added|bank_account_name|\biban\b|stc_pay|payout_crypto|column .* does not exist|schema cache/i.test(
         String(insErr.message || "")
       )
     ) {
@@ -1569,6 +1590,7 @@ router.post("/register", async (req, res) => {
       delete row.file_url;
       delete row.lat;
       delete row.lng;
+      delete row.maps_url;
       delete row.bank_country_code;
       delete row.bank_name;
       delete row.iban;
@@ -1646,9 +1668,10 @@ router.post("/register", async (req, res) => {
     }
 
     const mapsUrl =
-      lat != null && lng != null
+      row.maps_url ||
+      (lat != null && lng != null
         ? `${address} — https://maps.google.com/?q=${encodeURIComponent(String(lat) + "," + String(lng))}`
-        : address;
+        : address);
 
     const typeLabel = TYPE_LABEL_AR[type] || type;
     let cuisineLine = "";

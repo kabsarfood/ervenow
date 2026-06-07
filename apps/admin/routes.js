@@ -21,6 +21,7 @@ const platformOffers = require("../../shared/utils/platformOffersStore");
 const heroBanners = require("../../shared/utils/heroBannerStore");
 const checkoutPaymentMethods = require("../../shared/utils/checkoutPaymentMethods");
 const { sanitizeDriverOrStoreRowForApi, sanitizeDriverOrStoreListForApi } = require("../../shared/utils/bankApiSafe");
+const { applyMapsUrlToStorePatch, storeHasOfficialLocation } = require("../../shared/utils/storeMapsLocation");
 const {
   normalizeScopeType,
   normalizeSlugInput,
@@ -259,8 +260,9 @@ async function linkStoreOwnerAfterApprove(sb, store) {
 async function updateStoreWithOptionalActive(sb, id, patch) {
   const p = { ...patch };
   let { data, error } = await sb.from("stores").update(p).eq("id", id).select("*").single();
-  if (error && /is_active|column|schema cache/i.test(String(error.message || ""))) {
+  if (error && /is_active|maps_url|column|schema cache/i.test(String(error.message || ""))) {
     delete p.is_active;
+    if (/maps_url|column .* does not exist/i.test(String(error.message || ""))) delete p.maps_url;
     ({ data, error } = await sb.from("stores").update(p).eq("id", id).select("*").single());
   }
   return { data, error };
@@ -1637,13 +1639,27 @@ router.put(
       }
       if (b.location_text !== undefined) patch.location_text = String(b.location_text || "").trim() || null;
       if (b.address !== undefined) patch.address = String(b.address || "").trim() || null;
-      if (b.lat !== undefined && b.lat !== null && b.lat !== "") {
+      if (b.maps_url !== undefined) {
+        const mapsIn = String(b.maps_url || "").trim();
+        if (!mapsIn) {
+          patch.maps_url = null;
+        } else {
+          const mapsGot = await applyMapsUrlToStorePatch(patch, mapsIn);
+          if (!mapsGot.ok) return fail(res, mapsGot.message, 400);
+        }
+      }
+      if (b.lat !== undefined && b.lat !== null && b.lat !== "" && b.maps_url === undefined) {
         const lat = Number(b.lat);
         if (Number.isFinite(lat)) patch.lat = lat;
       }
-      if (b.lng !== undefined && b.lng !== null && b.lng !== "") {
+      if (b.lng !== undefined && b.lng !== null && b.lng !== "" && b.maps_url === undefined) {
         const lng = Number(b.lng);
         if (Number.isFinite(lng)) patch.lng = lng;
+      }
+
+      const mergedForLoc = Object.assign({}, existing, patch);
+      if (b.approve === true && !storeHasOfficialLocation(mergedForLoc)) {
+        return fail(res, "يجب لصق رابط موقع المتجر على Google Maps (أو تحديد lat/lng) قبل الاعتماد", 400);
       }
 
       const sb = createServiceClient() || req.supabase;

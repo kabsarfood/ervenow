@@ -120,9 +120,26 @@
               <span class="reg-store-section__num" aria-hidden="true">2</span>
               <div>
                 <h2 class="reg-store-section__title" id="h-map">الموقع على الخريطة</h2>
-                <p class="reg-store-section__hint">حدد موقع متجرك على خريطة ERVENOW — النقاط الرمادية تمثل متاجراً معتمدة.</p>
+                <p class="reg-store-section__hint">الصق رابط موقع متجرك من Google Maps — يُعتمد للخريطة والطلبات والمناديب.</p>
               </div>
             </div>
+
+            <div class="field-gap reg-store-maps-paste">
+              <label for="regStoreMapsUrl">رابط موقع المتجر على Google Maps <span aria-hidden="true">*</span></label>
+              <div class="reg-store-maps-paste__row">
+                <input
+                  type="url"
+                  id="regStoreMapsUrl"
+                  dir="ltr"
+                  inputmode="url"
+                  placeholder="https://maps.app.goo.gl/... أو lat,lng"
+                  autocomplete="off"
+                />
+                <button type="button" class="btn btn-ghost" id="btnApplyMapsUrl">اعتماد الرابط</button>
+              </div>
+              <p class="reg-store-map-status is-pending" id="regStoreMapsHint">الصق رابط المشاركة من تطبيق خرائط Google ثم اضغط «اعتماد الرابط».</p>
+            </div>
+
             <div class="reg-store-map-toolbar">
               <label class="visually-hidden" for="regStoreMapSearch">بحث عن عنوان</label>
               <input
@@ -144,6 +161,7 @@
             <p class="reg-store-map-status is-pending" id="mapHint">انقر على الخريطة لتحديد موقع متجرك.</p>
             <input type="hidden" id="lat" />
             <input type="hidden" id="lng" />
+            <input type="hidden" id="maps_url" />
 
             <div class="field-gap">
               <label for="address">العنوان التفصيلي</label>
@@ -542,6 +560,74 @@
         });
       }
 
+      var mapsUrlEl = document.getElementById("regStoreMapsUrl");
+      var mapsUrlHidden = document.getElementById("maps_url");
+      var mapsHintEl = document.getElementById("regStoreMapsHint");
+      var btnApplyMaps = document.getElementById("btnApplyMapsUrl");
+
+      async function applyRegStoreMapsUrl() {
+        if (!mapsUrlEl) return false;
+        var raw = mapsUrlEl.value.trim();
+        if (!raw) {
+          if (mapsHintEl) {
+            mapsHintEl.textContent = "الصق رابط Google Maps أولاً.";
+            mapsHintEl.classList.remove("is-ok");
+            mapsHintEl.classList.add("is-pending");
+          }
+          return false;
+        }
+        if (mapsHintEl) {
+          mapsHintEl.textContent = "جاري اعتماد الرابط…";
+          mapsHintEl.classList.remove("is-ok");
+          mapsHintEl.classList.add("is-pending");
+        }
+        try {
+          var j = await window.PlatformAPI.api("/api/store/resolve-maps-link", {
+            method: "POST",
+            body: { url: raw },
+          });
+          var la = Number(j.lat);
+          var ln = Number(j.lng);
+          if (!Number.isFinite(la) || !Number.isFinite(ln)) {
+            throw new Error("تعذر استخراج الإحداثيات من الرابط");
+          }
+          if (storeMap && typeof storeMap.placeAt === "function") {
+            storeMap.placeAt(la, ln, true);
+          } else {
+            if (latEl) latEl.value = String(la);
+            if (lngEl) lngEl.value = String(ln);
+          }
+          if (mapsUrlHidden) mapsUrlHidden.value = j.maps_url || raw;
+          if (mapsHintEl) {
+            mapsHintEl.textContent = "✓ تم اعتماد الموقع: " + la + ", " + ln;
+            mapsHintEl.classList.add("is-ok");
+            mapsHintEl.classList.remove("is-pending");
+          }
+          return true;
+        } catch (e) {
+          if (mapsHintEl) {
+            mapsHintEl.textContent = String(e.message || e || "تعذر اعتماد الرابط");
+            mapsHintEl.classList.remove("is-ok");
+            mapsHintEl.classList.add("is-pending");
+          }
+          return false;
+        }
+      }
+
+      if (btnApplyMaps) {
+        btnApplyMaps.addEventListener("click", function () {
+          applyRegStoreMapsUrl();
+        });
+      }
+      if (mapsUrlEl) {
+        mapsUrlEl.addEventListener("keydown", function (ev) {
+          if (ev.key === "Enter") {
+            ev.preventDefault();
+            applyRegStoreMapsUrl();
+          }
+        });
+      }
+
       document.getElementById("btnSend").onclick = async function () {
         var btn = document.getElementById("btnSend");
         try {
@@ -558,6 +644,7 @@
           var address = document.getElementById("address").value.trim();
           var lat = latEl.value.trim();
           var lng = lngEl.value.trim();
+          var maps_url = mapsUrlEl ? mapsUrlEl.value.trim() : "";
           var radius = Number(document.getElementById("delivery_radius_km").value);
           var email = document.getElementById("email").value.trim();
           var commercial_registration = document.getElementById("commercial_registration").value.trim();
@@ -574,8 +661,21 @@
             show(ErvenowSaPhone ? ErvenowSaPhone.invalidMessage() : "أدخل رقم سعودي صحيح", false);
             return;
           }
+          if (!maps_url) {
+            show("الصق رابط موقع المتجر على Google Maps.", false);
+            return;
+          }
           if (!lat || !lng || (storeMap && !storeMap.hasCoords())) {
-            show("حدد موقع متجرك على خريطة ERVENOW (نقرة على الخريطة أو «استخدم موقعي»).", false);
+            var applied = await applyRegStoreMapsUrl();
+            if (!applied) {
+              show("اعتماد رابط الموقع فشل — تحقق من الرابط أو حدد النقطة على الخريطة.", false);
+              return;
+            }
+            lat = latEl.value.trim();
+            lng = lngEl.value.trim();
+          }
+          if (!lat || !lng || (storeMap && !storeMap.hasCoords())) {
+            show("حدد موقع متجرك عبر رابط Google Maps أو نقرة على الخريطة.", false);
             return;
           }
           if (!address || address.length < 4) {
@@ -632,6 +732,7 @@
             type: type,
             lat: Number(lat),
             lng: Number(lng),
+            maps_url: mapsUrlHidden && mapsUrlHidden.value ? mapsUrlHidden.value : maps_url,
             address: address,
             delivery_radius_km: Number.isFinite(radius) ? radius : 5,
             email: email || undefined,

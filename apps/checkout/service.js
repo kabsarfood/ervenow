@@ -316,6 +316,7 @@ async function runCheckoutInsert(sb, appUser, body, options) {
         row.pickup_address = String(storeRow.address || storeRow.name || "").trim() || String(storeRow.name || "");
         row.pickup_lat = slat;
         row.pickup_lng = slng;
+        if (storeRow.maps_url) row.pickup_maps_url = String(storeRow.maps_url).trim();
         row.drop_address = dropAddress;
         row.drop_lat = custLat;
         row.drop_lng = custLng;
