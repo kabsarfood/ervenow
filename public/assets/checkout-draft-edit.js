@@ -48,6 +48,15 @@
     return draft;
   }
 
+  function syncBadgeAfterDraftChange() {
+    if (global.ErvenowOrderDraftBadge && typeof global.ErvenowOrderDraftBadge.sync === "function") {
+      global.ErvenowOrderDraftBadge.sync();
+    }
+    if (global.ErvenowOrderDraftVertical && typeof global.ErvenowOrderDraftVertical.syncHeaderBadge === "function") {
+      global.ErvenowOrderDraftVertical.syncHeaderBadge();
+    }
+  }
+
   function persist(draft) {
     var api = draftApi();
     if (!api || typeof api.writeDraft !== "function") {
@@ -56,6 +65,7 @@
     syncTotals(draft);
     var res = api.writeDraft(draft);
     if (!res.ok) return { ok: false, message: "تعذّر حفظ التعديل" };
+    syncBadgeAfterDraftChange();
     if (engine() && typeof engine().refresh === "function") engine().refresh();
     return { ok: true, draft: res.draft };
   }
@@ -228,6 +238,7 @@
     draft.items = items;
     if (!draft.items.length) {
       api.clearDraft();
+      syncBadgeAfterDraftChange();
       if (engine() && typeof engine().refresh === "function") engine().refresh();
       return { ok: true, cleared: true };
     }
@@ -245,6 +256,7 @@
     draft.items = items;
     if (!draft.items.length) {
       api.clearDraft();
+      syncBadgeAfterDraftChange();
       if (engine() && typeof engine().refresh === "function") engine().refresh();
       return { ok: true, cleared: true };
     }
@@ -255,6 +267,7 @@
     var api = draftApi();
     if (!api || typeof api.clearDraft !== "function") return { ok: false, message: "مسودة الطلب غير متاحة" };
     api.clearDraft();
+    syncBadgeAfterDraftChange();
     if (engine() && typeof engine().refresh === "function") engine().refresh();
     return { ok: true };
   }
@@ -295,6 +308,34 @@
     return persist(draft);
   }
 
+  async function refreshDeliveryQuoteIfPending() {
+    var api = draftApi();
+    if (!api) return { ok: false };
+    var draft = api.readDraft();
+    var items = draft.items || [];
+    if (!items.length) return { ok: true, draft: draft };
+
+    var eng = engine();
+    if (!eng || typeof eng.hasStoreProducts !== "function") return { ok: true, draft: draft };
+    if (!eng.hasStoreProducts(items)) return { ok: true, draft: draft };
+    if (typeof eng.getFulfillmentMode === "function" && eng.getFulfillmentMode(items) === "pickup") {
+      return { ok: true, draft: draft };
+    }
+
+    var deliveryFee = typeof eng.resolveDeliveryFeeFromDraft === "function" ? eng.resolveDeliveryFeeFromDraft(draft) : null;
+    var breakdown =
+      typeof eng.computeBreakdown === "function" ? eng.computeBreakdown(items, deliveryFee) : { deliveryPending: false };
+    if (!breakdown.deliveryPending) return { ok: true, draft: draft };
+
+    var loc = typeof eng.resolveEffectiveLocation === "function" ? eng.resolveEffectiveLocation(draft) : null;
+    if (!loc || !Number.isFinite(Number(loc.lat)) || !Number.isFinite(Number(loc.lng))) {
+      return { ok: false, message: "missing_location" };
+    }
+
+    draft = await refreshDeliveryFee(draft, loc);
+    return persist(draft);
+  }
+
   function bindUi() {
     var linesEl = document.getElementById("checkoutLines");
     if (linesEl && !linesEl.__checkoutEditBound) {
@@ -317,7 +358,6 @@
       clearBtn.__checkoutEditBound = true;
       clearBtn.addEventListener("click", function () {
         if (checkoutInFlightGuard()) return;
-        if (!window.confirm("هل تريد إفراغ الطلب بالكامل؟")) return;
         clearAll();
       });
     }
@@ -373,6 +413,7 @@
     clearAll: clearAll,
     setOrderNotes: setOrderNotes,
     setDeliveryLocation: setDeliveryLocation,
+    refreshDeliveryQuoteIfPending: refreshDeliveryQuoteIfPending,
     syncTotals: syncTotals,
     bindUi: bindUi,
     isProductLine: isProductLine,

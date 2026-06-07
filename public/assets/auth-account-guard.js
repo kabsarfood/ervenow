@@ -5,6 +5,14 @@
 (function (global) {
   function clearSession() {
     try {
+      if (global.ErvenowOrderDraft && typeof global.ErvenowOrderDraft.markSessionEnded === "function") {
+        global.ErvenowOrderDraft.markSessionEnded();
+      }
+      if (global.ErvenowOrderDraft && typeof global.ErvenowOrderDraft.clearPlatformDraftState === "function") {
+        global.ErvenowOrderDraft.clearPlatformDraftState();
+      }
+    } catch (_eDraft) {}
+    try {
       if (global.PlatformAPI && typeof global.PlatformAPI.setToken === "function") {
         global.PlatformAPI.setToken("");
       }

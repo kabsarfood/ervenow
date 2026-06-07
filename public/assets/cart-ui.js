@@ -329,50 +329,13 @@
   }
 
   function mountGuestHeaderCart(toolsEl, linkEl) {
-    if (!toolsEl || !linkEl || document.getElementById("lpCartWrap")) return;
-
-    var badge = linkEl.querySelector("#cartCount") || linkEl.querySelector(".dash-header-cart__badge");
-    var countText = badge ? badge.textContent : "0";
-    var countEmpty = badge && badge.getAttribute("data-empty");
-
-    var wrap = document.createElement("div");
-    wrap.className = "lp-cart-wrap dash-cart-wrap";
-    wrap.id = "lpCartWrap";
-    wrap.innerHTML =
-      '<button type="button" class="cart-btn dash-header-cart-btn" id="lpCartToggle" aria-expanded="false" aria-controls="lpCartPanel" aria-haspopup="dialog">' +
-      '<span aria-hidden="true">🛒</span>' +
-      '<span class="dash-header-cart__label">السلة</span>' +
-      '<span class="dash-header-cart__badge" id="cartCount"' +
-      (countEmpty ? ' data-empty="true"' : "") +
-      ">" +
-      countText +
-      "</span>" +
-      "</button>" +
-      '<div class="lp-cart-backdrop" id="lpCartBackdrop" aria-hidden="true"></div>' +
-      '<div class="lp-cart-panel lp-cart-panel--empty" id="lpCartPanel" role="dialog" aria-modal="true" aria-labelledby="lpCartDialogTitle" aria-hidden="true">' +
-      cartPanelInnerHtml({ continueHref: "/dashboard", showFullFin: true }) +
-      "</div>";
-
-    linkEl.replaceWith(wrap);
-    initCartToggle();
-    if (global.ErvenowGuestShell && typeof ErvenowGuestShell.syncHeaderLayout === "function") {
-      ErvenowGuestShell.syncHeaderLayout();
-    } else if (global.ErvenowViewport && typeof ErvenowViewport.syncHeaderHeight === "function") {
-      ErvenowViewport.syncHeaderHeight();
+    if (global.ErvenowOrderDraftBadge && typeof global.ErvenowOrderDraftBadge.enforceCheckoutNav === "function") {
+      global.ErvenowOrderDraftBadge.enforceCheckoutNav();
+      return;
     }
-
-    var checkout = document.getElementById("lpCartCheckoutBtn");
-    if (checkout) {
-      checkout.addEventListener("click", function () {
-        if (global.ErvenowCart && typeof global.ErvenowCart.goCheckout === "function") {
-          global.ErvenowCart.goCheckout();
-        } else if (typeof global.handleLpCartCheckoutClick === "function") {
-          global.handleLpCartCheckoutClick();
-        }
-      });
-    }
-
-    if (typeof global.updateCartCount === "function") global.updateCartCount();
+    if (!toolsEl || !linkEl) return;
+    if (linkEl.getAttribute("href") !== "/checkout") linkEl.setAttribute("href", "/checkout");
+    linkEl.setAttribute("data-erv-checkout-nav", "1");
   }
 
   global.ErvenowCartUI = {

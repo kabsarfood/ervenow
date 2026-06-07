@@ -3260,6 +3260,27 @@
           ErvenowGuestShell.performGuestLogout();
           return;
         }
+        if (window.ErvenowOrderDraft && typeof ErvenowOrderDraft.markSessionEnded === "function") {
+          ErvenowOrderDraft.markSessionEnded();
+        }
+        if (window.ErvenowOrderDraft && typeof ErvenowOrderDraft.prepareLogoutDraftState === "function") {
+          ErvenowOrderDraft.prepareLogoutDraftState().finally(function () {
+            if (window.ErvenowOrderDraft && typeof ErvenowOrderDraft.clearPlatformDraftState === "function") {
+              ErvenowOrderDraft.clearPlatformDraftState();
+            }
+            localStorage.removeItem("token");
+            localStorage.removeItem("ervenow_access_token");
+            localStorage.removeItem("erwenow_access_token");
+            localStorage.removeItem("userId");
+            localStorage.removeItem("userPhone");
+            localStorage.removeItem("guest");
+            try {
+              localStorage.removeItem("ervenow_guest_browse");
+            } catch (e) {}
+            location.reload();
+          });
+          return;
+        }
         localStorage.removeItem("token");
         localStorage.removeItem("ervenow_access_token");
         localStorage.removeItem("erwenow_access_token");

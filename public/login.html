@@ -1454,6 +1454,17 @@
           window.PlatformAPI.setToken(token);
 
           try {
+            if (res.user && res.user.id && window.ErvenowOrderDraft) {
+              if (typeof ErvenowOrderDraft.markRestoreDraftOnLogin === "function") {
+                ErvenowOrderDraft.markRestoreDraftOnLogin(String(res.user.id));
+              }
+              if (typeof ErvenowOrderDraft.restoreDraftAfterLogin === "function") {
+                ErvenowOrderDraft.restoreDraftAfterLogin();
+              }
+            }
+          } catch (_restoreDraft) {}
+
+          try {
             var maxAgeSec = 7 * 24 * 60 * 60;
             var cookie =
               "auth_token=" +

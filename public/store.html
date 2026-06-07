@@ -1172,6 +1172,7 @@
           {
             store_id: storeId,
             product_id: p.id,
+            product_name: String(p.name || "منتج").trim(),
             unit_price: unit,
             store_name: storeMeta.name || "",
             store_type: storeMeta.type || "",

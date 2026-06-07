@@ -177,6 +177,31 @@
     return state.selected;
   }
 
+  function pickDefaultMethod(methods) {
+    var m = normalizeMethods(methods || state.methods);
+    var keys = orderedKeys(m);
+    if (!keys.length) return null;
+    var prefer = ["ew_pay", "cash_on_delivery", "mada", "visa"];
+    for (var i = 0; i < prefer.length; i += 1) {
+      if (m[prefer[i]]) return prefer[i];
+    }
+    return keys[0];
+  }
+
+  function ensureDefaultSelected(draft, onChange) {
+    if (state.selected && normalizeMethods(state.methods)[state.selected]) {
+      return state.selected;
+    }
+    var fromDraft = draft && draft.payment_method ? String(draft.payment_method) : "";
+    if (fromDraft && normalizeMethods(state.methods)[fromDraft]) {
+      setSelected(fromDraft, onChange);
+      return fromDraft;
+    }
+    var def = pickDefaultMethod(state.methods);
+    if (def) setSelected(def, onChange);
+    return def;
+  }
+
   function setSelected(method, onChange) {
     state.selected = method ? String(method) : null;
     if (state.selected === "ew_pay") loadEwPayBalance().then(function () {
@@ -275,6 +300,8 @@
     renderOptions: renderOptions,
     getSelected: getSelected,
     setSelected: setSelected,
+    ensureDefaultSelected: ensureDefaultSelected,
+    pickDefaultMethod: pickDefaultMethod,
     loadEwPayBalance: loadEwPayBalance,
     validateEwPay: validateEwPay,
     setGrandTotalForEwPay: setGrandTotalForEwPay,

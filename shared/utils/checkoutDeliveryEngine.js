@@ -69,7 +69,15 @@ async function resolveStoreCheckoutFromCartSnapshot(sb, groupItems, storeRowFrom
 
   const clientFee = Number(d.delivery_fee);
   if (Number.isFinite(clientFee) && Math.abs(clientFee - quote.delivery_fee) > 0.05) {
-    return { ok: false, message: "تغيّرت رسوم التوصيل — أعد فتح المتجر وأضف المنتج مجدداً", status: 409 };
+    const { logger } = require("../utils/logger");
+    logger.warn(
+      {
+        storeId: storeRowFromDb.id,
+        clientFee,
+        serverFee: quote.delivery_fee,
+      },
+      "[checkoutDeliveryEngine] delivery_fee drift — using server quote"
+    );
   }
 
   const deliveryFee = roundMoney(quote.delivery_fee);

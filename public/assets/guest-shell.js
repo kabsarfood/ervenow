@@ -98,6 +98,10 @@
   }
 
   function refreshCartBadge() {
+    if (global.ErvenowOrderDraftBadge && typeof global.ErvenowOrderDraftBadge.enforceCheckoutNav === "function") {
+      global.ErvenowOrderDraftBadge.enforceCheckoutNav();
+      return;
+    }
     if (global.ErvenowOrderDraftBadge && typeof global.ErvenowOrderDraftBadge.sync === "function") {
       global.ErvenowOrderDraftBadge.sync();
       return;
@@ -206,6 +210,11 @@
 
   function clearGuestSessionState() {
     try {
+      if (global.ErvenowOrderDraft && typeof global.ErvenowOrderDraft.clearPlatformDraftState === "function") {
+        global.ErvenowOrderDraft.clearPlatformDraftState();
+      }
+    } catch (_eDraft) {}
+    try {
       if (global.ErvenowAuthGuard && typeof global.ErvenowAuthGuard.clearSession === "function") {
         global.ErvenowAuthGuard.clearSession();
       }
@@ -237,15 +246,39 @@
   }
 
   function performGuestLogout() {
-    clearGuestSessionState();
     try {
-      global.dispatchEvent(new CustomEvent("ervenow:auth-changed"));
-    } catch (_e) {}
-    try {
-      global.location.reload();
-    } catch (_e2) {
-      global.location.href = "/";
+      if (global.ErvenowOrderDraft && typeof global.ErvenowOrderDraft.markSessionEnded === "function") {
+        global.ErvenowOrderDraft.markSessionEnded();
+      }
+    } catch (_eMark) {}
+
+    var finish = function () {
+      clearGuestSessionState();
+      try {
+        global.__ervSessionMe = null;
+      } catch (_eMe) {}
+      try {
+        global.dispatchEvent(new CustomEvent("ervenow:auth-changed"));
+      } catch (_e) {}
+      if (global.ErvenowOrderDraftBadge && typeof global.ErvenowOrderDraftBadge.enforceCheckoutNav === "function") {
+        global.ErvenowOrderDraftBadge.enforceCheckoutNav();
+      } else if (global.ErvenowOrderDraftBadge && typeof global.ErvenowOrderDraftBadge.sync === "function") {
+        global.ErvenowOrderDraftBadge.sync();
+      }
+      try {
+        global.location.reload();
+      } catch (_e2) {
+        global.location.href = "/";
+      }
+    };
+
+    if (global.ErvenowOrderDraft && typeof global.ErvenowOrderDraft.prepareLogoutDraftState === "function") {
+      global.ErvenowOrderDraft.prepareLogoutDraftState()
+        .then(finish)
+        .catch(finish);
+      return;
     }
+    finish();
   }
 
   function wireSwitchAccountButton(btn) {
@@ -318,6 +351,14 @@
       var me = await global.PlatformAPI.api("/api/core/me");
       if (global.ErvenowAccountDest && ErvenowAccountDest.setSessionFromMe) {
         ErvenowAccountDest.setSessionFromMe(me);
+      }
+      if (me && me.user && me.user.id) {
+        try {
+          localStorage.setItem("userId", String(me.user.id));
+        } catch (_uid) {}
+        if (global.ErvenowOrderDraft && typeof global.ErvenowOrderDraft.restoreDraftAfterLogin === "function") {
+          global.ErvenowOrderDraft.restoreDraftAfterLogin();
+        }
       }
       var role = (me.profile && me.profile.role) || "customer";
       role = String(role).toLowerCase();
@@ -652,8 +693,13 @@
       return;
     }
     if (global.ErvenowOrderDraftBadge) {
-      if (typeof global.ErvenowOrderDraftBadge.boot === "function") global.ErvenowOrderDraftBadge.boot();
-      else if (typeof global.ErvenowOrderDraftBadge.sync === "function") global.ErvenowOrderDraftBadge.sync();
+      if (typeof global.ErvenowOrderDraftBadge.enforceCheckoutNav === "function") {
+        global.ErvenowOrderDraftBadge.enforceCheckoutNav();
+      } else if (typeof global.ErvenowOrderDraftBadge.boot === "function") {
+        global.ErvenowOrderDraftBadge.boot();
+      } else if (typeof global.ErvenowOrderDraftBadge.sync === "function") {
+        global.ErvenowOrderDraftBadge.sync();
+      }
       if (cb) cb();
       return;
     }

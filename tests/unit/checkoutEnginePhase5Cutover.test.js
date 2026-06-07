@@ -46,6 +46,14 @@ describe("Checkout Engine Phase 5 — cutover", () => {
     }
   });
 
+  test("cart-ui mountGuestHeaderCart does not inject lpCart drawer", () => {
+    const js = fs.readFileSync(path.join(PUBLIC_DIR, "assets/cart-ui.js"), "utf8");
+    var fn = js.slice(js.indexOf("function mountGuestHeaderCart"), js.indexOf("global.ErvenowCartUI"));
+    expect(fn).toMatch(/enforceCheckoutNav/);
+    expect(fn).not.toMatch(/lpCartWrap/);
+    expect(fn).not.toMatch(/initCartToggle/);
+  });
+
   test("legacy cart.js traffic redirects to /checkout", () => {
     const cartJs = readPublic("assets/cart.js");
     expect(cartJs).toMatch(/window\.location\.href\s*=\s*["']\/checkout["']/);

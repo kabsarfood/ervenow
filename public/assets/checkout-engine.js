@@ -16,6 +16,7 @@
   var CHECKOUT_IN_PROGRESS_MAX_POLLS = 15;
 
   var checkoutInFlight = false;
+  var labelEnrichInFlight = false;
 
   function roundMoney(n) {
     var x = Number(n);
@@ -245,6 +246,148 @@
       .replace(/"/g, "&quot;");
   }
 
+  function parseTitleParts(rawTitle) {
+    var raw = String(rawTitle || "").trim();
+    if (!raw) return { storeName: "", productName: "" };
+    var sep = raw.indexOf(" — ");
+    if (sep < 0) sep = raw.indexOf(" - ");
+    if (sep >= 0) {
+      return {
+        storeName: raw.slice(0, sep).trim(),
+        productName: raw.slice(sep + 3).trim(),
+      };
+    }
+    return { storeName: "", productName: raw };
+  }
+
+  function resolveLineDisplay(it, idx) {
+    var d = (it && it.data) || {};
+    var kind = lineKind(it);
+    var storeName = String(d.store_name || d.merchant_name || "").trim();
+    var productName = String(d.product_name || d.name || "").trim();
+    var parsed = parseTitleParts(it && it.title);
+
+    if (kind === "product") {
+      if (!storeName) storeName = parsed.storeName;
+      if (!productName) productName = parsed.productName;
+      if (!productName && String(it && it.title || "").trim()) productName = String(it.title).trim();
+      if (!productName) productName = "منتج";
+    } else {
+      productName = String(it.title || d.title || d.name || parsed.productName || "").trim();
+      if (!productName) productName = String(it.type || "طلب") + " #" + (idx + 1);
+    }
+
+    return { productName: productName, storeName: storeName, kind: kind };
+  }
+
+  function lineNeedsLabelEnrichment(it) {
+    if (lineKind(it) !== "product") return false;
+    var d = (it && it.data) || {};
+    if (!d.store_id || d.product_id == null || String(d.product_id).trim() === "") return false;
+    if (d.product_name && d.store_name) return false;
+    var disp = resolveLineDisplay(it, 0);
+    return !disp.storeName || disp.productName === "منتج" || /^restaurant\s*#/i.test(disp.productName);
+  }
+
+  function apiFetchUrl(path) {
+    if (global.PlatformAPI && typeof global.PlatformAPI.apiUrl === "function") {
+      return global.PlatformAPI.apiUrl(path);
+    }
+    return path;
+  }
+
+  async function enrichDraftLineLabels(draft) {
+    if (labelEnrichInFlight || !draft || !(draft.items || []).length) return;
+    var pending = (draft.items || []).filter(lineNeedsLabelEnrichment);
+    if (!pending.length) return;
+
+    var storeIds = {};
+    pending.forEach(function (it) {
+      var sid = it && it.data && it.data.store_id;
+      if (sid) storeIds[String(sid)] = true;
+    });
+    var ids = Object.keys(storeIds);
+    if (!ids.length) return;
+
+    labelEnrichInFlight = true;
+    var storeNames = {};
+    var productMaps = {};
+
+    try {
+      await Promise.all(
+        ids.map(function (sid) {
+          return Promise.all([
+            fetch(apiFetchUrl("/api/store/public/" + encodeURIComponent(sid)))
+              .then(function (res) {
+                return res.json();
+              })
+              .then(function (data) {
+                if (data && data.ok && data.store && data.store.name) {
+                  storeNames[sid] = String(data.store.name).trim();
+                }
+              })
+              .catch(function () {}),
+            fetch(
+              apiFetchUrl(
+                "/api/store/products?store_id=" + encodeURIComponent(sid) + "&limit=60&offset=0"
+              )
+            )
+              .then(function (res) {
+                return res.json();
+              })
+              .then(function (data) {
+                if (!data || !data.ok || !Array.isArray(data.products)) return;
+                var map = {};
+                data.products.forEach(function (p) {
+                  if (p && p.id != null) map[String(p.id)] = String(p.name || "").trim();
+                });
+                productMaps[sid] = map;
+              })
+              .catch(function () {}),
+          ]);
+        })
+      );
+
+      var changed = false;
+      var items = (draft.items || []).map(function (it) {
+        var d = (it && it.data) || {};
+        var sid = String(d.store_id || "");
+        var pid = String(d.product_id || "");
+        if (!sid || !pid) return it;
+
+        var nextData = Object.assign({}, d);
+        var itemChanged = false;
+        if (!nextData.store_name && storeNames[sid]) {
+          nextData.store_name = storeNames[sid];
+          itemChanged = true;
+        }
+        if (!nextData.product_name && productMaps[sid] && productMaps[sid][pid]) {
+          nextData.product_name = productMaps[sid][pid];
+          itemChanged = true;
+        }
+        if (!itemChanged) return it;
+
+        changed = true;
+        var storeLabel = nextData.store_name || storeNames[sid] || "متجر";
+        var productLabel = nextData.product_name || "منتج";
+        return Object.assign({}, it, {
+          title: storeLabel + " — " + productLabel,
+          data: nextData,
+        });
+      });
+
+      if (!changed) return;
+      draft.items = items;
+      var api = getDraftApi();
+      if (api && typeof api.writeDraft === "function") {
+        api.writeDraft(draft);
+        refresh();
+      }
+    } finally {
+      labelEnrichInFlight = false;
+    }
+  }
+
   function fmtMoney(n) {
     if (global.ErvenowCheckoutPayment && typeof global.ErvenowCheckoutPayment.fmtMoney === "function") {
       return global.ErvenowCheckoutPayment.fmtMoney(n);
@@ -406,9 +549,7 @@
     if (linesEl) {
       linesEl.innerHTML = items
         .map(function (it, idx) {
-          var title =
-            (it.data && (it.data.product_name || it.data.title || it.data.name)) ||
-            String(it.type || "بند") + " #" + (idx + 1);
+          var display = resolveLineDisplay(it, idx);
           var qty = (it.data && it.data.qty) || 1;
           var editable = editApi && editApi.isProductLine && editApi.isProductLine(it);
           var qtyBlock = editable
@@ -420,21 +561,28 @@
               '<button type="button" class="checkout-qty-btn" data-checkout-action="qty-plus" aria-label="زيادة">+</button>' +
               "</div>"
             : '<span class="checkout-line__qty-readonly">' + (qty > 1 ? "× " + qty : "") + "</span>";
+          var storeBlock =
+            display.storeName && display.kind === "product"
+              ? '<span class="checkout-line__store">' + escHtml(display.storeName) + "</span>"
+              : "";
           return (
             '<li class="checkout-line" data-line-index="' +
             idx +
             '">' +
             '<div class="checkout-line__main">' +
             '<span class="checkout-line__title">' +
-            escHtml(title) +
+            escHtml(display.productName) +
             "</span>" +
+            storeBlock +
             qtyBlock +
             "</div>" +
             '<div class="checkout-line__tail">' +
             '<span class="checkout-line__price">' +
             fmtMoney(it.price || 0) +
             " ر.س</span>" +
-            '<button type="button" class="checkout-line__remove" data-checkout-action="remove" aria-label="حذف البند">×</button>' +
+            '<button type="button" class="checkout-line__remove" data-checkout-action="remove" aria-label="حذف ' +
+            escHtml(display.productName) +
+            '">حذف</button>' +
             "</div>" +
             "</li>"
           );
@@ -486,11 +634,20 @@
     setMoney("checkoutGrand", breakdown.grandTotal, breakdown.deliveryPending);
 
     var confirmBtn = document.getElementById("checkoutConfirmBtn");
+    var paySelected =
+      global.ErvenowCheckoutPayment && typeof global.ErvenowCheckoutPayment.getSelected === "function"
+        ? global.ErvenowCheckoutPayment.getSelected()
+        : draft.payment_method;
+    var canConfirm = !!paySelected && !breakdown.deliveryPending;
     if (confirmBtn && !checkoutInFlight) {
-      confirmBtn.disabled = false;
-      confirmBtn.textContent = breakdown.deliveryPending
-        ? "تأكيد الطلب"
-        : "تأكيد الطلب — " + fmtMoney(breakdown.grandTotal) + " ر.س";
+      confirmBtn.disabled = !canConfirm;
+      if (!paySelected) {
+        confirmBtn.textContent = "اختر وسيلة الدفع";
+      } else if (breakdown.deliveryPending) {
+        confirmBtn.textContent = "أكمل موقع التوصيل أولاً";
+      } else {
+        confirmBtn.textContent = "تأكيد الطلب — " + fmtMoney(breakdown.grandTotal) + " ر.س";
+      }
     }
 
     if (global.ErvenowCheckoutPayment && typeof global.ErvenowCheckoutPayment.setGrandTotalForEwPay === "function") {
@@ -501,9 +658,14 @@
     if (pay && typeof pay.renderOptions === "function") {
       var payRoot = document.getElementById("checkoutPayOptions");
       if (payRoot) {
+        if (typeof pay.ensureDefaultSelected === "function") {
+          pay.ensureDefaultSelected(draft, onPaymentChanged);
+        }
         pay.renderOptions(payRoot, null, pay.getSelected(), onPaymentChanged);
       }
     }
+
+    void enrichDraftLineLabels(draft);
   }
 
   function onPaymentChanged(method) {
@@ -530,10 +692,25 @@
     if (!pay) return Promise.resolve();
     return pay.loadPaymentMethods(draft).then(function () {
       var payRoot = document.getElementById("checkoutPayOptions");
-      var initial = draft.payment_method || pay.getSelected();
-      if (initial) pay.setSelected(initial, onPaymentChanged);
+      if (typeof pay.ensureDefaultSelected === "function") {
+        pay.ensureDefaultSelected(draft, onPaymentChanged);
+      } else {
+        var initial = draft.payment_method || pay.getSelected();
+        if (initial) pay.setSelected(initial, onPaymentChanged);
+      }
       pay.renderOptions(payRoot, null, pay.getSelected(), onPaymentChanged);
     });
+  }
+
+  async function ensureCheckoutReady(draft) {
+    var edit = global.ErvenowCheckoutDraftEdit;
+    if (edit && typeof edit.refreshDeliveryQuoteIfPending === "function") {
+      try {
+        await edit.refreshDeliveryQuoteIfPending();
+      } catch (_e) {}
+    }
+    var api = getDraftApi();
+    return api ? api.readDraft() : draft;
   }
 
   async function confirmOrder() {
@@ -554,16 +731,23 @@
     var draft = api.readDraft();
     if (!draft.items || !draft.items.length) {
       resetCheckoutBtnIdle(btn);
-      showToast("لا توجد بنود في المسودة", "error");
+      showToast("لا توجد تفاصيل في الطلب", "error");
       return;
     }
 
     var payMethod = pay && typeof pay.getSelected === "function" ? pay.getSelected() : draft.payment_method;
     if (!payMethod) {
+      if (pay && typeof pay.ensureDefaultSelected === "function") {
+        payMethod = pay.ensureDefaultSelected(draft, onPaymentChanged);
+      }
+    }
+    if (!payMethod) {
       resetCheckoutBtnIdle(btn);
       showToast("اختر وسيلة الدفع", "error");
       return;
     }
+    draft.payment_method = payMethod;
+    api.writeDraft(draft);
 
     if (payMethod === "ew_pay" && pay && typeof pay.validateEwPay === "function") {
       var deliveryFee = resolveDeliveryFeeFromDraft(draft);
@@ -686,16 +870,24 @@
       showToast("تعذّر تحميل Order Draft Store", "error");
       return;
     }
+    var policy = { allowMigrate: true };
+    if (typeof api.applySessionDraftPolicy === "function") {
+      policy = api.applySessionDraftPolicy() || policy;
+    }
     restorePendingMapDraft();
-    api.tryMigrateFromLegacyCart({ sourcePage: "/checkout" });
+    if (policy.allowMigrate && typeof api.tryMigrateFromLegacyCart === "function") {
+      api.tryMigrateFromLegacyCart({ sourcePage: "/checkout" });
+    }
     showCheckoutFlash();
     var draft = api.readDraft();
     if (!draft.items || !draft.items.length) {
       renderEmpty();
       return;
     }
-    initPayment(draft).then(function () {
-      refresh();
+    ensureCheckoutReady(draft).then(function (freshDraft) {
+      return initPayment(freshDraft || draft).then(function () {
+        refresh();
+      });
     });
     bindEvents();
     if (global.ErvenowCheckoutDraftEdit && typeof global.ErvenowCheckoutDraftEdit.bindUi === "function") {
@@ -715,8 +907,12 @@
     buildOrderCreatePayload: buildOrderCreatePayload,
     computeBreakdown: computeBreakdown,
     resolveDeliveryFeeFromDraft: resolveDeliveryFeeFromDraft,
+    resolveEffectiveLocation: resolveEffectiveLocation,
     syncDraftTotals: syncDraftTotals,
+    hasStoreProducts: hasStoreProducts,
+    getFulfillmentMode: getFulfillmentMode,
     lineKind: lineKind,
+    resolveLineDisplay: resolveLineDisplay,
     showToast: showToast,
     isCheckoutInFlight: function () {
       return checkoutInFlight;

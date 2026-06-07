@@ -163,7 +163,14 @@
 
 .checkout-line__title {
   line-height: 1.5;
+  font-weight: 700;
+}
+
+.checkout-line__store {
+  font-size: 0.88rem;
   font-weight: 600;
+  color: var(--checkout-muted);
+  line-height: 1.45;
 }
 
 .checkout-line__tail {
@@ -225,14 +232,22 @@
   justify-content: center;
   min-width: 44px;
   min-height: 44px;
+  padding: 8px 14px;
   border-radius: 12px;
   border: 1px solid rgba(192, 57, 43, 0.35);
   background: rgba(192, 57, 43, 0.06);
   color: #a93226;
-  font-size: 1.35rem;
+  font-size: 0.9rem;
   font-weight: 700;
-  line-height: 1;
+  line-height: 1.2;
   cursor: pointer;
+  font-family: inherit;
+}
+
+.checkout-btn--danger {
+  color: #a93226;
+  border-color: rgba(192, 57, 43, 0.35);
+  background: rgba(192, 57, 43, 0.06);
 }
 
 .checkout-field {

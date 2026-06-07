@@ -155,12 +155,18 @@ function isPaidFromRequestBody(body) {
   return payStatus === "paid" || payStatus === "captured" || payStatus === "completed";
 }
 
-/** mada | stcpay | cash — لاستخدام لاحق مع بوابة الدفع */
+/** طرق الدفع المقبولة في checkout — البطاقات تُسجَّل pending حتى ربط البوابة */
 function normalizeOrderPaymentMethod(body) {
   const b = body && typeof body === "object" ? body : {};
-  const m = String(b.payment_method || "").trim().toLowerCase();
+  const m = String(b.payment_method || "")
+    .trim()
+    .toLowerCase()
+    .replace(/-/g, "_");
   if (m === "ew_pay") return "ew_pay";
-  if (m === "mada" || m === "stcpay" || m === "cash") return m;
+  if (m === "mada") return "mada";
+  if (m === "stcpay" || m === "stc_pay") return "stcpay";
+  if (m === "cash" || m === "cash_on_delivery" || m === "cod") return "cash";
+  if (m === "visa" || m === "mastercard" || m === "apple_pay") return m;
   return null;
 }
 

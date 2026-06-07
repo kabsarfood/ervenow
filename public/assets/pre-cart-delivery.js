@@ -227,6 +227,7 @@
       store_id: storeId,
       store_name: (storeMeta && storeMeta.name) || "",
       product_id: product.id,
+      product_name: String(product.name || "منتج").trim(),
       unit_price: unit,
       includes_delivery: !!product.includes_delivery,
       fulfillment_mode: fulfillment,

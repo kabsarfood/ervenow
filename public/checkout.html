@@ -49,7 +49,7 @@
         </section>
 
         <section class="checkout-empty card" id="checkoutEmpty" hidden>
-          <p class="checkout-empty__title">لا توجد بنود جاهزة للدفع</p>
+          <p class="checkout-empty__title">لا توجد عناصر حالياً في الطلب</p>
           <p class="checkout-empty__text">أضف منتجات من المتجر أو الخدمات، ثم ارجع هنا لإتمام الطلب.</p>
           <div class="checkout-empty__actions">
             <a class="checkout-btn checkout-btn--ghost" href="/stores">المتاجر</a>
@@ -62,12 +62,12 @@
           <div class="checkout-panel__stack">
             <section class="checkout-card checkout-card--items">
               <div class="checkout-card__head">
-                <h2 class="checkout-card__title">البنود</h2>
-                <button type="button" class="checkout-btn checkout-btn--ghost checkout-btn--sm" id="checkoutClearAllBtn">
-                  إفراغ الطلب
+                <h2 class="checkout-card__title">التفاصيل</h2>
+                <button type="button" class="checkout-btn checkout-btn--ghost checkout-btn--sm checkout-btn--danger" id="checkoutClearAllBtn">
+                  حذف الكل
                 </button>
               </div>
-              <ul class="checkout-lines" id="checkoutLines" aria-label="بنود الطلب"></ul>
+              <ul class="checkout-lines" id="checkoutLines" aria-label="تفاصيل الطلب"></ul>
             </section>
 
             <section class="checkout-card checkout-card--notes">

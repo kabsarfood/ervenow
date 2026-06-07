@@ -496,6 +496,216 @@
     };
   }
 
+  function savedDraftStorageKey(userId) {
+    return "ervenow:order-draft:saved:" + String(userId || "").trim();
+  }
+
+  function stashDraftForUser(userId) {
+    var uid = String(userId || "").trim();
+    if (!uid) return { ok: false, reason: "missing_user" };
+    var draft = store.readDraft();
+    var ls = getBrowserStorage();
+    if (!hasDraftItems(draft)) {
+      try {
+        ls.removeItem(savedDraftStorageKey(uid));
+      } catch (_e) {}
+      return { ok: true, stashed: false, empty: true };
+    }
+    try {
+      ls.setItem(savedDraftStorageKey(uid), JSON.stringify(normalizeOrderDraft(draft)));
+      return { ok: true, stashed: true };
+    } catch (_e2) {
+      return { ok: false, reason: "storage_write_failed" };
+    }
+  }
+
+  function restoreDraftForUser(userId) {
+    var uid = String(userId || "").trim();
+    if (!uid) return { ok: false, restored: false, reason: "missing_user" };
+    var ls = getBrowserStorage();
+    var raw = null;
+    try {
+      raw = ls.getItem(savedDraftStorageKey(uid));
+    } catch (_e) {
+      return { ok: false, restored: false, reason: "storage_read_failed" };
+    }
+    if (!raw) return { ok: true, restored: false };
+    try {
+      var parsed = JSON.parse(raw);
+      var normalized = normalizeOrderDraft(parsed);
+      if (!hasDraftItems(normalized)) return { ok: true, restored: false };
+      var res = store.writeDraft(normalized);
+      return { ok: !!res.ok, restored: !!res.ok, draft: res.draft };
+    } catch (_e2) {
+      return { ok: false, restored: false, reason: "parse_failed" };
+    }
+  }
+
+  var SESSION_ENDED_KEY = "ervenow:session-ended";
+  var RESTORE_DRAFT_ON_LOGIN_KEY = "ervenow:restore-draft-on-login";
+
+  function hasAuthSession() {
+    try {
+      if (global.PlatformAPI && typeof global.PlatformAPI.getToken === "function" && global.PlatformAPI.getToken()) {
+        return true;
+      }
+    } catch (_e0) {}
+    try {
+      return !!(
+        global.localStorage &&
+        (global.localStorage.getItem("ervenow_access_token") ||
+          global.localStorage.getItem("erwenow_access_token") ||
+          global.localStorage.getItem("token"))
+      );
+    } catch (_e1) {
+      return false;
+    }
+  }
+
+  function isAnonymousGuestBrowsing() {
+    try {
+      if (global.ErvenowGuestBrowse && typeof global.ErvenowGuestBrowse.isAnonymousGuest === "function") {
+        return global.ErvenowGuestBrowse.isAnonymousGuest();
+      }
+    } catch (_e2) {}
+    try {
+      return global.localStorage && global.localStorage.getItem("ervenow_guest_browse") === "1" && !hasAuthSession();
+    } catch (_e3) {
+      return false;
+    }
+  }
+
+  function purgeLegacyCartStorage(ls) {
+    ls = ls || getBrowserStorage();
+    try {
+      ls.removeItem(LEGACY_CART_STORAGE_KEY);
+      ls.removeItem(LEGACY_DELIVERY_LOC_KEY);
+      ls.removeItem(LEGACY_PAYMENT_METHOD_KEY);
+      ls.removeItem("ervenow_offline_api_queue_v1");
+    } catch (_e) {}
+  }
+
+  function clearPlatformDraftState() {
+    store.clearDraft();
+    store.invalidateCache();
+    var ls = getBrowserStorage();
+    try {
+      ls.setItem(ORDER_DRAFT_STORAGE_KEY, JSON.stringify(emptyOrderDraft()));
+    } catch (_eWrite) {}
+    store.invalidateCache();
+    purgeLegacyCartStorage(ls);
+    try {
+      if (global.sessionStorage) {
+        global.sessionStorage.removeItem("ervenow:checkout-idem");
+        global.sessionStorage.removeItem("ervenow:checkout-flash");
+        global.sessionStorage.removeItem("ervenow:pending-map-draft");
+      }
+    } catch (_e2) {}
+    if (global.ErvenowOrderDraftBadge && typeof global.ErvenowOrderDraftBadge.sync === "function") {
+      global.ErvenowOrderDraftBadge.sync();
+    }
+  }
+
+  function markSessionEnded() {
+    try {
+      if (global.sessionStorage) global.sessionStorage.setItem(SESSION_ENDED_KEY, String(Date.now()));
+    } catch (_e) {}
+  }
+
+  function consumeSessionEndedMarker() {
+    try {
+      if (!global.sessionStorage) return false;
+      var v = global.sessionStorage.getItem(SESSION_ENDED_KEY);
+      if (!v) return false;
+      global.sessionStorage.removeItem(SESSION_ENDED_KEY);
+      return true;
+    } catch (_e2) {
+      return false;
+    }
+  }
+
+  function markRestoreDraftOnLogin(userId) {
+    var uid = String(userId || "").trim();
+    if (!uid) return;
+    try {
+      if (global.sessionStorage) global.sessionStorage.setItem(RESTORE_DRAFT_ON_LOGIN_KEY, uid);
+    } catch (_e) {}
+  }
+
+  function consumeRestoreDraftOnLogin() {
+    try {
+      if (!global.sessionStorage) return null;
+      var uid = global.sessionStorage.getItem(RESTORE_DRAFT_ON_LOGIN_KEY);
+      if (!uid) return null;
+      global.sessionStorage.removeItem(RESTORE_DRAFT_ON_LOGIN_KEY);
+      return String(uid).trim() || null;
+    } catch (_e2) {
+      return null;
+    }
+  }
+
+  /**
+   * بعد الخروج: صفر كامل. أثناء تصفح زائر بدون حساب: يُبقي المسودة. بعد الدخول: الاسترجاع مرة واحدة فقط.
+   */
+  function applySessionDraftPolicy() {
+    if (consumeSessionEndedMarker()) {
+      clearPlatformDraftState();
+      return { allowMigrate: false, mode: "session_ended" };
+    }
+    if (hasAuthSession()) {
+      return { allowMigrate: true, mode: "authenticated" };
+    }
+    if (isAnonymousGuestBrowsing()) {
+      return { allowMigrate: true, mode: "guest_browse" };
+    }
+    if (hasDraftItems(store.readDraft())) {
+      clearPlatformDraftState();
+    } else {
+      purgeLegacyCartStorage();
+      store.invalidateCache();
+    }
+    return { allowMigrate: false, mode: "logged_out" };
+  }
+
+  function resolveLogoutUserId() {
+    try {
+      var fromLs = localStorage.getItem("userId");
+      if (fromLs && String(fromLs).trim()) return String(fromLs).trim();
+    } catch (_e) {}
+    try {
+      if (global.__ervSessionMe && global.__ervSessionMe.user && global.__ervSessionMe.user.id) {
+        return String(global.__ervSessionMe.user.id).trim();
+      }
+    } catch (_e2) {}
+    return null;
+  }
+
+  async function prepareLogoutDraftState() {
+    markSessionEnded();
+    var userId = resolveLogoutUserId();
+    if (!userId && global.PlatformAPI && typeof global.PlatformAPI.getToken === "function" && global.PlatformAPI.getToken()) {
+      try {
+        var me = await global.PlatformAPI.api("/api/core/me");
+        if (me && me.user && me.user.id) userId = String(me.user.id).trim();
+      } catch (_e3) {}
+    }
+    if (userId) stashDraftForUser(userId);
+    clearPlatformDraftState();
+    return { userId: userId };
+  }
+
+  function restoreDraftAfterLogin() {
+    var uid = consumeRestoreDraftOnLogin();
+    if (!uid) return { ok: true, restored: false, reason: "no_restore_flag" };
+    return restoreDraftForUser(uid);
+  }
+
+  function restoreSessionDraftForUser(userId) {
+    var uid = String(userId || resolveLogoutUserId() || "").trim();
+    if (!uid) return { ok: false, restored: false };
+    return restoreDraftForUser(uid);
+  }
+
   global.ErvenowOrderDraft = {
     VERSION: ORDER_DRAFT_VERSION,
     STORAGE_KEY: ORDER_DRAFT_STORAGE_KEY,
@@ -520,6 +730,18 @@
       });
     },
     onDraftChange: onDraftChange,
+    stashDraftForUser: stashDraftForUser,
+    restoreDraftForUser: restoreDraftForUser,
+    restoreSessionDraftForUser: restoreSessionDraftForUser,
+    clearPlatformDraftState: clearPlatformDraftState,
+    prepareLogoutDraftState: prepareLogoutDraftState,
+    applySessionDraftPolicy: applySessionDraftPolicy,
+    hasAuthSession: hasAuthSession,
+    isAnonymousGuestBrowsing: isAnonymousGuestBrowsing,
+    markSessionEnded: markSessionEnded,
+    markRestoreDraftOnLogin: markRestoreDraftOnLogin,
+    restoreDraftAfterLogin: restoreDraftAfterLogin,
+    savedDraftStorageKey: savedDraftStorageKey,
     _createMemoryStorage: createMemoryStorage,
     _createOrderDraftStore: createOrderDraftStore,
   };

@@ -10,6 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/assets/styles.css" />
     <link rel="stylesheet" href="/assets/guest-shell.css" />
+    <link rel="stylesheet" href="/assets/order-draft-badge.css" />
         <style>
       .dash-alert {
         display: none;
@@ -1240,7 +1241,7 @@
             <span class="dash-header-wallet__val" id="dashHeaderWalletAmount">—</span>
             <span class="dash-header-wallet__cur">ر.س</span>
           </a>
-          <a class="dash-header-cart" href="/checkout" aria-label="السلة — الدفع">
+          <a class="dash-header-cart" href="/checkout" data-erv-checkout-nav="1" aria-label="السلة — الدفع">
             <span aria-hidden="true">🛒</span>
             <span class="dash-header-cart__label">السلة</span>
             <span class="dash-header-cart__badge" id="cartCount" data-empty="true">0</span>
@@ -1482,6 +1483,10 @@
       }
 
       function refreshDashCartBadge() {
+        if (window.ErvenowOrderDraftBadge && typeof ErvenowOrderDraftBadge.enforceCheckoutNav === "function") {
+          ErvenowOrderDraftBadge.enforceCheckoutNav();
+          return;
+        }
         if (window.ErvenowOrderDraftBadge && typeof ErvenowOrderDraftBadge.sync === "function") {
           ErvenowOrderDraftBadge.sync();
           return;
@@ -1611,6 +1616,9 @@
       })();
 
       run();
+      if (window.ErvenowOrderDraftBadge && typeof ErvenowOrderDraftBadge.enforceCheckoutNav === "function") {
+        ErvenowOrderDraftBadge.enforceCheckoutNav();
+      }
       refreshDashCartBadge();
       window.addEventListener("storage", function (ev) {
         if (ev.key === "ervenow:order-draft" || ev.key === "cart") refreshDashCartBadge();
