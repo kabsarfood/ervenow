@@ -119,14 +119,16 @@
   display: flex !important;
   align-items: center !important;
   flex-shrink: 0;
-  order: 4;
+  order: 99;
   min-width: 0;
+  margin-inline-start: 0;
 }
 
 .lp-header.lp-header--refined .lp-header__end-zone {
   display: flex;
   align-items: center;
   gap: clamp(8px, 1.5vw, 12px);
+  justify-content: flex-end;
 }
 
 .lp-header.lp-header--refined .lp-header__actions {
@@ -135,7 +137,7 @@
   justify-content: flex-end !important;
   gap: clamp(8px, 1.5vw, 12px) !important;
   flex-shrink: 0;
-  order: 5;
+  order: 90;
   direction: rtl;
   flex-wrap: nowrap !important;
   width: auto !important;
@@ -240,6 +242,39 @@
   padding-inline: clamp(14px, 2.5vw, 20px);
 }
 
+/* ——— جوال + تابلت (≤1024): القائمة المنسدلة أقصى اليمين ——— */
+@media (max-width: 1024px) {
+  .lp-header.lp-header--refined .lp-header__top-row {
+    justify-content: flex-start !important;
+  }
+
+  .lp-header.lp-header--refined .lp-header__brand-mid {
+    margin-inline-end: 0;
+  }
+
+  .lp-header.lp-header--refined .lp-header__actions {
+    margin-inline-start: auto;
+  }
+
+  .lp-header.lp-header--refined .lp-header__toolbar-right {
+    order: 99;
+    margin-inline-start: clamp(6px, 1.2vw, 10px);
+  }
+
+  .lp-header.lp-header--refined .lp-quick-dd {
+    margin-inline-start: 0;
+  }
+
+  /* لوحة القائمة — محاذاة لليمين مع زر الهامبرغر */
+  .lp-header.lp-header--refined .lp-quick-dd__panel {
+    inset-inline-start: auto !important;
+    inset-inline-end: max(10px, env(safe-area-inset-right, 0px)) !important;
+    left: auto !important;
+    right: max(10px, env(safe-area-inset-right, 0px)) !important;
+    width: min(340px, calc(100vw - 20px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)));
+  }
+}
+
 /* ——— تابلت (641–1024) ——— */
 @media (min-width: 641px) and (max-width: 1024px) {
   .lp-header.lp-header--refined .lp-header__brand-mid {
@@ -295,19 +330,20 @@
 
   .lp-header.lp-header--refined .lp-header__user-mid:not([hidden]) {
     display: flex !important;
-    order: 2;
+    order: 3;
     flex: 1 1 auto;
   }
 
   .lp-header.lp-header--refined .lp-header__toolbar-right {
-    order: 3;
-    margin-inline-start: auto;
+    order: 99 !important;
+    margin-inline-start: auto !important;
   }
 
   .lp-header.lp-header--refined .lp-header__actions {
-    order: 10;
+    order: 100 !important;
+    margin-inline-start: 0 !important;
     width: 100% !important;
-    flex: 1 1 100%;
+    flex: 1 1 100% !important;
     display: grid !important;
     grid-template-columns: auto minmax(0, 1fr) auto;
     grid-template-areas: "cart auth wallet";
