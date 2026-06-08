@@ -27,9 +27,9 @@
 
 /* ══ HERO / بطاقة الرئيسية ═══════════════════════════════ */
 .sn-home-card {
-  max-width: 1000px;
+  max-width: 1080px;
   margin: 0 auto;
-  padding: clamp(16px, 3vw, 24px) max(16px, env(safe-area-inset-right, 16px)) clamp(8px, 2vw, 12px)
+  padding: clamp(18px, 3.5vw, 28px) max(16px, env(safe-area-inset-right, 16px)) clamp(12px, 2.5vw, 20px)
     max(16px, env(safe-area-inset-left, 16px));
   background: transparent;
   overflow: visible;
@@ -42,11 +42,18 @@
 .sn-home-card__inner {
   position: relative;
   text-align: center;
-  padding: clamp(28px, 6vw, 40px) clamp(20px, 4vw, 32px);
-  border-radius: var(--sn-radius-lg, 18px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: clamp(320px, 44vh, 480px);
+  padding: clamp(44px, 9vw, 80px) clamp(24px, 5vw, 56px);
+  border-radius: clamp(20px, 3vw, 28px);
   border: 1px solid rgba(61, 34, 19, 0.1);
-  background: linear-gradient(180deg, #f5ede2 0%, #f8f4ee 58%, #fffefb 100%);
-  box-shadow: 0 10px 36px rgba(45, 26, 14, 0.08);
+  background: linear-gradient(165deg, #f0e6d6 0%, #f5ede2 22%, #f8f4ee 58%, #fffefb 100%);
+  box-shadow:
+    0 24px 64px rgba(45, 26, 14, 0.11),
+    0 0 0 1px rgba(185, 135, 47, 0.06);
   overflow: hidden;
 }
 
@@ -55,8 +62,21 @@
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(circle at 80% 20%, rgba(185, 135, 47, 0.12) 0%, transparent 55%),
-    radial-gradient(circle at 20% 80%, rgba(61, 34, 19, 0.04) 0%, transparent 50%);
+    radial-gradient(ellipse 80% 60% at 85% 15%, rgba(185, 135, 47, 0.16) 0%, transparent 55%),
+    radial-gradient(ellipse 70% 50% at 12% 88%, rgba(61, 34, 19, 0.06) 0%, transparent 52%);
+  pointer-events: none;
+}
+
+.sn-home-card__inner::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(140px, 36%);
+  height: 4px;
+  border-radius: 0 0 6px 6px;
+  background: linear-gradient(90deg, transparent, rgba(185, 135, 47, 0.55), rgba(185, 135, 47, 0.95), rgba(185, 135, 47, 0.55), transparent);
   pointer-events: none;
 }
 
@@ -72,24 +92,25 @@
 
 .sn-hero__eyebrow {
   display: inline-block;
-  background: rgba(185, 135, 47, 0.1);
+  background: rgba(185, 135, 47, 0.12);
   backdrop-filter: blur(6px);
   border: 1px solid rgba(61, 34, 19, 0.12);
   border-radius: 100px;
-  padding: 5px 16px;
-  font-size: 0.8rem;
+  padding: clamp(7px, 1.5vw, 10px) clamp(16px, 3vw, 24px);
+  font-size: clamp(0.78rem, 2vw, 0.88rem);
   font-weight: 700;
   letter-spacing: 0.04em;
-  margin-bottom: 20px;
+  margin-bottom: clamp(22px, 4vw, 32px);
   color: var(--sn-brown-mid);
 }
 
 .sn-hero__title {
-  font-size: clamp(1.8rem, 5vw, 2.9rem);
+  font-size: clamp(2rem, 5.8vw, 3.35rem);
   font-weight: 900;
-  margin: 0 0 14px;
-  line-height: 1.2;
+  margin: 0 0 clamp(16px, 3vw, 22px);
+  line-height: 1.18;
   letter-spacing: -0.5px;
+  max-width: 14ch;
 }
 
 .sn-hero__title span {
@@ -97,16 +118,16 @@
 }
 
 .sn-hero__sub {
-  font-size: clamp(0.95rem, 2.5vw, 1.1rem);
+  font-size: clamp(1rem, 2.6vw, 1.18rem);
   color: var(--sn-muted);
-  margin: 0 auto 32px;
-  max-width: 480px;
-  line-height: 1.7;
+  margin: 0 auto clamp(28px, 5vw, 40px);
+  max-width: 520px;
+  line-height: 1.75;
 }
 
 .sn-hero__actions {
   display: flex;
-  gap: 12px;
+  gap: 14px;
   justify-content: center;
   flex-wrap: wrap;
 }
@@ -115,17 +136,18 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: var(--sn-gold);
+  background: linear-gradient(135deg, #c89438 0%, var(--sn-gold) 45%, #a97b3a 100%);
   color: #fff;
   border: none;
-  border-radius: 14px;
-  padding: 13px 28px;
+  border-radius: 16px;
+  min-height: 52px;
+  padding: clamp(14px, 2.5vw, 18px) clamp(32px, 6vw, 48px);
   font-family: inherit;
-  font-size: 1rem;
-  font-weight: 700;
+  font-size: clamp(1rem, 2.5vw, 1.12rem);
+  font-weight: 800;
   cursor: pointer;
   text-decoration: none;
-  box-shadow: 0 4px 18px rgba(185, 135, 47, 0.35);
+  box-shadow: 0 8px 28px rgba(185, 135, 47, 0.38);
   transition: transform var(--sn-transition), box-shadow var(--sn-transition);
 }
 
@@ -1035,4 +1057,20 @@
 .sn-home-card.sn-hero.sn-hero--has-platform-bg .sn-home-card__inner .sn-hero__sub {
   color: #fffefb;
   text-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
+}
+
+@media (max-width: 640px) {
+  .sn-home-card__inner {
+    min-height: clamp(300px, 54vh, 400px);
+    padding: clamp(36px, 10vw, 52px) clamp(18px, 5vw, 28px);
+  }
+
+  .sn-hero__title {
+    max-width: none;
+  }
+
+  .sn-hero__cta {
+    width: min(100%, 340px);
+    min-height: 48px;
+  }
 }
