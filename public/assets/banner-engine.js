@@ -209,6 +209,46 @@
     },
   ];
 
+  /** شرائح افتراضية لأقسام المنصة عند عدم رفع بنر من الأدمن */
+  var SECTION_DEFAULT_CAROUSEL = {
+    restaurants: [
+      {
+        title: "اكتشف المطاع\u0645|المعتمدة",
+        description: "مطابخ متنوعة وتوصيل لحد باب بيتك.",
+        button1_url: "/restaurants",
+        button1_text: "تصف\u0651ح المطاع\u0645",
+        _theme: 1,
+      },
+    ],
+    stores: [
+      {
+        title: "اكتشف المتاجر|قريبة منك",
+        description: "سوبرماركت، صيدليات، خضار — مع توصيل سريع.",
+        button1_url: "/stores",
+        button1_text: "تصفّح المتاجر",
+        _theme: 2,
+      },
+    ],
+    services: [
+      {
+        title: "خدمات منزلية|بخطوات بسيطة",
+        description: "سباك، كهرباء، تكييف، تنظيف — واحجز من هنا.",
+        button1_url: "/services",
+        button1_text: "استكشف الخدمات",
+        _theme: 3,
+      },
+    ],
+    delivery: [
+      {
+        title: "خدمات التوصيل|من نقطة لأخرى",
+        description: "نقل مركبات، أثاث، غاز — اطلب بسهولة.",
+        button1_url: "/delivery-services.html",
+        button1_text: "اطلب توصيل",
+        _theme: 1,
+      },
+    ],
+  };
+
   /* ——— Carousel (home promo) ——— */
   var carouselTimer = null;
   var carouselIndex = 0;
@@ -385,8 +425,11 @@
     recordImpression(banner.id);
   }
 
-  function applyCarouselMount(wrapId, innerId, banners) {
+  function applyCarouselMount(wrapId, innerId, banners, fallbackSlides) {
     var usable = filterMidCarousel(banners);
+    if (!usable.length && fallbackSlides && fallbackSlides.length) {
+      usable = fallbackSlides.slice();
+    }
     if (!usable.length && wrapId === "homeHeroBanner") {
       usable = HOME_DEFAULT_CAROUSEL.slice();
     }
@@ -524,7 +567,7 @@
   function applySectionCarousel(target, banners) {
     var mount = SECTION_CAROUSEL_MOUNTS[target];
     if (!mount) return false;
-    applyCarouselMount(mount.wrap, mount.inner, banners);
+    applyCarouselMount(mount.wrap, mount.inner, banners, SECTION_DEFAULT_CAROUSEL[target]);
     return true;
   }
 

@@ -1,0 +1,615 @@
+{
+  "capturedAt": "2026-06-08T20:17:55.640Z",
+  "spec": {
+    "width": 1920,
+    "height": 730,
+    "aspect": "1920/730",
+    "objectFit": "cover"
+  },
+  "api": {
+    "home": {
+      "count": 3,
+      "banners": [
+        {
+          "id": "d45d9d2d-2ebf-4a72-9d07-0db568c39307",
+          "title": "اطلب أي خدمة|الآن وبسهولة",
+          "display_mode": "card",
+          "hasImage": true
+        },
+        {
+          "id": "a4fa5d57-9ee1-4b63-a925-d34589e9b818",
+          "title": "اطلب أي خدمة|الآن وبسهولة",
+          "display_mode": "card",
+          "hasImage": true
+        },
+        {
+          "id": "6cf6cac9-abe3-4c5e-bee6-7a4cf2749170",
+          "title": "اطلب أي خدمة|الآن وبسهولة",
+          "display_mode": "carousel",
+          "hasImage": false
+        }
+      ]
+    },
+    "visitor_dashboard": {
+      "count": 2,
+      "banners": [
+        {
+          "id": "2d217ef8-52f9-40ea-9305-ea68ae52aa0e",
+          "title": "مرحباً بك في ERVENOW",
+          "display_mode": "card",
+          "hasImage": true
+        },
+        {
+          "id": "f2cfd7e4-969b-464e-a9df-3b94edd80d32",
+          "title": "مرحباً بك في ERVENOW",
+          "display_mode": "card",
+          "hasImage": true
+        }
+      ]
+    },
+    "restaurants": {
+      "count": 0,
+      "banners": []
+    },
+    "stores": {
+      "count": 0,
+      "banners": []
+    },
+    "services": {
+      "count": 0,
+      "banners": []
+    },
+    "delivery": {
+      "count": 0,
+      "banners": []
+    }
+  },
+  "measurements": [
+    {
+      "page": "home",
+      "label": "الرئيسية",
+      "viewport": "mobile-390",
+      "banner": {
+        "visible": true,
+        "wrap": {
+          "w": 390,
+          "h": 161,
+          "top": 264
+        },
+        "inner": {
+          "w": 366,
+          "h": 139
+        },
+        "viewport": {
+          "w": 390,
+          "h": 844
+        },
+        "hasImg": true,
+        "objectFit": "cover"
+      },
+      "header": {
+        "visible": true,
+        "wrap": {
+          "w": 390,
+          "h": 264,
+          "top": 0
+        },
+        "inner": null,
+        "viewport": {
+          "w": 390,
+          "h": 844
+        },
+        "hasImg": false,
+        "objectFit": null
+      },
+      "screenshot": "docs/review-screenshots/banner-audit/home-mobile-390.png"
+    },
+    {
+      "page": "home",
+      "label": "الرئيسية",
+      "viewport": "desktop-1280",
+      "banner": {
+        "visible": true,
+        "wrap": {
+          "w": 1280,
+          "h": 460,
+          "top": 161
+        },
+        "inner": {
+          "w": 1120,
+          "h": 426
+        },
+        "viewport": {
+          "w": 1280,
+          "h": 800
+        },
+        "hasImg": true,
+        "objectFit": "cover"
+      },
+      "header": {
+        "visible": true,
+        "wrap": {
+          "w": 1280,
+          "h": 161,
+          "top": 0
+        },
+        "inner": null,
+        "viewport": {
+          "w": 1280,
+          "h": 800
+        },
+        "hasImg": false,
+        "objectFit": null
+      },
+      "screenshot": "docs/review-screenshots/banner-audit/home-desktop-1280.png"
+    },
+    {
+      "page": "dashboard-hero",
+      "label": "لوحة الزائر — بنر hero",
+      "viewport": "mobile-390",
+      "banner": {
+        "visible": true,
+        "wrap": {
+          "w": 390,
+          "h": 161,
+          "top": 125
+        },
+        "inner": {
+          "w": 366,
+          "h": 139
+        },
+        "viewport": {
+          "w": 390,
+          "h": 844
+        },
+        "hasImg": true,
+        "objectFit": "cover"
+      },
+      "header": {
+        "visible": true,
+        "wrap": {
+          "w": 390,
+          "h": 125,
+          "top": 0
+        },
+        "inner": null,
+        "viewport": {
+          "w": 390,
+          "h": 844
+        },
+        "hasImg": false,
+        "objectFit": null
+      },
+      "screenshot": "docs/review-screenshots/banner-audit/dashboard-hero-mobile-390.png"
+    },
+    {
+      "page": "dashboard-hero",
+      "label": "لوحة الزائر — بنر hero",
+      "viewport": "desktop-1280",
+      "banner": {
+        "visible": true,
+        "wrap": {
+          "w": 1280,
+          "h": 512,
+          "top": 64
+        },
+        "inner": {
+          "w": 1256,
+          "h": 478
+        },
+        "viewport": {
+          "w": 1280,
+          "h": 800
+        },
+        "hasImg": true,
+        "objectFit": "cover"
+      },
+      "header": {
+        "visible": true,
+        "wrap": {
+          "w": 1280,
+          "h": 64,
+          "top": 0
+        },
+        "inner": null,
+        "viewport": {
+          "w": 1280,
+          "h": 800
+        },
+        "hasImg": false,
+        "objectFit": null
+      },
+      "screenshot": "docs/review-screenshots/banner-audit/dashboard-hero-desktop-1280.png"
+    },
+    {
+      "page": "dashboard-offers",
+      "label": "لوحة الزائر — عروض",
+      "viewport": "mobile-390",
+      "banner": {
+        "visible": true,
+        "wrap": {
+          "w": 362,
+          "h": 139,
+          "top": 583
+        },
+        "inner": {
+          "w": 360,
+          "h": 137
+        },
+        "viewport": {
+          "w": 390,
+          "h": 844
+        },
+        "hasImg": true,
+        "objectFit": "cover"
+      },
+      "header": {
+        "visible": true,
+        "wrap": {
+          "w": 390,
+          "h": 125,
+          "top": 0
+        },
+        "inner": null,
+        "viewport": {
+          "w": 390,
+          "h": 844
+        },
+        "hasImg": false,
+        "objectFit": null
+      },
+      "screenshot": "docs/review-screenshots/banner-audit/dashboard-offers-mobile-390.png"
+    },
+    {
+      "page": "dashboard-offers",
+      "label": "لوحة الزائر — عروض",
+      "viewport": "desktop-1280",
+      "banner": {
+        "visible": true,
+        "wrap": {
+          "w": 1092,
+          "h": 416,
+          "top": 192
+        },
+        "inner": {
+          "w": 1090,
+          "h": 414
+        },
+        "viewport": {
+          "w": 1280,
+          "h": 800
+        },
+        "hasImg": true,
+        "objectFit": "cover"
+      },
+      "header": {
+        "visible": true,
+        "wrap": {
+          "w": 1280,
+          "h": 64,
+          "top": 0
+        },
+        "inner": null,
+        "viewport": {
+          "w": 1280,
+          "h": 800
+        },
+        "hasImg": false,
+        "objectFit": null
+      },
+      "screenshot": "docs/review-screenshots/banner-audit/dashboard-offers-desktop-1280.png"
+    },
+    {
+      "page": "restaurants",
+      "label": "المطاعm",
+      "viewport": "mobile-390",
+      "banner": {
+        "visible": true,
+        "wrap": {
+          "w": 390,
+          "h": 161,
+          "top": 125
+        },
+        "inner": {
+          "w": 366,
+          "h": 139
+        },
+        "viewport": {
+          "w": 390,
+          "h": 844
+        },
+        "hasImg": false,
+        "objectFit": null
+      },
+      "header": {
+        "visible": true,
+        "wrap": {
+          "w": 390,
+          "h": 125,
+          "top": 0
+        },
+        "inner": null,
+        "viewport": {
+          "w": 390,
+          "h": 844
+        },
+        "hasImg": false,
+        "objectFit": null
+      },
+      "screenshot": "docs/review-screenshots/banner-audit/restaurants-mobile-390.png"
+    },
+    {
+      "page": "restaurants",
+      "label": "المطاعm",
+      "viewport": "desktop-1280",
+      "banner": {
+        "visible": true,
+        "wrap": {
+          "w": 1280,
+          "h": 512,
+          "top": 64
+        },
+        "inner": {
+          "w": 1256,
+          "h": 478
+        },
+        "viewport": {
+          "w": 1280,
+          "h": 800
+        },
+        "hasImg": false,
+        "objectFit": null
+      },
+      "header": {
+        "visible": true,
+        "wrap": {
+          "w": 1280,
+          "h": 64,
+          "top": 0
+        },
+        "inner": null,
+        "viewport": {
+          "w": 1280,
+          "h": 800
+        },
+        "hasImg": false,
+        "objectFit": null
+      },
+      "screenshot": "docs/review-screenshots/banner-audit/restaurants-desktop-1280.png"
+    },
+    {
+      "page": "stores",
+      "label": "المتاجر",
+      "viewport": "mobile-390",
+      "banner": {
+        "visible": true,
+        "wrap": {
+          "w": 390,
+          "h": 161,
+          "top": 125
+        },
+        "inner": {
+          "w": 366,
+          "h": 139
+        },
+        "viewport": {
+          "w": 390,
+          "h": 844
+        },
+        "hasImg": false,
+        "objectFit": null
+      },
+      "header": {
+        "visible": true,
+        "wrap": {
+          "w": 390,
+          "h": 125,
+          "top": 0
+        },
+        "inner": null,
+        "viewport": {
+          "w": 390,
+          "h": 844
+        },
+        "hasImg": false,
+        "objectFit": null
+      },
+      "screenshot": "docs/review-screenshots/banner-audit/stores-mobile-390.png"
+    },
+    {
+      "page": "stores",
+      "label": "المتاجر",
+      "viewport": "desktop-1280",
+      "banner": {
+        "visible": true,
+        "wrap": {
+          "w": 1280,
+          "h": 512,
+          "top": 64
+        },
+        "inner": {
+          "w": 1256,
+          "h": 478
+        },
+        "viewport": {
+          "w": 1280,
+          "h": 800
+        },
+        "hasImg": false,
+        "objectFit": null
+      },
+      "header": {
+        "visible": true,
+        "wrap": {
+          "w": 1280,
+          "h": 64,
+          "top": 0
+        },
+        "inner": null,
+        "viewport": {
+          "w": 1280,
+          "h": 800
+        },
+        "hasImg": false,
+        "objectFit": null
+      },
+      "screenshot": "docs/review-screenshots/banner-audit/stores-desktop-1280.png"
+    },
+    {
+      "page": "services",
+      "label": "الخدمات",
+      "viewport": "mobile-390",
+      "banner": {
+        "visible": true,
+        "wrap": {
+          "w": 390,
+          "h": 161,
+          "top": 125
+        },
+        "inner": {
+          "w": 366,
+          "h": 139
+        },
+        "viewport": {
+          "w": 390,
+          "h": 844
+        },
+        "hasImg": false,
+        "objectFit": null
+      },
+      "header": {
+        "visible": true,
+        "wrap": {
+          "w": 390,
+          "h": 125,
+          "top": 0
+        },
+        "inner": null,
+        "viewport": {
+          "w": 390,
+          "h": 844
+        },
+        "hasImg": false,
+        "objectFit": null
+      },
+      "screenshot": "docs/review-screenshots/banner-audit/services-mobile-390.png"
+    },
+    {
+      "page": "services",
+      "label": "الخدمات",
+      "viewport": "desktop-1280",
+      "banner": {
+        "visible": true,
+        "wrap": {
+          "w": 1280,
+          "h": 512,
+          "top": 64
+        },
+        "inner": {
+          "w": 1256,
+          "h": 478
+        },
+        "viewport": {
+          "w": 1280,
+          "h": 800
+        },
+        "hasImg": false,
+        "objectFit": null
+      },
+      "header": {
+        "visible": true,
+        "wrap": {
+          "w": 1280,
+          "h": 64,
+          "top": 0
+        },
+        "inner": null,
+        "viewport": {
+          "w": 1280,
+          "h": 800
+        },
+        "hasImg": false,
+        "objectFit": null
+      },
+      "screenshot": "docs/review-screenshots/banner-audit/services-desktop-1280.png"
+    },
+    {
+      "page": "delivery",
+      "label": "التوصيل",
+      "viewport": "mobile-390",
+      "banner": {
+        "visible": true,
+        "wrap": {
+          "w": 390,
+          "h": 161,
+          "top": 125
+        },
+        "inner": {
+          "w": 366,
+          "h": 139
+        },
+        "viewport": {
+          "w": 390,
+          "h": 844
+        },
+        "hasImg": false,
+        "objectFit": null
+      },
+      "header": {
+        "visible": true,
+        "wrap": {
+          "w": 390,
+          "h": 125,
+          "top": 0
+        },
+        "inner": null,
+        "viewport": {
+          "w": 390,
+          "h": 844
+        },
+        "hasImg": false,
+        "objectFit": null
+      },
+      "screenshot": "docs/review-screenshots/banner-audit/delivery-mobile-390.png"
+    },
+    {
+      "page": "delivery",
+      "label": "التوصيل",
+      "viewport": "desktop-1280",
+      "banner": {
+        "visible": true,
+        "wrap": {
+          "w": 1280,
+          "h": 512,
+          "top": 64
+        },
+        "inner": {
+          "w": 1256,
+          "h": 478
+        },
+        "viewport": {
+          "w": 1280,
+          "h": 800
+        },
+        "hasImg": false,
+        "objectFit": null
+      },
+      "header": {
+        "visible": true,
+        "wrap": {
+          "w": 1280,
+          "h": 64,
+          "top": 0
+        },
+        "inner": null,
+        "viewport": {
+          "w": 1280,
+          "h": 800
+        },
+        "hasImg": false,
+        "objectFit": null
+      },
+      "screenshot": "docs/review-screenshots/banner-audit/delivery-desktop-1280.png"
+    }
+  ]
+}

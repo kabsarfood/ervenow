@@ -1,0 +1,46 @@
+{
+  "capturedAt": "2026-06-08T19:48:08.845Z",
+  "url": "http://localhost:4000/restaurants",
+  "screenshots": {
+    "desktop": "docs/review-screenshots/restaurants/restaurants-desktop-1280.png",
+    "mobile": "docs/review-screenshots/restaurants/restaurants-mobile-390.png"
+  },
+  "desktop": {
+    "loadMs": 5281,
+    "metrics": {
+      "domContentLoaded": 1323,
+      "loadEvent": 2132,
+      "cssCount": 8,
+      "cssTransferBytes": 89621,
+      "jsCount": 16,
+      "jsTransferBytes": 175715,
+      "sectionHubCssBytes": 7387,
+      "restaurantsHubJsBytes": 9198,
+      "sectionCount": 7,
+      "hasNearby": true,
+      "hasPhotoCats": 8,
+      "pageHeight": 2713
+    }
+  },
+  "mobile": {
+    "loadMs": 3160,
+    "metrics": {
+      "domContentLoaded": 883,
+      "loadEvent": 1456,
+      "cssCount": 8,
+      "cssTransferBytes": 89621,
+      "jsCount": 16,
+      "jsTransferBytes": 175715,
+      "sectionHubCssBytes": 7387,
+      "restaurantsHubJsBytes": 9198,
+      "sectionCount": 7,
+      "hasNearby": true,
+      "hasPhotoCats": 8,
+      "pageHeight": 2722
+    }
+  },
+  "staticFiles": {
+    "section_hub_css_bytes": 7087,
+    "restaurants_hub_js_bytes": 8898
+  }
+}
