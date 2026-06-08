@@ -14,6 +14,7 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
     <link rel="stylesheet" href="/assets/live-store-map.css" />
+    <link rel="stylesheet" href="/assets/banner-engine.css" />
     <script src="/assets/api-config.js"></script>
     <script src="/assets/api.js"></script>
     <script src="/assets/applyBranding.js"></script>
@@ -22,39 +23,140 @@
     <header class="dash-site-header">
       <div class="dash-site-header__inner">
         <div class="dash-site-header__brand">
-          <a class="dash-site-header__logo" href="/">ERVENOW</a>
+          <a class="dash-site-header__logo" href="/">
+            ERVENOW
+            <span class="dash-site-header__logo-dot" aria-hidden="true"></span>
+          </a>
+          <p class="dash-site-header__tag" id="guestShellPageTag">الخريطة الحية</p>
         </div>
-        <nav class="dash-site-header__nav" aria-label="التنقل">
-          <a href="/">الرئيسية</a>
-          <a href="/dashboard">لوحة الزائر</a>
-          <a href="/live-map" aria-current="page">الخريطة الحية</a>
+        <nav class="dash-site-header__nav" aria-label="التنقل الرئيسي">
+          <div class="dash-site-header__links">
+            <a class="dash-site-header__link" href="/" data-nav="home">الرئيسية</a>
+            <a class="dash-site-header__link" href="/dashboard" data-nav="guest">لوحة الزائر</a>
+            <a class="dash-site-header__link is-active" href="/live-map" data-nav="live_map" aria-current="page">الخريطة الحية</a>
+          </div>
         </nav>
+        <div class="dash-site-header__tools">
+          <span id="dashHeaderNotifications" aria-hidden="true"></span>
+          <a class="dash-header-wallet" id="dashHeaderWallet" href="/wallet.html" hidden aria-label="المحفظة">
+            <span class="dash-header-wallet__label">محفظة</span>
+            <span class="dash-header-wallet__val" id="dashHeaderWalletAmount">—</span>
+            <span class="dash-header-wallet__cur">ر.س</span>
+          </a>
+          <a class="dash-header-cart" href="/checkout" aria-label="تأكيد الطلب — الدفع">
+            <span aria-hidden="true">🛒</span>
+            <span class="dash-header-cart__label">الطلب</span>
+            <span class="dash-header-cart__badge" id="cartCount" data-empty="true">0</span>
+          </a>
+        </div>
+        <a class="dash-site-header__btn dash-site-header__btn--primary" href="/login?role=customer&amp;next=%2Flive-map" id="switchAccount">تسجيل الدخول</a>
       </div>
     </header>
 
-    <main>
-      <div class="erv-live-map-head">
-        <h1>الخريطة الحية</h1>
-        <p>استكشف المطاعم والمتاجر والصيدليات ومزودي الخدمات القريبة — للأعضاء المسجّلين فقط.</p>
-      </div>
+    <div class="dash-main erv-live-map-main">
+      <main>
+        <div class="erv-live-map-head">
+          <h1>الخريطة الحية</h1>
+          <p>استكشف المطاعم والمتاجر والصيدليات ومزودي الخدمات القريبة — للأعضاء المسجّلين فقط.</p>
+        </div>
 
-      <div id="liveMapLoginGate" class="erv-live-map-gate" hidden>
-        <div class="erv-live-map-gate__card">
-          <p>سجّل الدخول لاستعراض الأنشطة القريبة منك والطلب منها مباشرة.</p>
-          <div class="erv-live-map-gate__actions">
-            <a class="btn btn-primary" href="/login?role=customer&amp;next=%2Flive-map">تسجيل الدخول</a>
-            <a class="btn btn-ghost" href="/login?mode=register&amp;role=customer&amp;next=%2Flive-map">إنشاء حساب</a>
+        <div id="ervBannerStrip" hidden aria-label="بنر إعلاني"></div>
+
+        <div id="liveMapFeatureDisabled" class="erv-live-map-feature-disabled" hidden>
+          <div class="erv-live-map-feature-disabled__card">
+            <div class="erv-live-map-feature-disabled__icon" aria-hidden="true">🗺️</div>
+            <h2 class="erv-live-map-feature-disabled__title">الخريطة الحية غير متاحة حالياً</h2>
+            <p>تم إخفاء هذه الميزة مؤقتاً. يمكنك متابعة التصفح من الصفحة الرئيسية أو لوحة الزائر.</p>
+            <div class="erv-live-map-gate__actions">
+              <a class="btn btn-primary" href="/">الرئيسية</a>
+              <a class="btn btn-ghost" href="/dashboard">لوحة الزائر</a>
+            </div>
           </div>
         </div>
-      </div>
 
-      <div id="liveMapShell">
-        <div id="liveMap" role="application" aria-label="خريطة الأنشطة"></div>
-      </div>
-    </main>
+        <div id="liveMapLoginGate" class="erv-live-map-gate">
+          <div class="erv-live-map-gate__card">
+            <div class="erv-live-map-gate__icon" aria-hidden="true">🗺️</div>
+            <h2 class="erv-live-map-gate__title">الخريطة الحية للأعضاء</h2>
+            <p>سجّل الدخول لاستعراض المطاعم والمتاجر والصيدليات والخدمات على خريطة الأقمار الصناعية — ثم ابحث بالمدينة والقسم.</p>
+            <div class="erv-live-map-gate__actions">
+              <a class="btn btn-primary" href="/login?role=customer&amp;next=%2Flive-map">تسجيل الدخول</a>
+              <a class="btn btn-ghost" href="/login?mode=register&amp;role=customer&amp;next=%2Flive-map">إنشاء حساب</a>
+            </div>
+          </div>
+        </div>
+
+        <div id="liveMapShell" hidden>
+          <div class="erv-live-map-toolbar" id="liveMapToolbar" aria-label="بحث الخريطة">
+            <div class="erv-live-map-toolbar__inner">
+              <label class="erv-live-map-field">
+                <span class="erv-live-map-field__label">المدينة</span>
+                <input
+                  type="search"
+                  id="liveMapCitySearch"
+                  class="erv-live-map-field__input"
+                  list="liveMapCityList"
+                  placeholder="ابحث عن مدينة…"
+                  autocomplete="off"
+                  enterkeyhint="search"
+                />
+                <datalist id="liveMapCityList"></datalist>
+              </label>
+              <label class="erv-live-map-field">
+                <span class="erv-live-map-field__label">القسم</span>
+                <select id="liveMapCategorySelect" class="erv-live-map-field__input erv-live-map-field__select">
+                  <option value="all">كل الأقسام</option>
+                  <option value="restaurant">مطاعم</option>
+                  <option value="store">متاجر</option>
+                  <option value="pharmacy">صيدليات</option>
+                  <option value="service">خدمات</option>
+                </select>
+              </label>
+              <button type="button" class="btn btn-primary erv-live-map-search-btn" id="liveMapSearchBtn">بحث</button>
+            </div>
+            <p class="erv-live-map-toolbar__hint" id="liveMapCityLabel">كل المملكة — كل الأقسام</p>
+          </div>
+          <div id="liveMap" role="application" aria-label="خريطة الأنشطة"></div>
+          <p id="liveMapEmpty" class="erv-live-map-empty" hidden>لا توجد أنشطة في هذه المنطقة — حرّك الخريطة أو غيّر المدينة/القسم.</p>
+
+          <section class="erv-live-map-feeder" id="liveMapFeeder" aria-label="الأنشطة القريبة">
+            <button type="button" class="erv-live-map-feeder__handle" id="liveMapFeederToggle" aria-expanded="true" aria-controls="liveMapFeederBody">
+              <span class="erv-live-map-feeder__handle-title">الأنشطة في هذه المنطقة</span>
+              <span class="erv-live-map-feeder__count" id="liveMapFeederCount">0</span>
+              <span class="erv-live-map-feeder__chev" aria-hidden="true">▾</span>
+            </button>
+            <div class="erv-live-map-feeder__body" id="liveMapFeederBody">
+              <div class="erv-live-map-feeder__scroll" id="liveMapFeederList" role="list"></div>
+            </div>
+          </section>
+        </div>
+      </main>
+
+      <footer class="dash-site-footer erv-live-map-footer">
+        <div class="dash-site-footer__logo">ERVENOW</div>
+        <nav class="dash-site-footer__links" aria-label="روابط سفلية">
+          <a class="dash-site-footer__link" href="/restaurants">مطاعم</a>
+          <a class="dash-site-footer__link" href="/stores">متاجر</a>
+          <a class="dash-site-footer__link" href="/delivery-services.html">توصيل</a>
+          <a class="dash-site-footer__link" href="/services">خدمات</a>
+          <a class="dash-site-footer__link" href="/live-map">الخريطة الحية</a>
+          <a class="dash-site-footer__link" href="/dashboard">لوحة الزائر</a>
+          <a class="dash-site-footer__link" href="/">الرئيسية</a>
+        </nav>
+        <p class="dash-site-footer__copy">© 2026 ERVENOW — جميع الحقوق محفوظة</p>
+      </footer>
+    </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+    <script src="/assets/order-draft-store.js"></script>
+    <script src="/assets/order-draft-badge.js"></script>
+    <script src="/assets/guestBrowse.js"></script>
+    <script src="/assets/guest-shell.js"></script>
     <script src="/assets/live-store-map.js"></script>
+    <script src="/assets/banner-engine.js" defer></script>
+    <script>
+      ErvenowGuestShell.init({ activeNav: "live_map", pageTag: "الخريطة الحية" });
+    </script>
   </body>
 </html>

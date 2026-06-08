@@ -984,6 +984,7 @@
       })();
     </script>
       <link rel="stylesheet" href="/assets/responsive-audit-base.css" />
+      <link rel="stylesheet" href="/assets/banner-engine.css" />
   </head>
   <body>
     <div class="wallet-layout">
@@ -1001,6 +1002,8 @@
           <a class="wallet-icon-btn" href="/dashboard" style="text-decoration: none">لوحة الزائر</a>
         </div>
       </header>
+
+      <div id="ervBannerCard" hidden aria-label="بنر"></div>
 
       <main class="wallet-main">
         <p class="wallet-load" id="loadHint">جاري تحميل البيانات…</p>
@@ -1798,5 +1801,6 @@
       applyUserDisplay();
       refreshAll();
     </script>
+    <script src="/assets/banner-engine.js" defer></script>
   </body>
 </html>

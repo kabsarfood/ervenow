@@ -22,7 +22,10 @@
     "migrate:finance:bundle": "node scripts/bundle-finance-migrations.js",
     "migrate:finance": "node scripts/run-finance-migrations.js",
     "migrate:ervenow-pay-checkout": "node scripts/run-migration-ervenow-pay-checkout.js",
-    "migrate:hero-banners": "node scripts/run-migration-hero-banners.js"
+    "migrate:hero-banners": "node scripts/run-migration-hero-banners.js",
+    "migrate:hero-banners-kind": "node scripts/run-migration-hero-banners-kind.js",
+    "migrate:hero-banners-placement": "node scripts/run-migration-hero-banners-placement.js",
+    "migrate:hero-banners-v2": "node scripts/run-migration-hero-banners-v2.js"
   },
   "engines": {
     "node": ">=20"

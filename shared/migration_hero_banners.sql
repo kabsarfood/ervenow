@@ -15,6 +15,8 @@ CREATE TABLE IF NOT EXISTS public.hero_banners (
   button2_url text,
   sort_order int NOT NULL DEFAULT 0,
   is_active boolean NOT NULL DEFAULT true,
+  banner_kind text NOT NULL DEFAULT 'promo',
+  placement text NOT NULL DEFAULT 'home_promo',
   starts_at timestamptz,
   ends_at timestamptz,
   created_at timestamptz NOT NULL DEFAULT now(),

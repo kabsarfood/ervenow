@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
   <head>
     <meta charset="utf-8" />
@@ -14,6 +14,9 @@
     />
     <link rel="stylesheet" href="/assets/styles.css" />
     <link rel="stylesheet" href="/assets/guest-shell.css" />
+    <link rel="stylesheet" href="/assets/start-now-landing.css" />
+    <link rel="stylesheet" href="/assets/index-header-banner.css" />
+    <link rel="stylesheet" href="/assets/banner-engine.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
       :root {
@@ -1095,6 +1098,10 @@
       </div>
     </header>
 
+    <section class="sn-home-banner sn-home-banner--mid" id="ervDeliveryBanner" hidden aria-label="بنر التوصيل">
+      <div class="sn-home-banner__inner" id="ervDeliveryBannerInner"></div>
+    </section>
+
     <div class="dash-main">
       <section class="ds-hero">
         <div class="ds-hero__inner">
@@ -1187,6 +1194,7 @@
     <script src="/assets/api.js"></script>
     <script src="/assets/guestBrowse.js"></script>
     <script src="/assets/guest-shell.js"></script>
+    <script src="/assets/banner-engine.js" defer></script>
     <script>
       ErvenowGuestShell.init({ activeNav: "delivery", pageTag: "خدمات التوصيل" });
     </script>

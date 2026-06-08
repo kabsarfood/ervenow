@@ -465,6 +465,10 @@ if (servePublicUi) {
     res.sendFile(path.join(publicPath, "admin", "admin-dashboard.html"));
   });
 
+  app.get("/admin-banner-management", (_req, res) => {
+    res.redirect(302, "/admin-dashboard#panelHeroBanners");
+  });
+
   app.get("/admin-login", (_req, res) => {
     res.sendFile(path.join(publicPath, "admin-login.html"));
   });

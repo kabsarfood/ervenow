@@ -173,8 +173,8 @@ svg {
   .sn-home-banner__inner .sn-hero-carousel__track,
   .sn-hero-carousel__body,
   .sn-hero-carousel__slide {
-    min-height: clamp(132px, 42vw, 200px);
-    aspect-ratio: 16 / 9;
+    min-height: 0;
+    aspect-ratio: var(--erv-banner-aspect, 1920 / 730);
   }
 
   .sn-hero {

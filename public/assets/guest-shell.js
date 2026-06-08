@@ -2,6 +2,7 @@
   var TOKEN_STORAGE_KEYS = ["ervenow_access_token", "erwenow_access_token", "token"];
   var _activeNavKey = "";
   var _storePreviewMode = false;
+  var _liveMapPublicEnabled = true;
 
   /** روابط الهيدر حسب الدور (من القائمة → الهيدر) */
   function buildNavLinks(role, opts) {
@@ -29,7 +30,7 @@
         href: "/driver-app",
         label: "تتبع الحي",
       });
-    } else {
+    } else if (opts.liveMapPublicEnabled !== false) {
       links.push({
         key: "live_map",
         href: "/live-map",
@@ -194,6 +195,7 @@
   }
 
   async function refreshIndexNavWallet(role) {
+    if (indexHasHeaderWallet()) return;
     var box = document.getElementById("lpNavWallet");
     var amountEl = document.getElementById("lpNavWalletAmount");
     if (!box || !amountEl) return;
@@ -333,6 +335,29 @@
     syncHeaderLayoutMetrics();
   }
 
+  function navOpts(extra) {
+    extra = extra && typeof extra === "object" ? extra : {};
+    extra.liveMapPublicEnabled = _liveMapPublicEnabled;
+    return extra;
+  }
+
+  async function fetchLiveMapPublicEnabled() {
+    try {
+      if (!global.PlatformAPI || typeof global.PlatformAPI.api !== "function") return _liveMapPublicEnabled;
+      var j = await global.PlatformAPI.api("/api/core/live-map-public");
+      _liveMapPublicEnabled = !!(j && j.enabled !== false);
+    } catch (_e) {
+      _liveMapPublicEnabled = true;
+    }
+    return _liveMapPublicEnabled;
+  }
+
+  async function paintNavWithFlags(activeNav, role, opts) {
+    await fetchLiveMapPublicEnabled();
+    paintHeaderNav(activeNav, role, navOpts(opts));
+    paintIndexNav(role, navOpts(opts));
+  }
+
   async function initAuthHeader() {
     if (_storePreviewMode) {
       paintStorePreviewHeader();
@@ -342,8 +367,7 @@
     if (!hasToken()) {
       setAccountButtonLoggedOut(switchAccount);
       await refreshHeaderWallet("");
-      paintHeaderNav(_activeNavKey, "", { authenticated: false });
-      paintIndexNav("", { authenticated: false });
+      await paintNavWithFlags(_activeNavKey, "", { authenticated: false });
       return;
     }
     syncGuestBrowseMode();
@@ -365,8 +389,7 @@
       var serviceType = me.profile && me.profile.service_type;
       setAccountButtonLoggedIn(switchAccount);
       await refreshHeaderWallet(role);
-      paintHeaderNav(_activeNavKey, role, { authenticated: true });
-      paintIndexNav(role, { authenticated: true });
+      await paintNavWithFlags(_activeNavKey, role, { authenticated: true });
       if (role === "driver") {
         document.querySelectorAll(".dash-header-cart").forEach(function (a) {
           a.style.display = "none";
@@ -376,8 +399,7 @@
     } catch (e) {
       setAccountButtonLoggedIn(switchAccount);
       await refreshHeaderWallet("customer");
-      paintHeaderNav(_activeNavKey, "", { authenticated: false });
-      paintIndexNav("", { authenticated: false });
+      await paintNavWithFlags(_activeNavKey, "", { authenticated: false });
     }
   }
 
@@ -428,9 +450,18 @@
     });
   }
 
+  function indexHasHeaderWallet() {
+    return !!document.getElementById("lpHeaderWallet");
+  }
+
   function buildIndexNavLinks(role, opts) {
     var links = buildNavLinks(role, opts);
-    if (opts && opts.authenticated && String(role || "").toLowerCase() !== "admin") {
+    if (
+      opts &&
+      opts.authenticated &&
+      String(role || "").toLowerCase() !== "admin" &&
+      !indexHasHeaderWallet()
+    ) {
       var i = -1;
       for (var k = 0; k < links.length; k++) {
         if (links[k].key === "logout") {
@@ -737,8 +768,7 @@
       syncHeaderLayoutMetrics();
       return;
     }
-    paintHeaderNav(_activeNavKey, "", { authenticated: hasToken() });
-    paintIndexNav("", { authenticated: hasToken() });
+    paintNavWithFlags(_activeNavKey, "", { authenticated: hasToken() });
     refreshCartBadge();
     loadToggleUi();
     loadDraftBadge();

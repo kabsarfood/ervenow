@@ -24,10 +24,10 @@ var reloadErvenowPayBtn = document.getElementById("reloadErvenowPayBtn");
 if (reloadErvenowPayBtn) reloadErvenowPayBtn.onclick = app.loadErvenowPayPanel;
 var reloadOffersBtn = document.getElementById("reloadOffersBtn");
 if (reloadOffersBtn) reloadOffersBtn.onclick = app.loadOffersPanel;
-var saveOffersBtn = document.getElementById("saveOffersBtn");
-if (saveOffersBtn) saveOffersBtn.onclick = app.safeClick(app.saveOffersPanel);
 var reloadHeroBannersBtn = document.getElementById("reloadHeroBannersBtn");
 if (reloadHeroBannersBtn) reloadHeroBannersBtn.onclick = app.loadHeroBannersPanel;
+var saveOffersBtn = document.getElementById("saveOffersBtn");
+if (saveOffersBtn) saveOffersBtn.onclick = app.safeClick(app.saveOffersPanel);
 var reloadServicesBtn = document.getElementById("reloadServicesBtn");
 if (reloadServicesBtn) reloadServicesBtn.onclick = app.loadServicesPanel;
 var saveErvenowPaySettingsBtn = document.getElementById("saveErvenowPaySettingsBtn");
@@ -71,6 +71,12 @@ var siteMaintenanceBtn = document.getElementById("siteMaintenanceBtn");
 if (siteMaintenanceBtn) {
   siteMaintenanceBtn.onclick = function () {
     app.toggleSiteMaintenance();
+  };
+}
+var liveMapPublicToggleBtn = document.getElementById("liveMapPublicToggleBtn");
+if (liveMapPublicToggleBtn) {
+  liveMapPublicToggleBtn.onclick = function () {
+    void app.toggleLiveMapPublic();
   };
 }
 document.querySelectorAll(".panel-btn[data-panel]").forEach(function (btn) {
@@ -138,8 +144,18 @@ if (closeBtn) {
   app.setupExecUi();
   app.initAdminDashboardSocket();
   app.startAdminAlertsTimer();
+  var hashPanel = String(location.hash || "").replace(/^#/, "").trim();
+  if (hashPanel && document.getElementById(hashPanel)) {
+    app.showPanel(hashPanel);
+    void app.loadPanelById(hashPanel);
+    var hashEl = document.getElementById(hashPanel);
+    if (hashEl) hashEl.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
   void app.refreshLiveDashboard();
-  if (app.hasPermission("dashboard")) void app.loadMapCategoryColors();
+  if (app.hasPermission("dashboard")) {
+    void app.loadMapCategoryColors();
+    void app.loadLiveMapPublicState();
+  }
   app.updateLiveSocketPulse();
   if (app.hasPermission("finance")) {
     app.loadFinancialFeatureFlags();

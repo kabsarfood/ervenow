@@ -356,6 +356,7 @@ router.get("/public-config", (_req, res) => {
 
 const platformBranding = require("../../shared/utils/platformBrandingStore");
 const { mergeMapColorsIntoBranding } = require("../../shared/utils/mapCategoryColors");
+const { readStateAsync: readLiveMapPublicAsync } = require("../../shared/utils/liveMapPublicStore");
 
 router.get("/platform-branding", async (_req, res) => {
   try {
@@ -368,15 +369,78 @@ router.get("/platform-branding", async (_req, res) => {
   }
 });
 
+router.get("/live-map-public", async (_req, res) => {
+  try {
+    const enabled = await readLiveMapPublicAsync();
+    res.set("Cache-Control", "public, max-age=15");
+    return ok(res, { enabled });
+  } catch (e) {
+    return fail(res, e.message || String(e), 500);
+  }
+});
+
 const platformOffers = require("../../shared/utils/platformOffersStore");
 const heroBanners = require("../../shared/utils/heroBannerStore");
 
 router.get("/hero-banner", async (_req, res) => {
   try {
     const sb = createServiceClient();
-    const banners = await heroBanners.getActiveBanners(sb);
+    const byTarget = await heroBanners.getActiveBannersByTarget(sb);
+    const byPlacement = await heroBanners.getActiveBannersByPlacement(sb);
+    const homePromo = byPlacement.home_promo || [];
+    const homeHero = byPlacement.home_hero || [];
+    const guestDash = byPlacement.guest_dashboard || [];
     res.set("Cache-Control", "public, max-age=30");
-    return ok(res, { banner: banners[0] || null, banners });
+    return ok(res, {
+      placements: byPlacement,
+      targets: byTarget,
+      banner: homePromo[0] || null,
+      banners: homePromo,
+      promo_banners: homePromo,
+      home_hero_banners: homeHero,
+      platform_banner: guestDash[0] || null,
+      platform_banners: guestDash,
+      guest_dashboard_banners: guestDash,
+    });
+  } catch (e) {
+    return fail(res, e.message || String(e), 500);
+  }
+});
+
+router.get("/banners", async (req, res) => {
+  try {
+    const sb = createServiceClient();
+    const target = String(req.query.target || req.query.placement || "").trim();
+    if (target) {
+      const banners = await heroBanners.getPublishedBannersForTarget(sb, target);
+      res.set("Cache-Control", "public, max-age=30");
+      return ok(res, { target, banners, banner_spec: heroBanners.BANNER_SPEC });
+    }
+    const byTarget = await heroBanners.getActiveBannersByTarget(sb);
+    res.set("Cache-Control", "public, max-age=30");
+    return ok(res, { targets: byTarget, banner_spec: heroBanners.BANNER_SPEC });
+  } catch (e) {
+    return fail(res, e.message || String(e), 500);
+  }
+});
+
+router.post("/banners/:id/impression", async (req, res) => {
+  try {
+    const sb = createServiceClient();
+    if (!sb) return fail(res, "قاعدة البيانات غير جاهزة", 503);
+    const result = await heroBanners.recordBannerImpression(sb, req.params.id);
+    return ok(res, result);
+  } catch (e) {
+    return fail(res, e.message || String(e), 500);
+  }
+});
+
+router.post("/banners/:id/click", async (req, res) => {
+  try {
+    const sb = createServiceClient();
+    if (!sb) return fail(res, "قاعدة البيانات غير جاهزة", 503);
+    const result = await heroBanners.recordBannerClick(sb, req.params.id);
+    return ok(res, result);
   } catch (e) {
     return fail(res, e.message || String(e), 500);
   }

@@ -204,23 +204,23 @@
   display: none !important;
 }
 
-.sn-home-banner__inner {
-  position: relative;
-  overflow: hidden;
-  border-radius: 0;
-  border: none;
-  border-block-end: 1px solid rgba(61, 34, 19, 0.1);
-  box-shadow: 0 8px 28px rgba(45, 26, 10, 0.1);
-  background: #1a1008;
-  min-height: clamp(148px, 32vw, 260px);
-  aspect-ratio: 21 / 8;
-  max-width: 100%;
-  margin: 0 auto;
-}
+  .sn-home-banner__inner {
+    position: relative;
+    overflow: hidden;
+    border-radius: 0;
+    border: none;
+    border-block-end: 1px solid rgba(61, 34, 19, 0.1);
+    box-shadow: 0 8px 28px rgba(45, 26, 10, 0.1);
+    background: #1a1008;
+    aspect-ratio: var(--erv-banner-aspect, 1920 / 730);
+    min-height: 0;
+    max-width: 100%;
+    margin: 0 auto;
+  }
 
-.sn-home-banner__inner.sn-hero--single {
-  min-height: clamp(160px, 38vw, 280px);
-}
+  .sn-home-banner__inner.sn-hero--single {
+    min-height: 0;
+  }
 
 .sn-home-banner__bg {
   position: absolute;
@@ -278,8 +278,8 @@
 /* بنرات متعددة — شريط شرائح أفقي */
 .sn-home-banner__inner.sn-hero--carousel {
   padding: 0;
-  min-height: clamp(148px, 32vw, 260px);
-  aspect-ratio: 21 / 8;
+  min-height: 0;
+  aspect-ratio: var(--erv-banner-aspect, 1920 / 730);
   text-align: center;
 }
 
@@ -297,14 +297,14 @@
   flex-direction: row;
   flex-wrap: nowrap;
   height: 100%;
-  min-height: clamp(148px, 32vw, 260px);
+  min-height: 0;
   transition: transform 0.62s cubic-bezier(0.4, 0, 0.2, 1);
   will-change: transform;
 }
 
 .sn-hero-carousel__track {
   position: relative;
-  min-height: clamp(148px, 32vw, 260px);
+  min-height: 0;
 }
 
 .sn-hero-carousel__slide {
@@ -312,7 +312,8 @@
   flex: 0 0 100%;
   width: 100%;
   min-width: 100%;
-  min-height: clamp(148px, 32vw, 260px);
+  min-height: 0;
+  height: 100%;
   direction: rtl;
   opacity: 1;
   visibility: visible;
@@ -360,7 +361,8 @@
   inset-inline-end: max(8px, env(safe-area-inset-right, 8px));
 }
 
-.sn-hero-carousel__bg {
+.sn-hero-carousel__bg,
+.sn-hero-carousel__img {
   position: absolute;
   inset: 0;
   background-size: cover;
@@ -490,7 +492,8 @@
 
 @media (prefers-reduced-motion: reduce) {
   .sn-hero--ken-burns,
-  .sn-hero-carousel__bg {
+  .sn-hero-carousel__bg,
+  .sn-hero-carousel__img {
     animation: none !important;
   }
 
@@ -1019,4 +1022,17 @@
   .lp-home-premium .sn-section--stats.lp-counters {
     margin-top: clamp(16px, 4vw, 24px);
   }
+}
+
+.sn-home-card.sn-hero.sn-hero--has-platform-bg .sn-home-card__inner {
+  background-image: linear-gradient(135deg, rgba(61, 34, 19, 0.88), rgba(45, 26, 10, 0.78)),
+    var(--platform-hero-bg, none);
+  background-size: cover;
+  background-position: center;
+}
+
+.sn-home-card.sn-hero.sn-hero--has-platform-bg .sn-home-card__inner .sn-hero__title,
+.sn-home-card.sn-hero.sn-hero--has-platform-bg .sn-home-card__inner .sn-hero__sub {
+  color: #fffefb;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
 }

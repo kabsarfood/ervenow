@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
   <head>
     <meta charset="utf-8" />
@@ -274,6 +274,7 @@
         width: 100%;
       }
     </style>
+    <link rel="stylesheet" href="/assets/banner-engine.css" />
   </head>
   <body class="guest-shell-page my-orders-page">
     <header class="dash-site-header">
@@ -303,6 +304,8 @@
         <a class="dash-site-header__btn dash-site-header__btn--primary" href="/login?role=customer" id="switchAccount">تسجيل الدخول</a>
       </div>
     </header>
+
+    <div id="ervBannerCard" hidden aria-label="بنر"></div>
 
     <div class="dash-main">
       <div class="layout">
@@ -864,5 +867,6 @@
         loadMyOrders({ openAfterLoad: ordersPanelOpen });
       });
     </script>
+    <script src="/assets/banner-engine.js" defer></script>
   </body>
 </html>

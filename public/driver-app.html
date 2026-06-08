@@ -10,10 +10,12 @@
     <link rel="stylesheet" href="/assets/guest-shell.css" />
     <link rel="stylesheet" href="/assets/driver-shell.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="/assets/banner-engine.css" />
   </head>
   <body class="guest-shell-page driver-page driver-app-page">
     <div id="driverShellHeader"></div>
     <div class="dash-main">
+      <div id="ervBannerCard" hidden aria-label="بنر"></div>
       <div id="driverShellHero"></div>
 
       <div class="layout driver-app-layout">
@@ -535,5 +537,6 @@
         }
       })();
     </script>
+    <script src="/assets/banner-engine.js" defer></script>
   </body>
 </html>

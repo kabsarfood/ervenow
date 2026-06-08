@@ -8,6 +8,10 @@ const { driverApprovedBody } = require("../../shared/messages/driverWhatsApp");
 const { storeApprovedBody } = require("../../shared/messages/storeWhatsApp");
 const { getRiyadhDate } = require("../delivery/service");
 const { readStateAsync, writeState } = require("../../shared/utils/siteMaintenanceStore");
+const {
+  readStateAsync: readLiveMapPublicAsync,
+  writeState: writeLiveMapPublicState,
+} = require("../../shared/utils/liveMapPublicStore");
 const { normalizePhone } = require("../../shared/utils/phone");
 const { findUserByPhone } = require("../../shared/utils/userPhoneLookup");
 const {
@@ -580,6 +584,30 @@ router.post("/site-maintenance", requireAuth, requireRole("admin"), async (req, 
   }
 });
 
+router.get("/live-map-public", requireAuth, requireRole("admin"), async (_req, res) => {
+  try {
+    const enabled = await readLiveMapPublicAsync();
+    return ok(res, { enabled });
+  } catch (e) {
+    return fail(res, e.message || String(e), 500);
+  }
+});
+
+router.post("/live-map-public", requireAuth, requireRole("admin"), async (req, res) => {
+  try {
+    const enabled = !!req.body?.enabled;
+    const saved = await writeLiveMapPublicState(enabled);
+    return ok(res, {
+      enabled: saved,
+      message: saved
+        ? "تم تفعيل صفحة الخريطة الحية للزوار"
+        : "تم إخفاء صفحة الخريطة الحية عن الزوار",
+    });
+  } catch (e) {
+    return fail(res, e.message || String(e), 500);
+  }
+});
+
 router.get("/platform-settings", requireAuth, requireRole("admin"), requireAdminPermission("dashboard"), async (_req, res) => {
   try {
     const sb = createServiceClient();
@@ -655,15 +683,37 @@ router.post("/platform-offers", requireAuth, requireRole("admin"), requireAdminP
   }
 });
 
-router.get("/hero-banners", requireAuth, requireRole("admin"), requireAdminPermission("dashboard"), async (_req, res) => {
+router.get("/hero-banners", requireAuth, requireRole("admin"), requireAdminPermission("dashboard"), async (req, res) => {
   try {
     const sb = createServiceClient();
     if (!sb) return fail(res, "قاعدة البيانات غير جاهزة", 503);
-    const banners = await heroBanners.listBanners(sb, { includeInactive: true });
-    return ok(res, { banners });
+    const target = req.query.target || req.query.placement || null;
+    const banners = await heroBanners.listBanners(sb, { includeInactive: true, target });
+    const bannerTargets = require("../../shared/utils/bannerTargets");
+    return ok(res, {
+      banners,
+      banner_spec: heroBanners.BANNER_SPEC,
+      target_options: heroBanners.getAdminSelectableTargets(),
+      status_options: bannerTargets.BANNER_STATUSES,
+      type_options: bannerTargets.BANNER_TYPES,
+      display_mode_options: bannerTargets.DISPLAY_MODES,
+      placement_options: heroBanners.getAdminSelectableTargets(),
+    });
   } catch (e) {
     return fail(res, e.message || String(e), 500);
   }
+});
+
+router.get("/banner-targets", requireAuth, requireRole("admin"), requireAdminPermission("dashboard"), async (_req, res) => {
+  const bannerTargets = require("../../shared/utils/bannerTargets");
+  return ok(res, {
+    targets: heroBanners.getAdminSelectableTargets(),
+    all_targets: bannerTargets.BANNER_TARGETS,
+  });
+});
+
+router.get("/banner-placements", requireAuth, requireRole("admin"), requireAdminPermission("dashboard"), async (_req, res) => {
+  return ok(res, { placements: heroBanners.getAdminSelectableTargets() });
 });
 
 router.post("/hero-banners", requireAuth, requireRole("admin"), requireAdminPermission("dashboard"), async (req, res) => {

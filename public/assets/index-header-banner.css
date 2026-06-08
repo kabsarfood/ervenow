@@ -1,0 +1,162 @@
+/**
+ * ERVENOW — الرئيسية: بنر علوي متحرك + هيدر محسّن (تجميلي فقط)
+ */
+
+:root {
+  --erv-banner-width: 1920;
+  --erv-banner-height: 730;
+  --erv-banner-aspect: 1920 / 730;
+}
+
+/* ——— بنر بين الهيدر وقسم «اطلب الآن» ——— */
+.sn-home-banner--mid {
+  padding: clamp(10px, 2vw, 16px) max(12px, env(safe-area-inset-right, 12px)) clamp(12px, 2.2vw, 18px)
+    max(12px, env(safe-area-inset-left, 12px));
+  margin: 0;
+}
+
+.sn-home-banner--mid .sn-home-banner__inner {
+  border-radius: clamp(12px, 2.5vw, 16px);
+  border: 1px solid rgba(61, 34, 19, 0.1);
+  border-block-end: 1px solid rgba(61, 34, 19, 0.1);
+  box-shadow: 0 8px 28px rgba(45, 26, 10, 0.1);
+  max-width: 1120px;
+}
+
+/* شرائح افتراضية بدون صورة من الأدمن */
+.sn-hero-carousel__slide--theme-1 {
+  background: linear-gradient(135deg, #3d2213 0%, #5c3d28 42%, #8b6914 100%);
+}
+
+.sn-hero-carousel__slide--theme-2 {
+  background: linear-gradient(135deg, #2a1810 0%, #4a3020 50%, #6b4a2a 100%);
+}
+
+.sn-hero-carousel__slide--theme-3 {
+  background: linear-gradient(135deg, #1f2937 0%, #3d2213 55%, #9a7b4f 100%);
+}
+
+.sn-hero-carousel__slide[class*="sn-hero-carousel__slide--theme-"] .sn-hero-carousel__overlay {
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.45));
+}
+
+/* ——— هيدر محسّن ——— */
+.lp-header--refined {
+  background: linear-gradient(180deg, rgba(255, 254, 251, 0.98), rgba(248, 244, 238, 0.96));
+  border-bottom: 1px solid rgba(185, 135, 47, 0.2);
+  box-shadow: 0 6px 28px rgba(45, 26, 14, 0.07);
+}
+
+.lp-header--refined::before {
+  content: "";
+  display: block;
+  height: 3px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(185, 135, 47, 0.35) 20%,
+    rgba(185, 135, 47, 0.85) 50%,
+    rgba(185, 135, 47, 0.35) 80%,
+    transparent 100%
+  );
+}
+
+.lp-header--refined .lp-header__inner {
+  padding: 12px 20px 14px;
+  gap: 12px;
+}
+
+.lp-header__top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  width: 100%;
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+.lp-header--refined .lp-header__brand-mid {
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.lp-brand__tag {
+  display: none;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--gold);
+  letter-spacing: 0.02em;
+  line-height: 1.35;
+}
+
+.lp-header--refined .lp-nav-wrap {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  padding-top: 2px;
+  border-top: 1px solid rgba(185, 135, 47, 0.12);
+}
+
+.lp-header--refined .lp-nav {
+  gap: 4px;
+  padding: 4px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(185, 135, 47, 0.14);
+}
+
+.lp-header--refined .lp-nav a {
+  border-radius: 10px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 16px;
+}
+
+.lp-header--refined .lp-nav a.is-active,
+.lp-header--refined .lp-nav a[aria-current="page"] {
+  color: var(--brown);
+  background: rgba(185, 135, 47, 0.14);
+  font-weight: 800;
+}
+
+.lp-header--refined .lp-header-wallet,
+.lp-header--refined .lp-draft-checkout-badge,
+.lp-header--refined .lp-quick-dd__btn {
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(45, 26, 14, 0.06);
+}
+
+.lp-header--refined .lp-quick-dd__btn {
+  border: 1px solid rgba(185, 135, 47, 0.22);
+  background: rgba(255, 254, 251, 0.95);
+}
+
+@media (min-width: 1025px) {
+  .lp-brand__tag {
+    display: block;
+  }
+
+  .lp-header--refined .lp-header__inner {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+@media (max-width: 640px) {
+  .lp-header--refined .lp-nav-wrap {
+    display: none;
+  }
+
+  .lp-header--refined .lp-header__inner {
+    padding: 10px 14px 12px;
+  }
+
+  .sn-home-banner--mid .sn-home-banner__inner {
+    min-height: 0;
+    aspect-ratio: var(--erv-banner-aspect);
+  }
+}

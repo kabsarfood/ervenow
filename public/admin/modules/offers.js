@@ -33,7 +33,7 @@ app.renderOffersEditor = function () {
     '<input type="checkbox" id="offersEnabledToggle" ' +
     (data.enabled !== false ? "checked" : "") +
     " /></label>" +
-    '<p class="sub" style="margin:0 0 12px">ارفع صورة، أدخل السعر/العنوان، وحدّد الرابط (مطاعم، متاجر، browse، …).</p>' +
+    '<p class="sub" style="margin:0 0 12px">ارفع صورة <strong>1920×730</strong>، أدخل السعر/العنوان، وحدّد الرابط — تُعرض بـ object-fit: cover في لوحة الزائر.</p>' +
     '<div id="offersSlidesList"></div>' +
     '<button type="button" class="btn btn-ghost" id="offersAddSlideBtn" style="margin-top:10px">+ إضافة شريحة</button>';
   root.innerHTML = html;
@@ -52,9 +52,7 @@ app.renderOffersEditor = function () {
           (idx + 1) +
           "</strong></div>" +
           (s.image_url
-            ? '<img src="' +
-              esc(s.image_url) +
-              '" alt="" style="width:100%;max-height:120px;object-fit:cover;border-radius:10px;margin:8px 0" />'
+            ? '<img class="hero-banner-preview" src="' + esc(s.image_url) + '" alt="" />'
             : "") +
           '<label style="display:block;margin:6px 0 2px">العنوان<input class="search-input offers-inp-title" style="width:100%;margin-top:4px" value="' +
           esc(s.title || "") +
@@ -71,7 +69,7 @@ app.renderOffersEditor = function () {
           '<label style="display:block;margin:6px 0 2px">الرابط<input class="search-input offers-inp-link" style="width:100%;margin-top:4px" dir="ltr" value="' +
           esc(s.link_url || "/browse") +
           '" /></label>' +
-          '<label style="display:block;margin:6px 0 2px">صورة جديدة<input type="file" accept="image/*" class="offers-inp-file" style="width:100%;margin-top:4px" /></label>' +
+          '<label style="display:block;margin:6px 0 2px">صورة (1920×730)<input type="file" accept="image/*" class="offers-inp-file" style="width:100%;margin-top:4px;font-size:16px" /></label>' +
           '<label style="display:flex;align-items:center;gap:8px;margin-top:8px"><input type="checkbox" class="offers-inp-active" ' +
           (s.active !== false ? "checked" : "") +
           " /> نشط</label>" +

@@ -17,6 +17,8 @@
     />
     <link rel="stylesheet" href="/assets/styles.css" />
     <link rel="stylesheet" href="/assets/start-now-landing.css" />
+    <link rel="stylesheet" href="/assets/banner-engine.css" />
+    <link rel="stylesheet" href="/assets/index-header-banner.css" />
     <link rel="stylesheet" href="/assets/ervenow-responsive.css" />
     <script src="/assets/api-config.js"></script>
     <script src="/assets/phonePrivacy.js"></script>
@@ -2672,8 +2674,9 @@
     <link rel="stylesheet" href="/assets/order-draft-badge.css" />
   </head>
   <body class="lp-body lp-home-premium">
-    <header class="lp-header" id="top">
+    <header class="lp-header lp-header--refined" id="top">
       <div class="lp-header__inner" id="lpHeaderInner">
+        <div class="lp-header__top-row">
         <a
           class="lp-header__logo-slot lp-header__logo-slot--has-img"
           href="/"
@@ -2691,6 +2694,7 @@
         </a>
         <a class="lp-header__brand-mid" href="/" aria-label="ERVENOW">
           <span class="lp-brand__name">ERVENOW</span>
+          <span class="lp-brand__tag">منصة التوصيل الذكية</span>
         </a>
         <button type="button" class="lp-header__user-mid" id="lpHeaderUserMid" hidden aria-label="فتح لوحة حسابك">
           <span class="lp-header__user-mid__num" id="lpHeaderUserMidText" dir="ltr"></span>
@@ -2810,6 +2814,7 @@
           <div id="authArea"></div>
         </div>
         </div>
+        </div>
         <div class="lp-nav-wrap" id="lpNavWrap">
           <nav class="lp-nav" aria-label="التنقل الرئيسي">
             <a href="/" data-nav="home">الرئيسية</a>
@@ -2821,7 +2826,7 @@
       </div>
     </header>
 
-    <section class="sn-home-banner" id="homeHeroBanner" hidden aria-label="بنرات العروض">
+    <section class="sn-home-banner sn-home-banner--mid" id="homeHeroBanner" hidden aria-label="بنرات العروض">
       <div class="sn-home-banner__inner" id="homeHeroBannerInner"></div>
     </section>
 
@@ -3685,6 +3690,6 @@
         }
       })();
     </script>
-    <script src="/assets/home-hero-banner.js" defer></script>
+    <script src="/assets/banner-engine.js" defer></script>
   </body>
 </html>
