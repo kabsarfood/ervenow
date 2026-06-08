@@ -1,49 +1,15 @@
 /**
- * ERVENOW — الرئيسية: هيدر موحّد + بنر علوي
+ * ERVENOW — الرئيسية: هيدر موحّد
  * يُحمَّل بعد الأنماط المضمّنة في index.html لضمان الأولوية
  */
 
 :root {
-  --erv-banner-width: 1920;
-  --erv-banner-height: 730;
-  --erv-banner-aspect: 1920 / 730;
   --erv-header-max: 1120px;
   --erv-header-pad-x: clamp(14px, 3vw, 24px);
   --erv-header-pad-y: clamp(10px, 1.6vw, 14px);
   --erv-header-gap: clamp(10px, 1.8vw, 14px);
   --erv-header-control-h: 44px;
   --erv-header-control-h-touch: 48px;
-}
-
-/* ——— بنر بين الهيدر وقسم «اطلب الآن» ——— */
-.sn-home-banner--mid {
-  padding: clamp(10px, 2vw, 16px) max(12px, env(safe-area-inset-right, 12px)) clamp(12px, 2.2vw, 18px)
-    max(12px, env(safe-area-inset-left, 12px));
-  margin: 0;
-}
-
-.sn-home-banner--mid .sn-home-banner__inner {
-  border-radius: clamp(12px, 2.5vw, 16px);
-  border: 1px solid rgba(61, 34, 19, 0.1);
-  border-block-end: 1px solid rgba(61, 34, 19, 0.1);
-  box-shadow: 0 8px 28px rgba(45, 26, 10, 0.1);
-  max-width: var(--erv-header-max);
-}
-
-.sn-hero-carousel__slide--theme-1 {
-  background: linear-gradient(135deg, #3d2213 0%, #5c3d28 42%, #8b6914 100%);
-}
-
-.sn-hero-carousel__slide--theme-2 {
-  background: linear-gradient(135deg, #2a1810 0%, #4a3020 50%, #6b4a2a 100%);
-}
-
-.sn-hero-carousel__slide--theme-3 {
-  background: linear-gradient(135deg, #1f2937 0%, #3d2213 55%, #9a7b4f 100%);
-}
-
-.sn-hero-carousel__slide[class*="sn-hero-carousel__slide--theme-"] .sn-hero-carousel__overlay {
-  background: linear-gradient(180deg, rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.45));
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -383,11 +349,6 @@
 
   .lp-header.lp-header--refined .lp-nav-wrap {
     display: none !important;
-  }
-
-  .sn-home-banner--mid .sn-home-banner__inner {
-    min-height: 0;
-    aspect-ratio: var(--erv-banner-aspect);
   }
 }
 

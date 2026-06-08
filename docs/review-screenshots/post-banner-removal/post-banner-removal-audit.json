@@ -1,0 +1,724 @@
+{
+  "capturedAt": "2026-06-08T20:53:19.375Z",
+  "baseUrl": "http://localhost:4000",
+  "note": "بعد إزالة بنرات Hero من الواجهة — بنرات العروض (#guestOffersCarousel) ما زالت في لوحة الزائر",
+  "assetSizesOnDisk": {
+    "bannerEngineJs": 454,
+    "bannerEngineCss": 5122,
+    "bannerEngineJsHuman": "454 B",
+    "bannerEngineCssHuman": "5.0 KB"
+  },
+  "beforeReference": "2026-06-08T20:17:55.640Z",
+  "measurements": [
+    {
+      "page": "home",
+      "label": "الرئيسية",
+      "viewport": {
+        "w": 390,
+        "h": 844
+      },
+      "loadMs": 2508,
+      "networkRequests": 25,
+      "bannerEngineLoaded": false,
+      "screenshot": "docs/review-screenshots/post-banner-removal/home-mobile-390-full.png",
+      "header": {
+        "top": 0,
+        "height": 162,
+        "width": 390,
+        "visible": true
+      },
+      "main": {
+        "top": 162,
+        "height": 430,
+        "width": 390,
+        "visible": true
+      },
+      "heroBannerRemoved": true,
+      "offersCarousel": null,
+      "firstViewportElementCount": 9,
+      "heightBeforeMainSection": 162,
+      "documentHeight": 4680,
+      "timing": {
+        "domContentLoaded": 1510,
+        "load": 2000,
+        "ttfb": 332
+      },
+      "assets": {
+        "cssCount": 5,
+        "jsCount": 14,
+        "cssBytes": 73495,
+        "jsBytes": 128451
+      }
+    },
+    {
+      "page": "home",
+      "label": "الرئيسية",
+      "viewport": {
+        "w": 1280,
+        "h": 800
+      },
+      "loadMs": 561,
+      "networkRequests": 25,
+      "bannerEngineLoaded": false,
+      "screenshot": "docs/review-screenshots/post-banner-removal/home-desktop-1280-full.png",
+      "header": {
+        "top": 0,
+        "height": 171,
+        "width": 1280,
+        "visible": true
+      },
+      "main": {
+        "top": 171,
+        "height": 569,
+        "width": 506,
+        "visible": true
+      },
+      "heroBannerRemoved": true,
+      "offersCarousel": null,
+      "firstViewportElementCount": 7,
+      "heightBeforeMainSection": 171,
+      "documentHeight": 3595,
+      "timing": {
+        "domContentLoaded": 41,
+        "load": 58,
+        "ttfb": 5
+      },
+      "assets": {
+        "cssCount": 5,
+        "jsCount": 14,
+        "cssBytes": 71995,
+        "jsBytes": 124251
+      }
+    },
+    {
+      "page": "dashboard",
+      "label": "لوحة الزائر",
+      "viewport": {
+        "w": 390,
+        "h": 844
+      },
+      "loadMs": 1439,
+      "networkRequests": 35,
+      "bannerEngineLoaded": false,
+      "screenshot": "docs/review-screenshots/post-banner-removal/dashboard-mobile-390-full.png",
+      "header": {
+        "top": 0,
+        "height": 125,
+        "width": 390,
+        "visible": true
+      },
+      "main": {
+        "top": 283,
+        "height": 193,
+        "width": 362,
+        "visible": true
+      },
+      "heroBannerRemoved": true,
+      "offersCarousel": {
+        "top": 476,
+        "height": 139,
+        "width": 362,
+        "visible": true
+      },
+      "firstViewportElementCount": 19,
+      "heightBeforeMainSection": 283,
+      "documentHeight": 1288,
+      "timing": {
+        "domContentLoaded": 87,
+        "load": 90,
+        "ttfb": 7
+      },
+      "assets": {
+        "cssCount": 6,
+        "jsCount": 15,
+        "cssBytes": 83178,
+        "jsBytes": 144049
+      }
+    },
+    {
+      "page": "dashboard",
+      "label": "لوحة الزائر",
+      "viewport": {
+        "w": 1280,
+        "h": 800
+      },
+      "loadMs": 572,
+      "networkRequests": 35,
+      "bannerEngineLoaded": false,
+      "screenshot": "docs/review-screenshots/post-banner-removal/dashboard-desktop-1280-full.png",
+      "header": {
+        "top": 0,
+        "height": 64,
+        "width": 1280,
+        "visible": true
+      },
+      "main": {
+        "top": 190,
+        "height": 133,
+        "width": 1092,
+        "visible": true
+      },
+      "heroBannerRemoved": true,
+      "offersCarousel": {
+        "top": 322,
+        "height": 416,
+        "width": 1092,
+        "visible": true
+      },
+      "firstViewportElementCount": 14,
+      "heightBeforeMainSection": 190,
+      "documentHeight": 1303,
+      "timing": {
+        "domContentLoaded": 42,
+        "load": 48,
+        "ttfb": 5
+      },
+      "assets": {
+        "cssCount": 6,
+        "jsCount": 15,
+        "cssBytes": 82578,
+        "jsBytes": 143149
+      }
+    },
+    {
+      "page": "restaurants",
+      "label": "المطاعم",
+      "viewport": {
+        "w": 390,
+        "h": 844
+      },
+      "loadMs": 3643,
+      "networkRequests": 30,
+      "bannerEngineLoaded": false,
+      "screenshot": "docs/review-screenshots/post-banner-removal/restaurants-mobile-390-full.png",
+      "header": {
+        "top": 0,
+        "height": 125,
+        "width": 390,
+        "visible": true
+      },
+      "main": {
+        "top": 125,
+        "height": 102,
+        "width": 390,
+        "visible": true
+      },
+      "heroBannerRemoved": true,
+      "offersCarousel": null,
+      "firstViewportElementCount": 16,
+      "heightBeforeMainSection": 125,
+      "documentHeight": 1366,
+      "timing": {
+        "domContentLoaded": 54,
+        "load": 57,
+        "ttfb": 8
+      },
+      "assets": {
+        "cssCount": 6,
+        "jsCount": 14,
+        "cssBytes": 82578,
+        "jsBytes": 137185
+      }
+    },
+    {
+      "page": "restaurants",
+      "label": "المطاعم",
+      "viewport": {
+        "w": 1280,
+        "h": 800
+      },
+      "loadMs": 898,
+      "networkRequests": 30,
+      "bannerEngineLoaded": false,
+      "screenshot": "docs/review-screenshots/post-banner-removal/restaurants-desktop-1280-full.png",
+      "header": {
+        "top": 0,
+        "height": 64,
+        "width": 1280,
+        "visible": true
+      },
+      "main": {
+        "top": 64,
+        "height": 135,
+        "width": 1280,
+        "visible": true
+      },
+      "heroBannerRemoved": true,
+      "offersCarousel": null,
+      "firstViewportElementCount": 16,
+      "heightBeforeMainSection": 64,
+      "documentHeight": 1278,
+      "timing": {
+        "domContentLoaded": 38,
+        "load": 40,
+        "ttfb": 6
+      },
+      "assets": {
+        "cssCount": 6,
+        "jsCount": 14,
+        "cssBytes": 82578,
+        "jsBytes": 136885
+      }
+    },
+    {
+      "page": "stores",
+      "label": "المتاجر",
+      "viewport": {
+        "w": 390,
+        "h": 844
+      },
+      "loadMs": 574,
+      "networkRequests": 26,
+      "bannerEngineLoaded": false,
+      "screenshot": "docs/review-screenshots/post-banner-removal/stores-mobile-390-full.png",
+      "header": {
+        "top": 0,
+        "height": 125,
+        "width": 390,
+        "visible": true
+      },
+      "main": {
+        "top": 125,
+        "height": 102,
+        "width": 390,
+        "visible": true
+      },
+      "heroBannerRemoved": true,
+      "offersCarousel": null,
+      "firstViewportElementCount": 13,
+      "heightBeforeMainSection": 125,
+      "documentHeight": 1113,
+      "timing": {
+        "domContentLoaded": 50,
+        "load": 55,
+        "ttfb": 9
+      },
+      "assets": {
+        "cssCount": 6,
+        "jsCount": 13,
+        "cssBytes": 82578,
+        "jsBytes": 132371
+      }
+    },
+    {
+      "page": "stores",
+      "label": "المتاجر",
+      "viewport": {
+        "w": 1280,
+        "h": 800
+      },
+      "loadMs": 1003,
+      "networkRequests": 26,
+      "bannerEngineLoaded": false,
+      "screenshot": "docs/review-screenshots/post-banner-removal/stores-desktop-1280-full.png",
+      "header": {
+        "top": 0,
+        "height": 64,
+        "width": 1280,
+        "visible": true
+      },
+      "main": {
+        "top": 64,
+        "height": 135,
+        "width": 1280,
+        "visible": true
+      },
+      "heroBannerRemoved": true,
+      "offersCarousel": null,
+      "firstViewportElementCount": 13,
+      "heightBeforeMainSection": 64,
+      "documentHeight": 1044,
+      "timing": {
+        "domContentLoaded": 37,
+        "load": 38,
+        "ttfb": 7
+      },
+      "assets": {
+        "cssCount": 6,
+        "jsCount": 13,
+        "cssBytes": 82578,
+        "jsBytes": 132371
+      }
+    },
+    {
+      "page": "services",
+      "label": "الخدمات",
+      "viewport": {
+        "w": 390,
+        "h": 844
+      },
+      "loadMs": 662,
+      "networkRequests": 27,
+      "bannerEngineLoaded": false,
+      "screenshot": "docs/review-screenshots/post-banner-removal/services-mobile-390-full.png",
+      "header": {
+        "top": 0,
+        "height": 125,
+        "width": 390,
+        "visible": true
+      },
+      "main": {
+        "top": 125,
+        "height": 102,
+        "width": 390,
+        "visible": true
+      },
+      "heroBannerRemoved": true,
+      "offersCarousel": null,
+      "firstViewportElementCount": 19,
+      "heightBeforeMainSection": 125,
+      "documentHeight": 2141,
+      "timing": {
+        "domContentLoaded": 140,
+        "load": 146,
+        "ttfb": 9
+      },
+      "assets": {
+        "cssCount": 6,
+        "jsCount": 13,
+        "cssBytes": 82578,
+        "jsBytes": 132371
+      }
+    },
+    {
+      "page": "services",
+      "label": "الخدمات",
+      "viewport": {
+        "w": 1280,
+        "h": 800
+      },
+      "loadMs": 570,
+      "networkRequests": 27,
+      "bannerEngineLoaded": false,
+      "screenshot": "docs/review-screenshots/post-banner-removal/services-desktop-1280-full.png",
+      "header": {
+        "top": 0,
+        "height": 64,
+        "width": 1280,
+        "visible": true
+      },
+      "main": {
+        "top": 64,
+        "height": 135,
+        "width": 1280,
+        "visible": true
+      },
+      "heroBannerRemoved": true,
+      "offersCarousel": null,
+      "firstViewportElementCount": 21,
+      "heightBeforeMainSection": 64,
+      "documentHeight": 1797,
+      "timing": {
+        "domContentLoaded": 52,
+        "load": 57,
+        "ttfb": 6
+      },
+      "assets": {
+        "cssCount": 6,
+        "jsCount": 13,
+        "cssBytes": 82578,
+        "jsBytes": 132371
+      }
+    },
+    {
+      "page": "delivery",
+      "label": "التوصيل",
+      "viewport": {
+        "w": 390,
+        "h": 844
+      },
+      "loadMs": 941,
+      "networkRequests": 29,
+      "bannerEngineLoaded": false,
+      "screenshot": "docs/review-screenshots/post-banner-removal/delivery-mobile-390-full.png",
+      "header": {
+        "top": 0,
+        "height": 125,
+        "width": 390,
+        "visible": true
+      },
+      "main": null,
+      "heroBannerRemoved": true,
+      "offersCarousel": null,
+      "firstViewportElementCount": 14,
+      "heightBeforeMainSection": null,
+      "documentHeight": 1298,
+      "timing": {
+        "domContentLoaded": 428,
+        "load": 434,
+        "ttfb": 7
+      },
+      "assets": {
+        "cssCount": 7,
+        "jsCount": 14,
+        "cssBytes": 82578,
+        "jsBytes": 132371
+      }
+    },
+    {
+      "page": "delivery",
+      "label": "التوصيل",
+      "viewport": {
+        "w": 1280,
+        "h": 800
+      },
+      "loadMs": 1044,
+      "networkRequests": 29,
+      "bannerEngineLoaded": false,
+      "screenshot": "docs/review-screenshots/post-banner-removal/delivery-desktop-1280-full.png",
+      "header": {
+        "top": 0,
+        "height": 64,
+        "width": 1280,
+        "visible": true
+      },
+      "main": null,
+      "heroBannerRemoved": true,
+      "offersCarousel": null,
+      "firstViewportElementCount": 12,
+      "heightBeforeMainSection": null,
+      "documentHeight": 1327,
+      "timing": {
+        "domContentLoaded": 38,
+        "load": 42,
+        "ttfb": 1
+      },
+      "assets": {
+        "cssCount": 7,
+        "jsCount": 14,
+        "cssBytes": 82578,
+        "jsBytes": 132371
+      }
+    }
+  ],
+  "comparisons": [
+    {
+      "page": "home",
+      "viewport": {
+        "w": 390,
+        "h": 844
+      },
+      "before": null,
+      "after": {
+        "heightBeforeMainSection": 162,
+        "heroBannerRemoved": true,
+        "firstViewportElementCount": 9,
+        "networkRequests": 25,
+        "cssBytes": 73495,
+        "jsBytes": 128451,
+        "loadMs": 2508,
+        "bannerEngineLoaded": false
+      },
+      "delta": null
+    },
+    {
+      "page": "home",
+      "viewport": {
+        "w": 1280,
+        "h": 800
+      },
+      "before": null,
+      "after": {
+        "heightBeforeMainSection": 171,
+        "heroBannerRemoved": true,
+        "firstViewportElementCount": 7,
+        "networkRequests": 25,
+        "cssBytes": 71995,
+        "jsBytes": 124251,
+        "loadMs": 561,
+        "bannerEngineLoaded": false
+      },
+      "delta": null
+    },
+    {
+      "page": "dashboard",
+      "viewport": {
+        "w": 390,
+        "h": 844
+      },
+      "before": null,
+      "after": {
+        "heightBeforeMainSection": 283,
+        "heroBannerRemoved": true,
+        "firstViewportElementCount": 19,
+        "networkRequests": 35,
+        "cssBytes": 83178,
+        "jsBytes": 144049,
+        "loadMs": 1439,
+        "bannerEngineLoaded": false
+      },
+      "delta": null
+    },
+    {
+      "page": "dashboard",
+      "viewport": {
+        "w": 1280,
+        "h": 800
+      },
+      "before": null,
+      "after": {
+        "heightBeforeMainSection": 190,
+        "heroBannerRemoved": true,
+        "firstViewportElementCount": 14,
+        "networkRequests": 35,
+        "cssBytes": 82578,
+        "jsBytes": 143149,
+        "loadMs": 572,
+        "bannerEngineLoaded": false
+      },
+      "delta": null
+    },
+    {
+      "page": "restaurants",
+      "viewport": {
+        "w": 390,
+        "h": 844
+      },
+      "before": null,
+      "after": {
+        "heightBeforeMainSection": 125,
+        "heroBannerRemoved": true,
+        "firstViewportElementCount": 16,
+        "networkRequests": 30,
+        "cssBytes": 82578,
+        "jsBytes": 137185,
+        "loadMs": 3643,
+        "bannerEngineLoaded": false
+      },
+      "delta": null
+    },
+    {
+      "page": "restaurants",
+      "viewport": {
+        "w": 1280,
+        "h": 800
+      },
+      "before": null,
+      "after": {
+        "heightBeforeMainSection": 64,
+        "heroBannerRemoved": true,
+        "firstViewportElementCount": 16,
+        "networkRequests": 30,
+        "cssBytes": 82578,
+        "jsBytes": 136885,
+        "loadMs": 898,
+        "bannerEngineLoaded": false
+      },
+      "delta": null
+    },
+    {
+      "page": "stores",
+      "viewport": {
+        "w": 390,
+        "h": 844
+      },
+      "before": null,
+      "after": {
+        "heightBeforeMainSection": 125,
+        "heroBannerRemoved": true,
+        "firstViewportElementCount": 13,
+        "networkRequests": 26,
+        "cssBytes": 82578,
+        "jsBytes": 132371,
+        "loadMs": 574,
+        "bannerEngineLoaded": false
+      },
+      "delta": null
+    },
+    {
+      "page": "stores",
+      "viewport": {
+        "w": 1280,
+        "h": 800
+      },
+      "before": null,
+      "after": {
+        "heightBeforeMainSection": 64,
+        "heroBannerRemoved": true,
+        "firstViewportElementCount": 13,
+        "networkRequests": 26,
+        "cssBytes": 82578,
+        "jsBytes": 132371,
+        "loadMs": 1003,
+        "bannerEngineLoaded": false
+      },
+      "delta": null
+    },
+    {
+      "page": "services",
+      "viewport": {
+        "w": 390,
+        "h": 844
+      },
+      "before": null,
+      "after": {
+        "heightBeforeMainSection": 125,
+        "heroBannerRemoved": true,
+        "firstViewportElementCount": 19,
+        "networkRequests": 27,
+        "cssBytes": 82578,
+        "jsBytes": 132371,
+        "loadMs": 662,
+        "bannerEngineLoaded": false
+      },
+      "delta": null
+    },
+    {
+      "page": "services",
+      "viewport": {
+        "w": 1280,
+        "h": 800
+      },
+      "before": null,
+      "after": {
+        "heightBeforeMainSection": 64,
+        "heroBannerRemoved": true,
+        "firstViewportElementCount": 21,
+        "networkRequests": 27,
+        "cssBytes": 82578,
+        "jsBytes": 132371,
+        "loadMs": 570,
+        "bannerEngineLoaded": false
+      },
+      "delta": null
+    },
+    {
+      "page": "delivery",
+      "viewport": {
+        "w": 390,
+        "h": 844
+      },
+      "before": null,
+      "after": {
+        "heightBeforeMainSection": null,
+        "heroBannerRemoved": true,
+        "firstViewportElementCount": 14,
+        "networkRequests": 29,
+        "cssBytes": 82578,
+        "jsBytes": 132371,
+        "loadMs": 941,
+        "bannerEngineLoaded": false
+      },
+      "delta": null
+    },
+    {
+      "page": "delivery",
+      "viewport": {
+        "w": 1280,
+        "h": 800
+      },
+      "before": null,
+      "after": {
+        "heightBeforeMainSection": null,
+        "heroBannerRemoved": true,
+        "firstViewportElementCount": 12,
+        "networkRequests": 29,
+        "cssBytes": 82578,
+        "jsBytes": 132371,
+        "loadMs": 1044,
+        "bannerEngineLoaded": false
+      },
+      "delta": null
+    }
+  ]
+}
