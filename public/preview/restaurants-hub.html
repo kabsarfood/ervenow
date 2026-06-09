@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover"
+    />
+    <script src="/assets/viewport-fit.js"></script>
+    <title>معاينة | صفحة المطاعم — تصنيفات + ترتيب</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/assets/responsive-audit-base.css" />
+    <link rel="stylesheet" href="/assets/ervenow-responsive.css" />
+    <link rel="stylesheet" href="/assets/preview-restaurants-hub.css" />
+  </head>
+  <body class="preview-rest-page">
+    <header class="preview-rest-banner">
+      <div class="preview-rest-banner__inner">
+        <p class="preview-rest-banner__tag">معاينة فقط — لم يُطبَّق بعد</p>
+        <h1 class="preview-rest-banner__title">صفحة المطاعم: تصنيفات أعلى + قائمة تحت + ترتيب</h1>
+        <p class="preview-rest-banner__links">
+          <a href="/">الرئيسية</a>
+          ·
+          <a href="/restaurants">/restaurants الحالية</a>
+        </p>
+        <nav class="preview-hub-nav" aria-label="معاينة الأقسام">
+          <a href="/preview/restaurants-hub.html" class="is-active" aria-current="page">🍽️ مطاعم</a>
+          <a href="/preview/stores-hub.html">🛒 متاجر</a>
+          <a href="/preview/delivery-hub.html">🚚 توصيل</a>
+          <a href="/preview/services-hub.html">🔧 خدمات</a>
+          <a href="/preview/">الفهرس</a>
+        </nav>
+      </div>
+    </header>
+
+    <div class="preview-rest-shell">
+      <header class="preview-rest-hero preview-rest-hero--restaurants">
+        <h1>🍽️ مطاعم</h1>
+        <p>تصنيف فرعي في الأعلى — المطاعم تحت. بدون اختيار تصنيف: <strong>كل المطاعم</strong> تظهر تلقائياً.</p>
+      </header>
+
+      <div class="preview-rest-toolbar">
+        <div class="preview-rest-search-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <circle cx="11" cy="11" r="7" />
+            <path d="M20 20l-4.3-4.3" stroke-linecap="round" />
+          </svg>
+          <input
+            type="search"
+            class="preview-rest-search"
+            id="restSearch"
+            placeholder="ابحث باسم المطعم…"
+            autocomplete="off"
+            enterkeyhint="search"
+          />
+        </div>
+        <div class="preview-rest-sort" role="group" aria-label="ترتيب النتائج">
+          <button type="button" class="preview-rest-sort__btn is-active" data-sort="nearest">📍 الأقرب</button>
+          <button type="button" class="preview-rest-sort__btn" data-sort="rating">⭐ الأعلى تقييماً</button>
+          <button type="button" class="preview-rest-sort__btn" data-sort="offers">🎁 عروض</button>
+        </div>
+      </div>
+
+      <section class="preview-rest-cats" aria-label="تصنيفات المطاعم">
+        <div class="preview-rest-cats__head">
+          <span aria-hidden="true">🍽️</span>
+          <div>
+            <strong>تصنيفات المطاعم</strong>
+            <small>اختر نوع المطبخ — أو «الكل» لعرض جميع المطاعم</small>
+          </div>
+        </div>
+        <div class="preview-rest-cats__scroll" id="catBar" role="tablist"></div>
+      </section>
+
+      <p class="preview-rest-status" id="statusLine" aria-live="polite">—</p>
+
+      <div class="preview-rest-grid" id="restGrid" aria-label="قائمة المطاعم"></div>
+
+      <footer class="preview-rest-foot">
+        <p>بيانات تجريبية للمعاينة — بعد الموافقة نربط <code dir="ltr">/api/stores</code> ونفتح من الرئيسية بزر «مطاعم».</p>
+      </footer>
+    </div>
+
+    <script src="/assets/restaurant-cuisines.js"></script>
+    <script>
+      (function () {
+        var CUISINES = (window.RESTAURANT_CUISINES || []).slice();
+        var MOCK = [
+          { id: "1", name: "مطعم النخبة", category: "kabsa_bukhari", label: "كبسة وبخاري", rating: 4.8, km: 1.2, offer: true, icon: "🍚" },
+          { id: "2", name: "شاورما الرياض", category: "shawarma_grill", label: "شاورما ومشاوي", rating: 4.6, km: 2.4, offer: false, icon: "🌯" },
+          { id: "3", name: "برجر كنج", category: "burger", label: "برقر", rating: 4.4, km: 0.8, offer: true, icon: "🍔" },
+          { id: "4", name: "بيتزا إيطاليا", category: "pizza", label: "بيتزا", rating: 4.7, km: 3.1, offer: false, icon: "🍕" },
+          { id: "5", name: "سمك الخليج", category: "seafood", label: "سمك", rating: 4.5, km: 4.0, offer: true, icon: "🐟" },
+          { id: "6", name: "بروستد الذهب", category: "broasted", label: "بروستد", rating: 4.2, km: 1.9, offer: false, icon: "🍗" },
+          { id: "7", name: "مقهى الصباح", category: "cafe", label: "مقاهي", rating: 4.9, km: 2.2, offer: false, icon: "☕" },
+          { id: "8", name: "حلويات السلطان", category: "sweets", label: "حلويات", rating: 4.3, km: 5.5, offer: true, icon: "🍰" },
+          { id: "9", name: "أسرة مطبخ أم سارة", category: "home_producers", label: "أسر منتجة", rating: 4.7, km: 2.8, offer: false, icon: "🏠" },
+          { id: "10", name: "مندي الجبل", category: "kabsa_bukhari", label: "كبسة وبخاري", rating: 4.1, km: 6.2, offer: false, icon: "🍚" },
+          { id: "11", name: "فلافل وشاورما", category: "shawarma_grill", label: "شاورما ومشاوي", rating: 4.0, km: 1.5, offer: true, icon: "🌯" },
+          { id: "12", name: "برجر هاوس", category: "burger", label: "برقر", rating: 4.6, km: 3.8, offer: false, icon: "🍔" },
+        ];
+
+        var activeCat = "";
+        var activeSort = "nearest";
+        var searchEl = document.getElementById("restSearch");
+        var catBar = document.getElementById("catBar");
+        var grid = document.getElementById("restGrid");
+        var statusLine = document.getElementById("statusLine");
+
+        function esc(s) {
+          return String(s || "")
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/"/g, "&quot;");
+        }
+
+        function buildCats() {
+          var html =
+            '<button type="button" class="preview-rest-cat is-active" data-cat="" role="tab" aria-selected="true">' +
+            '<span class="preview-rest-cat__ic">▦</span><span>الكل</span></button>';
+          CUISINES.forEach(function (c) {
+            html +=
+              '<button type="button" class="preview-rest-cat" data-cat="' +
+              esc(c.slug) +
+              '" role="tab" aria-selected="false">' +
+              '<span class="preview-rest-cat__ic">' +
+              esc(c.icon) +
+              "</span><span>" +
+              esc(c.label.replace(/^مطاعم\s/, "")) +
+              "</span></button>";
+          });
+          catBar.innerHTML = html;
+        }
+
+        function filtered() {
+          var q = searchEl ? String(searchEl.value || "").trim().toLowerCase() : "";
+          var list = MOCK.filter(function (r) {
+            if (activeCat && r.category !== activeCat) return false;
+            if (activeSort === "offers" && !r.offer) return false;
+            if (q && String(r.name).toLowerCase().indexOf(q) === -1) return false;
+            return true;
+          });
+          list.sort(function (a, b) {
+            if (activeSort === "rating") return b.rating - a.rating;
+            if (activeSort === "offers") {
+              if (a.offer !== b.offer) return a.offer ? -1 : 1;
+              return a.km - b.km;
+            }
+            return a.km - b.km;
+          });
+          return list;
+        }
+
+        function render() {
+          var list = filtered();
+          var catLabel = activeCat
+            ? (CUISINES.find(function (c) {
+                return c.slug === activeCat;
+              }) || {}).label || activeCat
+            : "كل التصنيفات";
+          var sortLabel =
+            activeSort === "rating" ? "الأعلى تقييماً" : activeSort === "offers" ? "عروض فقط" : "الأقرب";
+          statusLine.textContent =
+            list.length + " مطعم — " + catLabel + " · ترتيب: " + sortLabel;
+
+          if (!list.length) {
+            grid.innerHTML =
+              '<div class="preview-rest-empty" role="status">' +
+              "<h2>لا نتائج</h2>" +
+              "<p>جرّب «الكل» أو غيّر الترتيب أو امسح البحث.</p></div>";
+            return;
+          }
+
+          grid.innerHTML = list
+            .map(function (r) {
+              return (
+                '<article class="preview-rest-card">' +
+                '<div class="preview-rest-card__media">' +
+                esc(r.icon) +
+                (r.offer ? '<span class="preview-rest-card__offer">عرض</span>' : "") +
+                "</div>" +
+                '<div class="preview-rest-card__body">' +
+                "<h3>" +
+                esc(r.name) +
+                "</h3>" +
+                '<p class="preview-rest-card__type">' +
+                esc(r.label) +
+                "</p>" +
+                '<div class="preview-rest-card__meta">' +
+                "<span>⭐ " +
+                esc(String(r.rating)) +
+                "</span>" +
+                "<span>📍 " +
+                esc(String(r.km)) +
+                " كم</span>" +
+                "<span>⏱ ~" +
+                esc(String(Math.max(15, Math.round(r.km * 4 + 12)))) +
+                " د</span>" +
+                "</div>" +
+                '<button type="button" class="preview-rest-card__btn" data-id="' +
+                esc(r.id) +
+                '">عرض المطعم</button>' +
+                "</div></article>"
+              );
+            })
+            .join("");
+        }
+
+        buildCats();
+        render();
+
+        catBar.addEventListener("click", function (e) {
+          var btn = e.target.closest(".preview-rest-cat");
+          if (!btn) return;
+          activeCat = btn.getAttribute("data-cat") || "";
+          catBar.querySelectorAll(".preview-rest-cat").forEach(function (b) {
+            var on = b === btn;
+            b.classList.toggle("is-active", on);
+            b.setAttribute("aria-selected", on ? "true" : "false");
+          });
+          render();
+        });
+
+        document.querySelectorAll(".preview-rest-sort__btn").forEach(function (btn) {
+          btn.addEventListener("click", function () {
+            activeSort = btn.getAttribute("data-sort") || "nearest";
+            document.querySelectorAll(".preview-rest-sort__btn").forEach(function (b) {
+              b.classList.toggle("is-active", b === btn);
+            });
+            render();
+          });
+        });
+
+        if (searchEl) searchEl.addEventListener("input", render);
+
+        grid.addEventListener("click", function (e) {
+          var b = e.target.closest(".preview-rest-card__btn");
+          if (!b) return;
+          alert("معاينة — في النسخة النهائية يفتح المتجر.");
+        });
+
+        var p = new URLSearchParams(location.search);
+        var cat = String(p.get("category") || "").trim().toLowerCase();
+        if (cat) {
+          var chip = catBar.querySelector('.preview-rest-cat[data-cat="' + cat + '"]');
+          if (chip) chip.click();
+        }
+      })();
+    </script>
+  </body>
+</html>

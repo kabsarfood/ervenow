@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover"
+    />
+    <script src="/assets/viewport-fit.js"></script>
+    <title>معاينة | صفحة التوصيل</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/assets/responsive-audit-base.css" />
+    <link rel="stylesheet" href="/assets/ervenow-responsive.css" />
+    <link rel="stylesheet" href="/assets/preview-restaurants-hub.css" />
+  </head>
+  <body class="preview-rest-page">
+    <header class="preview-rest-banner">
+      <div class="preview-rest-banner__inner">
+        <p class="preview-rest-banner__tag">معاينة فقط — لم يُطبَّق بعد</p>
+        <h1 class="preview-rest-banner__title">صفحة التوصيل</h1>
+        <nav class="preview-hub-nav" aria-label="معاينة الأقسام">
+          <a href="/preview/restaurants-hub.html">🍽️ مطاعم</a>
+          <a href="/preview/stores-hub.html">🛒 متاجر</a>
+          <a href="/preview/delivery-hub.html" class="is-active" aria-current="page">🚚 توصيل</a>
+          <a href="/preview/services-hub.html">🔧 خدمات</a>
+          <a href="/preview/">الفهرس</a>
+        </nav>
+      </div>
+    </header>
+
+    <div class="preview-rest-shell">
+      <header class="preview-rest-hero preview-rest-hero--delivery">
+        <h1>🚚 توصيل</h1>
+        <p>نوع التوصيل في الأعلى — الخدمات المتاحة تحت. بدون اختيار: <strong>كل خيارات التوصيل</strong>.</p>
+      </header>
+
+      <div class="preview-rest-toolbar">
+        <div class="preview-rest-search-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <circle cx="11" cy="11" r="7" /><path d="M20 20l-4.3-4.3" stroke-linecap="round" />
+          </svg>
+          <input type="search" class="preview-rest-search" id="hubSearch" placeholder="ابحث عن خدمة توصيل…" autocomplete="off" />
+        </div>
+        <div class="preview-rest-sort" role="group" aria-label="ترتيب">
+          <button type="button" class="preview-rest-sort__btn is-active" data-sort="nearest">📍 الأقرب</button>
+          <button type="button" class="preview-rest-sort__btn" data-sort="rating">⭐ الأعلى تقييماً</button>
+          <button type="button" class="preview-rest-sort__btn" data-sort="offers">🎁 عروض</button>
+        </div>
+      </div>
+
+      <section class="preview-rest-cats" aria-label="أنواع التوصيل">
+        <div class="preview-rest-cats__head">
+          <span aria-hidden="true">🚚</span>
+          <div>
+            <strong>أنواع التوصيل</strong>
+            <small>نقل، داخلي، أثاث، غاز، خريطة — أو «الكل»</small>
+          </div>
+        </div>
+        <div class="preview-rest-cats__scroll" id="catBar" role="tablist"></div>
+      </section>
+
+      <p class="preview-rest-status" id="statusLine" aria-live="polite">—</p>
+      <div class="preview-rest-grid" id="hubGrid" aria-label="خدمات التوصيل"></div>
+      <footer class="preview-rest-foot">
+        <p>بيانات تجريبية — الصفحة الحقيقية: <a href="/delivery-services.html">/delivery-services.html</a></p>
+      </footer>
+    </div>
+
+    <script src="/assets/preview-section-hub.js"></script>
+    <script>
+      initPreviewHub({
+        queryKey: "service",
+        entityLabel: "خدمة",
+        entityPlural: "خدمات",
+        ctaLabel: "اطلب الآن",
+        categories: [
+          { id: "car_transport", icon: "🚗", label: "نقل مركبات" },
+          { id: "local_delivery", icon: "📦", label: "توصيل داخلي" },
+          { id: "furniture", icon: "🛋️", label: "نقل أثاث" },
+          { id: "gas_delivery", icon: "⛽", label: "توصيل غاز" },
+          { id: "map", icon: "🗺️", label: "من الخريطة" },
+        ],
+        items: [
+          { id: "d1", name: "توصيل سريع داخلي", category: "local_delivery", label: "توصيل داخلي", rating: 4.7, km: 1.0, offer: true, icon: "📦" },
+          { id: "d2", name: "نقل سيارة — فريق A", category: "car_transport", label: "نقل مركبات", rating: 4.5, km: 2.8, offer: false, icon: "🚗" },
+          { id: "d3", name: "نقل أثاث محترف", category: "furniture", label: "نقل أثاث", rating: 4.6, km: 3.5, offer: true, icon: "🛋️" },
+          { id: "d4", name: "غاز منزلي — توصيل", category: "gas_delivery", label: "توصيل غاز", rating: 4.8, km: 1.6, offer: false, icon: "⛽" },
+          { id: "d5", name: "طلب من الخريطة", category: "map", label: "من الخريطة", rating: 4.9, km: 0.5, offer: false, icon: "🗺️" },
+          { id: "d6", name: "باقة توصيل اليوم", category: "local_delivery", label: "توصيل داخلي", rating: 4.4, km: 2.1, offer: true, icon: "📦" },
+          { id: "d7", name: "سطحة + نقل", category: "car_transport", label: "نقل مركبات", rating: 4.3, km: 4.0, offer: false, icon: "🚗" },
+        ],
+      });
+    </script>
+  </body>
+</html>

@@ -6,6 +6,12 @@ var heroBannersCache = [];
 var targetOptions = [];
 var statusOptions = [];
 var bannerSpec = null;
+var heroBannersPanelLoaded = false;
+var heroBannersFilterStatus = "all";
+
+function heroBannersPanelHintText() {
+  return heroBannersCache.length + " بنر — مقاس موحّد 1920×730 — 6 أقسام ثابتة.";
+}
 
 var FALLBACK_SECTION_TARGETS = [
   { id: "home", label_ar: "الرئيسية", page: "/" },
@@ -147,7 +153,7 @@ var SECTION_ICONS = {
 };
 
 var SECTION_PLACEMENT_HINTS = {
-  home: "البنر المتحرك يظهر في / بين الهيدر وقسم «اطلب الآن» — صورة 1920×730 بكسل.",
+  home: "البنر المتحرك يظهر في / تحت الهيدر مباشرة (مكان بطاقة الترحيب) — صورة 1920×730 بكسل.",
   visitor_dashboard: "الشرائح المتحركة في /dashboard — صورة 1920×730 بكسل.",
   services: "بنر متحرك في /services — صورة 1920×730 بكسل.",
   stores: "بنر متحرك في /stores — صورة 1920×730 بكسل.",
@@ -298,6 +304,52 @@ function wireBannerList(listEl) {
       if (card) app.deleteHeroBannerCard(card);
     };
   });
+  listEl.querySelectorAll(".hb-inp-file").forEach(function (inp) {
+    inp.onchange = function () {
+      var card = inp.closest(".hero-banner-card");
+      if (card && inp.files && inp.files[0]) showBannerImageDimWarn(card, inp.files[0]);
+    };
+  });
+}
+
+function showBannerImageDimWarn(container, file) {
+  if (!container || !file) return;
+  var warn = container.querySelector(".erv-banner-dim-warn");
+  if (!warn) {
+    warn = document.createElement("p");
+    warn.className = "sub erv-banner-dim-warn";
+    warn.style.cssText =
+      "margin:8px 0 0;padding:10px 12px;border-radius:10px;background:rgba(166,92,0,0.12);color:#8a4b00;font-weight:700;line-height:1.5";
+    var fileInp = container.querySelector(".hb-inp-file");
+    if (fileInp && fileInp.parentNode) fileInp.parentNode.insertAdjacentElement("afterend", warn);
+    else container.appendChild(warn);
+  }
+  if (!file.type || !String(file.type).startsWith("image/")) {
+    warn.hidden = true;
+    return;
+  }
+  var url = URL.createObjectURL(file);
+  var img = new Image();
+  img.onload = function () {
+    URL.revokeObjectURL(url);
+    if (img.naturalWidth === 1920 && img.naturalHeight === 730) {
+      warn.hidden = true;
+      warn.textContent = "";
+      return;
+    }
+    warn.hidden = false;
+    warn.textContent =
+      "تنبيه: المقاس الموصى به 1920×730 بكسل. الصورة المختارة " +
+      img.naturalWidth +
+      "×" +
+      img.naturalHeight +
+      " — سيُعرض البنر بـ object-fit: cover دون منع الرفع.";
+  };
+  img.onerror = function () {
+    URL.revokeObjectURL(url);
+    warn.hidden = true;
+  };
+  img.src = url;
 }
 
 function sectionBlockHtml(opt, filterStatus, sectionIndex) {
@@ -357,11 +409,41 @@ function sectionBlockHtml(opt, filterStatus, sectionIndex) {
   );
 }
 
+function syncHeroBannerDraftsFromDom() {
+  document.querySelectorAll(".hero-banner-card").forEach(function (card) {
+    var idx = Number(card.getAttribute("data-banner-idx"));
+    if (!Number.isFinite(idx) || idx < 0 || !heroBannersCache[idx]) return;
+    var b = heroBannersCache[idx];
+    var titleEl = card.querySelector(".hb-inp-title");
+    var btn1TextEl = card.querySelector(".hb-inp-btn1-text");
+    var btn1UrlEl = card.querySelector(".hb-inp-btn1-url");
+    var sortEl = card.querySelector(".hb-inp-sort");
+    var statusEl = card.querySelector(".hb-inp-status");
+    var startsEl = card.querySelector(".hb-inp-starts");
+    var endsEl = card.querySelector(".hb-inp-ends");
+    if (titleEl) b.title = titleEl.value || "";
+    if (btn1TextEl) b.button1_text = btn1TextEl.value || "";
+    if (btn1UrlEl) b.button1_url = btn1UrlEl.value || "";
+    if (sortEl) b.sort_order = Number(sortEl.value || 0);
+    if (statusEl) {
+      b.status = statusEl.value || "active";
+      b.is_active = b.status !== "paused";
+    }
+    if (startsEl && startsEl.value) b.starts_at = new Date(startsEl.value).toISOString();
+    if (endsEl && endsEl.value) b.ends_at = new Date(endsEl.value).toISOString();
+  });
+}
+
 app.renderHeroBannersEditor = function () {
   var root = document.getElementById("heroBannersEditor");
   if (!root) return;
 
-  var filterStatus = (document.getElementById("heroBannersFilterStatus") || {}).value || "all";
+  syncHeroBannerDraftsFromDom();
+
+  var liveFilter = document.getElementById("heroBannersFilterStatus");
+  if (liveFilter) heroBannersFilterStatus = liveFilter.value || heroBannersFilterStatus;
+  var filterStatus = heroBannersFilterStatus || "all";
+  var scrollY = window.scrollY || 0;
 
   var sectionsHtml = getSectionTargetOptions()
     .map(function (opt, i) {
@@ -397,7 +479,13 @@ app.renderHeroBannersEditor = function () {
     "</div>";
 
   var filterSt = document.getElementById("heroBannersFilterStatus");
-  if (filterSt) filterSt.onchange = app.renderHeroBannersEditor;
+  if (filterSt) {
+    filterSt.value = filterStatus;
+    filterSt.onchange = function () {
+      heroBannersFilterStatus = filterSt.value || "all";
+      app.renderHeroBannersEditor();
+    };
+  }
 
   root.querySelectorAll(".hero-banners-section__list").forEach(wireBannerList);
 
@@ -405,6 +493,10 @@ app.renderHeroBannersEditor = function () {
     btn.onclick = function () {
       app.createHeroBannerDraft(btn.getAttribute("data-section-target") || "home");
     };
+  });
+
+  requestAnimationFrame(function () {
+    window.scrollTo(0, scrollY);
   });
 };
 
@@ -507,9 +599,15 @@ app.deleteHeroBannerCard = async function (card) {
   }
 };
 
-app.loadHeroBannersPanel = async function () {
+app.loadHeroBannersPanel = async function (opts) {
+  opts = opts || {};
+  var force = !!opts.force;
   if (!app.hasPermission("dashboard")) return;
   var hint = document.getElementById("heroBannersPanelHint");
+  if (!force && heroBannersPanelLoaded) {
+    if (hint) hint.textContent = heroBannersPanelHintText();
+    return;
+  }
   try {
     var j = await app.PlatformAPI.api("/api/admin/hero-banners");
     heroBannersCache = j.banners || [];
@@ -520,14 +618,12 @@ app.loadHeroBannersPanel = async function () {
       { id: "paused", label_ar: "موقوف" },
       { id: "scheduled", label_ar: "مجدول" },
     ];
+    heroBannersPanelLoaded = true;
     app.renderHeroBannersEditor();
-    if (hint) {
-      hint.textContent =
-        heroBannersCache.length +
-        " بنر — مقاس موحّد 1920×730 — 6 أقسام ثابتة.";
-    }
+    if (hint) hint.textContent = heroBannersPanelHintText();
   } catch (e) {
     if (!targetOptions.length) targetOptions = FALLBACK_SECTION_TARGETS.slice();
+    heroBannersPanelLoaded = true;
     if (hint) hint.textContent = (e.message || "تعذّر التحميل") + " — الأقسام الستة معروضة محلياً.";
     app.renderHeroBannersEditor();
   }

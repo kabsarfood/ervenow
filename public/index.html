@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ar" dir="rtl">
   <head>
     <meta charset="utf-8" />
@@ -1309,7 +1309,7 @@
 
       /* سطح المكتب: صف أول (قائمة + شعار + إجراءات) وصف ثاني لروابط التصفح متجاورة */
       @media (min-width: 901px) {
-        .lp-header__inner {
+        .lp-header:not(.lp-header--refined) .lp-header__inner {
           display: grid;
           grid-template-columns: auto auto 1fr;
           grid-template-rows: auto auto;
@@ -1321,14 +1321,14 @@
           direction: ltr;
         }
 
-        .lp-header__logo-slot {
+        .lp-header:not(.lp-header--refined) .lp-header__logo-slot {
           grid-column: 1;
           grid-row: 1;
           justify-self: left;
           align-self: center;
         }
 
-        .lp-header__brand-mid {
+        .lp-header:not(.lp-header--refined) .lp-header__brand-mid {
           grid-column: 2;
           grid-row: 1;
           justify-self: start;
@@ -1341,7 +1341,7 @@
           display: none !important;
         }
 
-        .lp-header__toolbar-right {
+        .lp-header:not(.lp-header--refined) .lp-header__toolbar-right {
           grid-column: 3;
           grid-row: 1;
           justify-self: end;
@@ -1349,15 +1349,15 @@
           min-width: 0;
         }
 
-        .lp-header__end-zone {
+        .lp-header:not(.lp-header--refined) .lp-header__end-zone {
           flex-shrink: 0;
         }
 
-        .lp-header__actions {
+        .lp-header:not(.lp-header--refined) .lp-header__actions {
           flex-shrink: 0;
         }
 
-        .lp-nav-wrap {
+        .lp-header:not(.lp-header--refined) .lp-nav-wrap {
           grid-column: 1 / -1;
           grid-row: 2;
           flex: none;
@@ -1398,11 +1398,16 @@
       }
 
       @media (max-width: 900px) {
-        .lp-header__toolbar-right {
+        .lp-header--refined .lp-header__toolbar-right,
+        .lp-header--refined .lp-header__end-zone {
+          display: none !important;
+        }
+
+        .lp-header:not(.lp-header--refined) .lp-header__toolbar-right {
           display: contents;
         }
 
-        .lp-header__inner {
+        .lp-header:not(.lp-header--refined) .lp-header__inner {
           display: grid;
           grid-template-columns: auto 1fr;
           align-items: center;
@@ -1420,7 +1425,13 @@
           grid-template-columns: auto 1fr auto;
         }
 
-        .lp-header__user-mid:not([hidden]) {
+        .lp-header--refined .lp-header__inner.lp-header__inner--user-mid {
+          display: flex !important;
+          flex-direction: column !important;
+          grid-template-columns: unset !important;
+        }
+
+        .lp-header:not(.lp-header--refined) .lp-header__user-mid:not([hidden]) {
           display: flex;
           grid-column: 2;
           grid-row: 1;
@@ -1432,22 +1443,22 @@
           grid-column: 3;
         }
 
-        .lp-header__logo-slot {
+        .lp-header:not(.lp-header--refined) .lp-header__logo-slot {
           grid-column: 1;
           grid-row: 1;
           justify-self: left;
           align-self: center;
         }
 
-        .lp-header__logo-img {
+        .lp-header:not(.lp-header--refined) .lp-header__logo-img {
           max-height: 67px;
         }
 
-        .lp-header__brand-mid {
+        .lp-header:not(.lp-header--refined) .lp-header__brand-mid {
           display: none !important;
         }
 
-        .lp-header__end-zone {
+        .lp-header:not(.lp-header--refined) .lp-header__end-zone {
           grid-column: 2;
           grid-row: 1;
           justify-self: end;
@@ -1457,7 +1468,7 @@
           width: auto;
         }
 
-        .lp-header__actions {
+        .lp-header:not(.lp-header--refined) .lp-header__actions {
           grid-column: 1 / -1;
           grid-row: 2;
           width: auto;
@@ -2567,6 +2578,13 @@
       }
 
       @media (min-width: 901px) {
+        .lp-header--refined .lp-quick-dd__panel {
+          left: 0 !important;
+          right: auto !important;
+          inset-inline-start: auto !important;
+          inset-inline-end: auto !important;
+        }
+
         .lp-quick-dd__panel {
           position: absolute;
           top: calc(100% + 8px);
@@ -2671,35 +2689,13 @@
     </style>
     <link rel="stylesheet" href="/assets/order-draft-badge.css" />
     <link rel="stylesheet" href="/assets/index-header-banner.css" />
+    <link rel="stylesheet" href="/assets/guest-offers-carousel.css" />
   </head>
   <body class="lp-body lp-home-premium">
-    <header class="lp-header lp-header--refined" id="top">
+    <header class="lp-header lp-header--refined lp-header--menu-left" id="top">
       <div class="lp-header__inner" id="lpHeaderInner">
         <div class="lp-header__top-row">
-        <a
-          class="lp-header__logo-slot lp-header__logo-slot--has-img"
-          href="/"
-          aria-label="ERVENOW — الصفحة الرئيسية"
-        >
-          <img
-            id="ervBrandLogo"
-            class="lp-header__logo-img"
-            src="/assets/ervenow-logo.png"
-            alt="ERVENOW"
-            width="160"
-            height="56"
-            decoding="async"
-          />
-        </a>
-        <a class="lp-header__brand-mid" href="/" aria-label="ERVENOW">
-          <span class="lp-brand__name">ERVENOW</span>
-          <span class="lp-brand__tag">منصة التوصيل الذكية</span>
-        </a>
-        <button type="button" class="lp-header__user-mid" id="lpHeaderUserMid" hidden aria-label="فتح لوحة حسابك">
-          <span class="lp-header__user-mid__num" id="lpHeaderUserMidText" dir="ltr"></span>
-        </button>
-        <div class="lp-header__toolbar-right">
-          <div class="lp-header__end-zone">
+        <div class="lp-header__menu-slot">
             <div class="lp-quick-dd" id="lpQuickNav">
             <button
               type="button"
@@ -2797,7 +2793,28 @@
           </div>
         </div>
         </div>
-        </div>
+        <a
+          class="lp-header__logo-slot lp-header__logo-slot--has-img"
+          href="/"
+          aria-label="ERVENOW — الصفحة الرئيسية"
+        >
+          <img
+            id="ervBrandLogo"
+            class="lp-header__logo-img"
+            src="/assets/ervenow-logo.png"
+            alt="ERVENOW"
+            width="160"
+            height="56"
+            decoding="async"
+          />
+        </a>
+        <a class="lp-header__brand-mid" href="/" aria-label="ERVENOW">
+          <span class="lp-brand__name">ERVENOW</span>
+          <span class="lp-brand__tag">منصة التوصيل الذكية</span>
+        </a>
+        <button type="button" class="lp-header__user-mid" id="lpHeaderUserMid" hidden aria-label="فتح لوحة حسابك">
+          <span class="lp-header__user-mid__num" id="lpHeaderUserMidText" dir="ltr"></span>
+        </button>
         <div class="lp-header__actions">
           <a class="lp-header-wallet" id="lpHeaderWallet" href="/wallet.html" hidden>
             <span class="lp-header-wallet__inner">
@@ -2825,24 +2842,12 @@
       </div>
     </header>
 
-    <section class="sn-home-card sn-hero" id="homeHeroSection" aria-labelledby="homeHeroTitle">
-      <div class="sn-home-card__inner">
-        <div class="sn-hero__eyebrow">منصة ERVENOW — خدمة واحدة لكل شيء</div>
-        <h1 class="sn-hero__title" id="homeHeroTitle">
-          اطلب أي خدمة<br>
-          <span>الآن وبسهولة</span>
-        </h1>
-        <p class="sn-hero__sub" id="homeHeroSub">كل ما تحتاجة — في مكان واحد.</p>
-        <div class="sn-hero__actions" id="homeHeroActions">
-          <a class="sn-hero__cta" href="/start-now">اطلب الآن</a>
-        </div>
-        <p id="guestStartNote" class="sn-guest-note">
-          وضع زائر — تصفّح العروض بحرية. لإتمام الطلب
-          <a href="/login" style="color:var(--sn-gold);font-weight:800;text-decoration:none">سجّل دخولك</a>
-          برمز واتساب. يتم تفعيل الحساب بعد المراجعة واعتماده من إدارة ERVENOW.
-        </p>
-      </div>
-    </section>
+    <section
+      class="card guest-offers-carousel guest-offers-carousel--home"
+      id="homeMainBanner"
+      hidden
+      aria-label="بنرات المنصة الرئيسية"
+    ></section>
 
     <div class="sn-wave" aria-hidden="true">
       <svg viewBox="0 0 1440 48" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
@@ -2856,84 +2861,39 @@
       <p class="sn-section__label">الأقسام الرئيسية</p>
       <h2 class="sn-section__title" id="home-cats-title">اختر ما يناسبك</h2>
 
-      <div class="sn-grid sn-home-hub" id="snHomeHub">
-        <details class="sn-hub-item sn-hub-item--restaurants" name="ervenow-home-hub">
-          <summary class="sn-card sn-card--restaurants">
-            <div class="sn-card__icon-wrap" aria-hidden="true">🍽️</div>
-            <div>
-              <div class="sn-card__name">مطاعم</div>
-              <div class="sn-card__desc">مشاوي، برقر، شاورما<br>وأكثر من مطاعم معتمدة</div>
-            </div>
-            <div class="sn-card__arrow">← اكتشف</div>
-          </summary>
-          <div class="sn-hub-panel">
-            <a class="sn-hub-link" href="/restaurants?category=kabsa_bukhari"><span class="sn-hub-link__ic" aria-hidden="true">🍚</span>مطاعم كبسة وبخاري</a>
-            <a class="sn-hub-link" href="/restaurants?category=shawarma_grill"><span class="sn-hub-link__ic" aria-hidden="true">🌯</span>مطاعم شاورما ومشاوي</a>
-            <a class="sn-hub-link" href="/restaurants?category=seafood"><span class="sn-hub-link__ic" aria-hidden="true">🐟</span>مطاعم سمك</a>
-            <a class="sn-hub-link" href="/restaurants?category=burger"><span class="sn-hub-link__ic" aria-hidden="true">🍔</span>مطاعم برقر</a>
-            <a class="sn-hub-link" href="/restaurants?category=broasted"><span class="sn-hub-link__ic" aria-hidden="true">🍗</span>مطاعم بروستد</a>
-            <a class="sn-hub-link" href="/restaurants?category=pizza"><span class="sn-hub-link__ic" aria-hidden="true">🍕</span>مطاعم بيتزا</a>
-            <a class="sn-hub-link" href="/restaurants?category=cafe"><span class="sn-hub-link__ic" aria-hidden="true">☕</span>مقاهي</a>
-            <a class="sn-hub-link" href="/restaurants?category=sweets"><span class="sn-hub-link__ic" aria-hidden="true">🍰</span>حلويات</a>
-            <a class="sn-hub-link" href="/restaurants?category=home_producers"><span class="sn-hub-link__ic" aria-hidden="true">🏠</span>أسر منتجة</a>
-            <a class="sn-hub-link" href="/restaurants"><span class="sn-hub-link__ic" aria-hidden="true">▦</span>كل المطاعم</a>
+      <div class="sn-grid sn-home-hub sn-home-hub--direct" id="snHomeHub">
+        <a class="sn-card sn-card--restaurants sn-hub-link-card" href="/restaurants">
+          <div class="sn-card__icon-wrap" aria-hidden="true">🍽️</div>
+          <div>
+            <div class="sn-card__name">مطاعم</div>
+            <div class="sn-card__desc">مشاوي، برقر، شاورما<br>وأكثر من مطاعم معتمدة</div>
           </div>
-        </details>
-        <details class="sn-hub-item sn-hub-item--stores" name="ervenow-home-hub">
-          <summary class="sn-card sn-card--stores">
-            <div class="sn-card__icon-wrap" aria-hidden="true">🛒</div>
-            <div>
-              <div class="sn-card__name">متاجر</div>
-              <div class="sn-card__desc">سوبرماركت، صيدليات<br>وبقالة مع توصيل سريع</div>
-            </div>
-            <div class="sn-card__arrow">← اكتشف</div>
-          </summary>
-          <div class="sn-hub-panel">
-            <a class="sn-hub-link" href="/stores?type=supermarket"><span class="sn-hub-link__ic" aria-hidden="true">🛒</span>سوبر ماركت</a>
-            <a class="sn-hub-link" href="/stores?type=pharmacy"><span class="sn-hub-link__ic" aria-hidden="true">💊</span>صيدليات</a>
-            <a class="sn-hub-link" href="/stores?type=vegetables"><span class="sn-hub-link__ic" aria-hidden="true">🥬</span>خضار</a>
-            <a class="sn-hub-link" href="/stores?type=flowers_gifts"><span class="sn-hub-link__ic" aria-hidden="true">💐</span>ورود وهدايا</a>
-            <a class="sn-hub-link" href="/stores?type=sweets"><span class="sn-hub-link__ic" aria-hidden="true">🍰</span>حلويات</a>
-            <a class="sn-hub-link" href="/stores?type=home_business"><span class="sn-hub-link__ic" aria-hidden="true">🏠</span>أسر منتجة</a>
-            <a class="sn-hub-link" href="/stores?type=all"><span class="sn-hub-link__ic" aria-hidden="true">▦</span>كل المتاجر</a>
+          <div class="sn-card__arrow">← اكتشف</div>
+        </a>
+        <a class="sn-card sn-card--stores sn-hub-link-card" href="/stores">
+          <div class="sn-card__icon-wrap" aria-hidden="true">🛒</div>
+          <div>
+            <div class="sn-card__name">متاجر</div>
+            <div class="sn-card__desc">سوبرماركت، صيدليات<br>وبقالة مع توصيل سريع</div>
           </div>
-        </details>
-        <details class="sn-hub-item sn-hub-item--delivery" name="ervenow-home-hub">
-          <summary class="sn-card sn-card--delivery">
-            <div class="sn-card__icon-wrap" aria-hidden="true">🚚</div>
-            <div>
-              <div class="sn-card__name">توصيل</div>
-              <div class="sn-card__desc">توصيل من نقطة لأخرى<br>وتوصيل غاز منزلي</div>
-            </div>
-            <div class="sn-card__arrow">← اطلب</div>
-          </summary>
-          <div class="sn-hub-panel">
-            <a class="sn-hub-link" href="/delivery-services.html?service=car_transport"><span class="sn-hub-link__ic" aria-hidden="true">🚗</span>نقل مركبات</a>
-            <a class="sn-hub-link" href="/delivery-services.html?service=local_delivery"><span class="sn-hub-link__ic" aria-hidden="true">📦</span>توصيل داخلي</a>
-            <a class="sn-hub-link" href="/delivery-services.html?service=furniture"><span class="sn-hub-link__ic" aria-hidden="true">🛋️</span>نقل أثاث</a>
-            <a class="sn-hub-link" href="/delivery-services.html?service=gas_delivery"><span class="sn-hub-link__ic" aria-hidden="true">🚚</span>توصيل غاز</a>
-            <a class="sn-hub-link" href="/delivery-map"><span class="sn-hub-link__ic" aria-hidden="true">🗺️</span>طلب من الخريطة</a>
+          <div class="sn-card__arrow">← اكتشف</div>
+        </a>
+        <a class="sn-card sn-card--delivery sn-hub-link-card" href="/delivery-services.html">
+          <div class="sn-card__icon-wrap" aria-hidden="true">🚚</div>
+          <div>
+            <div class="sn-card__name">توصيل</div>
+            <div class="sn-card__desc">توصيل من نقطة لأخرى<br>وتوصيل غاز منزلي</div>
           </div>
-        </details>
-        <details class="sn-hub-item sn-hub-item--services" name="ervenow-home-hub">
-          <summary class="sn-card sn-card--services">
-            <div class="sn-card__icon-wrap" aria-hidden="true">🔧</div>
-            <div>
-              <div class="sn-card__name">خدمات</div>
-              <div class="sn-card__desc">سباكة، كهرباء، تنظيف<br>وخدمات منزلية متنوعة</div>
-            </div>
-            <div class="sn-card__arrow">← احجز</div>
-          </summary>
-          <div class="sn-hub-panel">
-            <a class="sn-hub-link" href="/services?type=plumber"><span class="sn-hub-link__ic" aria-hidden="true">🔧</span>سباك</a>
-            <a class="sn-hub-link" href="/services?type=electrician"><span class="sn-hub-link__ic" aria-hidden="true">⚡</span>كهربائي</a>
-            <a class="sn-hub-link" href="/services?type=nursery"><span class="sn-hub-link__ic" aria-hidden="true">🪴</span>مشتل</a>
-            <a class="sn-hub-link" href="/services?type=ac_technician"><span class="sn-hub-link__ic" aria-hidden="true">❄️</span>فني مكيفات</a>
-            <a class="sn-hub-link" href="/services?type=cleaning_villa"><span class="sn-hub-link__ic" aria-hidden="true">🧼</span>غسيل درج فيلا</a>
-            <a class="sn-hub-link" href="/services?type=cleaning_building"><span class="sn-hub-link__ic" aria-hidden="true">🏢</span>غسيل درج عمارة</a>
-            <a class="sn-hub-link" href="/services"><span class="sn-hub-link__ic" aria-hidden="true">▦</span>كل الخدمات</a>
+          <div class="sn-card__arrow">← اطلب</div>
+        </a>
+        <a class="sn-card sn-card--services sn-hub-link-card" href="/services">
+          <div class="sn-card__icon-wrap" aria-hidden="true">🔧</div>
+          <div>
+            <div class="sn-card__name">خدمات</div>
+            <div class="sn-card__desc">سباكة، كهرباء، تنظيف<br>وخدمات منزلية متنوعة</div>
           </div>
-        </details>
+          <div class="sn-card__arrow">← احجز</div>
+        </a>
       </div>
 
       <div class="sn-trust" role="list" aria-label="مزايا المنصة">
@@ -3216,10 +3176,10 @@
         }
       })();
     </script>
+    <script src="/assets/guest-offers-carousel.js" defer></script>
     <script src="/assets/guestBrowse.js"></script>
     <script src="/assets/ervenow-toggle.js"></script>
     <script src="/assets/guest-shell.js"></script>
-    <script src="/assets/sn-home-hub.js"></script>
     <script>
       function goLogin() {
         window.location.href = "/login";
@@ -3680,7 +3640,8 @@
     <script>
       (function () {
         var n = document.getElementById("guestStartNote");
-        if (n && window.ErvenowGuestBrowse && ErvenowGuestBrowse.isAnonymousGuest()) {
+        if (!n) return;
+        if (window.ErvenowGuestBrowse && ErvenowGuestBrowse.isAnonymousGuest()) {
           n.style.display = "block";
         }
       })();

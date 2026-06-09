@@ -25,7 +25,11 @@ if (reloadErvenowPayBtn) reloadErvenowPayBtn.onclick = app.loadErvenowPayPanel;
 var reloadOffersBtn = document.getElementById("reloadOffersBtn");
 if (reloadOffersBtn) reloadOffersBtn.onclick = app.loadOffersPanel;
 var reloadHeroBannersBtn = document.getElementById("reloadHeroBannersBtn");
-if (reloadHeroBannersBtn) reloadHeroBannersBtn.onclick = app.loadHeroBannersPanel;
+if (reloadHeroBannersBtn) {
+  reloadHeroBannersBtn.onclick = function () {
+    app.loadHeroBannersPanel({ force: true });
+  };
+}
 var saveOffersBtn = document.getElementById("saveOffersBtn");
 if (saveOffersBtn) saveOffersBtn.onclick = app.safeClick(app.saveOffersPanel);
 var reloadServicesBtn = document.getElementById("reloadServicesBtn");
@@ -86,8 +90,25 @@ document.querySelectorAll(".panel-btn[data-panel]").forEach(function (btn) {
     var panelId = btn.getAttribute("data-panel");
     if (!panelId) return;
     var isActive = btn.classList.contains("active");
-    app.showPanel(isActive ? "" : panelId);
-    if (!isActive && panelId) void app.loadPanelById(panelId);
+    if (isActive) {
+      app.showPanel("");
+      return;
+    }
+    app.showPanel(panelId);
+    void app.loadPanelById(panelId);
+  });
+});
+document.querySelectorAll("[data-panel-jump]").forEach(function (link) {
+  if (link.getAttribute("data-panel-jump-wired") === "1") return;
+  link.setAttribute("data-panel-jump-wired", "1");
+  link.addEventListener("click", function (e) {
+    e.preventDefault();
+    var panelId = link.getAttribute("data-panel-jump");
+    if (!panelId || !document.getElementById(panelId)) return;
+    app.showPanel(panelId);
+    void app.loadPanelById(panelId);
+    var el = document.getElementById(panelId);
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
   });
 });
 var closeBtn = document.getElementById("closePanelsBtn");

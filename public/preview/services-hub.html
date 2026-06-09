@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover"
+    />
+    <script src="/assets/viewport-fit.js"></script>
+    <title>معاينة | صفحة الخدمات</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/assets/responsive-audit-base.css" />
+    <link rel="stylesheet" href="/assets/ervenow-responsive.css" />
+    <link rel="stylesheet" href="/assets/preview-restaurants-hub.css" />
+  </head>
+  <body class="preview-rest-page">
+    <header class="preview-rest-banner">
+      <div class="preview-rest-banner__inner">
+        <p class="preview-rest-banner__tag">معاينة فقط — لم يُطبَّق بعد</p>
+        <h1 class="preview-rest-banner__title">صفحة الخدمات</h1>
+        <nav class="preview-hub-nav" aria-label="معاينة الأقسام">
+          <a href="/preview/restaurants-hub.html">🍽️ مطاعم</a>
+          <a href="/preview/stores-hub.html">🛒 متاجر</a>
+          <a href="/preview/delivery-hub.html">🚚 توصيل</a>
+          <a href="/preview/services-hub.html" class="is-active" aria-current="page">🔧 خدمات</a>
+          <a href="/preview/">الفهرس</a>
+        </nav>
+      </div>
+    </header>
+
+    <div class="preview-rest-shell">
+      <header class="preview-rest-hero preview-rest-hero--services">
+        <h1>🔧 خدمات</h1>
+        <p>نوع الخدمة في الأعلى — المزودون تحت. بدون اختيار: <strong>كل الخدمات</strong> تظهر تلقائياً.</p>
+      </header>
+
+      <div class="preview-rest-toolbar">
+        <div class="preview-rest-search-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <circle cx="11" cy="11" r="7" /><path d="M20 20l-4.3-4.3" stroke-linecap="round" />
+          </svg>
+          <input type="search" class="preview-rest-search" id="hubSearch" placeholder="ابحث عن خدمة أو فني…" autocomplete="off" />
+        </div>
+        <div class="preview-rest-sort" role="group" aria-label="ترتيب">
+          <button type="button" class="preview-rest-sort__btn is-active" data-sort="nearest">📍 الأقرب</button>
+          <button type="button" class="preview-rest-sort__btn" data-sort="rating">⭐ الأعلى تقييماً</button>
+          <button type="button" class="preview-rest-sort__btn" data-sort="offers">🎁 عروض</button>
+        </div>
+      </div>
+
+      <section class="preview-rest-cats" aria-label="تصنيفات الخدمات">
+        <div class="preview-rest-cats__head">
+          <span aria-hidden="true">🔧</span>
+          <div>
+            <strong>تصنيفات الخدمات</strong>
+            <small>سباك، كهرباء، تنظيف… أو «الكل»</small>
+          </div>
+        </div>
+        <div class="preview-rest-cats__scroll" id="catBar" role="tablist"></div>
+      </section>
+
+      <p class="preview-rest-status" id="statusLine" aria-live="polite">—</p>
+      <div class="preview-rest-grid" id="hubGrid" aria-label="قائمة الخدمات"></div>
+      <footer class="preview-rest-foot">
+        <p>بيانات تجريبية — الصفحة الحقيقية: <a href="/services">/services</a></p>
+      </footer>
+    </div>
+
+    <script src="/assets/preview-section-hub.js"></script>
+    <script>
+      initPreviewHub({
+        queryKey: "type",
+        entityLabel: "مزود",
+        entityPlural: "مزودين",
+        ctaLabel: "احجز الخدمة",
+        categories: [
+          { id: "plumber", icon: "🔧", label: "سباك" },
+          { id: "electrician", icon: "⚡", label: "كهربائي" },
+          { id: "nursery", icon: "🪴", label: "مشتل" },
+          { id: "ac_technician", icon: "❄️", label: "فني مكيفات" },
+          { id: "cleaning_villa", icon: "🧼", label: "غسيل درج فيلا" },
+          { id: "cleaning_building", icon: "🏢", label: "غسيل درج عمارة" },
+        ],
+        items: [
+          { id: "v1", name: "سباك محترف — أحمد", category: "plumber", label: "سباك", rating: 4.8, km: 1.4, offer: true, icon: "🔧" },
+          { id: "v2", name: "كهربائي معتمد", category: "electrician", label: "كهربائي", rating: 4.7, km: 2.0, offer: false, icon: "⚡" },
+          { id: "v3", name: "مشتل الربيع", category: "nursery", label: "مشتل", rating: 4.6, km: 3.2, offer: false, icon: "🪴" },
+          { id: "v4", name: "تكييف وصيانة", category: "ac_technician", label: "فني مكيفات", rating: 4.9, km: 1.1, offer: true, icon: "❄️" },
+          { id: "v5", name: "تنظيف درج فيلا", category: "cleaning_villa", label: "غسيل درج فيلا", rating: 4.5, km: 2.6, offer: false, icon: "🧼" },
+          { id: "v6", name: "تنظيف عمارة", category: "cleaning_building", label: "غسيل درج عمارة", rating: 4.4, km: 1.9, offer: true, icon: "🏢" },
+          { id: "v7", name: "سباك طوارئ 24", category: "plumber", label: "سباك", rating: 4.3, km: 4.5, offer: false, icon: "🔧" },
+          { id: "v8", name: "كهرباء منازل", category: "electrician", label: "كهربائي", rating: 4.6, km: 2.8, offer: true, icon: "⚡" },
+        ],
+      });
+    </script>
+  </body>
+</html>

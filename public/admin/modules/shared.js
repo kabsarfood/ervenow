@@ -89,6 +89,15 @@ app.showPanel = function (panelId) {
     else btns[j].classList.remove("active");
   }
   app.activePanelId = panelId || "";
+  if (typeof history !== "undefined" && history.replaceState) {
+    var base = location.pathname + location.search;
+    if (panelId) {
+      var nextHash = "#" + panelId;
+      if (location.hash !== nextHash) history.replaceState(null, "", base + nextHash);
+    } else if (location.hash) {
+      history.replaceState(null, "", base);
+    }
+  }
 }
 
 app.adminPermissions = [];

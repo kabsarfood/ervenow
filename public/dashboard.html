@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
   <head>
     <meta charset="utf-8" />
@@ -13,6 +13,7 @@
     <link rel="stylesheet" href="/assets/order-draft-badge.css" />
     <link rel="stylesheet" href="/assets/start-now-landing.css" />
     <link rel="stylesheet" href="/assets/index-header-banner.css" />
+    <link rel="stylesheet" href="/assets/guest-offers-carousel.css" />
         <style>
       .dash-alert {
         display: none;
@@ -750,128 +751,6 @@
         min-height: 48px;
         font-size: 1rem;
       }
-      .dash-main .layout .card.guest-offers-carousel {
-        padding: 0;
-        margin-bottom: 14px;
-        overflow: hidden;
-        border-radius: 18px;
-        border: 1px solid rgba(61, 34, 19, 0.1);
-        background: #1a120c;
-      }
-      .guest-offers-carousel {
-        display: block;
-      }
-      .guest-offers-slide--noimg {
-        background: linear-gradient(135deg, #3d2213 0%, #6b4a2e 42%, #1a120c 100%);
-      }
-      .dash-offer-card__img {
-        width: 100%;
-        max-height: 88px;
-        object-fit: cover;
-        border-radius: 10px;
-        margin-bottom: 6px;
-      }
-      .guest-offers-shell {
-        position: relative;
-        width: 100%;
-        aspect-ratio: 1920 / 730;
-        min-height: 0;
-        overflow: hidden;
-      }
-      .guest-offers-track {
-        display: flex;
-        flex-direction: row;
-        direction: ltr;
-        height: 100%;
-        width: 100%;
-        transition: transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
-        will-change: transform;
-      }
-      .guest-offers-slide {
-        position: relative;
-        flex: 0 0 100%;
-        width: 100%;
-        min-width: 100%;
-        height: 100%;
-        display: block;
-        text-decoration: none;
-        color: #fffefb;
-        overflow: hidden;
-        box-sizing: border-box;
-      }
-      .guest-offers-slide__img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        display: block;
-      }
-      .guest-offers-slide__shade {
-        position: absolute;
-        inset: 0;
-        background: linear-gradient(90deg, rgba(26, 18, 12, 0.82) 0%, rgba(26, 18, 12, 0.35) 55%, rgba(26, 18, 12, 0.15) 100%);
-      }
-      .guest-offers-slide__body {
-        position: absolute;
-        inset: auto auto 0 0;
-        padding: clamp(14px, 3vw, 22px);
-        max-width: min(92%, 420px);
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-        z-index: 1;
-        direction: rtl;
-        text-align: right;
-      }
-      .guest-offers-slide__price {
-        display: inline-flex;
-        align-self: flex-start;
-        padding: 4px 10px;
-        border-radius: 999px;
-        background: rgba(212, 168, 74, 0.92);
-        color: #2b170d;
-        font-size: 0.78rem;
-        font-weight: 900;
-      }
-      .guest-offers-slide__title {
-        font-size: clamp(1rem, 3.2vw, 1.35rem);
-        font-weight: 900;
-        line-height: 1.25;
-      }
-      .guest-offers-slide__sub {
-        font-size: 0.86rem;
-        font-weight: 600;
-        opacity: 0.92;
-        line-height: 1.45;
-      }
-      .guest-offers-slide__cta {
-        margin-top: 4px;
-        font-size: 0.84rem;
-        font-weight: 800;
-        color: #f5d78e;
-      }
-      .guest-offers-dots {
-        position: absolute;
-        left: 50%;
-        bottom: 10px;
-        transform: translateX(-50%);
-        display: flex;
-        gap: 6px;
-        z-index: 2;
-      }
-      .guest-offers-dot {
-        width: 10px;
-        height: 10px;
-        min-width: 10px;
-        min-height: 10px;
-        padding: 0;
-        border: 0;
-        border-radius: 50%;
-        background: rgba(255, 255, 255, 0.35);
-        cursor: pointer;
-      }
-      .guest-offers-dot.is-active {
-        background: #f5d78e;
-      }
       .dash-main-hub {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
@@ -1220,13 +1099,13 @@
       }
 
         .dash-platform-hero {
-          margin-bottom: 14px;
-          border-radius: 18px;
+          margin-bottom: clamp(8px, 1.8vw, 10px);
+          border-radius: clamp(14px, 2.5vw, 16px);
           overflow: hidden;
           border: 1px solid rgba(61, 34, 19, 0.12);
           background: linear-gradient(135deg, #3d2213, #6b4423 55%, #8b5a2b);
           color: #fffefb;
-          padding: clamp(18px, 4vw, 28px) clamp(16px, 4vw, 24px);
+          padding: clamp(12px, 2.6vw, 18px) clamp(14px, 3vw, 20px);
         }
         .dash-platform-hero.sn-hero--has-platform-bg {
           background-image: linear-gradient(135deg, rgba(61, 34, 19, 0.9), rgba(45, 26, 10, 0.82)),
@@ -1235,38 +1114,48 @@
           background-position: center;
         }
         .dash-platform-hero__title {
-          margin: 0 0 8px;
-          font-size: clamp(1.25rem, 4vw, 1.65rem);
+          margin: 0 0 6px;
+          font-size: clamp(1.02rem, 3.2vw, 1.28rem);
           font-weight: 900;
           line-height: 1.35;
         }
         .dash-platform-hero__sub {
-          margin: 0 0 14px;
-          font-size: clamp(0.88rem, 2.5vw, 1rem);
-          line-height: 1.5;
+          margin: 0 0 10px;
+          font-size: clamp(0.8rem, 2.2vw, 0.9rem);
+          line-height: 1.45;
           opacity: 0.95;
         }
         .dash-platform-hero__actions {
           display: flex;
           flex-wrap: wrap;
-          gap: 10px;
+          gap: 8px;
         }
         .dash-platform-hero__actions a.sn-hero__cta {
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          min-height: 44px;
-          padding: 10px 18px;
-          border-radius: 12px;
+          min-height: 40px;
+          padding: 8px 14px;
+          border-radius: 10px;
+          font-size: 0.88rem;
           font-weight: 800;
           text-decoration: none;
           background: #c9a227;
           color: #1a1008;
         }
         .dash-platform-hero__actions a.sn-hero__cta--outline {
-          background: transparent;
+          background: rgba(26, 16, 8, 0.28);
+          color: #f5e6a8;
+          border: 2px solid #d4af37;
+          box-shadow: none;
+        }
+        .dash-platform-hero__actions a.sn-hero__cta--outline:hover,
+        .dash-platform-hero__actions a.sn-hero__cta--outline:focus-visible {
+          background: rgba(26, 16, 8, 0.4);
+          border-color: #e8c547;
           color: #fffefb;
-          border: 2px solid rgba(255, 254, 248, 0.65);
+          transform: none;
+          box-shadow: none;
         }
 
     </style>
@@ -1505,20 +1394,6 @@
         }
       }
 
-      function guestIconImg(size, className) {
-        return (
-          '<img class="erv-guest-icon' +
-          (className ? " " + className : "") +
-          '" src="' +
-          GUEST_ICON_SRC +
-          '" width="' +
-          size +
-          '" height="' +
-          size +
-          '" alt="" decoding="async" />'
-        );
-      }
-
       function showDashAlert(kind, html) {
         var dash = document.getElementById("dashStatus");
         if (!dash) return;
@@ -1608,15 +1483,7 @@
         var switchAccount = document.getElementById("switchAccount");
         if (!dashHasToken()) {
           if (document.getElementById("profileCard")) document.getElementById("profileCard").style.display = "none";
-          showDashAlert(
-            "guest",
-            '<div class="dash-guest-badge">' +
-              '<span class="dash-guest-badge__icon">' +
-              guestIconImg(40) +
-              "</span>" +
-              '<p class="dash-guest-badge__text">أنت تتصفّح كزائر — استكشف الأقسام وحسّب المسافة. لتنفيذ طلب توصيل <a href=\"/login?role=customer\">سجّل الدخول</a>. يتم تفعيل الحساب بعد المراجعة واعتماده من إدارة ERVENOW.</p>' +
-              "</div>"
-          );
+          hideDashAlert();
           if (window.ErvenowGuestShell && ErvenowGuestShell.refreshAuthHeader) {
             ErvenowGuestShell.refreshAuthHeader();
           }

@@ -731,6 +731,22 @@
   transform: translateX(0);
 }
 
+.sn-hub-link-card {
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+.sn-home-hub--direct .sn-hub-link-card .sn-card__arrow {
+  opacity: 0.85;
+  transform: translateX(0);
+}
+
+.sn-home-hub--direct .sn-hub-link-card:focus-visible {
+  outline: 3px solid rgba(201, 162, 39, 0.55);
+  outline-offset: 3px;
+}
+
 /* ══ أقسام رئيسية — شبكة البطاقات الأصلية + تصنيفات عند الفتح ══ */
 .sn-grid.sn-home-hub {
   display: grid;

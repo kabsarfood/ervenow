@@ -270,10 +270,50 @@ function parseUserGeoQuery(q) {
   return { lat, lng };
 }
 
+/** متاجر لديها منتجات بسعر عرض فعلي (offer_price < price) */
+async function fetchActiveOfferStoreIds(sb, storeIds) {
+  const set = new Set();
+  const ids = [...new Set((storeIds || []).filter(Boolean))];
+  if (!ids.length || !sb) return set;
+  try {
+    const { data, error } = await sb
+      .from("store_products")
+      .select("store_id, price, offer_price, active")
+      .in("store_id", ids)
+      .not("offer_price", "is", null);
+    if (error) return set;
+    (data || []).forEach((p) => {
+      if (p.active === false) return;
+      const price = Number(p.price);
+      const op = Number(p.offer_price);
+      if (!Number.isFinite(op) || op <= 0) return;
+      if (!Number.isFinite(price) || price <= 0) {
+        set.add(p.store_id);
+        return;
+      }
+      if (op < price) set.add(p.store_id);
+    });
+  } catch (e) {
+    console.warn("[store/offers]", e);
+  }
+  return set;
+}
+
+function attachOfferFlagsToRows(rows, offerIds) {
+  return (rows || []).map((r) => ({
+    ...r,
+    _has_active_offer: offerIds.has(r.id),
+  }));
+}
+
 function sortStoresForBrowse(rows, sortMode) {
   const mode = String(sortMode || "rating").toLowerCase();
   const copy = [...rows];
   copy.sort((a, b) => {
+    if (mode === "offers") {
+      const offerDiff = (b._has_active_offer ? 1 : 0) - (a._has_active_offer ? 1 : 0);
+      if (offerDiff !== 0) return offerDiff;
+    }
     if (mode === "orders") {
       const o = (Number(b.total_orders) || 0) - (Number(a.total_orders) || 0);
       if (o !== 0) return o;
@@ -281,8 +321,8 @@ function sortStoresForBrowse(rows, sortMode) {
     const ord = (Number(b.total_orders) || 0) - (Number(a.total_orders) || 0);
     if (ord !== 0) return ord;
     const ra = Number(b.average_rating) || 0;
-    const rb = Number(b.average_rating) || 0;
-    return rb - ra;
+    const rb = Number(a.average_rating) || 0;
+    return ra - rb;
   });
   return copy;
 }
@@ -395,6 +435,7 @@ function publicStoreRow(row, labelOpts) {
   if (row.distance_km != null && Number.isFinite(Number(row.distance_km))) {
     o.distance_km = Number(row.distance_km);
   }
+  if (row._has_active_offer != null) o.has_active_offer = !!row._has_active_offer;
   if (storeSupportsProductCategoryBrowse(row.type)) o.supports_product_categories = true;
   if (isDeliveryEnginePolicyEnabled()) {
     o.delivery_engine = publicDeliveryPolicyLabels(storePolicyRowToConfig(row));
@@ -546,6 +587,10 @@ router.get("/", optionalAuth, async (req, res) => {
     const browseType = String(req.query.type || "").trim().toLowerCase();
     const sortParam = String(req.query.sort || "rating").trim().toLowerCase();
     const userPos = parseUserGeoQuery(req.query);
+    const offersOnly =
+      String(req.query.offers_only || "").trim() === "1" ||
+      String(req.query.offers || "").trim() === "1" ||
+      sortParam === "offers";
     const wantTypes = browseTypesForStoreQuery(browseType);
 
     if (storesListRoot) {
@@ -555,7 +600,7 @@ router.get("/", optionalAuth, async (req, res) => {
         .trim()
         .toLowerCase();
       const listTypeRaw = String(req.query.type || "").trim().toLowerCase();
-      const cacheKey = `storelist-all:v4:${sortParam}|${mask ? "g" : "u"}|${geoKey}|c:${rawCatFilter || "none"}|t:${listTypeRaw || "all"}`;
+      const cacheKey = `storelist-all:v5:${sortParam}|${mask ? "g" : "u"}|${geoKey}|c:${rawCatFilter || "none"}|t:${listTypeRaw || "all"}|o:${offersOnly ? "1" : "0"}`;
       const redisListKey = `storelist:v2:${cacheKey}`;
       const redisHit = await cacheGetJson(redisListKey);
       if (redisHit && redisHit.stores) {
@@ -624,6 +669,12 @@ router.get("/", optionalAuth, async (req, res) => {
           (r) => storeRowCountsAsRestaurant(r) && restaurantRowMatchesCuisineFilter(r, categoryFilter, mergedRestaurant)
         );
       }
+      const offerIds = await fetchActiveOfferStoreIds(
+        sb,
+        rows.map((r) => r.id)
+      );
+      rows = attachOfferFlagsToRows(rows, offerIds);
+      if (offersOnly) rows = rows.filter((r) => r._has_active_offer);
       if (userPos) {
         rows = filterAndSortStoresByUser(rows, userPos.lat, userPos.lng);
       } else {
@@ -682,7 +733,7 @@ router.get("/", optionalAuth, async (req, res) => {
 
     const mask = !req.appUser;
     const geoKey = userPos ? `${userPos.lat.toFixed(4)}:${userPos.lng.toFixed(4)}` : "nogeo";
-    const cacheKey = `${browseType}|v3|${sortParam}|${mask ? "g" : "u"}|${geoKey}`;
+    const cacheKey = `${browseType}|v4|${sortParam}|${mask ? "g" : "u"}|${geoKey}|o:${offersOnly ? "1" : "0"}`;
     const redisListKey = `storelist:v2:${cacheKey}`;
     const redisHit = await cacheGetJson(redisListKey);
     if (redisHit && redisHit.stores) {
@@ -732,6 +783,13 @@ router.get("/", optionalAuth, async (req, res) => {
       seen.add(id);
       return storeRowIsListedActive(r);
     });
+
+    const offerIds2 = await fetchActiveOfferStoreIds(
+      sb,
+      rows.map((r) => r.id)
+    );
+    rows = attachOfferFlagsToRows(rows, offerIds2);
+    if (offersOnly) rows = rows.filter((r) => r._has_active_offer);
 
     if (userPos) {
       rows = filterAndSortStoresByUser(rows, userPos.lat, userPos.lng);

@@ -1,0 +1,221 @@
+/**
+ * ERVENOW — بنر شرائح العروض (مشترك: لوحة الزائر · الرئيسية)
+ * مقاس موحّد 1920×730 · object-fit cover · translateX 0.7s · 5s auto
+ */
+
+.guest-offers-carousel {
+  display: block;
+}
+
+.guest-offers-carousel[hidden] {
+  display: none !important;
+}
+
+.dash-main .layout .card.guest-offers-carousel {
+  padding: 0;
+  margin-bottom: 14px;
+  overflow: hidden;
+  border-radius: 18px;
+  border: 1px solid rgba(61, 34, 19, 0.1);
+  background: #1a120c;
+}
+
+#dashMain > .dash-platform-hero + .guest-offers-carousel {
+  margin-top: clamp(10px, 2.2vw, 14px);
+}
+
+/* الرئيسية — مكان بطاقة «اطلب الآن» السابقة · نفس بطاقة العروض */
+.lp-home-premium .card.guest-offers-carousel--home,
+.lp-home-premium .guest-offers-carousel--home {
+  box-sizing: border-box;
+  display: block;
+  max-width: min(1120px, 100%);
+  margin: 0 auto clamp(12px, 2.5vw, 18px);
+  overflow: hidden;
+  border-radius: clamp(14px, 2.5vw, 18px);
+  border: 1px solid rgba(61, 34, 19, 0.1);
+  background: #1a120c;
+  box-shadow: 0 8px 28px rgba(45, 26, 10, 0.1);
+}
+
+.lp-home-premium .card.guest-offers-carousel--home {
+  padding: 0;
+  margin-top: clamp(10px, 2vw, 16px);
+  width: min(1120px, calc(100% - 2 * max(clamp(14px, 3vw, 24px), env(safe-area-inset-left, 0px))));
+}
+
+.lp-home-premium .guest-offers-carousel--home:not(.card) {
+  padding: clamp(10px, 2vw, 16px)
+    max(clamp(14px, 3vw, 24px), env(safe-area-inset-right, 0px))
+    clamp(12px, 2.2vw, 18px)
+    max(clamp(14px, 3vw, 24px), env(safe-area-inset-left, 0px));
+}
+
+@media (max-width: 640px) {
+  .lp-home-premium .card.guest-offers-carousel--home,
+  .lp-home-premium .guest-offers-carousel--home {
+    margin-inline: max(0px, env(safe-area-inset-left, 0px)) max(0px, env(safe-area-inset-right, 0px));
+    border-radius: clamp(12px, 3vw, 16px);
+  }
+}
+
+@media (min-width: 641px) and (max-width: 1024px) {
+  .lp-home-premium .guest-offers-carousel--home {
+    max-width: min(96vw, 960px);
+  }
+}
+
+.guest-offers-slide--noimg {
+  background: linear-gradient(135deg, #3d2213 0%, #6b4a2e 42%, #1a120c 100%);
+}
+
+.guest-offers-shell {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1920 / 730;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.guest-offers-track {
+  display: flex;
+  flex-direction: row;
+  direction: ltr;
+  height: 100%;
+  width: 100%;
+  transition: transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .guest-offers-track {
+    transition: none;
+  }
+}
+
+.guest-offers-slide {
+  position: relative;
+  flex: 0 0 100%;
+  width: 100%;
+  min-width: 100%;
+  height: 100%;
+  display: block;
+  text-decoration: none;
+  color: #fffefb;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.guest-offers-slide__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.guest-offers-slide__shade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    rgba(26, 18, 12, 0.82) 0%,
+    rgba(26, 18, 12, 0.35) 55%,
+    rgba(26, 18, 12, 0.15) 100%
+  );
+  pointer-events: none;
+}
+
+.guest-offers-slide__body {
+  position: absolute;
+  inset: auto auto 0 0;
+  padding: clamp(14px, 3vw, 22px);
+  max-width: min(92%, 420px);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  z-index: 1;
+  direction: rtl;
+  text-align: right;
+}
+
+.guest-offers-slide__price {
+  display: inline-flex;
+  align-self: flex-start;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(212, 168, 74, 0.92);
+  color: #2b170d;
+  font-size: clamp(0.72rem, 2vw, 0.78rem);
+  font-weight: 900;
+  line-height: 1.35;
+}
+
+.guest-offers-slide__title {
+  font-size: clamp(1rem, 3.2vw, 1.35rem);
+  font-weight: 900;
+  line-height: 1.25;
+}
+
+.guest-offers-slide__sub {
+  font-size: clamp(0.82rem, 2.4vw, 0.86rem);
+  font-weight: 600;
+  opacity: 0.92;
+  line-height: 1.45;
+}
+
+.guest-offers-slide__cta {
+  margin-top: 4px;
+  font-size: clamp(0.8rem, 2.2vw, 0.84rem);
+  font-weight: 800;
+  color: #f5d78e;
+}
+
+.guest-offers-dots {
+  position: absolute;
+  left: 50%;
+  bottom: max(10px, env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%);
+  display: flex;
+  gap: 6px;
+  z-index: 2;
+}
+
+.guest-offers-dot {
+  width: 10px;
+  height: 10px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+  position: relative;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.guest-offers-dot::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 10px;
+  height: 10px;
+  margin: -5px 0 0 -5px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.35);
+  transition: background 0.2s, transform 0.2s;
+}
+
+.guest-offers-dot.is-active::after {
+  background: #f5d78e;
+  transform: scale(1.08);
+}
+
+.dash-offer-card__img {
+  width: 100%;
+  max-height: 88px;
+  object-fit: cover;
+  border-radius: 10px;
+  margin-bottom: 6px;
+}

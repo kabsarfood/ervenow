@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover"
+    />
+    <script src="/assets/viewport-fit.js"></script>
+    <title>معاينة | أقسام الرئيسية — روابط مباشرة</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/assets/responsive-audit-base.css" />
+    <link rel="stylesheet" href="/assets/ervenow-responsive.css" />
+    <link rel="stylesheet" href="/assets/start-now-landing.css" />
+    <link rel="stylesheet" href="/assets/preview-home-hub.css" />
+  </head>
+  <body class="preview-hub-page lp-home-premium">
+    <header class="preview-hub-banner" role="banner">
+      <div class="preview-hub-banner__inner">
+        <p class="preview-hub-banner__tag">معاينة فقط — لم يُطبَّق على الرئيسية بعد</p>
+        <h1 class="preview-hub-banner__title">أقسام الرئيسية: روابط مباشرة بدل القائمة المنسدلة</h1>
+        <p class="preview-hub-banner__sub">
+          اضغط أي بطاقة أدناه — ستنتقل لشاشة القسم (مثال مطاعم). قارن مع
+          <a href="/">الرئيسية الحالية</a>.
+        </p>
+        <div class="preview-hub-banner__tabs" role="tablist" aria-label="وضع المعاينة">
+          <button type="button" class="preview-hub-tab is-active" role="tab" aria-selected="true" data-view="proposed">
+            المقترح
+          </button>
+          <button type="button" class="preview-hub-tab" role="tab" aria-selected="false" data-view="current">
+            الحالي (منسدلة)
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="preview-hub-main">
+      <!-- ——— المقترح: بطاقات روابط ——— -->
+      <section
+        class="sn-section preview-hub-block"
+        id="viewProposed"
+        aria-labelledby="proposed-title"
+        data-preview-view="proposed"
+      >
+        <p class="sn-section__label">الخطوة 1 — الرئيسية (مقترح)</p>
+        <h2 class="sn-section__title" id="proposed-title">اختر ما يناسبك</h2>
+        <p class="preview-hub-note">كل بطاقة تفتح صفحة القسم — بدون قائمة منسدلة داخل البطاقة.</p>
+
+        <div class="sn-grid sn-home-hub sn-home-hub--direct">
+          <a class="sn-card sn-card--restaurants preview-hub-card" href="#demo-restaurants">
+            <div class="sn-card__icon-wrap" aria-hidden="true">🍽️</div>
+            <div>
+              <div class="sn-card__name">مطاعم</div>
+              <div class="sn-card__desc">مشاوي، برقر، شاورما<br />وأكثر من مطاعم معتمدة</div>
+            </div>
+            <div class="sn-card__arrow">← اكتشف</div>
+          </a>
+          <a class="sn-card sn-card--stores preview-hub-card" href="#demo-stores">
+            <div class="sn-card__icon-wrap" aria-hidden="true">🛒</div>
+            <div>
+              <div class="sn-card__name">متاجر</div>
+              <div class="sn-card__desc">سوبرماركت، صيدليات<br />وبقالة مع توصيل سريع</div>
+            </div>
+            <div class="sn-card__arrow">← اكتشف</div>
+          </a>
+          <a class="sn-card sn-card--delivery preview-hub-card" href="#demo-delivery">
+            <div class="sn-card__icon-wrap" aria-hidden="true">🚚</div>
+            <div>
+              <div class="sn-card__name">توصيل</div>
+              <div class="sn-card__desc">توصيل من نقطة لأخرى<br />وتوصيل غاز منزلي</div>
+            </div>
+            <div class="sn-card__arrow">← اطلب</div>
+          </a>
+          <a class="sn-card sn-card--services preview-hub-card" href="#demo-services">
+            <div class="sn-card__icon-wrap" aria-hidden="true">🔧</div>
+            <div>
+              <div class="sn-card__name">خدمات</div>
+              <div class="sn-card__desc">سباكة، كهرباء، تنظيف<br />وخدمات منزلية متنوعة</div>
+            </div>
+            <div class="sn-card__arrow">← احجز</div>
+          </a>
+        </div>
+      </section>
+
+      <!-- ——— الحالي: details منسدلة (نسخة مختصرة للمقارنة) ——— -->
+      <section
+        class="sn-section preview-hub-block"
+        id="viewCurrent"
+        hidden
+        aria-labelledby="current-title"
+        data-preview-view="current"
+      >
+        <p class="sn-section__label">الحالي — للمقارنة</p>
+        <h2 class="sn-section__title" id="current-title">اختر ما يناسبك</h2>
+        <p class="preview-hub-note">نفس آلية <a href="/">index.html</a> اليوم: نقر → قائمة داخل البطاقة.</p>
+
+        <div class="sn-grid sn-home-hub" id="snHomeHubCompare">
+          <details class="sn-hub-item sn-hub-item--restaurants" name="preview-home-hub">
+            <summary class="sn-card sn-card--restaurants">
+              <div class="sn-card__icon-wrap" aria-hidden="true">🍽️</div>
+              <div>
+                <div class="sn-card__name">مطاعم</div>
+                <div class="sn-card__desc">مشاوي، برقر، شاورما<br />وأكثر من مطاعم معتمدة</div>
+              </div>
+              <div class="sn-card__arrow">← اكتشف</div>
+            </summary>
+            <div class="sn-hub-panel">
+              <span class="preview-hub-panel-hint">قائمة طويلة داخل البطاقة — صعب على الجوال</span>
+              <a class="sn-hub-link" href="/restaurants?category=burger"><span class="sn-hub-link__ic">🍔</span>مطاعم برقر</a>
+              <a class="sn-hub-link" href="/restaurants?category=pizza"><span class="sn-hub-link__ic">🍕</span>مطاعم بيتزا</a>
+              <a class="sn-hub-link" href="/restaurants"><span class="sn-hub-link__ic">▦</span>كل المطاعم</a>
+            </div>
+          </details>
+          <details class="sn-hub-item sn-hub-item--stores" name="preview-home-hub">
+            <summary class="sn-card sn-card--stores">
+              <div class="sn-card__icon-wrap" aria-hidden="true">🛒</div>
+              <div>
+                <div class="sn-card__name">متاجر</div>
+                <div class="sn-card__desc">سوبرماركت، صيدليات<br />وبقالة مع توصيل سريع</div>
+              </div>
+              <div class="sn-card__arrow">← اكتشف</div>
+            </summary>
+            <div class="sn-hub-panel">
+              <a class="sn-hub-link" href="/stores?type=supermarket"><span class="sn-hub-link__ic">🛒</span>سوبر ماركت</a>
+              <a class="sn-hub-link" href="/stores?type=pharmacy"><span class="sn-hub-link__ic">💊</span>صيدليات</a>
+              <a class="sn-hub-link" href="/stores?type=all"><span class="sn-hub-link__ic">▦</span>كل المتاجر</a>
+            </div>
+          </details>
+          <details class="sn-hub-item sn-hub-item--delivery" name="preview-home-hub">
+            <summary class="sn-card sn-card--delivery">
+              <div class="sn-card__icon-wrap" aria-hidden="true">🚚</div>
+              <div>
+                <div class="sn-card__name">توصيل</div>
+                <div class="sn-card__desc">توصيل من نقطة لأخرى<br />وتوصيل غاز منزلي</div>
+              </div>
+              <div class="sn-card__arrow">← اطلب</div>
+            </summary>
+            <div class="sn-hub-panel">
+              <a class="sn-hub-link" href="/delivery-services.html?service=local_delivery"><span class="sn-hub-link__ic">📦</span>توصيل داخلي</a>
+              <a class="sn-hub-link" href="/delivery-map"><span class="sn-hub-link__ic">🗺️</span>طلب من الخريطة</a>
+            </div>
+          </details>
+          <details class="sn-hub-item sn-hub-item--services" name="preview-home-hub">
+            <summary class="sn-card sn-card--services">
+              <div class="sn-card__icon-wrap" aria-hidden="true">🔧</div>
+              <div>
+                <div class="sn-card__name">خدمات</div>
+                <div class="sn-card__desc">سباكة، كهرباء، تنظيف<br />وخدمات منزلية متنوعة</div>
+              </div>
+              <div class="sn-card__arrow">← احجز</div>
+            </summary>
+            <div class="sn-hub-panel">
+              <a class="sn-hub-link" href="/services?type=plumber"><span class="sn-hub-link__ic">🔧</span>سباك</a>
+              <a class="sn-hub-link" href="/services?type=electrician"><span class="sn-hub-link__ic">⚡</span>كهربائي</a>
+              <a class="sn-hub-link" href="/services"><span class="sn-hub-link__ic">▦</span>كل الخدمات</a>
+            </div>
+          </details>
+        </div>
+      </section>
+
+      <!-- ——— أمثلة صفحات الأقسام (بعد النقر) ——— -->
+      <section class="preview-section-demos" aria-label="أمثلة صفحات الأقسام">
+        <p class="sn-section__label">الخطوة 2 — بعد النقر على البطاقة</p>
+        <h2 class="sn-section__title">صفحة القسم — التصنيفات الفرعية بعرض كامل</h2>
+
+        <article class="preview-section-demo" id="demo-restaurants">
+          <header class="preview-section-demo__head preview-section-demo__head--restaurants">
+            <a class="preview-section-demo__back" href="#viewProposed">← الرئيسية</a>
+            <h3>🍽️ مطاعم</h3>
+            <p>اختر نوع المطبخ — ثم تصفّح المطاعم المعتمدة</p>
+          </header>
+          <div class="preview-section-demo__grid">
+            <a class="preview-cat-tile" href="/restaurants?category=kabsa_bukhari"><span>🍚</span>كبسة وبخاري</a>
+            <a class="preview-cat-tile" href="/restaurants?category=shawarma_grill"><span>🌯</span>شاورما ومشاوي</a>
+            <a class="preview-cat-tile" href="/restaurants?category=seafood"><span>🐟</span>سمك</a>
+            <a class="preview-cat-tile" href="/restaurants?category=burger"><span>🍔</span>برقر</a>
+            <a class="preview-cat-tile" href="/restaurants?category=broasted"><span>🍗</span>بروستد</a>
+            <a class="preview-cat-tile" href="/restaurants?category=pizza"><span>🍕</span>بيتزا</a>
+            <a class="preview-cat-tile" href="/restaurants?category=cafe"><span>☕</span>مقاهي</a>
+            <a class="preview-cat-tile" href="/restaurants?category=sweets"><span>🍰</span>حلويات</a>
+            <a class="preview-cat-tile preview-cat-tile--all" href="/restaurants"><span>▦</span>كل المطاعم</a>
+          </div>
+          <p class="preview-section-demo__foot">
+            <a href="/restaurants">افتح صفحة المطاعم الحقيقية ↗</a>
+          </p>
+        </article>
+
+        <article class="preview-section-demo" id="demo-stores">
+          <header class="preview-section-demo__head preview-section-demo__head--stores">
+            <a class="preview-section-demo__back" href="#viewProposed">← الرئيسية</a>
+            <h3>🛒 متاجر</h3>
+            <p>سوبرماركت، صيدليات، خضار — مع توصيل سريع</p>
+          </header>
+          <div class="preview-section-demo__grid">
+            <a class="preview-cat-tile" href="/stores?type=supermarket"><span>🛒</span>سوبر ماركت</a>
+            <a class="preview-cat-tile" href="/stores?type=pharmacy"><span>💊</span>صيدليات</a>
+            <a class="preview-cat-tile" href="/stores?type=vegetables"><span>🥬</span>خضار</a>
+            <a class="preview-cat-tile" href="/stores?type=flowers_gifts"><span>💐</span>ورود وهدايا</a>
+            <a class="preview-cat-tile" href="/stores?type=sweets"><span>🍰</span>حلويات</a>
+            <a class="preview-cat-tile preview-cat-tile--all" href="/stores?type=all"><span>▦</span>كل المتاجر</a>
+          </div>
+          <p class="preview-section-demo__foot"><a href="/stores">افتح صفحة المتاجر الحقيقية ↗</a></p>
+        </article>
+
+        <article class="preview-section-demo" id="demo-delivery">
+          <header class="preview-section-demo__head preview-section-demo__head--delivery">
+            <a class="preview-section-demo__back" href="#viewProposed">← الرئيسية</a>
+            <h3>🚚 توصيل</h3>
+            <p>من نقطة لأخرى — غاز — أثاث — خريطة</p>
+          </header>
+          <div class="preview-section-demo__grid">
+            <a class="preview-cat-tile" href="/delivery-services.html?service=car_transport"><span>🚗</span>نقل مركبات</a>
+            <a class="preview-cat-tile" href="/delivery-services.html?service=local_delivery"><span>📦</span>توصيل داخلي</a>
+            <a class="preview-cat-tile" href="/delivery-services.html?service=furniture"><span>🛋️</span>نقل أثاث</a>
+            <a class="preview-cat-tile" href="/delivery-services.html?service=gas_delivery"><span>⛽</span>توصيل غاز</a>
+            <a class="preview-cat-tile preview-cat-tile--all" href="/delivery-map"><span>🗺️</span>طلب من الخريطة</a>
+          </div>
+          <p class="preview-section-demo__foot">
+            <a href="/delivery-services.html">افتح صفحة التوصيل الحقيقية ↗</a>
+          </p>
+        </article>
+
+        <article class="preview-section-demo" id="demo-services">
+          <header class="preview-section-demo__head preview-section-demo__head--services">
+            <a class="preview-section-demo__back" href="#viewProposed">← الرئيسية</a>
+            <h3>🔧 خدمات</h3>
+            <p>سباكة، كهرباء، تنظيف — احجز فنيّاً معتمداً</p>
+          </header>
+          <div class="preview-section-demo__grid">
+            <a class="preview-cat-tile" href="/services?type=plumber"><span>🔧</span>سباك</a>
+            <a class="preview-cat-tile" href="/services?type=electrician"><span>⚡</span>كهربائي</a>
+            <a class="preview-cat-tile" href="/services?type=ac_technician"><span>❄️</span>فني مكيفات</a>
+            <a class="preview-cat-tile" href="/services?type=cleaning_villa"><span>🧼</span>غسيل درج فيلا</a>
+            <a class="preview-cat-tile" href="/services?type=cleaning_building"><span>🏢</span>غسيل درج عمارة</a>
+            <a class="preview-cat-tile preview-cat-tile--all" href="/services"><span>▦</span>كل الخدمات</a>
+          </div>
+          <p class="preview-section-demo__foot"><a href="/services">افتح صفحة الخدمات الحقيقية ↗</a></p>
+        </article>
+      </section>
+    </main>
+
+    <footer class="preview-hub-footer">
+      <p>هذه معاينة تصميم — الرئيسية على <a href="/">/</a> لم تتغيّر.</p>
+    </footer>
+
+    <script>
+      (function () {
+        var tabs = document.querySelectorAll(".preview-hub-tab");
+        var proposed = document.getElementById("viewProposed");
+        var current = document.getElementById("viewCurrent");
+        var demos = document.querySelector(".preview-section-demos");
+
+        tabs.forEach(function (tab) {
+          tab.addEventListener("click", function () {
+            var view = tab.getAttribute("data-view");
+            tabs.forEach(function (t) {
+              var on = t === tab;
+              t.classList.toggle("is-active", on);
+              t.setAttribute("aria-selected", on ? "true" : "false");
+            });
+            var showProposed = view === "proposed";
+            if (proposed) proposed.hidden = !showProposed;
+            if (current) current.hidden = showProposed;
+            if (demos) demos.style.display = showProposed ? "" : "none";
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          });
+        });
+
+        document.querySelectorAll(".preview-hub-card").forEach(function (card) {
+          card.addEventListener("click", function () {
+            setTimeout(function () {
+              var id = (card.getAttribute("href") || "").replace(/^#/, "");
+              var el = id ? document.getElementById(id) : null;
+              if (el) el.classList.add("is-highlight");
+              setTimeout(function () {
+                if (el) el.classList.remove("is-highlight");
+              }, 1200);
+            }, 80);
+          });
+        });
+      })();
+    </script>
+  </body>
+</html>

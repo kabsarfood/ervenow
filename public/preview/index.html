@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover"
+    />
+    <script src="/assets/viewport-fit.js"></script>
+    <title>معاينة | فهرس صفحات الأقسام</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/assets/responsive-audit-base.css" />
+    <link rel="stylesheet" href="/assets/preview-restaurants-hub.css" />
+    <style>
+      .preview-index-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+        gap: 14px;
+        margin-top: 18px;
+      }
+      .preview-index-card {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        min-height: 120px;
+        padding: 18px 16px;
+        border-radius: 16px;
+        border: 1px solid rgba(61, 34, 19, 0.1);
+        background: #fffefb;
+        text-decoration: none;
+        color: #2a1810;
+        box-shadow: 0 8px 24px rgba(42, 24, 16, 0.08);
+        transition: transform 0.15s ease;
+      }
+      .preview-index-card:hover {
+        transform: translateY(-3px);
+      }
+      .preview-index-card strong {
+        font-size: 1.05rem;
+      }
+      .preview-index-card span {
+        font-size: 0.84rem;
+        line-height: 1.5;
+        color: #7a6558;
+      }
+    </style>
+  </head>
+  <body class="preview-rest-page">
+    <header class="preview-rest-banner">
+      <div class="preview-rest-banner__inner">
+        <p class="preview-rest-banner__tag">معاينة التصميم — لم يُطبَّق على الموقع بعد</p>
+        <h1 class="preview-rest-banner__title">فهرس صفحات الأقسام الأربعة</h1>
+        <p class="preview-rest-banner__links"><a href="/">الرئيسية الحالية</a></p>
+      </div>
+    </header>
+
+    <main class="preview-rest-shell">
+      <p class="preview-hub-note" style="margin:0;line-height:1.6;color:#5c4638">
+        كل قسم: تصنيفات فرعية أعلى + قائمة تحت + أزرار <strong>الأقرب</strong> · <strong>الأعلى تقييماً</strong> · <strong>عروض</strong>.
+        بدون اختيار تصنيف → يظهر الكل تلقائياً.
+      </p>
+
+      <div class="preview-index-grid">
+        <a class="preview-index-card" href="/preview/restaurants-hub.html">
+          <strong>🍽️ مطاعم</strong>
+          <span>كبسة، شاورما، برقر… + قائمة المطاعم</span>
+        </a>
+        <a class="preview-index-card" href="/preview/stores-hub.html">
+          <strong>🛒 متاجر</strong>
+          <span>سوبرماركت، صيدليات، خضار… + قائمة المتاجر</span>
+        </a>
+        <a class="preview-index-card" href="/preview/delivery-hub.html">
+          <strong>🚚 توصيل</strong>
+          <span>نقل، داخلي، أثاث، غاز، خريطة</span>
+        </a>
+        <a class="preview-index-card" href="/preview/services-hub.html">
+          <strong>🔧 خدمات</strong>
+          <span>سباك، كهرباء، تنظيف… + المزودون</span>
+        </a>
+      </div>
+
+      <p class="preview-rest-foot" style="margin-top:28px">
+        <a href="/preview/home-hub-direct.html">معاينة الرئيسية (بطاقات بدون قائمة منسدلة)</a>
+      </p>
+    </main>
+  </body>
+</html>

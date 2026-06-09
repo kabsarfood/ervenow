@@ -1,4 +1,8 @@
 (function (global) {
+  var AUTO_MS = 5000;
+  var BANNER_REC_W = 1920;
+  var BANNER_REC_H = 730;
+
   function esc(s) {
     return String(s || "")
       .replace(/&/g, "&amp;")
@@ -28,7 +32,7 @@
     };
   }
 
-  function buildSlideHtml(slide, idx, total) {
+  function buildSlideHtml(slide) {
     var href = slide.link_url || "/browse";
     var title = slide.title || "عرض";
     var sub = slide.subtitle || "";
@@ -69,7 +73,16 @@
     }
   }
 
-  function mountCarousel(root, offers) {
+  function prefersReducedMotion() {
+    try {
+      return global.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    } catch (_e) {
+      return false;
+    }
+  }
+
+  function mountCarousel(root, offers, opts) {
+    opts = opts || {};
     if (!root) return false;
     var data = normalizeOffersPayload(offers);
     var slides = data.slides;
@@ -79,17 +92,22 @@
     }
     showCarouselRoot(root, true);
     var n = slides.length;
+    var ariaLabel = opts.ariaLabel || "عروض المنصة";
+    var timerKey = opts.timerKey || "__guestOffersTimer";
+
     root.innerHTML =
-      '<div class="guest-offers-shell" aria-label="عروض المنصة">' +
-      '<div class="guest-offers-track" id="guestOffersTrack">' +
+      '<div class="guest-offers-shell" aria-label="' +
+      esc(ariaLabel) +
+      '">' +
+      '<div class="guest-offers-track">' +
       slides
-        .map(function (s, i) {
-          return buildSlideHtml(s, i, n);
+        .map(function (s) {
+          return buildSlideHtml(s);
         })
         .join("") +
       "</div>" +
       (n > 1
-        ? '<div class="guest-offers-dots" id="guestOffersDots" aria-hidden="true">' +
+        ? '<div class="guest-offers-dots" aria-hidden="true">' +
           slides
             .map(function (_s, i) {
               return (
@@ -108,17 +126,13 @@
       "</div>";
 
     if (n > 1) {
-      var track = root.querySelector("#guestOffersTrack");
-      var dots = root.querySelectorAll("#guestOffersDots .guest-offers-dot");
+      var track = root.querySelector(".guest-offers-track");
+      var dots = root.querySelectorAll(".guest-offers-dots .guest-offers-dot");
       var idx = 0;
-
-      function slideTransform(i) {
-        return "translateX(-" + i * 100 + "%)";
-      }
 
       function goTo(i) {
         idx = ((i % n) + n) % n;
-        if (track) track.style.transform = slideTransform(idx);
+        if (track) track.style.transform = "translateX(-" + idx * 100 + "%)";
         for (var d = 0; d < dots.length; d++) {
           dots[d].classList.toggle("is-active", d === idx);
         }
@@ -134,13 +148,69 @@
         })(di);
       }
 
-      if (global.__guestOffersTimer) clearInterval(global.__guestOffersTimer);
-      global.__guestOffersTimer = setInterval(function () {
-        goTo(idx + 1);
-      }, 5000);
+      if (global[timerKey]) clearInterval(global[timerKey]);
+      if (!prefersReducedMotion()) {
+        global[timerKey] = setInterval(function () {
+          goTo(idx + 1);
+        }, opts.intervalMs || AUTO_MS);
+      }
       goTo(0);
     }
     return true;
+  }
+
+  function resolveHomeDisplayMode(banner) {
+    var mode = String((banner && banner.display_mode) || "").trim().toLowerCase();
+    if (mode && mode !== "auto") return mode;
+    if (banner && String(banner.image_url || "").trim()) return "carousel";
+    return "card";
+  }
+
+  function isHomeCarouselBanner(banner) {
+    if (!banner) return false;
+    var mode = resolveHomeDisplayMode(banner);
+    /* carousel / strip / auto — أو card مع صورة (بطاقة الترحيب أُزيلت من الرئيسية) */
+    if (mode === "carousel" || mode === "strip" || mode === "auto") return true;
+    if (mode === "card") return !!String(banner.image_url || "").trim();
+    return false;
+  }
+
+  function splitBannerTitle(title) {
+    var t = String(title || "").trim();
+    if (!t) return { badge: "", main: "" };
+    var parts = t.split("|");
+    if (parts.length >= 2) {
+      return { badge: parts[0].trim(), main: parts.slice(1).join("|").trim() };
+    }
+    return { badge: "", main: t };
+  }
+
+  function mapHomeBannerToSlide(banner) {
+    var parts = splitBannerTitle(banner.title);
+    return {
+      title: parts.main || banner.title || "ERVENOW",
+      subtitle: banner.description || "",
+      price_label: parts.badge || String(banner.banner_type || "").trim() || "",
+      image_url: banner.image_url || "",
+      link_url: banner.button1_url || banner.button2_url || "/start-now",
+      link_label: banner.button1_text || banner.button2_text || "اكتشف المزيد",
+      active: true,
+    };
+  }
+
+  async function fetchHomeBannersPayload() {
+    var res = await fetch(apiUrl("/api/core/banners?target=home"), {
+      headers: { Accept: "application/json" },
+      credentials: "same-origin",
+    });
+    var j = await res.json().catch(function () {
+      return {};
+    });
+    var list = [];
+    if (j && j.ok && Array.isArray(j.banners)) list = j.banners;
+    else if (j && Array.isArray(j.banners)) list = j.banners;
+    var slides = list.filter(isHomeCarouselBanner).map(mapHomeBannerToSlide);
+    return { enabled: true, slides: slides };
   }
 
   function mountOffersTabGrid(offers) {
@@ -202,7 +272,7 @@
     } catch (_e) {
       offers = null;
     }
-    mountCarousel(root, offers);
+    mountCarousel(root, offers, { timerKey: "__guestOffersTimer", ariaLabel: "عروض المنصة" });
     mountOffersTabGrid(offers);
     try {
       global.dispatchEvent(
@@ -213,14 +283,44 @@
     } catch (_e2) {}
   }
 
+  async function loadHomeMainBanner(containerId) {
+    var root = document.getElementById(containerId || "homeMainBanner");
+    var payload = { enabled: true, slides: [] };
+    try {
+      payload = await fetchHomeBannersPayload();
+    } catch (_e) {
+      payload = { enabled: true, slides: [] };
+    }
+    var visible = mountCarousel(root, payload, {
+      timerKey: "__homeMainBannerTimer",
+      ariaLabel: "بنرات المنصة الرئيسية",
+    });
+    try {
+      global.dispatchEvent(
+        new CustomEvent("ervenow:home-main-banner-loaded", {
+          detail: { slides: payload.slides, visible: visible },
+        })
+      );
+    } catch (_e2) {}
+  }
+
   function boot() {
-    loadGuestOffersCarousel("guestOffersCarousel");
+    if (document.getElementById("guestOffersCarousel")) {
+      loadGuestOffersCarousel("guestOffersCarousel");
+    }
+    if (document.getElementById("homeMainBanner")) {
+      loadHomeMainBanner("homeMainBanner");
+    }
   }
 
   global.ErvenowGuestOffers = {
     mount: mountCarousel,
     load: loadGuestOffersCarousel,
+    loadHome: loadHomeMainBanner,
     mountOffersTab: mountOffersTabGrid,
+    mapHomeBannerToSlide: mapHomeBannerToSlide,
+    BANNER_REC_W: BANNER_REC_W,
+    BANNER_REC_H: BANNER_REC_H,
   };
 
   if (document.readyState === "loading") {

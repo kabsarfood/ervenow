@@ -1136,7 +1136,7 @@
         <section class="ds-section-block" aria-labelledby="dsQuickTitle">
           <h2 class="ds-section-title" id="dsQuickTitle">١ — اختر نوع الخدمة</h2>
           <p class="ds-section-block__hint" id="dsLeadMuted">
-            التسعير يُحسب من مسافة الطريق بين نقطتي الاستلام والتسليم. «نقل المركبات» متاح الآن؛ باقي الخدمات قريباً.
+            كل خدمات التوصيل معروضة أدناه — اختر نوع الخدمة أو أكمل النموذج. «نقل المركبات» متاح الآن؛ باقي الخدمات قريباً.
           </p>
 
           <div class="ds-services-wrap">
@@ -1286,11 +1286,45 @@
           clearPreviewMaps();
           var mount = document.getElementById("dsFormMount");
           if (!mount) return;
-          mount.innerHTML =
-            "<div class='ds-coming' role='status'>" +
-            "<strong>اختر نوع خدمة التوصيل</strong><br>" +
-            "اضغط على أحد الخيارات أعلاه (نقل مركبات، توصيل داخلي، …) لبدء الطلب." +
-            "</div>";
+          var html =
+            '<div class="ds-all-services" role="list" aria-label="كل خدمات التوصيل">' +
+            "<p class=\"ds-section-block__hint\" style=\"margin:0 0 14px\">اختر خدمة للبدء — «نقل المركبات» متاح الآن.</p>" +
+            '<div class="stores-grid" style="margin:0">';
+          SERVICE_ORDER.forEach(function (id) {
+            var s = SERVICES.filter(function (x) {
+              return x.id === id;
+            })[0];
+            if (!s) return;
+            html +=
+              '<article class="store-card ds-service-card" role="listitem">' +
+              '<div class="store-card__media" style="display:flex;align-items:center;justify-content:center;font-size:2rem;background:#f5ede4">' +
+              (SERVICE_ICONS[s.id] || "📦") +
+              "</div><div class=\"store-info\"><h3>" +
+              s.label +
+              "</h3><p class=\"store-type\">" +
+              (SERVICE_DESC[s.id] || "") +
+              '</p><div class="store-card__cta"><button type="button" class="store-card__btn" data-ds-svc="' +
+              s.id +
+              '">' +
+              (s.ready ? "اطلب الآن" : "قريباً") +
+              "</button></div></div></article>";
+          });
+          html +=
+            '</div><p style="margin:14px 0 0"><a href="/delivery-map">🗺️ طلب من الخريطة</a></p></div>';
+          mount.innerHTML = html;
+          mount.querySelectorAll("[data-ds-svc]").forEach(function (btn) {
+            btn.addEventListener("click", function () {
+              var id = btn.getAttribute("data-ds-svc");
+              var svc = SERVICES.filter(function (x) {
+                return x.id === id;
+              })[0];
+              if (!svc || !svc.ready) return;
+              state.service = id;
+              renderChips();
+              setWelcome();
+              renderForms();
+            });
+          });
         }
 
         function authHeaders() {
