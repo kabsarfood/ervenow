@@ -193,7 +193,7 @@ async function fetchOrderForTracking(sb, orderId) {
   if (!id) return null;
   const { data, error } = await sb
     .from("orders")
-    .select("id, customer_id, driver_id, delivery_status")
+    .select("id, customer_id, driver_id, provider_id, delivery_status")
     .eq("id", id)
     .maybeSingle();
   if (error || !data) return null;
@@ -255,8 +255,9 @@ function attachTrackingSocket(io) {
         const order = await fetchOrderForTracking(sb, orderId);
         if (!order) return;
         const driverOk = String(order.driver_id || "") === String(uid);
+        const providerOk = String(order.provider_id || "") === String(uid);
         const customerOk = order.customer_id != null && String(order.customer_id) === String(uid);
-        if (role === "admin" || driverOk || customerOk) {
+        if (role === "admin" || driverOk || providerOk || customerOk) {
           socket.join(room);
         }
       } catch {
@@ -312,6 +313,46 @@ function attachTrackingSocket(io) {
         lng: ln,
         ts: Date.now(),
       };
+      if (Number.isFinite(sp)) payload.speed = sp;
+      if (Number.isFinite(hd)) payload.heading = hd;
+
+      io.to(room).emit("driver:update", payload);
+    });
+
+    socket.on("provider:location", async (data) => {
+      if (!data || typeof data !== "object") return;
+      if (socket.data.role !== "service") return;
+
+      const orderId = data.orderId;
+      const room = safeOrderRoomId(orderId);
+      if (!room) return;
+      const la = Number(data.lat);
+      const ln = Number(data.lng);
+      if (!Number.isFinite(la) || !Number.isFinite(ln)) return;
+      if (Math.abs(la) > 90 || Math.abs(ln) > 180) return;
+
+      const sb = createServiceClient();
+      if (!sb) return;
+      const providerUserId = socket.data.userId;
+      try {
+        const { data: row, error } = await sb
+          .from("orders")
+          .select("id, provider_id, delivery_status")
+          .eq("id", String(orderId).trim())
+          .maybeSingle();
+        if (error || !row) return;
+        if (String(row.provider_id || "") !== String(providerUserId)) return;
+        const ds = String(row.delivery_status || "");
+        if (!["accepted", "delivering", "picked"].includes(ds)) return;
+      } catch {
+        return;
+      }
+
+      if (!consumeDriverLocationThrottle(providerUserId, orderId)) return;
+
+      const payload = { lat: la, lng: ln, ts: Date.now() };
+      const sp = data.speed == null || data.speed === "" ? null : Number(data.speed);
+      const hd = data.heading == null || data.heading === "" ? null : Number(data.heading);
       if (Number.isFinite(sp)) payload.speed = sp;
       if (Number.isFinite(hd)) payload.heading = hd;
 

@@ -276,6 +276,42 @@
         }
       });
 
+      var providerGeoWatchId = null;
+      var providerGeoOrderId = null;
+
+      function stopProviderGeoWatch() {
+        if (providerGeoWatchId != null && navigator.geolocation) {
+          navigator.geolocation.clearWatch(providerGeoWatchId);
+        }
+        providerGeoWatchId = null;
+        providerGeoOrderId = null;
+      }
+
+      function startProviderGeoWatch(bookings, profileId) {
+        stopProviderGeoWatch();
+        if (!navigator.geolocation || !profileId) return;
+        var active = (bookings || []).find(function (b) {
+          return (
+            String(b.provider_id || "") === String(profileId) &&
+            ["accepted", "delivering"].indexOf(String(b.status || "").toLowerCase()) >= 0
+          );
+        });
+        if (!active || !active.id) return;
+        providerGeoOrderId = active.id;
+        providerGeoWatchId = navigator.geolocation.watchPosition(
+          function (pos) {
+            var oid = providerGeoOrderId;
+            if (!oid || !window.PlatformAPI) return;
+            window.PlatformAPI.api("/api/services/bookings/" + encodeURIComponent(oid) + "/location", {
+              method: "POST",
+              body: { lat: pos.coords.latitude, lng: pos.coords.longitude },
+            }).catch(function () {});
+          },
+          function () {},
+          { enableHighAccuracy: true, maximumAge: 8000, timeout: 15000 }
+        );
+      }
+
       function renderBookings(list) {
         var el = document.getElementById("list");
         if (!el) return;
@@ -289,10 +325,26 @@
             var mine = !!b.provider_id;
             var canReserve = (st === "new" || st === "pending") && !b.provider_id;
             var canProviderExecute = mine && st === "accepted";
+            var d = b.data && typeof b.data === "object" ? b.data : {};
             var maps =
               b.location && String(b.location).indexOf(",") !== -1
                 ? "https://www.google.com/maps?q=" + encodeURIComponent(b.location)
-                : null;
+                : d.drop_maps_url
+                  ? String(d.drop_maps_url)
+                  : null;
+            var fromLink = d.pickup_maps_url || d.from || "";
+            var extraInternal =
+              String(b.service_type || "").toLowerCase() === "internal_delivery"
+                ? "<p>الشحنة: " +
+                  (d.shipment_name || "—") +
+                  "</p><p>من: " +
+                  (fromLink ? '<a href="' + fromLink + '" target="_blank" rel="noopener">فتح الاستلام</a>' : "—") +
+                  "</p><p>إلى: " +
+                  (maps ? '<a href="' + maps + '" target="_blank" rel="noopener">فتح التسليم</a>' : "—") +
+                  "</p><p>المرسل إليه: " +
+                  (d.recipient_phone || "—") +
+                  "</p>"
+                : "";
             return (
               '<div class="sp-order' +
               (mine ? " is-mine" : "") +
@@ -311,7 +363,8 @@
               "<p>جوال العميل: " +
               (b.customer_phone || "—") +
               "</p>" +
-              (maps ? '<p><a href="' + maps + '" target="_blank" rel="noopener">فتح الموقع على الخرائط</a></p>' : "<p>الموقع: " + (b.location || "—") + "</p>") +
+              extraInternal +
+              (maps && !extraInternal ? '<p><a href="' + maps + '" target="_blank" rel="noopener">فتح الموقع على الخرائط</a></p>' : !extraInternal ? "<p>الموقع: " + (b.location || "—") + "</p>" : "") +
               "<p>الدفع: " +
               payLabel(b.payment_status) +
               " — " +
@@ -402,6 +455,7 @@
         }
         __bookings = data.bookings || [];
         renderBookings(__bookings);
+        startProviderGeoWatch(__bookings, profile.id);
         var summary = document.getElementById("summary");
         if (summary) summary.textContent = "عدد الطلبات المعروضة: " + __bookings.length;
       }

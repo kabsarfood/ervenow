@@ -61,6 +61,37 @@ async function attachDriverCarType(sb, order) {
   return order;
 }
 
+async function attachOrderTrackingMeta(sb, order) {
+  if (!order) return order;
+  const d = order.data && typeof order.data === "object" ? order.data : {};
+  if (!Number.isFinite(Number(order.pickup_lat)) && Number.isFinite(Number(d.pickup_lat))) {
+    order.pickup_lat = Number(d.pickup_lat);
+    order.pickup_lng = Number(d.pickup_lng);
+  }
+  if (!Number.isFinite(Number(order.drop_lat)) && Number.isFinite(Number(d.drop_lat))) {
+    order.drop_lat = Number(d.drop_lat);
+    order.drop_lng = Number(d.drop_lng);
+  }
+  if (!order.pickup_address && (d.from || d.pickup_maps_url)) {
+    order.pickup_address = String(d.from || d.pickup_maps_url).trim();
+  }
+  if (!order.drop_address && (d.to || d.drop_maps_url)) {
+    order.drop_address = String(d.to || d.drop_maps_url).trim();
+  }
+  await attachDriverCarType(sb, order);
+  const pid = order.provider_id;
+  if (pid) {
+    try {
+      const { data: prov } = await sb.from("users").select("phone, name").eq("id", pid).maybeSingle();
+      if (prov) {
+        order.provider_name = String(prov.name || "").trim();
+        if (!order.driver_phone) order.driver_phone = String(prov.phone || "").trim();
+      }
+    } catch (_e) {}
+  }
+  return order;
+}
+
 /**
  * GET /api/order/orders — قائمة طلبات العميل (بديل B2C عن GET /api/delivery/orders)
  */
@@ -233,7 +264,7 @@ router.get("/:id", requireAuth, async (req, res) => {
     const { data, error } = await q.single();
     if (error) return fail(res, error.message, 404);
     const o = data;
-    await attachDriverCarType(sb, o);
+    await attachOrderTrackingMeta(sb, o);
     if (req.appUser.role === "admin") {
       return ok(res, { order: o });
     }

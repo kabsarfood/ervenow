@@ -3,6 +3,13 @@
  */
 
 const { isHomeServiceType } = require("../utils/homeServicePricing");
+
+const FULFILLMENT_SERVICE_TYPES = new Set([
+  "internal_delivery",
+  "pickup_truck",
+  "furniture_move",
+  "vehicle_transfer",
+]);
 const { settleCompletedServiceLedgerOnly } = require("./ledgerOnlySettlement");
 const { creditProviderOnDelivered } = require("./providerLedgerCredit");
 const { getOrderDeliveryStatus, buildOrderStatusPatch } = require("../domain/orders/orderStatus");
@@ -39,7 +46,11 @@ async function completeServiceOrder(sb, orderId, providerId, options = {}) {
   if (!isServiceOrderRow(existing)) return { data: null, error: new Error("not a service order") };
 
   const serviceType = String(existing.service_type || "").toLowerCase();
-  if (!isHomeServiceType(serviceType) && serviceType !== "gas_delivery") {
+  if (
+    !isHomeServiceType(serviceType) &&
+    serviceType !== "gas_delivery" &&
+    !FULFILLMENT_SERVICE_TYPES.has(serviceType)
+  ) {
     return { data: null, error: new Error("not a service order") };
   }
 

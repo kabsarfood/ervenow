@@ -6,7 +6,14 @@ const { computeUnifiedDeliveryFee } = require("./unifiedDeliveryPricing");
 const { createDeliveryOrderFromBody, getRoadDistanceKm } = require("./service");
 const { createGasDelivery } = require("./gasDeliveryCreate");
 
-const CAR_VEHICLE = new Set(["sedan", "van", "suv"]);
+const CAR_VEHICLE = new Set([
+  "sedan",
+  "pickup_truck",
+  "motorcycle",
+  "furniture_truck",
+  "van",
+  "suv",
+]);
 const CAR_COND = new Set(["working", "damaged", "broken", "appraisal"]);
 const TRANSFER = new Set(["internal", "external"]);
 
@@ -143,7 +150,12 @@ async function createCarTransport(sb, appUser, payload, topBody, opts) {
     force_delivery_fee: true,
     delivery_fee: feeResult.delivery_fee,
     distance_km_override: distanceKm,
-    vehicle_type: str(payload.vehicle_category).toLowerCase() === "van" ? "van" : "car",
+    vehicle_type: (() => {
+      const cat = str(payload.vehicle_category).toLowerCase();
+      if (cat === "motorcycle") return "motorcycle";
+      if (cat === "furniture_truck" || cat === "van") return "van";
+      return "car";
+    })(),
     series_source: str(topBody.series_source) || "ervenow-unified",
     external_order_id: topBody.external_order_id,
     idempotency_key: topBody.idempotency_key,

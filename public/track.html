@@ -1070,25 +1070,49 @@
         return p.slice(0, 2) + "****" + p.slice(-4);
       }
 
+      function normalizeTrackOrderCoords(order) {
+        if (!order) return order;
+        var d = order.data && typeof order.data === "object" ? order.data : {};
+        if (!Number.isFinite(Number(order.pickup_lat)) && Number.isFinite(Number(d.pickup_lat))) {
+          order.pickup_lat = Number(d.pickup_lat);
+          order.pickup_lng = Number(d.pickup_lng);
+        }
+        if (!Number.isFinite(Number(order.drop_lat)) && Number.isFinite(Number(d.drop_lat))) {
+          order.drop_lat = Number(d.drop_lat);
+          order.drop_lng = Number(d.drop_lng);
+        }
+        if (!order.pickup_address && (d.from || d.pickup_maps_url)) {
+          order.pickup_address = String(d.from || d.pickup_maps_url);
+        }
+        if (!order.drop_address && (d.to || d.drop_maps_url)) {
+          order.drop_address = String(d.to || d.drop_maps_url);
+        }
+        return order;
+      }
+
       function syncDriverCallAndInfo(order) {
         var infoEl = document.getElementById("driverInfo");
         var btn = document.getElementById("callDriverBtn");
         if (!infoEl || !btn) return;
-        if (!order || !order.driver_id) {
+        var isService = String(order && order.service_type || "").toLowerCase() === "internal_delivery";
+        var hasParty = order && (order.driver_id || order.provider_id);
+        if (!order || !hasParty) {
           infoEl.textContent = "";
           btn.style.display = "none";
           btn.onclick = null;
           return;
         }
         var rawPhone = order.driver_phone != null ? String(order.driver_phone).trim() : "";
+        var label = isService ? "مزود الخدمة" : "المندوب";
+        var name = order.provider_name ? String(order.provider_name).trim() : "";
         if (rawPhone) {
-          infoEl.textContent = "📞 " + maskPhone(rawPhone);
+          infoEl.textContent = (name ? label + ": " + name + " — " : label + " — ") + "📞 " + maskPhone(rawPhone);
           btn.style.display = "inline-block";
           btn.onclick = function () {
             window.location.href = "tel:" + rawPhone.replace(/^tel:/i, "");
           };
         } else {
-          infoEl.textContent = "";
+          infoEl.textContent = name ? label + ": " + name : "";
           btn.style.display = "none";
           btn.onclick = null;
         }
@@ -2484,6 +2508,7 @@
 
       function renderOrder(order) {
         if (!order) return;
+        order = normalizeTrackOrderCoords(order);
         if (currentOrderId != null && String(currentOrderId) !== String(order.id)) {
           leaveTrackOrderRoom();
           clearDriverTrail();
@@ -2809,13 +2834,15 @@
           !Number.isNaN(Number(order.driver_lat)) &&
           !Number.isNaN(Number(order.driver_lng));
 
+        var partyLabel =
+          String(order.service_type || "").toLowerCase() === "internal_delivery" ? "مزود الخدمة" : "المندوب";
         if (!hasDriverLocation) {
-          gpsState.innerText = "📍 جاري تحديد موقع المندوب...";
+          gpsState.innerText = "📍 جاري تحديد موقع " + partyLabel + "...";
           lastUpdate.textContent = "";
           return;
         }
 
-        gpsState.innerText = "🚚 المندوب في الطريق";
+        gpsState.innerText = "🚚 " + partyLabel + " في الطريق";
         if (order.last_location_at) {
           var diff = Math.floor((Date.now() - new Date(order.last_location_at)) / 1000);
           if (diff < 0) diff = 0;

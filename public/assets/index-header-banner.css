@@ -160,7 +160,7 @@
 
 .lp-header.lp-header--refined .lp-header__menu-slot {
 
-  order: -9999 !important;
+  order: 9999 !important;
 
   flex: 0 0 auto !important;
 
@@ -168,11 +168,11 @@
 
   align-items: center !important;
 
-  justify-content: flex-start !important;
+  justify-content: flex-end !important;
 
   direction: ltr !important;
 
-  margin: 0 clamp(6px, 1.2vw, 12px) 0 0 !important;
+  margin: 0 0 0 clamp(6px, 1.2vw, 12px) !important;
 
   min-width: var(--erv-header-control-h);
 
@@ -346,13 +346,13 @@
 
   direction: rtl;
 
-  left: 0 !important;
+  right: 0 !important;
 
-  right: auto !important;
+  left: auto !important;
 
   inset-inline-start: auto !important;
 
-  inset-inline-end: auto !important;
+  inset-inline-end: 0 !important;
 
 }
 
@@ -442,9 +442,9 @@
 
     position: fixed !important;
 
-    left: max(10px, env(safe-area-inset-left, 0px)) !important;
+    right: max(10px, env(safe-area-inset-right, 0px)) !important;
 
-    right: auto !important;
+    left: auto !important;
 
     width: min(340px, calc(100vw - 20px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)));
 
@@ -630,7 +630,7 @@
 
   ((max-width: 932px) and (max-height: 500px) and (pointer: coarse)) {
 
-  /* الصف 1: ☰ يسار — شعار — حساب يمين */
+  /* الصف 1: شعار يسار — حساب — ☰ يمين الشاشة */
 
   .lp-header.lp-header--refined .lp-header__top-row {
 
@@ -676,9 +676,9 @@
 
   .lp-header.lp-header--refined .lp-header__menu-slot {
 
-    order: -9999 !important;
+    order: 9999 !important;
 
-    margin: 0 clamp(8px, 2vw, 12px) 0 0 !important;
+    margin: 0 0 0 clamp(8px, 2vw, 12px) !important;
 
   }
 
@@ -814,11 +814,19 @@
 
 /* ═══════════════════════════════════════════════════════════
 
-   ☰ يسار الشاشة دائماً — عربي (RTL) · إنجليزي (LTR)
+   ☰ يمين الشاشة دائماً — عربي (RTL) · إنجليزي (LTR) · جوال · تابلت · كمبيوتر
 
    ═══════════════════════════════════════════════════════════ */
 
 
+
+html[dir="rtl"] .lp-header.lp-header--menu-right,
+
+html[dir="ltr"] .lp-header.lp-header--menu-right,
+
+html[lang="ar"] .lp-header.lp-header--menu-right,
+
+html[lang="en"] .lp-header.lp-header--menu-right,
 
 html[dir="rtl"] .lp-header.lp-header--menu-left,
 
@@ -835,6 +843,14 @@ html[lang="en"] .lp-header.lp-header--menu-left {
 }
 
 
+
+html[dir="rtl"] .lp-header.lp-header--menu-right .lp-header__inner,
+
+html[dir="ltr"] .lp-header.lp-header--menu-right .lp-header__inner,
+
+html[dir="rtl"] .lp-header.lp-header--menu-right .lp-header__top-row,
+
+html[dir="ltr"] .lp-header.lp-header--menu-right .lp-header__top-row,
 
 html[dir="rtl"] .lp-header.lp-header--menu-left .lp-header__inner,
 
@@ -854,15 +870,19 @@ html[dir="ltr"] .lp-header.lp-header--menu-left .lp-header__top-row {
 
 
 
+html[dir="rtl"] .lp-header.lp-header--menu-right .lp-header__menu-slot,
+
+html[dir="ltr"] .lp-header.lp-header--menu-right .lp-header__menu-slot,
+
 html[dir="rtl"] .lp-header.lp-header--menu-left .lp-header__menu-slot,
 
 html[dir="ltr"] .lp-header.lp-header--menu-left .lp-header__menu-slot {
 
-  order: -9999 !important;
+  order: 9999 !important;
 
-  margin-left: 0 !important;
+  margin-left: clamp(6px, 1.2vw, 12px) !important;
 
-  margin-right: clamp(6px, 1.2vw, 12px) !important;
+  margin-right: 0 !important;
 
   align-self: center !important;
 
@@ -870,11 +890,15 @@ html[dir="ltr"] .lp-header.lp-header--menu-left .lp-header__menu-slot {
 
 
 
+html[dir="rtl"] .lp-header.lp-header--menu-right .lp-header__actions,
+
+html[dir="ltr"] .lp-header.lp-header--menu-right .lp-header__actions,
+
 html[dir="rtl"] .lp-header.lp-header--menu-left .lp-header__actions,
 
 html[dir="ltr"] .lp-header.lp-header--menu-left .lp-header__actions {
 
-  order: 999 !important;
+  order: 5 !important;
 
   margin-left: auto !important;
 
@@ -884,21 +908,27 @@ html[dir="ltr"] .lp-header.lp-header--menu-left .lp-header__actions {
 
 
 
+html[dir="rtl"] .lp-header.lp-header--menu-right .lp-quick-dd__panel,
+
+html[dir="ltr"] .lp-header.lp-header--menu-right .lp-quick-dd__panel,
+
 html[dir="rtl"] .lp-header.lp-header--menu-left .lp-quick-dd__panel,
 
 html[dir="ltr"] .lp-header.lp-header--menu-left .lp-quick-dd__panel {
 
-  left: 0 !important;
+  right: 0 !important;
 
-  right: auto !important;
+  left: auto !important;
 
   inset-inline-start: auto !important;
 
-  inset-inline-end: auto !important;
+  inset-inline-end: 0 !important;
 
 }
 
 
+
+html[lang="en"] .lp-header.lp-header--menu-right .lp-quick-dd__panel,
 
 html[lang="en"] .lp-header.lp-header--menu-left .lp-quick-dd__panel {
 
@@ -911,6 +941,10 @@ html[lang="en"] .lp-header.lp-header--menu-left .lp-quick-dd__panel {
 @media (max-width: 640px),
 
   ((max-width: 932px) and (max-height: 500px) and (pointer: coarse)) {
+
+  html[dir="rtl"] .lp-header.lp-header--menu-right .lp-header__actions,
+
+  html[dir="ltr"] .lp-header.lp-header--menu-right .lp-header__actions,
 
   html[dir="rtl"] .lp-header.lp-header--menu-left .lp-header__actions,
 

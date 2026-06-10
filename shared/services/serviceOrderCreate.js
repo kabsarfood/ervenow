@@ -9,6 +9,7 @@ const { computePlatformCommission } = require("../utils/serviceCommission");
 const { isHomeServiceType } = require("../utils/homeServicePricing");
 const { DELIVERY_STATUS } = require("../domain/orders/constants");
 const { notifyProvidersForBooking } = require("./serviceBookingNotify");
+const { sendInternalDeliveryCustomerWhatsApp } = require("./internalDeliveryNotify");
 const { logger } = require("../utils/logger");
 
 const SERVICE_ORDER_TYPES = new Set([
@@ -76,18 +77,33 @@ async function createServiceOrder(sb, appUser, body) {
   const providerId = raw.provider_id || raw.service_provider_id || null;
   const location = String(raw.location || raw.service_location || raw.drop_address || "").trim();
   const district = String(raw.district || "").trim();
+  const payloadData = raw.data && typeof raw.data === "object" ? raw.data : {};
 
   let orderData = null;
   let insertErr = null;
   for (let attempt = 0; attempt < 5; attempt += 1) {
     const order_number = await allocateUniqueServiceOrderNumber(sb, orderType === "gas_delivery" ? "ES" : "SV");
+    const pickupLat = Number(payloadData.pickup_lat);
+    const pickupLng = Number(payloadData.pickup_lng);
+    const dropLat = Number(payloadData.drop_lat);
+    const dropLng = Number(payloadData.drop_lng);
+    const hasPickup = Number.isFinite(pickupLat) && Number.isFinite(pickupLng);
+    const hasDrop = Number.isFinite(dropLat) && Number.isFinite(dropLng);
+    const pickupAddress = String(payloadData.from || payloadData.pickup_maps_url || district || "").trim();
+    const dropAddress = String(payloadData.to || payloadData.drop_maps_url || location || "").trim();
+    const noteLines = [
+      payloadData.shipment_name ? `الشحنة: ${payloadData.shipment_name}` : "",
+      payloadData.shipment_details || payloadData.notes_extra || "",
+      payloadData.recipient_phone ? `المرسل إليه: ${payloadData.recipient_phone}` : "",
+    ].filter(Boolean);
+
     const row = applyProviderIdToInsertRow(
       {
       customer_id: appUser.id,
-      customer_phone: String(appUser.phone || raw.customer_phone || "").trim(),
+      customer_phone: String(appUser.phone || raw.customer_phone || payloadData.customer_phone || "").trim(),
       order_type: orderType,
       service_type: serviceType,
-      service_name: String(raw.service_name || raw.title || serviceType).trim(),
+      service_name: String(raw.service_name || raw.title || payloadData.shipment_name || serviceType).trim(),
       delivery_status: DELIVERY_STATUS.NEW,
       order_number,
       order_total: total,
@@ -96,19 +112,24 @@ async function createServiceOrder(sb, appUser, body) {
       platform_fee: platformCommission,
       payment_status: paymentStatus,
       district: district || null,
-      service_location: location || null,
-      drop_address: location || district || "موقع الخدمة",
+      service_location: location || dropAddress || null,
+      drop_address: dropAddress || location || district || "موقع الخدمة",
       service_qty: normalizeQty(raw.qty ?? raw.service_qty ?? 1),
       gas_mode: raw.gas_mode || null,
       gas_liters: raw.gas_liters != null ? Number(raw.gas_liters) : null,
       scheduled_at: raw.scheduled_at || null,
-      pickup_address: district || "خدمة منزلية",
-      notes: String(raw.notes || "").trim() || null,
+      pickup_address: pickupAddress || district || "خدمة منزلية",
+      pickup_lat: hasPickup ? pickupLat : null,
+      pickup_lng: hasPickup ? pickupLng : null,
+      drop_lat: hasDrop ? dropLat : null,
+      drop_lng: hasDrop ? dropLng : null,
+      notes: String(raw.notes || "").trim() || (noteLines.length ? noteLines.join("\n") : null),
       data: {
         order_type: orderType,
         service_type: serviceType,
         unified: true,
-        ...(raw.data && typeof raw.data === "object" ? raw.data : {}),
+        provider_net: Math.max(0, Math.round((total - platformCommission) * 100) / 100),
+        ...payloadData,
       },
     },
       providerId
@@ -130,6 +151,14 @@ async function createServiceOrder(sb, appUser, body) {
     await notifyProvidersForBooking(sb, orderData);
   } catch (waErr) {
     logger.error({ err: waErr.message || String(waErr), orderId: orderData.id }, "[serviceOrderCreate] notify");
+  }
+
+  if (serviceType === "internal_delivery") {
+    try {
+      await sendInternalDeliveryCustomerWhatsApp(orderData);
+    } catch (waErr) {
+      logger.error({ err: waErr.message || String(waErr), orderId: orderData.id }, "[serviceOrderCreate] customer WA");
+    }
   }
 
   return { ok: true, order: orderData };

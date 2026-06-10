@@ -23,6 +23,12 @@ const { createServiceOrder } = require("../../shared/services/serviceOrderCreate
 const { createGasDelivery } = require("../delivery/gasDeliveryCreate");
 const { completeServiceBooking } = require("../../shared/services/completeServiceBooking");
 const { sendReserveWelcomeWhatsApp } = require("../../shared/services/serviceProviderReserve");
+const { buildCustomerMessageOrderAccepted } = require("../../shared/messages/deliveryCustomerWhatsApp");
+const {
+  bookingVehicleCategory,
+  serviceUserMatchesVehicleCategory,
+} = require("../../shared/utils/internalDeliveryVehicle");
+const { broadcastDriverUpdate, broadcastOrderPatch, orderPatchFromRow } = require("../../shared/lib/trackingSocket");
 const { getWalletPayloadWithLedgerFallback } = require("../../shared/utils/ledgerWallet");
 const {
   bookingTypesForProvider,
@@ -85,12 +91,19 @@ function normalizeQty(v) {
   return Math.max(1, Math.floor(n));
 }
 
-function filterBookingsForProvider(rows, providerId, providerType, providerDistrict) {
+function filterBookingsForProvider(rows, providerId, providerType, providerDistrict, providerVehicleType) {
   const types = bookingTypesForProvider(providerType);
   const pid = String(providerId || "");
+  const providerUser = {
+    service_type: providerType,
+    service_vehicle_type: providerVehicleType,
+  };
   return (rows || []).filter((b) => {
     const st = String(b.service_type || "").toLowerCase();
     if (!providerMatchesBookingType(providerType, st, b.gas_mode)) return false;
+    if (st === "internal_delivery" && !serviceUserMatchesVehicleCategory(providerUser, bookingVehicleCategory(b))) {
+      return false;
+    }
     const status = bookingStatus(b);
     const bookedBy = b.provider_id ? String(b.provider_id) : "";
     if (bookedBy && bookedBy !== pid) return false;
@@ -417,7 +430,13 @@ router.get("/me/dashboard", requireAuth, requireRole("service"), async (req, res
     if (bErr) return fail(res, bErr.message, 400);
 
     const bookings = sortBookingsByPriority(
-      filterBookingsForProvider(mapOrdersToBookings(rawBookings), uid, providerType, profile?.service_district),
+      filterBookingsForProvider(
+        mapOrdersToBookings(rawBookings),
+        uid,
+        providerType,
+        profile?.service_district,
+        profile?.service_vehicle_type
+      ),
       uid
     );
     const newCount = bookings.filter((b) => {
@@ -505,7 +524,13 @@ router.get("/bookings", requireAuth, async (req, res) => {
     if (error) throw error;
 
     const filtered = sortBookingsByPriority(
-      filterBookingsForProvider(mapOrdersToBookings(data), user.id, providerType, profile?.service_district),
+      filterBookingsForProvider(
+        mapOrdersToBookings(data),
+        user.id,
+        providerType,
+        profile?.service_district,
+        profile?.service_vehicle_type
+      ),
       user.id
     );
     return res.json({ ok: true, bookings: filtered });
@@ -521,7 +546,7 @@ router.post("/bookings/:id/reserve", requireAuth, requireRole("service"), async 
     const uid = req.appUser.id;
     const { data: profile } = await sb
       .from("users")
-      .select("id, name, phone, service_type, service_district")
+      .select("id, name, phone, service_type, service_district, service_vehicle_type, lat, lng")
       .eq("id", uid)
       .maybeSingle();
     const providerType = String(profile?.service_type || "").trim().toLowerCase();
@@ -532,6 +557,12 @@ router.post("/bookings/:id/reserve", requireAuth, requireRole("service"), async 
 
     if (!providerMatchesBookingType(providerType, booking.service_type, booking.gas_mode)) {
       return fail(res, "هذا الطلب لا يطابق تخصصك", 403);
+    }
+    if (
+      String(booking.service_type || "").toLowerCase() === "internal_delivery" &&
+      !serviceUserMatchesVehicleCategory(profile, bookingVehicleCategory(booking))
+    ) {
+      return fail(res, "نوع المركبة المطلوبة لا يطابق مركبتك المسجّلة", 403);
     }
   const bookingLoc = booking.service_location || booking.location;
     if (!providerAreaMatches(providerType, profile?.service_district, booking.district, bookingLoc)) {
@@ -544,10 +575,16 @@ router.post("/bookings/:id/reserve", requireAuth, requireRole("service"), async 
     }
 
     const now = new Date().toISOString();
+    const provLat = Number(profile?.lat);
+    const provLng = Number(profile?.lng);
     const reservePatch = applyProviderIdToPatch(
       {
         reserved_at: now,
         updated_at: now,
+        last_location_at: now,
+        ...(Number.isFinite(provLat) && Number.isFinite(provLng)
+          ? { driver_lat: provLat, driver_lng: provLng }
+          : {}),
         ...buildOrderStatusPatch(DELIVERY_STATUS.ACCEPTED),
       },
       uid
@@ -565,7 +602,51 @@ router.post("/bookings/:id/reserve", requireAuth, requireRole("service"), async 
 
     await sendReserveWelcomeWhatsApp(data, profile?.phone, profile?.name);
 
+    if (booking.customer_phone) {
+      try {
+        const msg = buildCustomerMessageOrderAccepted(raw, profile?.phone);
+        await sendWhatsApp({ to: booking.customer_phone, message: msg });
+      } catch (waErr) {
+        console.error("[services] reserve customer WA:", waErr && (waErr.message || waErr));
+      }
+    }
+
+    broadcastOrderPatch(raw.id, orderPatchFromRow(raw));
+
     return ok(res, { booking: data, message: "تم حجز الطلب وإرسال تفاصيله عبر واتساب" });
+  } catch (e) {
+    return fail(res, e.message, 500);
+  }
+});
+
+router.post("/bookings/:id/location", requireAuth, requireRole("service"), async (req, res) => {
+  try {
+    const sb = req.supabase || createServiceClient();
+    const uid = req.appUser.id;
+    const lat = Number(req.body?.lat);
+    const lng = Number(req.body?.lng);
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return fail(res, "إحداثيات غير صالحة", 400);
+
+    const { data: booking, error: gErr } = await fetchServiceOrderById(sb, req.params.id);
+    if (gErr || !booking) return fail(res, "الطلب غير موجود", 404);
+    if (String(booking.provider_id || "") !== String(uid)) return fail(res, "غير مصرح", 403);
+
+    const st = bookingStatus(booking);
+    if (!["accepted", "delivering", "picked"].includes(st)) {
+      return fail(res, "الطلب غير نشط للتتبع", 400);
+    }
+
+    const now = new Date().toISOString();
+    const { data: raw, error } = await updateOrdersResilient(
+      sb,
+      { driver_lat: lat, driver_lng: lng, last_location_at: now, updated_at: now },
+      { id: req.params.id }
+    );
+    if (error) return fail(res, error.message, 400);
+
+    broadcastDriverUpdate(req.params.id, uid, { lat, lng, ts: Date.now() });
+
+    return ok(res, { booking: orderToBookingView(raw), message: "تم تحديث الموقع" });
   } catch (e) {
     return fail(res, e.message, 500);
   }
