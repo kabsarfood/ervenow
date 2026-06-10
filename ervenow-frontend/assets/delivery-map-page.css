@@ -83,21 +83,21 @@ body.delivery-map-page {
   flex: 1 1 auto;
   max-height: none !important;
 }
-@media (min-width: 768px) {
+@media (min-width: 768px) and (max-width: 1024px) {
+  :root {
+    --delivery-map-h: clamp(300px, 42vh, 480px);
+  }
+}
+@media (min-width: 1025px) {
   :root {
     --delivery-map-h: clamp(360px, 58vh, 560px);
   }
   .delivery-map-page .map-canvas-grid {
-    grid-template-columns: minmax(0, 1.5fr) minmax(0, 0.5fr);
+    grid-template-columns: minmax(0, 1.55fr) minmax(280px, 0.45fr);
     grid-template-areas:
       "map method"
       "map shipment"
       "map actions";
-  }
-}
-@media (min-width: 1024px) {
-  .delivery-map-page .map-canvas-grid {
-    grid-template-columns: minmax(0, 1.55fr) minmax(280px, 0.45fr);
   }
 }
 
@@ -165,39 +165,24 @@ body.delivery-map-page {
   font-weight: 700;
   text-align: center;
 }
-@media (max-width: 767px) {
-  .delivery-map-page .delivery-panel__subtitle {
-    display: none;
-  }
-  /* تمرير واحد للصفحة — بدون scroll داخل scroll */
-  .delivery-map-page__shell {
-    overflow: visible;
-    min-height: auto;
-  }
-  .delivery-map-page .delivery-panel--luxe {
-    min-height: auto;
-  }
-  .delivery-map-page__scroll {
-    overflow: visible;
-    flex: none;
-    min-height: auto;
-  }
-  .delivery-map-main {
-    flex: none;
-    min-height: auto;
-  }
-  .delivery-map-page .map-canvas-form {
-    overflow-x: clip;
-    touch-action: pan-y;
-  }
-  /* ترتيب الجوال: طريقة → أدوات → خريطة → إحصاءات → شحنة → زر السلة */
+@media (max-width: 1024px) {
+  /* جوال + تابلت: خريطة → طريقة الاستخدام → تفاصيل → السعر → إتمام الطلب */
   .delivery-map-page .map-canvas-grid {
+    grid-template-columns: 1fr;
     grid-template-areas:
+      "map"
       "method"
       "actions"
-      "map"
-      "stats"
       "shipment"
+      "stats"
+      "cta";
+  }
+  .delivery-map-page .map-canvas-grid[data-route-mode="links"] {
+    grid-template-areas:
+      "map"
+      "method"
+      "shipment"
+      "stats"
       "cta";
   }
   .delivery-map-page .map-canvas-cell--map,
@@ -227,10 +212,40 @@ body.delivery-map-page {
   }
   .delivery-map-page .map-canvas-cta .map-canvas-cart-btn {
     width: 100%;
+    min-height: 48px;
+  }
+  .delivery-map-page .map-canvas-footer {
+    display: contents;
   }
   .delivery-map-page #pickupDropMap,
   .delivery-map-page #pickupDropMap.leaflet-container {
     touch-action: none;
+  }
+}
+@media (max-width: 767px) {
+  .delivery-map-page .delivery-panel__subtitle {
+    display: none;
+  }
+  /* تمرير واحد للصفحة — بدون scroll داخل scroll */
+  .delivery-map-page__shell {
+    overflow: visible;
+    min-height: auto;
+  }
+  .delivery-map-page .delivery-panel--luxe {
+    min-height: auto;
+  }
+  .delivery-map-page__scroll {
+    overflow: visible;
+    flex: none;
+    min-height: auto;
+  }
+  .delivery-map-main {
+    flex: none;
+    min-height: auto;
+  }
+  .delivery-map-page .map-canvas-form {
+    overflow-x: clip;
+    touch-action: pan-y;
   }
 }
 
@@ -651,14 +666,10 @@ body.delivery-map-page {
       .map-canvas-result {
         margin: 0;
       }
-      @media (max-width: 767px) {
-        .delivery-map-page .map-canvas-grid[data-route-mode="links"] {
-          grid-template-areas:
-            "method"
-            "map"
-            "stats"
-            "shipment"
-            "cta";
+      @media (max-width: 1024px) {
+        .delivery-map-page .map-canvas-cta .map-canvas-cart-btn {
+          min-height: 48px;
+          font-size: clamp(0.9rem, 2.4vw, 0.96rem);
         }
       }
       @media (max-width: 420px) {

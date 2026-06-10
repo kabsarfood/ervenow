@@ -547,7 +547,7 @@
           resultEl.innerText =
             "✓ تم تحديد الاستلام والتسليم — المسافة " +
             (km ? km.toFixed(2) : "—") +
-            " كم. راجع الخريطة ثم «أضف إلى السلة».";
+            " كم. راجع الخريطة ثم «إتمام الطلب إلى السلة».";
         } catch (e) {
           resultEl.innerText = "❌ " + (e.message || "تعذر قراءة الرابط");
         }
@@ -1013,7 +1013,7 @@
         } catch (e) {
           result.innerText = "❌ " + (e.message || "تعذّر إضافة الطلب للمسودة");
         } finally {
-          btn.innerText = "أضف إلى السلة";
+          btn.innerText = "إتمام الطلب إلى السلة";
           enableCreate();
         }
       }
