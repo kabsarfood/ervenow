@@ -52,4 +52,10 @@
   .lp-draft-checkout-badge__total {
     display: none !important;
   }
+
+  html.erv-mobile-shell:not(.erv-mobile-no-nav) .lp-draft-checkout-badge,
+  html.erv-mobile-shell:not(.erv-mobile-no-nav) #indexDraftBadge,
+  html.erv-mobile-shell:not(.erv-mobile-no-nav) .dash-header-cart {
+    display: none !important;
+  }
 }

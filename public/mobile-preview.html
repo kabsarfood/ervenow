@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover"
+    />
+    <script src="/assets/viewport-fit.js"></script>
+    <title>معاينة الجوال | ERVENOW</title>
+    <meta name="description" content="محاكاة المنصة على iPhone وSamsung Galaxy والتابلت — ERVENOW" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/assets/ervenow-responsive.css" />
+    <link rel="stylesheet" href="/assets/mobile-preview.css" />
+  </head>
+  <body class="erv-preview-page erv-preview-lab">
+    <header class="erv-preview-hero">
+      <p class="erv-preview-hero__brand">ERVENOW · Mobile Lab</p>
+      <h1 class="erv-preview-hero__title">معاينة المنصة على الجوال والتابلت</h1>
+      <p class="erv-preview-hero__sub">
+        iPhone (390px) · Samsung Galaxy (360px) · Tablet (768px) — نفس CSS والهيدر والشريط السفلي كما على
+        الجهاز الحقيقي
+      </p>
+    </header>
+
+    <div class="erv-preview-toolbar">
+      <label for="ervPreviewPage">الصفحة:</label>
+      <select id="ervPreviewPage" aria-label="اختر صفحة للمعاينة"></select>
+    </div>
+
+    <section class="erv-preview-links" aria-labelledby="ervPreviewLinksTitle">
+      <h2 class="erv-preview-links__title" id="ervPreviewLinksTitle">روابط سريعة (انسخ وشارك)</h2>
+      <div id="ervPreviewLinks"></div>
+    </section>
+
+    <main class="erv-preview-grid" id="ervPreviewGrid" aria-label="أجهزة المعاينة"></main>
+
+    <script src="/assets/mobile-preview.js" defer></script>
+  </body>
+</html>

@@ -10,6 +10,19 @@
 
 /* ——— تفعيل الغلاف ——— */
 @media (max-width: 640px), ((max-width: 932px) and (max-height: 500px) and (pointer: coarse)) {
+  /* ——— حجز مساحة الشريط السفلي الثل صفحات الجوال ——— */
+  html.erv-mobile-shell:not(.erv-mobile-no-nav) body {
+    padding-bottom: calc(var(--erv-mobile-nav-h, 56px) + env(safe-area-inset-bottom, 0px) + 8px);
+  }
+
+  html.erv-mobile-shell:not(.erv-mobile-no-nav) body.lp-home-premium {
+    padding-bottom: calc(var(--erv-mobile-nav-h, 56px) + env(safe-area-inset-bottom, 0px) + 8px) !important;
+  }
+
+  html.erv-mobile-shell.erv-mobile-no-nav body {
+    padding-bottom: max(8px, env(safe-area-inset-bottom, 0px));
+  }
+
   /* ——— هيدر guest-shell موحّد (تفاصيل إضافية؛ الأساس في mobile-foundation-shell.css) ——— */
   html.erv-mobile-shell body.erv-mobile-foundation.guest-shell-page .dash-site-header,
   body.erv-mobile-foundation.guest-shell-page .dash-site-header {
@@ -46,7 +59,8 @@
     line-height: 1.2;
   }
 
-  html:not(.erv-mobile-no-nav) body.erv-mobile-foundation .dash-site-header__tools {
+  html:not(.erv-mobile-no-nav) body.erv-mobile-foundation .dash-site-header__tools,
+  html:not(.erv-mobile-no-nav) body.erv-mobile-foundation .lp-header__actions {
     display: none !important;
   }
 
@@ -57,18 +71,9 @@
   }
 
   html:not(.erv-mobile-no-nav) body.erv-mobile-foundation .dash-header-cart,
-  html:not(.erv-mobile-no-nav) body.erv-mobile-foundation .lp-draft-checkout-badge {
-    position: absolute !important;
-    width: 1px !important;
-    height: 1px !important;
-    margin: -1px !important;
-    padding: 0 !important;
-    overflow: hidden !important;
-    clip: rect(0, 0, 0, 0) !important;
-    white-space: nowrap !important;
-    border: 0 !important;
-    opacity: 0 !important;
-    pointer-events: none !important;
+  html:not(.erv-mobile-no-nav) body.erv-mobile-foundation .lp-draft-checkout-badge,
+  html:not(.erv-mobile-no-nav) body.erv-mobile-foundation #indexDraftBadge {
+    display: none !important;
   }
 
   /* ——— هيدر الرئيسية (lp-header) موحّد ——— */

@@ -28,7 +28,7 @@
   }
 
   function mobileHeaderReservePx() {
-    if (document.body && document.body.classList.contains("lp-home-premium")) return 98;
+    if (document.body && document.body.classList.contains("lp-home-premium")) return 56;
     if (document.body && document.body.classList.contains("guest-shell-page")) return 56;
     return 56;
   }
@@ -40,8 +40,63 @@
     document.documentElement.style.setProperty("--erw-header-h", reserve + "px");
   }
 
+  function injectMobileFoundationCss() {
+    if (!isMobileShellViewport() || isPaymentFlowPath()) return;
+    if (document.body && document.body.classList.contains("erv-preview-lab")) return;
+    if (document.querySelector('link[href*="mobile-foundation.css"]')) return;
+    var link = document.createElement("link");
+    link.rel = "stylesheet";
+    link.href = "/assets/mobile-foundation.css";
+    document.head.appendChild(link);
+  }
+
+  function ensureMobileFoundationJs() {
+    if (!isMobileShellViewport() || isPaymentFlowPath()) return;
+    if (document.body && document.body.classList.contains("erv-preview-lab")) return;
+    if (document.querySelector('script[src*="mobile-foundation.js"]')) return;
+    var s = document.createElement("script");
+    s.src = "/assets/mobile-foundation.js";
+    s.defer = true;
+    document.head.appendChild(s);
+  }
+
+  function injectMobileHarmonyCritical() {
+    if (!isMobileShellViewport() || isPaymentFlowPath()) return;
+    if (document.body && document.body.classList.contains("erv-preview-lab")) return;
+    if (document.getElementById("ervMobileHarmonyCritical")) return;
+    var el = document.createElement("style");
+    el.id = "ervMobileHarmonyCritical";
+    el.textContent =
+      "html.erv-mobile-shell:not(.erv-mobile-no-nav) .lp-header__actions," +
+      "html.erv-mobile-shell:not(.erv-mobile-no-nav) .dash-site-header__tools," +
+      "html.erv-mobile-shell:not(.erv-mobile-no-nav) .lp-draft-checkout-badge," +
+      "html.erv-mobile-shell:not(.erv-mobile-no-nav) #indexDraftBadge," +
+      "html.erv-mobile-shell:not(.erv-mobile-no-nav) .dash-header-cart," +
+      "html.erv-mobile-shell:not(.erv-mobile-no-nav) .dash-header-cart-btn," +
+      "html.erv-mobile-shell:not(.erv-mobile-no-nav) #lpCartWrap{display:none!important;visibility:hidden!important;pointer-events:none!important}" +
+      "html.erv-mobile-shell body.lp-home-premium .lp-header__top-row{display:grid!important;grid-template-columns:auto 1fr auto!important;align-items:center!important;direction:ltr!important}" +
+      "html.erv-mobile-shell body.lp-home-premium .lp-header__top-row>.lp-header__logo-slot{grid-column:1!important;justify-self:start!important}" +
+      "html.erv-mobile-shell body.lp-home-premium .lp-header__top-row>.lp-header__brand-mid{grid-column:2!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-self:center!important;text-align:center!important;direction:rtl!important}" +
+      "html.erv-mobile-shell body.lp-home-premium .lp-header__top-row>.lp-header__menu-slot{grid-column:3!important;justify-self:end!important}" +
+      "html.erv-mobile-shell body.guest-shell-page .dash-site-header__inner{display:grid!important;grid-template-columns:auto 1fr auto!important;grid-template-areas:'logo identity menu'!important;align-items:center!important;direction:ltr!important}" +
+      "html.erv-mobile-shell body.guest-shell-page .dash-site-header__brand{grid-area:logo!important}" +
+      "html.erv-mobile-shell body.guest-shell-page .erv-harmony-identity{grid-area:identity!important}" +
+      "html.erv-mobile-shell body.guest-shell-page .erv-harmony-menu{grid-area:menu!important;justify-self:end!important}";
+    document.head.appendChild(el);
+    if (!document.querySelector('link[href*="mobile-harmony.css"]')) {
+      var link = document.createElement("link");
+      link.rel = "stylesheet";
+      link.href = "/assets/mobile-harmony.css";
+      document.head.appendChild(link);
+    }
+  }
+
   function bootMobileShell() {
     var root = document.documentElement;
+    if (document.body && document.body.classList.contains("erv-preview-lab")) {
+      root.classList.remove("erv-mobile-shell", "erv-mobile-no-nav");
+      return;
+    }
     if (!isMobileShellViewport()) {
       root.classList.remove("erv-mobile-shell", "erv-mobile-no-nav");
       return;
@@ -50,6 +105,8 @@
     if (isPaymentFlowPath()) root.classList.add("erv-mobile-no-nav");
     else root.classList.remove("erv-mobile-no-nav");
     applyMobileShellHeaderVars();
+    injectMobileFoundationCss();
+    injectMobileHarmonyCritical();
   }
 
   function ensureBottomNavShell() {
@@ -194,6 +251,13 @@
     applyMobileShellHeaderVars();
     ensureBottomNavShell();
     syncSiteHeaderHeight();
+    ensureMobileFoundationJs();
+    if (isMobileShellViewport() && !document.querySelector('script[src*="mobile-harmony.js"]')) {
+      var hs = document.createElement("script");
+      hs.src = "/assets/mobile-harmony.js";
+      hs.defer = true;
+      document.head.appendChild(hs);
+    }
   });
 
   if (typeof ResizeObserver !== "undefined") {

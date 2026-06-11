@@ -1,5 +1,5 @@
 {
-  "capturedAt": "2026-06-11T20:50:31.323Z",
+  "capturedAt": "2026-06-11T22:18:52.892Z",
   "phase": "after",
   "viewport": {
     "width": 390,
@@ -40,7 +40,7 @@
         "menuBtn": {
           "found": true,
           "visible": true,
-          "top": 12,
+          "top": 8,
           "left": 334,
           "w": 44,
           "h": 44
@@ -48,20 +48,20 @@
         "identity": {
           "found": true,
           "visible": true,
-          "top": 18,
-          "left": 159,
+          "top": 15,
+          "left": 155,
           "w": 72,
           "h": 30
         },
         "logo": {
           "found": true,
           "visible": true,
-          "top": 13,
+          "top": 12,
           "left": 12,
-          "w": 44,
-          "h": 40
+          "w": 36,
+          "h": 36
         },
-        "headerH": 66,
+        "headerH": 62,
         "pageId": "home"
       },
       "screenshot": "home-header-390.png"
@@ -121,7 +121,7 @@
           "w": 44,
           "h": 36
         },
-        "headerH": 55,
+        "headerH": 63,
         "pageId": "start-now"
       },
       "screenshot": "start-now-header-390.png"
@@ -150,7 +150,7 @@
         "bottomNavCartItem": {
           "found": true,
           "visible": true,
-          "top": 2773,
+          "top": 832,
           "left": 152,
           "w": 63,
           "h": 30
@@ -181,7 +181,7 @@
           "w": 44,
           "h": 36
         },
-        "headerH": 55,
+        "headerH": 63,
         "pageId": "restaurants"
       },
       "screenshot": "restaurants-header-390.png"

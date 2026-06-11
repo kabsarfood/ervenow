@@ -717,17 +717,50 @@ body.guest-shell-page.stores-page {
     box-shadow: 0 1px 0 rgba(61, 34, 19, 0.08);
   }
   html.erv-mobile-shell body.guest-shell-page .dash-site-header__inner {
-    display: flex !important;
-    flex-direction: row !important;
+    display: grid !important;
+    grid-template-columns: auto 1fr auto !important;
+    grid-template-areas: "logo identity menu" !important;
     align-items: center !important;
-    justify-content: space-between !important;
-    gap: 10px !important;
-    grid-template-columns: unset !important;
-    grid-template-rows: unset !important;
-    grid-template-areas: unset !important;
-    min-height: var(--erv-mobile-header-target, 52px);
-    max-height: var(--erv-mobile-header-reserve, 56px);
+    gap: 8px !important;
+    min-height: var(--erv-mobile-header-target, 52px) !important;
+    max-height: none !important;
+    direction: ltr !important;
+    unicode-bidi: isolate !important;
     padding: 4px max(12px, env(safe-area-inset-left, 12px)) 6px max(12px, env(safe-area-inset-right, 12px)) !important;
+  }
+  html.erv-mobile-shell body.guest-shell-page .dash-site-header__brand {
+    grid-area: logo !important;
+    min-width: 0;
+  }
+  html.erv-mobile-shell body.guest-shell-page .dash-site-header__logo {
+    font-size: 0 !important;
+    line-height: 0;
+  }
+  html.erv-mobile-shell body.guest-shell-page .dash-site-header__logo::before {
+    content: "";
+    display: block;
+    width: 36px;
+    height: 36px;
+    background: url("/assets/ervenow-logo.png") center / contain no-repeat;
+  }
+  html.erv-mobile-shell body.guest-shell-page .dash-site-header__logo-dot,
+  html.erv-mobile-shell body.guest-shell-page .dash-site-header__tag {
+    display: none !important;
+  }
+  html.erv-mobile-shell body.guest-shell-page .erv-harmony-identity {
+    grid-area: identity !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center;
+    text-decoration: none;
+    color: inherit;
+    min-width: 0;
+  }
+  html.erv-mobile-shell body.guest-shell-page .erv-harmony-menu {
+    grid-area: menu !important;
+    justify-self: end !important;
   }
   html.erv-mobile-shell .dash-site-header__nav,
   html.erv-mobile-shell .dash-site-header__btn,
@@ -735,23 +768,19 @@ body.guest-shell-page.stores-page {
   html.erv-mobile-shell .dash-site-header__tag {
     display: none !important;
   }
-  /* Harmony P0 — سلة واحدة: إخفاء السلة من الهيدر (العداد #cartCount يبقى في DOM) */
-  html.erv-mobile-shell:not(.erv-mobile-no-nav) .dash-site-header__tools {
+  /* Harmony P0 — إخفاء السلة + tools بالكامل */
+  html.erv-mobile-shell:not(.erv-mobile-no-nav) .dash-site-header__tools,
+  html.erv-mobile-shell:not(.erv-mobile-no-nav) .lp-header__actions {
     display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
   }
   html.erv-mobile-shell:not(.erv-mobile-no-nav) .dash-header-cart,
   html.erv-mobile-shell:not(.erv-mobile-no-nav) .dash-header-cart-btn,
-  html.erv-mobile-shell:not(.erv-mobile-no-nav) .lp-draft-checkout-badge {
-    position: absolute !important;
-    width: 1px !important;
-    height: 1px !important;
-    margin: -1px !important;
-    padding: 0 !important;
-    overflow: hidden !important;
-    clip: rect(0, 0, 0, 0) !important;
-    white-space: nowrap !important;
-    border: 0 !important;
-    opacity: 0 !important;
+  html.erv-mobile-shell:not(.erv-mobile-no-nav) .lp-draft-checkout-badge,
+  html.erv-mobile-shell:not(.erv-mobile-no-nav) #indexDraftBadge {
+    display: none !important;
+    visibility: hidden !important;
     pointer-events: none !important;
   }
   html.erv-mobile-shell .dash-header-cart__label,
