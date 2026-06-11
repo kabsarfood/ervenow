@@ -5,8 +5,8 @@
 
 @media (max-width: 640px), ((max-width: 932px) and (max-height: 500px) and (pointer: coarse)) {
   /* ═══ إخفاء السلة من الهيدر (#cartCount يبقى في DOM للمزامنة) ═══ */
-  html.erv-mobile-shell .lp-draft-checkout-badge,
-  html.erv-mobile-shell .dash-header-cart {
+  html.erv-mobile-shell:not(.erv-mobile-no-nav) .lp-draft-checkout-badge,
+  html.erv-mobile-shell:not(.erv-mobile-no-nav) .dash-header-cart {
     position: absolute !important;
     width: 1px !important;
     height: 1px !important;
@@ -20,11 +20,11 @@
     pointer-events: none !important;
   }
 
-  html.erv-mobile-shell .lp-header__actions {
+  html.erv-mobile-shell:not(.erv-mobile-no-nav) .lp-header__actions {
     display: none !important;
   }
 
-  html.erv-mobile-shell .dash-site-header__tools {
+  html.erv-mobile-shell:not(.erv-mobile-no-nav) .dash-site-header__tools {
     display: none !important;
   }
 

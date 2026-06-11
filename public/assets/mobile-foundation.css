@@ -46,8 +46,8 @@
     line-height: 1.2;
   }
 
-  body.erv-mobile-foundation .dash-site-header__tools {
-    flex: 0 0 auto;
+  html:not(.erv-mobile-no-nav) body.erv-mobile-foundation .dash-site-header__tools {
+    display: none !important;
   }
 
   body.erv-mobile-foundation .dash-header-cart__label,
@@ -56,10 +56,19 @@
     display: none !important;
   }
 
-  body.erv-mobile-foundation .dash-header-cart {
-    min-width: 44px;
-    min-height: 44px;
-    padding: 8px 10px;
+  html:not(.erv-mobile-no-nav) body.erv-mobile-foundation .dash-header-cart,
+  html:not(.erv-mobile-no-nav) body.erv-mobile-foundation .lp-draft-checkout-badge {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    margin: -1px !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
   }
 
   /* ——— هيدر الرئيسية (lp-header) موحّد ——— */
@@ -136,12 +145,6 @@
   body.erv-mobile-foundation #authArea,
   body.erv-mobile-foundation .lp-draft-checkout-badge__total {
     display: none !important;
-  }
-
-  body.erv-mobile-foundation .lp-draft-checkout-badge {
-    min-width: 44px;
-    min-height: 44px;
-    padding: 8px 10px !important;
   }
 
   body.erv-mobile-foundation .lp-quick-dd__btn {

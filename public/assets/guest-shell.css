@@ -166,12 +166,12 @@ body.guest-shell-page.stores-page {
   color: var(--gold, #b9872f);
 }
 @media (max-width: 520px) {
-  .dash-header-cart__label,
-  .dash-header-wallet__label {
+  html:not(.erv-mobile-shell) .dash-header-cart__label,
+  html:not(.erv-mobile-shell) .dash-header-wallet__label {
     display: none;
   }
-  .dash-header-cart,
-  .dash-header-wallet {
+  html:not(.erv-mobile-shell) .dash-header-cart,
+  html:not(.erv-mobile-shell) .dash-header-wallet {
     padding: 8px 10px;
     min-width: 44px;
     min-height: 44px;
@@ -734,6 +734,25 @@ body.guest-shell-page.stores-page {
   html.erv-mobile-shell .dash-site-header__inner > #switchAccount,
   html.erv-mobile-shell .dash-site-header__tag {
     display: none !important;
+  }
+  /* Harmony P0 — سلة واحدة: إخفاء السلة من الهيدر (العداد #cartCount يبقى في DOM) */
+  html.erv-mobile-shell:not(.erv-mobile-no-nav) .dash-site-header__tools {
+    display: none !important;
+  }
+  html.erv-mobile-shell:not(.erv-mobile-no-nav) .dash-header-cart,
+  html.erv-mobile-shell:not(.erv-mobile-no-nav) .dash-header-cart-btn,
+  html.erv-mobile-shell:not(.erv-mobile-no-nav) .lp-draft-checkout-badge {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    margin: -1px !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
   }
   html.erv-mobile-shell .dash-header-cart__label,
   html.erv-mobile-shell .dash-header-wallet,
