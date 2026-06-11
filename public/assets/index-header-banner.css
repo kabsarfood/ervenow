@@ -343,7 +343,7 @@ html:not(.erv-mobile-shell) .lp-header.lp-header--refined .lp-header__top-row > 
 
 
 
-.lp-header.lp-header--refined .lp-quick-dd__panel {
+.lp-header.lp-header--refined .lp-quick-dd__panel:not(.lp-quick-dd__panel--harmony) {
 
   direction: rtl;
 
@@ -439,7 +439,7 @@ html:not(.erv-mobile-shell) .lp-header.lp-header--refined .lp-header__top-row > 
 
 @media (max-width: 900px) {
 
-  .lp-header.lp-header--refined .lp-quick-dd__panel {
+  .lp-header.lp-header--refined .lp-quick-dd__panel:not(.lp-quick-dd__panel--harmony) {
 
     position: fixed !important;
 
@@ -915,13 +915,13 @@ html[dir="ltr"] .lp-header.lp-header--menu-left .lp-header__actions {
 
 
 
-html[dir="rtl"] .lp-header.lp-header--menu-right .lp-quick-dd__panel,
+html[dir="rtl"] .lp-header.lp-header--menu-right .lp-quick-dd__panel:not(.lp-quick-dd__panel--harmony),
 
-html[dir="ltr"] .lp-header.lp-header--menu-right .lp-quick-dd__panel,
+html[dir="ltr"] .lp-header.lp-header--menu-right .lp-quick-dd__panel:not(.lp-quick-dd__panel--harmony),
 
-html[dir="rtl"] .lp-header.lp-header--menu-left .lp-quick-dd__panel,
+html[dir="rtl"] .lp-header.lp-header--menu-left .lp-quick-dd__panel:not(.lp-quick-dd__panel--harmony),
 
-html[dir="ltr"] .lp-header.lp-header--menu-left .lp-quick-dd__panel {
+html[dir="ltr"] .lp-header.lp-header--menu-left .lp-quick-dd__panel:not(.lp-quick-dd__panel--harmony) {
 
   right: 0 !important;
 

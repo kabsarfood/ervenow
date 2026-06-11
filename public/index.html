@@ -1581,8 +1581,8 @@
           display: block;
         }
 
-        /* لوحة ثابتة فوق المحتوى — تتفادى القصّ على iOS / Samsung */
-        .lp-quick-dd__panel {
+        /* لوحة ثابتة فوق المحتوى — تتفادى القصّ على iOS / Samsung (سطح المكتب/تابلت) */
+        .lp-quick-dd__panel:not(.lp-quick-dd__panel--harmony) {
           position: fixed;
           z-index: 1250;
           top: var(--lp-dd-anchor-top, calc(64px + env(safe-area-inset-top, 0px)));
@@ -1596,7 +1596,7 @@
           -webkit-overflow-scrolling: touch;
         }
 
-        .lp-quick-dd__panel .lp-dd-item {
+        .lp-quick-dd__panel:not(.lp-quick-dd__panel--harmony) .lp-dd-item {
           min-height: 48px;
           padding: 14px 14px;
         }
@@ -3086,10 +3086,21 @@
 
     <script>
       (function () {
+        var MOBILE_MQ =
+          "(max-width: 640px), ((max-width: 932px) and (max-height: 500px) and (pointer: coarse))";
+        function isMobileMenuShell() {
+          try {
+            return window.matchMedia(MOBILE_MQ).matches;
+          } catch (e) {
+            return window.innerWidth <= 640;
+          }
+        }
+
         var root = document.getElementById("lpQuickNav");
         var btn = document.getElementById("lpQuickNavBtn");
         var panel = document.getElementById("lpQuickNavPanel");
         if (!root || !btn || !panel) return;
+        if (isMobileMenuShell()) return;
 
         function syncPanelAnchor() {
           try {
