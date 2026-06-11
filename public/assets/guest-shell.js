@@ -754,8 +754,21 @@
     document.head.appendChild(s1);
   }
 
+  function ensureMobileFoundation() {
+    if (!global.__ervMobileFoundationScript) {
+      global.__ervMobileFoundationScript = true;
+      var s = document.createElement("script");
+      s.src = "/assets/mobile-foundation.js";
+      s.defer = true;
+      document.head.appendChild(s);
+    } else if (global.ErvenowMobileFoundation) {
+      global.ErvenowMobileFoundation.apply();
+    }
+  }
+
   function init(opts) {
     opts = opts || {};
+    ensureMobileFoundation();
     _storePreviewMode = !!(opts.storePreview || (global.ErvenowStorePreview && ErvenowStorePreview.isActive()));
     normalizeSiteHeaderDomOrder();
     _activeNavKey = opts.activeNav || "";

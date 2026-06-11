@@ -225,7 +225,14 @@
 
     function openStore(id) {
       if (typeof cfg.onOpenStore === "function") {
-        cfg.onOpenStore(id);
+        var store = null;
+        for (var i = 0; i < allStores.length; i++) {
+          if (String(allStores[i].id) === String(id)) {
+            store = allStores[i];
+            break;
+          }
+        }
+        cfg.onOpenStore(id, store);
         return;
       }
       window.location.href = "/store.html?id=" + encodeURIComponent(id);
@@ -273,6 +280,7 @@
         var logo = store.logo_url || defaultLogo;
         var card = document.createElement("article");
         card.className = "store-card";
+        card.setAttribute("data-store-id", String(store.id));
         card.innerHTML =
           '<div class="store-card__media">' +
           (store.has_active_offer ? '<span class="erv-section-hub__offer-badge">عرض</span>' : "") +

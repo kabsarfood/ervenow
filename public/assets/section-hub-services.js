@@ -98,6 +98,19 @@
       syncServiceHeader(cat === "all" ? "" : cat);
       if (window.__svcSelectOrderType) window.__svcSelectOrderType(cat || "all");
     },
+    onOpenStore: function (id, store) {
+      if (window.ErvenowMobileServicesFlow && ErvenowMobileServicesFlow.isMobile()) {
+        var name = store && (store.name || store.label);
+        ErvenowMobileServicesFlow.openSheet(name ? String(name).trim() : "");
+        if (store && store.type) {
+          var t = String(store.type || store.category || "").toLowerCase();
+          if (t === "cleaning") t = "cleaning_villa";
+          if (window.__svcSelectOrderType) window.__svcSelectOrderType(t || "all");
+        }
+        return;
+      }
+      window.location.href = "/store.html?id=" + encodeURIComponent(id);
+    },
     onUrlParams: function (p) {
       var type = String(p.get("type") || "").trim().toLowerCase();
       if (type === "restaurant") {

@@ -1,0 +1,78 @@
+{
+  "capturedAt": "2026-06-11T14:34:55.138Z",
+  "viewport": {
+    "width": 390,
+    "height": 844
+  },
+  "pages": [
+    {
+      "id": "home",
+      "url": "/",
+      "file": "home-mobile-390-final.png",
+      "vitals": {
+        "lcp": 1392,
+        "cls": 0.033,
+        "fcp": 916,
+        "loadEventEnd": 1444,
+        "domContentLoaded": 914,
+        "lcpElement": "IMG.guest-offers-slide__img"
+      },
+      "extra": {
+        "shell": true,
+        "noNav": false,
+        "headerH": 98,
+        "bottomNavVisible": true,
+        "cards": {
+          "مطاعم": {
+            "visiblePct": 100
+          },
+          "متاجر": {
+            "visiblePct": 100
+          },
+          "توصيل": {
+            "visiblePct": 18
+          },
+          "خدمات": {
+            "visiblePct": 18
+          }
+        }
+      }
+    },
+    {
+      "id": "checkout",
+      "url": "/checkout",
+      "file": "checkout-mobile-390-final.png",
+      "vitals": {
+        "lcp": 828,
+        "cls": 0.113,
+        "fcp": 800,
+        "loadEventEnd": 1242,
+        "domContentLoaded": 799,
+        "lcpElement": "P.checkout-empty__text"
+      },
+      "extra": {
+        "shell": true,
+        "noNav": true,
+        "bottomNav": false
+      }
+    },
+    {
+      "id": "dashboard",
+      "url": "/dashboard",
+      "file": "dashboard-mobile-390-final.png",
+      "vitals": {
+        "lcp": 1344,
+        "cls": 0.242,
+        "fcp": 864,
+        "loadEventEnd": 1376,
+        "domContentLoaded": 868,
+        "lcpElement": "IMG.guest-offers-slide__img"
+      },
+      "extra": {
+        "shell": true,
+        "noNav": false,
+        "bottomNav": true
+      }
+    }
+  ]
+}

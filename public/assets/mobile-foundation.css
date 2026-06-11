@@ -1,0 +1,246 @@
+/**
+ * ERVENOW Mobile Excellence — Phase A: Mobile Foundation
+ * جوال فقط (≤640px) — هيدر مضغوط + شريط سفلي
+ */
+
+:root {
+  --erv-mobile-nav-h: 56px;
+  --erv-mobile-header-target: 52px;
+}
+
+/* ——— تفعيل الغلاف ——— */
+@media (max-width: 640px), ((max-width: 932px) and (max-height: 500px) and (pointer: coarse)) {
+  /* ——— هيدر guest-shell موحّد (تفاصيل إضافية؛ الأساس في mobile-foundation-shell.css) ——— */
+  html.erv-mobile-shell body.erv-mobile-foundation.guest-shell-page .dash-site-header,
+  body.erv-mobile-foundation.guest-shell-page .dash-site-header {
+    box-shadow: 0 1px 0 rgba(61, 34, 19, 0.08);
+  }
+
+  body.erv-mobile-foundation.guest-shell-page .dash-site-header__inner {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 10px !important;
+    grid-template-columns: unset !important;
+    grid-template-rows: unset !important;
+    grid-template-areas: unset !important;
+    min-height: var(--erv-mobile-header-target);
+    padding: 4px max(12px, env(safe-area-inset-left, 12px)) 6px max(12px, env(safe-area-inset-right, 12px)) !important;
+  }
+
+  body.erv-mobile-foundation .dash-site-header__nav,
+  body.erv-mobile-foundation .dash-site-header__btn,
+  body.erv-mobile-foundation .dash-site-header__inner > #switchAccount,
+  body.erv-mobile-foundation .dash-site-header__tag {
+    display: none !important;
+  }
+
+  body.erv-mobile-foundation .dash-site-header__brand {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  body.erv-mobile-foundation .dash-site-header__logo {
+    font-size: 1.05rem;
+    line-height: 1.2;
+  }
+
+  body.erv-mobile-foundation .dash-site-header__tools {
+    flex: 0 0 auto;
+  }
+
+  body.erv-mobile-foundation .dash-header-cart__label,
+  body.erv-mobile-foundation .dash-header-wallet,
+  body.erv-mobile-foundation #dashHeaderWallet {
+    display: none !important;
+  }
+
+  body.erv-mobile-foundation .dash-header-cart {
+    min-width: 44px;
+    min-height: 44px;
+    padding: 8px 10px;
+  }
+
+  /* ——— هيدر الرئيسية (lp-header) موحّد ——— */
+  body.erv-mobile-foundation.lp-home-premium .lp-header.lp-header--refined {
+    position: sticky;
+    top: 0;
+    z-index: 200;
+  }
+
+  body.erv-mobile-foundation .lp-header.lp-header--refined .lp-header__inner {
+    padding: 4px max(12px, env(safe-area-inset-left, 12px)) 6px max(12px, env(safe-area-inset-right, 12px)) !important;
+    gap: 0 !important;
+  }
+
+  body.erv-mobile-foundation .lp-header.lp-header--refined .lp-header__top-row {
+    display: grid !important;
+    grid-template-columns: auto 1fr auto !important;
+    grid-template-rows: auto !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    row-gap: 0 !important;
+    min-height: var(--erv-mobile-header-target);
+    width: 100%;
+  }
+
+  body.erv-mobile-foundation .lp-header__menu-slot {
+    grid-column: 1;
+    order: unset !important;
+    margin: 0 !important;
+  }
+
+  body.erv-mobile-foundation .lp-header__logo-slot {
+    grid-column: 2;
+    justify-self: center;
+    width: auto !important;
+    overflow: visible !important;
+  }
+
+  body.erv-mobile-foundation .lp-header__logo-img {
+    max-height: 38px !important;
+    width: auto;
+  }
+
+  body.erv-mobile-foundation .lp-header__brand-mid,
+  body.erv-mobile-foundation .lp-header__user-mid,
+  body.erv-mobile-foundation .lp-nav-wrap {
+    display: none !important;
+  }
+
+  body.erv-mobile-foundation .lp-header__actions {
+    grid-column: 3 !important;
+    order: unset !important;
+    display: flex !important;
+    flex: 0 0 auto !important;
+    width: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    grid-template-columns: unset !important;
+    grid-template-areas: unset !important;
+    gap: 6px !important;
+  }
+
+  body.erv-mobile-foundation #lpHeaderWallet,
+  body.erv-mobile-foundation #authArea,
+  body.erv-mobile-foundation .lp-draft-checkout-badge__total {
+    display: none !important;
+  }
+
+  body.erv-mobile-foundation .lp-draft-checkout-badge {
+    min-width: 44px;
+    min-height: 44px;
+    padding: 8px 10px !important;
+  }
+
+  body.erv-mobile-foundation .lp-quick-dd__btn {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  /* ——— تقليل ازدواجية لوحة الزائر ——— */
+  body.erv-mobile-foundation.guest-shell-page #platformHeroSection {
+    display: none !important;
+  }
+
+  body.erv-mobile-foundation.guest-shell-page #dashMain > .dash-platform-hero + .guest-offers-carousel {
+    margin-top: 0;
+  }
+
+  body.erv-mobile-foundation.guest-shell-page .dash-tabs-card .dash-section-hint {
+    font-size: 0.82rem;
+    margin-bottom: 10px;
+  }
+
+  body.erv-mobile-foundation .dash-site-footer {
+    padding-bottom: calc(var(--erv-mobile-nav-h) + env(safe-area-inset-bottom, 0px) + 16px);
+  }
+
+  body.erv-mobile-foundation.lp-home-premium .lp-footer {
+    padding-bottom: calc(var(--erv-mobile-nav-h) + env(safe-area-inset-bottom, 0px) + 20px);
+  }
+
+  /* ——— شريط سفلي ——— */
+  .erv-mobile-bottom-nav {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 300;
+    display: flex;
+    align-items: stretch;
+    justify-content: space-around;
+    gap: 2px;
+    min-height: var(--erv-mobile-nav-h);
+    padding: 4px max(6px, env(safe-area-inset-left, 6px)) max(6px, env(safe-area-inset-bottom, 6px))
+      max(6px, env(safe-area-inset-right, 6px));
+    background: linear-gradient(180deg, rgba(255, 254, 251, 0.98) 0%, #fffefb 100%);
+    border-top: 1px solid rgba(61, 34, 19, 0.1);
+    box-shadow: 0 -4px 24px rgba(45, 26, 14, 0.08);
+    direction: rtl;
+  }
+
+  .erv-mobile-bottom-nav__item {
+    flex: 1 1 0;
+    min-width: 0;
+    min-height: 48px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    padding: 4px 2px;
+    border-radius: 10px;
+    text-decoration: none;
+    color: rgba(61, 34, 19, 0.62);
+    font-family: inherit;
+    font-size: 0.62rem;
+    font-weight: 800;
+    line-height: 1.2;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    position: relative;
+  }
+
+  .erv-mobile-bottom-nav__item.is-active {
+    color: var(--brown, #3d2213);
+    background: rgba(185, 135, 47, 0.12);
+  }
+
+  .erv-mobile-bottom-nav__icon {
+    font-size: 1.2rem;
+    line-height: 1;
+  }
+
+  .erv-mobile-bottom-nav__badge {
+    position: absolute;
+    top: 2px;
+    left: 50%;
+    margin-left: 6px;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    border-radius: 999px;
+    background: #c41e3a;
+    color: #fff;
+    font-size: 0.58rem;
+    font-weight: 900;
+    line-height: 16px;
+    text-align: center;
+  }
+
+  .erv-mobile-bottom-nav__badge[hidden] {
+    display: none !important;
+  }
+}
+
+@media (min-width: 641px) {
+  .erv-mobile-bottom-nav {
+    display: none !important;
+  }
+}

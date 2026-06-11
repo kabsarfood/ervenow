@@ -128,6 +128,37 @@
   overflow: hidden;
 }
 
+.guest-offers-shell--placeholder {
+  background: linear-gradient(135deg, #e9dccb 0%, #f8f4ee 55%, #efe6d8 100%);
+  pointer-events: none;
+}
+
+@media (max-width: 640px) {
+  .lp-home-premium .guest-offers-carousel--reserved .guest-offers-shell--placeholder,
+  .guest-offers-carousel--reserved .guest-offers-shell--placeholder {
+    min-height: max(clamp(200px, 52vw, 380px), clamp(200px, 34vh, 380px));
+    aspect-ratio: 1920 / 730;
+  }
+
+  /* حجز مكان البنر قبل تحميل JS — يمنع قفز sn-section */
+  html.erv-mobile-shell #homeMainBanner.guest-offers-carousel--home[hidden] {
+    display: block !important;
+    min-height: max(clamp(200px, 52vw, 380px), clamp(200px, 34vh, 380px));
+    aspect-ratio: 1920 / 730;
+    margin-bottom: clamp(10px, 2.2vw, 14px);
+    visibility: hidden;
+    pointer-events: none;
+    background: linear-gradient(135deg, #e9dccb 0%, #f8f4ee 55%, #efe6d8 100%);
+    border-radius: 0;
+    border-inline: 0;
+    box-shadow: none;
+  }
+
+  html.erv-mobile-shell #homeMainBanner.guest-offers-carousel--home:not([hidden]) {
+    visibility: visible;
+  }
+}
+
 .guest-offers-track {
   display: flex;
   flex-direction: row;

@@ -968,4 +968,68 @@ html[lang="en"] .lp-header.lp-header--menu-left .lp-quick-dd__panel {
 
 }
 
+/* Mobile Foundation shell — مضمّن لتفادي تأخر @import و CLS */
+@media (max-width: 640px), ((max-width: 932px) and (max-height: 500px) and (pointer: coarse)) {
+  html.erv-mobile-shell:not(.erv-mobile-no-nav) body.lp-home-premium {
+    padding-bottom: calc(var(--erv-mobile-nav-h, 56px) + env(safe-area-inset-bottom, 0px) + 8px);
+  }
+  html.erv-mobile-shell.erv-mobile-no-nav body.lp-home-premium {
+    padding-bottom: max(8px, env(safe-area-inset-bottom, 0px));
+  }
+  html.erv-mobile-shell body.lp-home-premium .lp-header.lp-header--refined {
+    min-height: var(--erv-mobile-header-reserve, 98px);
+  }
+  html.erv-mobile-shell body.lp-home-premium .lp-header.lp-header--refined .lp-header__inner {
+    padding: 4px max(12px, env(safe-area-inset-left, 12px)) 6px max(12px, env(safe-area-inset-right, 12px)) !important;
+    gap: 0 !important;
+  }
+  html.erv-mobile-shell body.lp-home-premium .lp-header.lp-header--refined .lp-header__top-row {
+    display: grid !important;
+    grid-template-columns: auto 1fr auto !important;
+    grid-template-rows: auto !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    row-gap: 0 !important;
+    min-height: var(--erv-mobile-header-target, 52px);
+    max-height: var(--erv-mobile-header-reserve, 98px);
+    width: 100%;
+  }
+  html.erv-mobile-shell body.lp-home-premium .lp-header__menu-slot {
+    grid-column: 1;
+    order: unset !important;
+    margin: 0 !important;
+  }
+  html.erv-mobile-shell body.lp-home-premium .lp-header__logo-slot {
+    grid-column: 2;
+    justify-self: center;
+    width: auto !important;
+    overflow: visible !important;
+  }
+  html.erv-mobile-shell body.lp-home-premium .lp-header__brand-mid,
+  html.erv-mobile-shell body.lp-home-premium .lp-header__user-mid,
+  html.erv-mobile-shell body.lp-home-premium .lp-nav-wrap {
+    display: none !important;
+  }
+  html.erv-mobile-shell body.lp-home-premium .lp-header__actions {
+    grid-column: 3 !important;
+    order: unset !important;
+    display: flex !important;
+    flex: 0 0 auto !important;
+    width: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    grid-template-columns: unset !important;
+    grid-template-areas: unset !important;
+    gap: 6px !important;
+  }
+  html.erv-mobile-shell body.lp-home-premium #lpHeaderWallet,
+  html.erv-mobile-shell body.lp-home-premium #authArea,
+  html.erv-mobile-shell body.lp-home-premium .lp-draft-checkout-badge__total {
+    display: none !important;
+  }
+}
 

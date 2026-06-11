@@ -70,6 +70,20 @@
     } else {
       root.hidden = true;
       root.setAttribute("hidden", "");
+      root.innerHTML = "";
+      root.classList.remove("guest-offers-carousel--reserved");
+    }
+  }
+
+  /** يحجز ارتفاع البنر قبل تحميل API لتقليل CLS */
+  function reserveCarouselSlot(root) {
+    if (!root || root.dataset.ervBannerReserved === "1") return;
+    root.dataset.ervBannerReserved = "1";
+    root.classList.add("guest-offers-carousel--reserved");
+    showCarouselRoot(root, true);
+    if (!root.querySelector(".guest-offers-shell")) {
+      root.innerHTML =
+        '<div class="guest-offers-shell guest-offers-shell--placeholder" aria-hidden="true"></div>';
     }
   }
 
@@ -266,6 +280,7 @@
 
   async function loadGuestOffersCarousel(containerId) {
     var root = document.getElementById(containerId || "guestOffersCarousel");
+    if (root) reserveCarouselSlot(root);
     var offers = null;
     try {
       offers = await fetchOffersPayload();
@@ -285,6 +300,7 @@
 
   async function loadHomeMainBanner(containerId) {
     var root = document.getElementById(containerId || "homeMainBanner");
+    if (root) reserveCarouselSlot(root);
     var payload = { enabled: true, slides: [] };
     try {
       payload = await fetchHomeBannersPayload();
@@ -305,12 +321,12 @@
   }
 
   function boot() {
-    if (document.getElementById("guestOffersCarousel")) {
-      loadGuestOffersCarousel("guestOffersCarousel");
-    }
-    if (document.getElementById("homeMainBanner")) {
-      loadHomeMainBanner("homeMainBanner");
-    }
+    var dashCarousel = document.getElementById("guestOffersCarousel");
+    var homeBanner = document.getElementById("homeMainBanner");
+    if (dashCarousel) reserveCarouselSlot(dashCarousel);
+    if (homeBanner) reserveCarouselSlot(homeBanner);
+    if (dashCarousel) loadGuestOffersCarousel("guestOffersCarousel");
+    if (homeBanner) loadHomeMainBanner("homeMainBanner");
   }
 
   global.ErvenowGuestOffers = {

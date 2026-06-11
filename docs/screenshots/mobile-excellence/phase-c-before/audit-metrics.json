@@ -1,0 +1,1143 @@
+{
+  "capturedAt": "2026-06-11T15:51:21.972Z",
+  "phase": "phase-c-before",
+  "viewport": {
+    "width": 390,
+    "height": 844
+  },
+  "domReadyMs": 1237,
+  "firstImpression": {
+    "hasBrand": true,
+    "hasTagline": true,
+    "taglineText": "المنصة الذكية",
+    "sectionTitle": "اختر ما يناسبك",
+    "sectionCards": 4,
+    "trustItems": 4,
+    "hasExplainerBelowFold": true,
+    "metaDescription": "ERVENOW — نربط المطاعم والمتاجر والعملاء والمناديب في نظام ذكي واحد. يتم تفعيل الحساب بعد المراجعة واعتماده من إدارة ERVENOW."
+  },
+  "timeline": [
+    {
+      "atMs": 0,
+      "fold": {
+        "viewport": {
+          "w": 390,
+          "h": 844
+        },
+        "scrollY": 0,
+        "header": {
+          "top": 0,
+          "bottom": 98,
+          "h": 98,
+          "w": 390,
+          "visiblePct": 100,
+          "inFold": true,
+          "text": "القائمة\n\n            🔐الدخول\n            ➕إنشاء حساب\n            📋طلباتي0\n    "
+        },
+        "banner": {
+          "top": 98,
+          "bottom": 387,
+          "h": 289,
+          "w": 390,
+          "visiblePct": 100,
+          "inFold": true,
+          "text": ""
+        },
+        "bannerMeta": {
+          "hidden": false,
+          "display": "block",
+          "visibility": "visible",
+          "hasSlides": false,
+          "slideCount": 0,
+          "reserved": true
+        },
+        "wave": null,
+        "sectionLabel": {
+          "top": 438,
+          "bottom": 458,
+          "h": 20,
+          "w": 358,
+          "visiblePct": 100,
+          "inFold": true,
+          "text": "الأقسام الرئيسية"
+        },
+        "sectionTitle": {
+          "top": 466,
+          "bottom": 491,
+          "h": 25,
+          "w": 358,
+          "visiblePct": 100,
+          "inFold": true,
+          "text": "اختر ما يناسبك"
+        },
+        "trust": {
+          "top": 1062,
+          "bottom": 1221,
+          "h": 159,
+          "w": 358,
+          "visiblePct": -138,
+          "inFold": false,
+          "text": "⚡\n          توصيل سريع\n        \n        \n          🛡️\n          دفع آمن\n       "
+        },
+        "stats": {
+          "top": 1289,
+          "bottom": 1681,
+          "h": 392,
+          "w": 390,
+          "visiblePct": -114,
+          "inFold": false,
+          "text": "0\n          طلب يومي\n        \n        \n          0\n          مندوب نشط\n        \n"
+        },
+        "bottomNav": {
+          "top": 785,
+          "bottom": 844,
+          "h": 59,
+          "w": 390,
+          "visiblePct": 100,
+          "inFold": true,
+          "text": "🏠الرئيسية🔍استكشاف🛒السلة0📋طلباتي👤الحساب"
+        },
+        "brandMid": null,
+        "logo": {
+          "top": 12,
+          "bottom": 54,
+          "h": 42,
+          "w": 46,
+          "visiblePct": 100,
+          "inFold": true,
+          "text": ""
+        },
+        "sections": {
+          "restaurants": {
+            "top": 509,
+            "bottom": 762,
+            "h": 253,
+            "w": 171,
+            "visiblePct": 100,
+            "inFold": true,
+            "text": "🍽️\n          \n            مطاعم\n            مشاوي، برقر، شاورماوأكثر من مطاعم م"
+          },
+          "stores": {
+            "top": 509,
+            "bottom": 762,
+            "h": 253,
+            "w": 171,
+            "visiblePct": 100,
+            "inFold": true,
+            "text": "🛒\n          \n            متاجر\n            سوبرماركت، صيدلياتوبقالة مع توصيل سر"
+          },
+          "delivery": {
+            "top": 778,
+            "bottom": 1030,
+            "h": 253,
+            "w": 171,
+            "visiblePct": 26,
+            "inFold": true,
+            "text": "🚚\n          \n            توصيل\n            توصيل من نقطة لأخرىوتوصيل غاز منزلي\n"
+          },
+          "services": {
+            "top": 778,
+            "bottom": 1030,
+            "h": 253,
+            "w": 171,
+            "visiblePct": 26,
+            "inFold": true,
+            "text": "🔧\n          \n            خدمات\n            سباكة، كهرباء، تنظيفوخدمات منزلية مت"
+          }
+        },
+        "foldItems": [
+          {
+            "sel": ".lp-header, #homeMainBanner, .sn-section__label, #home-cats-title, a.sn-card, .sn-trust__item, .erv-mobile-bottom-nav",
+            "top": 0,
+            "bottom": 98,
+            "h": 98,
+            "visiblePct": 100,
+            "text": "القائمة\n\n            🔐الدخول\n            ➕إنشاء حساب\n      "
+          },
+          {
+            "sel": ".lp-header, #homeMainBanner, .sn-section__label, #home-cats-title, a.sn-card, .sn-trust__item, .erv-mobile-bottom-nav",
+            "top": 98,
+            "bottom": 387,
+            "h": 289,
+            "visiblePct": 100,
+            "text": ""
+          },
+          {
+            "sel": ".lp-header, #homeMainBanner, .sn-section__label, #home-cats-title, a.sn-card, .sn-trust__item, .erv-mobile-bottom-nav",
+            "top": 438,
+            "bottom": 458,
+            "h": 20,
+            "visiblePct": 100,
+            "text": "الأقسام الرئيسية"
+          },
+          {
+            "sel": ".lp-header, #homeMainBanner, .sn-section__label, #home-cats-title, a.sn-card, .sn-trust__item, .erv-mobile-bottom-nav",
+            "top": 466,
+            "bottom": 491,
+            "h": 25,
+            "visiblePct": 100,
+            "text": "اختر ما يناسبك"
+          },
+          {
+            "sel": ".lp-header, #homeMainBanner, .sn-section__label, #home-cats-title, a.sn-card, .sn-trust__item, .erv-mobile-bottom-nav",
+            "top": 509,
+            "bottom": 762,
+            "h": 253,
+            "visiblePct": 100,
+            "text": "🍽️\n          \n            مطاعم\n            مشاوي، برقر، شا"
+          },
+          {
+            "sel": ".lp-header, #homeMainBanner, .sn-section__label, #home-cats-title, a.sn-card, .sn-trust__item, .erv-mobile-bottom-nav",
+            "top": 509,
+            "bottom": 762,
+            "h": 253,
+            "visiblePct": 100,
+            "text": "🛒\n          \n            متاجر\n            سوبرماركت، صيدلي"
+          },
+          {
+            "sel": ".lp-header, #homeMainBanner, .sn-section__label, #home-cats-title, a.sn-card, .sn-trust__item, .erv-mobile-bottom-nav",
+            "top": 778,
+            "bottom": 1030,
+            "h": 253,
+            "visiblePct": 26,
+            "text": "🚚\n          \n            توصيل\n            توصيل من نقطة لأ"
+          },
+          {
+            "sel": ".lp-header, #homeMainBanner, .sn-section__label, #home-cats-title, a.sn-card, .sn-trust__item, .erv-mobile-bottom-nav",
+            "top": 778,
+            "bottom": 1030,
+            "h": 253,
+            "visiblePct": 26,
+            "text": "🔧\n          \n            خدمات\n            سباكة، كهرباء، ت"
+          },
+          {
+            "sel": ".lp-header, #homeMainBanner, .sn-section__label, #home-cats-title, a.sn-card, .sn-trust__item, .erv-mobile-bottom-nav",
+            "top": 785,
+            "bottom": 844,
+            "h": 59,
+            "visiblePct": 100,
+            "text": "🏠الرئيسية🔍استكشاف🛒السلة0📋طلباتي👤الحساب"
+          }
+        ]
+      }
+    },
+    {
+      "atMs": 800,
+      "fold": {
+        "viewport": {
+          "w": 390,
+          "h": 844
+        },
+        "scrollY": 0,
+        "header": {
+          "top": 0,
+          "bottom": 98,
+          "h": 98,
+          "w": 390,
+          "visiblePct": 100,
+          "inFold": true,
+          "text": "القائمة\n\n            🔐الدخول\n            ➕إنشاء حساب\n            📋طلباتي0\n    "
+        },
+        "banner": {
+          "top": 98,
+          "bottom": 387,
+          "h": 289,
+          "w": 390,
+          "visiblePct": 100,
+          "inFold": true,
+          "text": "promotionalاطلب من قسم المطاعمكل ما تحتاجه — في مكان واحد.اطلب الآن ←promotional"
+        },
+        "bannerMeta": {
+          "hidden": false,
+          "display": "block",
+          "visibility": "visible",
+          "hasSlides": true,
+          "slideCount": 3,
+          "reserved": true
+        },
+        "wave": null,
+        "sectionLabel": {
+          "top": 438,
+          "bottom": 458,
+          "h": 20,
+          "w": 358,
+          "visiblePct": 100,
+          "inFold": true,
+          "text": "الأقسام الرئيسية"
+        },
+        "sectionTitle": {
+          "top": 466,
+          "bottom": 491,
+          "h": 25,
+          "w": 358,
+          "visiblePct": 100,
+          "inFold": true,
+          "text": "اختر ما يناسبك"
+        },
+        "trust": {
+          "top": 1082,
+          "bottom": 1241,
+          "h": 159,
+          "w": 358,
+          "visiblePct": -150,
+          "inFold": false,
+          "text": "⚡\n          توصيل سريع\n        \n        \n          🛡️\n          دفع آمن\n       "
+        },
+        "stats": {
+          "top": 1309,
+          "bottom": 1701,
+          "h": 392,
+          "w": 390,
+          "visiblePct": -119,
+          "inFold": false,
+          "text": "0\n          طلب يومي\n        \n        \n          0\n          مندوب نشط\n        \n"
+        },
+        "bottomNav": {
+          "top": 785,
+          "bottom": 844,
+          "h": 59,
+          "w": 390,
+          "visiblePct": 100,
+          "inFold": true,
+          "text": "🏠الرئيسية🔍استكشاف🛒السلة0📋طلباتي👤الحساب"
+        },
+        "brandMid": null,
+        "logo": {
+          "top": 12,
+          "bottom": 54,
+          "h": 42,
+          "w": 46,
+          "visiblePct": 100,
+          "inFold": true,
+          "text": ""
+        },
+        "sections": {
+          "restaurants": {
+            "top": 509,
+            "bottom": 781,
+            "h": 273,
+            "w": 171,
+            "visiblePct": 100,
+            "inFold": true,
+            "text": "🍽️\n          \n            مطاعم\n            مشاوي، برقر، شاورماوأكثر من مطاعم م"
+          },
+          "stores": {
+            "top": 509,
+            "bottom": 781,
+            "h": 273,
+            "w": 171,
+            "visiblePct": 100,
+            "inFold": true,
+            "text": "🛒\n          \n            متاجر\n            سوبرماركت، صيدلياتوبقالة مع توصيل سر"
+          },
+          "delivery": {
+            "top": 797,
+            "bottom": 1050,
+            "h": 253,
+            "w": 171,
+            "visiblePct": 18,
+            "inFold": true,
+            "text": "🚚\n          \n            توصيل\n            توصيل من نقطة لأخرىوتوصيل غاز منزلي\n"
+          },
+          "services": {
+            "top": 797,
+            "bottom": 1050,
+            "h": 253,
+            "w": 171,
+            "visiblePct": 18,
+            "inFold": true,
+            "text": "🔧\n          \n            خدمات\n            سباكة، كهرباء، تنظيفوخدمات منزلية مت"
+          }
+        },
+        "foldItems": [
+          {
+            "sel": ".lp-header, #homeMainBanner, .sn-section__label, #home-cats-title, a.sn-card, .sn-trust__item, .erv-mobile-bottom-nav",
+            "top": 0,
+            "bottom": 98,
+            "h": 98,
+            "visiblePct": 100,
+            "text": "القائمة\n\n            🔐الدخول\n            ➕إنشاء حساب\n      "
+          },
+          {
+            "sel": ".lp-header, #homeMainBanner, .sn-section__label, #home-cats-title, a.sn-card, .sn-trust__item, .erv-mobile-bottom-nav",
+            "top": 98,
+            "bottom": 387,
+            "h": 289,
+            "visiblePct": 100,
+            "text": "promotionalاطلب من قسم المطاعمكل ما تحتاجه — في مكان واحد.اط"
+          },
+          {
+            "sel": ".lp-header, #homeMainBanner, .sn-section__label, #home-cats-title, a.sn-card, .sn-trust__item, .erv-mobile-bottom-nav",
+            "top": 438,
+            "bottom": 458,
+            "h": 20,
+            "visiblePct": 100,
+            "text": "الأقسام الرئيسية"
+          },
+          {
+            "sel": ".lp-header, #homeMainBanner, .sn-section__label, #home-cats-title, a.sn-card, .sn-trust__item, .erv-mobile-bottom-nav",
+            "top": 466,
+            "bottom": 491,
+            "h": 25,
+            "visiblePct": 100,
+            "text": "اختر ما يناسبك"
+          },
+          {
+            "sel": ".lp-header, #homeMainBanner, .sn-section__label, #home-cats-title, a.sn-card, .sn-trust__item, .erv-mobile-bottom-nav",
+            "top": 509,
+            "bottom": 781,
+            "h": 273,
+            "visiblePct": 100,
+            "text": "🍽️\n          \n            مطاعم\n            مشاوي، برقر، شا"
+          },
+          {
+            "sel": ".lp-header, #homeMainBanner, .sn-section__label, #home-cats-title, a.sn-card, .sn-trust__item, .erv-mobile-bottom-nav",
+            "top": 509,
+            "bottom": 781,
+            "h": 273,
+            "visiblePct": 100,
+            "text": "🛒\n          \n            متاجر\n            سوبرماركت، صيدلي"
+          },
+          {
+            "sel": ".lp-header, #homeMainBanner, .sn-section__label, #home-cats-title, a.sn-card, .sn-trust__item, .erv-mobile-bottom-nav",
+            "top": 785,
+            "bottom": 844,
+            "h": 59,
+            "visiblePct": 100,
+            "text": "🏠الرئيسية🔍استكشاف🛒السلة0📋طلباتي👤الحساب"
+          },
+          {
+            "sel": ".lp-header, #homeMainBanner, .sn-section__label, #home-cats-title, a.sn-card, .sn-trust__item, .erv-mobile-bottom-nav",
+            "top": 797,
+            "bottom": 1050,
+            "h": 253,
+            "visiblePct": 18,
+            "text": "🚚\n          \n            توصيل\n            توصيل من نقطة لأ"
+          },
+          {
+            "sel": ".lp-header, #homeMainBanner, .sn-section__label, #home-cats-title, a.sn-card, .sn-trust__item, .erv-mobile-bottom-nav",
+            "top": 797,
+            "bottom": 1050,
+            "h": 253,
+            "visiblePct": 18,
+            "text": "🔧\n          \n            خدمات\n            سباكة، كهرباء، ت"
+          }
+        ]
+      }
+    },
+    {
+      "atMs": 3000,
+      "fold": {
+        "viewport": {
+          "w": 390,
+          "h": 844
+        },
+        "scrollY": 0,
+        "header": {
+          "top": 0,
+          "bottom": 98,
+          "h": 98,
+          "w": 390,
+          "visiblePct": 100,
+          "inFold": true,
+          "text": "القائمة\n\n            🔐الدخول\n            ➕إنشاء حساب\n            📋طلباتي0\n    "
+        },
+        "banner": {
+          "top": 98,
+          "bottom": 387,
+          "h": 289,
+          "w": 390,
+          "visiblePct": 100,
+          "inFold": true,
+          "text": "promotionalاطلب من قسم المطاعمكل ما تحتاجه — في مكان واحد.اطلب الآن ←promotional"
+        },
+        "bannerMeta": {
+          "hidden": false,
+          "display": "block",
+          "visibility": "visible",
+          "hasSlides": true,
+          "slideCount": 3,
+          "reserved": true
+        },
+        "wave": null,
+        "sectionLabel": {
+          "top": 438,
+          "bottom": 458,
+          "h": 20,
+          "w": 358,
+          "visiblePct": 100,
+          "inFold": true,
+          "text": "الأقسام الرئيسية"
+        },
+        "sectionTitle": {
+          "top": 466,
+          "bottom": 491,
+          "h": 25,
+          "w": 358,
+          "visiblePct": 100,
+          "inFold": true,
+          "text": "اختر ما يناسبك"
+        },
+        "trust": {
+          "top": 1082,
+          "bottom": 1241,
+          "h": 159,
+          "w": 358,
+          "visiblePct": -150,
+          "inFold": false,
+          "text": "⚡\n          توصيل سريع\n        \n        \n          🛡️\n          دفع آمن\n       "
+        },
+        "stats": {
+          "top": 1309,
+          "bottom": 1701,
+          "h": 392,
+          "w": 390,
+          "visiblePct": -119,
+          "inFold": false,
+          "text": "0\n          طلب يومي\n        \n        \n          0\n          مندوب نشط\n        \n"
+        },
+        "bottomNav": {
+          "top": 785,
+          "bottom": 844,
+          "h": 59,
+          "w": 390,
+          "visiblePct": 100,
+          "inFold": true,
+          "text": "🏠الرئيسية🔍استكشاف🛒السلة0📋طلباتي👤الحساب"
+        },
+        "brandMid": null,
+        "logo": {
+          "top": 12,
+          "bottom": 54,
+          "h": 42,
+          "w": 46,
+          "visiblePct": 100,
+          "inFold": true,
+          "text": ""
+        },
+        "sections": {
+          "restaurants": {
+            "top": 509,
+            "bottom": 781,
+            "h": 273,
+            "w": 171,
+            "visiblePct": 100,
+            "inFold": true,
+            "text": "🍽️\n          \n            مطاعم\n            مشاوي، برقر، شاورماوأكثر من مطاعم م"
+          },
+          "stores": {
+            "top": 509,
+            "bottom": 781,
+            "h": 273,
+            "w": 171,
+            "visiblePct": 100,
+            "inFold": true,
+            "text": "🛒\n          \n            متاجر\n            سوبرماركت، صيدلياتوبقالة مع توصيل سر"
+          },
+          "delivery": {
+            "top": 797,
+            "bottom": 1050,
+            "h": 253,
+            "w": 171,
+            "visiblePct": 18,
+            "inFold": true,
+            "text": "🚚\n          \n            توصيل\n            توصيل من نقطة لأخرىوتوصيل غاز منزلي\n"
+          },
+          "services": {
+            "top": 797,
+            "bottom": 1050,
+            "h": 253,
+            "w": 171,
+            "visiblePct": 18,
+            "inFold": true,
+            "text": "🔧\n          \n            خدمات\n            سباكة، كهرباء، تنظيفوخدمات منزلية مت"
+          }
+        },
+        "foldItems": [
+          {
+            "sel": ".lp-header, #homeMainBanner, .sn-section__label, #home-cats-title, a.sn-card, .sn-trust__item, .erv-mobile-bottom-nav",
+            "top": 0,
+            "bottom": 98,
+            "h": 98,
+            "visiblePct": 100,
+            "text": "القائمة\n\n            🔐الدخول\n            ➕إنشاء حساب\n      "
+          },
+          {
+            "sel": ".lp-header, #homeMainBanner, .sn-section__label, #home-cats-title, a.sn-card, .sn-trust__item, .erv-mobile-bottom-nav",
+            "top": 98,
+            "bottom": 387,
+            "h": 289,
+            "visiblePct": 100,
+            "text": "promotionalاطلب من قسم المطاعمكل ما تحتاجه — في مكان واحد.اط"
+          },
+          {
+            "sel": ".lp-header, #homeMainBanner, .sn-section__label, #home-cats-title, a.sn-card, .sn-trust__item, .erv-mobile-bottom-nav",
+            "top": 438,
+            "bottom": 458,
+            "h": 20,
+            "visiblePct": 100,
+            "text": "الأقسام الرئيسية"
+          },
+          {
+            "sel": ".lp-header, #homeMainBanner, .sn-section__label, #home-cats-title, a.sn-card, .sn-trust__item, .erv-mobile-bottom-nav",
+            "top": 466,
+            "bottom": 491,
+            "h": 25,
+            "visiblePct": 100,
+            "text": "اختر ما يناسبك"
+          },
+          {
+            "sel": ".lp-header, #homeMainBanner, .sn-section__label, #home-cats-title, a.sn-card, .sn-trust__item, .erv-mobile-bottom-nav",
+            "top": 509,
+            "bottom": 781,
+            "h": 273,
+            "visiblePct": 100,
+            "text": "🍽️\n          \n            مطاعم\n            مشاوي، برقر، شا"
+          },
+          {
+            "sel": ".lp-header, #homeMainBanner, .sn-section__label, #home-cats-title, a.sn-card, .sn-trust__item, .erv-mobile-bottom-nav",
+            "top": 509,
+            "bottom": 781,
+            "h": 273,
+            "visiblePct": 100,
+            "text": "🛒\n          \n            متاجر\n            سوبرماركت، صيدلي"
+          },
+          {
+            "sel": ".lp-header, #homeMainBanner, .sn-section__label, #home-cats-title, a.sn-card, .sn-trust__item, .erv-mobile-bottom-nav",
+            "top": 785,
+            "bottom": 844,
+            "h": 59,
+            "visiblePct": 100,
+            "text": "🏠الرئيسية🔍استكشاف🛒السلة0📋طلباتي👤الحساب"
+          },
+          {
+            "sel": ".lp-header, #homeMainBanner, .sn-section__label, #home-cats-title, a.sn-card, .sn-trust__item, .erv-mobile-bottom-nav",
+            "top": 797,
+            "bottom": 1050,
+            "h": 253,
+            "visiblePct": 18,
+            "text": "🚚\n          \n            توصيل\n            توصيل من نقطة لأ"
+          },
+          {
+            "sel": ".lp-header, #homeMainBanner, .sn-section__label, #home-cats-title, a.sn-card, .sn-trust__item, .erv-mobile-bottom-nav",
+            "top": 797,
+            "bottom": 1050,
+            "h": 253,
+            "visiblePct": 18,
+            "text": "🔧\n          \n            خدمات\n            سباكة، كهرباء، ت"
+          }
+        ]
+      }
+    },
+    {
+      "atMs": 5000,
+      "fold": {
+        "viewport": {
+          "w": 390,
+          "h": 844
+        },
+        "scrollY": 0,
+        "header": {
+          "top": 0,
+          "bottom": 98,
+          "h": 98,
+          "w": 390,
+          "visiblePct": 100,
+          "inFold": true,
+          "text": "القائمة\n\n            🔐الدخول\n            ➕إنشاء حساب\n            📋طلباتي0\n    "
+        },
+        "banner": {
+          "top": 98,
+          "bottom": 387,
+          "h": 289,
+          "w": 390,
+          "visiblePct": 100,
+          "inFold": true,
+          "text": "promotionalاطلب من قسم المطاعمكل ما تحتاجه — في مكان واحد.اطلب الآن ←promotional"
+        },
+        "bannerMeta": {
+          "hidden": false,
+          "display": "block",
+          "visibility": "visible",
+          "hasSlides": true,
+          "slideCount": 3,
+          "reserved": true
+        },
+        "wave": null,
+        "sectionLabel": {
+          "top": 438,
+          "bottom": 458,
+          "h": 20,
+          "w": 358,
+          "visiblePct": 100,
+          "inFold": true,
+          "text": "الأقسام الرئيسية"
+        },
+        "sectionTitle": {
+          "top": 466,
+          "bottom": 491,
+          "h": 25,
+          "w": 358,
+          "visiblePct": 100,
+          "inFold": true,
+          "text": "اختر ما يناسبك"
+        },
+        "trust": {
+          "top": 1082,
+          "bottom": 1241,
+          "h": 159,
+          "w": 358,
+          "visiblePct": -150,
+          "inFold": false,
+          "text": "⚡\n          توصيل سريع\n        \n        \n          🛡️\n          دفع آمن\n       "
+        },
+        "stats": {
+          "top": 1309,
+          "bottom": 1701,
+          "h": 392,
+          "w": 390,
+          "visiblePct": -119,
+          "inFold": false,
+          "text": "0\n          طلب يومي\n        \n        \n          0\n          مندوب نشط\n        \n"
+        },
+        "bottomNav": {
+          "top": 785,
+          "bottom": 844,
+          "h": 59,
+          "w": 390,
+          "visiblePct": 100,
+          "inFold": true,
+          "text": "🏠الرئيسية🔍استكشاف🛒السلة0📋طلباتي👤الحساب"
+        },
+        "brandMid": null,
+        "logo": {
+          "top": 12,
+          "bottom": 54,
+          "h": 42,
+          "w": 46,
+          "visiblePct": 100,
+          "inFold": true,
+          "text": ""
+        },
+        "sections": {
+          "restaurants": {
+            "top": 509,
+            "bottom": 781,
+            "h": 273,
+            "w": 171,
+            "visiblePct": 100,
+            "inFold": true,
+            "text": "🍽️\n          \n            مطاعم\n            مشاوي، برقر، شاورماوأكثر من مطاعم م"
+          },
+          "stores": {
+            "top": 509,
+            "bottom": 781,
+            "h": 273,
+            "w": 171,
+            "visiblePct": 100,
+            "inFold": true,
+            "text": "🛒\n          \n            متاجر\n            سوبرماركت، صيدلياتوبقالة مع توصيل سر"
+          },
+          "delivery": {
+            "top": 797,
+            "bottom": 1050,
+            "h": 253,
+            "w": 171,
+            "visiblePct": 18,
+            "inFold": true,
+            "text": "🚚\n          \n            توصيل\n            توصيل من نقطة لأخرىوتوصيل غاز منزلي\n"
+          },
+          "services": {
+            "top": 797,
+            "bottom": 1050,
+            "h": 253,
+            "w": 171,
+            "visiblePct": 18,
+            "inFold": true,
+            "text": "🔧\n          \n            خدمات\n            سباكة، كهرباء، تنظيفوخدمات منزلية مت"
+          }
+        },
+        "foldItems": [
+          {
+            "sel": ".lp-header, #homeMainBanner, .sn-section__label, #home-cats-title, a.sn-card, .sn-trust__item, .erv-mobile-bottom-nav",
+            "top": 0,
+            "bottom": 98,
+            "h": 98,
+            "visiblePct": 100,
+            "text": "القائمة\n\n            🔐الدخول\n            ➕إنشاء حساب\n      "
+          },
+          {
+            "sel": ".lp-header, #homeMainBanner, .sn-section__label, #home-cats-title, a.sn-card, .sn-trust__item, .erv-mobile-bottom-nav",
+            "top": 98,
+            "bottom": 387,
+            "h": 289,
+            "visiblePct": 100,
+            "text": "promotionalاطلب من قسم المطاعمكل ما تحتاجه — في مكان واحد.اط"
+          },
+          {
+            "sel": ".lp-header, #homeMainBanner, .sn-section__label, #home-cats-title, a.sn-card, .sn-trust__item, .erv-mobile-bottom-nav",
+            "top": 438,
+            "bottom": 458,
+            "h": 20,
+            "visiblePct": 100,
+            "text": "الأقسام الرئيسية"
+          },
+          {
+            "sel": ".lp-header, #homeMainBanner, .sn-section__label, #home-cats-title, a.sn-card, .sn-trust__item, .erv-mobile-bottom-nav",
+            "top": 466,
+            "bottom": 491,
+            "h": 25,
+            "visiblePct": 100,
+            "text": "اختر ما يناسبك"
+          },
+          {
+            "sel": ".lp-header, #homeMainBanner, .sn-section__label, #home-cats-title, a.sn-card, .sn-trust__item, .erv-mobile-bottom-nav",
+            "top": 509,
+            "bottom": 781,
+            "h": 273,
+            "visiblePct": 100,
+            "text": "🍽️\n          \n            مطاعم\n            مشاوي، برقر، شا"
+          },
+          {
+            "sel": ".lp-header, #homeMainBanner, .sn-section__label, #home-cats-title, a.sn-card, .sn-trust__item, .erv-mobile-bottom-nav",
+            "top": 509,
+            "bottom": 781,
+            "h": 273,
+            "visiblePct": 100,
+            "text": "🛒\n          \n            متاجر\n            سوبرماركت، صيدلي"
+          },
+          {
+            "sel": ".lp-header, #homeMainBanner, .sn-section__label, #home-cats-title, a.sn-card, .sn-trust__item, .erv-mobile-bottom-nav",
+            "top": 785,
+            "bottom": 844,
+            "h": 59,
+            "visiblePct": 100,
+            "text": "🏠الرئيسية🔍استكشاف🛒السلة0📋طلباتي👤الحساب"
+          },
+          {
+            "sel": ".lp-header, #homeMainBanner, .sn-section__label, #home-cats-title, a.sn-card, .sn-trust__item, .erv-mobile-bottom-nav",
+            "top": 797,
+            "bottom": 1050,
+            "h": 253,
+            "visiblePct": 18,
+            "text": "🚚\n          \n            توصيل\n            توصيل من نقطة لأ"
+          },
+          {
+            "sel": ".lp-header, #homeMainBanner, .sn-section__label, #home-cats-title, a.sn-card, .sn-trust__item, .erv-mobile-bottom-nav",
+            "top": 797,
+            "bottom": 1050,
+            "h": 253,
+            "visiblePct": 18,
+            "text": "🔧\n          \n            خدمات\n            سباكة، كهرباء، ت"
+          }
+        ]
+      }
+    },
+    {
+      "atMs": 10000,
+      "fold": {
+        "viewport": {
+          "w": 390,
+          "h": 844
+        },
+        "scrollY": 0,
+        "header": {
+          "top": 0,
+          "bottom": 98,
+          "h": 98,
+          "w": 390,
+          "visiblePct": 100,
+          "inFold": true,
+          "text": "القائمة\n\n            🔐الدخول\n            ➕إنشاء حساب\n            📋طلباتي0\n    "
+        },
+        "banner": {
+          "top": 98,
+          "bottom": 387,
+          "h": 289,
+          "w": 390,
+          "visiblePct": 100,
+          "inFold": true,
+          "text": "promotionalاطلب من قسم المطاعمكل ما تحتاجه — في مكان واحد.اطلب الآن ←promotional"
+        },
+        "bannerMeta": {
+          "hidden": false,
+          "display": "block",
+          "visibility": "visible",
+          "hasSlides": true,
+          "slideCount": 3,
+          "reserved": true
+        },
+        "wave": null,
+        "sectionLabel": {
+          "top": 438,
+          "bottom": 458,
+          "h": 20,
+          "w": 358,
+          "visiblePct": 100,
+          "inFold": true,
+          "text": "الأقسام الرئيسية"
+        },
+        "sectionTitle": {
+          "top": 466,
+          "bottom": 491,
+          "h": 25,
+          "w": 358,
+          "visiblePct": 100,
+          "inFold": true,
+          "text": "اختر ما يناسبك"
+        },
+        "trust": {
+          "top": 1082,
+          "bottom": 1241,
+          "h": 159,
+          "w": 358,
+          "visiblePct": -150,
+          "inFold": false,
+          "text": "⚡\n          توصيل سريع\n        \n        \n          🛡️\n          دفع آمن\n       "
+        },
+        "stats": {
+          "top": 1309,
+          "bottom": 1701,
+          "h": 392,
+          "w": 390,
+          "visiblePct": -119,
+          "inFold": false,
+          "text": "0\n          طلب يومي\n        \n        \n          0\n          مندوب نشط\n        \n"
+        },
+        "bottomNav": {
+          "top": 785,
+          "bottom": 844,
+          "h": 59,
+          "w": 390,
+          "visiblePct": 100,
+          "inFold": true,
+          "text": "🏠الرئيسية🔍استكشاف🛒السلة0📋طلباتي👤الحساب"
+        },
+        "brandMid": null,
+        "logo": {
+          "top": 12,
+          "bottom": 54,
+          "h": 42,
+          "w": 46,
+          "visiblePct": 100,
+          "inFold": true,
+          "text": ""
+        },
+        "sections": {
+          "restaurants": {
+            "top": 509,
+            "bottom": 781,
+            "h": 273,
+            "w": 171,
+            "visiblePct": 100,
+            "inFold": true,
+            "text": "🍽️\n          \n            مطاعم\n            مشاوي، برقر، شاورماوأكثر من مطاعم م"
+          },
+          "stores": {
+            "top": 509,
+            "bottom": 781,
+            "h": 273,
+            "w": 171,
+            "visiblePct": 100,
+            "inFold": true,
+            "text": "🛒\n          \n            متاجر\n            سوبرماركت، صيدلياتوبقالة مع توصيل سر"
+          },
+          "delivery": {
+            "top": 797,
+            "bottom": 1050,
+            "h": 253,
+            "w": 171,
+            "visiblePct": 18,
+            "inFold": true,
+            "text": "🚚\n          \n            توصيل\n            توصيل من نقطة لأخرىوتوصيل غاز منزلي\n"
+          },
+          "services": {
+            "top": 797,
+            "bottom": 1050,
+            "h": 253,
+            "w": 171,
+            "visiblePct": 18,
+            "inFold": true,
+            "text": "🔧\n          \n            خدمات\n            سباكة، كهرباء، تنظيفوخدمات منزلية مت"
+          }
+        },
+        "foldItems": [
+          {
+            "sel": ".lp-header, #homeMainBanner, .sn-section__label, #home-cats-title, a.sn-card, .sn-trust__item, .erv-mobile-bottom-nav",
+            "top": 0,
+            "bottom": 98,
+            "h": 98,
+            "visiblePct": 100,
+            "text": "القائمة\n\n            🔐الدخول\n            ➕إنشاء حساب\n      "
+          },
+          {
+            "sel": ".lp-header, #homeMainBanner, .sn-section__label, #home-cats-title, a.sn-card, .sn-trust__item, .erv-mobile-bottom-nav",
+            "top": 98,
+            "bottom": 387,
+            "h": 289,
+            "visiblePct": 100,
+            "text": "promotionalاطلب من قسم المطاعمكل ما تحتاجه — في مكان واحد.اط"
+          },
+          {
+            "sel": ".lp-header, #homeMainBanner, .sn-section__label, #home-cats-title, a.sn-card, .sn-trust__item, .erv-mobile-bottom-nav",
+            "top": 438,
+            "bottom": 458,
+            "h": 20,
+            "visiblePct": 100,
+            "text": "الأقسام الرئيسية"
+          },
+          {
+            "sel": ".lp-header, #homeMainBanner, .sn-section__label, #home-cats-title, a.sn-card, .sn-trust__item, .erv-mobile-bottom-nav",
+            "top": 466,
+            "bottom": 491,
+            "h": 25,
+            "visiblePct": 100,
+            "text": "اختر ما يناسبك"
+          },
+          {
+            "sel": ".lp-header, #homeMainBanner, .sn-section__label, #home-cats-title, a.sn-card, .sn-trust__item, .erv-mobile-bottom-nav",
+            "top": 509,
+            "bottom": 781,
+            "h": 273,
+            "visiblePct": 100,
+            "text": "🍽️\n          \n            مطاعم\n            مشاوي، برقر، شا"
+          },
+          {
+            "sel": ".lp-header, #homeMainBanner, .sn-section__label, #home-cats-title, a.sn-card, .sn-trust__item, .erv-mobile-bottom-nav",
+            "top": 509,
+            "bottom": 781,
+            "h": 273,
+            "visiblePct": 100,
+            "text": "🛒\n          \n            متاجر\n            سوبرماركت، صيدلي"
+          },
+          {
+            "sel": ".lp-header, #homeMainBanner, .sn-section__label, #home-cats-title, a.sn-card, .sn-trust__item, .erv-mobile-bottom-nav",
+            "top": 785,
+            "bottom": 844,
+            "h": 59,
+            "visiblePct": 100,
+            "text": "🏠الرئيسية🔍استكشاف🛒السلة0📋طلباتي👤الحساب"
+          },
+          {
+            "sel": ".lp-header, #homeMainBanner, .sn-section__label, #home-cats-title, a.sn-card, .sn-trust__item, .erv-mobile-bottom-nav",
+            "top": 797,
+            "bottom": 1050,
+            "h": 253,
+            "visiblePct": 18,
+            "text": "🚚\n          \n            توصيل\n            توصيل من نقطة لأ"
+          },
+          {
+            "sel": ".lp-header, #homeMainBanner, .sn-section__label, #home-cats-title, a.sn-card, .sn-trust__item, .erv-mobile-bottom-nav",
+            "top": 797,
+            "bottom": 1050,
+            "h": 253,
+            "visiblePct": 18,
+            "text": "🔧\n          \n            خدمات\n            سباكة، كهرباء، ت"
+          }
+        ]
+      }
+    }
+  ],
+  "conversion": [
+    {
+      "id": "restaurants",
+      "label": "مطاعم",
+      "url": "/restaurants",
+      "timeToVisibleMs": 1417,
+      "layout": {
+        "found": true,
+        "top": 509,
+        "bottom": 781,
+        "h": 273,
+        "visiblePct": 100,
+        "scrollNeeded": 389,
+        "href": "/restaurants",
+        "tapReady": true
+      },
+      "navigationMs": 171,
+      "estimatedTapSeconds": 2.2
+    },
+    {
+      "id": "stores",
+      "label": "متاجر",
+      "url": "/stores",
+      "timeToVisibleMs": 1472,
+      "layout": {
+        "found": true,
+        "top": 509,
+        "bottom": 781,
+        "h": 273,
+        "visiblePct": 100,
+        "scrollNeeded": 389,
+        "href": "/stores",
+        "tapReady": true
+      },
+      "navigationMs": 202,
+      "estimatedTapSeconds": 2.2
+    },
+    {
+      "id": "services",
+      "label": "خدمات",
+      "url": "/services",
+      "timeToVisibleMs": 1407,
+      "layout": {
+        "found": true,
+        "top": 797,
+        "bottom": 1050,
+        "h": 253,
+        "visiblePct": 18,
+        "scrollNeeded": 678,
+        "href": "/services",
+        "tapReady": true
+      },
+      "navigationMs": 108,
+      "estimatedTapSeconds": 2.9
+    },
+    {
+      "id": "delivery",
+      "label": "توصيل",
+      "url": "/delivery-services.html",
+      "timeToVisibleMs": 1724,
+      "layout": {
+        "found": true,
+        "top": 797,
+        "bottom": 1050,
+        "h": 253,
+        "visiblePct": 18,
+        "scrollNeeded": 678,
+        "href": "/delivery-services.html",
+        "tapReady": true
+      },
+      "navigationMs": 474,
+      "estimatedTapSeconds": 2.9
+    }
+  ],
+  "foldSummary": {
+    "headerH": 98,
+    "bannerH": 289,
+    "bannerVisible": true,
+    "firstSectionCardTop": 509,
+    "cardsInFold": [
+      "restaurants",
+      "stores",
+      "delivery",
+      "services"
+    ],
+    "cardsPartial": [
+      {
+        "id": "delivery",
+        "visiblePct": 18
+      },
+      {
+        "id": "services",
+        "visiblePct": 18
+      }
+    ]
+  },
+  "screenshots": {
+    "fold": "home-fold-390.png",
+    "at5s": "home-at-5s-390.png",
+    "at10s": "home-at-10s-390.png",
+    "full": "home-full-390.png"
+  }
+}

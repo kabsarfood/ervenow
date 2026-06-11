@@ -1,0 +1,1192 @@
+{
+  "capturedAt": "2026-06-11T13:41:21.101Z",
+  "phase": "before",
+  "baseUrl": "http://localhost:4000",
+  "viewports": [
+    {
+      "name": "mobile-390",
+      "size": {
+        "width": 390,
+        "height": 844
+      }
+    },
+    {
+      "name": "tablet-768",
+      "size": {
+        "width": 768,
+        "height": 1024
+      }
+    },
+    {
+      "name": "desktop-1280",
+      "size": {
+        "width": 1280,
+        "height": 800
+      }
+    }
+  ],
+  "pages": [
+    {
+      "id": "home",
+      "label": "الرئيسية",
+      "url": "/"
+    },
+    {
+      "id": "dashboard",
+      "label": "لوحة الزائر",
+      "url": "/dashboard"
+    },
+    {
+      "id": "restaurants",
+      "label": "المطاعم",
+      "url": "/restaurants"
+    },
+    {
+      "id": "stores",
+      "label": "المتاجر",
+      "url": "/stores"
+    },
+    {
+      "id": "services",
+      "label": "الخدمات",
+      "url": "/services"
+    },
+    {
+      "id": "delivery-services",
+      "label": "التوصيل",
+      "url": "/delivery-services.html"
+    },
+    {
+      "id": "delivery-map",
+      "label": "من الخريطة",
+      "url": "/delivery-map"
+    },
+    {
+      "id": "checkout",
+      "label": "الدفع",
+      "url": "/checkout"
+    },
+    {
+      "id": "login",
+      "label": "تسجيل الدخول",
+      "url": "/login"
+    },
+    {
+      "id": "track",
+      "label": "تتبع الحي",
+      "url": "/track"
+    }
+  ],
+  "measurements": [
+    {
+      "page": "home",
+      "label": "الرئيسية",
+      "viewport": "mobile-390",
+      "loadMs": 5473,
+      "screenshot": "docs/screenshots/mobile-ux-3.0/before/home-mobile-390.png",
+      "screenshotFull": "docs/screenshots/mobile-ux-3.0/before/home-mobile-390-full.png",
+      "metrics": {
+        "viewport": {
+          "w": 390,
+          "h": 844
+        },
+        "docH": 4592,
+        "header": {
+          "w": 390,
+          "h": 218,
+          "top": 0,
+          "visible": true,
+          "hidden": false
+        },
+        "mainBanner": {
+          "w": 390,
+          "h": 289,
+          "top": 218,
+          "visible": true,
+          "hidden": false
+        },
+        "search": null,
+        "footer": {
+          "w": 390,
+          "h": 635,
+          "top": 3938,
+          "visible": true,
+          "hidden": false
+        },
+        "smallTouchTargets": 0,
+        "buttonSample": 8,
+        "overflowX": false
+      }
+    },
+    {
+      "page": "home",
+      "label": "الرئيسية",
+      "viewport": "tablet-768",
+      "loadMs": 4653,
+      "screenshot": "docs/screenshots/mobile-ux-3.0/before/home-tablet-768.png",
+      "screenshotFull": "docs/screenshots/mobile-ux-3.0/before/home-tablet-768-full.png",
+      "metrics": {
+        "viewport": {
+          "w": 768,
+          "h": 1024
+        },
+        "docH": 3483,
+        "header": {
+          "w": 768,
+          "h": 90,
+          "top": 0,
+          "visible": true,
+          "hidden": false
+        },
+        "mainBanner": {
+          "w": 768,
+          "h": 382,
+          "top": 90,
+          "visible": true,
+          "hidden": false
+        },
+        "search": null,
+        "footer": {
+          "w": 768,
+          "h": 408,
+          "top": 3054,
+          "visible": true,
+          "hidden": false
+        },
+        "smallTouchTargets": 0,
+        "buttonSample": 8,
+        "overflowX": false
+      }
+    },
+    {
+      "page": "home",
+      "label": "الرئيسية",
+      "viewport": "desktop-1280",
+      "loadMs": 5541,
+      "screenshot": "docs/screenshots/mobile-ux-3.0/before/home-desktop-1280.png",
+      "screenshotFull": "docs/screenshots/mobile-ux-3.0/before/home-desktop-1280-full.png",
+      "metrics": {
+        "viewport": {
+          "w": 1280,
+          "h": 800
+        },
+        "docH": 3487,
+        "header": {
+          "w": 1280,
+          "h": 171,
+          "top": 0,
+          "visible": true,
+          "hidden": false
+        },
+        "mainBanner": {
+          "w": 1120,
+          "h": 427,
+          "top": 187,
+          "visible": true,
+          "hidden": false
+        },
+        "search": null,
+        "footer": {
+          "w": 1280,
+          "h": 211,
+          "top": 3275,
+          "visible": true,
+          "hidden": false
+        },
+        "smallTouchTargets": 0,
+        "buttonSample": 8,
+        "overflowX": false
+      }
+    },
+    {
+      "page": "dashboard",
+      "label": "لوحة الزائر",
+      "viewport": "mobile-390",
+      "loadMs": 4473,
+      "screenshot": "docs/screenshots/mobile-ux-3.0/before/dashboard-mobile-390.png",
+      "screenshotFull": "docs/screenshots/mobile-ux-3.0/before/dashboard-mobile-390-full.png",
+      "metrics": {
+        "viewport": {
+          "w": 390,
+          "h": 844
+        },
+        "docH": 1282,
+        "header": {
+          "w": 390,
+          "h": 125,
+          "top": 0,
+          "visible": true,
+          "hidden": false
+        },
+        "mainBanner": {
+          "w": 390,
+          "h": 255,
+          "top": 354,
+          "visible": true,
+          "hidden": false
+        },
+        "search": null,
+        "footer": {
+          "w": 390,
+          "h": 219,
+          "top": 1063,
+          "visible": true,
+          "hidden": false
+        },
+        "smallTouchTargets": 0,
+        "buttonSample": 12,
+        "overflowX": false
+      }
+    },
+    {
+      "page": "dashboard",
+      "label": "لوحة الزائر",
+      "viewport": "tablet-768",
+      "loadMs": 4516,
+      "screenshot": "docs/screenshots/mobile-ux-3.0/before/dashboard-tablet-768.png",
+      "screenshotFull": "docs/screenshots/mobile-ux-3.0/before/dashboard-tablet-768-full.png",
+      "metrics": {
+        "viewport": {
+          "w": 768,
+          "h": 1024
+        },
+        "docH": 1092,
+        "header": {
+          "w": 768,
+          "h": 69,
+          "top": 0,
+          "visible": true,
+          "hidden": false
+        },
+        "mainBanner": {
+          "w": 732,
+          "h": 280,
+          "top": 257,
+          "visible": true,
+          "hidden": false
+        },
+        "search": null,
+        "footer": {
+          "w": 768,
+          "h": 151,
+          "top": 940,
+          "visible": true,
+          "hidden": false
+        },
+        "smallTouchTargets": 0,
+        "buttonSample": 12,
+        "overflowX": false
+      }
+    },
+    {
+      "page": "dashboard",
+      "label": "لوحة الزائر",
+      "viewport": "desktop-1280",
+      "loadMs": 4577,
+      "screenshot": "docs/screenshots/mobile-ux-3.0/before/dashboard-desktop-1280.png",
+      "screenshotFull": "docs/screenshots/mobile-ux-3.0/before/dashboard-desktop-1280-full.png",
+      "metrics": {
+        "viewport": {
+          "w": 1280,
+          "h": 800
+        },
+        "docH": 1233,
+        "header": {
+          "w": 1280,
+          "h": 64,
+          "top": 0,
+          "visible": true,
+          "hidden": false
+        },
+        "mainBanner": {
+          "w": 1092,
+          "h": 416,
+          "top": 252,
+          "visible": true,
+          "hidden": false
+        },
+        "search": null,
+        "footer": {
+          "w": 1280,
+          "h": 155,
+          "top": 1078,
+          "visible": true,
+          "hidden": false
+        },
+        "smallTouchTargets": 1,
+        "buttonSample": 12,
+        "overflowX": false
+      }
+    },
+    {
+      "page": "restaurants",
+      "label": "المطاعم",
+      "viewport": "mobile-390",
+      "loadMs": 7396,
+      "screenshot": "docs/screenshots/mobile-ux-3.0/before/restaurants-mobile-390.png",
+      "screenshotFull": "docs/screenshots/mobile-ux-3.0/before/restaurants-mobile-390-full.png",
+      "metrics": {
+        "viewport": {
+          "w": 390,
+          "h": 844
+        },
+        "docH": 1416,
+        "header": {
+          "w": 390,
+          "h": 125,
+          "top": 0,
+          "visible": true,
+          "hidden": false
+        },
+        "mainBanner": null,
+        "search": {
+          "w": 362,
+          "h": 57,
+          "top": 241,
+          "visible": true,
+          "hidden": false
+        },
+        "footer": {
+          "w": 390,
+          "h": 221,
+          "top": 1195,
+          "visible": true,
+          "hidden": false
+        },
+        "smallTouchTargets": 0,
+        "buttonSample": 15,
+        "overflowX": false
+      }
+    },
+    {
+      "page": "restaurants",
+      "label": "المطاعم",
+      "viewport": "tablet-768",
+      "loadMs": 5088,
+      "screenshot": "docs/screenshots/mobile-ux-3.0/before/restaurants-tablet-768.png",
+      "screenshotFull": "docs/screenshots/mobile-ux-3.0/before/restaurants-tablet-768-full.png",
+      "metrics": {
+        "viewport": {
+          "w": 768,
+          "h": 1024
+        },
+        "docH": 1292,
+        "header": {
+          "w": 768,
+          "h": 69,
+          "top": 0,
+          "visible": true,
+          "hidden": false
+        },
+        "mainBanner": null,
+        "search": {
+          "w": 732,
+          "h": 60,
+          "top": 220,
+          "visible": true,
+          "hidden": false
+        },
+        "footer": {
+          "w": 768,
+          "h": 151,
+          "top": 1141,
+          "visible": true,
+          "hidden": false
+        },
+        "smallTouchTargets": 0,
+        "buttonSample": 15,
+        "overflowX": false
+      }
+    },
+    {
+      "page": "restaurants",
+      "label": "المطاعم",
+      "viewport": "desktop-1280",
+      "loadMs": 5017,
+      "screenshot": "docs/screenshots/mobile-ux-3.0/before/restaurants-desktop-1280.png",
+      "screenshotFull": "docs/screenshots/mobile-ux-3.0/before/restaurants-desktop-1280-full.png",
+      "metrics": {
+        "viewport": {
+          "w": 1280,
+          "h": 800
+        },
+        "docH": 1283,
+        "header": {
+          "w": 1280,
+          "h": 64,
+          "top": 0,
+          "visible": true,
+          "hidden": false
+        },
+        "mainBanner": null,
+        "search": {
+          "w": 1092,
+          "h": 60,
+          "top": 227,
+          "visible": true,
+          "hidden": false
+        },
+        "footer": {
+          "w": 1280,
+          "h": 155,
+          "top": 1128,
+          "visible": true,
+          "hidden": false
+        },
+        "smallTouchTargets": 1,
+        "buttonSample": 15,
+        "overflowX": false
+      }
+    },
+    {
+      "page": "stores",
+      "label": "المتاجر",
+      "viewport": "mobile-390",
+      "loadMs": 4977,
+      "screenshot": "docs/screenshots/mobile-ux-3.0/before/stores-mobile-390.png",
+      "screenshotFull": "docs/screenshots/mobile-ux-3.0/before/stores-mobile-390-full.png",
+      "metrics": {
+        "viewport": {
+          "w": 390,
+          "h": 844
+        },
+        "docH": 1429,
+        "header": {
+          "w": 390,
+          "h": 125,
+          "top": 0,
+          "visible": true,
+          "hidden": false
+        },
+        "mainBanner": null,
+        "search": {
+          "w": 362,
+          "h": 57,
+          "top": 241,
+          "visible": true,
+          "hidden": false
+        },
+        "footer": {
+          "w": 390,
+          "h": 221,
+          "top": 1208,
+          "visible": true,
+          "hidden": false
+        },
+        "smallTouchTargets": 0,
+        "buttonSample": 12,
+        "overflowX": false
+      }
+    },
+    {
+      "page": "stores",
+      "label": "المتاجر",
+      "viewport": "tablet-768",
+      "loadMs": 4339,
+      "screenshot": "docs/screenshots/mobile-ux-3.0/before/stores-tablet-768.png",
+      "screenshotFull": "docs/screenshots/mobile-ux-3.0/before/stores-tablet-768-full.png",
+      "metrics": {
+        "viewport": {
+          "w": 768,
+          "h": 1024
+        },
+        "docH": 1209,
+        "header": {
+          "w": 768,
+          "h": 69,
+          "top": 0,
+          "visible": true,
+          "hidden": false
+        },
+        "mainBanner": null,
+        "search": {
+          "w": 732,
+          "h": 60,
+          "top": 220,
+          "visible": true,
+          "hidden": false
+        },
+        "footer": {
+          "w": 768,
+          "h": 151,
+          "top": 1058,
+          "visible": true,
+          "hidden": false
+        },
+        "smallTouchTargets": 0,
+        "buttonSample": 12,
+        "overflowX": false
+      }
+    },
+    {
+      "page": "stores",
+      "label": "المتاجر",
+      "viewport": "desktop-1280",
+      "loadMs": 4384,
+      "screenshot": "docs/screenshots/mobile-ux-3.0/before/stores-desktop-1280.png",
+      "screenshotFull": "docs/screenshots/mobile-ux-3.0/before/stores-desktop-1280-full.png",
+      "metrics": {
+        "viewport": {
+          "w": 1280,
+          "h": 800
+        },
+        "docH": 1203,
+        "header": {
+          "w": 1280,
+          "h": 64,
+          "top": 0,
+          "visible": true,
+          "hidden": false
+        },
+        "mainBanner": null,
+        "search": {
+          "w": 1092,
+          "h": 60,
+          "top": 227,
+          "visible": true,
+          "hidden": false
+        },
+        "footer": {
+          "w": 1280,
+          "h": 155,
+          "top": 1048,
+          "visible": true,
+          "hidden": false
+        },
+        "smallTouchTargets": 1,
+        "buttonSample": 12,
+        "overflowX": false
+      }
+    },
+    {
+      "page": "services",
+      "label": "الخدمات",
+      "viewport": "mobile-390",
+      "loadMs": 4927,
+      "screenshot": "docs/screenshots/mobile-ux-3.0/before/services-mobile-390.png",
+      "screenshotFull": "docs/screenshots/mobile-ux-3.0/before/services-mobile-390-full.png",
+      "metrics": {
+        "viewport": {
+          "w": 390,
+          "h": 844
+        },
+        "docH": 2513,
+        "header": {
+          "w": 390,
+          "h": 125,
+          "top": 0,
+          "visible": true,
+          "hidden": false
+        },
+        "mainBanner": null,
+        "search": {
+          "w": 362,
+          "h": 57,
+          "top": 241,
+          "visible": true,
+          "hidden": false
+        },
+        "footer": {
+          "w": 390,
+          "h": 221,
+          "top": 2292,
+          "visible": true,
+          "hidden": false
+        },
+        "smallTouchTargets": 1,
+        "buttonSample": 23,
+        "overflowX": false
+      }
+    },
+    {
+      "page": "services",
+      "label": "الخدمات",
+      "viewport": "tablet-768",
+      "loadMs": 4442,
+      "screenshot": "docs/screenshots/mobile-ux-3.0/before/services-tablet-768.png",
+      "screenshotFull": "docs/screenshots/mobile-ux-3.0/before/services-tablet-768-full.png",
+      "metrics": {
+        "viewport": {
+          "w": 768,
+          "h": 1024
+        },
+        "docH": 2116,
+        "header": {
+          "w": 768,
+          "h": 69,
+          "top": 0,
+          "visible": true,
+          "hidden": false
+        },
+        "mainBanner": null,
+        "search": {
+          "w": 732,
+          "h": 60,
+          "top": 220,
+          "visible": true,
+          "hidden": false
+        },
+        "footer": {
+          "w": 768,
+          "h": 151,
+          "top": 1965,
+          "visible": true,
+          "hidden": false
+        },
+        "smallTouchTargets": 1,
+        "buttonSample": 23,
+        "overflowX": false
+      }
+    },
+    {
+      "page": "services",
+      "label": "الخدمات",
+      "viewport": "desktop-1280",
+      "loadMs": 4590,
+      "screenshot": "docs/screenshots/mobile-ux-3.0/before/services-desktop-1280.png",
+      "screenshotFull": "docs/screenshots/mobile-ux-3.0/before/services-desktop-1280-full.png",
+      "metrics": {
+        "viewport": {
+          "w": 1280,
+          "h": 800
+        },
+        "docH": 1994,
+        "header": {
+          "w": 1280,
+          "h": 64,
+          "top": 0,
+          "visible": true,
+          "hidden": false
+        },
+        "mainBanner": null,
+        "search": {
+          "w": 1092,
+          "h": 60,
+          "top": 227,
+          "visible": true,
+          "hidden": false
+        },
+        "footer": {
+          "w": 1280,
+          "h": 155,
+          "top": 1839,
+          "visible": true,
+          "hidden": false
+        },
+        "smallTouchTargets": 2,
+        "buttonSample": 23,
+        "overflowX": false
+      }
+    },
+    {
+      "page": "delivery-services",
+      "label": "التوصيل",
+      "viewport": "mobile-390",
+      "loadMs": 4202,
+      "screenshot": "docs/screenshots/mobile-ux-3.0/before/delivery-services-mobile-390.png",
+      "screenshotFull": "docs/screenshots/mobile-ux-3.0/before/delivery-services-mobile-390-full.png",
+      "metrics": {
+        "viewport": {
+          "w": 390,
+          "h": 844
+        },
+        "docH": 973,
+        "header": {
+          "w": 390,
+          "h": 125,
+          "top": 0,
+          "visible": true,
+          "hidden": false
+        },
+        "mainBanner": null,
+        "search": {
+          "w": 362,
+          "h": 318,
+          "top": 370,
+          "visible": true,
+          "hidden": false
+        },
+        "footer": {
+          "w": 390,
+          "h": 221,
+          "top": 752,
+          "visible": true,
+          "hidden": false
+        },
+        "smallTouchTargets": 0,
+        "buttonSample": 7,
+        "overflowX": false
+      }
+    },
+    {
+      "page": "delivery-services",
+      "label": "التوصيل",
+      "viewport": "tablet-768",
+      "loadMs": 4186,
+      "screenshot": "docs/screenshots/mobile-ux-3.0/before/delivery-services-tablet-768.png",
+      "screenshotFull": "docs/screenshots/mobile-ux-3.0/before/delivery-services-tablet-768-full.png",
+      "metrics": {
+        "viewport": {
+          "w": 768,
+          "h": 1024
+        },
+        "docH": 1024,
+        "header": {
+          "w": 768,
+          "h": 69,
+          "top": 0,
+          "visible": true,
+          "hidden": false
+        },
+        "mainBanner": null,
+        "search": {
+          "w": 680,
+          "h": 343,
+          "top": 253,
+          "visible": true,
+          "hidden": false
+        },
+        "footer": {
+          "w": 768,
+          "h": 151,
+          "top": 670,
+          "visible": true,
+          "hidden": false
+        },
+        "smallTouchTargets": 0,
+        "buttonSample": 7,
+        "overflowX": false
+      }
+    },
+    {
+      "page": "delivery-services",
+      "label": "التوصيل",
+      "viewport": "desktop-1280",
+      "loadMs": 4189,
+      "screenshot": "docs/screenshots/mobile-ux-3.0/before/delivery-services-desktop-1280.png",
+      "screenshotFull": "docs/screenshots/mobile-ux-3.0/before/delivery-services-desktop-1280-full.png",
+      "metrics": {
+        "viewport": {
+          "w": 1280,
+          "h": 800
+        },
+        "docH": 844,
+        "header": {
+          "w": 1280,
+          "h": 64,
+          "top": 0,
+          "visible": true,
+          "hidden": false
+        },
+        "mainBanner": null,
+        "search": {
+          "w": 760,
+          "h": 356,
+          "top": 253,
+          "visible": true,
+          "hidden": false
+        },
+        "footer": {
+          "w": 1280,
+          "h": 155,
+          "top": 689,
+          "visible": true,
+          "hidden": false
+        },
+        "smallTouchTargets": 1,
+        "buttonSample": 7,
+        "overflowX": false
+      }
+    },
+    {
+      "page": "delivery-map",
+      "label": "من الخريطة",
+      "viewport": "mobile-390",
+      "loadMs": 5284,
+      "screenshot": "docs/screenshots/mobile-ux-3.0/before/delivery-map-mobile-390.png",
+      "screenshotFull": "docs/screenshots/mobile-ux-3.0/before/delivery-map-mobile-390-full.png",
+      "metrics": {
+        "viewport": {
+          "w": 390,
+          "h": 844
+        },
+        "docH": 1548,
+        "header": {
+          "w": 390,
+          "h": 125,
+          "top": 0,
+          "visible": true,
+          "hidden": false
+        },
+        "mainBanner": null,
+        "search": null,
+        "footer": null,
+        "smallTouchTargets": 3,
+        "buttonSample": 8,
+        "overflowX": false
+      }
+    },
+    {
+      "page": "delivery-map",
+      "label": "من الخريطة",
+      "viewport": "tablet-768",
+      "loadMs": 4608,
+      "screenshot": "docs/screenshots/mobile-ux-3.0/before/delivery-map-tablet-768.png",
+      "screenshotFull": "docs/screenshots/mobile-ux-3.0/before/delivery-map-tablet-768-full.png",
+      "metrics": {
+        "viewport": {
+          "w": 768,
+          "h": 1024
+        },
+        "docH": 1661,
+        "header": {
+          "w": 768,
+          "h": 69,
+          "top": 0,
+          "visible": true,
+          "hidden": false
+        },
+        "mainBanner": null,
+        "search": null,
+        "footer": null,
+        "smallTouchTargets": 3,
+        "buttonSample": 8,
+        "overflowX": false
+      }
+    },
+    {
+      "page": "delivery-map",
+      "label": "من الخريطة",
+      "viewport": "desktop-1280",
+      "loadMs": 4816,
+      "screenshot": "docs/screenshots/mobile-ux-3.0/before/delivery-map-desktop-1280.png",
+      "screenshotFull": "docs/screenshots/mobile-ux-3.0/before/delivery-map-desktop-1280-full.png",
+      "metrics": {
+        "viewport": {
+          "w": 1280,
+          "h": 800
+        },
+        "docH": 980,
+        "header": {
+          "w": 1280,
+          "h": 64,
+          "top": 0,
+          "visible": true,
+          "hidden": false
+        },
+        "mainBanner": null,
+        "search": null,
+        "footer": null,
+        "smallTouchTargets": 4,
+        "buttonSample": 8,
+        "overflowX": false
+      }
+    },
+    {
+      "page": "checkout",
+      "label": "الدفع",
+      "viewport": "mobile-390",
+      "loadMs": 8439,
+      "screenshot": "docs/screenshots/mobile-ux-3.0/before/checkout-mobile-390.png",
+      "screenshotFull": "docs/screenshots/mobile-ux-3.0/before/checkout-mobile-390-full.png",
+      "metrics": {
+        "viewport": {
+          "w": 390,
+          "h": 844
+        },
+        "docH": 844,
+        "header": {
+          "w": 390,
+          "h": 125,
+          "top": 0,
+          "visible": true,
+          "hidden": false
+        },
+        "mainBanner": null,
+        "search": null,
+        "footer": {
+          "w": 390,
+          "h": 167,
+          "top": 532,
+          "visible": true,
+          "hidden": false
+        },
+        "smallTouchTargets": 0,
+        "buttonSample": 4,
+        "overflowX": false
+      }
+    },
+    {
+      "page": "checkout",
+      "label": "الدفع",
+      "viewport": "tablet-768",
+      "loadMs": 4094,
+      "screenshot": "docs/screenshots/mobile-ux-3.0/before/checkout-tablet-768.png",
+      "screenshotFull": "docs/screenshots/mobile-ux-3.0/before/checkout-tablet-768-full.png",
+      "metrics": {
+        "viewport": {
+          "w": 768,
+          "h": 1024
+        },
+        "docH": 1024,
+        "header": {
+          "w": 768,
+          "h": 69,
+          "top": 0,
+          "visible": true,
+          "hidden": false
+        },
+        "mainBanner": null,
+        "search": null,
+        "footer": {
+          "w": 768,
+          "h": 151,
+          "top": 499,
+          "visible": true,
+          "hidden": false
+        },
+        "smallTouchTargets": 0,
+        "buttonSample": 4,
+        "overflowX": false
+      }
+    },
+    {
+      "page": "checkout",
+      "label": "الدفع",
+      "viewport": "desktop-1280",
+      "loadMs": 4085,
+      "screenshot": "docs/screenshots/mobile-ux-3.0/before/checkout-desktop-1280.png",
+      "screenshotFull": "docs/screenshots/mobile-ux-3.0/before/checkout-desktop-1280-full.png",
+      "metrics": {
+        "viewport": {
+          "w": 1280,
+          "h": 800
+        },
+        "docH": 800,
+        "header": {
+          "w": 1280,
+          "h": 64,
+          "top": 0,
+          "visible": true,
+          "hidden": false
+        },
+        "mainBanner": null,
+        "search": null,
+        "footer": {
+          "w": 1280,
+          "h": 155,
+          "top": 506,
+          "visible": true,
+          "hidden": false
+        },
+        "smallTouchTargets": 1,
+        "buttonSample": 4,
+        "overflowX": false
+      }
+    },
+    {
+      "page": "login",
+      "label": "تسجيل الدخول",
+      "viewport": "mobile-390",
+      "loadMs": 4126,
+      "screenshot": "docs/screenshots/mobile-ux-3.0/before/login-mobile-390.png",
+      "screenshotFull": "docs/screenshots/mobile-ux-3.0/before/login-mobile-390-full.png",
+      "metrics": {
+        "viewport": {
+          "w": 390,
+          "h": 844
+        },
+        "docH": 977,
+        "header": {
+          "w": 390,
+          "h": 177,
+          "top": 0,
+          "visible": true,
+          "hidden": false
+        },
+        "mainBanner": null,
+        "search": null,
+        "footer": {
+          "w": 390,
+          "h": 221,
+          "top": 756,
+          "visible": true,
+          "hidden": false
+        },
+        "smallTouchTargets": 0,
+        "buttonSample": 4,
+        "overflowX": false
+      }
+    },
+    {
+      "page": "login",
+      "label": "تسجيل الدخول",
+      "viewport": "tablet-768",
+      "loadMs": 4270,
+      "screenshot": "docs/screenshots/mobile-ux-3.0/before/login-tablet-768.png",
+      "screenshotFull": "docs/screenshots/mobile-ux-3.0/before/login-tablet-768-full.png",
+      "metrics": {
+        "viewport": {
+          "w": 768,
+          "h": 1024
+        },
+        "docH": 1024,
+        "header": {
+          "w": 768,
+          "h": 69,
+          "top": 0,
+          "visible": true,
+          "hidden": false
+        },
+        "mainBanner": null,
+        "search": null,
+        "footer": {
+          "w": 768,
+          "h": 151,
+          "top": 873,
+          "visible": true,
+          "hidden": false
+        },
+        "smallTouchTargets": 0,
+        "buttonSample": 4,
+        "overflowX": false
+      }
+    },
+    {
+      "page": "login",
+      "label": "تسجيل الدخول",
+      "viewport": "desktop-1280",
+      "loadMs": 4286,
+      "screenshot": "docs/screenshots/mobile-ux-3.0/before/login-desktop-1280.png",
+      "screenshotFull": "docs/screenshots/mobile-ux-3.0/before/login-desktop-1280-full.png",
+      "metrics": {
+        "viewport": {
+          "w": 1280,
+          "h": 800
+        },
+        "docH": 985,
+        "header": {
+          "w": 1280,
+          "h": 64,
+          "top": 0,
+          "visible": true,
+          "hidden": false
+        },
+        "mainBanner": null,
+        "search": null,
+        "footer": {
+          "w": 1280,
+          "h": 155,
+          "top": 830,
+          "visible": true,
+          "hidden": false
+        },
+        "smallTouchTargets": 1,
+        "buttonSample": 4,
+        "overflowX": false
+      }
+    },
+    {
+      "page": "track",
+      "label": "تتبع الحي",
+      "viewport": "mobile-390",
+      "loadMs": 4268,
+      "screenshot": "docs/screenshots/mobile-ux-3.0/before/track-mobile-390.png",
+      "screenshotFull": "docs/screenshots/mobile-ux-3.0/before/track-mobile-390-full.png",
+      "metrics": {
+        "viewport": {
+          "w": 390,
+          "h": 844
+        },
+        "docH": 1490,
+        "header": {
+          "w": 390,
+          "h": 125,
+          "top": 0,
+          "visible": true,
+          "hidden": false
+        },
+        "mainBanner": null,
+        "search": null,
+        "footer": {
+          "w": 390,
+          "h": 221,
+          "top": 1269,
+          "visible": true,
+          "hidden": false
+        },
+        "smallTouchTargets": 1,
+        "buttonSample": 10,
+        "overflowX": false
+      }
+    },
+    {
+      "page": "track",
+      "label": "تتبع الحي",
+      "viewport": "tablet-768",
+      "loadMs": 4315,
+      "screenshot": "docs/screenshots/mobile-ux-3.0/before/track-tablet-768.png",
+      "screenshotFull": "docs/screenshots/mobile-ux-3.0/before/track-tablet-768-full.png",
+      "metrics": {
+        "viewport": {
+          "w": 768,
+          "h": 1024
+        },
+        "docH": 1385,
+        "header": {
+          "w": 768,
+          "h": 69,
+          "top": 0,
+          "visible": true,
+          "hidden": false
+        },
+        "mainBanner": null,
+        "search": null,
+        "footer": {
+          "w": 768,
+          "h": 151,
+          "top": 1234,
+          "visible": true,
+          "hidden": false
+        },
+        "smallTouchTargets": 1,
+        "buttonSample": 10,
+        "overflowX": false
+      }
+    },
+    {
+      "page": "track",
+      "label": "تتبع الحي",
+      "viewport": "desktop-1280",
+      "loadMs": 4668,
+      "screenshot": "docs/screenshots/mobile-ux-3.0/before/track-desktop-1280.png",
+      "screenshotFull": "docs/screenshots/mobile-ux-3.0/before/track-desktop-1280-full.png",
+      "metrics": {
+        "viewport": {
+          "w": 1280,
+          "h": 800
+        },
+        "docH": 1314,
+        "header": {
+          "w": 1280,
+          "h": 64,
+          "top": 0,
+          "visible": true,
+          "hidden": false
+        },
+        "mainBanner": null,
+        "search": null,
+        "footer": {
+          "w": 1280,
+          "h": 155,
+          "top": 1159,
+          "visible": true,
+          "hidden": false
+        },
+        "smallTouchTargets": 2,
+        "buttonSample": 10,
+        "overflowX": false
+      }
+    }
+  ]
+}

@@ -1,0 +1,346 @@
+{
+  "capturedAt": "2026-06-11T15:43:54.588Z",
+  "phase": "after",
+  "viewport": {
+    "width": 390,
+    "height": 844
+  },
+  "goal": "تقليل زمن الوصول للخدمة 50%+",
+  "results": [
+    {
+      "id": "restaurants",
+      "url": "/restaurants",
+      "label": "المطاعم",
+      "domReadyMs": 902,
+      "timeToFirstResultMs": 16357,
+      "firstVisible": {
+        "found": true,
+        "top": 183,
+        "visible": true,
+        "text": "مطعم كبسار للاكلات السعوديةمطاعم كبسة وبخاريعرض المطعم"
+      },
+      "layout": {
+        "viewport": {
+          "w": 390,
+          "h": 844
+        },
+        "header": {
+          "h": 55,
+          "top": 0,
+          "bottom": 55,
+          "visible": true
+        },
+        "hero": {
+          "h": 0,
+          "top": 0,
+          "bottom": 0,
+          "visible": false
+        },
+        "search": {
+          "h": 60,
+          "top": 58,
+          "bottom": 118,
+          "visible": true
+        },
+        "sortBar": {
+          "h": 0,
+          "top": 0,
+          "bottom": 0,
+          "visible": false
+        },
+        "countLine": {
+          "h": 0,
+          "top": 0,
+          "bottom": 0,
+          "visible": false
+        },
+        "categoryBlock": {
+          "h": 56,
+          "top": 122,
+          "bottom": 178,
+          "visible": true
+        },
+        "guestNote": {
+          "h": 0,
+          "top": 0,
+          "bottom": 0,
+          "visible": false
+        },
+        "breadcrumb": null,
+        "quicklinks": null,
+        "deliveryPicker": null,
+        "deliveryForm": null,
+        "svcOrderPanel": null,
+        "firstResult": {
+          "tag": "ARTICLE.store-card",
+          "top": 183,
+          "bottom": 542,
+          "visibleWithoutScroll": true,
+          "visiblePct": 100
+        },
+        "scrollPxToFirstResult": 128,
+        "chromeAboveResults": 298
+      },
+      "clicks": {
+        "minClicksToAction": 1,
+        "scrollPx": 0,
+        "path": [
+          "0: دخول — Hero + بحث + 3 فلاتر + تصنيفات + نص زائر",
+          "1: نقرة — «تصفح/اطلب» على أول بطاقة"
+        ],
+        "note": "النتيجة قد تكون ظاهرة دون تمرير"
+      },
+      "screenshots": {
+        "firstPaint": "restaurants-first-paint-390.png",
+        "loaded": "restaurants-loaded-390.png",
+        "full": "restaurants-full-390.png"
+      }
+    },
+    {
+      "id": "stores",
+      "url": "/stores",
+      "label": "المتاجر",
+      "domReadyMs": 858,
+      "timeToFirstResultMs": 2250,
+      "firstVisible": {
+        "found": false
+      },
+      "layout": {
+        "viewport": {
+          "w": 390,
+          "h": 844
+        },
+        "header": {
+          "h": 55,
+          "top": 0,
+          "bottom": 55,
+          "visible": true
+        },
+        "hero": {
+          "h": 0,
+          "top": 0,
+          "bottom": 0,
+          "visible": false
+        },
+        "search": {
+          "h": 60,
+          "top": 58,
+          "bottom": 118,
+          "visible": true
+        },
+        "sortBar": {
+          "h": 0,
+          "top": 0,
+          "bottom": 0,
+          "visible": false
+        },
+        "countLine": {
+          "h": 0,
+          "top": 0,
+          "bottom": 0,
+          "visible": false
+        },
+        "categoryBlock": {
+          "h": 48,
+          "top": 122,
+          "bottom": 170,
+          "visible": true
+        },
+        "guestNote": {
+          "h": 0,
+          "top": 0,
+          "bottom": 0,
+          "visible": false
+        },
+        "breadcrumb": null,
+        "quicklinks": null,
+        "deliveryPicker": null,
+        "deliveryForm": null,
+        "svcOrderPanel": null,
+        "firstResult": null,
+        "scrollPxToFirstResult": null,
+        "chromeAboveResults": 282
+      },
+      "clicks": {
+        "minClicksToAction": 0,
+        "scrollPx": 0,
+        "path": [
+          "0: دخول — Hero + بحث + 3 فلاتر + تصنيفات + نص زائر",
+          "1: لا نتائج — لا يمكن النقر"
+        ],
+        "note": "النتيجة قد تكون ظاهرة دون تمرير"
+      },
+      "screenshots": {
+        "firstPaint": "stores-first-paint-390.png",
+        "loaded": "stores-loaded-390.png",
+        "full": "stores-full-390.png"
+      }
+    },
+    {
+      "id": "services",
+      "url": "/services",
+      "label": "الخدمات",
+      "domReadyMs": 954,
+      "timeToFirstResultMs": 538,
+      "firstVisible": {
+        "found": false
+      },
+      "layout": {
+        "viewport": {
+          "w": 390,
+          "h": 844
+        },
+        "header": {
+          "h": 55,
+          "top": 0,
+          "bottom": 55,
+          "visible": true
+        },
+        "hero": {
+          "h": 0,
+          "top": 0,
+          "bottom": 0,
+          "visible": false
+        },
+        "search": {
+          "h": 60,
+          "top": 58,
+          "bottom": 118,
+          "visible": true
+        },
+        "sortBar": {
+          "h": 0,
+          "top": 0,
+          "bottom": 0,
+          "visible": false
+        },
+        "countLine": {
+          "h": 0,
+          "top": 0,
+          "bottom": 0,
+          "visible": false
+        },
+        "categoryBlock": {
+          "h": 48,
+          "top": 122,
+          "bottom": 170,
+          "visible": true
+        },
+        "guestNote": {
+          "h": 0,
+          "top": 0,
+          "bottom": 0,
+          "visible": false
+        },
+        "breadcrumb": null,
+        "quicklinks": null,
+        "deliveryPicker": null,
+        "deliveryForm": null,
+        "svcOrderPanel": {
+          "h": 0,
+          "top": 0,
+          "bottom": 0,
+          "visible": false
+        },
+        "firstResult": null,
+        "scrollPxToFirstResult": null,
+        "chromeAboveResults": 282
+      },
+      "clicks": {
+        "minClicksToAction": 0,
+        "scrollPx": 0,
+        "path": [
+          "0: دخول — بحث + تصنيفات + شبكة مقدّمين (لوحة الطلب في sheet)",
+          "1: لا مقدّمين — لا يمكن النقر"
+        ],
+        "note": "مسار واحد: مقدّم → sheet → إرسال"
+      },
+      "screenshots": {
+        "firstPaint": "services-first-paint-390.png",
+        "loaded": "services-loaded-390.png",
+        "full": "services-full-390.png"
+      }
+    },
+    {
+      "id": "delivery",
+      "url": "/delivery-services.html",
+      "label": "التوصيل",
+      "domReadyMs": 824,
+      "timeToFirstResultMs": 442,
+      "firstVisible": {
+        "found": true,
+        "top": 105,
+        "visible": true,
+        "text": "متاح✓🚗نقل المركباتنقل جميع أنواع المركبات داخل وخارج المدين"
+      },
+      "layout": {
+        "viewport": {
+          "w": 390,
+          "h": 844
+        },
+        "header": {
+          "h": 55,
+          "top": 0,
+          "bottom": 55,
+          "visible": true
+        },
+        "hero": null,
+        "search": null,
+        "sortBar": null,
+        "countLine": null,
+        "categoryBlock": null,
+        "guestNote": null,
+        "breadcrumb": {
+          "h": 0,
+          "top": 0,
+          "bottom": 0,
+          "visible": false
+        },
+        "quicklinks": {
+          "h": 0,
+          "top": 0,
+          "bottom": 0,
+          "visible": false
+        },
+        "deliveryPicker": {
+          "h": 317,
+          "top": 74,
+          "bottom": 391,
+          "visible": true
+        },
+        "deliveryForm": {
+          "h": 0,
+          "top": 0,
+          "bottom": 0,
+          "visible": false
+        },
+        "svcOrderPanel": null,
+        "firstResult": {
+          "tag": "BUTTON.ds-svc",
+          "top": 105,
+          "bottom": 169,
+          "visibleWithoutScroll": true,
+          "visiblePct": 100
+        },
+        "scrollPxToFirstResult": 49,
+        "chromeAboveResults": 55
+      },
+      "clicks": {
+        "minClicksToAction": 1,
+        "scrollPx": 0,
+        "path": [
+          "0: دخول الصفحة — رؤية شرائح الخدمات",
+          "1: نقرة — اختيار نوع التوصيل (ds-svc)",
+          "2: تمرير/قراءة — نموذج «أكمل تفاصيل الطلب»",
+          "3+: نقرة — تعبئة الحقول وإرسال"
+        ],
+        "note": "الحد الأدنى لبدء الطلب = 1 نقرة على الخدمة"
+      },
+      "screenshots": {
+        "firstPaint": "delivery-first-paint-390.png",
+        "loaded": "delivery-loaded-390.png",
+        "full": "delivery-full-390.png"
+      }
+    }
+  ]
+}

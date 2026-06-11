@@ -1,0 +1,236 @@
+{
+  "phase": "after",
+  "capturedAt": "2026-06-11T14:35:40.085Z",
+  "results": [
+    {
+      "id": "home",
+      "url": "/",
+      "file": "home-mobile-390.png",
+      "metrics": {
+        "headerLp": {
+          "h": 98,
+          "top": 0,
+          "bottom": 98,
+          "visible": true
+        },
+        "headerDash": null,
+        "bottomNav": {
+          "h": 59,
+          "top": 785,
+          "bottom": 844,
+          "visible": true
+        },
+        "banner": {
+          "h": 289,
+          "top": 98,
+          "bottom": 387,
+          "visible": true
+        },
+        "hubTop": 509,
+        "hubVisible": true,
+        "foundation": true,
+        "cssHeaderH": "98px"
+      }
+    },
+    {
+      "id": "dashboard",
+      "url": "/dashboard",
+      "file": "dashboard-mobile-390.png",
+      "metrics": {
+        "headerLp": null,
+        "headerDash": {
+          "h": 55,
+          "top": 0,
+          "bottom": 55,
+          "visible": true
+        },
+        "bottomNav": {
+          "h": 24,
+          "top": 1261,
+          "bottom": 1285,
+          "visible": true
+        },
+        "banner": {
+          "h": 255,
+          "top": 285,
+          "bottom": 540,
+          "visible": true
+        },
+        "hubTop": 554,
+        "hubVisible": true,
+        "foundation": true,
+        "cssHeaderH": "56px"
+      }
+    },
+    {
+      "id": "restaurants",
+      "url": "/restaurants",
+      "file": "restaurants-mobile-390.png",
+      "metrics": {
+        "headerLp": null,
+        "headerDash": {
+          "h": 55,
+          "top": 0,
+          "bottom": 55,
+          "visible": true
+        },
+        "bottomNav": {
+          "h": 24,
+          "top": 1395,
+          "bottom": 1419,
+          "visible": true
+        },
+        "banner": null,
+        "hubTop": null,
+        "hubVisible": false,
+        "foundation": true,
+        "cssHeaderH": "56px"
+      }
+    },
+    {
+      "id": "stores",
+      "url": "/stores",
+      "file": "stores-mobile-390.png",
+      "metrics": {
+        "headerLp": null,
+        "headerDash": {
+          "h": 55,
+          "top": 0,
+          "bottom": 55,
+          "visible": true
+        },
+        "bottomNav": {
+          "h": 24,
+          "top": 1408,
+          "bottom": 1432,
+          "visible": true
+        },
+        "banner": null,
+        "hubTop": null,
+        "hubVisible": false,
+        "foundation": true,
+        "cssHeaderH": "56px"
+      }
+    },
+    {
+      "id": "services",
+      "url": "/services",
+      "file": "services-mobile-390.png",
+      "metrics": {
+        "headerLp": null,
+        "headerDash": {
+          "h": 55,
+          "top": 0,
+          "bottom": 55,
+          "visible": true
+        },
+        "bottomNav": {
+          "h": 24,
+          "top": 2492,
+          "bottom": 2516,
+          "visible": true
+        },
+        "banner": null,
+        "hubTop": null,
+        "hubVisible": false,
+        "foundation": true,
+        "cssHeaderH": "56px"
+      }
+    },
+    {
+      "id": "delivery",
+      "url": "/delivery-services.html",
+      "file": "delivery-mobile-390.png",
+      "metrics": {
+        "headerLp": null,
+        "headerDash": {
+          "h": 55,
+          "top": 0,
+          "bottom": 55,
+          "visible": true
+        },
+        "bottomNav": {
+          "h": 24,
+          "top": 952,
+          "bottom": 976,
+          "visible": true
+        },
+        "banner": null,
+        "hubTop": null,
+        "hubVisible": false,
+        "foundation": true,
+        "cssHeaderH": "56px"
+      }
+    },
+    {
+      "id": "checkout",
+      "url": "/checkout",
+      "file": "checkout-mobile-390.png",
+      "metrics": {
+        "headerLp": null,
+        "headerDash": {
+          "h": 53,
+          "top": 0,
+          "bottom": 53,
+          "visible": true
+        },
+        "bottomNav": null,
+        "banner": null,
+        "hubTop": null,
+        "hubVisible": false,
+        "foundation": true,
+        "cssHeaderH": "56px"
+      }
+    },
+    {
+      "id": "my-orders",
+      "url": "/my-orders",
+      "file": "my-orders-mobile-390.png",
+      "metrics": {
+        "headerLp": null,
+        "headerDash": {
+          "h": 55,
+          "top": 0,
+          "bottom": 55,
+          "visible": true
+        },
+        "bottomNav": {
+          "h": 24,
+          "top": 756,
+          "bottom": 780,
+          "visible": true
+        },
+        "banner": null,
+        "hubTop": null,
+        "hubVisible": false,
+        "foundation": true,
+        "cssHeaderH": "56px"
+      }
+    },
+    {
+      "id": "login",
+      "url": "/login",
+      "file": "login-mobile-390.png",
+      "metrics": {
+        "headerLp": null,
+        "headerDash": {
+          "h": 53,
+          "top": 0,
+          "bottom": 53,
+          "visible": true
+        },
+        "bottomNav": {
+          "h": 24,
+          "top": 904,
+          "bottom": 928,
+          "visible": true
+        },
+        "banner": null,
+        "hubTop": null,
+        "hubVisible": false,
+        "foundation": true,
+        "cssHeaderH": "56px"
+      }
+    }
+  ]
+}

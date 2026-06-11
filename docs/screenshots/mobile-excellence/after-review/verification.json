@@ -1,0 +1,141 @@
+{
+  "capturedAt": "2026-06-11T14:13:46.176Z",
+  "viewport": {
+    "width": 390,
+    "height": 844
+  },
+  "hubFirstScreen": {
+    "viewport": {
+      "w": 390,
+      "h": 844
+    },
+    "safeBottom": 785,
+    "headerH": 98,
+    "cards": {
+      "مطاعم": {
+        "top": 444,
+        "bottom": 631,
+        "height": 187,
+        "visiblePct": 100,
+        "fullyVisible": true
+      },
+      "متاجر": {
+        "top": 444,
+        "bottom": 631,
+        "height": 187,
+        "visiblePct": 100,
+        "fullyVisible": true
+      },
+      "توصيل": {
+        "top": 639,
+        "bottom": 827,
+        "height": 187,
+        "visiblePct": 78,
+        "fullyVisible": false
+      },
+      "خدمات": {
+        "top": 639,
+        "bottom": 827,
+        "height": 187,
+        "visiblePct": 78,
+        "fullyVisible": false
+      }
+    },
+    "scrollPxToSeeAllHub": 42,
+    "allFourMostlyVisible": false
+  },
+  "performanceAfter": {
+    "lcp": 1512,
+    "cls": 0.631,
+    "fcp": 932,
+    "loadEventEnd": 1428,
+    "domContentLoaded": 962,
+    "lcpElement": "IMG.guest-offers-slide__img"
+  },
+  "performanceBeforeApprox": {
+    "lcp": 1484,
+    "cls": 0.268,
+    "fcp": 1012,
+    "loadEventEnd": 1501,
+    "domContentLoaded": 998,
+    "lcpElement": "IMG.guest-offers-slide__img"
+  },
+  "bottomNavChecks": [
+    {
+      "id": "checkout",
+      "url": "/checkout",
+      "file": "checkout-nav-check.png",
+      "navVisible": true,
+      "navTop": 785,
+      "overlapCount": 5,
+      "overlaps": [
+        {
+          "text": "🏠الرئيسية",
+          "bottom": 838,
+          "navTop": 785
+        },
+        {
+          "text": "🔍استكشاف",
+          "bottom": 838,
+          "navTop": 785
+        },
+        {
+          "text": "🛒السلة0",
+          "bottom": 838,
+          "navTop": 785
+        },
+        {
+          "text": "📋طلباتي",
+          "bottom": 838,
+          "navTop": 785
+        },
+        {
+          "text": "👤الحساب",
+          "bottom": 838,
+          "navTop": 785
+        }
+      ],
+      "conflict": true
+    },
+    {
+      "id": "delivery-map",
+      "url": "/delivery-map",
+      "file": "delivery-map-nav-check.png",
+      "navVisible": true,
+      "mapVisible": true,
+      "mapBottom": 511,
+      "navTop": 785,
+      "mapObscuredByNav": false,
+      "conflict": false
+    },
+    {
+      "id": "live-map",
+      "url": "/live-map",
+      "file": "live-map-nav-check.png",
+      "navVisible": true,
+      "mapBottom": null,
+      "navTop": 785,
+      "conflict": false
+    },
+    {
+      "id": "login-keyboard",
+      "url": "/login",
+      "file": "login-keyboard-nav-check.png",
+      "navVisible": true,
+      "focusedTag": "INPUT",
+      "focusBottom": 488,
+      "navTop": 785,
+      "conflict": false,
+      "note": "محاكاة تركيز الحقل — لوحة المفاتيح الافتراضية غير مفعّلة في Playwright"
+    },
+    {
+      "id": "restaurants-modal",
+      "url": "/restaurants",
+      "file": "restaurants-modal-nav-check.png",
+      "navVisible": true,
+      "modalCount": 0,
+      "conflict": false,
+      "note": "لا نافذة منبثقة مفتوحة افتراضياً"
+    }
+  ]
+}

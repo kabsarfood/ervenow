@@ -11,6 +11,59 @@
 
   var lockCount = 0;
   var savedScrollY = 0;
+  var MOBILE_SHELL_MQ =
+    "(max-width: 640px), ((max-width: 932px) and (max-height: 500px) and (pointer: coarse))";
+
+  function isMobileShellViewport() {
+    try {
+      return global.matchMedia(MOBILE_SHELL_MQ).matches;
+    } catch (e) {
+      return global.innerWidth <= 640;
+    }
+  }
+
+  function isPaymentFlowPath(path) {
+    var p = path || global.location.pathname || "";
+    return /^\/checkout(\/|$)/.test(p) || /^\/cart(\/|$)/.test(p) || /^\/pay(\/|$)/.test(p);
+  }
+
+  function mobileHeaderReservePx() {
+    if (document.body && document.body.classList.contains("lp-home-premium")) return 98;
+    if (document.body && document.body.classList.contains("guest-shell-page")) return 56;
+    return 56;
+  }
+
+  function applyMobileShellHeaderVars() {
+    var reserve = mobileHeaderReservePx();
+    document.documentElement.style.setProperty("--erv-mobile-header-reserve", reserve + "px");
+    document.documentElement.style.setProperty("--erv-mobile-header-h", reserve + "px");
+    document.documentElement.style.setProperty("--erw-header-h", reserve + "px");
+  }
+
+  function bootMobileShell() {
+    var root = document.documentElement;
+    if (!isMobileShellViewport()) {
+      root.classList.remove("erv-mobile-shell", "erv-mobile-no-nav");
+      return;
+    }
+    root.classList.add("erv-mobile-shell");
+    if (isPaymentFlowPath()) root.classList.add("erv-mobile-no-nav");
+    else root.classList.remove("erv-mobile-no-nav");
+    applyMobileShellHeaderVars();
+  }
+
+  function ensureBottomNavShell() {
+    if (!isMobileShellViewport() || isPaymentFlowPath() || !document.body) return;
+    var nav = document.getElementById("ervMobileBottomNav");
+    if (!nav) {
+      nav = document.createElement("nav");
+      nav.id = "ervMobileBottomNav";
+      nav.className = "erv-mobile-bottom-nav erv-mobile-bottom-nav--shell";
+      nav.setAttribute("aria-label", "التنقل السريع");
+      nav.setAttribute("aria-hidden", "true");
+      document.body.appendChild(nav);
+    }
+  }
 
   function enforceViewportMeta() {
     var meta = document.querySelector('meta[name="viewport"]');
@@ -45,12 +98,17 @@
   }
 
   function syncSiteHeaderHeight() {
-    var header = document.querySelector(".dash-site-header");
+    if (document.documentElement.classList.contains("erv-mobile-shell")) {
+      applyMobileShellHeaderVars();
+      return;
+    }
+    var header = document.querySelector(".dash-site-header, .lp-header.lp-header--refined");
     if (!header) return;
     var rect = header.getBoundingClientRect();
     var h = Math.ceil(rect.height);
     if (h > 0) {
       document.documentElement.style.setProperty("--erw-header-h", h + "px");
+      document.documentElement.style.setProperty("--erv-mobile-header-h", h + "px");
     }
   }
 
@@ -96,6 +154,7 @@
   }
 
   enforceViewportMeta();
+  bootMobileShell();
   setViewportVars();
   clampHorizontalScroll();
 
@@ -107,6 +166,7 @@
   document.addEventListener("scroll", clampHorizontalScroll, { passive: true });
 
   global.addEventListener("resize", function () {
+    bootMobileShell();
     setViewportVars();
     clampHorizontalScroll();
   }, { passive: true });
@@ -130,18 +190,20 @@
   }
 
   global.addEventListener("DOMContentLoaded", function () {
+    bootMobileShell();
+    applyMobileShellHeaderVars();
+    ensureBottomNavShell();
     syncSiteHeaderHeight();
-    global.setTimeout(syncSiteHeaderHeight, 120);
   });
 
   if (typeof ResizeObserver !== "undefined") {
     global.addEventListener("DOMContentLoaded", function () {
-      var header = document.querySelector(".dash-site-header");
-      if (!header) return;
-      var ro = new ResizeObserver(function () {
-        syncSiteHeaderHeight();
+      document.querySelectorAll(".dash-site-header, .lp-header.lp-header--refined").forEach(function (header) {
+        var ro = new ResizeObserver(function () {
+          syncSiteHeaderHeight();
+        });
+        ro.observe(header);
       });
-      ro.observe(header);
     });
   }
 
@@ -152,5 +214,7 @@
     lockScroll: lockScroll,
     unlockScroll: unlockScroll,
     syncHeaderHeight: syncSiteHeaderHeight,
+    bootMobileShell: bootMobileShell,
+    isPaymentFlowPath: isPaymentFlowPath,
   };
 })(window);
