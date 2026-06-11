@@ -371,6 +371,18 @@ if (servePublicUi) {
       maxAge: staticMaxAgeMs,
       setHeaders(res, filePath) {
         const fp = String(filePath || "").replace(/\\/g, "/");
+        if (fp.endsWith(".html")) {
+          res.setHeader("Cache-Control", "no-cache, must-revalidate");
+          return;
+        }
+        if (
+          /\/assets\/(viewport-fit|mobile-harmony|mobile-foundation|mobile-home-conversion|mobile-fast-discovery)([^/]*)\.(js|css)$/.test(
+            fp
+          )
+        ) {
+          res.setHeader("Cache-Control", "public, max-age=300, must-revalidate");
+          return;
+        }
         if (fp.includes("/assets/") || fp.includes("/uploads/")) {
           res.setHeader(
             "Cache-Control",

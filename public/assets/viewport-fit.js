@@ -6,6 +6,15 @@
   if (global.__ervViewportReady) return;
   global.__ervViewportReady = true;
 
+  /** يُرفَع عند كل تحديث Mobile Shell لإجبار تحميل نسخة جديدة (تجاوز cache الجوال) */
+  var ERV_SHELL_ASSET_VER = "20260612";
+
+  function shellAssetUrl(path) {
+    var p = String(path || "");
+    if (!p) return p;
+    return p + (p.indexOf("?") >= 0 ? "&" : "?") + "erv=" + ERV_SHELL_ASSET_VER;
+  }
+
   var VIEWPORT_LOCKED =
     "width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover";
 
@@ -46,7 +55,7 @@
     if (document.querySelector('link[href*="mobile-foundation.css"]')) return;
     var link = document.createElement("link");
     link.rel = "stylesheet";
-    link.href = "/assets/mobile-foundation.css";
+    link.href = shellAssetUrl("/assets/mobile-foundation.css");
     document.head.appendChild(link);
   }
 
@@ -55,7 +64,7 @@
     if (document.body && document.body.classList.contains("erv-preview-lab")) return;
     if (document.querySelector('script[src*="mobile-foundation.js"]')) return;
     var s = document.createElement("script");
-    s.src = "/assets/mobile-foundation.js";
+    s.src = shellAssetUrl("/assets/mobile-foundation.js");
     s.defer = true;
     document.head.appendChild(s);
   }
@@ -86,7 +95,7 @@
     if (!document.querySelector('link[href*="mobile-harmony.css"]')) {
       var link = document.createElement("link");
       link.rel = "stylesheet";
-      link.href = "/assets/mobile-harmony.css";
+      link.href = shellAssetUrl("/assets/mobile-harmony.css");
       document.head.appendChild(link);
     }
   }
@@ -254,7 +263,7 @@
     ensureMobileFoundationJs();
     if (isMobileShellViewport() && !document.querySelector('script[src*="mobile-harmony.js"]')) {
       var hs = document.createElement("script");
-      hs.src = "/assets/mobile-harmony.js";
+      hs.src = shellAssetUrl("/assets/mobile-harmony.js");
       hs.defer = true;
       document.head.appendChild(hs);
     }
@@ -280,5 +289,7 @@
     syncHeaderHeight: syncSiteHeaderHeight,
     bootMobileShell: bootMobileShell,
     isPaymentFlowPath: isPaymentFlowPath,
+    shellAssetUrl: shellAssetUrl,
+    shellAssetVer: ERV_SHELL_ASSET_VER,
   };
 })(window);
