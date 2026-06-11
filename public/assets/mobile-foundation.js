@@ -161,6 +161,9 @@
     else unmountBottomNav();
     setActiveNav();
     syncCartBadge();
+    if (global.ErvenowMobileHarmony && typeof global.ErvenowMobileHarmony.init === "function") {
+      global.ErvenowMobileHarmony.init();
+    }
   }
 
   function disable() {

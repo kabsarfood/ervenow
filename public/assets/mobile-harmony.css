@@ -1,0 +1,275 @@
+/**
+ * ERVENOW Mobile Harmony — P0
+ * جوال فقط: هيدر = هوية · شريط سفلي = تنقل · سلة واحدة
+ */
+
+@media (max-width: 640px), ((max-width: 932px) and (max-height: 500px) and (pointer: coarse)) {
+  /* ═══ إخفاء السلة من الهيدر (#cartCount يبقى في DOM للمزامنة) ═══ */
+  html.erv-mobile-shell .lp-draft-checkout-badge,
+  html.erv-mobile-shell .dash-header-cart {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    margin: -1px !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+  }
+
+  html.erv-mobile-shell .lp-header__actions {
+    display: none !important;
+  }
+
+  html.erv-mobile-shell .dash-site-header__tools {
+    display: none !important;
+  }
+
+  /* ═══ الرئيسية — lp-header: يسار شعار · وسط هوية · يمين قائمة ═══ */
+  html.erv-mobile-shell body.lp-home-premium .lp-header.lp-header--refined {
+    min-height: var(--erv-mobile-header-target, 52px) !important;
+  }
+
+  html.erv-mobile-shell body.lp-home-premium .lp-header.lp-header--refined .lp-header__inner {
+    min-height: 0 !important;
+  }
+
+  html.erv-mobile-shell body.lp-home-premium .lp-header.lp-header--refined .lp-header__top-row {
+    display: grid !important;
+    grid-template-columns: auto 1fr auto !important;
+    grid-template-rows: auto !important;
+    align-items: center !important;
+    min-height: var(--erv-mobile-header-target, 52px) !important;
+    max-height: none !important;
+    width: 100%;
+    direction: ltr !important;
+    unicode-bidi: isolate !important;
+  }
+
+  html.erv-mobile-shell body.lp-home-premium .lp-header.lp-header--refined .lp-header__top-row > .lp-header__logo-slot {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    justify-self: start !important;
+    order: unset !important;
+    margin: 0 !important;
+  }
+
+  html.erv-mobile-shell body.lp-home-premium .lp-header.lp-header--refined .lp-header__top-row > .lp-header__brand-mid {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    justify-self: center !important;
+    text-align: center !important;
+    direction: rtl !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    order: unset !important;
+    gap: 0 !important;
+  }
+
+  html.erv-mobile-shell body.lp-home-premium .lp-header.lp-header--refined .lp-header__top-row > .lp-header__menu-slot {
+    grid-column: 3 !important;
+    grid-row: 1 !important;
+    justify-self: end !important;
+    order: unset !important;
+    margin: 0 !important;
+  }
+
+  html.erv-mobile-shell body.lp-home-premium .lp-header.lp-header--refined .lp-header__top-row > .lp-header__user-mid,
+  html.erv-mobile-shell body.lp-home-premium .lp-header.lp-header--refined .lp-header__top-row > .lp-header__actions {
+    display: none !important;
+  }
+
+  html.erv-mobile-shell body.lp-home-premium .lp-header__logo-img {
+    max-height: 36px !important;
+    width: auto;
+  }
+
+  html.erv-mobile-shell body.lp-home-premium .lp-header__brand-mid .lp-brand__name {
+    font-size: 0.92rem !important;
+    font-weight: 900 !important;
+    letter-spacing: 0.05em;
+    line-height: 1.15;
+  }
+
+  html.erv-mobile-shell body.lp-home-premium .lp-header__brand-mid .lp-brand__tag {
+    display: block !important;
+    font-size: 0.68rem !important;
+    font-weight: 700 !important;
+    color: #b9872f;
+    line-height: 1.2;
+  }
+
+  html.erv-mobile-shell body.lp-home-premium .lp-header__user-mid,
+  html.erv-mobile-shell body.lp-home-premium .lp-nav-wrap {
+    display: none !important;
+  }
+
+  /* ═══ guest-shell — هيدر موحّد ═══ */
+  html.erv-mobile-shell body.guest-shell-page .dash-site-header__inner {
+    display: grid !important;
+    grid-template-columns: auto 1fr auto !important;
+    grid-template-areas: "logo identity menu" !important;
+    align-items: center !important;
+    gap: 8px !important;
+    min-height: var(--erv-mobile-header-target, 52px) !important;
+    max-height: none !important;
+    direction: ltr !important;
+    unicode-bidi: isolate !important;
+  }
+
+  html.erv-mobile-shell body.guest-shell-page .dash-site-header__brand {
+    grid-area: logo !important;
+    min-width: 0;
+  }
+
+  html.erv-mobile-shell body.guest-shell-page .dash-site-header__logo {
+    font-size: 0 !important;
+    line-height: 0;
+    display: inline-flex;
+    align-items: center;
+    min-height: 36px;
+  }
+
+  html.erv-mobile-shell body.guest-shell-page .dash-site-header__logo-dot {
+    display: none !important;
+  }
+
+  html.erv-mobile-shell body.guest-shell-page .dash-site-header__logo::before {
+    content: "";
+    display: block;
+    width: 36px;
+    height: 36px;
+    background: url("/assets/ervenow-logo.png") center / contain no-repeat;
+  }
+
+  html.erv-mobile-shell body.guest-shell-page .dash-site-header__tag {
+    display: none !important;
+  }
+
+  html.erv-mobile-shell body.guest-shell-page .erv-harmony-identity {
+    grid-area: identity !important;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-width: 0;
+    text-align: center;
+    text-decoration: none;
+    color: inherit;
+    gap: 0;
+    line-height: 1.15;
+  }
+
+  html.erv-mobile-shell body.guest-shell-page .erv-harmony-identity__name {
+    font-size: 0.92rem;
+    font-weight: 900;
+    letter-spacing: 0.05em;
+    color: #3d2213;
+  }
+
+  html.erv-mobile-shell body.guest-shell-page .erv-harmony-identity__tag {
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: #b9872f;
+  }
+
+  html.erv-mobile-shell body.guest-shell-page .erv-harmony-menu {
+    grid-area: menu !important;
+    justify-self: end;
+  }
+
+  html.erv-mobile-shell body.guest-shell-page .erv-harmony-menu__btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    min-height: 44px;
+    padding: 0;
+    border: 0;
+    border-radius: 12px;
+    background: rgba(61, 34, 19, 0.06);
+    font-family: inherit;
+    font-size: 1.35rem;
+    line-height: 1;
+    color: #3d2213;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  html.erv-mobile-shell body.guest-shell-page .dash-site-header__nav {
+    display: none !important;
+  }
+
+  html.erv-mobile-shell body.guest-shell-page .dash-site-header__inner > .dash-site-header__btn,
+  html.erv-mobile-shell body.guest-shell-page .dash-site-header__inner > #switchAccount {
+    display: none !important;
+  }
+
+  html.erv-mobile-shell body.guest-shell-page .erv-harmony-nav-panel {
+    display: none;
+    position: fixed;
+    top: calc(var(--erv-mobile-header-h, 52px) + env(safe-area-inset-top, 0px));
+    right: max(8px, env(safe-area-inset-right, 8px));
+    left: max(8px, env(safe-area-inset-left, 8px));
+    z-index: 250;
+    max-height: min(70vh, 480px);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    background: #fffefb;
+    border: 1px solid rgba(61, 34, 19, 0.1);
+    border-radius: 16px;
+    box-shadow: 0 16px 48px rgba(45, 26, 14, 0.16);
+    padding: 10px;
+  }
+
+  html.erv-mobile-shell body.guest-shell-page.erv-harmony-nav-open .erv-harmony-nav-panel {
+    display: block;
+  }
+
+  html.erv-mobile-shell body.guest-shell-page .erv-harmony-nav-panel .dash-site-header__links {
+    display: flex !important;
+    flex-direction: column !important;
+    flex-wrap: nowrap !important;
+    gap: 4px;
+    width: 100%;
+    padding: 0;
+    overflow: visible;
+  }
+
+  html.erv-mobile-shell body.guest-shell-page .erv-harmony-nav-panel .dash-site-header__link {
+    width: 100% !important;
+    min-height: 44px !important;
+    justify-content: flex-start !important;
+    padding: 10px 14px !important;
+    border-radius: 10px;
+    font-size: 0.88rem !important;
+  }
+
+  html.erv-mobile-shell body.guest-shell-page .erv-harmony-nav-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 240;
+    background: rgba(26, 18, 12, 0.35);
+  }
+
+  html.erv-mobile-shell body.guest-shell-page.erv-harmony-nav-open .erv-harmony-nav-backdrop {
+    display: block;
+  }
+}
+
+@media (min-width: 641px) {
+  .erv-harmony-identity,
+  .erv-harmony-menu,
+  .erv-harmony-nav-panel,
+  .erv-harmony-nav-backdrop {
+    display: none !important;
+  }
+}

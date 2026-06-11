@@ -1,0 +1,30 @@
+{
+  "capturedAt": "2026-06-11T20:30:28.914Z",
+  "phase": "before",
+  "note": "Pre-fix baseline — home header had menu left (12px), logo mid (66px), identity right (306px); header cart visible on non-shell pages",
+  "viewport": { "width": 390, "height": 844 },
+  "results": [
+    {
+      "id": "home",
+      "label": "الرئيسية",
+      "metrics": {
+        "headerCart": { "visible": false },
+        "menuBtn": { "left": 12 },
+        "identity": { "left": 306 },
+        "logo": { "left": 66 },
+        "headerH": 66
+      }
+    },
+    {
+      "id": "start-now",
+      "label": "ابدأ الآن",
+      "metrics": {
+        "headerCart": { "visible": true },
+        "menuBtn": { "left": 320 },
+        "identity": { "left": 78 },
+        "logo": { "left": 26 },
+        "headerH": 55
+      }
+    }
+  ]
+}

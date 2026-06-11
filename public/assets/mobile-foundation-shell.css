@@ -64,6 +64,7 @@
   html.erv-mobile-shell body.lp-home-premium .lp-header.lp-header--refined .lp-header__top-row {
     display: grid !important;
     grid-template-columns: auto 1fr auto !important;
+    grid-template-areas: "logo identity menu" !important;
     grid-template-rows: auto !important;
     flex-wrap: nowrap !important;
     align-items: center !important;
@@ -72,40 +73,47 @@
     width: 100%;
   }
 
-  html.erv-mobile-shell body.lp-home-premium .lp-header__menu-slot {
-    grid-column: 1;
+  html.erv-mobile-shell body.lp-home-premium .lp-header.lp-header--refined .lp-header__top-row > .lp-header__logo-slot {
+    grid-area: logo !important;
+    grid-column: auto !important;
+    grid-row: auto !important;
+    justify-self: start !important;
     order: unset !important;
     margin: 0 !important;
-  }
-
-  html.erv-mobile-shell body.lp-home-premium .lp-header__logo-slot {
-    grid-column: 2;
-    justify-self: center;
     width: auto !important;
     overflow: visible !important;
   }
 
-  html.erv-mobile-shell body.lp-home-premium .lp-header__brand-mid,
+  html.erv-mobile-shell body.lp-home-premium .lp-header.lp-header--refined .lp-header__top-row > .lp-header__brand-mid {
+    grid-area: identity !important;
+    grid-column: auto !important;
+    grid-row: auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    justify-self: center !important;
+    order: unset !important;
+    margin: 0 !important;
+    min-width: 0;
+  }
+
+  html.erv-mobile-shell body.lp-home-premium .lp-header.lp-header--refined .lp-header__top-row > .lp-header__menu-slot {
+    grid-area: menu !important;
+    grid-column: auto !important;
+    grid-row: auto !important;
+    justify-self: end !important;
+    order: unset !important;
+    margin: 0 !important;
+  }
+
   html.erv-mobile-shell body.lp-home-premium .lp-header__user-mid,
   html.erv-mobile-shell body.lp-home-premium .lp-nav-wrap {
     display: none !important;
   }
 
   html.erv-mobile-shell body.lp-home-premium .lp-header__actions {
-    grid-column: 3 !important;
-    order: unset !important;
-    display: flex !important;
-    flex: 0 0 auto !important;
-    width: auto !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    border: 0 !important;
-    border-radius: 0 !important;
-    background: transparent !important;
-    box-shadow: none !important;
-    grid-template-columns: unset !important;
-    grid-template-areas: unset !important;
-    gap: 6px !important;
+    display: none !important;
   }
 
   html.erv-mobile-shell body.lp-home-premium #lpHeaderWallet,

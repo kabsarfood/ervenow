@@ -138,15 +138,16 @@
 
 /* إلغاء grid القديم من index.html — Firefox يتأثر بها */
 
-.lp-header.lp-header--refined .lp-header__top-row > .lp-header__menu-slot,
+/* إلغاء grid القديم من index.html — لا يُطبَّق مع mobile shell */
+html:not(.erv-mobile-shell) .lp-header.lp-header--refined .lp-header__top-row > .lp-header__menu-slot,
 
-.lp-header.lp-header--refined .lp-header__top-row > .lp-header__logo-slot,
+html:not(.erv-mobile-shell) .lp-header.lp-header--refined .lp-header__top-row > .lp-header__logo-slot,
 
-.lp-header.lp-header--refined .lp-header__top-row > .lp-header__brand-mid,
+html:not(.erv-mobile-shell) .lp-header.lp-header--refined .lp-header__top-row > .lp-header__brand-mid,
 
-.lp-header.lp-header--refined .lp-header__top-row > .lp-header__user-mid,
+html:not(.erv-mobile-shell) .lp-header.lp-header--refined .lp-header__top-row > .lp-header__user-mid,
 
-.lp-header.lp-header--refined .lp-header__top-row > .lp-header__actions {
+html:not(.erv-mobile-shell) .lp-header.lp-header--refined .lp-header__top-row > .lp-header__actions {
 
   grid-column: auto !important;
 
@@ -638,9 +639,8 @@
 
   ((max-width: 932px) and (max-height: 500px) and (pointer: coarse)) {
 
-  /* الصف 1: شعار يسار — حساب — ☰ يمين الشاشة */
-
-  .lp-header.lp-header--refined .lp-header__top-row {
+  /* الصف 1: تخطيط قديم — يُستبدَل بـ mobile shell / harmony */
+  html:not(.erv-mobile-shell) .lp-header.lp-header--refined .lp-header__top-row {
 
     flex-wrap: wrap !important;
 
@@ -650,7 +650,7 @@
 
 
 
-  .lp-header.lp-header--refined .lp-header__brand-mid {
+  html:not(.erv-mobile-shell) .lp-header.lp-header--refined .lp-header__brand-mid {
 
     display: none !important;
 
@@ -682,7 +682,7 @@
 
 
 
-  .lp-header.lp-header--refined .lp-header__menu-slot {
+  html:not(.erv-mobile-shell) .lp-header.lp-header--refined .lp-header__menu-slot {
 
     order: 9999 !important;
 
@@ -692,9 +692,8 @@
 
 
 
-  /* الصف الثاني: شريط السلة/الدخول */
-
-  .lp-header.lp-header--refined .lp-header__actions {
+  /* الصف الثاني: شريط السلة/الدخول (بدون mobile shell) */
+  html:not(.erv-mobile-shell) .lp-header.lp-header--refined .lp-header__actions {
 
     order: 6 !important;
 
@@ -977,7 +976,7 @@ html[lang="en"] .lp-header.lp-header--menu-left .lp-quick-dd__panel {
     padding-bottom: max(8px, env(safe-area-inset-bottom, 0px));
   }
   html.erv-mobile-shell body.lp-home-premium .lp-header.lp-header--refined {
-    min-height: var(--erv-mobile-header-reserve, 98px);
+    min-height: var(--erv-mobile-header-target, 52px);
   }
   html.erv-mobile-shell body.lp-home-premium .lp-header.lp-header--refined .lp-header__inner {
     padding: 4px max(12px, env(safe-area-inset-left, 12px)) 6px max(12px, env(safe-area-inset-right, 12px)) !important;
@@ -991,40 +990,45 @@ html[lang="en"] .lp-header.lp-header--menu-left .lp-quick-dd__panel {
     align-items: center !important;
     row-gap: 0 !important;
     min-height: var(--erv-mobile-header-target, 52px);
-    max-height: var(--erv-mobile-header-reserve, 98px);
+    max-height: none;
     width: 100%;
+    direction: ltr !important;
+    unicode-bidi: isolate !important;
   }
-  html.erv-mobile-shell body.lp-home-premium .lp-header__menu-slot {
-    grid-column: 1;
+  html.erv-mobile-shell body.lp-home-premium .lp-header.lp-header--refined .lp-header__top-row > .lp-header__logo-slot {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    justify-self: start !important;
     order: unset !important;
     margin: 0 !important;
-  }
-  html.erv-mobile-shell body.lp-home-premium .lp-header__logo-slot {
-    grid-column: 2;
-    justify-self: center;
     width: auto !important;
     overflow: visible !important;
   }
-  html.erv-mobile-shell body.lp-home-premium .lp-header__brand-mid,
+  html.erv-mobile-shell body.lp-home-premium .lp-header.lp-header--refined .lp-header__top-row > .lp-header__brand-mid {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    justify-self: center !important;
+    order: unset !important;
+    margin: 0 !important;
+    min-width: 0;
+  }
+  html.erv-mobile-shell body.lp-home-premium .lp-header.lp-header--refined .lp-header__top-row > .lp-header__menu-slot {
+    grid-column: 3 !important;
+    grid-row: 1 !important;
+    justify-self: end !important;
+    order: unset !important;
+    margin: 0 !important;
+  }
   html.erv-mobile-shell body.lp-home-premium .lp-header__user-mid,
   html.erv-mobile-shell body.lp-home-premium .lp-nav-wrap {
     display: none !important;
   }
   html.erv-mobile-shell body.lp-home-premium .lp-header__actions {
-    grid-column: 3 !important;
-    order: unset !important;
-    display: flex !important;
-    flex: 0 0 auto !important;
-    width: auto !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    border: 0 !important;
-    border-radius: 0 !important;
-    background: transparent !important;
-    box-shadow: none !important;
-    grid-template-columns: unset !important;
-    grid-template-areas: unset !important;
-    gap: 6px !important;
+    display: none !important;
   }
   html.erv-mobile-shell body.lp-home-premium #lpHeaderWallet,
   html.erv-mobile-shell body.lp-home-premium #authArea,

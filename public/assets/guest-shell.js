@@ -760,10 +760,39 @@
       var s = document.createElement("script");
       s.src = "/assets/mobile-foundation.js";
       s.defer = true;
+      s.onload = function () {
+        loadMobileHarmony();
+      };
       document.head.appendChild(s);
     } else if (global.ErvenowMobileFoundation) {
       global.ErvenowMobileFoundation.apply();
+      loadMobileHarmony();
     }
+  }
+
+  function loadMobileHarmony() {
+    if (global.__ervMobileHarmonyScript) {
+      if (global.ErvenowMobileHarmony) global.ErvenowMobileHarmony.init();
+      return;
+    }
+    global.__ervMobileHarmonyScript = true;
+    if (!document.querySelector('link[href*="mobile-harmony.css"]')) {
+      var l = document.createElement("link");
+      l.rel = "stylesheet";
+      l.href = "/assets/mobile-harmony.css";
+      document.head.appendChild(l);
+    }
+    if (global.ErvenowMobileHarmony) {
+      global.ErvenowMobileHarmony.init();
+      return;
+    }
+    var h = document.createElement("script");
+    h.src = "/assets/mobile-harmony.js";
+    h.defer = true;
+    h.onload = function () {
+      if (global.ErvenowMobileHarmony) global.ErvenowMobileHarmony.init();
+    };
+    document.head.appendChild(h);
   }
 
   function init(opts) {

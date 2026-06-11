@@ -83,19 +83,39 @@
     row-gap: 0 !important;
     min-height: var(--erv-mobile-header-target);
     width: 100%;
+    direction: ltr !important;
+    unicode-bidi: isolate !important;
   }
 
-  body.erv-mobile-foundation .lp-header__menu-slot {
-    grid-column: 1;
+  body.erv-mobile-foundation .lp-header.lp-header--refined .lp-header__top-row > .lp-header__logo-slot {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    justify-self: start !important;
     order: unset !important;
     margin: 0 !important;
-  }
-
-  body.erv-mobile-foundation .lp-header__logo-slot {
-    grid-column: 2;
-    justify-self: center;
     width: auto !important;
     overflow: visible !important;
+  }
+
+  body.erv-mobile-foundation .lp-header.lp-header--refined .lp-header__top-row > .lp-header__brand-mid {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    justify-self: center !important;
+    order: unset !important;
+    margin: 0 !important;
+    min-width: 0;
+  }
+
+  body.erv-mobile-foundation .lp-header.lp-header--refined .lp-header__top-row > .lp-header__menu-slot {
+    grid-column: 3 !important;
+    grid-row: 1 !important;
+    justify-self: end !important;
+    order: unset !important;
+    margin: 0 !important;
   }
 
   body.erv-mobile-foundation .lp-header__logo-img {
@@ -103,27 +123,13 @@
     width: auto;
   }
 
-  body.erv-mobile-foundation .lp-header__brand-mid,
   body.erv-mobile-foundation .lp-header__user-mid,
   body.erv-mobile-foundation .lp-nav-wrap {
     display: none !important;
   }
 
   body.erv-mobile-foundation .lp-header__actions {
-    grid-column: 3 !important;
-    order: unset !important;
-    display: flex !important;
-    flex: 0 0 auto !important;
-    width: auto !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    border: 0 !important;
-    border-radius: 0 !important;
-    background: transparent !important;
-    box-shadow: none !important;
-    grid-template-columns: unset !important;
-    grid-template-areas: unset !important;
-    gap: 6px !important;
+    display: none !important;
   }
 
   body.erv-mobile-foundation #lpHeaderWallet,
