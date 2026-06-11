@@ -51,6 +51,18 @@
         max-width: 100%;
       }
 
+      @media (max-width: 1024px) {
+        .lp-body {
+          padding-bottom: max(20px, env(safe-area-inset-bottom, 0px));
+        }
+        .lp-home-premium .sn-wave {
+          display: none;
+        }
+        .lp-home-premium .sn-section:first-of-type {
+          padding-top: clamp(20px, 4vw, 28px);
+        }
+      }
+
       @media (min-width: 1025px) {
         .lp-body.lp-home-premium {
           display: flex;

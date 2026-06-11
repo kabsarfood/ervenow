@@ -594,13 +594,21 @@
 
 
 
-/* ——— تابلت (641–1024) ——— */
+/* ——— تابلت (641–1024) — نفس تجربة الجوال: قائمة ☰ بدون شريط تنقل إضافي ——— */
 
 @media (min-width: 641px) and (max-width: 1024px) {
 
   .lp-header.lp-header--refined .lp-header__brand-mid {
 
-    display: flex !important;
+    display: none !important;
+
+  }
+
+
+
+  .lp-header.lp-header--refined .lp-nav-wrap {
+
+    display: none !important;
 
   }
 

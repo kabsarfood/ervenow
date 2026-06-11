@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ar" dir="rtl">
   <head>
     <meta charset="utf-8" />
@@ -12,7 +12,6 @@
     <link rel="stylesheet" href="/assets/guest-shell.css" />
     <link rel="stylesheet" href="/assets/order-draft-badge.css" />
     <link rel="stylesheet" href="/assets/start-now-landing.css" />
-    <link rel="stylesheet" href="/assets/index-header-banner.css" />
     <link rel="stylesheet" href="/assets/guest-offers-carousel.css" />
         <style>
       .dash-alert {
@@ -792,13 +791,14 @@
         margin-bottom: 14px;
       }
       .dash-tabs__nav {
-        display: flex;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 8px;
-        flex-wrap: wrap;
         margin: 0 0 14px;
       }
       .dash-tabs__nav button {
-        flex: 1 1 calc(50% - 4px);
+        flex: unset;
+        width: 100%;
         min-width: 0;
         min-height: 44px;
         padding: 11px 10px;
@@ -817,8 +817,29 @@
         z-index: 2;
         pointer-events: auto;
       }
-      @media (min-width: 520px) {
-        .dash-tabs__nav button { flex: 1 1 calc(25% - 6px); }
+      .dash-tabs__nav button:last-child:nth-child(5) {
+        grid-column: 1 / -1;
+      }
+      @media (min-width: 641px) and (max-width: 1024px) {
+        .dash-tabs__nav {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+        .dash-tabs__nav button:last-child:nth-child(5) {
+          grid-column: auto;
+        }
+      }
+      @media (min-width: 1025px) {
+        .dash-tabs__nav {
+          display: flex;
+          flex-wrap: wrap;
+        }
+        .dash-tabs__nav button {
+          flex: 1 1 calc(20% - 6px);
+          width: auto;
+        }
+        .dash-tabs__nav button:last-child:nth-child(5) {
+          grid-column: auto;
+        }
       }
       .dash-tabs__nav button.is-active,
       .dash-tabs__nav button[aria-selected="true"] {
@@ -942,19 +963,6 @@
           padding: 8px 6px;
           min-height: 44px;
         }
-          max-height: none !important;
-          min-height: 260px;
-          height: 260px;
-        }
-          grid-column: unset;
-          grid-row: unset;
-        }
-          grid-template-columns: 1fr;
-        }
-          flex-direction: column;
-        }
-          width: 100%;
-        }
       }
       @media (min-width: 641px) and (max-width: 1024px) {
         .dash-site-header__inner {
@@ -971,7 +979,7 @@
           grid-template-columns: repeat(3, minmax(0, 1fr));
         }
         .dash-tabs__nav button {
-          min-height: 42px;
+          min-height: 44px;
         }
       }
       @media (max-width: 380px) {
@@ -982,181 +990,75 @@
         .cat-grid {
           grid-template-columns: 1fr;
         }
-        .dash-tabs__nav button {
-          flex: 1 1 calc(50% - 4px);
-        }
       }
 
-      /* ── من الخريطة — جوال: مرونة، ظهور كامل، شريط سفلي ثابت ── */
-      :root {
+      .dash-platform-hero {
+        margin-bottom: clamp(8px, 1.8vw, 10px);
+        border-radius: clamp(14px, 2.5vw, 16px);
+        overflow: hidden;
+        border: 1px solid rgba(61, 34, 19, 0.12);
+        background: linear-gradient(135deg, #3d2213, #6b4423 55%, #8b5a2b);
+        color: #fffefb;
+        padding: clamp(12px, 2.6vw, 18px) clamp(14px, 3vw, 20px);
       }
-        list-style: none;
-        cursor: pointer;
+      .dash-platform-hero.sn-hero--has-platform-bg {
+        background-image: linear-gradient(135deg, rgba(61, 34, 19, 0.9), rgba(45, 26, 10, 0.82)),
+          var(--platform-hero-bg, none);
+        background-size: cover;
+        background-position: center;
       }
-        display: none;
+      .dash-platform-hero__title {
+        margin: 0 0 6px;
+        font-size: clamp(1.02rem, 3.2vw, 1.28rem);
+        font-weight: 900;
+        line-height: 1.35;
       }
-        content: "▾";
-        float: inline-start;
-        font-size: 0.85rem;
-        opacity: 0.55;
-        transition: transform 0.2s ease;
+      .dash-platform-hero__sub {
+        margin: 0 0 10px;
+        font-size: clamp(0.8rem, 2.2vw, 0.9rem);
+        line-height: 1.45;
+        opacity: 0.95;
       }
-        transform: rotate(-90deg);
+      .dash-platform-hero__actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
       }
-        padding-top: 2px;
+      .dash-platform-hero__actions a.sn-hero__cta {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 48px;
+        padding: 10px 16px;
+        border-radius: 10px;
+        font-size: 0.88rem;
+        font-weight: 800;
+        text-decoration: none;
+        background: #c9a227;
+        color: #1a1008;
       }
-      @media (min-width: 768px) {
-          pointer-events: none;
-          cursor: default;
-        }
-          display: none;
-        }
+      .dash-platform-hero__actions a.sn-hero__cta--outline {
+        background: rgba(26, 16, 8, 0.28);
+        color: #f5e6a8;
+        border: 2px solid #d4af37;
+        box-shadow: none;
       }
-      @media (max-width: 767px) {
-        :root {
-        }
-          left: 0;
-          top: 0;
-          transform: none;
-          width: 100%;
-          max-width: 100%;
-          height: 100dvh;
-          max-height: var(--erw-viewport-h, 100dvh);
-          min-height: 0;
-          border-radius: 0;
-          padding-top: 0;
-        }
-          flex: 1 1 auto;
-          min-height: 0;
-          width: 100%;
-        }
-          display: none;
-        }
-          padding: max(10px, env(safe-area-inset-top, 0px)) clamp(44px, 12vw, 52px) 8px 14px;
-          flex-shrink: 0;
-        }
-          font-size: clamp(0.92rem, 4.2vw, 1.05rem);
-        }
-          padding-top: 8px;
-          padding-inline: max(10px, env(safe-area-inset-left, 10px)) max(10px, env(safe-area-inset-right, 10px));
-          padding-bottom: max(12px, var(--erw-safe-bottom, 12px));
-          scroll-padding-bottom: 16px;
-        }
-          grid-template-areas:
-            "map"
-            "method"
-            "actions"
-            "shipment";
-          gap: 10px;
-        }
-          grid-template-areas:
-            "method"
-            "map"
-            "shipment";
-        }
-          display: none;
-        }
-          margin-top: 2px;
-        }
-          gap: 6px;
-          margin: 0 0 2px;
-        }
-          padding: 10px 12px;
-        }
-          margin-bottom: 6px;
-        }
-          border-radius: 16px;
-          box-shadow: 0 6px 22px rgba(45, 28, 14, 0.09);
-          border-color: rgba(185, 135, 47, 0.22);
-        }
-          flex-shrink: 0;
-        }
-          position: sticky;
-          left: auto;
-          right: auto;
-          bottom: 0;
-          z-index: 3;
-          margin: 0;
-          padding: 10px 0 max(4px, env(safe-area-inset-bottom, 0px));
-          background: linear-gradient(180deg, rgba(255, 254, 251, 0.94) 0%, #fffefb 30%);
-          border-top: 1px solid rgba(185, 135, 47, 0.22);
-          box-shadow: 0 -8px 24px rgba(45, 28, 14, 0.08);
-          grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
-          gap: 10px;
-        }
-          min-height: 48px;
-          padding: 6px 8px;
-        }
-          min-height: 48px;
-          font-size: 0.9rem;
-        }
-          min-height: 50px;
-          font-size: 0.9rem;
-        }
-          padding: 12px;
-          border-radius: 14px;
-        }
+      .dash-platform-hero__actions a.sn-hero__cta--outline:hover,
+      .dash-platform-hero__actions a.sn-hero__cta--outline:focus-visible {
+        background: rgba(26, 16, 8, 0.4);
+        border-color: #e8c547;
+        color: #fffefb;
+        transform: none;
+        box-shadow: none;
       }
-
-        .dash-platform-hero {
-          margin-bottom: clamp(8px, 1.8vw, 10px);
-          border-radius: clamp(14px, 2.5vw, 16px);
-          overflow: hidden;
-          border: 1px solid rgba(61, 34, 19, 0.12);
-          background: linear-gradient(135deg, #3d2213, #6b4423 55%, #8b5a2b);
-          color: #fffefb;
-          padding: clamp(12px, 2.6vw, 18px) clamp(14px, 3vw, 20px);
-        }
-        .dash-platform-hero.sn-hero--has-platform-bg {
-          background-image: linear-gradient(135deg, rgba(61, 34, 19, 0.9), rgba(45, 26, 10, 0.82)),
-            var(--platform-hero-bg, none);
-          background-size: cover;
-          background-position: center;
-        }
-        .dash-platform-hero__title {
-          margin: 0 0 6px;
-          font-size: clamp(1.02rem, 3.2vw, 1.28rem);
-          font-weight: 900;
-          line-height: 1.35;
-        }
-        .dash-platform-hero__sub {
-          margin: 0 0 10px;
-          font-size: clamp(0.8rem, 2.2vw, 0.9rem);
-          line-height: 1.45;
-          opacity: 0.95;
-        }
+      @media (max-width: 640px) {
         .dash-platform-hero__actions {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 8px;
+          flex-direction: column;
         }
         .dash-platform-hero__actions a.sn-hero__cta {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          min-height: 40px;
-          padding: 8px 14px;
-          border-radius: 10px;
-          font-size: 0.88rem;
-          font-weight: 800;
-          text-decoration: none;
-          background: #c9a227;
-          color: #1a1008;
+          width: 100%;
         }
-        .dash-platform-hero__actions a.sn-hero__cta--outline {
-          background: rgba(26, 16, 8, 0.28);
-          color: #f5e6a8;
-          border: 2px solid #d4af37;
-          box-shadow: none;
-        }
-        .dash-platform-hero__actions a.sn-hero__cta--outline:hover,
-        .dash-platform-hero__actions a.sn-hero__cta--outline:focus-visible {
-          background: rgba(26, 16, 8, 0.4);
-          border-color: #e8c547;
-          color: #fffefb;
-          transform: none;
-          box-shadow: none;
-        }
+      }
 
     </style>
   </head>

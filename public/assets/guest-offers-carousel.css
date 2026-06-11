@@ -44,6 +44,13 @@
   width: min(1120px, calc(100% - 2 * max(clamp(14px, 3vw, 24px), env(safe-area-inset-left, 0px))));
 }
 
+@media (max-width: 1024px) {
+  .lp-home-premium .card.guest-offers-carousel--home {
+    width: 100%;
+    margin-top: 0;
+  }
+}
+
 .lp-home-premium .guest-offers-carousel--home:not(.card) {
   padding: clamp(10px, 2vw, 16px)
     max(clamp(14px, 3vw, 24px), env(safe-area-inset-right, 0px))
@@ -54,14 +61,58 @@
 @media (max-width: 640px) {
   .lp-home-premium .card.guest-offers-carousel--home,
   .lp-home-premium .guest-offers-carousel--home {
-    margin-inline: max(0px, env(safe-area-inset-left, 0px)) max(0px, env(safe-area-inset-right, 0px));
-    border-radius: clamp(12px, 3vw, 16px);
+    margin-inline: 0;
+    border-radius: 0;
   }
 }
 
-@media (min-width: 641px) and (max-width: 1024px) {
+/* جوال + تابلت — بنر الرئيسية بعرض كامل وارتفاع أوضح (مثل الكمبيوتر) */
+@media (max-width: 1024px) {
+  .lp-home-premium .card.guest-offers-carousel--home,
   .lp-home-premium .guest-offers-carousel--home {
-    max-width: min(96vw, 960px);
+    width: 100%;
+    max-width: 100%;
+    margin-inline: 0;
+    margin-top: 0;
+    margin-bottom: clamp(10px, 2.2vw, 14px);
+    border-radius: 0;
+    border-inline: 0;
+    box-shadow: 0 6px 22px rgba(45, 26, 10, 0.08);
+  }
+
+  .lp-home-premium .guest-offers-carousel--home .guest-offers-shell {
+    min-height: max(clamp(200px, 52vw, 380px), clamp(200px, 34vh, 380px));
+    aspect-ratio: 1920 / 730;
+  }
+
+  .guest-offers-slide__img {
+    width: 100%;
+    height: 100% !important;
+    max-height: none !important;
+    object-fit: cover;
+    object-position: center;
+  }
+}
+
+@supports not (aspect-ratio: 1920 / 730) {
+  @media (max-width: 1024px) {
+    .lp-home-premium .guest-offers-carousel--home .guest-offers-shell {
+      height: max(clamp(200px, 52vw, 380px), clamp(200px, 34vh, 380px));
+    }
+  }
+}
+
+@media (max-width: 640px) {
+  .dash-main .layout .card.guest-offers-carousel {
+    margin-inline: calc(-1 * max(14px, env(safe-area-inset-left, 14px)));
+    width: calc(100% + 2 * max(14px, env(safe-area-inset-left, 14px)));
+    max-width: 100vw;
+    border-radius: 0;
+    border-inline: 0;
+  }
+
+  .dash-main .layout .card.guest-offers-carousel .guest-offers-shell {
+    min-height: max(clamp(180px, 48vw, 320px), clamp(180px, 30vh, 320px));
   }
 }
 
