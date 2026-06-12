@@ -33,6 +33,7 @@ const { createSiteMaintenanceMiddleware } = require("../shared/middleware/siteMa
 const { pushToErvenow } = require("../shared/utils/ervenowPush");
 const { startRetryNotificationsWorker } = require("../apps/driver/retryNotifications");
 const { startClosedOrdersPurgeWorker } = require("../apps/delivery/purgeClosedOrders");
+const { startGasRadiusExpandWorker } = require("../apps/delivery/gasRadiusExpand");
 const { createServiceClient } = require("../shared/config/supabase");
 const { register, metrics } = require("../shared/utils/metrics");
 const { logger } = require("../shared/utils/logger");
@@ -318,6 +319,15 @@ app.get("/api/health", (_req, res) => {
       "/api/notifications",
     ],
   });
+});
+
+/** حالة صيانة الموقع للواجهة (بدون مصادقة) — للحماية على CDN/Vercel */
+app.get("/api/site-maintenance/status", (req, res) => {
+  const siteMaintenanceStore = require("../shared/utils/siteMaintenanceStore");
+  const { maintenanceActiveForRequest } = require("../shared/middleware/siteMaintenanceGate");
+  const enabled = siteMaintenanceStore.readState() && maintenanceActiveForRequest(req);
+  res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
+  res.json({ ok: true, enabled: !!enabled });
 });
 
 /** فحص عميق للمراقبة والنشر — لا يعرّي أسرارًا */
@@ -645,6 +655,7 @@ app.use((err, _req, res, _next) => {
     });
     startRetryNotificationsWorker();
     startClosedOrdersPurgeWorker();
+    startGasRadiusExpandWorker();
     console.log("[boot] Socket.IO tracking: /socket.io/");
   } catch (e) {
     console.error("[boot] schema check failed:", e && (e.message || e));

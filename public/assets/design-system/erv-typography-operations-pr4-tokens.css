@@ -1,0 +1,26 @@
+/**
+ * ERVENOW Typography PR4 — Operations token extensions
+ * Loaded with PR1 tokens on Admin · Driver · Store · Provider dashboards only
+ */
+
+body.erv-typography-pr4-operations {
+  --erv-t-kpi: 20px;
+  --erv-t-kpi-weight: 700;
+  --erv-t-table: 14px;
+  --erv-t-table-weight: 500;
+  --erv-t-table-head-weight: 700;
+  --erv-t-badge: 12px;
+  --erv-t-badge-weight: 600;
+}
+
+@media (min-width: 641px) and (max-width: 1024px) {
+  body.erv-typography-pr4-operations {
+    --erv-t-kpi: 24px;
+  }
+}
+
+@media (min-width: 1025px) {
+  body.erv-typography-pr4-operations {
+    --erv-t-kpi: 24px;
+  }
+}

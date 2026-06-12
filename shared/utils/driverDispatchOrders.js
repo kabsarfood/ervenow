@@ -1,5 +1,5 @@
 /**
- * طلبات يستلمها مندوب التوصيل فقط (مطاعم / متاجر / توصيل عام).
+ * طلبات يستلمها مندوب التوصيل (مطاعم / متاجر / توصيل عام / توصيل داخلي).
  * تُستبعد طلبات الخدمات المنزلية ونقل المركبات والأثاث.
  */
 
@@ -10,7 +10,6 @@ const DRIVER_EXCLUDED_SERVICE_TYPES = new Set([
   "pickup_truck",
   "vehicle_transfer",
   "furniture_move",
-  "internal_delivery",
   "plumber",
   "electrician",
   "ac_technician",
@@ -26,8 +25,13 @@ const DRIVER_EXCLUDED_SERVICE_TYPES = new Set([
   "service",
 ]);
 
+function isInternalDeliveryOrder(order) {
+  return String(order?.service_type || "").trim().toLowerCase() === "internal_delivery";
+}
+
 function isDriverDispatchOrder(order) {
   if (!order) return false;
+  if (isInternalDeliveryOrder(order)) return true;
   const ot = String(order.order_type || "delivery").trim().toLowerCase();
   if (DRIVER_EXCLUDED_ORDER_TYPES.has(ot)) return false;
   const st = String(order.service_type || "").trim().toLowerCase();
@@ -42,6 +46,7 @@ function filterDriverDispatchOrders(rows) {
 module.exports = {
   DRIVER_EXCLUDED_ORDER_TYPES,
   DRIVER_EXCLUDED_SERVICE_TYPES,
+  isInternalDeliveryOrder,
   isDriverDispatchOrder,
   filterDriverDispatchOrders,
 };

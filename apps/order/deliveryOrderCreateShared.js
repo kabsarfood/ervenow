@@ -10,9 +10,31 @@ const { normalizeIdempotencyKey, isOrdersIdempotencyColumnMissingError } = requi
 const { logger } = require("../../shared/utils/logger");
 const { isOrderPaymentGateRequired } = require("../../shared/utils/orderPaymentGate");
 const { createDeliveryOrderFromBody, isPaidFromRequestBody } = require("../delivery/service");
+const { createUnifiedDeliveryOrder } = require("../delivery/unifiedDeliveryCreate");
 const { enqueueDeliveryJob } = require("../../queues/deliveryQueue");
 const { bumpDeliveryOrdersListEpoch } = require("../../shared/utils/deliveryOrdersListCache");
 const { createNotification } = require("../../shared/services/notificationService");
+const { notifyProvidersForBooking } = require("../../shared/services/serviceBookingNotify");
+const { isDriverDispatchOrder } = require("../../shared/utils/driverDispatchOrders");
+
+const UNIFIED_SERVICE_TYPES = new Set([
+  "car_transport",
+  "pickup_truck",
+  "furniture",
+  "gas_delivery",
+  "local_delivery",
+]);
+
+function isUnifiedServiceBody(body) {
+  const st = String(body?.service_type || "").toLowerCase();
+  const payload = body?.payload;
+  return UNIFIED_SERVICE_TYPES.has(st) && payload && typeof payload === "object";
+}
+
+function isServiceProviderOrder(order) {
+  const ot = String(order?.order_type || "").toLowerCase();
+  return ot === "service" || ot === "gas_delivery";
+}
 
 /**
  * @typedef {"delivery"|"order"} DeliveryEntryPoint
@@ -103,25 +125,38 @@ async function runUnifiedDeliveryOnlyCreate({ sb, appUser, body, idempotencyKey,
   const initialDeliveryStatus = usePaymentGate ? (paymentConfirmed ? "pending" : "draft") : "pending";
   const payment_status = paymentConfirmed ? "paid" : "pending";
 
-  const { data, error } = await createDeliveryOrderFromBody(sb, appUser, cleanBody, {
-    initialDeliveryStatus,
-    payment_status,
-  });
+  const createOpts = { initialDeliveryStatus, payment_status };
+  const { data, error } = isUnifiedServiceBody(cleanBody)
+    ? await createUnifiedDeliveryOrder(sb, appUser, cleanBody, createOpts)
+    : await createDeliveryOrderFromBody(sb, appUser, cleanBody, createOpts);
   if (error) return { ok: false, status: 400, message: error.message };
 
   if (data && initialDeliveryStatus === "pending") {
-    try {
-      await enqueueDeliveryJob("new-order", {
-        orderId: data.id,
-        pickup:
-          data.pickup_lat != null && data.pickup_lng != null
-            ? { lat: Number(data.pickup_lat), lng: Number(data.pickup_lng) }
-            : null,
-        dropoff:
-          data.drop_lat != null && data.drop_lng != null ? { lat: Number(data.drop_lat), lng: Number(data.drop_lng) } : null,
-      });
-    } catch (qe) {
-      logger.error({ err: qe && (qe.message || String(qe)), orderId: data.id }, "[deliveryOrderCreateShared] enqueue new-order");
+    if (isServiceProviderOrder(data)) {
+      try {
+        await notifyProvidersForBooking(sb, data);
+      } catch (notifyErr) {
+        logger.error(
+          { err: notifyErr && (notifyErr.message || String(notifyErr)), orderId: data.id },
+          "[deliveryOrderCreateShared] notify service providers"
+        );
+      }
+    } else if (isDriverDispatchOrder(data)) {
+      try {
+        await enqueueDeliveryJob("new-order", {
+          orderId: data.id,
+          pickup:
+            data.pickup_lat != null && data.pickup_lng != null
+              ? { lat: Number(data.pickup_lat), lng: Number(data.pickup_lng) }
+              : null,
+          dropoff:
+            data.drop_lat != null && data.drop_lng != null
+              ? { lat: Number(data.drop_lat), lng: Number(data.drop_lng) }
+              : null,
+        });
+      } catch (qe) {
+        logger.error({ err: qe && (qe.message || String(qe)), orderId: data.id }, "[deliveryOrderCreateShared] enqueue new-order");
+      }
     }
     await bumpDeliveryOrdersListEpoch();
   } else if (data) {

@@ -5,7 +5,6 @@ const {
   bookingVehicleCategory,
   vehicleCategoryLabel,
   driverCarTypeForCategory,
-  serviceUserMatchesVehicleCategory,
 } = require("../utils/internalDeliveryVehicle");
 
 function publicBase() {
@@ -37,7 +36,7 @@ function buildInternalDeliveryProviderMessage(booking) {
 
   return (
     "مرحباً من منصة ERVENOW 👋\n" +
-    "طلب توصيل داخلي جديد:\n\n" +
+    "طلب توصيل داخلي جديد (للمندوب):\n\n" +
     `📋 رقم الطلب: ${orderNo}\n` +
     `📦 اسم الشحنة: ${d.shipment_name || booking.service_name || "توصيل داخلي"}\n` +
     `📝 التفاصيل: ${d.shipment_details || d.notes_extra || booking.notes || "—"}\n` +
@@ -50,9 +49,9 @@ function buildInternalDeliveryProviderMessage(booking) {
     `💳 الدفع: ${pay}\n` +
     `عمولة المنصة (${pct}): ${comm.toFixed(2)} ريال\n` +
     `صافيك بعد الإتمام: ${net.toFixed(2)} ريال\n\n` +
-    `🔗 حجز الطلب: ${publicBase()}/services-provider.html\n` +
+    `🔗 قبول الطلب: ${publicBase()}/driver\n` +
     `🔗 تتبع العميل: ${trackUrl}\n\n` +
-    "بعد إتمام المهمة من لوحتك تُسجَّل العمولة (7%) في ذمتك."
+    "بعد إتمام المهمة من تطبيق المندوب تُسجَّل العمولة (7%) في ذمتك."
   );
 }
 
@@ -75,31 +74,17 @@ async function getInternalDeliveryNotifyPhones(sb, booking) {
   const driverType = driverCarTypeForCategory(cat);
   const phones = new Set();
 
-  const { data: services, error: sErr } = await sb
-    .from("users")
-    .select("phone, service_type, service_vehicle_type, service_district")
-    .eq("role", "service")
-    .in("service_type", ["internal_delivery", "pickup_truck"]);
-  if (!sErr && Array.isArray(services)) {
-    for (const u of services) {
-      if (!serviceUserMatchesVehicleCategory(u, cat)) continue;
-      const p = String(u.phone || "").trim();
+  let q = sb
+    .from("drivers")
+    .select("phone")
+    .eq("status", "approved")
+    .eq("active", true);
+  if (driverType) q = q.eq("car_type", driverType);
+  const { data: drivers, error: dErr } = await q;
+  if (!dErr && Array.isArray(drivers)) {
+    for (const d of drivers) {
+      const p = String(d.phone || "").trim();
       if (p.length >= 10) phones.add(p);
-    }
-  }
-
-  if (driverType) {
-    const { data: drivers, error: dErr } = await sb
-      .from("drivers")
-      .select("phone")
-      .eq("status", "approved")
-      .eq("active", true)
-      .eq("car_type", driverType);
-    if (!dErr && Array.isArray(drivers)) {
-      for (const d of drivers) {
-        const p = String(d.phone || "").trim();
-        if (p.length >= 10) phones.add(p);
-      }
     }
   }
 

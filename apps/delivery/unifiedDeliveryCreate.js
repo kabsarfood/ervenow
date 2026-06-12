@@ -5,6 +5,7 @@
 const { computeUnifiedDeliveryFee } = require("./unifiedDeliveryPricing");
 const { createDeliveryOrderFromBody, getRoadDistanceKm } = require("./service");
 const { createGasDelivery } = require("./gasDeliveryCreate");
+const { computePlatformCommission } = require("../../shared/utils/serviceCommission");
 
 const CAR_VEHICLE = new Set([
   "sedan",
@@ -15,7 +16,7 @@ const CAR_VEHICLE = new Set([
   "suv",
 ]);
 const CAR_COND = new Set(["working", "damaged", "broken", "appraisal"]);
-const TRANSFER = new Set(["internal", "external"]);
+const TRANSFER = new Set(["internal", "external", "international"]);
 
 function str(v) {
   return String(v == null ? "" : v).trim();
@@ -46,7 +47,9 @@ function buildCarTransportNotes(p, feeInfo, serviceLabel) {
   const lines = [
     `[ERVENOW unified] ${label}`,
     `المركبة: ${p.vehicle_category} — الحالة: ${p.vehicle_condition}`,
-    `النقل: ${feeInfo.mode === "external" ? "خارجي" : "داخلي"}`,
+    `النقل: ${
+      feeInfo.mode === "external" ? "خارجي" : feeInfo.mode === "international" ? "دولي" : "داخلي"
+    }`,
     `المسافة (طريق تقريبي): ${Number(feeInfo.distance_km || 0).toFixed(2)} كم`,
     `أجرة النقل: ${Number(feeInfo.delivery_fee || 0).toFixed(2)} ر.س`,
   ];
@@ -84,6 +87,7 @@ async function createCarTransport(sb, appUser, payload, topBody, opts) {
   const feeResult = computeUnifiedDeliveryFee("car_transport", {
     transfer_mode,
     distance_km: distanceKm,
+    vehicle_condition: str(payload.vehicle_condition).toLowerCase(),
   });
   if (!feeResult.ok) {
     return { data: null, error: new Error(feeResult.message || "تسعير غير صالح") };
@@ -99,8 +103,10 @@ async function createCarTransport(sb, appUser, payload, topBody, opts) {
     "موقع التسليم";
 
   const requestedSt = str(topBody.service_type).toLowerCase();
-  const serviceTypeStored = requestedSt === "pickup_truck" ? "pickup_truck" : "vehicle_transfer";
+  const serviceTypeStored = requestedSt === "pickup_truck" ? "pickup_truck" : "car_transport";
   const notes = buildCarTransportNotes(payload, feeResult, serviceTypeStored);
+  const deliveryFee = Math.round(Number(feeResult.delivery_fee || 0) * 100) / 100;
+  const platformCommission = computePlatformCommission(deliveryFee, serviceTypeStored);
 
   const fromCity = transfer_mode === "external" ? str(payload.from_city) : "";
   const toCity = transfer_mode === "external" ? str(payload.to_city) : "";
@@ -109,6 +115,11 @@ async function createCarTransport(sb, appUser, payload, topBody, opts) {
     unified: true,
     service_type: serviceTypeStored,
     legacy_service_type: "vehicle_transfer",
+    plate_number: str(payload.plate_number),
+    pickup_maps_url: str(payload.pickup_maps_url),
+    drop_maps_url: str(payload.drop_maps_url),
+    sender_phone: str(payload.sender_phone || topBody.customer_phone),
+    recipient_phone: str(payload.recipient_phone),
     from_location: {
       lat: pickup_lat,
       lng: pickup_lng,
@@ -148,8 +159,14 @@ async function createCarTransport(sb, appUser, payload, topBody, opts) {
     order_total: 0,
     customer_phone: str(topBody.customer_phone) || str(appUser.phone) || "",
     force_delivery_fee: true,
-    delivery_fee: feeResult.delivery_fee,
+    delivery_fee: deliveryFee,
     distance_km_override: distanceKm,
+    total_amount: deliveryFee,
+    order_total: deliveryFee,
+    platform_commission: platformCommission,
+    service_name: "نقل مركبات",
+    service_location: pickup_address,
+    district: str(payload.pickup_district_label),
     vehicle_type: (() => {
       const cat = str(payload.vehicle_category).toLowerCase();
       if (cat === "motorcycle") return "motorcycle";

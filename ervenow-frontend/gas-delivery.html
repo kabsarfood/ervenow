@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
   <head>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -136,7 +136,7 @@
         <div class="gd-welcome">
           <strong>أهلاً بك في خدمة توصيل الغاز من ERVENOW</strong><br />
           اختر نوع الخدمة، حدّد الكمية، ثم موقع التوصيل. الأسعار: أسطوانة واحدة
-          <strong>39 ر.س</strong>، اثنتان <strong>75 ر.س</strong>، وتعبئة المركزي
+          <strong>39 ر.س</strong>، اثنتان <strong>78 ر.س</strong>، وتعبئة المركزي
           <strong>0.90 ر.س/لتر</strong>.
         </div>
 
@@ -154,7 +154,7 @@
               <label for="gdCylQty">عدد الأسطوانات</label>
               <select id="gdCylQty">
                 <option value="1">1 أسطوانة — 39 ر.س</option>
-                <option value="2">2 أسطوانة — 75 ر.س</option>
+                <option value="2">2 أسطوانة — 78 ر.س</option>
                 <option value="3">3 أسطوانات</option>
                 <option value="4">4 أسطوانات</option>
                 <option value="5">5 أسطوانات</option>
@@ -225,20 +225,7 @@
       </div>
     </div>
 
-      <footer class="dash-site-footer">
-        <div class="dash-site-footer__logo">ERVENOW</div>
-        <nav class="dash-site-footer__links" aria-label="روابط سفلية">
-          <a class="dash-site-footer__link" href="/restaurants">مطاعم</a>
-          <a class="dash-site-footer__link" href="/stores">متاجر</a>
-          <a class="dash-site-footer__link" href="/delivery-services.html">توصيل</a>
-          <a class="dash-site-footer__link" href="/services">خدمات</a>
-          <a class="dash-site-footer__link" href="/delivery-map">طلب من الخريطة</a>
-          <a class="dash-site-footer__link" href="/start-now.html">ابدأ الآن</a>
-          <a class="dash-site-footer__link" href="/">الرئيسية</a>
-        </nav>
-        <p class="dash-site-footer__copy">© 2026 ERVENOW — جميع الحقوق محفوظة</p>
-      </footer>
-    </div>
+      </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="/assets/order-draft-store.js"></script>
@@ -253,16 +240,14 @@
     <script>
       (function () {
         var CYL_ONE = 39;
-        var CYL_TWO = 75;
+        var CYL_UNIT = 39;
         var PER_LITER = 0.9;
         var map = null;
         var marker = null;
 
         function priceCylinders(qty) {
           qty = Math.max(1, Math.min(10, parseInt(qty, 10) || 1));
-          if (qty === 1) return CYL_ONE;
-          if (qty === 2) return CYL_TWO;
-          return CYL_TWO + (qty - 2) * CYL_ONE;
+          return qty * CYL_UNIT;
         }
 
         function priceCentral(liters) {

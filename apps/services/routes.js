@@ -24,10 +24,7 @@ const { createGasDelivery } = require("../delivery/gasDeliveryCreate");
 const { completeServiceBooking } = require("../../shared/services/completeServiceBooking");
 const { sendReserveWelcomeWhatsApp } = require("../../shared/services/serviceProviderReserve");
 const { buildCustomerMessageOrderAccepted } = require("../../shared/messages/deliveryCustomerWhatsApp");
-const {
-  bookingVehicleCategory,
-  serviceUserMatchesVehicleCategory,
-} = require("../../shared/utils/internalDeliveryVehicle");
+const { currentGasRadiusKm, providerWithinGasRadius } = require("../../shared/utils/gasDeliveryRadius");
 const { broadcastDriverUpdate, broadcastOrderPatch, orderPatchFromRow } = require("../../shared/lib/trackingSocket");
 const { getWalletPayloadWithLedgerFallback } = require("../../shared/utils/ledgerWallet");
 const {
@@ -53,6 +50,7 @@ const { DELIVERY_STATUS } = require("../../shared/domain/orders/constants");
 const { patchUnifiedOrderStatus } = require("../../shared/services/unifiedOrderStatus");
 const { updateOrdersResilient } = require("../../shared/utils/idempotency");
 const { applyProviderIdToPatch } = require("../../shared/utils/orderProviderId");
+const { providerAreaMatchesCarBooking } = require("../../shared/services/carTransportNotify");
 
 const router = express.Router();
 const SERVICE_TYPES = new Set([
@@ -66,6 +64,7 @@ const SERVICE_TYPES = new Set([
   "cleaning_building",
   "laundry_estates",
   "vehicle_transfer",
+  "car_transport",
   "internal_delivery",
   "pickup_truck",
   "furniture_move",
@@ -91,17 +90,14 @@ function normalizeQty(v) {
   return Math.max(1, Math.floor(n));
 }
 
-function filterBookingsForProvider(rows, providerId, providerType, providerDistrict, providerVehicleType) {
-  const types = bookingTypesForProvider(providerType);
+function filterBookingsForProvider(rows, providerId, providerType, providerDistrict, _providerVehicleType, providerProfile) {
   const pid = String(providerId || "");
-  const providerUser = {
-    service_type: providerType,
-    service_vehicle_type: providerVehicleType,
-  };
+  const providerUser = providerProfile && typeof providerProfile === "object" ? providerProfile : {};
   return (rows || []).filter((b) => {
     const st = String(b.service_type || "").toLowerCase();
+    if (st === "internal_delivery") return false;
     if (!providerMatchesBookingType(providerType, st, b.gas_mode)) return false;
-    if (st === "internal_delivery" && !serviceUserMatchesVehicleCategory(providerUser, bookingVehicleCategory(b))) {
+    if (st === "gas_delivery" && !providerWithinGasRadius(providerUser, b, currentGasRadiusKm(b))) {
       return false;
     }
     const status = bookingStatus(b);
@@ -109,6 +105,10 @@ function filterBookingsForProvider(rows, providerId, providerType, providerDistr
     if (bookedBy && bookedBy !== pid) return false;
     if (bookedBy === pid) return true;
     if (status !== "new" && status !== "pending") return false;
+    if (st === "car_transport" || st === "vehicle_transfer" || st === "pickup_truck") {
+      return providerAreaMatchesCarBooking(providerType, providerDistrict, b);
+    }
+    if (st === "gas_delivery") return true;
     const loc = b.service_location || b.location;
     return providerAreaMatches(providerType, providerDistrict, b.district, loc);
   });
@@ -146,6 +146,7 @@ function labelByType(type) {
     cleaning_villa: "غسيل درج فيلا",
     cleaning_building: "غسيل درج عمارة (3 أدوار)",
     vehicle_transfer: "نقل مركبات",
+    car_transport: "نقل مركبات",
     internal_delivery: "توصيل داخلي",
     pickup_truck: "ونيت",
     furniture_move: "نقل أثاث",
@@ -285,7 +286,10 @@ router.post("/home-order", optionalAuth, async (req, res) => {
 router.get("/gas/pricing", (_req, res) => {
   return ok(res, {
     cylinder_one: 39,
-    cylinder_two: 75,
+    cylinder_two: 78,
+    cylinder_provider_net: 37,
+    cylinder_platform_fee: 2,
+    cylinder_customer_unit: 39,
     central_per_liter: 0.9,
     central_liters: CENTRAL_LITERS,
     commission_rate: require("../../shared/utils/platformCommission").PLATFORM_COMMISSION_RATE,
@@ -400,7 +404,7 @@ router.get("/me/dashboard", requireAuth, requireRole("service"), async (req, res
     const firstProfile = await sb
       .from("users")
       .select(
-        "id, name, phone, service_type, service_district, service_rating_avg, service_rating_count, service_vehicle_type, service_plate_number, service_vehicle_model"
+        "id, name, phone, service_type, service_district, service_rating_avg, service_rating_count, service_vehicle_type, service_plate_number, service_vehicle_model, lat, lng"
       )
       .eq("id", uid)
       .maybeSingle();
@@ -409,7 +413,7 @@ router.get("/me/dashboard", requireAuth, requireRole("service"), async (req, res
       if (/service_vehicle_type|service_plate_number|service_vehicle_model/i.test(msg)) {
         const fallback = await sb
           .from("users")
-          .select("id, name, phone, service_type, service_district, service_rating_avg, service_rating_count")
+          .select("id, name, phone, service_type, service_district, service_rating_avg, service_rating_count, lat, lng")
           .eq("id", uid)
           .maybeSingle();
         if (fallback.error) return fail(res, fallback.error.message, 400);
@@ -435,7 +439,8 @@ router.get("/me/dashboard", requireAuth, requireRole("service"), async (req, res
         uid,
         providerType,
         profile?.service_district,
-        profile?.service_vehicle_type
+        profile?.service_vehicle_type,
+        profile
       ),
       uid
     );
@@ -509,7 +514,7 @@ router.get("/bookings", requireAuth, async (req, res) => {
 
     const { data: profile, error: pErr } = await req.supabase
       .from("users")
-      .select("service_type, service_district")
+      .select("service_type, service_district, service_vehicle_type, lat, lng")
       .eq("id", user.id)
       .maybeSingle();
     if (pErr) return fail(res, pErr.message, 400);
@@ -529,7 +534,8 @@ router.get("/bookings", requireAuth, async (req, res) => {
         user.id,
         providerType,
         profile?.service_district,
-        profile?.service_vehicle_type
+        profile?.service_vehicle_type,
+        profile
       ),
       user.id
     );
@@ -555,17 +561,28 @@ router.post("/bookings/:id/reserve", requireAuth, requireRole("service"), async 
     const { data: booking, error: gErr } = await fetchServiceOrderById(sb, req.params.id);
     if (gErr || !booking) return fail(res, "الطلب غير موجود", 404);
 
+    if (String(booking.service_type || "").toLowerCase() === "internal_delivery") {
+      return fail(res, "طلبات التوصيل الداخلي للمناديب فقط — استخدم تطبيق المندوب", 403);
+    }
     if (!providerMatchesBookingType(providerType, booking.service_type, booking.gas_mode)) {
       return fail(res, "هذا الطلب لا يطابق تخصصك", 403);
     }
     if (
-      String(booking.service_type || "").toLowerCase() === "internal_delivery" &&
-      !serviceUserMatchesVehicleCategory(profile, bookingVehicleCategory(booking))
+      String(booking.service_type || "").toLowerCase() === "gas_delivery" &&
+      !providerWithinGasRadius(profile, booking, currentGasRadiusKm(booking))
     ) {
-      return fail(res, "نوع المركبة المطلوبة لا يطابق مركبتك المسجّلة", 403);
+      return fail(
+        res,
+        `الطلب خارج نطاق التوصيل الحالي (${currentGasRadiusKm(booking)} كم من موقع العميل)`,
+        403
+      );
     }
   const bookingLoc = booking.service_location || booking.location;
-    if (!providerAreaMatches(providerType, profile?.service_district, booking.district, bookingLoc)) {
+    const bookingSt = String(booking.service_type || "").toLowerCase();
+    if (
+      bookingSt !== "gas_delivery" &&
+      !providerAreaMatches(providerType, profile?.service_district, booking.district, bookingLoc)
+    ) {
       return fail(res, providerType === "pickup_truck" ? "الطلب خارج مدينتك المسجّلة" : "الطلب خارج حيّك المسجّل", 403);
     }
     const st = bookingStatus(booking);

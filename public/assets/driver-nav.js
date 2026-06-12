@@ -111,18 +111,7 @@
   }
 
   function renderFooter() {
-    return (
-      '<footer class="dash-site-footer">' +
-      '<div class="dash-site-footer__logo">ERVENOW</div>' +
-      '<nav class="dash-site-footer__links" aria-label="روابط سفلية">' +
-      '<a class="dash-site-footer__link" href="/driver">لوحة المندوب</a>' +
-      '<a class="dash-site-footer__link" href="/orders">طلبات المنصة</a>' +
-      '<a class="dash-site-footer__link" href="/driver-app">تتبع الحي</a>' +
-      '<a class="dash-site-footer__link" href="/">الرئيسية</a>' +
-      "</nav>" +
-      '<p class="dash-site-footer__copy">© 2026 ERVENOW — جميع الحقوق محفوظة</p>' +
-      "</footer>"
-    );
+    return "";
   }
 
   async function refreshBalanceChip() {

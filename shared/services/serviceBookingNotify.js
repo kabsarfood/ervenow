@@ -5,6 +5,7 @@ const { isHomeServiceType } = require("../utils/homeServicePricing");
 const { notifyHomeServiceProvidersCascade } = require("./homeServiceNotify");
 const { providerTypesMatchingBooking } = require("../utils/serviceProviderTypes");
 const { notifyInternalDeliveryOrder } = require("./internalDeliveryNotify");
+const { isCarTransportBooking, notifyCarTransportProviders } = require("./carTransportNotify");
 
 async function getServiceProviderPhones(sb, bookingType) {
   const matchTypes = providerTypesMatchingBooking(bookingType);
@@ -65,6 +66,10 @@ async function notifyProvidersForBooking(sb, booking) {
   const t = String(booking.service_type || "").toLowerCase();
   if (t === "internal_delivery") {
     await notifyInternalDeliveryOrder(sb, booking);
+    return;
+  }
+  if (isCarTransportBooking(booking)) {
+    await notifyCarTransportProviders(sb, booking);
     return;
   }
   if (isHomeServiceType(t) || t === "gas_delivery") {

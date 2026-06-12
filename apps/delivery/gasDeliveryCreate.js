@@ -7,9 +7,10 @@ const {
   gasServiceLabel,
   CENTRAL_LITERS,
   googleMapsUrl,
+  computeGasPlatformCommission,
 } = require("../../shared/utils/gasDeliveryPricing");
 const { createDeliveryOrderFromBody } = require("./service");
-const { sendGasProviderWhatsApp } = require("../../shared/services/gasDeliveryWhatsApp");
+const { GAS_RADIUS_INITIAL_KM } = require("../../shared/utils/gasDeliveryRadius");
 
 function str(v) {
   return String(v == null ? "" : v).trim();
@@ -81,6 +82,7 @@ async function createGasDelivery(sb, appUser, rawBody) {
   const mapsUrl = googleMapsUrl(coords.lat, coords.lng);
   const dropAddress = str(body.drop_address || payload.drop_address || coords.location) || coords.location;
   const pickupAddress = str(body.pickup_address || payload.pickup_address || dropAddress) || dropAddress;
+  const platformCommission = computeGasPlatformCommission(mode, priced.qty, priced.liters, priced.price);
 
   const { data: order, error } = await createDeliveryOrderFromBody(
     sb,
@@ -95,6 +97,8 @@ async function createGasDelivery(sb, appUser, rawBody) {
       order_total: 0,
       force_delivery_fee: true,
       delivery_fee: priced.price,
+      total_amount: priced.price,
+      platform_commission: platformCommission,
       customer_phone,
       notes: `[غاز] ${gasServiceLabel(mode)}`,
       order_type: "gas_delivery",
@@ -108,6 +112,7 @@ async function createGasDelivery(sb, appUser, rawBody) {
         cylinders: mode === "cylinder_swap" ? priced.qty : null,
         liters: priced.liters,
         payment_method: pay.payment_method,
+        gas_radius_km: GAS_RADIUS_INITIAL_KM,
         district: str(dataBlock.district || payload.district || body.district),
       },
     },

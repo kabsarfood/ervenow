@@ -1,0 +1,1418 @@
+{
+  "mode": "before",
+  "capturedAt": "2026-06-12T18:54:05.097Z",
+  "metrics": {
+    "admin@390": {
+      "pageTitle": {
+        "fontSize": "21.6px",
+        "fontWeight": "900",
+        "lineHeight": "25.92px"
+      },
+      "sectionH2": {
+        "fontSize": "16px",
+        "fontWeight": "800",
+        "lineHeight": "24px"
+      },
+      "kpiValue": {
+        "fontSize": "19.52px",
+        "fontWeight": "900",
+        "lineHeight": "normal"
+      },
+      "kpiLabel": {
+        "fontSize": "13.76px",
+        "fontWeight": "700",
+        "lineHeight": "normal"
+      },
+      "tableHead": {
+        "fontSize": "14.08px",
+        "fontWeight": "800",
+        "lineHeight": "21.12px"
+      },
+      "tableCell": {
+        "fontSize": "14.08px",
+        "fontWeight": "400",
+        "lineHeight": "21.12px"
+      },
+      "badge": null,
+      "alert": {
+        "fontSize": "13.3333px",
+        "fontWeight": "800",
+        "lineHeight": "normal"
+      },
+      "secondary": {
+        "fontSize": "14.4px",
+        "fontWeight": "600",
+        "lineHeight": "23.76px"
+      },
+      "_fontSizeHistogram": [
+        {
+          "size": "11.52px",
+          "count": 11
+        },
+        {
+          "size": "11.84px",
+          "count": 9
+        },
+        {
+          "size": "12px",
+          "count": 20
+        },
+        {
+          "size": "12.48px",
+          "count": 8
+        },
+        {
+          "size": "12.8px",
+          "count": 12
+        },
+        {
+          "size": "13.12px",
+          "count": 43
+        },
+        {
+          "size": "13.3333px",
+          "count": 23
+        },
+        {
+          "size": "13.6px",
+          "count": 12
+        },
+        {
+          "size": "13.76px",
+          "count": 34
+        },
+        {
+          "size": "14.08px",
+          "count": 80
+        },
+        {
+          "size": "14.4px",
+          "count": 11
+        },
+        {
+          "size": "14.72px",
+          "count": 22
+        },
+        {
+          "size": "15.2px",
+          "count": 46
+        },
+        {
+          "size": "16px",
+          "count": 211
+        },
+        {
+          "size": "16.8px",
+          "count": 5
+        },
+        {
+          "size": "17.6px",
+          "count": 19
+        },
+        {
+          "size": "18.72px",
+          "count": 4
+        },
+        {
+          "size": "19.2px",
+          "count": 15
+        },
+        {
+          "size": "19.52px",
+          "count": 12
+        },
+        {
+          "size": "20px",
+          "count": 1
+        },
+        {
+          "size": "21.6px",
+          "count": 4
+        },
+        {
+          "size": "24px",
+          "count": 1
+        },
+        {
+          "size": "28px",
+          "count": 7
+        }
+      ],
+      "_layout": {
+        "mainW": 370,
+        "viewport": 390
+      }
+    },
+    "driver@390": {
+      "pageTitle": {
+        "fontSize": "13.6px",
+        "fontWeight": "800",
+        "lineHeight": "20.4px"
+      },
+      "sectionH2": {
+        "fontSize": "14.72px",
+        "fontWeight": "800",
+        "lineHeight": "21.344px"
+      },
+      "kpiValue": null,
+      "kpiLabel": null,
+      "tableHead": null,
+      "tableCell": null,
+      "badge": {
+        "fontSize": "11.52px",
+        "fontWeight": "800",
+        "lineHeight": "17.28px"
+      },
+      "alert": null,
+      "secondary": null,
+      "_fontSizeHistogram": [
+        {
+          "size": "10.88px",
+          "count": 1
+        },
+        {
+          "size": "11.52px",
+          "count": 6
+        },
+        {
+          "size": "12px",
+          "count": 44
+        },
+        {
+          "size": "12.48px",
+          "count": 5
+        },
+        {
+          "size": "12.8px",
+          "count": 8
+        },
+        {
+          "size": "13px",
+          "count": 6
+        },
+        {
+          "size": "13.3333px",
+          "count": 1
+        },
+        {
+          "size": "13.6px",
+          "count": 1
+        },
+        {
+          "size": "13.76px",
+          "count": 2
+        },
+        {
+          "size": "14.08px",
+          "count": 6
+        },
+        {
+          "size": "14.4px",
+          "count": 2
+        },
+        {
+          "size": "14.72px",
+          "count": 2
+        },
+        {
+          "size": "15.2px",
+          "count": 2
+        },
+        {
+          "size": "15.6px",
+          "count": 1
+        },
+        {
+          "size": "16px",
+          "count": 34
+        },
+        {
+          "size": "16.8px",
+          "count": 1
+        },
+        {
+          "size": "17.6px",
+          "count": 2
+        },
+        {
+          "size": "17.92px",
+          "count": 1
+        },
+        {
+          "size": "19.2px",
+          "count": 7
+        },
+        {
+          "size": "21.6px",
+          "count": 1
+        },
+        {
+          "size": "22px",
+          "count": 4
+        },
+        {
+          "size": "26.4px",
+          "count": 1
+        }
+      ],
+      "_layout": {
+        "mainW": 390,
+        "viewport": 390
+      }
+    },
+    "store@390": {
+      "pageTitle": {
+        "fontSize": "18.4px",
+        "fontWeight": "800",
+        "lineHeight": "27.6px"
+      },
+      "sectionH2": {
+        "fontSize": "16.8px",
+        "fontWeight": "800",
+        "lineHeight": "25.2px"
+      },
+      "kpiValue": {
+        "fontSize": "20px",
+        "fontWeight": "900",
+        "lineHeight": "22px"
+      },
+      "kpiLabel": {
+        "fontSize": "12.48px",
+        "fontWeight": "700",
+        "lineHeight": "18.72px"
+      },
+      "tableHead": null,
+      "tableCell": null,
+      "badge": {
+        "fontSize": "12.48px",
+        "fontWeight": "700",
+        "lineHeight": "18.72px"
+      },
+      "alert": null,
+      "secondary": {
+        "fontSize": "15.2px",
+        "fontWeight": "400",
+        "lineHeight": "22.8px"
+      },
+      "_fontSizeHistogram": [
+        {
+          "size": "10.88px",
+          "count": 2
+        },
+        {
+          "size": "11.52px",
+          "count": 4
+        },
+        {
+          "size": "12px",
+          "count": 10
+        },
+        {
+          "size": "12.48px",
+          "count": 17
+        },
+        {
+          "size": "12.8px",
+          "count": 5
+        },
+        {
+          "size": "13.12px",
+          "count": 11
+        },
+        {
+          "size": "13.44px",
+          "count": 12
+        },
+        {
+          "size": "13.6px",
+          "count": 14
+        },
+        {
+          "size": "13.76px",
+          "count": 10
+        },
+        {
+          "size": "14.08px",
+          "count": 42
+        },
+        {
+          "size": "14.72px",
+          "count": 4
+        },
+        {
+          "size": "15.2px",
+          "count": 35
+        },
+        {
+          "size": "16px",
+          "count": 101
+        },
+        {
+          "size": "16.8px",
+          "count": 6
+        },
+        {
+          "size": "17.6px",
+          "count": 2
+        },
+        {
+          "size": "18.4px",
+          "count": 2
+        },
+        {
+          "size": "19.2px",
+          "count": 7
+        },
+        {
+          "size": "20px",
+          "count": 4
+        },
+        {
+          "size": "21.6px",
+          "count": 4
+        },
+        {
+          "size": "24px",
+          "count": 5
+        },
+        {
+          "size": "32px",
+          "count": 1
+        }
+      ],
+      "_layout": {
+        "mainW": 390,
+        "viewport": 390
+      }
+    },
+    "provider@390": {
+      "pageTitle": {
+        "fontSize": "21.6px",
+        "fontWeight": "700",
+        "lineHeight": "32.4px"
+      },
+      "sectionH2": {
+        "fontSize": "24px",
+        "fontWeight": "700",
+        "lineHeight": "36px"
+      },
+      "kpiValue": {
+        "fontSize": "18.4px",
+        "fontWeight": "700",
+        "lineHeight": "27.6px"
+      },
+      "kpiLabel": {
+        "fontSize": "13.12px",
+        "fontWeight": "700",
+        "lineHeight": "19.68px"
+      },
+      "tableHead": null,
+      "tableCell": null,
+      "badge": {
+        "fontSize": "11.2px",
+        "fontWeight": "800",
+        "lineHeight": "normal"
+      },
+      "alert": null,
+      "secondary": {
+        "fontSize": "15.2px",
+        "fontWeight": "400",
+        "lineHeight": "22.8px"
+      },
+      "_fontSizeHistogram": [
+        {
+          "size": "11.2px",
+          "count": 1
+        },
+        {
+          "size": "12px",
+          "count": 10
+        },
+        {
+          "size": "13.12px",
+          "count": 6
+        },
+        {
+          "size": "14.08px",
+          "count": 27
+        },
+        {
+          "size": "15.2px",
+          "count": 13
+        },
+        {
+          "size": "16px",
+          "count": 38
+        },
+        {
+          "size": "18.4px",
+          "count": 6
+        },
+        {
+          "size": "19.2px",
+          "count": 6
+        },
+        {
+          "size": "20px",
+          "count": 1
+        },
+        {
+          "size": "21.6px",
+          "count": 1
+        },
+        {
+          "size": "24px",
+          "count": 2
+        }
+      ],
+      "_layout": {
+        "mainW": 390,
+        "viewport": 390
+      }
+    },
+    "admin@768": {
+      "pageTitle": {
+        "fontSize": "29.6px",
+        "fontWeight": "900",
+        "lineHeight": "35.52px"
+      },
+      "sectionH2": {
+        "fontSize": "17.92px",
+        "fontWeight": "800",
+        "lineHeight": "26.88px"
+      },
+      "kpiValue": {
+        "fontSize": "19.52px",
+        "fontWeight": "900",
+        "lineHeight": "normal"
+      },
+      "kpiLabel": {
+        "fontSize": "13.76px",
+        "fontWeight": "700",
+        "lineHeight": "normal"
+      },
+      "tableHead": {
+        "fontSize": "14.08px",
+        "fontWeight": "800",
+        "lineHeight": "21.12px"
+      },
+      "tableCell": {
+        "fontSize": "14.08px",
+        "fontWeight": "400",
+        "lineHeight": "21.12px"
+      },
+      "badge": null,
+      "alert": {
+        "fontSize": "13.3333px",
+        "fontWeight": "800",
+        "lineHeight": "normal"
+      },
+      "secondary": {
+        "fontSize": "16px",
+        "fontWeight": "600",
+        "lineHeight": "26.4px"
+      },
+      "_fontSizeHistogram": [
+        {
+          "size": "11.52px",
+          "count": 12
+        },
+        {
+          "size": "11.84px",
+          "count": 9
+        },
+        {
+          "size": "12px",
+          "count": 10
+        },
+        {
+          "size": "12.48px",
+          "count": 5
+        },
+        {
+          "size": "12.8px",
+          "count": 7
+        },
+        {
+          "size": "13.12px",
+          "count": 48
+        },
+        {
+          "size": "13.3333px",
+          "count": 23
+        },
+        {
+          "size": "13.6px",
+          "count": 12
+        },
+        {
+          "size": "13.76px",
+          "count": 36
+        },
+        {
+          "size": "14.08px",
+          "count": 80
+        },
+        {
+          "size": "14.4px",
+          "count": 11
+        },
+        {
+          "size": "14.72px",
+          "count": 22
+        },
+        {
+          "size": "15.2px",
+          "count": 46
+        },
+        {
+          "size": "16px",
+          "count": 208
+        },
+        {
+          "size": "16.8px",
+          "count": 3
+        },
+        {
+          "size": "17.6px",
+          "count": 19
+        },
+        {
+          "size": "17.92px",
+          "count": 3
+        },
+        {
+          "size": "18.72px",
+          "count": 4
+        },
+        {
+          "size": "19.2px",
+          "count": 10
+        },
+        {
+          "size": "19.52px",
+          "count": 12
+        },
+        {
+          "size": "20px",
+          "count": 1
+        },
+        {
+          "size": "20.48px",
+          "count": 2
+        },
+        {
+          "size": "21.6px",
+          "count": 3
+        },
+        {
+          "size": "24px",
+          "count": 1
+        },
+        {
+          "size": "28px",
+          "count": 7
+        },
+        {
+          "size": "29.6px",
+          "count": 1
+        }
+      ],
+      "_layout": {
+        "mainW": 748,
+        "viewport": 768
+      }
+    },
+    "driver@768": {
+      "pageTitle": {
+        "fontSize": "14.976px",
+        "fontWeight": "800",
+        "lineHeight": "22.464px"
+      },
+      "sectionH2": {
+        "fontSize": "14.72px",
+        "fontWeight": "800",
+        "lineHeight": "21.344px"
+      },
+      "kpiValue": null,
+      "kpiLabel": null,
+      "tableHead": null,
+      "tableCell": null,
+      "badge": {
+        "fontSize": "11.52px",
+        "fontWeight": "800",
+        "lineHeight": "17.28px"
+      },
+      "alert": null,
+      "secondary": null,
+      "_fontSizeHistogram": [
+        {
+          "size": "11.52px",
+          "count": 6
+        },
+        {
+          "size": "12px",
+          "count": 34
+        },
+        {
+          "size": "12.48px",
+          "count": 5
+        },
+        {
+          "size": "12.8px",
+          "count": 1
+        },
+        {
+          "size": "13px",
+          "count": 6
+        },
+        {
+          "size": "13.12px",
+          "count": 4
+        },
+        {
+          "size": "13.3333px",
+          "count": 1
+        },
+        {
+          "size": "13.6px",
+          "count": 4
+        },
+        {
+          "size": "13.76px",
+          "count": 2
+        },
+        {
+          "size": "14.08px",
+          "count": 2
+        },
+        {
+          "size": "14.72px",
+          "count": 1
+        },
+        {
+          "size": "14.976px",
+          "count": 1
+        },
+        {
+          "size": "15.2px",
+          "count": 2
+        },
+        {
+          "size": "16px",
+          "count": 34
+        },
+        {
+          "size": "16.8px",
+          "count": 1
+        },
+        {
+          "size": "17.6px",
+          "count": 1
+        },
+        {
+          "size": "17.92px",
+          "count": 1
+        },
+        {
+          "size": "19.2px",
+          "count": 2
+        },
+        {
+          "size": "20px",
+          "count": 1
+        },
+        {
+          "size": "20.48px",
+          "count": 3
+        },
+        {
+          "size": "22px",
+          "count": 4
+        },
+        {
+          "size": "33.6px",
+          "count": 1
+        }
+      ],
+      "_layout": {
+        "mainW": 768,
+        "viewport": 768
+      }
+    },
+    "store@768": {
+      "pageTitle": {
+        "fontSize": "23.2px",
+        "fontWeight": "800",
+        "lineHeight": "34.8px"
+      },
+      "sectionH2": {
+        "fontSize": "16.8px",
+        "fontWeight": "800",
+        "lineHeight": "25.2px"
+      },
+      "kpiValue": {
+        "fontSize": "24px",
+        "fontWeight": "900",
+        "lineHeight": "26.4px"
+      },
+      "kpiLabel": {
+        "fontSize": "12.48px",
+        "fontWeight": "700",
+        "lineHeight": "18.72px"
+      },
+      "tableHead": null,
+      "tableCell": null,
+      "badge": {
+        "fontSize": "12.48px",
+        "fontWeight": "700",
+        "lineHeight": "18.72px"
+      },
+      "alert": null,
+      "secondary": {
+        "fontSize": "15.2px",
+        "fontWeight": "400",
+        "lineHeight": "22.8px"
+      },
+      "_fontSizeHistogram": [
+        {
+          "size": "10.88px",
+          "count": 2
+        },
+        {
+          "size": "11.52px",
+          "count": 5
+        },
+        {
+          "size": "12.48px",
+          "count": 19
+        },
+        {
+          "size": "12.8px",
+          "count": 1
+        },
+        {
+          "size": "13.12px",
+          "count": 16
+        },
+        {
+          "size": "13.44px",
+          "count": 12
+        },
+        {
+          "size": "13.6px",
+          "count": 14
+        },
+        {
+          "size": "13.76px",
+          "count": 10
+        },
+        {
+          "size": "14.08px",
+          "count": 37
+        },
+        {
+          "size": "14.72px",
+          "count": 3
+        },
+        {
+          "size": "15.2px",
+          "count": 35
+        },
+        {
+          "size": "16px",
+          "count": 98
+        },
+        {
+          "size": "16.8px",
+          "count": 6
+        },
+        {
+          "size": "17.6px",
+          "count": 2
+        },
+        {
+          "size": "18.4px",
+          "count": 1
+        },
+        {
+          "size": "19.2px",
+          "count": 2
+        },
+        {
+          "size": "20.48px",
+          "count": 2
+        },
+        {
+          "size": "21.6px",
+          "count": 3
+        },
+        {
+          "size": "23.2px",
+          "count": 1
+        },
+        {
+          "size": "24px",
+          "count": 9
+        },
+        {
+          "size": "32px",
+          "count": 1
+        }
+      ],
+      "_layout": {
+        "mainW": 768,
+        "viewport": 768
+      }
+    },
+    "provider@768": {
+      "pageTitle": {
+        "fontSize": "28px",
+        "fontWeight": "700",
+        "lineHeight": "42px"
+      },
+      "sectionH2": {
+        "fontSize": "24px",
+        "fontWeight": "700",
+        "lineHeight": "36px"
+      },
+      "kpiValue": {
+        "fontSize": "18.4px",
+        "fontWeight": "700",
+        "lineHeight": "27.6px"
+      },
+      "kpiLabel": {
+        "fontSize": "13.12px",
+        "fontWeight": "700",
+        "lineHeight": "19.68px"
+      },
+      "tableHead": null,
+      "tableCell": null,
+      "badge": {
+        "fontSize": "11.2px",
+        "fontWeight": "800",
+        "lineHeight": "normal"
+      },
+      "alert": null,
+      "secondary": {
+        "fontSize": "15.2px",
+        "fontWeight": "400",
+        "lineHeight": "22.8px"
+      },
+      "_fontSizeHistogram": [
+        {
+          "size": "11.2px",
+          "count": 1
+        },
+        {
+          "size": "13.12px",
+          "count": 6
+        },
+        {
+          "size": "14.08px",
+          "count": 27
+        },
+        {
+          "size": "15.2px",
+          "count": 13
+        },
+        {
+          "size": "16px",
+          "count": 37
+        },
+        {
+          "size": "18.4px",
+          "count": 6
+        },
+        {
+          "size": "19.2px",
+          "count": 1
+        },
+        {
+          "size": "20px",
+          "count": 1
+        },
+        {
+          "size": "24px",
+          "count": 2
+        },
+        {
+          "size": "28px",
+          "count": 1
+        }
+      ],
+      "_layout": {
+        "mainW": 768,
+        "viewport": 768
+      }
+    },
+    "admin@1280": {
+      "pageTitle": {
+        "fontSize": "29.6px",
+        "fontWeight": "900",
+        "lineHeight": "35.52px"
+      },
+      "sectionH2": {
+        "fontSize": "17.92px",
+        "fontWeight": "800",
+        "lineHeight": "26.88px"
+      },
+      "kpiValue": {
+        "fontSize": "19.52px",
+        "fontWeight": "900",
+        "lineHeight": "normal"
+      },
+      "kpiLabel": {
+        "fontSize": "13.76px",
+        "fontWeight": "700",
+        "lineHeight": "normal"
+      },
+      "tableHead": {
+        "fontSize": "14.72px",
+        "fontWeight": "800",
+        "lineHeight": "22.08px"
+      },
+      "tableCell": {
+        "fontSize": "14.72px",
+        "fontWeight": "400",
+        "lineHeight": "22.08px"
+      },
+      "badge": null,
+      "alert": {
+        "fontSize": "13.3333px",
+        "fontWeight": "800",
+        "lineHeight": "normal"
+      },
+      "secondary": {
+        "fontSize": "16px",
+        "fontWeight": "600",
+        "lineHeight": "26.4px"
+      },
+      "_fontSizeHistogram": [
+        {
+          "size": "11.52px",
+          "count": 12
+        },
+        {
+          "size": "11.84px",
+          "count": 9
+        },
+        {
+          "size": "12px",
+          "count": 10
+        },
+        {
+          "size": "12.48px",
+          "count": 6
+        },
+        {
+          "size": "12.8px",
+          "count": 11
+        },
+        {
+          "size": "13.12px",
+          "count": 43
+        },
+        {
+          "size": "13.3333px",
+          "count": 26
+        },
+        {
+          "size": "13.44px",
+          "count": 6
+        },
+        {
+          "size": "13.6px",
+          "count": 12
+        },
+        {
+          "size": "13.76px",
+          "count": 27
+        },
+        {
+          "size": "14.08px",
+          "count": 54
+        },
+        {
+          "size": "14.4px",
+          "count": 11
+        },
+        {
+          "size": "14.72px",
+          "count": 48
+        },
+        {
+          "size": "15.2px",
+          "count": 44
+        },
+        {
+          "size": "16px",
+          "count": 217
+        },
+        {
+          "size": "16.8px",
+          "count": 3
+        },
+        {
+          "size": "17.6px",
+          "count": 19
+        },
+        {
+          "size": "17.92px",
+          "count": 3
+        },
+        {
+          "size": "18.72px",
+          "count": 4
+        },
+        {
+          "size": "19.2px",
+          "count": 1
+        },
+        {
+          "size": "19.52px",
+          "count": 12
+        },
+        {
+          "size": "20px",
+          "count": 1
+        },
+        {
+          "size": "20.48px",
+          "count": 2
+        },
+        {
+          "size": "21.6px",
+          "count": 12
+        },
+        {
+          "size": "24px",
+          "count": 1
+        },
+        {
+          "size": "28px",
+          "count": 7
+        },
+        {
+          "size": "29.6px",
+          "count": 1
+        }
+      ],
+      "_layout": {
+        "mainW": 1280,
+        "viewport": 1280
+      }
+    },
+    "driver@1280": {
+      "pageTitle": {
+        "fontSize": "14.976px",
+        "fontWeight": "800",
+        "lineHeight": "22.464px"
+      },
+      "sectionH2": {
+        "fontSize": "14.72px",
+        "fontWeight": "800",
+        "lineHeight": "21.344px"
+      },
+      "kpiValue": null,
+      "kpiLabel": null,
+      "tableHead": null,
+      "tableCell": null,
+      "badge": {
+        "fontSize": "11.52px",
+        "fontWeight": "800",
+        "lineHeight": "17.28px"
+      },
+      "alert": null,
+      "secondary": null,
+      "_fontSizeHistogram": [
+        {
+          "size": "11.52px",
+          "count": 6
+        },
+        {
+          "size": "12px",
+          "count": 40
+        },
+        {
+          "size": "12.48px",
+          "count": 5
+        },
+        {
+          "size": "13px",
+          "count": 6
+        },
+        {
+          "size": "13.3333px",
+          "count": 1
+        },
+        {
+          "size": "13.44px",
+          "count": 5
+        },
+        {
+          "size": "13.6px",
+          "count": 4
+        },
+        {
+          "size": "13.76px",
+          "count": 2
+        },
+        {
+          "size": "14.08px",
+          "count": 2
+        },
+        {
+          "size": "14.72px",
+          "count": 1
+        },
+        {
+          "size": "14.976px",
+          "count": 1
+        },
+        {
+          "size": "15.2px",
+          "count": 4
+        },
+        {
+          "size": "16px",
+          "count": 33
+        },
+        {
+          "size": "17.6px",
+          "count": 1
+        },
+        {
+          "size": "17.92px",
+          "count": 1
+        },
+        {
+          "size": "19.2px",
+          "count": 2
+        },
+        {
+          "size": "20px",
+          "count": 1
+        },
+        {
+          "size": "20.48px",
+          "count": 3
+        },
+        {
+          "size": "22px",
+          "count": 4
+        },
+        {
+          "size": "32px",
+          "count": 1
+        }
+      ],
+      "_layout": {
+        "mainW": 1280,
+        "viewport": 1280
+      }
+    },
+    "store@1280": {
+      "pageTitle": {
+        "fontSize": "23.2px",
+        "fontWeight": "800",
+        "lineHeight": "34.8px"
+      },
+      "sectionH2": {
+        "fontSize": "16.8px",
+        "fontWeight": "800",
+        "lineHeight": "25.2px"
+      },
+      "kpiValue": {
+        "fontSize": "24px",
+        "fontWeight": "900",
+        "lineHeight": "26.4px"
+      },
+      "kpiLabel": {
+        "fontSize": "12.48px",
+        "fontWeight": "700",
+        "lineHeight": "18.72px"
+      },
+      "tableHead": null,
+      "tableCell": null,
+      "badge": {
+        "fontSize": "12.48px",
+        "fontWeight": "700",
+        "lineHeight": "18.72px"
+      },
+      "alert": null,
+      "secondary": {
+        "fontSize": "15.2px",
+        "fontWeight": "400",
+        "lineHeight": "22.8px"
+      },
+      "_fontSizeHistogram": [
+        {
+          "size": "10.88px",
+          "count": 2
+        },
+        {
+          "size": "11.52px",
+          "count": 5
+        },
+        {
+          "size": "12.48px",
+          "count": 19
+        },
+        {
+          "size": "13.12px",
+          "count": 11
+        },
+        {
+          "size": "13.44px",
+          "count": 18
+        },
+        {
+          "size": "13.6px",
+          "count": 14
+        },
+        {
+          "size": "13.76px",
+          "count": 10
+        },
+        {
+          "size": "14.08px",
+          "count": 37
+        },
+        {
+          "size": "14.72px",
+          "count": 3
+        },
+        {
+          "size": "15.2px",
+          "count": 35
+        },
+        {
+          "size": "16px",
+          "count": 99
+        },
+        {
+          "size": "16.8px",
+          "count": 6
+        },
+        {
+          "size": "17.6px",
+          "count": 1
+        },
+        {
+          "size": "18.4px",
+          "count": 1
+        },
+        {
+          "size": "19.2px",
+          "count": 2
+        },
+        {
+          "size": "20.48px",
+          "count": 2
+        },
+        {
+          "size": "21.6px",
+          "count": 3
+        },
+        {
+          "size": "23.2px",
+          "count": 1
+        },
+        {
+          "size": "24px",
+          "count": 9
+        },
+        {
+          "size": "32px",
+          "count": 1
+        }
+      ],
+      "_layout": {
+        "mainW": 1280,
+        "viewport": 1280
+      }
+    },
+    "provider@1280": {
+      "pageTitle": {
+        "fontSize": "28px",
+        "fontWeight": "700",
+        "lineHeight": "42px"
+      },
+      "sectionH2": {
+        "fontSize": "24px",
+        "fontWeight": "700",
+        "lineHeight": "36px"
+      },
+      "kpiValue": {
+        "fontSize": "18.4px",
+        "fontWeight": "700",
+        "lineHeight": "27.6px"
+      },
+      "kpiLabel": {
+        "fontSize": "13.12px",
+        "fontWeight": "700",
+        "lineHeight": "19.68px"
+      },
+      "tableHead": null,
+      "tableCell": null,
+      "badge": {
+        "fontSize": "11.2px",
+        "fontWeight": "800",
+        "lineHeight": "normal"
+      },
+      "alert": null,
+      "secondary": {
+        "fontSize": "15.2px",
+        "fontWeight": "400",
+        "lineHeight": "22.8px"
+      },
+      "_fontSizeHistogram": [
+        {
+          "size": "11.2px",
+          "count": 1
+        },
+        {
+          "size": "13.12px",
+          "count": 6
+        },
+        {
+          "size": "14.08px",
+          "count": 27
+        },
+        {
+          "size": "15.2px",
+          "count": 13
+        },
+        {
+          "size": "16px",
+          "count": 37
+        },
+        {
+          "size": "18.4px",
+          "count": 6
+        },
+        {
+          "size": "19.2px",
+          "count": 1
+        },
+        {
+          "size": "20px",
+          "count": 1
+        },
+        {
+          "size": "24px",
+          "count": 2
+        },
+        {
+          "size": "28px",
+          "count": 1
+        }
+      ],
+      "_layout": {
+        "mainW": 900,
+        "viewport": 1280
+      }
+    }
+  }
+}

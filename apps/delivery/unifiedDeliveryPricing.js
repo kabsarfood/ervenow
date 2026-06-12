@@ -1,27 +1,18 @@
 /**
  * تسعير موحد لخدمات التوصيل (ERVENOW unified delivery).
- * car_transport: داخلي = شرائح مسافة | خارجي = كيلومتر × 2
  */
+
+const {
+  priceCarTransportInternal,
+  priceCarTransportExternal,
+  priceCarTransportInternational,
+  CAR_TRANSPORT_EXTERNAL_RATE,
+  CAR_TRANSPORT_INTERNATIONAL_RATE,
+} = require("../../shared/utils/carTransportPricing");
 
 function clampNum(n, fallback = 0) {
   const x = Number(n);
   return Number.isFinite(x) ? x : fallback;
-}
-
-/** مسافة الطريق (كم) — للعرض والتخزين؛ التسعير يستخدم نفس القيمة */
-function priceCarTransportInternal(distanceKm) {
-  const d = Math.max(0, clampNum(distanceKm, 0));
-  if (d <= 0) return 0;
-  if (d <= 10) return 100;
-  if (d <= 35) return 180;
-  if (d <= 50) return 200;
-  if (d <= 100) return 250;
-  return Math.round((250 + (d - 100) * 2) * 100) / 100;
-}
-
-function priceCarTransportExternal(distanceKm) {
-  const d = Math.max(0, clampNum(distanceKm, 0));
-  return Math.round(d * 2 * 100) / 100;
 }
 
 const { priceCylinderSwap, priceCentralRefill } = require("../../shared/utils/gasDeliveryPricing");
@@ -42,11 +33,26 @@ function computeUnifiedDeliveryFee(serviceType, payload) {
   if (st === "car_transport") {
     const mode = String(p.transfer_mode || "internal").toLowerCase();
     const km = clampNum(p.distance_km, 0);
+    const vehicleCondition = String(p.vehicle_condition || "").trim().toLowerCase();
     if (km <= 0) return { ok: false, message: "distance_km required" };
     if (mode === "external") {
       return { ok: true, delivery_fee: priceCarTransportExternal(km), distance_km: km, mode: "external" };
     }
-    return { ok: true, delivery_fee: priceCarTransportInternal(km), distance_km: km, mode: "internal" };
+    if (mode === "international") {
+      return {
+        ok: true,
+        delivery_fee: priceCarTransportInternational(km),
+        distance_km: km,
+        mode: "international",
+      };
+    }
+    return {
+      ok: true,
+      delivery_fee: priceCarTransportInternal(km, vehicleCondition),
+      distance_km: km,
+      mode: "internal",
+      vehicle_condition: vehicleCondition || null,
+    };
   }
   if (st === "gas_delivery") {
     const mode = String(p.mode || "cylinder").toLowerCase();
@@ -66,8 +72,11 @@ function computeUnifiedDeliveryFee(serviceType, payload) {
 }
 
 module.exports = {
+  CAR_TRANSPORT_EXTERNAL_RATE,
+  CAR_TRANSPORT_INTERNATIONAL_RATE,
   priceCarTransportInternal,
   priceCarTransportExternal,
+  priceCarTransportInternational,
   priceGasDelivery,
   priceLocalDeliveryFlat,
   computeUnifiedDeliveryFee,

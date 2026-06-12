@@ -64,6 +64,30 @@ describe("siteMaintenanceGate", () => {
       expect(
         shouldBlockPublicPage({
           method: "GET",
+          path: "/delivery-services.html",
+          hostname: "ervenow.com",
+          headers: { host: "ervenow.com" },
+        })
+      ).toBe(true);
+      expect(
+        shouldBlockPublicPage({
+          method: "GET",
+          path: "/delivery-services",
+          hostname: "ervenow.com",
+          headers: { host: "ervenow.com" },
+        })
+      ).toBe(true);
+      expect(
+        shouldBlockPublicPage({
+          method: "GET",
+          path: "/admin-login",
+          hostname: "ervenow.com",
+          headers: { host: "ervenow.com" },
+        })
+      ).toBe(true);
+      expect(
+        shouldBlockPublicPage({
+          method: "GET",
           path: "/",
           hostname: "localhost",
           headers: { host: "localhost:4000" },
@@ -73,6 +97,14 @@ describe("siteMaintenanceGate", () => {
         shouldBlockPublicPage({
           method: "GET",
           path: "/api/health",
+          hostname: "ervenow.com",
+          headers: { host: "ervenow.com" },
+        })
+      ).toBe(false);
+      expect(
+        shouldBlockPublicPage({
+          method: "GET",
+          path: "/assets/viewport-fit.js",
           hostname: "ervenow.com",
           headers: { host: "ervenow.com" },
         })

@@ -7,7 +7,7 @@
   global.__ervViewportReady = true;
 
   /** يُرفَع عند كل تحديث Mobile Shell لإجبار تحميل نسخة جديدة (تجاوز cache الجوال) */
-  var ERV_SHELL_ASSET_VER = "20260612e";
+  var ERV_SHELL_ASSET_VER = "20260612";
 
   function shellAssetUrl(path) {
     var p = String(path || "");
@@ -292,4 +292,88 @@
     shellAssetUrl: shellAssetUrl,
     shellAssetVer: ERV_SHELL_ASSET_VER,
   };
+
+  /** وضع الصيانة — يغطي صفحات HTML المنشورة على CDN حتى لو تجاوزت بوابة الخادم */
+  var ADMIN_PANEL_PATHS = [
+    "/admin-dashboard",
+    "/admin-finance",
+    "/admin-debts",
+    "/admin-approvals",
+    "/admin-settings",
+    "/admin-branding",
+    "/admin-categories",
+    "/admin-commissions",
+    "/admin-withdrawals",
+    "/admin/",
+  ];
+
+  function isDevHost(hostname) {
+    var h = String(hostname || "").toLowerCase().split(":")[0];
+    if (!h) return true;
+    if (h === "localhost" || h === "127.0.0.1" || h === "::1") return true;
+    if (h.endsWith(".local")) return true;
+    if (/^10\.\d+\.\d+\.\d+$/.test(h)) return true;
+    if (/^192\.168\.\d+\.\d+$/.test(h)) return true;
+    return false;
+  }
+
+  function isProdMaintenanceHost(hostname) {
+    var h = String(hostname || "").toLowerCase().split(":")[0];
+    return h === "ervenow.com" || h === "www.ervenow.com";
+  }
+
+  function isAdminPanelPathClient(path) {
+    var lower = String(path || "").split("?")[0].toLowerCase();
+    for (var i = 0; i < ADMIN_PANEL_PATHS.length; i++) {
+      var prefix = ADMIN_PANEL_PATHS[i];
+      if (prefix.endsWith("/")) {
+        if (lower.indexOf(prefix) === 0) return true;
+      } else if (lower === prefix || lower.indexOf(prefix + "/") === 0) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  function showMaintenancePage() {
+    if (global.__ervMaintenanceShown) return;
+    global.__ervMaintenanceShown = true;
+    try {
+      global.stop && global.stop();
+    } catch (e) {}
+    var html =
+      '<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="utf-8"/>' +
+      '<meta name="viewport" content="width=device-width,initial-scale=1"/>' +
+      '<meta name="robots" content="noindex,nofollow"/>' +
+      '<title>المنصة تحت التطوير والصيانة | ERVENOW</title>' +
+      '<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;800&display=swap" rel="stylesheet"/>' +
+      '<style>*{box-sizing:border-box}body{margin:0;min-height:100dvh;display:flex;align-items:center;justify-content:center;' +
+      'font-family:Cairo,sans-serif;background:linear-gradient(160deg,#f8f4ef 0%,#e8ddd2 100%);color:#2b1f16}' +
+      '.box{text-align:center;padding:32px 28px;max-width:420px}h1{font-size:1.75rem;font-weight:800;color:#5b371d;margin:0 0 12px}' +
+      'p{margin:0;font-size:1.05rem;color:#6f5441;line-height:1.6}</style></head><body><div class="box">' +
+      "<h1>المنصة تحت التطوير والصيانة</h1>" +
+      "<p>نعمل على تحسين المنصة. نعتذر عن الإزعاج ونعود قريباً.</p>" +
+      "</div></body></html>";
+    document.open();
+    document.write(html);
+    document.close();
+  }
+
+  function checkSiteMaintenance() {
+    if (isDevHost(global.location.hostname)) return;
+    if (!isProdMaintenanceHost(global.location.hostname)) return;
+    if (isAdminPanelPathClient(global.location.pathname)) return;
+    var base = global.__ERVENOW_API_BASE__ != null ? String(global.__ERVENOW_API_BASE__).replace(/\/$/, "") : "";
+    fetch(base + "/api/site-maintenance/status", { cache: "no-store", credentials: "omit" })
+      .then(function (r) {
+        return r.json();
+      })
+      .then(function (j) {
+        if (j && j.enabled) showMaintenancePage();
+      })
+      .catch(function () {});
+  }
+
+  checkSiteMaintenance();
+  global.addEventListener("DOMContentLoaded", checkSiteMaintenance);
 })(window);

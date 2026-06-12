@@ -1,6 +1,20 @@
 const siteMaintenanceStore = require("../utils/siteMaintenanceStore");
 
-const ADMIN_UI_PREFIXES = ["/admin-login", "/admin-dashboard", "/admin-finance", "/admin-approvals", "/admin/branding"];
+/** لوحات الإدارة المتبقية أثناء الصيانة — بدون صفحة تسجيل الدخول */
+const ADMIN_PANEL_PREFIXES = [
+  "/admin-dashboard",
+  "/admin-finance",
+  "/admin-debts",
+  "/admin-approvals",
+  "/admin-settings",
+  "/admin-branding",
+  "/admin-categories",
+  "/admin-commissions",
+  "/admin-withdrawals",
+  "/admin/",
+];
+
+const STATIC_ASSET_EXT = /\.(css|js|mjs|map|png|jpe?g|gif|webp|svg|ico|woff2?|ttf|eot|webmanifest|txt|xml)$/i;
 
 function parseHostnameFromHeader(value) {
   const raw = String(value || "")
@@ -87,6 +101,7 @@ const MAINTENANCE_HTML = `<!DOCTYPE html>
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
+<meta name="robots" content="noindex, nofollow"/>
 <title>المنصة تحت التطوير والصيانة | ERVENOW</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;800&display=swap" rel="stylesheet"/>
@@ -108,12 +123,24 @@ mark{background:transparent;color:#5b371d;font-weight:700}
 </body>
 </html>`;
 
+function isAdminPanelPath(p) {
+  const lower = String(p || "").split("?")[0].toLowerCase();
+  for (const prefix of ADMIN_PANEL_PREFIXES) {
+    if (prefix.endsWith("/")) {
+      if (lower.startsWith(prefix)) return true;
+    } else if (lower === prefix || lower.startsWith(prefix + "/")) {
+      return true;
+    }
+  }
+  return false;
+}
+
 function pathAllowedDuringMaintenance(p) {
   const lower = String(p || "").split("?")[0].toLowerCase();
-  for (const prefix of ADMIN_UI_PREFIXES) {
-    if (lower === prefix || lower.startsWith(prefix + "/")) return true;
-  }
-  if (/\.[a-z0-9]{2,8}$/i.test(lower)) return true;
+  if (isAdminPanelPath(lower)) return true;
+  if (lower.startsWith("/assets/") && STATIC_ASSET_EXT.test(lower)) return true;
+  if (lower.startsWith("/uploads/") && STATIC_ASSET_EXT.test(lower)) return true;
+  if (/^\/(favicon\.ico|logo\.png|robots\.txt|manifest\.webmanifest)$/.test(lower)) return true;
   return false;
 }
 
@@ -123,10 +150,10 @@ function shouldBlockPublicPage(req) {
   if (!siteMaintenanceStore.readState()) return false;
   if (!maintenanceActiveForRequest(req)) return false;
   const rawPath = String(req.path || "").split("?")[0];
+  if (pathAllowedDuringMaintenance(rawPath)) return false;
   const lower = rawPath.toLowerCase();
   if (lower.startsWith("/api/")) return false;
   if (lower.startsWith("/socket.io")) return false;
-  if (pathAllowedDuringMaintenance(rawPath)) return false;
   return true;
 }
 
@@ -136,16 +163,21 @@ function createSiteMaintenanceMiddleware(servePublicUi) {
     if (!shouldBlockPublicPage(req)) return next();
     res.status(503);
     res.setHeader("Retry-After", "3600");
+    res.setHeader("Cache-Control", "no-store");
     res.type("html").send(MAINTENANCE_HTML);
   };
 }
 
 module.exports = {
+  ADMIN_PANEL_PREFIXES,
+  MAINTENANCE_HTML,
   createSiteMaintenanceMiddleware,
   getMaintenanceHostnames,
   getRequestHostnames,
+  isAdminPanelPath,
   isDevelopmentHost,
   isMaintenanceHostname,
   maintenanceActiveForRequest,
+  pathAllowedDuringMaintenance,
   shouldBlockPublicPage,
 };

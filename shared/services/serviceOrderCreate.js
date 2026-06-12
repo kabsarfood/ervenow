@@ -6,11 +6,14 @@ const { allocateUniqueServiceOrderNumber } = require("../utils/generateOrderNumb
 const { insertOrdersResilient } = require("../utils/idempotency");
 const { applyProviderIdToInsertRow } = require("../utils/orderProviderId");
 const { computePlatformCommission } = require("../utils/serviceCommission");
+const { computeGasPlatformCommission, gasCylinderProviderNet } = require("../utils/gasDeliveryPricing");
 const { isHomeServiceType } = require("../utils/homeServicePricing");
 const { DELIVERY_STATUS } = require("../domain/orders/constants");
+const { enqueueDeliveryJob } = require("../../queues/deliveryQueue");
 const { notifyProvidersForBooking } = require("./serviceBookingNotify");
-const { sendInternalDeliveryCustomerWhatsApp } = require("./internalDeliveryNotify");
+const { notifyInternalDeliveryOrder, sendInternalDeliveryCustomerWhatsApp } = require("./internalDeliveryNotify");
 const { logger } = require("../utils/logger");
+const { GAS_RADIUS_INITIAL_KM } = require("../utils/gasDeliveryRadius");
 
 const SERVICE_ORDER_TYPES = new Set([
   "service",
@@ -24,6 +27,7 @@ const SERVICE_ORDER_TYPES = new Set([
   "cleaning_building",
   "laundry_estates",
   "vehicle_transfer",
+  "car_transport",
   "internal_delivery",
   "pickup_truck",
   "furniture_move",
@@ -70,14 +74,22 @@ async function createServiceOrder(sb, appUser, body) {
 
   const total = normalizeMoney(raw.total_amount ?? raw.total ?? raw.price);
   const orderType = resolveOrderType(serviceType);
+  const payloadData = raw.data && typeof raw.data === "object" ? raw.data : {};
   const platformCommission = normalizeMoney(
-    raw.platform_commission ?? computePlatformCommission(total, serviceType)
+    raw.platform_commission ??
+      (serviceType === "gas_delivery"
+        ? computeGasPlatformCommission(
+            raw.gas_mode ?? payloadData.gas_mode,
+            raw.qty ?? raw.service_qty ?? payloadData.qty ?? 1,
+            raw.gas_liters ?? payloadData.gas_liters,
+            total
+          )
+        : computePlatformCommission(total, serviceType))
   );
   const paymentStatus = String(raw.payment_status || "unpaid").toLowerCase() === "paid" ? "paid" : "unpaid";
   const providerId = raw.provider_id || raw.service_provider_id || null;
   const location = String(raw.location || raw.service_location || raw.drop_address || "").trim();
   const district = String(raw.district || "").trim();
-  const payloadData = raw.data && typeof raw.data === "object" ? raw.data : {};
 
   let orderData = null;
   let insertErr = null;
@@ -128,7 +140,12 @@ async function createServiceOrder(sb, appUser, body) {
         order_type: orderType,
         service_type: serviceType,
         unified: true,
-        provider_net: Math.max(0, Math.round((total - platformCommission) * 100) / 100),
+        provider_net:
+          serviceType === "gas_delivery" &&
+          String(raw.gas_mode ?? payloadData.gas_mode || "cylinder_swap").toLowerCase() !== "central_refill"
+            ? gasCylinderProviderNet(raw.qty ?? raw.service_qty ?? payloadData.qty ?? 1, total)
+            : Math.max(0, Math.round((total - platformCommission) * 100) / 100),
+        ...(serviceType === "gas_delivery" ? { gas_radius_km: GAS_RADIUS_INITIAL_KM } : {}),
         ...payloadData,
       },
     },
@@ -148,7 +165,12 @@ async function createServiceOrder(sb, appUser, body) {
   }
 
   try {
-    await notifyProvidersForBooking(sb, orderData);
+    if (serviceType === "internal_delivery") {
+      await enqueueDeliveryJob("new-order", { orderId: orderData.id });
+      await notifyInternalDeliveryOrder(sb, orderData);
+    } else {
+      await notifyProvidersForBooking(sb, orderData);
+    }
   } catch (waErr) {
     logger.error({ err: waErr.message || String(waErr), orderId: orderData.id }, "[serviceOrderCreate] notify");
   }

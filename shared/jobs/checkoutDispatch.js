@@ -2,6 +2,7 @@ const { notifyNearestDrivers } = require("../../apps/driver/notify");
 const { pushToErvenow } = require("../utils/ervenowPush");
 const { perfLog } = require("../utils/perfLog");
 const { logger } = require("../utils/logger");
+const { isDriverDispatchOrder } = require("../utils/driverDispatchOrders");
 
 /**
  * ما كان يُنفَّذ في مسار checkout بعد إنشاء الطلب: إشعار المناديب + دفع Ervenow + تحديث data.
@@ -30,8 +31,10 @@ async function runCheckoutDispatch(sb, ctx) {
   try {
     if (deferDriverUntilReady) {
       osrmStatus = "store_deferred_until_ready";
-    } else {
+    } else if (isDriverDispatchOrder(order)) {
       await notifyNearestDrivers(sb, order);
+    } else {
+      osrmStatus = "service_provider_skip";
     }
   } catch (notifyErr) {
     logger.error(

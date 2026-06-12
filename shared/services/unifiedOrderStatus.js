@@ -15,6 +15,9 @@ const { broadcastOrderPatch, broadcastStoreOrderEvent, orderPatchFromRow } = req
 const { bumpDeliveryOrdersListEpoch } = require("../utils/deliveryOrdersListCache");
 const { enqueueDeliveryJob } = require("../../queues/deliveryQueue");
 const { createNotification } = require("./notificationService");
+const { notifyProvidersForBooking } = require("./serviceBookingNotify");
+const { isDriverDispatchOrder, isInternalDeliveryOrder } = require("../utils/driverDispatchOrders");
+const { notifyInternalDeliveryOrder } = require("./internalDeliveryNotify");
 const { normalizePhone } = require("../utils/phone");
 
 const MERCHANT_WORKFLOW_STATUSES = [
@@ -101,10 +104,32 @@ async function afterStatusSideEffects(sb, order, previousStatus, nextStatus, fin
   const settlementRow = financialResult && financialResult.settlement ? financialResult.settlement : financialResult || {};
 
   if (prevDs === DELIVERY_STATUS.DRAFT && ds === DELIVERY_STATUS.PENDING) {
-    try {
-      await enqueueJobForPublishedOrder(order);
-    } catch (qe) {
-      logger.error({ err: qe.message || String(qe), orderId: order.id }, "[unifiedOrderStatus] enqueue draft→pending");
+    const ot = String(order.order_type || "").toLowerCase();
+    if (isInternalDeliveryOrder(order)) {
+      try {
+        await enqueueJobForPublishedOrder(order);
+        await notifyInternalDeliveryOrder(sb, order);
+      } catch (notifyErr) {
+        logger.error(
+          { err: notifyErr.message || String(notifyErr), orderId: order.id },
+          "[unifiedOrderStatus] internal_delivery draft→pending"
+        );
+      }
+    } else if (ot === "service" || ot === "gas_delivery") {
+      try {
+        await notifyProvidersForBooking(sb, order);
+      } catch (notifyErr) {
+        logger.error(
+          { err: notifyErr.message || String(notifyErr), orderId: order.id },
+          "[unifiedOrderStatus] notify providers draft→pending"
+        );
+      }
+    } else if (isDriverDispatchOrder(order)) {
+      try {
+        await enqueueJobForPublishedOrder(order);
+      } catch (qe) {
+        logger.error({ err: qe.message || String(qe), orderId: order.id }, "[unifiedOrderStatus] enqueue draft→pending");
+      }
     }
   }
 

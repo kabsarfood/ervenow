@@ -241,52 +241,7 @@
   }
 
   function renderFooter() {
-    var wa = whatsappUrl("لوحة المتجر");
-    return (
-      '<footer class="dash-site-footer store-site-footer">' +
-      '<div class="store-site-footer__intro">' +
-      "<strong>ERVENOW</strong> — شريكك في التجارة، التوصيل، والخدمات" +
-      '<p class="store-site-footer__tagline">متاجر · مطاعم · صيدليات · محطات · شركات نقل · مزودو خدمات</p>' +
-      "</div>" +
-      '<div class="store-footer__grid">' +
-      '<div class="store-footer__col">' +
-      "<h3>خدمات أصحاب المتاجر والشركاء</h3>" +
-      '<div class="store-footer__links">' +
-      '<a href="/store-dashboard">لوحة المتجر</a>' +
-      '<a href="/order-board">لوحة الطلبات</a>' +
-      '<a href="/merchant-dashboard">الطلبات والإيرادات</a>' +
-      '<a href="#walletAnchor">المحفظة المالية</a>' +
-      '<a href="#withdrawCard">سحب الأرباح</a>' +
-      '<a href="#productsAnchor">المنتجات والعروض</a>' +
-      "</div>" +
-      "</div>" +
-      '<div class="store-footer__col">' +
-      "<h3>تواصل مع المنصة</h3>" +
-      "<p>فريق ERVENOW يرافقك في التفعيل، العمولات، السحب، والدعم التشغيلي على مدار اليوم.</p>" +
-      '<a class="store-footer__contact-chip" href="' +
-      wa +
-      '" target="_blank" rel="noopener">💬 واتساب ' +
-      SUPPORT_PHONE_DISPLAY +
-      "</a>" +
-      '<a class="store-footer__contact-chip" href="mailto:' +
-      SUPPORT_EMAIL +
-      '">✉️ ' +
-      SUPPORT_EMAIL +
-      "</a>" +
-      '<a class="store-footer__contact-chip" href="#storeSupport">📋 جميع قنوات التواصل</a>' +
-      "</div>" +
-      '<div class="store-footer__col">' +
-      "<h3>استفسارات شائعة</h3>" +
-      '<div class="store-footer__links">' +
-      '<a href="#storeSupport">كيف أتواصل مع الإدارة؟</a>' +
-      '<a href="#walletAnchor">متى يُضاف الرصيد للمحفظة؟</a>' +
-      '<a href="#withdrawCard">طلب سحب الأرباح</a>' +
-      "</div>" +
-      "</div>" +
-      "</div>" +
-      '<p class="dash-site-footer__copy">© 2026 ERVENOW — جميع الحقوق محفوظة</p>' +
-      "</footer>"
-    );
+    return "";
   }
 
   function isMarketplaceHomeHref(href) {

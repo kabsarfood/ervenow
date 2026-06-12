@@ -1057,19 +1057,6 @@
       </main>
       </div>
 
-    <footer class="dash-site-footer">
-      <div class="dash-site-footer__logo">ERVENOW</div>
-      <nav class="dash-site-footer__links" aria-label="روابط سفلية">
-        <a class="dash-site-footer__link" href="/restaurants">مطاعم</a>
-        <a class="dash-site-footer__link" href="/stores">متاجر</a>
-        <a class="dash-site-footer__link" href="/delivery-services.html">توصيل</a>
-        <a class="dash-site-footer__link" href="/services">خدمات</a>
-        <a class="dash-site-footer__link" href="/delivery-map">طلب من الخريطة</a>
-        <a class="dash-site-footer__link" href="/start-now.html">ابدأ الآن</a>
-        <a class="dash-site-footer__link" href="/">الرئيسية</a>
-      </nav>
-      <p class="dash-site-footer__copy">© 2026 ERVENOW — جميع الحقوق محفوظة</p>
-    </footer>
     </div>
 
     <div id="dsMapModal" aria-hidden="true">
@@ -1161,7 +1148,7 @@
 
         var SERVICE_ORDER = ["car_transport", "local_delivery", "gas_delivery", "furniture"];
 
-        var GAS_SMALL_CYLINDER_PRICE = 37;
+        var GAS_SMALL_CYLINDER_PRICE = 39;
         var FURNITURE_RATE_PICKUP = 200;
         var FURNITURE_RATE_DYNA = 600;
 
@@ -1222,17 +1209,31 @@
           return { Authorization: "Bearer " + t };
         }
 
-        function priceCarInternal(km) {
+        var CAR_TRANSPORT_APPRAISAL_FEE = 499;
+        var CAR_TRANSPORT_EXTERNAL_RATE = 2.3;
+        var CAR_TRANSPORT_INTERNATIONAL_RATE = 2.8;
+
+        function priceCarPerKm(km, rate) {
           var d = Math.max(0, Number(km) || 0);
-          if (d <= 10) return 100;
-          if (d <= 35) return 180;
-          if (d <= 50) return 200;
-          if (d <= 100) return 250;
-          return Math.round((250 + (d - 100) * 2) * 100) / 100;
+          return Math.round(d * rate * 100) / 100;
+        }
+
+        function priceCarInternal(km, vehicleCondition) {
+          var cond = String(vehicleCondition || "working").toLowerCase();
+          if (cond === "appraisal") return CAR_TRANSPORT_APPRAISAL_FEE;
+          var d = Math.max(0, Number(km) || 0);
+          if (d <= 5) return 99;
+          if (d <= 15) return 149;
+          if (d <= 40) return 199;
+          return 249;
         }
 
         function priceCarExternal(km) {
-          return Math.round((Number(km) || 0) * 2 * 100) / 100;
+          return priceCarPerKm(km, CAR_TRANSPORT_EXTERNAL_RATE);
+        }
+
+        function priceCarInternational(km) {
+          return priceCarPerKm(km, CAR_TRANSPORT_INTERNATIONAL_RATE);
         }
 
         function priceLocalByVehicle(km, vehicle) {
@@ -1337,7 +1338,7 @@
           priceEl.textContent = String(fee);
           if (hintEl) {
             hintEl.textContent = state.gasLoc
-              ? fee + " ر.س — " + qty + " أسطوانة صغيرة × " + GAS_SMALL_CYLINDER_PRICE + " ر.س"
+              ? fee + " ر.س — " + qty + " أسطوانة × " + GAS_SMALL_CYLINDER_PRICE + " ر.س"
               : "حدد موقع التوصيل لعرض السعر.";
           }
           return fee;
@@ -1727,7 +1728,13 @@
           }
           var km = haversineKm(state.pickup.lat, state.pickup.lng, state.dropoff.lat, state.dropoff.lng);
           var mode = (document.getElementById("dsTransfer") || {}).value || "internal";
-          var fee = mode === "external" ? priceCarExternal(km) : priceCarInternal(km);
+          var cond = (document.getElementById("dsVehCond") || {}).value || "working";
+          var fee =
+            mode === "international"
+              ? priceCarInternational(km)
+              : mode === "external"
+                ? priceCarExternal(km)
+                : priceCarInternal(km, cond);
           if (distEl) distEl.textContent = Math.round(km) + "";
           if (priceEl) priceEl.textContent = Math.round(fee) + "";
           if (el) {
@@ -1809,7 +1816,7 @@
             "<div class='ds-card ds-notes-phone'>" +
             "<div class='ds-field-grid-3 ds-notes-phone__grid'>" +
             "<div class='ds-row ds-row--full'><label>ملاحظات إضافية (اختياري)</label><div class='ds-field'><textarea id='dsNotes' rows='3' placeholder='اكتب أي ملاحظات خاصة بطلبك...'></textarea></div></div>" +
-            "<div class='ds-row'><label>رقم الجوال</label><div class='ds-field'><input id='dsPhone' type='tel' placeholder='05xxxxxxxx' dir='ltr' /></div></div>" +
+            "<div class='ds-row'><label>رقم الجوال</label><div class='ds-field'><input id='dsPhone' type='tel' placeholder='********************' dir='ltr' /></div></div>" +
             "</div>" +
             "</div>" +
             "<div class='ds-price-box'>" +
@@ -1835,6 +1842,7 @@
             document.getElementById("dsCityRow2").style.display = ext ? "flex" : "none";
             updateEstimate();
           };
+          document.getElementById("dsVehCond").onchange = updateEstimate;
           document.getElementById("dsCarForm").onsubmit = addCarToCart;
           syncLocLabels();
           updateEstimate();
@@ -1858,8 +1866,8 @@
             "<div class='ds-row'><label for='dsToUrl'>توصيل إلى — الصق رابط الموقع</label><div class='ds-paste-row'><input id='dsToUrl' type='url' dir='ltr' placeholder='https://maps.google.com/...' required /><button type='button' class='ds-paste-btn' id='dsToPaste'>لصق</button></div><p class='ds-loc-status is-unset' id='dsToLbl'>❌ لم يتم التحديد</p></div>" +
             "<div class='ds-row'><label for='dsShipDetails'>تفاصيل الشحنة</label><div class='ds-field'><textarea id='dsShipDetails' rows='3' placeholder='وصف المحتوى، الوزن التقريبي، تعليمات التسليم…'></textarea></div></div>" +
             "<div class='ds-row'><label for='dsLocalVeh'>نوع المركبة المطلوبة</label><div class='ds-field'><select id='dsLocalVeh' required><option value='motorcycle'>دباب</option><option value='sedan' selected>سيدان</option><option value='pickup_truck'>ونيت</option></select></div></div>" +
-            "<div class='ds-row'><label for='dsLocalPhone'>رقم جوالك (طالب الخدمة)</label><div class='ds-field'><input id='dsLocalPhone' type='tel' placeholder='05xxxxxxxx' dir='ltr' required /></div></div>" +
-            "<div class='ds-row'><label for='dsRecipientPhone'>رقم المرسل إليه</label><div class='ds-field'><input id='dsRecipientPhone' type='tel' placeholder='05xxxxxxxx' dir='ltr' required /></div></div>" +
+            "<div class='ds-row'><label for='dsLocalPhone'>رقم جوالك (طالب الخدمة)</label><div class='ds-field'><input id='dsLocalPhone' type='tel' placeholder='********************' dir='ltr' required /></div></div>" +
+            "<div class='ds-row'><label for='dsRecipientPhone'>رقم المرسل إليه</label><div class='ds-field'><input id='dsRecipientPhone' type='tel' placeholder='********************' dir='ltr' required /></div></div>" +
             "</div>" +
             "<div class='ds-price-box'>" +
             "<div class='ds-price-cell'><span class='ds-price-cell__ic'>💰</span><p class='ds-price-cell__lbl'>السعر التقريبي</p><p class='ds-price-cell__val' id='dsLocalPriceVal'>—</p><span class='ds-price-cell__unit'>ريال سعودي</span></div>" +
@@ -1916,11 +1924,11 @@
             qtyOpts +
             "</select></div></div>" +
             "<div class='ds-row'><label for='dsGasPhone'>رقم الجوال</label>" +
-            "<div class='ds-field'><input id='dsGasPhone' type='tel' placeholder='05xxxxxxxx' dir='ltr' required /></div></div>" +
+            "<div class='ds-field'><input id='dsGasPhone' type='tel' placeholder='********************' dir='ltr' required /></div></div>" +
             "</div>" +
             "<div class='ds-price-box' style='grid-template-columns:1fr'>" +
             "<div class='ds-price-cell'><span class='ds-price-cell__ic'>🔥</span><p class='ds-price-cell__lbl'>السعر</p>" +
-            "<p class='ds-price-cell__val' id='dsGasPriceVal'>37</p><span class='ds-price-cell__unit'>ريال — أسطوانة صغيرة " +
+            "<p class='ds-price-cell__val' id='dsGasPriceVal'>39</p><span class='ds-price-cell__unit'>ريال — أسطوانة صغيرة " +
             GAS_SMALL_CYLINDER_PRICE +
             " ر.س</span></div></div>" +
             "<p id='dsGasEstimate' aria-live='polite' style='margin:10px 0 0;font-size:0.82rem;font-weight:600;color:var(--ds-muted);text-align:center;line-height:1.5'></p>" +
@@ -1985,7 +1993,7 @@
             "<button type='button' class='ds-paste-btn' id='dsFurnGeo' style='width:100%;margin-top:8px'>◎ حدد موقعك</button>" +
             "<p class='ds-loc-status is-unset' id='dsFurnLbl'>❌ لم يتم التحديد</p></div>" +
             "<div class='ds-row'><label for='dsFurnPhone'>رقم جوال طالب الخدمة</label>" +
-            "<div class='ds-field'><input id='dsFurnPhone' type='tel' placeholder='05xxxxxxxx' dir='ltr' required /></div></div>" +
+            "<div class='ds-field'><input id='dsFurnPhone' type='tel' placeholder='********************' dir='ltr' required /></div></div>" +
             "</div>" +
             "<div class='ds-price-box' style='grid-template-columns:1fr'>" +
             "<div class='ds-price-cell'><span class='ds-price-cell__ic'>🛋️</span><p class='ds-price-cell__lbl'>السعر الإجمالي</p>" +

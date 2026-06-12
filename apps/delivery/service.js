@@ -341,6 +341,18 @@ async function createDeliveryOrderFromBody(sb, appUser, body, opts) {
     ...(opts.service_type || b.service_type
       ? { service_type: String(opts.service_type || b.service_type).trim() }
       : {}),
+    ...(b.service_name ? { service_name: String(b.service_name).trim() } : {}),
+    ...(b.service_location ? { service_location: String(b.service_location).trim() } : {}),
+    ...(b.district ? { district: String(b.district).trim() } : {}),
+    ...(b.total_amount != null && String(b.total_amount).trim() !== ""
+      ? { total_amount: Math.max(0, Math.round(Number(b.total_amount) * 100) / 100) }
+      : {}),
+    ...(b.platform_commission != null && String(b.platform_commission).trim() !== ""
+      ? {
+          platform_commission: Math.max(0, Math.round(Number(b.platform_commission) * 100) / 100),
+          platform_fee: Math.max(0, Math.round(Number(b.platform_commission) * 100) / 100),
+        }
+      : {}),
   }));
 }
 

@@ -1,6 +1,7 @@
 const { sendWhatsApp } = require("../utils/whatsapp");
 const { roughDistanceKm } = require("../utils/geo");
 const { commissionPercentLabel } = require("../utils/serviceCommission");
+const { notifyGasDeliveryProviders } = require("./gasDeliveryNotify");
 const { catalogEntry, serviceDisplayName } = require("../utils/homeServicePricing");
 const { providerAreaMatches, providerMatchesBookingType } = require("../utils/serviceProviderTypes");
 async function getServiceProviderPhones(sb, serviceType) {
@@ -142,6 +143,9 @@ function sleep(ms) {
 async function notifyHomeServiceProvidersCascade(sb, booking) {
   if (!sb || !booking) return { sent: 0, providers: 0 };
   const serviceType = String(booking.service_type || "").trim().toLowerCase();
+  if (serviceType === "gas_delivery") {
+    return notifyGasDeliveryProviders(sb, booking);
+  }
   const district = String(booking.district || "").trim();
   const gasMode = booking.gas_mode || null;
   let providers = await fetchServiceProviders(sb, serviceType, district, gasMode, booking.location);

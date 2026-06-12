@@ -6,6 +6,7 @@ const { runCheckoutDispatch } = require("../shared/jobs/checkoutDispatch");
 const {
   refineDeliveryOrderPricingFromOsrm,
 } = require("../apps/delivery/service");
+const { isDriverDispatchOrder } = require("../shared/utils/driverDispatchOrders");
 
 async function processDeliveryJob(name, data) {
   const sb = createServiceClient();
@@ -23,6 +24,7 @@ async function processDeliveryJob(name, data) {
     const ds = String(order?.delivery_status || order?.status || "").toLowerCase();
     if (
       order &&
+      isDriverDispatchOrder(order) &&
       order.pickup_lat != null &&
       order.pickup_lng != null &&
       ["pending", "new"].includes(ds) &&

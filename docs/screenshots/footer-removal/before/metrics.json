@@ -1,0 +1,300 @@
+{
+  "mode": "before",
+  "capturedAt": "2026-06-12T19:51:53.505Z",
+  "metrics": {
+    "restaurants@390": {
+      "footerCount": 1,
+      "visibleFooters": 1,
+      "hasBottomNav": true,
+      "viewport": 390,
+      "scrollH": 921
+    },
+    "stores@390": {
+      "footerCount": 1,
+      "visibleFooters": 1,
+      "hasBottomNav": true,
+      "viewport": 390,
+      "scrollH": 844
+    },
+    "services@390": {
+      "footerCount": 1,
+      "visibleFooters": 1,
+      "hasBottomNav": true,
+      "viewport": 390,
+      "scrollH": 844
+    },
+    "delivery@390": {
+      "footerCount": 0,
+      "visibleFooters": 0,
+      "hasBottomNav": false,
+      "viewport": 390,
+      "scrollH": 844
+    },
+    "cart@390": {
+      "footerCount": 1,
+      "visibleFooters": 1,
+      "hasBottomNav": true,
+      "viewport": 390,
+      "scrollH": 844
+    },
+    "checkout@390": {
+      "footerCount": 1,
+      "visibleFooters": 1,
+      "hasBottomNav": false,
+      "viewport": 390,
+      "scrollH": 844
+    },
+    "wallet@390": {
+      "footerCount": 0,
+      "visibleFooters": 0,
+      "hasBottomNav": true,
+      "viewport": 390,
+      "scrollH": 1535
+    },
+    "orders@390": {
+      "footerCount": 1,
+      "visibleFooters": 1,
+      "hasBottomNav": true,
+      "viewport": 390,
+      "scrollH": 844
+    },
+    "login@390": {
+      "footerCount": 1,
+      "visibleFooters": 1,
+      "hasBottomNav": true,
+      "viewport": 390,
+      "scrollH": 968
+    },
+    "dashboard@390": {
+      "footerCount": 1,
+      "visibleFooters": 1,
+      "hasBottomNav": true,
+      "viewport": 390,
+      "scrollH": 1108
+    },
+    "driver@390": {
+      "footerCount": 1,
+      "visibleFooters": 1,
+      "hasBottomNav": true,
+      "viewport": 390,
+      "scrollH": 1415
+    },
+    "store@390": {
+      "footerCount": 1,
+      "visibleFooters": 1,
+      "hasBottomNav": true,
+      "viewport": 390,
+      "scrollH": 7249
+    },
+    "provider@390": {
+      "footerCount": 0,
+      "visibleFooters": 0,
+      "hasBottomNav": true,
+      "viewport": 390,
+      "scrollH": 1370
+    },
+    "admin@390": {
+      "footerCount": 1,
+      "visibleFooters": 1,
+      "hasBottomNav": true,
+      "viewport": 390,
+      "scrollH": 5030
+    },
+    "restaurants@768": {
+      "footerCount": 1,
+      "visibleFooters": 1,
+      "hasBottomNav": false,
+      "viewport": 768,
+      "scrollH": 1287
+    },
+    "stores@768": {
+      "footerCount": 1,
+      "visibleFooters": 1,
+      "hasBottomNav": false,
+      "viewport": 768,
+      "scrollH": 1203
+    },
+    "services@768": {
+      "footerCount": 1,
+      "visibleFooters": 1,
+      "hasBottomNav": false,
+      "viewport": 768,
+      "scrollH": 2088
+    },
+    "delivery@768": {
+      "footerCount": 0,
+      "visibleFooters": 0,
+      "hasBottomNav": false,
+      "viewport": 768,
+      "scrollH": 1024
+    },
+    "cart@768": {
+      "footerCount": 1,
+      "visibleFooters": 1,
+      "hasBottomNav": false,
+      "viewport": 768,
+      "scrollH": 1024
+    },
+    "checkout@768": {
+      "footerCount": 1,
+      "visibleFooters": 1,
+      "hasBottomNav": false,
+      "viewport": 768,
+      "scrollH": 1024
+    },
+    "wallet@768": {
+      "footerCount": 0,
+      "visibleFooters": 0,
+      "hasBottomNav": false,
+      "viewport": 768,
+      "scrollH": 1024
+    },
+    "orders@768": {
+      "footerCount": 1,
+      "visibleFooters": 1,
+      "hasBottomNav": false,
+      "viewport": 768,
+      "scrollH": 1024
+    },
+    "login@768": {
+      "footerCount": 1,
+      "visibleFooters": 1,
+      "hasBottomNav": false,
+      "viewport": 768,
+      "scrollH": 1024
+    },
+    "dashboard@768": {
+      "footerCount": 1,
+      "visibleFooters": 1,
+      "hasBottomNav": false,
+      "viewport": 768,
+      "scrollH": 1092
+    },
+    "driver@768": {
+      "footerCount": 1,
+      "visibleFooters": 1,
+      "hasBottomNav": false,
+      "viewport": 768,
+      "scrollH": 1032
+    },
+    "store@768": {
+      "footerCount": 1,
+      "visibleFooters": 1,
+      "hasBottomNav": false,
+      "viewport": 768,
+      "scrollH": 5814
+    },
+    "provider@768": {
+      "footerCount": 0,
+      "visibleFooters": 0,
+      "hasBottomNav": false,
+      "viewport": 768,
+      "scrollH": 1108
+    },
+    "admin@768": {
+      "footerCount": 1,
+      "visibleFooters": 1,
+      "hasBottomNav": false,
+      "viewport": 768,
+      "scrollH": 3391
+    },
+    "restaurants@1280": {
+      "footerCount": 1,
+      "visibleFooters": 1,
+      "hasBottomNav": false,
+      "viewport": 1280,
+      "scrollH": 1277
+    },
+    "stores@1280": {
+      "footerCount": 1,
+      "visibleFooters": 1,
+      "hasBottomNav": false,
+      "viewport": 1280,
+      "scrollH": 1199
+    },
+    "services@1280": {
+      "footerCount": 1,
+      "visibleFooters": 1,
+      "hasBottomNav": false,
+      "viewport": 1280,
+      "scrollH": 1979
+    },
+    "delivery@1280": {
+      "footerCount": 0,
+      "visibleFooters": 0,
+      "hasBottomNav": false,
+      "viewport": 1280,
+      "scrollH": 800
+    },
+    "cart@1280": {
+      "footerCount": 1,
+      "visibleFooters": 1,
+      "hasBottomNav": false,
+      "viewport": 1280,
+      "scrollH": 800
+    },
+    "checkout@1280": {
+      "footerCount": 1,
+      "visibleFooters": 1,
+      "hasBottomNav": false,
+      "viewport": 1280,
+      "scrollH": 800
+    },
+    "wallet@1280": {
+      "footerCount": 0,
+      "visibleFooters": 0,
+      "hasBottomNav": false,
+      "viewport": 1280,
+      "scrollH": 957
+    },
+    "orders@1280": {
+      "footerCount": 1,
+      "visibleFooters": 1,
+      "hasBottomNav": false,
+      "viewport": 1280,
+      "scrollH": 800
+    },
+    "login@1280": {
+      "footerCount": 1,
+      "visibleFooters": 1,
+      "hasBottomNav": false,
+      "viewport": 1280,
+      "scrollH": 985
+    },
+    "dashboard@1280": {
+      "footerCount": 1,
+      "visibleFooters": 1,
+      "hasBottomNav": false,
+      "viewport": 1280,
+      "scrollH": 1233
+    },
+    "driver@1280": {
+      "footerCount": 1,
+      "visibleFooters": 1,
+      "hasBottomNav": false,
+      "viewport": 1280,
+      "scrollH": 987
+    },
+    "store@1280": {
+      "footerCount": 1,
+      "visibleFooters": 1,
+      "hasBottomNav": false,
+      "viewport": 1280,
+      "scrollH": 5769
+    },
+    "provider@1280": {
+      "footerCount": 0,
+      "visibleFooters": 0,
+      "hasBottomNav": false,
+      "viewport": 1280,
+      "scrollH": 1135
+    },
+    "admin@1280": {
+      "footerCount": 1,
+      "visibleFooters": 1,
+      "hasBottomNav": false,
+      "viewport": 1280,
+      "scrollH": 2612
+    }
+  }
+}

@@ -1,0 +1,291 @@
+/**
+ * ERVENOW Typography PR4 — Operations apply layer
+ * Scope: body.erv-typography-pr4-operations only
+ * Typography only — no colors, layout, tables structure, or business logic
+ */
+
+body.erv-typography-pr4-operations {
+  font-family: var(--erv-t-font);
+}
+
+/* ——— Admin Dashboard ——— */
+body.erv-typography-pr4-operations.admin-shell-page .admin-hero__title {
+  font-size: var(--erv-t-h1);
+  font-weight: var(--erv-t-h1-weight);
+  line-height: var(--erv-t-lh-heading);
+}
+
+body.erv-typography-pr4-operations.admin-shell-page .admin-hero__eyebrow,
+body.erv-typography-pr4-operations.admin-shell-page .admin-hero__lead {
+  font-size: var(--erv-t-secondary);
+  font-weight: var(--erv-t-secondary-weight);
+  line-height: var(--erv-t-lh);
+}
+
+body.erv-typography-pr4-operations.admin-shell-page .dash-zone-title,
+body.erv-typography-pr4-operations.admin-shell-page .panel-title,
+body.erv-typography-pr4-operations.admin-shell-page .live-dash-head h2 {
+  font-size: var(--erv-t-h2);
+  font-weight: var(--erv-t-h2-weight);
+  line-height: var(--erv-t-lh-heading);
+}
+
+body.erv-typography-pr4-operations.admin-shell-page .live-map-card__head h3,
+body.erv-typography-pr4-operations.admin-shell-page .finance-feature-control-wrap h3,
+body.erv-typography-pr4-operations.admin-shell-page .finance-drawer-head h3 {
+  font-size: var(--erv-t-h3);
+  font-weight: var(--erv-t-h3-weight);
+  line-height: var(--erv-t-lh-heading);
+}
+
+body.erv-typography-pr4-operations.admin-shell-page .command-kpi-card__label,
+body.erv-typography-pr4-operations.admin-shell-page .live-stat-card .lbl,
+body.erv-typography-pr4-operations.admin-shell-page .finance-kpi-card span {
+  font-size: var(--erv-t-secondary);
+  font-weight: var(--erv-t-secondary-weight);
+  line-height: var(--erv-t-lh);
+}
+
+body.erv-typography-pr4-operations.admin-shell-page .command-kpi-card__value,
+body.erv-typography-pr4-operations.admin-shell-page .live-stat-card .num,
+body.erv-typography-pr4-operations.admin-shell-page .finance-kpi-card strong {
+  font-size: var(--erv-t-kpi);
+  font-weight: var(--erv-t-kpi-weight);
+  line-height: var(--erv-t-lh-tight);
+}
+
+body.erv-typography-pr4-operations.admin-shell-page .command-kpi-card__hint,
+body.erv-typography-pr4-operations.admin-shell-page .live-stat-card .hint {
+  font-size: var(--erv-t-caption);
+  font-weight: var(--erv-t-caption-weight);
+  line-height: var(--erv-t-lh);
+}
+
+body.erv-typography-pr4-operations.admin-shell-page .finance-table {
+  font-size: var(--erv-t-table);
+}
+
+body.erv-typography-pr4-operations.admin-shell-page .finance-table th {
+  font-size: var(--erv-t-table);
+  font-weight: var(--erv-t-table-head-weight);
+}
+
+body.erv-typography-pr4-operations.admin-shell-page .finance-table td {
+  font-size: var(--erv-t-table);
+  font-weight: var(--erv-t-table-weight);
+}
+
+body.erv-typography-pr4-operations.admin-shell-page .finance-status-badge,
+body.erv-typography-pr4-operations.admin-shell-page .panel-badge {
+  font-size: var(--erv-t-badge);
+  font-weight: var(--erv-t-badge-weight);
+  line-height: var(--erv-t-lh);
+}
+
+body.erv-typography-pr4-operations.admin-shell-page .command-alert-chip,
+body.erv-typography-pr4-operations.admin-shell-page .financial-alert-card__title {
+  font-size: var(--erv-t-secondary);
+  font-weight: var(--erv-t-h3-weight);
+  line-height: var(--erv-t-lh);
+}
+
+body.erv-typography-pr4-operations.admin-shell-page .financial-alert-card__msg,
+body.erv-typography-pr4-operations.admin-shell-page .financial-alert-empty {
+  font-size: var(--erv-t-secondary);
+  font-weight: var(--erv-t-secondary-weight);
+  line-height: var(--erv-t-lh);
+}
+
+body.erv-typography-pr4-operations.admin-shell-page .sub,
+body.erv-typography-pr4-operations.admin-shell-page .muted {
+  font-size: var(--erv-t-secondary);
+  font-weight: var(--erv-t-secondary-weight);
+  line-height: var(--erv-t-lh);
+}
+
+/* ——— Driver Dashboard ——— */
+body.erv-typography-pr4-operations.driver-page .guest-section-hero__eyebrow.driver-hero-eyebrow--lg,
+body.erv-typography-pr4-operations.driver-page .guest-section-hero__title {
+  font-size: var(--erv-t-h1);
+  font-weight: var(--erv-t-h1-weight);
+  line-height: var(--erv-t-lh-heading);
+}
+
+body.erv-typography-pr4-operations.driver-page .guest-section-hero__sub {
+  font-size: var(--erv-t-secondary);
+  font-weight: var(--erv-t-secondary-weight);
+  line-height: var(--erv-t-lh);
+}
+
+body.erv-typography-pr4-operations.driver-page .driver-order-section__title {
+  font-size: var(--erv-t-h2);
+  font-weight: var(--erv-t-h2-weight);
+  line-height: var(--erv-t-lh-heading);
+}
+
+body.erv-typography-pr4-operations.driver-page .drv-order-card__num {
+  font-size: var(--erv-t-h3);
+  font-weight: var(--erv-t-h3-weight);
+  line-height: var(--erv-t-lh-heading);
+}
+
+body.erv-typography-pr4-operations.driver-page .drv-order-card__status,
+body.erv-typography-pr4-operations.driver-page .driver-profile-card__role {
+  font-size: var(--erv-t-badge);
+  font-weight: var(--erv-t-badge-weight);
+  line-height: var(--erv-t-lh);
+}
+
+body.erv-typography-pr4-operations.driver-page .driver-profile-card__phone {
+  font-size: var(--erv-t-body);
+  font-weight: var(--erv-t-h2-weight);
+  line-height: var(--erv-t-lh);
+}
+
+body.erv-typography-pr4-operations.driver-page .driver-profile-card__rating-val {
+  font-size: var(--erv-t-kpi);
+  font-weight: var(--erv-t-kpi-weight);
+  line-height: var(--erv-t-lh-tight);
+}
+
+body.erv-typography-pr4-operations.driver-page .driver-profile-card__rating,
+body.erv-typography-pr4-operations.driver-page .driver-profile-card__wallet-label,
+body.erv-typography-pr4-operations.driver-page .drv-order-card__meta-line,
+body.erv-typography-pr4-operations.driver-page .driver-order-section__empty {
+  font-size: var(--erv-t-secondary);
+  font-weight: var(--erv-t-secondary-weight);
+  line-height: var(--erv-t-lh);
+}
+
+body.erv-typography-pr4-operations.driver-page .driver-profile-card__rating-count,
+body.erv-typography-pr4-operations.driver-page .driver-profile-card__rating-muted,
+body.erv-typography-pr4-operations.driver-page .driver-loc-status {
+  font-size: var(--erv-t-caption);
+  font-weight: var(--erv-t-caption-weight);
+  line-height: var(--erv-t-lh);
+}
+
+body.erv-typography-pr4-operations.driver-page .driver-main-action,
+body.erv-typography-pr4-operations.driver-page .driver-refresh-btn {
+  font-size: var(--erv-t-body);
+  font-weight: var(--erv-t-h3-weight);
+  line-height: var(--erv-t-lh);
+}
+
+/* ——— Store Dashboard ——— */
+body.erv-typography-pr4-operations.store-shell-page .portal-hero__text h1 {
+  font-size: var(--erv-t-h1);
+  font-weight: var(--erv-t-h1-weight);
+  line-height: var(--erv-t-lh-heading);
+}
+
+body.erv-typography-pr4-operations.store-shell-page .portal-card h2,
+body.erv-typography-pr4-operations.store-shell-page .portal-preview-card h2 {
+  font-size: var(--erv-t-h2);
+  font-weight: var(--erv-t-h2-weight);
+  line-height: var(--erv-t-lh-heading);
+}
+
+body.erv-typography-pr4-operations.store-shell-page .portal-kpi__lbl {
+  font-size: var(--erv-t-secondary);
+  font-weight: var(--erv-t-secondary-weight);
+  line-height: var(--erv-t-lh);
+}
+
+body.erv-typography-pr4-operations.store-shell-page .portal-kpi__val {
+  font-size: var(--erv-t-kpi);
+  font-weight: var(--erv-t-kpi-weight);
+  line-height: var(--erv-t-lh-tight);
+}
+
+body.erv-typography-pr4-operations.store-shell-page .portal-kpi__sub {
+  font-size: var(--erv-t-caption);
+  font-weight: var(--erv-t-caption-weight);
+  line-height: var(--erv-t-lh);
+}
+
+body.erv-typography-pr4-operations.store-shell-page .portal-badge {
+  font-size: var(--erv-t-badge);
+  font-weight: var(--erv-t-badge-weight);
+  line-height: var(--erv-t-lh);
+}
+
+body.erv-typography-pr4-operations.store-shell-page .portal-product-card__name {
+  font-size: var(--erv-t-body);
+  font-weight: var(--erv-t-body-weight);
+  line-height: var(--erv-t-lh);
+}
+
+body.erv-typography-pr4-operations.store-shell-page .portal-product-card__price {
+  font-size: var(--erv-t-kpi);
+  font-weight: var(--erv-t-kpi-weight);
+  line-height: var(--erv-t-lh-tight);
+}
+
+body.erv-typography-pr4-operations.store-shell-page .sub,
+body.erv-typography-pr4-operations.store-shell-page .portal-panel-url,
+body.erv-typography-pr4-operations.store-shell-page .portal-preview-note {
+  font-size: var(--erv-t-secondary);
+  font-weight: var(--erv-t-secondary-weight);
+  line-height: var(--erv-t-lh);
+}
+
+body.erv-typography-pr4-operations.store-shell-page .portal-nav a {
+  font-size: var(--erv-t-body);
+  font-weight: var(--erv-t-h3-weight);
+  line-height: var(--erv-t-lh);
+}
+
+/* ——— Provider Dashboard ——— */
+body.erv-typography-pr4-operations #panelTitle {
+  font-size: var(--erv-t-h1);
+  font-weight: var(--erv-t-h1-weight);
+  line-height: var(--erv-t-lh-heading);
+}
+
+body.erv-typography-pr4-operations #ordersPanel h2,
+body.erv-typography-pr4-operations #svcPayCard h2 {
+  font-size: var(--erv-t-h2);
+  font-weight: var(--erv-t-h2-weight);
+  line-height: var(--erv-t-lh-heading);
+}
+
+body.erv-typography-pr4-operations .sp-kpi strong {
+  font-size: var(--erv-t-kpi);
+  font-weight: var(--erv-t-kpi-weight);
+  line-height: var(--erv-t-lh-tight);
+}
+
+body.erv-typography-pr4-operations .sp-kpi span,
+body.erv-typography-pr4-operations .sub,
+body.erv-typography-pr4-operations .hub-pay-row {
+  font-size: var(--erv-t-secondary);
+  font-weight: var(--erv-t-secondary-weight);
+  line-height: var(--erv-t-lh);
+}
+
+body.erv-typography-pr4-operations .sp-bell__badge {
+  font-size: var(--erv-t-badge);
+  font-weight: var(--erv-t-badge-weight);
+  line-height: var(--erv-t-lh);
+}
+
+body.erv-typography-pr4-operations .sp-order p {
+  font-size: var(--erv-t-body);
+  font-weight: var(--erv-t-body-weight);
+  line-height: var(--erv-t-lh);
+}
+
+body.erv-typography-pr4-operations .sp-order p b {
+  font-size: var(--erv-t-secondary);
+  font-weight: var(--erv-t-h3-weight);
+  line-height: var(--erv-t-lh);
+}
+
+body.erv-typography-pr4-operations .btn,
+body.erv-typography-pr4-operations .btn-primary,
+body.erv-typography-pr4-operations .btn-ghost {
+  font-size: var(--erv-t-body);
+  font-weight: var(--erv-t-h3-weight);
+  line-height: var(--erv-t-lh);
+}
