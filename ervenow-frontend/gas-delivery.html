@@ -5,10 +5,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover" />
-    <script src="/assets/viewport-fit.js"></script>
+    <script src="/assets/viewport-fit.js?erv=20260612b"></script>
     <title>ERVENOW | توصيل الغاز</title>
     <link rel="stylesheet" href="/assets/styles.css" />
-    <link rel="stylesheet" href="/assets/guest-shell.css" />
+    <link rel="stylesheet" href="/assets/guest-shell.css?erv=20260612b" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
       .gd-wrap {
@@ -117,7 +117,7 @@
             <span class="dash-header-wallet__val" id="dashHeaderWalletAmount">—</span>
             <span class="dash-header-wallet__cur">ر.س</span>
           </a>
-          <a class="dash-header-cart" href="/cart" aria-label="السلة — الدفع">
+          <a class="dash-header-cart" href="/checkout" aria-label="السلة — الدفع">
             <span aria-hidden="true">🛒</span>
             <span class="dash-header-cart__label">السلة</span>
             <span class="dash-header-cart__badge" id="cartCount" data-empty="true">0</span>
@@ -241,12 +241,12 @@
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="/assets/cart.js"></script>
-    <script src="/assets/service-cart.js"></script>
+    <script src="/assets/order-draft-store.js"></script>
+    <script src="/assets/order-draft-vertical.js"></script>
     <script src="/assets/api-config.js"></script>
     <script src="/assets/api.js"></script>
     <script src="/assets/guestBrowse.js"></script>
-    <script src="/assets/guest-shell.js"></script>
+    <script src="/assets/guest-shell.js?erv=20260612b"></script>
     <script>
       ErvenowGuestShell.init({ activeNav: "delivery", pageTag: "توصيل الغاز" });
     </script>
@@ -355,13 +355,16 @@
             item.data.payment_mode = "on_service";
             item.data.payment_status = "unpaid";
           }
-          if (window.ErvenowServiceCart && ErvenowServiceCart.add) {
-            ErvenowServiceCart.add(item);
+          if (!window.ErvenowOrderDraftVertical || typeof ErvenowOrderDraftVertical.commit !== "function") {
+            showMsg("تعذر تحميل مسودة الطلب — حدّث الصفحة", false);
             return;
           }
-          if (window.ErvenowCart && ErvenowCart.addService) ErvenowCart.addService(item);
-          else if (window.ErvenowCart) ErvenowCart.add(item);
-          location.href = "/cart";
+          var gdRes = ErvenowOrderDraftVertical.commit(item, {
+            sourcePage: "/gas-delivery",
+            vertical: "gas",
+            message: "تمت إضافة طلب الغاز — أكمل تأكيد الطلب",
+          });
+          if (!gdRes.ok) showMsg(gdRes.message || "تعذر الإضافة للمسودة", false);
         }
 
         function openMap() {

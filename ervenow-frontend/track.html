@@ -1,14 +1,14 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ar" dir="rtl">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover" />
-    <script src="/assets/viewport-fit.js"></script>
+    <script src="/assets/viewport-fit.js?erv=20260612b"></script>
     <title>ERVENOW | تتبع الطلب</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/assets/styles.css" />
-    <link rel="stylesheet" href="/assets/guest-shell.css" />
+    <link rel="stylesheet" href="/assets/guest-shell.css?erv=20260612b" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
       #rateStars.disabled {
@@ -264,7 +264,7 @@
             <span class="dash-header-wallet__val" id="dashHeaderWalletAmount">—</span>
             <span class="dash-header-wallet__cur">ر.س</span>
           </a>
-          <a class="dash-header-cart" href="/cart" aria-label="السلة — الدفع">
+          <a class="dash-header-cart" href="/checkout" aria-label="السلة — الدفع">
             <span aria-hidden="true">🛒</span>
             <span class="dash-header-cart__label">السلة</span>
             <span class="dash-header-cart__badge" id="cartCount" data-empty="true">0</span>
@@ -389,11 +389,12 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="/assets/track.js"></script>
     <script src="https://cdn.socket.io/4.8.1/socket.io.min.js" crossorigin="anonymous"></script>
-    <script src="/assets/cart.js"></script>
+    <script src="/assets/order-draft-store.js"></script>
+    <script src="/assets/order-draft-badge.js"></script>
     <script src="/assets/api-config.js"></script>
     <script src="/assets/api.js"></script>
     <script src="/assets/guestBrowse.js"></script>
-    <script src="/assets/guest-shell.js"></script>
+    <script src="/assets/guest-shell.js?erv=20260612b"></script>
     <script>
       ErvenowGuestShell.init({ activeNav: "track", pageTag: "تتبع الطلب" });
     </script>
@@ -1069,32 +1070,56 @@
         return p.slice(0, 2) + "****" + p.slice(-4);
       }
 
+      function normalizeTrackOrderCoords(order) {
+        if (!order) return order;
+        var d = order.data && typeof order.data === "object" ? order.data : {};
+        if (!Number.isFinite(Number(order.pickup_lat)) && Number.isFinite(Number(d.pickup_lat))) {
+          order.pickup_lat = Number(d.pickup_lat);
+          order.pickup_lng = Number(d.pickup_lng);
+        }
+        if (!Number.isFinite(Number(order.drop_lat)) && Number.isFinite(Number(d.drop_lat))) {
+          order.drop_lat = Number(d.drop_lat);
+          order.drop_lng = Number(d.drop_lng);
+        }
+        if (!order.pickup_address && (d.from || d.pickup_maps_url)) {
+          order.pickup_address = String(d.from || d.pickup_maps_url);
+        }
+        if (!order.drop_address && (d.to || d.drop_maps_url)) {
+          order.drop_address = String(d.to || d.drop_maps_url);
+        }
+        return order;
+      }
+
       function syncDriverCallAndInfo(order) {
         var infoEl = document.getElementById("driverInfo");
         var btn = document.getElementById("callDriverBtn");
         if (!infoEl || !btn) return;
-        if (!order || !order.driver_id) {
+        var isService = String(order && order.service_type || "").toLowerCase() === "internal_delivery";
+        var hasParty = order && (order.driver_id || order.provider_id);
+        if (!order || !hasParty) {
           infoEl.textContent = "";
           btn.style.display = "none";
           btn.onclick = null;
           return;
         }
         var rawPhone = order.driver_phone != null ? String(order.driver_phone).trim() : "";
+        var label = isService ? "مزود الخدمة" : "المندوب";
+        var name = order.provider_name ? String(order.provider_name).trim() : "";
         if (rawPhone) {
-          infoEl.textContent = "📞 " + maskPhone(rawPhone);
+          infoEl.textContent = (name ? label + ": " + name + " — " : label + " — ") + "📞 " + maskPhone(rawPhone);
           btn.style.display = "inline-block";
           btn.onclick = function () {
             window.location.href = "tel:" + rawPhone.replace(/^tel:/i, "");
           };
         } else {
-          infoEl.textContent = "";
+          infoEl.textContent = name ? label + ": " + name : "";
           btn.style.display = "none";
           btn.onclick = null;
         }
       }
 
       function trackingEligible(ds) {
-        return ["accepted", "delivering", "picked"].includes(ds);
+        return ["picked_up", "picked", "delivering"].includes(String(ds || "").toLowerCase());
       }
 
       function evaluateArrivedAtDropoff(order, distM) {
@@ -1662,8 +1687,8 @@
           onWayTimeoutId = setTimeout(function () {
             onWayTimeoutId = null;
             if (!lastOrder || String(lastOrder.id || "") !== orderId) return;
-            var st = String(lastOrder.delivery_status || lastOrder.status || "");
-            if (!["accepted", "delivering", "picked"].includes(st)) return;
+            var st = String(lastOrder.delivery_status || lastOrder.status || "").toLowerCase();
+            if (!trackingEligible(st)) return;
             if (notifiedOnWay) return;
             notifiedOnWay = true;
             showTrackToast("🚚 المندوب في الطريق إليك");
@@ -2076,6 +2101,10 @@
 
       function updateDriverMarker(lat, lng, opts) {
         opts = opts || {};
+        if (lastOrder) {
+          var dsGuard = String(lastOrder.delivery_status || lastOrder.status || "").toLowerCase();
+          if (dsGuard === "delivered" || !trackingEligible(dsGuard)) return;
+        }
         if (lat == null || lng == null) return;
         var rawLa = Number(lat);
         var rawLn = Number(lng);
@@ -2479,6 +2508,7 @@
 
       function renderOrder(order) {
         if (!order) return;
+        order = normalizeTrackOrderCoords(order);
         if (currentOrderId != null && String(currentOrderId) !== String(order.id)) {
           leaveTrackOrderRoom();
           clearDriverTrail();
@@ -2633,13 +2663,19 @@
           }
         }
         var hasDriverLocation = lat != null && lng != null && !Number.isNaN(Number(lat)) && !Number.isNaN(Number(lng));
-        if (deliveryStatus === "delivered" && hasDropPoint) {
-          updateDriverMarker(dropLat, dropLng, { refocusMap: !hadDriverMarker });
-          updateDropMarker(dropLat, dropLng);
-          document.getElementById("coords").textContent =
-            "📍 تم التسليم عند نقطة النهاية: " + dropLat + " ، " + dropLng;
+        var dsMap = String(deliveryStatus || "").toLowerCase();
+        if (dsMap === "delivered") {
+          clearDriverMarker(false);
+          clearDriverTrail();
+          if (hasDropPoint) {
+            updateDropMarker(dropLat, dropLng);
+            document.getElementById("coords").textContent =
+              "📍 تم التسليم عند نقطة النهاية: " + dropLat + " ، " + dropLng;
+          } else {
+            document.getElementById("coords").textContent = "✅ تم التسليم";
+          }
           document.getElementById("coordsMeta").textContent = "";
-        } else if (order.driver_lat && order.driver_lng && hasDriverLocation) {
+        } else if (trackingEligible(dsMap) && hasDriverLocation) {
           var dsMapOnly = String(order.delivery_status || order.status || "").toLowerCase();
           var mapFromSocketOnly =
             trackSocket &&
@@ -2798,13 +2834,15 @@
           !Number.isNaN(Number(order.driver_lat)) &&
           !Number.isNaN(Number(order.driver_lng));
 
+        var partyLabel =
+          String(order.service_type || "").toLowerCase() === "internal_delivery" ? "مزود الخدمة" : "المندوب";
         if (!hasDriverLocation) {
-          gpsState.innerText = "📍 جاري تحديد موقع المندوب...";
+          gpsState.innerText = "📍 جاري تحديد موقع " + partyLabel + "...";
           lastUpdate.textContent = "";
           return;
         }
 
-        gpsState.innerText = "🚚 المندوب في الطريق";
+        gpsState.innerText = "🚚 " + partyLabel + " في الطريق";
         if (order.last_location_at) {
           var diff = Math.floor((Date.now() - new Date(order.last_location_at)) / 1000);
           if (diff < 0) diff = 0;

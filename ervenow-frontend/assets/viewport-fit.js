@@ -6,11 +6,130 @@
   if (global.__ervViewportReady) return;
   global.__ervViewportReady = true;
 
+  /** يُرفَع عند كل تحديث Mobile Shell لإجبار تحميل نسخة جديدة (تجاوز cache الجوال) */
+  var ERV_SHELL_ASSET_VER = "20260612b";
+
+  function shellAssetUrl(path) {
+    var p = String(path || "");
+    if (!p) return p;
+    return p + (p.indexOf("?") >= 0 ? "&" : "?") + "erv=" + ERV_SHELL_ASSET_VER;
+  }
+
   var VIEWPORT_LOCKED =
     "width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover";
 
   var lockCount = 0;
   var savedScrollY = 0;
+  var MOBILE_SHELL_MQ =
+    "(max-width: 640px), ((max-width: 932px) and (max-height: 500px) and (pointer: coarse))";
+
+  function isMobileShellViewport() {
+    try {
+      return global.matchMedia(MOBILE_SHELL_MQ).matches;
+    } catch (e) {
+      return global.innerWidth <= 640;
+    }
+  }
+
+  function isPaymentFlowPath(path) {
+    var p = path || global.location.pathname || "";
+    return /^\/checkout(\/|$)/.test(p) || /^\/cart(\/|$)/.test(p) || /^\/pay(\/|$)/.test(p);
+  }
+
+  function mobileHeaderReservePx() {
+    if (document.body && document.body.classList.contains("lp-home-premium")) return 56;
+    if (document.body && document.body.classList.contains("guest-shell-page")) return 56;
+    return 56;
+  }
+
+  function applyMobileShellHeaderVars() {
+    var reserve = mobileHeaderReservePx();
+    document.documentElement.style.setProperty("--erv-mobile-header-reserve", reserve + "px");
+    document.documentElement.style.setProperty("--erv-mobile-header-h", reserve + "px");
+    document.documentElement.style.setProperty("--erw-header-h", reserve + "px");
+  }
+
+  function injectMobileFoundationCss() {
+    if (!isMobileShellViewport() || isPaymentFlowPath()) return;
+    if (document.body && document.body.classList.contains("erv-preview-lab")) return;
+    if (document.querySelector('link[href*="mobile-foundation.css"]')) return;
+    var link = document.createElement("link");
+    link.rel = "stylesheet";
+    link.href = shellAssetUrl("/assets/mobile-foundation.css");
+    document.head.appendChild(link);
+  }
+
+  function ensureMobileFoundationJs() {
+    if (!isMobileShellViewport() || isPaymentFlowPath()) return;
+    if (document.body && document.body.classList.contains("erv-preview-lab")) return;
+    if (document.querySelector('script[src*="mobile-foundation.js"]')) return;
+    var s = document.createElement("script");
+    s.src = shellAssetUrl("/assets/mobile-foundation.js");
+    s.defer = true;
+    document.head.appendChild(s);
+  }
+
+  function injectMobileHarmonyCritical() {
+    if (!isMobileShellViewport() || isPaymentFlowPath()) return;
+    if (document.body && document.body.classList.contains("erv-preview-lab")) return;
+    if (document.getElementById("ervMobileHarmonyCritical")) return;
+    var el = document.createElement("style");
+    el.id = "ervMobileHarmonyCritical";
+    el.textContent =
+      "html.erv-mobile-shell:not(.erv-mobile-no-nav) .lp-header__actions," +
+      "html.erv-mobile-shell:not(.erv-mobile-no-nav) .dash-site-header__tools," +
+      "html.erv-mobile-shell:not(.erv-mobile-no-nav) .lp-draft-checkout-badge," +
+      "html.erv-mobile-shell:not(.erv-mobile-no-nav) #indexDraftBadge," +
+      "html.erv-mobile-shell:not(.erv-mobile-no-nav) .dash-header-cart," +
+      "html.erv-mobile-shell:not(.erv-mobile-no-nav) .dash-header-cart-btn," +
+      "html.erv-mobile-shell:not(.erv-mobile-no-nav) #lpCartWrap{display:none!important;visibility:hidden!important;pointer-events:none!important}" +
+      "html.erv-mobile-shell body.lp-home-premium .lp-header__top-row{display:grid!important;grid-template-columns:auto 1fr auto!important;align-items:center!important;direction:ltr!important}" +
+      "html.erv-mobile-shell body.lp-home-premium .lp-header__top-row>.lp-header__logo-slot{grid-column:1!important;justify-self:start!important}" +
+      "html.erv-mobile-shell body.lp-home-premium .lp-header__top-row>.lp-header__brand-mid{grid-column:2!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-self:center!important;text-align:center!important;direction:rtl!important}" +
+      "html.erv-mobile-shell body.lp-home-premium .lp-header__top-row>.lp-header__menu-slot{grid-column:3!important;justify-self:end!important}" +
+      "html.erv-mobile-shell body.guest-shell-page .dash-site-header__inner{display:grid!important;grid-template-columns:auto 1fr auto!important;grid-template-areas:'logo identity menu'!important;align-items:center!important;direction:ltr!important}" +
+      "html.erv-mobile-shell body.guest-shell-page .dash-site-header__brand{grid-area:logo!important}" +
+      "html.erv-mobile-shell body.guest-shell-page .erv-harmony-identity{grid-area:identity!important}" +
+      "html.erv-mobile-shell body.guest-shell-page .erv-harmony-menu{grid-area:menu!important;justify-self:end!important}";
+    document.head.appendChild(el);
+    if (!document.querySelector('link[href*="mobile-harmony.css"]')) {
+      var link = document.createElement("link");
+      link.rel = "stylesheet";
+      link.href = shellAssetUrl("/assets/mobile-harmony.css");
+      document.head.appendChild(link);
+    }
+  }
+
+  function bootMobileShell() {
+    var root = document.documentElement;
+    if (document.body && document.body.classList.contains("erv-preview-lab")) {
+      root.classList.remove("erv-mobile-shell", "erv-mobile-no-nav");
+      return;
+    }
+    if (!isMobileShellViewport()) {
+      root.classList.remove("erv-mobile-shell", "erv-mobile-no-nav");
+      return;
+    }
+    root.classList.add("erv-mobile-shell");
+    if (isPaymentFlowPath()) root.classList.add("erv-mobile-no-nav");
+    else root.classList.remove("erv-mobile-no-nav");
+    applyMobileShellHeaderVars();
+    injectMobileFoundationCss();
+    injectMobileHarmonyCritical();
+  }
+
+  function ensureBottomNavShell() {
+    if (!isMobileShellViewport() || isPaymentFlowPath() || !document.body) return;
+    var nav = document.getElementById("ervMobileBottomNav");
+    if (!nav) {
+      nav = document.createElement("nav");
+      nav.id = "ervMobileBottomNav";
+      nav.className = "erv-mobile-bottom-nav erv-mobile-bottom-nav--shell";
+      nav.setAttribute("aria-label", "التنقل السريع");
+      nav.setAttribute("aria-hidden", "true");
+      document.body.appendChild(nav);
+    }
+  }
 
   function enforceViewportMeta() {
     var meta = document.querySelector('meta[name="viewport"]');
@@ -45,12 +164,17 @@
   }
 
   function syncSiteHeaderHeight() {
-    var header = document.querySelector(".dash-site-header");
+    if (document.documentElement.classList.contains("erv-mobile-shell")) {
+      applyMobileShellHeaderVars();
+      return;
+    }
+    var header = document.querySelector(".dash-site-header, .lp-header.lp-header--refined");
     if (!header) return;
     var rect = header.getBoundingClientRect();
     var h = Math.ceil(rect.height);
     if (h > 0) {
       document.documentElement.style.setProperty("--erw-header-h", h + "px");
+      document.documentElement.style.setProperty("--erv-mobile-header-h", h + "px");
     }
   }
 
@@ -96,6 +220,7 @@
   }
 
   enforceViewportMeta();
+  bootMobileShell();
   setViewportVars();
   clampHorizontalScroll();
 
@@ -107,6 +232,7 @@
   document.addEventListener("scroll", clampHorizontalScroll, { passive: true });
 
   global.addEventListener("resize", function () {
+    bootMobileShell();
     setViewportVars();
     clampHorizontalScroll();
   }, { passive: true });
@@ -130,18 +256,27 @@
   }
 
   global.addEventListener("DOMContentLoaded", function () {
+    bootMobileShell();
+    applyMobileShellHeaderVars();
+    ensureBottomNavShell();
     syncSiteHeaderHeight();
-    global.setTimeout(syncSiteHeaderHeight, 120);
+    ensureMobileFoundationJs();
+    if (isMobileShellViewport() && !document.querySelector('script[src*="mobile-harmony.js"]')) {
+      var hs = document.createElement("script");
+      hs.src = shellAssetUrl("/assets/mobile-harmony.js");
+      hs.defer = true;
+      document.head.appendChild(hs);
+    }
   });
 
   if (typeof ResizeObserver !== "undefined") {
     global.addEventListener("DOMContentLoaded", function () {
-      var header = document.querySelector(".dash-site-header");
-      if (!header) return;
-      var ro = new ResizeObserver(function () {
-        syncSiteHeaderHeight();
+      document.querySelectorAll(".dash-site-header, .lp-header.lp-header--refined").forEach(function (header) {
+        var ro = new ResizeObserver(function () {
+          syncSiteHeaderHeight();
+        });
+        ro.observe(header);
       });
-      ro.observe(header);
     });
   }
 
@@ -152,5 +287,9 @@
     lockScroll: lockScroll,
     unlockScroll: unlockScroll,
     syncHeaderHeight: syncSiteHeaderHeight,
+    bootMobileShell: bootMobileShell,
+    isPaymentFlowPath: isPaymentFlowPath,
+    shellAssetUrl: shellAssetUrl,
+    shellAssetVer: ERV_SHELL_ASSET_VER,
   };
 })(window);

@@ -1,20 +1,21 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ar" dir="rtl">
   <head>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover" />
-    <script src="/assets/viewport-fit.js"></script>
+    <script src="/assets/viewport-fit.js?erv=20260612b"></script>
     <meta name="description" content="يتم تفعيل الحساب بعد المراجعة واعتماده من إدارة ERVENOW." />
-    <title>ERVENOW | السلة</title>
+    <title>ERVENOW | إتمام الطلب</title>
     <link rel="stylesheet" href="/assets/styles.css" />
-    <link rel="stylesheet" href="/assets/guest-shell.css" />
+    <link rel="stylesheet" href="/assets/guest-shell.css?erv=20260612b" />
     <link rel="stylesheet" href="/assets/cart-luxe.css" />
     <link rel="stylesheet" href="/assets/cart-shell.css" />
     <link rel="stylesheet" href="/assets/cart-page.css" />
+    <link rel="stylesheet" href="/assets/cart-checkout-v3.css" />
   </head>
-  <body class="guest-shell-page">
+  <body class="guest-shell-page cart-checkout-v3">
     <header class="dash-site-header">
       <div class="dash-site-header__inner">
         <div class="dash-site-header__brand">
@@ -38,7 +39,7 @@
             <span class="dash-header-wallet__val" id="dashHeaderWalletAmount">—</span>
             <span class="dash-header-wallet__cur">ر.س</span>
           </a>
-          <a class="dash-header-cart" href="/cart" aria-label="السلة — الدفع">
+          <a class="dash-header-cart" href="/checkout" aria-label="السلة — الدفع">
             <span aria-hidden="true">🛒</span>
             <span class="dash-header-cart__label">السلة</span>
             <span class="dash-header-cart__badge" id="cartCount" data-empty="true">0</span>
@@ -49,40 +50,43 @@
     </header>
 
     <div class="dash-main">
-      <div class="layout cart-page-wrap">
-        <div class="card" id="guestCartBanner" style="display: none; margin-bottom: 12px; background: #fff8ee; border-color: #e8d4bc">
-          <p class="sub" style="margin: 0">
+      <div class="layout cart-page-wrap container">
+        <div class="card card--guest" id="guestCartBanner" style="display: none">
+          <p class="guest-note">
             لإتمام الطلب سجّل <strong>اسمك</strong> وجوالك ورمز واتساب. بعد إكمال التسجيل سيتم مراجعة الطلب وتفعيل الحساب.
-            <a href="/login?mode=register&amp;role=customer&amp;next=%2Fcart" style="font-weight: 800; color: #5b371d">تسجيل الآن</a>
+            <a href="/login?mode=register&amp;role=customer&amp;next=%2Fcart">تسجيل الآن</a>
           </p>
         </div>
 
-        <div
-          class="lp-cart-panel lp-cart-panel--page lp-cart-panel--empty"
-          id="lpCartPageRoot"
-          role="region"
-          aria-label="سلة التسوق"
-        ></div>
+        <div class="header" id="cartCheckoutHeader" hidden>
+          <div class="header-title" id="lpCartDialogTitle">🛒 إتمام الطلب</div>
+          <div class="order-id" id="cartCheckoutOrderRef">—</div>
+        </div>
 
-        <div class="card cart-delivery-loc" id="storeDeliveryCard" style="display: none; margin-top: 12px">
-          <div class="badge">موقع التوصيل</div>
+        <div class="card card--store" id="cartCheckoutStoreCard" hidden>
+          <div class="store-name" id="cartStoreName">—</div>
+          <div class="store-meta" id="cartStoreMeta">—</div>
+        </div>
+
+        <div class="card cart-delivery-loc" id="storeDeliveryCard" style="display: none">
+          <div class="card-title">📍 موقع التوصيل</div>
           <div id="deliveryLocSavedView">
-            <p class="sub cart-delivery-loc__display" id="deliveryLocDisplay">—</p>
-            <p class="sub cart-delivery-loc__status" id="geoStatus" style="margin-top: 8px"></p>
-            <button type="button" class="btn btn-ghost cart-delivery-loc__change" id="btnChangeLocation" style="margin-top: 10px">
-              تغيير الموقع
-            </button>
+            <div class="location cart-delivery-loc__display" id="deliveryLocDisplay">—</div>
+            <p class="location-status cart-delivery-loc__status" id="geoStatus"></p>
+            <button type="button" class="change-btn cart-delivery-loc__change" id="btnChangeLocation">تغيير الموقع</button>
           </div>
           <div id="deliveryLocEditorView" hidden>
-            <p class="sub">عدّل العنوان أو حدّد GPS — لن يُطلب الموقع تلقائياً.</p>
-            <label for="customer_address">عنوان التوصيل (نصّي)</label>
-            <textarea id="customer_address" rows="2" placeholder="الحي، الشارع، رقم الوحدة…" style="font-size: 16px"></textarea>
-            <div class="cart-delivery-loc__actions" style="margin-top: 10px; display: flex; flex-wrap: wrap; gap: 8px">
-              <button type="button" class="btn btn-ghost" id="btnGeo">تحديد موقعي GPS</button>
-              <button type="button" class="btn btn-primary" id="btnSaveLocation">حفظ الموقع</button>
+            <p class="location-hint">عدّل العنوان أو حدّد GPS — لن يُطلب الموقع تلقائياً.</p>
+            <label class="location-label" for="customer_address">عنوان التوصيل (نصّي)</label>
+            <textarea id="customer_address" rows="2" placeholder="الحي، الشارع، رقم الوحدة…"></textarea>
+            <div class="cart-delivery-loc__actions location-actions">
+              <button type="button" class="change-btn" id="btnGeo">تحديد موقعي GPS</button>
+              <button type="button" class="change-btn change-btn--primary" id="btnSaveLocation">حفظ الموقع</button>
             </div>
           </div>
         </div>
+
+        <div class="lp-cart-panel lp-cart-panel--page lp-cart-panel--empty" id="lpCartPageRoot" role="region" aria-label="إتمام الطلب"></div>
       </div>
 
       <footer class="dash-site-footer">
@@ -114,18 +118,17 @@
     <script src="/assets/cart.js"></script>
     <script src="/assets/cart-ui.js"></script>
     <script src="/assets/service-cart.js"></script>
-    <script src="/assets/guest-shell.js"></script>
+    <script src="/assets/guest-shell.js?erv=20260612b"></script>
     <script>
-      ErvenowGuestShell.init({ activeNav: "guest", pageTag: "السلة" });
+      ErvenowGuestShell.init({ activeNav: "guest", pageTag: "إتمام الطلب" });
 
       (function mountCartPageUi() {
         var root = document.getElementById("lpCartPageRoot");
         if (!root || !window.ErvenowCartUI) return;
         root.innerHTML = ErvenowCartUI.cartPanelInnerHtml({
-          continueHref: "/dashboard",
+          checkoutV3: true,
           checkoutId: "lpCartCheckoutBtn",
           showFullFin: true,
-          hidePanelHead: true,
         });
       })();
 

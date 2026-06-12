@@ -1,0 +1,223 @@
+/**
+ * ERVENOW — قالب موحّد لصفحات الأقسام (مطاعم · متاجر · خدمات · توصيل)
+ */
+
+.erv-section-hub {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: clamp(14px, 3vw, 22px) clamp(14px, 3vw, 20px) clamp(24px, 4vw, 48px);
+}
+
+.erv-section-hub__title {
+  margin: 0 0 clamp(14px, 2.5vw, 18px);
+  font-size: clamp(1.25rem, 3.8vw, 1.65rem);
+  font-weight: 900;
+  line-height: 1.35;
+  color: #2a1810;
+}
+
+.erv-section-hub__search-wrap {
+  position: relative;
+  margin-bottom: 12px;
+}
+
+.erv-section-hub__search-wrap svg {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.erv-section-hub__search {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 48px;
+  padding: 12px 44px 12px 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(61, 34, 19, 0.1);
+  background: rgba(255, 255, 255, 0.92);
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 600;
+  color: #2a1810;
+  box-shadow: 0 10px 32px rgba(42, 24, 16, 0.06);
+}
+
+.erv-section-hub__search:focus {
+  outline: none;
+  border-color: rgba(201, 162, 39, 0.55);
+  box-shadow: 0 0 0 3px rgba(201, 162, 39, 0.2);
+}
+
+.erv-section-hub__cats-block {
+  margin-bottom: 12px;
+  padding: 14px 14px 10px;
+  border-radius: 16px;
+  background: linear-gradient(180deg, rgba(255, 252, 248, 0.98), rgba(255, 245, 235, 0.9));
+  border: 1px solid rgba(61, 34, 19, 0.1);
+  box-shadow: 0 6px 22px rgba(42, 24, 16, 0.05);
+}
+
+.erv-section-hub__cats-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.erv-section-hub__cats-head span:first-child {
+  font-size: 1.45rem;
+  line-height: 1;
+}
+
+.erv-section-hub__cats-head strong {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: #2a1810;
+}
+
+.erv-section-hub__cats-scroll {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x proximity;
+}
+
+.erv-section-hub__cat {
+  flex: 0 0 auto;
+  scroll-snap-align: start;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 88px;
+  max-width: 104px;
+  min-height: 88px;
+  padding: 10px 8px;
+  border-radius: 16px;
+  border: 1px solid rgba(61, 34, 19, 0.1);
+  background: #fffefb;
+  font-family: inherit;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #4a382e;
+  line-height: 1.3;
+  text-align: center;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.erv-section-hub__cat:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 22px rgba(42, 24, 16, 0.1);
+}
+
+.erv-section-hub__cat__ic {
+  font-size: 1.4rem;
+  line-height: 1;
+}
+
+.erv-section-hub__cat.is-active {
+  background: linear-gradient(135deg, #3d2213, #5c3220);
+  color: #fff8ee;
+  border-color: transparent;
+  box-shadow: 0 10px 24px rgba(61, 34, 19, 0.25);
+}
+
+.erv-section-hub__sort {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.erv-section-hub__sort-btn {
+  flex: 1 1 auto;
+  min-width: min(100%, 118px);
+  min-height: 44px;
+  padding: 10px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(61, 34, 19, 0.12);
+  background: rgba(255, 255, 255, 0.88);
+  font-family: inherit;
+  font-size: 0.86rem;
+  font-weight: 800;
+  color: #5c4638;
+  cursor: pointer;
+}
+
+.erv-section-hub__sort-btn.is-active {
+  background: linear-gradient(135deg, #3d2213, #5c3220);
+  color: #fff8ee;
+  border-color: transparent;
+  box-shadow: 0 8px 22px rgba(61, 34, 19, 0.22);
+}
+
+.erv-section-hub__geo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 12px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(61, 34, 19, 0.08);
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: #5c4638;
+  cursor: pointer;
+  user-select: none;
+}
+
+.erv-section-hub__geo[hidden] {
+  display: none !important;
+}
+
+.erv-section-hub__geo input {
+  width: 18px;
+  height: 18px;
+  accent-color: #5c3220;
+  flex-shrink: 0;
+}
+
+.erv-section-hub__count {
+  margin: 0 0 14px;
+  font-size: clamp(0.84rem, 2.2vw, 0.92rem);
+  font-weight: 800;
+  color: #7a6558;
+  line-height: 1.45;
+}
+
+.erv-section-hub__grid {
+  min-height: 160px;
+}
+
+.erv-section-hub__offer-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #c9a227;
+  color: #1a1008;
+  font-size: 0.68rem;
+  font-weight: 900;
+}
+
+.store-card__media {
+  position: relative;
+}
+
+@media (max-width: 640px) {
+  .erv-section-hub__sort-btn {
+    flex: 1 1 calc(50% - 4px);
+  }
+}

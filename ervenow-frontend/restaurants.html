@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ar" dir="rtl">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover" />
-    <script src="/assets/viewport-fit.js"></script>
+    <script src="/assets/viewport-fit.js?erv=20260612b"></script>
     <title>ERVENOW | اكتشف المطاعم</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -12,7 +12,11 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="/assets/styles.css" />
-    <link rel="stylesheet" href="/assets/guest-shell.css" />
+    <link rel="stylesheet" href="/assets/guest-shell.css?erv=20260612b" />
+    <link rel="stylesheet" href="/assets/mobile-harmony.css?erv=20260612b" />
+    <link rel="stylesheet" href="/assets/start-now-landing.css" />
+    <link rel="stylesheet" href="/assets/index-header-banner.css" />
+    <link rel="stylesheet" href="/assets/section-hub.css" />
     <style>
       :root {
         --stores-ink: #2a1810;
@@ -511,7 +515,7 @@
             <span class="dash-header-wallet__val" id="dashHeaderWalletAmount">—</span>
             <span class="dash-header-wallet__cur">ر.س</span>
           </a>
-          <a class="dash-header-cart" href="/cart" aria-label="السلة — الدفع">
+          <a class="dash-header-cart" href="/checkout" aria-label="السلة — الدفع">
             <span aria-hidden="true">🛒</span>
             <span class="dash-header-cart__label">السلة</span>
             <span class="dash-header-cart__badge" id="cartCount" data-empty="true">0</span>
@@ -544,20 +548,21 @@
           placeholder="ابحث باسم المطعم…"
           autocomplete="off"
           enterkeyhint="search"
-          disabled
         />
       </div>
-      <label class="stores-geo-opt" for="storesGeoFilter">
-        <input type="checkbox" id="storesGeoFilter" />
-        <span>تصفية حسب قرب موقعي (ضمن نطاق توصيل كل مطعم)</span>
-      </label>
+      <div class="erv-section-hub__sort" id="hubSortBar" role="group" aria-label="ترتيب النتائج">
+        <button type="button" class="erv-section-hub__sort-btn" data-sort="nearest">📍 الأقرب</button>
+        <button type="button" class="erv-section-hub__sort-btn is-active" data-sort="rating">⭐ الأعلى تقييماً</button>
+        <button type="button" class="erv-section-hub__sort-btn" data-sort="offers">🎁 عروض</button>
+      </div>
+      <p class="erv-section-hub__count" id="hubCountLine" aria-live="polite">—</p>
 
       <div class="stores-restaurant-cuisine-block" id="storesRestaurantCuisineBlock">
         <div class="stores-restaurant-cuisine-block__head">
           <span class="stores-restaurant-cuisine-block__emoji" aria-hidden="true">🍽️</span>
           <div>
             <p class="stores-restaurant-cuisine-block__title">تصنيفات المطاعم</p>
-            <p class="stores-restaurant-cuisine-block__sub">اختر نوع المطبخ — يظهر في البحث والتصفية للزوار.</p>
+            <p class="stores-restaurant-cuisine-block__sub">اختر نوع المطبخ — أو «الكل» لعرض جميع المطاعم المعتمدة.</p>
           </div>
         </div>
         <div class="stores-cuisine-scroll" id="storesCuisineBar" role="tablist" aria-label="تصنيف المطعم"></div>
@@ -590,523 +595,17 @@
       <p class="dash-site-footer__copy">© 2026 ERVENOW — جميع الحقوق محفوظة</p>
     </footer>
     </div>
-    <script src="/assets/cart.js"></script>
+    <script src="/assets/order-draft-store.js"></script>
+    <script src="/assets/order-draft-badge.js"></script>
     <script src="/assets/api-config.js"></script>
     <script src="/assets/api.js"></script>
     <script src="/assets/guestBrowse.js"></script>
     <script src="/assets/restaurant-cuisines.js"></script>
-    <script src="/assets/guest-shell.js"></script>
+    <script src="/assets/guest-shell.js?erv=20260612b"></script>
     <script>
       ErvenowGuestShell.init({ activeNav: "restaurants", pageTag: "اكتشف المطاعم" });
     </script>
-    <script>
-      function esc(s) {
-        return String(s || "")
-          .replace(/&/g, "&amp;")
-          .replace(/</g, "&lt;")
-          .replace(/"/g, "&quot;")
-          .replace(/'/g, "&#39;");
-      }
-
-      function openStore(id) {
-        window.location.href = "/store.html?id=" + encodeURIComponent(id);
-      }
-
-      function etaMinutesFromKm(km) {
-        var n = Number(km);
-        if (!Number.isFinite(n) || n < 0) return null;
-        return Math.max(10, Math.round(n * 4));
-      }
-
-      var RESTAURANT_CUISINES = [];
-
-      function loadRestaurantCuisinesFromApi() {
-        var fallback = function () {
-          if (window.ErvenowRestaurantCuisines && ErvenowRestaurantCuisines.list) {
-            RESTAURANT_CUISINES = ErvenowRestaurantCuisines.list.slice();
-          }
-        };
-        if (!window.PlatformAPI || !PlatformAPI.apiUrl) {
-          fallback();
-          return Promise.resolve();
-        }
-        return fetch(PlatformAPI.apiUrl("/api/categories?type=restaurant&list=canonical&sort=manual"))
-          .then(function (r) {
-            return r.json();
-          })
-          .then(function (data) {
-            var list = (data && data.categories) || [];
-            if (list.length) {
-              RESTAURANT_CUISINES = list.map(function (c) {
-                return { slug: c.slug, icon: c.icon || "▫", label: c.name_ar || c.label_ar || c.slug };
-              });
-            } else {
-              fallback();
-            }
-          })
-          .catch(function () {
-            fallback();
-          });
-      }
-
-      var CUISINE_COMBO =
-        (window.ErvenowRestaurantCuisines && ErvenowRestaurantCuisines.CUISINE_COMBO) || {
-          kabsa_bukhari: ["kabsa_bukhari", "kabsa", "bukhari_mandi"],
-          burger_broasted: ["broasted", "burger", "burger_broasted"],
-          cafe_sweets: ["cafe", "sweets", "dessert_cafe"],
-        };
-
-      function storeMatchesCuisineChip(store, slug) {
-        if (window.ErvenowRestaurantCuisines && ErvenowRestaurantCuisines.storeMatchesCuisineChip) {
-          return ErvenowRestaurantCuisines.storeMatchesCuisineChip(store, slug);
-        }
-        if (!slug) return storeCountsAsRestaurant(store);
-        if (!storeCountsAsRestaurant(store)) return false;
-        var c = String(store.category || "")
-          .trim()
-          .toLowerCase();
-        var key = String(slug || "")
-          .trim()
-          .toLowerCase();
-        var combo = CUISINE_COMBO[key];
-        if (combo) return combo.indexOf(c) !== -1;
-        return c === key;
-      }
-
-      var TYPE_AR = {
-        restaurant: "مطعم",
-        pharmacy: "صيدلية",
-        supermarket: "سوبر ماركت",
-        minimarket: "بقالة",
-        vegetables: "خضار وفواكه",
-        butcher: "لحوم",
-        fish: "أسماك",
-        home_business: "منتج منزلي",
-        flowers_gifts: "ورد وهدايا",
-        sweets: "حلويات",
-        services: "خدمات",
-        other: "أخرى",
-        plumber: "سباكة",
-        electrician: "كهرباء",
-        cleaning: "تنظيف",
-        nursery: "تنسيق حدائق",
-        ac_technician: "تكييف",
-        vehicle_transfer: "نقل مركبات",
-        internal_delivery: "توصيل",
-        pickup_truck: "ونيت",
-        furniture_move: "نقل أثاث",
-        gas_delivery: "غاز",
-      };
-
-      function typeLabelAr(type) {
-        var t = String(type || "").toLowerCase();
-        return TYPE_AR[t] || t || "—";
-      }
-
-      var MARKET_TYPES = {
-        supermarket: 1,
-        minimarket: 1,
-        vegetables: 1,
-        butcher: 1,
-        fish: 1,
-        sweets: 1,
-        flowers_gifts: 1,
-        home_business: 1,
-      };
-
-      function storeBucket(store) {
-        var t = String(store.type || store.category || "").toLowerCase();
-        if (t === "restaurant") return "restaurant";
-        if (t === "pharmacy") return "pharmacy";
-        if (MARKET_TYPES[t]) return "market";
-        return "service";
-      }
-
-      function displayName(store) {
-        return String(store.name || store.label || "").trim();
-      }
-
-      function matchesSearch(store, query) {
-        var q = String(query || "").trim().toLowerCase();
-        if (!q) return true;
-        var bits = [
-          displayName(store),
-          store.category_label_ar || "",
-          store.category || "",
-          store.type || "",
-        ];
-        var hay = bits.join(" ").toLowerCase();
-        return hay.indexOf(q) !== -1;
-      }
-
-      function storeCountsAsRestaurant(store) {
-        if (window.ErvenowRestaurantCuisines && ErvenowRestaurantCuisines.storeCountsAsRestaurant) {
-          return ErvenowRestaurantCuisines.storeCountsAsRestaurant(store);
-        }
-        return String(store.type || "").toLowerCase() === "restaurant";
-      }
-
-      function getUserGeo() {
-        return new Promise(function (resolve) {
-          if (!navigator.geolocation) return resolve(null);
-          navigator.geolocation.getCurrentPosition(
-            function (p) {
-              resolve({ lat: p.coords.latitude, lng: p.coords.longitude });
-            },
-            function () {
-              resolve(null);
-            },
-            { enableHighAccuracy: false, timeout: 2500, maximumAge: 300000 }
-          );
-        });
-      }
-
-      (function () {
-        var container = document.getElementById("container");
-        var guestNote = document.getElementById("guestNote");
-        var searchEl = document.getElementById("storeSearch");
-        var defaultLogo =
-          "data:image/svg+xml," +
-          encodeURIComponent(
-            '<svg xmlns="http://www.w3.org/2000/svg" width="320" height="200" viewBox="0 0 320 200"><defs><linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#f0ebe3"/><stop offset="100%" stop-color="#e5dcd2"/></linearGradient></defs><rect fill="url(#g)" width="320" height="200"/><text x="50%" y="52%" dominant-baseline="middle" text-anchor="middle" fill="#c9a227" font-family="sans-serif" font-size="18" font-weight="700">ERVENOW</text></svg>'
-          );
-
-        var allStores = [];
-        var activeCuisine = "";
-        var SKELETON_COUNT = 8;
-        var cuisineBar = document.getElementById("storesCuisineBar");
-        var geoFilterEl = document.getElementById("storesGeoFilter");
-        try {
-          if (geoFilterEl && sessionStorage.getItem("ervenow_stores_geo") === "1") geoFilterEl.checked = true;
-        } catch (e) {}
-        if (geoFilterEl) {
-          geoFilterEl.addEventListener("change", function () {
-            try {
-              sessionStorage.setItem("ervenow_stores_geo", geoFilterEl.checked ? "1" : "0");
-            } catch (e2) {}
-            load();
-          });
-        }
-
-        function hasCuisineSelected() {
-          return activeCuisine !== null && activeCuisine !== undefined;
-        }
-
-        function renderPickCuisine() {
-          container.className = "stores-grid";
-          container.removeAttribute("aria-busy");
-          container.innerHTML =
-            '<div class="stores-empty" role="status">' +
-            '<div class="stores-empty__icon" aria-hidden="true">🍽️</div>' +
-            "<h2>اختر تصنيف المطبخ</h2>" +
-            "<p>اضغط على أحد التصنيفات أعلاه — أو «الكل» لعرض كل المطاعم المعتمدة.</p>" +
-            "</div>";
-        }
-
-        function renderCuisineBarActive() {
-          if (!cuisineBar) return;
-          var chips = cuisineBar.querySelectorAll(".stores-cuisine-chip");
-          for (var i = 0; i < chips.length; i++) {
-            var c = chips[i];
-            var slug = c.getAttribute("data-cuisine") || "";
-            var on = hasCuisineSelected() && slug === activeCuisine;
-            c.classList.toggle("is-active", on);
-            c.setAttribute("aria-selected", on ? "true" : "false");
-          }
-        }
-
-        function buildCuisineBar() {
-          if (!cuisineBar) return;
-          var html =
-            '<button type="button" class="stores-cuisine-chip" data-cuisine="" role="tab" aria-selected="false">' +
-            '<span class="stores-cuisine-chip__icon" aria-hidden="true">▦</span><span>الكل</span></button>';
-          for (var i = 0; i < RESTAURANT_CUISINES.length; i++) {
-            var it = RESTAURANT_CUISINES[i];
-            html +=
-              '<button type="button" class="stores-cuisine-chip" data-cuisine="' +
-              esc(it.slug) +
-              '" role="tab" aria-selected="false">' +
-              '<span class="stores-cuisine-chip__icon" aria-hidden="true">' +
-              esc(it.icon) +
-              "</span><span>" +
-              esc(it.label) +
-              "</span></button>";
-          }
-          cuisineBar.innerHTML = html;
-        }
-
-        function setCuisineFromChip(btn) {
-          if (!btn.hasAttribute("data-cuisine")) return;
-          var slug = String(btn.getAttribute("data-cuisine") || "");
-          if (hasCuisineSelected() && slug === activeCuisine) {
-            activeCuisine = null;
-            if (searchEl) searchEl.disabled = true;
-            renderCuisineBarActive();
-            renderPickCuisine();
-            return;
-          }
-          activeCuisine = slug;
-          if (searchEl) searchEl.disabled = false;
-          renderCuisineBarActive();
-          load();
-        }
-
-        function renderSkeleton() {
-          container.className = "stores-grid stores-grid--skeleton";
-          container.setAttribute("aria-busy", "true");
-          var html = "";
-          for (var i = 0; i < SKELETON_COUNT; i++) {
-            html +=
-              '<div class="store-skel">' +
-              '<div class="store-skel__banner"></div>' +
-              '<div class="store-skel__body">' +
-              '<div class="store-skel__line"></div>' +
-              '<div class="store-skel__line store-skel__line--short"></div>' +
-              '<div class="store-skel__line"></div>' +
-              '<div class="store-skel__line store-skel__line--btn"></div>' +
-              "</div></div>";
-          }
-          container.innerHTML = html;
-        }
-
-        function renderEmptyBlock(kind, detail) {
-          container.className = "stores-grid";
-          container.removeAttribute("aria-busy");
-          var body = "";
-          if (kind === "error") {
-            var errLine =
-              detail && String(detail).trim()
-                ? "<p>" + esc(String(detail).trim()) + "</p>"
-                : "<p>تحقق من الشبكة أو أعد المحاولة بعد قليل.</p>";
-            body =
-              '<div class="stores-empty" role="alert">' +
-              '<div class="stores-empty__icon" aria-hidden="true">📡</div>' +
-              "<h2>تعذر التحميل</h2>" +
-              errLine +
-              '<div class="stores-empty__actions">' +
-              '<button type="button" class="btn btn-primary" id="btnRetry">إعادة المحاولة</button>' +
-              '<a class="btn btn-ghost" href="/">الرئيسية</a>' +
-              "</div></div>";
-          } else if (kind === "none") {
-            var geoHint =
-              detail === true
-                ? "<p style=\"margin-top:12px;font-weight:600;color:#5c4638\">عند تفعيل <strong>الموقع</strong> نعرض فقط المطاعم التي يصلها التوصيل إلى موقعك الحالي. إن لم يظهر أي مطعم، جرّب إعادة التحميل و<strong>رفض</strong> مشاركة الموقع لعرض كل المطاعم المعتمدة (بدون فلترة بالمسافة).</p>"
-                : "";
-            body =
-              '<div class="stores-empty" role="status">' +
-              '<div class="stores-empty__icon" aria-hidden="true">🏪</div>' +
-              "<h2>لا مطاعم معروضة بعد</h2>" +
-              "<p>لم نجد مطاعم مفعّلة تطابق العرض الحالي. إن كنت قد سجّلت مطعماً، فغالباً ما زال <strong>بانتظار الموافقة</strong> أو خارج نطاق التوصيل عند تفعيل الموقع.</p>" +
-              geoHint +
-              '<div class="stores-empty__actions">' +
-              '<a class="btn btn-primary" href="/">الصفحة الرئيسية</a>' +
-              '<a class="btn btn-ghost" href="/register-store.html">تسجيل متجر</a>' +
-              "</div></div>";
-          } else {
-            body =
-              '<div class="stores-empty" role="status">' +
-              '<div class="stores-empty__icon" aria-hidden="true">🔎</div>' +
-              "<h2>لا نتائج</h2>" +
-              "<p>جرّب كلمات أخرى، أو امسح البحث، أو اختر تصنيف &laquo;الكل&raquo;.</p>" +
-              '<div class="stores-empty__actions">' +
-              '<button type="button" class="btn btn-primary" id="btnClearFilters">مسح البحث والفلتر</button>' +
-              "</div></div>";
-          }
-          container.innerHTML = body;
-          var retry = document.getElementById("btnRetry");
-          if (retry) retry.addEventListener("click", function () {
-            load();
-          });
-          var clearBtn = document.getElementById("btnClearFilters");
-          if (clearBtn) {
-            clearBtn.addEventListener("click", function () {
-              if (searchEl) searchEl.value = "";
-              activeCuisine = null;
-              if (searchEl) searchEl.disabled = true;
-              renderCuisineBarActive();
-              renderPickCuisine();
-            });
-          }
-        }
-
-        function applyFilters() {
-          var q = searchEl ? searchEl.value : "";
-          return allStores.filter(function (s) {
-            if (!s || !s.id) return false;
-            if (!storeCountsAsRestaurant(s) && storeBucket(s) !== "restaurant") return false;
-            return matchesSearch(s, q);
-          });
-        }
-
-        function renderList() {
-          var list = applyFilters();
-          container.className = "stores-grid";
-          container.removeAttribute("aria-busy");
-          container.innerHTML = "";
-
-          if (!list.length) {
-            renderEmptyBlock("filtered");
-            return;
-          }
-
-          list.forEach(function (store) {
-            var name = displayName(store) || "مطعم";
-            var act = store.category_label_ar || typeLabelAr(store.type || store.category);
-            var km = store.distance_km != null && Number.isFinite(Number(store.distance_km)) ? Number(store.distance_km) : null;
-            var metaHtml = "";
-            if (km != null) {
-              var eta = etaMinutesFromKm(km);
-              var outRadius = store.within_delivery_radius === false;
-              metaHtml =
-                '<div class="store-meta">' +
-                "<span>📍 " +
-                esc(km.toFixed(1)) +
-                " كم</span>" +
-                '<span class="store-meta__dot" aria-hidden="true">·</span>' +
-                "<span>⏱ نحو " +
-                esc(String(eta)) +
-                " د توصيل</span>" +
-                (outRadius ? '<span class="store-meta__dot" aria-hidden="true">·</span><span>خارج نطاق التوصيل المعتاد</span>' : "") +
-                "</div>";
-            } else {
-              metaHtml =
-                '<div class="store-meta is-muted"><span>فعّل الموقع لعرض المسافة والوقت التقريبي</span></div>';
-            }
-
-            var logo = store.logo_url || "/default.png";
-            var card = document.createElement("article");
-            card.className = "store-card";
-            card.setAttribute("itemscope", "");
-            card.setAttribute("itemtype", "https://schema.org/Store");
-            card.innerHTML =
-              '<div class="store-card__media">' +
-              '<img class="store-logo" src="' +
-              esc(logo) +
-              '" alt="" loading="lazy" decoding="async" fetchpriority="low" />' +
-              "</div>" +
-              '<div class="store-info">' +
-              "<h3 itemprop=\"name\">" +
-              esc(name) +
-              "</h3>" +
-              '<p class="store-type">' +
-              esc(act) +
-              "</p>" +
-              metaHtml +
-              '<div class="store-card__cta">' +
-              '<button type="button" class="store-card__btn">عرض المطعم</button>' +
-              "</div>" +
-              "</div>";
-
-            var img = card.querySelector(".store-logo");
-            if (img) {
-              img.addEventListener("error", function () {
-                img.src = defaultLogo;
-              });
-              if (!store.logo_url) img.src = defaultLogo;
-            }
-            var btn = card.querySelector(".store-card__btn");
-            if (btn) {
-              btn.addEventListener("click", function () {
-                openStore(store.id);
-              });
-            }
-            container.appendChild(card);
-          });
-        }
-
-        if (searchEl) {
-          searchEl.addEventListener("input", function () {
-            if (!hasCuisineSelected()) return;
-            if (allStores.length) renderList();
-          });
-        }
-
-        async function load() {
-          if (!hasCuisineSelected()) {
-            renderPickCuisine();
-            if (searchEl) searchEl.disabled = true;
-            return;
-          }
-          renderSkeleton();
-          if (searchEl) searchEl.disabled = true;
-          try {
-            var geo = null;
-            if (geoFilterEl && geoFilterEl.checked) geo = await getUserGeo();
-            var parts = [];
-            if (geo) {
-              parts.push("user_lat=" + encodeURIComponent(geo.lat));
-              parts.push("user_lng=" + encodeURIComponent(geo.lng));
-            }
-            parts.push("type=restaurant");
-            if (activeCuisine && String(activeCuisine).length > 0) {
-              parts.push("category=" + encodeURIComponent(activeCuisine));
-            }
-            var qs = parts.length ? "?" + parts.join("&") : "";
-            var headers = {};
-            var tok = window.PlatformAPI && PlatformAPI.getToken && PlatformAPI.getToken();
-            if (tok) headers.Authorization = "Bearer " + tok;
-
-            var res = await fetch(window.PlatformAPI.apiUrl("/api/stores" + qs), { headers: headers });
-            var data = await res.json().catch(function () {
-              return {};
-            });
-
-            if (!res.ok || !data.ok) {
-              if (searchEl) searchEl.disabled = false;
-              renderEmptyBlock("error", data.error || "الخادم لم يرد بشكل صحيح.");
-              return;
-            }
-
-            if (data.browse_masked) guestNote.style.display = "block";
-            allStores = Array.isArray(data.stores) ? data.stores : [];
-            if (activeCuisine && String(activeCuisine).length > 0 && !data.category_applied) {
-              allStores = allStores.filter(function (s) {
-                return storeMatchesCuisineChip(s, activeCuisine);
-              });
-            }
-
-            if (searchEl) searchEl.disabled = false;
-
-            if (!allStores.length) {
-              renderEmptyBlock("none", !!data.geo_filtered);
-              return;
-            }
-
-            renderList();
-          } catch (err) {
-            if (searchEl) searchEl.disabled = false;
-            renderEmptyBlock("error", "تعذر إكمال الطلب. تحقق من الاتصال ثم أعد المحاولة.");
-          }
-        }
-
-        function applyQueryFromUrl() {
-          var p = new URLSearchParams(location.search);
-          var category = String(p.get("category") || "")
-            .trim()
-            .toLowerCase();
-          if (category) {
-            activeCuisine = category;
-            renderCuisineBarActive();
-          }
-        }
-
-        loadRestaurantCuisinesFromApi().then(function () {
-          buildCuisineBar();
-          applyQueryFromUrl();
-          if (activeCuisine === null || activeCuisine === undefined) activeCuisine = "";
-          renderCuisineBarActive();
-          if (cuisineBar) {
-            cuisineBar.addEventListener("click", function (e) {
-              var t = e.target.closest(".stores-cuisine-chip");
-              if (!t) return;
-              setCuisineFromChip(t);
-            });
-          }
-          if (searchEl) searchEl.disabled = !hasCuisineSelected();
-          if (!hasCuisineSelected()) renderPickCuisine();
-          else load();
-        });
-      })();
-    </script>
+    <script src="/assets/section-hub.js"></script>
+    <script src="/assets/section-hub-restaurants.js"></script>
   </body>
 </html>

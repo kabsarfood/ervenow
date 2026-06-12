@@ -35,5 +35,18 @@
     isAnonymousGuest: function () {
       return this.isActive() && !this.hasSessionToken();
     },
+
+    /** إنهاء جلسة الزائر — تصفير السلة والبيانات المحلية */
+    endSession: function () {
+      this.setActive(false);
+      try {
+        if (window.ErvenowOrderDraft && typeof ErvenowOrderDraft.markSessionEnded === "function") {
+          ErvenowOrderDraft.markSessionEnded();
+        }
+        if (window.ErvenowOrderDraft && typeof ErvenowOrderDraft.clearPlatformDraftState === "function") {
+          ErvenowOrderDraft.clearPlatformDraftState();
+        }
+      } catch (e) {}
+    },
   };
 })();

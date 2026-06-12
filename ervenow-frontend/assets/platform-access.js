@@ -4,7 +4,7 @@
 (function (global) {
   var ADMIN_PREFIXES = ["/admin", "/admin-dashboard", "/admin-login", "/admin-settings", "/admin-finance", "/admin-approvals", "/admin-branding", "/admin-categories", "/admin-commissions", "/admin-debts", "/admin-withdrawals"];
   var DRIVER_HUB = ["/driver", "/driver-wallet", "/driver-app", "/driver-login", "/orders"];
-  var DRIVER_BLOCKED_ORDER = ["/cart", "/order"];
+  var DRIVER_BLOCKED_ORDER = ["/cart", "/checkout", "/order"];
 
   function normalizeRole(role) {
     var r = String(role || "")
@@ -58,7 +58,7 @@
   }
 
   function applyDriverUiRestrictions() {
-    document.querySelectorAll('a[href="/cart"], a[href="/order"]').forEach(function (a) {
+    document.querySelectorAll('a[href="/cart"], a[href="/checkout"], a[href="/order"]').forEach(function (a) {
       a.setAttribute("data-driver-order-blocked", "1");
       a.addEventListener(
         "click",

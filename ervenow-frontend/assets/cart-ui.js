@@ -4,8 +4,86 @@
 (function (global) {
   "use strict";
 
+  function cartPageCheckoutV3Html(opts) {
+    opts = opts || {};
+    var checkoutId = opts.checkoutId || "lpCartCheckoutBtn";
+    var showFullFin = opts.showFullFin !== false;
+    var ewPayDetail =
+      '<div id="lpCartEwPayDetail" class="erv-ew-pay-card" hidden>' +
+      '<div class="erv-ew-pay-card__rows">' +
+      '<div class="erv-ew-pay-card__row"><span class="erv-ew-pay-card__label">الرصيد المتاح</span>' +
+      '<strong class="erv-ew-pay-card__val" id="lpCartEwPayAvail">—</strong></div>' +
+      '<div class="erv-ew-pay-card__row"><span class="erv-ew-pay-card__label">قيمة الطلب</span>' +
+      '<strong class="erv-ew-pay-card__val" id="lpCartEwPayOrder">—</strong></div>' +
+      '<div class="erv-ew-pay-card__row erv-ew-pay-card__row--after"><span class="erv-ew-pay-card__label">الرصيد بعد العملية</span>' +
+      '<strong class="erv-ew-pay-card__val" id="lpCartEwPayAfter">—</strong></div>' +
+      "</div>" +
+      '<p id="lpCartEwPayInsufficient" class="erv-ew-pay-card__warn" hidden>رصيد المحفظة غير كافٍ</p>' +
+      '<a id="lpCartEwPayTopup" class="erv-ew-pay-card__topup" href="/wallet.html" hidden>شحن المحفظة</a>' +
+      '<span id="lpCartEwPayBalance" class="visually-hidden" aria-hidden="true"></span>' +
+      "</div>";
+    return (
+      '<div class="lp-cart-panel__surface">' +
+      '<p id="lpCartPanelSub" class="visually-hidden" hidden>أضف منتجات أو خدمات، ثم أكمل الدفع.</p>' +
+      '<div id="lpCartItemsCard" class="card card--items" aria-labelledby="lpCartLinesHeading">' +
+      '<div class="card-title" id="lpCartLinesHeading">📦 الطلب</div>' +
+      '<div class="card-body--items">' +
+      '<div id="lpCartLines" class="lp-cart-panel__list"></div>' +
+      '<p id="lpCartEmpty" class="cart-empty-msg" hidden>السلة فارغة — ابدأ من أحد الأقسام:</p>' +
+      '<div id="lpCartEmptyCta" class="lp-cart-panel__empty-cta" hidden>' +
+      '<a class="lp-cart-panel__empty-btn" href="/stores">متاجر</a>' +
+      '<a class="lp-cart-panel__empty-btn" href="/services">خدمات</a>' +
+      '<a class="lp-cart-panel__empty-btn" href="/delivery-services.html">توصيل</a>' +
+      '<a class="lp-cart-panel__empty-btn lp-cart-panel__empty-btn--primary" href="/start-now.html">ابدأ طلباً</a>' +
+      "</div>" +
+      "</div>" +
+      "</div>" +
+      '<div id="cartCheckoutDeliveryCard" class="card" hidden>' +
+      '<div class="card-title">🚚 التوصيل</div>' +
+      '<div class="total-row"><span>نوع التوصيل</span><span id="cartDeliveryTypeLabel">—</span></div>' +
+      '<div class="total-row"><span>رسوم التوصيل</span><span id="cartDeliveryFeeDisplay">—</span></div>' +
+      (showFullFin
+        ? '<p id="lpCartDelNote" class="total-note" hidden>لطلبات المتجر: حدّد موقع التوصيل لحساب الأجرة (كم × 2.3 ر.س).</p>'
+        : "") +
+      "</div>" +
+      '<div id="lpCartPayCard" class="card" hidden>' +
+      '<div class="card-title">💳 وسيلة الدفع</div>' +
+      '<div id="lpCartPaySection">' +
+      '<div id="lpCartPayIcons" class="erv-pay-cards erv-pay-cards--cart payment-grid" role="group" aria-label="وسائل الدفع"></div>' +
+      '<select id="lpCartPaySelect" class="erv-pay-select" hidden aria-hidden="true" tabindex="-1"></select>' +
+      '<div id="lpCartPayLuxeWrap" class="erv-pay-luxe-wrap" hidden></div>' +
+      ewPayDetail +
+      "</div>" +
+      "</div>" +
+      '<div id="lpCartSummary" class="card" hidden>' +
+      '<div class="card-title">💰 ملخص الفاتورة</div>' +
+      '<div class="total-row"><span>المنتجات</span><span id="lpCartSub">٠٫٠٠ <small class="lp-cart-panel__cur">ر.س</small></span></div>' +
+      (showFullFin
+        ? '<div class="total-row"><span>التوصيل</span><span id="lpCartDel">٠٫٠٠ <small class="lp-cart-panel__cur">ر.س</small></span></div>'
+        : "") +
+      '<div class="total-row"><span>الضريبة</span><span id="lpCartVat">٠٫٠٠ <small class="lp-cart-panel__cur">ر.س</small></span></div>' +
+      (showFullFin
+        ? '<div class="total-row" hidden aria-hidden="true"><span>عمولة المنصة</span><span id="lpCartComm">٠٫٠٠ <small class="lp-cart-panel__cur">ر.س</small></span></div>'
+        : "") +
+      '<div class="total-final"><span>الإجمالي</span><span id="lpCartTotal">٠٫٠٠ <small class="lp-cart-panel__cur">ر.س</small></span></div>' +
+      "</div>" +
+      '<div class="security" aria-hidden="false">🔒 دفع آمن • 🛡️ حماية المشتري • 🚚 تتبع مباشر</div>' +
+      '<div id="lpCartFooter" hidden>' +
+      '<button type="button" class="checkout-btn" id="' +
+      checkoutId +
+      '" disabled>تأكيد الطلب</button>' +
+      '<div class="footer-note">SSL Secured • PCI DSS • 3D Secure</div>' +
+      "</div>" +
+      '<span id="lpCartItemsToggleMeta" class="visually-hidden" aria-hidden="true"></span>' +
+      '<span id="lpCartFinToggleMeta" class="visually-hidden" aria-hidden="true"></span>' +
+      '<span id="lpCartPayToggleMeta" class="visually-hidden" aria-hidden="true"></span>' +
+      "</div>"
+    );
+  }
+
   function cartPanelInnerHtml(opts) {
     opts = opts || {};
+    if (opts.checkoutV3 === true) return cartPageCheckoutV3Html(opts);
     var continueHref = opts.continueHref || "/dashboard";
     var checkoutId = opts.checkoutId || "lpCartCheckoutBtn";
     var showFullFin = opts.showFullFin !== false;
@@ -133,7 +211,7 @@
   function rememberCartReturnUrl() {
     try {
       var path = global.location && global.location.pathname;
-      if (!path || path === "/cart") return;
+      if (!path || path === "/cart" || path === "/checkout") return;
       global.sessionStorage.setItem(
         "erv_cart_return_url",
         path + (global.location.search || "") + (global.location.hash || "")
@@ -150,7 +228,7 @@
       try {
         stored = global.sessionStorage.getItem("erv_cart_return_url") || "";
       } catch (e1) {}
-      if (stored && stored !== "/cart") {
+      if (stored && stored !== "/cart" && stored !== "/checkout") {
         e.preventDefault();
         if (panel && panel.classList.contains("lp-cart-panel--open")) {
           panel.classList.remove("lp-cart-panel--open");
@@ -251,54 +329,18 @@
   }
 
   function mountGuestHeaderCart(toolsEl, linkEl) {
-    if (!toolsEl || !linkEl || document.getElementById("lpCartWrap")) return;
-
-    var badge = linkEl.querySelector("#cartCount") || linkEl.querySelector(".dash-header-cart__badge");
-    var countText = badge ? badge.textContent : "0";
-    var countEmpty = badge && badge.getAttribute("data-empty");
-
-    var wrap = document.createElement("div");
-    wrap.className = "lp-cart-wrap dash-cart-wrap";
-    wrap.id = "lpCartWrap";
-    wrap.innerHTML =
-      '<button type="button" class="cart-btn dash-header-cart-btn" id="lpCartToggle" aria-expanded="false" aria-controls="lpCartPanel" aria-haspopup="dialog">' +
-      '<span aria-hidden="true">🛒</span>' +
-      '<span class="dash-header-cart__label">السلة</span>' +
-      '<span class="dash-header-cart__badge" id="cartCount"' +
-      (countEmpty ? ' data-empty="true"' : "") +
-      ">" +
-      countText +
-      "</span>" +
-      "</button>" +
-      '<div class="lp-cart-backdrop" id="lpCartBackdrop" aria-hidden="true"></div>' +
-      '<div class="lp-cart-panel lp-cart-panel--empty" id="lpCartPanel" role="dialog" aria-modal="true" aria-labelledby="lpCartDialogTitle" aria-hidden="true">' +
-      cartPanelInnerHtml({ continueHref: "/dashboard", showFullFin: true }) +
-      "</div>";
-
-    linkEl.replaceWith(wrap);
-    initCartToggle();
-    if (global.ErvenowGuestShell && typeof ErvenowGuestShell.syncHeaderLayout === "function") {
-      ErvenowGuestShell.syncHeaderLayout();
-    } else if (global.ErvenowViewport && typeof ErvenowViewport.syncHeaderHeight === "function") {
-      ErvenowViewport.syncHeaderHeight();
+    if (global.ErvenowOrderDraftBadge && typeof global.ErvenowOrderDraftBadge.enforceCheckoutNav === "function") {
+      global.ErvenowOrderDraftBadge.enforceCheckoutNav();
+      return;
     }
-
-    var checkout = document.getElementById("lpCartCheckoutBtn");
-    if (checkout) {
-      checkout.addEventListener("click", function () {
-        if (global.ErvenowCart && typeof global.ErvenowCart.goCheckout === "function") {
-          global.ErvenowCart.goCheckout();
-        } else if (typeof global.handleLpCartCheckoutClick === "function") {
-          global.handleLpCartCheckoutClick();
-        }
-      });
-    }
-
-    if (typeof global.updateCartCount === "function") global.updateCartCount();
+    if (!toolsEl || !linkEl) return;
+    if (linkEl.getAttribute("href") !== "/checkout") linkEl.setAttribute("href", "/checkout");
+    linkEl.setAttribute("data-erv-checkout-nav", "1");
   }
 
   global.ErvenowCartUI = {
     cartPanelInnerHtml: cartPanelInnerHtml,
+    cartPageCheckoutV3Html: cartPageCheckoutV3Html,
     initCartToggle: initCartToggle,
     initContinueShopping: initContinueShopping,
     rememberCartReturnUrl: rememberCartReturnUrl,

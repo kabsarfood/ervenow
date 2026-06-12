@@ -1244,7 +1244,7 @@ select {
   vertical-align: middle;
 }
 .live-map-legend .lg-store::before {
-  background: #eab308;
+  background: var(--admin-map-color-store, var(--accent, currentColor));
 }
 .live-map-legend .lg-driver::before {
   background: #3b82f6;
@@ -1750,5 +1750,100 @@ select {
   }
   .store-setup-foot .btn {
     flex: 1 1 100%;
+  }
+}
+
+/* إدارة البنرات V2 — أقسام ثابتة */
+.hero-banners-sections {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(14px, 2.5vw, 20px);
+}
+.hero-banners-section {
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.55);
+  overflow: hidden;
+}
+.hero-banners-section__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 14px;
+  padding: clamp(12px, 2.5vw, 16px) clamp(14px, 3vw, 18px);
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.08), rgba(14, 165, 233, 0.06));
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+.hero-banners-section__title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1 1 220px;
+  min-width: 0;
+}
+.hero-banners-section__num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: rgba(99, 102, 241, 0.15);
+  color: #4338ca;
+  font-weight: 800;
+  font-size: 0.82rem;
+  flex-shrink: 0;
+}
+.hero-banners-section__ic {
+  font-size: 1.35rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.hero-banners-section__meta {
+  min-width: 0;
+}
+.hero-banners-section__title {
+  margin: 0;
+  font-size: clamp(1rem, 2.2vw, 1.12rem);
+  line-height: 1.45;
+}
+.hero-banners-section__path {
+  margin: 2px 0 0;
+  font-size: 0.82rem;
+  color: rgba(0, 0, 0, 0.55);
+  word-break: break-all;
+}
+.hero-banners-section__id {
+  font-size: 0.78rem;
+  opacity: 0.85;
+}
+.hero-banners-section__hint {
+  margin: 6px 0 0;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: rgba(0, 0, 0, 0.58);
+}
+.hero-banners-section__list {
+  padding: clamp(10px, 2vw, 14px);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.hero-banners-section__empty {
+  margin: 4px 0;
+  padding: 8px 4px;
+}
+.hero-banner-card__path {
+  font-size: 0.82rem;
+  opacity: 0.75;
+}
+@media (max-width: 640px) {
+  .hero-banners-section__head {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .hero-banners-section__head .hb-section-add-btn {
+    width: 100%;
   }
 }

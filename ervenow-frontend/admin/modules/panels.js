@@ -286,6 +286,24 @@ app.openStoreSetup = async function (storeId) {
     document.getElementById("storeSetupType").value = st.type || "restaurant";
     document.getElementById("storeSetupLocation").value = st.location_text || "";
     document.getElementById("storeSetupAddress").value = st.address || "";
+    var mapsEl = document.getElementById("storeSetupMapsUrl");
+    if (mapsEl) {
+      mapsEl.value =
+        st.maps_url ||
+        (st.lat != null && st.lng != null
+          ? "https://www.google.com/maps?q=" + encodeURIComponent(String(st.lat) + "," + String(st.lng))
+          : "");
+    }
+    var mapsStatus = document.getElementById("storeSetupMapsStatus");
+    if (mapsStatus) {
+      if (st.lat != null && st.lng != null) {
+        mapsStatus.textContent = "الإحداثيات المعتمدة: " + st.lat + ", " + st.lng;
+        mapsStatus.className = "sub is-ok";
+      } else {
+        mapsStatus.textContent = "⚠️ لا يوجد موقع معتمد — الصق رابط Google Maps قبل الاعتماد.";
+        mapsStatus.className = "sub";
+      }
+    }
     document.getElementById("storeSetupBio").value = (j.merchant_hub && j.merchant_hub.bio) || "";
     var sub = document.getElementById("storeSetupSubtitle");
     if (sub) {
@@ -330,10 +348,17 @@ app.saveStoreSetup = async function (approveAfter) {
   var body = {
     name: document.getElementById("storeSetupName").value.trim(),
     type: document.getElementById("storeSetupType").value,
+    maps_url: document.getElementById("storeSetupMapsUrl")
+      ? document.getElementById("storeSetupMapsUrl").value.trim()
+      : "",
     location_text: document.getElementById("storeSetupLocation").value.trim(),
     address: document.getElementById("storeSetupAddress").value.trim(),
     bio: document.getElementById("storeSetupBio").value.trim(),
   };
+  if (!body.maps_url) {
+    app.showError("رابط موقع المتجر على Google Maps مطلوب");
+    return;
+  }
   var cat = document.getElementById("storeSetupCategory").value.trim();
   if (body.type === "restaurant") body.restaurant_category = cat || null;
   else body.category = cat || null;
@@ -402,6 +427,39 @@ app.saveStoreSetup = async function (approveAfter) {
     typeEl.onchange = function () {
       app.fillStoreSetupCategorySelect(typeEl.value, "");
     };
+  }
+  var mapsUrlEl = document.getElementById("storeSetupMapsUrl");
+  var mapsStatusEl = document.getElementById("storeSetupMapsStatus");
+  async function previewStoreMapsUrl() {
+    if (!mapsUrlEl || !mapsStatusEl) return;
+    var raw = mapsUrlEl.value.trim();
+    if (!raw) {
+      mapsStatusEl.textContent = "";
+      return;
+    }
+    mapsStatusEl.textContent = "جاري التحقق من الرابط…";
+    mapsStatusEl.className = "sub";
+    try {
+      var j = await app.PlatformAPI.api("/api/store/resolve-maps-link", {
+        method: "POST",
+        body: { url: raw },
+      });
+      if (j && Number.isFinite(Number(j.lat)) && Number.isFinite(Number(j.lng))) {
+        mapsStatusEl.textContent = "✓ موقع معتمد: " + j.lat + ", " + j.lng;
+        mapsStatusEl.className = "sub is-ok";
+      } else {
+        mapsStatusEl.textContent = "تعذر استخراج الإحداثيات — تحقق من الرابط";
+        mapsStatusEl.className = "sub";
+      }
+    } catch (e) {
+      mapsStatusEl.textContent = String(e.message || e || "تعذر التحقق من الرابط");
+      mapsStatusEl.className = "sub";
+    }
+  }
+  if (mapsUrlEl) {
+    mapsUrlEl.addEventListener("blur", function () {
+      previewStoreMapsUrl();
+    });
   }
 })();
 

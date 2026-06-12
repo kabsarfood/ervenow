@@ -1,15 +1,18 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ar" dir="rtl">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover" />
     <meta name="description" content="يتم تفعيل الحساب بعد المراجعة واعتماده من إدارة ERVENOW." />
-    <script src="/assets/viewport-fit.js"></script>
+    <script src="/assets/viewport-fit.js?erv=20260612b"></script>
     <title>ERVENOW | لوحة زائر المنصة</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/assets/styles.css" />
-    <link rel="stylesheet" href="/assets/guest-shell.css" />
+    <link rel="stylesheet" href="/assets/guest-shell.css?erv=20260612b" />
+    <link rel="stylesheet" href="/assets/order-draft-badge.css" />
+    <link rel="stylesheet" href="/assets/start-now-landing.css" />
+    <link rel="stylesheet" href="/assets/guest-offers-carousel.css" />
         <style>
       .dash-alert {
         display: none;
@@ -747,126 +750,6 @@
         min-height: 48px;
         font-size: 1rem;
       }
-      .dash-main .layout .card.guest-offers-carousel {
-        padding: 0;
-        margin-bottom: 14px;
-        overflow: hidden;
-        border-radius: 18px;
-        border: 1px solid rgba(61, 34, 19, 0.1);
-        background: #1a120c;
-      }
-      .guest-offers-carousel {
-        display: block;
-      }
-      .guest-offers-slide--noimg {
-        background: linear-gradient(135deg, #3d2213 0%, #6b4a2e 42%, #1a120c 100%);
-      }
-      .dash-offer-card__img {
-        width: 100%;
-        max-height: 88px;
-        object-fit: cover;
-        border-radius: 10px;
-        margin-bottom: 6px;
-      }
-      .guest-offers-shell {
-        position: relative;
-        height: clamp(253px, 65.8vw, 354px);
-        overflow: hidden;
-      }
-      .guest-offers-track {
-        display: flex;
-        flex-direction: row;
-        direction: ltr;
-        height: 100%;
-        width: 100%;
-        transition: transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
-        will-change: transform;
-      }
-      .guest-offers-slide {
-        position: relative;
-        flex: 0 0 100%;
-        width: 100%;
-        min-width: 100%;
-        height: 100%;
-        display: block;
-        text-decoration: none;
-        color: #fffefb;
-        overflow: hidden;
-        box-sizing: border-box;
-      }
-      .guest-offers-slide__img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        display: block;
-      }
-      .guest-offers-slide__shade {
-        position: absolute;
-        inset: 0;
-        background: linear-gradient(90deg, rgba(26, 18, 12, 0.82) 0%, rgba(26, 18, 12, 0.35) 55%, rgba(26, 18, 12, 0.15) 100%);
-      }
-      .guest-offers-slide__body {
-        position: absolute;
-        inset: auto auto 0 0;
-        padding: clamp(14px, 3vw, 22px);
-        max-width: min(92%, 420px);
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-        z-index: 1;
-        direction: rtl;
-        text-align: right;
-      }
-      .guest-offers-slide__price {
-        display: inline-flex;
-        align-self: flex-start;
-        padding: 4px 10px;
-        border-radius: 999px;
-        background: rgba(212, 168, 74, 0.92);
-        color: #2b170d;
-        font-size: 0.78rem;
-        font-weight: 900;
-      }
-      .guest-offers-slide__title {
-        font-size: clamp(1rem, 3.2vw, 1.35rem);
-        font-weight: 900;
-        line-height: 1.25;
-      }
-      .guest-offers-slide__sub {
-        font-size: 0.86rem;
-        font-weight: 600;
-        opacity: 0.92;
-        line-height: 1.45;
-      }
-      .guest-offers-slide__cta {
-        margin-top: 4px;
-        font-size: 0.84rem;
-        font-weight: 800;
-        color: #f5d78e;
-      }
-      .guest-offers-dots {
-        position: absolute;
-        left: 50%;
-        bottom: 10px;
-        transform: translateX(-50%);
-        display: flex;
-        gap: 6px;
-        z-index: 2;
-      }
-      .guest-offers-dot {
-        width: 10px;
-        height: 10px;
-        min-width: 10px;
-        min-height: 10px;
-        padding: 0;
-        border: 0;
-        border-radius: 50%;
-        background: rgba(255, 255, 255, 0.35);
-        cursor: pointer;
-      }
-      .guest-offers-dot.is-active {
-        background: #f5d78e;
-      }
       .dash-main-hub {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
@@ -908,13 +791,14 @@
         margin-bottom: 14px;
       }
       .dash-tabs__nav {
-        display: flex;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 8px;
-        flex-wrap: wrap;
         margin: 0 0 14px;
       }
       .dash-tabs__nav button {
-        flex: 1 1 calc(50% - 4px);
+        flex: unset;
+        width: 100%;
         min-width: 0;
         min-height: 44px;
         padding: 11px 10px;
@@ -933,8 +817,29 @@
         z-index: 2;
         pointer-events: auto;
       }
-      @media (min-width: 520px) {
-        .dash-tabs__nav button { flex: 1 1 calc(25% - 6px); }
+      .dash-tabs__nav button:last-child:nth-child(5) {
+        grid-column: 1 / -1;
+      }
+      @media (min-width: 641px) and (max-width: 1024px) {
+        .dash-tabs__nav {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+        .dash-tabs__nav button:last-child:nth-child(5) {
+          grid-column: auto;
+        }
+      }
+      @media (min-width: 1025px) {
+        .dash-tabs__nav {
+          display: flex;
+          flex-wrap: wrap;
+        }
+        .dash-tabs__nav button {
+          flex: 1 1 calc(20% - 6px);
+          width: auto;
+        }
+        .dash-tabs__nav button:last-child:nth-child(5) {
+          grid-column: auto;
+        }
       }
       .dash-tabs__nav button.is-active,
       .dash-tabs__nav button[aria-selected="true"] {
@@ -1058,19 +963,6 @@
           padding: 8px 6px;
           min-height: 44px;
         }
-          max-height: none !important;
-          min-height: 260px;
-          height: 260px;
-        }
-          grid-column: unset;
-          grid-row: unset;
-        }
-          grid-template-columns: 1fr;
-        }
-          flex-direction: column;
-        }
-          width: 100%;
-        }
       }
       @media (min-width: 641px) and (max-width: 1024px) {
         .dash-site-header__inner {
@@ -1087,7 +979,7 @@
           grid-template-columns: repeat(3, minmax(0, 1fr));
         }
         .dash-tabs__nav button {
-          min-height: 42px;
+          min-height: 44px;
         }
       }
       @media (max-width: 380px) {
@@ -1098,119 +990,73 @@
         .cat-grid {
           grid-template-columns: 1fr;
         }
-        .dash-tabs__nav button {
-          flex: 1 1 calc(50% - 4px);
-        }
       }
 
-      /* ── من الخريطة — جوال: مرونة، ظهور كامل، شريط سفلي ثابت ── */
-      :root {
+      .dash-platform-hero {
+        margin-bottom: clamp(8px, 1.8vw, 10px);
+        border-radius: clamp(14px, 2.5vw, 16px);
+        overflow: hidden;
+        border: 1px solid rgba(61, 34, 19, 0.12);
+        background: linear-gradient(135deg, #3d2213, #6b4423 55%, #8b5a2b);
+        color: #fffefb;
+        padding: clamp(12px, 2.6vw, 18px) clamp(14px, 3vw, 20px);
       }
-        list-style: none;
-        cursor: pointer;
+      .dash-platform-hero.sn-hero--has-platform-bg {
+        background-image: linear-gradient(135deg, rgba(61, 34, 19, 0.9), rgba(45, 26, 10, 0.82)),
+          var(--platform-hero-bg, none);
+        background-size: cover;
+        background-position: center;
       }
-        display: none;
+      .dash-platform-hero__title {
+        margin: 0 0 6px;
+        font-size: clamp(1.02rem, 3.2vw, 1.28rem);
+        font-weight: 900;
+        line-height: 1.35;
       }
-        content: "▾";
-        float: inline-start;
-        font-size: 0.85rem;
-        opacity: 0.55;
-        transition: transform 0.2s ease;
+      .dash-platform-hero__sub {
+        margin: 0 0 10px;
+        font-size: clamp(0.8rem, 2.2vw, 0.9rem);
+        line-height: 1.45;
+        opacity: 0.95;
       }
-        transform: rotate(-90deg);
+      .dash-platform-hero__actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
       }
-        padding-top: 2px;
+      .dash-platform-hero__actions a.sn-hero__cta {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 48px;
+        padding: 10px 16px;
+        border-radius: 10px;
+        font-size: 0.88rem;
+        font-weight: 800;
+        text-decoration: none;
+        background: #c9a227;
+        color: #1a1008;
       }
-      @media (min-width: 768px) {
-          pointer-events: none;
-          cursor: default;
+      .dash-platform-hero__actions a.sn-hero__cta--outline {
+        background: rgba(26, 16, 8, 0.28);
+        color: #f5e6a8;
+        border: 2px solid #d4af37;
+        box-shadow: none;
+      }
+      .dash-platform-hero__actions a.sn-hero__cta--outline:hover,
+      .dash-platform-hero__actions a.sn-hero__cta--outline:focus-visible {
+        background: rgba(26, 16, 8, 0.4);
+        border-color: #e8c547;
+        color: #fffefb;
+        transform: none;
+        box-shadow: none;
+      }
+      @media (max-width: 640px) {
+        .dash-platform-hero__actions {
+          flex-direction: column;
         }
-          display: none;
-        }
-      }
-      @media (max-width: 767px) {
-        :root {
-        }
-          left: 0;
-          top: 0;
-          transform: none;
+        .dash-platform-hero__actions a.sn-hero__cta {
           width: 100%;
-          max-width: 100%;
-          height: 100dvh;
-          max-height: var(--erw-viewport-h, 100dvh);
-          min-height: 0;
-          border-radius: 0;
-          padding-top: 0;
-        }
-          flex: 1 1 auto;
-          min-height: 0;
-          width: 100%;
-        }
-          display: none;
-        }
-          padding: max(10px, env(safe-area-inset-top, 0px)) clamp(44px, 12vw, 52px) 8px 14px;
-          flex-shrink: 0;
-        }
-          font-size: clamp(0.92rem, 4.2vw, 1.05rem);
-        }
-          padding-top: 8px;
-          padding-inline: max(10px, env(safe-area-inset-left, 10px)) max(10px, env(safe-area-inset-right, 10px));
-          padding-bottom: max(12px, var(--erw-safe-bottom, 12px));
-          scroll-padding-bottom: 16px;
-        }
-          grid-template-areas:
-            "map"
-            "method"
-            "actions"
-            "shipment";
-          gap: 10px;
-        }
-          grid-template-areas:
-            "method"
-            "map"
-            "shipment";
-        }
-          display: none;
-        }
-          margin-top: 2px;
-        }
-          gap: 6px;
-          margin: 0 0 2px;
-        }
-          padding: 10px 12px;
-        }
-          margin-bottom: 6px;
-        }
-          border-radius: 16px;
-          box-shadow: 0 6px 22px rgba(45, 28, 14, 0.09);
-          border-color: rgba(185, 135, 47, 0.22);
-        }
-          flex-shrink: 0;
-        }
-          position: sticky;
-          left: auto;
-          right: auto;
-          bottom: 0;
-          z-index: 3;
-          margin: 0;
-          padding: 10px 0 max(4px, env(safe-area-inset-bottom, 0px));
-          background: linear-gradient(180deg, rgba(255, 254, 251, 0.94) 0%, #fffefb 30%);
-          border-top: 1px solid rgba(185, 135, 47, 0.22);
-          box-shadow: 0 -8px 24px rgba(45, 28, 14, 0.08);
-          grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
-          gap: 10px;
-        }
-          min-height: 48px;
-          padding: 6px 8px;
-        }
-          min-height: 48px;
-          font-size: 0.9rem;
-        }
-          min-height: 50px;
-          font-size: 0.9rem;
-        }
-          padding: 12px;
-          border-radius: 14px;
         }
       }
 
@@ -1240,7 +1086,7 @@
             <span class="dash-header-wallet__val" id="dashHeaderWalletAmount">—</span>
             <span class="dash-header-wallet__cur">ر.س</span>
           </a>
-          <a class="dash-header-cart" href="/cart" aria-label="السلة — الدفع">
+          <a class="dash-header-cart" href="/checkout" data-erv-checkout-nav="1" aria-label="السلة — الدفع">
             <span aria-hidden="true">🛒</span>
             <span class="dash-header-cart__label">السلة</span>
             <span class="dash-header-cart__badge" id="cartCount" data-empty="true">0</span>
@@ -1265,6 +1111,15 @@
       </div>
 
       <main id="dashMain">
+      <section class="dash-platform-hero" id="platformHeroSection" aria-labelledby="platformHeroTitle">
+        <h2 class="dash-platform-hero__title" id="platformHeroTitle">مرحباً بك في ERVENOW</h2>
+        <p class="dash-platform-hero__sub" id="platformHeroSub">استكشف المطاعم والمتاجر والخدمات — سجّل دخولك لإتمام الطلب.</p>
+        <div class="dash-platform-hero__actions" id="platformHeroActions">
+          <a class="sn-hero__cta" href="/start-now">ابدأ الآن</a>
+          <a class="sn-hero__cta sn-hero__cta--outline" href="/login?role=customer">تسجيل الدخول</a>
+        </div>
+      </section>
+
       <section class="card guest-offers-carousel" id="guestOffersCarousel" hidden aria-label="عروض المنصة"></section>
 
       <section class="card dash-tabs-card" aria-labelledby="dashTabsTitle">
@@ -1374,14 +1229,14 @@
     </footer>
     </div>
 
-    <script src="/assets/cart.js"></script>
-    <script src="/assets/service-cart.js"></script>
+    <script src="/assets/order-draft-store.js"></script>
+    <script src="/assets/order-draft-badge.js"></script>
     <script src="/assets/api-config.js"></script>
     <script src="/assets/api.js"></script>
     <script src="/assets/auth-account-guard.js"></script>
     <script src="/assets/guestBrowse.js"></script>
     <script src="/assets/guest-offers-carousel.js"></script>
-    <script src="/assets/guest-shell.js"></script>
+    <script src="/assets/guest-shell.js?erv=20260612b"></script>
     <script src="/assets/ervenow-toggle.js"></script>
     <script>ErvenowGuestShell.init({ activeNav: "guest", pageTag: "لوحة زائر المنصة" });</script>
     <script>
@@ -1441,20 +1296,6 @@
         }
       }
 
-      function guestIconImg(size, className) {
-        return (
-          '<img class="erv-guest-icon' +
-          (className ? " " + className : "") +
-          '" src="' +
-          GUEST_ICON_SRC +
-          '" width="' +
-          size +
-          '" height="' +
-          size +
-          '" alt="" decoding="async" />'
-        );
-      }
-
       function showDashAlert(kind, html) {
         var dash = document.getElementById("dashStatus");
         if (!dash) return;
@@ -1482,11 +1323,17 @@
       }
 
       function refreshDashCartBadge() {
-        if (typeof updateCartCount === "function") updateCartCount();
+        if (window.ErvenowOrderDraftBadge && typeof ErvenowOrderDraftBadge.enforceCheckoutNav === "function") {
+          ErvenowOrderDraftBadge.enforceCheckoutNav();
+          return;
+        }
+        if (window.ErvenowOrderDraftBadge && typeof ErvenowOrderDraftBadge.sync === "function") {
+          ErvenowOrderDraftBadge.sync();
+          return;
+        }
         var badge = document.getElementById("cartCount");
         if (!badge) return;
-        var n = parseInt(badge.textContent, 10) || 0;
-        badge.setAttribute("data-empty", n > 0 ? "false" : "true");
+        badge.setAttribute("data-empty", "true");
       }
 
       async function refreshDashHeaderWallet(role) {
@@ -1538,15 +1385,7 @@
         var switchAccount = document.getElementById("switchAccount");
         if (!dashHasToken()) {
           if (document.getElementById("profileCard")) document.getElementById("profileCard").style.display = "none";
-          showDashAlert(
-            "guest",
-            '<div class="dash-guest-badge">' +
-              '<span class="dash-guest-badge__icon">' +
-              guestIconImg(40) +
-              "</span>" +
-              '<p class="dash-guest-badge__text">أنت تتصفّح كزائر — استكشف الأقسام وحسّب المسافة. لتنفيذ طلب توصيل <a href=\"/login?role=customer\">سجّل الدخول</a>. يتم تفعيل الحساب بعد المراجعة واعتماده من إدارة ERVENOW.</p>' +
-              "</div>"
-          );
+          hideDashAlert();
           if (window.ErvenowGuestShell && ErvenowGuestShell.refreshAuthHeader) {
             ErvenowGuestShell.refreshAuthHeader();
           }
@@ -1609,9 +1448,12 @@
       })();
 
       run();
+      if (window.ErvenowOrderDraftBadge && typeof ErvenowOrderDraftBadge.enforceCheckoutNav === "function") {
+        ErvenowOrderDraftBadge.enforceCheckoutNav();
+      }
       refreshDashCartBadge();
       window.addEventListener("storage", function (ev) {
-        if (ev.key === "cart") refreshDashCartBadge();
+        if (ev.key === "ervenow:order-draft" || ev.key === "cart") refreshDashCartBadge();
       });
     </script>
   </body>

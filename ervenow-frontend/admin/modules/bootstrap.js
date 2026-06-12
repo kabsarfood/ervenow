@@ -24,10 +24,14 @@ var reloadErvenowPayBtn = document.getElementById("reloadErvenowPayBtn");
 if (reloadErvenowPayBtn) reloadErvenowPayBtn.onclick = app.loadErvenowPayPanel;
 var reloadOffersBtn = document.getElementById("reloadOffersBtn");
 if (reloadOffersBtn) reloadOffersBtn.onclick = app.loadOffersPanel;
+var reloadHeroBannersBtn = document.getElementById("reloadHeroBannersBtn");
+if (reloadHeroBannersBtn) {
+  reloadHeroBannersBtn.onclick = function () {
+    app.loadHeroBannersPanel({ force: true });
+  };
+}
 var saveOffersBtn = document.getElementById("saveOffersBtn");
 if (saveOffersBtn) saveOffersBtn.onclick = app.safeClick(app.saveOffersPanel);
-var reloadHeroBannersBtn = document.getElementById("reloadHeroBannersBtn");
-if (reloadHeroBannersBtn) reloadHeroBannersBtn.onclick = app.loadHeroBannersPanel;
 var reloadServicesBtn = document.getElementById("reloadServicesBtn");
 if (reloadServicesBtn) reloadServicesBtn.onclick = app.loadServicesPanel;
 var saveErvenowPaySettingsBtn = document.getElementById("saveErvenowPaySettingsBtn");
@@ -73,6 +77,12 @@ if (siteMaintenanceBtn) {
     app.toggleSiteMaintenance();
   };
 }
+var liveMapPublicToggleBtn = document.getElementById("liveMapPublicToggleBtn");
+if (liveMapPublicToggleBtn) {
+  liveMapPublicToggleBtn.onclick = function () {
+    void app.toggleLiveMapPublic();
+  };
+}
 document.querySelectorAll(".panel-btn[data-panel]").forEach(function (btn) {
   if (btn.getAttribute("data-panel-wired") === "1") return;
   btn.setAttribute("data-panel-wired", "1");
@@ -80,8 +90,25 @@ document.querySelectorAll(".panel-btn[data-panel]").forEach(function (btn) {
     var panelId = btn.getAttribute("data-panel");
     if (!panelId) return;
     var isActive = btn.classList.contains("active");
-    app.showPanel(isActive ? "" : panelId);
-    if (!isActive && panelId) void app.loadPanelById(panelId);
+    if (isActive) {
+      app.showPanel("");
+      return;
+    }
+    app.showPanel(panelId);
+    void app.loadPanelById(panelId);
+  });
+});
+document.querySelectorAll("[data-panel-jump]").forEach(function (link) {
+  if (link.getAttribute("data-panel-jump-wired") === "1") return;
+  link.setAttribute("data-panel-jump-wired", "1");
+  link.addEventListener("click", function (e) {
+    e.preventDefault();
+    var panelId = link.getAttribute("data-panel-jump");
+    if (!panelId || !document.getElementById(panelId)) return;
+    app.showPanel(panelId);
+    void app.loadPanelById(panelId);
+    var el = document.getElementById(panelId);
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
   });
 });
 var closeBtn = document.getElementById("closePanelsBtn");
@@ -138,7 +165,18 @@ if (closeBtn) {
   app.setupExecUi();
   app.initAdminDashboardSocket();
   app.startAdminAlertsTimer();
+  var hashPanel = String(location.hash || "").replace(/^#/, "").trim();
+  if (hashPanel && document.getElementById(hashPanel)) {
+    app.showPanel(hashPanel);
+    void app.loadPanelById(hashPanel);
+    var hashEl = document.getElementById(hashPanel);
+    if (hashEl) hashEl.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
   void app.refreshLiveDashboard();
+  if (app.hasPermission("dashboard")) {
+    void app.loadMapCategoryColors();
+    void app.loadLiveMapPublicState();
+  }
   app.updateLiveSocketPulse();
   if (app.hasPermission("finance")) {
     app.loadFinancialFeatureFlags();

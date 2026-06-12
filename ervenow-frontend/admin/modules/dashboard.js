@@ -336,12 +336,13 @@ app.renderSmartAlerts = function () {
           break;
         }
       }
-      if (o && app.liveMap) {
+      if (o && global.ErvenowLiveStoreMap && typeof ErvenowLiveStoreMap.getMap === "function") {
+        var liveMap = ErvenowLiveStoreMap.getMap();
         var lat = Number(o.drop_lat) || Number(o.pickup_lat) || Number(o.driver_lat);
         var lng = Number(o.drop_lng) || Number(o.pickup_lng) || Number(o.driver_lng);
-        if (Number.isFinite(lat) && Number.isFinite(lng)) {
+        if (liveMap && Number.isFinite(lat) && Number.isFinite(lng)) {
           try {
-            app.liveMap.setView([lat, lng], 15);
+            liveMap.setView([lat, lng], 15);
           } catch (_m) {}
         }
       }
@@ -355,7 +356,6 @@ app.startAdminAlertsTimer = function () {
   app.adminAlertsTimer = setInterval(function () {
     if (!app.hasPermission("orders")) return;
     app.renderSmartAlerts();
-    app.syncLiveMapMarkers();
   }, 30000);
 }
 
@@ -380,13 +380,52 @@ app.adminMapDotIcon = function (color, opts) {
 }
 
 app.storeTypeColor = function (type) {
+  var cat = app.mapCategoryFromStoreType(type);
+  var c = app.mapCategoryColors && app.mapCategoryColors[cat];
+  if (c && /^#[0-9A-Fa-f]{6}$/.test(String(c).trim())) return String(c).trim();
+  try {
+    var v = getComputedStyle(document.documentElement).getPropertyValue("--accent").trim();
+    if (v) return v;
+  } catch (_e) {}
+  return "currentColor";
+};
+
+app.mapCategoryColors = {};
+
+app.mapCategoryFromStoreType = function (type) {
   var t = String(type || "").toLowerCase();
-  if (t === "restaurant") return "#eab308";
-  if (t === "supermarket" || t === "market") return "#22c55e";
-  if (t === "pharmacy") return "#06b6d4";
-  if (t === "flower") return "#ec4899";
-  return "#9ca3af";
-}
+  if (t === "restaurant") return "restaurant";
+  if (t === "pharmacy") return "pharmacy";
+  if (t === "services" || t === "service") return "service";
+  return "store";
+};
+
+app.applyLiveMapLegendColors = function () {
+  var c = app.mapCategoryColors || {};
+  var root = document.documentElement;
+  if (c.store) root.style.setProperty("--admin-map-color-store", c.store);
+  if (c.restaurant) root.style.setProperty("--admin-map-color-restaurant", c.restaurant);
+  if (c.pharmacy) root.style.setProperty("--admin-map-color-pharmacy", c.pharmacy);
+  if (c.service) root.style.setProperty("--admin-map-color-service", c.service);
+};
+
+app.loadMapCategoryColors = async function () {
+  if (!app.hasPermission("dashboard")) return;
+  try {
+    var j = await app.PlatformAPI.api("/api/admin/platform-settings");
+    var s = (j && j.settings) || {};
+    app.mapCategoryColors = {
+      restaurant: s.map_color_restaurant,
+      store: s.map_color_store,
+      pharmacy: s.map_color_pharmacy,
+      service: s.map_color_service,
+    };
+    app.applyLiveMapLegendColors();
+    if (global.ErvenowLiveStoreMap && typeof ErvenowLiveStoreMap.refresh === "function") {
+      void ErvenowLiveStoreMap.refresh();
+    }
+  } catch (_e) {}
+};
 
 app.ADMIN_SA_CITIES = [
   { id: "all", label: "كل المملكة", lat: 24.0, lng: 45.0, zoom: 6, radiusKm: null },
@@ -482,372 +521,74 @@ app.adminMapGlyphIcon = function (glyph, color, opts) {
   });
 }
 
-app.updateLiveMapHudCounts = function (counts) {
-  counts = counts || {};
-  var city = counts.city || app.adminMapCityById(app.liveMapSelectedCityId);
-  var d = document.getElementById("liveMapCountDrivers");
-  var s = document.getElementById("liveMapCountStores");
-  var c = document.getElementById("liveMapCountCustomers");
-  var o = document.getElementById("liveMapCountOrders");
-  var lbl = document.getElementById("liveMapCityLabel");
-  if (d) d.textContent = String(counts.drivers != null ? counts.drivers : 0);
-  if (s) s.textContent = String(counts.stores != null ? counts.stores : 0);
-  if (c) c.textContent = String(counts.customers != null ? counts.customers : 0);
-  if (o) o.textContent = String(counts.orders != null ? counts.orders : 0);
-  if (lbl) lbl.textContent = city && city.id !== "all" ? city.label : "كل المملكة";
-}
+app.initAdminLiveStoreMap = function () {
+  if (app._adminLiveStoreMapInited) return;
+  if (!global.ErvenowLiveStoreMap || !document.getElementById("liveMap")) return;
+  app._adminLiveStoreMapInited = true;
+  void ErvenowLiveStoreMap.boot();
+};
 
-app.wireLiveMapControls = function () {
-  if (app.liveMapControlsWired) return;
-  var sel = document.getElementById("liveMapCitySelect");
-  var search = document.getElementById("liveMapCitySearch");
-  var list = document.getElementById("liveMapCityList");
-  if (!sel && !search) return;
-  app.liveMapControlsWired = true;
-  var cur = app.adminMapCityById(app.liveMapSelectedCityId || "all");
-  if (sel) {
-    sel.innerHTML = "";
-    app.ADMIN_SA_CITIES.forEach(function (city) {
-      var opt = document.createElement("option");
-      opt.value = city.id;
-      opt.textContent = city.label;
-      sel.appendChild(opt);
-    });
-    sel.value = cur.id;
+app.updateLiveMapPublicBtn = function (enabled) {
+  app.liveMapPublicEnabled = !!enabled;
+  var btn = document.getElementById("liveMapPublicToggleBtn");
+  if (!btn) return;
+  btn.disabled = false;
+  if (app.liveMapPublicEnabled) {
+    btn.className = "btn btn-primary";
+    btn.textContent = "إخفاء عن الزوار";
+    btn.title = "إخفاء صفحة /live-map من قائمة الزوار";
+  } else {
+    btn.className = "btn btn-ghost";
+    btn.textContent = "إظهار للزوار";
+    btn.title = "تفعيل صفحة /live-map في قائمة الزوار";
   }
-  if (list) {
-    list.innerHTML = "";
-    app.ADMIN_SA_CITIES.forEach(function (city) {
-      if (city.id === "all") return;
-      var opt = document.createElement("option");
-      opt.value = city.label;
-      list.appendChild(opt);
-    });
-  }
-  if (search) search.value = cur.id === "all" ? "" : cur.label;
-  function applySearchValue() {
-    var resolved = app.adminMapResolveCityQuery(search ? search.value : "");
-    if (!resolved) return;
-    app.flyLiveMapToCity(resolved.id);
-  }
-  if (search) {
-    search.addEventListener("change", applySearchValue);
-    search.addEventListener("keydown", function (ev) {
-      if (ev.key === "Enter") {
-        ev.preventDefault();
-        applySearchValue();
-      }
-    });
-  }
-  if (sel) {
-    sel.addEventListener("change", function () {
-      app.flyLiveMapToCity(sel.value);
-    });
-  }
-}
+};
 
-app.flyLiveMapToCity = function (cityId) {
-  app.ensureLiveMap();
-  var city = app.adminMapCityById(cityId);
-  app.liveMapSelectedCityId = city.id;
-  app.liveMapUserLocked = true;
-  app.liveMapAutoFitEnabled = false;
-  var sel = document.getElementById("liveMapCitySelect");
-  var search = document.getElementById("liveMapCitySearch");
-  if (sel) sel.value = city.id;
-  if (search) search.value = city.id === "all" ? "" : city.label;
-  if (app.liveMap) {
-    try {
-      app.liveMap.flyTo([city.lat, city.lng], city.zoom || 11, { animate: true, duration: 0.85 });
-    } catch (_f) {
-      try {
-        app.liveMap.setView([city.lat, city.lng], city.zoom || 11);
-      } catch (_s) {}
-    }
+app.loadLiveMapPublicState = async function () {
+  var btn = document.getElementById("liveMapPublicToggleBtn");
+  if (!btn) return;
+  try {
+    var j = await app.PlatformAPI.api("/api/admin/live-map-public");
+    app.updateLiveMapPublicBtn(j.enabled);
+  } catch (_e) {
+    btn.textContent = "الخريطة للزوار";
+    btn.disabled = true;
   }
-  app.syncLiveMapMarkers({ immediate: true });
-}
+};
+
+app.toggleLiveMapPublic = async function () {
+  if (!app.hasPermission("dashboard")) return;
+  app.touchAdminActivity();
+  try {
+    var next = !app.liveMapPublicEnabled;
+    var msg = next
+      ? "سيتم إظهار صفحة «الخريطة الحية» في قائمة الزوار على /live-map. متابعة؟"
+      : "سيتم إخفاء الرابط عن الزوار — لوحة الإدارة تبقى للمعاينة. متابعة؟";
+    if (!confirm(msg)) return;
+    var j = await app.PlatformAPI.api("/api/admin/live-map-public", {
+      method: "POST",
+      body: { enabled: next },
+    });
+    app.updateLiveMapPublicBtn(j.enabled);
+    app.showSuccess(j.message || (j.enabled ? "تم التفعيل" : "تم الإخفاء"));
+  } catch (e) {
+    app.showError(e.message || "فشل تحديث إعداد الخريطة");
+  }
+};
 
 app.ensureLiveMap = function () {
-  if (app.liveMap || typeof L === "undefined") return;
-  var el = document.getElementById("liveMap");
-  if (!el) return;
-  app.liveMap = L.map("liveMap", {
-    zoomControl: true,
-    preferCanvas: true,
-    zoomAnimation: true,
-    markerZoomAnimation: false,
-    inertia: true,
-    updateWhenIdle: true,
-    updateWhenZooming: false,
-  }).setView([24.0, 45.0], 6);
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    attribution: "&copy; OpenStreetMap",
-    maxZoom: 19,
-  }).addTo(app.liveMap);
-  app.liveMapMarkersLayer = L.layerGroup().addTo(app.liveMap);
-  app.liveMap.on("dragstart", function () {
-    app.liveMapUserLocked = true;
-    app.liveMapAutoFitEnabled = false;
-  });
-  app.liveMap.on("zoomstart", function (ev) {
-    if (ev && ev.originalEvent) {
-      app.liveMapUserLocked = true;
-      app.liveMapAutoFitEnabled = false;
-    }
-  });
-  app.wireLiveMapControls();
-  setTimeout(function () {
-    try {
-      app.liveMap.invalidateSize();
-    } catch (_e) {}
-  }, 120);
-}
+  app.initAdminLiveStoreMap();
+};
 
-app.removeLiveMapMarker = function (store, key) {
-  if (!store[key]) return;
-  try {
-    if (app.liveMapMarkersLayer) app.liveMapMarkersLayer.removeLayer(store[key]);
-  } catch (_e) {}
-  delete store[key];
-}
-
-app.upsertLiveMapMarker = function (store, key, lat, lng, icon, popupHtml, markerOpts) {
-  if (!app.liveMapMarkersLayer || typeof L === "undefined") return;
-  markerOpts = markerOpts || {};
-  var la = Number(lat);
-  var ln = Number(lng);
-  if (!Number.isFinite(la) || !Number.isFinite(ln)) {
-    app.removeLiveMapMarker(store, key);
-    return;
+app.flyLiveMapToCity = function (cityId) {
+  if (global.ErvenowLiveStoreMap && typeof ErvenowLiveStoreMap.flyToCity === "function") {
+    ErvenowLiveStoreMap.flyToCity(cityId);
   }
-  var ll = [la, ln];
-  var m = store[key];
-  if (!m) {
-    m = L.marker(ll, { icon: icon });
-    if (popupHtml) m.bindPopup(popupHtml, { maxWidth: 300 });
-    m.on("click", function () {
-      if (popupHtml) m.openPopup();
-      if (typeof markerOpts.onClick === "function") markerOpts.onClick();
-    });
-    m.addTo(app.liveMapMarkersLayer);
-    store[key] = m;
-  } else {
-    try {
-      m.setLatLng(ll, { animate: true, duration: 0.45 });
-    } catch (_a) {
-      m.setLatLng(ll);
-    }
-    if (icon) m.setIcon(icon);
-    if (popupHtml) m.setPopupContent(popupHtml);
-  }
-}
+};
 
-app.syncLiveMapMarkers = function (opts) {
-  opts = opts && typeof opts === "object" ? opts : {};
-  if (opts.fitBounds) app.liveMapAutoFitEnabled = true;
-  if (opts.immediate) {
-    app._runSyncLiveMapMarkersImpl();
-    return;
-  }
-  if (app.liveMapSyncTimer) return;
-  app.liveMapSyncTimer = setTimeout(function () {
-    app.liveMapSyncTimer = null;
-    app._runSyncLiveMapMarkersImpl();
-  }, 220);
-}
-
-app._runSyncLiveMapMarkersImpl = function () {
-  app.ensureLiveMap();
-  if (!app.liveMap || !app.liveMapMarkersLayer) return;
-
-  var city = app.adminMapCityById(app.liveMapSelectedCityId);
-  var wantedDrivers = {};
-  var wantedOrders = {};
-  var wantedStores = {};
-  var hudDrivers = 0;
-  var hudStores = 0;
-  var hudOrders = 0;
-  var hudCustomers = 0;
-  var seenCustomers = {};
-
-  var storeRows = Array.isArray(app.cacheMapStores) ? app.cacheMapStores : [];
-  for (var si = 0; si < storeRows.length; si++) {
-    var st = storeRows[si];
-    if (!st || st.id == null) continue;
-    var sla = Number(st.lat);
-    var sln = Number(st.lng);
-    if (!Number.isFinite(sla) || !Number.isFinite(sln)) continue;
-    if (!app.adminMapPointInCity(sla, sln, city)) continue;
-    var sk = "store:" + String(st.id);
-    wantedStores[sk] = true;
-    hudStores += 1;
-    var sName = app.escapeHtml(st.name || "متجر");
-    var sStatus = app.escapeHtml(st.status || "approved");
-    var sType = app.escapeHtml(st.type || "store");
-    var sPhone = app.escapeHtml(st.phone || "—");
-    var sColor = app.storeTypeColor(st.type);
-    app.upsertLiveMapMarker(
-      app.liveMapStoreMarkers,
-      sk,
-      sla,
-      sln,
-      app.adminMapGlyphIcon("🏪", sColor, { size: 28, pulse: false }),
-      '<div class="admin-map-popup"><strong>🏪 ' + sName + '</strong><div class="admin-popup-row">النوع: ' +
-        sType +
-        '</div><div class="admin-popup-row">الجوال: ' +
-        sPhone +
-        '</div><div class="admin-popup-row">الحالة: ' +
-        sStatus +
-        "</div></div>"
-    );
-  }
-
-  if (app.hasPermission("drivers")) {
-    for (var di = 0; di < app.cacheDrivers.length; di++) {
-      var dr = app.cacheDrivers[di];
-      if (!dr || !dr.id) continue;
-      var dlat = dr.lat != null ? dr.lat : dr.latitude;
-      var dlng = dr.lng != null ? dr.lng : dr.longitude;
-      var dla = Number(dlat);
-      var dln = Number(dlng);
-      if (!Number.isFinite(dla) || !Number.isFinite(dln)) continue;
-      if (!app.adminMapPointInCity(dla, dln, city)) continue;
-      var dk = "drv:" + String(dr.id);
-      wantedDrivers[dk] = true;
-      hudDrivers += 1;
-      var currentOrder = app.findCurrentOrderForDriver(dr);
-      var dColor = app.driverMarkerColor(dr, currentOrder);
-      var dPulse =
-        !!currentOrder && (app.isPendingTooLong(currentOrder) || app.orderNeedsDriver(currentOrder));
-      var dPopup = app.buildDriverPopupHtml(dr, currentOrder);
-      (function (orderRef) {
-        app.upsertLiveMapMarker(
-          app.liveMapDriverMarkers,
-          dk,
-          dla,
-          dln,
-          app.adminMapGlyphIcon("🚚", dColor, { size: currentOrder ? 30 : 28, pulse: dPulse }),
-          dPopup,
-          {
-            onClick: function () {
-              if (orderRef) app.focusLiveOrderRow(orderRef.id);
-            },
-          }
-        );
-      })(currentOrder);
-    }
-  }
-
-  if (app.hasPermission("orders")) {
-    var seenOrderIds = {};
-    var mapOrders = app.cacheOrders.slice(0, 50);
-    for (var oi = 0; oi < mapOrders.length; oi++) {
-      var o = mapOrders[oi];
-      if (!o || o.id == null) continue;
-      if (app.isCancelledOrderClient(o)) continue;
-      if (app.isDeliveredStatusClient(o)) continue;
-      var oid = String(o.id);
-      var oColor = app.orderStatusMapColor(o);
-      var slaLvl = app.getOrderSlaLevel(o);
-      var oPulse = !!slaLvl || app.orderNeedsDriver(o);
-      var oIcon = app.adminMapDotIcon(oColor, { size: 11, pulse: oPulse });
-      var orderInCity = false;
-
-      var plat = Number(o.pickup_lat);
-      var plng = Number(o.pickup_lng);
-      if (Number.isFinite(plat) && Number.isFinite(plng) && app.adminMapPointInCity(plat, plng, city)) {
-        orderInCity = true;
-        var pk = "pk:" + oid;
-        wantedOrders[pk] = true;
-        (function (orderId) {
-          app.upsertLiveMapMarker(
-            app.liveMapOrderMarkers,
-            pk,
-            plat,
-            plng,
-            oIcon,
-            app.buildOrderMapPopupHtml(o, "pickup"),
-            { onClick: function () { app.focusLiveOrderRow(orderId); } }
-          );
-        })(oid);
-      }
-
-      var dlat2 = Number(o.drop_lat);
-      var dlng2 = Number(o.drop_lng);
-      if (Number.isFinite(dlat2) && Number.isFinite(dlng2) && app.adminMapPointInCity(dlat2, dlng2, city)) {
-        orderInCity = true;
-        var dk2 = "drop:" + oid;
-        wantedOrders[dk2] = true;
-        (function (orderId) {
-          app.upsertLiveMapMarker(
-            app.liveMapOrderMarkers,
-            dk2,
-            dlat2,
-            dlng2,
-            app.adminMapDotIcon(oColor, { size: 13, pulse: oPulse }),
-            app.buildOrderMapPopupHtml(o, "drop"),
-            { onClick: function () { app.focusLiveOrderRow(orderId); } }
-          );
-        })(oid);
-      }
-
-      var drlat = Number(o.driver_lat);
-      var drlng = Number(o.driver_lng);
-      if (
-        Number.isFinite(drlat) &&
-        Number.isFinite(drlng) &&
-        app.isActiveDeliveryStatusClient(o) &&
-        app.adminMapPointInCity(drlat, drlng, city)
-      ) {
-        orderInCity = true;
-        var ok = "odrv:" + oid;
-        wantedOrders[ok] = true;
-        (function (orderId) {
-          app.upsertLiveMapMarker(
-            app.liveMapOrderMarkers,
-            ok,
-            drlat,
-            drlng,
-            app.adminMapDotIcon(app.ORDER_MAP_COLORS.delivering, { size: 14, pulse: oPulse }),
-            app.buildOrderMapPopupHtml(o, "driver"),
-            { onClick: function () { app.focusLiveOrderRow(orderId); } }
-          );
-        })(oid);
-      }
-
-      if (orderInCity && !seenOrderIds[oid]) {
-        seenOrderIds[oid] = true;
-        hudOrders += 1;
-        var custKey = String(o.customer_id || o.customer_phone || "").trim();
-        if (custKey && !seenCustomers[custKey]) {
-          seenCustomers[custKey] = true;
-          hudCustomers += 1;
-        }
-      }
-    }
-  }
-
-  Object.keys(app.liveMapDriverMarkers).forEach(function (k) {
-    if (!wantedDrivers[k]) app.removeLiveMapMarker(app.liveMapDriverMarkers, k);
-  });
-  Object.keys(app.liveMapStoreMarkers).forEach(function (k) {
-    if (!wantedStores[k]) app.removeLiveMapMarker(app.liveMapStoreMarkers, k);
-  });
-  Object.keys(app.liveMapOrderMarkers).forEach(function (k) {
-    if (k.indexOf("store:") === 0 || !wantedOrders[k]) app.removeLiveMapMarker(app.liveMapOrderMarkers, k);
-  });
-
-  app.updateLiveMapHudCounts({
-    city: city,
-    drivers: hudDrivers,
-    stores: hudStores,
-    customers: hudCustomers,
-    orders: hudOrders,
-  });
-
-  app.renderSmartAlerts();
-}
+app.syncLiveMapMarkers = function () {
+  if (app.hasPermission("orders")) app.renderSmartAlerts();
+};
 
 app.applyDriverGpsToActiveOrders = function (data) {
   if (!data || data.lat == null || data.lng == null) return;
@@ -863,8 +604,8 @@ app.applyDriverGpsToActiveOrders = function (data) {
     if (data.ts != null) o.last_location_at = new Date(Number(data.ts)).toISOString();
     touched = true;
   }
-  if (touched) app.syncLiveMapMarkers();
-}
+  if (touched && app.hasPermission("orders")) app.renderSmartAlerts();
+};
 
 app.updateLiveSocketPulse = function () {
   var pulse = document.querySelector(".live-pulse");
@@ -939,13 +680,14 @@ app.refreshLiveDriversAndMap = async function () {
     var lng = Number(s.lng);
     return Number.isFinite(lat) && Number.isFinite(lng);
   });
-  app.syncLiveMapMarkers();
-}
+};
 
 app.refreshLiveDashboard = async function () {
   if (app.liveTickBusy) return;
   app.liveTickBusy = true;
   try {
+    await app.loadMapCategoryColors();
+    app.initAdminLiveStoreMap();
     await app.refreshLiveDriversAndMap();
     if (app.hasPermission("orders")) app.renderSmartAlerts();
     app.updateLiveClock();

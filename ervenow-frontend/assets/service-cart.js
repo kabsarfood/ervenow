@@ -50,11 +50,11 @@
       };
     }
     if (opts.redirect !== false) {
-      var msg = opts.message || "تمت الإضافة للسلة — أكمل الدفع من /cart";
+      var msg = opts.message || "تمت الإضافة — أكمل الدفع من /checkout";
       try {
         sessionStorage.setItem("ervenow:cart-flash", msg);
       } catch (_) {}
-      global.location.href = "/cart";
+      global.location.href = "/checkout";
       return { ok: true };
     }
     return { ok: true, message: opts.message || "تمت الإضافة للسلة" };

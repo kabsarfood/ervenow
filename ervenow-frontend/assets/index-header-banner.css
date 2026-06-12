@@ -1,0 +1,1063 @@
+/**
+
+ * ERVENOW — الرئيسية: هيدر موحّد
+
+ * يُحمَّل بعد الأنماط المضمّنة في index.html لضمان الأولوية
+
+ */
+
+
+
+:root {
+
+  --erv-header-max: 1120px;
+
+  --erv-header-pad-x: clamp(14px, 3vw, 24px);
+
+  --erv-header-pad-y: clamp(10px, 1.6vw, 14px);
+
+  --erv-header-gap: clamp(10px, 1.8vw, 14px);
+
+  --erv-header-control-h: 44px;
+
+  --erv-header-control-h-touch: 48px;
+
+}
+
+
+
+/* ═══════════════════════════════════════════════════════════
+
+   هيدر موحّد — جوال · تابلت · كمبيوتر
+
+   ═══════════════════════════════════════════════════════════ */
+
+
+
+.lp-header.lp-header--refined {
+
+  background: linear-gradient(180deg, rgba(255, 254, 251, 0.98), rgba(248, 244, 238, 0.96));
+
+  border-bottom: 1px solid rgba(185, 135, 47, 0.2);
+
+  box-shadow: 0 6px 28px rgba(45, 26, 14, 0.07);
+
+  direction: ltr;
+
+  unicode-bidi: isolate;
+
+}
+
+
+
+.lp-header.lp-header--refined::before {
+
+  content: "";
+
+  display: block;
+
+  height: 3px;
+
+  background: linear-gradient(
+
+    90deg,
+
+    transparent 0%,
+
+    rgba(185, 135, 47, 0.35) 20%,
+
+    rgba(185, 135, 47, 0.85) 50%,
+
+    rgba(185, 135, 47, 0.35) 80%,
+
+    transparent 100%
+
+  );
+
+}
+
+
+
+.lp-header.lp-header--refined .lp-header__inner {
+
+  display: flex !important;
+
+  flex-direction: column !important;
+
+  align-items: stretch !important;
+
+  max-width: var(--erv-header-max);
+
+  margin: 0 auto;
+
+  padding: var(--erv-header-pad-y) var(--erv-header-pad-x) clamp(12px, 2vw, 14px);
+
+  padding-top: max(var(--erv-header-pad-y), env(safe-area-inset-top, 0px));
+
+  padding-left: max(var(--erv-header-pad-x), env(safe-area-inset-left, 0px));
+
+  padding-right: max(var(--erv-header-pad-x), env(safe-area-inset-right, 0px));
+
+  gap: var(--erv-header-gap);
+
+  direction: ltr;
+
+  unicode-bidi: isolate;
+
+}
+
+
+
+/* صف الهيدر: flex + LTR — ☰ أول عنصر = أقصى يسار (Chrome · Firefox · Safari) */
+
+.lp-header.lp-header--refined .lp-header__top-row {
+
+  display: flex !important;
+
+  flex-direction: row !important;
+
+  flex-wrap: nowrap !important;
+
+  direction: ltr !important;
+
+  unicode-bidi: isolate !important;
+
+  align-items: center !important;
+
+  justify-content: flex-start !important;
+
+  gap: var(--erv-header-gap) !important;
+
+  width: 100% !important;
+
+  min-width: 0;
+
+}
+
+
+
+/* إلغاء grid القديم من index.html — Firefox يتأثر بها */
+
+/* إلغاء grid القديم من index.html — لا يُطبَّق مع mobile shell */
+html:not(.erv-mobile-shell) .lp-header.lp-header--refined .lp-header__top-row > .lp-header__menu-slot,
+
+html:not(.erv-mobile-shell) .lp-header.lp-header--refined .lp-header__top-row > .lp-header__logo-slot,
+
+html:not(.erv-mobile-shell) .lp-header.lp-header--refined .lp-header__top-row > .lp-header__brand-mid,
+
+html:not(.erv-mobile-shell) .lp-header.lp-header--refined .lp-header__top-row > .lp-header__user-mid,
+
+html:not(.erv-mobile-shell) .lp-header.lp-header--refined .lp-header__top-row > .lp-header__actions {
+
+  grid-column: auto !important;
+
+  grid-row: auto !important;
+
+  grid-area: auto !important;
+
+}
+
+
+
+.lp-header.lp-header--refined .lp-header__menu-slot {
+
+  order: 9999 !important;
+
+  flex: 0 0 auto !important;
+
+  display: flex !important;
+
+  align-items: center !important;
+
+  justify-content: flex-end !important;
+
+  direction: ltr !important;
+
+  margin: 0 0 0 clamp(6px, 1.2vw, 12px) !important;
+
+  min-width: var(--erv-header-control-h);
+
+}
+
+
+
+.lp-header.lp-header--refined .lp-header__logo-slot {
+
+  order: 2 !important;
+
+  flex-shrink: 0;
+
+}
+
+
+
+.lp-header.lp-header--refined .lp-header__logo-img {
+
+  max-height: clamp(44px, 8vw, 56px);
+
+  width: auto;
+
+  height: auto;
+
+  object-fit: contain;
+
+}
+
+
+
+.lp-header.lp-header--refined .lp-header__brand-mid {
+
+  order: 3 !important;
+
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: flex-start;
+
+  justify-content: center;
+
+  gap: 1px;
+
+  min-width: 0;
+
+  margin-left: clamp(4px, 1vw, 10px);
+
+  margin-right: 0;
+
+  text-align: start;
+
+  direction: rtl;
+
+  flex-shrink: 1;
+
+}
+
+
+
+.lp-header.lp-header--refined .lp-header__brand-mid .lp-brand__name {
+
+  font-size: clamp(1.05rem, 2.6vw, 1.32rem);
+
+  font-weight: 800;
+
+  letter-spacing: 0.05em;
+
+  line-height: 1.2;
+
+}
+
+
+
+.lp-header.lp-header--refined .lp-brand__tag {
+
+  display: block;
+
+  font-size: clamp(0.65rem, 1.8vw, 0.72rem);
+
+  font-weight: 700;
+
+  color: var(--gold, #b9872f);
+
+  letter-spacing: 0.02em;
+
+  line-height: 1.35;
+
+  white-space: nowrap;
+
+}
+
+
+
+.lp-header.lp-header--refined .lp-header__user-mid {
+
+  order: 4 !important;
+
+  flex: 0 1 auto !important;
+
+  min-width: 0;
+
+  max-width: min(11.5rem, 38vw);
+
+  justify-content: center;
+
+}
+
+
+
+.lp-header.lp-header--refined .lp-header__actions {
+
+  order: 5 !important;
+
+  margin-left: auto !important;
+
+  margin-right: 0 !important;
+
+  display: flex !important;
+
+  align-items: center !important;
+
+  justify-content: flex-end !important;
+
+  gap: clamp(8px, 1.5vw, 12px) !important;
+
+  flex-shrink: 0;
+
+  margin: 0 !important;
+
+  direction: rtl;
+
+  flex-wrap: nowrap !important;
+
+  width: auto !important;
+
+  min-width: 0;
+
+  padding: 0 !important;
+
+  background: none !important;
+
+  border: none !important;
+
+  border-radius: 0 !important;
+
+  box-shadow: none !important;
+
+  align-self: center !important;
+
+}
+
+
+
+.lp-header.lp-header--refined .lp-quick-dd {
+
+  flex-shrink: 0;
+
+  direction: ltr !important;
+
+  margin-left: 0 !important;
+
+  margin-right: 0 !important;
+
+}
+
+
+
+.lp-header.lp-header--refined .lp-quick-dd__panel:not(.lp-quick-dd__panel--harmony) {
+
+  direction: rtl;
+
+  right: 0 !important;
+
+  left: auto !important;
+
+  inset-inline-start: auto !important;
+
+  inset-inline-end: 0 !important;
+
+}
+
+
+
+.lp-header.lp-header--refined .lp-header__actions #authArea {
+
+  display: inline-flex;
+
+  align-items: center;
+
+  gap: clamp(8px, 1.2vw, 10px);
+
+  flex-wrap: nowrap;
+
+  justify-content: flex-end;
+
+  direction: rtl;
+
+  min-width: 0;
+
+}
+
+
+
+.lp-header.lp-header--refined .lp-header-wallet,
+
+.lp-header.lp-header--refined .lp-draft-checkout-badge,
+
+.lp-header.lp-header--refined .lp-quick-dd__btn,
+
+.lp-header.lp-header--refined #authArea > .lp-btn-outline,
+
+.lp-header.lp-header--refined #authArea > .lp-btn-solid {
+
+  min-height: var(--erv-header-control-h);
+
+  border-radius: 12px;
+
+  box-shadow: 0 2px 10px rgba(45, 26, 14, 0.06);
+
+}
+
+
+
+.lp-header.lp-header--refined .lp-quick-dd__btn {
+
+  min-width: var(--erv-header-control-h);
+
+  padding: 0;
+
+  display: inline-flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  border: 1px solid rgba(185, 135, 47, 0.22);
+
+  background: rgba(255, 254, 251, 0.95);
+
+}
+
+
+
+.lp-header.lp-header--refined .lp-header-wallet {
+
+  padding: 8px clamp(10px, 2vw, 14px);
+
+}
+
+
+
+.lp-header.lp-header--refined .lp-draft-checkout-badge {
+
+  min-width: var(--erv-header-control-h);
+
+  padding-inline: 12px;
+
+}
+
+
+
+@media (max-width: 900px) {
+
+  .lp-header.lp-header--refined .lp-quick-dd__panel:not(.lp-quick-dd__panel--harmony) {
+
+    position: fixed !important;
+
+    right: max(10px, env(safe-area-inset-right, 0px)) !important;
+
+    left: auto !important;
+
+    width: min(340px, calc(100vw - 20px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)));
+
+  }
+
+}
+
+
+
+.lp-header.lp-header--refined .lp-nav-wrap {
+
+  display: flex !important;
+
+  width: 100% !important;
+
+  justify-content: center !important;
+
+  align-items: center !important;
+
+  padding-top: clamp(6px, 1vw, 8px) !important;
+
+  margin-top: 0 !important;
+
+  border-top: 1px solid rgba(185, 135, 47, 0.12);
+
+  overflow-x: auto;
+
+  -webkit-overflow-scrolling: touch;
+
+  scrollbar-width: thin;
+
+  direction: rtl;
+
+  flex: none !important;
+
+  grid-column: unset !important;
+
+  grid-row: unset !important;
+
+}
+
+
+
+.lp-header.lp-header--refined .lp-nav {
+
+  display: inline-flex;
+
+  align-items: center;
+
+  gap: clamp(4px, 1vw, 6px);
+
+  padding: 4px;
+
+  border-radius: 14px;
+
+  background: rgba(255, 255, 255, 0.55);
+
+  border: 1px solid rgba(185, 135, 47, 0.14);
+
+  flex-wrap: nowrap;
+
+}
+
+
+
+.lp-header.lp-header--refined .lp-nav a {
+
+  border-radius: 10px;
+
+  min-height: var(--erv-header-control-h);
+
+  display: inline-flex;
+
+  align-items: center;
+
+  padding: 8px clamp(12px, 2.2vw, 18px);
+
+  font-size: clamp(0.82rem, 2vw, 0.88rem);
+
+  font-weight: 700;
+
+  white-space: nowrap;
+
+}
+
+
+
+.lp-header.lp-header--refined .lp-nav a.is-active,
+
+.lp-header.lp-header--refined .lp-nav a[aria-current="page"] {
+
+  color: var(--brown, #3d2213);
+
+  background: rgba(185, 135, 47, 0.14);
+
+  font-weight: 800;
+
+}
+
+
+
+.lp-header.lp-header--refined .lp-nav a.lp-nav__cta {
+
+  min-height: var(--erv-header-control-h);
+
+  padding-inline: clamp(14px, 2.5vw, 20px);
+
+}
+
+
+
+/* ——— كمبيوتر (1025+) ——— */
+
+@media (min-width: 1025px) {
+
+  .lp-header.lp-header--refined .lp-header__top-row {
+
+    min-height: 56px;
+
+  }
+
+
+
+  .lp-header.lp-header--refined .lp-header__user-mid {
+
+    display: none !important;
+
+  }
+
+
+
+  .lp-header.lp-header--refined .lp-header__brand-mid {
+
+    display: flex !important;
+
+  }
+
+
+
+  .lp-header.lp-header--refined .lp-nav-wrap {
+
+    padding-top: clamp(8px, 1.2vw, 10px) !important;
+
+  }
+
+}
+
+
+
+/* ——— تابلت (641–1024) — نفس تجربة الجوال: قائمة ☰ بدون شريط تنقل إضافي ——— */
+
+@media (min-width: 641px) and (max-width: 1024px) {
+
+  .lp-header.lp-header--refined .lp-header__brand-mid {
+
+    display: none !important;
+
+  }
+
+
+
+  .lp-header.lp-header--refined .lp-nav-wrap {
+
+    display: none !important;
+
+  }
+
+
+
+  .lp-header.lp-header--refined .lp-header__user-mid:not([hidden]) {
+
+    display: none !important;
+
+  }
+
+
+
+  .lp-header.lp-header--refined .lp-brand__tag {
+
+    display: none;
+
+  }
+
+}
+
+
+
+/* ——— جوال + آيفون (عمودي وأفقي) ——— */
+
+@media (max-width: 640px),
+
+  ((max-width: 932px) and (max-height: 500px) and (pointer: coarse)) {
+
+  /* الصف 1: تخطيط قديم — يُستبدَل بـ mobile shell / harmony */
+  html:not(.erv-mobile-shell) .lp-header.lp-header--refined .lp-header__top-row {
+
+    flex-wrap: wrap !important;
+
+    row-gap: 10px;
+
+  }
+
+
+
+  html:not(.erv-mobile-shell) .lp-header.lp-header--refined .lp-header__brand-mid {
+
+    display: none !important;
+
+  }
+
+
+
+  .lp-header.lp-header--refined .lp-header__logo-img {
+
+    max-height: 48px;
+
+  }
+
+
+
+  .lp-header.lp-header--refined .lp-header__user-mid:not([hidden]) {
+
+    display: flex !important;
+
+    flex: 0 1 auto !important;
+
+    order: 4 !important;
+
+    margin-left: auto !important;
+
+    margin-right: 0 !important;
+
+  }
+
+
+
+  html:not(.erv-mobile-shell) .lp-header.lp-header--refined .lp-header__menu-slot {
+
+    order: 9999 !important;
+
+    margin: 0 0 0 clamp(8px, 2vw, 12px) !important;
+
+  }
+
+
+
+  /* الصف الثاني: شريط السلة/الدخول (بدون mobile shell) */
+  html:not(.erv-mobile-shell) .lp-header.lp-header--refined .lp-header__actions {
+
+    order: 6 !important;
+
+    flex: 1 1 100% !important;
+
+    margin-left: 0 !important;
+
+    width: 100% !important;
+
+    display: grid !important;
+
+    grid-template-columns: auto minmax(0, 1fr) auto;
+
+    grid-template-areas: "cart auth wallet";
+
+    align-items: center;
+
+    gap: 10px !important;
+
+    padding: 12px clamp(12px, 3vw, 14px) !important;
+
+    direction: ltr;
+
+    background: linear-gradient(145deg, rgba(255, 254, 251, 0.98), rgba(248, 241, 229, 0.96)) !important;
+
+    border: 1px solid rgba(61, 34, 19, 0.1) !important;
+
+    border-radius: 14px !important;
+
+    box-shadow: 0 4px 20px rgba(45, 26, 14, 0.08) !important;
+
+  }
+
+
+
+  .lp-header.lp-header--refined .lp-header__actions .lp-draft-checkout-badge {
+
+    grid-area: cart;
+
+    justify-self: start;
+
+  }
+
+
+
+  .lp-header.lp-header--refined .lp-header__actions #authArea {
+
+    grid-area: auth;
+
+    justify-content: center;
+
+    justify-self: center;
+
+    width: 100%;
+
+    max-width: 100%;
+
+  }
+
+
+
+  .lp-header.lp-header--refined .lp-header__actions .lp-header-wallet {
+
+    grid-area: wallet;
+
+    justify-self: end;
+
+  }
+
+
+
+  .lp-header.lp-header--refined .lp-header-wallet,
+
+  .lp-header.lp-header--refined .lp-draft-checkout-badge,
+
+  .lp-header.lp-header--refined .lp-quick-dd__btn,
+
+  .lp-header.lp-header--refined #authArea > .lp-btn-outline,
+
+  .lp-header.lp-header--refined #authArea > .lp-btn-solid {
+
+    min-height: var(--erv-header-control-h-touch);
+
+  }
+
+
+
+  .lp-header.lp-header--refined .lp-nav-wrap {
+
+    display: none !important;
+
+  }
+
+}
+
+
+
+@media (max-width: 380px) {
+
+  .lp-header.lp-header--refined .lp-header__actions {
+
+    gap: 8px !important;
+
+    padding: 10px 12px !important;
+
+  }
+
+
+
+  .lp-header.lp-header--refined #authArea > .lp-btn-outline,
+
+  .lp-header.lp-header--refined #authArea > .lp-btn-solid {
+
+    min-width: 0;
+
+    padding-inline: 10px;
+
+    font-size: 0.82rem;
+
+  }
+
+}
+
+
+
+/* ═══════════════════════════════════════════════════════════
+
+   ☰ يمين الشاشة دائماً — عربي (RTL) · إنجليزي (LTR) · جوال · تابلت · كمبيوتر
+
+   ═══════════════════════════════════════════════════════════ */
+
+
+
+html[dir="rtl"] .lp-header.lp-header--menu-right,
+
+html[dir="ltr"] .lp-header.lp-header--menu-right,
+
+html[lang="ar"] .lp-header.lp-header--menu-right,
+
+html[lang="en"] .lp-header.lp-header--menu-right,
+
+html[dir="rtl"] .lp-header.lp-header--menu-left,
+
+html[dir="ltr"] .lp-header.lp-header--menu-left,
+
+html[lang="ar"] .lp-header.lp-header--menu-left,
+
+html[lang="en"] .lp-header.lp-header--menu-left {
+
+  direction: ltr !important;
+
+  unicode-bidi: isolate;
+
+}
+
+
+
+html[dir="rtl"] .lp-header.lp-header--menu-right .lp-header__inner,
+
+html[dir="ltr"] .lp-header.lp-header--menu-right .lp-header__inner,
+
+html[dir="rtl"] .lp-header.lp-header--menu-right .lp-header__top-row,
+
+html[dir="ltr"] .lp-header.lp-header--menu-right .lp-header__top-row,
+
+html[dir="rtl"] .lp-header.lp-header--menu-left .lp-header__inner,
+
+html[dir="ltr"] .lp-header.lp-header--menu-left .lp-header__inner,
+
+html[dir="rtl"] .lp-header.lp-header--menu-left .lp-header__top-row,
+
+html[dir="ltr"] .lp-header.lp-header--menu-left .lp-header__top-row {
+
+  direction: ltr !important;
+
+  unicode-bidi: isolate !important;
+
+  flex-direction: row !important;
+
+}
+
+
+
+html[dir="rtl"] .lp-header.lp-header--menu-right .lp-header__menu-slot,
+
+html[dir="ltr"] .lp-header.lp-header--menu-right .lp-header__menu-slot,
+
+html[dir="rtl"] .lp-header.lp-header--menu-left .lp-header__menu-slot,
+
+html[dir="ltr"] .lp-header.lp-header--menu-left .lp-header__menu-slot {
+
+  order: 9999 !important;
+
+  margin-left: clamp(6px, 1.2vw, 12px) !important;
+
+  margin-right: 0 !important;
+
+  align-self: center !important;
+
+}
+
+
+
+html[dir="rtl"] .lp-header.lp-header--menu-right .lp-header__actions,
+
+html[dir="ltr"] .lp-header.lp-header--menu-right .lp-header__actions,
+
+html[dir="rtl"] .lp-header.lp-header--menu-left .lp-header__actions,
+
+html[dir="ltr"] .lp-header.lp-header--menu-left .lp-header__actions {
+
+  order: 5 !important;
+
+  margin-left: auto !important;
+
+  margin-right: 0 !important;
+
+}
+
+
+
+html[dir="rtl"] .lp-header.lp-header--menu-right .lp-quick-dd__panel:not(.lp-quick-dd__panel--harmony),
+
+html[dir="ltr"] .lp-header.lp-header--menu-right .lp-quick-dd__panel:not(.lp-quick-dd__panel--harmony),
+
+html[dir="rtl"] .lp-header.lp-header--menu-left .lp-quick-dd__panel:not(.lp-quick-dd__panel--harmony),
+
+html[dir="ltr"] .lp-header.lp-header--menu-left .lp-quick-dd__panel:not(.lp-quick-dd__panel--harmony) {
+
+  right: 0 !important;
+
+  left: auto !important;
+
+  inset-inline-start: auto !important;
+
+  inset-inline-end: 0 !important;
+
+}
+
+
+
+html[lang="en"] .lp-header.lp-header--menu-right .lp-quick-dd__panel,
+
+html[lang="en"] .lp-header.lp-header--menu-left .lp-quick-dd__panel {
+
+  direction: ltr;
+
+}
+
+
+
+@media (max-width: 640px),
+
+  ((max-width: 932px) and (max-height: 500px) and (pointer: coarse)) {
+
+  html[dir="rtl"] .lp-header.lp-header--menu-right .lp-header__actions,
+
+  html[dir="ltr"] .lp-header.lp-header--menu-right .lp-header__actions,
+
+  html[dir="rtl"] .lp-header.lp-header--menu-left .lp-header__actions,
+
+  html[dir="ltr"] .lp-header.lp-header--menu-left .lp-header__actions {
+
+    order: 6 !important;
+
+    margin-left: 0 !important;
+
+    width: 100% !important;
+
+  }
+
+}
+
+/* Mobile Foundation shell — مضمّن لتفادي تأخر @import و CLS */
+@media (max-width: 640px), ((max-width: 932px) and (max-height: 500px) and (pointer: coarse)) {
+  html.erv-mobile-shell:not(.erv-mobile-no-nav) body.lp-home-premium {
+    padding-bottom: calc(var(--erv-mobile-nav-h, 56px) + env(safe-area-inset-bottom, 0px) + 8px);
+  }
+  html.erv-mobile-shell.erv-mobile-no-nav body.lp-home-premium {
+    padding-bottom: max(8px, env(safe-area-inset-bottom, 0px));
+  }
+  html.erv-mobile-shell body.lp-home-premium .lp-header.lp-header--refined {
+    min-height: var(--erv-mobile-header-target, 52px);
+    background: #f8f4ee !important;
+    border-bottom: 0 !important;
+    box-shadow: 0 1px 0 rgba(61, 34, 19, 0.08) !important;
+  }
+  html.erv-mobile-shell body.lp-home-premium .lp-header.lp-header--refined::before {
+    display: none !important;
+  }
+  html.erv-mobile-shell body.lp-home-premium .lp-header.lp-header--refined .lp-header__inner {
+    padding: 4px max(12px, env(safe-area-inset-left, 12px)) 6px max(12px, env(safe-area-inset-right, 12px)) !important;
+    gap: 0 !important;
+  }
+  html.erv-mobile-shell body.lp-home-premium .lp-header.lp-header--refined .lp-header__top-row {
+    display: grid !important;
+    grid-template-columns: auto 1fr auto !important;
+    grid-template-rows: auto !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    row-gap: 0 !important;
+    min-height: var(--erv-mobile-header-target, 52px);
+    max-height: none;
+    width: 100%;
+    direction: ltr !important;
+    unicode-bidi: isolate !important;
+  }
+  html.erv-mobile-shell body.lp-home-premium .lp-header.lp-header--refined .lp-header__top-row > .lp-header__logo-slot {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    justify-self: start !important;
+    order: unset !important;
+    margin: 0 !important;
+    width: auto !important;
+    overflow: visible !important;
+  }
+  html.erv-mobile-shell body.lp-home-premium .lp-header.lp-header--refined .lp-header__top-row > .lp-header__brand-mid {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    justify-self: center !important;
+    text-align: center !important;
+    direction: rtl !important;
+    order: unset !important;
+    margin: 0 !important;
+    min-width: 0;
+    gap: 0 !important;
+    line-height: 1.15;
+  }
+  html.erv-mobile-shell body.lp-home-premium .lp-header__brand-mid .lp-brand__name {
+    font-size: 0.92rem !important;
+    font-weight: 900 !important;
+    letter-spacing: 0.05em;
+    color: #3d2213;
+    line-height: 1.15;
+  }
+  html.erv-mobile-shell body.lp-home-premium .lp-header__brand-mid .lp-brand__tag {
+    display: block !important;
+    font-size: 0.68rem !important;
+    font-weight: 700 !important;
+    color: #b9872f;
+    line-height: 1.2;
+  }
+  html.erv-mobile-shell body.lp-home-premium .lp-header.lp-header--refined .lp-header__top-row > .lp-header__menu-slot {
+    grid-column: 3 !important;
+    grid-row: 1 !important;
+    justify-self: end !important;
+    order: unset !important;
+    margin: 0 !important;
+  }
+  html.erv-mobile-shell body.lp-home-premium .lp-header__user-mid,
+  html.erv-mobile-shell body.lp-home-premium .lp-nav-wrap {
+    display: none !important;
+  }
+  html.erv-mobile-shell body.lp-home-premium .lp-header__actions {
+    display: none !important;
+  }
+  html.erv-mobile-shell body.lp-home-premium #lpHeaderWallet,
+  html.erv-mobile-shell body.lp-home-premium #authArea,
+  html.erv-mobile-shell body.lp-home-premium .lp-draft-checkout-badge__total {
+    display: none !important;
+  }
+}
+

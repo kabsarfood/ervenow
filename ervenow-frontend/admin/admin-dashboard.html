@@ -3,16 +3,20 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover" />
-    <script src="/assets/viewport-fit.js"></script>
+    <script src="/assets/viewport-fit.js?erv=20260612b"></script>
     <title>لوحة الإدارة | ERVENOW</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <meta name="theme-color" content="#3d2213" />
     <link rel="stylesheet" href="/assets/styles.css" />
-    <link rel="stylesheet" href="/assets/guest-shell.css" />
+    <link rel="stylesheet" href="/assets/guest-shell.css?erv=20260612b" />
     <link rel="stylesheet" href="/assets/admin-dashboard-shell.css" />
     <link rel="stylesheet" href="/admin/admin-dashboard.css" />
+    <link rel="stylesheet" href="/assets/banner-engine.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+    <link rel="stylesheet" href="/assets/live-store-map.css" />
   </head>
   <body class="admin-shell-page">
     <header class="dash-site-header admin-site-header">
@@ -95,7 +99,7 @@
                 <a class="admin-hero-chip" href="#" data-panel-jump="panelOrders">📦 الطلبات</a>
                 <a class="admin-hero-chip" href="#" data-panel-jump="panelStores">🏪 المتاجر</a>
                 <a class="admin-hero-chip" href="#" data-panel-jump="panelOffers">🎁 العروض</a>
-                <a class="admin-hero-chip" href="#" data-panel-jump="panelHeroBanners">🎨 البنرات</a>
+                <a class="admin-hero-chip" href="#" data-panel-jump="panelHeroBanners">🎨 إدارة البنرات</a>
                 <a class="admin-hero-chip" href="#" data-panel-jump="panelErvenowPay" id="adminHeroPayChip" style="display:none">⚡ ERVENOW PAY</a>
                 <a class="admin-hero-chip" href="/dashboard">🧭 لوحة الزائر</a>
               </div>
@@ -268,49 +272,62 @@
             <div class="hint">من الطلبات المكتملة</div>
           </div>
         </div>
-        <div class="live-map-card">
+        <div class="live-map-card erv-live-map-admin-card">
           <div class="live-map-card__head">
-            <h3>خريطة حية</h3>
-            <div class="live-map-toolbar">
-              <label class="live-map-toolbar__label" for="liveMapCitySearch">المدينة</label>
-              <input
-                type="search"
-                id="liveMapCitySearch"
-                class="live-map-city-search"
-                list="liveMapCityList"
-                placeholder="ابحث عن مدينة..."
-                autocomplete="off"
-                aria-label="ابحث عن مدينة"
-              />
-              <datalist id="liveMapCityList"></datalist>
-              <select id="liveMapCitySelect" class="live-map-city-select" hidden aria-hidden="true" tabindex="-1">
-                <option value="all">كل المملكة</option>
-              </select>
+            <h3>الخريطة الحية</h3>
+            <div class="erv-live-map-admin-actions">
+              <button type="button" class="btn btn-ghost" id="liveMapPublicToggleBtn" title="إظهار أو إخفاء صفحة /live-map عن الزوار">
+                جارٍ التحميل…
+              </button>
+              <a class="btn btn-ghost" href="/live-map" target="_blank" rel="noopener noreferrer">معاينة للزوار</a>
             </div>
           </div>
-          <p id="liveMapCityLabel" class="live-map-city-label">كل المملكة</p>
-          <div class="live-map-hud" aria-live="polite">
-            <span class="live-map-hud__chip live-map-hud__chip--drivers"
-              >🚚 المناديب: <strong id="liveMapCountDrivers">0</strong></span
-            >
-            <span class="live-map-hud__chip live-map-hud__chip--stores"
-              >🏪 المتاجر: <strong id="liveMapCountStores">0</strong></span
-            >
-            <span class="live-map-hud__chip live-map-hud__chip--customers"
-              >👥 العملاء النشطون: <strong id="liveMapCountCustomers">0</strong></span
-            >
-            <span class="live-map-hud__chip live-map-hud__chip--orders"
-              >📦 الطلبات الجارية: <strong id="liveMapCountOrders">0</strong></span
-            >
-          </div>
-          <div id="liveMap" role="application" aria-label="خريطة المندوبين والمتاجر والطلبات"></div>
-          <div class="live-map-legend">
-            <span class="lg-store">متجر</span>
-            <span class="lg-driver">مندوب</span>
-            <span class="lg-order">استلام</span>
-            <span class="lg-drop">تسليم</span>
-            <span class="lg-late">متأخر +10 د</span>
-            <span class="lg-nodriver">بدون مندوب</span>
+          <p class="sub erv-live-map-admin-desc">
+            نفس خريطة الأنشطة للأعضاء — أقمار صناعية وتضاريس، بحث بالمدينة والقسم. يمكنك إظهارها أو إخفاءها عن الزوار لقياس الإقبال.
+          </p>
+          <div id="ervAdminLiveMapShell" class="erv-live-map-admin-shell">
+            <div class="erv-live-map-toolbar" id="liveMapToolbar" aria-label="بحث الخريطة">
+              <div class="erv-live-map-toolbar__inner">
+                <label class="erv-live-map-field">
+                  <span class="erv-live-map-field__label">المدينة</span>
+                  <input
+                    type="search"
+                    id="liveMapCitySearch"
+                    class="erv-live-map-field__input"
+                    list="liveMapCityList"
+                    placeholder="ابحث عن مدينة…"
+                    autocomplete="off"
+                    enterkeyhint="search"
+                    aria-label="ابحث عن مدينة"
+                  />
+                  <datalist id="liveMapCityList"></datalist>
+                </label>
+                <label class="erv-live-map-field">
+                  <span class="erv-live-map-field__label">القسم</span>
+                  <select id="liveMapCategorySelect" class="erv-live-map-field__input erv-live-map-field__select">
+                    <option value="all">كل الأقسام</option>
+                    <option value="restaurant">مطاعم</option>
+                    <option value="store">متاجر</option>
+                    <option value="pharmacy">صيدليات</option>
+                    <option value="service">خدمات</option>
+                  </select>
+                </label>
+                <button type="button" class="btn btn-primary erv-live-map-search-btn" id="liveMapSearchBtn">بحث</button>
+              </div>
+              <p class="erv-live-map-toolbar__hint" id="liveMapCityLabel">كل المملكة — كل الأقسام</p>
+            </div>
+            <div id="liveMap" role="application" aria-label="خريطة الأنشطة"></div>
+            <p id="liveMapEmpty" class="erv-live-map-empty" hidden>لا توجد أنشطة في هذه المنطقة — حرّك الخريطة أو غيّر المدينة/القسم.</p>
+            <section class="erv-live-map-feeder" id="liveMapFeeder" aria-label="الأنشطة القريبة">
+              <button type="button" class="erv-live-map-feeder__handle" id="liveMapFeederToggle" aria-expanded="true" aria-controls="liveMapFeederBody">
+                <span class="erv-live-map-feeder__handle-title">الأنشطة في هذه المنطقة</span>
+                <span class="erv-live-map-feeder__count" id="liveMapFeederCount">0</span>
+                <span class="erv-live-map-feeder__chev" aria-hidden="true">▾</span>
+              </button>
+              <div class="erv-live-map-feeder__body" id="liveMapFeederBody">
+                <div class="erv-live-map-feeder__scroll" id="liveMapFeederList" role="list"></div>
+              </div>
+            </section>
           </div>
         </div>
         <div class="live-alerts-card" id="liveAlertsCard">
@@ -448,7 +465,7 @@
             🎁 العروض
           </button>
           <button type="button" class="panel-btn" data-panel="panelHeroBanners" id="panelHeroBannersBtn">
-            🎨 البنرات الرئيسية
+            🎨 إدارة البنرات
           </button>
           <button type="button" class="panel-btn" data-panel="panelNotifications">
             🔔 الإشعارات
@@ -641,7 +658,7 @@
 
       <div class="card admin-panel" id="panelHeroBanners">
         <div class="panel-toolbar">
-          <strong class="panel-title">🎨 إدارة البنرات الرئيسية</strong>
+          <strong class="panel-title">🎨 إدارة البنرات V2</strong>
           <div class="panel-toolbar-actions">
             <button type="button" class="btn btn-primary" id="reloadHeroBannersBtn">تحديث</button>
           </div>
@@ -892,7 +909,19 @@
             <span id="storeSetupCatLabel">تصنيف المطعم / القسم</span>
             <select id="storeSetupCategory" aria-label="تصنيف المتجر"></select>
           </label>
-          <label>وصف الموقع (نص) <input type="text" id="storeSetupLocation" /></label>
+          <label id="storeSetupMapsWrap">
+            <span>رابط موقع المتجر على Google Maps <strong aria-hidden="true">*</strong></span>
+            <input
+              type="url"
+              id="storeSetupMapsUrl"
+              dir="ltr"
+              required
+              placeholder="https://maps.app.goo.gl/... أو lat,lng"
+              autocomplete="off"
+            />
+          </label>
+          <p class="sub" id="storeSetupMapsStatus" style="margin: 0"></p>
+          <label>وصف الموقع (نص اختياري) <input type="text" id="storeSetupLocation" /></label>
           <label>العنوان <input type="text" id="storeSetupAddress" /></label>
           <label>نبذة للزوار <textarea id="storeSetupBio" rows="3" placeholder="مثال: وجبات منزلية، توصيل سريع…"></textarea></label>
           <div class="store-setup-media">
@@ -932,6 +961,11 @@
     <script src="/assets/compressImage.js"></script>
     <script src="https://cdn.socket.io/4.8.1/socket.io.min.js" crossorigin="anonymous"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+    <script>
+      window.__ERV_LIVE_MAP_OPTS__ = { adminMode: true, skipAutoBoot: true };
+    </script>
+    <script src="/assets/live-store-map.js"></script>
     <script type="module" src="/admin/admin-dashboard.js"></script>
     <script>
       (function initAdminNotifications() {
@@ -984,19 +1018,6 @@
           toggle.setAttribute("aria-expanded", "false");
         });
       })();
-    </script>
-    <script>
-      document.querySelectorAll("[data-panel-jump]").forEach(function (link) {
-        link.addEventListener("click", function (e) {
-          var panelId = link.getAttribute("data-panel-jump");
-          if (!panelId) return;
-          e.preventDefault();
-          var btn = document.querySelector('.panel-btn[data-panel="' + panelId + '"]');
-          if (btn) btn.click();
-          var el = document.getElementById(panelId);
-          if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
-        });
-      });
     </script>
   </body>
 </html>

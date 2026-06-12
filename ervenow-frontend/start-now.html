@@ -1,16 +1,18 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ar" dir="rtl">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover" />
-    <script src="/assets/viewport-fit.js"></script>
+    <script src="/assets/viewport-fit.js?erv=20260612b"></script>
     <title>ابدأ الآن | ERVENOW</title>
     <meta name="description" content="اطلب من مطاعم، متاجر، توصيل، أو خدمات منزلية — كل شيء في مكان واحد. يتم تفعيل الحساب بعد المراجعة واعتماده من إدارة ERVENOW." />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/assets/styles.css" />
-    <link rel="stylesheet" href="/assets/guest-shell.css" />
+    <link rel="stylesheet" href="/assets/guest-shell.css?erv=20260612b" />
+    <link rel="stylesheet" href="/assets/mobile-harmony.css?erv=20260612b" />
     <link rel="stylesheet" href="/assets/start-now-landing.css" />
+    <link rel="stylesheet" href="/assets/start-now-page.css" />
     <style>
       *, *::before, *::after { box-sizing: border-box; }
 
@@ -39,90 +41,8 @@
         width: 100%;
       }
 
-      /* ══ HERO ═════════════════════════════════════════════════ */
-      .sn-hero {
-        background: linear-gradient(180deg, #f5ede2 0%, #f8f4ee 58%, #fffefb 100%);
-        color: var(--brown);
-        text-align: center;
-        padding: 64px 24px 72px;
-        position: relative;
-        overflow: hidden;
-      }
-      .sn-hero::before {
-        content: "";
-        position: absolute;
-        inset: 0;
-        background:
-          radial-gradient(circle at 80% 20%, rgba(185,135,47,.12) 0%, transparent 55%),
-          radial-gradient(circle at 20% 80%, rgba(61,34,19,.04) 0%, transparent 50%);
-        pointer-events: none;
-      }
-      .sn-hero__eyebrow {
-        display: inline-block;
-        background: rgba(185, 135, 47, 0.1);
-        backdrop-filter: blur(6px);
-        border: 1px solid rgba(61,34,19,.12);
-        border-radius: 100px;
-        padding: 5px 16px;
-        font-size: .8rem;
-        font-weight: 700;
-        letter-spacing: .04em;
-        margin-bottom: 20px;
-        color: var(--brown-mid);
-      }
-      .sn-hero__title {
-        font-size: clamp(1.8rem, 5vw, 2.9rem);
-        font-weight: 900;
-        margin: 0 0 14px;
-        line-height: 1.2;
-        letter-spacing: -.5px;
-      }
-      .sn-hero__title span {
-        color: var(--gold);
-      }
-      .sn-hero__sub {
-        font-size: clamp(.95rem, 2.5vw, 1.1rem);
-        color: var(--muted);
-        margin: 0 auto 32px;
-        max-width: 480px;
-        line-height: 1.7;
-      }
-      .sn-hero__actions {
-        display: flex;
-        gap: 12px;
-        justify-content: center;
-        flex-wrap: wrap;
-      }
-      .sn-hero__cta {
-        background: var(--gold);
-        color: #fff;
-        border: none;
-        border-radius: 14px;
-        padding: 13px 28px;
-        font-family: inherit;
-        font-size: 1rem;
-        font-weight: 700;
-        cursor: pointer;
-        text-decoration: none;
-        box-shadow: 0 4px 18px rgba(185,135,47,.35);
-        transition: transform var(--transition), box-shadow var(--transition);
-      }
-      .sn-hero__cta:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 24px rgba(185,135,47,.40);
-      }
-      .sn-hero__cta--outline {
-        background: rgba(61,34,19,.04);
-        backdrop-filter: blur(6px);
-        border: 1.5px solid rgba(61,34,19,.2);
-        color: var(--brown);
-        box-shadow: none;
-      }
-      .sn-hero__cta--outline:hover {
-        background: rgba(61,34,19,.08);
-        box-shadow: none;
-        transform: none;
-      }
+      /* Hero — start-now-page.css */
+
       /* wave separator */
       .sn-wave {
         display: block;
@@ -339,7 +259,7 @@
             <span class="dash-header-wallet__val" id="dashHeaderWalletAmount">—</span>
             <span class="dash-header-wallet__cur">ر.س</span>
           </a>
-          <a class="dash-header-cart" href="/cart" aria-label="السلة — الدفع">
+          <a class="dash-header-cart" href="/checkout" aria-label="السلة — الدفع">
             <span aria-hidden="true">🛒</span>
             <span class="dash-header-cart__label">السلة</span>
             <span class="dash-header-cart__badge" id="cartCount" data-empty="true">0</span>
@@ -351,21 +271,20 @@
 
     <div class="dash-main">
     <!-- ══ HERO ════════════════════════════════════════════════ -->
-    <section class="sn-hero">
-      <div class="sn-hero__eyebrow">منصة ERVENOW — خدمة واحدة لكل شيء</div>
-      <h1 class="sn-hero__title">
-        اطلب أي خدمة<br>
-        <span>الآن وبسهولة</span>
-      </h1>
-      <p class="sn-hero__sub">
-        كل ما تحتاجة — في مكان واحد.
-      </p>
-      <!-- guest note داخل الهيرو -->
-      <p id="guestStartNote" class="sn-guest-note">
-        وضع زائر — تصفّح العروض بحرية. لإتمام الطلب
-        <a href="/login" style="color:var(--gold);font-weight:800;text-decoration:none">سجّل دخولك</a>
-        برمز واتساب. يتم تفعيل الحساب بعد المراجعة واعتماده من إدارة ERVENOW.
-      </p>
+    <section class="sn-hero sn-hero--start-now" aria-labelledby="snStartHeroTitle">
+      <div class="sn-hero__inner">
+        <p class="sn-hero__eyebrow">منصة ERVENOW — خدمة واحدة لكل شيء</p>
+        <h1 class="sn-hero__title" id="snStartHeroTitle">
+          اطلب أي خدمة<br />
+          <span>الآن وبسهولة</span>
+        </h1>
+        <p class="sn-hero__sub">كل ما تحتاجه — في مكان واحد.</p>
+        <p id="guestStartNote" class="sn-guest-note">
+          وضع زائر — تصفّح العروض بحرية. لإتمام الطلب
+          <a href="/login" style="color: var(--gold); font-weight: 800; text-decoration: none">سجّل دخولك</a>
+          برمز واتساب. يتم تفعيل الحساب بعد المراجعة واعتماده من إدارة ERVENOW.
+        </p>
+      </div>
     </section>
 
     <!-- wave -->
@@ -497,12 +416,13 @@
       <p class="dash-site-footer__copy">© 2026 ERVENOW — جميع الحقوق محفوظة</p>
     </footer>
     </div>
-    <script src="/assets/cart.js"></script>
+    <script src="/assets/order-draft-store.js"></script>
+    <script src="/assets/order-draft-badge.js"></script>
     <script src="/assets/api-config.js"></script>
     <script src="/assets/api.js"></script>
     <script src="/assets/guestBrowse.js"></script>
     <script src="/assets/ervenow-toggle.js"></script>
-    <script src="/assets/guest-shell.js"></script>
+    <script src="/assets/guest-shell.js?erv=20260612b"></script>
     <script>
       ErvenowGuestShell.init({ activeNav: "start", pageTag: "ابدأ الآن" });
     </script>

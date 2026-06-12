@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover" />
-    <script src="/assets/viewport-fit.js"></script>
+    <script src="/assets/viewport-fit.js?erv=20260612b"></script>
     <title>الهوية البصرية | ERVENOW</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet" />
@@ -442,6 +442,37 @@
           <div class="msg" id="msgColors"></div>
         </div>
 
+        <div class="card" id="cardMapColors">
+          <h3>ألوان نقاط الخريطة الحية</h3>
+          <p class="hint">تُستخدم في الخريطة العامة (/live-map) وخريطة لوحة الإدارة — بدون ألوان ثابتة في الكود.</p>
+
+          <div class="color-row">
+            <label style="margin: 0; flex: 1 1 140px">Restaurant Color — مطعم</label>
+            <input type="color" id="cMapRestaurantPick" />
+            <input type="text" id="cMapRestaurant" maxlength="7" dir="ltr" />
+          </div>
+          <div class="color-row">
+            <label style="margin: 0; flex: 1 1 140px">Store Color — متجر</label>
+            <input type="color" id="cMapStorePick" />
+            <input type="text" id="cMapStore" maxlength="7" dir="ltr" />
+          </div>
+          <div class="color-row">
+            <label style="margin: 0; flex: 1 1 140px">Pharmacy Color — صيدلية</label>
+            <input type="color" id="cMapPharmacyPick" />
+            <input type="text" id="cMapPharmacy" maxlength="7" dir="ltr" />
+          </div>
+          <div class="color-row">
+            <label style="margin: 0; flex: 1 1 140px">Service Provider Color — خدمات</label>
+            <input type="color" id="cMapServicePick" />
+            <input type="text" id="cMapService" maxlength="7" dir="ltr" />
+          </div>
+
+          <div class="btn-row">
+            <button type="button" class="btn btn-primary" id="btnSaveMapColors">حفظ ألوان الخريطة</button>
+          </div>
+          <div class="msg" id="msgMapColors"></div>
+        </div>
+
         <div class="card" id="cardCheckoutPay">
           <h3>وسائل الدفع في السلة</h3>
           <p class="hint">
@@ -519,7 +550,7 @@
         }
 
         function syncPickers() {
-          ["Primary", "Secondary", "Accent", "Bg", "Text"].forEach(function (k) {
+          ["Primary", "Secondary", "Accent", "Bg", "Text", "MapRestaurant", "MapStore", "MapPharmacy", "MapService"].forEach(function (k) {
             var hex = document.getElementById("c" + k).value.trim();
             var pick = document.getElementById("c" + k + "Pick");
             if (pick && /^#[0-9A-Fa-f]{6}$/.test(hex)) pick.value = hex;
@@ -687,6 +718,10 @@
           document.getElementById("cAccent").value = settings.accent_color || "#d4a76a";
           document.getElementById("cBg").value = settings.background_color || "#f8f5f0";
           document.getElementById("cText").value = settings.text_color || "#2b1f16";
+          document.getElementById("cMapRestaurant").value = settings.map_color_restaurant || "#eab308";
+          document.getElementById("cMapStore").value = settings.map_color_store || "#22c55e";
+          document.getElementById("cMapPharmacy").value = settings.map_color_pharmacy || "#06b6d4";
+          document.getElementById("cMapService").value = settings.map_color_service || "#8b5cf6";
           syncPickers();
           if (settings.logo_url) setLogoPreviewFromUrl(settings.logo_url);
           pendingLogoDataUrl = null;
@@ -735,7 +770,7 @@
           location.href = "/admin-login";
         };
 
-        ["Primary", "Secondary", "Accent", "Bg", "Text"].forEach(function (k) {
+        ["Primary", "Secondary", "Accent", "Bg", "Text", "MapRestaurant", "MapStore", "MapPharmacy", "MapService"].forEach(function (k) {
           wirePicker(k);
         });
 
@@ -803,6 +838,23 @@
           }
         };
 
+        document.getElementById("btnSaveMapColors").onclick = async function () {
+          hideMsg("msgMapColors");
+          try {
+            var body = {
+              map_color_restaurant: document.getElementById("cMapRestaurant").value.trim(),
+              map_color_store: document.getElementById("cMapStore").value.trim(),
+              map_color_pharmacy: document.getElementById("cMapPharmacy").value.trim(),
+              map_color_service: document.getElementById("cMapService").value.trim(),
+            };
+            var j = await window.PlatformAPI.api("/api/admin/platform-settings", { method: "POST", body: body });
+            settings = j.settings || settings;
+            show("msgMapColors", j.message || "تم حفظ ألوان الخريطة", true);
+          } catch (err) {
+            show("msgMapColors", String(err.message || err), false);
+          }
+        };
+
         document.getElementById("btnSaveColors").onclick = async function () {
           hideMsg("msgColors");
           try {
@@ -835,6 +887,10 @@
             document.getElementById("cAccent").value = settings.accent_color || "#d4a76a";
             document.getElementById("cBg").value = settings.background_color || "#f8f5f0";
             document.getElementById("cText").value = settings.text_color || "#2b1f16";
+            document.getElementById("cMapRestaurant").value = settings.map_color_restaurant || "#eab308";
+            document.getElementById("cMapStore").value = settings.map_color_store || "#22c55e";
+            document.getElementById("cMapPharmacy").value = settings.map_color_pharmacy || "#06b6d4";
+            document.getElementById("cMapService").value = settings.map_color_service || "#8b5cf6";
             syncPickers();
             show("msgColors", j.message || "تمت إعادة التعيين", true);
             updateLivePreview();

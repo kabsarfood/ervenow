@@ -310,6 +310,8 @@
       p === "/dashboard" ||
       p === "/cart" ||
       p === "/cart.html" ||
+      p === "/checkout" ||
+      p === "/checkout.html" ||
       p === "/partner-portal.html" ||
       p === "/partner-portal" ||
       p === "/register-store.html" ||

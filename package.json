@@ -9,6 +9,8 @@
     "worker:delivery": "node workers/deliveryWorker.js",
     "apply:store-branding": "node scripts/apply-store-branding-infra.mjs",
     "frontend:sync": "node scripts/sync-ervenow-frontend.js",
+    "bump:shell": "node scripts/bump-shell-asset-urls.js",
+    "deploy:frontend": "node scripts/bump-shell-asset-urls.js && node scripts/sync-ervenow-frontend.js",
     "load:test": "npx artillery run tests/load/artillery.yml",
     "test": "jest",
     "test:ci": "jest --ci",

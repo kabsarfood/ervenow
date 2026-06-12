@@ -2,6 +2,7 @@
   var TOKEN_STORAGE_KEYS = ["ervenow_access_token", "erwenow_access_token", "token"];
   var _activeNavKey = "";
   var _storePreviewMode = false;
+  var _liveMapPublicEnabled = true;
 
   /** روابط الهيدر حسب الدور (من القائمة → الهيدر) */
   function buildNavLinks(role, opts) {
@@ -29,11 +30,11 @@
         href: "/driver-app",
         label: "تتبع الحي",
       });
-    } else {
+    } else if (opts.liveMapPublicEnabled !== false) {
       links.push({
-        key: "track",
-        href: "/track",
-        label: "تتبع الحي",
+        key: "live_map",
+        href: "/live-map",
+        label: "الخريطة الحية",
       });
     }
     if (!opts.authenticated) {
@@ -98,11 +99,17 @@
   }
 
   function refreshCartBadge() {
-    if (typeof global.updateCartCount === "function") global.updateCartCount();
+    if (global.ErvenowOrderDraftBadge && typeof global.ErvenowOrderDraftBadge.enforceCheckoutNav === "function") {
+      global.ErvenowOrderDraftBadge.enforceCheckoutNav();
+      return;
+    }
+    if (global.ErvenowOrderDraftBadge && typeof global.ErvenowOrderDraftBadge.sync === "function") {
+      global.ErvenowOrderDraftBadge.sync();
+      return;
+    }
     var badge = document.getElementById("cartCount");
     if (!badge) return;
-    var n = parseInt(badge.textContent, 10) || 0;
-    badge.setAttribute("data-empty", n > 0 ? "false" : "true");
+    badge.setAttribute("data-empty", "true");
   }
 
   function ensureNotificationCenterAssets() {
@@ -188,6 +195,7 @@
   }
 
   async function refreshIndexNavWallet(role) {
+    if (indexHasHeaderWallet()) return;
     var box = document.getElementById("lpNavWallet");
     var amountEl = document.getElementById("lpNavWalletAmount");
     if (!box || !amountEl) return;
@@ -203,6 +211,11 @@
   }
 
   function clearGuestSessionState() {
+    try {
+      if (global.ErvenowOrderDraft && typeof global.ErvenowOrderDraft.clearPlatformDraftState === "function") {
+        global.ErvenowOrderDraft.clearPlatformDraftState();
+      }
+    } catch (_eDraft) {}
     try {
       if (global.ErvenowAuthGuard && typeof global.ErvenowAuthGuard.clearSession === "function") {
         global.ErvenowAuthGuard.clearSession();
@@ -235,15 +248,39 @@
   }
 
   function performGuestLogout() {
-    clearGuestSessionState();
     try {
-      global.dispatchEvent(new CustomEvent("ervenow:auth-changed"));
-    } catch (_e) {}
-    try {
-      global.location.reload();
-    } catch (_e2) {
-      global.location.href = "/";
+      if (global.ErvenowOrderDraft && typeof global.ErvenowOrderDraft.markSessionEnded === "function") {
+        global.ErvenowOrderDraft.markSessionEnded();
+      }
+    } catch (_eMark) {}
+
+    var finish = function () {
+      clearGuestSessionState();
+      try {
+        global.__ervSessionMe = null;
+      } catch (_eMe) {}
+      try {
+        global.dispatchEvent(new CustomEvent("ervenow:auth-changed"));
+      } catch (_e) {}
+      if (global.ErvenowOrderDraftBadge && typeof global.ErvenowOrderDraftBadge.enforceCheckoutNav === "function") {
+        global.ErvenowOrderDraftBadge.enforceCheckoutNav();
+      } else if (global.ErvenowOrderDraftBadge && typeof global.ErvenowOrderDraftBadge.sync === "function") {
+        global.ErvenowOrderDraftBadge.sync();
+      }
+      try {
+        global.location.reload();
+      } catch (_e2) {
+        global.location.href = "/";
+      }
+    };
+
+    if (global.ErvenowOrderDraft && typeof global.ErvenowOrderDraft.prepareLogoutDraftState === "function") {
+      global.ErvenowOrderDraft.prepareLogoutDraftState()
+        .then(finish)
+        .catch(finish);
+      return;
     }
+    finish();
   }
 
   function wireSwitchAccountButton(btn) {
@@ -298,6 +335,29 @@
     syncHeaderLayoutMetrics();
   }
 
+  function navOpts(extra) {
+    extra = extra && typeof extra === "object" ? extra : {};
+    extra.liveMapPublicEnabled = _liveMapPublicEnabled;
+    return extra;
+  }
+
+  async function fetchLiveMapPublicEnabled() {
+    try {
+      if (!global.PlatformAPI || typeof global.PlatformAPI.api !== "function") return _liveMapPublicEnabled;
+      var j = await global.PlatformAPI.api("/api/core/live-map-public");
+      _liveMapPublicEnabled = !!(j && j.enabled !== false);
+    } catch (_e) {
+      _liveMapPublicEnabled = true;
+    }
+    return _liveMapPublicEnabled;
+  }
+
+  async function paintNavWithFlags(activeNav, role, opts) {
+    await fetchLiveMapPublicEnabled();
+    paintHeaderNav(activeNav, role, navOpts(opts));
+    paintIndexNav(role, navOpts(opts));
+  }
+
   async function initAuthHeader() {
     if (_storePreviewMode) {
       paintStorePreviewHeader();
@@ -307,8 +367,7 @@
     if (!hasToken()) {
       setAccountButtonLoggedOut(switchAccount);
       await refreshHeaderWallet("");
-      paintHeaderNav(_activeNavKey, "", { authenticated: false });
-      paintIndexNav("", { authenticated: false });
+      await paintNavWithFlags(_activeNavKey, "", { authenticated: false });
       return;
     }
     syncGuestBrowseMode();
@@ -317,13 +376,20 @@
       if (global.ErvenowAccountDest && ErvenowAccountDest.setSessionFromMe) {
         ErvenowAccountDest.setSessionFromMe(me);
       }
+      if (me && me.user && me.user.id) {
+        try {
+          localStorage.setItem("userId", String(me.user.id));
+        } catch (_uid) {}
+        if (global.ErvenowOrderDraft && typeof global.ErvenowOrderDraft.restoreDraftAfterLogin === "function") {
+          global.ErvenowOrderDraft.restoreDraftAfterLogin();
+        }
+      }
       var role = (me.profile && me.profile.role) || "customer";
       role = String(role).toLowerCase();
       var serviceType = me.profile && me.profile.service_type;
       setAccountButtonLoggedIn(switchAccount);
       await refreshHeaderWallet(role);
-      paintHeaderNav(_activeNavKey, role, { authenticated: true });
-      paintIndexNav(role, { authenticated: true });
+      await paintNavWithFlags(_activeNavKey, role, { authenticated: true });
       if (role === "driver") {
         document.querySelectorAll(".dash-header-cart").forEach(function (a) {
           a.style.display = "none";
@@ -333,8 +399,7 @@
     } catch (e) {
       setAccountButtonLoggedIn(switchAccount);
       await refreshHeaderWallet("customer");
-      paintHeaderNav(_activeNavKey, "", { authenticated: false });
-      paintIndexNav("", { authenticated: false });
+      await paintNavWithFlags(_activeNavKey, "", { authenticated: false });
     }
   }
 
@@ -385,9 +450,18 @@
     });
   }
 
+  function indexHasHeaderWallet() {
+    return !!document.getElementById("lpHeaderWallet");
+  }
+
   function buildIndexNavLinks(role, opts) {
     var links = buildNavLinks(role, opts);
-    if (opts && opts.authenticated && String(role || "").toLowerCase() !== "admin") {
+    if (
+      opts &&
+      opts.authenticated &&
+      String(role || "").toLowerCase() !== "admin" &&
+      !indexHasHeaderWallet()
+    ) {
       var i = -1;
       for (var k = 0; k < links.length; k++) {
         if (links[k].key === "logout") {
@@ -561,9 +635,9 @@
       '<span class="dash-header-wallet__val" id="dashHeaderWalletAmount">—</span>' +
       '<span class="dash-header-wallet__cur">ر.س</span>' +
       "</a>" +
-      '<a class="dash-header-cart" href="/cart" aria-label="السلة — الدفع">' +
+      '<a class="dash-header-cart" href="/checkout" aria-label="تأكيد الطلب — الدفع">' +
       '<span aria-hidden="true">🛒</span>' +
-      '<span class="dash-header-cart__label">السلة</span>' +
+      '<span class="dash-header-cart__label">الطلب</span>' +
       '<span class="dash-header-cart__badge" id="cartCount" data-empty="true">0</span>' +
       "</a>" +
       "</div>" +
@@ -644,59 +718,86 @@
     document.head.appendChild(s);
   }
 
-  function ensureCartStyles() {
-    if (!document.querySelector('link[href*="cart-luxe.css"]')) {
-      var l1 = document.createElement("link");
-      l1.rel = "stylesheet";
-      l1.href = "/assets/cart-luxe.css";
-      document.head.appendChild(l1);
-    }
-    if (!document.querySelector('link[href*="cart-shell.css"]')) {
-      var l2 = document.createElement("link");
-      l2.rel = "stylesheet";
-      l2.href = "/assets/cart-shell.css";
-      document.head.appendChild(l2);
-    }
-  }
-
-  function mountUnifiedHeaderCart() {
-    if (document.getElementById("lpCartWrap")) return;
-    var tools = document.querySelector(".dash-site-header__tools");
-    var link = tools && tools.querySelector(".dash-header-cart");
-    if (tools && link && global.ErvenowCartUI) {
-      global.ErvenowCartUI.mountGuestHeaderCart(tools, link);
-      normalizeSiteHeaderDomOrder();
-    }
-  }
-
-  function loadCartUi(cb) {
+  function loadDraftBadge(cb) {
     if (!document.body.classList.contains("guest-shell-page")) {
       if (cb) cb();
       return;
     }
-    ensureCartStyles();
-    if (global.ErvenowCartUI) {
-      mountUnifiedHeaderCart();
+    if (global.ErvenowOrderDraftBadge) {
+      if (typeof global.ErvenowOrderDraftBadge.enforceCheckoutNav === "function") {
+        global.ErvenowOrderDraftBadge.enforceCheckoutNav();
+      } else if (typeof global.ErvenowOrderDraftBadge.boot === "function") {
+        global.ErvenowOrderDraftBadge.boot();
+      } else if (typeof global.ErvenowOrderDraftBadge.sync === "function") {
+        global.ErvenowOrderDraftBadge.sync();
+      }
       if (cb) cb();
       return;
     }
-    if (document.querySelector('script[src*="cart-ui.js"]')) {
-      mountUnifiedHeaderCart();
+    if (document.querySelector('script[src*="order-draft-badge.js"]')) {
       if (cb) cb();
       return;
     }
-    var s = document.createElement("script");
-    s.src = "/assets/cart-ui.js";
-    s.async = true;
-    s.onload = function () {
-      mountUnifiedHeaderCart();
-      if (cb) cb();
+    var s1 = document.createElement("script");
+    s1.src = "/assets/order-draft-store.js";
+    s1.async = true;
+    s1.onload = function () {
+      var s2 = document.createElement("script");
+      s2.src = "/assets/order-draft-badge.js";
+      s2.async = true;
+      s2.onload = function () {
+        refreshCartBadge();
+        if (cb) cb();
+      };
+      document.head.appendChild(s2);
     };
-    document.head.appendChild(s);
+    document.head.appendChild(s1);
+  }
+
+  function ensureMobileFoundation() {
+    if (!global.__ervMobileFoundationScript) {
+      global.__ervMobileFoundationScript = true;
+      var s = document.createElement("script");
+      s.src = "/assets/mobile-foundation.js";
+      s.defer = true;
+      s.onload = function () {
+        loadMobileHarmony();
+      };
+      document.head.appendChild(s);
+    } else if (global.ErvenowMobileFoundation) {
+      global.ErvenowMobileFoundation.apply();
+      loadMobileHarmony();
+    }
+  }
+
+  function loadMobileHarmony() {
+    if (global.__ervMobileHarmonyScript) {
+      if (global.ErvenowMobileHarmony) global.ErvenowMobileHarmony.init();
+      return;
+    }
+    global.__ervMobileHarmonyScript = true;
+    if (!document.querySelector('link[href*="mobile-harmony.css"]')) {
+      var l = document.createElement("link");
+      l.rel = "stylesheet";
+      l.href = "/assets/mobile-harmony.css";
+      document.head.appendChild(l);
+    }
+    if (global.ErvenowMobileHarmony) {
+      global.ErvenowMobileHarmony.init();
+      return;
+    }
+    var h = document.createElement("script");
+    h.src = "/assets/mobile-harmony.js";
+    h.defer = true;
+    h.onload = function () {
+      if (global.ErvenowMobileHarmony) global.ErvenowMobileHarmony.init();
+    };
+    document.head.appendChild(h);
   }
 
   function init(opts) {
     opts = opts || {};
+    ensureMobileFoundation();
     _storePreviewMode = !!(opts.storePreview || (global.ErvenowStorePreview && ErvenowStorePreview.isActive()));
     normalizeSiteHeaderDomOrder();
     _activeNavKey = opts.activeNav || "";
@@ -709,11 +810,10 @@
       syncHeaderLayoutMetrics();
       return;
     }
-    paintHeaderNav(_activeNavKey, "", { authenticated: hasToken() });
-    paintIndexNav("", { authenticated: hasToken() });
+    paintNavWithFlags(_activeNavKey, "", { authenticated: hasToken() });
     refreshCartBadge();
     loadToggleUi();
-    loadCartUi();
+    loadDraftBadge();
     ensureNotificationCenterAssets();
     loadPlatformAccessScript();
     loadAccountDestScript();

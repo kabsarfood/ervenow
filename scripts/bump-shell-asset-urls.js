@@ -19,6 +19,16 @@ const reps = [
   [/\/assets\/mobile-harmony\.css(?:\?[^"']*)?/g, "/assets/mobile-harmony.css?erv=" + VER],
   [/\/assets\/mobile-foundation\.js(?:\?[^"']*)?/g, "/assets/mobile-foundation.js?erv=" + VER],
   [/\/assets\/mobile-foundation\.css(?:\?[^"']*)?/g, "/assets/mobile-foundation.css?erv=" + VER],
+  [
+    /\/assets\/mobile-home-conversion\.css(?:\?[^"']*)?/g,
+    "/assets/mobile-home-conversion.css?erv=" + VER,
+  ],
+  [
+    /\/assets\/mobile-fast-discovery\.css(?:\?[^"']*)?/g,
+    "/assets/mobile-fast-discovery.css?erv=" + VER,
+  ],
+  [/\/assets\/guest-shell\.css(?:\?[^"']*)?/g, "/assets/guest-shell.css?erv=" + VER],
+  [/\/assets\/guest-shell\.js(?:\?[^"']*)?/g, "/assets/guest-shell.js?erv=" + VER],
 ];
 
 let count = 0;
@@ -32,4 +42,15 @@ for (const f of walk(root)) {
     console.log("updated", path.relative(root, f));
   }
 }
-console.log("done", count, "files, ver", VER);
+
+const viewportFit = path.join(root, "assets", "viewport-fit.js");
+if (fs.existsSync(viewportFit)) {
+  let vf = fs.readFileSync(viewportFit, "utf8");
+  const next = vf.replace(/var ERV_SHELL_ASSET_VER = "[^"]+";/, 'var ERV_SHELL_ASSET_VER = "' + VER + '";');
+  if (next !== vf) {
+    fs.writeFileSync(viewportFit, next);
+    console.log("updated assets/viewport-fit.js ERV_SHELL_ASSET_VER");
+  }
+}
+
+console.log("done", count, "html files, ver", VER);

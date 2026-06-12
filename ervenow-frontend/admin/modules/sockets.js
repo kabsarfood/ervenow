@@ -55,8 +55,7 @@ app.initAdminDashboardSocket = function () {
     }
     app.updateLiveSocketPulse();
     app.adminRealtimeJoinTrackedOrders();
-    app.ensureLiveMap();
-    app.syncLiveMapMarkers();
+    app.initAdminLiveStoreMap();
     void app.refreshLiveDriversAndMap();
   });
   app.adminSocket.on("connect_error", function () {

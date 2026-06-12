@@ -166,12 +166,12 @@ body.guest-shell-page.stores-page {
   color: var(--gold, #b9872f);
 }
 @media (max-width: 520px) {
-  .dash-header-cart__label,
-  .dash-header-wallet__label {
+  html:not(.erv-mobile-shell) .dash-header-cart__label,
+  html:not(.erv-mobile-shell) .dash-header-wallet__label {
     display: none;
   }
-  .dash-header-cart,
-  .dash-header-wallet {
+  html:not(.erv-mobile-shell) .dash-header-cart,
+  html:not(.erv-mobile-shell) .dash-header-wallet {
     padding: 8px 10px;
     min-width: 44px;
     min-height: 44px;
@@ -697,5 +697,373 @@ body.guest-shell-page.stores-page {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+@import url("/assets/mobile-foundation.css");
+
+/* Mobile Foundation shell — مضمّن لتفادي تأخر @import */
+@media (max-width: 640px), ((max-width: 932px) and (max-height: 500px) and (pointer: coarse)) {
+  html.erv-mobile-shell:not(.erv-mobile-no-nav) body.guest-shell-page {
+    padding-bottom: calc(var(--erv-mobile-nav-h, 56px) + env(safe-area-inset-bottom, 0px) + 8px);
+  }
+  html.erv-mobile-shell.erv-mobile-no-nav body.guest-shell-page {
+    padding-bottom: max(8px, env(safe-area-inset-bottom, 0px));
+  }
+  html.erv-mobile-shell body.guest-shell-page {
+    padding-top: var(--erv-mobile-header-h, var(--erv-mobile-header-reserve, 56px));
+  }
+  html.erv-mobile-shell body.guest-shell-page .dash-site-header {
+    box-shadow: 0 1px 0 rgba(61, 34, 19, 0.08);
+  }
+  html.erv-mobile-shell body.guest-shell-page .dash-site-header__inner {
+    display: grid !important;
+    grid-template-columns: auto 1fr auto !important;
+    grid-template-areas: "logo identity menu" !important;
+    align-items: center !important;
+    gap: 8px !important;
+    min-height: var(--erv-mobile-header-target, 52px) !important;
+    max-height: none !important;
+    direction: ltr !important;
+    unicode-bidi: isolate !important;
+    padding: 4px max(12px, env(safe-area-inset-left, 12px)) 6px max(12px, env(safe-area-inset-right, 12px)) !important;
+  }
+  html.erv-mobile-shell body.guest-shell-page .dash-site-header__brand {
+    grid-area: logo !important;
+    min-width: 0;
+  }
+  html.erv-mobile-shell body.guest-shell-page .dash-site-header__logo {
+    font-size: 0 !important;
+    line-height: 0;
+  }
+  html.erv-mobile-shell body.guest-shell-page .dash-site-header__logo::before {
+    content: "";
+    display: block;
+    width: 36px;
+    height: 36px;
+    background: url("/assets/ervenow-logo.png") center / contain no-repeat;
+  }
+  html.erv-mobile-shell body.guest-shell-page .dash-site-header__logo-dot,
+  html.erv-mobile-shell body.guest-shell-page .dash-site-header__tag {
+    display: none !important;
+  }
+  html.erv-mobile-shell body.guest-shell-page .erv-harmony-identity {
+    grid-area: identity !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center;
+    text-decoration: none;
+    color: inherit;
+    min-width: 0;
+  }
+  html.erv-mobile-shell body.guest-shell-page .erv-harmony-menu {
+    grid-area: menu !important;
+    justify-self: end !important;
+  }
+  html.erv-mobile-shell .dash-site-header__nav,
+  html.erv-mobile-shell .dash-site-header__btn,
+  html.erv-mobile-shell .dash-site-header__inner > #switchAccount,
+  html.erv-mobile-shell .dash-site-header__tag {
+    display: none !important;
+  }
+  /* Harmony P0 — إخفاء السلة + tools بالكامل */
+  html.erv-mobile-shell:not(.erv-mobile-no-nav) .dash-site-header__tools,
+  html.erv-mobile-shell:not(.erv-mobile-no-nav) .lp-header__actions {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+  }
+  html.erv-mobile-shell:not(.erv-mobile-no-nav) .dash-header-cart,
+  html.erv-mobile-shell:not(.erv-mobile-no-nav) .dash-header-cart-btn,
+  html.erv-mobile-shell:not(.erv-mobile-no-nav) .lp-draft-checkout-badge,
+  html.erv-mobile-shell:not(.erv-mobile-no-nav) #indexDraftBadge {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+  }
+  html.erv-mobile-shell .dash-header-cart__label,
+  html.erv-mobile-shell .dash-header-wallet,
+  html.erv-mobile-shell #dashHeaderWallet {
+    display: none !important;
+  }
+  html.erv-mobile-shell:not(.erv-mobile-no-nav) .erv-mobile-bottom-nav--shell {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 300;
+    min-height: var(--erv-mobile-nav-h, 56px);
+    padding: 4px max(6px, env(safe-area-inset-left, 6px)) max(6px, env(safe-area-inset-bottom, 6px))
+      max(6px, env(safe-area-inset-right, 6px));
+    background: linear-gradient(180deg, rgba(255, 254, 251, 0.98) 0%, #fffefb 100%);
+    border-top: 1px solid rgba(61, 34, 19, 0.1);
+    box-shadow: 0 -4px 24px rgba(45, 26, 14, 0.08);
+    visibility: hidden;
+    pointer-events: none;
+  }
+  html.erv-mobile-shell:not(.erv-mobile-no-nav) .erv-mobile-bottom-nav--ready {
+    visibility: visible;
+    pointer-events: auto;
+  }
+  html.erv-mobile-shell.erv-mobile-no-nav .erv-mobile-bottom-nav {
+    display: none !important;
+  }
+  html.erv-mobile-shell:not(.erv-mobile-no-nav) .dash-site-footer {
+    padding-bottom: calc(var(--erv-mobile-nav-h, 56px) + env(safe-area-inset-bottom, 0px) + 16px);
+  }
+  html.erv-mobile-shell.erv-mobile-no-nav .dash-site-footer {
+    padding-bottom: max(16px, env(safe-area-inset-bottom, 0px));
+  }
+}
+
+/* Phase B P0 — Fast Discovery (mobile-fast-discovery.css inlined) */
+
+@media (max-width: 640px), ((max-width: 932px) and (max-height: 500px) and (pointer: coarse)) {
+  /* ═══ مطاعم · متاجر · خدمات (قالب Hub موحّد) ═══ */
+  html.erv-mobile-shell body.guest-shell-page.stores-page .guest-section-hero {
+    display: none !important;
+  }
+
+  html.erv-mobile-shell body.guest-shell-page.stores-page .dash-main > .layout {
+    padding-block: 0 12px !important;
+  }
+
+  html.erv-mobile-shell body.guest-shell-page.stores-page .stores-toolbar {
+    position: sticky;
+    top: var(--erv-mobile-header-h, 56px);
+    z-index: 40;
+    max-width: 100%;
+    margin: 0;
+    padding: 2px max(12px, env(safe-area-inset-left, 12px)) 4px max(12px, env(safe-area-inset-right, 12px));
+    background: linear-gradient(180deg, #faf4ee 0%, rgba(253, 251, 247, 0.98) 100%);
+    border-bottom: 1px solid rgba(61, 34, 19, 0.06);
+  }
+
+  html.erv-mobile-shell body.guest-shell-page.stores-page .stores-search-wrap {
+    margin-bottom: 4px;
+  }
+
+  html.erv-mobile-shell body.guest-shell-page.stores-page .stores-search {
+    min-height: 44px;
+    padding: 8px 42px 8px 14px;
+    font-size: 16px;
+    border-radius: 14px;
+    box-shadow: 0 4px 16px rgba(42, 24, 16, 0.05);
+  }
+
+  /* ترتيب افتراضي — إخفاء شريط الفلاتر الثقيل على الجوال */
+  html.erv-mobile-shell body.guest-shell-page.stores-page #hubSortBar {
+    display: none !important;
+  }
+
+  html.erv-mobile-shell body.guest-shell-page.stores-page #hubCountLine {
+    display: none !important;
+  }
+
+  html.erv-mobile-shell body.guest-shell-page.stores-page .stores-restaurant-cuisine-block__head,
+  html.erv-mobile-shell body.guest-shell-page.stores-page #storesCategoryBlock .stores-restaurant-cuisine-block__head {
+    display: none !important;
+  }
+
+  html.erv-mobile-shell body.guest-shell-page.stores-page .stores-restaurant-cuisine-block,
+  html.erv-mobile-shell body.guest-shell-page.stores-page #storesCategoryBlock {
+    margin-top: 0;
+    padding: 0;
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+  }
+
+  html.erv-mobile-shell body.guest-shell-page.stores-page .stores-cuisine-scroll {
+    padding: 0;
+    margin: 0;
+    gap: 6px;
+  }
+
+  html.erv-mobile-shell body.guest-shell-page.stores-page .stores-cuisine-chip {
+    min-width: 56px;
+    max-width: 76px;
+    min-height: 48px;
+    padding: 4px 3px;
+    font-size: 0.58rem;
+    border-radius: 10px;
+  }
+
+  html.erv-mobile-shell body.guest-shell-page.stores-page .stores-cuisine-chip__icon {
+    font-size: 1rem;
+  }
+
+  html.erv-mobile-shell body.guest-shell-page.stores-page #guestNote {
+    display: none !important;
+  }
+
+  html.erv-mobile-shell body.guest-shell-page.stores-page .stores-main {
+    padding: 0 max(12px, env(safe-area-inset-left, 12px)) 12px max(12px, env(safe-area-inset-right, 12px));
+    max-width: 100%;
+  }
+
+  html.erv-mobile-shell body.guest-shell-page.stores-page .stores-panel {
+    margin-top: 0;
+    padding-top: 0;
+  }
+
+  html.erv-mobile-shell body.guest-shell-page.stores-page .stores-grid {
+    gap: 4px;
+  }
+
+  /* ═══ خدمات — إخفاء اللوحة المكررة في التدفق ═══ */
+  html.erv-mobile-shell body.guest-shell-page.stores-page.services-page #svcOrderPanel {
+    display: none !important;
+  }
+
+  html.erv-mobile-shell body.guest-shell-page.stores-page.services-page .stores-toolbar #svcOrderPanel.erv-svc-panel--sheet-ready {
+    display: none !important;
+  }
+
+  /* ═══ توصيل — تقليل الكروم فقط ═══ */
+  html.erv-mobile-shell body.guest-shell-page:not(.stores-page) .ds-crumb {
+    display: none !important;
+  }
+
+  html.erv-mobile-shell body.guest-shell-page:not(.stores-page) .ds-quicklinks {
+    display: none !important;
+  }
+
+  html.erv-mobile-shell body.guest-shell-page .ds-main {
+    padding-top: 4px;
+  }
+
+  html.erv-mobile-shell body.guest-shell-page .ds-section-block {
+    margin-bottom: 12px;
+  }
+
+  html.erv-mobile-shell body.guest-shell-page .ds-section-block__hint {
+    display: none !important;
+  }
+
+  html.erv-mobile-shell body.guest-shell-page .ds-section-title {
+    margin: 0 0 8px;
+    font-size: 0.95rem;
+  }
+
+  html.erv-mobile-shell body.guest-shell-page .ds-service-picker {
+    margin-bottom: 8px;
+  }
+
+  html.erv-mobile-shell body.guest-shell-page .ds-services-wrap {
+    margin-top: 0;
+  }
+
+  html.erv-mobile-shell body.guest-shell-page .ds-svc {
+    min-height: 64px;
+    padding: 10px 12px;
+  }
+
+  html.erv-mobile-shell body.guest-shell-page .ds-form-zone[hidden] {
+    display: none !important;
+  }
+}
+
+/* ═══ Services order sheet (mobile) ═══ */
+.erv-svc-order-sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  pointer-events: none;
+  visibility: hidden;
+  transition: visibility 0.2s;
+}
+
+.erv-svc-order-sheet.is-open {
+  pointer-events: auto;
+  visibility: visible;
+}
+
+.erv-svc-order-sheet__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(26, 18, 12, 0.45);
+  opacity: 0;
+  transition: opacity 0.25s;
+}
+
+.erv-svc-order-sheet.is-open .erv-svc-order-sheet__backdrop {
+  opacity: 1;
+}
+
+.erv-svc-order-sheet__panel {
+  position: relative;
+  max-height: min(88vh, 720px);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  background: #fffefb;
+  border-radius: 18px 18px 0 0;
+  padding: 12px max(14px, env(safe-area-inset-left, 14px)) max(16px, env(safe-area-inset-bottom, 16px))
+    max(14px, env(safe-area-inset-right, 14px));
+  box-shadow: 0 -8px 40px rgba(45, 26, 14, 0.18);
+  transform: translateY(100%);
+  transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.erv-svc-order-sheet.is-open .erv-svc-order-sheet__panel {
+  transform: translateY(0);
+}
+
+.erv-svc-order-sheet__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.erv-svc-order-sheet__title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 900;
+  color: #3d2213;
+}
+
+.erv-svc-order-sheet__close {
+  min-width: 44px;
+  min-height: 44px;
+  border: 0;
+  border-radius: 12px;
+  background: rgba(61, 34, 19, 0.08);
+  font-family: inherit;
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+
+.erv-svc-order-sheet .svc-order-panel__sub {
+  display: none;
+}
+
+.erv-svc-order-sheet .svc-order-cards {
+  display: none;
+}
+
+.erv-svc-order-sheet .svc-order-panel__title {
+  display: none;
+}
+
+.erv-svc-order-sheet #svcOrderPanel,
+.erv-svc-order-sheet .erv-svc-panel--sheet-ready {
+  display: block !important;
+  padding: 0;
+  margin: 0;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+
+@media (min-width: 641px) {
+  .erv-svc-order-sheet {
+    display: none !important;
   }
 }

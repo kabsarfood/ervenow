@@ -46,6 +46,21 @@ const vercelJson = {
   $schema: "https://openapi.vercel.sh/vercel.json",
   cleanUrls: true,
   trailingSlash: false,
+  headers: [
+    {
+      source: "/",
+      headers: [{ key: "Cache-Control", value: "no-cache, must-revalidate" }],
+    },
+    {
+      source: "/(.*)\\.html",
+      headers: [{ key: "Cache-Control", value: "no-cache, must-revalidate" }],
+    },
+    {
+      source:
+        "/assets/(viewport-fit|mobile-harmony|mobile-foundation|mobile-home-conversion|mobile-fast-discovery|guest-shell)(.*)\\.(js|css)",
+      headers: [{ key: "Cache-Control", value: "public, max-age=300, must-revalidate" }],
+    },
+  ],
   routes: [
     { handle: "filesystem" },
     { src: "/admin/branding", dest: "/admin-branding.html" },
@@ -87,10 +102,11 @@ const deployTxt = `ERVENOW — نشر الواجهة (Vercel) + API (Railway)
   ervenow-frontend/assets/
   ervenow-frontend/vercel.json
 
-1) المزامنة من المستودع:
-   - عدّل public/assets/api-config.js (رابط Railway) ثم: npm run frontend:sync
-   - أو ضع في .env: ERVENOW_PUBLIC_API_BASE=https://xxx.up.railway.app ثم npm run frontend:sync
-     (يستبدل api-config في ervenow-frontend فقط عند وجود المتغير)
+1) المزامنة من المستودع (بعد أي تعديل جوال في public/):
+   - npm run deploy:frontend
+     (يرفع ?erv= على ملفات Mobile Shell ثم ينسخ public → ervenow-frontend)
+   - أو يدوياً: npm run bump:shell && npm run frontend:sync
+   - رابط API: ERVENOW_PUBLIC_API_BASE في .env أو public/assets/api-config.js
 
 2) Vercel
    - Framework Preset: Other

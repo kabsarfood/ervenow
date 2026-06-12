@@ -1,0 +1,212 @@
+/* ERVENOW Banner Engine — مقاس موحّد 1920×730 + object-fit: cover */
+:root {
+  --erv-banner-width: 1920;
+  --erv-banner-height: 730;
+  --erv-banner-aspect: 1920 / 730;
+}
+
+.erv-banner-unified .sn-home-banner__inner,
+.erv-banner-unified--slot .sn-home-banner__inner {
+  aspect-ratio: var(--erv-banner-aspect);
+  width: 100%;
+  max-width: 100%;
+  min-height: 0;
+}
+
+.erv-banner-media__img,
+.sn-hero-carousel__img,
+.sn-home-banner__bg-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+  pointer-events: none;
+}
+
+.sn-home-banner__inner.sn-hero--ken-burns .sn-home-banner__bg-img {
+  animation: snHeroKenBurns 18s ease-in-out infinite alternate;
+}
+
+.sn-hero-carousel__slide .sn-hero-carousel__img {
+  transform: scale(1.04);
+  animation: snHeroSlideZoom 14s ease-in-out infinite alternate;
+}
+
+.erv-banner-unified--slot {
+  width: 100%;
+  max-width: min(1200px, calc(100% - 24px));
+  margin-inline: auto;
+  padding: clamp(10px, 2vw, 16px) max(12px, env(safe-area-inset-right, 12px)) clamp(12px, 2.2vw, 18px)
+    max(12px, env(safe-area-inset-left, 12px));
+}
+
+.erv-banner-unified--slot .sn-home-banner__inner {
+  border-radius: clamp(12px, 2.5vw, 16px);
+  overflow: hidden;
+}
+
+/* ERVENOW Banner Engine — شرائط وبطاقات عامة (legacy — تُعرض الآن كبنر موحّد) */
+.erv-banner-strip {
+  position: relative;
+  margin: 0 auto clamp(12px, 2vw, 20px);
+  max-width: min(1200px, calc(100% - 24px));
+  border-radius: clamp(12px, 2vw, 16px);
+  overflow: hidden;
+  aspect-ratio: var(--erv-banner-aspect);
+  min-height: 0;
+  background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%);
+  color: #fff;
+}
+.erv-banner-strip__bg {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  opacity: 0.35;
+}
+.erv-banner-strip__body {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: clamp(8px, 2vw, 16px);
+  padding: clamp(12px, 2.5vw, 18px) clamp(14px, 3vw, 22px);
+}
+.erv-banner-strip__title {
+  margin: 0;
+  font-weight: 800;
+  font-size: clamp(0.95rem, 2.5vw, 1.1rem);
+  line-height: 1.45;
+  flex: 1 1 180px;
+}
+.erv-banner-strip__sub {
+  margin: 0;
+  opacity: 0.9;
+  font-size: clamp(0.85rem, 2.2vw, 0.95rem);
+  line-height: 1.45;
+  flex: 1 1 100%;
+}
+.erv-banner-strip .sn-hero__cta {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 16px;
+  border-radius: 999px;
+  background: #f59e0b;
+  color: #111;
+  font-weight: 800;
+  text-decoration: none;
+  font-size: 16px;
+}
+.erv-banner-card {
+  position: relative;
+  margin: 0 auto clamp(14px, 2.5vw, 22px);
+  max-width: min(1200px, calc(100% - 24px));
+  border-radius: clamp(14px, 2.5vw, 18px);
+  overflow: hidden;
+  aspect-ratio: var(--erv-banner-aspect);
+  min-height: 0;
+  background: linear-gradient(145deg, #0b1220, #162033);
+  color: #fff;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.12);
+}
+.erv-banner-card__bg {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  opacity: 0.28;
+}
+.erv-banner-card__body {
+  position: relative;
+  z-index: 1;
+  padding: clamp(16px, 3vw, 24px);
+}
+.erv-banner-card__title {
+  margin: 0 0 8px;
+  font-size: clamp(1.1rem, 3vw, 1.45rem);
+  line-height: 1.45;
+  font-weight: 800;
+}
+.erv-banner-card__sub {
+  margin: 0 0 12px;
+  opacity: 0.92;
+  line-height: 1.5;
+  font-size: clamp(0.9rem, 2.4vw, 1rem);
+}
+.erv-banner-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.erv-banner-card .sn-hero__cta {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 18px;
+  border-radius: 999px;
+  background: #f59e0b;
+  color: #111;
+  font-weight: 800;
+  text-decoration: none;
+  font-size: 16px;
+}
+.erv-banner-card .sn-hero__cta--outline {
+  background: transparent;
+  border: 2px solid rgba(255, 255, 255, 0.65);
+  color: #fff;
+}
+
+.hero-banners-targets {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 8px;
+  margin-top: 6px;
+}
+.hero-banners-targets label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 6px 10px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 10px;
+  font-size: 15px;
+  cursor: pointer;
+}
+.hero-banners-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 8px 0;
+  font-size: 14px;
+  opacity: 0.85;
+}
+
+.hero-banners-spec-notice {
+  margin: 0 0 14px;
+  padding: clamp(12px, 2.5vw, 16px);
+  border-radius: 12px;
+  border: 1px solid rgba(185, 135, 47, 0.28);
+  background: rgba(255, 248, 235, 0.92);
+  line-height: 1.55;
+  font-size: clamp(0.88rem, 2.2vw, 0.95rem);
+}
+
+.hero-banners-spec-notice strong {
+  color: #3d2213;
+}
+
+.hero-banner-preview {
+  width: 100%;
+  aspect-ratio: var(--erv-banner-aspect);
+  object-fit: cover;
+  border-radius: 10px;
+  margin: 8px 0;
+  display: block;
+  background: #1a1008;
+}

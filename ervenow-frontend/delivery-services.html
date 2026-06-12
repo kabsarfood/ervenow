@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover" />
-    <script src="/assets/viewport-fit.js"></script>
+    <script src="/assets/viewport-fit.js?erv=20260612b"></script>
     <meta name="theme-color" content="#f8f4ee" />
     <title>ERVENOW | خدمات التوصيل</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -13,7 +13,9 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="/assets/styles.css" />
-    <link rel="stylesheet" href="/assets/guest-shell.css" />
+    <link rel="stylesheet" href="/assets/guest-shell.css?erv=20260612b" />
+    <link rel="stylesheet" href="/assets/start-now-landing.css" />
+    <link rel="stylesheet" href="/assets/index-header-banner.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
       :root {
@@ -74,71 +76,6 @@
         text-align: center;
       }
 
-      /* ——— Hero ——— */
-      .ds-hero {
-        position: relative;
-        padding: 20px var(--ds-pad-x) 24px;
-        background: linear-gradient(135deg, #fffefb 0%, #f5ede2 55%, var(--ds-bg) 100%);
-        overflow: hidden;
-        border-bottom: 1px solid var(--ds-border);
-      }
-
-      .ds-hero::before {
-        content: "";
-        position: absolute;
-        inset: 0;
-        background:
-          radial-gradient(circle at 15% 30%, rgba(185, 135, 47, 0.1) 0%, transparent 45%),
-          radial-gradient(circle at 85% 70%, rgba(61, 34, 19, 0.05) 0%, transparent 50%);
-        pointer-events: none;
-      }
-
-      .ds-hero__inner {
-        position: relative;
-        display: grid;
-        grid-template-columns: 1fr 1.1fr;
-        gap: 12px;
-        align-items: center;
-        z-index: 1;
-      }
-
-      .ds-hero__van {
-        width: 100%;
-        max-height: 120px;
-        object-fit: contain;
-        object-position: left bottom;
-        filter: drop-shadow(0 8px 20px rgba(0, 0, 0, 0.15));
-      }
-
-      .ds-hero__text {
-        text-align: right;
-      }
-
-      .ds-hero__title {
-        margin: 0 0 8px;
-        font-size: 1.35rem;
-        font-weight: 800;
-        line-height: 1.3;
-        display: flex;
-        align-items: center;
-        justify-content: flex-end;
-        gap: 8px;
-        flex-wrap: wrap;
-      }
-
-      .ds-hero__title-ic {
-        color: var(--ds-gold);
-        font-size: 1.5rem;
-      }
-
-      .ds-hero__sub {
-        margin: 0;
-        font-size: 0.82rem;
-        font-weight: 500;
-        color: var(--ds-muted);
-        line-height: 1.55;
-      }
-
       /* ——— Sections ——— */
       .ds-main {
         padding: 0 0 24px;
@@ -173,6 +110,38 @@
         display: none;
       }
 
+      .ds-service-picker.is-open #dsLeadMuted {
+        display: none;
+      }
+
+      .ds-service-back {
+        display: none;
+        width: 100%;
+        min-height: 48px;
+        margin: 0 0 12px;
+        padding: 12px 16px;
+        border-radius: var(--ds-radius-sm);
+        border: 1.5px solid var(--ds-border);
+        background: var(--ds-white);
+        color: var(--ds-black);
+        font-family: inherit;
+        font-size: 0.88rem;
+        font-weight: 800;
+        cursor: pointer;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        box-shadow: var(--ds-shadow);
+      }
+
+      .ds-service-picker.is-open .ds-service-back {
+        display: flex;
+      }
+
+      .ds-service-back:active {
+        transform: scale(0.99);
+      }
+
       .ds-svc__badge {
         position: absolute;
         top: 8px;
@@ -192,46 +161,49 @@
         border-color: rgba(185, 135, 47, 0.28);
       }
 
-      /* Service cards horizontal scroll */
+      /* Service cards — عمود واحد متناسق (جوال · تابلت · كمبيوتر) */
       .ds-services-wrap {
         margin: 0;
         max-width: 100%;
-        padding: 0 max(16px, env(safe-area-inset-left, 16px)) 4px max(16px, env(safe-area-inset-right, 16px));
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        overscroll-behavior-x: contain;
-        scrollbar-width: none;
-      }
-
-      .ds-services-wrap::-webkit-scrollbar {
-        display: none;
+        padding: 0;
+        overflow: visible;
       }
 
       .ds-services {
-        display: flex;
+        display: grid;
+        grid-template-columns: 1fr;
         gap: 10px;
-        min-width: min-content;
-        padding-bottom: 4px;
+        min-width: 0;
+        width: 100%;
       }
 
       .ds-svc {
         position: relative;
-        flex: 0 0 148px;
-        min-height: 168px;
-        padding: 14px 12px;
+        width: 100%;
+        min-height: 72px;
+        padding: 14px 16px 14px 44px;
         border: 1.5px solid var(--ds-border);
         border-radius: var(--ds-radius-sm);
         background: var(--ds-white);
         box-shadow: var(--ds-shadow);
         cursor: pointer;
         font-family: inherit;
-        text-align: center;
+        text-align: right;
         display: flex;
-        flex-direction: column;
+        flex-direction: row;
         align-items: center;
-        gap: 8px;
+        gap: 12px;
         color: var(--ds-black);
         transition: transform 0.15s, border-color 0.2s, background 0.2s;
+      }
+
+      .ds-svc__body {
+        flex: 1 1 auto;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        align-items: flex-start;
       }
 
       .ds-svc__check {
@@ -257,18 +229,20 @@
       }
 
       .ds-svc__lbl {
-        font-size: 0.88rem;
+        font-size: clamp(0.9rem, 2.4vw, 1rem);
         font-weight: 800;
-        line-height: 1.3;
+        line-height: 1.35;
+        width: 100%;
       }
 
       .ds-svc__desc {
-        font-size: 0.68rem;
+        font-size: clamp(0.72rem, 2vw, 0.8rem);
         font-weight: 600;
         color: var(--ds-muted);
-        line-height: 1.4;
+        line-height: 1.45;
+        width: 100%;
         display: -webkit-box;
-        -webkit-line-clamp: 3;
+        -webkit-line-clamp: 2;
         -webkit-box-orient: vertical;
         overflow: hidden;
       }
@@ -348,18 +322,6 @@
         gap: 12px;
       }
 
-      @media (min-width: 380px) {
-        .ds-field-grid-3 {
-          grid-template-columns: 1fr 1fr;
-        }
-      }
-
-      @media (min-width: 440px) {
-        .ds-field-grid-3 {
-          grid-template-columns: 1fr 1fr 1fr;
-        }
-      }
-
       .ds-row {
         display: flex;
         flex-direction: column;
@@ -395,7 +357,7 @@
         border-radius: var(--ds-radius-sm);
         background: var(--ds-white);
         font-family: inherit;
-        font-size: 0.88rem;
+        font-size: 16px;
         font-weight: 600;
         color: var(--ds-black);
       }
@@ -412,6 +374,37 @@
       .ds-row textarea {
         min-height: 88px;
         resize: vertical;
+      }
+
+      .ds-paste-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: stretch;
+      }
+
+      .ds-paste-row input {
+        flex: 1 1 180px;
+        min-width: 0;
+      }
+
+      .ds-paste-btn {
+        flex: 0 0 auto;
+        min-height: 48px;
+        min-width: 72px;
+        padding: 10px 14px;
+        border-radius: var(--ds-radius-sm);
+        border: 1.5px solid var(--ds-gold);
+        background: var(--ds-white);
+        color: var(--ds-gold);
+        font-family: inherit;
+        font-size: 0.82rem;
+        font-weight: 800;
+        cursor: pointer;
+      }
+
+      .ds-paste-btn:active {
+        transform: scale(0.99);
       }
 
       .ds-advanced {
@@ -436,16 +429,10 @@
         grid-template-columns: 1fr;
       }
 
-      @media (min-width: 360px) {
-        .ds-notes-phone__grid {
-          grid-template-columns: 1fr 1fr;
-        }
-      }
-
       .ds-loc-grid {
         display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 12px;
+        grid-template-columns: 1fr;
+        gap: 14px;
       }
 
       .ds-loc-block {
@@ -501,7 +488,8 @@
 
       .ds-map-btn {
         width: 100%;
-        padding: 10px 8px;
+        min-height: 48px;
+        padding: 12px 10px;
         border-radius: var(--ds-radius-sm);
         font-family: inherit;
         font-size: 0.75rem;
@@ -664,6 +652,47 @@
         border-top: 1px dashed rgba(61, 34, 19, 0.12);
       }
 
+      .ds-form-zone .ds-section-block__hint {
+        margin-bottom: 12px;
+      }
+
+      .ds-form-placeholder {
+        margin: 0;
+        padding: clamp(18px, 4vw, 24px) clamp(16px, 3vw, 20px);
+        border-radius: var(--ds-radius);
+        border: 1px dashed rgba(61, 34, 19, 0.18);
+        background: rgba(255, 255, 255, 0.72);
+        color: var(--ds-muted);
+        font-size: clamp(0.86rem, 2.2vw, 0.92rem);
+        font-weight: 700;
+        line-height: 1.55;
+        text-align: center;
+      }
+
+      #dsCarForm.ds-form-stack {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        width: 100%;
+        max-width: 100%;
+      }
+
+      #dsCarForm.ds-form-stack .ds-form-head,
+      #dsCarForm.ds-form-stack .ds-card,
+      #dsCarForm.ds-form-stack .ds-price-box,
+      #dsCarForm.ds-form-stack .ds-submit-wrap {
+        width: 100%;
+        max-width: 100%;
+        grid-column: auto;
+        grid-row: auto;
+        position: static;
+        top: auto;
+      }
+
+      #dsCarForm.ds-form-stack .ds-card + .ds-card {
+        margin-top: 0;
+      }
+
       .ds-coming {
         text-align: center;
         padding: 32px 16px;
@@ -780,36 +809,8 @@
 
       /* ——— شاشات صغيرة جداً ——— */
       @media (max-width: 359px) {
-        .ds-loc-grid {
-          grid-template-columns: 1fr;
-        }
-
         .ds-notes-phone__grid {
           grid-template-columns: 1fr;
-        }
-
-        .ds-svc {
-          flex: 0 0 132px;
-          min-height: 156px;
-        }
-
-        .ds-hero__inner {
-          grid-template-columns: 1fr;
-          text-align: center;
-        }
-
-        .ds-hero__text {
-          text-align: center;
-        }
-
-        .ds-hero__title {
-          justify-content: center;
-          font-size: 1.2rem;
-        }
-
-        .ds-hero__van {
-          max-height: 100px;
-          margin: 0 auto;
         }
       }
 
@@ -819,37 +820,23 @@
           --ds-pad-x: 24px;
         }
 
-        .ds-hero {
-          padding-left: var(--ds-pad-x);
-          padding-right: var(--ds-pad-x);
-        }
-
-        .ds-services-wrap {
-          margin: 0;
-          padding: 0;
-          overflow: visible;
-        }
-
-        .ds-services {
-          display: grid;
-          grid-template-columns: repeat(2, minmax(0, 1fr));
-          min-width: 0;
-          gap: 12px;
+        .ds-main {
+          max-width: min(680px, 100%);
+          margin-inline: auto;
         }
 
         .ds-svc {
-          flex: unset;
-          width: 100%;
-          min-height: 176px;
+          min-height: 76px;
+          padding: 16px 18px 16px 48px;
         }
 
         .ds-map-preview {
-          height: 110px;
+          height: 120px;
         }
 
-        .ds-map-btn {
-          font-size: 0.82rem;
-          padding: 12px 10px;
+        .ds-loc-grid {
+          grid-template-columns: 1fr;
+          gap: 16px;
         }
       }
 
@@ -860,33 +847,11 @@
         }
 
         .guest-shell-page {
-          background: linear-gradient(180deg, #f5ede2 0%, var(--ds-bg) 120px);
+          background: var(--ds-bg);
         }
 
-        .ds-hero {
-          padding: 36px var(--ds-pad-x) 44px;
-          border-radius: 0 0 28px 28px;
-          margin-bottom: 8px;
-        }
-
-        .ds-hero__inner {
-          grid-template-columns: 1.15fr 1fr;
-          gap: 32px;
-          max-width: 100%;
-        }
-
-        .ds-hero__van {
-          max-height: 220px;
-        }
-
-        .ds-hero__title {
-          font-size: 2rem;
-          justify-content: flex-start;
-        }
-
-        .ds-hero__sub {
-          font-size: 1rem;
-          max-width: 28em;
+        .ds-main {
+          max-width: min(760px, 100%);
         }
 
         .ds-section-title {
@@ -895,18 +860,16 @@
         }
 
         .ds-services {
-          grid-template-columns: repeat(4, minmax(0, 1fr));
-          gap: 14px;
+          gap: 12px;
         }
 
         .ds-svc {
-          min-height: 190px;
-          padding: 18px 14px;
+          min-height: 80px;
         }
 
         .ds-svc:hover:not(.is-active) {
           border-color: var(--ds-gold);
-          transform: translateY(-2px);
+          transform: translateY(-1px);
         }
 
         .ds-card {
@@ -914,15 +877,16 @@
         }
 
         .ds-field-grid-3 {
-          grid-template-columns: repeat(3, minmax(0, 1fr));
+          grid-template-columns: 1fr;
+          gap: 14px;
         }
 
         .ds-notes-phone__grid {
-          grid-template-columns: 1.2fr 0.8fr;
+          grid-template-columns: 1fr;
         }
 
         .ds-map-preview {
-          height: 130px;
+          height: 140px;
         }
 
         .ds-price-cell__val {
@@ -931,8 +895,9 @@
 
         #dsSubmit,
         .ds-btn-cart-primary {
-          font-size: 1.1rem;
-          padding: 18px 24px;
+          font-size: 1.05rem;
+          min-height: 48px;
+          padding: 16px 24px;
           transition: filter 0.15s, transform 0.15s;
           width: 100%;
         }
@@ -954,39 +919,11 @@
           font-weight: 700;
           color: var(--ds-brown, #3d2213);
           text-decoration: none;
-          padding: 10px;
+          min-height: 48px;
+          line-height: 48px;
+          padding: 0 10px;
           border-radius: 12px;
           border: 1px dashed rgba(61, 34, 19, 0.25);
-        }
-
-        /* نموذج: عمود رئيسي + شريط جانبي للسعر والإرسال */
-        #dsCarForm {
-          display: grid;
-          grid-template-columns: minmax(0, 1fr) minmax(280px, 340px);
-          gap: 20px 28px;
-          align-items: start;
-        }
-
-        #dsCarForm .ds-form-head {
-          grid-column: 1 / -1;
-        }
-
-        #dsCarForm .ds-card {
-          grid-column: 1;
-        }
-
-        #dsCarForm .ds-price-box {
-          grid-column: 2;
-          grid-row: 2;
-          position: sticky;
-          top: 88px;
-        }
-
-        #dsCarForm .ds-submit-wrap {
-          grid-column: 2;
-          grid-row: 3;
-          position: sticky;
-          top: calc(88px + 140px);
         }
 
         #dsCarForm > #dsEstimate {
@@ -1028,28 +965,6 @@
         }
       }
 
-      /* تابلت */
-      @media (min-width: 640px) and (max-width: 899px) {
-        #dsCarForm .ds-field-grid-3 {
-          grid-template-columns: repeat(3, minmax(0, 1fr));
-        }
-      }
-
-      @media (min-width: 1200px) {
-        .ds-hero__inner {
-          grid-template-columns: 1.2fr 1fr;
-          gap: 48px;
-        }
-
-        .ds-hero__van {
-          max-height: 260px;
-        }
-
-        #dsCarForm {
-          grid-template-columns: minmax(0, 1fr) minmax(300px, 380px);
-        }
-      }
-
       /* تقليل الحركة */
       @media (prefers-reduced-motion: reduce) {
         .ds-svc,
@@ -1085,7 +1000,7 @@
             <span class="dash-header-wallet__val" id="dashHeaderWalletAmount">—</span>
             <span class="dash-header-wallet__cur">ر.س</span>
           </a>
-          <a class="dash-header-cart" href="/cart" aria-label="السلة — الدفع">
+          <a class="dash-header-cart" href="/checkout" aria-label="السلة — الدفع">
             <span aria-hidden="true">🛒</span>
             <span class="dash-header-cart__label">السلة</span>
             <span class="dash-header-cart__badge" id="cartCount" data-empty="true">0</span>
@@ -1096,24 +1011,6 @@
     </header>
 
     <div class="dash-main">
-      <section class="ds-hero">
-        <div class="ds-hero__inner">
-          <img
-            class="ds-hero__van"
-            src="/delivery/assets/branding/arwenow-fleet-dark.png"
-            alt=""
-            loading="eager"
-          />
-          <div class="ds-hero__text">
-            <h1 class="ds-hero__title">
-              <span class="ds-hero__title-ic" aria-hidden="true">🚚</span>
-              خدمات التوصيل
-            </h1>
-            <p class="ds-hero__sub">نقل مركبات، توصيل داخلي، أثاث، وغاز — اختر الخدمة وأكمل الطلب من نموذج واحد منظم. يتم تفعيل الحساب بعد المراجعة واعتماده من إدارة ERVENOW.</p>
-          </div>
-        </div>
-      </section>
-
       <div class="layout">
       <main class="ds-main">
         <nav class="ds-crumb" aria-label="مسار التصفح">
@@ -1131,11 +1028,14 @@
           <a href="/">🏠 الرئيسية</a>
         </div>
 
-        <section class="ds-section-block" aria-labelledby="dsQuickTitle">
+        <section class="ds-section-block ds-service-picker" id="dsServicePickerSection" aria-labelledby="dsQuickTitle">
           <h2 class="ds-section-title" id="dsQuickTitle">١ — اختر نوع الخدمة</h2>
           <p class="ds-section-block__hint" id="dsLeadMuted">
-            التسعير يُحسب من مسافة الطريق بين نقطتي الاستلام والتسليم. «نقل المركبات» متاح الآن؛ باقي الخدمات قريباً.
+            اختر نوع الخدمة من البطاقات أدناه — كل خدمات التوصيل متاحة الآن.
           </p>
+          <button type="button" class="ds-service-back" id="dsServiceBack" hidden>
+            ← العودة — عرض كل الخدمات
+          </button>
 
           <div class="ds-services-wrap">
             <div class="ds-services" id="dsServiceChips" role="tablist" aria-label="نوع الخدمة"></div>
@@ -1146,7 +1046,7 @@
 
         <section class="ds-section-block ds-form-zone" aria-labelledby="dsFormTitle">
           <h2 class="ds-section-title" id="dsFormTitle">٢ — أكمل تفاصيل الطلب</h2>
-          <p class="ds-section-block__hint">املأ النموذج أدناه بعد اختيار الخدمة المناسبة.</p>
+          <p class="ds-section-block__hint" id="dsFormHint">املأ النموذج أدناه بعد اختيار الخدمة من القائمة أعلاه.</p>
           <div id="dsFormMount"></div>
         </section>
 
@@ -1181,12 +1081,13 @@
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="/assets/cart.js"></script>
-    <script src="/assets/service-cart.js"></script>
+    <script src="/assets/delivery-map-order.js"></script>
+    <script src="/assets/order-draft-store.js"></script>
+    <script src="/assets/order-draft-vertical.js"></script>
     <script src="/assets/api-config.js"></script>
     <script src="/assets/api.js"></script>
     <script src="/assets/guestBrowse.js"></script>
-    <script src="/assets/guest-shell.js"></script>
+    <script src="/assets/guest-shell.js?erv=20260612b"></script>
     <script>
       ErvenowGuestShell.init({ activeNav: "delivery", pageTag: "خدمات التوصيل" });
     </script>
@@ -1251,17 +1152,37 @@
 
         var SERVICES = [
           { id: "car_transport", label: "نقل المركبات", ready: true },
-          { id: "local_delivery", label: "توصيل داخلي", ready: false },
-          { id: "furniture", label: "نقل أثاث", ready: false },
-          { id: "gas_delivery", label: "توصيل غاز", ready: false },
+          { id: "local_delivery", label: "توصيل داخلي", ready: true },
+          { id: "furniture", label: "نقل أثاث", ready: true },
+          { id: "gas_delivery", label: "توصيل غاز", ready: true },
         ];
 
         var SERVICE_ORDER = ["car_transport", "local_delivery", "gas_delivery", "furniture"];
+
+        var GAS_SMALL_CYLINDER_PRICE = 37;
+        var FURNITURE_RATE_PICKUP = 200;
+        var FURNITURE_RATE_DYNA = 600;
+
+        var FURNITURE_MOVE_LABELS = {
+          apartment: "نقل أثاث شقة",
+          villa: "نقل أثاث فيلا",
+          palace: "نقل أثاث قصر",
+        };
+        var FURNITURE_PRICE_PICKUP_TRIP = 200;
+        var FURNITURE_PRICE_DYNA_TRIP = 600;
+
+        var FURNITURE_MOVE_LABELS = {
+          apartment: "نقل أثاث شقة",
+          villa: "نقل أثاث فيlla",
+          palace: "نقل أثاث قصر",
+        };
 
         var state = {
           service: null,
           pickup: null,
           dropoff: null,
+          gasLoc: null,
+          furnitureLoc: null,
           mapTarget: null,
           map: null,
           marker: null,
@@ -1285,10 +1206,9 @@
           var mount = document.getElementById("dsFormMount");
           if (!mount) return;
           mount.innerHTML =
-            "<div class='ds-coming' role='status'>" +
-            "<strong>اختر نوع خدمة التوصيل</strong><br>" +
-            "اضغط على أحد الخيارات أعلاه (نقل مركبات، توصيل داخلي، …) لبدء الطلب." +
-            "</div>";
+            '<p class="ds-form-placeholder" role="status">' +
+            "اختر نوع الخدمة من القائمة أعلاه — ثم املأ النموذج هنا (مثل «نقل المركبات»)." +
+            "</p>";
         }
 
         function authHeaders() {
@@ -1313,10 +1233,333 @@
           return Math.round((Number(km) || 0) * 2 * 100) / 100;
         }
 
+        function priceLocalByVehicle(km, vehicle) {
+          var d = Math.max(0, Number(km) || 0);
+          if (d <= 0) return 0;
+          var v = String(vehicle || "sedan").toLowerCase();
+          if (v === "motorcycle") return Math.max(25, Math.round(d * 2 * 100) / 100);
+          if (v === "pickup_truck") return Math.max(75, Math.round((d * 2.3 + 50) * 100) / 100);
+          return Math.max(35, Math.round(d * 2.3 * 100) / 100);
+        }
+
+        function setLocStatus(elId, ok, text) {
+          var el = document.getElementById(elId);
+          if (!el) return;
+          el.className = "ds-loc-status " + (ok ? "is-set" : "is-unset");
+          el.textContent = text;
+        }
+
+        async function resolveMapsField(raw, label) {
+          var DM = window.ErvenowDeliveryMap;
+          var text = String(raw || "").trim();
+          if (!text) return { ok: false, message: label + ": الصق رابط الموقع أولاً" };
+          if (!DM) return { ok: false, message: "تعذر تحميل أداة قراءة الروابط" };
+          var resolved = null;
+          if (typeof DM.resolveMapsLinkAsync === "function") {
+            resolved = await DM.resolveMapsLinkAsync(text);
+          } else {
+            var ll = DM.parseMapsUrl(text);
+            if (ll) {
+              resolved = {
+                ll: ll,
+                mapsUrl: /^https?:\/\//i.test(text) ? text : DM.buildGoogleMapsUrl(ll.lat, ll.lng),
+              };
+            }
+          }
+          if (resolved && resolved.error) return { ok: false, message: resolved.error };
+          if (!resolved || !resolved.ll) {
+            return {
+              ok: false,
+              message: label + ": تعذر قراءة الإحداثيات — استخدم رابط Google Maps أو lat,lng",
+            };
+          }
+          return {
+            ok: true,
+            lat: Number(resolved.ll.lat),
+            lng: Number(resolved.ll.lng),
+            mapsUrl: resolved.mapsUrl || DM.buildGoogleMapsUrl(resolved.ll.lat, resolved.ll.lng),
+            raw: text,
+          };
+        }
+
+        async function resolveLocalEndpoint(which) {
+          var isFrom = which === "from";
+          var inputId = isFrom ? "dsFromUrl" : "dsToUrl";
+          var lblId = isFrom ? "dsFromLbl" : "dsToLbl";
+          var label = isFrom ? "توصيل من" : "توصيل إلى";
+          var input = document.getElementById(inputId);
+          if (!input) return false;
+          setLocStatus(lblId, false, "⏳ جاري التحقق من الرابط…");
+          var out = await resolveMapsField(input.value, label);
+          if (!out.ok) {
+            if (isFrom) state.pickup = null;
+            else state.dropoff = null;
+            setLocStatus(lblId, false, "❌ " + out.message);
+            updateLocalEstimate();
+            return false;
+          }
+          var pt = { lat: out.lat, lng: out.lng, mapsUrl: out.mapsUrl, raw: out.raw };
+          if (isFrom) state.pickup = pt;
+          else state.dropoff = pt;
+          setLocStatus(lblId, true, "✔️ تم تحديد الموقع");
+          updateLocalEstimate();
+          return true;
+        }
+
+        async function pasteLocalLink(which) {
+          var inputId = which === "from" ? "dsFromUrl" : "dsToUrl";
+          var input = document.getElementById(inputId);
+          if (!input) return;
+          try {
+            var t = await navigator.clipboard.readText();
+            if (t) input.value = String(t).trim();
+          } catch (e) {
+            input.focus();
+            return;
+          }
+          await resolveLocalEndpoint(which);
+        }
+
+        function priceGasSmall(qty) {
+          var n = Math.max(1, Math.min(10, parseInt(String(qty || "1"), 10) || 1));
+          return n * GAS_SMALL_CYLINDER_PRICE;
+        }
+
+        function updateGasPrice() {
+          var priceEl = document.getElementById("dsGasPriceVal");
+          var hintEl = document.getElementById("dsGasEstimate");
+          var qtyEl = document.getElementById("dsGasQty");
+          if (!priceEl) return 0;
+          var qty = qtyEl ? qtyEl.value : 1;
+          var fee = priceGasSmall(qty);
+          priceEl.textContent = String(fee);
+          if (hintEl) {
+            hintEl.textContent = state.gasLoc
+              ? fee + " ر.س — " + qty + " أسطوانة صغيرة × " + GAS_SMALL_CYLINDER_PRICE + " ر.س"
+              : "حدد موقع التوصيل لعرض السعر.";
+          }
+          return fee;
+        }
+
+        async function resolveGasLocation() {
+          var input = document.getElementById("dsGasUrl");
+          if (!input) return false;
+          setLocStatus("dsGasLbl", false, "⏳ جاري التحقق من الموقع…");
+          var out = await resolveMapsField(input.value, "موقع التوصيل");
+          if (!out.ok) {
+            state.gasLoc = null;
+            setLocStatus("dsGasLbl", false, "❌ " + out.message);
+            updateGasPrice();
+            return false;
+          }
+          state.gasLoc = { lat: out.lat, lng: out.lng, mapsUrl: out.mapsUrl, raw: out.raw };
+          setLocStatus("dsGasLbl", true, "✔️ تم تحديد الموقع");
+          updateGasPrice();
+          return true;
+        }
+
+        async function pasteGasLink() {
+          var input = document.getElementById("dsGasUrl");
+          if (!input) return;
+          try {
+            var t = await navigator.clipboard.readText();
+            if (t) input.value = String(t).trim();
+          } catch (e) {
+            input.focus();
+            return;
+          }
+          await resolveGasLocation();
+        }
+
+        function useMyLocationForGas() {
+          var err = document.getElementById("dsErr");
+          if (!navigator.geolocation) {
+            if (err) {
+              err.textContent = "المتصفح لا يدعم تحديد الموقع.";
+              err.style.display = "block";
+            }
+            return;
+          }
+          setLocStatus("dsGasLbl", false, "⏳ جاري تحديد موقعك…");
+          navigator.geolocation.getCurrentPosition(
+            function (pos) {
+              var lat = pos.coords.latitude;
+              var lng = pos.coords.longitude;
+              var DM = window.ErvenowDeliveryMap;
+              var mapsUrl = DM ? DM.buildGoogleMapsUrl(lat, lng) : "https://www.google.com/maps?q=" + lat + "," + lng;
+              state.gasLoc = { lat: lat, lng: lng, mapsUrl: mapsUrl, raw: lat.toFixed(6) + "," + lng.toFixed(6) };
+              var input = document.getElementById("dsGasUrl");
+              if (input) input.value = mapsUrl;
+              setLocStatus("dsGasLbl", true, "✔️ تم تحديد موقعك");
+              updateGasPrice();
+              if (err) err.style.display = "none";
+            },
+            function () {
+              setLocStatus("dsGasLbl", false, "❌ تعذر تحديد موقعك — الصق الرابط يدوياً");
+              if (err) {
+                err.textContent = "تعذر تحديد موقعك. الصق رابط Google Maps أو فعّل صلاحية الموقع.";
+                err.style.display = "block";
+              }
+            },
+            { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 }
+          );
+        }
+
+        function priceFurnitureMove(trips, vehicle) {
+          var n = Math.max(1, Math.min(20, parseInt(String(trips || "1"), 10) || 1));
+          var v = String(vehicle || "pickup_truck").toLowerCase();
+          var rate = v === "dyna" || v === "dyna_5t" || v === "dyna_jumbo" ? FURNITURE_RATE_DYNA : FURNITURE_RATE_PICKUP;
+          return n * rate;
+        }
+
+        function updateFurniturePrice() {
+          var priceEl = document.getElementById("dsFurnPriceVal");
+          var hintEl = document.getElementById("dsFurnEstimate");
+          var tripsEl = document.getElementById("dsFurnTrips");
+          var vehEl = document.getElementById("dsFurnVehicle");
+          if (!priceEl) return 0;
+          var trips = tripsEl ? tripsEl.value : 1;
+          var veh = vehEl ? vehEl.value : "pickup_truck";
+          var rate = String(veh).indexOf("dyna") >= 0 ? FURNITURE_RATE_DYNA : FURNITURE_RATE_PICKUP;
+          var fee = priceFurnitureMove(trips, veh);
+          priceEl.textContent = String(fee);
+          if (hintEl) {
+            hintEl.textContent =
+              trips +
+              " ردة × " +
+              rate +
+              " ر.س = " +
+              fee +
+              " ر.س" +
+              (state.furnitureLoc ? "" : " — حدّد موقعك أدناه");
+          }
+          return fee;
+        }
+
+        async function resolveFurnitureLocation() {
+          var input = document.getElementById("dsFurnUrl");
+          if (!input) return false;
+          setLocStatus("dsFurnLbl", false, "⏳ جاري التحقق من الموقع…");
+          var out = await resolveMapsField(input.value, "موقع طالب الخدمة");
+          if (!out.ok) {
+            state.furnitureLoc = null;
+            setLocStatus("dsFurnLbl", false, "❌ " + out.message);
+            updateFurniturePrice();
+            return false;
+          }
+          state.furnitureLoc = { lat: out.lat, lng: out.lng, mapsUrl: out.mapsUrl, raw: out.raw };
+          setLocStatus("dsFurnLbl", true, "✔️ تم تحديد الموقع");
+          updateFurniturePrice();
+          return true;
+        }
+
+        async function pasteFurnitureLink() {
+          var input = document.getElementById("dsFurnUrl");
+          if (!input) return;
+          try {
+            var t = await navigator.clipboard.readText();
+            if (t) input.value = String(t).trim();
+          } catch (e) {
+            input.focus();
+            return;
+          }
+          await resolveFurnitureLocation();
+        }
+
+        function useMyLocationForFurniture() {
+          var err = document.getElementById("dsErr");
+          if (!navigator.geolocation) {
+            if (err) {
+              err.textContent = "المتصفح لا يدعم تحديد الموقع.";
+              err.style.display = "block";
+            }
+            return;
+          }
+          setLocStatus("dsFurnLbl", false, "⏳ جاري تحديد موقعك…");
+          navigator.geolocation.getCurrentPosition(
+            function (pos) {
+              var lat = pos.coords.latitude;
+              var lng = pos.coords.longitude;
+              var DM = window.ErvenowDeliveryMap;
+              var mapsUrl = DM ? DM.buildGoogleMapsUrl(lat, lng) : "https://www.google.com/maps?q=" + lat + "," + lng;
+              state.furnitureLoc = { lat: lat, lng: lng, mapsUrl: mapsUrl, raw: lat.toFixed(6) + "," + lng.toFixed(6) };
+              var input = document.getElementById("dsFurnUrl");
+              if (input) input.value = mapsUrl;
+              setLocStatus("dsFurnLbl", true, "✔️ تم تحديد موقعك");
+              updateFurniturePrice();
+              if (err) err.style.display = "none";
+            },
+            function () {
+              setLocStatus("dsFurnLbl", false, "❌ تعذر تحديد موقعك");
+              if (err) {
+                err.textContent = "تعذر تحديد موقعك. الصق رابط الموقع أو فعّل صلاحية الموقع.";
+                err.style.display = "block";
+              }
+            },
+            { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 }
+          );
+        }
+
+        function updateLocalEstimate() {
+          var distEl = document.getElementById("dsLocalDistVal");
+          var priceEl = document.getElementById("dsLocalPriceVal");
+          var hintEl = document.getElementById("dsLocalEstimate");
+          var vehEl = document.getElementById("dsLocalVeh");
+          if (!distEl || !priceEl) return;
+          if (!state.pickup || !state.dropoff) {
+            distEl.textContent = "—";
+            priceEl.textContent = "—";
+            if (hintEl) hintEl.textContent = "الصق رابطي «من» و«إلى» لعرض السعر التقريبي.";
+            return;
+          }
+          var km = haversineKm(state.pickup.lat, state.pickup.lng, state.dropoff.lat, state.dropoff.lng);
+          var fee = priceLocalByVehicle(km, vehEl ? vehEl.value : "sedan");
+          distEl.textContent = Math.round(km) + "";
+          priceEl.textContent = Math.round(fee) + "";
+          if (hintEl) {
+            hintEl.textContent =
+              "تقدير ≈ " + km.toFixed(1) + " كم — " + fee.toFixed(2) + " ر.س (السعر النهائي قد يختلف حسب مسار الطريق).";
+          }
+        }
+
+        function closeServicePicker() {
+          state.service = null;
+          try {
+            history.replaceState({}, "", location.pathname + location.hash);
+          } catch (e) {
+            location.search = "";
+          }
+          syncServicePickerUi();
+          renderChips();
+          renderForms();
+        }
+
+        function syncServicePickerUi() {
+          var section = document.getElementById("dsServicePickerSection");
+          var back = document.getElementById("dsServiceBack");
+          var title = document.getElementById("dsQuickTitle");
+          var formZone = document.querySelector(".ds-form-zone");
+          var open = !!state.service;
+          if (section) section.classList.toggle("is-open", open);
+          if (back) back.hidden = !open;
+          if (title) {
+            if (open) {
+              var active = SERVICES.filter(function (x) {
+                return x.id === state.service;
+              })[0];
+              title.textContent = active ? "١ — " + active.label : "١ — اختر نوع الخدمة";
+            } else {
+              title.textContent = "١ — اختر نوع الخدمة";
+            }
+          }
+          if (formZone) formZone.hidden = !open;
+        }
+
         function renderChips() {
           var el = document.getElementById("dsServiceChips");
           el.innerHTML = "";
-          SERVICE_ORDER.forEach(function (id) {
+          var list = state.service ? SERVICE_ORDER.filter(function (id) { return id === state.service; }) : SERVICE_ORDER;
+          list.forEach(function (id) {
             var s = SERVICES.filter(function (x) {
               return x.id === id;
             })[0];
@@ -1339,27 +1582,21 @@
               '<span class="ds-svc__ic" aria-hidden="true">' +
               (SERVICE_ICONS[s.id] || "📦") +
               "</span>" +
-              '<span class="ds-svc__lbl">' +
+              '<span class="ds-svc__body"><span class="ds-svc__lbl">' +
               s.label +
               '</span><span class="ds-svc__desc">' +
               (SERVICE_DESC[s.id] || "") +
-              "</span>";
+              "</span></span>";
             b.onclick = function () {
               if (state.service === s.id) {
-                state.service = null;
-                try {
-                  history.replaceState({}, "", location.pathname + location.hash);
-                } catch (e) {
-                  location.search = "";
-                }
-                renderChips();
-                renderForms();
+                closeServicePicker();
                 return;
               }
               location.search = "?service=" + encodeURIComponent(s.id);
             };
             el.appendChild(b);
           });
+          syncServicePickerUi();
         }
 
         function setWelcome() {
@@ -1527,11 +1764,11 @@
             return "<option value='" + x.replace(/'/g, "&#39;") + "'>" + x + "</option>";
           }).join("");
           mount.innerHTML =
-            "<form class='ds-form' id='dsCarForm'>" +
+            "<form class='ds-form ds-form-stack' id='dsCarForm'>" +
             "<div class='ds-form-head'><h2>نقل المركبات</h2><span class='ds-step'>الخطوة 2 من 2</span></div>" +
             "<div class='ds-card'>" +
             "<div class='ds-field-grid-3'>" +
-            "<div class='ds-row'><label>نوع المركبة</label><div class='ds-field'><select id='dsVehCat' required><option value='sedan'>سيدان</option><option value='van'>فان</option><option value='suv'>جيب</option></select></div></div>" +
+            "<div class='ds-row'><label>نوع المركبة</label><div class='ds-field'><select id='dsVehCat' required><option value='furniture_truck'>سيارة نقل عفش</option><option value='pickup_truck'>ونيت</option><option value='motorcycle'>دباب</option><option value='sedan' selected>سيدان</option></select></div></div>" +
             "<div class='ds-row'><label>حالة المركبة</label><div class='ds-field'><select id='dsVehCond' required><option value='working'>صالحة</option><option value='damaged'>مصدوم</option><option value='broken'>معطل</option><option value='appraisal'>تقديرات</option></select></div></div>" +
             "<div class='ds-row'><label>نوع النقل</label><div class='ds-field'><select id='dsTransfer' required><option value='internal'>نقل داخلي</option><option value='external'>نقل خارجي</option></select></div></div>" +
             "</div>" +
@@ -1580,7 +1817,7 @@
             "<p id='dsEstimate' aria-live='polite'></p>" +
             "<div class='ds-submit-wrap'>" +
             "<button type='submit' id='dsSubmit' class='ds-btn-cart-primary'>🛒 إضافة للسلة والدفع</button>" +
-            "<a href='/cart' class='ds-btn-cart-secondary'>عرض السلة</a>" +
+            "<a href='/checkout' class='ds-btn-cart-secondary'>تأكيد الطلب</a>" +
             "</div>" +
             "</form>";
 
@@ -1601,15 +1838,201 @@
           updateEstimate();
         }
 
+        function renderLocalForm() {
+          clearPreviewMaps();
+          state.pickup = null;
+          state.dropoff = null;
+          var mount = document.getElementById("dsFormMount");
+          if (state.service !== "local_delivery") {
+            mount.innerHTML = "";
+            return;
+          }
+          mount.innerHTML =
+            "<form class='ds-form ds-form-stack' id='dsLocalForm'>" +
+            "<div class='ds-form-head'><h2>طلب توصيل داخلي</h2><span class='ds-step'>الخطوة 2 من 2</span></div>" +
+            "<div class='ds-card'>" +
+            "<div class='ds-row'><label for='dsShipName'>اسم الشحنة</label><div class='ds-field'><input id='dsShipName' required placeholder='مثال: طرد مستندات / أغراض شخصية' /></div></div>" +
+            "<div class='ds-row'><label for='dsFromUrl'>توصيل من — الصق رابط الموقع</label><div class='ds-paste-row'><input id='dsFromUrl' type='url' dir='ltr' placeholder='https://maps.google.com/...' required /><button type='button' class='ds-paste-btn' id='dsFromPaste'>لصق</button></div><p class='ds-loc-status is-unset' id='dsFromLbl'>❌ لم يتم التحديد</p></div>" +
+            "<div class='ds-row'><label for='dsToUrl'>توصيل إلى — الصق رابط الموقع</label><div class='ds-paste-row'><input id='dsToUrl' type='url' dir='ltr' placeholder='https://maps.google.com/...' required /><button type='button' class='ds-paste-btn' id='dsToPaste'>لصق</button></div><p class='ds-loc-status is-unset' id='dsToLbl'>❌ لم يتم التحديد</p></div>" +
+            "<div class='ds-row'><label for='dsShipDetails'>تفاصيل الشحنة</label><div class='ds-field'><textarea id='dsShipDetails' rows='3' placeholder='وصف المحتوى، الوزن التقريبي، تعليمات التسليم…'></textarea></div></div>" +
+            "<div class='ds-row'><label for='dsLocalVeh'>نوع المركبة المطلوبة</label><div class='ds-field'><select id='dsLocalVeh' required><option value='motorcycle'>دباب</option><option value='sedan' selected>سيدان</option><option value='pickup_truck'>ونيت</option></select></div></div>" +
+            "<div class='ds-row'><label for='dsLocalPhone'>رقم جوالك (طالب الخدمة)</label><div class='ds-field'><input id='dsLocalPhone' type='tel' placeholder='05xxxxxxxx' dir='ltr' required /></div></div>" +
+            "<div class='ds-row'><label for='dsRecipientPhone'>رقم المرسل إليه</label><div class='ds-field'><input id='dsRecipientPhone' type='tel' placeholder='05xxxxxxxx' dir='ltr' required /></div></div>" +
+            "</div>" +
+            "<div class='ds-price-box'>" +
+            "<div class='ds-price-cell'><span class='ds-price-cell__ic'>💰</span><p class='ds-price-cell__lbl'>السعر التقريبي</p><p class='ds-price-cell__val' id='dsLocalPriceVal'>—</p><span class='ds-price-cell__unit'>ريال سعودي</span></div>" +
+            "<div class='ds-price-cell'><span class='ds-price-cell__ic'>📍</span><p class='ds-price-cell__lbl'>المسافة التقريبية</p><p class='ds-price-cell__val' id='dsLocalDistVal'>—</p><span class='ds-price-cell__unit'>كم</span></div>" +
+            "</div>" +
+            "<p id='dsLocalEstimate' aria-live='polite' style='margin:10px 0 0;font-size:0.82rem;font-weight:600;color:var(--ds-muted);text-align:center;line-height:1.5'></p>" +
+            "<p class='ds-section-block__hint' style='margin:8px 0 0;text-align:center'>بعد الدفع يمكنك متابعة الطلب من <a href='/track'>تتبع الطلب</a> برقم الطلب أو على الخريطة.</p>" +
+            "<div class='ds-submit-wrap'>" +
+            "<button type='submit' id='dsLocalSubmit' class='ds-btn-cart-primary'>🛒 إضافة للسلة والدفع</button>" +
+            "<a href='/checkout' class='ds-btn-cart-secondary'>تأكيد الطلب</a>" +
+            "</div>" +
+            "</form>";
+
+          document.getElementById("dsFromPaste").onclick = function () {
+            pasteLocalLink("from");
+          };
+          document.getElementById("dsToPaste").onclick = function () {
+            pasteLocalLink("to");
+          };
+          document.getElementById("dsFromUrl").onblur = function () {
+            if (String(document.getElementById("dsFromUrl").value || "").trim()) resolveLocalEndpoint("from");
+          };
+          document.getElementById("dsToUrl").onblur = function () {
+            if (String(document.getElementById("dsToUrl").value || "").trim()) resolveLocalEndpoint("to");
+          };
+          document.getElementById("dsLocalVeh").onchange = updateLocalEstimate;
+          document.getElementById("dsLocalForm").onsubmit = addLocalToCart;
+          updateLocalEstimate();
+        }
+
+        function renderGasForm() {
+          clearPreviewMaps();
+          state.gasLoc = null;
+          var mount = document.getElementById("dsFormMount");
+          if (state.service !== "gas_delivery") {
+            mount.innerHTML = "";
+            return;
+          }
+          var qtyOpts = "";
+          for (var i = 1; i <= 10; i += 1) {
+            qtyOpts += "<option value='" + i + "'" + (i === 1 ? " selected" : "") + ">" + i + "</option>";
+          }
+          mount.innerHTML =
+            "<form class='ds-form ds-form-stack' id='dsGasForm'>" +
+            "<div class='ds-form-head'><h2>طلب توصيل غاز</h2><span class='ds-step'>الخطوة 2 من 2</span></div>" +
+            "<div class='ds-card'>" +
+            "<div class='ds-row'><label for='dsGasUrl'>موقع طالب الخدمة — الصق رابط الموقع</label>" +
+            "<div class='ds-paste-row'><input id='dsGasUrl' type='url' dir='ltr' placeholder='https://maps.google.com/...' required />" +
+            "<button type='button' class='ds-paste-btn' id='dsGasPaste'>لصق</button></div>" +
+            "<button type='button' class='ds-paste-btn' id='dsGasGeo' style='width:100%;margin-top:8px'>◎ حدد موقعك</button>" +
+            "<p class='ds-loc-status is-unset' id='dsGasLbl'>❌ لم يتم التحديد</p></div>" +
+            "<div class='ds-row'><label for='dsGasQty'>عدد الأسطوانات (حجم صغير)</label>" +
+            "<div class='ds-field'><select id='dsGasQty' required>" +
+            qtyOpts +
+            "</select></div></div>" +
+            "<div class='ds-row'><label for='dsGasPhone'>رقم الجوال</label>" +
+            "<div class='ds-field'><input id='dsGasPhone' type='tel' placeholder='05xxxxxxxx' dir='ltr' required /></div></div>" +
+            "</div>" +
+            "<div class='ds-price-box' style='grid-template-columns:1fr'>" +
+            "<div class='ds-price-cell'><span class='ds-price-cell__ic'>🔥</span><p class='ds-price-cell__lbl'>السعر</p>" +
+            "<p class='ds-price-cell__val' id='dsGasPriceVal'>37</p><span class='ds-price-cell__unit'>ريال — أسطوانة صغيرة " +
+            GAS_SMALL_CYLINDER_PRICE +
+            " ر.س</span></div></div>" +
+            "<p id='dsGasEstimate' aria-live='polite' style='margin:10px 0 0;font-size:0.82rem;font-weight:600;color:var(--ds-muted);text-align:center;line-height:1.5'></p>" +
+            "<div class='ds-submit-wrap'>" +
+            "<button type='submit' id='dsGasSubmit' class='ds-btn-cart-primary'>🛒 إضافة للسلة والدفع</button>" +
+            "<a href='/checkout' class='ds-btn-cart-secondary'>تأكيد الطلب</a>" +
+            "</div></form>";
+
+          document.getElementById("dsGasPaste").onclick = pasteGasLink;
+          document.getElementById("dsGasGeo").onclick = useMyLocationForGas;
+          document.getElementById("dsGasUrl").onblur = function () {
+            if (String(document.getElementById("dsGasUrl").value || "").trim()) resolveGasLocation();
+          };
+          document.getElementById("dsGasQty").onchange = updateGasPrice;
+          document.getElementById("dsGasForm").onsubmit = addGasToCart;
+          updateGasPrice();
+        }
+
+        function renderFurnitureForm() {
+          clearPreviewMaps();
+          state.furnitureLoc = null;
+          var mount = document.getElementById("dsFormMount");
+          if (state.service !== "furniture") {
+            mount.innerHTML = "";
+            return;
+          }
+          var tripOpts = "";
+          for (var t = 1; t <= 10; t += 1) {
+            tripOpts += "<option value='" + t + "'" + (t === 1 ? " selected" : "") + ">" + t + "</option>";
+          }
+          mount.innerHTML =
+            "<form class='ds-form ds-form-stack' id='dsFurnForm'>" +
+            "<div class='ds-form-head'><h2>نقل الأثاث</h2><span class='ds-step'>الخطوة 2 من 2</span></div>" +
+            "<div class='ds-card'>" +
+            "<div class='ds-row'><label for='dsFurnMoveType'>تفاصيل النقل</label>" +
+            "<div class='ds-field'><select id='dsFurnMoveType' required>" +
+            "<option value='apartment'>1 — نقل أثاث شقة</option>" +
+            "<option value='villa'>2 — نقل أثاث فيلا</option>" +
+            "<option value='palace'>3 — نقل أثاث قصر</option>" +
+            "</select></div></div>" +
+            "<div class='ds-row'><label for='dsFurnLocDetails'>تفاصيل الموقع (من / إلى / ملاحظات)</label>" +
+            "<div class='ds-field'><textarea id='dsFurnLocDetails' rows='3' placeholder='مثال: من حي النرجس شقة 12 — إلى حي الياسمين فيلا 5…' required></textarea></div></div>" +
+            "<div class='ds-row'><label for='dsFurnDetails'>تفاصيل الأثاث</label>" +
+            "<div class='ds-field'><textarea id='dsFurnDetails' rows='3' placeholder='غرف نوم، مطبخ، ثلاجة، عدد القطع…' required></textarea></div></div>" +
+            "<div class='ds-field-grid-3' style='display:grid;grid-template-columns:1fr;gap:12px'>" +
+            "<div class='ds-row'><label for='dsFurnVehicle'>نوع المركبة المطلوبة</label>" +
+            "<div class='ds-field'><select id='dsFurnVehicle' required>" +
+            "<option value='pickup_truck'>ونيت — " +
+            FURNITURE_RATE_PICKUP +
+            " ر.س / ردة</option>" +
+            "<option value='dyna'>دينا — " +
+            FURNITURE_RATE_DYNA +
+            " ر.س / ردة</option>" +
+            "</select></div></div>" +
+            "<div class='ds-row'><label for='dsFurnTrips'>عدد الردود</label>" +
+            "<div class='ds-field'><select id='dsFurnTrips' required>" +
+            tripOpts +
+            "</select></div></div></div>" +
+            "<div class='ds-row'><label for='dsFurnUrl'>موقع طالب الخدمة — الصق رابط الموقع</label>" +
+            "<div class='ds-paste-row'><input id='dsFurnUrl' type='url' dir='ltr' placeholder='https://maps.google.com/...' required />" +
+            "<button type='button' class='ds-paste-btn' id='dsFurnPaste'>لصق</button></div>" +
+            "<button type='button' class='ds-paste-btn' id='dsFurnGeo' style='width:100%;margin-top:8px'>◎ حدد موقعك</button>" +
+            "<p class='ds-loc-status is-unset' id='dsFurnLbl'>❌ لم يتم التحديد</p></div>" +
+            "<div class='ds-row'><label for='dsFurnPhone'>رقم جوال طالب الخدمة</label>" +
+            "<div class='ds-field'><input id='dsFurnPhone' type='tel' placeholder='05xxxxxxxx' dir='ltr' required /></div></div>" +
+            "</div>" +
+            "<div class='ds-price-box' style='grid-template-columns:1fr'>" +
+            "<div class='ds-price-cell'><span class='ds-price-cell__ic'>🛋️</span><p class='ds-price-cell__lbl'>السعر الإجمالي</p>" +
+            "<p class='ds-price-cell__val' id='dsFurnPriceVal'>200</p><span class='ds-price-cell__unit'>ريال سعودي</span></div></div>" +
+            "<p id='dsFurnEstimate' aria-live='polite' style='margin:10px 0 0;font-size:0.82rem;font-weight:600;color:var(--ds-muted);text-align:center;line-height:1.5'></p>" +
+            "<div class='ds-submit-wrap'>" +
+            "<button type='submit' id='dsFurnSubmit' class='ds-btn-cart-primary'>✓ إتمام الطلب — إضافة للسلة</button>" +
+            "<a href='/checkout' class='ds-btn-cart-secondary'>تأكيد الطلب</a>" +
+            "</div></form>";
+
+          document.getElementById("dsFurnPaste").onclick = pasteFurnitureLink;
+          document.getElementById("dsFurnGeo").onclick = useMyLocationForFurniture;
+          document.getElementById("dsFurnUrl").onblur = function () {
+            if (String(document.getElementById("dsFurnUrl").value || "").trim()) resolveFurnitureLocation();
+          };
+          document.getElementById("dsFurnVehicle").onchange = updateFurniturePrice;
+          document.getElementById("dsFurnTrips").onchange = updateFurniturePrice;
+          document.getElementById("dsFurnForm").onsubmit = addFurnitureToCart;
+          updateFurniturePrice();
+        }
+
         function renderForms() {
+          var hint = document.getElementById("dsFormHint");
           if (!state.service) {
+            if (hint) hint.textContent = "املأ النموذج أدناه بعد اختيار الخدمة من القائمة أعلاه.";
             renderPickService();
             return;
           }
           if (state.service === "car_transport") {
+            if (hint) hint.textContent = "أكمل بيانات نقل المركبات — كل البطاقات مرتبة من الأعلى للأسفل.";
             renderCarForm();
             return;
           }
+          if (state.service === "local_delivery") {
+            if (hint) hint.textContent = "أكمل بيانات التوصيل الداخلي — الصق روابط المواقع ثم أضف للسلة.";
+            renderLocalForm();
+            return;
+          }
+          if (state.service === "gas_delivery") {
+            if (hint) hint.textContent = "حدد موقع التوصيل وعدد الأسطوانات الصغيرة ثم أضف للسلة.";
+            renderGasForm();
+            return;
+          }
+          if (state.service === "furniture") {
+            if (hint) hint.textContent = "أكمل تفاصيل نقل الأثاث — اختر نوع النقل والمركبة وعدد الردود.";
+            renderFurnitureForm();
+            return;
+          }
+          if (hint) hint.textContent = "هذه الخدمة قريباً — اختر إحدى الخدمات المتاحة من القائمة أعلاه.";
           renderComingSoon();
         }
 
@@ -1662,24 +2085,283 @@
               return;
             }
           }
-          if (!window.ErvenowServiceCart || !ErvenowServiceCart.add) {
-            err.textContent = "تعذر تحميل السلة. حدّث الصفحة.";
+          if (!window.ErvenowOrderDraftVertical || typeof ErvenowOrderDraftVertical.commit !== "function") {
+            err.textContent = "تعذر تحميل مسودة الطلب. حدّث الصفحة.";
             err.style.display = "block";
             return;
           }
-          var result = ErvenowServiceCart.add(buildCarCartItem());
+          var result = ErvenowOrderDraftVertical.commit(buildCarCartItem(), {
+            sourcePage: "/delivery-services",
+            vertical: "vehicle",
+            redirect: false,
+            message: "تمت إضافة طلب النقل — أكمل تأكيد الطلب",
+          });
           if (!result.ok) {
-            err.textContent = result.message || "تعذر الإضافة للسلة";
+            err.textContent = result.message || "تعذر الإضافة للمسودة";
             err.style.display = "block";
             return;
           }
-          ok.textContent = "تمت الإضافة للسلة — أكمل الدفع ثم يُخصَّص مندوب للنقل.";
+          ok.textContent = "تمت الإضافة — جاري التوجيه لتأكيد الطلب…";
           ok.style.display = "block";
+          window.location.href = "/checkout";
+        }
+
+        function buildLocalCartItem() {
+          var shipName = document.getElementById("dsShipName").value.trim();
+          var details = document.getElementById("dsShipDetails").value.trim();
+          var fromUrl = document.getElementById("dsFromUrl").value.trim();
+          var toUrl = document.getElementById("dsToUrl").value.trim();
+          var vehicle = document.getElementById("dsLocalVeh").value;
+          var phone = document.getElementById("dsLocalPhone").value.trim();
+          var recipientPhone = document.getElementById("dsRecipientPhone").value.trim();
+          var priceEl = document.getElementById("dsLocalPriceVal");
+          var fee = priceEl ? parseInt(String(priceEl.textContent || "").replace(/[^\d]/g, ""), 10) : 0;
+          if (!Number.isFinite(fee) || fee < 1) fee = 1;
+          var km = 0;
+          if (state.pickup && state.dropoff) {
+            km = haversineKm(state.pickup.lat, state.pickup.lng, state.dropoff.lat, state.dropoff.lng);
+          }
+          return {
+            type: "internal_delivery",
+            title: shipName || "توصيل داخلي",
+            price: fee,
+            customer_phone: phone,
+            data: {
+              shipment_name: shipName,
+              shipment_details: details,
+              vehicle_category: vehicle,
+              vehicle_type: vehicle,
+              pickup_lat: state.pickup.lat,
+              pickup_lng: state.pickup.lng,
+              drop_lat: state.dropoff.lat,
+              drop_lng: state.dropoff.lng,
+              pickup_maps_url: state.pickup.mapsUrl || fromUrl,
+              drop_maps_url: state.dropoff.mapsUrl || toUrl,
+              from: fromUrl,
+              to: toUrl,
+              location: toUrl,
+              district: fromUrl,
+              distance_km: Math.round(km * 100) / 100,
+              notes_extra: details,
+              recipient_phone: recipientPhone,
+              customer_phone: phone,
+              total_amount: fee,
+              payment_status: "unpaid",
+            },
+          };
+        }
+
+        async function addLocalToCart(ev) {
+          ev.preventDefault();
+          var err = document.getElementById("dsErr");
+          var ok = document.getElementById("dsOk");
+          err.style.display = "none";
+          ok.style.display = "none";
+          var shipName = document.getElementById("dsShipName").value.trim();
+          if (!shipName) {
+            err.textContent = "أدخل اسم الشحنة.";
+            err.style.display = "block";
+            return;
+          }
+          var fromUrl = document.getElementById("dsFromUrl").value.trim();
+          var toUrl = document.getElementById("dsToUrl").value.trim();
+          if (!fromUrl || !toUrl) {
+            err.textContent = "الصق رابط موقع الاستلام والتسليم.";
+            err.style.display = "block";
+            return;
+          }
+          if (!state.pickup) await resolveLocalEndpoint("from");
+          if (!state.dropoff) await resolveLocalEndpoint("to");
+          if (!state.pickup || !state.dropoff) {
+            err.textContent = "تعذر قراءة إحداثيات أحد الرابطين — تأكد من روابط Google Maps الصحيحة.";
+            err.style.display = "block";
+            return;
+          }
+          if (!window.ErvenowOrderDraftVertical || typeof ErvenowOrderDraftVertical.commit !== "function") {
+            err.textContent = "تعذر تحميل مسودة الطلب. حدّث الصفحة.";
+            err.style.display = "block";
+            return;
+          }
+          var result = ErvenowOrderDraftVertical.commit(buildLocalCartItem(), {
+            sourcePage: "/delivery-services",
+            vertical: "vehicle",
+            redirect: false,
+            message: "تمت إضافة طلب التوصيل — أكمل تأكيد الطلب",
+          });
+          if (!result.ok) {
+            err.textContent = result.message || "تعذر الإضافة للمسودة";
+            err.style.display = "block";
+            return;
+          }
+          ok.textContent = "تمت الإضافة — جاري التوجيه لتأكيد الطلب…";
+          ok.style.display = "block";
+          window.location.href = "/checkout";
+        }
+
+        function buildGasCartItem() {
+          var qty = parseInt(document.getElementById("dsGasQty").value, 10) || 1;
+          var phone = document.getElementById("dsGasPhone").value.trim();
+          var locUrl = document.getElementById("dsGasUrl").value.trim();
+          var fee = priceGasSmall(qty);
+          return {
+            type: "gas_delivery",
+            title: "تبديل غاز — أسطوانة صغيرة",
+            price: fee,
+            customer_phone: phone,
+            data: {
+              gas_mode: "cylinder_swap",
+              cylinder_size: "small",
+              qty: qty,
+              pickup_lat: state.gasLoc.lat,
+              pickup_lng: state.gasLoc.lng,
+              drop_lat: state.gasLoc.lat,
+              drop_lng: state.gasLoc.lng,
+              location: locUrl || state.gasLoc.raw,
+              maps_url: state.gasLoc.mapsUrl || locUrl,
+              district: locUrl,
+              customer_phone: phone,
+              total_amount: fee,
+              payment_status: "unpaid",
+            },
+          };
+        }
+
+        async function addGasToCart(ev) {
+          ev.preventDefault();
+          var err = document.getElementById("dsErr");
+          var ok = document.getElementById("dsOk");
+          err.style.display = "none";
+          ok.style.display = "none";
+          var locUrl = document.getElementById("dsGasUrl").value.trim();
+          if (!locUrl && !state.gasLoc) {
+            err.textContent = "الصق رابط الموقع أو اضغط «حدد موقعك».";
+            err.style.display = "block";
+            return;
+          }
+          if (!state.gasLoc) await resolveGasLocation();
+          if (!state.gasLoc) {
+            err.textContent = "تعذر قراءة موقع التوصيل — تأكد من الرابط أو حدّد موقعك.";
+            err.style.display = "block";
+            return;
+          }
+          if (!window.ErvenowOrderDraftVertical || typeof ErvenowOrderDraftVertical.commit !== "function") {
+            err.textContent = "تعذر تحميل مسودة الطلب. حدّث الصفحة.";
+            err.style.display = "block";
+            return;
+          }
+          var result = ErvenowOrderDraftVertical.commit(buildGasCartItem(), {
+            sourcePage: "/delivery-services",
+            vertical: "gas",
+            redirect: false,
+            message: "تمت إضافة طلب الغاز — أكمل تأكيد الطلب",
+          });
+          if (!result.ok) {
+            err.textContent = result.message || "تعذر الإضافة للمسودة";
+            err.style.display = "block";
+            return;
+          }
+          ok.textContent = "تمت الإضافة — جاري التوجيه لتأكيد الطلب…";
+          ok.style.display = "block";
+          window.location.href = "/checkout";
+        }
+
+        function buildFurnitureCartItem() {
+          var moveType = document.getElementById("dsFurnMoveType").value;
+          var locDetails = document.getElementById("dsFurnLocDetails").value.trim();
+          var furnDetails = document.getElementById("dsFurnDetails").value.trim();
+          var vehicle = document.getElementById("dsFurnVehicle").value;
+          var trips = parseInt(document.getElementById("dsFurnTrips").value, 10) || 1;
+          var phone = document.getElementById("dsFurnPhone").value.trim();
+          var locUrl = document.getElementById("dsFurnUrl").value.trim();
+          var fee = priceFurnitureMove(trips, vehicle);
+          var title = FURNITURE_MOVE_LABELS[moveType] || "نقل أثاث";
+          var rate = String(vehicle).indexOf("dyna") >= 0 ? FURNITURE_RATE_DYNA : FURNITURE_RATE_PICKUP;
+          return {
+            type: "furniture_move",
+            title: title,
+            price: fee,
+            customer_phone: phone,
+            data: {
+              furniture_type: moveType,
+              move_type: moveType,
+              move_label: title,
+              location_details: locDetails,
+              furniture_details: furnDetails,
+              vehicle_category: vehicle,
+              vehicle_type: vehicle,
+              trips: trips,
+              trip_rate: rate,
+              from: locDetails,
+              to: locDetails,
+              pickup_lat: state.furnitureLoc.lat,
+              pickup_lng: state.furnitureLoc.lng,
+              drop_lat: state.furnitureLoc.lat,
+              drop_lng: state.furnitureLoc.lng,
+              location: locUrl || state.furnitureLoc.raw,
+              maps_url: state.furnitureLoc.mapsUrl || locUrl,
+              district: locDetails,
+              notes_extra: furnDetails,
+              customer_phone: phone,
+              total_amount: fee,
+              payment_status: "unpaid",
+            },
+          };
+        }
+
+        async function addFurnitureToCart(ev) {
+          ev.preventDefault();
+          var err = document.getElementById("dsErr");
+          var ok = document.getElementById("dsOk");
+          err.style.display = "none";
+          ok.style.display = "none";
+          if (!document.getElementById("dsFurnLocDetails").value.trim()) {
+            err.textContent = "أدخل تفاصيل الموقع (من / إلى).";
+            err.style.display = "block";
+            return;
+          }
+          if (!document.getElementById("dsFurnDetails").value.trim()) {
+            err.textContent = "أدخل تفاصيل الأثاث.";
+            err.style.display = "block";
+            return;
+          }
+          var locUrl = document.getElementById("dsFurnUrl").value.trim();
+          if (!locUrl && !state.furnitureLoc) {
+            err.textContent = "الصق رابط موقعك أو اضغط «حدد موقعك».";
+            err.style.display = "block";
+            return;
+          }
+          if (!state.furnitureLoc) await resolveFurnitureLocation();
+          if (!state.furnitureLoc) {
+            err.textContent = "تعذر قراءة الموقع — تأكد من الرابط أو حدّد موقعك.";
+            err.style.display = "block";
+            return;
+          }
+          if (!window.ErvenowOrderDraftVertical || typeof ErvenowOrderDraftVertical.commit !== "function") {
+            err.textContent = "تعذر تحميل مسودة الطلب. حدّث الصفحة.";
+            err.style.display = "block";
+            return;
+          }
+          var result = ErvenowOrderDraftVertical.commit(buildFurnitureCartItem(), {
+            sourcePage: "/delivery-services",
+            vertical: "vehicle",
+            redirect: false,
+            message: "تمت إضافة طلب نقل الأثاث — أكمل تأكيد الطلب",
+          });
+          if (!result.ok) {
+            err.textContent = result.message || "تعذر الإضافة للمسودة";
+            err.style.display = "block";
+            return;
+          }
+          ok.textContent = "تمت الإضافة — جاري التوجيه لتأكيد الطلب…";
+          ok.style.display = "block";
+          window.location.href = "/checkout";
         }
 
         document.getElementById("dsMapConfirm").onclick = confirmMap;
+        document.getElementById("dsServiceBack").onclick = closeServicePicker;
 
         state.service = qs();
+        syncServicePickerUi();
         renderChips();
         setWelcome();
         renderForms();
