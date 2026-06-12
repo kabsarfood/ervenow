@@ -41,6 +41,9 @@ const reps = [
   ],
   [/\/assets\/guest-shell\.css(?:\?[^"']*)?/g, "/assets/guest-shell.css?erv=" + VER],
   [/\/assets\/guest-shell\.js(?:\?[^"']*)?/g, "/assets/guest-shell.js?erv=" + VER],
+  [/\/assets\/api\.js(?:\?[^"']*)?/g, "/assets/api.js?erv=" + VER],
+  [/\/assets\/kabsar-store-polish\.css(?:\?[^"']*)?/g, "/assets/kabsar-store-polish.css?erv=" + VER],
+  [/\/assets\/cart\.js(?:\?[^"']*)?/g, "/assets/cart.js?erv=" + VER],
 ];
 
 let count = 0;

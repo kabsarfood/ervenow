@@ -40,8 +40,34 @@ function productRowWithImages(row) {
   };
 }
 
+/** يُحدّث روابط Supabase الموقّعة/النسبية قبل إرسال المنتج للواجهة */
+async function resolveProductRowImages(sb, row, resolveUrl) {
+  const p = productRowWithImages(row);
+  if (!sb || typeof resolveUrl !== "function") return p;
+  const urls = [];
+  for (const u of p.image_urls || []) {
+    const next = await resolveUrl(sb, u);
+    if (next && !urls.includes(next)) urls.push(next);
+  }
+  return {
+    ...p,
+    image_urls: urls,
+    image_url: urls[0] || null,
+  };
+}
+
+async function resolveProductsForApi(sb, rows, resolveUrl) {
+  const out = [];
+  for (const r of rows || []) {
+    out.push(await resolveProductRowImages(sb, r, resolveUrl));
+  }
+  return out;
+}
+
 module.exports = {
   parseImageUrlsField,
   productImageUrlsFromRow,
   productRowWithImages,
+  resolveProductRowImages,
+  resolveProductsForApi,
 };

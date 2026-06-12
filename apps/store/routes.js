@@ -47,7 +47,12 @@ const {
   resolveProductCategorySlug,
   fetchMergedProductCategorySlugs,
 } = require("../../shared/categoriesDb");
-const { productRowWithImages, productImageUrlsFromRow } = require("../../shared/utils/productImages");
+const {
+  productRowWithImages,
+  productImageUrlsFromRow,
+  resolveProductRowImages,
+  resolveProductsForApi,
+} = require("../../shared/utils/productImages");
 const {
   resolvePublicCategorySlug,
   fetchMergedRestaurantCategorySlugs,
@@ -176,6 +181,10 @@ async function fetchMerchantHubPublic(sb, storeId) {
 
 function mapProductsForApi(rows) {
   return (rows || []).map((r) => productRowWithImages(r));
+}
+
+async function mapProductsForApiResolved(sb, rows) {
+  return resolveProductsForApi(sb, rows || [], resolveStoreImageUrl);
 }
 
 async function notifyAdminWhatsApp({ name, phoneDisplay, typeLabel, mapsUrl, requestId, payoutSummary, cuisineLine }) {
@@ -1134,7 +1143,7 @@ router.get("/products", optionalAuth, async (req, res) => {
       return fail(res, error.message, 400);
     }
     return ok(res, {
-      products: mapProductsForApi(data || []),
+      products: await mapProductsForApiResolved(sb, data || []),
       total: count ?? (data || []).length,
       limit,
       offset,
@@ -1229,7 +1238,7 @@ router.post("/products", requireAuth, requireStoreRole, async (req, res) => {
     }
     if (productCategory) void incrementCategoryUsage(catalogType, productCategory);
     listCache = { key: "", at: 0, payload: null };
-    return ok(res, { product: productRowWithImages(data) });
+    return ok(res, { product: await resolveProductRowImages(sb, data, resolveStoreImageUrl) });
   } catch (e) {
     console.error("[store/products/post]", e);
     return fail(res, e.message || "خطأ في الخادم", 500);
@@ -1377,7 +1386,7 @@ router.put("/products/:id", requireAuth, requireStoreRole, async (req, res) => {
           : String(patch.category).trim().toLowerCase();
       if (newCat && newCat !== prevCat) void incrementCategoryUsage(catalogType, newCat);
     }
-    return ok(res, { product: productRowWithImages(data) });
+    return ok(res, { product: await resolveProductRowImages(sb, data, resolveStoreImageUrl) });
   } catch (e) {
     console.error("[store/products/put]", e);
     return fail(res, e.message || "خطأ في الخادم", 500);

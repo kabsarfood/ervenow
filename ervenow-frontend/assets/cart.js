@@ -331,7 +331,11 @@ function cartLineImageUrl(item) {
   var d = (item && item.data) || {};
   var u = d.image_url || d.thumb_url || d.product_image || "";
   if (!u && Array.isArray(d.image_urls) && d.image_urls.length) u = d.image_urls[0];
-  return String(u || "").trim();
+  u = String(u || "").trim();
+  if (u && w.PlatformAPI && typeof w.PlatformAPI.mediaUrl === "function") {
+    u = w.PlatformAPI.mediaUrl(u);
+  }
+  return u;
 }
 
 function cartLineThumbInner(item, kind) {

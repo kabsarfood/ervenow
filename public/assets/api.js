@@ -237,6 +237,19 @@
       var p = path.indexOf("/") === 0 ? path : "/" + path;
       return base ? base + p : p;
     },
+    /** روابط الوسائط (/uploads · Supabase) — يضيف قاعدة API عند الواجهة على Vercel */
+    mediaUrl: function (url) {
+      var u = String(url || "").trim();
+      if (!u) return "";
+      if (/^(https?:|data:|blob:)/i.test(u)) return u;
+      if (u.indexOf("//") === 0) {
+        var proto = typeof location !== "undefined" && location.protocol ? location.protocol : "https:";
+        return proto + u;
+      }
+      var base = readApiBase();
+      var p = u.indexOf("/") === 0 ? u : "/" + u;
+      return base ? base + p : p;
+    },
     apiFetch: apiFetch,
     /** طول قائمة الانتظار عند انقطاع الشبكة (طلبات تعديل فقط) */
     getOfflineQueueLength: function () {

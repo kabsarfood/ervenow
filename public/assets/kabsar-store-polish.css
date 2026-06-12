@@ -259,3 +259,12 @@
 .store-prod-modal__wrap {
   position: relative;
 }
+
+@media (max-width: 640px), ((max-width: 932px) and (max-height: 500px) and (pointer: coarse)) {
+  .prod-card__media img,
+  .prod-gallery__img.is-active {
+    min-height: 1px;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+  }
+}

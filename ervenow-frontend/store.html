@@ -3,15 +3,15 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover" />
-    <script src="/assets/viewport-fit.js?erv=20260612c"></script>
+    <script src="/assets/viewport-fit.js?erv=20260612d"></script>
     <title>ERVENOW | المتجر</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/assets/styles.css" />
-    <link rel="stylesheet" href="/assets/guest-shell.css?erv=20260612c" />
+    <link rel="stylesheet" href="/assets/guest-shell.css?erv=20260612d" />
     <link rel="stylesheet" href="/assets/ervenow-responsive.css" />
     <link rel="stylesheet" href="/assets/pre-cart-delivery.css" />
-    <link rel="stylesheet" href="/assets/kabsar-store-polish.css" />
+    <link rel="stylesheet" href="/assets/kabsar-store-polish.css?erv=20260612d" />
     <link rel="stylesheet" href="/assets/store-preview-mode.css" />
     <style>
       :root {
@@ -799,10 +799,10 @@
     <script src="/assets/pre-cart-delivery.js"></script>
     <script src="/assets/kabsar-store-polish.js"></script>
     <script src="/assets/api-config.js"></script>
-    <script src="/assets/api.js"></script>
+    <script src="/assets/api.js?erv=20260612d"></script>
     <script src="/assets/guestBrowse.js"></script>
     <script src="/assets/store-preview-mode.js"></script>
-    <script src="/assets/guest-shell.js?erv=20260612c"></script>
+    <script src="/assets/guest-shell.js?erv=20260612d"></script>
     <script>
       (function () {
         var previewOn =
@@ -880,16 +880,25 @@
         return base;
       }
 
+      function resolveProductMediaUrl(u) {
+        u = String(u || "").trim();
+        if (!u) return "";
+        if (window.PlatformAPI && typeof PlatformAPI.mediaUrl === "function") {
+          return PlatformAPI.mediaUrl(u);
+        }
+        return u;
+      }
+
       function productImageUrls(p) {
         if (!p) return [];
         var urls = [];
         if (p.image_urls && p.image_urls.length) {
           p.image_urls.forEach(function (u) {
-            u = String(u || "").trim();
+            u = resolveProductMediaUrl(u);
             if (u && urls.indexOf(u) < 0) urls.push(u);
           });
         }
-        var primary = p.image_url != null ? String(p.image_url).trim() : "";
+        var primary = p.image_url != null ? resolveProductMediaUrl(p.image_url) : "";
         if (primary && urls.indexOf(primary) < 0) urls.unshift(primary);
         return urls.slice(0, 8);
       }
@@ -938,18 +947,24 @@
         }
       }
 
-      function productMediaHtml(p) {
+      function productMediaHtml(p, productIndex) {
         var urls = productImageUrls(p);
         if (!urls.length) {
           return '<div class="prod-card__placeholder" aria-hidden="true"></div>';
         }
+        var eager = productIndex != null && productIndex < 6;
+        var loadAttr = eager
+          ? ' loading="eager" fetchpriority="high"'
+          : ' loading="lazy"';
         if (urls.length === 1) {
           return (
             '<img src="' +
             esc(urls[0]) +
             '" alt="' +
             esc(p.name) +
-            '" loading="lazy" decoding="async" />'
+            '"' +
+            loadAttr +
+            ' decoding="async" />'
           );
         }
         var imgs = urls
@@ -963,7 +978,9 @@
               esc(p.name) +
               '" data-gi="' +
               i +
-              '" loading="lazy" decoding="async" />'
+              '"' +
+              (eager && i === 0 ? ' loading="eager" fetchpriority="high"' : ' loading="lazy"') +
+              ' decoding="async" />'
             );
           })
           .join("");
@@ -1374,15 +1391,14 @@
           return;
         }
 
+        var baseIndex = append ? lastProducts.length - rows.length : 0;
         var html = rows
-          .map(function (p) {
-            var rowIndex = lastProducts.findIndex(function (x) {
-              return String(x.id) === String(p.id);
-            });
+          .map(function (p, sliceIndex) {
+            var rowIndex = baseIndex + sliceIndex;
             var stockN = p.stock != null && p.stock !== "" ? Number(p.stock) : null;
             var hasStockCap = stockN != null && Number.isFinite(stockN);
             var available = p.active !== false && (!hasStockCap || stockN > 0);
-            var im = productMediaHtml(p);
+            var im = productMediaHtml(p, rowIndex);
             var cardClass = "prod-card" + (available ? "" : " prod-card--unavailable");
             var catSlug = p.category != null ? String(p.category).trim().toLowerCase() : "";
             var catBlock = catSlug
@@ -1478,10 +1494,38 @@
 
         if (append) box.innerHTML += html;
         else box.innerHTML = html;
+        wireProductImageErrors(box);
         if (window.KabsarStorePolish) {
           KabsarStorePolish.applyGridSparse();
           KabsarStorePolish.wireImageZoom();
         }
+      }
+
+      function wireProductImageErrors(root) {
+        if (!root) return;
+        root.querySelectorAll(".prod-card__media img").forEach(function (img) {
+          if (img.getAttribute("data-erv-img-wired") === "1") return;
+          img.setAttribute("data-erv-img-wired", "1");
+          img.addEventListener("error", function () {
+            var media = img.closest(".prod-card__media");
+            if (!media) return;
+            if (img.parentNode && img.parentNode.classList.contains("prod-gallery")) {
+              img.remove();
+              if (!media.querySelector(".prod-gallery__img, .prod-card__media > img")) {
+                var phG = document.createElement("div");
+                phG.className = "prod-card__placeholder";
+                phG.setAttribute("aria-hidden", "true");
+                media.appendChild(phG);
+              }
+              return;
+            }
+            if (media.querySelector(".prod-card__placeholder")) return;
+            var ph = document.createElement("div");
+            ph.className = "prod-card__placeholder";
+            ph.setAttribute("aria-hidden", "true");
+            img.replaceWith(ph);
+          });
+        });
       }
 
       document.getElementById("products").addEventListener("click", function (ev) {

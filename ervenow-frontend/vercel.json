@@ -22,7 +22,7 @@
       ]
     },
     {
-      "source": "/assets/(viewport-fit|mobile-harmony|mobile-foundation|mobile-home-conversion|mobile-fast-discovery|guest-shell|guest-offers-carousel)(.*)\\.(js|css)",
+      "source": "/assets/(viewport-fit|mobile-harmony|mobile-foundation|mobile-home-conversion|mobile-fast-discovery|guest-shell|guest-offers-carousel|api|kabsar-store-polish|cart)(.*)\\.(js|css)",
       "headers": [
         {
           "key": "Cache-Control",
