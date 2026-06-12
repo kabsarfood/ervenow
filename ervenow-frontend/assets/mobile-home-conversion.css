@@ -4,45 +4,7 @@
  */
 
 @media (max-width: 640px), ((max-width: 932px) and (max-height: 500px) and (pointer: coarse)) {
-  /* ═══ بنر أقصر — الرئيسية فقط ═══ */
-  html.erv-mobile-shell body.lp-home-premium .card.guest-offers-carousel--home,
-  html.erv-mobile-shell body.lp-home-premium .guest-offers-carousel--home {
-    margin-bottom: 6px !important;
-  }
-
-  html.erv-mobile-shell body.lp-home-premium .guest-offers-carousel--home .guest-offers-shell {
-    aspect-ratio: auto !important;
-    min-height: clamp(118px, 36vw, 156px) !important;
-    height: clamp(118px, 36vw, 156px) !important;
-    max-height: 156px !important;
-  }
-
-  html.erv-mobile-shell body.lp-home-premium #homeMainBanner.guest-offers-carousel--home[hidden],
-  html.erv-mobile-shell body.lp-home-premium .guest-offers-carousel--reserved .guest-offers-shell--placeholder {
-    aspect-ratio: auto !important;
-    min-height: clamp(118px, 36vw, 156px) !important;
-    height: clamp(118px, 36vw, 156px) !important;
-    max-height: 156px !important;
-    margin-bottom: 6px !important;
-  }
-
-  html.erv-mobile-shell body.lp-home-premium .guest-offers-slide__body {
-    padding: 8px 12px;
-    gap: 4px;
-  }
-
-  html.erv-mobile-shell body.lp-home-premium .guest-offers-slide__title {
-    font-size: 0.82rem;
-    line-height: 1.25;
-  }
-
-  html.erv-mobile-shell body.lp-home-premium .guest-offers-slide__sub {
-    font-size: 0.68rem;
-    display: -webkit-box;
-    -webkit-line-clamp: 1;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
+  /* البنر: نفس مقاس guest-offers-carousel.css (عرض كامل + aspect-ratio 1920/730) */
 
   /* ═══ هوية ERVENOW — شريط خفيف (ليس في الهيدر) ═══ */
   html.erv-mobile-shell body.lp-home-premium .erv-home-identity {

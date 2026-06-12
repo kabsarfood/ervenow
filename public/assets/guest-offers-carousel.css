@@ -85,6 +85,14 @@
     aspect-ratio: 1920 / 730;
   }
 
+  html.erv-mobile-shell body.lp-home-premium .guest-offers-carousel--home .guest-offers-shell,
+  html.erv-mobile-shell body.lp-home-premium .guest-offers-carousel--reserved .guest-offers-shell--placeholder {
+    min-height: max(clamp(200px, 52vw, 380px), clamp(200px, 34vh, 380px)) !important;
+    height: auto !important;
+    max-height: none !important;
+    aspect-ratio: 1920 / 730 !important;
+  }
+
   .guest-offers-slide__img {
     width: 100%;
     height: 100% !important;

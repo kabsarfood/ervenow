@@ -376,7 +376,7 @@ if (servePublicUi) {
           return;
         }
         if (
-          /\/assets\/(viewport-fit|mobile-harmony|mobile-foundation|mobile-home-conversion|mobile-fast-discovery|guest-shell)([^/]*)\.(js|css)$/.test(
+          /\/assets\/(viewport-fit|mobile-harmony|mobile-foundation|mobile-home-conversion|mobile-fast-discovery|guest-shell|guest-offers-carousel)([^/]*)\.(js|css)$/.test(
             fp
           )
         ) {

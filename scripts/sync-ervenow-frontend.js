@@ -57,7 +57,7 @@ const vercelJson = {
     },
     {
       source:
-        "/assets/(viewport-fit|mobile-harmony|mobile-foundation|mobile-home-conversion|mobile-fast-discovery|guest-shell)(.*)\\.(js|css)",
+        "/assets/(viewport-fit|mobile-harmony|mobile-foundation|mobile-home-conversion|mobile-fast-discovery|guest-shell|guest-offers-carousel)(.*)\\.(js|css)",
       headers: [{ key: "Cache-Control", value: "public, max-age=300, must-revalidate" }],
     },
   ],

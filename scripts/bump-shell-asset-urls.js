@@ -27,6 +27,18 @@ const reps = [
     /\/assets\/mobile-fast-discovery\.css(?:\?[^"']*)?/g,
     "/assets/mobile-fast-discovery.css?erv=" + VER,
   ],
+  [
+    /\/assets\/mobile-home-conversion\.css(?:\?[^"']*)?/g,
+    "/assets/mobile-home-conversion.css?erv=" + VER,
+  ],
+  [
+    /\/assets\/guest-offers-carousel\.css(?:\?[^"']*)?/g,
+    "/assets/guest-offers-carousel.css?erv=" + VER,
+  ],
+  [
+    /\/assets\/guest-offers-carousel\.js(?:\?[^"']*)?/g,
+    "/assets/guest-offers-carousel.js?erv=" + VER,
+  ],
   [/\/assets\/guest-shell\.css(?:\?[^"']*)?/g, "/assets/guest-shell.css?erv=" + VER],
   [/\/assets\/guest-shell\.js(?:\?[^"']*)?/g, "/assets/guest-shell.js?erv=" + VER],
 ];
