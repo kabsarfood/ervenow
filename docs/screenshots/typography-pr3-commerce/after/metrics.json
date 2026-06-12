@@ -1,0 +1,1158 @@
+{
+  "mode": "after",
+  "capturedAt": "2026-06-12T18:26:10.873Z",
+  "metrics": {
+    "cart@390": {
+      "pageTitle": {
+        "fontSize": "18px",
+        "fontWeight": "700",
+        "lineHeight": "24.3px"
+      },
+      "sectionH2": {
+        "fontSize": "16px",
+        "fontWeight": "600",
+        "lineHeight": "21.6px"
+      },
+      "price": null,
+      "financialTotal": {
+        "fontSize": "20px",
+        "fontWeight": "700",
+        "lineHeight": "27px"
+      },
+      "secondary": {
+        "fontSize": "14px",
+        "fontWeight": "500",
+        "lineHeight": "20.3px"
+      },
+      "caption": {
+        "fontSize": "12px",
+        "fontWeight": "400",
+        "lineHeight": "17.4px"
+      },
+      "trustOrNote": {
+        "fontSize": "12px",
+        "fontWeight": "400",
+        "lineHeight": "17.4px"
+      },
+      "_fontSizeHistogram": [
+        {
+          "size": "10.5px",
+          "count": 3
+        },
+        {
+          "size": "10.88px",
+          "count": 2
+        },
+        {
+          "size": "11.2px",
+          "count": 1
+        },
+        {
+          "size": "11.52px",
+          "count": 2
+        },
+        {
+          "size": "12px",
+          "count": 13
+        },
+        {
+          "size": "12.48px",
+          "count": 2
+        },
+        {
+          "size": "12.8px",
+          "count": 12
+        },
+        {
+          "size": "13.12px",
+          "count": 4
+        },
+        {
+          "size": "13.8px",
+          "count": 1
+        },
+        {
+          "size": "14px",
+          "count": 29
+        },
+        {
+          "size": "14.08px",
+          "count": 10
+        },
+        {
+          "size": "14.72px",
+          "count": 2
+        },
+        {
+          "size": "15px",
+          "count": 1
+        },
+        {
+          "size": "15.2px",
+          "count": 1
+        },
+        {
+          "size": "16px",
+          "count": 40
+        },
+        {
+          "size": "17.6px",
+          "count": 1
+        },
+        {
+          "size": "18px",
+          "count": 1
+        },
+        {
+          "size": "18.4px",
+          "count": 1
+        },
+        {
+          "size": "19.2px",
+          "count": 5
+        },
+        {
+          "size": "20px",
+          "count": 3
+        },
+        {
+          "size": "21.6px",
+          "count": 1
+        }
+      ],
+      "_layout": {
+        "mainW": 390,
+        "viewport": 390
+      }
+    },
+    "checkout@390": {
+      "pageTitle": {
+        "fontSize": "24px",
+        "fontWeight": "700",
+        "lineHeight": "32.4px"
+      },
+      "sectionH2": {
+        "fontSize": "18px",
+        "fontWeight": "700",
+        "lineHeight": "24.3px"
+      },
+      "price": null,
+      "financialTotal": {
+        "fontSize": "20px",
+        "fontWeight": "700",
+        "lineHeight": "27px"
+      },
+      "secondary": {
+        "fontSize": "14px",
+        "fontWeight": "500",
+        "lineHeight": "20.3px"
+      },
+      "caption": null,
+      "trustOrNote": {
+        "fontSize": "14px",
+        "fontWeight": "500",
+        "lineHeight": "20.3px"
+      },
+      "_fontSizeHistogram": [
+        {
+          "size": "10.88px",
+          "count": 2
+        },
+        {
+          "size": "11.52px",
+          "count": 1
+        },
+        {
+          "size": "12.48px",
+          "count": 1
+        },
+        {
+          "size": "12.8px",
+          "count": 9
+        },
+        {
+          "size": "13.6px",
+          "count": 3
+        },
+        {
+          "size": "14px",
+          "count": 12
+        },
+        {
+          "size": "14.08px",
+          "count": 4
+        },
+        {
+          "size": "14.4px",
+          "count": 5
+        },
+        {
+          "size": "14.72px",
+          "count": 1
+        },
+        {
+          "size": "15.2px",
+          "count": 9
+        },
+        {
+          "size": "16px",
+          "count": 36
+        },
+        {
+          "size": "17.6px",
+          "count": 1
+        },
+        {
+          "size": "18px",
+          "count": 6
+        },
+        {
+          "size": "20px",
+          "count": 3
+        },
+        {
+          "size": "21.6px",
+          "count": 1
+        },
+        {
+          "size": "24px",
+          "count": 1
+        }
+      ],
+      "_layout": {
+        "mainW": 390,
+        "viewport": 390
+      }
+    },
+    "wallet@390": {
+      "pageTitle": {
+        "fontSize": "24px",
+        "fontWeight": "700",
+        "lineHeight": "32.4px"
+      },
+      "sectionH2": {
+        "fontSize": "18px",
+        "fontWeight": "700",
+        "lineHeight": "24.3px"
+      },
+      "price": null,
+      "financialTotal": {
+        "fontSize": "20px",
+        "fontWeight": "800",
+        "lineHeight": "25px"
+      },
+      "secondary": {
+        "fontSize": "14px",
+        "fontWeight": "500",
+        "lineHeight": "20.3px"
+      },
+      "caption": null,
+      "trustOrNote": null,
+      "_fontSizeHistogram": [
+        {
+          "size": "11.52px",
+          "count": 8
+        },
+        {
+          "size": "12px",
+          "count": 11
+        },
+        {
+          "size": "12.48px",
+          "count": 4
+        },
+        {
+          "size": "13.12px",
+          "count": 6
+        },
+        {
+          "size": "13.3333px",
+          "count": 6
+        },
+        {
+          "size": "13.6px",
+          "count": 5
+        },
+        {
+          "size": "13.76px",
+          "count": 5
+        },
+        {
+          "size": "14px",
+          "count": 10
+        },
+        {
+          "size": "14.08px",
+          "count": 8
+        },
+        {
+          "size": "14.72px",
+          "count": 1
+        },
+        {
+          "size": "16px",
+          "count": 62
+        },
+        {
+          "size": "16.8px",
+          "count": 1
+        },
+        {
+          "size": "18px",
+          "count": 4
+        },
+        {
+          "size": "19.2px",
+          "count": 5
+        },
+        {
+          "size": "20px",
+          "count": 2
+        },
+        {
+          "size": "21.6px",
+          "count": 1
+        },
+        {
+          "size": "24px",
+          "count": 1
+        }
+      ],
+      "_layout": {
+        "mainW": 390,
+        "viewport": 390
+      }
+    },
+    "orders@390": {
+      "pageTitle": {
+        "fontSize": "24px",
+        "fontWeight": "700",
+        "lineHeight": "32.4px"
+      },
+      "sectionH2": null,
+      "price": null,
+      "financialTotal": null,
+      "secondary": null,
+      "caption": null,
+      "trustOrNote": null,
+      "_fontSizeHistogram": [
+        {
+          "size": "10.88px",
+          "count": 1
+        },
+        {
+          "size": "11.52px",
+          "count": 1
+        },
+        {
+          "size": "12px",
+          "count": 12
+        },
+        {
+          "size": "12.48px",
+          "count": 4
+        },
+        {
+          "size": "12.8px",
+          "count": 7
+        },
+        {
+          "size": "14px",
+          "count": 2
+        },
+        {
+          "size": "14.08px",
+          "count": 4
+        },
+        {
+          "size": "14.72px",
+          "count": 1
+        },
+        {
+          "size": "15.2px",
+          "count": 3
+        },
+        {
+          "size": "16px",
+          "count": 26
+        },
+        {
+          "size": "17.6px",
+          "count": 1
+        },
+        {
+          "size": "19.2px",
+          "count": 5
+        },
+        {
+          "size": "21.6px",
+          "count": 1
+        },
+        {
+          "size": "24px",
+          "count": 1
+        }
+      ],
+      "_layout": {
+        "mainW": 390,
+        "viewport": 390
+      }
+    },
+    "cart@768": {
+      "pageTitle": {
+        "fontSize": "20px",
+        "fontWeight": "700",
+        "lineHeight": "27px"
+      },
+      "sectionH2": {
+        "fontSize": "18px",
+        "fontWeight": "600",
+        "lineHeight": "24.3px"
+      },
+      "price": null,
+      "financialTotal": {
+        "fontSize": "24px",
+        "fontWeight": "700",
+        "lineHeight": "32.4px"
+      },
+      "secondary": {
+        "fontSize": "14px",
+        "fontWeight": "500",
+        "lineHeight": "20.3px"
+      },
+      "caption": {
+        "fontSize": "12px",
+        "fontWeight": "400",
+        "lineHeight": "17.4px"
+      },
+      "trustOrNote": {
+        "fontSize": "12px",
+        "fontWeight": "400",
+        "lineHeight": "17.4px"
+      },
+      "_fontSizeHistogram": [
+        {
+          "size": "10.5px",
+          "count": 3
+        },
+        {
+          "size": "10.88px",
+          "count": 1
+        },
+        {
+          "size": "11.2px",
+          "count": 1
+        },
+        {
+          "size": "11.52px",
+          "count": 3
+        },
+        {
+          "size": "12px",
+          "count": 3
+        },
+        {
+          "size": "12.48px",
+          "count": 5
+        },
+        {
+          "size": "12.8px",
+          "count": 2
+        },
+        {
+          "size": "13.12px",
+          "count": 7
+        },
+        {
+          "size": "13.6px",
+          "count": 7
+        },
+        {
+          "size": "13.8px",
+          "count": 1
+        },
+        {
+          "size": "14px",
+          "count": 29
+        },
+        {
+          "size": "14.08px",
+          "count": 6
+        },
+        {
+          "size": "14.72px",
+          "count": 1
+        },
+        {
+          "size": "15.2px",
+          "count": 1
+        },
+        {
+          "size": "16px",
+          "count": 32
+        },
+        {
+          "size": "18px",
+          "count": 7
+        },
+        {
+          "size": "18.4px",
+          "count": 1
+        },
+        {
+          "size": "20px",
+          "count": 2
+        },
+        {
+          "size": "20.48px",
+          "count": 2
+        },
+        {
+          "size": "24px",
+          "count": 3
+        }
+      ],
+      "_layout": {
+        "mainW": 768,
+        "viewport": 768
+      }
+    },
+    "checkout@768": {
+      "pageTitle": {
+        "fontSize": "28px",
+        "fontWeight": "700",
+        "lineHeight": "37.8px"
+      },
+      "sectionH2": {
+        "fontSize": "20px",
+        "fontWeight": "700",
+        "lineHeight": "27px"
+      },
+      "price": null,
+      "financialTotal": {
+        "fontSize": "24px",
+        "fontWeight": "700",
+        "lineHeight": "32.4px"
+      },
+      "secondary": {
+        "fontSize": "14px",
+        "fontWeight": "500",
+        "lineHeight": "20.3px"
+      },
+      "caption": null,
+      "trustOrNote": {
+        "fontSize": "14px",
+        "fontWeight": "500",
+        "lineHeight": "20.3px"
+      },
+      "_fontSizeHistogram": [
+        {
+          "size": "10.88px",
+          "count": 1
+        },
+        {
+          "size": "11.52px",
+          "count": 2
+        },
+        {
+          "size": "12.48px",
+          "count": 2
+        },
+        {
+          "size": "12.8px",
+          "count": 2
+        },
+        {
+          "size": "13.12px",
+          "count": 3
+        },
+        {
+          "size": "13.6px",
+          "count": 7
+        },
+        {
+          "size": "14px",
+          "count": 12
+        },
+        {
+          "size": "14.4px",
+          "count": 5
+        },
+        {
+          "size": "15.2px",
+          "count": 9
+        },
+        {
+          "size": "16px",
+          "count": 34
+        },
+        {
+          "size": "20px",
+          "count": 7
+        },
+        {
+          "size": "20.48px",
+          "count": 2
+        },
+        {
+          "size": "24px",
+          "count": 3
+        },
+        {
+          "size": "28px",
+          "count": 1
+        }
+      ],
+      "_layout": {
+        "mainW": 768,
+        "viewport": 768
+      }
+    },
+    "wallet@768": {
+      "pageTitle": {
+        "fontSize": "28px",
+        "fontWeight": "700",
+        "lineHeight": "37.8px"
+      },
+      "sectionH2": {
+        "fontSize": "20px",
+        "fontWeight": "700",
+        "lineHeight": "27px"
+      },
+      "price": null,
+      "financialTotal": {
+        "fontSize": "24px",
+        "fontWeight": "800",
+        "lineHeight": "30px"
+      },
+      "secondary": {
+        "fontSize": "14px",
+        "fontWeight": "500",
+        "lineHeight": "20.3px"
+      },
+      "caption": null,
+      "trustOrNote": null,
+      "_fontSizeHistogram": [
+        {
+          "size": "11.52px",
+          "count": 8
+        },
+        {
+          "size": "12px",
+          "count": 1
+        },
+        {
+          "size": "12.48px",
+          "count": 4
+        },
+        {
+          "size": "13.12px",
+          "count": 6
+        },
+        {
+          "size": "13.3333px",
+          "count": 6
+        },
+        {
+          "size": "13.6px",
+          "count": 5
+        },
+        {
+          "size": "13.76px",
+          "count": 5
+        },
+        {
+          "size": "14px",
+          "count": 10
+        },
+        {
+          "size": "14.08px",
+          "count": 8
+        },
+        {
+          "size": "14.72px",
+          "count": 1
+        },
+        {
+          "size": "16px",
+          "count": 61
+        },
+        {
+          "size": "16.8px",
+          "count": 1
+        },
+        {
+          "size": "20px",
+          "count": 5
+        },
+        {
+          "size": "21.6px",
+          "count": 1
+        },
+        {
+          "size": "24px",
+          "count": 1
+        },
+        {
+          "size": "28px",
+          "count": 1
+        }
+      ],
+      "_layout": {
+        "mainW": 768,
+        "viewport": 768
+      }
+    },
+    "orders@768": {
+      "pageTitle": {
+        "fontSize": "28px",
+        "fontWeight": "700",
+        "lineHeight": "37.8px"
+      },
+      "sectionH2": null,
+      "price": null,
+      "financialTotal": null,
+      "secondary": null,
+      "caption": null,
+      "trustOrNote": null,
+      "_fontSizeHistogram": [
+        {
+          "size": "11.52px",
+          "count": 2
+        },
+        {
+          "size": "12px",
+          "count": 2
+        },
+        {
+          "size": "12.48px",
+          "count": 6
+        },
+        {
+          "size": "12.8px",
+          "count": 1
+        },
+        {
+          "size": "13.12px",
+          "count": 3
+        },
+        {
+          "size": "13.6px",
+          "count": 3
+        },
+        {
+          "size": "14px",
+          "count": 2
+        },
+        {
+          "size": "15.2px",
+          "count": 3
+        },
+        {
+          "size": "16px",
+          "count": 24
+        },
+        {
+          "size": "20px",
+          "count": 1
+        },
+        {
+          "size": "20.48px",
+          "count": 2
+        },
+        {
+          "size": "28px",
+          "count": 1
+        }
+      ],
+      "_layout": {
+        "mainW": 768,
+        "viewport": 768
+      }
+    },
+    "cart@1280": {
+      "pageTitle": {
+        "fontSize": "22px",
+        "fontWeight": "700",
+        "lineHeight": "29.7px"
+      },
+      "sectionH2": {
+        "fontSize": "18px",
+        "fontWeight": "600",
+        "lineHeight": "24.3px"
+      },
+      "price": null,
+      "financialTotal": {
+        "fontSize": "24px",
+        "fontWeight": "700",
+        "lineHeight": "32.4px"
+      },
+      "secondary": {
+        "fontSize": "14px",
+        "fontWeight": "500",
+        "lineHeight": "20.3px"
+      },
+      "caption": {
+        "fontSize": "12px",
+        "fontWeight": "400",
+        "lineHeight": "17.4px"
+      },
+      "trustOrNote": {
+        "fontSize": "12px",
+        "fontWeight": "400",
+        "lineHeight": "17.4px"
+      },
+      "_fontSizeHistogram": [
+        {
+          "size": "10.5px",
+          "count": 3
+        },
+        {
+          "size": "10.88px",
+          "count": 1
+        },
+        {
+          "size": "11.2px",
+          "count": 1
+        },
+        {
+          "size": "11.52px",
+          "count": 3
+        },
+        {
+          "size": "12px",
+          "count": 3
+        },
+        {
+          "size": "12.48px",
+          "count": 5
+        },
+        {
+          "size": "12.8px",
+          "count": 1
+        },
+        {
+          "size": "13.12px",
+          "count": 4
+        },
+        {
+          "size": "13.44px",
+          "count": 4
+        },
+        {
+          "size": "13.6px",
+          "count": 7
+        },
+        {
+          "size": "13.8px",
+          "count": 1
+        },
+        {
+          "size": "14px",
+          "count": 29
+        },
+        {
+          "size": "14.08px",
+          "count": 6
+        },
+        {
+          "size": "14.72px",
+          "count": 1
+        },
+        {
+          "size": "15.2px",
+          "count": 1
+        },
+        {
+          "size": "16px",
+          "count": 32
+        },
+        {
+          "size": "18px",
+          "count": 7
+        },
+        {
+          "size": "18.4px",
+          "count": 1
+        },
+        {
+          "size": "20px",
+          "count": 1
+        },
+        {
+          "size": "20.48px",
+          "count": 2
+        },
+        {
+          "size": "22px",
+          "count": 1
+        },
+        {
+          "size": "24px",
+          "count": 3
+        }
+      ],
+      "_layout": {
+        "mainW": 1280,
+        "viewport": 1280
+      }
+    },
+    "checkout@1280": {
+      "pageTitle": {
+        "fontSize": "32px",
+        "fontWeight": "700",
+        "lineHeight": "43.2px"
+      },
+      "sectionH2": {
+        "fontSize": "22px",
+        "fontWeight": "700",
+        "lineHeight": "29.7px"
+      },
+      "price": null,
+      "financialTotal": {
+        "fontSize": "24px",
+        "fontWeight": "700",
+        "lineHeight": "32.4px"
+      },
+      "secondary": {
+        "fontSize": "14px",
+        "fontWeight": "500",
+        "lineHeight": "20.3px"
+      },
+      "caption": null,
+      "trustOrNote": {
+        "fontSize": "14px",
+        "fontWeight": "500",
+        "lineHeight": "20.3px"
+      },
+      "_fontSizeHistogram": [
+        {
+          "size": "10.88px",
+          "count": 1
+        },
+        {
+          "size": "11.52px",
+          "count": 2
+        },
+        {
+          "size": "12.48px",
+          "count": 2
+        },
+        {
+          "size": "12.8px",
+          "count": 1
+        },
+        {
+          "size": "13.44px",
+          "count": 4
+        },
+        {
+          "size": "13.6px",
+          "count": 7
+        },
+        {
+          "size": "14px",
+          "count": 12
+        },
+        {
+          "size": "14.4px",
+          "count": 5
+        },
+        {
+          "size": "15.2px",
+          "count": 9
+        },
+        {
+          "size": "16px",
+          "count": 34
+        },
+        {
+          "size": "20px",
+          "count": 1
+        },
+        {
+          "size": "20.48px",
+          "count": 2
+        },
+        {
+          "size": "22px",
+          "count": 6
+        },
+        {
+          "size": "24px",
+          "count": 3
+        },
+        {
+          "size": "32px",
+          "count": 1
+        }
+      ],
+      "_layout": {
+        "mainW": 1280,
+        "viewport": 1280
+      }
+    },
+    "wallet@1280": {
+      "pageTitle": {
+        "fontSize": "32px",
+        "fontWeight": "700",
+        "lineHeight": "43.2px"
+      },
+      "sectionH2": {
+        "fontSize": "22px",
+        "fontWeight": "700",
+        "lineHeight": "29.7px"
+      },
+      "price": null,
+      "financialTotal": {
+        "fontSize": "24px",
+        "fontWeight": "800",
+        "lineHeight": "30px"
+      },
+      "secondary": {
+        "fontSize": "14px",
+        "fontWeight": "500",
+        "lineHeight": "20.3px"
+      },
+      "caption": null,
+      "trustOrNote": null,
+      "_fontSizeHistogram": [
+        {
+          "size": "11.52px",
+          "count": 8
+        },
+        {
+          "size": "12px",
+          "count": 1
+        },
+        {
+          "size": "12.48px",
+          "count": 4
+        },
+        {
+          "size": "13.12px",
+          "count": 6
+        },
+        {
+          "size": "13.3333px",
+          "count": 6
+        },
+        {
+          "size": "13.6px",
+          "count": 5
+        },
+        {
+          "size": "13.76px",
+          "count": 5
+        },
+        {
+          "size": "14px",
+          "count": 10
+        },
+        {
+          "size": "14.08px",
+          "count": 8
+        },
+        {
+          "size": "14.72px",
+          "count": 1
+        },
+        {
+          "size": "16px",
+          "count": 61
+        },
+        {
+          "size": "16.8px",
+          "count": 1
+        },
+        {
+          "size": "20px",
+          "count": 4
+        },
+        {
+          "size": "21.6px",
+          "count": 1
+        },
+        {
+          "size": "22px",
+          "count": 1
+        },
+        {
+          "size": "24px",
+          "count": 1
+        },
+        {
+          "size": "32px",
+          "count": 1
+        }
+      ],
+      "_layout": {
+        "mainW": 1100,
+        "viewport": 1280
+      }
+    },
+    "orders@1280": {
+      "pageTitle": {
+        "fontSize": "32px",
+        "fontWeight": "700",
+        "lineHeight": "43.2px"
+      },
+      "sectionH2": null,
+      "price": null,
+      "financialTotal": null,
+      "secondary": null,
+      "caption": null,
+      "trustOrNote": null,
+      "_fontSizeHistogram": [
+        {
+          "size": "11.52px",
+          "count": 2
+        },
+        {
+          "size": "12px",
+          "count": 2
+        },
+        {
+          "size": "12.48px",
+          "count": 6
+        },
+        {
+          "size": "13.44px",
+          "count": 4
+        },
+        {
+          "size": "13.6px",
+          "count": 3
+        },
+        {
+          "size": "14px",
+          "count": 2
+        },
+        {
+          "size": "15.2px",
+          "count": 3
+        },
+        {
+          "size": "16px",
+          "count": 24
+        },
+        {
+          "size": "20px",
+          "count": 1
+        },
+        {
+          "size": "20.48px",
+          "count": 2
+        },
+        {
+          "size": "32px",
+          "count": 1
+        }
+      ],
+      "_layout": {
+        "mainW": 1280,
+        "viewport": 1280
+      }
+    }
+  }
+}

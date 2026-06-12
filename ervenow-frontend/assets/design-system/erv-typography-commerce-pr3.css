@@ -1,0 +1,255 @@
+/**
+ * ERVENOW Typography PR3 — Commerce apply layer
+ * Scope: body.erv-typography-pr3-commerce only
+ * Typography only — no colors, layout, fields, or payment logic
+ */
+
+body.erv-typography-pr3-commerce {
+  font-family: var(--erv-t-font);
+}
+
+/* ——— Cart (cart-checkout-v3) ——— */
+body.erv-typography-pr3-commerce.cart-checkout-v3 .header-title {
+  font-size: var(--erv-t-h2);
+  font-weight: var(--erv-t-h2-weight);
+  line-height: var(--erv-t-lh-heading);
+}
+
+body.erv-typography-pr3-commerce.cart-checkout-v3 .order-id {
+  font-size: var(--erv-t-caption);
+  font-weight: var(--erv-t-caption-weight);
+  line-height: var(--erv-t-lh);
+}
+
+body.erv-typography-pr3-commerce.cart-checkout-v3 .card-title {
+  font-size: var(--erv-t-h3);
+  font-weight: var(--erv-t-h3-weight);
+  line-height: var(--erv-t-lh-heading);
+}
+
+body.erv-typography-pr3-commerce.cart-checkout-v3 .store-name {
+  font-size: var(--erv-t-h3);
+  font-weight: var(--erv-t-h3-weight);
+  line-height: var(--erv-t-lh-heading);
+}
+
+body.erv-typography-pr3-commerce.cart-checkout-v3 .store-meta,
+body.erv-typography-pr3-commerce.cart-checkout-v3 .location,
+body.erv-typography-pr3-commerce.cart-checkout-v3 .location-hint,
+body.erv-typography-pr3-commerce.cart-checkout-v3 .change-btn {
+  font-size: var(--erv-t-secondary);
+  font-weight: var(--erv-t-secondary-weight);
+  line-height: var(--erv-t-lh);
+}
+
+body.erv-typography-pr3-commerce.cart-checkout-v3 .location-label,
+body.erv-typography-pr3-commerce.cart-checkout-v3 .payment-label {
+  font-size: var(--erv-t-secondary);
+  font-weight: var(--erv-t-secondary-weight);
+  line-height: var(--erv-t-lh);
+}
+
+body.erv-typography-pr3-commerce.cart-checkout-v3 .location-status,
+body.erv-typography-pr3-commerce.cart-checkout-v3 .total-note,
+body.erv-typography-pr3-commerce.cart-checkout-v3 .security,
+body.erv-typography-pr3-commerce.cart-checkout-v3 .footer-note {
+  font-size: var(--erv-t-caption);
+  font-weight: var(--erv-t-caption-weight);
+  line-height: var(--erv-t-lh);
+}
+
+body.erv-typography-pr3-commerce.cart-checkout-v3 .lp-cart-line__title {
+  font-size: var(--erv-t-secondary);
+  font-weight: var(--erv-t-secondary-weight);
+  line-height: var(--erv-t-lh);
+}
+
+body.erv-typography-pr3-commerce.cart-checkout-v3 .item-price,
+body.erv-typography-pr3-commerce.cart-checkout-v3 .lp-cart-line__price {
+  font-size: var(--erv-t-price);
+  font-weight: var(--erv-t-price-weight);
+  line-height: var(--erv-t-lh-tight);
+}
+
+body.erv-typography-pr3-commerce.cart-checkout-v3 .total-row {
+  font-size: var(--erv-t-secondary);
+  font-weight: var(--erv-t-secondary-weight);
+  line-height: var(--erv-t-lh);
+}
+
+body.erv-typography-pr3-commerce.cart-checkout-v3 .total-final {
+  font-size: var(--erv-t-fin);
+  font-weight: var(--erv-t-fin-weight);
+  line-height: var(--erv-t-lh-heading);
+}
+
+body.erv-typography-pr3-commerce.cart-checkout-v3 .checkout-btn {
+  font-size: var(--erv-t-body);
+  font-weight: var(--erv-t-h2-weight);
+  line-height: var(--erv-t-lh);
+}
+
+/* ——— Checkout ——— */
+body.erv-typography-pr3-commerce.checkout-page .checkout-hero__title {
+  font-size: var(--erv-t-h1);
+  font-weight: var(--erv-t-h1-weight);
+  line-height: var(--erv-t-lh-heading);
+}
+
+body.erv-typography-pr3-commerce.checkout-page .checkout-hero__sub,
+body.erv-typography-pr3-commerce.checkout-page .checkout-trust,
+body.erv-typography-pr3-commerce.checkout-page .checkout-line__store,
+body.erv-typography-pr3-commerce.checkout-page .checkout-empty__text {
+  font-size: var(--erv-t-secondary);
+  font-weight: var(--erv-t-secondary-weight);
+  line-height: var(--erv-t-lh);
+}
+
+body.erv-typography-pr3-commerce.checkout-page .checkout-card__title,
+body.erv-typography-pr3-commerce.checkout-page .checkout-empty__title {
+  font-size: var(--erv-t-h2);
+  font-weight: var(--erv-t-h2-weight);
+  line-height: var(--erv-t-lh-heading);
+}
+
+body.erv-typography-pr3-commerce.checkout-page .checkout-line,
+body.erv-typography-pr3-commerce.checkout-page .checkout-line__title {
+  font-size: var(--erv-t-body);
+  font-weight: var(--erv-t-body-weight);
+  line-height: var(--erv-t-lh);
+}
+
+body.erv-typography-pr3-commerce.checkout-page .checkout-line__price {
+  font-size: var(--erv-t-price);
+  font-weight: var(--erv-t-price-weight);
+  line-height: var(--erv-t-lh-tight);
+}
+
+body.erv-typography-pr3-commerce.checkout-page .checkout-invoice__row {
+  font-size: var(--erv-t-secondary);
+  font-weight: var(--erv-t-secondary-weight);
+  line-height: var(--erv-t-lh);
+}
+
+body.erv-typography-pr3-commerce.checkout-page .checkout-invoice__row--grand,
+body.erv-typography-pr3-commerce.checkout-page .checkout-invoice__row--grand dt,
+body.erv-typography-pr3-commerce.checkout-page .checkout-invoice__row--grand dd {
+  font-size: var(--erv-t-fin);
+  font-weight: var(--erv-t-fin-weight);
+  line-height: var(--erv-t-lh-heading);
+}
+
+body.erv-typography-pr3-commerce.checkout-page .checkout-btn,
+body.erv-typography-pr3-commerce.checkout-page .checkout-btn--sm {
+  font-size: var(--erv-t-body);
+  font-weight: var(--erv-t-h3-weight);
+  line-height: var(--erv-t-lh);
+}
+
+/* ——— Wallet ——— */
+body.erv-typography-pr3-commerce .wallet-brand strong {
+  font-size: var(--erv-t-h1);
+  font-weight: var(--erv-t-h1-weight);
+  line-height: var(--erv-t-lh-heading);
+}
+
+body.erv-typography-pr3-commerce .wallet-crumbs,
+body.erv-typography-pr3-commerce .wallet-load,
+body.erv-typography-pr3-commerce .wallet-card-label,
+body.erv-typography-pr3-commerce .wallet-balance-unit,
+body.erv-typography-pr3-commerce .wallet-user,
+body.erv-typography-pr3-commerce .wallet-metric__label,
+body.erv-typography-pr3-commerce .wallet-summary-foot,
+body.erv-typography-pr3-commerce .wallet-tx-title,
+body.erv-typography-pr3-commerce .wallet-tx-loading {
+  font-size: var(--erv-t-secondary);
+  font-weight: var(--erv-t-secondary-weight);
+  line-height: var(--erv-t-lh);
+}
+
+body.erv-typography-pr3-commerce .wallet-icon-btn,
+body.erv-typography-pr3-commerce .wallet-btn {
+  font-size: var(--erv-t-body);
+  font-weight: var(--erv-t-h3-weight);
+  line-height: var(--erv-t-lh);
+}
+
+body.erv-typography-pr3-commerce .wallet-balance-num {
+  font-size: var(--erv-t-fin);
+  font-weight: 800;
+  line-height: var(--erv-t-lh-tight);
+}
+
+body.erv-typography-pr3-commerce .wallet-metric__val {
+  font-size: var(--erv-t-price);
+  font-weight: var(--erv-t-price-weight);
+  line-height: var(--erv-t-lh-tight);
+}
+
+body.erv-typography-pr3-commerce .wallet-badge,
+body.erv-typography-pr3-commerce .wallet-tx-meta {
+  font-size: var(--erv-t-caption);
+  font-weight: var(--erv-t-caption-weight);
+  line-height: var(--erv-t-lh);
+}
+
+body.erv-typography-pr3-commerce .wallet-tx-head h2 {
+  font-size: var(--erv-t-h2);
+  font-weight: var(--erv-t-h2-weight);
+  line-height: var(--erv-t-lh-heading);
+}
+
+body.erv-typography-pr3-commerce .wallet-tx-amt {
+  font-size: var(--erv-t-price);
+  font-weight: var(--erv-t-price-weight);
+  line-height: var(--erv-t-lh-tight);
+}
+
+/* ——— My Orders ——— */
+body.erv-typography-pr3-commerce.my-orders-page .my-orders-hero h1 {
+  font-size: var(--erv-t-h1);
+  font-weight: var(--erv-t-h1-weight);
+  line-height: var(--erv-t-lh-heading);
+}
+
+body.erv-typography-pr3-commerce.my-orders-page .my-orders-hero p,
+body.erv-typography-pr3-commerce.my-orders-page .my-order-meta,
+body.erv-typography-pr3-commerce.my-orders-page .my-order-route__item,
+body.erv-typography-pr3-commerce.my-orders-page .my-orders-tab-note {
+  font-size: var(--erv-t-secondary);
+  font-weight: var(--erv-t-secondary-weight);
+  line-height: var(--erv-t-lh);
+}
+
+body.erv-typography-pr3-commerce.my-orders-page .my-orders-section h2 {
+  font-size: var(--erv-t-h2);
+  font-weight: var(--erv-t-h2-weight);
+  line-height: var(--erv-t-lh-heading);
+}
+
+body.erv-typography-pr3-commerce.my-orders-page .my-order-card__id {
+  font-size: var(--erv-t-h3);
+  font-weight: var(--erv-t-h3-weight);
+  line-height: var(--erv-t-lh-heading);
+}
+
+body.erv-typography-pr3-commerce.my-orders-page .my-order-badge,
+body.erv-typography-pr3-commerce.my-orders-page .my-orders-toggle__count,
+body.erv-typography-pr3-commerce.my-orders-page .my-orders-toggle__chev {
+  font-size: var(--erv-t-caption);
+  font-weight: var(--erv-t-caption-weight);
+  line-height: var(--erv-t-lh);
+}
+
+body.erv-typography-pr3-commerce.my-orders-page .my-orders-tab,
+body.erv-typography-pr3-commerce.my-orders-page .my-orders-toggle {
+  font-size: var(--erv-t-body);
+  font-weight: var(--erv-t-h3-weight);
+  line-height: var(--erv-t-lh);
+}
+
+body.erv-typography-pr3-commerce.my-orders-page .my-order-actions .btn {
+  font-size: var(--erv-t-secondary);
+  font-weight: var(--erv-t-secondary-weight);
+  line-height: var(--erv-t-lh);
+}

@@ -1,0 +1,25 @@
+/**
+ * ERVENOW Typography PR3 — Commerce token extensions
+ * Loaded with PR1 tokens on Cart · Checkout · Wallet · Orders only
+ */
+
+body.erv-typography-pr3-commerce {
+  --erv-t-price: 18px;
+  --erv-t-price-weight: 700;
+  --erv-t-fin: 20px;
+  --erv-t-fin-weight: 700;
+}
+
+@media (min-width: 641px) and (max-width: 1024px) {
+  body.erv-typography-pr3-commerce {
+    --erv-t-price: 20px;
+    --erv-t-fin: 24px;
+  }
+}
+
+@media (min-width: 1025px) {
+  body.erv-typography-pr3-commerce {
+    --erv-t-price: 20px;
+    --erv-t-fin: 24px;
+  }
+}

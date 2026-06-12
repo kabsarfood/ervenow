@@ -1,0 +1,174 @@
+/**
+ * ERVENOW Typography PR2 — Home apply layer
+ * Scope: body.erv-typography-pr2-home.lp-home-premium only
+ * Typography only — no colors, layout, harmony, or banner height changes
+ */
+
+body.erv-typography-pr2-home.lp-home-premium {
+  font-family: var(--erv-t-font);
+  --erv-t-identity-tag: var(--erv-t-secondary);
+}
+
+@media (min-width: 641px) and (max-width: 1024px) {
+  body.erv-typography-pr2-home.lp-home-premium {
+    --erv-t-identity-tag: var(--erv-t-body);
+  }
+}
+
+@media (min-width: 1025px) {
+  body.erv-typography-pr2-home.lp-home-premium {
+    --erv-t-identity-tag: var(--erv-t-h3);
+  }
+}
+
+/* ——— ERVENOW Identity (mobile block) ——— */
+body.erv-typography-pr2-home.lp-home-premium .erv-home-identity__name {
+  font-size: var(--erv-t-h1);
+  font-weight: var(--erv-t-h1-weight);
+  line-height: var(--erv-t-lh-heading);
+}
+
+body.erv-typography-pr2-home.lp-home-premium .erv-home-identity__tag {
+  font-size: var(--erv-t-identity-tag);
+  font-weight: var(--erv-t-secondary-weight);
+  line-height: var(--erv-t-lh);
+}
+
+body.erv-typography-pr2-home.lp-home-premium .erv-home-identity__scope {
+  font-size: var(--erv-t-caption);
+  font-weight: var(--erv-t-caption-weight);
+  line-height: var(--erv-t-lh);
+}
+
+/* ——— Identity in header (tablet/desktop — typography only) ——— */
+body.erv-typography-pr2-home.lp-home-premium .lp-header__brand-mid .lp-brand__name {
+  font-size: var(--erv-t-h1);
+  font-weight: var(--erv-t-h1-weight);
+  line-height: var(--erv-t-lh-heading);
+}
+
+body.erv-typography-pr2-home.lp-home-premium .lp-header__brand-mid .lp-brand__tag {
+  font-size: var(--erv-t-identity-tag);
+  font-weight: var(--erv-t-secondary-weight);
+  line-height: var(--erv-t-lh);
+}
+
+/* ——— Hero banner text (carousel slides) ——— */
+body.erv-typography-pr2-home.lp-home-premium .guest-offers-slide__title {
+  font-size: var(--erv-t-h2);
+  font-weight: var(--erv-t-h2-weight);
+  line-height: var(--erv-t-lh-heading);
+}
+
+body.erv-typography-pr2-home.lp-home-premium .guest-offers-slide__sub,
+body.erv-typography-pr2-home.lp-home-premium .guest-offers-slide__cta {
+  font-size: var(--erv-t-secondary);
+  font-weight: var(--erv-t-secondary-weight);
+  line-height: var(--erv-t-lh);
+}
+
+body.erv-typography-pr2-home.lp-home-premium .guest-offers-slide__price {
+  font-size: var(--erv-t-caption);
+  font-weight: var(--erv-t-caption-weight);
+  line-height: var(--erv-t-lh);
+}
+
+/* ——— Section titles & labels ——— */
+body.erv-typography-pr2-home.lp-home-premium .sn-section__label {
+  font-size: var(--erv-t-caption);
+  font-weight: var(--erv-t-caption-weight);
+  line-height: var(--erv-t-lh);
+}
+
+body.erv-typography-pr2-home.lp-home-premium .sn-section__title,
+body.erv-typography-pr2-home.lp-home-premium .lp-section__title {
+  font-size: var(--erv-t-h2);
+  font-weight: var(--erv-t-h2-weight);
+  line-height: var(--erv-t-lh-heading);
+}
+
+body.erv-typography-pr2-home.lp-home-premium .lp-section__lead {
+  font-size: var(--erv-t-secondary);
+  font-weight: var(--erv-t-secondary-weight);
+  line-height: var(--erv-t-lh);
+}
+
+/* ——— Home cards ——— */
+body.erv-typography-pr2-home.lp-home-premium #snHomeHub .sn-card__name {
+  font-size: var(--erv-t-h3);
+  font-weight: var(--erv-t-h3-weight);
+  line-height: var(--erv-t-lh-heading);
+}
+
+body.erv-typography-pr2-home.lp-home-premium #snHomeHub .sn-card__desc {
+  font-size: var(--erv-t-secondary);
+  font-weight: var(--erv-t-secondary-weight);
+  line-height: var(--erv-t-lh);
+}
+
+body.erv-typography-pr2-home.lp-home-premium #snHomeHub .sn-card__arrow {
+  font-size: var(--erv-t-secondary);
+  font-weight: var(--erv-t-secondary-weight);
+  line-height: var(--erv-t-lh);
+}
+
+/* ——— Trust bar — 14px all devices ——— */
+body.erv-typography-pr2-home.lp-home-premium .sn-trust__item {
+  font-size: var(--erv-t-secondary);
+  font-weight: var(--erv-t-secondary-weight);
+  line-height: var(--erv-t-lh);
+}
+
+/* ——— Why / How sections ——— */
+body.erv-typography-pr2-home.lp-home-premium .lp-why-item h3,
+body.erv-typography-pr2-home.lp-home-premium .lp-step h3 {
+  font-size: var(--erv-t-h3);
+  font-weight: var(--erv-t-h3-weight);
+  line-height: var(--erv-t-lh-heading);
+}
+
+body.erv-typography-pr2-home.lp-home-premium .lp-why-item p,
+body.erv-typography-pr2-home.lp-home-premium .lp-step p {
+  font-size: var(--erv-t-secondary);
+  font-weight: var(--erv-t-secondary-weight);
+  line-height: var(--erv-t-lh);
+}
+
+body.erv-typography-pr2-home.lp-home-premium .lp-counter__label {
+  font-size: var(--erv-t-caption);
+  font-weight: var(--erv-t-caption-weight);
+  line-height: var(--erv-t-lh);
+}
+
+/* ——— Mobile shell overrides (beat mobile-home-conversion) ——— */
+@media (max-width: 640px), ((max-width: 932px) and (max-height: 500px) and (pointer: coarse)) {
+  html.erv-mobile-shell body.erv-typography-pr2-home.lp-home-premium .erv-home-identity__name {
+    font-size: var(--erv-t-h1);
+    font-weight: var(--erv-t-h1-weight);
+    line-height: var(--erv-t-lh-heading);
+  }
+
+  html.erv-mobile-shell body.erv-typography-pr2-home.lp-home-premium .erv-home-identity__tag {
+    font-size: var(--erv-t-secondary);
+    font-weight: var(--erv-t-secondary-weight);
+    line-height: var(--erv-t-lh);
+  }
+
+  html.erv-mobile-shell body.erv-typography-pr2-home.lp-home-premium .erv-home-identity__scope {
+    font-size: var(--erv-t-caption);
+    font-weight: var(--erv-t-caption-weight);
+    line-height: var(--erv-t-lh);
+  }
+
+  html.erv-mobile-shell body.erv-typography-pr2-home.lp-home-premium .sn-section[aria-labelledby="home-cats-title"] > .sn-trust .sn-trust__item {
+    font-size: var(--erv-t-secondary);
+    font-weight: var(--erv-t-secondary-weight);
+    line-height: var(--erv-t-lh);
+  }
+
+  html.erv-mobile-shell body.erv-typography-pr2-home.lp-home-premium #snHomeHub .sn-card__name {
+    font-size: var(--erv-t-h3);
+    font-weight: var(--erv-t-h3-weight);
+    line-height: var(--erv-t-lh-heading);
+  }
+}
