@@ -7,7 +7,7 @@
   global.__ervViewportReady = true;
 
   /** يُرفَع عند كل تحديث Mobile Shell لإجبار تحميل نسخة جديدة (تجاوز cache الجوال) */
-  var ERV_SHELL_ASSET_VER = "20260612d";
+  var ERV_SHELL_ASSET_VER = "20260612e";
 
   function shellAssetUrl(path) {
     var p = String(path || "");

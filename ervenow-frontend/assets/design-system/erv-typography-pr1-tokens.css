@@ -1,0 +1,54 @@
+/**
+ * ERVENOW Typography PR1 — Tokens V1
+ * Cairo · Guest & Hub only · Mobile / Tablet / Desktop
+ */
+
+:root {
+  --erv-t-font: "Cairo", var(--font, system-ui, sans-serif);
+  --erv-t-lh: 1.45;
+  --erv-t-lh-tight: 1.25;
+  --erv-t-lh-heading: 1.35;
+
+  /* Mobile (default, ≤640px) */
+  --erv-t-h1: 24px;
+  --erv-t-h1-weight: 700;
+  --erv-t-h2: 18px;
+  --erv-t-h2-weight: 700;
+  --erv-t-h3: 16px;
+  --erv-t-h3-weight: 600;
+  --erv-t-body: 16px;
+  --erv-t-body-weight: 500;
+  --erv-t-secondary: 14px;
+  --erv-t-secondary-weight: 500;
+  --erv-t-caption: 12px;
+  --erv-t-caption-weight: 400;
+  --erv-t-nav: 12px;
+  --erv-t-nav-weight: 600;
+  --erv-t-price: 18px;
+  --erv-t-price-weight: 700;
+  --erv-t-input: max(16px, 1rem);
+}
+
+@media (min-width: 641px) and (max-width: 1024px) {
+  :root {
+    --erv-t-h1: 28px;
+    --erv-t-h2: 20px;
+    --erv-t-h3: 18px;
+    --erv-t-body: 16px;
+    --erv-t-secondary: 14px;
+    --erv-t-caption: 12px;
+    --erv-t-price: 18px;
+  }
+}
+
+@media (min-width: 1025px) {
+  :root {
+    --erv-t-h1: 32px;
+    --erv-t-h2: 22px;
+    --erv-t-h3: 18px;
+    --erv-t-body: 16px;
+    --erv-t-secondary: 14px;
+    --erv-t-caption: 12px;
+    --erv-t-price: 18px;
+  }
+}

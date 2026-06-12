@@ -1,0 +1,306 @@
+/**
+ * ERVENOW Typography PR1 — Guest Shell & Hub apply layer
+ * Scope: body.erv-typography-pr1-guest-hub only
+ * Typography only — no colors, layout, or header changes
+ */
+
+body.erv-typography-pr1-guest-hub {
+  font-family: var(--erv-t-font);
+}
+
+/* ——— Guest section hero (tablet/desktop — hidden on mobile shell) ——— */
+body.erv-typography-pr1-guest-hub .guest-section-hero__eyebrow {
+  font-size: var(--erv-t-caption);
+  font-weight: var(--erv-t-caption-weight);
+  line-height: var(--erv-t-lh);
+}
+
+body.erv-typography-pr1-guest-hub .guest-section-hero__title {
+  font-size: var(--erv-t-h1);
+  font-weight: var(--erv-t-h1-weight);
+  line-height: var(--erv-t-lh-tight);
+}
+
+body.erv-typography-pr1-guest-hub .guest-section-hero__sub {
+  font-size: var(--erv-t-secondary);
+  font-weight: var(--erv-t-secondary-weight);
+  line-height: var(--erv-t-lh);
+}
+
+body.erv-typography-pr1-guest-hub .guest-section-hero__hint {
+  font-size: var(--erv-t-caption);
+  font-weight: var(--erv-t-caption-weight);
+  line-height: var(--erv-t-lh);
+}
+
+body.erv-typography-pr1-guest-hub .guest-page-title {
+  font-size: var(--erv-t-h2);
+  font-weight: var(--erv-t-h2-weight);
+  line-height: var(--erv-t-lh-heading);
+}
+
+/* ——— Section hub ——— */
+body.erv-typography-pr1-guest-hub .erv-section-hub__title {
+  font-size: var(--erv-t-h1);
+  font-weight: var(--erv-t-h1-weight);
+  line-height: var(--erv-t-lh-heading);
+}
+
+body.erv-typography-pr1-guest-hub .erv-section-hub__search {
+  font-size: var(--erv-t-input);
+  font-weight: var(--erv-t-body-weight);
+}
+
+body.erv-typography-pr1-guest-hub .erv-section-hub__cats-head strong {
+  font-size: var(--erv-t-h3);
+  font-weight: var(--erv-t-h3-weight);
+  line-height: var(--erv-t-lh-heading);
+}
+
+body.erv-typography-pr1-guest-hub .erv-section-hub__cat {
+  font-size: var(--erv-t-caption);
+  font-weight: var(--erv-t-caption-weight);
+  line-height: var(--erv-t-lh);
+}
+
+body.erv-typography-pr1-guest-hub .erv-section-hub__sort-btn,
+body.erv-typography-pr1-guest-hub .erv-section-hub__geo {
+  font-size: var(--erv-t-secondary);
+  font-weight: var(--erv-t-secondary-weight);
+  line-height: var(--erv-t-lh);
+}
+
+body.erv-typography-pr1-guest-hub .erv-section-hub__count {
+  font-size: var(--erv-t-secondary);
+  font-weight: var(--erv-t-secondary-weight);
+  line-height: var(--erv-t-lh);
+}
+
+body.erv-typography-pr1-guest-hub .erv-section-hub__offer-badge {
+  font-size: var(--erv-t-caption);
+  font-weight: var(--erv-t-caption-weight);
+  line-height: var(--erv-t-lh);
+}
+
+/* ——— Hub listing (stores-* shared inline) ——— */
+body.erv-typography-pr1-guest-hub .stores-search {
+  font-size: var(--erv-t-input);
+  font-weight: var(--erv-t-body-weight);
+}
+
+body.erv-typography-pr1-guest-hub .stores-filter,
+body.erv-typography-pr1-guest-hub .stores-geo-opt {
+  font-size: var(--erv-t-secondary);
+  font-weight: var(--erv-t-secondary-weight);
+  line-height: var(--erv-t-lh);
+}
+
+body.erv-typography-pr1-guest-hub .stores-restaurant-cuisine-block__title {
+  font-size: var(--erv-t-h3);
+  font-weight: var(--erv-t-h3-weight);
+  line-height: var(--erv-t-lh-heading);
+}
+
+body.erv-typography-pr1-guest-hub .stores-restaurant-cuisine-block__sub {
+  font-size: var(--erv-t-secondary);
+  font-weight: var(--erv-t-secondary-weight);
+  line-height: var(--erv-t-lh);
+}
+
+body.erv-typography-pr1-guest-hub .stores-cuisine-chip {
+  font-size: var(--erv-t-caption);
+  font-weight: var(--erv-t-caption-weight);
+  line-height: var(--erv-t-lh);
+}
+
+body.erv-typography-pr1-guest-hub .stores-note {
+  font-size: var(--erv-t-secondary);
+  font-weight: var(--erv-t-secondary-weight);
+  line-height: var(--erv-t-lh);
+}
+
+body.erv-typography-pr1-guest-hub .store-info h3 {
+  font-size: var(--erv-t-h3);
+  font-weight: var(--erv-t-h3-weight);
+  line-height: var(--erv-t-lh-heading);
+}
+
+body.erv-typography-pr1-guest-hub .store-info .store-type,
+body.erv-typography-pr1-guest-hub .store-meta {
+  font-size: var(--erv-t-secondary);
+  font-weight: var(--erv-t-secondary-weight);
+  line-height: var(--erv-t-lh);
+}
+
+body.erv-typography-pr1-guest-hub .store-card__btn {
+  font-size: var(--erv-t-secondary);
+  font-weight: var(--erv-t-nav-weight);
+  line-height: var(--erv-t-lh);
+}
+
+body.erv-typography-pr1-guest-hub .stores-empty h2 {
+  font-size: var(--erv-t-h2);
+  font-weight: var(--erv-t-h2-weight);
+  line-height: var(--erv-t-lh-heading);
+}
+
+body.erv-typography-pr1-guest-hub .stores-empty p {
+  font-size: var(--erv-t-body);
+  font-weight: var(--erv-t-body-weight);
+  line-height: var(--erv-t-lh);
+}
+
+/* ——— Delivery services (ds-*) ——— */
+body.erv-typography-pr1-guest-hub .ds-section-title,
+body.erv-typography-pr1-guest-hub .ds-form-head h2 {
+  font-size: var(--erv-t-h2);
+  font-weight: var(--erv-t-h2-weight);
+  line-height: var(--erv-t-lh-heading);
+}
+
+body.erv-typography-pr1-guest-hub .ds-section-block__hint,
+body.erv-typography-pr1-guest-hub .ds-lead,
+body.erv-typography-pr1-guest-hub .ds-crumb,
+body.erv-typography-pr1-guest-hub .ds-service-back,
+body.erv-typography-pr1-guest-hub .ds-quicklinks a,
+body.erv-typography-pr1-guest-hub .ds-form-placeholder,
+body.erv-typography-pr1-guest-hub .ds-err,
+body.erv-typography-pr1-guest-hub .ds-ok {
+  font-size: var(--erv-t-secondary);
+  font-weight: var(--erv-t-secondary-weight);
+  line-height: var(--erv-t-lh);
+}
+
+body.erv-typography-pr1-guest-hub .ds-svc__lbl {
+  font-size: var(--erv-t-h3);
+  font-weight: var(--erv-t-h3-weight);
+  line-height: var(--erv-t-lh-heading);
+}
+
+body.erv-typography-pr1-guest-hub .ds-svc__desc {
+  font-size: var(--erv-t-secondary);
+  font-weight: var(--erv-t-secondary-weight);
+  line-height: var(--erv-t-lh);
+}
+
+body.erv-typography-pr1-guest-hub .ds-svc__badge,
+body.erv-typography-pr1-guest-hub .ds-step {
+  font-size: var(--erv-t-caption);
+  font-weight: var(--erv-t-caption-weight);
+  line-height: var(--erv-t-lh);
+}
+
+body.erv-typography-pr1-guest-hub .ds-form input,
+body.erv-typography-pr1-guest-hub .ds-form select,
+body.erv-typography-pr1-guest-hub .ds-form textarea,
+body.erv-typography-pr1-guest-hub .ds-form label {
+  font-size: var(--erv-t-input);
+  font-weight: var(--erv-t-body-weight);
+  line-height: var(--erv-t-lh);
+}
+
+body.erv-typography-pr1-guest-hub .ds-price-tag,
+body.erv-typography-pr1-guest-hub .ds-estimate-line {
+  font-size: var(--erv-t-price);
+  font-weight: var(--erv-t-price-weight);
+  line-height: var(--erv-t-lh-tight);
+}
+
+/* ——— Guest footer (not header) ——— */
+body.erv-typography-pr1-guest-hub .dash-site-footer__link {
+  font-size: var(--erv-t-secondary);
+  font-weight: var(--erv-t-secondary-weight);
+  line-height: var(--erv-t-lh);
+}
+
+body.erv-typography-pr1-guest-hub .dash-site-footer__copy {
+  font-size: var(--erv-t-caption);
+  font-weight: var(--erv-t-caption-weight);
+  line-height: var(--erv-t-lh);
+}
+
+/* ——— Services order panel ——— */
+body.erv-typography-pr1-guest-hub .svc-order-panel__title {
+  font-size: var(--erv-t-h2);
+  font-weight: var(--erv-t-h2-weight);
+  line-height: var(--erv-t-lh-heading);
+}
+
+body.erv-typography-pr1-guest-hub .svc-order-panel__sub {
+  font-size: var(--erv-t-secondary);
+  font-weight: var(--erv-t-secondary-weight);
+  line-height: var(--erv-t-lh);
+}
+
+body.erv-typography-pr1-guest-hub .svc-order-card__label {
+  font-size: var(--erv-t-secondary);
+  font-weight: var(--erv-t-h3-weight);
+  line-height: var(--erv-t-lh);
+}
+
+body.erv-typography-pr1-guest-hub .svc-order-card__price {
+  font-size: var(--erv-t-caption);
+  font-weight: var(--erv-t-secondary-weight);
+  line-height: var(--erv-t-lh);
+}
+
+body.erv-typography-pr1-guest-hub .svc-order-form label,
+body.erv-typography-pr1-guest-hub .svc-order-form input,
+body.erv-typography-pr1-guest-hub .svc-order-form select {
+  font-size: var(--erv-t-input);
+  font-weight: var(--erv-t-body-weight);
+  line-height: var(--erv-t-lh);
+}
+
+body.erv-typography-pr1-guest-hub .svc-order-success {
+  font-size: var(--erv-t-secondary);
+  font-weight: var(--erv-t-secondary-weight);
+  line-height: var(--erv-t-lh);
+}
+
+body.erv-typography-pr1-guest-hub .stores-note {
+  font-size: var(--erv-t-secondary);
+  font-weight: var(--erv-t-secondary-weight);
+  line-height: var(--erv-t-lh);
+}
+
+body.erv-typography-pr1-guest-hub .ds-form-head h2,
+body.erv-typography-pr1-guest-hub .ds-price-cell__val {
+  font-size: var(--erv-t-price);
+  font-weight: var(--erv-t-price-weight);
+  line-height: var(--erv-t-lh-tight);
+}
+
+body.erv-typography-pr1-guest-hub .ds-btn-cart-primary,
+body.erv-typography-pr1-guest-hub #dsSubmit {
+  font-size: var(--erv-t-body);
+  font-weight: var(--erv-t-h3-weight);
+  line-height: var(--erv-t-lh);
+}
+
+/* ——— Mobile shell overrides (beat guest-shell fast-discovery) ——— */
+@media (max-width: 640px), ((max-width: 932px) and (max-height: 500px) and (pointer: coarse)) {
+  html.erv-mobile-shell body.erv-typography-pr1-guest-hub.guest-shell-page .ds-section-title {
+    font-size: var(--erv-t-h2);
+    font-weight: var(--erv-t-h2-weight);
+    line-height: var(--erv-t-lh-heading);
+  }
+
+  html.erv-mobile-shell body.erv-typography-pr1-guest-hub.guest-shell-page.stores-page .stores-cuisine-chip {
+    font-size: var(--erv-t-caption);
+    font-weight: var(--erv-t-caption-weight);
+    line-height: var(--erv-t-lh);
+  }
+
+  html.erv-mobile-shell body.erv-typography-pr1-guest-hub.guest-shell-page .ds-svc__lbl {
+    font-size: var(--erv-t-h3);
+    font-weight: var(--erv-t-h3-weight);
+    line-height: var(--erv-t-lh-heading);
+  }
+
+  html.erv-mobile-shell body.erv-typography-pr1-guest-hub.guest-shell-page .ds-svc__desc {
+    font-size: var(--erv-t-secondary);
+    font-weight: var(--erv-t-secondary-weight);
+    line-height: var(--erv-t-lh);
+  }
+}

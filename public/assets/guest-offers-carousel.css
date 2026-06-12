@@ -81,16 +81,34 @@
   }
 
   .lp-home-premium .guest-offers-carousel--home .guest-offers-shell {
-    min-height: max(clamp(200px, 52vw, 380px), clamp(200px, 34vh, 380px));
+    width: 100%;
     aspect-ratio: 1920 / 730;
+    min-height: clamp(200px, 52vw, 380px);
+    height: auto;
+  }
+
+  html.erv-mobile-shell body.lp-home-premium .guest-offers-carousel--home,
+  html.erv-mobile-shell body.lp-home-premium .card.guest-offers-carousel--home {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-inline: 0 !important;
+    padding: 0 !important;
+    box-sizing: border-box;
   }
 
   html.erv-mobile-shell body.lp-home-premium .guest-offers-carousel--home .guest-offers-shell,
   html.erv-mobile-shell body.lp-home-premium .guest-offers-carousel--reserved .guest-offers-shell--placeholder {
-    min-height: max(clamp(200px, 52vw, 380px), clamp(200px, 34vh, 380px)) !important;
+    width: 100% !important;
+    aspect-ratio: 1920 / 730 !important;
+    /* vw فقط — vh يختلف على Safari iOS ويكسر التلاؤم */
+    min-height: clamp(200px, 52vw, 380px) !important;
     height: auto !important;
     max-height: none !important;
-    aspect-ratio: 1920 / 730 !important;
+  }
+
+  html.erv-mobile-shell body.lp-home-premium .guest-offers-carousel--home .guest-offers-track {
+    height: 100%;
+    min-height: 100%;
   }
 
   .guest-offers-slide__img {
@@ -98,14 +116,39 @@
     height: 100% !important;
     max-height: none !important;
     object-fit: cover;
-    object-position: center;
+    object-position: center center;
+  }
+
+  /* Safari iOS — ملء الصورة داخل الإطار (height % في flex لا يعمل دائماً) */
+  @supports (-webkit-touch-callout: none) {
+    html.erv-mobile-shell body.lp-home-premium .guest-offers-carousel--home .guest-offers-shell {
+      position: relative;
+      overflow: hidden;
+    }
+
+    html.erv-mobile-shell body.lp-home-premium .guest-offers-carousel--home .guest-offers-slide {
+      position: relative;
+      overflow: hidden;
+      isolation: isolate;
+    }
+
+    html.erv-mobile-shell body.lp-home-premium .guest-offers-carousel--home .guest-offers-slide__img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center center;
+      -webkit-transform: translateZ(0);
+      transform: translateZ(0);
+    }
   }
 }
 
 @supports not (aspect-ratio: 1920 / 730) {
   @media (max-width: 1024px) {
     .lp-home-premium .guest-offers-carousel--home .guest-offers-shell {
-      height: max(clamp(200px, 52vw, 380px), clamp(200px, 34vh, 380px));
+      height: clamp(200px, 52vw, 380px);
     }
   }
 }
@@ -144,14 +187,14 @@
 @media (max-width: 640px) {
   .lp-home-premium .guest-offers-carousel--reserved .guest-offers-shell--placeholder,
   .guest-offers-carousel--reserved .guest-offers-shell--placeholder {
-    min-height: max(clamp(200px, 52vw, 380px), clamp(200px, 34vh, 380px));
+    min-height: clamp(200px, 52vw, 380px);
     aspect-ratio: 1920 / 730;
   }
 
   /* حجز مكان البنر قبل تحميل JS — يمنع قفز sn-section */
   html.erv-mobile-shell #homeMainBanner.guest-offers-carousel--home[hidden] {
     display: block !important;
-    min-height: max(clamp(200px, 52vw, 380px), clamp(200px, 34vh, 380px));
+    min-height: clamp(200px, 52vw, 380px);
     aspect-ratio: 1920 / 730;
     margin-bottom: clamp(10px, 2.2vw, 14px);
     visibility: hidden;

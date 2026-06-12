@@ -213,9 +213,9 @@
     text-decoration: none;
     color: rgba(61, 34, 19, 0.62);
     font-family: inherit;
-    font-size: 0.62rem;
-    font-weight: 800;
-    line-height: 1.2;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.45;
     -webkit-tap-highlight-color: transparent;
     touch-action: manipulation;
     position: relative;

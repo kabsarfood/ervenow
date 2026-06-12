@@ -10,9 +10,9 @@
 
 .erv-section-hub__title {
   margin: 0 0 clamp(14px, 2.5vw, 18px);
-  font-size: clamp(1.25rem, 3.8vw, 1.65rem);
-  font-weight: 900;
-  line-height: 1.35;
+  font-size: var(--erv-t-h1, clamp(1.25rem, 3.8vw, 1.65rem));
+  font-weight: var(--erv-t-h1-weight, 700);
+  line-height: var(--erv-t-lh-heading, 1.35);
   color: #2a1810;
 }
 
@@ -41,8 +41,8 @@
   border: 1px solid rgba(61, 34, 19, 0.1);
   background: rgba(255, 255, 255, 0.92);
   font-family: inherit;
-  font-size: 16px;
-  font-weight: 600;
+  font-size: var(--erv-t-input, 16px);
+  font-weight: var(--erv-t-body-weight, 500);
   color: #2a1810;
   box-shadow: 0 10px 32px rgba(42, 24, 16, 0.06);
 }
@@ -76,8 +76,8 @@
 
 .erv-section-hub__cats-head strong {
   display: block;
-  font-size: 0.9rem;
-  font-weight: 800;
+  font-size: var(--erv-t-h3, 0.9rem);
+  font-weight: var(--erv-t-h3-weight, 600);
   color: #2a1810;
 }
 
@@ -106,10 +106,10 @@
   border: 1px solid rgba(61, 34, 19, 0.1);
   background: #fffefb;
   font-family: inherit;
-  font-size: 0.72rem;
-  font-weight: 800;
+  font-size: var(--erv-t-caption, 0.72rem);
+  font-weight: var(--erv-t-caption-weight, 400);
   color: #4a382e;
-  line-height: 1.3;
+  line-height: var(--erv-t-lh, 1.45);
   text-align: center;
   cursor: pointer;
   transition: transform 0.15s ease, box-shadow 0.2s ease, background 0.2s ease;
@@ -148,8 +148,8 @@
   border: 1px solid rgba(61, 34, 19, 0.12);
   background: rgba(255, 255, 255, 0.88);
   font-family: inherit;
-  font-size: 0.86rem;
-  font-weight: 800;
+  font-size: var(--erv-t-secondary, 0.86rem);
+  font-weight: var(--erv-t-secondary-weight, 500);
   color: #5c4638;
   cursor: pointer;
 }
@@ -170,8 +170,8 @@
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.55);
   border: 1px solid rgba(61, 34, 19, 0.08);
-  font-size: 0.86rem;
-  font-weight: 600;
+  font-size: var(--erv-t-secondary, 0.86rem);
+  font-weight: var(--erv-t-secondary-weight, 500);
   color: #5c4638;
   cursor: pointer;
   user-select: none;
@@ -190,10 +190,10 @@
 
 .erv-section-hub__count {
   margin: 0 0 14px;
-  font-size: clamp(0.84rem, 2.2vw, 0.92rem);
-  font-weight: 800;
+  font-size: var(--erv-t-secondary, clamp(0.84rem, 2.2vw, 0.92rem));
+  font-weight: var(--erv-t-secondary-weight, 500);
   color: #7a6558;
-  line-height: 1.45;
+  line-height: var(--erv-t-lh, 1.45);
 }
 
 .erv-section-hub__grid {
@@ -208,8 +208,8 @@
   border-radius: 999px;
   background: #c9a227;
   color: #1a1008;
-  font-size: 0.68rem;
-  font-weight: 900;
+  font-size: var(--erv-t-caption, 0.68rem);
+  font-weight: var(--erv-t-caption-weight, 400);
 }
 
 .store-card__media {

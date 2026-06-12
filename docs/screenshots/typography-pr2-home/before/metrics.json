@@ -1,0 +1,534 @@
+{
+  "mode": "before",
+  "capturedAt": "2026-06-12T17:57:50.867Z",
+  "metrics": {
+    "home@390": {
+      "identityName": {
+        "fontSize": "16px",
+        "fontWeight": "900",
+        "lineHeight": "19.2px"
+      },
+      "identityNameHeader": {
+        "fontSize": "14.72px",
+        "fontWeight": "900",
+        "lineHeight": "16.928px"
+      },
+      "identityTag": {
+        "fontSize": "12.48px",
+        "fontWeight": "700",
+        "lineHeight": "14.976px"
+      },
+      "identityTagHeader": {
+        "fontSize": "10.88px",
+        "fontWeight": "700",
+        "lineHeight": "13.056px"
+      },
+      "identityScope": {
+        "fontSize": "11.52px",
+        "fontWeight": "700",
+        "lineHeight": "16.704px"
+      },
+      "heroSlideTitle": {
+        "fontSize": "16px",
+        "fontWeight": "900",
+        "lineHeight": "20px"
+      },
+      "heroSlideSub": {
+        "fontSize": "13.12px",
+        "fontWeight": "600",
+        "lineHeight": "19.024px"
+      },
+      "sectionLabel": {
+        "fontSize": "13.12px",
+        "fontWeight": "700",
+        "lineHeight": "19.68px"
+      },
+      "sectionTitle": {
+        "fontSize": "19.2px",
+        "fontWeight": "800",
+        "lineHeight": "24.96px"
+      },
+      "sectionLead": {
+        "fontSize": "15.2px",
+        "fontWeight": "600",
+        "lineHeight": "25.84px"
+      },
+      "cardTitle": {
+        "fontSize": "14.08px",
+        "fontWeight": "800",
+        "lineHeight": "16.896px"
+      },
+      "cardDesc": {
+        "fontSize": "12.8px",
+        "fontWeight": "700",
+        "lineHeight": "19.84px"
+      },
+      "trustItem": {
+        "fontSize": "10.4px",
+        "fontWeight": "700",
+        "lineHeight": "15.6px"
+      },
+      "whyH3": {
+        "fontSize": "16.8px",
+        "fontWeight": "800",
+        "lineHeight": "25.2px"
+      },
+      "whyBody": {
+        "fontSize": "14.08px",
+        "fontWeight": "600",
+        "lineHeight": "23.232px"
+      },
+      "_fontSizeHistogram": [
+        {
+          "size": "10.4px",
+          "count": 4
+        },
+        {
+          "size": "10.88px",
+          "count": 1
+        },
+        {
+          "size": "11.52px",
+          "count": 6
+        },
+        {
+          "size": "12px",
+          "count": 11
+        },
+        {
+          "size": "12.48px",
+          "count": 2
+        },
+        {
+          "size": "12.8px",
+          "count": 8
+        },
+        {
+          "size": "13.12px",
+          "count": 7
+        },
+        {
+          "size": "13.3333px",
+          "count": 3
+        },
+        {
+          "size": "13.6px",
+          "count": 4
+        },
+        {
+          "size": "13.76px",
+          "count": 40
+        },
+        {
+          "size": "14.08px",
+          "count": 12
+        },
+        {
+          "size": "14.4px",
+          "count": 7
+        },
+        {
+          "size": "14.72px",
+          "count": 7
+        },
+        {
+          "size": "15.2px",
+          "count": 4
+        },
+        {
+          "size": "16px",
+          "count": 94
+        },
+        {
+          "size": "16.8px",
+          "count": 25
+        },
+        {
+          "size": "17.6px",
+          "count": 6
+        },
+        {
+          "size": "19.2px",
+          "count": 6
+        },
+        {
+          "size": "20px",
+          "count": 4
+        },
+        {
+          "size": "21.6px",
+          "count": 9
+        },
+        {
+          "size": "32px",
+          "count": 6
+        }
+      ],
+      "_layout": {
+        "bannerH": 205,
+        "hubH": 182,
+        "identityVisible": true
+      }
+    },
+    "home@768": {
+      "identityName": {
+        "fontSize": "16px",
+        "fontWeight": "700",
+        "lineHeight": "24px"
+      },
+      "identityNameHeader": {
+        "fontSize": "19.968px",
+        "fontWeight": "800",
+        "lineHeight": "23.9616px"
+      },
+      "identityTag": {
+        "fontSize": "16px",
+        "fontWeight": "400",
+        "lineHeight": "24px"
+      },
+      "identityTagHeader": {
+        "fontSize": "11.52px",
+        "fontWeight": "700",
+        "lineHeight": "15.552px"
+      },
+      "identityScope": {
+        "fontSize": "16px",
+        "fontWeight": "400",
+        "lineHeight": "24px"
+      },
+      "heroSlideTitle": {
+        "fontSize": "21.6px",
+        "fontWeight": "900",
+        "lineHeight": "27px"
+      },
+      "heroSlideSub": {
+        "fontSize": "13.76px",
+        "fontWeight": "600",
+        "lineHeight": "19.952px"
+      },
+      "sectionLabel": {
+        "fontSize": "13.12px",
+        "fontWeight": "700",
+        "lineHeight": "19.68px"
+      },
+      "sectionTitle": {
+        "fontSize": "23.2px",
+        "fontWeight": "800",
+        "lineHeight": "30.16px"
+      },
+      "sectionLead": {
+        "fontSize": "16.896px",
+        "fontWeight": "600",
+        "lineHeight": "28.7232px"
+      },
+      "cardTitle": {
+        "fontSize": "16.8px",
+        "fontWeight": "800",
+        "lineHeight": "25.2px"
+      },
+      "cardDesc": {
+        "fontSize": "12.8px",
+        "fontWeight": "700",
+        "lineHeight": "19.84px"
+      },
+      "trustItem": {
+        "fontSize": "13.12px",
+        "fontWeight": "700",
+        "lineHeight": "19.68px"
+      },
+      "whyH3": {
+        "fontSize": "16.8px",
+        "fontWeight": "800",
+        "lineHeight": "25.2px"
+      },
+      "whyBody": {
+        "fontSize": "14.08px",
+        "fontWeight": "600",
+        "lineHeight": "23.232px"
+      },
+      "_fontSizeHistogram": [
+        {
+          "size": "10.88px",
+          "count": 1
+        },
+        {
+          "size": "11.52px",
+          "count": 1
+        },
+        {
+          "size": "12px",
+          "count": 1
+        },
+        {
+          "size": "12.48px",
+          "count": 3
+        },
+        {
+          "size": "12.8px",
+          "count": 9
+        },
+        {
+          "size": "13.12px",
+          "count": 5
+        },
+        {
+          "size": "13.3333px",
+          "count": 3
+        },
+        {
+          "size": "13.44px",
+          "count": 3
+        },
+        {
+          "size": "13.6px",
+          "count": 4
+        },
+        {
+          "size": "13.76px",
+          "count": 5
+        },
+        {
+          "size": "14.08px",
+          "count": 19
+        },
+        {
+          "size": "14.4px",
+          "count": 44
+        },
+        {
+          "size": "14.72px",
+          "count": 6
+        },
+        {
+          "size": "16px",
+          "count": 94
+        },
+        {
+          "size": "16.8px",
+          "count": 29
+        },
+        {
+          "size": "16.896px",
+          "count": 4
+        },
+        {
+          "size": "17.6px",
+          "count": 10
+        },
+        {
+          "size": "19.2px",
+          "count": 1
+        },
+        {
+          "size": "19.968px",
+          "count": 1
+        },
+        {
+          "size": "21.6px",
+          "count": 3
+        },
+        {
+          "size": "23.2px",
+          "count": 1
+        },
+        {
+          "size": "26.88px",
+          "count": 4
+        },
+        {
+          "size": "32px",
+          "count": 4
+        },
+        {
+          "size": "38.4px",
+          "count": 6
+        }
+      ],
+      "_layout": {
+        "bannerH": 382,
+        "hubH": 273,
+        "identityVisible": false
+      }
+    },
+    "home@1280": {
+      "identityName": {
+        "fontSize": "16px",
+        "fontWeight": "700",
+        "lineHeight": "24px"
+      },
+      "identityNameHeader": {
+        "fontSize": "21.12px",
+        "fontWeight": "800",
+        "lineHeight": "25.344px"
+      },
+      "identityTag": {
+        "fontSize": "16px",
+        "fontWeight": "400",
+        "lineHeight": "24px"
+      },
+      "identityTagHeader": {
+        "fontSize": "11.52px",
+        "fontWeight": "700",
+        "lineHeight": "15.552px"
+      },
+      "identityScope": {
+        "fontSize": "16px",
+        "fontWeight": "400",
+        "lineHeight": "24px"
+      },
+      "heroSlideTitle": {
+        "fontSize": "21.6px",
+        "fontWeight": "900",
+        "lineHeight": "27px"
+      },
+      "heroSlideSub": {
+        "fontSize": "13.76px",
+        "fontWeight": "600",
+        "lineHeight": "19.952px"
+      },
+      "sectionLabel": {
+        "fontSize": "13.12px",
+        "fontWeight": "700",
+        "lineHeight": "19.68px"
+      },
+      "sectionTitle": {
+        "fontSize": "23.2px",
+        "fontWeight": "800",
+        "lineHeight": "30.16px"
+      },
+      "sectionLead": {
+        "fontSize": "16.96px",
+        "fontWeight": "600",
+        "lineHeight": "28.832px"
+      },
+      "cardTitle": {
+        "fontSize": "16.8px",
+        "fontWeight": "800",
+        "lineHeight": "25.2px"
+      },
+      "cardDesc": {
+        "fontSize": "12.8px",
+        "fontWeight": "700",
+        "lineHeight": "19.84px"
+      },
+      "trustItem": {
+        "fontSize": "13.12px",
+        "fontWeight": "700",
+        "lineHeight": "19.68px"
+      },
+      "whyH3": {
+        "fontSize": "16.8px",
+        "fontWeight": "800",
+        "lineHeight": "25.2px"
+      },
+      "whyBody": {
+        "fontSize": "14.08px",
+        "fontWeight": "600",
+        "lineHeight": "23.232px"
+      },
+      "_fontSizeHistogram": [
+        {
+          "size": "10.88px",
+          "count": 1
+        },
+        {
+          "size": "11.52px",
+          "count": 2
+        },
+        {
+          "size": "12px",
+          "count": 1
+        },
+        {
+          "size": "12.48px",
+          "count": 3
+        },
+        {
+          "size": "12.8px",
+          "count": 9
+        },
+        {
+          "size": "13.12px",
+          "count": 5
+        },
+        {
+          "size": "13.3333px",
+          "count": 3
+        },
+        {
+          "size": "13.44px",
+          "count": 3
+        },
+        {
+          "size": "13.6px",
+          "count": 4
+        },
+        {
+          "size": "13.76px",
+          "count": 5
+        },
+        {
+          "size": "14.08px",
+          "count": 19
+        },
+        {
+          "size": "14.4px",
+          "count": 44
+        },
+        {
+          "size": "14.72px",
+          "count": 6
+        },
+        {
+          "size": "16px",
+          "count": 97
+        },
+        {
+          "size": "16.8px",
+          "count": 29
+        },
+        {
+          "size": "16.96px",
+          "count": 4
+        },
+        {
+          "size": "17.6px",
+          "count": 10
+        },
+        {
+          "size": "19.2px",
+          "count": 1
+        },
+        {
+          "size": "21.12px",
+          "count": 1
+        },
+        {
+          "size": "21.6px",
+          "count": 3
+        },
+        {
+          "size": "23.2px",
+          "count": 1
+        },
+        {
+          "size": "29.6px",
+          "count": 4
+        },
+        {
+          "size": "32px",
+          "count": 4
+        },
+        {
+          "size": "42.4px",
+          "count": 6
+        }
+      ],
+      "_layout": {
+        "bannerH": 427,
+        "hubH": 229,
+        "identityVisible": false
+      }
+    }
+  }
+}
