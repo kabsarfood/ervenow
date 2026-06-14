@@ -792,7 +792,7 @@ body.guest-shell-page.stores-page {
     position: fixed;
     left: 0;
     right: 0;
-    bottom: var(--erv-mobile-nav-offset, 8px);
+    bottom: 0;
     z-index: 300;
     min-height: calc(var(--erv-mobile-nav-h, 62px) + env(safe-area-inset-bottom, 0px) + var(--erv-plus-fab-lift, 28px) * 0.35);
     background: transparent;
@@ -808,7 +808,7 @@ body.guest-shell-page.stores-page {
   }
   html.erv-mobile-shell:not(.erv-mobile-no-nav) .dash-site-footer {
     padding-bottom: calc(
-      var(--erv-mobile-nav-h, 62px) + var(--erv-plus-fab-lift, 28px) * 0.5 + var(--erv-mobile-nav-offset, 8px) + env(safe-area-inset-bottom, 0px) + 16px
+      var(--erv-mobile-nav-h, 62px) + var(--erv-plus-fab-lift, 28px) * 0.5 + var(--erv-mobile-nav-offset, 0px) + env(safe-area-inset-bottom, 0px) + 16px
     );
   }
   html.erv-mobile-shell.erv-mobile-no-nav .dash-site-footer {
