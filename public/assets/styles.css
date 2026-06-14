@@ -135,16 +135,9 @@ textarea {
 .app-tile {
   padding: 16px;
   border-radius: var(--radius);
-  border: 1px solid var(--border);
   background: var(--card);
   text-decoration: none;
   color: inherit;
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-
-.app-tile:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 32px rgba(45, 26, 14, 0.08);
 }
 
 .app-tile strong {
@@ -1154,3 +1147,4 @@ textarea {
 @import url("/assets/responsive-site.css");
 @import url("/assets/ervenow-responsive.css");
 @import url("/assets/responsive-audit-base.css");
+@import url("/assets/erv-interactive-surfaces.css");

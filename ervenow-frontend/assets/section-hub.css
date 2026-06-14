@@ -115,11 +115,6 @@
   transition: transform 0.15s ease, box-shadow 0.2s ease, background 0.2s ease;
 }
 
-.erv-section-hub__cat:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 22px rgba(42, 24, 16, 0.1);
-}
-
 .erv-section-hub__cat__ic {
   font-size: 1.4rem;
   line-height: 1;
@@ -221,3 +216,5 @@
     flex: 1 1 calc(50% - 4px);
   }
 }
+
+@import url("/assets/erv-interactive-surfaces.css");

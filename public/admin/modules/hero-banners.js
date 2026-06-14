@@ -10,7 +10,7 @@ var heroBannersPanelLoaded = false;
 var heroBannersFilterStatus = "all";
 
 function heroBannersPanelHintText() {
-  return heroBannersCache.length + " بنر — مقاس موحّد 1920×730 — 6 أقسام ثابتة.";
+  return heroBannersCache.length + " بنر — مقاس موحّد 1920×730 — 6 أقسام ثابتة. صور البنرات منفصلة عن شعار المنصة.";
 }
 
 var FALLBACK_SECTION_TARGETS = [

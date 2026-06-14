@@ -23,7 +23,7 @@ const { createServiceOrder } = require("../../shared/services/serviceOrderCreate
 const { createGasDelivery } = require("../delivery/gasDeliveryCreate");
 const { completeServiceBooking } = require("../../shared/services/completeServiceBooking");
 const { sendReserveWelcomeWhatsApp } = require("../../shared/services/serviceProviderReserve");
-const { buildCustomerMessageOrderAccepted } = require("../../shared/messages/deliveryCustomerWhatsApp");
+const { sendOrderAcceptedToCustomer, sendCustomerDeliveringNotice, sendDriverArrived } = require("../../shared/services/whatsappService");
 const { currentGasRadiusKm, providerWithinGasRadius } = require("../../shared/utils/gasDeliveryRadius");
 const { broadcastDriverUpdate, broadcastOrderPatch, orderPatchFromRow } = require("../../shared/lib/trackingSocket");
 const { getWalletPayloadWithLedgerFallback } = require("../../shared/utils/ledgerWallet");
@@ -621,8 +621,7 @@ router.post("/bookings/:id/reserve", requireAuth, requireRole("service"), async 
 
     if (booking.customer_phone) {
       try {
-        const msg = buildCustomerMessageOrderAccepted(raw, profile?.phone);
-        await sendWhatsApp({ to: booking.customer_phone, message: msg });
+        await sendOrderAcceptedToCustomer(raw, profile?.phone);
       } catch (waErr) {
         console.error("[services] reserve customer WA:", waErr && (waErr.message || waErr));
       }
@@ -810,6 +809,14 @@ router.patch("/bookings/:id/status", requireAuth, requireRole("service", "admin"
       const out = await patchUnifiedOrderStatus(req.supabase, req.params.id, nextStatus, req.appUser);
       if (out.error) return fail(res, out.error.message, 400);
       const view = orderToBookingView(out.data);
+      if (view.customer_phone) {
+        try {
+          if (nextStatus === "delivering") await sendCustomerDeliveringNotice(out.data);
+          else if (nextStatus === "delivered") await sendDriverArrived(out.data);
+        } catch (waErr) {
+          console.error("[services] status customer WA:", waErr && (waErr.message || waErr));
+        }
+      }
       if (nextStatus === "delivered") await sendCustomerRateWhatsApp(view);
       return ok(res, { booking: view });
     }

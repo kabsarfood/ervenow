@@ -32,17 +32,8 @@ function merchantNetForStoreOrder(order) {
  * @param {string} storeId
  */
 async function resolveMerchantUserIdForStore(sb, storeId) {
-  const sid = String(storeId || "").trim();
-  if (!sid || !sb) return null;
-  const { data: storeRow } = await sb.from("stores").select("phone").eq("id", sid).maybeSingle();
-  const digits = String(storeRow?.phone || "").replace(/\D/g, "");
-  if (digits.length < 9) return null;
-  const { data: merchantUser } = await sb
-    .from("users")
-    .select("id")
-    .eq("phone", digits)
-    .maybeSingle();
-  return merchantUser?.id || null;
+  const { resolveStoreMerchantUserId } = require("./platformNotify");
+  return resolveStoreMerchantUserId(sb, storeId);
 }
 
 /**

@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <script src="/assets/viewport-fit.js?erv=20260612"></script>
+    <title>ERVENOW | دخول مزوّد الخدمة</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/assets/styles.css" />
+    <link rel="stylesheet" href="/assets/guest-shell.css?erv=20260612" />
+    <link rel="stylesheet" href="/assets/auth-shell.css" />
+  </head>
+  <body class="guest-shell-page auth-page auth-login-page driver-auth-page">
+    <header class="dash-site-header">
+      <div class="dash-site-header__inner">
+        <div class="dash-site-header__brand">
+          <a class="dash-site-header__logo" href="/">
+            ERVENOW
+            <span class="dash-site-header__logo-dot" aria-hidden="true"></span>
+          </a>
+          <p class="dash-site-header__tag">دخول مزوّد الخدمة</p>
+        </div>
+        <nav class="dash-site-header__nav" aria-label="التنقل">
+          <div class="dash-site-header__links">
+            <a class="dash-site-header__link" href="/">الرئيسية</a>
+            <a class="dash-site-header__link" href="/partner-portal">بوابة الشركاء</a>
+            <a class="dash-site-header__link" href="/login?mode=register&amp;role=service">طلب انضمام</a>
+          </div>
+        </nav>
+        <a class="dash-site-header__btn dash-site-header__btn--primary" href="/services-provider">لوحة المزود</a>
+      </div>
+    </header>
+
+    <section class="driver-auth-banner" aria-labelledby="providerBannerTitle">
+      <div class="driver-auth-banner__veil" aria-hidden="true"></div>
+      <div class="driver-auth-banner__inner">
+        <p class="driver-auth-banner__eyebrow">بوابة مقدّمي الخدمة</p>
+        <img class="driver-auth-banner__logo" src="/assets/ervenow-logo.png" width="160" height="42" alt="ERVENOW" />
+        <h1 class="driver-auth-banner__title" id="providerBannerTitle">مزوّد خدمة ERVENOW</h1>
+        <p class="driver-auth-banner__sub">
+          أدخل جوالك السعودي <strong dir="ltr">05xxxxxxxx</strong> واستلم رمز واتساب للدخول إلى لوحتك.
+        </p>
+        <span class="driver-auth-banner__badge">صلاحية الرمز 5 دقائق</span>
+      </div>
+    </section>
+
+    <main class="auth-page__main">
+      <div class="auth-page__body">
+        <div class="auth-card">
+          <p class="auth-pickup-tip driver-auth-card-title" role="note">دخول مزوّد الخدمة</p>
+          <p class="auth-form-intro" id="providerAuthIntro">
+            أدخل رقم جوالك بصيغة <strong dir="ltr">05xxxxxxxx</strong> ثم اضغط إرسال الرمز.
+          </p>
+
+          <label for="loginPhone">رقم الجوال</label>
+          <input
+            id="loginPhone"
+            type="tel"
+            inputmode="numeric"
+            maxlength="10"
+            placeholder="05xxxxxxxx"
+            autocomplete="tel-national"
+            dir="ltr"
+          />
+
+          <div class="auth-code-group" id="codeGroup" hidden>
+            <label for="loginCode">رمز واتساب</label>
+            <input
+              id="loginCode"
+              type="text"
+              inputmode="numeric"
+              maxlength="8"
+              placeholder="أدخل الرمز المرسل على واتساب"
+              autocomplete="one-time-code"
+            />
+          </div>
+
+          <div class="auth-otp-actions auth-otp-actions--single">
+            <button type="button" class="btn btn-primary" id="providerAuthBtn">إرسال الرمز</button>
+          </div>
+
+          <div class="msg" id="msg" style="display: none" role="status" aria-live="polite"></div>
+
+          <a class="auth-join-link" href="/login?mode=register&amp;role=service">
+            لم تُعتمد بعد؟ قدّم طلب الانضمام كمقدّم خدمة
+          </a>
+        </div>
+      </div>
+    </main>
+
+    <script src="/assets/api-config.js"></script>
+    <script src="/assets/api.js?erv=20260612"></script>
+    <script src="/assets/sa-phone-input.js"></script>
+    <script src="/assets/auth-otp-flow.js"></script>
+    <script>
+      function showInlineMsg(text, isOk) {
+        var el = document.getElementById("msg");
+        if (!el) return;
+        el.style.display = text ? "block" : "none";
+        el.className = "msg " + (isOk ? "ok" : "err");
+        el.textContent = text || "";
+      }
+
+      function getVal(id) {
+        var el = document.getElementById(id);
+        return ((el && el.value) || "").trim();
+      }
+
+      function normalizePhoneInput(el) {
+        if (!el) return "";
+        if (window.ErvenowSaPhone) return ErvenowSaPhone.formatField(el);
+        return el.value || "";
+      }
+
+      function phoneOk(v) {
+        return window.ErvenowSaPhone ? ErvenowSaPhone.isValid(v) : false;
+      }
+
+      function phoneToE164(phoneEl) {
+        normalizePhoneInput(phoneEl);
+        return ErvenowSaPhone ? ErvenowSaPhone.toE164(phoneEl.value) || "" : "";
+      }
+
+      function mapOtpError(msg) {
+        var m = String(msg || "");
+        if (m.indexOf("قيد المراجعة") !== -1 || m.indexOf("pending_approval") !== -1) {
+          return "حسابك ما زال قيد المراجعة — انتظر موافقة الإدارة.";
+        }
+        if (m.indexOf("منتهي") !== -1 || m.indexOf("غير صحيح") !== -1) {
+          return "رمز واتساب غير صحيح أو منتهي. صلاحية الرمز 5 دقائق.";
+        }
+        return m;
+      }
+
+      function persistSession(token, phoneEl) {
+        window.PlatformAPI.setToken(token);
+        try {
+          var maxAgeSec = 7 * 24 * 60 * 60;
+          var c =
+            "auth_token=" +
+            encodeURIComponent(token) +
+            "; path=/; max-age=" +
+            maxAgeSec +
+            "; SameSite=Lax";
+          if (location.protocol === "https:") c += "; Secure";
+          document.cookie = c;
+        } catch (cookieErr) {}
+        try {
+          if (token) localStorage.setItem("token", token);
+          var dp = normalizePhoneInput(phoneEl);
+          if (dp) localStorage.setItem("userPhone", dp);
+        } catch (lsErr) {}
+        try {
+          localStorage.removeItem("ervenow_guest_browse");
+        } catch (e) {}
+      }
+
+      function defaultNext() {
+        return "/services-provider";
+      }
+
+      ErvenowAuthOtpFlow.mount({
+        phoneId: "loginPhone",
+        codeId: "loginCode",
+        codeGroupId: "codeGroup",
+        btnId: "providerAuthBtn",
+        introId: "providerAuthIntro",
+        introSend: "أدخل رقم جوالك بصيغة 05xxxxxxxx ثم اضغط إرسال الرمز.",
+        introVerify: "أدخل رمز واتساب ثم اضغط تسجيل الدخول.",
+        phoneValid: phoneOk,
+        normalizePhone: normalizePhoneInput,
+        onPhoneInvalid: function () {
+          showInlineMsg("أدخل رقم جوال سعودي صحيح بصيغة 05xxxxxxxx", false);
+        },
+        onVerifyNeedsCode: function (codeEl) {
+          if (!getVal("loginCode")) {
+            showInlineMsg("أدخل رمز واتساب المرسل إلى جوالك", false);
+            return false;
+          }
+          return true;
+        },
+        onSend: async function (phoneEl) {
+          showInlineMsg("", false);
+          try {
+            await window.PlatformAPI.api("/api/core/send-otp", {
+              method: "POST",
+              body: { phone: phoneToE164(phoneEl), login_only: true },
+            });
+            showInlineMsg("تم إرسال الرمز عبر واتساب. صلاحية الرمز 5 دقائق.", true);
+          } catch (e) {
+            showInlineMsg(mapOtpError(e.message || "فشل إرسال الرمز"), false);
+            throw e;
+          }
+        },
+        onVerify: async function (phoneEl, codeEl) {
+          showInlineMsg("", false);
+          var j;
+          try {
+            j = await window.PlatformAPI.api("/api/core/verify-otp", {
+              method: "POST",
+              body: {
+                phone: phoneToE164(phoneEl),
+                code: (codeEl.value || "").trim(),
+                login_only: true,
+              },
+            });
+            if (j.pending_approval || (j.user && String(j.user.status || "").toLowerCase() === "pending")) {
+              showInlineMsg("حسابك قيد المراجعة — انتظر موافقة الإدارة.", false);
+              setTimeout(function () {
+                location.href = "/pending-approval.html";
+              }, 1200);
+              return;
+            }
+            if (!j.token) throw new Error("لم يتم إصدار جلسة");
+            var role = String((j.user && j.user.role) || "").toLowerCase();
+            if (role !== "service") {
+              throw new Error("هذا الرقم ليس حساب مزوّد خدمة معتمد — استخدم صفحة تسجيل الدخول العامة.");
+            }
+          } catch (e) {
+            showInlineMsg(mapOtpError(e.message || "فشل تسجيل الدخول"), false);
+            throw e;
+          }
+          persistSession(j.token, phoneEl);
+          if (j.user && j.user.id) {
+            try {
+              localStorage.setItem("userId", String(j.user.id));
+            } catch (idErr) {}
+          }
+          showInlineMsg("تم تسجيل الدخول — جاري التوجيه إلى لوحة المزود…", true);
+          setTimeout(function () {
+            var qs = new URLSearchParams(location.search);
+            var next = qs.get("next");
+            location.href =
+              next && next.startsWith("/") && !next.startsWith("//") ? next.split("#")[0] : defaultNext();
+          }, 500);
+        },
+      });
+
+      if (window.PlatformAPI && PlatformAPI.getToken()) {
+        var qs0 = new URLSearchParams(location.search);
+        var n0 = qs0.get("next");
+        location.replace(
+          n0 && n0.startsWith("/") && !n0.startsWith("//") ? n0.split("#")[0] : defaultNext()
+        );
+      }
+    </script>
+  </body>
+</html>

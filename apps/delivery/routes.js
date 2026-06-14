@@ -18,6 +18,7 @@ const { enqueueDeliveryJob } = require("../../queues/deliveryQueue");
 const { deliveryOrdersCreateLimiter } = require("../../shared/middleware/apiRateLimits");
 const { normalizeIdempotencyKey } = require("../../shared/utils/idempotency");
 const { getOrderProviderId } = require("../../shared/utils/orderProviderId");
+const { repairInconsistentOrderFinancials } = require("../../shared/utils/orderTotals");
 const { logger } = require("../../shared/utils/logger");
 const {
   sendOrderAcceptedToCustomer,
@@ -173,7 +174,7 @@ router.get("/orders/:id", requireAuth, async (req, res) => {
     else q = q.eq("order_number", key);
     const { data, error } = await q.single();
     if (error) return fail(res, error.message, 404);
-    const o = data;
+    const o = repairInconsistentOrderFinancials(data);
     await attachDriverCarType(req.supabase, o);
     if (req.appUser.role === "admin") {
       return ok(res, { order: o });
@@ -361,6 +362,22 @@ router.post("/orders/:id/accept", requireAuth, requireRole("driver"), async (req
           logger.warn(
             { err: notifyErr.message || String(notifyErr), orderId: data.id },
             "[delivery/accept] customer notification"
+          );
+        }
+      }
+      if (data.store_id) {
+        try {
+          const { notifyStoreForOrderEvent } = require("../../shared/services/platformNotify");
+          await notifyStoreForOrderEvent(
+            req.supabase,
+            data,
+            "مندوب في الطريق",
+            "تم قبول مندوب لتوصيل طلبك."
+          );
+        } catch (storeNotifyErr) {
+          logger.warn(
+            { err: storeNotifyErr.message || String(storeNotifyErr), orderId: data.id },
+            "[delivery/accept] store notification"
           );
         }
       }

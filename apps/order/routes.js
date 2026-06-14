@@ -25,7 +25,11 @@ const { patchUnifiedOrderStatus, normalizeIncomingStatus } = require("../../shar
 const { isAllowedDeliveryStatusTransition } = require("../../shared/utils/deliveryStateMachine");
 const { getOrderDeliveryStatus } = require("../../shared/domain/orders/orderStatus");
 const { broadcastOrderPatch, orderPatchFromRow } = require("../../shared/lib/trackingSocket");
-const { sendCustomerDeliveringNotice, sendDriverArrived } = require("../../shared/messages/deliveryCustomerWhatsApp");
+const { repairInconsistentOrderFinancials } = require("../../shared/utils/orderTotals");
+const {
+  sendCustomerDeliveringNotice,
+  sendDriverArrived,
+} = require("../../shared/services/whatsappService");
 
 const router = express.Router();
 
@@ -61,23 +65,12 @@ async function attachDriverCarType(sb, order) {
   return order;
 }
 
+const { normalizeOrderTrackingCoords } = require("../../shared/utils/orderTrackingCoords");
+
 async function attachOrderTrackingMeta(sb, order) {
   if (!order) return order;
+  normalizeOrderTrackingCoords(order);
   const d = order.data && typeof order.data === "object" ? order.data : {};
-  if (!Number.isFinite(Number(order.pickup_lat)) && Number.isFinite(Number(d.pickup_lat))) {
-    order.pickup_lat = Number(d.pickup_lat);
-    order.pickup_lng = Number(d.pickup_lng);
-  }
-  if (!Number.isFinite(Number(order.drop_lat)) && Number.isFinite(Number(d.drop_lat))) {
-    order.drop_lat = Number(d.drop_lat);
-    order.drop_lng = Number(d.drop_lng);
-  }
-  if (!order.pickup_address && (d.from || d.pickup_maps_url)) {
-    order.pickup_address = String(d.from || d.pickup_maps_url).trim();
-  }
-  if (!order.drop_address && (d.to || d.drop_maps_url)) {
-    order.drop_address = String(d.to || d.drop_maps_url).trim();
-  }
   await attachDriverCarType(sb, order);
   const pid = order.provider_id;
   if (pid) {
@@ -263,7 +256,7 @@ router.get("/:id", requireAuth, async (req, res) => {
     else q = q.eq("order_number", key);
     const { data, error } = await q.single();
     if (error) return fail(res, error.message, 404);
-    const o = data;
+    const o = repairInconsistentOrderFinancials(data);
     await attachOrderTrackingMeta(sb, o);
     if (req.appUser.role === "admin") {
       return ok(res, { order: o });

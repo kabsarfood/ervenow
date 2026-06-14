@@ -735,6 +735,15 @@ async function refineDeliveryOrderPricingFromOsrm(sb, orderId) {
   const ds0 = String(order.delivery_status || "").toLowerCase();
   if (ds0 === "draft") return { ok: true, skipped: true, reason: "draft" };
 
+  const orderData = order.data && typeof order.data === "object" ? order.data : {};
+  const serviceType = String(order.service_type || orderData.service_type || "").trim().toLowerCase();
+  const isUnifiedCar =
+    orderData.unified === true &&
+    ["car_transport", "pickup_truck", "vehicle_transfer"].includes(serviceType);
+  if (isUnifiedCar) {
+    return { ok: true, skipped: true, reason: "unified_car_transport" };
+  }
+
   const pickup_lat = parseCoord(order.pickup_lat);
   const pickup_lng = parseCoord(order.pickup_lng);
   const drop_lat = parseCoord(order.drop_lat);

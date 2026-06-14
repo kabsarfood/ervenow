@@ -309,8 +309,14 @@ app.loadFinancialFeatureFlags = async function () {
     app.syncFinancialFeatureModesFromList(list);
     app.renderFinanceFeatureControl(list);
     app.applyFinanceFeatureVisibility();
+    if (hint && list.length) hint.textContent = "0=OFF · 1=ON · 2=AUTO — GET/POST /api/admin/features";
   } catch (e) {
-    if (hint) hint.textContent = e.message || "تعذّر تحميل Feature Control";
+    var msg = String(e.message || e || "");
+    if (hint) {
+      hint.textContent = /migration|feature_flags/i.test(msg)
+        ? "Feature Control: القيم الافتراضية — نفّذ migration_platform_feature_flags.sql عند الحاجة"
+        : msg || "تعذّر تحميل Feature Control";
+    }
     var root = document.getElementById("financeFeatureControlList");
     if (root) {
       root.innerHTML =

@@ -101,6 +101,7 @@
     phoneEl.addEventListener("blur", resetFromPhoneChange);
 
     phoneEl.addEventListener("keydown", function (e) {
+      if (typeof cfg.isActive === "function" && !cfg.isActive()) return;
       if (e.key === "Enter" && !otpSent && phoneValid()) {
         e.preventDefault();
         btn.click();
@@ -108,6 +109,7 @@
     });
 
     codeEl.addEventListener("keydown", function (e) {
+      if (typeof cfg.isActive === "function" && !cfg.isActive()) return;
       if (e.key === "Enter" && otpSent) {
         e.preventDefault();
         btn.click();
@@ -123,6 +125,7 @@
     });
 
     btn.addEventListener("click", async function () {
+      if (typeof cfg.isActive === "function" && !cfg.isActive()) return;
       if (locked) return;
       locked = true;
       try {

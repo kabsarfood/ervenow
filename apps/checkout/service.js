@@ -22,7 +22,7 @@ const {
   isErvenowPayMethod,
   resolveMerchantUserIdForStore,
 } = require("../../shared/services/ervenowPayCheckout");
-const { createNotification } = require("../../shared/services/notificationService");
+const { sendCustomerOrderPaidWhatsApp } = require("../../shared/messages/deliveryCustomerWhatsApp");
 const { computePlatformCommission } = require("../../shared/utils/platformCommission");
 const {
   useCartDeliverySnapshot,
@@ -481,28 +481,27 @@ async function runCheckoutInsert(sb, appUser, body, options) {
         );
       }
       try {
-        const digits = String(storeRowForCheckout.phone || "").replace(/\D/g, "");
-        if (digits) {
-          const { data: merchantUser } = await sb
-            .from("users")
-            .select("id, role")
-            .eq("phone", digits)
-            .maybeSingle();
-          if (merchantUser && merchantUser.id) {
-            await createNotification(sb, {
-              recipient_type: "store",
-              recipient_id: merchantUser.id,
-              title: "طلب جديد",
-              message: "لديك طلب جديد بانتظار المعالجة.",
-              type: "order",
-              source: "store",
-              payload: {
-                order_id: data.id,
-                order_number: data.order_number || null,
-                store_id: data.store_id || null,
-              },
-            });
-          }
+        const merchantUserId = await resolveMerchantUserIdForStore(sb, data.store_id);
+        if (merchantUserId) {
+          const { notifyStoreInApp, notifyAdminsForOrderEvent } = require("../../shared/services/platformNotify");
+          await notifyStoreInApp(sb, {
+            merchantUserId,
+            title: "طلب جديد",
+            message: "لديك طلب جديد بانتظار المعالجة.",
+            type: "order",
+            source: "store",
+            payload: {
+              order_id: data.id,
+              order_number: data.order_number || null,
+              store_id: data.store_id || null,
+            },
+          });
+          await notifyAdminsForOrderEvent(
+            sb,
+            data,
+            "طلب متجر جديد",
+            `طلب جديد رقم ${data.order_number || data.id} من متجر معتمد.`
+          );
         }
       } catch (notifyErr) {
         logger.warn(
@@ -563,6 +562,26 @@ async function runCheckoutInsert(sb, appUser, body, options) {
           "[checkout] ew_pay payment_status update"
         );
       }
+    }
+  }
+
+  for (const order of results) {
+    if (!order?.customer_phone) continue;
+    if (String(order.payment_status || "").toLowerCase() !== "paid") continue;
+    const ot = String(order.order_type || "").toLowerCase();
+    const st = String(order.service_type || "").toLowerCase();
+    const isServiceRow =
+      ot === "service" ||
+      ot === "gas_delivery" ||
+      ["car_transport", "pickup_truck", "vehicle_transfer", "gas_delivery", "internal_delivery"].includes(st);
+    if (isServiceRow && !useErvenowPay) continue;
+    try {
+      await sendCustomerOrderPaidWhatsApp(order, logger);
+    } catch (waErr) {
+      logger.error(
+        { err: waErr && (waErr.message || String(waErr)), orderId: order.id },
+        "[checkout] customer paid WA"
+      );
     }
   }
 

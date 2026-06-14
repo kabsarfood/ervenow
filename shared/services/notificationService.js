@@ -9,7 +9,7 @@ const NOTIFICATION_TYPES = new Set([
   "promotion",
 ]);
 const NOTIFICATION_SOURCES = new Set(["ervenow", "wallet", "delivery", "store", "admin"]);
-const { broadcastNotificationNew, roomForRecipient } = require("../lib/trackingSocket");
+const { broadcastNotificationNew } = require("../lib/trackingSocket");
 
 function normalizeText(value, fallback = "") {
   return String(value == null ? fallback : value).trim();
@@ -65,9 +65,8 @@ async function createNotification(sb, input) {
   const { data, error } = await sb.from("notifications").insert(row).select("*").single();
   if (error) throw error;
   try {
-    const room = roomForRecipient(data.recipient_type, data.recipient_id);
-    if (room) {
-      broadcastNotificationNew(room, {
+    if (data.recipient_type && data.recipient_id) {
+      broadcastNotificationNew(data.recipient_type, data.recipient_id, {
         id: data.id,
         recipient_type: data.recipient_type,
         recipient_id: data.recipient_id,

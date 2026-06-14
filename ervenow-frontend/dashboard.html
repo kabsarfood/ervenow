@@ -1,18 +1,18 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover" />
     <meta name="description" content="يتم تفعيل الحساب بعد المراجعة واعتماده من إدارة ERVENOW." />
-    <script src="/assets/viewport-fit.js?erv=20260612e"></script>
+    <script src="/assets/viewport-fit.js?erv=20260612"></script>
     <title>ERVENOW | لوحة زائر المنصة</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/assets/styles.css" />
-    <link rel="stylesheet" href="/assets/guest-shell.css?erv=20260612e" />
+    <link rel="stylesheet" href="/assets/guest-shell.css?erv=20260612" />
     <link rel="stylesheet" href="/assets/order-draft-badge.css" />
     <link rel="stylesheet" href="/assets/start-now-landing.css" />
-    <link rel="stylesheet" href="/assets/guest-offers-carousel.css?erv=20260612e" />
+    <link rel="stylesheet" href="/assets/guest-offers-carousel.css?erv=20260612" />
         <style>
       .dash-alert {
         display: none;
@@ -170,10 +170,6 @@
         font-weight: 900;
         color: #fffefb;
         background: linear-gradient(135deg, #b9872f 0%, #d4a84a 100%);
-      }
-      .cat-card--map-link:hover {
-        border-color: rgba(185, 135, 47, 0.45);
-        box-shadow: 0 10px 28px rgba(45, 28, 14, 0.12);
       }
 
       .delivery-dropdown {
@@ -536,21 +532,10 @@
         gap: 4px;
         padding: clamp(12px, 2.5vw, 14px);
         border-radius: 14px;
-        border: 1px solid rgba(91, 55, 29, 0.12);
         background: #fffdfa;
         text-decoration: none;
         color: inherit;
         min-height: 100px;
-        transition: box-shadow 0.2s ease, border-color 0.2s ease, transform 0.12s ease;
-      }
-      .cat-card:active {
-        transform: scale(0.99);
-      }
-      @media (hover: hover) and (pointer: fine) {
-        .cat-card:hover {
-          border-color: rgba(185, 135, 47, 0.45);
-          box-shadow: 0 8px 22px rgba(45, 28, 14, 0.1);
-        }
       }
       .cat-card__icon {
         font-size: clamp(1.35rem, 4vw, 1.55rem);
@@ -769,15 +754,7 @@
         text-decoration: none;
         color: var(--brown, #3d2213);
         background: #fffefb;
-        border: 1px solid rgba(61, 34, 19, 0.1);
-        box-shadow: 0 2px 10px rgba(45, 26, 14, 0.05);
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
         text-align: center;
-      }
-      .hub-card:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 8px 24px rgba(45, 26, 14, 0.1);
-        border-color: rgba(185, 135, 47, 0.35);
       }
       .hub-card__icon {
         font-size: 1.75rem;
@@ -810,7 +787,7 @@
         font-size: 0.86rem;
         cursor: pointer;
         color: var(--brown, #3d2213);
-        transition: background 0.15s, color 0.15s, border-color 0.15s;
+        transition: background 0.15s, color 0.15s;
         touch-action: manipulation;
         -webkit-tap-highlight-color: rgba(185, 135, 47, 0.15);
         position: relative;
@@ -867,6 +844,46 @@
       }
       .dash-tabs__empty[hidden] {
         display: none !important;
+      }
+      .dash-tabs__empty-msg {
+        margin: 0;
+      }
+      .dash-tabs__live-map-btn {
+        display: none;
+      }
+      @media (max-width: 640px), ((max-width: 932px) and (max-height: 500px) and (pointer: coarse)) {
+        .dash-tabs__empty {
+          padding: 12px;
+          border-style: solid;
+          border-color: rgba(185, 135, 47, 0.22);
+          background: linear-gradient(145deg, #fffefb 0%, #f6ede2 100%);
+        }
+        .dash-tabs__empty-msg--desktop {
+          display: none !important;
+        }
+        .dash-tabs__live-map-btn {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+          width: 100%;
+          min-height: 48px;
+          padding: 12px 16px;
+          border-radius: 14px;
+          border: 1px solid rgba(185, 135, 47, 0.35);
+          background: linear-gradient(135deg, #b9872f 0%, #d4a84a 100%);
+          color: #fffefb;
+          font-family: inherit;
+          font-size: 1rem;
+          font-weight: 900;
+          line-height: 1.35;
+          text-decoration: none;
+          box-shadow: 0 8px 22px rgba(155, 111, 37, 0.22);
+        }
+        .dash-tabs__live-map-btn__ic {
+          font-size: 1.2rem;
+          line-height: 1;
+        }
       }
       .dash-tabs__all {
         display: inline-flex;
@@ -1061,6 +1078,7 @@
       }
 
     </style>
+    <link rel="stylesheet" href="/assets/erv-interactive-surfaces.css?erv=20260612" />
   </head>
   <body class="guest-shell-page">
     <header class="dash-site-header">
@@ -1134,9 +1152,15 @@
             <button type="button" role="tab" id="tab-delivery" data-tab="delivery" aria-selected="false" aria-controls="panel-delivery">توصيل</button>
           </div>
 
-          <p class="dash-tabs__empty" id="dashTabsEmpty" role="status">
-            اختر قسماً من الأزرار أعلاه لاستكشاف المنصة — لا يُفتح أي قسم تلقائياً.
-          </p>
+          <div class="dash-tabs__empty" id="dashTabsEmpty" role="status">
+            <p class="dash-tabs__empty-msg dash-tabs__empty-msg--desktop">
+              اختر قسماً من الأزرار أعلاه لاستكشاف المنصة — لا يُفتح أي قسم تلقائياً.
+            </p>
+            <a class="dash-tabs__live-map-btn" href="/live-map" aria-label="فتح الخريطة الحية">
+              <span class="dash-tabs__live-map-btn__ic" aria-hidden="true">🗺️</span>
+              الخريطة الحية
+            </a>
+          </div>
 
           <div class="dash-tabs__panel" id="panel-restaurants" role="tabpanel" aria-labelledby="tab-restaurants" hidden>
             <a class="dash-tabs__all" href="/restaurants">عرض كل المطاعم ←</a>
@@ -1219,11 +1243,11 @@
     <script src="/assets/order-draft-store.js"></script>
     <script src="/assets/order-draft-badge.js"></script>
     <script src="/assets/api-config.js"></script>
-    <script src="/assets/api.js?erv=20260612e"></script>
+    <script src="/assets/api.js?erv=20260612"></script>
     <script src="/assets/auth-account-guard.js"></script>
     <script src="/assets/guestBrowse.js"></script>
-    <script src="/assets/guest-offers-carousel.js?erv=20260612e"></script>
-    <script src="/assets/guest-shell.js?erv=20260612e"></script>
+    <script src="/assets/guest-offers-carousel.js?erv=20260612"></script>
+    <script src="/assets/guest-shell.js?erv=20260612"></script>
     <script src="/assets/ervenow-toggle.js"></script>
     <script>ErvenowGuestShell.init({ activeNav: "guest", pageTag: "لوحة زائر المنصة" });</script>
     <script>

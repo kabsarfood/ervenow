@@ -360,9 +360,6 @@
     Object.keys(storeCache).forEach(function (id) {
       upsertMarker(storeCache[id]);
     });
-    var visible = Object.keys(markerById).length;
-    var emptyEl = document.getElementById("liveMapEmpty");
-    if (emptyEl) emptyEl.hidden = visible > 0;
     renderFeeder();
   }
 
@@ -400,7 +397,6 @@
 
   async function fetchStoresInView() {
     if (!hasToken() || !map || !clusterGroup) return;
-    var emptyEl = document.getElementById("liveMapEmpty");
     try {
       var j = await api("/api/store/live-map/stores" + boundsQuery());
       if (j && j.map_colors) {
@@ -421,7 +417,6 @@
           }
         }
       });
-      if (emptyEl) emptyEl.hidden = Object.keys(markerById).length > 0;
       renderFeeder();
     } catch (e) {
       var msg = e && (e.message || e);

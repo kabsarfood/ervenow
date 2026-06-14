@@ -1873,6 +1873,24 @@ router.post("/register", async (req, res) => {
       console.error("[store/register] WhatsApp:", waErr.message || waErr);
     }
 
+    try {
+      const { notifyAdminsInApp } = require("../../shared/services/platformNotify");
+      await notifyAdminsInApp(sb, {
+        title: "طلب تسجيل متجر جديد",
+        message: `${typeLabel} «${name}» بانتظار المراجعة والاعتماد.`,
+        type: "account",
+        source: "store",
+        payload: {
+          store_id: requestId,
+          store_type: type,
+          store_name: name,
+          phone: phoneDisplay,
+        },
+      });
+    } catch (notifyErr) {
+      console.warn("[store/register] admin in-app notify:", notifyErr.message || notifyErr);
+    }
+
     return ok(res, {
       ok: true,
       success: true,

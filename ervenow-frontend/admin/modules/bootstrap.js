@@ -128,7 +128,6 @@ if (closeBtn) {
   app.showPanel("");
   if (app.hasPermission("dashboard")) app.loadStats();
   else if (app.hasPermission("finance")) app.loadLedgerFinanceSummary();
-  void app.loadCommandCenter();
   if (app.hasPermission("orders")) app.loadRecentOrders();
   if (app.hasPermission("drivers")) app.loadDrivers();
   if (
@@ -182,6 +181,9 @@ if (closeBtn) {
     app.loadFinancialFeatureFlags();
     app.loadLedgerFinanceSummary();
   }
+  setTimeout(function () {
+    void app.loadCommandCenter();
+  }, 2500);
   setInterval(function () {
     if (app.hasPermission("dashboard")) {
       app.loadStats();

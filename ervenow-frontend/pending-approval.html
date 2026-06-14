@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover" />
-    <script src="/assets/viewport-fit.js?erv=20260612e"></script>
+    <script src="/assets/viewport-fit.js?erv=20260612"></script>
     <title>ERVENOW | حسابك قيد المراجعة</title>
     <meta name="description" content="تم استلام طلب التسجيل بنجاح. حسابك قيد المراجعة من إدارة ERVENOW، وسيتم إشعارك فور اعتماد الحساب وتفعيله." />
     <meta name="robots" content="noindex, nofollow" />
@@ -50,18 +50,23 @@
         <p class="sub" id="pendingPhone">—</p>
         <div class="pending-actions">
           <a class="btn btn-primary" href="/">الرئيسية</a>
-          <a class="btn btn-ghost" href="/login">تسجيل الدخول</a>
+          <a class="btn btn-ghost" id="pendingLoginBtn" href="/login">تسجيل الدخول</a>
         </div>
       </div>
     </div>
     <script src="/assets/api-config.js"></script>
-    <script src="/assets/api.js?erv=20260612e"></script>
+    <script src="/assets/api.js?erv=20260612"></script>
     <script>
       (function () {
         try {
           var p = localStorage.getItem("userPhone") || "";
           if (p) document.getElementById("pendingPhone").textContent = "الجوال: " + p;
         } catch (e) {}
+        try {
+          var loginBtn = document.getElementById("pendingLoginBtn");
+          var portal = localStorage.getItem("erv_pending_login_url") || "";
+          if (loginBtn && portal && portal.indexOf("/") === 0) loginBtn.href = portal;
+        } catch (portalErr) {}
         try {
           localStorage.removeItem("token");
           localStorage.removeItem("userId");

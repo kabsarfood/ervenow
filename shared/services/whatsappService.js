@@ -11,6 +11,7 @@ const {
   buildCustomerMessageDriverArrived,
   buildPublicTrackUrl,
   sendDeliveryCustomerWhatsApp,
+  sendCustomerOrderPaidWhatsApp,
 } = require("../messages/deliveryCustomerWhatsApp");
 const {
   isMapDeliveryOrder,
@@ -175,18 +176,18 @@ async function sendOrderAcceptedToCustomer(order, driverPhone) {
  */
 async function sendCustomerDeliveringNotice(order) {
   if (!order?.customer_phone) return false;
-  const body = buildCustomerMessageOrderPickedUp();
+  const body = buildCustomerMessageOrderPickedUp(order);
   const ok = await sendDeliveryCustomerWhatsApp(order.customer_phone, body, null);
   if (ok) logWaSent(order.customer_phone, "customer_delivering");
   return ok;
 }
 
 /**
- * وصول المندوب — يدمج «المندوب وصل» مع سطر التحية من المهمة الجديدة
+ * وصول المندوب إلى وجهة العميل
  */
 async function sendDriverArrived(order) {
   if (!order?.customer_phone) return false;
-  const body = `${buildCustomerMessageDriverArrived()}\n\nنأمل تجربة سعيدة 🌟`;
+  const body = buildCustomerMessageDriverArrived(order);
   const ok = await sendDeliveryCustomerWhatsApp(order.customer_phone, body, null);
   if (ok) logWaSent(order.customer_phone, "driver_arrived_customer");
   return ok;
@@ -244,6 +245,7 @@ module.exports = {
   sendOrderAcceptedToCustomer,
   sendCustomerDeliveringNotice,
   sendDriverArrived,
+  sendCustomerOrderPaidWhatsApp,
   sendTrackingLink,
   sendSupportMenu,
   normalizePhone,

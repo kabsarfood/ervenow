@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
   <head>
     <meta charset="utf-8" />
@@ -50,7 +50,7 @@
         <p class="sub" id="pendingPhone">—</p>
         <div class="pending-actions">
           <a class="btn btn-primary" href="/">الرئيسية</a>
-          <a class="btn btn-ghost" href="/login">تسجيل الدخول</a>
+          <a class="btn btn-ghost" id="pendingLoginBtn" href="/login">تسجيل الدخول</a>
         </div>
       </div>
     </div>
@@ -62,6 +62,11 @@
           var p = localStorage.getItem("userPhone") || "";
           if (p) document.getElementById("pendingPhone").textContent = "الجوال: " + p;
         } catch (e) {}
+        try {
+          var loginBtn = document.getElementById("pendingLoginBtn");
+          var portal = localStorage.getItem("erv_pending_login_url") || "";
+          if (loginBtn && portal && portal.indexOf("/") === 0) loginBtn.href = portal;
+        } catch (portalErr) {}
         try {
           localStorage.removeItem("token");
           localStorage.removeItem("userId");

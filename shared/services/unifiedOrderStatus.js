@@ -19,6 +19,10 @@ const { notifyProvidersForBooking } = require("./serviceBookingNotify");
 const { isDriverDispatchOrder, isInternalDeliveryOrder } = require("../utils/driverDispatchOrders");
 const { notifyInternalDeliveryOrder } = require("./internalDeliveryNotify");
 const { normalizePhone } = require("../utils/phone");
+const {
+  notifyStoreForOrderEvent,
+  notifyAdminsForOrderEvent,
+} = require("./platformNotify");
 
 const MERCHANT_WORKFLOW_STATUSES = [
   DELIVERY_STATUS.ACCEPTED,
@@ -131,6 +135,35 @@ async function afterStatusSideEffects(sb, order, previousStatus, nextStatus, fin
         logger.error({ err: qe.message || String(qe), orderId: order.id }, "[unifiedOrderStatus] enqueue draft→pending");
       }
     }
+
+    if (order.store_id) {
+      try {
+        await notifyStoreForOrderEvent(
+          sb,
+          order,
+          "طلب جديد",
+          "لديك طلب جديد بانتظار المعالجة."
+        );
+      } catch (storeNotifyErr) {
+        logger.warn(
+          { err: storeNotifyErr.message || String(storeNotifyErr), orderId: order.id },
+          "[unifiedOrderStatus] store draft→pending notification"
+        );
+      }
+    }
+    try {
+      await notifyAdminsForOrderEvent(
+        sb,
+        order,
+        "طلب جديد على المنصة",
+        `طلب جديد رقم ${order.order_number || order.id} أصبح نشطاً.`
+      );
+    } catch (adminNotifyErr) {
+      logger.warn(
+        { err: adminNotifyErr.message || String(adminNotifyErr), orderId: order.id },
+        "[unifiedOrderStatus] admin draft→pending notification"
+      );
+    }
   }
 
   const merchantCustomerNotify = {
@@ -139,15 +172,15 @@ async function afterStatusSideEffects(sb, order, previousStatus, nextStatus, fin
     [DELIVERY_STATUS.READY]: { title: "طلبك جاهز", message: "طلبك جاهز للاستلام — سيتوجه المندوب قريباً." },
   };
   if (order.customer_id && merchantCustomerNotify[ds]) {
+    const msg = merchantCustomerNotify[ds];
     try {
-      const msg = merchantCustomerNotify[ds];
       await createNotification(sb, {
         recipient_type: "customer",
         recipient_id: order.customer_id,
         title: msg.title,
         message: msg.message,
         type: "delivery",
-        source: "store_workflow",
+        source: "store",
         payload: {
           order_id: order.id,
           order_number: order.order_number || null,
@@ -160,6 +193,16 @@ async function afterStatusSideEffects(sb, order, previousStatus, nextStatus, fin
         "[unifiedOrderStatus] merchant workflow customer notification"
       );
     }
+    if (order.store_id) {
+      try {
+        await notifyStoreForOrderEvent(sb, order, msg.title, `تحديث على الطلب: ${msg.message}`);
+      } catch (storeNotifyErr) {
+        logger.warn(
+          { err: storeNotifyErr.message || String(storeNotifyErr), orderId: order.id },
+          "[unifiedOrderStatus] merchant workflow store notification"
+        );
+      }
+    }
   }
 
   const driverCustomerNotify = {
@@ -168,15 +211,15 @@ async function afterStatusSideEffects(sb, order, previousStatus, nextStatus, fin
     [DELIVERY_STATUS.DELIVERED]: { title: "تم التسليم", message: "تم تسليم الطلب." },
   };
   if (order.customer_id && driverCustomerNotify[ds]) {
+    const msg = driverCustomerNotify[ds];
     try {
-      const msg = driverCustomerNotify[ds];
       await createNotification(sb, {
         recipient_type: "customer",
         recipient_id: order.customer_id,
         title: msg.title,
         message: msg.message,
         type: "delivery",
-        source: "driver_workflow",
+        source: "delivery",
         payload: {
           order_id: order.id,
           order_number: order.order_number || null,
@@ -188,6 +231,16 @@ async function afterStatusSideEffects(sb, order, previousStatus, nextStatus, fin
         { err: notifyErr.message || String(notifyErr), orderId: order.id },
         "[unifiedOrderStatus] driver workflow customer notification"
       );
+    }
+    if (order.store_id && (ds === DELIVERY_STATUS.PICKED_UP || ds === DELIVERY_STATUS.DELIVERED)) {
+      try {
+        await notifyStoreForOrderEvent(sb, order, msg.title, msg.message);
+      } catch (storeNotifyErr) {
+        logger.warn(
+          { err: storeNotifyErr.message || String(storeNotifyErr), orderId: order.id },
+          "[unifiedOrderStatus] driver workflow store notification"
+        );
+      }
     }
   }
 

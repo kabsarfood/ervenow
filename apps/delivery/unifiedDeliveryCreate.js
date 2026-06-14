@@ -162,7 +162,6 @@ async function createCarTransport(sb, appUser, payload, topBody, opts) {
     delivery_fee: deliveryFee,
     distance_km_override: distanceKm,
     total_amount: deliveryFee,
-    order_total: deliveryFee,
     platform_commission: platformCommission,
     service_name: "نقل مركبات",
     service_location: pickup_address,

@@ -4,8 +4,7 @@ const { requireAuth } = require("../../shared/middleware/auth");
 const { requireRole } = require("../../shared/middleware/roles");
 const { ok, fail } = require("../../shared/utils/helpers");
 const { sendWhatsApp } = require("../../shared/utils/whatsapp");
-const { driverApprovedBody } = require("../../shared/messages/driverWhatsApp");
-const { storeApprovedBody } = require("../../shared/messages/storeWhatsApp");
+const { accountApprovedBody } = require("../../shared/messages/accountApprovalWhatsApp");
 const { getRiyadhDate } = require("../delivery/service");
 const { readStateAsync, writeState } = require("../../shared/utils/siteMaintenanceStore");
 const {
@@ -225,12 +224,30 @@ function storeMerchantPanelPaths(store) {
 async function notifyStoreApprovedWhatsApp(store) {
   try {
     if (!store?.phone) return;
+    const base = String(process.env.ERVENOW_PUBLIC_URL || process.env.ERWENOW_PUBLIC_URL || "").replace(
+      /\/$/,
+      ""
+    );
+    const panel = base ? `${base}/store-dashboard` : "/store-dashboard";
+    const extra = `\n\nصفحة التحكم الخاصة بمتجرك:\n${panel}`;
     await sendWhatsApp({
       to: store.phone,
-      message: storeApprovedBody(store.name),
+      message: accountApprovedBody(store.name) + extra,
     });
   } catch (waErr) {
     console.error("[admin/approve-store] WhatsApp:", waErr && (waErr.message || String(waErr)));
+  }
+}
+
+async function notifyAccountApprovedWhatsApp(phone, displayName, role) {
+  try {
+    if (!phone) return;
+    await sendWhatsApp({
+      to: phone,
+      message: accountApprovedBody(displayName, { role: String(role || "").toLowerCase() }),
+    });
+  } catch (waErr) {
+    console.error("[admin/approve-account] WhatsApp:", waErr && (waErr.message || String(waErr)));
   }
 }
 
@@ -987,14 +1004,6 @@ router.get("/features", requireAuth, requireRole("admin"), requireAdminPermissio
     if (!sb) return fail(res, "قاعدة البيانات غير جاهزة (service_role)", 503);
 
     const result = await listFinancialFeatureFlagsArray(sb);
-    if (!result.ok && result.reason === "migration_missing") {
-      return fail(
-        res,
-        "نفّذ shared/migration_platform_feature_flags.sql في Supabase SQL Editor",
-        503,
-        { reason: result.reason, detail: result.detail || null }
-      );
-    }
     return res.status(200).json(result.list);
   } catch (e) {
     return fail(res, e.message, 500);
@@ -2070,9 +2079,20 @@ router.get("/drivers", requireAuth, requireRole("admin"), requireAdminPermission
       .select("*")
       .order("created_at", { ascending: false })
       .limit(500);
-    if (error) return fail(res, error.message, 400);
+    if (error) {
+      if (isSchemaMissingError(error)) {
+        return ok(res, { drivers: [], note: "جدول drivers غير موجود — نفّذ هجرة المندوبين" });
+      }
+      return fail(res, error.message, 400);
+    }
     const enriched = await attachUserIdsToDrivers(req.supabase, data || []);
-    const withFreeze = await enrichDriversWithAutoFreeze(req.supabase, enriched);
+    let withFreeze = enriched;
+    try {
+      withFreeze = await enrichDriversWithAutoFreeze(req.supabase, enriched);
+    } catch (freezeErr) {
+      console.warn("[admin/drivers] auto-freeze enrich skipped:", freezeErr && (freezeErr.message || freezeErr));
+      withFreeze = enriched.map((d) => ({ ...d, is_frozen: false, warning: false }));
+    }
     return ok(res, { drivers: sanitizeDriverOrStoreListForApi(withFreeze) });
   } catch (e) {
     return fail(res, e.message || String(e), 500);
@@ -2098,10 +2118,7 @@ router.post("/approve-driver", requireAuth, requireRole("admin"), requireAdminPe
     }
     try {
       if (data?.phone) {
-        await sendWhatsApp({
-          to: data.phone,
-          message: driverApprovedBody(data.name),
-        });
+        await notifyAccountApprovedWhatsApp(data.phone, data.name, "driver");
       }
     } catch (waErr) {
       console.error("[admin/approve-driver] WhatsApp:", waErr && (waErr.message || String(waErr)));
@@ -2413,6 +2430,17 @@ router.post("/activate-customer", requireAuth, requireRole("admin"), requireAdmi
     if (patched.error) return fail(res, patched.error.message || String(patched.error), 400);
     if (patched.data?.phone) await syncUserStatusByPhone(sb, patched.data.phone, "active");
     try {
+      if (patched.data?.phone) {
+        await notifyAccountApprovedWhatsApp(
+          patched.data.phone,
+          patched.data.name || existing.data?.name,
+          patched.data.role || existing.data?.role
+        );
+      }
+    } catch (waErr) {
+      console.error("[admin/activate-customer] WhatsApp:", waErr && (waErr.message || String(waErr)));
+    }
+    try {
       if (patched.data && patched.data.id) {
         const role = String(patched.data.role || "").toLowerCase();
         const recipientType =
@@ -2541,18 +2569,10 @@ router.get("/orders", requireAuth, requireRole("admin"), requireAdminPermission(
       error = r2.error;
     }
     if (error) return fail(res, error.message, 400);
-    const rows = (data || []).map((o) => {
-      if (!isCancelledOrder(o)) {
-        const twv = o.total_with_vat;
-        if (twv == null || twv === "" || Number(twv) === 0) {
-          console.warn("⚠️ Missing total_with_vat", o.id);
-        }
-      }
-      return {
-        ...o,
-        amount_display: orderBillableAmount(o),
-      };
-    });
+    const rows = (data || []).map((o) => ({
+      ...o,
+      amount_display: orderBillableAmount(o),
+    }));
     return ok(res, { orders: rows });
   } catch (e) {
     return fail(res, e.message || String(e), 500);

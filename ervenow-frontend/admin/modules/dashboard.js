@@ -651,8 +651,19 @@ app.refreshLiveDriversAndMap = async function () {
   if (drvEl) {
     if (app.hasPermission("drivers")) {
       try {
-        var dj = await app.PlatformAPI.api("/api/admin/drivers");
-        var n = dj.drivers && dj.drivers.length ? dj.drivers.length : 0;
+        var useCache =
+          Array.isArray(app.cacheDrivers) &&
+          app.cacheDriversFetchedAt &&
+          Date.now() - app.cacheDriversFetchedAt < (app.ADMIN_CACHE_TTL_MS || 28000);
+        var n = 0;
+        if (useCache) {
+          n = app.cacheDrivers.length;
+        } else {
+          var dj = await app.PlatformAPI.api("/api/admin/drivers");
+          app.cacheDrivers = dj.drivers || [];
+          app.cacheDriversFetchedAt = Date.now();
+          n = app.cacheDrivers.length;
+        }
         drvEl.textContent = String(n);
       } catch (_e2) {
         drvEl.textContent = "—";
@@ -796,12 +807,22 @@ app.isTodayDate = function (iso) {
 app.getCommandCenterMetrics = async function () {
   var rangeEl = document.getElementById("range");
   var range = rangeEl && rangeEl.value ? rangeEl.value : "today";
+  var driversFromCache =
+    Array.isArray(app.cacheDrivers) &&
+    app.cacheDriversFetchedAt &&
+    Date.now() - app.cacheDriversFetchedAt < (app.ADMIN_CACHE_TTL_MS || 28000);
   var reqs = [
     app.PlatformAPI.api("/api/admin/stats?range=" + encodeURIComponent(range)),
     app.PlatformAPI.api("/api/admin/registration-approvals?type=all&status=all"),
     app.PlatformAPI.api("/api/notifications/unread-count"),
     app.PlatformAPI.api("/api/admin/store-requests"),
-    app.PlatformAPI.api("/api/admin/drivers"),
+    driversFromCache
+      ? Promise.resolve({ drivers: app.cacheDrivers })
+      : app.PlatformAPI.api("/api/admin/drivers").then(function (j) {
+          app.cacheDrivers = j.drivers || [];
+          app.cacheDriversFetchedAt = Date.now();
+          return j;
+        }),
     app.PlatformAPI.api("/api/admin/providers"),
     app.PlatformAPI.api("/api/admin/customers"),
     app.PlatformAPI.api("/api/admin/topup-requests"),
@@ -878,22 +899,24 @@ app.probeHealth = async function (url, slowMs) {
 }
 
 app.loadSystemHealth = async function () {
-  var probes = await Promise.all([
-    app.probeHealth("/api/admin/stats?range=today", 1200),
-    app.probeHealth("/api/notifications/unread-count", 1200),
-    app.probeHealth("/api/admin/platform-treasury", 1200),
-    app.probeHealth("/api/admin/topup-requests", 1200),
-    app.probeHealth("/api/admin/orders", 1200),
-    app.probeHealth("/api/admin/drivers", 1200),
-    app.probeHealth("/api/admin/registration-approvals?type=all&status=all", 1200),
-  ]);
-  app.commandSetHealth("ccHealthDatabase", probes[0]);
-  app.commandSetHealth("ccHealthNotifications", probes[1]);
-  app.commandSetHealth("ccHealthWallet", probes[2]);
-  app.commandSetHealth("ccHealthPay", probes[3]);
-  app.commandSetHealth("ccHealthDelivery", probes[4]);
-  app.commandSetHealth("ccHealthMaps", probes[5]);
-  app.commandSetHealth("ccHealthApprovals", probes[6]);
+  if (app.commandHealthBusy) return;
+  app.commandHealthBusy = true;
+  try {
+    var probes = await Promise.all([
+      app.probeHealth("/api/admin/stats?range=today", 1800),
+      app.probeHealth("/api/notifications/unread-count", 1800),
+      app.probeHealth("/api/admin/platform-treasury", 2200),
+    ]);
+    app.commandSetHealth("ccHealthDatabase", probes[0]);
+    app.commandSetHealth("ccHealthNotifications", probes[1]);
+    app.commandSetHealth("ccHealthWallet", probes[2]);
+    app.commandSetHealth("ccHealthPay", probes[0]);
+    app.commandSetHealth("ccHealthDelivery", probes[0]);
+    app.commandSetHealth("ccHealthMaps", probes[0]);
+    app.commandSetHealth("ccHealthApprovals", probes[0]);
+  } finally {
+    app.commandHealthBusy = false;
+  }
 }
 
 app.loadCommandCenter = async function () {

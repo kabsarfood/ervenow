@@ -1,9 +1,9 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover" />
-    <script src="/assets/viewport-fit.js?erv=20260612e"></script>
+    <script src="/assets/viewport-fit.js?erv=20260612"></script>
     <title>ERVENOW | اكتشف المطاعم</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -12,8 +12,8 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="/assets/styles.css" />
-    <link rel="stylesheet" href="/assets/guest-shell.css?erv=20260612e" />
-    <link rel="stylesheet" href="/assets/mobile-harmony.css?erv=20260612e" />
+    <link rel="stylesheet" href="/assets/guest-shell.css?erv=20260612" />
+    <link rel="stylesheet" href="/assets/mobile-harmony.css?erv=20260612" />
     <link rel="stylesheet" href="/assets/start-now-landing.css" />
     <link rel="stylesheet" href="/assets/index-header-banner.css" />
     <link rel="stylesheet" href="/assets/section-hub.css" />
@@ -249,14 +249,39 @@
         line-height: 1.55;
       }
 
+      .guest-shell-page.stores-page.restaurants-page .stores-main {
+        margin-top: 16px;
+      }
+
       .stores-panel {
         min-height: 200px;
       }
 
-      .stores-grid {
+      .guest-shell-page.stores-page.restaurants-page .stores-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
-        gap: 18px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      @media (min-width: 641px) and (max-width: 1024px) {
+        .guest-shell-page.stores-page.restaurants-page .stores-grid {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: 16px;
+        }
+      }
+
+      @media (min-width: 1025px) {
+        .guest-shell-page.stores-page.restaurants-page .stores-grid {
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+          gap: 18px;
+        }
+      }
+
+      @media (max-width: 640px) {
+        html.erv-mobile-shell body.guest-shell-page.stores-page.restaurants-page .stores-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 12px;
+        }
       }
 
       /* ——— Skeleton ——— */
@@ -325,16 +350,7 @@
         flex-direction: column;
         border-radius: var(--stores-radius);
         background: var(--stores-card);
-        border: 1px solid rgba(61, 34, 19, 0.06);
-        box-shadow: var(--stores-shadow);
         overflow: hidden;
-        transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.32s ease, border-color 0.25s;
-      }
-
-      .store-card:hover {
-        transform: translateY(-8px);
-        box-shadow: var(--stores-shadow-hover);
-        border-color: rgba(201, 162, 39, 0.22);
       }
 
       .store-card:hover .store-card__media img {
@@ -416,7 +432,6 @@
         justify-content: center;
         gap: 8px;
         padding: 11px 14px;
-        border: none;
         border-radius: 12px;
         font-family: inherit;
         font-size: 0.88rem;
@@ -424,18 +439,6 @@
         cursor: pointer;
         color: #fffdf8;
         background: linear-gradient(135deg, #3d2213, #6b3d22);
-        box-shadow: 0 6px 20px rgba(61, 34, 19, 0.22);
-        transition: transform 0.2s, box-shadow 0.2s, filter 0.2s;
-      }
-
-      .store-card__btn:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 10px 28px rgba(61, 34, 19, 0.28);
-        filter: brightness(1.04);
-      }
-
-      .store-card__btn:active {
-        transform: translateY(0);
       }
 
       .store-card__btn:focus-visible {
@@ -488,10 +491,11 @@
         font-weight: 700;
       }
     </style>
+    <link rel="stylesheet" href="/assets/erv-interactive-surfaces.css?erv=20260612" />
     <link rel="stylesheet" href="/assets/design-system/erv-typography-pr1-tokens.css" />
     <link rel="stylesheet" href="/assets/design-system/erv-typography-guest-hub-pr1.css" />
   </head>
-  <body class="guest-shell-page stores-page erv-typography-pr1-guest-hub">
+  <body class="guest-shell-page stores-page restaurants-page erv-typography-pr1-guest-hub">
     <header class="dash-site-header">
       <div class="dash-site-header__inner">
         <div class="dash-site-header__brand">
@@ -587,10 +591,10 @@
     <script src="/assets/order-draft-store.js"></script>
     <script src="/assets/order-draft-badge.js"></script>
     <script src="/assets/api-config.js"></script>
-    <script src="/assets/api.js?erv=20260612e"></script>
+    <script src="/assets/api.js?erv=20260612"></script>
     <script src="/assets/guestBrowse.js"></script>
     <script src="/assets/restaurant-cuisines.js"></script>
-    <script src="/assets/guest-shell.js?erv=20260612e"></script>
+    <script src="/assets/guest-shell.js?erv=20260612"></script>
     <script>
       ErvenowGuestShell.init({ activeNav: "restaurants", pageTag: "اكتشف المطاعم" });
     </script>

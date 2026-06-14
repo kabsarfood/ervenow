@@ -10,7 +10,7 @@
   html.erv-mobile-shell body.lp-home-premium .erv-home-identity {
     display: block;
     max-width: 100%;
-    margin: 0;
+    margin: 0 0 10px;
     padding: 8px max(14px, env(safe-area-inset-left, 14px)) 6px max(14px, env(safe-area-inset-right, 14px));
     text-align: center;
     box-sizing: border-box;
@@ -52,8 +52,8 @@
   html.erv-mobile-shell body.lp-home-premium .sn-section[aria-labelledby="home-cats-title"] {
     display: flex;
     flex-direction: column;
-    padding: 4px max(12px, env(safe-area-inset-left, 12px))
-      calc(var(--erv-mobile-nav-h, 56px) + env(safe-area-inset-bottom, 0px) + 10px)
+    margin-top: clamp(10px, 2.8vw, 16px);
+    padding: clamp(12px, 3.2vw, 18px) max(12px, env(safe-area-inset-left, 12px)) 10px
       max(12px, env(safe-area-inset-right, 12px)) !important;
   }
 
@@ -111,7 +111,7 @@
   /* ═══ بطاقات الأقسام — 4/4 فوق الطية ═══ */
   html.erv-mobile-shell body.lp-home-premium #snHomeHub.sn-home-hub--direct {
     gap: 8px;
-    margin: 0;
+    margin: clamp(6px, 1.8vw, 10px) 0 0;
   }
 
   html.erv-mobile-shell body.lp-home-premium #snHomeHub .sn-card {
@@ -137,6 +137,13 @@
   html.erv-mobile-shell body.lp-home-premium #snHomeHub .sn-card__arrow {
     display: none !important;
   }
+
+  /* ═══ أرقام المنصة — مسافة متوازنة تحت بطاقات الأقسام ═══ */
+  html.erv-mobile-shell body.lp-home-premium .sn-section--stats.lp-counters {
+    margin-top: clamp(10px, 3vw, 16px) !important;
+    padding-top: 0 !important;
+    padding-bottom: clamp(18px, 4.5vw, 28px) !important;
+  }
 }
 
 /* Desktop / tablet — إخفاء شريط الهوية الإضافي (الهوية في الهيدر) */
@@ -149,3 +156,5 @@
     display: none !important;
   }
 }
+
+@import url("/assets/erv-interactive-surfaces.css");

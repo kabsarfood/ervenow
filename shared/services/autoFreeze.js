@@ -158,16 +158,38 @@ async function enrichDriversWithAutoFreeze(sb, drivers) {
   const balanceByUser = new Map();
   if (userIds.length) {
     if (isLedgerOnlyMode()) {
-      for (const uid of userIds) {
-        balanceByUser.set(String(uid), await getDriverLedgerOwedBalanceLazy(sb, uid));
+      try {
+        const { data, error } = await sb
+          .from("ervenow_ledger_wallets")
+          .select("user_id, balance")
+          .in("user_id", userIds)
+          .eq("role", "driver");
+        if (error) {
+          if (!/ervenow_ledger|does not exist|schema cache/i.test(String(error.message || ""))) {
+            throw error;
+          }
+        } else {
+          for (const w of data || []) {
+            const bal = Number(w.balance) || 0;
+            balanceByUser.set(String(w.user_id), bal < 0 ? Math.abs(bal) : 0);
+          }
+        }
+      } catch (e) {
+        console.warn("[autoFreeze] batch driver balances skipped:", e && (e.message || String(e)));
       }
     } else {
-      const { data: wallets } = await sb
+      const { data: wallets, error } = await sb
         .from("driver_wallets")
         .select("driver_id, balance")
         .in("driver_id", userIds);
-      for (const w of wallets || []) {
-        balanceByUser.set(String(w.driver_id), Number(w.balance) || 0);
+      if (error) {
+        if (!/driver_wallets|does not exist|schema cache/i.test(String(error.message || ""))) {
+          throw error;
+        }
+      } else {
+        for (const w of wallets || []) {
+          balanceByUser.set(String(w.driver_id), Number(w.balance) || 0);
+        }
       }
     }
   }

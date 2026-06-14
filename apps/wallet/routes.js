@@ -425,6 +425,18 @@ router.post("/withdraw", requireAuth, requireRole(...PAYOUT_ROLES), async (req, 
       ip: clientIp(req),
       metadata: { amount, path: "ledger_only" },
     });
+    try {
+      const { notifyAdminsInApp } = require("../../shared/services/platformNotify");
+      await notifyAdminsInApp(req.supabase, {
+        title: "طلب سحب جديد",
+        message: `طلب سحب بمبلغ ${amount} ر.س بانتظار المراجعة.`,
+        type: "wallet",
+        source: "wallet",
+        payload: { user_id: req.appUser.id, amount, role: req.appUser.role || null },
+      });
+    } catch (notifyErr) {
+      console.warn("[wallet/withdraw] admin notify:", notifyErr.message || notifyErr);
+    }
     return ok(res, { message: "تم إرسال طلب السحب", source: "ervenow_withdraw_requests" });
   } catch (e) {
     fail(res, e.message, e.statusCode || 500);
@@ -548,6 +560,18 @@ router.post("/withdraw/confirm-otp", requireAuth, requireRole(...PAYOUT_ROLES), 
       ip: clientIp(req),
       metadata: { amount, path: "ledger_only_otp" },
     });
+    try {
+      const { notifyAdminsInApp } = require("../../shared/services/platformNotify");
+      await notifyAdminsInApp(req.supabase, {
+        title: "طلب سحب جديد",
+        message: `طلب سحب بمبلغ ${amount} ر.س بانتظار المراجعة.`,
+        type: "wallet",
+        source: "wallet",
+        payload: { user_id: req.appUser.id, amount, role: req.appUser.role || null },
+      });
+    } catch (notifyErr) {
+      console.warn("[wallet/withdraw/confirm-otp] admin notify:", notifyErr.message || notifyErr);
+    }
     return ok(res, {
       message: "تم إرسال طلب السحب بنجاح بعد التحقق",
       source: "ervenow_withdraw_requests",

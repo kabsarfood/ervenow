@@ -776,6 +776,11 @@
           badge.hidden = true;
           badge.textContent = "0";
         }
+        try {
+          window.dispatchEvent(
+            new CustomEvent("ervenow:orders-count-changed", { detail: { count: count } })
+          );
+        } catch (e) {}
       }
 
       function setOrdersPanelOpen(open) {

@@ -61,7 +61,7 @@ function phonesEquivalent(a, b) {
 function isMissingUsersColumnError(err) {
   if (!err) return false;
   const msg = String(err.message || err.details || "");
-  return /users\.(status|name|service_type)|column .* does not exist|Could not find the .*column/i.test(msg);
+  return /users\.(status|name|service_type|service_district)|column .* does not exist|Could not find the .*column/i.test(msg);
 }
 
 async function findUserByPhone(sb, phoneDigits, columns = "id, role, status, phone, service_type, updated_at") {
@@ -90,8 +90,10 @@ async function findUserByPhoneFuzzy(sb, phoneDigits, columns) {
 
 async function findUserByPhoneResilient(sb, phoneDigits) {
   const columnSets = [
+    "id, role, status, phone, name, service_type, service_district",
     "id, role, status, phone, name, service_type",
     "id, role, status, phone, service_type",
+    "id, role, phone, service_type, updated_at, name, service_district",
     "id, role, phone, service_type, updated_at, name",
     "id, role, phone, service_type, updated_at",
     "id, role, phone",

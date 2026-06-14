@@ -169,18 +169,10 @@ async function joinStoreRoomForMerchant(socket) {
   const sb = createServiceClient();
   if (!sb || !socket.data.userId) return;
   try {
-    const { data: user } = await sb.from("users").select("phone").eq("id", socket.data.userId).maybeSingle();
-    if (!user || !user.phone) return;
-    const digits = String(user.phone).replace(/\D/g, "");
-    if (digits.length < 9) return;
-    const { data: st } = await sb
-      .from("stores")
-      .select("id")
-      .eq("phone", digits)
-      .eq("status", "approved")
-      .maybeSingle();
-    if (st && st.id) {
-      const room = safeStoreRoomId(st.id);
+    const { resolveApprovedStoreIdForMerchantUser } = require("../services/platformNotify");
+    const storeId = await resolveApprovedStoreIdForMerchantUser(sb, socket.data.userId);
+    if (storeId) {
+      const room = safeStoreRoomId(storeId);
       if (room) socket.join(room);
     }
   } catch {

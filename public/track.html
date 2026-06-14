@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
   <head>
     <meta charset="utf-8" />
@@ -767,10 +767,12 @@
         var dLng = Number(order.driver_lng);
         var toLat = Number(order.drop_lat);
         var toLng = Number(order.drop_lng);
-        if (!Number.isFinite(dLat) || !Number.isFinite(dLng) || !Number.isFinite(toLat) || !Number.isFinite(toLng)) {
+        if (!isPlausibleSaudiCoord(dLat, dLng) || !isPlausibleSaudiCoord(toLat, toLng)) {
           return null;
         }
-        return haversineKmQuick(dLat, dLng, toLat, toLng) * 1000;
+        var m = haversineKmQuick(dLat, dLng, toLat, toLng) * 1000;
+        if (!Number.isFinite(m) || m > MAX_TRIP_KM_DISPLAY * 1000) return null;
+        return m;
       }
 
       function pickEstimatedSpeedMsLastOrder() {
@@ -795,7 +797,7 @@
             var along = computeAlongRouteMetersFromLatLng(ll.lat, ll.lng, trackRouteProgressMeta);
             var tot = trackRouteProgressMeta.totalM;
             var rem = tot - along;
-            if (Number.isFinite(rem) && rem > 25 && rem < tot + 400) {
+            if (Number.isFinite(rem) && rem > 25 && rem < tot + 400 && rem <= MAX_TRIP_KM_DISPLAY * 1000) {
               return Math.max(15, rem);
             }
           } catch (e) {}
@@ -983,14 +985,16 @@
         syncTrackRouteProgressUi();
       }
 
-      function updateRemainingDistanceEl(distM) {
+      function updateRemainingDistanceEl(distM, order) {
         var el = document.getElementById("remainingDistance");
         if (!el) return;
         if (distM == null || !Number.isFinite(distM)) {
           el.textContent = "—";
           return;
         }
-        el.textContent = (distM / 1000).toFixed(1) + " كم";
+        var ds = order ? String(order.delivery_status || order.status || "").toLowerCase() : "";
+        var suffix = !trackingEligible(ds) ? " (مسافة الطلب)" : "";
+        el.textContent = (distM / 1000).toFixed(1) + " كم" + suffix;
       }
 
       function syncDriverNearPulseClass(active) {
@@ -1057,22 +1061,93 @@
         return p.slice(0, 2) + "****" + p.slice(-4);
       }
 
+      var MAX_TRIP_KM_DISPLAY = 500;
+
+      function isPlausibleSaudiCoord(lat, lng) {
+        if (!Number.isFinite(lat) || !Number.isFinite(lng)) return false;
+        if (Math.abs(lat) < 0.0001 && Math.abs(lng) < 0.0001) return false;
+        return lat >= 16 && lat <= 33 && lng >= 34 && lng <= 56;
+      }
+
+      function maybeFixCoordPair(lat, lng) {
+        if (isPlausibleSaudiCoord(lat, lng)) return { lat: lat, lng: lng };
+        if (isPlausibleSaudiCoord(lng, lat)) return { lat: lng, lng: lat };
+        return null;
+      }
+
+      function readCoordPoint(obj, latKey, lngKey) {
+        if (!obj || typeof obj !== "object") return null;
+        var la = Number(obj[latKey]);
+        var ln = Number(obj[lngKey]);
+        if (!Number.isFinite(la) || !Number.isFinite(ln)) return null;
+        return maybeFixCoordPair(la, ln);
+      }
+
+      function hasValidDriverOnOrder(order) {
+        if (!order) return false;
+        return isPlausibleSaudiCoord(Number(order.driver_lat), Number(order.driver_lng));
+      }
+
+      function getTripDistanceMeters(order) {
+        if (!order) return null;
+        var km = Number(order.distance_km);
+        if (!Number.isFinite(km) || km <= 0 || km > MAX_TRIP_KM_DISPLAY) return null;
+        return km * 1000;
+      }
+
+      function getRemainingDistanceMeters(order) {
+        if (!order) return null;
+        var ds = String(order.delivery_status || order.status || "").toLowerCase();
+        var snap = orderSnapshotForTracking() || order;
+        var hasLiveDriver =
+          hasValidDriverOnOrder(snap) ||
+          (driverMarker && typeof driverMarker.getLatLng === "function" && trackingEligible(ds));
+        if (hasLiveDriver && trackingEligible(ds)) {
+          var liveM = getRemainingMetersForEta(snap);
+          if (liveM != null && Number.isFinite(liveM) && liveM <= MAX_TRIP_KM_DISPLAY * 1000) {
+            return liveM;
+          }
+        }
+        return getTripDistanceMeters(snap);
+      }
       function normalizeTrackOrderCoords(order) {
         if (!order) return order;
         var d = order.data && typeof order.data === "object" ? order.data : {};
-        if (!Number.isFinite(Number(order.pickup_lat)) && Number.isFinite(Number(d.pickup_lat))) {
-          order.pickup_lat = Number(d.pickup_lat);
-          order.pickup_lng = Number(d.pickup_lng);
+        var pickup =
+          readCoordPoint(order, "pickup_lat", "pickup_lng") ||
+          readCoordPoint(d, "pickup_lat", "pickup_lng") ||
+          readCoordPoint(d.from_location, "lat", "lng");
+        var drop =
+          readCoordPoint(order, "drop_lat", "drop_lng") ||
+          readCoordPoint(d, "drop_lat", "drop_lng") ||
+          readCoordPoint(d.to_location, "lat", "lng");
+        if (pickup) {
+          order.pickup_lat = pickup.lat;
+          order.pickup_lng = pickup.lng;
         }
-        if (!Number.isFinite(Number(order.drop_lat)) && Number.isFinite(Number(d.drop_lat))) {
-          order.drop_lat = Number(d.drop_lat);
-          order.drop_lng = Number(d.drop_lng);
+        if (drop) {
+          order.drop_lat = drop.lat;
+          order.drop_lng = drop.lng;
         }
-        if (!order.pickup_address && (d.from || d.pickup_maps_url)) {
-          order.pickup_address = String(d.from || d.pickup_maps_url);
+        var driver = readCoordPoint(order, "driver_lat", "driver_lng");
+        if (driver) {
+          order.driver_lat = driver.lat;
+          order.driver_lng = driver.lng;
+        } else if (order.driver_lat != null || order.driver_lng != null) {
+          order.driver_lat = null;
+          order.driver_lng = null;
         }
-        if (!order.drop_address && (d.to || d.drop_maps_url)) {
-          order.drop_address = String(d.to || d.drop_maps_url);
+        if (!order.pickup_address && (d.from || d.pickup_maps_url || (d.from_location && d.from_location.address))) {
+          order.pickup_address = String(d.from || d.pickup_maps_url || d.from_location.address);
+        }
+        if (!order.drop_address && (d.to || d.drop_maps_url || (d.to_location && d.to_location.address))) {
+          order.drop_address = String(d.to || d.drop_maps_url || d.to_location.address);
+        }
+        var km = Number(order.distance_km != null ? order.distance_km : d.distance_km);
+        if (Number.isFinite(km) && km > 0 && km <= MAX_TRIP_KM_DISPLAY) {
+          order.distance_km = Math.round(km * 1000) / 1000;
+        } else if (Number.isFinite(km) && km > MAX_TRIP_KM_DISPLAY) {
+          order.distance_km = null;
         }
         return order;
       }
@@ -1166,20 +1241,20 @@
       function runDeliveryTrackingAlerts() {
         var order = orderSnapshotForTracking();
         if (!order) {
-          updateRemainingDistanceEl(null);
+          updateRemainingDistanceEl(null, null);
           syncDriverNearPulseClass(false);
           syncMapArrivingClass(null);
           return;
         }
         var ds = String(order.delivery_status || order.status || "").toLowerCase();
         if (ds === "delivered" || ds === "cancelled_by_customer" || ds === "cancelled") {
-          updateRemainingDistanceEl(null);
+          updateRemainingDistanceEl(null, null);
           syncDriverNearPulseClass(false);
           syncMapArrivingClass(null);
           return;
         }
-        var distM = getDriverToDropMeters(order);
-        updateRemainingDistanceEl(distM);
+        var distM = getRemainingDistanceMeters(order);
+        updateRemainingDistanceEl(distM, order);
         if (!trackingEligible(ds)) {
           syncDriverNearPulseClass(false);
           syncMapArrivingClass(null);
@@ -1287,31 +1362,6 @@
         var km = haversineKmQuick(dLat, dLng, toLat, toLng);
         if (!(km > 0)) return null;
         return Math.round((km / 40) * 3600);
-      }
-
-      function buildRouteCheckpointsFromGeometry(geometry) {
-        var out = [];
-        if (!geometry || geometry.type !== "LineString" || !Array.isArray(geometry.coordinates)) return out;
-        var ring = geometry.coordinates;
-        if (ring.length < 2) return out;
-        var acc = 0;
-        var nextMark = 500;
-        for (var i = 1; i < ring.length; i++) {
-          var p0 = ring[i - 1];
-          var p1 = ring[i];
-          var segLen = haversineKmQuick(p0[1], p0[0], p1[1], p1[0]) * 1000;
-          if (!(segLen > 0)) continue;
-          while (acc + segLen >= nextMark) {
-            var along = nextMark - acc;
-            var t = along / segLen;
-            var lat = p0[1] + (p1[1] - p0[1]) * t;
-            var lng = p0[0] + (p1[0] - p0[0]) * t;
-            out.push([lat, lng]);
-            nextMark += 500;
-          }
-          acc += segLen;
-        }
-        return out;
       }
 
       function clearRouteCheckpoints() {
@@ -1926,6 +1976,10 @@
           cum.push(total);
         }
         if (!(total > 10)) return;
+        if (total > MAX_TRIP_KM_DISPLAY * 1000) {
+          trackRouteProgressMeta = null;
+          return;
+        }
         trackRouteProgressMeta = { pts: pts, cum: cum, totalM: total };
       }
 
@@ -2329,20 +2383,6 @@
 
         buildTrackRouteProgressMeta(geo);
         clearRouteCheckpoints();
-        var cpts = buildRouteCheckpointsFromGeometry(geo);
-        if (cpts.length) {
-          routeCheckpointLayer = L.layerGroup();
-          for (var ci = 0; ci < cpts.length; ci++) {
-            L.circleMarker(cpts[ci], {
-              radius: 4,
-              color: "#1d4ed8",
-              weight: 2,
-              fillColor: "#93c5fd",
-              fillOpacity: 0.88,
-            }).addTo(routeCheckpointLayer);
-          }
-          routeCheckpointLayer.addTo(map);
-        }
         if (opts.fitBounds !== false && routeLine) {
           map.fitBounds(routeLine.getBounds(), { padding: [44, 44], maxZoom: 16, animate: true, duration: 0.4 });
         }
@@ -2582,12 +2622,29 @@
         if (amountsEl) {
           var otot = Number(order.order_total) || 0;
           var dfee = Number(order.delivery_fee) || 0;
+          var stLow = String(order.service_type || (order.data && order.data.service_type) || "").toLowerCase();
+          var isCarTransport = ["car_transport", "pickup_truck", "vehicle_transfer"].includes(stLow);
+          if (isCarTransport && dfee > 0 && Math.abs(otot - dfee) < 0.02) {
+            otot = 0;
+          }
           var sub = otot + dfee;
           var vatN = order.vat_amount == null || order.vat_amount === "" ? null : Number(order.vat_amount);
           var twvN =
             order.total_with_vat == null || order.total_with_vat === ""
               ? null
               : Number(order.total_with_vat);
+          if (sub > 0) {
+            var expectedVat = Math.round(sub * 0.15 * 100) / 100;
+            var expectedTotal = Math.round((sub + expectedVat) * 100) / 100;
+            if (vatN != null && !Number.isNaN(vatN) && Math.abs(vatN - expectedVat) > 0.05) {
+              vatN = expectedVat;
+            }
+            if (twvN != null && !Number.isNaN(twvN) && Math.abs(twvN - expectedTotal) > 0.05) {
+              twvN = expectedTotal;
+            }
+            if (vatN == null || Number.isNaN(vatN)) vatN = expectedVat;
+            if (twvN == null || Number.isNaN(twvN)) twvN = expectedTotal;
+          }
           var twvValid = twvN != null && !Number.isNaN(twvN);
           if (sub <= 0 && !twvValid && (vatN == null || vatN === 0)) {
             amountsEl.style.display = "none";
@@ -2822,7 +2879,13 @@
           !Number.isNaN(Number(order.driver_lng));
 
         var partyLabel =
-          String(order.service_type || "").toLowerCase() === "internal_delivery" ? "مزود الخدمة" : "المندوب";
+          String(order.service_type || "").toLowerCase() === "internal_delivery"
+            ? "مزود الخدمة"
+            : ["car_transport", "pickup_truck", "vehicle_transfer"].includes(
+                String(order.service_type || "").toLowerCase()
+              )
+              ? "سائق السطحة"
+              : "المندوب";
         if (!hasDriverLocation) {
           gpsState.innerText = "📍 جاري تحديد موقع " + partyLabel + "...";
           lastUpdate.textContent = "";

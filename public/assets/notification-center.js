@@ -173,7 +173,7 @@
     var countRes = await PlatformAPI.api("/api/notifications/unread-count");
     state.unreadCount = Number((countRes && countRes.unread_count) || 0);
     var listRes = await PlatformAPI.api("/api/notifications");
-    var rows = (listRes && (listRes.notifications || listRes.data)) || [];
+    var rows = (listRes && (listRes.items || listRes.notifications || listRes.data)) || [];
     var byId = {};
     state.items = rows
       .map(normIncoming)
@@ -183,8 +183,9 @@
         byId[n.id] = true;
         return true;
       });
-    if (!state.items.length && state.unreadCount > 0) {
-      state.unreadCount = 0;
+    refreshUnreadCountFromItems(state);
+    if (state.unreadCount === 0 && Number((countRes && countRes.unread_count) || 0) > 0) {
+      state.unreadCount = Number(countRes.unread_count);
     }
   }
 

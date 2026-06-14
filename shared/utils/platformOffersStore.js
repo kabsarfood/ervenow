@@ -1,7 +1,5 @@
-const fs = require("fs");
-const path = require("path");
 const {
-  saveLogoBase64,
+  saveUploadImageBase64,
   platformSettingsHelpMessage,
   isMissingPlatformSettingsTable,
 } = require("./platformBrandingStore");
@@ -149,25 +147,16 @@ async function loadOffers(sb, { includeInactive = false } = {}) {
 
 async function saveOfferImage({ publicRoot, dataUrl, fileName, slideId }) {
   if (!publicRoot) throw new Error("publicRoot مطلوب لرفع صورة العرض");
-  const safeId = String(slideId || slugId()).replace(/[^a-zA-Z0-9_-]/g, "");
+  const safeId = String(slideId || slugId()).replace(/[^a-zA-Z0-9_-]/g, "") || "offer";
   const baseName = String(fileName || "offer-" + safeId + ".jpg").replace(/[^a-zA-Z0-9._-]/g, "");
-  const url = await saveLogoBase64({
+  return saveUploadImageBase64({
     publicRoot,
     dataUrl,
     fileName: baseName,
     maxBytes: 3 * 1024 * 1024,
+    uploadSubdir: "platform/offers",
+    outputFileName: safeId,
   });
-  const ext = (baseName.match(/\.([a-z0-9]+)$/i) || [])[1] || "jpg";
-  const dir = path.join(publicRoot, "uploads", "platform", "offers");
-  await fs.promises.mkdir(dir, { recursive: true });
-  const fromPath = path.join(publicRoot, "uploads", "platform", "logo." + ext);
-  const toPath = path.join(dir, safeId + "." + ext);
-  try {
-    await fs.promises.copyFile(fromPath, toPath);
-  } catch (_e) {
-    return url;
-  }
-  return `/uploads/platform/offers/${safeId}.${ext}?v=${Date.now()}`;
 }
 
 async function applyOffersPatch(sb, patch, { publicRoot } = {}) {

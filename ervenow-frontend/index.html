@@ -1,9 +1,9 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover" />
-    <script src="/assets/viewport-fit.js?erv=20260612e"></script>
+    <script src="/assets/viewport-fit.js?erv=20260622"></script>
     <meta
       name="description"
       content="ERVENOW — نربط المطاعم والمتاجر والعملاء والمناديب في نظام ذكي واحد. يتم تفعيل الحساب بعد المراجعة واعتماده من إدارة ERVENOW."
@@ -18,13 +18,14 @@
     <link rel="stylesheet" href="/assets/styles.css" />
     <link rel="stylesheet" href="/assets/start-now-landing.css" />
     <link rel="stylesheet" href="/assets/ervenow-responsive.css" />
-    <link rel="stylesheet" href="/assets/mobile-foundation.css?erv=20260612e" />
-    <link rel="stylesheet" href="/assets/mobile-home-conversion.css?erv=20260612e" />
-    <script src="/assets/mobile-foundation.js?erv=20260612e" defer></script>
-    <script src="/assets/mobile-harmony.js?erv=20260612e" defer></script>
+    <link rel="stylesheet" href="/assets/mobile-foundation.css?erv=20260622" />
+    <link rel="stylesheet" href="/assets/mobile-home-conversion.css?erv=20260612" />
+    <script src="/assets/mobile-foundation.js?erv=20260622" defer></script>
+    <script src="/assets/mobile-orders-nav-badge.js?erv=20260612" defer></script>
+    <script src="/assets/mobile-harmony.js?erv=20260612" defer></script>
     <script src="/assets/api-config.js"></script>
     <script src="/assets/phonePrivacy.js"></script>
-    <script src="/assets/api.js?erv=20260612e"></script>
+    <script src="/assets/api.js?erv=20260612"></script>
     <script src="/assets/account-destinations.js" defer></script>
     <script src="/assets/platform-access.js" defer></script>
     <script>
@@ -2705,8 +2706,8 @@
     </style>
     <link rel="stylesheet" href="/assets/order-draft-badge.css" />
     <link rel="stylesheet" href="/assets/index-header-banner.css" />
-    <link rel="stylesheet" href="/assets/guest-offers-carousel.css?erv=20260612e" />
-    <link rel="stylesheet" href="/assets/mobile-harmony.css?erv=20260612e" />
+    <link rel="stylesheet" href="/assets/guest-offers-carousel.css?erv=20260612" />
+    <link rel="stylesheet" href="/assets/mobile-harmony.css?erv=20260612" />
     <link rel="stylesheet" href="/assets/design-system/erv-typography-pr1-tokens.css" />
     <link rel="stylesheet" href="/assets/design-system/erv-typography-home-pr2.css" />
   </head>
@@ -3039,7 +3040,7 @@
       <div class="lp-footer__inner">
         <div>
           <p class="lp-footer__brand">ERVENOW</p>
-          <p class="lp-footer__copy">© جميع الحقوق محفوظة ERVENOW<br />المنصة الذكية — من الطلب إلى باب زائر المنصة.</p>
+          <p class="lp-footer__copy">© جميع الحقوق محفوظة ERVENOW<br />المنصة الذكية — طلبك إلى باب بيتك.</p>
         </div>
         <div class="lp-footer__contact">
           <span>تواصل</span>
@@ -3214,10 +3215,10 @@
         }
       })();
     </script>
-    <script src="/assets/guest-offers-carousel.js?erv=20260612e" defer></script>
+    <script src="/assets/guest-offers-carousel.js?erv=20260612" defer></script>
     <script src="/assets/guestBrowse.js"></script>
     <script src="/assets/ervenow-toggle.js"></script>
-    <script src="/assets/guest-shell.js?erv=20260612e"></script>
+    <script src="/assets/guest-shell.js?erv=20260612"></script>
     <script>
       function goLogin() {
         window.location.href = "/login";
@@ -3597,6 +3598,32 @@
           }
         }
 
+        function dispatchOrdersCount(count) {
+          try {
+            window.dispatchEvent(
+              new CustomEvent("ervenow:orders-count-changed", { detail: { count: count } })
+            );
+          } catch (e) {}
+        }
+
+        function isCancelledOrder(o) {
+          var ds = String((o && o.delivery_status) || (o && o.status) || "").toLowerCase();
+          var st = String((o && o.status) || "").toLowerCase();
+          if (/cancel/.test(ds) || /cancel/.test(st)) return true;
+          return ds === "cancelled_by_customer" || ds === "canceled_by_customer" || st === "cancelled" || st === "canceled";
+        }
+
+        function isDeliveredOrder(o) {
+          var ds = String((o && o.delivery_status) || (o && o.status) || "").toLowerCase();
+          return ds === "delivered" || ds === "completed" || ds === "closed";
+        }
+
+        function countOpenOrders(orders) {
+          return (orders || []).filter(function (o) {
+            return !isCancelledOrder(o) && !isDeliveredOrder(o);
+          }).length;
+        }
+
         async function loadOrdersCount() {
           var badge = document.getElementById("ordersBadge");
           if (!badge) return;
@@ -3604,6 +3631,7 @@
             var token = getToken();
             if (!token) {
               badge.style.display = "none";
+              dispatchOrdersCount(0);
               return;
             }
             var role = "";
@@ -3626,16 +3654,16 @@
                 return {};
               });
               if (dataC.ok && Array.isArray(dataC.orders)) {
-                var pendingC = dataC.orders.filter(function (o) {
-                  var ds = String(o.delivery_status || o.status || "").toLowerCase();
-                  return !o.driver_id && (ds === "pending" || ds === "new" || ds === "draft");
-                }).length;
-                badge.innerText = String(pendingC);
+                var openCount = countOpenOrders(dataC.orders);
+                badge.innerText = String(openCount);
+                badge.style.display = openCount > 0 ? "" : "none";
+                dispatchOrdersCount(openCount);
               }
               return;
             }
             if (role !== "driver" && role !== "admin") {
               badge.style.display = "none";
+              dispatchOrdersCount(0);
               return;
             }
             badge.style.display = "";
@@ -3657,6 +3685,8 @@
             }
 
             badge.innerText = String(count);
+            badge.style.display = count > 0 ? "" : "none";
+            dispatchOrdersCount(count);
 
             if (count > lastCount) {
               var s = document.getElementById("newOrderSound");

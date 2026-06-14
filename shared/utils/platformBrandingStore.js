@@ -79,14 +79,23 @@ function sniffImageType(buf) {
 }
 
 /**
- * يحفظ الشعار تحت public/uploads/platform/ ويعيد مسار URL عام.
+ * يحفظ صورة base64 تحت public/uploads/{uploadSubdir}/{outputFileName}.{ext}
  * @param {string} publicRoot - مسار مجلد public
  */
-async function saveLogoBase64({ publicRoot, dataUrl, fileName, maxBytes = 2 * 1024 * 1024 }) {
+async function saveUploadImageBase64({
+  publicRoot,
+  dataUrl,
+  fileName,
+  maxBytes = 2 * 1024 * 1024,
+  uploadSubdir = "platform",
+  outputFileName = "logo",
+}) {
   const { mime, buffer } = decodeBase64ImageDataUrl(dataUrl);
-  if (!buffer || !buffer.length) throw new Error("ملف الشعار غير صالح");
+  if (!buffer || !buffer.length) throw new Error("ملف الصورة غير صالح");
 
-  if (buffer.length > maxBytes) throw new Error("حجم الشعار يتجاوز 2 ميجابايت");
+  if (buffer.length > maxBytes) {
+    throw new Error(`حجم الصورة يتجاوز ${Math.round(maxBytes / (1024 * 1024))} ميجابايت`);
+  }
 
   let ext = extFromMimeOrName(mime || "", fileName);
   const sniffed = sniffImageType(buffer);
@@ -97,15 +106,34 @@ async function saveLogoBase64({ publicRoot, dataUrl, fileName, maxBytes = 2 * 10
   }
   if (!["png", "jpg", "svg", "webp"].includes(ext)) throw new Error("صيغة الصورة غير مدعومة");
 
-  const dir = path.join(publicRoot, "uploads", "platform");
+  const safeName = String(outputFileName || "asset").replace(/[^a-zA-Z0-9_-]/g, "") || "asset";
+  const subParts = String(uploadSubdir || "platform")
+    .split("/")
+    .map((p) => p.trim())
+    .filter(Boolean);
+  const dir = path.join(publicRoot, "uploads", ...subParts);
   await fs.promises.mkdir(dir, { recursive: true });
 
-  const safeBase = "logo." + ext;
-  const diskPath = path.join(dir, safeBase);
+  const diskPath = path.join(dir, `${safeName}.${ext}`);
   await fs.promises.writeFile(diskPath, buffer);
 
-  const v = Date.now();
-  return `/uploads/platform/${safeBase}?v=${v}`;
+  const urlPath = "/uploads/" + subParts.join("/") + `/${safeName}.${ext}`;
+  return `${urlPath}?v=${Date.now()}`;
+}
+
+/**
+ * يحفظ شعار المنصة فقط — لا يُستخدم لبنرات العرض أو غيرها.
+ * @param {string} publicRoot - مسار مجلد public
+ */
+async function saveLogoBase64({ publicRoot, dataUrl, fileName, maxBytes = 2 * 1024 * 1024 }) {
+  return saveUploadImageBase64({
+    publicRoot,
+    dataUrl,
+    fileName,
+    maxBytes,
+    uploadSubdir: "platform",
+    outputFileName: "logo",
+  });
 }
 
 async function loadBranding(sb) {
@@ -209,6 +237,7 @@ module.exports = {
   applyBrandingPatch,
   resetColorsToDefaults,
   isValidHexColor,
+  saveUploadImageBase64,
   saveLogoBase64,
   isMissingPlatformSettingsTable,
   platformSettingsHelpMessage,

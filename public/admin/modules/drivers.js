@@ -21,6 +21,7 @@ app.loadDrivers = async function () {
   try {
     var j = await app.PlatformAPI.api("/api/admin/drivers");
     app.cacheDrivers = j.drivers || [];
+    app.cacheDriversFetchedAt = Date.now();
     var pendingCount = 0;
     app.cacheDrivers.forEach(function (d) {
       if (String(d.status || "").toLowerCase() === "pending") pendingCount += 1;

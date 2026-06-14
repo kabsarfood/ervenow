@@ -1,6 +1,4 @@
-const fs = require("fs");
-const path = require("path");
-const { saveLogoBase64 } = require("./platformBrandingStore");
+const { saveUploadImageBase64 } = require("./platformBrandingStore");
 const {
   BANNER_TARGETS,
   normalizeBannerTargets,
@@ -162,23 +160,14 @@ async function saveBannerImage({ publicRoot, dataUrl, fileName, bannerId }) {
   if (!publicRoot) throw new Error("publicRoot مطلوب لرفع صورة البنر");
   const safeId = String(bannerId || "hb-" + Date.now()).replace(/[^a-zA-Z0-9_-]/g, "") || "hb";
   const baseName = String(fileName || "hero-" + safeId + ".jpg").replace(/[^a-zA-Z0-9._-]/g, "");
-  await saveLogoBase64({
+  return saveUploadImageBase64({
     publicRoot,
     dataUrl,
     fileName: baseName,
     maxBytes: 3 * 1024 * 1024,
+    uploadSubdir: "hero-banners",
+    outputFileName: safeId,
   });
-  const ext = (baseName.match(/\.([a-z0-9]+)$/i) || [])[1] || "jpg";
-  const dir = path.join(publicRoot, "uploads", "hero-banners");
-  await fs.promises.mkdir(dir, { recursive: true });
-  const fromPath = path.join(publicRoot, "uploads", "platform", "logo." + ext);
-  const toPath = path.join(dir, safeId + "." + ext);
-  try {
-    await fs.promises.copyFile(fromPath, toPath);
-  } catch (_e) {
-    return `/uploads/platform/logo.${ext}?v=${Date.now()}`;
-  }
-  return `/uploads/hero-banners/${safeId}.${ext}?v=${Date.now()}`;
 }
 
 function resolveTargetsFromBody(body) {

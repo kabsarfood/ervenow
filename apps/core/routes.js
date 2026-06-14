@@ -150,6 +150,60 @@ function isMissingServiceVehicleColumnError(err) {
   return /service_vehicle_type|service_plate_number|service_vehicle_model/i.test(msg);
 }
 
+function isMissingServiceDistrictColumnError(err) {
+  if (!err) return false;
+  const msg = String(err.message || err.details || "");
+  return /service_district/i.test(msg);
+}
+
+function stripOptionalUserColumnsForSchema(row, err) {
+  const out = { ...row };
+  if (!err) return out;
+  if (isMissingNameColumnError(err) && out.name != null) delete out.name;
+  if (isMissingServiceDistrictColumnError(err) && out.service_district != null) {
+    delete out.service_district;
+  }
+  if (isMissingServiceVehicleColumnError(err)) {
+    delete out.service_vehicle_type;
+    delete out.service_plate_number;
+    delete out.service_vehicle_model;
+  }
+  return out;
+}
+
+async function resilientUserUpdate(sb, userId, patch) {
+  let p = { ...patch };
+  let res = await sb.from("users").update(p).eq("id", userId).select().single();
+  for (let attempt = 0; attempt < 5 && res.error; attempt++) {
+    const next = stripOptionalUserColumnsForSchema(p, res.error);
+    if (JSON.stringify(next) === JSON.stringify(p)) break;
+    p = next;
+    res = await sb.from("users").update(p).eq("id", userId).select().single();
+  }
+  return res;
+}
+
+async function resilientUserInsert(sb, insertRow, initialStatus) {
+  let row = { ...insertRow };
+  let res = await sb.from("users").insert({ ...row, status: initialStatus }).select().single();
+  for (let attempt = 0; attempt < 6 && res.error; attempt++) {
+    if (isMissingStatusColumnError(res.error)) {
+      res = await sb.from("users").insert(row).select().single();
+      if (!res.error) return res;
+    }
+    const next = stripOptionalUserColumnsForSchema(row, res.error);
+    if (JSON.stringify(next) === JSON.stringify(row)) break;
+    if (isMissingServiceDistrictColumnError(res.error)) {
+      console.warn(
+        "[ERVENOW] users.service_district غير موجود — نفّذ shared/migration_users_service_district.sql في Supabase"
+      );
+    }
+    row = next;
+    res = await sb.from("users").insert({ ...row, status: initialStatus }).select().single();
+  }
+  return res;
+}
+
 const PICKUP_VEHICLE_TYPES = new Set([
   "flatbed",
   "flatbed_hydraulic",
@@ -261,18 +315,7 @@ async function upsertDriverByPhone(
     if (trimmedName && role === "service") patch.name = trimmedName;
     if (trimmedDistrict && role === "service") patch.service_district = trimmedDistrict;
     if (applyVehicle) Object.assign(patch, serviceVehicle);
-    let upd = await sb.from("users").update(patch).eq("id", existing.id).select().single();
-    if (upd.error && isMissingNameColumnError(upd.error) && patch.name != null) {
-      delete patch.name;
-      upd = await sb.from("users").update(patch).eq("id", existing.id).select().single();
-    }
-    if (upd.error && isMissingServiceVehicleColumnError(upd.error) && applyVehicle) {
-      delete patch.service_vehicle_type;
-      delete patch.service_plate_number;
-      delete patch.service_vehicle_model;
-      upd = await sb.from("users").update(patch).eq("id", existing.id).select().single();
-    }
-    return upd;
+    return resilientUserUpdate(sb, existing.id, patch);
   }
 
   const insertRow = {
@@ -285,55 +328,11 @@ async function upsertDriverByPhone(
     ...(applyVehicle ? serviceVehicle : {}),
   };
   const initialStatus = role === "admin" ? "active" : "pending";
-  const withStatusInsert = await sb
-    .from("users")
-    .insert({ ...insertRow, status: initialStatus })
-    .select()
-    .single();
-  if (!withStatusInsert.error) return withStatusInsert;
-  if (isMissingServiceVehicleColumnError(withStatusInsert.error) && applyVehicle) {
-    const insertNoVehicle = { ...insertRow };
-    delete insertNoVehicle.service_vehicle_type;
-    delete insertNoVehicle.service_plate_number;
-    delete insertNoVehicle.service_vehicle_model;
-    const retryVehicle = await sb
-      .from("users")
-      .insert({ ...insertNoVehicle, status: initialStatus })
-      .select()
-      .single();
-    if (!retryVehicle.error) return retryVehicle;
-  }
-  if (
-    isMissingNameColumnError(withStatusInsert.error) &&
-    trimmedName &&
-    role === "customer"
-  ) {
-    const { name: _drop, ...insertNoName } = insertRow;
-    const retry = await sb
-      .from("users")
-      .insert({ ...insertNoName, status: initialStatus })
-      .select()
-      .single();
-    if (!retry.error) return retry;
-    if (!isMissingStatusColumnError(retry.error)) return retry;
-    return sb.from("users").insert(insertNoName).select().single();
-  }
-  if (!isMissingStatusColumnError(withStatusInsert.error)) return withStatusInsert;
-  const noStatus = await sb.from("users").insert(insertRow).select().single();
-  if (!noStatus.error) return noStatus;
-  if (
-    isMissingNameColumnError(noStatus.error) &&
-    trimmedName &&
-    role === "customer"
-  ) {
-    const { name: _d, ...insertNoName } = insertRow;
-    return sb.from("users").insert(insertNoName).select().single();
-  }
-  return noStatus;
+  return resilientUserInsert(sb, insertRow, initialStatus);
 }
 
 router.get("/", (_req, res) => {
-  ok(res, { service: "core", endpoints: ["/health", "/public-config", "/verify-otp", "/me"] });
+  ok(res, { service: "core", endpoints: ["/health", "/public-config", "/send-otp", "/verify-otp", "/register", "/register-account", "/me"] });
 });
 
 router.get("/health", (_req, res) => {
@@ -562,6 +561,13 @@ router.post("/send-otp", async (req, res) => {
 
 router.post("/verify-otp", async (req, res) => {
   try {
+    const registerWithoutOtp =
+      (req.body?.register_without_otp === true || req.body?.register_without_otp === "true") &&
+      !(req.body?.login_only === true || req.body?.login_only === "true");
+    if (registerWithoutOtp) {
+      return await handleRegisterAccount(req, res);
+    }
+
     const raw = req.body?.phone;
     const codeIn = String(req.body?.code || "").trim();
     const loginOnly = req.body?.login_only === true || req.body?.login_only === "true";
@@ -652,24 +658,46 @@ router.post("/verify-otp", async (req, res) => {
       roleForSession = existingRole || "customer";
     }
 
-    const wantServiceType = req.body?.service_type;
+    let wantServiceType = req.body?.service_type;
     const displayName =
       roleForSession === "customer" || roleForSession === "service"
         ? String(req.body?.name || "").trim()
         : "";
-    const serviceDistrict =
+    let serviceDistrict =
       roleForSession === "service"
         ? String(req.body?.service_district || req.body?.service_city || req.body?.district || "").trim()
         : "";
-    if (roleForSession === "service" && !normalizeServiceType(wantServiceType)) {
-      return fail(res, "اختر نوع الخدمة من القائمة", 400);
+
+    const isServiceLoginOnly =
+      loginOnly && roleForSession === "service" && !!existingUser;
+    if (isServiceLoginOnly) {
+      if (!normalizeServiceType(wantServiceType)) {
+        wantServiceType = existingUser.service_type;
+      }
+      if (!serviceDistrict) {
+        serviceDistrict = String(existingUser.service_district || "").trim();
+      }
     }
-    if (roleForSession === "service" && !serviceDistrict) {
-      const st = normalizeServiceType(wantServiceType);
+
+    const normalizedServiceType =
+      roleForSession === "service" ? normalizeServiceType(wantServiceType) : null;
+
+    if (roleForSession === "service" && !normalizedServiceType) {
+      const msg = isServiceLoginOnly
+        ? "حساب مقدم الخدمة غير مكتمل — تواصل مع الإدارة"
+        : "اختر نوع الخدمة من القائمة";
+      return fail(res, msg, 400);
+    }
+    if (roleForSession === "service" && !loginOnly && !serviceDistrict) {
+      const st = normalizedServiceType;
       return fail(res, st === "pickup_truck" ? "اختر المدينة" : "أدخل الحي الذي تخدمه", 400);
     }
     let serviceVehicle = null;
-    if (roleForSession === "service" && normalizeServiceType(wantServiceType) === "pickup_truck") {
+    if (
+      roleForSession === "service" &&
+      !loginOnly &&
+      normalizedServiceType === "pickup_truck"
+    ) {
       const parsedVehicle = parsePickupVehiclePayload(req.body);
       if (!parsedVehicle.ok) return fail(res, parsedVehicle.error, 400);
       serviceVehicle = parsedVehicle.data;
@@ -790,6 +818,222 @@ router.post("/verify-otp", async (req, res) => {
     fail(res, msg, 500);
   }
 });
+
+async function handleRegisterAccount(req, res) {
+  const raw = req.body?.phone;
+  const roleIn = String(req.body?.role || "customer").trim().toLowerCase();
+  const wantRole = ALLOWED_USER_ROLES.has(roleIn) ? roleIn : "customer";
+
+  const e164 = toE164(raw);
+  if (!e164) return fail(res, "رقم الجوال غير صالح", 400);
+  if (!isErvnowSaudiMobileE164(e164)) {
+    return fail(res, "رقم غير صالح — أدخل 05xxxxxxxx أو 9665xxxxxxxx", 400);
+  }
+
+  let payoutParsed = {};
+  try {
+    payoutParsed = parseOptionalPayoutPayload(req.body);
+  } catch (pe) {
+    return fail(res, pe.message || "بيانات الحساب البنكي غير صالحة", 400);
+  }
+
+  const digits = canonicalPhoneDigits(toStorageDigits(e164));
+  const sb = createServiceClient();
+  if (!sb) {
+    return fail(res, `قاعدة البيانات غير جاهزة — ${getDatabaseConfigHint()}`, 503);
+  }
+
+  const exFound = await findUserByPhoneResilient(sb, digits);
+  if (exFound.error && !isMissingStatusColumnError(exFound.error)) {
+    console.error("[ERVENOW] register-account user lookup:", exFound.error.message || exFound.error);
+  }
+  const existingUser = exFound.data || null;
+  if (existingUser) {
+    const exSt = String(existingUser.status || "").toLowerCase();
+    const exRole = String(existingUser.role || "").toLowerCase();
+    if (exSt === "blocked" || exRole === "blocked") {
+      return fail(res, "الحساب محظور من الإدارة", 403, { blocked: true });
+    }
+    if (exSt === "rejected") {
+      return fail(res, "تم رفض طلب التسجيل — تواصل مع الإدارة", 403, { rejected: true });
+    }
+    if (isUserAccountApproved(existingUser.status, existingUser.role)) {
+      return fail(res, "رقم الجوال مسجّل مسبقاً — استخدم تسجيل الدخول", 409, {
+        already_registered: true,
+      });
+    }
+  }
+
+  const wantServiceType = req.body?.service_type;
+  const displayName =
+    wantRole === "customer" || wantRole === "service"
+      ? String(req.body?.name || "").trim()
+      : "";
+  const serviceDistrict =
+    wantRole === "service"
+      ? String(req.body?.service_district || req.body?.service_city || req.body?.district || "").trim()
+      : "";
+
+  if (wantRole === "service" && !normalizeServiceType(wantServiceType)) {
+    return fail(res, "اختر نوع الخدمة من القائمة", 400);
+  }
+  if (wantRole === "service" && !displayName) {
+    return fail(res, "أدخل الاسم", 400);
+  }
+  if (wantRole === "service" && !serviceDistrict) {
+    const st = normalizeServiceType(wantServiceType);
+    return fail(res, st === "pickup_truck" ? "اختر المدينة" : "أدخل الحي الذي تخدمه", 400);
+  }
+
+  let serviceVehicle = null;
+  if (wantRole === "service" && normalizeServiceType(wantServiceType) === "pickup_truck") {
+    const parsedVehicle = parsePickupVehiclePayload(req.body);
+    if (!parsedVehicle.ok) return fail(res, parsedVehicle.error, 400);
+    serviceVehicle = parsedVehicle.data;
+  }
+
+  if (wantRole === "driver") {
+    const d = req.body?.driver && typeof req.body.driver === "object" ? req.body.driver : req.body;
+    const dName = String(d?.name || req.body?.name || "").trim();
+    const iqama = String(d?.iqama || req.body?.iqama || "").trim();
+    const carType = String(d?.car_type || req.body?.car_type || "").trim();
+    const plate = String(d?.plate_number || req.body?.plate_number || "").trim();
+    if (!dName || !iqama || !carType || !plate) {
+      return fail(res, "أكمل بيانات المندوب: الاسم، الهوية/الإقامة، نوع المركبة، ورقم اللوحة", 400);
+    }
+  }
+
+  const { data: userRow, error: dbErr } = await upsertDriverByPhone(
+    sb,
+    digits,
+    wantRole,
+    wantServiceType,
+    displayName,
+    serviceDistrict,
+    serviceVehicle,
+    { loginOnly: false }
+  );
+  if (dbErr) {
+    console.error("[ERVENOW] register-account DB:", dbErr);
+    return fail(
+      res,
+      dbErr.message || "فشل حفظ المستخدم. نفّذ migration_users_phone_auth.sql في Supabase",
+      400
+    );
+  }
+  if (!userRow || userRow.id == null) {
+    return fail(res, "فشل إنشاء المستخدم في قاعدة البيانات", 500);
+  }
+
+  const payoutPatch = payoutRowForUsers(payoutParsed);
+  const payoutRoles = new Set(["store", "merchant", "restaurant", "service", "driver"]);
+  if (payoutRoles.has(String(wantRole).toLowerCase()) && Object.keys(payoutPatch).length) {
+    if (payoutParsed.iban) {
+      try {
+        await assertPayoutIbanGloballyAvailable(sb, payoutParsed.iban, {
+          excludeUserId: userRow.id,
+          ownerPhonesDigits: [digits],
+        });
+      } catch (pe) {
+        return fail(res, pe.message || "الآيبان مستخدم لحساب آخر", 400);
+      }
+    }
+    const pRes = await sb
+      .from("users")
+      .update({ ...payoutPatch, updated_at: new Date().toISOString() })
+      .eq("id", userRow.id);
+    if (pRes.error && !/column|does not exist|schema cache/i.test(String(pRes.error.message || ""))) {
+      console.warn("[ERVENOW] register-account payout update:", pRes.error.message);
+    }
+  }
+
+  if (wantRole === "driver") {
+    const { payoutRowForDriversOrStores } = require("../../shared/utils/payoutFields");
+    const { iqamaDigitsNormalized } = require("../../shared/utils/payoutUniqueness");
+    const d = req.body?.driver && typeof req.body.driver === "object" ? req.body.driver : req.body;
+    const dName = String(d?.name || req.body?.name || "").trim();
+    const iqama = String(d?.iqama || req.body?.iqama || "").trim();
+    const carType = String(d?.car_type || req.body?.car_type || "").trim();
+    const plate = String(d?.plate_number || req.body?.plate_number || "").trim();
+    let extraPayout = {};
+    try {
+      if (payoutParsed.iban) {
+        extraPayout = payoutRowForDriversOrStores(payoutParsed);
+      }
+    } catch (pe) {
+      return fail(res, pe.message || "بيانات الدفع غير صالحة", 400);
+    }
+    const iqama_digits = iqamaDigitsNormalized(iqama);
+    const driverRow = {
+      name: dName,
+      phone: digits,
+      iqama,
+      iqama_digits: iqama_digits || null,
+      car_type: carType,
+      plate_number: plate,
+      status: "pending",
+      active: false,
+      ...extraPayout,
+    };
+    const { error: drvErr } = await sb.from("drivers").upsert(driverRow, { onConflict: "phone" });
+    if (drvErr) {
+      const em = String(drvErr.message || drvErr.details || "");
+      if (/unique|duplicate|23505|iqama/i.test(em)) {
+        return fail(res, "رقم الهوية / الإقامة مستخدم مسبقاً أو بيانات مكررة", 400);
+      }
+      console.warn("[ERVENOW] register-account driver upsert:", em);
+    }
+  }
+
+  try {
+    const { notifyAdminsInApp } = require("../../shared/services/platformNotify");
+    const roleLabel =
+      wantRole === "service" ? normalizeServiceType(wantServiceType) || "service" : wantRole;
+    await notifyAdminsInApp(sb, {
+      title: "طلب تسجيل جديد",
+      message: `طلب انضمام (${roleLabel}) — ${displayName || digits}`,
+      type: "registration",
+      source: "admin",
+      payload: {
+        user_id: userRow.id,
+        role: wantRole,
+        service_type: userRow.service_type || null,
+        phone: digits,
+      },
+    });
+  } catch (notifyErr) {
+    console.warn("[ERVENOW] register-account admin notify:", notifyErr.message || notifyErr);
+  }
+
+  return ok(res, {
+    success: true,
+    pending_approval: true,
+    approved: false,
+    message:
+      "تم استلام طلب التسجيل بنجاح. حسابك قيد المراجعة من إدارة ERVENOW، وسيتم إشعارك فور اعتماد الحساب وتفعيله. بعد الاعتماد سجّل الدخول برمز واتساب.",
+    user: {
+      id: userRow.id,
+      phone: userRow.phone,
+      role: userRow.role,
+      status: userRow.status || "pending",
+      service_type: userRow.service_type || null,
+      name: userRow.name || null,
+    },
+  });
+}
+
+/** تسجيل حساب جديد بدون OTP — يُرسل للإدارة للموافقة، ثم يدخل المستخدم برمز واتساب بعد الاعتماد */
+async function registerAccountRoute(req, res) {
+  try {
+    return await handleRegisterAccount(req, res);
+  } catch (e) {
+    console.error("[ERVENOW] register-account:", e);
+    return fail(res, e.message || "فشل التسجيل", 500);
+  }
+}
+
+router.post("/register-account", registerAccountRoute);
+router.post("/register", registerAccountRoute);
 
 router.get("/me", requireAuth, (req, res) => {
   const approved = accountApprovedFlag(req.appUser.status, req.appUser.role);

@@ -7,7 +7,7 @@
   global.__ervViewportReady = true;
 
   /** يُرفَع عند كل تحديث Mobile Shell لإجبار تحميل نسخة جديدة (تجاوز cache الجوال) */
-  var ERV_SHELL_ASSET_VER = "20260612";
+  var ERV_SHELL_ASSET_VER = "20260622";
 
   function shellAssetUrl(path) {
     var p = String(path || "");
@@ -69,6 +69,16 @@
     document.head.appendChild(s);
   }
 
+  function ensureMobileOrdersNavBadgeJs() {
+    if (!isMobileShellViewport() || isPaymentFlowPath()) return;
+    if (document.body && document.body.classList.contains("erv-preview-lab")) return;
+    if (document.querySelector('script[src*="mobile-orders-nav-badge.js"]')) return;
+    var s = document.createElement("script");
+    s.src = shellAssetUrl("/assets/mobile-orders-nav-badge.js");
+    s.defer = true;
+    document.head.appendChild(s);
+  }
+
   function injectMobileHarmonyCritical() {
     if (!isMobileShellViewport() || isPaymentFlowPath()) return;
     if (document.body && document.body.classList.contains("erv-preview-lab")) return;
@@ -124,7 +134,7 @@
     if (!nav) {
       nav = document.createElement("nav");
       nav.id = "ervMobileBottomNav";
-      nav.className = "erv-mobile-bottom-nav erv-mobile-bottom-nav--shell";
+      nav.className = "erv-mobile-bottom-nav erv-mobile-bottom-nav--shell erv-mobile-bottom-nav--plus";
       nav.setAttribute("aria-label", "التنقل السريع");
       nav.setAttribute("aria-hidden", "true");
       document.body.appendChild(nav);
@@ -261,6 +271,7 @@
     ensureBottomNavShell();
     syncSiteHeaderHeight();
     ensureMobileFoundationJs();
+    ensureMobileOrdersNavBadgeJs();
     if (isMobileShellViewport() && !document.querySelector('script[src*="mobile-harmony.js"]')) {
       var hs = document.createElement("script");
       hs.src = shellAssetUrl("/assets/mobile-harmony.js");

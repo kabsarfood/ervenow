@@ -11,7 +11,8 @@ const { isHomeServiceType } = require("../utils/homeServicePricing");
 const { DELIVERY_STATUS } = require("../domain/orders/constants");
 const { enqueueDeliveryJob } = require("../../queues/deliveryQueue");
 const { notifyProvidersForBooking } = require("./serviceBookingNotify");
-const { notifyInternalDeliveryOrder, sendInternalDeliveryCustomerWhatsApp } = require("./internalDeliveryNotify");
+const { notifyInternalDeliveryOrder } = require("./internalDeliveryNotify");
+const { sendCustomerOrderPaidWhatsApp } = require("../messages/deliveryCustomerWhatsApp");
 const { logger } = require("../utils/logger");
 const { GAS_RADIUS_INITIAL_KM } = require("../utils/gasDeliveryRadius");
 
@@ -142,7 +143,7 @@ async function createServiceOrder(sb, appUser, body) {
         unified: true,
         provider_net:
           serviceType === "gas_delivery" &&
-          String(raw.gas_mode ?? payloadData.gas_mode || "cylinder_swap").toLowerCase() !== "central_refill"
+          String((raw.gas_mode ?? payloadData.gas_mode) || "cylinder_swap").toLowerCase() !== "central_refill"
             ? gasCylinderProviderNet(raw.qty ?? raw.service_qty ?? payloadData.qty ?? 1, total)
             : Math.max(0, Math.round((total - platformCommission) * 100) / 100),
         ...(serviceType === "gas_delivery" ? { gas_radius_km: GAS_RADIUS_INITIAL_KM } : {}),
@@ -175,11 +176,11 @@ async function createServiceOrder(sb, appUser, body) {
     logger.error({ err: waErr.message || String(waErr), orderId: orderData.id }, "[serviceOrderCreate] notify");
   }
 
-  if (serviceType === "internal_delivery") {
+  if (paymentStatus === "paid") {
     try {
-      await sendInternalDeliveryCustomerWhatsApp(orderData);
+      await sendCustomerOrderPaidWhatsApp(orderData, logger);
     } catch (waErr) {
-      logger.error({ err: waErr.message || String(waErr), orderId: orderData.id }, "[serviceOrderCreate] customer WA");
+      logger.error({ err: waErr.message || String(waErr), orderId: orderData.id }, "[serviceOrderCreate] customer paid WA");
     }
   }
 

@@ -1,0 +1,374 @@
+/**
+ * ERVENOW — مواصفات التفاعل الموحّدة
+ * المرجع: بطاقات الأقسام .sn-card (start-now-landing.css)
+ *
+ *  • الحافة: 1.5px solid rgba(61, 34, 19, 0.12)
+ *  • عند التفاعل: حافة #b9872f + ظل 0 12px 34px + رفع translateY(-5px)
+ *  • الانتقال: transform · box-shadow · border-color — 0.22s cubic-bezier(0.4, 0, 0.2, 1)
+ *  • طبقة ::before شفافة opacity 0.045
+ */
+:root {
+  --erv-sn-border: var(--sn-border, rgba(61, 34, 19, 0.12));
+  --erv-sn-gold: var(--sn-gold, #b9872f);
+  --erv-sn-shadow: var(--sn-shadow-sm, 0 2px 8px rgba(45, 26, 14, 0.06));
+  --erv-sn-shadow-hover: var(--sn-shadow-hover, 0 12px 34px rgba(45, 26, 14, 0.14));
+  --erv-sn-motion: var(--sn-transition, 0.22s cubic-bezier(0.4, 0, 0.2, 1));
+  --erv-sn-lift: -5px;
+  --erv-sn-overlay: 0.045;
+}
+
+/* ── قائمة العناصر التفاعلية ─────────────────────────────── */
+.erv-interact,
+.btn:not(:disabled):not([disabled]),
+a.btn,
+button.btn:not(:disabled):not([disabled]),
+.btn-primary:not(:disabled):not([disabled]),
+.btn-ghost:not(:disabled):not([disabled]),
+.store-order-btn:not(:disabled):not([disabled]),
+.btn-add-cart:not(:disabled):not([disabled]),
+.dash-site-header__btn,
+.auth-mode-tabs__btn,
+.role-picker__btn,
+.lp-btn-solid,
+.lp-btn-outline,
+.lp-quick-dd__btn,
+.cat-card,
+.hub-card,
+.dash-tabs__nav button:not(:disabled):not([disabled]),
+.dash-tabs__live-map-btn,
+.sn-card,
+.preview-hub-card,
+.ds-svc:not(:disabled):not([disabled]),
+.stores-cuisine-chip,
+.store-card,
+.store-card__btn,
+.erv-section-hub__cat,
+.preview-rest-sort__btn,
+.admin-shell-page .panel-btn:not(:disabled):not([disabled]),
+.admin-mobile-nav-panel__btn,
+.app-tile,
+.portal-card,
+.erv-mobile-bottom-nav__item,
+.erv-plus-nav-sheet__option,
+.cart-mobile-bar__btn,
+a[class$="__btn"]:not(.prod-qty-btn):not(.prod-gallery__dot),
+button[class$="__btn"]:not(:disabled):not([disabled]):not(.prod-qty-btn):not(.prod-gallery__dot) {
+  position: relative;
+  border: 1.5px solid var(--erv-sn-border) !important;
+  box-shadow: var(--erv-sn-shadow);
+  transition:
+    transform var(--erv-sn-motion),
+    box-shadow var(--erv-sn-motion),
+    border-color var(--erv-sn-motion) !important;
+}
+
+.cat-card,
+.hub-card,
+.sn-card,
+.preview-hub-card,
+.store-card,
+.app-tile,
+.portal-card,
+.ds-svc:not(:disabled):not([disabled]) {
+  overflow: hidden;
+}
+
+/* طبقة لمعان — نفس .sn-card::before */
+.erv-interact::before,
+.btn:not(:disabled):not([disabled])::before,
+a.btn::before,
+.cat-card::before,
+.hub-card::before,
+.dash-tabs__nav button:not(:disabled):not([disabled])::before,
+.dash-tabs__live-map-btn::before,
+.sn-card::before,
+.preview-hub-card::before,
+.ds-svc:not(:disabled):not([disabled])::before,
+.stores-cuisine-chip::before,
+.store-card::before,
+.store-card__btn::before,
+.erv-section-hub__cat::before,
+.preview-rest-sort__btn::before,
+.admin-shell-page .panel-btn:not(:disabled):not([disabled])::before,
+.app-tile::before,
+.portal-card::before,
+.dash-site-header__btn::before,
+.auth-mode-tabs__btn::before,
+.role-picker__btn::before,
+.lp-btn-solid::before,
+.lp-btn-outline::before,
+.lp-quick-dd__btn::before,
+.erv-mobile-bottom-nav__item::before,
+.cart-mobile-bar__btn::before,
+a[class$="__btn"]:not(.prod-qty-btn)::before,
+button[class$="__btn"]:not(:disabled):not(.prod-qty-btn)::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--erv-sn-gold);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--erv-sn-motion);
+}
+
+/* ── حالة التفاعل (نفس hover لـ .sn-card) ─────────────────── */
+@media (hover: hover) and (pointer: fine) {
+  .erv-interact:hover,
+  .btn:not(:disabled):not([disabled]):hover,
+  a.btn:hover,
+  .btn-primary:not(:disabled):not([disabled]):hover,
+  .btn-ghost:not(:disabled):not([disabled]):hover,
+  .store-order-btn:not(:disabled):not([disabled]):hover,
+  .btn-add-cart:not(:disabled):not([disabled]):hover,
+  .dash-site-header__btn:hover,
+  .auth-mode-tabs__btn:hover,
+  .role-picker__btn:hover,
+  .lp-btn-solid:hover,
+  .lp-btn-outline:hover,
+  .lp-quick-dd__btn:hover,
+  .cat-card:hover,
+  .hub-card:hover,
+  .dash-tabs__nav button:not(:disabled):not([disabled]):hover,
+  .dash-tabs__live-map-btn:hover,
+  .preview-hub-card:hover,
+  .ds-svc:not(:disabled):not([disabled]):not(.is-soon):hover,
+  .stores-cuisine-chip:hover,
+  .store-card:hover,
+  .store-card__btn:hover,
+  .erv-section-hub__cat:hover,
+  .preview-rest-sort__btn:hover,
+  .admin-shell-page .panel-btn:not(:disabled):not([disabled]):hover,
+  .admin-mobile-nav-panel__btn:hover,
+  .app-tile:hover,
+  .portal-card:hover,
+  .erv-mobile-bottom-nav__item:hover,
+  .cart-mobile-bar__btn:hover,
+  a[class$="__btn"]:not(.prod-qty-btn):hover,
+  button[class$="__btn"]:not(:disabled):not(.prod-qty-btn):hover {
+    transform: translateY(var(--erv-sn-lift)) !important;
+    border-color: var(--erv-sn-gold) !important;
+    box-shadow: var(--erv-sn-shadow-hover) !important;
+    opacity: 1;
+    filter: none;
+  }
+
+  .erv-interact:hover::before,
+  .btn:not(:disabled):not([disabled]):hover::before,
+  a.btn:hover::before,
+  .cat-card:hover::before,
+  .hub-card:hover::before,
+  .dash-tabs__nav button:not(:disabled):not([disabled]):hover::before,
+  .dash-tabs__live-map-btn:hover::before,
+  .preview-hub-card:hover::before,
+  .ds-svc:not(:disabled):not([disabled]):not(.is-soon):hover::before,
+  .stores-cuisine-chip:hover::before,
+  .store-card:hover::before,
+  .store-card__btn:hover::before,
+  .erv-section-hub__cat:hover::before,
+  .preview-rest-sort__btn:hover::before,
+  .admin-shell-page .panel-btn:not(:disabled):not([disabled]):hover::before,
+  .app-tile:hover::before,
+  .portal-card:hover::before,
+  .dash-site-header__btn:hover::before,
+  .auth-mode-tabs__btn:hover::before,
+  .role-picker__btn:hover::before,
+  .lp-btn-solid:hover::before,
+  .lp-btn-outline:hover::before,
+  .lp-quick-dd__btn:hover::before,
+  .erv-mobile-bottom-nav__item:hover::before,
+  .cart-mobile-bar__btn:hover::before,
+  a[class$="__btn"]:not(.prod-qty-btn):hover::before,
+  button[class$="__btn"]:not(:disabled):not(.prod-qty-btn):hover::before {
+    opacity: var(--erv-sn-overlay);
+  }
+
+  .cat-card:hover .cat-card__icon,
+  .hub-card:hover .hub-card__icon,
+  .sn-card:hover .sn-card__icon-wrap,
+  .preview-hub-card:hover .sn-card__icon-wrap,
+  .ds-svc:not(:disabled):hover .ds-svc__ic,
+  .stores-cuisine-chip:hover .stores-cuisine-chip__icon,
+  .erv-section-hub__cat:hover .erv-section-hub__cat__ic {
+    transform: scale(1.1);
+    transition: transform var(--erv-sn-motion);
+  }
+}
+
+/* بطاقات الأقسام — لون القسم عند التفاعل */
+.sn-card:hover,
+.sn-card:active {
+  transform: translateY(var(--erv-sn-lift)) !important;
+  border-color: var(--card-color, var(--erv-sn-gold)) !important;
+  box-shadow: var(--erv-sn-shadow-hover) !important;
+}
+
+.sn-card:hover::before,
+.sn-card:active::before {
+  background: var(--card-accent, var(--erv-sn-gold));
+  opacity: var(--erv-sn-overlay);
+}
+
+/* لمس / ضغط — نفس حركة .sn-card (بدون scale) */
+.erv-interact:active:not(:disabled):not([disabled]),
+.btn:not(:disabled):not([disabled]):active,
+a.btn:active,
+.cat-card:active,
+.hub-card:active,
+.dash-tabs__nav button:not(:disabled):not([disabled]):active,
+.dash-tabs__live-map-btn:active,
+.preview-hub-card:active,
+.ds-svc:not(:disabled):not([disabled]):active,
+.stores-cuisine-chip:active,
+.store-card:active,
+.store-card__btn:active,
+.erv-section-hub__cat:active,
+.preview-rest-sort__btn:active,
+.admin-shell-page .panel-btn:not(:disabled):not([disabled]):active,
+.app-tile:active,
+.portal-card:active,
+.dash-site-header__btn:active,
+.auth-mode-tabs__btn:active,
+.role-picker__btn:active,
+.lp-btn-solid:active,
+.lp-btn-outline:active,
+.lp-quick-dd__btn:active,
+.erv-mobile-bottom-nav__item:active,
+.cart-mobile-bar__btn:active,
+a[class$="__btn"]:not(.prod-qty-btn):active,
+button[class$="__btn"]:not(:disabled):not(.prod-qty-btn):active {
+  transform: translateY(var(--erv-sn-lift)) !important;
+  border-color: var(--erv-sn-gold) !important;
+  box-shadow: var(--erv-sn-shadow-hover) !important;
+  filter: none;
+}
+
+.erv-interact:active:not(:disabled)::before,
+.btn:not(:disabled):active::before,
+.cat-card:active::before,
+.hub-card:active::before,
+.dash-tabs__nav button:not(:disabled):active::before,
+.dash-tabs__live-map-btn:active::before,
+.preview-hub-card:active::before,
+.ds-svc:not(:disabled):active::before,
+.stores-cuisine-chip:active::before,
+.store-card:active::before,
+.store-card__btn:active::before,
+.erv-section-hub__cat:active::before,
+.preview-rest-sort__btn:active::before,
+.admin-shell-page .panel-btn:not(:disabled):active::before,
+.app-tile:active::before,
+.portal-card:active::before,
+.dash-site-header__btn:active::before,
+.auth-mode-tabs__btn:active::before,
+.role-picker__btn:active::before,
+.lp-btn-solid:active::before,
+.lp-btn-outline:active::before,
+.lp-quick-dd__btn:active::before,
+.erv-mobile-bottom-nav__item:active::before,
+.cart-mobile-bar__btn:active::before,
+a[class$="__btn"]:not(.prod-qty-btn):active::before,
+button[class$="__btn"]:not(:disabled):not(.prod-qty-btn):active::before {
+  opacity: var(--erv-sn-overlay);
+}
+
+.dash-tabs__nav button.is-active:active,
+.dash-tabs__nav button[aria-selected="true"]:active {
+  transform: translateY(var(--erv-sn-lift)) !important;
+}
+
+/* تركيز لوحة المفاتيح */
+.erv-interact:focus-visible,
+.btn:not(:disabled):focus-visible,
+a.btn:focus-visible,
+.cat-card:focus-visible,
+.hub-card:focus-visible,
+.dash-tabs__nav button:not(:disabled):focus-visible,
+.dash-tabs__live-map-btn:focus-visible,
+.ds-svc:not(:disabled):focus-visible,
+.store-card:focus-visible,
+.store-card__btn:focus-visible,
+.dash-site-header__btn:focus-visible,
+.app-tile:focus-visible {
+  outline: none;
+  border-color: var(--erv-sn-gold) !important;
+  box-shadow:
+    var(--erv-sn-shadow-hover),
+    0 0 0 3px rgba(185, 135, 47, 0.22) !important;
+}
+
+/* استثناءات */
+.prod-qty-btn,
+.prod-gallery__dot,
+.leaflet-bar a,
+.leaflet-control-zoom-in,
+.leaflet-control-zoom-out,
+.maplibregl-ctrl button,
+.erw-chip-scroll button,
+.erw-chip-scroll a,
+button[disabled],
+.btn:disabled,
+.btn[disabled],
+.ds-svc.is-soon:not(.is-active) {
+  transform: none !important;
+}
+
+.prod-qty-btn::before,
+.prod-gallery__dot::before,
+.leaflet-bar a::before,
+.erw-chip-scroll button::before,
+.erw-chip-scroll a::before {
+  display: none !important;
+}
+
+/* الحالات النشطة — الحفاظ على التنسيق المحلي */
+.dash-tabs__nav button.is-active,
+.dash-tabs__nav button[aria-selected="true"] {
+  border-color: rgba(185, 135, 47, 0.35) !important;
+}
+
+.erv-section-hub__cat.is-active {
+  border-color: transparent !important;
+}
+
+.admin-shell-page .panel-btn.active {
+  border-color: rgba(212, 167, 106, 0.5) !important;
+}
+
+.ds-svc.is-active {
+  border-color: var(--ds-gold, var(--erv-sn-gold)) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .erv-interact,
+  .btn,
+  a.btn,
+  .cat-card,
+  .hub-card,
+  .dash-tabs__nav button,
+  .sn-card,
+  .ds-svc,
+  .store-card,
+  .app-tile,
+  .portal-card,
+  .dash-site-header__btn {
+    transition-duration: 0.01ms !important;
+  }
+
+  .erv-interact:hover,
+  .btn:hover,
+  .cat-card:hover,
+  .hub-card:hover,
+  .sn-card:hover,
+  .ds-svc:hover,
+  .store-card:hover,
+  .app-tile:hover,
+  .erv-interact:active,
+  .btn:active,
+  .cat-card:active,
+  .hub-card:active,
+  .sn-card:active,
+  .store-card:active {
+    transform: none !important;
+  }
+}

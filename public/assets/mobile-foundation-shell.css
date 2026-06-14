@@ -127,14 +127,10 @@
     position: fixed;
     left: 0;
     right: 0;
-    bottom: 0;
+    bottom: var(--erv-mobile-nav-offset, 8px);
     z-index: 300;
-    min-height: var(--erv-mobile-nav-h, 56px);
-    padding: 4px max(6px, env(safe-area-inset-left, 6px)) max(6px, env(safe-area-inset-bottom, 6px))
-      max(6px, env(safe-area-inset-right, 6px));
-    background: linear-gradient(180deg, rgba(255, 254, 251, 0.98) 0%, #fffefb 100%);
-    border-top: 1px solid rgba(61, 34, 19, 0.1);
-    box-shadow: 0 -4px 24px rgba(45, 26, 14, 0.08);
+    min-height: calc(var(--erv-mobile-nav-h, 62px) + env(safe-area-inset-bottom, 0px) + var(--erv-plus-fab-lift, 28px) * 0.35);
+    background: transparent;
     visibility: hidden;
     pointer-events: none;
   }
@@ -149,7 +145,9 @@
   }
 
   html.erv-mobile-shell:not(.erv-mobile-no-nav) .dash-site-footer {
-    padding-bottom: calc(var(--erv-mobile-nav-h, 56px) + env(safe-area-inset-bottom, 0px) + 16px);
+    padding-bottom: calc(
+      var(--erv-mobile-nav-h, 62px) + var(--erv-plus-fab-lift, 28px) * 0.5 + var(--erv-mobile-nav-offset, 8px) + env(safe-area-inset-bottom, 0px) + 16px
+    );
   }
 
   html.erv-mobile-shell.erv-mobile-no-nav .dash-site-footer {

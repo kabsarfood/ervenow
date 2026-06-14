@@ -438,6 +438,20 @@
         color: var(--muted, #5c4a3d);
         line-height: 1.55;
       }
+      body.auth-register-mode #authLoginOtpBlock,
+      body.auth-register-mode #authLoginOtpActions,
+      body.auth-register-mode #loginCodeGroup {
+        display: none !important;
+      }
+      body.auth-register-mode #authRegisterPanel {
+        display: block;
+      }
+      body:not(.auth-register-mode) #authRegisterPanel {
+        display: none !important;
+      }
+      body.auth-register-mode #authRegisterActions {
+        display: block;
+      }
       .auth-store-link {
         display: block;
         margin: 0 0 14px;
@@ -521,6 +535,7 @@
             autocomplete="tel-national"
           />
 
+          <div id="authLoginOtpBlock">
           <div class="auth-code-group" id="loginCodeGroup" hidden>
             <label for="otp" style="margin-top: 16px">رمز واتساب</label>
             <input
@@ -533,15 +548,15 @@
             />
           </div>
 
-          <div class="auth-otp-actions auth-otp-actions--single">
+          <div class="auth-otp-actions auth-otp-actions--single" id="authLoginOtpActions">
             <button type="button" class="btn btn-primary" id="authOtpBtn">إرسال الرمز</button>
+          </div>
           </div>
 
         </div>
 
-        <section class="auth-services-panel" id="authServicesPanel" hidden aria-hidden="true"></section>
-
-        <section class="auth-role-section" id="authRoleSection" hidden>
+        <section class="auth-register-panel" id="authRegisterPanel" hidden aria-hidden="true">
+        <section class="auth-role-section" id="authRoleSection">
           <div class="auth-register-role">
             <span class="auth-register-role__chip" id="registerRoleChip">صفة التسجيل</span>
             <select id="registerRoleSelect" class="auth-register-role__select" aria-labelledby="registerRoleChip"></select>
@@ -572,7 +587,8 @@
 
         <div id="serviceRegisterFields" class="driver-register-fields">
           <p class="sub" id="serviceRegIntro" style="margin-top: 0">
-            بيانات مقدّم الخدمة للمراجعة. بعد اعتماد الطلب من إدارة ERVENOW تُفتح لوحتك لاستقبال الطلبات في منطقتك.
+            بيانات مقدّم الخدمة للمراجعة. بعد اعتماد الطلب من إدارة ERVENOW سجّل الدخول من
+            <a href="/service-provider-login">بوابة مزوّد الخدمة</a>.
           </p>
           <label for="serviceRegName">الاسم</label>
           <input id="serviceRegName" type="text" maxlength="120" placeholder="اسمك أو اسم النشاط" autocomplete="name" />
@@ -661,6 +677,11 @@
           </label>
         </div>
 
+        <div class="auth-register-actions auth-otp-actions auth-otp-actions--single" id="authRegisterActions" hidden>
+          <button type="button" class="btn btn-primary" id="authRegisterBtn">إنشاء حساب</button>
+        </div>
+        </section>
+
         <div class="msg" id="msg" style="display: none"></div>
       </div>
     </main>
@@ -741,6 +762,28 @@
         return new URLSearchParams(window.location.search).get("mode") === "register";
       }
 
+      function syncRegisterSubmitUi() {
+        var isReg = isRegisterMode();
+        var regPanel = document.getElementById("authRegisterPanel");
+        var loginOtpBlock = document.getElementById("authLoginOtpBlock");
+        var registerActions = document.getElementById("authRegisterActions");
+        if (regPanel) {
+          regPanel.hidden = !isReg;
+          regPanel.setAttribute("aria-hidden", isReg ? "false" : "true");
+        }
+        if (loginOtpBlock) {
+          loginOtpBlock.hidden = isReg;
+          loginOtpBlock.setAttribute("aria-hidden", isReg ? "true" : "false");
+        }
+        if (registerActions) {
+          registerActions.hidden = !isReg;
+          registerActions.setAttribute("aria-hidden", isReg ? "false" : "true");
+        }
+        var otpInput = document.getElementById("otp");
+        if (otpInput) otpInput.disabled = isReg;
+        if (isReg && window.loginOtpFlow && loginOtpFlow.reset) loginOtpFlow.reset();
+      }
+
       function setAuthMode(register) {
         var qs = new URLSearchParams(window.location.search);
         if (register) {
@@ -768,25 +811,28 @@
         var intro = document.getElementById("authFormIntro");
         if (intro) {
           intro.textContent = register
-            ? "أدخل بياناتك وأكمل التحقق عبر OTP. بعد مراجعة الطلب واعتماده من إدارة ERVENOW سيتم تفعيل حسابك وإشعارك بذلك."
+            ? "أكمل بياناتك ثم اضغط إنشاء حساب في الأسفل. يُراجع الطلب من الإدارة، وبعد الاعتماد سجّل الدخول برمز واتساب."
             : "";
         }
-        if (window.loginOtpFlow && loginOtpFlow.refreshLabels) loginOtpFlow.refreshLabels();
-        var servicesPanel = document.getElementById("authServicesPanel");
-        if (servicesPanel) {
-          servicesPanel.hidden = true;
-          servicesPanel.setAttribute("aria-hidden", "true");
+        if (!register && window.loginOtpFlow && loginOtpFlow.refreshLabels) loginOtpFlow.refreshLabels();
+        if (register && window.loginOtpFlow && loginOtpFlow.reset) loginOtpFlow.reset();
+        var regPanel = document.getElementById("authRegisterPanel");
+        if (regPanel) {
+          regPanel.hidden = !register;
+          regPanel.setAttribute("aria-hidden", register ? "false" : "true");
         }
-        var roleSec = document.getElementById("authRoleSection");
-        if (roleSec) roleSec.hidden = !register;
         var body = document.getElementById("authBody");
         if (body) body.classList.toggle("auth-register-mode", !!register);
         var tag = document.querySelector(".dash-site-header__tag");
         if (tag) tag.textContent = register ? "إنشاء حساب" : "تسجيل الدخول";
         if (register) syncRegisterRoleSelectFromPreferred(qs.get("role") || "customer");
-        else syncLoginRoleUi();
+        else {
+          syncLoginRoleUi();
+          if (window.loginOtpFlow && loginOtpFlow.reset) loginOtpFlow.reset();
+        }
         syncCustomerRegisterUi();
         syncAuthHead();
+        syncRegisterSubmitUi();
       }
 
       var REGISTER_ROLE_OPTIONS = [
@@ -1076,7 +1122,11 @@
         if (title) {
           title.innerHTML = reg ? "انضم إلى <span>ERVENOW</span>" : "مرحباً بعودتك إلى <span>ERVENOW</span>";
         }
-        if (sub) sub.textContent = "صلاحية الرمز 5 دقائق.";
+        if (sub) {
+          sub.textContent = reg
+            ? "يُراجع طلبك فريق الإدارة — بعد الاعتماد سجّل الدخول برمز واتساب."
+            : "صلاحية الرمز 5 دقائق.";
+        }
       }
 
       function syncCustomerRegisterUi() {
@@ -1090,6 +1140,7 @@
         syncPayoutRegisterBlock();
         syncAuthHead();
         syncLoginRoleUi();
+        syncRegisterSubmitUi();
       }
 
       function safeInternalNext(raw) {
@@ -1210,6 +1261,14 @@
           window.location.replace("/driver-login");
           return;
         }
+        if (
+          mode !== "register" &&
+          r &&
+          (String(r).toLowerCase() === "service" || isServiceTypeValue(r))
+        ) {
+          window.location.replace("/service-provider-login");
+          return;
+        }
         if (mode === "register") {
           setAuthMode(true);
         } else {
@@ -1273,7 +1332,201 @@
         });
       }
 
+      function buildRegisterRequestBody() {
+        normalizeInputPhone();
+        var raw = document.getElementById("phone").value;
+        if (!isValid05(raw)) {
+          show(ErvenowSaPhone ? ErvenowSaPhone.invalidMessage() : "أدخل رقم سعودي صحيح", false);
+          throw new Error("invalid_phone");
+        }
+        if (!assertDriverOnlyInRegisterMode()) throw new Error("driver_register");
+        var phone = toE164(raw);
+        if (!phone) {
+          show("أدخل الرقم", false);
+          throw new Error("no_phone");
+        }
+
+        var roleSel = document.getElementById("role").value;
+        var role = apiRoleFromSelection();
+        var body = { phone: phone, role: role };
+        var driverRegPayload = null;
+
+        if (isCustomerRegisterMode()) {
+          var custName = String(document.getElementById("customerName").value || "").trim();
+          if (custName) body.name = custName;
+        }
+
+        if (isDriverRegisterMode()) {
+          var dName = String(document.getElementById("driverRegName").value || "").trim();
+          var iqama = String(document.getElementById("driverRegIqama").value || "").trim();
+          var carType = String(document.getElementById("driverRegCarType").value || "").trim();
+          var plate = String(document.getElementById("driverRegPlate").value || "").trim();
+          if (!dName || !iqama || !carType || !plate) {
+            show("أكمل بيانات المندوب: الاسم، الهوية/الإقامة، نوع المركبة، ورقم اللوحة", false);
+            throw new Error("driver_fields");
+          }
+          driverRegPayload = { name: dName, iqama: iqama, car_type: carType, plate_number: plate };
+          body.driver = driverRegPayload;
+          body.name = dName;
+        }
+
+        var payoutPayload = null;
+        try {
+          payoutPayload = collectRegisterPayoutPayload();
+        } catch (pe) {
+          show(String(pe.message || pe), false);
+          throw pe;
+        }
+        if (driverRegPayload && payoutPayload) {
+          body.payout = payoutPayload;
+        }
+
+        if (isServiceRegisterMode()) {
+          var sName = String(document.getElementById("serviceRegName").value || "").trim();
+          var sType = selectedServiceType();
+          var sArea = readServiceAreaValue();
+          if (!sName) {
+            show("أدخل الاسم", false);
+            throw new Error("service_name");
+          }
+          if (!sType) {
+            show("اختر نوع الخدمة من القائمة", false);
+            throw new Error("service_type");
+          }
+          if (!sArea) {
+            show(isPickupTruckRegister() ? "اختر المدينة" : "أدخل الحي الذي تخدمه", false);
+            throw new Error("service_area");
+          }
+          body.name = sName;
+          body.service_type = sType;
+          body.service_district = sArea;
+          body.district = sArea;
+          if (isPickupTruckRegister()) body.service_city = sArea;
+          if (isPickupTruckRegister()) {
+            var vType = String(document.getElementById("pickupTruckVehicleType").value || "").trim();
+            var vPlate = String(document.getElementById("pickupTruckPlate").value || "").trim();
+            var vModel = String(document.getElementById("pickupTruckModel").value || "").trim();
+            if (!vType || !vPlate || !vModel) {
+              show("أكمل بيانات المركبة: النوع، رقم اللوحة، وسنة الموديل", false);
+              throw new Error("vehicle_fields");
+            }
+            body.service_vehicle_type = vType;
+            body.service_plate_number = vPlate;
+            body.service_vehicle_model = vModel;
+          }
+          if (payoutPayload && !payoutPayload.iban) {
+            show("أدخل رقم الآيبان لاستلام المستحقات", false);
+            throw new Error("iban");
+          }
+        }
+
+        if (
+          payoutPayload &&
+          (roleSel === "store" ||
+            roleSel === "merchant" ||
+            roleSel === "restaurant" ||
+            isServiceRegisterMode())
+        ) {
+          body.payout = payoutPayload;
+        }
+
+        return body;
+      }
+
+      function isRegisterApiNotFoundError(err) {
+        var msg = String((err && err.message) || err || "");
+        return msg.indexOf("غير موجود") !== -1 || msg.indexOf("لم يعد متاحاً") !== -1;
+      }
+
+      async function postRegisterAccount(regBody) {
+        var attempts = [
+          { path: "/api/core/register-account", body: regBody },
+          { path: "/api/core/register", body: regBody },
+        ];
+        var lastErr = null;
+        for (var i = 0; i < attempts.length; i++) {
+          try {
+            return await window.PlatformAPI.api(attempts[i].path, {
+              method: "POST",
+              body: attempts[i].body,
+            });
+          } catch (e) {
+            lastErr = e;
+            if (!isRegisterApiNotFoundError(e)) throw e;
+          }
+        }
+        throw (
+          lastErr ||
+          new Error("خدمة التسجيل غير متاحة على الخادم — أعد تشغيل الخادم أو حدّث النشر.")
+        );
+      }
+
+      async function runRegisterAccount() {
+        var btn = document.getElementById("authRegisterBtn");
+        if (btn) btn.disabled = true;
+        try {
+          var regBody = buildRegisterRequestBody();
+          var res = await postRegisterAccount(regBody);
+          if (res.ok === false || res.success === false) {
+            show("تعذّر إرسال طلب التسجيل", false);
+            throw new Error("register_failed");
+          }
+          try {
+            normalizeInputPhone();
+            var disp = String(document.getElementById("phone").value || "").trim();
+            if (disp) localStorage.setItem("userPhone", disp);
+            if (isServiceRegisterMode()) {
+              localStorage.setItem("erv_pending_login_url", "/service-provider-login");
+            }
+          } catch (phStore) {}
+          show(
+            res.message ||
+              "تم استلام طلب التسجيل بنجاح. حسابك قيد المراجعة من إدارة ERVENOW، وسيتم إشعارك فور اعتماد الحساب وتفعيله. بعد الاعتماد سجّل الدخول من بوابة مزوّد الخدمة.",
+            true
+          );
+          setTimeout(function () {
+            window.location.href = "/pending-approval.html";
+          }, 1400);
+        } catch (e) {
+          var errMsg = String(e.message || e);
+          if (
+            errMsg === "invalid_phone" ||
+            errMsg === "no_phone" ||
+            errMsg === "driver_fields" ||
+            errMsg === "service_name" ||
+            errMsg === "service_type" ||
+            errMsg === "service_area" ||
+            errMsg === "vehicle_fields" ||
+            errMsg === "iban" ||
+            errMsg === "driver_register"
+          ) {
+            /* رسالة معروضة */
+          } else if (errMsg.indexOf("مسجّل مسبقاً") !== -1 || errMsg.indexOf("already_registered") !== -1) {
+            show("رقم الجوال مسجّل مسبقاً — استخدم تبويب تسجيل الدخول", false);
+          } else if (isRegisterApiNotFoundError(e)) {
+            show(
+              "خدمة التسجيل غير متاحة على الخادم حالياً. أعد تشغيل خادم ERVENOW (npm start) ثم أعد المحاولة.",
+              false
+            );
+          } else if (/رمز الدخول|رمز واتساب/i.test(errMsg)) {
+            show(
+              "إنشاء الحساب لا يحتاج رمزاً — اضغط «إنشاء حساب» في أسفل النموذج فقط. إن تكرّر الخطأ أعد تشغيل الخادم.",
+              false
+            );
+          } else {
+            show(mapOtpError(errMsg), false);
+          }
+          throw e;
+        } finally {
+          if (btn) btn.disabled = false;
+        }
+      }
+
       async function runLoginVerify() {
+        if (isRegisterMode()) {
+          show("لإنشاء حساب جديد استخدم زر «إنشاء حساب» في أسفل النموذج — لا حاجة لرمز واتساب.", false);
+          throw new Error("use_register_btn");
+        }
         try {
           normalizeInputPhone();
           var raw = document.getElementById("phone").value;
@@ -1523,6 +1776,10 @@
       }
 
       async function runLoginSendOtp() {
+        if (isRegisterMode()) {
+          show("في إنشاء الحساب استخدم زر «إنشاء حساب» في أسفل النموذج — لا حاجة لإرسال الرمز.", false);
+          throw new Error("register_no_otp");
+        }
         normalizeInputPhone();
         var raw = document.getElementById("phone").value;
         if (!isValid05(raw)) {
@@ -1563,27 +1820,33 @@
         show("تم إرسال الرمز عبر واتساب. صلاحية الرمز 5 دقائق.", true);
       }
 
+      document.getElementById("phone").addEventListener("keydown", function (e) {
+        if (e.key === "Enter" && isRegisterMode()) {
+          e.preventDefault();
+          e.stopPropagation();
+          var regBtn = document.getElementById("authRegisterBtn");
+          if (regBtn && !regBtn.disabled) regBtn.click();
+        }
+      });
+
       window.loginOtpFlow = ErvenowAuthOtpFlow.mount({
         phoneId: "phone",
         codeId: "otp",
         codeGroupId: "loginCodeGroup",
         btnId: "authOtpBtn",
         introId: "authFormIntro",
+        isActive: function () {
+          return !isRegisterMode();
+        },
         introSend: function () {
-          return isRegisterMode()
-            ? "اختر صفة حسابك ، ثم أدخل جوالك السعودي - اضغط إرسال الرمز ."
-            : "";
+          return "";
         },
         introVerify: function () {
-          return isRegisterMode()
-            ? "أدخل رمز واتساب ثم اضغط إنشاء حساب."
-            : "أدخل رمز واتساب ثم اضغط تسجيل الدخول.";
+          return "أدخل رمز واتساب ثم اضغط تسجيل الدخول.";
         },
         labels: {
           send: "إرسال الرمز",
-          verify: function () {
-            return isRegisterMode() ? "إنشاء حساب" : "تسجيل الدخول";
-          },
+          verify: "تسجيل الدخول",
         },
         phoneValid: function (v) {
           return isValid05(v);
@@ -1605,6 +1868,16 @@
         onSend: runLoginSendOtp,
         onVerify: runLoginVerify,
       });
+
+      var authRegisterBtn = document.getElementById("authRegisterBtn");
+      if (authRegisterBtn) {
+        authRegisterBtn.addEventListener("click", function () {
+          if (!isRegisterMode()) return;
+          runRegisterAccount();
+        });
+      }
+
+      syncRegisterSubmitUi();
     </script>
   </body>
 </html>

@@ -423,6 +423,10 @@ if (servePublicUi) {
     res.sendFile(path.join(publicPath, "driver-login.html"));
   });
 
+  app.get("/service-provider-login", (_req, res) => {
+    res.sendFile(path.join(publicPath, "service-provider-login.html"));
+  });
+
   app.get("/driver-register", (_req, res) => {
     res.sendFile(path.join(publicPath, "driver-register.html"));
   });

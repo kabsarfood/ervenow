@@ -47,8 +47,9 @@
     return m === "POST" || m === "PUT" || m === "PATCH" || m === "DELETE";
   }
 
-  function shouldRetryHttpStatus(status) {
+  function shouldRetryHttpStatus(status, json) {
     if (status === 408 || status === 429) return true;
+    if (json && json.reason === "migration_missing") return false;
     if (status >= 500 && status <= 599) return true;
     return false;
   }
@@ -379,7 +380,7 @@
         }
 
         var msg = humanizeHttpError(r.status, j);
-        if (attempt < totalAttempts - 1 && shouldRetryHttpStatus(r.status)) {
+        if (attempt < totalAttempts - 1 && shouldRetryHttpStatus(r.status, j)) {
           lastErr = new Error(msg);
           continue;
         }

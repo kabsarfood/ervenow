@@ -15,6 +15,7 @@ const { enqueueDeliveryJob } = require("../../queues/deliveryQueue");
 const { bumpDeliveryOrdersListEpoch } = require("../../shared/utils/deliveryOrdersListCache");
 const { createNotification } = require("../../shared/services/notificationService");
 const { notifyProvidersForBooking } = require("../../shared/services/serviceBookingNotify");
+const { sendCustomerOrderPaidWhatsApp } = require("../../shared/messages/deliveryCustomerWhatsApp");
 const { isDriverDispatchOrder } = require("../../shared/utils/driverDispatchOrders");
 
 const UNIFIED_SERVICE_TYPES = new Set([
@@ -182,6 +183,34 @@ async function runUnifiedDeliveryOnlyCreate({ sb, appUser, body, idempotencyKey,
       logger.warn(
         { err: notifyErr.message || String(notifyErr), orderId: data.id },
         "[deliveryOrderCreateShared] customer create notification"
+      );
+    }
+    try {
+      const { notifyAdminsForOrderEvent, notifyStoreForOrderEvent } = require("../../shared/services/platformNotify");
+      await notifyAdminsForOrderEvent(
+        sb,
+        data,
+        "طلب توصيل جديد",
+        `طلب توصيل جديد رقم ${data.order_number || data.id}.`
+      );
+      if (data.store_id) {
+        await notifyStoreForOrderEvent(sb, data, "طلب جديد", "لديك طلب جديد بانتظار المعالجة.");
+      }
+    } catch (platformNotifyErr) {
+      logger.warn(
+        { err: platformNotifyErr.message || String(platformNotifyErr), orderId: data.id },
+        "[deliveryOrderCreateShared] platform notifications"
+      );
+    }
+  }
+
+  if (data && paymentConfirmed) {
+    try {
+      await sendCustomerOrderPaidWhatsApp(data, logger);
+    } catch (waErr) {
+      logger.error(
+        { err: waErr && (waErr.message || String(waErr)), orderId: data.id },
+        "[deliveryOrderCreateShared] customer paid WA"
       );
     }
   }
