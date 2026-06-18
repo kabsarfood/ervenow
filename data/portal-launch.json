@@ -1,0 +1,26 @@
+{
+  "updated_at": "2026-06-17T12:00:00.000Z",
+  "notes": "البوابات التشغيلية الرسمية: merchant · driver · service · transport. العميل → المنصة الرئيسية. الإدارة → Admin Console.",
+  "operational_portals": ["merchant", "driver", "service", "transport"],
+  "customer_platform_home": "/start-now.html",
+  "admin_console": "/admin-dashboard",
+  "live": {
+    "service": true,
+    "transport": true,
+    "driver": true,
+    "merchant": true
+  },
+  "legacy_paths": {
+    "driver": "/driver",
+    "merchant": "/store-dashboard"
+  },
+  "operational_paths": {
+    "merchant": "/merchant-preview",
+    "driver": "/driver-preview",
+    "service": "/service-preview",
+    "transport": "/transport-preview"
+  },
+  "deprecated": {
+    "customer_portal": "/customer-preview"
+  }
+}

@@ -4,6 +4,7 @@
 
 const { allocateUniqueServiceOrderNumber } = require("../utils/generateOrderNumber");
 const { insertOrdersResilient } = require("../utils/idempotency");
+const { applyPortalTypeToOrderRow } = require("../utils/orderPortalRouting");
 const { applyProviderIdToInsertRow } = require("../utils/orderProviderId");
 const { computePlatformCommission } = require("../utils/serviceCommission");
 const { computeGasPlatformCommission, gasCylinderProviderNet } = require("../utils/gasDeliveryPricing");
@@ -153,7 +154,7 @@ async function createServiceOrder(sb, appUser, body) {
       providerId
     );
 
-    const ins = await insertOrdersResilient(sb, row);
+    const ins = await insertOrdersResilient(sb, applyPortalTypeToOrderRow(row));
     orderData = ins.data;
     insertErr = ins.error;
     if (!insertErr) break;

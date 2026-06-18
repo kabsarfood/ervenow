@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS public.notifications (
   title text NOT NULL,
   message text NOT NULL,
   type text NOT NULL DEFAULT 'system'
-    CHECK (type IN ('order', 'wallet', 'payment', 'account', 'delivery', 'system', 'promotion')),
+    CHECK (type IN ('order', 'wallet', 'payment', 'account', 'delivery', 'system', 'promotion', 'broadcast')),
   source text NOT NULL DEFAULT 'ervenow'
     CHECK (source IN ('ervenow', 'wallet', 'delivery', 'store', 'admin')),
   is_read boolean NOT NULL DEFAULT false,

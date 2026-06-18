@@ -10,7 +10,7 @@
     var r = String(role || "").toLowerCase();
     if (r === "user") r = "customer";
     var links = [{ key: "home", href: "/", label: "الرئيسية" }];
-    links.push({ key: "guest", href: "/dashboard", label: "لوحة الزائر" });
+    links.push({ key: "guest", href: "/dashboard", label: "منصة ERVENOW" });
     if (opts.authenticated) {
       if (r === "driver") {
         links.push({ key: "my_orders", href: "/orders", label: "طلباتي" });
@@ -120,6 +120,13 @@
       l.setAttribute("data-erv-notification-center-css", "1");
       document.head.appendChild(l);
     }
+    if (!document.querySelector('script[data-erv-notification-sounds="1"]')) {
+      var snd = document.createElement("script");
+      snd.src = "/assets/notification-sounds.js";
+      snd.defer = true;
+      snd.setAttribute("data-erv-notification-sounds", "1");
+      document.head.appendChild(snd);
+    }
     if (!document.querySelector('script[data-erv-notification-center-js="1"]')) {
       var s = document.createElement("script");
       s.src = "/assets/notification-center.js";
@@ -129,8 +136,34 @@
     }
   }
 
+  /** يضمن وجود حاوية الجرس في أي هيدر معروف */
+  function ensureNotificationHost() {
+    var existing = document.getElementById("dashHeaderNotifications");
+    if (existing) return existing;
+    var host = document.createElement("div");
+    host.id = "dashHeaderNotifications";
+    host.setAttribute("aria-hidden", "true");
+    var tools = document.querySelector(".dash-site-header__tools");
+    if (tools) {
+      tools.insertBefore(host, tools.firstChild);
+      return host;
+    }
+    var lpActions = document.querySelector(".lp-header__actions");
+    if (lpActions) {
+      lpActions.insertBefore(host, lpActions.firstChild);
+      return host;
+    }
+    var walletActions = document.querySelector(".wallet-top-actions");
+    if (walletActions) {
+      walletActions.insertBefore(host, walletActions.firstChild);
+      return host;
+    }
+    return null;
+  }
+
   function mountNotificationCenter() {
     if (!hasToken()) return;
+    ensureNotificationHost();
     var host = document.getElementById("dashHeaderNotifications");
     if (!host || host.getAttribute("data-erv-notif-mounted") === "1") return;
     if (!global.ErvenowNotificationCenter || typeof global.ErvenowNotificationCenter.mount !== "function") {
@@ -297,7 +330,7 @@
   function setAccountButtonLoggedOut(switchAccount) {
     if (!switchAccount) return;
     switchAccount.style.display = "";
-    switchAccount.textContent = "تسجيل الدخول";
+    switchAccount.textContent = "دخول الأعضاء";
     switchAccount.className =
       "dash-site-header__btn dash-site-header__btn--primary switch-account--nav-only";
     switchAccount.setAttribute("data-erv-switch-mode", "login");
@@ -537,6 +570,9 @@
       wireNavLogoutLinks(wrap);
       if (opts.authenticated) {
         refreshIndexNavWallet(role);
+        ensureNotificationCenterAssets();
+        ensureNotificationHost();
+        setTimeout(mountNotificationCenter, 80);
       }
     }
     var mobileQuick = document.getElementById("lpMobileQuickNav");
@@ -646,7 +682,7 @@
       links +
       "</div>" +
       "</nav>" +
-      '<a class="dash-site-header__btn dash-site-header__btn--primary switch-account--nav-only" href="/login?role=customer" id="switchAccount">تسجيل الدخول</a>' +
+      '<a class="dash-site-header__btn dash-site-header__btn--primary switch-account--nav-only" href="/login?role=customer" id="switchAccount">دخول الأعضاء</a>' +
       "</div>" +
       "</header>"
     );
@@ -786,6 +822,7 @@
     ensureMobileFoundation();
     _storePreviewMode = !!(opts.storePreview || (global.ErvenowStorePreview && ErvenowStorePreview.isActive()));
     normalizeSiteHeaderDomOrder();
+    ensureNotificationHost();
     _activeNavKey = opts.activeNav || "";
     if (opts.pageTag) {
       var tag = document.getElementById("guestShellPageTag");
@@ -843,6 +880,8 @@
     },
     syncHeaderLayout: syncHeaderLayoutMetrics,
     normalizeSiteHeaderDomOrder: normalizeSiteHeaderDomOrder,
+    ensureNotificationHost: ensureNotificationHost,
+    mountNotificationBell: mountNotificationCenter,
     setActiveNav: setActiveNav,
   };
 })(window);

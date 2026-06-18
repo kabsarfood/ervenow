@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover"
+    />
+    <script src="/assets/viewport-fit.js?erv=20260612"></script>
+    <meta name="theme-color" content="#5b371d" />
+    <title>ERVENOW | مركز الإشعارات</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/assets/ervenow-responsive.css" />
+    <link rel="stylesheet" href="/assets/responsive-audit-base.css" />
+    <link rel="stylesheet" href="/assets/guest-shell.css?erv=20260612" />
+    <link rel="stylesheet" href="/assets/notification-center.css" />
+    <style>
+      body.notifications-page {
+        margin: 0;
+        min-height: 100dvh;
+        font-family: "Cairo", system-ui, sans-serif;
+        background: #f8f5f0;
+        color: #2b1f16;
+        line-height: 1.45;
+      }
+      .notifications-page__back {
+        display: inline-flex;
+        align-items: center;
+        min-height: 44px;
+        margin: 12px clamp(12px, 3vw, 20px) 0;
+        color: #8a6227;
+        font-weight: 800;
+        text-decoration: none;
+        font-size: 0.88rem;
+      }
+    </style>
+    <script>
+      (function () {
+        try {
+          var t =
+            localStorage.getItem("ervenow_access_token") ||
+            localStorage.getItem("token") ||
+            localStorage.getItem("erwenow_access_token");
+          if (!t || !String(t).trim()) window.location.replace("/login?role=customer");
+        } catch (e) {
+          window.location.replace("/login?role=customer");
+        }
+      })();
+    </script>
+  </head>
+  <body class="guest-shell-page notifications-page">
+    <div id="guestShellHeader"></div>
+    <a class="notifications-page__back" href="javascript:history.back()">← رجوع</a>
+    <main id="notificationsPageRoot" aria-label="مركز الإشعارات"></main>
+
+    <script src="/assets/api-config.js"></script>
+    <script src="/assets/api.js?erv=20260612"></script>
+    <script src="/assets/guest-shell.js?erv=20260612"></script>
+    <script src="/assets/notification-sounds.js"></script>
+    <script src="/assets/notification-center.js"></script>
+    <script>
+      ErvenowGuestShell.mountShell({ activeNav: "guest", pageTag: "مركز الإشعارات" });
+      ErvenowNotificationCenter.initPage({ mount: "#notificationsPageRoot" });
+    </script>
+  </body>
+</html>

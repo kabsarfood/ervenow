@@ -16,7 +16,7 @@
     delivering: "قيد التوصيل",
     delivered: "تم التسليم",
     cancelled: "ملغى",
-    cancelled_by_customer: "ملغى من العميل",
+    cancelled_by_customer: "ملغى من العضو",
   };
 
   var NEXT_ACTION = {

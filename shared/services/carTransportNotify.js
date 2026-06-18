@@ -1,7 +1,7 @@
 const { sendWhatsApp } = require("../utils/whatsapp");
 const { commissionPercentLabel } = require("../utils/serviceCommission");
-const { buildPublicTrackUrl } = require("../messages/deliveryCustomerWhatsApp");
 const { providerAreaMatches, normDistrictText } = require("../utils/serviceProviderTypes");
+const { notifyProvidersInAppByPhones } = require("./notificationEvents");
 
 const CAR_TRANSPORT_TYPES = new Set(["car_transport", "vehicle_transfer", "pickup_truck"]);
 
@@ -61,9 +61,9 @@ async function getCarTransportProviderPhones(sb, booking) {
   if (!sb || !booking) return [];
   const { data, error } = await sb
     .from("users")
-    .select("phone, service_type, service_district")
-    .eq("role", "service")
-    .eq("service_type", "pickup_truck");
+    .select("phone, service_type, service_district, role")
+    .eq("service_type", "pickup_truck")
+    .in("role", ["service", "driver"]);
   if (error || !Array.isArray(data)) return [];
   const phones = new Set();
   for (const u of data) {
@@ -74,7 +74,38 @@ async function getCarTransportProviderPhones(sb, booking) {
   return [...phones];
 }
 
+function buildCarTransportProviderPanelUrl(booking) {
+  const id = String(booking?.id || "").trim();
+  const no = String(booking?.order_number || booking?.service_order_number || "").trim();
+  const key = id || no;
+  if (!key) return `${publicBase()}/services-provider.html`;
+  return `${publicBase()}/services-provider.html?order=${encodeURIComponent(key)}&action=reserve`;
+}
+
+/** إشعار أولي — ملخص + رابط الحجز (التفاصيل بعد الحجز) */
 function buildCarTransportProviderMessage(booking) {
+  const loc = carBookingLocation(booking);
+  const total = Number(booking.total_amount || booking.delivery_fee || 0);
+  const pay = booking.payment_status === "paid" ? "مدفوع ✅" : "بانتظار الدفع 💵";
+  const orderNo = booking.order_number || booking.service_order_number || booking.id || "—";
+  const panelUrl = buildCarTransportProviderPanelUrl(booking);
+  const cityLine = loc.district ? `في ${loc.district}` : "متاح الآن";
+
+  return (
+    "مرحباً من منصة ERVENOW 👋\n" +
+    `🛻 طلب سطحة جديد ${cityLine}\n\n` +
+    `📋 رقم الطلب: ${orderNo}\n` +
+    (loc.vehicleCategory ? `🚗 نوع المركبة: ${loc.vehicleCategory}\n` : "") +
+    `💰 المبلغ: ${total.toFixed(2)} ريال\n` +
+    `💳 الدفع: ${pay}\n\n` +
+    "👇 افتح الرابط ثم اضغط «حجز الطلب» (أول من يحجز يأخذ الطلب):\n" +
+    `🔗 ${panelUrl}\n\n` +
+    "بعد الحجز ستصلك تفاصيل الاستلام والتسليم وأرقام التواصل على واتساب."
+  );
+}
+
+/** تفاصيل النقل — يُرسل بعد حجز الطلب من اللوحة */
+function buildCarTransportReserveDetailsMessage(booking, providerName) {
   const loc = carBookingLocation(booking);
   const total = Number(booking.total_amount || booking.delivery_fee || 0);
   const comm = Number(booking.platform_commission || booking.platform_fee || 0);
@@ -82,11 +113,11 @@ function buildCarTransportProviderMessage(booking) {
   const pct = commissionPercentLabel(booking.service_type);
   const pay = booking.payment_status === "paid" ? "مدفوع ✅" : "بانتظار الدفع 💵";
   const orderNo = booking.order_number || booking.service_order_number || booking.id || "—";
-  const trackUrl = buildPublicTrackUrl(booking.id) || `${publicBase()}/track?id=${encodeURIComponent(String(booking.id || ""))}`;
+  const panelUrl = buildCarTransportProviderPanelUrl(booking);
+  const greet = providerName ? `مرحباً ${providerName}` : "مرحباً";
 
   return (
-    "مرحباً من منصة ERVENOW 👋\n" +
-    "طلب نقل مركبات جديد (سطحة):\n\n" +
+    `${greet} — تم حجز طلب السطحة بنجاح ✅\n\n` +
     `📋 رقم الطلب: ${orderNo}\n` +
     (loc.plate ? `🚘 اللوحة: ${loc.plate}\n` : "") +
     (loc.vehicleCategory ? `🚗 نوع المركبة: ${loc.vehicleCategory}\n` : "") +
@@ -100,9 +131,8 @@ function buildCarTransportProviderMessage(booking) {
     `💳 الدفع: ${pay}\n` +
     `عمولة المنصة (${pct}): ${comm.toFixed(2)} ريال\n` +
     `صافيك بعد الإتمام: ${net.toFixed(2)} ريال\n\n` +
-    `🔗 حجز الطلب: ${publicBase()}/services-provider.html\n` +
-    `🔗 تتبع العميل: ${trackUrl}\n\n` +
-    "بعد إتمام المهمة من لوحتك تُسجَّل العمولة في ذمتك."
+    "تواصل مع العميل ونفّذ النقل. بعد الإنهاء اضغط «تم التنفيذ» من لوحتك.\n" +
+    `🔗 لوحتك: ${panelUrl.replace("&action=reserve", "")}`
   );
 }
 
@@ -121,6 +151,11 @@ async function sendCarTransportProviderWhatsApp(phones, booking) {
 async function notifyCarTransportProviders(sb, booking) {
   const phones = await getCarTransportProviderPhones(sb, booking);
   await sendCarTransportProviderWhatsApp(phones, booking);
+  try {
+    await notifyProvidersInAppByPhones(sb, booking, phones);
+  } catch (e) {
+    console.error("[carTransportNotify] provider in-app:", e && (e.message || e));
+  }
 }
 
 function isCarTransportBooking(booking) {
@@ -140,5 +175,8 @@ module.exports = {
   carBookingLocation,
   providerAreaMatchesCarBooking,
   getCarTransportProviderPhones,
+  buildCarTransportProviderPanelUrl,
+  buildCarTransportProviderMessage,
+  buildCarTransportReserveDetailsMessage,
   notifyCarTransportProviders,
 };

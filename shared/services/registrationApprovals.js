@@ -1,4 +1,5 @@
 const { roleLabelAr, normalizeAccountStatus } = require("../utils/accountApproval");
+const { isTransportServiceType } = require("../utils/adminRoleTaxonomy");
 
 function normalizeDigits(v) {
   return String(v || "").replace(/\D/g, "");
@@ -82,7 +83,18 @@ function matchesTypeFilter(item, typeFilter) {
   if (f === "customer") return item.kind === "user" && ["customer", "user"].includes(String(item.role || "").toLowerCase());
   if (f === "store") return item.kind === "store";
   if (f === "service") {
-    return item.kind === "user" && String(item.role || "").toLowerCase() === "service";
+    return (
+      item.kind === "user" &&
+      String(item.role || "").toLowerCase() === "service" &&
+      !isTransportServiceType(item.service_type)
+    );
+  }
+  if (f === "transport") {
+    return (
+      item.kind === "user" &&
+      String(item.role || "").toLowerCase() === "service" &&
+      isTransportServiceType(item.service_type)
+    );
   }
   if (f === "driver") return item.kind === "driver";
   return true;
@@ -137,13 +149,14 @@ async function loadRegistrationApprovalItems(sb, options = {}) {
     !typeFilter ||
     typeFilter === "all" ||
     typeFilter === "customer" ||
-    typeFilter === "service";
+    typeFilter === "service" ||
+    typeFilter === "transport";
   const wantStores = !typeFilter || typeFilter === "all" || typeFilter === "store";
   const wantDrivers = !typeFilter || typeFilter === "all" || typeFilter === "driver";
 
   if (wantUsers) {
     const roles =
-      typeFilter === "service"
+      typeFilter === "service" || typeFilter === "transport"
         ? ["service"]
         : typeFilter === "customer"
           ? ["customer", "user"]
@@ -166,6 +179,8 @@ async function loadRegistrationApprovalItems(sb, options = {}) {
       (q.data || []).forEach((u) => {
         const st = normalizeAccountStatus(u.status, u.role);
         if (typeFilter === "customer" && !["customer", "user"].includes(String(u.role || "").toLowerCase())) return;
+        if (typeFilter === "service" && isTransportServiceType(u.service_type)) return;
+        if (typeFilter === "transport" && !isTransportServiceType(u.service_type)) return;
         if (st === "blocked") return;
         items.push(mapUserRow(u));
       });

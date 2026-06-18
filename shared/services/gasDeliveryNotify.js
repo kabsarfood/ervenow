@@ -9,6 +9,7 @@ const {
   notifiedGasPhones,
   providerWithinGasRadius,
 } = require("../utils/gasDeliveryRadius");
+const { notifyProvidersInAppByPhones } = require("./notificationEvents");
 
 function publicBase() {
   return String(process.env.ERVENOW_PUBLIC_URL || "https://ervenow.com").replace(/\/$/, "");
@@ -152,6 +153,13 @@ async function notifyGasDeliveryProviders(sb, booking, opts) {
     providers = providers.filter((p) => !skip.has(p.phone));
   }
   if (!providers.length) return { sent: 0, providers: 0, radius_km: radiusKm };
+
+  const phones = providers.map((p) => p.phone).filter(Boolean);
+  try {
+    await notifyProvidersInAppByPhones(sb, booking, phones);
+  } catch (e) {
+    console.error("[gasDeliveryNotify] in-app:", e && (e.message || e));
+  }
 
   const waOnCreate = String(process.env.ERVENOW_SERVICE_WA_ON_CREATE || "").trim() === "1";
   if (!waOnCreate) {

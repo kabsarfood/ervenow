@@ -83,6 +83,7 @@
     <script src="/assets/osrm-route-leaflet.js"></script>
     <script src="/assets/api-config.js"></script>
     <script src="/assets/api.js?erv=20260612"></script>
+    <script src="/assets/admin-readiness-beacon.js" defer></script>
     <script src="/assets/driver-nav.js"></script>
     <script>
       ErvenowDriverNav.mount({
@@ -101,8 +102,8 @@
       if (!token) {
         document.body.innerHTML =
           '<div style="text-align:center;margin-top:50px;">' +
-          "<h2>🔒 الرجاء تسجيل الدخول كمندوب</h2>" +
-          '<a href="/driver-login">تسجيل الدخول</a>' +
+          "<h2>🔒 الرجاء الدخول كشريك توصيل</h2>" +
+          '<a href="/driver-login">دخول الأعضاء</a>' +
           "</div>";
         throw new Error("auth");
       }
@@ -775,7 +776,7 @@
           }
         }
         body += "<p>📍 " + escHtml(o.drop_address || "—") + "</p>";
-        body += "<p>هاتف العميل: " + escHtml(phone) + "</p>";
+        body += "<p>هاتف العضو: " + escHtml(phone) + "</p>";
         var actions =
           '<a class="drv-btn drv-btn--ghost" href="/driver-app?order=' +
           encodeURIComponent(o.id) +

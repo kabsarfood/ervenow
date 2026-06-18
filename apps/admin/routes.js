@@ -94,7 +94,20 @@ const {
   approveTopupRequest,
   rejectTopupRequest,
 } = require("../../shared/services/walletTopupService");
-const { createNotification } = require("../../shared/services/notificationService");
+const { createRoutedNotification } = require("../../shared/utils/notificationPortalRouting");
+const {
+  notifyWithdrawApproved,
+  notifyWithdrawRejected,
+  notifyCustomer,
+  notifyDriverUser,
+  getNotificationAuditReport,
+} = require("../../shared/services/notificationEvents");
+const {
+  listPlatformModules,
+  readPlatformModules,
+  updatePlatformModuleStatus,
+  MODULE_STATUSES,
+} = require("../../shared/utils/platformModules");
 
 const ADMIN_PUBLIC_ROOT = path.join(__dirname, "../../public");
 
@@ -596,6 +609,44 @@ router.post("/site-maintenance", requireAuth, requireRole("admin"), async (req, 
     const enabled = !!req.body?.enabled;
     const saved = await writeState(enabled);
     return ok(res, { enabled: saved, message: saved ? "تم تعطيل الموقع للزوار" : "تم تفعيل الموقع للزوار" });
+  } catch (e) {
+    return fail(res, e.message || String(e), 500);
+  }
+});
+
+router.get("/notification-audit", requireAuth, requireRole("admin"), async (_req, res) => {
+  try {
+    return ok(res, { items: getNotificationAuditReport(), generated_at: new Date().toISOString() });
+  } catch (e) {
+    return fail(res, e.message || String(e), 500);
+  }
+});
+
+router.get("/platform-modules", requireAuth, requireRole("admin"), async (_req, res) => {
+  try {
+    const state = readPlatformModules();
+    return ok(res, {
+      modules: listPlatformModules(),
+      statuses: MODULE_STATUSES,
+      updated_at: state.updated_at,
+      notes: state.notes,
+    });
+  } catch (e) {
+    return fail(res, e.message || String(e), 500);
+  }
+});
+
+router.patch("/platform-modules/:id", requireAuth, requireRole("admin"), async (req, res) => {
+  try {
+    const moduleId = String(req.params.id || "").trim();
+    const status = String(req.body?.status || "").trim().toLowerCase();
+    if (!moduleId) return fail(res, "module id required", 400);
+    if (!MODULE_STATUSES.includes(status)) {
+      return fail(res, `status must be one of: ${MODULE_STATUSES.join(", ")}`, 400);
+    }
+    const saved = updatePlatformModuleStatus(moduleId, status);
+    const row = saved.modules && saved.modules[moduleId];
+    return ok(res, { module: row, updated_at: saved.updated_at });
   } catch (e) {
     return fail(res, e.message || String(e), 500);
   }
@@ -1452,7 +1503,15 @@ router.post("/withdrawals/:id/reject", requireAuth, requireRole("admin"), requir
       return fail(res, "حدّد نوع الطلب: أرسل في الجسم { \"kind\": \"driver\" } أو { \"kind\": \"store\" } (أو ?kind=)", 400);
     }
     const now = new Date().toISOString();
+    const rejectReason = String(req.body?.reason || req.body?.note || req.body?.rejection_reason || "")
+      .trim()
+      .slice(0, 500);
     if (kind === "driver") {
+      const { data: reqRow } = await req.supabase
+        .from("ervenow_withdraw_requests")
+        .select("user_id, amount")
+        .eq("id", id)
+        .maybeSingle();
       const { data, error } = await req.supabase
         .from("ervenow_withdraw_requests")
         .update({ status: "rejected", processed_at: now })
@@ -1462,15 +1521,41 @@ router.post("/withdrawals/:id/reject", requireAuth, requireRole("admin"), requir
         .maybeSingle();
       if (error) return fail(res, error.message, 400);
       if (!data) return fail(res, "الطلب غير موجود أو ليس قيد المراجعة", 400);
+      if (reqRow && reqRow.user_id) {
+        try {
+          await notifyWithdrawRejected(
+            req.supabase,
+            String(reqRow.user_id),
+            { role: "driver" },
+            { amount: Number(reqRow.amount || 0), currency: "SAR", reference: id }
+          );
+        } catch (_e) {}
+      }
       return ok(res, { ok: true, kind: "driver", id: data.id, status: data.status });
     }
-    const { data, error } = await req.supabase
+    const { data: storeReq } = await req.supabase
       .from("store_withdrawals")
-      .update({ status: "rejected", updated_at: now })
+      .select("store_id, amount")
+      .eq("id", id)
+      .maybeSingle();
+    const storeRejectPatch = { status: "rejected", updated_at: now };
+    if (rejectReason) storeRejectPatch.rejection_reason = rejectReason;
+    let { data, error } = await req.supabase
+      .from("store_withdrawals")
+      .update(storeRejectPatch)
       .eq("id", id)
       .eq("status", "pending")
       .select("id, status")
       .maybeSingle();
+    if (error && rejectReason && /rejection_reason|column/i.test(String(error.message || ""))) {
+      ({ data, error } = await req.supabase
+        .from("store_withdrawals")
+        .update({ status: "rejected", updated_at: now })
+        .eq("id", id)
+        .eq("status", "pending")
+        .select("id, status")
+        .maybeSingle());
+    }
     if (error) {
       const msg = String(error.message || "");
       if (/store_withdrawals|schema cache|relation/i.test(msg)) {
@@ -1479,6 +1564,20 @@ router.post("/withdrawals/:id/reject", requireAuth, requireRole("admin"), requir
       return fail(res, error.message, 400);
     }
     if (!data) return fail(res, "الطلب غير موجود أو ليس قيد المراجعة", 400);
+    if (storeReq && storeReq.store_id) {
+      try {
+        const sq = await req.supabase.from("stores").select("phone").eq("id", storeReq.store_id).maybeSingle();
+        const ownerId = await findUserIdByPhoneSafe(req.supabase, sq && sq.data && sq.data.phone);
+        if (ownerId) {
+          await notifyWithdrawRejected(
+            req.supabase,
+            ownerId,
+            { role: "store" },
+            { amount: Number(storeReq.amount || 0), currency: "SAR", reference: id, store_id: storeReq.store_id, reason: rejectReason || null }
+          );
+        }
+      } catch (_e) {}
+    }
     return ok(res, { ok: true, kind: "store", id: data.id, status: data.status });
   } catch (e) {
     return fail(res, e.message || String(e), 500);
@@ -2002,51 +2101,43 @@ async function resolveDriverUserIdForAssign(sb, body) {
 
 async function notifyOrderAssignment(sb, orderRow, driverUserId) {
   if (!sb || !orderRow) return;
-  const orderId = orderRow.id;
-  const orderNumber = orderRow.order_number || null;
-
   if (orderRow.customer_id) {
-    await createNotification(sb, {
-      recipient_type: "customer",
-      recipient_id: orderRow.customer_id,
-      title: "تم تعيين مندوب",
-      message: "تم إسناد مندوب لتوصيل طلبك.",
-      type: "delivery",
-      source: "admin",
-      payload: {
-        order_id: orderId,
-        order_number: orderNumber,
-        driver_id: driverUserId || null,
-      },
-    });
+    await notifyCustomer(
+      sb,
+      orderRow.customer_id,
+      "customer.driver.en_route",
+      "تم تعيين مندوب",
+      "تم إسناد مندوب لتوصيل طلبك.",
+      orderRow,
+      { driver_id: driverUserId || null }
+    );
   }
-
   if (driverUserId) {
-    await createNotification(sb, {
-      recipient_type: "driver",
-      recipient_id: driverUserId,
-      title: "مهمة جديدة",
-      message: "تم إسناد طلب جديد إليك.",
-      type: "delivery",
-      source: "admin",
-      payload: {
-        order_id: orderId,
-        order_number: orderNumber,
-      },
-    });
+    await notifyDriverUser(
+      sb,
+      driverUserId,
+      "driver.task.assigned",
+      "مهمة جديدة",
+      "تم إسناد طلب جديد إليك.",
+      orderRow
+    );
   }
 }
 
 async function notifyAccountLifecycle(sb, recipientType, recipientId, title, message, payload) {
   if (!sb || !recipientType || !recipientId) return;
-  await createNotification(sb, {
+  const portalMap = { store: "merchant", driver: "driver", provider: "service", customer: "customer", admin: "admin" };
+  const portal = portalMap[String(recipientType).toLowerCase()] || "customer";
+  await createRoutedNotification(sb, {
     recipient_type: recipientType,
     recipient_id: recipientId,
+    target_portal: portal,
+    target_role: portal,
     title,
     message,
     type: "account",
     source: "admin",
-    payload: payload && typeof payload === "object" ? payload : {},
+    payload: Object.assign({ event: "account.lifecycle" }, payload && typeof payload === "object" ? payload : {}),
   });
 }
 
@@ -2060,16 +2151,8 @@ async function findUserIdByPhoneSafe(sb, phone) {
 }
 
 async function notifyWalletApprovedWithdraw(sb, recipientType, recipientId, payload) {
-  if (!sb || !recipientType || !recipientId) return;
-  await createNotification(sb, {
-    recipient_type: recipientType,
-    recipient_id: recipientId,
-    title: "تم اعتماد السحب",
-    message: "تم اعتماد طلب السحب المالي الخاص بك.",
-    type: "wallet",
-    source: "wallet",
-    payload: payload && typeof payload === "object" ? payload : {},
-  });
+  if (!sb || !recipientId) return;
+  await notifyWithdrawApproved(sb, recipientId, { role: recipientType }, payload);
 }
 
 router.get("/drivers", requireAuth, requireRole("admin"), requireAdminPermission("drivers"), async (req, res) => {
@@ -2702,6 +2785,27 @@ router.get("/driver-notifications", requireAuth, requireRole("admin"), requireAd
   }
 });
 
+router.post("/broadcast", requireAuth, requireRole("admin"), requireAdminPermission("notifications"), async (req, res) => {
+  try {
+    const { sendBroadcast } = require("../../shared/services/broadcastNotify");
+    const { appendBroadcastHistory } = require("../../shared/utils/adminReadinessStore");
+    const result = await sendBroadcast(req.supabase, req.body || {});
+    await appendBroadcastHistory({
+      broadcast_id: result.broadcast_id,
+      title: req.body?.title || "",
+      target: result.target,
+      category: result.category,
+      recipients: result.recipients,
+      sent: result.sent,
+      failed: result.failed,
+      admin_phone: req.appUser?.phone || null,
+    });
+    return ok(res, result);
+  } catch (e) {
+    return fail(res, e.message || String(e), 400);
+  }
+});
+
 router.get("/complaints", requireAuth, requireRole("admin"), requireAdminPermission("complaints"), async (req, res) => {
   try {
     const { data, error } = await req.supabase
@@ -2735,23 +2839,66 @@ router.post("/resolve-complaint", requireAuth, requireRole("admin"), requireAdmi
 
 router.get("/providers", requireAuth, requireRole("admin"), requireAdminPermission("providers"), async (req, res) => {
   try {
-    const { data: users, error: uErr } = await req.supabase
-      .from("users")
-      .select("id, phone, role, created_at")
-      .in("role", ["store", "restaurant", "merchant", "service"])
-      .order("created_at", { ascending: false })
-      .limit(500);
-    if (uErr) return fail(res, uErr.message, 400);
+    const segment = String(req.query.segment || "all").toLowerCase();
+    const q = String(req.query.q || "")
+      .trim()
+      .toLowerCase();
+    const { matchesProviderSegment, isTransportServiceType } = require("../../shared/utils/adminRoleTaxonomy");
+    const { labelForType } = require("../../shared/utils/serviceProviderTypes");
+
+    const selectExprs = [
+      "id, phone, role, service_type, status, name, created_at, updated_at",
+      "id, phone, role, service_type, status, created_at, updated_at",
+    ];
+    let users = [];
+    let lastErr = null;
+    for (const sel of selectExprs) {
+      const { data, error } = await req.supabase
+        .from("users")
+        .select(sel)
+        .eq("role", "service")
+        .order("created_at", { ascending: false })
+        .limit(500);
+      if (!error) {
+        users = data || [];
+        lastErr = null;
+        break;
+      }
+      lastErr = error;
+    }
+    if (lastErr) return fail(res, lastErr.message, 400);
+
+    let providers = users.filter((u) => {
+      if (segment === "transport") return matchesProviderSegment(u, "transport");
+      if (segment === "service") return matchesProviderSegment(u, "service");
+      return true;
+    });
+
+    if (q) {
+      providers = providers.filter((u) => {
+        const label = labelForType(u.service_type);
+        const hay = [u.name, u.phone, u.service_type, label, u.status].join(" ").toLowerCase();
+        return hay.includes(q);
+      });
+    }
+
+    providers = providers.map((u) => ({
+      ...u,
+      service_type_label: labelForType(u.service_type),
+      segment: isTransportServiceType(u.service_type) ? "transport" : "service",
+    }));
 
     let stores = [];
-    const { data: sData, error: sErr } = await req.supabase
-      .from("stores")
-      .select("id, name, phone, type, status, created_at")
-      .order("created_at", { ascending: false })
-      .limit(500);
-    if (!sErr) stores = sData || [];
+    if (segment === "all") {
+      const { data: sData, error: sErr } = await req.supabase
+        .from("stores")
+        .select("id, name, phone, type, status, created_at")
+        .order("created_at", { ascending: false })
+        .limit(500);
+      if (!sErr) stores = sData || [];
+    }
 
-    return ok(res, { providers: users || [], stores });
+    return ok(res, { providers, stores, segment });
   } catch (e) {
     return fail(res, e.message || String(e), 500);
   }
@@ -3744,6 +3891,90 @@ router.post(
       return ok(res, { settings, message: "تم حفظ الإعدادات" });
     } catch (e) {
       return fail(res, e.message || String(e), e.statusCode || 400);
+    }
+  }
+);
+
+router.get(
+  "/role-separation-monitor",
+  requireAuth,
+  requireRole("admin"),
+  requireAdminPermission("dashboard"),
+  async (req, res) => {
+    try {
+      const { buildRoleSeparationMonitor } = require("../../shared/services/adminReadinessMonitor");
+      const payload = await buildRoleSeparationMonitor(req.supabase);
+      return ok(res, payload);
+    } catch (e) {
+      return fail(res, e.message || String(e), 500);
+    }
+  }
+);
+
+router.get(
+  "/preview-monitor",
+  requireAuth,
+  requireRole("admin"),
+  requireAdminPermission("dashboard"),
+  async (req, res) => {
+    try {
+      const { buildPreviewMonitor } = require("../../shared/services/adminReadinessMonitor");
+      const payload = await buildPreviewMonitor(req.supabase);
+      return ok(res, payload);
+    } catch (e) {
+      return fail(res, e.message || String(e), 500);
+    }
+  }
+);
+
+router.get(
+  "/role-registry",
+  requireAuth,
+  requireRole("admin"),
+  requireAdminPermission("dashboard"),
+  async (req, res) => {
+    try {
+      const { buildRoleRegistry } = require("../../shared/services/adminReadinessMonitor");
+      const payload = await buildRoleRegistry(req.supabase, {
+        q: req.query.q,
+        limit: req.query.limit,
+      });
+      return ok(res, payload);
+    } catch (e) {
+      return fail(res, e.message || String(e), 500);
+    }
+  }
+);
+
+router.get(
+  "/broadcast/analytics",
+  requireAuth,
+  requireRole("admin"),
+  requireAdminPermission("notifications"),
+  async (req, res) => {
+    try {
+      const { getBroadcastAnalytics } = require("../../shared/services/adminReadinessMonitor");
+      const payload = await getBroadcastAnalytics(req.supabase);
+      return ok(res, payload);
+    } catch (e) {
+      return fail(res, e.message || String(e), 500);
+    }
+  }
+);
+
+router.get(
+  "/role-separation-report",
+  requireAuth,
+  requireRole("admin"),
+  requireAdminPermission("dashboard"),
+  async (req, res) => {
+    try {
+      const { buildSoftLaunchReport } = require("../../shared/services/roleSeparationReport");
+      const hours = req.query.hours;
+      const payload = await buildSoftLaunchReport({ hours });
+      return ok(res, payload);
+    } catch (e) {
+      return fail(res, e.message || String(e), 500);
     }
   }
 );

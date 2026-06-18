@@ -78,6 +78,32 @@
         border-color: rgba(185, 135, 47, 0.45);
         background: #fffdf8;
       }
+      .sp-order--highlight {
+        border-color: #b9872f;
+        box-shadow: 0 0 0 3px rgba(185, 135, 47, 0.28);
+        background: #fffdf8;
+      }
+      .sp-deeplink-hint {
+        margin: 8px 0 0;
+        padding: 10px 12px;
+        border-radius: 10px;
+        background: rgba(185, 135, 47, 0.12);
+        color: #3d2213;
+        font-weight: 700;
+        line-height: 1.45;
+      }
+      .sp-reserve--pulse {
+        animation: spReservePulse 1.2s ease-in-out infinite;
+      }
+      @keyframes spReservePulse {
+        0%,
+        100% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.04);
+        }
+      }
       .sp-order__actions {
         display: flex;
         gap: 8px;
@@ -165,6 +191,7 @@
           <button class="btn btn-primary" type="button" id="refreshBtn">تحديث</button>
         </div>
         <p class="sub" id="summary">—</p>
+        <p class="sub sp-deeplink-hint" id="deepLinkHint" hidden>اضغط «حجز الطلب» على الطلب المميّز أدناه — بعد الحجز تصلك تفاصيل النقل على واتساب.</p>
         <div id="list"></div>
       </div>
 
@@ -218,7 +245,7 @@
         if (s === "accepted") return "محجوز — قيد التنفيذ";
         if (s === "delivering") {
           if (booking && booking.customer_confirmed_at) return "بانتظار تأكيد المزود";
-          return "تم التنفيذ — بانتظار تأكيد العميل";
+          return "تم التنفيذ — بانتظار تأكيد العضو";
         }
         if (s === "delivered") return "تمت المهمة";
         if (s === "cancelled") return "ملغي";
@@ -317,6 +344,53 @@
         );
       }
 
+      function getDeepLinkOrderKey() {
+        try {
+          var p = new URLSearchParams(location.search);
+          return String(p.get("order") || p.get("booking") || "").trim();
+        } catch (e) {
+          return "";
+        }
+      }
+
+      function bookingMatchesDeepLink(b, key) {
+        if (!key || !b) return false;
+        var k = String(key).trim();
+        return (
+          String(b.id || "") === k ||
+          String(b.service_order_number || "") === k ||
+          String(b.order_number || "") === k
+        );
+      }
+
+      function applyOrderDeepLink(list) {
+        var key = getDeepLinkOrderKey();
+        var hint = document.getElementById("deepLinkHint");
+        if (!key) {
+          if (hint) hint.hidden = true;
+          return;
+        }
+        var panel = document.getElementById("ordersPanel");
+        if (panel) panel.hidden = false;
+        if (hint) hint.hidden = false;
+        var el = document.getElementById("list");
+        if (!el) return;
+        var match = (list || []).find(function (b) {
+          return bookingMatchesDeepLink(b, key);
+        });
+        if (!match) return;
+        var card = el.querySelector('.sp-order[data-order-id="' + match.id + '"]');
+        if (!card) return;
+        card.classList.add("sp-order--highlight");
+        var btn = card.querySelector("[data-reserve]");
+        if (btn) btn.classList.add("sp-reserve--pulse");
+        try {
+          card.scrollIntoView({ behavior: "smooth", block: "center" });
+        } catch (e2) {
+          card.scrollIntoView(true);
+        }
+      }
+
       function renderBookings(list) {
         var el = document.getElementById("list");
         if (!el) return;
@@ -353,6 +427,8 @@
             return (
               '<div class="sp-order' +
               (mine ? " is-mine" : "") +
+              '" data-order-id="' +
+              b.id +
               '">' +
               "<p><b>" +
               (b.service_name || "خدمة") +
@@ -365,7 +441,7 @@
               "<p>الحي: " +
               (b.district || "—") +
               "</p>" +
-              "<p>جوال العميل: " +
+              "<p>جوال العضو: " +
               (b.customer_phone || "—") +
               "</p>" +
               extraInternal +
@@ -388,7 +464,7 @@
                   b.id +
                   '" data-step="provider">تم التنفيذ</button>'
                 : st === "delivering" && mine
-                  ? '<span class="sub">بانتظار تأكيد العميل</span>'
+                  ? '<span class="sub">بانتظار تأكيد العضو</span>'
                   : "") +
               "</div></div>"
             );
@@ -405,6 +481,7 @@
             completeOrder(btn.getAttribute("data-complete"), btn, btn.getAttribute("data-step") || "provider");
           });
         });
+        applyOrderDeepLink(list);
       }
 
       function applyDashboard(data) {
@@ -565,5 +642,6 @@
         setInterval(loadDashboard, 8000);
       })();
     </script>
+    <script src="/assets/admin-readiness-beacon.js" defer></script>
   </body>
 </html>

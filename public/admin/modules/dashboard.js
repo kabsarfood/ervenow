@@ -535,12 +535,12 @@ app.updateLiveMapPublicBtn = function (enabled) {
   btn.disabled = false;
   if (app.liveMapPublicEnabled) {
     btn.className = "btn btn-primary";
-    btn.textContent = "إخفاء عن الزوار";
-    btn.title = "إخفاء صفحة /live-map من قائمة الزوار";
+    btn.textContent = "إخفاء عن الضيوف";
+    btn.title = "إخفاء صفحة /live-map من قائمة الضيوف";
   } else {
     btn.className = "btn btn-ghost";
     btn.textContent = "إظهار للزوار";
-    btn.title = "تفعيل صفحة /live-map في قائمة الزوار";
+    btn.title = "تفعيل صفحة /live-map في قائمة الضيوف";
   }
 };
 
@@ -562,8 +562,8 @@ app.toggleLiveMapPublic = async function () {
   try {
     var next = !app.liveMapPublicEnabled;
     var msg = next
-      ? "سيتم إظهار صفحة «الخريطة الحية» في قائمة الزوار على /live-map. متابعة؟"
-      : "سيتم إخفاء الرابط عن الزوار — لوحة الإدارة تبقى للمعاينة. متابعة؟";
+      ? "سيتم إظهار صفحة «الخريطة الحية» في قائمة الضيوف على /live-map. متابعة؟"
+      : "سيتم إخفاء الرابط عن الضيوف — لوحة الإدارة تبقى للمعاينة. متابعة؟";
     if (!confirm(msg)) return;
     var j = await app.PlatformAPI.api("/api/admin/live-map-public", {
       method: "POST",

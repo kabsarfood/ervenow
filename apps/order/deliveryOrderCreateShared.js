@@ -13,7 +13,7 @@ const { createDeliveryOrderFromBody, isPaidFromRequestBody } = require("../deliv
 const { createUnifiedDeliveryOrder } = require("../delivery/unifiedDeliveryCreate");
 const { enqueueDeliveryJob } = require("../../queues/deliveryQueue");
 const { bumpDeliveryOrdersListEpoch } = require("../../shared/utils/deliveryOrdersListCache");
-const { createNotification } = require("../../shared/services/notificationService");
+const { notifyCustomer } = require("../../shared/services/notificationEvents");
 const { notifyProvidersForBooking } = require("../../shared/services/serviceBookingNotify");
 const { sendCustomerOrderPaidWhatsApp } = require("../../shared/messages/deliveryCustomerWhatsApp");
 const { isDriverDispatchOrder } = require("../../shared/utils/driverDispatchOrders");
@@ -166,19 +166,14 @@ async function runUnifiedDeliveryOnlyCreate({ sb, appUser, body, idempotencyKey,
 
   if (data && appUser && appUser.id) {
     try {
-      await createNotification(sb, {
-        recipient_type: "customer",
-        recipient_id: appUser.id,
-        title: "تم استلام طلبك",
-        message: "تم إنشاء الطلب بنجاح وهو الآن قيد المعالجة.",
-        type: "order",
-        source: "delivery",
-        payload: {
-          order_id: data.id,
-          order_number: data.order_number || null,
-          delivery_status: data.delivery_status || null,
-        },
-      });
+      await notifyCustomer(
+        sb,
+        appUser.id,
+        "customer.order.received",
+        "تم استلام طلبك",
+        "تم إنشاء الطلب بنجاح وهو الآن قيد المعالجة.",
+        data
+      );
     } catch (notifyErr) {
       logger.warn(
         { err: notifyErr.message || String(notifyErr), orderId: data.id },
@@ -186,7 +181,8 @@ async function runUnifiedDeliveryOnlyCreate({ sb, appUser, body, idempotencyKey,
       );
     }
     try {
-      const { notifyAdminsForOrderEvent, notifyStoreForOrderEvent } = require("../../shared/services/platformNotify");
+      const { notifyAdminsForOrderEvent } = require("../../shared/services/platformNotify");
+      const { notifyMerchantForOrder } = require("../../shared/services/notificationEvents");
       await notifyAdminsForOrderEvent(
         sb,
         data,
@@ -194,7 +190,13 @@ async function runUnifiedDeliveryOnlyCreate({ sb, appUser, body, idempotencyKey,
         `طلب توصيل جديد رقم ${data.order_number || data.id}.`
       );
       if (data.store_id) {
-        await notifyStoreForOrderEvent(sb, data, "طلب جديد", "لديك طلب جديد بانتظار المعالجة.");
+        await notifyMerchantForOrder(
+          sb,
+          data,
+          "merchant.order.new",
+          "طلب جديد",
+          "لديك طلب جديد بانتظار المعالجة."
+        );
       }
     } catch (platformNotifyErr) {
       logger.warn(

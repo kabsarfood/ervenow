@@ -1,6 +1,12 @@
-/** Admin — مزودو الخدمات */
+/** Admin — مزودو الخدمات (بدون النقل) */
 import { app } from "./shared.js";
 import "./api.js";
+
+function esc(s) {
+  return String(s || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;");
+}
 
 app.loadServicesPanel = async function () {
   if (!app.hasPermission("providers")) return;
@@ -8,54 +14,41 @@ app.loadServicesPanel = async function () {
   if (!root) return;
   root.innerHTML = '<div class="item">جارٍ التحميل…</div>';
   try {
-    var j = await app.PlatformAPI.api("/api/admin/providers");
-    var users = j.providers || [];
-    var stores = j.stores || [];
-    var rows = users.concat(
-      stores.map(function (s) {
-        return {
-          name: s.name,
-          phone: s.phone,
-          role: s.type || "store",
-          status: s.status,
-          public_store_url: s.id ? "/store.html?id=" + encodeURIComponent(s.id) : "",
-        };
-      })
-    );
+    var q = app.getSearch("searchServices");
+    var url = "/api/admin/providers?segment=service";
+    if (q) url += "&q=" + encodeURIComponent(q);
+    var j = await app.PlatformAPI.api(url);
+    var rows = j.providers || [];
     if (!rows.length) {
-      root.innerHTML = '<div class="item">لا يوجد مزودو خدمات مسجلون.</div>';
+      root.innerHTML =
+        '<div class="item">لا يوجد مزودو خدمات (كهرباء · سباكة · تكييف · غسيل · تشجير).</div>';
       return;
     }
     root.innerHTML = rows
       .map(function (p) {
-        var name = p.name || p.store_name || p.business_name || "—";
+        var name = p.name || "—";
         var phone = p.phone || "—";
-        var role = p.role || p.service_type || "service";
+        var typeLabel = p.service_type_label || p.service_type || "خدمة";
         var st = p.status || "active";
         return (
           '<div class="item">' +
           "<strong>" +
-          name +
+          esc(name) +
           "</strong>" +
           "<div>الجوال: " +
-          phone +
+          esc(phone) +
           "</div>" +
-          "<div>النوع: " +
-          role +
+          "<div>نوع الخدمة: " +
+          esc(typeLabel) +
           " · " +
-          st +
+          esc(st) +
           "</div>" +
-          (p.public_store_url
-            ? '<div><a href="' +
-              p.public_store_url +
-              '" target="_blank" rel="noopener">عرض الصفحة</a></div>'
-            : "") +
           "</div>"
         );
       })
       .join("");
   } catch (e) {
-    root.innerHTML = '<div class="item">' + (e.message || "فشل التحميل") + "</div>";
+    root.innerHTML = '<div class="item">' + esc(e.message || "فشل التحميل") + "</div>";
   }
 };
 
@@ -65,4 +58,8 @@ app.applyServicesPanelVisibility = function () {
   var panel = document.getElementById("panelServices");
   if (btn) btn.style.display = show ? "" : "none";
   if (panel && !show) panel.style.display = "none";
+  var tbtn = document.getElementById("panelTransportBtn");
+  var tpanel = document.getElementById("panelTransport");
+  if (tbtn) tbtn.style.display = show ? "" : "none";
+  if (tpanel && !show) tpanel.style.display = "none";
 };

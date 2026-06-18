@@ -93,6 +93,7 @@
     <script src="/assets/api-config.js"></script>
     <script src="/assets/api.js?erv=20260612"></script>
     <script src="/assets/sa-phone-input.js"></script>
+    <script src="/assets/role-routing.js?erv=20260616"></script>
     <script src="/assets/auth-otp-flow.js"></script>
     <script>
       function showInlineMsg(text, isOk) {
@@ -157,8 +158,18 @@
         } catch (e) {}
       }
 
-      function defaultNext() {
-        return "/services-provider";
+      function defaultNext(user) {
+        if (window.ErvenowRoleRouting && user) {
+          return ErvenowRoleRouting.resolvePostLoginPath(user);
+        }
+        return "/service-preview";
+      }
+
+      function redirectAfterLogin(user) {
+        var qs = new URLSearchParams(location.search);
+        var next = qs.get("next");
+        location.href =
+          next && next.startsWith("/") && !next.startsWith("//") ? next.split("#")[0] : defaultNext(user);
       }
 
       ErvenowAuthOtpFlow.mount({
@@ -168,7 +179,7 @@
         btnId: "providerAuthBtn",
         introId: "providerAuthIntro",
         introSend: "أدخل رقم جوالك بصيغة 05xxxxxxxx ثم اضغط إرسال الرمز.",
-        introVerify: "أدخل رمز واتساب ثم اضغط تسجيل الدخول.",
+        introVerify: "أدخل رمز واتساب ثم اضغط دخول الأعضاء.",
         phoneValid: phoneOk,
         normalizePhone: normalizePhoneInput,
         onPhoneInvalid: function () {
@@ -216,10 +227,10 @@
             if (!j.token) throw new Error("لم يتم إصدار جلسة");
             var role = String((j.user && j.user.role) || "").toLowerCase();
             if (role !== "service") {
-              throw new Error("هذا الرقم ليس حساب مزوّد خدمة معتمد — استخدم صفحة تسجيل الدخول العامة.");
+              throw new Error("هذا الرقم ليس حساب مزوّد خدمة معتمد — استخدم صفحة دخول الأعضاء العامة.");
             }
           } catch (e) {
-            showInlineMsg(mapOtpError(e.message || "فشل تسجيل الدخول"), false);
+            showInlineMsg(mapOtpError(e.message || "فشل الدخول"), false);
             throw e;
           }
           persistSession(j.token, phoneEl);
@@ -228,22 +239,21 @@
               localStorage.setItem("userId", String(j.user.id));
             } catch (idErr) {}
           }
-          showInlineMsg("تم تسجيل الدخول — جاري التوجيه إلى لوحة المزود…", true);
+          showInlineMsg("تم الدخول — جاري التوجيه إلى لوحة المزود…", true);
           setTimeout(function () {
-            var qs = new URLSearchParams(location.search);
-            var next = qs.get("next");
-            location.href =
-              next && next.startsWith("/") && !next.startsWith("//") ? next.split("#")[0] : defaultNext();
+            redirectAfterLogin(j.user || {});
           }, 500);
         },
       });
 
       if (window.PlatformAPI && PlatformAPI.getToken()) {
-        var qs0 = new URLSearchParams(location.search);
-        var n0 = qs0.get("next");
-        location.replace(
-          n0 && n0.startsWith("/") && !n0.startsWith("//") ? n0.split("#")[0] : defaultNext()
-        );
+        PlatformAPI.api("/api/core/me")
+          .then(function (me) {
+            redirectAfterLogin((me && me.profile) || {});
+          })
+          .catch(function () {
+            redirectAfterLogin({});
+          });
       }
     </script>
   </body>

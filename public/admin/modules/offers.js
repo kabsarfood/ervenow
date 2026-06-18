@@ -1,4 +1,4 @@
-/** Admin — عروض بنر لوحة الزائر */
+/** Admin — عروض بنر منصة ERVENOW */
 import { app } from "./shared.js";
 import "./api.js";
 
@@ -29,11 +29,11 @@ app.renderOffersEditor = function () {
   var slides = Array.isArray(data.slides) ? data.slides : [];
   var html =
     '<label class="finance-feature-row" style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 0;margin-bottom:10px">' +
-    "<span>تفعيل البنر في لوحة الزائر</span>" +
+    "<span>تفعيل البنر في منصة ERVENOW</span>" +
     '<input type="checkbox" id="offersEnabledToggle" ' +
     (data.enabled !== false ? "checked" : "") +
     " /></label>" +
-    '<p class="sub" style="margin:0 0 12px">ارفع صورة <strong>1920×730</strong>، أدخل السعر/العنوان، وحدّد الرابط — تُعرض بـ object-fit: cover في لوحة الزائر.</p>' +
+    '<p class="sub" style="margin:0 0 12px">ارفع صورة <strong>1920×730</strong>، أدخل السعر/العنوان، وحدّد الرابط — تُعرض بـ object-fit: cover في منصة ERVENOW.</p>' +
     '<div id="offersSlidesList"></div>' +
     '<button type="button" class="btn btn-ghost" id="offersAddSlideBtn" style="margin-top:10px">+ إضافة شريحة</button>';
   root.innerHTML = html;

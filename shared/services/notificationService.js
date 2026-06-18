@@ -7,6 +7,7 @@ const NOTIFICATION_TYPES = new Set([
   "delivery",
   "system",
   "promotion",
+  "broadcast",
 ]);
 const NOTIFICATION_SOURCES = new Set(["ervenow", "wallet", "delivery", "store", "admin"]);
 const { broadcastNotificationNew } = require("../lib/trackingSocket");
@@ -76,6 +77,7 @@ async function createNotification(sb, input) {
         source: data.source,
         is_read: data.is_read,
         created_at: data.created_at,
+        payload: data.payload || {},
       });
     }
   } catch (_) {

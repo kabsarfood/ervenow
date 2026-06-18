@@ -106,10 +106,10 @@ app.renderCustomers = function () {
     item.className = "item";
     var meta = app.customerAccountMeta(u);
     item.innerHTML =
-      "<strong>" + (u.name || "زائر المنصة") + "</strong>" +
+      "<strong>" + (u.name || "ضيف ERVENOW") + "</strong>" +
       "<div>رقم الجوال: " + (u.phone || "—") + "</div>" +
       "<div>تاريخ التسجيل: " + app.fmtWhen(u.created_at) + "</div>" +
-      "<div>نوع الحساب: متسوق</div>" +
+      "<div>نوع الحساب: عضو ERVENOW</div>" +
       '<div>حالة الحساب: <span class="finance-status-badge ' + meta.badgeCls + '">' + meta.stLabel + "</span></div>" +
       "<div>آخر نشاط: " + app.fmtWhen(u.updated_at || u.created_at) + "</div>";
     var row = document.createElement("div");
@@ -117,7 +117,7 @@ app.renderCustomers = function () {
     if (meta.pending) {
       row.appendChild(app.mkAction("✅ اعتماد", "btn-primary", app.safeClick(async function () {
         try {
-          await app.activateCustomerAccount(u, meta, { skipConfirm: true, successMessage: "تم اعتماد المتسوق — الحالة: معتمد" });
+          await app.activateCustomerAccount(u, meta, { skipConfirm: true, successMessage: "تم اعتماد العضو — الحالة: معتمد" });
         } catch (e) { app.showError(e.message || "فشل"); }
       })));
       row.appendChild(app.mkAction("❌ رفض", "btn-ghost", app.safeClick(async function () {

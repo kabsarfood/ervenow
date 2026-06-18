@@ -1,0 +1,55 @@
+{
+  "updated_at": "2026-06-18T17:30:02.074Z",
+  "notes": "Platform Modules — تشغيل/إيقاف الخدمات المستقبلية من لوحة الأدمن دون تعديل الكود.",
+  "modules": {
+    "meshwar": {
+      "id": "meshwar",
+      "label": "Meshwar",
+      "label_ar": "مشوار",
+      "description": "خدمة التوصيل السريع Meshwar",
+      "status": "disabled"
+    },
+    "ervenow_pos": {
+      "id": "ervenow_pos",
+      "label": "ERVENOW POS",
+      "label_ar": "نقاط البيع",
+      "description": "نظام نقاط البيع للتجار",
+      "status": "disabled"
+    },
+    "loyalty": {
+      "id": "loyalty",
+      "label": "Loyalty",
+      "label_ar": "الولاء",
+      "description": "برنامج نقاط الولاء والمكافآت",
+      "status": "disabled"
+    },
+    "qr_payments": {
+      "id": "qr_payments",
+      "label": "QR Payments",
+      "label_ar": "دفع QR",
+      "description": "الدفع عبر رمز QR",
+      "status": "beta"
+    },
+    "service_schedule": {
+      "id": "service_schedule",
+      "label": "Service Schedule",
+      "label_ar": "جدولة الخدمات",
+      "description": "جدولة المواعيد في بوابة مزوّد الخدمة",
+      "status": "enabled"
+    },
+    "transport_fleet": {
+      "id": "transport_fleet",
+      "label": "Transport Fleet",
+      "label_ar": "أسطول النقل",
+      "description": "إدارة مركبات الأسطول في بوابة النقل",
+      "status": "enabled"
+    },
+    "transport_pricing": {
+      "id": "transport_pricing",
+      "label": "Transport Pricing",
+      "label_ar": "تسعير النقل",
+      "description": "إدارة أسعار النقل والغاز والمسافات",
+      "status": "enabled"
+    }
+  }
+}

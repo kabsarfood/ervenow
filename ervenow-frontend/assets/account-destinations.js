@@ -3,14 +3,26 @@
  */
 (function (global) {
   var ROLE_HOME = {
-    customer: { path: "/dashboard", label: "لوحة زائر المنصة", short: "زائر المنصة" },
-    driver: { path: "/driver", label: "لوحة المندوب", short: "مندوب التوصيل" },
-    store: { path: "/store-dashboard", label: "لوحة المتجر", short: "المتجر" },
-    merchant: { path: "/store-dashboard", label: "لوحة المتجر", short: "التاجر" },
-    restaurant: { path: "/store-dashboard", label: "لوحة المطعم", short: "المطعم" },
-    service: { path: "/services-provider.html", label: "لوحة مزود الخدمة", short: "مزود خدمة" },
+    customer: { path: "/start-now.html", label: "المنصة الرئيسية", short: "عضو ERVENOW" },
+    driver: { path: "/driver", label: "لوحة شريك التوصيل", short: "شريك توصيل" },
+    store: { path: "/store-dashboard", label: "لوحة الشريك التجاري", short: "شريك تجاري" },
+    merchant: { path: "/store-dashboard", label: "لوحة الشريك التجاري", short: "شريك تجاري" },
+    restaurant: { path: "/store-dashboard", label: "لوحة الشريك التجاري", short: "شريك تجاري" },
+    service: { path: "/service-preview", label: "بوابة شريك الخدمات", short: "شريك خدمات" },
+    transport: { path: "/transport-preview", label: "بوابة شريك النقل", short: "شريك نقل" },
     admin: { path: "/admin-dashboard", label: "لوحة الإدارة", short: "الإدارة" },
     blocked: { path: "/blocked-complaints.html", label: "الدعم والشكاوى", short: "الدعم" },
+  };
+
+  var TRANSPORT_SERVICE_TYPES = {
+    pickup_truck: 1,
+    car_transport: 1,
+    vehicle_transfer: 1,
+    internal_delivery: 1,
+    furniture_move: 1,
+    gas_cylinder_swap: 1,
+    gas_central_refill: 1,
+    gas_delivery: 1,
   };
 
   var SERVICE_HOME_LABELS = {
@@ -36,7 +48,14 @@
       return DRIVER_HOME_PATH;
     }
     if (String(role || "").toLowerCase() === "driver" && p !== DRIVER_HOME_PATH) {
-      var allowed = { "/driver": 1, "/driver-wallet": 1, "/driver-app": 1, "/orders": 1, "/driver-login": 1 };
+      var allowed = {
+        "/driver": 1,
+        "/driver-preview": 1,
+        "/driver-wallet": 1,
+        "/driver-app": 1,
+        "/orders": 1,
+        "/driver-login": 1,
+      };
       if (!allowed[p] && p.indexOf("driver-dashboard") !== -1) return DRIVER_HOME_PATH;
     }
     return p || "/";
@@ -51,6 +70,18 @@
 
   function homeFor(role, serviceType) {
     var r = normalizeRole(role);
+    if (r === "service" && serviceType) {
+      var st = String(serviceType).trim().toLowerCase();
+      if (TRANSPORT_SERVICE_TYPES[st]) {
+        var transport = ROLE_HOME.transport;
+        return {
+          role: "transport",
+          path: canonicalPath(transport.path, "transport"),
+          label: transport.label,
+          short: transport.short,
+        };
+      }
+    }
     var base = ROLE_HOME[r] || ROLE_HOME.customer;
     var out = {
       role: r,

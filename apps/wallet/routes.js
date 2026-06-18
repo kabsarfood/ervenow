@@ -23,6 +23,10 @@ const {
   listLedgerWithdrawRequests,
   getWithdrawAvailableBalance,
 } = require("../../shared/utils/ledgerWallet");
+const {
+  resolveUserWalletPortal,
+  filterWithdrawalsForPortal,
+} = require("../../shared/utils/walletPortalRouting");
 const { createServiceClient } = require("../../shared/config/supabase");
 const { assertWithdrawSystemEnabled } = require("../../shared/utils/platformFeatureFlags");
 const { loadPlatformPaySettings, assertWithdrawEnabledPay } = require("../../shared/services/platformPaySettings");
@@ -30,7 +34,7 @@ const {
   createTopupRequest,
   redeemTopupCode,
 } = require("../../shared/services/walletTopupService");
-const { createNotification } = require("../../shared/services/notificationService");
+const { notifyWalletCredit } = require("../../shared/services/notificationEvents");
 
 const router = express.Router();
 const MIN_WITHDRAW = 20;
@@ -206,20 +210,20 @@ router.post("/ledger/deposit", requireAuth, requireRole("admin"), async (req, re
     const row = typeof data === "object" && data !== null && !Array.isArray(data) ? data : {};
     if (row.ok === true || row.ok === "true") {
       try {
-        await createNotification(req.supabase, {
-          recipient_type: walletRecipientTypeByRole(roleHint),
-          recipient_id: userId,
-          title: "تم شحن المحفظة",
-          message: "تم إضافة الرصيد إلى محفظتك بنجاح.",
-          type: "wallet",
-          source: "wallet",
-          payload: {
+        await notifyWalletCredit(
+          req.supabase,
+          userId,
+          { role: roleHint },
+          "wallet.topup",
+          "تم شحن المحفظة",
+          "تم إضافة الرصيد إلى محفظتك بنجاح.",
+          {
             amount: Number(amount || 0),
             currency: "SAR",
             reference: reference_id,
             wallet_id: row.wallet_id || null,
-          },
-        });
+          }
+        );
       } catch (_e) {}
       return ok(res, { result: row, wallet_mode: "ledger" });
     }
@@ -276,20 +280,20 @@ router.post("/ledger/refund", requireAuth, requireRole("admin"), async (req, res
     const row = typeof data === "object" && data !== null && !Array.isArray(data) ? data : {};
     if (row.ok === true || row.ok === "true") {
       try {
-        await createNotification(req.supabase, {
-          recipient_type: walletRecipientTypeByRole(req.body?.role || "customer"),
-          recipient_id: userId,
-          title: "تم استرداد مبلغ",
-          message: "تمت إعادة المبلغ إلى محفظتك.",
-          type: "wallet",
-          source: "wallet",
-          payload: {
+        await notifyWalletCredit(
+          req.supabase,
+          userId,
+          { role: req.body?.role || "customer" },
+          "wallet.refund",
+          "تم استرداد مبلغ",
+          "تمت إعادة المبلغ إلى محفظتك.",
+          {
             amount: Number(amount || 0),
             currency: "SAR",
             reference: reference_id,
             wallet_id: row.wallet_id || null,
-          },
-        });
+          }
+        );
       } catch (_e) {}
       return ok(res, { result: row, wallet_mode: "ledger" });
     }
@@ -314,20 +318,20 @@ router.post("/topup-request", requireAuth, requireRole(...WALLET_READ_ROLES), as
     const result = await createTopupRequest(req.supabase, req.appUser, req.body || {});
     if (result && result.auto_fulfilled === true) {
       try {
-        await createNotification(req.supabase, {
-          recipient_type: walletRecipientTypeByRole(req.appUser.role),
-          recipient_id: req.appUser.id,
-          title: "تم شحن المحفظة",
-          message: "تم إضافة الرصيد إلى محفظتك بنجاح.",
-          type: "wallet",
-          source: "wallet",
-          payload: {
+        await notifyWalletCredit(
+          req.supabase,
+          req.appUser.id,
+          req.appUser,
+          "wallet.topup",
+          "تم شحن المحفظة",
+          "تم إضافة الرصيد إلى محفظتك بنجاح.",
+          {
             amount: Number(result.amount_credited || req.body?.amount || 0),
             currency: "SAR",
             reference: result.code || null,
             wallet_id: null,
-          },
-        });
+          }
+        );
       } catch (_e) {}
     }
     return ok(res, result);
@@ -341,20 +345,20 @@ router.post("/redeem-code", requireAuth, requireRole(...WALLET_READ_ROLES), asyn
     const code = req.body?.code;
     const result = await redeemTopupCode(req.supabase, req.appUser, code);
     try {
-      await createNotification(req.supabase, {
-        recipient_type: walletRecipientTypeByRole(req.appUser.role),
-        recipient_id: req.appUser.id,
-        title: "تم شحن المحفظة",
-        message: "تم إضافة الرصيد إلى محفظتك بنجاح.",
-        type: "wallet",
-        source: "wallet",
-        payload: {
+      await notifyWalletCredit(
+        req.supabase,
+        req.appUser.id,
+        req.appUser,
+        "wallet.topup",
+        "تم شحن المحفظة",
+        "تم إضافة الرصيد إلى محفظتك بنجاح.",
+        {
           amount: Number(result.amount || 0),
           currency: "SAR",
           reference: result.code || String(code || "").trim() || null,
           wallet_id: null,
-        },
-      });
+        }
+      );
     } catch (_e) {}
     return ok(res, result);
   } catch (e) {
@@ -377,10 +381,12 @@ router.post("/transfer", requireAuth, requireRole(...WALLET_READ_ROLES), async (
 
 router.get("/withdraw", requireAuth, requireRole(...PAYOUT_ROLES), async (req, res) => {
   try {
+    const portalType = resolveUserWalletPortal(req.appUser);
     const { rows, source } = await listLedgerWithdrawRequests(req.supabase, req.appUser.id, {
       limit: Number(req.query?.limit) || 50,
     });
-    ok(res, { requests: rows, source });
+    const requests = filterWithdrawalsForPortal(rows, portalType);
+    ok(res, { requests, source, portal_type: portalType });
   } catch (e) {
     fail(res, e.message, 500);
   }

@@ -39,6 +39,7 @@ const { attachSiteSessionCookie } = require("../../shared/middleware/publicSiteO
 const { parseOptionalPayoutPayload, payoutRowForDriversOrStores } = require("../../shared/utils/payoutFields");
 const { sanitizeDriverOrStoreRowForApi } = require("../../shared/utils/bankApiSafe");
 const { filterDriverDispatchOrders } = require("../../shared/utils/driverDispatchOrders");
+const { filterOrdersForPortal } = require("../../shared/utils/orderPortalRouting");
 const {
   isMerchantDispatchOrder,
   isLegacyOpenOrderForDriver,
@@ -532,7 +533,10 @@ router.get("/orders", requireAuth, async (req, res) => {
     });
 
     const activeAssigned = filterDriverDispatchOrders(assignedOrders || []);
-    const finalOrders = filterDriverDispatchOrders([...activeAssigned, ...visibleOpenOrders]);
+    const finalOrders = filterOrdersForPortal(
+      filterDriverDispatchOrders([...activeAssigned, ...visibleOpenOrders]),
+      "driver"
+    );
 
     return ok(res, {
       orders: finalOrders,
@@ -569,6 +573,74 @@ router.get("/wallet", requireAuth, requireRole("driver"), async (req, res) => {
       warning: freeze.warning,
       setup_required: !!payload.setup_required,
       message: payload.message || null,
+    });
+  } catch (e) {
+    return fail(res, e.message, 500);
+  }
+});
+
+function earningsRangeStart(range) {
+  const now = new Date();
+  const start = new Date(now);
+  if (range === "week") start.setDate(start.getDate() - 7);
+  else if (range === "month") start.setMonth(start.getMonth() - 1);
+  else start.setHours(0, 0, 0, 0);
+  return start;
+}
+
+function summarizeDriverEarnings(txs, completedOrders, range) {
+  const since = earningsRangeStart(range);
+  const earnings = (txs || [])
+    .filter((t) => {
+      if (!t || !t.created_at) return false;
+      if (new Date(t.created_at) < since) return false;
+      const dir = String(t.direction || "").toLowerCase();
+      const type = String(t.type || "").toLowerCase();
+      const amt = Math.abs(Number(t.amount) || 0);
+      if (!amt) return false;
+      return dir === "credit" && (type === "earning" || type === "deposit" || type === "refund");
+    })
+    .reduce((sum, t) => sum + Math.abs(Number(t.amount) || 0), 0);
+  const trips = (completedOrders || []).filter((o) => {
+    const at = o.updated_at || o.delivered_at || o.created_at;
+    return at && new Date(at) >= since;
+  }).length;
+  const rounded = Math.round(earnings * 100) / 100;
+  return {
+    earnings_sar: rounded,
+    trips,
+    avg_per_trip_sar: trips > 0 ? Math.round((rounded / trips) * 100) / 100 : 0,
+  };
+}
+
+router.get("/earnings", requireAuth, requireRole("driver"), async (req, res) => {
+  try {
+    const sb = req.supabase;
+    const uid = req.appUser.id;
+    const { listLedgerWalletTransactions } = require("../../shared/utils/ledgerWallet");
+    let txs = [];
+    try {
+      txs = await listLedgerWalletTransactions(sb, uid, "driver", 500);
+    } catch (_txErr) {
+      txs = [];
+    }
+    const { data: completedOrders, error: oErr } = await sb
+      .from("orders")
+      .select("id, updated_at, delivered_at, created_at, delivery_status, status")
+      .eq("driver_id", uid)
+      .in("delivery_status", ["delivered", "picked_up", "picked"])
+      .order("updated_at", { ascending: false })
+      .limit(300);
+    if (oErr) return fail(res, oErr.message, 400);
+    const delivered = (completedOrders || []).filter((o) => {
+      const st = String(o.delivery_status || o.status || "").toLowerCase();
+      return st === "delivered" || st === "picked_up" || st === "picked";
+    });
+    return ok(res, {
+      today: summarizeDriverEarnings(txs, delivered, "today"),
+      week: summarizeDriverEarnings(txs, delivered, "week"),
+      month: summarizeDriverEarnings(txs, delivered, "month"),
+      source: "ledger",
     });
   } catch (e) {
     return fail(res, e.message, 500);

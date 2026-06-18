@@ -1,0 +1,24 @@
+{
+  "portal": "merchant",
+  "brand": "ERVENOW Merchant",
+  "roleLabel": "تاجر",
+  "theme": "merchant",
+  "defaultSection": "dashboard",
+  "items": [
+    "dashboard",
+    "orders",
+    "products",
+    "categories",
+    "offers",
+    "wallet",
+    "withdrawals",
+    "reports",
+    "notifications",
+    "settings",
+    "pos"
+  ],
+  "sidebarFoot": [
+    { "href": "/store-dashboard", "label": "لوحة المتجر" },
+    { "href": "/order-board", "label": "Order Board" }
+  ]
+}

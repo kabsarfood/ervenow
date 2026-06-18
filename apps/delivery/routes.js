@@ -41,7 +41,7 @@ const {
   broadcastOrderPatch,
   orderPatchFromRow,
 } = require("../../shared/lib/trackingSocket");
-const { createNotification } = require("../../shared/services/notificationService");
+const { notifyCustomer, notifyDriverUser } = require("../../shared/services/notificationEvents");
 
 const router = express.Router();
 
@@ -345,19 +345,23 @@ router.post("/orders/:id/accept", requireAuth, requireRole("driver"), async (req
       }
       if (data.customer_id) {
         try {
-          await createNotification(req.supabase, {
-            recipient_type: "customer",
-            recipient_id: data.customer_id,
-            title: "تم قبول الطلب",
-            message: "تم قبول طلبك وبدء تجهيزه.",
-            type: "order",
-            source: "delivery",
-            payload: {
-              order_id: data.id,
-              order_number: data.order_number || null,
-              driver_id: data.driver_id || req.appUser.id,
-            },
-          });
+          await notifyCustomer(
+            req.supabase,
+            data.customer_id,
+            "customer.order.accepted",
+            "تم قبول الطلب",
+            "تم قبول طلبك وبدء تجهيزه.",
+            data,
+            { driver_id: data.driver_id || req.appUser.id }
+          );
+          await notifyDriverUser(
+            req.supabase,
+            req.appUser.id,
+            "driver.task.assigned",
+            "مهمة جديدة",
+            `تم إسناد طلب ${data.order_number || data.id} إليك.`,
+            data
+          );
         } catch (notifyErr) {
           logger.warn(
             { err: notifyErr.message || String(notifyErr), orderId: data.id },

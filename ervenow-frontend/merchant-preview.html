@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover"
+    />
+    <script src="/assets/viewport-fit.js?erv=20260616"></script>
+    <meta name="theme-color" content="#3d2615" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>ERVENOW | معاينة بوابة التاجر</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/assets/ervenow-responsive.css" />
+    <link rel="stylesheet" href="/assets/responsive-audit-base.css" />
+    <link rel="stylesheet" href="/assets/notification-center.css" />
+    <link rel="stylesheet" href="/assets/portal-framework/portal-framework.css?pfv=20260617" />
+    <link rel="stylesheet" href="/assets/merchant-preview.css?pfv=20260617" />
+  </head>
+  <body class="pf-page pf-page--ops">
+    <div class="pf-preview-banner" role="status">ERVENOW Merchant — Portal 2.0</div>
+
+    <div class="pf-login" id="mpLogin" hidden>
+      <h1 style="margin: 0 0 8px; font-size: 1.25rem">بوابة التاجر — معاينة</h1>
+      <p style="margin: 0 0 16px; color: var(--pf-muted); font-weight: 600">
+        سجّل الدخول كتاجر معتمد للوصول إلى النموذج الموحّد.
+      </p>
+      <a class="pf-btn pf-btn--primary" href="/login?role=store">تسجيل دخول المتجر</a>
+      <a class="pf-btn" href="/store-dashboard" style="margin-inline-start: 8px">البوابة الكلاسيكية</a>
+    </div>
+
+    <div id="mpApp"></div>
+
+    <script src="/assets/api-config.js"></script>
+    <script src="/assets/api.js?erv=20260616"></script>
+    <script src="/assets/auth-account-guard.js"></script>
+    <script src="/assets/merchant-order-workflow.js"></script>
+    <script src="/assets/notification-sounds.js"></script>
+    <script src="/assets/notification-center.js"></script>
+    <script src="/assets/portal-framework/theme-engine.js?pfv=20260617"></script>
+    <script src="/assets/portal-framework/role-context.js?pfv=20260617"></script>
+    <script src="/assets/portal-framework/portal-widgets.js?pfv=20260617"></script>
+    <script src="/assets/portal-framework/portal-header.js?pfv=20260617"></script>
+    <script src="/assets/portal-framework/portal-sidebar.js?pfv=20260617"></script>
+    <script src="/assets/portal-framework/portal-operational.js?pfv=20260617"></script>
+    <script src="/assets/portal-framework/portal-platform-modules.js?pfv=20260617"></script>
+    <script src="/assets/portal-framework/portal-inline-notifications.js?pfv=20260617"></script>
+    <script src="/assets/portal-framework/portal-notifications-ops.js?pfv=20260617"></script>
+    <script src="/assets/portal-framework/portal-shell.js?pfv=20260617"></script>
+    <script src="/assets/merchant-preview.js?pfv=20260617"></script>
+    <script src="/assets/admin-readiness-beacon.js" defer></script>
+    <script>
+      ErvenowMerchantPreview.init();
+    </script>
+  </body>
+</html>

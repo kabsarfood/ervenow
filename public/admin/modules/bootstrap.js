@@ -22,6 +22,8 @@ var reloadFinanceBtn = document.getElementById("reloadFinanceBtn");
 if (reloadFinanceBtn) reloadFinanceBtn.onclick = app.loadFinancePanel;
 var reloadErvenowPayBtn = document.getElementById("reloadErvenowPayBtn");
 if (reloadErvenowPayBtn) reloadErvenowPayBtn.onclick = app.loadErvenowPayPanel;
+var reloadBroadcastBtn = document.getElementById("reloadBroadcastBtn");
+if (reloadBroadcastBtn) reloadBroadcastBtn.onclick = app.loadBroadcastPanel;
 var reloadOffersBtn = document.getElementById("reloadOffersBtn");
 if (reloadOffersBtn) reloadOffersBtn.onclick = app.loadOffersPanel;
 var reloadHeroBannersBtn = document.getElementById("reloadHeroBannersBtn");
@@ -34,10 +36,20 @@ var saveOffersBtn = document.getElementById("saveOffersBtn");
 if (saveOffersBtn) saveOffersBtn.onclick = app.safeClick(app.saveOffersPanel);
 var reloadServicesBtn = document.getElementById("reloadServicesBtn");
 if (reloadServicesBtn) reloadServicesBtn.onclick = app.loadServicesPanel;
+var reloadTransportBtn = document.getElementById("reloadTransportBtn");
+if (reloadTransportBtn) reloadTransportBtn.onclick = app.loadTransportPanel;
+var searchServicesEl = document.getElementById("searchServices");
+if (searchServicesEl) searchServicesEl.addEventListener("input", function () {
+  void app.loadServicesPanel();
+});
+var searchTransportEl = document.getElementById("searchTransport");
+if (searchTransportEl) searchTransportEl.addEventListener("input", function () {
+  void app.loadTransportPanel();
+});
 var saveErvenowPaySettingsBtn = document.getElementById("saveErvenowPaySettingsBtn");
 if (saveErvenowPaySettingsBtn) saveErvenowPaySettingsBtn.onclick = app.safeClick(app.saveErvenowPaySettings);
-var reloadSettingsBtn = document.getElementById("reloadSettingsBtn");
-if (reloadSettingsBtn) reloadSettingsBtn.onclick = app.loadSettingsPanel;
+var reloadPlatformModulesBtn = document.getElementById("reloadPlatformModulesBtn");
+if (reloadPlatformModulesBtn) reloadPlatformModulesBtn.onclick = app.loadPlatformModulesPanel;
 var openAdminAccountsBtn = document.getElementById("openAdminAccountsBtn");
 if (openAdminAccountsBtn) {
   openAdminAccountsBtn.onclick = function () {

@@ -284,6 +284,7 @@ app.applyPermissionVisibility = function () {
     panelDrivers: "drivers",
     panelOrders: "orders",
     panelNotifications: "notifications",
+    panelBroadcast: "notifications",
     panelComplaints: "complaints",
     panelCustomers: "customers",
     panelStores: "stores",
@@ -291,9 +292,14 @@ app.applyPermissionVisibility = function () {
     panelJobs: "jobs",
     panelAdminAccounts: "admin_accounts",
     panelSettings: null,
+    panelPlatformModules: "dashboard",
     panelOffers: "dashboard",
     panelHeroBanners: "dashboard",
     panelServices: "providers",
+    panelTransport: "providers",
+    panelRoleSeparation: "dashboard",
+    panelPreviewMonitor: "dashboard",
+    panelRoleRegistry: "dashboard",
     panelErvenowPay: "finance",
     financePanel: "finance",
   };
@@ -372,6 +378,8 @@ app.loadPanelById = function (panelId) {
       return done(app.loadRecentOrders());
     case "panelNotifications":
       return done(app.loadNotifications());
+    case "panelBroadcast":
+      return done(app.loadBroadcastPanel());
     case "panelDrivers":
       return done(app.loadDrivers());
     case "panelComplaints":
@@ -388,12 +396,22 @@ app.loadPanelById = function (panelId) {
       return done(app.loadAdminAccounts());
     case "panelSettings":
       return done(app.loadSettingsPanel());
+    case "panelPlatformModules":
+      return done(app.loadPlatformModulesPanel());
     case "panelOffers":
       return done(app.loadOffersPanel());
     case "panelHeroBanners":
       return done(app.loadHeroBannersPanel());
     case "panelServices":
       return done(app.loadServicesPanel());
+    case "panelTransport":
+      return done(app.loadTransportPanel());
+    case "panelRoleSeparation":
+      return done(app.loadRoleSeparationMonitor());
+    case "panelPreviewMonitor":
+      return done(app.loadPreviewMonitor());
+    case "panelRoleRegistry":
+      return done(app.loadRoleRegistry());
     case "panelErvenowPay":
       return done(app.loadErvenowPayPanel());
     case "financePanel":
@@ -414,11 +432,11 @@ app.mkAction = function (label, cls, fn) {
 }
 
 app.confirmAccountBlock = function () {
-  return window.confirm("حظر هذا الحساب؟ لن يتمكن من تسجيل الدخول أو استخدام خدمات المنصة.");
+  return window.confirm("حظر هذا الحساب؟ لن يتمكن من دخول الأعضاء أو استخدام خدمات المنصة.");
 }
 
 app.confirmAccountActivate = function () {
-  return window.confirm("تفعيل هذا الحساب؟ سيتمكن من تسجيل الدخول واستخدام المنصة.");
+  return window.confirm("تفعيل هذا الحساب؟ سيتمكن من دخول الأعضاء واستخدام المنصة.");
 }
 
 /** حالة زائر/متسوق في لوحة إدارة الزوار */

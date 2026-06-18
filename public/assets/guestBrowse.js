@@ -31,12 +31,12 @@
       }
     },
 
-    /** زائر يتصفح بدون حساب — لا يستطيع الطلب حتى يسجّل */
+    /** ضيف يتصفح بدون حساب — لا يستطيع الطلب حتى ينشئ عضوية */
     isAnonymousGuest: function () {
       return this.isActive() && !this.hasSessionToken();
     },
 
-    /** إنهاء جلسة الزائر — تصفير السلة والبيانات المحلية */
+    /** إنهاء جلسة الضيف — تصفير السلة والبيانات المحلية */
     endSession: function () {
       this.setActive(false);
       try {

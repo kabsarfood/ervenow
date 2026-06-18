@@ -25,7 +25,7 @@
         <nav class="dash-site-header__nav" aria-label="التنقل">
           <div class="dash-site-header__links">
             <a class="dash-site-header__link" href="/">الرئيسية</a>
-            <a class="dash-site-header__link" href="/dashboard">لوحة الزائر</a>
+            <a class="dash-site-header__link" href="/dashboard">منصة ERVENOW</a>
             <a class="dash-site-header__link" href="/login?mode=register&amp;role=driver">طلب انضمام</a>
           </div>
         </nav>
@@ -91,8 +91,33 @@
     <script src="/assets/api-config.js"></script>
     <script src="/assets/api.js?erv=20260612"></script>
     <script src="/assets/sa-phone-input.js"></script>
+    <script src="/assets/role-routing.js"></script>
+    <script src="/assets/admin-readiness-beacon.js"></script>
     <script src="/assets/auth-otp-flow.js"></script>
     <script>
+      function driverPostLoginPath() {
+        var qs = new URLSearchParams(location.search);
+        var next = qs.get("next");
+        if (next && next.startsWith("/") && !next.startsWith("//")) return next.split("#")[0];
+        return window.ErvenowRoleRouting
+          ? ErvenowRoleRouting.resolvePostLoginPath({ role: "driver" })
+          : "/driver";
+      }
+
+      function performDriverRedirect(targetPath, success) {
+        var path = String(targetPath || "/driver");
+        var beacon = window.ErvenowAdminReadinessBeacon;
+        if (beacon && beacon.trackRedirect) {
+          beacon.trackRedirect({
+            portal: "driver",
+            role: "driver",
+            path: path,
+            success: success !== false,
+          });
+        }
+        location.href = path;
+      }
+
       function showInlineMsg(text, isOk) {
         var el = document.getElementById("msg");
         if (!el) return;
@@ -136,7 +161,7 @@
         btnId: "driverAuthBtn",
         introId: "driverAuthIntro",
         introSend: "أدخل رقم جوالك بصيغة 05xxxxxxxx ثم اضغط إرسال الرمز.",
-        introVerify: "أدخل رمز واتساب ثم اضغط تسجيل الدخول.",
+        introVerify: "أدخل رمز واتساب ثم اضغط دخول الأعضاء.",
         phoneValid: phoneOk,
         normalizePhone: normalizePhoneInput,
         onPhoneInvalid: function () {
@@ -172,7 +197,7 @@
             });
             if (!j.token) throw new Error("لم يتم إصدار جلسة");
           } catch (e) {
-            showInlineMsg(mapOtpError(e.message || "فشل تسجيل الدخول"), false);
+            showInlineMsg(mapOtpError(e.message || "فشل الدخول"), false);
             throw e;
           }
           window.PlatformAPI.setToken(j.token);
@@ -194,22 +219,15 @@
           try {
             localStorage.removeItem("ervenow_guest_browse");
           } catch (e) {}
-          showInlineMsg("تم تسجيل الدخول — جاري التوجيه…", true);
+          showInlineMsg("تم الدخول — جاري التوجيه…", true);
           setTimeout(function () {
-            var qs = new URLSearchParams(location.search);
-            var next = qs.get("next");
-            location.href =
-              next && next.startsWith("/") && !next.startsWith("//") ? next.split("#")[0] : "/driver";
+            performDriverRedirect(driverPostLoginPath());
           }, 500);
         },
       });
 
       if (window.PlatformAPI && PlatformAPI.getToken()) {
-        var qs0 = new URLSearchParams(location.search);
-        var n0 = qs0.get("next");
-        location.replace(
-          n0 && n0.startsWith("/") && !n0.startsWith("//") ? n0.split("#")[0] : "/driver"
-        );
+        performDriverRedirect(driverPostLoginPath());
       }
     </script>
   </body>

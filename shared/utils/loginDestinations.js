@@ -1,10 +1,14 @@
 /**
- * توجيه ذكي بعد تسجيل الدخول — يدعم تعدد الأدوار (users.role + drivers + stores)
+ * توجيه ذكي بعد تسجيل الدخول — Role Routing Engine + تعدد الأدوار
  */
+const {
+  resolvePortalRole,
+  portalPathForRole,
+  portalLabelAr,
+  MERCHANT_DB_ROLES,
+} = require("./resolvePortalRole");
 
-/** اللوحة الموحدة للمندوب — لا تستخدم /driver-dashboard */
-const DRIVER_HOME_PATH = "/driver";
-
+const DRIVER_HOME_PATH = portalPathForRole("driver");
 const LEGACY_DRIVER_PATHS = new Set(["/driver-dashboard", "/driver-dashboard.html"]);
 
 function canonicalAccountPath(path, role) {
@@ -18,59 +22,64 @@ function canonicalAccountPath(path, role) {
   return p || "/";
 }
 
-const ROLE_DESTINATIONS = {
-  customer: { path: "/dashboard", label: "لوحة زائر المنصة" },
-  driver: { path: DRIVER_HOME_PATH, label: "لوحة المندوب" },
-  store: { path: "/store-dashboard", label: "حساب المتجر" },
-  merchant: { path: "/store-dashboard", label: "متجر" },
-  restaurant: { path: "/store-dashboard", label: "مطعم" },
-  service: { path: "/services-provider", label: "مزود خدمة" },
-  admin: { path: "/admin-dashboard", label: "لوحة الإدارة" },
-  blocked: { path: "/blocked-complaints", label: "الدعم" },
-};
+const BLOCKED_DESTINATION = { path: "/blocked-complaints", label: "الدعم" };
 
-const STORE_PANEL_ROLES = new Set(["store", "merchant", "restaurant"]);
-
-function destinationForRole(role) {
-  const r = String(role || "customer").toLowerCase();
-  return ROLE_DESTINATIONS[r] || ROLE_DESTINATIONS.customer;
+function destinationForPortalRole(portalRole) {
+  const r = String(portalRole || "customer").toLowerCase();
+  return {
+    role: r,
+    path: portalPathForRole(r),
+    label: portalLabelAr(r),
+  };
 }
 
 function addDestination(list, seen, entry) {
-  const role = String(entry.role || "customer").toLowerCase();
-  const path = canonicalAccountPath(entry.path || destinationForRole(role).path, role);
-  const key = path + "|" + role;
+  const portalRole = String(entry.portalRole || entry.role || "customer").toLowerCase();
+  const path = canonicalAccountPath(entry.path || portalPathForRole(portalRole), portalRole);
+  const key = path + "|" + portalRole;
   if (seen.has(key)) return;
   seen.add(key);
   list.push({
-    role,
+    role: portalRole,
+    portalRole,
     path,
-    label: entry.label || destinationForRole(role).label,
+    label: entry.label || portalLabelAr(portalRole),
     primary: !!entry.primary,
     extra: !!entry.extra,
+    rawRole: entry.rawRole || null,
   });
 }
 
 async function resolveLoginDestinations(sb, userRow) {
   const destinations = [];
   const seen = new Set();
+
   if (!userRow || !userRow.id) {
-    addDestination(destinations, seen, { role: "customer", ...ROLE_DESTINATIONS.customer, primary: true });
+    addDestination(destinations, seen, { portalRole: "customer", ...destinationForPortalRole("customer"), primary: true });
     return destinations;
   }
 
-  const role = String(userRow.role || "customer").toLowerCase();
+  const rawRole = String(userRow.role || "customer").toLowerCase();
   const status = String(userRow.status || "").toLowerCase();
   const phone = String(userRow.phone || "").replace(/\D/g, "");
 
-  if (role === "blocked" || status === "blocked") {
-    addDestination(destinations, seen, { role: "blocked", ...ROLE_DESTINATIONS.blocked, primary: true });
+  if (rawRole === "blocked" || status === "blocked") {
+    addDestination(destinations, seen, {
+      portalRole: "customer",
+      path: BLOCKED_DESTINATION.path,
+      label: BLOCKED_DESTINATION.label,
+      rawRole: "blocked",
+      primary: true,
+    });
     return destinations;
   }
 
+  const primary = resolvePortalRole(userRow);
   addDestination(destinations, seen, {
-    role,
-    ...destinationForRole(role),
+    portalRole: primary.portalRole,
+    path: portalPathForRole(primary.portalRole),
+    label: portalLabelAr(primary.portalRole),
+    rawRole: primary.rawRole,
     primary: true,
   });
 
@@ -81,8 +90,13 @@ async function resolveLoginDestinations(sb, userRow) {
         .select("id, status, active")
         .eq("phone", phone)
         .maybeSingle();
-      if (drv && String(drv.status || "") === "approved" && drv.active === true && role !== "driver") {
-        addDestination(destinations, seen, { role: "driver", ...ROLE_DESTINATIONS.driver, extra: true });
+      if (drv && String(drv.status || "") === "approved" && drv.active === true && primary.portalRole !== "driver") {
+        addDestination(destinations, seen, {
+          portalRole: "driver",
+          ...destinationForPortalRole("driver"),
+          rawRole: "driver",
+          extra: true,
+        });
       }
     } catch (_) {
       /* drivers table optional */
@@ -95,34 +109,34 @@ async function resolveLoginDestinations(sb, userRow) {
         .eq("phone", phone)
         .eq("status", "approved");
       const hasApprovedStore = (stores || []).length > 0;
-      if (hasApprovedStore && !STORE_PANEL_ROLES.has(role)) {
-        addDestination(destinations, seen, { role: "store", ...ROLE_DESTINATIONS.store, extra: true });
-      }
-      const types = new Set((stores || []).map((s) => String(s.type || "merchant").toLowerCase()));
-      if (types.has("restaurant") && role !== "restaurant" && role !== "store") {
-        addDestination(destinations, seen, { role: "restaurant", ...ROLE_DESTINATIONS.restaurant, extra: true });
-      }
-      if (
-        (types.has("merchant") || types.size > 0) &&
-        role !== "merchant" &&
-        role !== "restaurant" &&
-        role !== "store"
-      ) {
-        if (!types.has("restaurant") || types.size > 1) {
-          addDestination(destinations, seen, { role: "merchant", ...ROLE_DESTINATIONS.merchant, extra: true });
-        }
+      if (hasApprovedStore && !MERCHANT_DB_ROLES.has(rawRole) && primary.portalRole !== "merchant") {
+        addDestination(destinations, seen, {
+          portalRole: "merchant",
+          ...destinationForPortalRole("merchant"),
+          rawRole: "store",
+          extra: true,
+        });
       }
     } catch (_) {
       /* stores table optional */
     }
   }
 
-  if (userRow.service_type && role !== "service") {
-    addDestination(destinations, seen, { role: "service", ...ROLE_DESTINATIONS.service, extra: true });
+  if (userRow.service_type && rawRole !== "service") {
+    const svc = resolvePortalRole({ role: "service", service_type: userRow.service_type });
+    if (svc.portalRole !== primary.portalRole) {
+      addDestination(destinations, seen, {
+        portalRole: svc.portalRole,
+        path: portalPathForRole(svc.portalRole),
+        label: portalLabelAr(svc.portalRole),
+        rawRole: "service",
+        extra: true,
+      });
+    }
   }
 
   if (!destinations.length) {
-    addDestination(destinations, seen, { role: "customer", ...ROLE_DESTINATIONS.customer, primary: true });
+    addDestination(destinations, seen, { portalRole: "customer", ...destinationForPortalRole("customer"), primary: true });
   }
 
   return destinations;
@@ -131,28 +145,61 @@ async function resolveLoginDestinations(sb, userRow) {
 function pickDefaultDestination(destinations, preferredRole) {
   const list = Array.isArray(destinations) ? destinations : [];
   if (!list.length) {
-    const r = destinationForRole(preferredRole);
-    return { role: String(preferredRole || "customer").toLowerCase(), ...r, path: canonicalAccountPath(r.path, preferredRole) };
+    const resolved = resolvePortalRole({ role: preferredRole });
+    const path = portalPathForRole(resolved.portalRole);
+    return {
+      role: resolved.portalRole,
+      portalRole: resolved.portalRole,
+      path: canonicalAccountPath(path, resolved.portalRole),
+      label: portalLabelAr(resolved.portalRole),
+    };
   }
 
   const pref = String(preferredRole || "").toLowerCase();
   if (pref) {
-    const match = list.find((d) => d.role === pref);
-    if (match) return { ...match, path: canonicalAccountPath(match.path, match.role) };
+    const prefPortal = MERCHANT_DB_ROLES.has(pref)
+      ? "merchant"
+      : pref === "user"
+        ? "customer"
+        : pref;
+    const match = list.find((d) => d.portalRole === prefPortal || d.role === prefPortal || d.rawRole === pref);
+    if (match) {
+      return { ...match, path: canonicalAccountPath(match.path, match.portalRole || match.role) };
+    }
   }
 
   const primary = list.find((d) => d.primary);
-  if (primary) return { ...primary, path: canonicalAccountPath(primary.path, primary.role) };
+  if (primary) return { ...primary, path: canonicalAccountPath(primary.path, primary.portalRole || primary.role) };
   const first = list[0];
-  return { ...first, path: canonicalAccountPath(first.path, first.role) };
+  return { ...first, path: canonicalAccountPath(first.path, first.portalRole || first.role) };
+}
+
+/** @deprecated استخدم resolvePortalRole — للتوافق */
+const ROLE_DESTINATIONS = {
+  customer: destinationForPortalRole("customer"),
+  driver: destinationForPortalRole("driver"),
+  store: destinationForPortalRole("merchant"),
+  merchant: destinationForPortalRole("merchant"),
+  restaurant: destinationForPortalRole("merchant"),
+  service: destinationForPortalRole("service"),
+  transport: destinationForPortalRole("transport"),
+  admin: destinationForPortalRole("admin"),
+  blocked: BLOCKED_DESTINATION,
+};
+
+function destinationForRole(role) {
+  const resolved = resolvePortalRole({ role });
+  if (String(role || "").toLowerCase() === "blocked") return BLOCKED_DESTINATION;
+  return destinationForPortalRole(resolved.portalRole);
 }
 
 module.exports = {
   DRIVER_HOME_PATH,
   canonicalAccountPath,
   ROLE_DESTINATIONS,
-  STORE_PANEL_ROLES,
+  STORE_PANEL_ROLES: MERCHANT_DB_ROLES,
   destinationForRole,
+  destinationForPortalRole,
   resolveLoginDestinations,
   pickDefaultDestination,
 };

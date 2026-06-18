@@ -1,0 +1,6 @@
+{
+  "enabled": true,
+  "phase": "soft_launch",
+  "started_at": "2026-06-15T00:00:00.000Z",
+  "notes": "Role Separation Soft Launch — البوابات التشغيلية: merchant · driver · service · transport. العميل داخل المنصة الرئيسية."
+}

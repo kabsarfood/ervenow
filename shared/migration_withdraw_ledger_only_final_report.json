@@ -1,0 +1,68 @@
+{
+  "backup_before": "=== ervenow_withdraw_requests (TABLE) ===\nCOLUMNS:\n  id uuid NOT NULL DEFAULT gen_random_uuid()\n  user_id uuid NOT NULL\n  amount numeric NOT NULL\n  status text NULL DEFAULT 'pending'::text\n  note text NULL\n  created_at timestamp with time zone NULL DEFAULT now()\n\nCONSTRAINTS:\n  CHECK 2200_20783_1_not_null CHECK id IS NOT NULL\n  CHECK 2200_20783_2_not_null CHECK user_id IS NOT NULL\n  CHECK 2200_20783_3_not_null CHECK amount IS NOT NULL\n  PRIMARY KEY ervenow_withdraw_requests_pkey (id) -> ervenow_withdraw_requests(id)\n\nINDEXES:\n  ervenow_withdraw_requests_pkey: CREATE UNIQUE INDEX ervenow_withdraw_requests_pkey ON public.ervenow_withdraw_requests USING btree (id)\n  idx_withdraw_status: CREATE INDEX idx_withdraw_status ON public.ervenow_withdraw_requests USING btree (status)\n  idx_withdraw_user: CREATE INDEX idx_withdraw_user ON public.ervenow_withdraw_requests USING btree (user_id)\n\n=== withdraw_requests (TABLE) ===\nCOLUMNS:\n  id uuid NOT NULL DEFAULT gen_random_uuid()\n  user_id uuid NOT NULL\n  amount numeric(14,2) NOT NULL\n  status text NOT NULL DEFAULT 'pending'::text\n  created_at timestamp with time zone NOT NULL DEFAULT now()\n  processed_at timestamp with time zone NULL\n  note text NULL\n\nCONSTRAINTS:\n  CHECK 2200_21311_1_not_null CHECK id IS NOT NULL\n  CHECK 2200_21311_2_not_null CHECK user_id IS NOT NULL\n  CHECK 2200_21311_3_not_null CHECK amount IS NOT NULL\n  CHECK 2200_21311_4_not_null CHECK status IS NOT NULL\n  CHECK 2200_21311_5_not_null CHECK created_at IS NOT NULL\n  CHECK withdraw_requests_amount_check -> withdraw_requests(amount) CHECK (amount > (0)::numeric)\n  CHECK withdraw_requests_status_check -> withdraw_requests(status) CHECK (status = ANY (ARRAY['pending'::text, 'approved'::text, 'rejected'::text]))\n  FOREIGN KEY withdraw_requests_user_id_fkey (user_id) -> users(id)\n  PRIMARY KEY withdraw_requests_pkey (id) -> withdraw_requests(id)\n\nINDEXES:\n  ervenow_withdraw_requests_pkey: CREATE UNIQUE INDEX ervenow_withdraw_requests_pkey ON public.ervenow_withdraw_requests USING btree (id)\n  idx_withdraw_status: CREATE INDEX idx_withdraw_status ON public.ervenow_withdraw_requests USING btree (status)\n  idx_withdraw_user: CREATE INDEX idx_withdraw_user ON public.ervenow_withdraw_requests USING btree (user_id)\n  idx_withdraw_requests_user_created: CREATE INDEX idx_withdraw_requests_user_created ON public.withdraw_requests USING btree (user_id, created_at DESC)\n  withdraw_requests_pkey: CREATE UNIQUE INDEX withdraw_requests_pkey ON public.withdraw_requests USING btree (id)\n",
+  "migration_executed": true,
+  "structure_after": "=== ervenow_withdraw_requests (TABLE) ===\nCOLUMNS:\n  id uuid NOT NULL DEFAULT gen_random_uuid()\n  user_id uuid NOT NULL\n  amount numeric NOT NULL\n  status text NULL DEFAULT 'pending'::text\n  note text NULL\n  created_at timestamp with time zone NULL DEFAULT now()\n  iban text NULL\n  processed_at timestamp with time zone NULL\n\nCONSTRAINTS:\n  CHECK 2200_20783_1_not_null CHECK id IS NOT NULL\n  CHECK 2200_20783_2_not_null CHECK user_id IS NOT NULL\n  CHECK 2200_20783_3_not_null CHECK amount IS NOT NULL\n  PRIMARY KEY ervenow_withdraw_requests_pkey (id) -> ervenow_withdraw_requests(id)\n\nINDEXES:\n  ervenow_withdraw_requests_pkey: CREATE UNIQUE INDEX ervenow_withdraw_requests_pkey ON public.ervenow_withdraw_requests USING btree (id)\n  idx_ervenow_withdraw_created: CREATE INDEX idx_ervenow_withdraw_created ON public.ervenow_withdraw_requests USING btree (created_at DESC)\n  idx_ervenow_withdraw_user: CREATE INDEX idx_ervenow_withdraw_user ON public.ervenow_withdraw_requests USING btree (user_id, status)\n  idx_withdraw_status: CREATE INDEX idx_withdraw_status ON public.ervenow_withdraw_requests USING btree (status)\n  idx_withdraw_user: CREATE INDEX idx_withdraw_user ON public.ervenow_withdraw_requests USING btree (user_id)\n\n=== withdraw_requests (VIEW) ===\nVIEW DEFINITION:\n SELECT id,\n    user_id,\n    amount,\n        CASE\n            WHEN status = 'paid'::text THEN 'approved'::text\n            ELSE status\n        END AS status,\n    created_at,\n    note\n   FROM ervenow_withdraw_requests;\n\nCOLUMNS:\n  id uuid NULL\n  user_id uuid NULL\n  amount numeric NULL\n  status text NULL\n  created_at timestamp with time zone NULL\n  note text NULL\n\nINDEXES:\n  ervenow_withdraw_requests_pkey: CREATE UNIQUE INDEX ervenow_withdraw_requests_pkey ON public.ervenow_withdraw_requests USING btree (id)\n  idx_ervenow_withdraw_created: CREATE INDEX idx_ervenow_withdraw_created ON public.ervenow_withdraw_requests USING btree (created_at DESC)\n  idx_ervenow_withdraw_user: CREATE INDEX idx_ervenow_withdraw_user ON public.ervenow_withdraw_requests USING btree (user_id, status)\n  idx_withdraw_status: CREATE INDEX idx_withdraw_status ON public.ervenow_withdraw_requests USING btree (status)\n  idx_withdraw_user: CREATE INDEX idx_withdraw_user ON public.ervenow_withdraw_requests USING btree (user_id)\n",
+  "checks": {
+    "withdraw_requests_kind": "VIEW",
+    "ervenow_columns": [
+      {
+        "column_name": "id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": "gen_random_uuid()"
+      },
+      {
+        "column_name": "user_id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": null
+      },
+      {
+        "column_name": "amount",
+        "data_type": "numeric",
+        "is_nullable": "NO",
+        "column_default": null
+      },
+      {
+        "column_name": "status",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": "'pending'::text"
+      },
+      {
+        "column_name": "note",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "created_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()"
+      },
+      {
+        "column_name": "iban",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "processed_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      }
+    ],
+    "has_iban": true,
+    "has_processed_at": true,
+    "approve_rpc_ok": true
+  },
+  "test_withdraw": {
+    "ok": false,
+    "step": "find_user",
+    "error": "TypeError: fetch failed"
+  },
+  "test_approve": null,
+  "missing_table_message_gone": false
+}

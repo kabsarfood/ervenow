@@ -1,6 +1,7 @@
 const { sendWhatsApp } = require("../utils/whatsapp");
 const { commissionPercentLabel } = require("../utils/serviceCommission");
 const { buildPublicTrackUrl } = require("../messages/deliveryCustomerWhatsApp");
+const { notifyDriversInAppByPhones } = require("./notificationEvents");
 const {
   bookingVehicleCategory,
   vehicleCategoryLabel,
@@ -116,6 +117,11 @@ async function sendInternalDeliveryCustomerWhatsApp(booking) {
 async function notifyInternalDeliveryOrder(sb, booking) {
   const phones = await getInternalDeliveryNotifyPhones(sb, booking);
   await sendInternalDeliveryProviderWhatsApp(phones, booking);
+  try {
+    await notifyDriversInAppByPhones(sb, booking, phones);
+  } catch (e) {
+    console.error("[internalDeliveryNotify] driver in-app:", e && (e.message || e));
+  }
 }
 
 module.exports = {

@@ -2,6 +2,7 @@ const { sendWhatsApp } = require("../utils/whatsapp");
 const { commissionPercentLabel } = require("../utils/serviceCommission");
 const { catalogEntry, serviceDisplayName } = require("../utils/homeServicePricing");
 const { labelForType } = require("../utils/serviceProviderTypes");
+const { isCarTransportBooking, buildCarTransportReserveDetailsMessage } = require("./carTransportNotify");
 
 function publicBase() {
   return String(process.env.ERVENOW_PUBLIC_URL || "https://ervenow.com").replace(/\/$/, "");
@@ -33,6 +34,9 @@ function paymentLabel(booking) {
 }
 
 function buildReserveWelcomeMessage(booking, providerName) {
+  if (isCarTransportBooking(booking)) {
+    return buildCarTransportReserveDetailsMessage(booking, providerName);
+  }
   const coords = parseCoordsFromLocation(booking.service_location || booking.location);
   const maps = mapsUrl(coords, booking.service_location || booking.location || booking.district);
   const svcName = booking.service_name || serviceDisplayName(booking.service_type);

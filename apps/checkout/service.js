@@ -10,6 +10,7 @@ const { broadcastStoreOrderEvent, orderPatchFromRow } = require("../../shared/li
 const { isOrderPaymentGateRequired } = require("../../shared/utils/orderPaymentGate");
 const { isPaidFromRequestBody, normalizeOrderPaymentMethod } = require("../delivery/service");
 const { insertOrdersResilient } = require("../../shared/utils/idempotency");
+const { applyPortalTypeToOrderRow } = require("../../shared/utils/orderPortalRouting");
 const {
   isIdempotencyKeyUniqueViolation,
   fetchOrderByCustomerIdempotencyKey,
@@ -22,6 +23,7 @@ const {
   isErvenowPayMethod,
   resolveMerchantUserIdForStore,
 } = require("../../shared/services/ervenowPayCheckout");
+const { publishDraftOrderAfterPayment } = require("../../shared/services/publishOrderAfterPayment");
 const { sendCustomerOrderPaidWhatsApp } = require("../../shared/messages/deliveryCustomerWhatsApp");
 const { computePlatformCommission } = require("../../shared/utils/platformCommission");
 const {
@@ -436,7 +438,7 @@ async function runCheckoutInsert(sb, appUser, body, options) {
     let insertErr = null;
     for (let insAttempt = 0; insAttempt < 5; insAttempt += 1) {
       row.order_number = await allocateUniqueOrderNumber(sb, orderPrefix);
-      const insertRow = normalizeOrderFinancialsForInsert(row);
+      const insertRow = applyPortalTypeToOrderRow(normalizeOrderFinancialsForInsert(row));
       const ins = await insertOrdersResilient(sb, insertRow);
       data = ins.data;
       insertErr = ins.error;
@@ -483,19 +485,15 @@ async function runCheckoutInsert(sb, appUser, body, options) {
       try {
         const merchantUserId = await resolveMerchantUserIdForStore(sb, data.store_id);
         if (merchantUserId) {
-          const { notifyStoreInApp, notifyAdminsForOrderEvent } = require("../../shared/services/platformNotify");
-          await notifyStoreInApp(sb, {
-            merchantUserId,
-            title: "طلب جديد",
-            message: "لديك طلب جديد بانتظار المعالجة.",
-            type: "order",
-            source: "store",
-            payload: {
-              order_id: data.id,
-              order_number: data.order_number || null,
-              store_id: data.store_id || null,
-            },
-          });
+          const { notifyMerchantForOrder } = require("../../shared/services/notificationEvents");
+          const { notifyAdminsForOrderEvent } = require("../../shared/services/platformNotify");
+          await notifyMerchantForOrder(
+            sb,
+            data,
+            "merchant.order.new",
+            "طلب جديد",
+            "لديك طلب جديد بانتظار المعالجة."
+          );
           await notifyAdminsForOrderEvent(
             sb,
             data,
@@ -556,6 +554,10 @@ async function runCheckoutInsert(sb, appUser, body, options) {
           .eq("id", oid);
         order.payment_status = "paid";
         order.payment_method = "ew_pay";
+        const pub = await publishDraftOrderAfterPayment(sb, order);
+        if (pub.published && pub.order) {
+          Object.assign(order, pub.order);
+        }
       } catch (upErr) {
         logger.error(
           { err: upErr && (upErr.message || String(upErr)), orderId: oid },

@@ -208,8 +208,8 @@
         "</h3>" +
         statusPill(o) +
         "</div>" +
-        '<p class="ob-card__row"><strong>العميل:</strong> ' +
-        esc(o.customer_name || "عميل") +
+        '<p class="ob-card__row"><strong>العضو:</strong> ' +
+        esc(o.customer_name || "عضو ERVENOW") +
         "</p>" +
         '<p class="ob-card__row"><strong>عدد الأصناف:</strong> ' +
         (Number(o.item_count) || 0) +
@@ -359,7 +359,7 @@
       "<dt>رقم الطلب</dt><dd>" +
       esc(order.order_number || order.id) +
       "</dd>" +
-      "<dt>اسم العميل</dt><dd>" +
+      "<dt>اسم العضو</dt><dd>" +
       esc(order.customer_name) +
       "</dd>" +
       "<dt>الجوال</dt><dd>" +

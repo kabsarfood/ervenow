@@ -1,0 +1,50 @@
+/* ERVENOW — Service Portal Preview (content helpers on Portal Framework) */
+.sp-booking {
+  border: 1px solid var(--pf-border);
+  border-radius: 14px;
+  padding: clamp(12px, 3vw, 16px);
+  background: #fff;
+  margin-bottom: 10px;
+  line-height: 1.5;
+}
+
+.sp-booking.is-mine {
+  border-color: color-mix(in srgb, var(--pf-accent) 35%, transparent);
+  background: color-mix(in srgb, var(--pf-accent-soft) 40%, #fff);
+}
+
+.sp-booking p {
+  margin: 0 0 6px;
+  font-size: 0.84rem;
+}
+
+.sp-booking__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.sp-coming-soon {
+  text-align: center;
+  padding: clamp(32px, 8vw, 56px) 20px;
+  border: 2px dashed color-mix(in srgb, var(--pf-accent) 35%, transparent);
+  border-radius: var(--pf-radius);
+  background: color-mix(in srgb, var(--pf-accent-soft) 25%, #fff);
+}
+
+.sp-coming-soon__icon {
+  font-size: 2.5rem;
+  margin-bottom: 12px;
+}
+
+.sp-coming-soon h3 {
+  margin: 0 0 8px;
+  font-size: 1.1rem;
+}
+
+.sp-coming-soon p {
+  margin: 0;
+  color: var(--pf-muted);
+  font-weight: 600;
+}

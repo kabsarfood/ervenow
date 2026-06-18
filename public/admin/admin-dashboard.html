@@ -60,7 +60,7 @@
           </select>
           <a href="/admin/branding" class="dash-site-header__link admin-header-tool-link" title="الهوية البصرية">🎨 <span class="hide-mobile">الهوية</span></a>
           <a href="/admin/categories" class="dash-site-header__link admin-header-tool-link" title="الأقسام">📂 <span class="hide-mobile">الأقسام</span></a>
-          <a href="#" class="dash-site-header__link admin-header-tool-link" id="adminHeaderOffers" title="عروض لوحة الزائر">🎁 <span class="hide-mobile">العروض</span></a>
+          <a href="#" class="dash-site-header__link admin-header-tool-link" id="adminHeaderOffers" title="عروض منصة ERVENOW">🎁 <span class="hide-mobile">العروض</span></a>
           <a href="/admin/withdrawals" class="dash-site-header__link admin-header-tool-link" title="السحب">💸 <span class="hide-mobile">السحب</span></a>
           <button type="button" class="dash-site-header__link admin-header-tool-link" id="siteMaintenanceBtn" title="تعطيل ervenow.com للزوار — localhost للتطوير">
             ⏸ <span class="hide-mobile">الموقع</span>
@@ -95,7 +95,7 @@
               <p class="admin-hero__eyebrow">مركز القيادة · ERVENOW</p>
               <h1 class="admin-hero__title" id="adminHeroTitle">لوحة إدارة المنصة</h1>
               <p class="admin-hero__lead">
-                راقب الطلبات والخريطة الحية، وافق على المتاجر والمناديب، وتابع المالية — بنفس روح تجربة زائر المنصة، بلمسة تنفيذية أوضح.
+                راقب الطلبات والخريطة الحية، وافق على المتاجر والمناديب، وتابع المالية — بنفس روح تجربة ضيف ERVENOW، بلمسة تنفيذية أوضح.
               </p>
               <div class="admin-hero__chips">
                 <a class="admin-hero-chip" href="#liveDashboard">📊 التشغيل الحي</a>
@@ -104,7 +104,7 @@
                 <a class="admin-hero-chip" href="#" data-panel-jump="panelOffers">🎁 العروض</a>
                 <a class="admin-hero-chip" href="#" data-panel-jump="panelHeroBanners">🎨 إدارة البنرات</a>
                 <a class="admin-hero-chip" href="#" data-panel-jump="panelErvenowPay" id="adminHeroPayChip" style="display:none">⚡ ERVENOW PAY</a>
-                <a class="admin-hero-chip" href="/dashboard">🧭 لوحة الزائر</a>
+                <a class="admin-hero-chip" href="/dashboard">🧭 منصة ERVENOW</a>
               </div>
             </div>
             <div class="admin-hero__art" aria-hidden="true">
@@ -279,14 +279,14 @@
           <div class="live-map-card__head">
             <h3>الخريطة الحية</h3>
             <div class="erv-live-map-admin-actions">
-              <button type="button" class="btn btn-ghost" id="liveMapPublicToggleBtn" title="إظهار أو إخفاء صفحة /live-map عن الزوار">
+              <button type="button" class="btn btn-ghost" id="liveMapPublicToggleBtn" title="إظهار أو إخفاء صفحة /live-map عن الضيوف">
                 جارٍ التحميل…
               </button>
               <a class="btn btn-ghost" href="/live-map" target="_blank" rel="noopener noreferrer">معاينة للزوار</a>
             </div>
           </div>
           <p class="sub erv-live-map-admin-desc">
-            نفس خريطة الأنشطة للأعضاء — أقمار صناعية وتضاريس، بحث بالمدينة والقسم. يمكنك إظهارها أو إخفاءها عن الزوار لقياس الإقبال.
+            نفس خريطة الأنشطة للأعضاء — أقمار صناعية وتضاريس، بحث بالمدينة والقسم. يمكنك إظهارها أو إخفاءها عن الضيوف لقياس الإقبال.
           </p>
           <div id="ervAdminLiveMapShell" class="erv-live-map-admin-shell">
             <div class="erv-live-map-toolbar" id="liveMapToolbar" aria-label="بحث الخريطة">
@@ -463,11 +463,26 @@
           <button type="button" class="panel-btn" data-panel="panelServices" id="panelServicesBtn" style="display:none">
             🧑‍🔧 الخدمات
           </button>
+          <button type="button" class="panel-btn" data-panel="panelTransport" id="panelTransportBtn" style="display:none">
+            🚚 النقل
+          </button>
+          <button type="button" class="panel-btn" data-panel="panelRoleSeparation" id="panelRoleSeparationBtn">
+            📡 فصل الأدوار
+          </button>
+          <button type="button" class="panel-btn" data-panel="panelPreviewMonitor" id="panelPreviewMonitorBtn">
+            👁️ معاينة البوابات
+          </button>
+          <button type="button" class="panel-btn" data-panel="panelRoleRegistry" id="panelRoleRegistryBtn">
+            📋 سجل الأدوار
+          </button>
           <button type="button" class="panel-btn" data-panel="panelOffers" id="panelOffersBtn">
             🎁 العروض
           </button>
           <button type="button" class="panel-btn" data-panel="panelHeroBanners" id="panelHeroBannersBtn">
             🎨 إدارة البنرات
+          </button>
+          <button type="button" class="panel-btn" data-panel="panelBroadcast" id="panelBroadcastBtn">
+            📢 مركز الإعلانات
           </button>
           <button type="button" class="panel-btn" data-panel="panelNotifications">
             🔔 الإشعارات
@@ -478,7 +493,7 @@
             <span class="panel-badge zero" id="badgeComplaints">0</span>
           </button>
           <button type="button" class="panel-btn" data-panel="panelCustomers">
-            👥 الزوار
+            👥 الأعضاء
             <span class="panel-badge zero" id="badgeCustomers">0</span>
           </button>
           <button type="button" class="panel-btn" data-panel="panelJobs">
@@ -487,6 +502,9 @@
           </button>
           <button type="button" class="panel-btn" data-panel="panelSettings" id="panelSettingsBtn">
             ⚙️ الإعدادات
+          </button>
+          <button type="button" class="panel-btn" data-panel="panelPlatformModules" id="panelPlatformModulesBtn">
+            🧩 وحدات المنصة
           </button>
           <button type="button" class="panel-btn" data-panel="panelErvenowPay" id="panelErvenowPayBtn" style="display:none">
             ⚡ ERVENOW PAY
@@ -507,6 +525,17 @@
           </div>
           <div id="recentOrders"></div>
         </div>
+      </div>
+
+      <div class="card admin-panel" id="panelBroadcast">
+        <div class="panel-toolbar">
+          <strong class="panel-title">📢 مركز الإعلانات</strong>
+          <div class="panel-toolbar-actions">
+            <button type="button" class="btn btn-primary" id="reloadBroadcastBtn">تحديث</button>
+          </div>
+        </div>
+        <p class="ledger-tx-updated" id="broadcastPanelHint">—</p>
+        <div id="broadcastPanelForm"></div>
       </div>
 
       <div class="grid admin-panel" id="panelNotifications">
@@ -561,9 +590,10 @@
           <div class="panel-toolbar-actions">
             <select id="approvalsFilterType" class="search-input" aria-label="فلتر النوع">
               <option value="all">كل الأنواع</option>
-              <option value="customer">متسوق</option>
+              <option value="customer">عضو ERVENOW</option>
               <option value="store">متجر</option>
               <option value="service">مزود خدمة</option>
+              <option value="transport">نقل</option>
               <option value="driver">مندوب</option>
             </select>
             <select id="approvalsFilterStatus" class="search-input" aria-label="فلتر الحالة">
@@ -620,6 +650,17 @@
         <div id="jobsList"></div>
       </div>
 
+      <div class="card admin-panel" id="panelPlatformModules">
+        <div class="panel-toolbar">
+          <strong class="panel-title">🧩 وحدات المنصة</strong>
+          <div class="panel-toolbar-actions">
+            <button type="button" class="btn btn-primary" id="reloadPlatformModulesBtn">تحديث</button>
+          </div>
+        </div>
+        <p class="ledger-tx-updated" id="platformModulesHint">Meshwar · POS · Loyalty · QR Payments — Enabled / Disabled / Beta</p>
+        <div id="platformModulesList"></div>
+      </div>
+
       <div class="card admin-panel" id="panelSettings">
         <div class="panel-toolbar">
           <strong class="panel-title">⚙️ الإعدادات</strong>
@@ -648,7 +689,7 @@
 
       <div class="card admin-panel" id="panelOffers">
         <div class="panel-toolbar">
-          <strong class="panel-title">🎁 عروض لوحة الزائر</strong>
+          <strong class="panel-title">🎁 عروض منصة ERVENOW</strong>
           <div class="panel-toolbar-actions">
             <button type="button" class="btn btn-primary" id="reloadOffersBtn">تحديث</button>
             <button type="button" class="btn btn-ghost" id="saveOffersBtn">حفظ العروض</button>
@@ -673,10 +714,58 @@
         <div class="panel-toolbar">
           <strong class="panel-title">🧑‍🔧 مزودو الخدمات</strong>
           <div class="panel-toolbar-actions">
+            <input id="searchServices" class="search-input" placeholder="بحث: اسم / جوال / نوع" />
             <button type="button" class="btn btn-primary" id="reloadServicesBtn">تحديث</button>
           </div>
         </div>
+        <p class="ledger-tx-updated">كهرباء · سباكة · تكييف · غسيل فلل · تشجير — بدون النقل</p>
         <div id="servicesProvidersList"></div>
+      </div>
+
+      <div class="card admin-panel" id="panelTransport">
+        <div class="panel-toolbar">
+          <strong class="panel-title">🚚 مزودو النقل</strong>
+          <div class="panel-toolbar-actions">
+            <input id="searchTransport" class="search-input" placeholder="بحث: اسم / جوال / نوع" />
+            <button type="button" class="btn btn-primary" id="reloadTransportBtn">تحديث</button>
+          </div>
+        </div>
+        <p class="ledger-tx-updated">نقل مركبات · توصيل غاز · شحن · توصيل بين المدن</p>
+        <div id="transportProvidersList"></div>
+      </div>
+
+      <div class="card admin-panel" id="panelRoleSeparation">
+        <div class="panel-toolbar">
+          <strong class="panel-title">📡 Role Separation Monitor</strong>
+          <div class="panel-toolbar-actions">
+            <button type="button" class="btn btn-primary" id="reloadRoleSeparationBtn">تحديث</button>
+          </div>
+        </div>
+        <p class="ledger-tx-updated" id="roleSeparationMonitorHint">—</p>
+        <div id="roleSeparationMonitorBody"></div>
+      </div>
+
+      <div class="card admin-panel" id="panelPreviewMonitor">
+        <div class="panel-toolbar">
+          <strong class="panel-title">👁️ Preview Monitor</strong>
+          <div class="panel-toolbar-actions">
+            <button type="button" class="btn btn-primary" id="reloadPreviewMonitorBtn">تحديث</button>
+          </div>
+        </div>
+        <p class="ledger-tx-updated" id="previewMonitorHint">—</p>
+        <div id="previewMonitorBody"></div>
+      </div>
+
+      <div class="card admin-panel" id="panelRoleRegistry">
+        <div class="panel-toolbar">
+          <strong class="panel-title">📋 Role Registry (عرض فقط)</strong>
+          <div class="panel-toolbar-actions">
+            <input id="searchRoleRegistry" class="search-input" placeholder="بحث: اسم / جوال / دور" />
+            <button type="button" class="btn btn-primary" id="reloadRoleRegistryBtn">تحديث</button>
+          </div>
+        </div>
+        <p class="ledger-tx-updated" id="roleRegistryHint">—</p>
+        <div id="roleRegistryList"></div>
       </div>
 
       <div class="card admin-panel" id="panelErvenowPay">

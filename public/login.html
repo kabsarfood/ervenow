@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover" />
     <script src="/assets/viewport-fit.js?erv=20260612"></script>
-    <title>ERVENOW AUTH | تسجيل الدخول وإنشاء حساب</title>
+    <title>ERVENOW | دخول الأعضاء وإنشاء عضوية</title>
     <meta name="description" content="يتم تفعيل الحساب بعد المراجعة واعتماده من إدارة ERVENOW." />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -272,7 +272,7 @@
         background: #fff9ef;
       }
 
-      /* ——— غلاف تسجيل الدخول (متناسق مع لوحة الزائر) ——— */
+      /* ——— غلاف دخول الأعضاء (متناسق مع منصة ERVENOW) ——— */
       .auth-login-page {
         min-height: 100dvh;
       }
@@ -481,11 +481,11 @@
             ERVENOW
             <span class="dash-site-header__logo-dot" aria-hidden="true"></span>
           </a>
-          <p class="dash-site-header__tag">تسجيل الدخول</p>
+          <p class="dash-site-header__tag">دخول الأعضاء</p>
         </div>
         <nav class="dash-site-header__nav" aria-label="التنقل">
           <div class="dash-site-header__links">
-            <a class="dash-site-header__link" href="/dashboard">لوحة الزائر</a>
+            <a class="dash-site-header__link" href="/dashboard">منصة ERVENOW</a>
             <a class="dash-site-header__link" href="/">الرئيسية</a>
           </div>
         </nav>
@@ -495,8 +495,8 @@
 
     <div class="auth-banner" id="authBanner">
       <section class="sn-hero auth-sn-hero" aria-labelledby="authTitle">
-        <p class="sn-hero__eyebrow" id="authBannerEyebrow">🧭 ERVENOW AUTH — تسجيل الدخول</p>
-        <h1 class="sn-hero__title" id="authTitle">مرحباً بعودتك إلى <span>ERVENOW</span></h1>
+        <p class="sn-hero__eyebrow" id="authBannerEyebrow">👋 مرحباً بك ضيف ERVENOW</p>
+        <h1 class="sn-hero__title" id="authTitle">⭐ أهلاً بك — <span>دخول الأعضاء</span></h1>
         <p class="sn-hero__sub" id="authSubtitle">صلاحية الرمز 5 دقائق.</p>
       </section>
       <div class="sn-wave" aria-hidden="true">
@@ -515,10 +515,10 @@
       <div class="auth-card">
         <div class="auth-mode-tabs" role="tablist" aria-label="دخول أو تسجيل">
           <button type="button" class="auth-mode-tabs__btn is-active" id="authTabLogin" role="tab" aria-selected="true">
-            تسجيل الدخول
+            دخول الأعضاء
           </button>
           <button type="button" class="auth-mode-tabs__btn" id="authTabRegister" role="tab" aria-selected="false">
-            إنشاء حساب
+            ⭐ إنشاء عضوية جديدة
           </button>
         </div>
 
@@ -566,12 +566,12 @@
         <div id="roleWrap">
         <label for="role" id="roleLabel">نوع الحساب</label>
         <select id="role" aria-hidden="true" tabindex="-1">
-          <option value="customer">🧭 زائر المنصة</option>
-          <option value="driver">🛵 مندوب توصيل</option>
-          <option value="store">🏪 حساب المتجر</option>
+          <option value="customer">⭐ عضو ERVENOW</option>
+          <option value="driver">🚚 شريك توصيل</option>
+          <option value="store">🏪 شريك تجاري</option>
           <option value="merchant">متجر (قديم)</option>
           <option value="restaurant">مطعم (قديم)</option>
-          <option value="service">🛠️ مزود خدمة</option>
+          <option value="service">🔧 شريك خدمات</option>
         </select>
 
         <div id="serviceTypeSubWrap" class="driver-register-fields" hidden>
@@ -587,7 +587,7 @@
 
         <div id="serviceRegisterFields" class="driver-register-fields">
           <p class="sub" id="serviceRegIntro" style="margin-top: 0">
-            بيانات مقدّم الخدمة للمراجعة. بعد اعتماد الطلب من إدارة ERVENOW سجّل الدخول من
+            بيانات شريك الخدمات للمراجعة. بعد اعتماد الطلب من إدارة ERVENOW استخدم دخول الأعضاء من
             <a href="/service-provider-login">بوابة مزوّد الخدمة</a>.
           </p>
           <label for="serviceRegName">الاسم</label>
@@ -678,7 +678,7 @@
         </div>
 
         <div class="auth-register-actions auth-otp-actions auth-otp-actions--single" id="authRegisterActions" hidden>
-          <button type="button" class="btn btn-primary" id="authRegisterBtn">إنشاء حساب</button>
+          <button type="button" class="btn btn-primary" id="authRegisterBtn">إنشاء عضوية</button>
         </div>
         </section>
 
@@ -690,7 +690,7 @@
       <div class="lp-footer__inner">
         <div>
           <p class="lp-footer__brand">ERVENOW</p>
-          <p class="lp-footer__copy">© جميع الحقوق محفوظة ERVENOW<br />المنصة الذكية — من الطلب إلى باب زائر المنصة.</p>
+          <p class="lp-footer__copy">© جميع الحقوق محفوظة ERVENOW<br />المنصة الذكية — من الطلب إلى باب ضيف ERVENOW.</p>
         </div>
         <div class="lp-footer__contact">
           <span>تواصل</span>
@@ -739,6 +739,8 @@
     <script src="/assets/phonePrivacy.js"></script>
     <script src="/assets/guestBrowse.js"></script>
     <script src="/assets/payoutRegistration.js"></script>
+    <script src="/assets/role-routing.js"></script>
+    <script src="/assets/admin-readiness-beacon.js"></script>
     <script src="/assets/api.js?erv=20260612"></script>
     <script src="/assets/sa-phone-input.js"></script>
     <script src="/assets/auth-otp-flow.js"></script>
@@ -811,7 +813,7 @@
         var intro = document.getElementById("authFormIntro");
         if (intro) {
           intro.textContent = register
-            ? "أكمل بياناتك ثم اضغط إنشاء حساب في الأسفل. يُراجع الطلب من الإدارة، وبعد الاعتماد سجّل الدخول برمز واتساب."
+            ? "أكمل بياناتك ثم اضغط إنشاء عضوية في الأسفل. يُراجع الطلب من الإدارة، وبعد الاعتماد سجّل الدخول برمز واتساب."
             : "";
         }
         if (!register && window.loginOtpFlow && loginOtpFlow.refreshLabels) loginOtpFlow.refreshLabels();
@@ -824,7 +826,7 @@
         var body = document.getElementById("authBody");
         if (body) body.classList.toggle("auth-register-mode", !!register);
         var tag = document.querySelector(".dash-site-header__tag");
-        if (tag) tag.textContent = register ? "إنشاء حساب" : "تسجيل الدخول";
+        if (tag) tag.textContent = register ? "إنشاء عضوية" : "دخول الأعضاء";
         if (register) syncRegisterRoleSelectFromPreferred(qs.get("role") || "customer");
         else {
           syncLoginRoleUi();
@@ -836,15 +838,15 @@
       }
 
       var REGISTER_ROLE_OPTIONS = [
-        { value: "customer", label: "🧭 زائر المنصة" },
-        { value: "driver", label: "🛵 سائق توصيل (مندوب)" },
+        { value: "customer", label: "⭐ عضو ERVENOW" },
+        { value: "driver", label: "🚚 شريك توصيل" },
         { value: "internal_delivery", label: "📦 توصيل داخلي" },
-        { value: "pickup_truck", label: "سطحة / نقل مركبات" },
-        { value: "plumber", label: "سباك" },
-        { value: "ac_technician", label: "فني مكيفات" },
-        { value: "electrician", label: "مهندس كهربائي" },
-        { value: "laundry_estates", label: "مغسل فلل وعمائر" },
-        { value: "furniture_move", label: "نقل أثاث" },
+        { value: "pickup_truck", label: "🚛 شريك نقل — سطحة" },
+        { value: "plumber", label: "🔧 شريك خدمات — سباك" },
+        { value: "ac_technician", label: "🔧 شريك خدمات — مكيفات" },
+        { value: "electrician", label: "🔧 شريك خدمات — كهربائي" },
+        { value: "laundry_estates", label: "🔧 شريك خدمات — مغسل" },
+        { value: "furniture_move", label: "🚛 شريك نقل — أثاث" },
       ];
 
       var REGISTER_SERVICE_TYPES = REGISTER_ROLE_OPTIONS.filter(function (o) {
@@ -970,9 +972,9 @@
         var sel = document.getElementById("role");
         if (!sel || !isRegisterMode()) return;
         sel.innerHTML =
-          '<option value="customer">🧭 زائر</option>' +
-          '<option value="driver">🛵 مندوب توصيل</option>' +
-          '<option value="service">🛠️ مقدم خدمة</option>';
+          '<option value="customer">⭐ عضو ERVENOW</option>' +
+          '<option value="driver">🚚 شريك توصيل</option>' +
+          '<option value="service">🔧 شريك خدمات</option>';
         var want = String(preferred || "customer").trim();
         if (isServiceTypeValue(want)) {
           sel.value = "service";
@@ -1117,14 +1119,16 @@
         var title = document.getElementById("authTitle");
         var sub = document.getElementById("authSubtitle");
         if (eyebrow) {
-          eyebrow.textContent = reg ? "🧭 ERVENOW AUTH — إنشاء حساب" : "🧭 ERVENOW AUTH — تسجيل الدخول";
+          eyebrow.textContent = reg ? "⭐ ERVENOW — إنشاء عضوية" : "👋 مرحباً بك ضيف ERVENOW";
         }
         if (title) {
-          title.innerHTML = reg ? "انضم إلى <span>ERVENOW</span>" : "مرحباً بعودتك إلى <span>ERVENOW</span>";
+          title.innerHTML = reg
+            ? 'أنشئ <span>عضويتك</span> للاستفادة من جميع الخدمات'
+            : "⭐ أهلاً بك — <span>دخول الأعضاء</span>";
         }
         if (sub) {
           sub.textContent = reg
-            ? "يُراجع طلبك فريق الإدارة — بعد الاعتماد سجّل الدخول برمز واتساب."
+            ? "يُراجع طلبك فريق الإدارة — بعد الاعتماد استخدم دخول الأعضاء برمز واتساب."
             : "صلاحية الرمز 5 دقائق.";
         }
       }
@@ -1149,35 +1153,59 @@
         return s.split("#")[0];
       }
 
-      function resolvePostLoginTarget(actualRole, roleFallback) {
+      function resolvePostLoginTarget(userOrRole, roleFallback) {
         try {
           if (window.ErvenowGuestBrowse) ErvenowGuestBrowse.setActive(false);
           else localStorage.removeItem("ervenow_guest_browse");
         } catch (e) {}
         var qs = new URLSearchParams(window.location.search);
         var next = safeInternalNext(qs.get("next"));
-        var ar = String(actualRole || roleFallback || "").toLowerCase();
-        if (next && ar !== "blocked") return next;
-
-        var map = {
-          blocked: "/blocked-complaints",
-          admin: "/admin-dashboard",
-          driver: "/driver",
-          store: "/store-dashboard",
-          merchant: "/store-dashboard",
-          restaurant: "/store-dashboard",
-          service: "/services-provider",
-          customer: "/dashboard",
-        };
-        return map[ar] || "/";
+        var RR = window.ErvenowRoleRouting;
+        var user = RR ? RR.userFromRoleArg(userOrRole) : { role: String(userOrRole || roleFallback || "customer").toLowerCase() };
+        if (!user.role && roleFallback) user.role = String(roleFallback).toLowerCase();
+        if (next && String(user.role || "").toLowerCase() !== "blocked") return next;
+        return RR ? RR.resolvePostLoginPath(user) : "/start-now.html";
       }
 
-      function showRolePicker(destinations) {
+      function trackLoginRedirect(targetPath, user, success) {
+        var RR = window.ErvenowRoleRouting;
+        var beacon = window.ErvenowAdminReadinessBeacon;
+        if (!beacon) return;
+        var resolved = RR
+          ? RR.resolvePortalRole(RR.userFromRoleArg(user))
+          : { portalRole: "customer", rawRole: "customer", serviceType: "", unknownRole: false, unknownServiceType: false };
+        if (resolved.unknownRole && beacon.trackRedirectError) {
+          beacon.trackRedirectError("unknown_role", { rawRole: resolved.rawRole, serviceType: resolved.serviceType });
+        }
+        if (beacon.trackRedirect) {
+          beacon.trackRedirect({
+            portal: resolved.portalRole,
+            role: resolved.rawRole,
+            raw_role: resolved.rawRole,
+            service_type: resolved.serviceType,
+            path: targetPath,
+            success: success !== false,
+          });
+        }
+      }
+
+      function performLoginRedirect(targetPath, user, success) {
+        var path = String(targetPath || "/start-now.html");
+        if (path.indexOf("driver-dashboard") !== -1) {
+          path = window.ErvenowRoleRouting
+            ? ErvenowRoleRouting.portalPathForRole("driver")
+            : "/driver";
+        }
+        trackLoginRedirect(path, user, success);
+        window.location.href = path;
+      }
+
+      function showRolePicker(destinations, user) {
         var overlay = document.getElementById("rolePickerOverlay");
         var list = document.getElementById("rolePickerList");
         if (!overlay || !list) {
           var fb = destinations[0];
-          window.location.href = (fb && fb.path) || "/";
+          performLoginRedirect((fb && fb.path) || "/start-now.html", user);
           return;
         }
         list.innerHTML = destinations
@@ -1193,41 +1221,41 @@
           .join("");
         list.querySelectorAll(".role-picker__btn").forEach(function (btn) {
           btn.addEventListener("click", function () {
-            var p = btn.getAttribute("data-path") || "/";
-            if (p.indexOf("driver-dashboard") !== -1) p = "/driver";
-            window.location.href = p;
+            var p = btn.getAttribute("data-path") || "/start-now.html";
+            performLoginRedirect(p, user);
           });
         });
         overlay.hidden = false;
       }
 
-      async function navigateAfterLogin(actualRole) {
+      async function navigateAfterLogin(userOrRole) {
+        var RR = window.ErvenowRoleRouting;
+        var user = RR ? RR.userFromRoleArg(userOrRole) : { role: String(userOrRole || "customer").toLowerCase() };
         var qs = new URLSearchParams(window.location.search);
         var next = safeInternalNext(qs.get("next"));
-        if (next && String(actualRole || "").toLowerCase() !== "blocked") {
-          window.location.href = next;
+        if (next && String(user.role || "").toLowerCase() !== "blocked") {
+          performLoginRedirect(next, user);
           return;
         }
         try {
           var destRes = await window.PlatformAPI.api("/api/core/login-destinations");
           var dests = destRes.destinations || [];
           if (dests.length > 1) {
-            showRolePicker(dests);
+            showRolePicker(dests, user);
             return;
           }
           var pick = dests[0] || destRes.default;
-          var targetPath = (pick && pick.path) || resolvePostLoginTarget(actualRole);
-          if (String(targetPath).indexOf("driver-dashboard") !== -1) targetPath = "/driver";
-          window.location.href = targetPath;
+          var targetPath = (pick && pick.path) || resolvePostLoginTarget(user);
+          performLoginRedirect(targetPath, user);
         } catch (navErr) {
-          window.location.href = resolvePostLoginTarget(actualRole);
+          performLoginRedirect(resolvePostLoginTarget(user), user, false);
         }
       }
 
       function mapOtpError(msg) {
         var m = String(msg || "");
         if (m.indexOf("غير مسجّل") !== -1 || m.indexOf("not_registered") !== -1) {
-          return "رقم الجوال غير مسجّل — تأكد أنك على تبويب «تسجيل الدخول» (وليس إنشاء حساب)، وأن الرقم مطابق لما في حسابك. إن لم يكن لديك حساب استخدم «إنشاء حساب».";
+          return "رقم الجوال غير مسجّل — تأكد أنك على تبويب «دخول الأعضاء» (وليس إنشاء عضوية)، وأن الرقم مطابق لما في حسابك. إن لم يكن لديك حساب استخدم «إنشاء عضوية».";
         }
         if (m.indexOf("بانتظار موافقة") !== -1 || m.indexOf("قيد المراجعة") !== -1 || m.indexOf("pending_approval") !== -1) {
           setTimeout(function () {
@@ -1502,7 +1530,7 @@
           ) {
             /* رسالة معروضة */
           } else if (errMsg.indexOf("مسجّل مسبقاً") !== -1 || errMsg.indexOf("already_registered") !== -1) {
-            show("رقم الجوال مسجّل مسبقاً — استخدم تبويب تسجيل الدخول", false);
+            show("رقم الجوال مسجّل مسبقاً — استخدم تبويب دخول الأعضاء", false);
           } else if (isRegisterApiNotFoundError(e)) {
             show(
               "خدمة التسجيل غير متاحة على الخادم حالياً. أعد تشغيل خادم ERVENOW (npm start) ثم أعد المحاولة.",
@@ -1510,7 +1538,7 @@
             );
           } else if (/رمز الدخول|رمز واتساب/i.test(errMsg)) {
             show(
-              "إنشاء الحساب لا يحتاج رمزاً — اضغط «إنشاء حساب» في أسفل النموذج فقط. إن تكرّر الخطأ أعد تشغيل الخادم.",
+              "إنشاء الحساب لا يحتاج رمزاً — اضغط «إنشاء عضوية» في أسفل النموذج فقط. إن تكرّر الخطأ أعد تشغيل الخادم.",
               false
             );
           } else {
@@ -1524,7 +1552,7 @@
 
       async function runLoginVerify() {
         if (isRegisterMode()) {
-          show("لإنشاء حساب جديد استخدم زر «إنشاء حساب» في أسفل النموذج — لا حاجة لرمز واتساب.", false);
+          show("لإنشاء عضوية جديدة استخدم زر «إنشاء عضوية» في أسفل النموذج — لا حاجة لرمز واتساب.", false);
           throw new Error("use_register_btn");
         }
         try {
@@ -1750,19 +1778,19 @@
             return;
           }
 
-          var actualRole = String((res.user && res.user.role) || role || "customer").toLowerCase();
-          if (actualRole === "user") actualRole = "customer";
-          show("نجاح تسجيل الدخول. تحويل…", true);
-          var goTo = resolvePostLoginTarget(actualRole);
+          var loginUser = res.user || { role: role || "customer" };
+          if (String(loginUser.role || "").toLowerCase() === "user") loginUser.role = "customer";
+          show("تم الدخول بنجاح. تحويل…", true);
+          var goTo = resolvePostLoginTarget(loginUser);
           setTimeout(function () {
             if (/\/login/i.test(window.location.pathname)) {
-              window.location.href = goTo;
+              performLoginRedirect(goTo, loginUser);
             }
           }, 2200);
           try {
-            await navigateAfterLogin(actualRole);
+            await navigateAfterLogin(loginUser);
           } catch (navErr) {
-            window.location.href = goTo;
+            performLoginRedirect(goTo, loginUser, false);
           }
         } catch (e) {
           var errMsg = String(e.message || e);
@@ -1777,7 +1805,7 @@
 
       async function runLoginSendOtp() {
         if (isRegisterMode()) {
-          show("في إنشاء الحساب استخدم زر «إنشاء حساب» في أسفل النموذج — لا حاجة لإرسال الرمز.", false);
+          show("في إنشاء الحساب استخدم زر «إنشاء عضوية» في أسفل النموذج — لا حاجة لإرسال الرمز.", false);
           throw new Error("register_no_otp");
         }
         normalizeInputPhone();
@@ -1842,11 +1870,11 @@
           return "";
         },
         introVerify: function () {
-          return "أدخل رمز واتساب ثم اضغط تسجيل الدخول.";
+          return "أدخل رمز واتساب ثم اضغط دخول الأعضاء.";
         },
         labels: {
           send: "إرسال الرمز",
-          verify: "تسجيل الدخول",
+          verify: "دخول الأعضاء",
         },
         phoneValid: function (v) {
           return isValid05(v);

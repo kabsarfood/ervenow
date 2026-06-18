@@ -30,6 +30,7 @@ const payRoutes = require("../apps/pay/routes");
 const notificationsRoutes = require("../apps/notifications/routes");
 const { createPublicSiteOtpGate, isPrivateOtpGate } = require("../shared/middleware/publicSiteOtpGate");
 const { createSiteMaintenanceMiddleware } = require("../shared/middleware/siteMaintenanceGate");
+const { createAdminReadinessPageTracker } = require("../shared/middleware/adminReadinessPageTrack");
 const { pushToErvenow } = require("../shared/utils/ervenowPush");
 const { startRetryNotificationsWorker } = require("../apps/driver/retryNotifications");
 const { startClosedOrdersPurgeWorker } = require("../apps/delivery/purgeClosedOrders");
@@ -294,6 +295,7 @@ app.use(createPublicSiteOtpGate(servePublicUi));
 
 /** صفحة «تحت التطوير» للزوار عند التفعيل من لوحة الإدارة — لا يعطل مسارات /api/* أو لوحات الأدمن */
 app.use(createSiteMaintenanceMiddleware(servePublicUi));
+app.use(createAdminReadinessPageTracker());
 
 app.get("/api/health", (_req, res) => {
   res.json({
@@ -391,6 +393,10 @@ if (servePublicUi) {
           )
         ) {
           res.setHeader("Cache-Control", "public, max-age=300, must-revalidate");
+          return;
+        }
+        if (/\/assets\/portal-framework\//.test(fp) || /-preview\.(js|css)$/.test(fp) || /viewport-fit\.js/.test(fp)) {
+          res.setHeader("Cache-Control", "no-cache, must-revalidate");
           return;
         }
         if (fp.includes("/assets/") || fp.includes("/uploads/")) {
@@ -592,6 +598,24 @@ if (servePublicUi) {
   });
   app.get("/wallet", (_req, res) => {
     res.sendFile(path.join(publicPath, "wallet.html"));
+  });
+  app.get(["/notifications", "/notifications.html"], (_req, res) => {
+    res.sendFile(path.join(publicPath, "notifications.html"));
+  });
+  app.get(["/merchant-preview", "/merchant-preview.html"], (_req, res) => {
+    res.sendFile(path.join(publicPath, "merchant-preview.html"));
+  });
+  app.get(["/driver-preview", "/driver-preview.html"], (_req, res) => {
+    res.sendFile(path.join(publicPath, "driver-preview.html"));
+  });
+  app.get(["/customer-preview", "/customer-preview.html"], (_req, res) => {
+    res.redirect(301, "/start-now.html");
+  });
+  app.get(["/service-preview", "/service-preview.html"], (_req, res) => {
+    res.sendFile(path.join(publicPath, "service-preview.html"));
+  });
+  app.get(["/transport-preview", "/transport-preview.html"], (_req, res) => {
+    res.sendFile(path.join(publicPath, "transport-preview.html"));
   });
   app.get("/pay", (_req, res) => {
     res.sendFile(path.join(publicPath, "pay.html"));

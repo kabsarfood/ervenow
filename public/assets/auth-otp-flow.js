@@ -1,5 +1,5 @@
 /**
- * تدفق OTP موحّد: زر واحد (إرسال الرمز ← تسجيل الدخول) + إظهار حقل الرمز بعد الإرسال + تركيز تلقائي
+ * تدفق OTP موحّد: زر واحد (إرسال الرمز ← دخول الأعضاء) + إظهار حقل الرمز بعد الإرسال + تركيز تلقائي
  */
 (function (global) {
   function el(id) {
@@ -28,7 +28,7 @@
     var labels = Object.assign(
       {
         send: "إرسال الرمز",
-        verify: "تسجيل الدخول",
+        verify: "دخول الأعضاء",
         sending: "جارٍ الإرسال…",
         verifying: "جارٍ التحقق…",
       },
@@ -71,7 +71,7 @@
     function setStep(isVerify) {
       otpSent = !!isVerify;
       if (isVerify) {
-        btn.textContent = textOf(labels.verify, "تسجيل الدخول");
+        btn.textContent = textOf(labels.verify, "دخول الأعضاء");
         btn.disabled = false;
         if (codeGroup) codeGroup.hidden = false;
         updateIntro(true);
@@ -151,7 +151,7 @@
           if (typeof cfg.onVerifyNeedsCode === "function" && !cfg.onVerifyNeedsCode(codeEl)) {
             return;
           }
-          var verifyLabel = textOf(labels.verify, "تسجيل الدخول");
+          var verifyLabel = textOf(labels.verify, "دخول الأعضاء");
           btn.disabled = true;
           btn.textContent = textOf(labels.verifying, "جارٍ التحقق…");
           try {
@@ -208,7 +208,7 @@
         setStep(false);
       },
       refreshLabels: function () {
-        if (otpSent) btn.textContent = textOf(labels.verify, "تسجيل الدخول");
+        if (otpSent) btn.textContent = textOf(labels.verify, "دخول الأعضاء");
         else {
           btn.textContent = textOf(labels.send, "إرسال الرمز");
           btn.disabled = !phoneValid();

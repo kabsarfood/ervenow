@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
   <head>
     <meta charset="utf-8" />
@@ -250,7 +250,7 @@
         </div>
         <nav class="dash-site-header__nav" aria-label="التنقل الرئيسي">
           <div class="dash-site-header__links">
-            <a class="dash-site-header__link is-active" href="/dashboard" data-nav="guest" aria-current="page">لوحة الزائر</a>
+            <a class="dash-site-header__link is-active" href="/dashboard" data-nav="guest" aria-current="page">منصة ERVENOW</a>
             <a class="dash-site-header__link" href="/restaurants" data-nav="restaurants">مطاعم</a>
             <a class="dash-site-header__link" href="/stores" data-nav="stores">متاجر</a>
             <a class="dash-site-header__link" href="/delivery-services.html" data-nav="delivery">توصيل</a>
@@ -270,7 +270,7 @@
             <span class="dash-header-cart__badge" id="cartCount" data-empty="true">0</span>
           </a>
         </div>
-        <a class="dash-site-header__btn dash-site-header__btn--primary" href="/login?role=customer" id="switchAccount">تسجيل الدخول</a>
+        <a class="dash-site-header__btn dash-site-header__btn--primary" href="/login?role=customer" id="switchAccount">دخول الأعضاء</a>
       </div>
     </header>
 
@@ -393,7 +393,7 @@
         picked: "تم الاستلام من نقطة الالتقاط",
         delivering: "جاري التوصيل",
         delivered: "تم التسليم",
-        cancelled_by_customer: "أُلغي بواسطة زائر المنصة",
+        cancelled_by_customer: "أُلغي بواسطة ضيف ERVENOW",
       };
 
       /** بعد أول driver:update لا نُرجع موضع المندوب لإحداثيات REST القديمة */
@@ -1362,31 +1362,6 @@
         var km = haversineKmQuick(dLat, dLng, toLat, toLng);
         if (!(km > 0)) return null;
         return Math.round((km / 40) * 3600);
-      }
-
-      function buildRouteCheckpointsFromGeometry(geometry) {
-        var out = [];
-        if (!geometry || geometry.type !== "LineString" || !Array.isArray(geometry.coordinates)) return out;
-        var ring = geometry.coordinates;
-        if (ring.length < 2) return out;
-        var acc = 0;
-        var nextMark = 500;
-        for (var i = 1; i < ring.length; i++) {
-          var p0 = ring[i - 1];
-          var p1 = ring[i];
-          var segLen = haversineKmQuick(p0[1], p0[0], p1[1], p1[0]) * 1000;
-          if (!(segLen > 0)) continue;
-          while (acc + segLen >= nextMark) {
-            var along = nextMark - acc;
-            var t = along / segLen;
-            var lat = p0[1] + (p1[1] - p0[1]) * t;
-            var lng = p0[0] + (p1[0] - p0[0]) * t;
-            out.push([lat, lng]);
-            nextMark += 500;
-          }
-          acc += segLen;
-        }
-        return out;
       }
 
       function clearRouteCheckpoints() {
@@ -2408,20 +2383,6 @@
 
         buildTrackRouteProgressMeta(geo);
         clearRouteCheckpoints();
-        var cpts = buildRouteCheckpointsFromGeometry(geo);
-        if (cpts.length) {
-          routeCheckpointLayer = L.layerGroup();
-          for (var ci = 0; ci < cpts.length; ci++) {
-            L.circleMarker(cpts[ci], {
-              radius: 4,
-              color: "#1d4ed8",
-              weight: 2,
-              fillColor: "#93c5fd",
-              fillOpacity: 0.88,
-            }).addTo(routeCheckpointLayer);
-          }
-          routeCheckpointLayer.addTo(map);
-        }
         if (opts.fitBounds !== false && routeLine) {
           map.fitBounds(routeLine.getBounds(), { padding: [44, 44], maxZoom: 16, animate: true, duration: 0.4 });
         }
@@ -2672,6 +2633,18 @@
             order.total_with_vat == null || order.total_with_vat === ""
               ? null
               : Number(order.total_with_vat);
+          if (sub > 0) {
+            var expectedVat = Math.round(sub * 0.15 * 100) / 100;
+            var expectedTotal = Math.round((sub + expectedVat) * 100) / 100;
+            if (vatN != null && !Number.isNaN(vatN) && Math.abs(vatN - expectedVat) > 0.05) {
+              vatN = expectedVat;
+            }
+            if (twvN != null && !Number.isNaN(twvN) && Math.abs(twvN - expectedTotal) > 0.05) {
+              twvN = expectedTotal;
+            }
+            if (vatN == null || Number.isNaN(vatN)) vatN = expectedVat;
+            if (twvN == null || Number.isNaN(twvN)) twvN = expectedTotal;
+          }
           var twvValid = twvN != null && !Number.isNaN(twvN);
           if (sub <= 0 && !twvValid && (vatN == null || vatN === 0)) {
             amountsEl.style.display = "none";

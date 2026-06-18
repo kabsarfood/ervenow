@@ -28,7 +28,8 @@
     "migrate:hero-banners": "node scripts/run-migration-hero-banners.js",
     "migrate:hero-banners-kind": "node scripts/run-migration-hero-banners-kind.js",
     "migrate:hero-banners-placement": "node scripts/run-migration-hero-banners-placement.js",
-    "migrate:hero-banners-v2": "node scripts/run-migration-hero-banners-v2.js"
+    "migrate:hero-banners-v2": "node scripts/run-migration-hero-banners-v2.js",
+    "migrate:orders-portal-type": "node scripts/run-migration-orders-portal-type.js"
   },
   "engines": {
     "node": ">=20"

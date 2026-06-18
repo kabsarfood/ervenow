@@ -4,6 +4,7 @@ const { commissionPercentLabel } = require("../utils/serviceCommission");
 const { notifyGasDeliveryProviders } = require("./gasDeliveryNotify");
 const { catalogEntry, serviceDisplayName } = require("../utils/homeServicePricing");
 const { providerAreaMatches, providerMatchesBookingType } = require("../utils/serviceProviderTypes");
+const { notifyProvidersInAppByPhones } = require("./notificationEvents");
 async function getServiceProviderPhones(sb, serviceType) {
   let q = sb.from("users").select("phone").eq("role", "service");
   if (serviceType) q = q.eq("service_type", serviceType);
@@ -156,6 +157,13 @@ async function notifyHomeServiceProvidersCascade(sb, booking) {
 
   const coords = parseCoordsFromLocation(booking.location);
   providers = sortProvidersByDistance(providers, coords);
+
+  const phones = providers.map((p) => p.phone).filter(Boolean);
+  try {
+    await notifyProvidersInAppByPhones(sb, booking, phones);
+  } catch (e) {
+    console.error("[homeServiceNotify] in-app:", e && (e.message || e));
+  }
 
   const waOnCreate = String(process.env.ERVENOW_SERVICE_WA_ON_CREATE || "").trim() === "1";
   if (!waOnCreate) {

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover" />
     <meta name="description" content="يتم تفعيل الحساب بعد المراجعة واعتماده من إدارة ERVENOW." />
     <script src="/assets/viewport-fit.js?erv=20260612"></script>
-    <title>ERVENOW | لوحة زائر المنصة</title>
+    <title>ERVENOW | منصة ERVENOW</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/assets/styles.css" />
@@ -1088,12 +1088,12 @@
             ERVENOW
             <span class="dash-site-header__logo-dot" aria-hidden="true"></span>
           </a>
-          <p class="dash-site-header__tag" id="guestShellPageTag">لوحة زائر المنصة</p>
+          <p class="dash-site-header__tag" id="guestShellPageTag">منصة ERVENOW</p>
         </div>
         <nav class="dash-site-header__nav" aria-label="التنقل الرئيسي">
           <div class="dash-site-header__links">
             <a class="dash-site-header__link" href="/" data-nav="home">الرئيسية</a>
-            <a class="dash-site-header__link is-active" href="/dashboard" data-nav="guest" aria-current="page">لوحة الزائر</a>
+            <a class="dash-site-header__link is-active" href="/dashboard" data-nav="guest" aria-current="page">منصة ERVENOW</a>
             <a class="dash-site-header__link" href="/track" data-nav="track">تتبع الحي</a>
             <a class="dash-site-header__link dash-site-header__link--cta" href="/login?role=customer" data-nav="login">دخول</a>
           </div>
@@ -1110,7 +1110,7 @@
             <span class="dash-header-cart__badge" id="cartCount" data-empty="true">0</span>
           </a>
         </div>
-        <a class="dash-site-header__btn dash-site-header__btn--primary switch-account--nav-only" href="/login?role=customer" id="switchAccount">تسجيل الدخول</a>
+        <a class="dash-site-header__btn dash-site-header__btn--primary switch-account--nav-only" href="/login?role=customer" id="switchAccount">دخول الأعضاء</a>
       </div>
     </header>
 
@@ -1130,11 +1130,12 @@
 
       <main id="dashMain">
       <section class="dash-platform-hero" id="platformHeroSection" aria-labelledby="platformHeroTitle">
-        <h2 class="dash-platform-hero__title" id="platformHeroTitle">مرحباً بك في ERVENOW</h2>
-        <p class="dash-platform-hero__sub" id="platformHeroSub">استكشف المطاعم والمتاجر والخدمات — سجّل دخولك لإتمام الطلب.</p>
+        <h2 class="dash-platform-hero__title" id="platformHeroTitle">👋 مرحباً بك ضيف ERVENOW</h2>
+        <p class="dash-platform-hero__sub" id="platformHeroSub">استكشف المطاعم والمتاجر والخدمات — أنشئ عضويتك لإتمام الطلب.</p>
         <div class="dash-platform-hero__actions" id="platformHeroActions">
           <a class="sn-hero__cta" href="/start-now">ابدأ الآن</a>
-          <a class="sn-hero__cta sn-hero__cta--outline" href="/login?role=customer">تسجيل الدخول</a>
+          <a class="sn-hero__cta sn-hero__cta--outline" href="/login?role=customer">دخول الأعضاء</a>
+          <a class="sn-hero__cta sn-hero__cta--outline" href="/login?mode=register&amp;role=customer">⭐ إنشاء عضوية جديدة</a>
         </div>
       </section>
 
@@ -1247,9 +1248,10 @@
     <script src="/assets/auth-account-guard.js"></script>
     <script src="/assets/guestBrowse.js"></script>
     <script src="/assets/guest-offers-carousel.js?erv=20260612"></script>
+    <script src="/assets/membership-identity.js"></script>
     <script src="/assets/guest-shell.js?erv=20260612"></script>
     <script src="/assets/ervenow-toggle.js"></script>
-    <script>ErvenowGuestShell.init({ activeNav: "guest", pageTag: "لوحة زائر المنصة" });</script>
+    <script>ErvenowGuestShell.init({ activeNav: "guest", pageTag: "منصة ERVENOW" });</script>
     <script>
       (function () {
         if (!window.PlatformAPI || !window.PlatformAPI.getToken()) return;
@@ -1275,14 +1277,36 @@
       }
 
       function roleLabelAr(role) {
+        var MI = window.ErvenowMembershipIdentity;
+        if (MI && typeof MI.roleLabel === "function") return MI.roleLabel(role);
         var map = {
-          admin: "مدير",
-          customer: "عميل",
-          driver: "مندوب",
-          merchant: "تاجر",
-          provider: "مزود خدمة",
+          admin: "🛡️ الإدارة",
+          customer: "⭐ عضو ERVENOW",
+          driver: "🚚 شريك توصيل",
+          merchant: "🏪 شريك تجاري",
+          store: "🏪 شريك تجاري",
+          restaurant: "🏪 شريك تجاري",
+          provider: "🔧 شريك خدمات",
+          service: "🔧 شريك خدمات",
+          transport: "🚛 شريك نقل",
         };
         return map[role] || role;
+      }
+
+      function paintPlatformHero(auth) {
+        var title = document.getElementById("platformHeroTitle");
+        var sub = document.getElementById("platformHeroSub");
+        var actions = document.getElementById("platformHeroActions");
+        if (!title || !sub) return;
+        if (auth) {
+          title.textContent = "⭐ أهلاً بك عضو ERVENOW";
+          sub.textContent = "تابع طلباتك ومحفظتك وإشعاراتك من المنصة.";
+          if (actions) actions.style.display = "none";
+          return;
+        }
+        title.textContent = "👋 مرحباً بك ضيف ERVENOW";
+        sub.textContent = "استكشف المطاعم والمتاجر والخدمات — أنشئ عضويتك لإتمام الطلب.";
+        if (actions) actions.style.display = "";
       }
 
       var GUEST_ICON_SRC = "/assets/icons/guest-visitor.svg";
@@ -1396,6 +1420,7 @@
         var switchAccount = document.getElementById("switchAccount");
         if (!dashHasToken()) {
           if (document.getElementById("profileCard")) document.getElementById("profileCard").style.display = "none";
+          paintPlatformHero(false);
           hideDashAlert();
           if (window.ErvenowGuestShell && ErvenowGuestShell.refreshAuthHeader) {
             ErvenowGuestShell.refreshAuthHeader();
@@ -1414,13 +1439,14 @@
           if (role === "admin") {
             showDashAlert(
               "admin",
-              "تنبيه للأدمن: يمكنك تصفّح المنصة كزائر ثم العودة إلى <a href=\"/admin\">لوحة الإدارة</a>."
+              "تنبيه للأدمن: يمكنك تصفّح المنصة كضيف ثم العودة إلى <a href=\"/admin\">لوحة الإدارة</a>."
             );
           }
           document.getElementById("profileCard").style.display = "block";
           document.getElementById("roleBadge").textContent = roleLabelAr(role);
           document.getElementById("phoneLine").textContent = me.user.phone || me.user.email || me.user.id;
           applyProfileAvatar(role);
+          paintPlatformHero(role === "customer" || role === "user" || !role);
           if (window.ErvenowGuestShell && ErvenowGuestShell.refreshAuthHeader) {
             ErvenowGuestShell.refreshAuthHeader();
           } else {

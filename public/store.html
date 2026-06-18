@@ -653,7 +653,7 @@
         </div>
         <nav class="dash-site-header__nav" aria-label="التنقل الرئيسي">
           <div class="dash-site-header__links">
-            <a class="dash-site-header__link" href="/dashboard" data-nav="guest">لوحة الزائر</a>
+            <a class="dash-site-header__link" href="/dashboard" data-nav="guest">منصة ERVENOW</a>
             <a class="dash-site-header__link" href="/restaurants" data-nav="restaurants">مطاعم</a>
             <a class="dash-site-header__link is-active" href="/stores" data-nav="stores" aria-current="page">متاجر</a>
             <a class="dash-site-header__link" href="/delivery-services.html" data-nav="delivery">توصيل</a>
@@ -673,7 +673,7 @@
             <span class="dash-header-cart__badge" id="cartCount" data-empty="true">0</span>
           </a>
         </div>
-        <a class="dash-site-header__btn dash-site-header__btn--primary switch-account--nav-only" href="/login?role=customer" id="switchAccount">تسجيل الدخول</a>
+        <a class="dash-site-header__btn dash-site-header__btn--primary switch-account--nav-only" href="/login?role=customer" id="switchAccount">دخول الأعضاء</a>
       </div>
     </header>
 
@@ -751,7 +751,7 @@
           <button type="button" class="btn btn-primary" id="btnReview" style="margin-top: 10px">إرسال التقييم</button>
         </div>
         <p class="sub" id="reviewLoginHint" style="margin-top: 12px; display: none">
-          <a href="/login?role=customer">سجّل الدخول كزائر المنصة</a> لإضافة تقييم.
+          <a href="/login?role=customer">سجّل الدخول كضيف ERVENOW</a> لإضافة تقييم.
         </p>
       </div>
 
@@ -1289,7 +1289,7 @@
 
         var ratingLine =
           store.masked || data.browse_masked
-            ? "التقييم والطلبات تظهر بالكامل بعد تسجيل الدخول."
+            ? "التقييم والطلبات تظهر بالكامل بعد دخول الأعضاء."
             : "★ " +
               (Number(store.average_rating) || 0).toFixed(1) +
               " (" +

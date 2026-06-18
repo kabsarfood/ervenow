@@ -14,15 +14,23 @@ const { logger } = require("../utils/logger");
 const { broadcastOrderPatch, broadcastStoreOrderEvent, orderPatchFromRow } = require("../lib/trackingSocket");
 const { bumpDeliveryOrdersListEpoch } = require("../utils/deliveryOrdersListCache");
 const { enqueueDeliveryJob } = require("../../queues/deliveryQueue");
-const { createNotification } = require("./notificationService");
-const { notifyProvidersForBooking } = require("./serviceBookingNotify");
-const { isDriverDispatchOrder, isInternalDeliveryOrder } = require("../utils/driverDispatchOrders");
-const { notifyInternalDeliveryOrder } = require("./internalDeliveryNotify");
-const { normalizePhone } = require("../utils/phone");
 const {
   notifyStoreForOrderEvent,
   notifyAdminsForOrderEvent,
 } = require("./platformNotify");
+const {
+  notifyCustomer,
+  notifyMerchantForOrder,
+  notifyDriverUser,
+  notifyProviderForOrder,
+  notifyOrderCancelled,
+  isCancelledStatus,
+} = require("./notificationEvents");
+const { resolveOrderPortalType } = require("../utils/orderPortalRouting");
+const { notifyProvidersForBooking } = require("./serviceBookingNotify");
+const { isDriverDispatchOrder, isInternalDeliveryOrder } = require("../utils/driverDispatchOrders");
+const { notifyInternalDeliveryOrder } = require("./internalDeliveryNotify");
+const { normalizePhone } = require("../utils/phone");
 
 const MERCHANT_WORKFLOW_STATUSES = [
   DELIVERY_STATUS.ACCEPTED,
@@ -107,6 +115,17 @@ async function afterStatusSideEffects(sb, order, previousStatus, nextStatus, fin
   const prevDs = normalizeIncomingStatus(previousStatus);
   const settlementRow = financialResult && financialResult.settlement ? financialResult.settlement : financialResult || {};
 
+  if (isCancelledStatus(ds)) {
+    try {
+      await notifyOrderCancelled(sb, order);
+    } catch (cancelNotifyErr) {
+      logger.warn(
+        { err: cancelNotifyErr.message || String(cancelNotifyErr), orderId: order.id },
+        "[unifiedOrderStatus] cancel notifications"
+      );
+    }
+  }
+
   if (prevDs === DELIVERY_STATUS.DRAFT && ds === DELIVERY_STATUS.PENDING) {
     const ot = String(order.order_type || "").toLowerCase();
     if (isInternalDeliveryOrder(order)) {
@@ -138,9 +157,10 @@ async function afterStatusSideEffects(sb, order, previousStatus, nextStatus, fin
 
     if (order.store_id) {
       try {
-        await notifyStoreForOrderEvent(
+        await notifyMerchantForOrder(
           sb,
           order,
+          "merchant.order.new",
           "طلب جديد",
           "لديك طلب جديد بانتظار المعالجة."
         );
@@ -167,26 +187,26 @@ async function afterStatusSideEffects(sb, order, previousStatus, nextStatus, fin
   }
 
   const merchantCustomerNotify = {
-    [DELIVERY_STATUS.ACCEPTED]: { title: "تم قبول طلبك", message: "المتجر قبل طلبك." },
-    [DELIVERY_STATUS.PREPARING]: { title: "جاري التجهيز", message: "يتم تجهيز طلبك الآن." },
-    [DELIVERY_STATUS.READY]: { title: "طلبك جاهز", message: "طلبك جاهز للاستلام — سيتوجه المندوب قريباً." },
+    [DELIVERY_STATUS.ACCEPTED]: {
+      event: "customer.order.accepted",
+      title: "تم قبول طلبك",
+      message: "المتجر قبل طلبك.",
+    },
+    [DELIVERY_STATUS.PREPARING]: {
+      event: "customer.order.in_progress",
+      title: "جاري التنفيذ",
+      message: "يتم تجهيز طلبك الآن.",
+    },
+    [DELIVERY_STATUS.READY]: {
+      event: "customer.order.in_progress",
+      title: "طلبك جاهز",
+      message: "طلبك جاهز للاستلام — سيتوجه المندوب قريباً.",
+    },
   };
   if (order.customer_id && merchantCustomerNotify[ds]) {
     const msg = merchantCustomerNotify[ds];
     try {
-      await createNotification(sb, {
-        recipient_type: "customer",
-        recipient_id: order.customer_id,
-        title: msg.title,
-        message: msg.message,
-        type: "delivery",
-        source: "store",
-        payload: {
-          order_id: order.id,
-          order_number: order.order_number || null,
-          delivery_status: ds,
-        },
-      });
+      await notifyCustomer(sb, order.customer_id, msg.event, msg.title, msg.message, order);
     } catch (notifyErr) {
       logger.warn(
         { err: notifyErr.message || String(notifyErr), orderId: order.id },
@@ -206,26 +226,26 @@ async function afterStatusSideEffects(sb, order, previousStatus, nextStatus, fin
   }
 
   const driverCustomerNotify = {
-    [DELIVERY_STATUS.PICKED_UP]: { title: "تم الاستلام من المتجر", message: "تم استلام الطلب من المتجر." },
-    [DELIVERY_STATUS.DELIVERING]: { title: "المندوب في الطريق", message: "المندوب في الطريق إليك." },
-    [DELIVERY_STATUS.DELIVERED]: { title: "تم التسليم", message: "تم تسليم الطلب." },
+    [DELIVERY_STATUS.PICKED_UP]: {
+      event: "customer.order.in_progress",
+      title: "تم الاستلام من المتجر",
+      message: "تم استلام الطلب من المتجر.",
+    },
+    [DELIVERY_STATUS.DELIVERING]: {
+      event: "customer.driver.en_route",
+      title: "المندوب في الطريق",
+      message: "المندوب في الطريق إليك.",
+    },
+    [DELIVERY_STATUS.DELIVERED]: {
+      event: "customer.order.delivered",
+      title: "تم التسليم",
+      message: "تم تسليم الطلب.",
+    },
   };
   if (order.customer_id && driverCustomerNotify[ds]) {
     const msg = driverCustomerNotify[ds];
     try {
-      await createNotification(sb, {
-        recipient_type: "customer",
-        recipient_id: order.customer_id,
-        title: msg.title,
-        message: msg.message,
-        type: "delivery",
-        source: "delivery",
-        payload: {
-          order_id: order.id,
-          order_number: order.order_number || null,
-          delivery_status: ds,
-        },
-      });
+      await notifyCustomer(sb, order.customer_id, msg.event, msg.title, msg.message, order);
     } catch (notifyErr) {
       logger.warn(
         { err: notifyErr.message || String(notifyErr), orderId: order.id },
@@ -246,7 +266,10 @@ async function afterStatusSideEffects(sb, order, previousStatus, nextStatus, fin
 
   if (ds === DELIVERY_STATUS.READY && STORE_ORDER_TYPES.has(String(order.order_type || "").toLowerCase())) {
     try {
-      const { notifyNearestDrivers } = require("../../apps/driver/notify");
+      const { notifyNearestDrivers, getNearestDrivers } = require("../../apps/driver/notify");
+      const { notifyDriversOrderReady } = require("./notificationEvents");
+      const nearest = await getNearestDrivers(sb, order);
+      await notifyDriversOrderReady(sb, order, nearest);
       await notifyNearestDrivers(sb, order);
     } catch (driverNotifyErr) {
       logger.warn(
@@ -270,21 +293,20 @@ async function afterStatusSideEffects(sb, order, previousStatus, nextStatus, fin
       settlementRow && Number.isFinite(Number(settlementRow.driver)) ? Number(settlementRow.driver) : null;
     if (order.driver_id && driverAmount != null && driverAmount > 0) {
       try {
-        await createNotification(sb, {
-          recipient_type: "driver",
-          recipient_id: order.driver_id,
-          title: "تمت تسوية مالية",
-          message: "تم تحديث الرصيد بعد تنفيذ التسوية المالية.",
-          type: "payment",
-          source: "wallet",
-          payload: {
+        await notifyDriverUser(
+          sb,
+          order.driver_id,
+          "driver.payment.settled",
+          "تمت تسوية مالية",
+          "تم تحديث الرصيد بعد تنفيذ التسوية المالية.",
+          order,
+          {
             amount: driverAmount,
             currency: "SAR",
             reference: order.id,
             wallet_id: settlementRow.driver_wallet_id || null,
-            order_id: order.id,
-          },
-        });
+          }
+        );
       } catch (notifyErr) {
         logger.warn(
           { err: notifyErr.message || String(notifyErr), orderId: order.id },
@@ -307,21 +329,22 @@ async function afterStatusSideEffects(sb, order, previousStatus, nextStatus, fin
       (providerCredit.ok === true || providerCredit.ok === "true" || providerCredit.reason === "duplicate")
     ) {
       try {
-        await createNotification(sb, {
-          recipient_type: "provider",
-          recipient_id: providerId,
-          title: "تمت تسوية مالية",
-          message: "تم تحديث الرصيد بعد تنفيذ التسوية المالية.",
-          type: "payment",
-          source: "wallet",
-          payload: {
+        const portal = resolveOrderPortalType(order);
+        const ev = portal === "transport" ? "transport.payment.settled" : "service.payment.settled";
+        await notifyProviderForOrder(
+          sb,
+          order,
+          providerId,
+          ev,
+          "تمت تسوية مالية",
+          "تم تحديث الرصيد بعد تنفيذ التسوية المالية.",
+          {
             amount: providerAmount,
             currency: "SAR",
             reference: order.id,
             wallet_id: providerCredit.wallet_id || null,
-            order_id: order.id,
-          },
-        });
+          }
+        );
       } catch (notifyErr) {
         logger.warn(
           { err: notifyErr.message || String(notifyErr), orderId: order.id },

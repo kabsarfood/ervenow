@@ -202,7 +202,7 @@
       "</div>" +
       '<a class="dash-site-header__btn dash-site-header__btn--primary" href="' +
       STORE_LOGIN_URL +
-      '" id="storeSwitchAccount">تسجيل الدخول</a>' +
+      '" id="storeSwitchAccount">دخول الأعضاء</a>' +
       "</div>" +
       '<div class="store-mobile-nav-panel" id="storeMobileNavPanel" hidden>' +
       mobileLinks +
@@ -391,7 +391,7 @@
     if (!btn) return;
     if (!authenticated) {
       btn.removeAttribute("data-store-logout-wired");
-      btn.textContent = "تسجيل الدخول";
+      btn.textContent = "دخول الأعضاء";
       btn.setAttribute("href", STORE_LOGIN_URL);
       btn.className = "dash-site-header__btn dash-site-header__btn--primary";
       btn.removeAttribute("title");

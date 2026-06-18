@@ -2740,9 +2740,9 @@
               role="menuitem"
               class="lp-dd-item"
               href="/login?mode=register&amp;role=customer"
-              aria-label="إنشاء حساب"
+              aria-label="إنشاء عضوية"
               data-guest-only="true"
-              ><span class="lp-dd-ic" aria-hidden="true">➕</span><span class="lp-dd-link__text">إنشاء حساب</span></a
+              ><span class="lp-dd-ic" aria-hidden="true">➕</span><span class="lp-dd-link__text">إنشاء عضوية</span></a
             >
             <a
               role="menuitem"
@@ -2854,7 +2854,7 @@
         <div class="lp-nav-wrap" id="lpNavWrap">
           <nav class="lp-nav" aria-label="التنقل الرئيسي">
             <a href="/" data-nav="home">الرئيسية</a>
-            <a href="/dashboard" data-nav="guest">لوحة الزائر</a>
+            <a href="/dashboard" data-nav="guest">منصة ERVENOW</a>
             <a href="/track" data-nav="track">تتبع الحي</a>
             <a href="/login?role=customer" data-nav="login" class="lp-nav__cta">دخول</a>
           </nav>
@@ -3005,7 +3005,7 @@
           <article class="lp-step">
             <div class="lp-step__num">1</div>
             <h3>اطلب</h3>
-            <p>يقدّم زائر المنصة طلبه من المطعم أو المتجر عبر القنوات المتصلة بالمنصة.</p>
+            <p>يقدّم ضيف ERVENOW طلبه من المطعم أو المتجر عبر القنوات المتصلة بالمنصة.</p>
           </article>
           <article class="lp-step">
             <div class="lp-step__num">2</div>
@@ -3320,7 +3320,7 @@
           if (window.ErvenowGuestBrowse && ErvenowGuestBrowse.isAnonymousGuest()) {
             box.hidden = false;
             box.setAttribute("href", "/login");
-            if (labelEl) labelEl.textContent = "رصيد زائر";
+            if (labelEl) labelEl.textContent = "رصيد ضيف";
             amountEl.textContent = fmtMoney(0);
             return;
           }
@@ -3479,7 +3479,7 @@
             var home =
               window.ErvenowAccountDest && ErvenowAccountDest.homeFor
                 ? ErvenowAccountDest.homeFor(role, serviceType)
-                : { path: "/dashboard", label: "لوحة زائر المنصة", short: "حسابي" };
+                : { path: "/dashboard", label: "منصة ERVENOW", short: "حسابي" };
 
             if (role === "admin") {
               label = home.short || "الإدارة";

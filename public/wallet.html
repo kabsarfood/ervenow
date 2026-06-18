@@ -1001,7 +1001,7 @@
         </div>
         <div class="wallet-top-actions">
           <button type="button" class="wallet-icon-btn" id="btnLoad" title="تحديث">↻ تحديث</button>
-          <a class="wallet-icon-btn" href="/dashboard" style="text-decoration: none">لوحة الزائر</a>
+          <a class="wallet-icon-btn" href="/dashboard" style="text-decoration: none">منصة ERVENOW</a>
         </div>
       </header>
 
@@ -1200,6 +1200,7 @@
     <script src="/assets/api-config.js"></script>
     <script src="/assets/api.js?erv=20260612"></script>
     <script src="/assets/auth-account-guard.js"></script>
+    <script src="/assets/guest-shell.js?erv=20260612"></script>
     <script>
       void ErvenowAuthGuard.ensureApprovedAccount({ loginUrl: "/login" });
     </script>
@@ -1801,6 +1802,9 @@
 
       applyUserDisplay();
       refreshAll();
+      if (window.ErvenowGuestShell && ErvenowGuestShell.mountNotificationBell) {
+        ErvenowGuestShell.mountNotificationBell();
+      }
     </script>
   </body>
 </html>

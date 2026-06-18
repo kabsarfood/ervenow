@@ -15,7 +15,7 @@ function heroBannersPanelHintText() {
 
 var FALLBACK_SECTION_TARGETS = [
   { id: "home", label_ar: "الرئيسية", page: "/" },
-  { id: "visitor_dashboard", label_ar: "لوحة زائر المنصة", page: "/dashboard" },
+  { id: "visitor_dashboard", label_ar: "منصة ERVENOW", page: "/dashboard" },
   { id: "services", label_ar: "خدمات", page: "/services" },
   { id: "stores", label_ar: "متاجر", page: "/stores" },
   { id: "restaurants", label_ar: "مطاعم", page: "/restaurants" },
@@ -43,7 +43,7 @@ var TARGET_DEFAULTS = {
     description: "استكشف المطاعم والمتاجر والخدمات — سجّل دخولك لإتمام الطلب.",
     button1_text: "ابدأ الآن",
     button1_url: "/start-now",
-    button2_text: "تسجيل الدخول",
+    button2_text: "دخول الأعضاء",
     button2_url: "/login?role=customer",
     display_mode: "carousel",
     banner_type: "awareness",

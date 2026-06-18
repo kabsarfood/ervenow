@@ -30,6 +30,7 @@ const {
   resolveRestaurantBrowseCategory,
 } = require("../../shared/restaurantCategories");
 const { countOrdersByStatus, enrichOrderForBoard } = require("../../shared/utils/storeOrderBoard");
+const { orderVisibleInPortal } = require("../../shared/utils/orderPortalRouting");
 const {
   isMarketStoreType,
   productCategoryLabelAr,
@@ -41,11 +42,15 @@ const {
   labelForProductSlug,
   iconForProductSlug,
   storeSupportsProductCategoryBrowse,
+  builtinSlugSet,
 } = require("../../shared/productCategoryTypes");
 const {
   fetchProductCategoryCatalog,
   resolveProductCategorySlug,
   fetchMergedProductCategorySlugs,
+  isCategoriesTableMissing,
+  normalizeSlugInput,
+  CATEGORY_SCOPE_PRODUCT,
 } = require("../../shared/categoriesDb");
 const {
   productRowWithImages,
@@ -1984,6 +1989,7 @@ router.get("/order-board", requireAuth, requireStoreRole, async (req, res) => {
     if (oErr) return fail(res, oErr.message, 400);
 
     let orders = (rows || []).map(enrichOrderForBoard);
+    orders = orders.filter((o) => orderVisibleInPortal(o, "merchant"));
     orders = await attachDriversToOrders(sb, orders);
     const status_counts = countOrdersByStatus(rows || []);
 
@@ -2217,6 +2223,301 @@ router.patch("/merchant-hub", requireAuth, requireStoreRole, async (req, res) =>
   }
 });
 
+async function loadMerchantCategoryRows(sb, storeId) {
+  const got = await loadApprovedStore(sb, storeId);
+  if (got.error) return { error: got.error, status: 404 };
+  const store = got.store;
+  const catalogType = productCatalogTypeForStoreType(store.type);
+  if (!storeSupportsProductCategoryBrowse(store.type)) {
+    return { categories: [], catalog_type: catalogType, supports: false, store };
+  }
+  const catalog = await fetchProductCategoryCatalog(sb, catalogType);
+  const { data: prodRows, error: pErr } = await sb
+    .from("store_products")
+    .select("category")
+    .eq("store_id", storeId)
+    .eq("active", true);
+  if (pErr && !isStoreProductsMissing(pErr)) return { error: pErr.message, status: 400 };
+  const counts = new Map();
+  for (const r of prodRows || []) {
+    const slug = String(r.category || "")
+      .trim()
+      .toLowerCase();
+    if (slug) counts.set(slug, (counts.get(slug) || 0) + 1);
+  }
+  const builtin = builtinSlugSet(catalogType);
+  const { data: dbRows } = await sb
+    .from("categories")
+    .select("id, slug, name_ar, icon, sort_order, is_active")
+    .eq("type", catalogType)
+    .eq("scope", CATEGORY_SCOPE_PRODUCT);
+  const dbBySlug = new Map();
+  (dbRows || []).forEach((r) => {
+    if (r && r.slug) dbBySlug.set(String(r.slug).toLowerCase(), r);
+  });
+  const categories = catalog.map((c, idx) => {
+    const slug = String(c.slug || "").toLowerCase();
+    const db = dbBySlug.get(slug);
+    return {
+      slug,
+      label: c.label || slug,
+      icon: c.icon || "📦",
+      sort_order: db && db.sort_order != null ? Number(db.sort_order) : c.sort_order != null ? Number(c.sort_order) : idx,
+      product_count: counts.get(slug) || 0,
+      is_builtin: builtin.has(slug),
+      db_id: db && db.id ? db.id : null,
+      is_active: db ? db.is_active !== false : true,
+    };
+  });
+  categories.sort(
+    (a, b) =>
+      (a.sort_order || 0) - (b.sort_order || 0) || String(a.label).localeCompare(String(b.label), "ar")
+  );
+  return { categories, catalog_type: catalogType, supports: true, store };
+}
+
+router.get("/merchant-categories", requireAuth, requireStoreRole, async (req, res) => {
+  try {
+    const sb = createServiceClient();
+    if (!sb) return fail(res, "الخادم غير مهيأ لقاعدة البيانات", 503);
+    const storeId = String(req.query.store_id || "").trim();
+    if (!storeId) return fail(res, "store_id مطلوب", 400);
+    const own = await assertMerchantOwnsStore(sb, storeId, req.appUser);
+    if (own.error) return fail(res, own.error, 403);
+    const out = await loadMerchantCategoryRows(sb, storeId);
+    if (out.error) return fail(res, out.error, out.status || 400);
+    return ok(res, {
+      categories: out.categories,
+      catalog_type: out.catalog_type,
+      supports_product_categories: out.supports,
+    });
+  } catch (e) {
+    console.error("[store/merchant-categories/get]", e);
+    return fail(res, e.message || "خطأ في الخادم", 500);
+  }
+});
+
+router.post("/merchant-categories", requireAuth, requireStoreRole, async (req, res) => {
+  try {
+    const sb = createServiceClient();
+    if (!sb) return fail(res, "الخادم غير مهيأ لقاعدة البيانات", 503);
+    const storeId = String(req.body?.store_id || "").trim();
+    const slug = normalizeSlugInput(req.body?.slug);
+    const name_ar = String(req.body?.name_ar || req.body?.label || "").trim();
+    if (!storeId || !slug || !name_ar) return fail(res, "store_id و slug و name_ar مطلوبة", 400);
+    const own = await assertMerchantOwnsStore(sb, storeId, req.appUser);
+    if (own.error) return fail(res, own.error, 403);
+    const catalogType = productCatalogTypeForStoreType(own.store.type);
+    if (!storeSupportsProductCategoryBrowse(own.store.type)) {
+      return fail(res, "هذا النوع من المتاجر لا يدعم أقسام المنتجات", 400);
+    }
+    const icon =
+      req.body?.icon != null && String(req.body.icon).trim() !== ""
+        ? String(req.body.icon).trim().slice(0, 32)
+        : null;
+    let sort_order = Number(req.body?.sort_order);
+    if (!Number.isFinite(sort_order)) sort_order = 0;
+    const now = new Date().toISOString();
+    const { data, error } = await sb
+      .from("categories")
+      .insert({
+        type: catalogType,
+        scope: CATEGORY_SCOPE_PRODUCT,
+        slug,
+        name_ar,
+        icon,
+        sort_order,
+        is_active: true,
+        updated_at: now,
+      })
+      .select("*")
+      .single();
+    if (error) {
+      if (isCategoriesTableMissing(error)) {
+        return fail(res, "جدول categories غير جاهز — نفّذ shared/migration_categories.sql", 400);
+      }
+      if (String(error.code) === "23505") return fail(res, "slug موجود مسبقاً", 409);
+      return fail(res, error.message, 400);
+    }
+    void incrementCategoryUsage(catalogType, slug);
+    listCache = { key: "", at: 0, payload: null };
+    return ok(res, { category: data });
+  } catch (e) {
+    console.error("[store/merchant-categories/post]", e);
+    return fail(res, e.message || "خطأ في الخادم", 500);
+  }
+});
+
+router.put("/merchant-categories/:slug", requireAuth, requireStoreRole, async (req, res) => {
+  try {
+    const sb = createServiceClient();
+    if (!sb) return fail(res, "الخادم غير مهيأ لقاعدة البيانات", 503);
+    const storeId = String(req.body?.store_id || "").trim();
+    const slug = normalizeSlugInput(req.params.slug);
+    if (!storeId || !slug) return fail(res, "store_id و slug مطلوبان", 400);
+    const own = await assertMerchantOwnsStore(sb, storeId, req.appUser);
+    if (own.error) return fail(res, own.error, 403);
+    const catalogType = productCatalogTypeForStoreType(own.store.type);
+    const builtin = builtinSlugSet(catalogType);
+    const patch = { updated_at: new Date().toISOString() };
+    if (req.body?.name_ar !== undefined || req.body?.label !== undefined) {
+      const la = String((req.body.name_ar != null ? req.body.name_ar : req.body.label) || "").trim();
+      if (!la) return fail(res, "name_ar لا يمكن أن يكون فارغاً", 400);
+      patch.name_ar = la;
+    }
+    if (req.body?.icon !== undefined) {
+      patch.icon =
+        req.body.icon == null || String(req.body.icon).trim() === ""
+          ? null
+          : String(req.body.icon).trim().slice(0, 32);
+    }
+    if (req.body?.sort_order != null) {
+      const s = Number(req.body.sort_order);
+      if (Number.isFinite(s)) patch.sort_order = s;
+    }
+    if (builtin.has(slug) && (patch.name_ar || patch.icon)) {
+      const { data: existing } = await sb
+        .from("categories")
+        .select("id")
+        .eq("type", catalogType)
+        .eq("scope", CATEGORY_SCOPE_PRODUCT)
+        .eq("slug", slug)
+        .maybeSingle();
+      if (!existing) {
+        const { data: inserted, error: insErr } = await sb
+          .from("categories")
+          .insert({
+            type: catalogType,
+            scope: CATEGORY_SCOPE_PRODUCT,
+            slug,
+            name_ar: patch.name_ar || labelForProductSlug(catalogType, slug, null) || slug,
+            icon: patch.icon || iconForProductSlug(catalogType, slug, null),
+            sort_order: patch.sort_order != null ? patch.sort_order : 0,
+            is_active: true,
+            updated_at: patch.updated_at,
+          })
+          .select("*")
+          .single();
+        if (insErr) {
+          if (isCategoriesTableMissing(insErr)) return fail(res, "جدول categories غير جاهز", 400);
+          return fail(res, insErr.message, 400);
+        }
+        listCache = { key: "", at: 0, payload: null };
+        return ok(res, { category: inserted, note: "override_builtin" });
+      }
+    }
+    const { data, error } = await sb
+      .from("categories")
+      .update(patch)
+      .eq("type", catalogType)
+      .eq("scope", CATEGORY_SCOPE_PRODUCT)
+      .eq("slug", slug)
+      .select("*")
+      .maybeSingle();
+    if (error) {
+      if (isCategoriesTableMissing(error)) return fail(res, "جدول categories غير جاهز", 400);
+      return fail(res, error.message, 400);
+    }
+    if (!data) return fail(res, "القسم غير موجود — أنشئه أولاً", 404);
+    listCache = { key: "", at: 0, payload: null };
+    return ok(res, { category: data });
+  } catch (e) {
+    console.error("[store/merchant-categories/put]", e);
+    return fail(res, e.message || "خطأ في الخادم", 500);
+  }
+});
+
+router.delete("/merchant-categories/:slug", requireAuth, requireStoreRole, async (req, res) => {
+  try {
+    const sb = createServiceClient();
+    if (!sb) return fail(res, "الخادم غير مهيأ لقاعدة البيانات", 503);
+    const storeId = String(req.query.store_id || req.body?.store_id || "").trim();
+    const slug = normalizeSlugInput(req.params.slug);
+    if (!storeId || !slug) return fail(res, "store_id و slug مطلوبان", 400);
+    const own = await assertMerchantOwnsStore(sb, storeId, req.appUser);
+    if (own.error) return fail(res, own.error, 403);
+    const catalogType = productCatalogTypeForStoreType(own.store.type);
+    if (builtinSlugSet(catalogType).has(slug)) {
+      return fail(res, "لا يمكن حذف قسم افتراضي من النظام", 400);
+    }
+    const { count, error: cErr } = await sb
+      .from("store_products")
+      .select("id", { count: "exact", head: true })
+      .eq("store_id", storeId)
+      .eq("category", slug)
+      .eq("active", true);
+    if (cErr && !isStoreProductsMissing(cErr)) return fail(res, cErr.message, 400);
+    if ((count || 0) > 0) {
+      return fail(res, "لا يمكن حذف قسم يحتوي منتجات نشطة — انقل المنتجات أولاً", 400);
+    }
+    const { error } = await sb
+      .from("categories")
+      .update({ is_active: false, updated_at: new Date().toISOString() })
+      .eq("type", catalogType)
+      .eq("scope", CATEGORY_SCOPE_PRODUCT)
+      .eq("slug", slug);
+    if (error) {
+      if (isCategoriesTableMissing(error)) return fail(res, "جدول categories غير جاهز", 400);
+      return fail(res, error.message, 400);
+    }
+    listCache = { key: "", at: 0, payload: null };
+    return ok(res, { ok: true, slug });
+  } catch (e) {
+    console.error("[store/merchant-categories/delete]", e);
+    return fail(res, e.message || "خطأ في الخادم", 500);
+  }
+});
+
+router.patch("/merchant-categories/reorder", requireAuth, requireStoreRole, async (req, res) => {
+  try {
+    const sb = createServiceClient();
+    if (!sb) return fail(res, "الخادم غير مهيأ لقاعدة البيانات", 503);
+    const storeId = String(req.body?.store_id || "").trim();
+    const order = Array.isArray(req.body?.order) ? req.body.order : [];
+    if (!storeId || !order.length) return fail(res, "store_id و order[] مطلوبان", 400);
+    const own = await assertMerchantOwnsStore(sb, storeId, req.appUser);
+    if (own.error) return fail(res, own.error, 403);
+    const catalogType = productCatalogTypeForStoreType(own.store.type);
+    const now = new Date().toISOString();
+    for (let i = 0; i < order.length; i++) {
+      const row = order[i] || {};
+      const slug = normalizeSlugInput(row.slug);
+      if (!slug) continue;
+      const sort_order = Number.isFinite(Number(row.sort_order)) ? Number(row.sort_order) : i;
+      const { data: existing } = await sb
+        .from("categories")
+        .select("id")
+        .eq("type", catalogType)
+        .eq("scope", CATEGORY_SCOPE_PRODUCT)
+        .eq("slug", slug)
+        .maybeSingle();
+      if (existing) {
+        await sb
+          .from("categories")
+          .update({ sort_order, updated_at: now })
+          .eq("id", existing.id);
+      } else {
+        await sb.from("categories").insert({
+          type: catalogType,
+          scope: CATEGORY_SCOPE_PRODUCT,
+          slug,
+          name_ar: labelForProductSlug(catalogType, slug, null) || slug,
+          icon: iconForProductSlug(catalogType, slug, null),
+          sort_order,
+          is_active: true,
+          updated_at: now,
+        });
+      }
+    }
+    listCache = { key: "", at: 0, payload: null };
+    const out = await loadMerchantCategoryRows(sb, storeId);
+    return ok(res, { categories: out.categories || [] });
+  } catch (e) {
+    console.error("[store/merchant-categories/reorder]", e);
+    return fail(res, e.message || "خطأ في الخادم", 500);
+  }
+});
+
 router.get("/withdrawals", requireAuth, requireStoreRole, async (req, res) => {
   try {
     const sb = createServiceClient();
@@ -2231,17 +2532,65 @@ router.get("/withdrawals", requireAuth, requireStoreRole, async (req, res) => {
     if (sErr) return fail(res, sErr.message, 400);
     if (!st) return fail(res, "لا يوجد متجر معتمد لجوالك.", 404);
 
-    const { data, error } = await sb
-      .from("store_withdrawals")
-      .select("id,store_id,amount,status,created_at,updated_at")
-      .eq("store_id", st.id)
-      .order("created_at", { ascending: false })
-      .limit(100);
+    const wallet = await getStoreWalletPayloadWithFallback(sb, req.appUser.id, st.id);
+    const balance = Number(wallet.balance) || 0;
+
+    async function fetchWithdrawals() {
+      const fullSelect =
+        "id,store_id,amount,status,created_at,updated_at,rejection_reason";
+      let res = await sb
+        .from("store_withdrawals")
+        .select(fullSelect)
+        .eq("store_id", st.id)
+        .order("created_at", { ascending: false })
+        .limit(100);
+      if (
+        res.error &&
+        /rejection_reason|column|does not exist|schema cache/i.test(String(res.error.message || ""))
+      ) {
+        res = await sb
+          .from("store_withdrawals")
+          .select("id,store_id,amount,status,created_at,updated_at")
+          .eq("store_id", st.id)
+          .order("created_at", { ascending: false })
+          .limit(100);
+      }
+      return res;
+    }
+
+    const { data, error } = await fetchWithdrawals();
     if (error) {
-      if (isStoreWithdrawalsMissing(error)) return ok(res, { withdrawals: [], note: "migration_store_withdrawals.sql" });
+      if (isStoreWithdrawalsMissing(error)) {
+        return ok(res, {
+          withdrawals: [],
+          balance,
+          available: balance,
+          pending_reserved: 0,
+          total_withdrawn: 0,
+          portal_type: "merchant",
+          wallet_source: wallet.source || wallet.wallet_mode || null,
+          note: "migration_store_withdrawals.sql",
+        });
+      }
       return fail(res, error.message, 400);
     }
-    return ok(res, { withdrawals: data || [] });
+    const rows = data || [];
+    const pendingReserved = rows
+      .filter((r) => String(r.status || "").toLowerCase() === "pending")
+      .reduce((a, r) => a + (Number(r.amount) || 0), 0);
+    const totalWithdrawn = rows
+      .filter((r) => String(r.status || "").toLowerCase() === "approved")
+      .reduce((a, r) => a + (Number(r.amount) || 0), 0);
+    const available = Math.round((balance - pendingReserved) * 100) / 100;
+    return ok(res, {
+      withdrawals: rows,
+      balance,
+      available: Math.max(0, available),
+      pending_reserved: Math.round(pendingReserved * 100) / 100,
+      total_withdrawn: Math.round(totalWithdrawn * 100) / 100,
+      portal_type: "merchant",
+      wallet_source: wallet.source || wallet.wallet_mode || null,
+    });
   } catch (e) {
     console.error("[store/withdrawals/list]", e);
     return fail(res, e.message || "خطأ في الخادم", 500);

@@ -1,0 +1,9 @@
+{
+  "portal": "transport",
+  "brand": "ERVENOW Transport",
+  "roleLabel": "نقل",
+  "theme": "transport",
+  "defaultSection": "dashboard",
+  "items": ["dashboard", "transport-orders", "wallet", "notifications", "fleet", "pricing", "settings"],
+  "sidebarFoot": [{ "href": "/services-provider.html", "label": "بوابة النقل الكلاسيكية" }]
+}

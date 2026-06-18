@@ -348,7 +348,7 @@
           }
           if (isLikelyNetworkError(e)) {
             throw new Error(
-              "تعذّر الاتصال بالخادم. إن كانت الواجهة على نطاق مختلف عن الـ API: أضف نطاق الواجهة إلى CORS_ORIGINS على الخادم، أو عيّن ERVENOW_PUBLIC_URL ليطابق رابط الموقع الظاهر للزائر."
+              "تعذّر الاتصال بالخادم. إن كانت الواجهة على نطاق مختلف عن الـ API: أضف نطاق الواجهة إلى CORS_ORIGINS على الخادم، أو عيّن ERVENOW_PUBLIC_URL ليطابق رابط الموقع الظاهر للعضو."
             );
           }
           throw new Error(humanizeThrownError(e));

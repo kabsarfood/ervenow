@@ -26,6 +26,9 @@ const { isAllowedDeliveryStatusTransition } = require("../../shared/utils/delive
 const { getOrderDeliveryStatus } = require("../../shared/domain/orders/orderStatus");
 const { broadcastOrderPatch, orderPatchFromRow } = require("../../shared/lib/trackingSocket");
 const { repairInconsistentOrderFinancials } = require("../../shared/utils/orderTotals");
+const { getOrderProviderId } = require("../../shared/utils/orderProviderId");
+const { resolveOrderPortalType } = require("../../shared/utils/orderPortalRouting");
+const { notifyOrderFieldChanges } = require("../../shared/services/notificationEvents");
 const {
   sendCustomerDeliveringNotice,
   sendDriverArrived,
@@ -238,6 +241,81 @@ router.patch("/:id/status", requireAuth, async (req, res) => {
     });
   } catch (e) {
     return fail(res, e.message || "status update failed", 500);
+  }
+});
+
+/**
+ * PATCH /api/order/:id/details — تحديث موعد الخدمة أو وجهة النقل
+ * Body: { scheduled_at } | { drop_address, drop_lat, drop_lng }
+ */
+router.patch("/:id/details", requireAuth, async (req, res) => {
+  try {
+    const sb = req.supabase || createServiceClient();
+    if (!sb) return fail(res, "database not configured", 503);
+
+    const orderId = String(req.params.id || "").trim();
+    const body = req.body && typeof req.body === "object" ? req.body : {};
+    const hasSchedule = Object.prototype.hasOwnProperty.call(body, "scheduled_at");
+    const hasDestination =
+      Object.prototype.hasOwnProperty.call(body, "drop_address") ||
+      Object.prototype.hasOwnProperty.call(body, "drop_lat") ||
+      Object.prototype.hasOwnProperty.call(body, "drop_lng");
+    if (!hasSchedule && !hasDestination) {
+      return fail(res, "scheduled_at or destination fields required", 400);
+    }
+
+    const { data: before, error: readErr } = await sb.from("orders").select("*").eq("id", orderId).maybeSingle();
+    if (readErr || !before) return fail(res, "Not found", 404);
+
+    const portal = resolveOrderPortalType(before);
+    const u = req.appUser;
+    const providerId = getOrderProviderId(before);
+    const isOwner = before.customer_id && String(before.customer_id) === String(u.id);
+    const isAdmin = u.role === "admin";
+    const isProvider = u.role === "service" && providerId && String(providerId) === String(u.id);
+    if (!isOwner && !isAdmin && !isProvider) return fail(res, "Forbidden", 403);
+
+    if (hasSchedule && portal !== "service" && !isAdmin) {
+      return fail(res, "schedule updates only for service orders", 400);
+    }
+    if (hasDestination && portal !== "transport" && !isAdmin) {
+      return fail(res, "destination updates only for transport orders", 400);
+    }
+
+    const patch = { updated_at: new Date().toISOString() };
+    if (hasSchedule) patch.scheduled_at = body.scheduled_at || null;
+    if (hasDestination) {
+      if (Object.prototype.hasOwnProperty.call(body, "drop_address")) {
+        patch.drop_address = String(body.drop_address || "").trim();
+      }
+      if (Object.prototype.hasOwnProperty.call(body, "drop_lat")) {
+        const lat = Number(body.drop_lat);
+        patch.drop_lat = Number.isFinite(lat) ? lat : null;
+      }
+      if (Object.prototype.hasOwnProperty.call(body, "drop_lng")) {
+        const lng = Number(body.drop_lng);
+        patch.drop_lng = Number.isFinite(lng) ? lng : null;
+      }
+    }
+
+    const { data: after, error } = await sb.from("orders").update(patch).eq("id", orderId).select("*").maybeSingle();
+    if (error) return fail(res, error.message, 400);
+    if (!after) return fail(res, "update failed", 400);
+
+    try {
+      await notifyOrderFieldChanges(sb, before, after);
+    } catch (notifyErr) {
+      logger.warn(
+        { err: notifyErr.message || String(notifyErr), orderId },
+        "[order/details] field notifications"
+      );
+    }
+
+    if (after.id) broadcastOrderPatch(String(after.id), orderPatchFromRow(after));
+    await bumpDeliveryOrdersListEpoch();
+    return ok(res, { order: after });
+  } catch (e) {
+    return fail(res, e.message || "details update failed", 500);
   }
 });
 

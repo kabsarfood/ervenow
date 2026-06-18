@@ -1,7 +1,7 @@
 /**
  * إشعارات داخل التطبيق — متاجر · أدمن · مزودو خدمات
  */
-const { createNotification } = require("./notificationService");
+const { createRoutedNotification } = require("../utils/notificationPortalRouting");
 const { findUserByPhone } = require("../utils/userPhoneLookup");
 const { phoneLookupVariants } = require("../utils/userPhoneLookup");
 const { logger } = require("../utils/logger");
@@ -60,9 +60,11 @@ async function notifyStoreInApp(sb, input) {
     (input.storeId && (await resolveStoreMerchantUserId(sb, input.storeId))) ||
     (input.storeRow && (await resolveStoreMerchantUserId(sb, input.storeRow)));
   if (!merchantUserId) return null;
-  return createNotification(sb, {
+  return createRoutedNotification(sb, {
     recipient_type: "store",
     recipient_id: merchantUserId,
+    target_portal: "merchant",
+    target_role: "merchant",
     title: input.title,
     message: input.message,
     type: input.type || "order",
@@ -86,9 +88,11 @@ async function notifyAdminsInApp(sb, input) {
   const out = [];
   for (const adminId of ids) {
     try {
-      const row = await createNotification(sb, {
+      const row = await createRoutedNotification(sb, {
         recipient_type: "admin",
         recipient_id: adminId,
+        target_portal: "admin",
+        target_role: "admin",
         title: input.title,
         message: input.message,
         type: input.type || "system",
@@ -108,9 +112,12 @@ async function notifyAdminsInApp(sb, input) {
  */
 async function notifyProviderInApp(sb, input) {
   if (!sb || !input || !input.providerUserId) return null;
-  return createNotification(sb, {
+  const targetPortal = input.target_portal || input.portal_type || "service";
+  return createRoutedNotification(sb, {
     recipient_type: "provider",
     recipient_id: String(input.providerUserId),
+    target_portal: targetPortal,
+    target_role: targetPortal,
     title: input.title,
     message: input.message,
     type: input.type || "order",

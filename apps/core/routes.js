@@ -1,6 +1,6 @@
 const express = require("express");
 const jwt = require("jsonwebtoken");
-const { requireAuth, getJwtSecret } = require("../../shared/middleware/auth");
+const { requireAuth, getJwtSecret, optionalAuth } = require("../../shared/middleware/auth");
 const { requireRole } = require("../../shared/middleware/roles");
 const { ok, fail } = require("../../shared/utils/helpers");
 const { toE164, toStorageDigits, isErvnowSaudiMobileE164 } = require("../../shared/utils/phone");
@@ -337,6 +337,25 @@ router.get("/", (_req, res) => {
 
 router.get("/health", (_req, res) => {
   ok(res, { service: "core", version: "2.1.0", auth: "ervenow_unified+05+jwt" });
+});
+
+router.get("/platform-modules", optionalAuth, (_req, res) => {
+  try {
+    const { readPlatformModules } = require("../../shared/utils/platformModules");
+    const state = readPlatformModules();
+    const modules = {};
+    for (const [id, row] of Object.entries(state.modules || {})) {
+      modules[id] = {
+        id: row.id,
+        label: row.label,
+        label_ar: row.label_ar,
+        status: row.status,
+      };
+    }
+    return ok(res, { modules, updated_at: state.updated_at || null });
+  } catch (e) {
+    return fail(res, e.message || "platform modules error", 500);
+  }
 });
 
 router.get("/public-config", (_req, res) => {
@@ -1145,6 +1164,54 @@ router.get("/settings", async (_req, res) => {
     ok(res, { settings });
   } catch (e) {
     fail(res, e.message || String(e), 500);
+  }
+});
+
+/** تتبع زيارات البوابات — اختياري مع JWT */
+router.post("/readiness-beacon", optionalAuth, async (req, res) => {
+  try {
+    const { recordPageVisit, recordRedirectError, recordRedirectEvent } = require("../../shared/utils/adminReadinessStore");
+    const body = req.body || {};
+    const kind = String(body.kind || "page_visit").toLowerCase();
+    const userId = req.appUser?.id ? String(req.appUser.id) : body.user_id ? String(body.user_id) : null;
+
+    if (kind === "redirect_error") {
+      const errorType = String(body.error_type || "").toLowerCase();
+      await recordRedirectError(errorType, {
+        path: body.path || null,
+        detail: body.detail || null,
+        user_id: userId,
+        role: req.appUser?.role || body.role || null,
+        portal: body.portal || null,
+      });
+      return ok(res, { recorded: true });
+    }
+
+    if (kind === "redirect") {
+      await recordRedirectEvent({
+        portal: body.portal || null,
+        role: body.role || req.appUser?.role || null,
+        raw_role: body.raw_role || body.role || null,
+        service_type: body.service_type || null,
+        path: body.path || null,
+        success: body.success !== false,
+        user_id: userId,
+      });
+      return ok(res, { recorded: true });
+    }
+
+    await recordPageVisit({
+      path: body.path || req.headers.referer || null,
+      portalKey: body.portal || null,
+      legacyKey: body.legacy || null,
+      userId,
+      role: req.appUser?.role || body.role || null,
+      name: body.name || null,
+      phone: req.appUser?.phone || body.phone || null,
+    });
+    return ok(res, { recorded: true });
+  } catch (e) {
+    return fail(res, e.message || String(e), 500);
   }
 });
 

@@ -27,6 +27,8 @@ const { sendOrderAcceptedToCustomer, sendCustomerDeliveringNotice, sendDriverArr
 const { currentGasRadiusKm, providerWithinGasRadius } = require("../../shared/utils/gasDeliveryRadius");
 const { broadcastDriverUpdate, broadcastOrderPatch, orderPatchFromRow } = require("../../shared/lib/trackingSocket");
 const { getWalletPayloadWithLedgerFallback } = require("../../shared/utils/ledgerWallet");
+const { resolvePortalRole } = require("../../shared/utils/resolvePortalRole");
+const { filterOrdersForPortal } = require("../../shared/utils/orderPortalRouting");
 const {
   bookingTypesForProvider,
   districtsMatch,
@@ -444,7 +446,10 @@ router.get("/me/dashboard", requireAuth, requireRole("service"), async (req, res
       ),
       uid
     );
-    const newCount = bookings.filter((b) => {
+    const portalRole = resolvePortalRole(req.appUser).portalRole;
+    const portalBookings = filterOrdersForPortal(bookings, portalRole);
+
+    const newCount = portalBookings.filter((b) => {
       const s = bookingStatus(b);
       return (s === "new" || s === "pending") && !b.provider_id;
     }).length;
@@ -461,14 +466,15 @@ router.get("/me/dashboard", requireAuth, requireRole("service"), async (req, res
       /* table optional */
     }
 
-    const completed = bookings.filter((b) => bookingStatus(b) === "delivered").length;
-    const activeJobs = bookings.filter((b) => {
+    const completed = portalBookings.filter((b) => bookingStatus(b) === "delivered").length;
+    const activeJobs = portalBookings.filter((b) => {
       const s = bookingStatus(b);
       return (s === "accepted" || s === "delivering") && String(b.provider_id || "") === String(uid);
     }).length;
 
     let walletBalance = 0;
     let walletEarned = 0;
+    let walletEarnedToday = 0;
     let walletCommission = 0;
     let walletSource = "legacy";
     try {
@@ -480,6 +486,20 @@ router.get("/me/dashboard", requireAuth, requireRole("service"), async (req, res
       if (walletSource === "ervenow_ledger" && walletCommission > 0) {
         commissionPending = walletCommission;
       }
+      try {
+        const { listLedgerWalletTransactions } = require("../../shared/utils/ledgerWallet");
+        const txs = await listLedgerWalletTransactions(sb, uid, "service", 200);
+        const todayStart = new Date();
+        todayStart.setHours(0, 0, 0, 0);
+        walletEarnedToday = (txs || [])
+          .filter((t) => {
+            if (!t || !t.created_at || new Date(t.created_at) < todayStart) return false;
+            return String(t.direction || "").toLowerCase() === "credit";
+          })
+          .reduce((s, t) => s + Math.abs(Number(t.amount) || 0), 0);
+      } catch (_todayErr) {
+        walletEarnedToday = 0;
+      }
     } catch (_) {
       /* optional */
     }
@@ -488,7 +508,8 @@ router.get("/me/dashboard", requireAuth, requireRole("service"), async (req, res
       panel_title: panelTitleForType(providerType),
       service_label: labelForType(providerType),
       profile: profile || {},
-      bookings,
+      bookings: portalBookings,
+      portal_type: portalRole,
       stats: {
         new_orders: newCount,
         completed_jobs: completed,
@@ -496,11 +517,160 @@ router.get("/me/dashboard", requireAuth, requireRole("service"), async (req, res
         commission_pending_sar: Math.round(commissionPending * 100) / 100,
         wallet_balance_sar: Math.round(walletBalance * 100) / 100,
         wallet_earned_sar: Math.round(walletEarned * 100) / 100,
+        wallet_earned_today_sar: Math.round(walletEarnedToday * 100) / 100,
         wallet_commission_sar: Math.round(walletCommission * 100) / 100,
         wallet_source: walletSource,
         rating_avg: Number(profile?.service_rating_avg) || 0,
         rating_count: Number(profile?.service_rating_count) || 0,
       },
+    });
+  } catch (e) {
+    return fail(res, e.message, 500);
+  }
+});
+
+router.get("/me/schedule", requireAuth, requireRole("service"), async (req, res) => {
+  try {
+    const sb = req.supabase || createServiceClient();
+    const uid = req.appUser.id;
+    const dash = await (async () => {
+      const { data: profile } = await sb
+        .from("users")
+        .select("id, service_type, service_district, service_vehicle_type")
+        .eq("id", uid)
+        .maybeSingle();
+      const providerType = String(profile?.service_type || "").trim().toLowerCase();
+      const types = bookingTypesForProvider(providerType);
+      let bookingsQ = serviceOrdersQuery(sb).order("scheduled_at", { ascending: true, nullsFirst: false }).limit(200);
+      bookingsQ = applyServiceTypeFilter(bookingsQ, types);
+      const { data: rawBookings, error: bErr } = await bookingsQ;
+      if (bErr) throw new Error(bErr.message);
+      const bookings = sortBookingsByPriority(
+        filterBookingsForProvider(
+          mapOrdersToBookings(rawBookings),
+          uid,
+          providerType,
+          profile?.service_district,
+          profile?.service_vehicle_type,
+          profile
+        ),
+        uid
+      );
+      const portalRole = resolvePortalRole(req.appUser).portalRole;
+      return filterOrdersForPortal(bookings, portalRole);
+    })();
+    const now = new Date();
+    const weekEnd = new Date(now);
+    weekEnd.setDate(weekEnd.getDate() + 7);
+    const todayStart = new Date(now);
+    todayStart.setHours(0, 0, 0, 0);
+    const todayEnd = new Date(todayStart);
+    todayEnd.setDate(todayEnd.getDate() + 1);
+    const withSchedule = (dash || []).filter((b) => b.scheduled_at);
+    const today = withSchedule.filter((b) => {
+      const d = new Date(b.scheduled_at);
+      return d >= todayStart && d < todayEnd;
+    });
+    const week = withSchedule.filter((b) => {
+      const d = new Date(b.scheduled_at);
+      return d >= todayStart && d < weekEnd;
+    });
+    const mine = (dash || []).filter((b) => String(b.provider_id || "") === String(uid));
+    return ok(res, { today, week, all: withSchedule, my_bookings: mine });
+  } catch (e) {
+    return fail(res, e.message, 500);
+  }
+});
+
+router.get("/me/fleet", requireAuth, requireRole("service"), async (req, res) => {
+  try {
+    const sb = req.supabase || createServiceClient();
+    const uid = req.appUser.id;
+    const { data: profile, error: pErr } = await sb
+      .from("users")
+      .select(
+        "id, name, phone, service_type, service_vehicle_type, service_plate_number, service_vehicle_model, service_rating_avg, service_rating_count, lat, lng"
+      )
+      .eq("id", uid)
+      .maybeSingle();
+    if (pErr) return fail(res, pErr.message, 400);
+    const providerType = String(profile?.service_type || "").trim().toLowerCase();
+    const types = bookingTypesForProvider(providerType);
+    let bookingsQ = serviceOrdersQuery(sb).order("updated_at", { ascending: false }).limit(120);
+    bookingsQ = applyServiceTypeFilter(bookingsQ, types);
+    const { data: rawBookings } = await bookingsQ;
+    const portalBookings = filterOrdersForPortal(
+      sortBookingsByPriority(
+        filterBookingsForProvider(
+          mapOrdersToBookings(rawBookings || []),
+          uid,
+          providerType,
+          profile?.service_district,
+          profile?.service_vehicle_type,
+          profile
+        ),
+        uid
+      ),
+      resolvePortalRole(req.appUser).portalRole
+    );
+    const active = portalBookings.filter((b) => {
+      const st = bookingStatus(b);
+      return String(b.provider_id || "") === String(uid) && (st === "accepted" || st === "delivering");
+    });
+    const vehicle = {
+      type: profile?.service_vehicle_type || null,
+      plate: profile?.service_plate_number || null,
+      model: profile?.service_vehicle_model || null,
+      status: active.length ? "busy" : "available",
+      driver_name: profile?.name || null,
+      driver_phone: profile?.phone || null,
+    };
+    return ok(res, {
+      vehicles: vehicle.type || vehicle.plate ? [vehicle] : [],
+      activity: active,
+      profile: profile || {},
+    });
+  } catch (e) {
+    return fail(res, e.message, 500);
+  }
+});
+
+router.get("/me/pricing", requireAuth, requireRole("service"), async (req, res) => {
+  try {
+    const sb = req.supabase || createServiceClient();
+    const uid = req.appUser.id;
+    const { data: profile } = await sb
+      .from("users")
+      .select("service_type")
+      .eq("id", uid)
+      .maybeSingle();
+    const providerType = String(profile?.service_type || "").trim().toLowerCase();
+    const { computeUnifiedDeliveryFee } = require("../delivery/unifiedDeliveryPricing");
+    const {
+      CAR_TRANSPORT_EXTERNAL_RATE,
+      CAR_TRANSPORT_INTERNATIONAL_RATE,
+      priceCarTransportInternal,
+    } = require("../delivery/unifiedDeliveryPricing");
+    const gasPricing = {
+      cylinder_one: 39,
+      cylinder_two: 78,
+      central_per_liter: 0.9,
+    };
+    const transportSamples = [
+      { label: "نقل داخلي (10 كم)", fee: priceCarTransportInternal(10, "running") },
+      { label: "نقل خارجي (50 كم)", fee: computeUnifiedDeliveryFee("car_transport", { transfer_mode: "external", distance_km: 50 }).delivery_fee },
+      { label: "توصيل داخلي ثابت", fee: computeUnifiedDeliveryFee("local_delivery", {}).delivery_fee },
+      { label: "أسطوانة غاز", fee: computeUnifiedDeliveryFee("gas_delivery", { mode: "cylinder", cylinders: 1 }).delivery_fee },
+    ].filter((r) => Number.isFinite(Number(r.fee)));
+    return ok(res, {
+      provider_type: providerType,
+      gas: gasPricing,
+      transport_rates: {
+        external_per_km: CAR_TRANSPORT_EXTERNAL_RATE,
+        international_per_km: CAR_TRANSPORT_INTERNATIONAL_RATE,
+      },
+      samples: transportSamples,
+      note: "الأسعار المرجعية من محرك التسعير الموحّد — التعديل الإداري لاحقاً",
     });
   } catch (e) {
     return fail(res, e.message, 500);
@@ -528,18 +698,22 @@ router.get("/bookings", requireAuth, async (req, res) => {
     const { data, error } = await q;
     if (error) throw error;
 
-    const filtered = sortBookingsByPriority(
-      filterBookingsForProvider(
-        mapOrdersToBookings(data),
-        user.id,
-        providerType,
-        profile?.service_district,
-        profile?.service_vehicle_type,
-        profile
+    const portalRole = resolvePortalRole(user).portalRole;
+    const filtered = filterOrdersForPortal(
+      sortBookingsByPriority(
+        filterBookingsForProvider(
+          mapOrdersToBookings(data),
+          user.id,
+          providerType,
+          profile?.service_district,
+          profile?.service_vehicle_type,
+          profile
+        ),
+        user.id
       ),
-      user.id
+      portalRole
     );
-    return res.json({ ok: true, bookings: filtered });
+    return res.json({ ok: true, bookings: filtered, portal_type: portalRole });
   } catch (e) {
     console.error(e);
     return res.status(500).json({ ok: false, error: "INTERNAL_ERROR" });

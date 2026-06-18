@@ -1,0 +1,9 @@
+{
+  "portal": "service",
+  "brand": "ERVENOW Service",
+  "roleLabel": "مزوّد خدمة",
+  "theme": "service",
+  "defaultSection": "dashboard",
+  "items": ["dashboard", "requests", "schedule", "wallet", "rating", "notifications", "settings"],
+  "sidebarFoot": [{ "href": "/services-provider.html", "label": "البوابة الكلاسيكية" }]
+}

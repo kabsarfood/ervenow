@@ -8,6 +8,8 @@ const { getOsrmRouteKmOrHaversine } = require("../../shared/utils/osrmClient");
 const { logger } = require("../../shared/utils/logger");
 const { normalizeOrderFinancialsForInsert } = require("../../shared/utils/orderTotals");
 const { isOrdersStoreColumnMissingError, insertOrdersResilient } = require("../../shared/utils/idempotency");
+const { applyPortalTypeToOrderRow } = require("../../shared/utils/orderPortalRouting");
+const { notifyOrderCancelled } = require("../../shared/services/notificationEvents");
 const {
   isIdempotencyKeyUniqueViolation,
   fetchOrderByCustomerIdempotencyKey,
@@ -464,7 +466,7 @@ async function insertDeliveryOrderWithRetry(sb, buildRow) {
 
     await new Promise((r) => setTimeout(r, delay + jitter));
     const order_number = await buildNextDeliveryOrderNumber(sb);
-    const row = normalizeOrderFinancialsForInsert(buildRow(order_number));
+    const row = applyPortalTypeToOrderRow(normalizeOrderFinancialsForInsert(buildRow(order_number)));
     const { data, error } = await insertOrdersResilient(sb, row);
     if (!error) {
       if (data) await insertVatRecordForOrder(sb, data);
@@ -719,6 +721,14 @@ async function cancelOrderByCustomer(sb, orderId, appUser) {
   if (error) return { data: null, error, refund: null };
 
   const refund = await refundCustomerWalletIfPaid(sb, order);
+  try {
+    await notifyOrderCancelled(sb, data);
+  } catch (notifyErr) {
+    logger.warn(
+      { err: notifyErr.message || String(notifyErr), orderId },
+      "[delivery/cancel] routed notifications"
+    );
+  }
   return { data, error: null, refund };
 }
 

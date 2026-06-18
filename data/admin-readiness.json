@@ -1,0 +1,203 @@
+{
+  "updated_at": "2026-06-18T18:41:16.020Z",
+  "portal_visits": {
+    "customer": {
+      "visits": 27,
+      "unique_users": {},
+      "last_at": "2026-06-16T08:05:26.848Z"
+    },
+    "merchant": {
+      "visits": 72,
+      "unique_users": {},
+      "last_at": "2026-06-18T18:41:13.580Z"
+    },
+    "driver": {
+      "visits": 115,
+      "unique_users": {},
+      "last_at": "2026-06-18T18:41:14.694Z"
+    },
+    "service": {
+      "visits": 64,
+      "unique_users": {},
+      "last_at": "2026-06-18T18:41:15.473Z"
+    },
+    "transport": {
+      "visits": 80,
+      "unique_users": {},
+      "last_at": "2026-06-18T18:41:16.019Z"
+    }
+  },
+  "preview_visits": {
+    "customer": {
+      "visits": 12,
+      "unique_users": {},
+      "last_at": "2026-06-16T08:05:26.848Z",
+      "active_users": {}
+    },
+    "merchant": {
+      "visits": 71,
+      "unique_users": {},
+      "last_at": "2026-06-18T18:41:13.580Z",
+      "active_users": {}
+    },
+    "driver": {
+      "visits": 98,
+      "unique_users": {},
+      "last_at": "2026-06-18T18:41:14.694Z",
+      "active_users": {}
+    },
+    "service": {
+      "visits": 49,
+      "unique_users": {},
+      "last_at": "2026-06-18T18:41:15.473Z",
+      "active_users": {}
+    },
+    "transport": {
+      "visits": 80,
+      "unique_users": {},
+      "last_at": "2026-06-18T18:41:16.019Z",
+      "active_users": {}
+    }
+  },
+  "legacy_access": {
+    "store-dashboard": {
+      "visits": 1,
+      "unique_users": {},
+      "last_at": "2026-06-16T06:20:33.745Z"
+    },
+    "driver-app": {
+      "visits": 0,
+      "unique_users": {},
+      "last_at": null
+    },
+    "order-board": {
+      "visits": 0,
+      "unique_users": {},
+      "last_at": null
+    },
+    "services-provider": {
+      "visits": 15,
+      "unique_users": {},
+      "last_at": "2026-06-16T06:28:44.910Z"
+    }
+  },
+  "redirect_errors": {
+    "unknown_role": [],
+    "failed_redirect": [],
+    "unauthorized_portal": []
+  },
+  "user_snapshots": {},
+  "broadcast_history": [],
+  "redirect_events": [
+    {
+      "at": "2026-06-15T18:20:53.219Z",
+      "portal": "merchant",
+      "role": "store",
+      "path": "/merchant-preview",
+      "success": true,
+      "raw_role": "store",
+      "service_type": null,
+      "user_id": null
+    },
+    {
+      "at": "2026-06-15T16:46:08.694Z",
+      "portal": "transport",
+      "role": "service",
+      "path": "/transport-preview",
+      "success": true,
+      "raw_role": "service",
+      "service_type": "pickup_truck",
+      "user_id": null
+    },
+    {
+      "at": "2026-06-15T16:42:53.456Z",
+      "portal": "driver",
+      "role": "driver",
+      "path": "/driver-preview",
+      "success": true,
+      "raw_role": "driver",
+      "service_type": null,
+      "user_id": null
+    },
+    {
+      "at": "2026-06-15T16:40:21.392Z",
+      "portal": "driver",
+      "role": "driver",
+      "path": "/driver-preview",
+      "success": true,
+      "raw_role": "driver",
+      "service_type": null,
+      "user_id": null
+    },
+    {
+      "at": "2026-06-15T16:29:28.355Z",
+      "portal": "merchant",
+      "role": "store",
+      "path": "/merchant-preview",
+      "success": true,
+      "raw_role": "store",
+      "service_type": null,
+      "user_id": null
+    },
+    {
+      "at": "2026-06-15T16:27:12.668Z",
+      "portal": "admin",
+      "role": "admin",
+      "path": "/admin-dashboard",
+      "success": true,
+      "raw_role": "admin",
+      "service_type": null,
+      "user_id": null
+    },
+    {
+      "at": "2026-06-15T16:25:22.794Z",
+      "portal": "driver",
+      "role": "driver",
+      "path": "/driver-preview",
+      "success": true,
+      "raw_role": "driver",
+      "service_type": null,
+      "user_id": null
+    },
+    {
+      "at": "2026-06-15T16:23:33.581Z",
+      "portal": "transport",
+      "role": "service",
+      "path": "/transport-preview",
+      "success": true,
+      "raw_role": "service",
+      "service_type": "pickup_truck",
+      "user_id": null
+    },
+    {
+      "at": "2026-06-15T16:21:51.211Z",
+      "portal": "merchant",
+      "role": "store",
+      "path": "/merchant-preview",
+      "success": true,
+      "raw_role": "store",
+      "service_type": null,
+      "user_id": null
+    },
+    {
+      "at": "2026-06-15T15:46:15.052Z",
+      "portal": "transport",
+      "role": "service",
+      "path": "/transport-preview",
+      "success": true,
+      "raw_role": "service",
+      "service_type": "pickup_truck",
+      "user_id": null
+    },
+    {
+      "at": "2026-06-15T15:44:31.940Z",
+      "portal": "transport",
+      "role": "service",
+      "path": "/transport-preview",
+      "success": true,
+      "raw_role": "service",
+      "service_type": "pickup_truck",
+      "user_id": null
+    }
+  ]
+}

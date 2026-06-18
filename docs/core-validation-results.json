@@ -1,0 +1,264 @@
+{
+  "generated_at": "2026-06-18T18:41:43.711Z",
+  "ervenow_core_1_0_ready": true,
+  "portals": {
+    "merchant": {
+      "result": "PASS",
+      "checks": [
+        {
+          "id": "live",
+          "ok": true,
+          "note": "portalLaunch live flag"
+        },
+        {
+          "id": "file:public/assets/merchant-preview.js",
+          "ok": true,
+          "note": "exists"
+        },
+        {
+          "id": "file:public/merchant-preview.html",
+          "ok": true,
+          "note": "exists"
+        },
+        {
+          "id": "file:apps/store/routes.js",
+          "ok": true,
+          "note": "exists"
+        },
+        {
+          "id": "section:renderCategories",
+          "ok": true,
+          "note": "implemented"
+        },
+        {
+          "id": "section:renderWithdrawals",
+          "ok": true,
+          "note": "implemented"
+        },
+        {
+          "id": "section:renderNotifications",
+          "ok": true,
+          "note": "implemented"
+        },
+        {
+          "id": "section:renderOrders",
+          "ok": true,
+          "note": "implemented"
+        },
+        {
+          "id": "api:merchant-categories",
+          "ok": true,
+          "note": "routed"
+        },
+        {
+          "id": "api:/withdrawals",
+          "ok": true,
+          "note": "routed"
+        },
+        {
+          "id": "api:merchant-dashboard",
+          "ok": true,
+          "note": "routed"
+        },
+        {
+          "id": "api:order-board",
+          "ok": true,
+          "note": "routed"
+        },
+        {
+          "id": "unit_tests",
+          "ok": true,
+          "note": "0 tests passed"
+        }
+      ]
+    },
+    "driver": {
+      "result": "PASS",
+      "checks": [
+        {
+          "id": "live",
+          "ok": true,
+          "note": "portalLaunch live flag"
+        },
+        {
+          "id": "file:public/assets/driver-preview.js",
+          "ok": true,
+          "note": "exists"
+        },
+        {
+          "id": "file:public/driver-preview.html",
+          "ok": true,
+          "note": "exists"
+        },
+        {
+          "id": "file:apps/driver/routes.js",
+          "ok": true,
+          "note": "exists"
+        },
+        {
+          "id": "section:renderEarnings",
+          "ok": true,
+          "note": "implemented"
+        },
+        {
+          "id": "section:renderNotifications",
+          "ok": true,
+          "note": "implemented"
+        },
+        {
+          "id": "section:renderWallet",
+          "ok": true,
+          "note": "implemented"
+        },
+        {
+          "id": "api:router.get(\"/orders\"",
+          "ok": true,
+          "note": "routed"
+        },
+        {
+          "id": "api:router.get(\"/wallet\"",
+          "ok": true,
+          "note": "routed"
+        },
+        {
+          "id": "api:router.get(\"/earnings\"",
+          "ok": true,
+          "note": "routed"
+        },
+        {
+          "id": "unit_tests",
+          "ok": true,
+          "note": "0 tests passed"
+        }
+      ]
+    },
+    "service": {
+      "result": "PASS",
+      "checks": [
+        {
+          "id": "live",
+          "ok": true,
+          "note": "portalLaunch live flag"
+        },
+        {
+          "id": "file:public/assets/service-preview.js",
+          "ok": true,
+          "note": "exists"
+        },
+        {
+          "id": "file:public/service-preview.html",
+          "ok": true,
+          "note": "exists"
+        },
+        {
+          "id": "file:apps/services/routes.js",
+          "ok": true,
+          "note": "exists"
+        },
+        {
+          "id": "section:renderSchedule",
+          "ok": true,
+          "note": "implemented"
+        },
+        {
+          "id": "section:renderDashboard",
+          "ok": true,
+          "note": "implemented"
+        },
+        {
+          "id": "section:renderRequests",
+          "ok": true,
+          "note": "implemented"
+        },
+        {
+          "id": "api:/me/dashboard",
+          "ok": true,
+          "note": "routed"
+        },
+        {
+          "id": "api:/me/schedule",
+          "ok": true,
+          "note": "routed"
+        },
+        {
+          "id": "unit_tests",
+          "ok": true,
+          "note": "0 tests passed"
+        }
+      ]
+    },
+    "transport": {
+      "result": "PASS",
+      "checks": [
+        {
+          "id": "live",
+          "ok": true,
+          "note": "portalLaunch live flag"
+        },
+        {
+          "id": "file:public/assets/transport-preview.js",
+          "ok": true,
+          "note": "exists"
+        },
+        {
+          "id": "file:public/transport-preview.html",
+          "ok": true,
+          "note": "exists"
+        },
+        {
+          "id": "file:apps/services/routes.js",
+          "ok": true,
+          "note": "exists"
+        },
+        {
+          "id": "section:renderFleet",
+          "ok": true,
+          "note": "implemented"
+        },
+        {
+          "id": "section:renderPricing",
+          "ok": true,
+          "note": "implemented"
+        },
+        {
+          "id": "section:renderTransportOrders",
+          "ok": true,
+          "note": "implemented"
+        },
+        {
+          "id": "api:/me/fleet",
+          "ok": true,
+          "note": "routed"
+        },
+        {
+          "id": "api:/me/pricing",
+          "ok": true,
+          "note": "routed"
+        },
+        {
+          "id": "unit_tests",
+          "ok": true,
+          "note": "0 tests passed"
+        }
+      ]
+    }
+  },
+  "summary": [
+    {
+      "portal": "merchant",
+      "result": "PASS"
+    },
+    {
+      "portal": "driver",
+      "result": "PASS"
+    },
+    {
+      "portal": "service",
+      "result": "PASS"
+    },
+    {
+      "portal": "transport",
+      "result": "PASS"
+    }
+  ]
+}

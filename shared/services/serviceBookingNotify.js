@@ -6,6 +6,7 @@ const { notifyHomeServiceProvidersCascade } = require("./homeServiceNotify");
 const { providerTypesMatchingBooking } = require("../utils/serviceProviderTypes");
 const { notifyInternalDeliveryOrder } = require("./internalDeliveryNotify");
 const { isCarTransportBooking, notifyCarTransportProviders } = require("./carTransportNotify");
+const { notifyProvidersInAppByPhones } = require("./notificationEvents");
 
 async function getServiceProviderPhones(sb, bookingType) {
   const matchTypes = providerTypesMatchingBooking(bookingType);
@@ -78,6 +79,11 @@ async function notifyProvidersForBooking(sb, booking) {
   }
   const phones = await getServiceProviderPhones(sb, booking.service_type);
   await sendProviderBookingWhatsApp(phones, booking);
+  try {
+    await notifyProvidersInAppByPhones(sb, booking, phones);
+  } catch (e) {
+    console.error("[serviceBookingNotify] provider in-app:", e && (e.message || e));
+  }
 }
 
 module.exports = {

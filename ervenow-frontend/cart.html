@@ -5,11 +5,11 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover" />
-    <script src="/assets/viewport-fit.js?erv=20260612e"></script>
+    <script src="/assets/viewport-fit.js?erv=20260612"></script>
     <meta name="description" content="يتم تفعيل الحساب بعد المراجعة واعتماده من إدارة ERVENOW." />
     <title>ERVENOW | إتمام الطلب</title>
     <link rel="stylesheet" href="/assets/styles.css" />
-    <link rel="stylesheet" href="/assets/guest-shell.css?erv=20260612e" />
+    <link rel="stylesheet" href="/assets/guest-shell.css?erv=20260612" />
     <link rel="stylesheet" href="/assets/cart-luxe.css" />
     <link rel="stylesheet" href="/assets/cart-shell.css" />
     <link rel="stylesheet" href="/assets/cart-page.css" />
@@ -31,7 +31,7 @@
         <nav class="dash-site-header__nav" aria-label="التنقل الرئيسي">
           <div class="dash-site-header__links">
             <a class="dash-site-header__link" href="/" data-nav="home">الرئيسية</a>
-            <a class="dash-site-header__link is-active" href="/dashboard" data-nav="guest" aria-current="page">لوحة الزائر</a>
+            <a class="dash-site-header__link is-active" href="/dashboard" data-nav="guest" aria-current="page">منصة ERVENOW</a>
             <a class="dash-site-header__link" href="/track" data-nav="track">تتبع الحي</a>
             <a class="dash-site-header__link dash-site-header__link--cta" href="/login?role=customer" data-nav="login">دخول</a>
           </div>
@@ -48,7 +48,7 @@
             <span class="dash-header-cart__badge" id="cartCount" data-empty="true">0</span>
           </a>
         </div>
-        <a class="dash-site-header__btn dash-site-header__btn--primary" href="/login?role=customer" id="switchAccount">تسجيل الدخول</a>
+        <a class="dash-site-header__btn dash-site-header__btn--primary" href="/login?role=customer" id="switchAccount">دخول الأعضاء</a>
       </div>
     </header>
 
@@ -104,11 +104,11 @@
 
     <script src="/assets/guestBrowse.js"></script>
     <script src="/assets/api-config.js"></script>
-    <script src="/assets/api.js?erv=20260612e"></script>
-    <script src="/assets/cart.js?erv=20260612e"></script>
+    <script src="/assets/api.js?erv=20260612"></script>
+    <script src="/assets/cart.js?erv=20260612"></script>
     <script src="/assets/cart-ui.js"></script>
     <script src="/assets/service-cart.js"></script>
-    <script src="/assets/guest-shell.js?erv=20260612e"></script>
+    <script src="/assets/guest-shell.js?erv=20260612"></script>
     <script>
       ErvenowGuestShell.init({ activeNav: "guest", pageTag: "إتمام الطلب" });
 
@@ -142,7 +142,7 @@
           if (!added || added.ok === false) {
             sessionStorage.setItem(
               "ervenow:cart-flash",
-              (added && added.message) || "تعذر إضافة طلب التوصيل — أعد المحاولة من لوحة الزائر."
+              (added && added.message) || "تعذر إضافة طلب التوصيل — أعد المحاولة من منصة ERVENOW."
             );
             return;
           }

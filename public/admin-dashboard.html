@@ -3643,7 +3643,7 @@
       }
 
       function confirmAccountBlock() {
-        return window.confirm("حظر هذا الحساب؟ لن يتمكن من تسجيل الدخول أو استخدام خدمات المنصة.");
+        return window.confirm("حظر هذا الحساب؟ لن يتمكن من دخول الأعضاء أو استخدام خدمات المنصة.");
       }
 
       function fmtMoney(v) {
@@ -5170,7 +5170,7 @@
           var rejected = status === "rejected";
           var stLabel = blocked ? "محظور" : pending ? "بانتظار الموافقة" : rejected ? "مرفوض" : "معتمد";
           item.innerHTML =
-            "<strong>" + (u.name || "زائر المنصة") + "</strong>" +
+            "<strong>" + (u.name || "ضيف ERVENOW") + "</strong>" +
             "<div>الجوال: " + (u.phone || "—") + "</div>" +
             "<div>الحالة: " + stLabel + "</div>";
           var row = document.createElement("div");

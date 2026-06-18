@@ -36,6 +36,15 @@
     return /^\/checkout(\/|$)/.test(p) || /^\/cart(\/|$)/.test(p) || /^\/pay(\/|$)/.test(p);
   }
 
+  /** بوابات موحّدة — بدون شريط سفلي للمنصة الرئيسية */
+  function isUnifiedPortalPage() {
+    try {
+      var p = String(global.location.pathname || "").replace(/\.html$/i, "");
+      if (/\/(driver|merchant|customer|service|transport)-preview\/?$/.test(p)) return true;
+    } catch (e) {}
+    return !!(document.body && document.body.classList.contains("pf-page"));
+  }
+
   function mobileHeaderReservePx() {
     if (document.body && document.body.classList.contains("lp-home-premium")) return 56;
     if (document.body && document.body.classList.contains("guest-shell-page")) return 56;
@@ -50,7 +59,7 @@
   }
 
   function injectMobileFoundationCss() {
-    if (!isMobileShellViewport() || isPaymentFlowPath()) return;
+    if (!isMobileShellViewport() || isPaymentFlowPath() || isUnifiedPortalPage()) return;
     if (document.body && document.body.classList.contains("erv-preview-lab")) return;
     if (document.querySelector('link[href*="mobile-foundation.css"]')) return;
     var link = document.createElement("link");
@@ -60,7 +69,7 @@
   }
 
   function ensureMobileFoundationJs() {
-    if (!isMobileShellViewport() || isPaymentFlowPath()) return;
+    if (!isMobileShellViewport() || isPaymentFlowPath() || isUnifiedPortalPage()) return;
     if (document.body && document.body.classList.contains("erv-preview-lab")) return;
     if (document.querySelector('script[src*="mobile-foundation.js"]')) return;
     var s = document.createElement("script");
@@ -70,7 +79,7 @@
   }
 
   function ensureMobileOrdersNavBadgeJs() {
-    if (!isMobileShellViewport() || isPaymentFlowPath()) return;
+    if (!isMobileShellViewport() || isPaymentFlowPath() || isUnifiedPortalPage()) return;
     if (document.body && document.body.classList.contains("erv-preview-lab")) return;
     if (document.querySelector('script[src*="mobile-orders-nav-badge.js"]')) return;
     var s = document.createElement("script");
@@ -80,7 +89,7 @@
   }
 
   function injectMobileHarmonyCritical() {
-    if (!isMobileShellViewport() || isPaymentFlowPath()) return;
+    if (!isMobileShellViewport() || isPaymentFlowPath() || isUnifiedPortalPage()) return;
     if (document.body && document.body.classList.contains("erv-preview-lab")) return;
     if (document.getElementById("ervMobileHarmonyCritical")) return;
     var el = document.createElement("style");
@@ -121,7 +130,7 @@
       return;
     }
     root.classList.add("erv-mobile-shell");
-    if (isPaymentFlowPath()) root.classList.add("erv-mobile-no-nav");
+    if (isPaymentFlowPath() || isUnifiedPortalPage()) root.classList.add("erv-mobile-no-nav");
     else root.classList.remove("erv-mobile-no-nav");
     applyMobileShellHeaderVars();
     injectMobileFoundationCss();
@@ -129,7 +138,7 @@
   }
 
   function ensureBottomNavShell() {
-    if (!isMobileShellViewport() || isPaymentFlowPath() || !document.body) return;
+    if (!isMobileShellViewport() || isPaymentFlowPath() || isUnifiedPortalPage() || !document.body) return;
     var nav = document.getElementById("ervMobileBottomNav");
     if (!nav) {
       nav = document.createElement("nav");
