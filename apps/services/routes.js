@@ -1,7 +1,7 @@
 const express = require("express");
 const { requireAuth, optionalAuth } = require("../../shared/middleware/auth");
 const { denyUnlessCanPlaceOrders } = require("../../shared/middleware/platformAccess");
-const { requireRole } = require("../../shared/middleware/roles");
+const { requireRole, requireServiceProviderRole, requireServiceProviderOrAdmin } = require("../../shared/middleware/roles");
 const { createServiceClient } = require("../../shared/config/supabase");
 const { ok, fail } = require("../../shared/utils/helpers");
 const { sendWhatsApp } = require("../../shared/utils/whatsapp");
@@ -28,7 +28,7 @@ const { currentGasRadiusKm, providerCoords, providerWithinGasRadius } = require(
 const { usersQueryResilient } = require("../../shared/utils/usersGeoSelect");
 const { broadcastDriverUpdate, broadcastOrderPatch, orderPatchFromRow } = require("../../shared/lib/trackingSocket");
 const { getWalletPayloadWithLedgerFallback } = require("../../shared/utils/ledgerWallet");
-const { resolvePortalRole } = require("../../shared/utils/resolvePortalRole");
+const { resolvePortalRole, portalRoleForProvider } = require("../../shared/utils/resolvePortalRole");
 const { filterOrdersForPortal } = require("../../shared/utils/orderPortalRouting");
 const {
   bookingTypesForProvider,
@@ -91,13 +91,6 @@ function normalizeQty(v) {
   const n = Number(v);
   if (!Number.isFinite(n) || n < 1) return 1;
   return Math.max(1, Math.floor(n));
-}
-
-function portalRoleForProvider(appUser, profile) {
-  return resolvePortalRole({
-    role: (profile && profile.role) || (appUser && appUser.role) || "service",
-    service_type: profile && profile.service_type,
-  }).portalRole;
 }
 
 function filterBookingsForProvider(rows, providerId, providerType, providerDistrict, _providerVehicleType, providerProfile) {
@@ -412,7 +405,7 @@ router.get("/providers", async (req, res) => {
   }
 });
 
-router.get("/me/dashboard", requireAuth, requireRole("service"), async (req, res) => {
+router.get("/me/dashboard", requireAuth, requireServiceProviderRole(), async (req, res) => {
   try {
     const sb = req.supabase || createServiceClient();
     const uid = req.appUser.id;
@@ -537,7 +530,7 @@ router.get("/me/dashboard", requireAuth, requireRole("service"), async (req, res
   }
 });
 
-router.get("/me/schedule", requireAuth, requireRole("service"), async (req, res) => {
+router.get("/me/schedule", requireAuth, requireServiceProviderRole(), async (req, res) => {
   try {
     const sb = req.supabase || createServiceClient();
     const uid = req.appUser.id;
@@ -590,7 +583,7 @@ router.get("/me/schedule", requireAuth, requireRole("service"), async (req, res)
   }
 });
 
-router.get("/me/fleet", requireAuth, requireRole("service"), async (req, res) => {
+router.get("/me/fleet", requireAuth, requireServiceProviderRole(), async (req, res) => {
   try {
     const sb = req.supabase || createServiceClient();
     const uid = req.appUser.id;
@@ -642,7 +635,7 @@ router.get("/me/fleet", requireAuth, requireRole("service"), async (req, res) =>
   }
 });
 
-router.get("/me/pricing", requireAuth, requireRole("service"), async (req, res) => {
+router.get("/me/pricing", requireAuth, requireServiceProviderRole(), async (req, res) => {
   try {
     const sb = req.supabase || createServiceClient();
     const uid = req.appUser.id;
@@ -728,7 +721,7 @@ router.get("/bookings", requireAuth, async (req, res) => {
   }
 });
 
-router.post("/bookings/:id/reserve", requireAuth, requireRole("service"), async (req, res) => {
+router.post("/bookings/:id/reserve", requireAuth, requireServiceProviderRole(), async (req, res) => {
   try {
     const sb = req.supabase || createServiceClient();
     const uid = req.appUser.id;
@@ -824,7 +817,7 @@ router.post("/bookings/:id/reserve", requireAuth, requireRole("service"), async 
   }
 });
 
-router.post("/bookings/:id/location", requireAuth, requireRole("service"), async (req, res) => {
+router.post("/bookings/:id/location", requireAuth, requireServiceProviderRole(), async (req, res) => {
   try {
     const sb = req.supabase || createServiceClient();
     const uid = req.appUser.id;
@@ -987,7 +980,7 @@ router.post("/checkout", optionalAuth, async (req, res) => {
   }
 });
 
-router.patch("/bookings/:id/status", requireAuth, requireRole("service", "admin"), async (req, res) => {
+router.patch("/bookings/:id/status", requireAuth, requireServiceProviderOrAdmin(), async (req, res) => {
   try {
     const nextStatus = String(req.body?.status || req.body?.delivery_status || "").trim().toLowerCase();
     if (!nextStatus) return fail(res, "status required", 400);
@@ -1073,7 +1066,7 @@ router.post("/bookings/:id/rate", requireAuth, requireRole("customer"), async (r
   }
 });
 
-router.get("/me/checkout-payment-methods", requireAuth, requireRole("service"), async (req, res) => {
+router.get("/me/checkout-payment-methods", requireAuth, requireServiceProviderRole(), async (req, res) => {
   try {
     const sb = createServiceClient();
     if (!sb) return fail(res, "قاعدة البيانات غير جاهزة", 503);
@@ -1089,7 +1082,7 @@ router.get("/me/checkout-payment-methods", requireAuth, requireRole("service"), 
   }
 });
 
-router.patch("/me/checkout-payment-methods", requireAuth, requireRole("service"), async (req, res) => {
+router.patch("/me/checkout-payment-methods", requireAuth, requireServiceProviderRole(), async (req, res) => {
   try {
     const sb = createServiceClient();
     if (!sb) return fail(res, "قاعدة البيانات غير جاهزة", 503);

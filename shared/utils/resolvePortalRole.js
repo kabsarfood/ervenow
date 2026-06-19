@@ -99,6 +99,9 @@ function resolvePortalRole(user) {
   }
 
   if (rawRole === "driver") {
+    if (isTransportPortalType(serviceType)) {
+      return { portalRole: "transport", unknownRole: false, unknownServiceType: false, rawRole, serviceType };
+    }
     return { portalRole: "driver", unknownRole: false, unknownServiceType: false, rawRole, serviceType };
   }
 
@@ -147,6 +150,18 @@ function resolvePostLoginPath(user) {
   return portalPathForRole(resolved.portalRole);
 }
 
+/**
+ * بوابة مزوّد الخدمة/النقل — نفس منطق apps/services/routes.js
+ * @param {{ role?: string }|null|undefined} appUser
+ * @param {{ role?: string, service_type?: string|null }|null|undefined} profile
+ */
+function portalRoleForProvider(appUser, profile) {
+  return resolvePortalRole({
+    role: (profile && profile.role) || (appUser && appUser.role) || "service",
+    service_type: profile && profile.service_type,
+  }).portalRole;
+}
+
 module.exports = {
   UNIFIED_PORTAL_ROLES,
   OPERATIONAL_PORTAL_ROLES,
@@ -161,6 +176,7 @@ module.exports = {
   isTransportPortalType,
   isServicePortalType,
   resolvePortalRole,
+  portalRoleForProvider,
   portalPathForRole: portalPathForRoleReexport,
   portalPreviewPathForRole,
   isPortalLive,

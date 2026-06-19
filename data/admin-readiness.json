@@ -1,10 +1,10 @@
 {
-  "updated_at": "2026-06-19T12:32:53.955Z",
+  "updated_at": "2026-06-19T19:00:46.121Z",
   "portal_visits": {
     "customer": {
-      "visits": 28,
+      "visits": 29,
       "unique_users": {},
-      "last_at": "2026-06-18T18:53:52.649Z"
+      "last_at": "2026-06-19T18:35:25.486Z"
     },
     "merchant": {
       "visits": 80,
@@ -12,14 +12,14 @@
       "last_at": "2026-06-19T12:00:40.637Z"
     },
     "driver": {
-      "visits": 268,
+      "visits": 291,
       "unique_users": {},
-      "last_at": "2026-06-19T12:32:53.955Z"
+      "last_at": "2026-06-19T19:00:46.121Z"
     },
     "service": {
-      "visits": 145,
+      "visits": 151,
       "unique_users": {},
-      "last_at": "2026-06-19T11:47:28.861Z"
+      "last_at": "2026-06-19T18:31:22.765Z"
     },
     "transport": {
       "visits": 109,
@@ -41,15 +41,15 @@
       "active_users": {}
     },
     "driver": {
-      "visits": 223,
+      "visits": 246,
       "unique_users": {},
-      "last_at": "2026-06-19T12:32:53.955Z",
+      "last_at": "2026-06-19T19:00:46.121Z",
       "active_users": {}
     },
     "service": {
-      "visits": 123,
+      "visits": 129,
       "unique_users": {},
-      "last_at": "2026-06-19T11:47:28.861Z",
+      "last_at": "2026-06-19T18:31:22.765Z",
       "active_users": {}
     },
     "transport": {
@@ -89,6 +89,26 @@
   "user_snapshots": {},
   "broadcast_history": [],
   "redirect_events": [
+    {
+      "at": "2026-06-19T18:35:25.486Z",
+      "portal": "customer",
+      "role": "customer",
+      "path": "/start-now",
+      "success": true,
+      "raw_role": "customer",
+      "service_type": null,
+      "user_id": null
+    },
+    {
+      "at": "2026-06-19T18:32:40.051Z",
+      "portal": "driver",
+      "role": "driver",
+      "path": "/driver-preview",
+      "success": true,
+      "raw_role": "driver",
+      "service_type": "pickup_truck",
+      "user_id": null
+    },
     {
       "at": "2026-06-19T12:22:36.620Z",
       "portal": "driver",

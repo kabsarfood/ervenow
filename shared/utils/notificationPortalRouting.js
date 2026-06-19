@@ -95,23 +95,41 @@ async function createRoutedNotification(sb, input) {
  * @param {object} notif
  * @param {{ portalRole?: string, role?: string, service_type?: string|null }|string} portalContext
  */
+function eventPortalFromNotification(notif) {
+  const payload = normalizePayload(notif && notif.payload);
+  const event = String(
+    (notif && notif.type) || payload.event || (notif && notif.event) || ""
+  ).toLowerCase();
+  if (event.startsWith("transport.")) return "transport";
+  if (event.startsWith("service.")) return "service";
+  return null;
+}
+
 function notificationBelongsToPortal(notif, portalContext) {
   const userPortal =
     typeof portalContext === "string"
       ? portalContext
       : portalContext.portalRole || resolveAppUserPortal(portalContext);
 
-  const payload = (notif && notif.payload) || {};
+  const payload = normalizePayload(notif && notif.payload);
   const targetPortal = String(payload.target_portal || payload.portal_type || "").toLowerCase();
-  if (!targetPortal) return true;
-
   const p = String(userPortal || "").toLowerCase();
-  if (p === targetPortal) return true;
 
-  if (p === "service" && targetPortal === "service") return true;
-  if (p === "transport" && targetPortal === "transport") return true;
+  if (targetPortal === "*" || targetPortal === "all") return true;
 
-  return false;
+  if (targetPortal) {
+    if (p === targetPortal) return true;
+    if (p === "service" && targetPortal === "service") return true;
+    if (p === "transport" && targetPortal === "transport") return true;
+    return false;
+  }
+
+  const inferred = eventPortalFromNotification(notif);
+  if (inferred && (p === "service" || p === "transport")) {
+    return p === inferred;
+  }
+
+  return true;
 }
 
 /**
@@ -130,6 +148,7 @@ module.exports = {
   mapAppRoleToRecipientType,
   enrichRoutedNotificationInput,
   createRoutedNotification,
+  eventPortalFromNotification,
   notificationBelongsToPortal,
   filterNotificationsForPortal,
 };

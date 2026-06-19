@@ -23,6 +23,7 @@ describe("resolvePortalRole", () => {
     expect(resolvePortalRole({ role: "service", service_type: "pickup_truck" }).portalRole).toBe("transport");
     expect(resolvePortalRole({ role: "service", service_type: "car_transport" }).portalRole).toBe("transport");
     expect(resolvePortalRole({ role: "service", service_type: "gas_delivery" }).portalRole).toBe("transport");
+    expect(resolvePortalRole({ role: "driver", service_type: "pickup_truck" }).portalRole).toBe("transport");
   });
 
   test("defaults service role without service_type to service portal", () => {

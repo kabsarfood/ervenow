@@ -16,6 +16,22 @@
   var lastSentAt = 0;
   var sendingLocation = false;
   var POLL_MS = 8000;
+
+  var TRANSPORT_PROVIDER_TYPES = {
+    pickup_truck: 1,
+    car_transport: 1,
+    vehicle_transfer: 1,
+    internal_delivery: 1,
+    furniture_move: 1,
+    gas_cylinder_swap: 1,
+    gas_central_refill: 1,
+    gas_delivery: 1,
+  };
+
+  function isTransportProviderProfile(profile) {
+    var st = String((profile && profile.service_type) || "").toLowerCase();
+    return !!TRANSPORT_PROVIDER_TYPES[st];
+  }
   var PRESENCE_MS = 15000;
 
   var state = {
@@ -834,6 +850,11 @@
       });
       if (!me) {
         shell.showLogin();
+        return;
+      }
+      if (isTransportProviderProfile(me.profile)) {
+        var hash = global.location.hash || "";
+        global.location.replace("/transport-preview" + hash);
         return;
       }
       var role = String((me.profile && me.profile.role) || "").toLowerCase();

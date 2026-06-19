@@ -7,6 +7,11 @@
 
   var shell = null;
   var W = null;
+  var boardSocket = null;
+  var boardRefreshTimer = null;
+  var boardPollTimer = null;
+  var notifCenterApi = null;
+  var BOARD_POLL_MS = 8000;
 
   var state = {
     storeId: null,
@@ -79,6 +84,101 @@
     return PlatformAPI.api(path, opts);
   }
 
+  async function loadOrderBoard() {
+    try {
+      state.board = await api("/api/store/order-board");
+    } catch (_) {
+      state.board = state.board || { orders: [], status_counts: {} };
+    }
+  }
+
+  function storeIdFromSocketMsg(msg) {
+    if (!msg) return null;
+    if (msg.store_id != null) return msg.store_id;
+    if (msg.patch && msg.patch.store_id != null) return msg.patch.store_id;
+    return null;
+  }
+
+  function orderSectionsNeedRefresh() {
+    var section = shell ? shell.getActiveSection() : state.activeSection;
+    return section === "dashboard" || section === "orders";
+  }
+
+  function scheduleBoardRefresh() {
+    if (boardRefreshTimer) clearTimeout(boardRefreshTimer);
+    boardRefreshTimer = setTimeout(function () {
+      boardRefreshTimer = null;
+      refreshOrderBoardLive().catch(function () {});
+    }, 350);
+  }
+
+  async function refreshOrderBoardLive() {
+    await loadOrderBoard();
+    if (orderSectionsNeedRefresh()) renderMain();
+  }
+
+  function disconnectOrderBoardSocket() {
+    if (boardSocket) {
+      try {
+        boardSocket.disconnect();
+      } catch (_) {}
+      boardSocket = null;
+    }
+  }
+
+  function connectOrderBoardSocket() {
+    if (boardSocket || typeof global.io === "undefined") return;
+    if (!state.storeId) return;
+    try {
+      boardSocket = global.io({
+        path: "/socket.io/",
+        transports: ["websocket", "polling"],
+        auth: {
+          token:
+            (global.PlatformAPI && PlatformAPI.getToken && PlatformAPI.getToken()) ||
+            localStorage.getItem("ervenow_access_token") ||
+            "",
+        },
+      });
+      function onStoreOrderEvent(msg) {
+        if (!msg || !state.storeId) return;
+        if (String(storeIdFromSocketMsg(msg) || "") !== String(state.storeId)) return;
+        scheduleBoardRefresh();
+      }
+      boardSocket.on("order:patch", onStoreOrderEvent);
+      boardSocket.on("order:new", onStoreOrderEvent);
+      boardSocket.on("order:cancelled", onStoreOrderEvent);
+    } catch (_) {}
+  }
+
+  function startOrderBoardPolling() {
+    stopOrderBoardPolling();
+    boardPollTimer = setInterval(function () {
+      refreshOrderBoardLive().catch(function () {});
+    }, BOARD_POLL_MS);
+  }
+
+  function stopOrderBoardPolling() {
+    if (boardPollTimer) {
+      clearInterval(boardPollTimer);
+      boardPollTimer = null;
+    }
+  }
+
+  function startOrderBoardLive() {
+    connectOrderBoardSocket();
+    startOrderBoardPolling();
+  }
+
+  function stopOrderBoardLive() {
+    if (boardRefreshTimer) {
+      clearTimeout(boardRefreshTimer);
+      boardRefreshTimer = null;
+    }
+    stopOrderBoardPolling();
+    disconnectOrderBoardSocket();
+  }
+
   async function loadCoreData() {
     var my = await api("/api/store/my-store");
     state.store = my.store || my;
@@ -91,6 +191,7 @@
     } catch (_) {
       state.board = { orders: dash.orders || [], status_counts: {} };
     }
+    if (state.storeId) connectOrderBoardSocket();
     if (state.storeId) {
       var prod = await api(
         "/api/store/products?store_id=" + encodeURIComponent(state.storeId) + "&limit=80&offset=0"
@@ -1030,7 +1131,8 @@
       await loadCoreData();
       await loadMerchantCategories();
       renderMain();
-      shell.mountNotifications();
+      notifCenterApi = await shell.mountNotifications();
+      startOrderBoardLive();
     } catch (e) {
       showMsg(e.message || "تعذّر تحميل البيانات", false);
     }
@@ -1085,5 +1187,10 @@
     await boot();
   }
 
-  global.ErvenowMerchantPreview = { init: init, navigate: navigate };
+  global.ErvenowMerchantPreview = {
+    init: init,
+    navigate: navigate,
+    stop: stopOrderBoardLive,
+    refreshOrders: refreshOrderBoardLive,
+  };
 })(typeof window !== "undefined" ? window : global);

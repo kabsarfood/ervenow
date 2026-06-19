@@ -7,6 +7,9 @@
 
   var shell = null;
   var W = null;
+  var notifOpsApi = null;
+  var pollTimer = null;
+  var POLL_MS = 8000;
 
   var state = {
     dashboard: null,
@@ -624,6 +627,34 @@
     }
   }
 
+  function sectionsWithLiveBookings(section) {
+    return section === "dashboard" || section === "requests" || section === "schedule";
+  }
+
+  async function pollTick() {
+    if (!shell) return;
+    var section = shell.getActiveSection();
+    await loadData();
+    if (section === "schedule") await loadSchedule();
+    paintHeader();
+    if (sectionsWithLiveBookings(section)) renderMain(section);
+    if (notifOpsApi && notifOpsApi.refresh) await notifOpsApi.refresh();
+  }
+
+  function startPolling() {
+    stopPolling();
+    pollTimer = setInterval(function () {
+      pollTick().catch(function () {});
+    }, POLL_MS);
+  }
+
+  function stopPolling() {
+    if (pollTimer) {
+      clearInterval(pollTimer);
+      pollTimer = null;
+    }
+  }
+
   function isServiceProfile(p) {
     var role = String((p && p.role) || "").toLowerCase();
     if (role !== "service") return false;
@@ -701,12 +732,13 @@
       await loadData();
       shell.showApp();
       renderMain(shell.getActiveSection());
-      shell.mountNotifications();
+      notifOpsApi = await shell.mountNotifications();
+      startPolling();
     } catch (e) {
       shell.showLogin();
       shell.showMessage((e && e.message) || "تعذّر تحميل البوابة", false);
     }
   }
 
-  global.ErvenowServicePreview = { init: init, refresh: loadData };
+  global.ErvenowServicePreview = { init: init, refresh: loadData, stop: stopPolling };
 })(typeof window !== "undefined" ? window : global);

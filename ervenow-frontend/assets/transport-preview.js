@@ -26,6 +26,9 @@
 
   var shell = null;
   var W = null;
+  var notifOpsApi = null;
+  var pollTimer = null;
+  var POLL_MS = 8000;
 
   var state = {
     dashboard: null,
@@ -672,11 +675,39 @@
     }
   }
 
+  function sectionsWithLiveBookings(section) {
+    return section === "dashboard" || section === "transport-orders";
+  }
+
+  async function pollTick() {
+    if (!shell) return;
+    var section = shell.getActiveSection();
+    await loadData();
+    paintHeader();
+    if (sectionsWithLiveBookings(section)) renderMain(section);
+    if (notifOpsApi && notifOpsApi.refresh) await notifOpsApi.refresh();
+  }
+
+  function startPolling() {
+    stopPolling();
+    pollTimer = setInterval(function () {
+      pollTick().catch(function () {});
+    }, POLL_MS);
+  }
+
+  function stopPolling() {
+    if (pollTimer) {
+      clearInterval(pollTimer);
+      pollTimer = null;
+    }
+  }
+
   function canAccessTransport(me) {
     if (!me || !me.profile) return false;
     var role = String(me.profile.role || "").toLowerCase();
     if (role === "admin") return true;
-    return role === "service" && isTransportProfile(me.profile);
+    if (!isTransportProfile(me.profile)) return false;
+    return role === "service" || role === "driver";
   }
 
   async function init() {
@@ -741,12 +772,13 @@
       await loadData();
       shell.showApp();
       renderMain(shell.getActiveSection());
-      shell.mountNotifications();
+      notifOpsApi = await shell.mountNotifications();
+      startPolling();
     } catch (e) {
       shell.showLogin();
       shell.showMessage((e && e.message) || "تعذّر تحميل البوابة", false);
     }
   }
 
-  global.ErvenowTransportPreview = { init: init, refresh: loadData };
+  global.ErvenowTransportPreview = { init: init, refresh: loadData, stop: stopPolling };
 })(typeof window !== "undefined" ? window : global);
