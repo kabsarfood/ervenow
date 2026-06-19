@@ -25,14 +25,26 @@ function carBookingLocation(booking) {
   const d = orderData(booking);
   const car = d.car && typeof d.car === "object" ? d.car : {};
   const from = d.from_location && typeof d.from_location === "object" ? d.from_location : {};
+  const to = d.to_location && typeof d.to_location === "object" ? d.to_location : {};
   return {
-    district: String(booking.district || car.pickup_district_label || from.district || "").trim(),
+    district: String(
+      booking.district ||
+        car.pickup_district_label ||
+        d.pickup_district_label ||
+        from.district ||
+        from.city ||
+        d.from_city ||
+        ""
+    ).trim(),
     location: String(
       booking.service_location ||
         booking.pickup_address ||
         d.pickup_maps_url ||
         from.address ||
         booking.location ||
+        d.from_city ||
+        d.to_city ||
+        to.city ||
         ""
     ).trim(),
     pickupUrl: String(d.pickup_maps_url || "").trim(),
@@ -54,6 +66,7 @@ function providerMatchesCarBooking(providerDistrict, booking) {
   const loc = carBookingLocation(booking);
   const hay = normDistrictText(`${loc.district} ${loc.location}`);
   if (!hay.trim()) return true;
+  if (!normDistrictText(providerDistrict)) return true;
   return providerAreaMatches("pickup_truck", providerDistrict, loc.district, loc.location);
 }
 

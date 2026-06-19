@@ -30,37 +30,46 @@
     );
   }
 
+  function renderLogoutNavItem() {
+    return (
+      '<button type="button" class="pf-nav__item pf-nav__item--logout pf-nav__item--no-icon" data-pf-action="logout" title="تسجيل الخروج">' +
+      "<span>خروج</span></button>"
+    );
+  }
+
   function renderNavItems(navItems, activeSection) {
-    return (navItems || [])
-      .map(function (item) {
-        if (!item) return "";
-        if (item.href) {
+    return (
+      (navItems || [])
+        .map(function (item) {
+          if (!item) return "";
+          if (item.href) {
+            return (
+              '<a class="pf-nav__item" href="' +
+              esc(item.href) +
+              '"><span class="pf-nav__icon" aria-hidden="true">' +
+              esc(item.icon) +
+              "</span><span>" +
+              esc(item.label) +
+              "</span></a>"
+            );
+          }
+          var active = item.id === activeSection;
           return (
-            '<a class="pf-nav__item" href="' +
-            esc(item.href) +
+            '<button type="button" class="pf-nav__item' +
+            (active ? " is-active" : "") +
+            '" data-pf-section="' +
+            esc(item.id) +
+            '" title="' +
+            esc(item.en || item.label) +
             '"><span class="pf-nav__icon" aria-hidden="true">' +
             esc(item.icon) +
             "</span><span>" +
             esc(item.label) +
-            "</span></a>"
+            "</span></button>"
           );
-        }
-        var active = item.id === activeSection;
-        return (
-          '<button type="button" class="pf-nav__item' +
-          (active ? " is-active" : "") +
-          '" data-pf-section="' +
-          esc(item.id) +
-          '" title="' +
-          esc(item.en || item.label) +
-          '"><span class="pf-nav__icon" aria-hidden="true">' +
-          esc(item.icon) +
-          "</span><span>" +
-          esc(item.label) +
-          "</span></button>"
-        );
-      })
-      .join("");
+        })
+        .join("") + renderLogoutNavItem()
+    );
   }
 
   function mount(sidebarEl, config, opts) {

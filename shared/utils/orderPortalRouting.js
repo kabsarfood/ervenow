@@ -17,6 +17,13 @@ const ORDER_PORTAL_TYPE_SET = new Set(ORDER_PORTAL_TYPES);
 
 const MERCHANT_ORDER_TYPES = new Set(["store", "restaurant", "delivery"]);
 
+function normServiceTypeFromOrder(order) {
+  const direct = normServiceType(order && order.service_type);
+  if (direct) return direct;
+  const d = order && order.data && typeof order.data === "object" ? order.data : {};
+  return normServiceType(d.service_type || d.legacy_service_type);
+}
+
 /**
  * @param {object|null|undefined} order
  * @returns {"merchant"|"service"|"transport"|null}
@@ -32,7 +39,7 @@ function resolveOrderPortalType(order) {
   if (ORDER_PORTAL_TYPE_SET.has(fromData)) return fromData;
 
   const ot = String(order.order_type || "").trim().toLowerCase();
-  const st = normServiceType(order.service_type);
+  const st = normServiceTypeFromOrder(order);
 
   if (ot === "service" || ot === "gas_delivery") {
     if (isTransportPortalType(st)) return "transport";
@@ -94,6 +101,7 @@ function filterOrdersForPortal(orders, portalType) {
 module.exports = {
   ORDER_PORTAL_TYPES,
   ORDER_PORTAL_TYPE_SET,
+  normServiceTypeFromOrder,
   resolveOrderPortalType,
   applyPortalTypeToOrderRow,
   orderVisibleInPortal,

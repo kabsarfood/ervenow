@@ -4,21 +4,64 @@
 
 const { logger } = require("../utils/logger");
 const { computePlatformCommission, roundMoney } = require("../utils/platformCommission");
+const { computeLedgerWalletFromAllTransactions } = require("../utils/ledgerWallet");
 
 function parseRpcRow(data) {
   return typeof data === "object" && data !== null && !Array.isArray(data) ? data : {};
+}
+
+function isLegacyInternalDeliveryDoubleFee(order) {
+  const st = String(order?.service_type || order?.data?.service_type || "").toLowerCase();
+  if (st !== "internal_delivery") return false;
+  const sub = Number(order?.order_total) || 0;
+  const del = Number(order?.delivery_fee) || 0;
+  return sub > 0 && del > 0 && Math.abs(sub - del) < 0.02;
 }
 
 function orderChargeAmount(order) {
   const withVat = Number(order?.total_with_vat);
   if (Number.isFinite(withVat) && withVat > 0) return roundMoney(withVat);
   const total = Number(order?.total_amount);
-  if (Number.isFinite(total) && total > 0) return roundMoney(total);
+  if (Number.isFinite(total) && total > 0) {
+    const sub = Number(order?.order_total) || 0;
+    const del = Number(order?.delivery_fee) || 0;
+    const vat = Number(order?.vat_amount);
+    if (isLegacyInternalDeliveryDoubleFee(order)) {
+      if (Number.isFinite(vat) && vat >= 0) return roundMoney(Math.max(sub, del) + vat);
+      return roundMoney(Math.max(sub, del) * 1.15);
+    }
+    if (Number.isFinite(vat) && vat >= 0 && Math.abs(total - (sub + del + vat)) <= 0.05) {
+      return roundMoney(total);
+    }
+    if (!Number.isFinite(vat) || vat <= 0) {
+      const expected = roundMoney((sub + del) * 1.15);
+      if (Math.abs(total - sub) < 0.02 && del <= 0) return expected;
+    }
+    return roundMoney(total);
+  }
   const sub = Number(order?.order_total) || 0;
-  const del = Number(order?.delivery_fee) || 0;
+  let del = Number(order?.delivery_fee) || 0;
+  if (isLegacyInternalDeliveryDoubleFee(order)) del = 0;
   const vat = Number(order?.vat_amount);
   if (Number.isFinite(vat) && vat >= 0) return roundMoney(sub + del + vat);
   return roundMoney((sub + del) * 1.15);
+}
+
+function resolveCheckoutGrandTotal(orders, financialIntent) {
+  const list = Array.isArray(orders) ? orders.filter(Boolean) : [];
+  const computed = roundMoney(list.reduce((s, o) => s + orderChargeAmount(o), 0));
+  const intent = roundMoney(Number(financialIntent && financialIntent.grand_total));
+  if (!(computed > 0)) {
+    if (intent > 0) return { ok: true, amount: intent };
+    return { ok: true, amount: 0 };
+  }
+  if (intent > 0 && Math.abs(intent - computed) > 0.05) {
+    logger.warn(
+      { computed, intent },
+      "[ervenowPay] financial_intent drift — charging server-computed total"
+    );
+  }
+  return { ok: true, amount: computed };
 }
 
 function merchantNetForStoreOrder(order) {
@@ -41,26 +84,47 @@ async function resolveMerchantUserIdForStore(sb, storeId) {
  * @param {string} customerId
  * @param {object[]} orders
  */
-async function applyErvenowPayForCheckoutOrders(sb, customerId, orders) {
+async function applyErvenowPayForCheckoutOrders(sb, customerId, orders, options) {
   const list = Array.isArray(orders) ? orders.filter(Boolean) : [];
   if (!list.length) return { ok: true, paid: [] };
 
-  const totalDue = roundMoney(list.reduce((s, o) => s + orderChargeAmount(o), 0));
+  const opts = options && typeof options === "object" ? options : {};
+  const totalResolved = resolveCheckoutGrandTotal(list, opts.financialIntent);
+  const totalDue = totalResolved.amount;
   if (!(totalDue > 0)) return { ok: true, paid: [] };
 
   const custId = String(customerId || "").trim();
   if (!custId) return { ok: false, reason: "missing_customer", message: "معرّف العميل مطلوب" };
 
-  const { data: balData, error: balErr } = await sb.rpc("ervenow_ledger_user_wallet_summary", {
-    p_user_id: custId,
-    p_role: "customer",
-  });
-  if (balErr) {
-    logger.error({ err: balErr.message }, "[ervenowPay] balance check");
-    return { ok: false, reason: "balance_check_failed", message: balErr.message || "تعذر التحقق من الرصيد" };
+  let balance = 0;
+  try {
+    const ledger = await computeLedgerWalletFromAllTransactions(sb, custId, "customer");
+    if (!ledger.ok) {
+      if (ledger.reason === "migration_missing") {
+        return {
+          ok: false,
+          reason: "balance_check_failed",
+          message: "نظام المحفظة غير مفعّل — تواصل مع دعم ERVENOW",
+        };
+      }
+      const { data: balData, error: balErr } = await sb.rpc("ervenow_ledger_user_wallet_summary", {
+        p_user_id: custId,
+        p_role: "customer",
+      });
+      if (balErr) {
+        logger.error({ err: balErr.message }, "[ervenowPay] balance check");
+        return { ok: false, reason: "balance_check_failed", message: balErr.message || "تعذر التحقق من الرصيد" };
+      }
+      const balRow = parseRpcRow(balData);
+      balance = roundMoney(Number(balRow.balance) || 0);
+    } else {
+      balance = roundMoney(Number(ledger.balance) || 0);
+    }
+  } catch (balEx) {
+    logger.error({ err: balEx.message || String(balEx) }, "[ervenowPay] balance check");
+    return { ok: false, reason: "balance_check_failed", message: "تعذر التحقق من الرصيد" };
   }
-  const balRow = parseRpcRow(balData);
-  const balance = roundMoney(Number(balRow.balance) || 0);
+
   if (balance < totalDue) {
     return {
       ok: false,
@@ -120,6 +184,14 @@ async function applyErvenowPayForCheckoutOrders(sb, customerId, orders) {
           balance: row.balance,
         };
       }
+      if (reason === "platform_wallet_missing") {
+        return {
+          ok: false,
+          reason,
+          message: "نظام الدفع غير مكتمل — تواصل مع دعم ERVENOW",
+          order_id: orderId,
+        };
+      }
       return {
         ok: false,
         reason,
@@ -162,6 +234,8 @@ module.exports = {
   releaseErvenowPayOnOrderComplete,
   isErvenowPayMethod,
   orderChargeAmount,
+  resolveCheckoutGrandTotal,
+  isLegacyInternalDeliveryDoubleFee,
   merchantNetForStoreOrder,
   resolveMerchantUserIdForStore,
 };

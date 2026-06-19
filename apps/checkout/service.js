@@ -224,6 +224,9 @@ async function runCheckoutInsert(sb, appUser, body, options) {
           gas_liters: data.gas_liters != null ? Number(data.gas_liters) : null,
           total_amount: total,
           payment_status: svcPaymentStatus,
+          idempotency_key: checkoutIdempotencyKey
+            ? `${checkoutIdempotencyKey}:svc:${svcIdx}:${serviceType}`
+            : null,
           data,
         });
         if (!created.ok) {
@@ -530,12 +533,15 @@ async function runCheckoutInsert(sb, appUser, body, options) {
   }
 
   if (useErvenowPay && results.length) {
-    const payResult = await applyErvenowPayForCheckoutOrders(sb, appUser.id, results);
+    const payResult = await applyErvenowPayForCheckoutOrders(sb, appUser.id, results, {
+      financialIntent: body?.financial_intent,
+    });
     if (!payResult.ok) {
       return {
         ok: false,
         message: payResult.message || "رصيد المحفظة غير كافٍ",
         status: payResult.reason === "insufficient_balance" ? 402 : 400,
+        reason: payResult.reason || null,
         balance: payResult.balance,
         required: payResult.required,
       };

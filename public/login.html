@@ -471,6 +471,37 @@
       .auth-login-page .lp-footer {
         display: none;
       }
+      /* كمبيوتر — توسيط رسائل الترحيب في منتصف البانر */
+      @media (min-width: 1025px) {
+        .auth-banner {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+        }
+        .auth-sn-hero {
+          text-align: center;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          width: 100%;
+          max-width: min(720px, 92vw);
+          margin-inline: auto;
+          padding: clamp(32px, 6vh, 56px) 24px clamp(40px, 7vh, 64px);
+        }
+        .auth-sn-hero .sn-hero__eyebrow,
+        .auth-sn-hero .sn-hero__title,
+        .auth-sn-hero .sn-hero__sub {
+          text-align: center;
+          margin-inline: auto;
+        }
+        .auth-sn-hero .sn-hero__title {
+          max-width: none;
+        }
+        .auth-sn-hero .sn-hero__sub {
+          max-width: 36rem;
+        }
+      }
     </style>
   </head>
   <body class="guest-shell-page auth-page auth-login-page" id="authBody">

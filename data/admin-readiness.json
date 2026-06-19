@@ -1,30 +1,30 @@
 {
-  "updated_at": "2026-06-18T18:41:16.020Z",
+  "updated_at": "2026-06-19T12:32:53.955Z",
   "portal_visits": {
     "customer": {
-      "visits": 27,
+      "visits": 28,
       "unique_users": {},
-      "last_at": "2026-06-16T08:05:26.848Z"
+      "last_at": "2026-06-18T18:53:52.649Z"
     },
     "merchant": {
-      "visits": 72,
-      "unique_users": {},
-      "last_at": "2026-06-18T18:41:13.580Z"
-    },
-    "driver": {
-      "visits": 115,
-      "unique_users": {},
-      "last_at": "2026-06-18T18:41:14.694Z"
-    },
-    "service": {
-      "visits": 64,
-      "unique_users": {},
-      "last_at": "2026-06-18T18:41:15.473Z"
-    },
-    "transport": {
       "visits": 80,
       "unique_users": {},
-      "last_at": "2026-06-18T18:41:16.019Z"
+      "last_at": "2026-06-19T12:00:40.637Z"
+    },
+    "driver": {
+      "visits": 268,
+      "unique_users": {},
+      "last_at": "2026-06-19T12:32:53.955Z"
+    },
+    "service": {
+      "visits": 145,
+      "unique_users": {},
+      "last_at": "2026-06-19T11:47:28.861Z"
+    },
+    "transport": {
+      "visits": 109,
+      "unique_users": {},
+      "last_at": "2026-06-18T20:54:23.313Z"
     }
   },
   "preview_visits": {
@@ -35,27 +35,27 @@
       "active_users": {}
     },
     "merchant": {
-      "visits": 71,
+      "visits": 79,
       "unique_users": {},
-      "last_at": "2026-06-18T18:41:13.580Z",
+      "last_at": "2026-06-19T12:00:40.637Z",
       "active_users": {}
     },
     "driver": {
-      "visits": 98,
+      "visits": 223,
       "unique_users": {},
-      "last_at": "2026-06-18T18:41:14.694Z",
+      "last_at": "2026-06-19T12:32:53.955Z",
       "active_users": {}
     },
     "service": {
-      "visits": 49,
+      "visits": 123,
       "unique_users": {},
-      "last_at": "2026-06-18T18:41:15.473Z",
+      "last_at": "2026-06-19T11:47:28.861Z",
       "active_users": {}
     },
     "transport": {
-      "visits": 80,
+      "visits": 109,
       "unique_users": {},
-      "last_at": "2026-06-18T18:41:16.019Z",
+      "last_at": "2026-06-18T20:54:23.313Z",
       "active_users": {}
     }
   },
@@ -76,9 +76,9 @@
       "last_at": null
     },
     "services-provider": {
-      "visits": 15,
+      "visits": 22,
       "unique_users": {},
-      "last_at": "2026-06-16T06:28:44.910Z"
+      "last_at": "2026-06-19T11:11:56.612Z"
     }
   },
   "redirect_errors": {
@@ -89,6 +89,96 @@
   "user_snapshots": {},
   "broadcast_history": [],
   "redirect_events": [
+    {
+      "at": "2026-06-19T12:22:36.620Z",
+      "portal": "driver",
+      "role": "driver",
+      "path": "/driver-preview",
+      "success": true,
+      "raw_role": "driver",
+      "service_type": null,
+      "user_id": null
+    },
+    {
+      "at": "2026-06-19T12:02:26.654Z",
+      "portal": "driver",
+      "role": "driver",
+      "path": "/driver",
+      "success": true,
+      "raw_role": "driver",
+      "service_type": "pickup_truck",
+      "user_id": null
+    },
+    {
+      "at": "2026-06-19T11:54:50.715Z",
+      "portal": "driver",
+      "role": "driver",
+      "path": "/driver",
+      "success": true,
+      "raw_role": "driver",
+      "service_type": null,
+      "user_id": null
+    },
+    {
+      "at": "2026-06-19T11:51:52.642Z",
+      "portal": "driver",
+      "role": "driver",
+      "path": "/driver",
+      "success": true,
+      "raw_role": "driver",
+      "service_type": null,
+      "user_id": null
+    },
+    {
+      "at": "2026-06-19T11:48:55.887Z",
+      "portal": "driver",
+      "role": "driver",
+      "path": "/driver",
+      "success": true,
+      "raw_role": "driver",
+      "service_type": null,
+      "user_id": null
+    },
+    {
+      "at": "2026-06-19T11:46:56.875Z",
+      "portal": "driver",
+      "role": "driver",
+      "path": "/driver",
+      "success": true,
+      "raw_role": "driver",
+      "service_type": null,
+      "user_id": null
+    },
+    {
+      "at": "2026-06-18T21:08:08.792Z",
+      "portal": "driver",
+      "role": "driver",
+      "path": "/driver-preview",
+      "success": true,
+      "raw_role": "driver",
+      "service_type": null,
+      "user_id": null
+    },
+    {
+      "at": "2026-06-18T20:21:52.960Z",
+      "portal": "transport",
+      "role": "service",
+      "path": "/transport-preview",
+      "success": true,
+      "raw_role": "service",
+      "service_type": "pickup_truck",
+      "user_id": null
+    },
+    {
+      "at": "2026-06-18T18:53:52.649Z",
+      "portal": "customer",
+      "role": "customer",
+      "path": "/start-now",
+      "success": true,
+      "raw_role": "customer",
+      "service_type": null,
+      "user_id": null
+    },
     {
       "at": "2026-06-15T18:20:53.219Z",
       "portal": "merchant",

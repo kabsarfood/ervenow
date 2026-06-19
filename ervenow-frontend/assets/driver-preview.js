@@ -7,10 +7,20 @@
 
   var shell = null;
   var W = null;
+  var notifOpsApi = null;
+  var pollTimer = null;
+  var presenceTimer = null;
+  var knownOrderIds = [];
+  var lastLat = NaN;
+  var lastLng = NaN;
+  var lastSentAt = 0;
+  var sendingLocation = false;
+  var POLL_MS = 8000;
+  var PRESENCE_MS = 15000;
 
   var state = {
     me: null,
-    orders: { ready_queue: [], active: [], completed: [], orders: [] },
+    orders: { ready_queue: [], legacy_open: [], active: [], completed: [], orders: [] },
     wallet: null,
     rating: { avg: null, count: 0 },
     activeSection: "dashboard",
@@ -18,6 +28,8 @@
     earnings: null,
     online: true,
     locationOk: false,
+    gpsActive: false,
+    lastLocationSentAt: null,
     ordersOk: false,
     walletOk: false,
     notifOk: false,
@@ -131,16 +143,158 @@
 
   function acceptRate() {
     var done = completedToday().length;
-    var ready = (state.orders.ready_queue || []).length;
+    var ready = readyQueueItems().length;
     if (!done && !ready) return "—";
     return Math.round((done / Math.max(1, done + ready)) * 100) + "%";
+  }
+
+  function isLegacyOpenOrder(o) {
+    var s = normStatus(o);
+    return (s === "new" || s === "pending") && !o.driver_id;
+  }
+
+  function readyQueueItems() {
+    var seen = {};
+    var out = [];
+    function pushList(list) {
+      (list || []).forEach(function (o) {
+        var id = String(o.id || "");
+        if (!id || seen[id]) return;
+        seen[id] = 1;
+        out.push(o);
+      });
+    }
+    pushList(state.orders.ready_queue);
+    pushList(state.orders.legacy_open);
+    return out;
+  }
+
+  function applyOrdersPayload(o) {
+    var ids = (o.orders || [])
+      .map(function (x) {
+        return String(x.id || "");
+      })
+      .filter(Boolean);
+    var newIds = ids.filter(function (id) {
+      return knownOrderIds.indexOf(id) === -1;
+    });
+    if (newIds.length && knownOrderIds.length) {
+      try {
+        if (global.ErvenowNotificationSounds && ErvenowNotificationSounds.play) {
+          ErvenowNotificationSounds.play("notify");
+        } else {
+          new Audio("/assets/sounds/EW_NOTIFY.mp3").play();
+        }
+      } catch (_e) {}
+    }
+    knownOrderIds = ids;
+    state.orders = {
+      ready_queue: o.ready_queue || [],
+      legacy_open: o.legacy_open || [],
+      active: o.active || [],
+      completed: o.completed || [],
+      orders: o.orders || [],
+    };
+  }
+
+  function shouldSendLocation(lat, lng) {
+    var now = Date.now();
+    if (!Number.isFinite(lastLat) || !Number.isFinite(lastLng)) return true;
+    var moved = Math.abs(lat - lastLat) + Math.abs(lng - lastLng) > 0.00005;
+    var timePassed = now - lastSentAt > 5000;
+    return moved || timePassed;
+  }
+
+  async function sendLocation(lat, lng) {
+    if (sendingLocation || !Number.isFinite(lat) || !Number.isFinite(lng)) return;
+    if (!shouldSendLocation(lat, lng)) return;
+    sendingLocation = true;
+    try {
+      var activeOrder =
+        (state.orders.active || []).find(function (o) {
+          var s = normStatus(o);
+          return s === "accepted" || s === "picked_up" || s === "delivering";
+        }) || null;
+      var body = { lat: lat, lng: lng };
+      if (activeOrder && activeOrder.id) body.order_id = activeOrder.id;
+      await api("/api/driver/update-location", { method: "POST", body: body });
+      lastLat = lat;
+      lastLng = lng;
+      lastSentAt = Date.now();
+      state.gpsActive = true;
+      state.lastLocationSentAt = new Date().toISOString();
+      updateOnlineUi();
+    } catch (_e) {
+      state.gpsActive = false;
+      updateOnlineUi();
+    } finally {
+      sendingLocation = false;
+    }
+  }
+
+  function startPresenceLocationLoop() {
+    if (presenceTimer != null || !navigator.geolocation) return;
+    presenceTimer = setInterval(function () {
+      if (!navigator.onLine) return;
+      navigator.geolocation.getCurrentPosition(
+        function (pos) {
+          sendLocation(pos.coords.latitude, pos.coords.longitude);
+        },
+        function () {},
+        { enableHighAccuracy: true, maximumAge: 10000, timeout: 12000 }
+      );
+    }, PRESENCE_MS);
+    navigator.geolocation.getCurrentPosition(
+      function (pos) {
+        sendLocation(pos.coords.latitude, pos.coords.longitude);
+      },
+      function () {},
+      { enableHighAccuracy: true, maximumAge: 5000, timeout: 12000 }
+    );
+  }
+
+  function stopOperationalLoops() {
+    if (pollTimer != null) {
+      clearInterval(pollTimer);
+      pollTimer = null;
+    }
+    if (presenceTimer != null) {
+      clearInterval(presenceTimer);
+      presenceTimer = null;
+    }
+  }
+
+  function startOperationalLoops() {
+    stopOperationalLoops();
+    pollTimer = setInterval(function () {
+      pollTick().catch(function () {});
+    }, POLL_MS);
+    startPresenceLocationLoop();
+  }
+
+  async function pollTick() {
+    if (!global.PlatformAPI || !PlatformAPI.getToken || !PlatformAPI.getToken()) return;
+    var prevSection = shell ? shell.getActiveSection() : state.activeSection;
+    await refreshOrders({ silent: true });
+    if (notifOpsApi && notifOpsApi.refresh) {
+      try {
+        await notifOpsApi.refresh();
+        state.notifOk = true;
+      } catch (_e) {
+        state.notifOk = false;
+      }
+    }
+    if (shell && shell.getActiveSection() === prevSection) {
+      renderMain();
+    }
   }
 
   function updateOnlineUi() {
     state.online = typeof navigator.onLine === "boolean" ? navigator.onLine : true;
     if (!shell) return;
+    var gpsLabel = state.gpsActive ? "موقع محدّث" : state.locationOk ? "GPS جاهز" : "تفعيل الموقع";
     var statusHtml = state.online
-      ? '<span class="pf-status-pill"><span>🟢</span><span>متصل</span></span>'
+      ? '<span class="pf-status-pill"><span>🟢</span><span>متصل · ' + esc(gpsLabel) + "</span></span>"
       : '<span class="pf-status-pill is-paused"><span>🔴</span><span>غير متصل</span></span>';
     shell.updateHeader({ toolsHtml: statusHtml });
   }
@@ -167,12 +321,7 @@
     state.me = await api("/api/core/me");
     try {
       var o = await api("/api/driver/orders");
-      state.orders = {
-        ready_queue: o.ready_queue || [],
-        active: o.active || [],
-        completed: o.completed || [],
-        orders: o.orders || [],
-      };
+      applyOrdersPayload(o);
       state.ordersOk = true;
     } catch (e) {
       state.ordersOk = false;
@@ -230,7 +379,7 @@
     var bal = state.wallet && state.wallet.balance != null ? fmtMoney(state.wallet.balance) + " ر.س" : "—";
     var avg = state.rating.avg != null ? Number(state.rating.avg).toFixed(1) : "—";
     var activeN = (state.orders.active || []).length;
-    var readyN = (state.orders.ready_queue || []).length;
+    var readyN = readyQueueItems().length;
     var doneN = completedToday().length;
 
     return (
@@ -248,7 +397,7 @@
       '<div class="pf-home-block">' +
       '<div class="pf-home-block__head"><h3>الطلبات المتاحة</h3>' +
       '<button type="button" class="pf-btn" data-pf-section="ready">عرض الكل</button></div>' +
-      renderOrderList((state.orders.ready_queue || []).slice(0, 3), "ready", "لا طلبات جاهزة للاستلام الآن.") +
+      renderOrderList(readyQueueItems().slice(0, 3), "ready", "لا طلبات جاهزة للاستلام الآن.") +
       "</div>" +
       '<div class="pf-home-block">' +
       '<div class="pf-home-block__head"><h3>الطلبات النشطة</h3>' +
@@ -275,9 +424,11 @@
   function orderCard(o, mode) {
     var st = normStatus(o);
     var num = o.order_number || String(o.id || "").slice(0, 8);
+    var legacyTag = mode === "ready" && isLegacyOpenOrder(o) ? " <span class='dp-legacy-tag'>توصيل مباشر</span>" : "";
     var body =
       "<p class='dp-order-card__meta'>" +
-      esc(o.store_name || "متجر") +
+      esc(o.store_name || (isLegacyOpenOrder(o) ? "توصيل" : "متجر")) +
+      legacyTag +
       "<br>" +
       esc(o.pickup_address || o.drop_address || "—") +
       "<br>" +
@@ -325,11 +476,15 @@
   }
 
   function renderReady() {
-    return (
+    var legacyN = (state.orders.legacy_open || []).length;
+  return (
       '<h2 class="dp-section-title">الطلبات الجاهزة</h2>' +
-      '<p class="dp-section-sub">Ready Queue — من نظام الاستلام الحالي</p>' +
-      renderOrderList(state.orders.ready_queue || [], "ready", "لا طلبات جاهزة للاستلام الآن.") +
-      '<p class="dp-section-sub"><a href="/driver">فتح لوحة المندوب الكاملة ↗</a></p>'
+      '<p class="dp-section-sub">Ready Queue — جاهزة من المتجر' +
+      (legacyN ? " · " + legacyN + " توصيل مباشر (legacy)" : "") +
+      "</p>" +
+      '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px">' +
+      '<button type="button" class="dp-btn dp-btn--ghost" id="dpRefreshOrders">تحديث</button></div>' +
+      renderOrderList(readyQueueItems(), "ready", "لا طلبات جاهزة للاستلام الآن.")
     );
   }
 
@@ -530,15 +685,11 @@
     }
   }
 
-  async function refreshOrders() {
+  async function refreshOrders(opts) {
+    opts = opts || {};
     var o = await api("/api/driver/orders");
-    state.orders = {
-      ready_queue: o.ready_queue || [],
-      active: o.active || [],
-      completed: o.completed || [],
-      orders: o.orders || [],
-    };
-    renderMain();
+    applyOrdersPayload(o);
+    if (!opts.silent) renderMain();
   }
 
   function wireSectionEvents() {
@@ -618,6 +769,7 @@
   async function boot() {
     await loadCoreData();
     renderMain();
+    startOperationalLoops();
     if (shell.getActiveSection() === "dashboard") renderMain();
   }
 
@@ -661,12 +813,14 @@
       shell = createShell(portalCfg);
       W = shell.getWidgets();
       shell.mountChrome();
-      shell.mountNotifications().then(function () {
-        state.notifOk = true;
+      shell.mountNotifications().then(function (api) {
+        notifOpsApi = api;
+        state.notifOk = !!api;
         if (shell.getActiveSection() === "dashboard") renderMain();
       });
       global.addEventListener("online", updateOnlineUi);
       global.addEventListener("offline", updateOnlineUi);
+      global.addEventListener("beforeunload", stopOperationalLoops);
     }
 
     if (!global.PlatformAPI || !PlatformAPI.getToken || !PlatformAPI.getToken()) {
@@ -697,5 +851,10 @@
     }
   }
 
-  global.ErvenowDriverPreview = { init: init, navigate: navigate, refresh: loadCoreData };
+  global.ErvenowDriverPreview = {
+    init: init,
+    navigate: navigate,
+    refresh: loadCoreData,
+    stopLoops: stopOperationalLoops,
+  };
 })(typeof window !== "undefined" ? window : global);

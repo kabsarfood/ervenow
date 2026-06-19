@@ -16,6 +16,8 @@ const {
   publicDeliveryPolicyLabels,
 } = require("../../shared/services/deliveryPolicyEngine");
 const { resolveMapsLink } = require("../../shared/utils/mapsUrlParser");
+const { breakdownFromOrder } = require("../../shared/utils/orderDisplayFields");
+const { fetchOrderByIdResilient } = require("../../shared/utils/ordersSchemaOptional");
 function deliveryEngineRouter(deps) {
   const router = express.Router();
   const loadApprovedStore = deps.loadApprovedStore;
@@ -128,11 +130,17 @@ function deliveryEngineRouter(deps) {
       const sb = createServiceClient();
       if (!sb) return fail(res, "الخادم غير مهيأ", 503);
       const orderId = String(req.params.orderId || "").trim();
-      const { data: order, error: oErr } = await sb.from("orders").select("id,store_id,delivery_status,breakdown").eq("id", orderId).maybeSingle();
+      const { data: order, error: oErr } = await fetchOrderByIdResilient(sb, orderId, [
+        "id",
+        "store_id",
+        "delivery_status",
+        "breakdown",
+        "data",
+      ]);
       if (oErr || !order) return fail(res, "الطلب غير موجود", 404);
       const own = await assertMerchantOwnsStore(sb, order.store_id, req.appUser);
       if (own.error) return fail(res, own.error, 403);
-      const b = order.breakdown && typeof order.breakdown === "object" ? order.breakdown : {};
+      const b = breakdownFromOrder(order);
       if (b.fulfillment !== "store_delivery" && b.delivery_provider !== "store") {
         return fail(res, "هذا الطلب ليس توصيلاً ذاتياً للمتجر", 400);
       }

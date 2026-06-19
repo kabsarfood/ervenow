@@ -48,7 +48,9 @@
   }
 
   function shouldRetryHttpStatus(status, json) {
-    if (status === 408 || status === 429) return true;
+    if (status === 408) return true;
+    /* 429 = حد معدّل — إعادة المحاولة الفورية تضاعف الطلبات وتفشل idempotency */
+    if (status === 429) return false;
     if (json && json.reason === "migration_missing") return false;
     if (status >= 500 && status <= 599) return true;
     return false;
@@ -96,6 +98,9 @@
       return raw || "لا صلاحية لتنفيذ هذا الإجراء.";
     }
     if (status === 404) return "المورد غير موجود أو لم يعد متاحاً.";
+    if (status === 409) {
+      return "طلب التأكيد قيد المعالجة — انتظر لحظة ثم أعد المحاولة (لن يُنشأ طلب مكرر).";
+    }
     if (status === 429) return "طلبات كثيرة — انتظر قليلاً ثم أعد المحاولة.";
     if (raw && /[\u0600-\u06FF]/.test(raw)) return raw;
     if (j && j.reason === "migration_missing") {
@@ -121,9 +126,9 @@
    * @param {string} url
    * @param {RequestInit} [options]
    */
-  function apiFetch(url, options) {
+  function apiFetch(url, options, timeoutMs) {
     options = options || {};
-    var ms = Number(w.__ERVENOW_FETCH_TIMEOUT_MS) || 5000;
+    var ms = Number(timeoutMs) > 0 ? Number(timeoutMs) : Number(w.__ERVENOW_FETCH_TIMEOUT_MS) || 5000;
     var ctrl = new AbortController();
     var tid = setTimeout(function () {
       ctrl.abort();
@@ -313,7 +318,7 @@
 
         var r;
         try {
-          r = await apiFetch(url, { method: method, headers: headers, body: body });
+          r = await apiFetch(url, { method: method, headers: headers, body: body }, opts.timeoutMs);
         } catch (e) {
           lastErr = e;
           var offline =

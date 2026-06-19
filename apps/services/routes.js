@@ -24,7 +24,8 @@ const { createGasDelivery } = require("../delivery/gasDeliveryCreate");
 const { completeServiceBooking } = require("../../shared/services/completeServiceBooking");
 const { sendReserveWelcomeWhatsApp } = require("../../shared/services/serviceProviderReserve");
 const { sendOrderAcceptedToCustomer, sendCustomerDeliveringNotice, sendDriverArrived } = require("../../shared/services/whatsappService");
-const { currentGasRadiusKm, providerWithinGasRadius } = require("../../shared/utils/gasDeliveryRadius");
+const { currentGasRadiusKm, providerCoords, providerWithinGasRadius } = require("../../shared/utils/gasDeliveryRadius");
+const { usersQueryResilient } = require("../../shared/utils/usersGeoSelect");
 const { broadcastDriverUpdate, broadcastOrderPatch, orderPatchFromRow } = require("../../shared/lib/trackingSocket");
 const { getWalletPayloadWithLedgerFallback } = require("../../shared/utils/ledgerWallet");
 const { resolvePortalRole } = require("../../shared/utils/resolvePortalRole");
@@ -92,6 +93,13 @@ function normalizeQty(v) {
   return Math.max(1, Math.floor(n));
 }
 
+function portalRoleForProvider(appUser, profile) {
+  return resolvePortalRole({
+    role: (profile && profile.role) || (appUser && appUser.role) || "service",
+    service_type: profile && profile.service_type,
+  }).portalRole;
+}
+
 function filterBookingsForProvider(rows, providerId, providerType, providerDistrict, _providerVehicleType, providerProfile) {
   const pid = String(providerId || "");
   const providerUser = providerProfile && typeof providerProfile === "object" ? providerProfile : {};
@@ -99,8 +107,13 @@ function filterBookingsForProvider(rows, providerId, providerType, providerDistr
     const st = String(b.service_type || "").toLowerCase();
     if (st === "internal_delivery") return false;
     if (!providerMatchesBookingType(providerType, st, b.gas_mode)) return false;
-    if (st === "gas_delivery" && !providerWithinGasRadius(providerUser, b, currentGasRadiusKm(b))) {
-      return false;
+    if (st === "gas_delivery") {
+      const bookingLoc = b.service_location || b.location;
+      if (providerCoords(providerUser)) {
+        if (!providerWithinGasRadius(providerUser, b, currentGasRadiusKm(b))) return false;
+      } else if (!providerAreaMatches(providerType, providerDistrict, b.district, bookingLoc)) {
+        return false;
+      }
     }
     const status = bookingStatus(b);
     const bookedBy = b.provider_id ? String(b.provider_id) : "";
@@ -369,15 +382,16 @@ router.get("/providers", async (req, res) => {
     if (!sb) return fail(res, "قاعدة البيانات غير جاهزة", 503);
     const serviceType = String(req.query?.service_type || req.query?.type || "").trim().toLowerCase();
     const district = String(req.query?.district || "").trim();
-    let q = sb
-      .from("users")
-      .select("id, name, phone, service_type, service_district, service_rating_avg, service_rating_count, lat, lng")
-      .eq("role", "service");
-    if (serviceType) {
-      const types = bookingTypesForProvider(serviceType);
-      if (types.length === 1) q = q.eq("service_type", types[0]);
-    }
-    const { data, error } = await q;
+    const providersSelect =
+      "id, name, phone, service_type, service_district, service_rating_avg, service_rating_count, lat, lng";
+    const { data, error } = await usersQueryResilient(sb, providersSelect, (q) => {
+      let query = q.eq("role", "service");
+      if (serviceType) {
+        const types = bookingTypesForProvider(serviceType);
+        if (types.length === 1) query = query.eq("service_type", types[0]);
+      }
+      return query;
+    });
     if (error) return fail(res, error.message, 400);
     let list = (data || []).filter((u) => {
       if (!serviceType) return true;
@@ -403,23 +417,17 @@ router.get("/me/dashboard", requireAuth, requireRole("service"), async (req, res
     const sb = req.supabase || createServiceClient();
     const uid = req.appUser.id;
     let profile = null;
-    const firstProfile = await sb
-      .from("users")
-      .select(
-        "id, name, phone, service_type, service_district, service_rating_avg, service_rating_count, service_vehicle_type, service_plate_number, service_vehicle_model, lat, lng"
-      )
-      .eq("id", uid)
-      .maybeSingle();
+    const profileSelectFull =
+      "id, name, phone, service_type, service_district, service_rating_avg, service_rating_count, service_vehicle_type, service_plate_number, service_vehicle_model, lat, lng";
+    const profileSelectBase =
+      "id, name, phone, service_type, service_district, service_rating_avg, service_rating_count, lat, lng";
+    let firstProfile = await usersQueryResilient(sb, profileSelectFull, (q) => q.eq("id", uid), "maybeSingle");
     if (firstProfile.error) {
       const msg = String(firstProfile.error.message || "");
       if (/service_vehicle_type|service_plate_number|service_vehicle_model/i.test(msg)) {
-        const fallback = await sb
-          .from("users")
-          .select("id, name, phone, service_type, service_district, service_rating_avg, service_rating_count, lat, lng")
-          .eq("id", uid)
-          .maybeSingle();
-        if (fallback.error) return fail(res, fallback.error.message, 400);
-        profile = fallback.data;
+        firstProfile = await usersQueryResilient(sb, profileSelectBase, (q) => q.eq("id", uid), "maybeSingle");
+        if (firstProfile.error) return fail(res, firstProfile.error.message, 400);
+        profile = firstProfile.data;
       } else {
         return fail(res, firstProfile.error.message, 400);
       }
@@ -446,7 +454,7 @@ router.get("/me/dashboard", requireAuth, requireRole("service"), async (req, res
       ),
       uid
     );
-    const portalRole = resolvePortalRole(req.appUser).portalRole;
+    const portalRole = portalRoleForProvider(req.appUser, profile);
     const portalBookings = filterOrdersForPortal(bookings, portalRole);
 
     const newCount = portalBookings.filter((b) => {
@@ -556,7 +564,7 @@ router.get("/me/schedule", requireAuth, requireRole("service"), async (req, res)
         ),
         uid
       );
-      const portalRole = resolvePortalRole(req.appUser).portalRole;
+      const portalRole = portalRoleForProvider(req.appUser, profile);
       return filterOrdersForPortal(bookings, portalRole);
     })();
     const now = new Date();
@@ -586,13 +594,12 @@ router.get("/me/fleet", requireAuth, requireRole("service"), async (req, res) =>
   try {
     const sb = req.supabase || createServiceClient();
     const uid = req.appUser.id;
-    const { data: profile, error: pErr } = await sb
-      .from("users")
-      .select(
-        "id, name, phone, service_type, service_vehicle_type, service_plate_number, service_vehicle_model, service_rating_avg, service_rating_count, lat, lng"
-      )
-      .eq("id", uid)
-      .maybeSingle();
+    const { data: profile, error: pErr } = await usersQueryResilient(
+      sb,
+      "id, name, phone, service_type, service_vehicle_type, service_plate_number, service_vehicle_model, service_rating_avg, service_rating_count, lat, lng",
+      (q) => q.eq("id", uid),
+      "maybeSingle"
+    );
     if (pErr) return fail(res, pErr.message, 400);
     const providerType = String(profile?.service_type || "").trim().toLowerCase();
     const types = bookingTypesForProvider(providerType);
@@ -611,7 +618,7 @@ router.get("/me/fleet", requireAuth, requireRole("service"), async (req, res) =>
         ),
         uid
       ),
-      resolvePortalRole(req.appUser).portalRole
+      portalRoleForProvider(req.appUser, profile)
     );
     const active = portalBookings.filter((b) => {
       const st = bookingStatus(b);
@@ -682,11 +689,12 @@ router.get("/bookings", requireAuth, async (req, res) => {
     const user = req.appUser;
     if (user.role !== "service") return res.status(403).json({ ok: false });
 
-    const { data: profile, error: pErr } = await req.supabase
-      .from("users")
-      .select("service_type, service_district, service_vehicle_type, lat, lng")
-      .eq("id", user.id)
-      .maybeSingle();
+    const { data: profile, error: pErr } = await usersQueryResilient(
+      req.supabase,
+      "service_type, service_district, service_vehicle_type, lat, lng",
+      (q) => q.eq("id", user.id),
+      "maybeSingle"
+    );
     if (pErr) return fail(res, pErr.message, 400);
 
     const providerType = String(profile?.service_type || "").trim().toLowerCase();
@@ -698,7 +706,7 @@ router.get("/bookings", requireAuth, async (req, res) => {
     const { data, error } = await q;
     if (error) throw error;
 
-    const portalRole = resolvePortalRole(user).portalRole;
+    const portalRole = portalRoleForProvider(user, profile);
     const filtered = filterOrdersForPortal(
       sortBookingsByPriority(
         filterBookingsForProvider(
@@ -724,11 +732,12 @@ router.post("/bookings/:id/reserve", requireAuth, requireRole("service"), async 
   try {
     const sb = req.supabase || createServiceClient();
     const uid = req.appUser.id;
-    const { data: profile } = await sb
-      .from("users")
-      .select("id, name, phone, service_type, service_district, service_vehicle_type, lat, lng")
-      .eq("id", uid)
-      .maybeSingle();
+    const { data: profile } = await usersQueryResilient(
+      sb,
+      "id, name, phone, service_type, service_district, service_vehicle_type, lat, lng",
+      (q) => q.eq("id", uid),
+      "maybeSingle"
+    );
     const providerType = String(profile?.service_type || "").trim().toLowerCase();
     if (!providerType) return fail(res, "نوع الخدمة غير مضبوط في حسابك", 400);
 
@@ -741,15 +750,21 @@ router.post("/bookings/:id/reserve", requireAuth, requireRole("service"), async 
     if (!providerMatchesBookingType(providerType, booking.service_type, booking.gas_mode)) {
       return fail(res, "هذا الطلب لا يطابق تخصصك", 403);
     }
-    if (
-      String(booking.service_type || "").toLowerCase() === "gas_delivery" &&
-      !providerWithinGasRadius(profile, booking, currentGasRadiusKm(booking))
-    ) {
-      return fail(
-        res,
-        `الطلب خارج نطاق التوصيل الحالي (${currentGasRadiusKm(booking)} كم من موقع العميل)`,
-        403
-      );
+    if (String(booking.service_type || "").toLowerCase() === "gas_delivery") {
+      if (providerCoords(profile)) {
+        if (!providerWithinGasRadius(profile, booking, currentGasRadiusKm(booking))) {
+          return fail(
+            res,
+            `الطلب خارج نطاق التوصيل الحالي (${currentGasRadiusKm(booking)} كم من موقع العميل)`,
+            403
+          );
+        }
+      } else {
+        const bookingLoc = booking.service_location || booking.location;
+        if (!providerAreaMatches(providerType, profile?.service_district, booking.district, bookingLoc)) {
+          return fail(res, "الطلب خارج حيّك المسجّل", 403);
+        }
+      }
     }
   const bookingLoc = booking.service_location || booking.location;
     const bookingSt = String(booking.service_type || "").toLowerCase();

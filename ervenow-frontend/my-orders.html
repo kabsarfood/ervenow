@@ -146,6 +146,31 @@
         color: #b91c1c;
         font-weight: 700;
       }
+      #myOrdersDupBanner {
+        margin-bottom: 12px;
+        padding: 14px;
+        border-radius: 14px;
+        border: 1px solid rgba(185, 135, 47, 0.35);
+        background: linear-gradient(180deg, #fff9ee 0%, #fffefb 100%);
+        color: var(--brown-mid, #5c4a3d);
+        font-weight: 600;
+        line-height: 1.55;
+      }
+      #myOrdersDupBanner[hidden] {
+        display: none !important;
+      }
+      #myOrdersDupBanner strong {
+        color: var(--brown, #3d2213);
+      }
+      #myOrdersDupBanner .my-orders-dup-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 10px;
+      }
+      .my-order-actions .btn {
+        min-height: 44px;
+      }
       .my-orders-toggle-wrap {
         margin-bottom: 12px;
         padding: 0;
@@ -321,6 +346,7 @@
 
         <div id="myOrdersContent" hidden>
           <div id="myOrdersMsg" role="alert"></div>
+          <div id="myOrdersDupBanner" hidden role="status"></div>
           <div class="card my-orders-toggle-wrap">
             <button
               type="button"
@@ -533,12 +559,114 @@
 
       function orderPrice(o) {
         var d = orderData(o);
-        var candidates = [o.delivery_fee, o.order_total, o.total_amount, o.total_with_vat, d.delivery_fee];
+        var candidates = [o.order_total, o.total_amount, o.total_with_vat, d.total_amount, o.delivery_fee, d.delivery_fee];
         for (var i = 0; i < candidates.length; i++) {
           var n = Number(candidates[i]);
-          if (Number.isFinite(n) && n >= 0) return n;
+          if (Number.isFinite(n) && n > 0) return n;
         }
         return null;
+      }
+
+      function roundRouteCoord(n) {
+        var x = Number(n);
+        if (!Number.isFinite(x)) return "";
+        return (Math.round(x * 1e5) / 1e5).toFixed(5);
+      }
+
+      function orderRouteKey(o) {
+        var plat = roundRouteCoord(o.pickup_lat);
+        var plng = roundRouteCoord(o.pickup_lng);
+        var dlat = roundRouteCoord(o.drop_lat);
+        var dlng = roundRouteCoord(o.drop_lng);
+        if (!plat || !plng || !dlat || !dlng) return "";
+        return plat + "|" + plng + "|" + dlat + "|" + dlng;
+      }
+
+      function findDuplicateOpenGroups(openOrders) {
+        var groups = {};
+        (openOrders || []).forEach(function (o) {
+          var k = orderRouteKey(o);
+          if (!k) return;
+          if (!groups[k]) groups[k] = [];
+          groups[k].push(o);
+        });
+        return Object.keys(groups)
+          .map(function (k) {
+            return groups[k];
+          })
+          .filter(function (g) {
+            return g.length > 1;
+          });
+      }
+
+      function canCustomerCancel(o) {
+        if (isOrderClosed(o)) return false;
+        if (o.driver_id) return false;
+        var ds = orderStatusKey(o);
+        return ds === "draft" || ds === "new" || ds === "pending" || ds === "accepted";
+      }
+
+      async function cancelOrderById(orderId) {
+        if (!orderId || !window.PlatformAPI) return { ok: false, message: "تعذّر الإلغاء" };
+        try {
+          await PlatformAPI.api("/api/order/" + encodeURIComponent(orderId) + "/cancel", { method: "POST" });
+          return { ok: true };
+        } catch (e) {
+          return { ok: false, message: (e && e.message) || "تعذّر الإلغاء" };
+        }
+      }
+
+      function renderDuplicateBanner(openOrders) {
+        var el = document.getElementById("myOrdersDupBanner");
+        if (!el) return;
+        var dups = findDuplicateOpenGroups(openOrders);
+        if (!dups.length) {
+          el.hidden = true;
+          el.innerHTML = "";
+          return;
+        }
+        var extra = dups.reduce(function (sum, g) {
+          return sum + g.length - 1;
+        }, 0);
+        el.hidden = false;
+        el.innerHTML =
+          "<strong>تنبيه:</strong> يوجد " +
+          extra +
+          " طلباً مكرراً بنفس المسار (غالباً بسبب إعادة محاولة الدفع). " +
+          "احتفظ بأحدث طلب فقط وألغِ الباقي." +
+          '<div class="my-orders-dup-actions">' +
+          '<button type="button" class="btn btn-primary" id="myOrdersCancelDupBtn">إلغاء الطلبات المكررة (الاحتفاظ بالأحدث)</button>' +
+          "</div>";
+        var btn = document.getElementById("myOrdersCancelDupBtn");
+        if (btn) {
+          btn.onclick = async function () {
+            if (
+              !window.confirm(
+                "إلغاء " +
+                  extra +
+                  " طلباً مكرراً والاحتفاظ بأحدث طلب لكل مسار؟ لا يمكن التراجع."
+              )
+            ) {
+              return;
+            }
+            btn.disabled = true;
+            var cancelled = 0;
+            for (var gi = 0; gi < dups.length; gi += 1) {
+              var sorted = dups[gi].slice().sort(function (a, b) {
+                return orderSortTime(b) - orderSortTime(a);
+              });
+              for (var oi = 1; oi < sorted.length; oi += 1) {
+                var oid = sorted[oi] && sorted[oi].id;
+                if (!oid || !canCustomerCancel(sorted[oi])) continue;
+                var res = await cancelOrderById(oid);
+                if (res.ok) cancelled += 1;
+              }
+            }
+            btn.disabled = false;
+            showMsg(cancelled ? "تم إلغاء " + cancelled + " طلباً مكرراً." : "لم يُلغَ أي طلب — قد يكون بعضها قيد التنفيذ.");
+            await loadMyOrders({ openAfterLoad: true });
+          };
+        }
       }
 
       function formatDistance(km) {
@@ -667,6 +795,11 @@
           '<a class="btn btn-primary" href="/track?id=' +
           encodeURIComponent(trackId) +
           '">تتبع الطلب</a>' +
+          (canCustomerCancel(o)
+            ? '<button type="button" class="btn btn-ghost my-order-cancel" data-cancel-order="' +
+              esc(o.id || "") +
+              '">إلغاء الطلب</button>'
+            : "") +
           "</div>" +
           "</article>"
         );
@@ -761,6 +894,7 @@
         if (openCountEl) openCountEl.textContent = "(" + parts.open.length + ")";
         if (closedCountEl) closedCountEl.textContent = "(" + parts.closed.length + ")";
         updateOrdersCount(parts.open.length);
+        renderDuplicateBanner(parts.open);
         setActiveOrdersTab(activeOrdersTab);
       }
 
@@ -858,6 +992,23 @@
       document.getElementById("myOrdersTabClosed").onclick = function () {
         setActiveOrdersTab("closed");
       };
+      document.addEventListener("click", function (ev) {
+        var btn = ev.target.closest && ev.target.closest("[data-cancel-order]");
+        if (!btn) return;
+        var orderId = btn.getAttribute("data-cancel-order");
+        if (!orderId) return;
+        if (!window.confirm("إلغاء هذا الطلب؟ لا يمكن التراجع.")) return;
+        btn.disabled = true;
+        cancelOrderById(orderId).then(function (res) {
+          if (!res.ok) {
+            btn.disabled = false;
+            showMsg(res.message || "تعذّر الإلغاء");
+            return;
+          }
+          showMsg("تم إلغاء الطلب.");
+          loadMyOrders({ openAfterLoad: true });
+        });
+      });
       loadMyOrders({ openAfterLoad: false });
       window.addEventListener("ervenow:auth-changed", function () {
         loadMyOrders({ openAfterLoad: ordersPanelOpen });

@@ -205,6 +205,22 @@ body.pf-page .pf-main-wrap {
   color: color-mix(in srgb, var(--pf-accent-soft) 80%, white);
 }
 
+.pf-nav__item--logout {
+  margin-top: 4px;
+  color: #ffd8d8;
+  font-weight: 800;
+}
+
+.pf-nav__item--logout:hover,
+.pf-nav__item--logout:focus-visible {
+  background: rgba(255, 90, 90, 0.18);
+  color: #fff;
+}
+
+.pf-nav__item--no-icon {
+  padding-inline-start: calc(12px + 1.25rem + 10px);
+}
+
 .pf-main-wrap {
   flex: 1;
   min-width: 0;
@@ -247,7 +263,7 @@ body.pf-page--draft-portal .pf-header {
 }
 
 @media (min-width: 1025px) {
-  body.pf-page .pf-header {
+  body.pf-page.pf-sidebar-open .pf-header {
     right: var(--pf-sidebar-w);
   }
 }
@@ -858,10 +874,21 @@ body.pf-page [data-pf-msg] {
     right: 0;
     height: 100dvh;
     z-index: 45;
+    transform: translateX(100%);
+    transition: transform 0.22s ease;
+    box-shadow: -8px 0 32px rgba(0, 0, 0, 0.12);
   }
 
-  body.pf-page .pf-shell {
-    padding-inline-end: var(--pf-sidebar-w);
+  body.pf-page .pf-sidebar.is-open {
+    transform: translateX(0);
+  }
+
+  body.pf-page.pf-sidebar-open .pf-shell {
+    padding-inline-start: var(--pf-sidebar-w);
+  }
+
+  body.pf-page .pf-overlay.is-open {
+    display: none;
   }
 
   body.pf-page .pf-content {
@@ -1226,4 +1253,215 @@ body.pf-page .dash-site-header {
   border-color: var(--pf-accent);
   background: color-mix(in srgb, var(--pf-accent) 10%, #fff);
   color: var(--pf-accent);
+}
+
+/* —— بوابات تشغيلية: بطاقة الدخول + توسيط المحتوى (كل البوابات) —— */
+body.pf-page--ops:has(.pf-login:not([hidden])) [id$="App"] .pf-content {
+  visibility: hidden;
+  height: 0;
+  overflow: hidden;
+  padding: 0;
+  margin: 0;
+  border: 0;
+}
+
+body.pf-page--ops:has(.pf-login:not([hidden])) {
+  min-height: 100dvh;
+}
+
+body.pf-page--ops:has(.pf-login:not([hidden])) .pf-login {
+  margin-top: calc(var(--pf-top-chrome-h, 56px) + clamp(16px, 3vw, 24px));
+  margin-bottom: clamp(20px, 8vh, 48px);
+  position: relative;
+  z-index: 30;
+}
+
+@media (min-width: 1025px) {
+  body.pf-page--ops:has(.pf-login:not([hidden])) .pf-login {
+    margin-top: calc(var(--pf-top-chrome-h, 56px) + clamp(28px, 5vh, 56px));
+    margin-inline: auto;
+    margin-bottom: clamp(32px, 10vh, 72px);
+    max-width: min(420px, calc(100vw - 48px));
+  }
+
+  body.pf-page--ops.pf-sidebar-open:has(.pf-login:not([hidden])) .pf-login {
+    max-width: min(420px, calc(100vw - var(--pf-sidebar-w, 260px) - 48px));
+  }
+}
+
+.pf-login .pf-btn + .pf-btn {
+  margin-inline-start: 0 !important;
+}
+
+body.pf-page [id$="App"] .pf-main-wrap {
+  width: 100%;
+  min-width: 0;
+}
+
+body.pf-page [id$="App"] .pf-content {
+  width: 100%;
+}
+
+body.pf-page [id$="App"] [data-pf-main] {
+  margin-inline: auto;
+}
+
+body.pf-page [data-pf-main] .pf-kpi-grid,
+body.pf-page [data-pf-main] .pf-quick-grid,
+body.pf-page [data-pf-main] .pf-home-block,
+body.pf-page [data-pf-main] .pf-tabs,
+body.pf-page [data-pf-main] .pf-type-chips,
+body.pf-page [data-pf-main] .pf-card,
+body.pf-page [data-pf-main] .pf-ops-grid,
+body.pf-page [data-pf-main] .pf-hub-grid,
+body.pf-page [data-pf-main] .sp-booking,
+body.pf-page [data-pf-main] .tp-booking {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+body.pf-page [id$="App"] .pf-kpi__val {
+  display: inline-flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+body.pf-page [id$="App"] .pf-home-block__head .pf-btn {
+  align-self: flex-start;
+}
+
+@media (max-width: 640px) {
+  body.pf-page [data-pf-main] .pf-type-chips {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    flex-wrap: nowrap;
+    padding-bottom: 4px;
+  }
+}
+
+/* —— تذييل البوابة (شريط متصل بعرض الصفحة) —— */
+[data-pf-footer] {
+  width: 100%;
+  margin-top: auto;
+  flex-shrink: 0;
+}
+
+.pf-portal-footer {
+  width: 100%;
+  margin: 0;
+  padding: clamp(18px, 3vw, 26px) clamp(16px, 4vw, 28px);
+  padding-bottom: max(18px, env(safe-area-inset-bottom));
+  border: none;
+  border-top: 1px solid color-mix(in srgb, var(--pf-sidebar) 85%, #000);
+  border-radius: 0;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--pf-sidebar) 96%, #000) 0%,
+    var(--pf-sidebar) 100%
+  );
+  color: var(--pf-sidebar-text);
+  text-align: center;
+}
+
+.pf-shell--bottom-nav [data-pf-footer] .pf-portal-footer {
+  padding-bottom: max(18px, calc(env(safe-area-inset-bottom) + 76px));
+}
+
+.pf-portal-footer__inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(12px, 2.5vw, 16px);
+  width: 100%;
+  max-width: var(--pf-content-max);
+  margin-inline: auto;
+}
+
+.pf-portal-footer__brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.pf-portal-footer__name {
+  font-size: clamp(1rem, 3vw, 1.15rem);
+  font-weight: 900;
+  color: #fff;
+  letter-spacing: 0.02em;
+}
+
+.pf-portal-footer__tag {
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: color-mix(in srgb, var(--pf-accent-soft) 90%, #fff);
+}
+
+.pf-portal-footer__portal {
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: color-mix(in srgb, var(--pf-sidebar-text) 78%, transparent);
+}
+
+.pf-portal-footer__motto {
+  margin: 4px 0 0;
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: color-mix(in srgb, var(--pf-sidebar-text) 82%, transparent);
+  line-height: 1.5;
+}
+
+.pf-portal-footer__contacts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px 14px;
+  width: 100%;
+}
+
+.pf-portal-footer__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 40px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--pf-sidebar-text) 22%, transparent);
+  background: color-mix(in srgb, #fff 8%, transparent);
+  color: var(--pf-sidebar-text);
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-decoration: none;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.pf-portal-footer__link:hover {
+  border-color: color-mix(in srgb, var(--pf-accent-soft) 55%, transparent);
+  background: color-mix(in srgb, var(--pf-accent) 18%, transparent);
+  color: #fff;
+}
+
+.pf-portal-footer__copy {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: color-mix(in srgb, var(--pf-sidebar-text) 68%, transparent);
+  line-height: 1.45;
+}
+
+@media (max-width: 640px) {
+  .pf-portal-footer__contacts {
+    flex-direction: column;
+  }
+
+  .pf-portal-footer__link {
+    width: 100%;
+    max-width: 300px;
+    justify-content: center;
+    min-height: 44px;
+    font-size: 16px;
+  }
 }

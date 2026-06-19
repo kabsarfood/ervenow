@@ -19,6 +19,9 @@
     "migrate:platform-settings": "node scripts/run-migration-platform-settings.js",
     "migrate:users-name-optional": "node scripts/run-migration-users-name-optional.js",
     "migrate:users-service-district": "node scripts/run-migration-users-service-district.js",
+    "migrate:users-lat-lng": "node scripts/run-migration-users-lat-lng.js",
+    "migrate:orders-store-name": "node scripts/run-migration-orders-store-name.js",
+    "migrate:wallet-balance-from-tx": "node scripts/run-migration-wallet-balance-from-tx.js",
     "responsive:audit": "node scripts/apply-responsive-audit.js",
     "migrate:wallet-topup-pay": "node scripts/run-migration-wallet-topup-pay.js",
     "migrate:stores-steps-10-15": "node scripts/run-migration-stores-steps-10-15.js",
@@ -29,7 +32,9 @@
     "migrate:hero-banners-kind": "node scripts/run-migration-hero-banners-kind.js",
     "migrate:hero-banners-placement": "node scripts/run-migration-hero-banners-placement.js",
     "migrate:hero-banners-v2": "node scripts/run-migration-hero-banners-v2.js",
-    "migrate:orders-portal-type": "node scripts/run-migration-orders-portal-type.js"
+    "migrate:orders-portal-type": "node scripts/run-migration-orders-portal-type.js",
+    "migrate:orders-schema-cache": "node scripts/run-migration-orders-schema-cache-columns.js",
+    "report:orders-schema": "node scripts/orders-schema-consistency-report.js"
   },
   "engines": {
     "node": ">=20"

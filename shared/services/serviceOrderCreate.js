@@ -4,7 +4,12 @@
 
 const { allocateUniqueServiceOrderNumber } = require("../utils/generateOrderNumber");
 const { insertOrdersResilient } = require("../utils/idempotency");
+const {
+  fetchOrderByCustomerIdempotencyKey,
+  findRecentSimilarDeliveryOrder,
+} = require("../utils/orderDedup");
 const { applyPortalTypeToOrderRow } = require("../utils/orderPortalRouting");
+const { normalizeOrderFinancialsForInsert } = require("../utils/orderTotals");
 const { applyProviderIdToInsertRow } = require("../utils/orderProviderId");
 const { computePlatformCommission } = require("../utils/serviceCommission");
 const { computeGasPlatformCommission, gasCylinderProviderNet } = require("../utils/gasDeliveryPricing");
@@ -92,17 +97,45 @@ async function createServiceOrder(sb, appUser, body) {
   const providerId = raw.provider_id || raw.service_provider_id || null;
   const location = String(raw.location || raw.service_location || raw.drop_address || "").trim();
   const district = String(raw.district || "").trim();
+  const idempotencyKey =
+    raw.idempotency_key != null && String(raw.idempotency_key).trim() !== ""
+      ? String(raw.idempotency_key).trim().slice(0, 256)
+      : null;
+
+  const pickupLat = Number(payloadData.pickup_lat);
+  const pickupLng = Number(payloadData.pickup_lng);
+  const dropLat = Number(payloadData.drop_lat);
+  const dropLng = Number(payloadData.drop_lng);
+  const hasPickup = Number.isFinite(pickupLat) && Number.isFinite(pickupLng);
+  const hasDrop = Number.isFinite(dropLat) && Number.isFinite(dropLng);
+
+  if (idempotencyKey) {
+    try {
+      const existing = await fetchOrderByCustomerIdempotencyKey(sb, appUser.id, idempotencyKey);
+      if (existing) return { ok: true, order: existing };
+    } catch (idemErr) {
+      logger.warn({ err: idemErr.message || String(idemErr) }, "[serviceOrderCreate] idempotency lookup");
+    }
+  }
+
+  if (hasPickup && hasDrop) {
+    try {
+      const similar = await findRecentSimilarDeliveryOrder(sb, appUser.id, {
+        pickup_lat: pickupLat,
+        pickup_lng: pickupLng,
+        drop_lat: dropLat,
+        drop_lng: dropLng,
+      });
+      if (similar) return { ok: true, order: similar };
+    } catch (dedupErr) {
+      logger.warn({ err: dedupErr.message || String(dedupErr) }, "[serviceOrderCreate] dedup lookup");
+    }
+  }
 
   let orderData = null;
   let insertErr = null;
   for (let attempt = 0; attempt < 5; attempt += 1) {
     const order_number = await allocateUniqueServiceOrderNumber(sb, orderType === "gas_delivery" ? "ES" : "SV");
-    const pickupLat = Number(payloadData.pickup_lat);
-    const pickupLng = Number(payloadData.pickup_lng);
-    const dropLat = Number(payloadData.drop_lat);
-    const dropLng = Number(payloadData.drop_lng);
-    const hasPickup = Number.isFinite(pickupLat) && Number.isFinite(pickupLng);
-    const hasDrop = Number.isFinite(dropLat) && Number.isFinite(dropLng);
     const pickupAddress = String(payloadData.from || payloadData.pickup_maps_url || district || "").trim();
     const dropAddress = String(payloadData.to || payloadData.drop_maps_url || location || "").trim();
     const noteLines = [
@@ -110,6 +143,10 @@ async function createServiceOrder(sb, appUser, body) {
       payloadData.shipment_details || payloadData.notes_extra || "",
       payloadData.recipient_phone ? `المرسل إليه: ${payloadData.recipient_phone}` : "",
     ].filter(Boolean);
+
+    const isInternalDelivery = serviceType === "internal_delivery";
+    const goodsBase = isInternalDelivery ? 0 : total;
+    const serviceDeliveryFee = isInternalDelivery ? total : null;
 
     const row = applyProviderIdToInsertRow(
       {
@@ -120,7 +157,7 @@ async function createServiceOrder(sb, appUser, body) {
       service_name: String(raw.service_name || raw.title || payloadData.shipment_name || serviceType).trim(),
       delivery_status: DELIVERY_STATUS.NEW,
       order_number,
-      order_total: total,
+      order_total: goodsBase,
       total_amount: total,
       platform_commission: platformCommission,
       platform_fee: platformCommission,
@@ -137,6 +174,12 @@ async function createServiceOrder(sb, appUser, body) {
       pickup_lng: hasPickup ? pickupLng : null,
       drop_lat: hasDrop ? dropLat : null,
       drop_lng: hasDrop ? dropLng : null,
+      distance_km:
+        payloadData.distance_km != null && Number.isFinite(Number(payloadData.distance_km))
+          ? Math.round(Number(payloadData.distance_km) * 100) / 100
+          : null,
+      delivery_fee: serviceDeliveryFee,
+      idempotency_key: idempotencyKey,
       notes: String(raw.notes || "").trim() || (noteLines.length ? noteLines.join("\n") : null),
       data: {
         order_type: orderType,
@@ -154,7 +197,10 @@ async function createServiceOrder(sb, appUser, body) {
       providerId
     );
 
-    const ins = await insertOrdersResilient(sb, applyPortalTypeToOrderRow(row));
+    const ins = await insertOrdersResilient(
+      sb,
+      applyPortalTypeToOrderRow(normalizeOrderFinancialsForInsert(row))
+    );
     orderData = ins.data;
     insertErr = ins.error;
     if (!insertErr) break;

@@ -2,6 +2,8 @@
  * Order Management Board — عدّادات وحسابات مالية للوحة المتجر/المطعم
  */
 
+const { breakdownFromOrder } = require("./orderDisplayFields");
+
 const BOARD_STATUSES = ["pending", "accepted", "preparing", "ready", "picked_up", "delivered"];
 
 function normalizeBoardStatus(raw) {
@@ -32,7 +34,7 @@ function countOrdersByStatus(orders) {
 }
 
 function itemsFromOrder(order) {
-  const b = order && order.breakdown && typeof order.breakdown === "object" ? order.breakdown : {};
+  const b = breakdownFromOrder(order);
   return Array.isArray(b.items) ? b.items : [];
 }
 
@@ -43,7 +45,7 @@ function itemCountFromOrder(order) {
 }
 
 function customerNameFromOrder(order) {
-  const b = order && order.breakdown && typeof order.breakdown === "object" ? order.breakdown : {};
+  const b = breakdownFromOrder(order);
   const d = order && order.data && typeof order.data === "object" ? order.data : {};
   return (
     String(b.customer_name || d.customer_name || d.customerName || order.customer_name || "").trim() || "عميل"

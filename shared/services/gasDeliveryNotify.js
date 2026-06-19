@@ -10,6 +10,7 @@ const {
   providerWithinGasRadius,
 } = require("../utils/gasDeliveryRadius");
 const { notifyProvidersInAppByPhones } = require("./notificationEvents");
+const { usersQueryResilient } = require("../utils/usersGeoSelect");
 
 function publicBase() {
   return String(process.env.ERVENOW_PUBLIC_URL || "https://ervenow.com").replace(/\/$/, "");
@@ -81,10 +82,11 @@ async function fetchGasProviders(sb, booking, maxRadiusKm) {
   const district = String(booking.district || "").trim();
   const bookingLocation = booking.service_location || booking.location;
 
-  const { data, error } = await sb
-    .from("users")
-    .select("id, phone, lat, lng, service_type, service_district, name")
-    .eq("role", "service");
+  const { data, error } = await usersQueryResilient(
+    sb,
+    "id, phone, lat, lng, service_type, service_district, name",
+    (q) => q.eq("role", "service")
+  );
   if (error || !Array.isArray(data)) return [];
 
   const customer = bookingCustomerCoords(booking);

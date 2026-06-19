@@ -5,6 +5,7 @@ const { notifyGasDeliveryProviders } = require("./gasDeliveryNotify");
 const { catalogEntry, serviceDisplayName } = require("../utils/homeServicePricing");
 const { providerAreaMatches, providerMatchesBookingType } = require("../utils/serviceProviderTypes");
 const { notifyProvidersInAppByPhones } = require("./notificationEvents");
+const { usersQueryResilient } = require("../utils/usersGeoSelect");
 async function getServiceProviderPhones(sb, serviceType) {
   let q = sb.from("users").select("phone").eq("role", "service");
   if (serviceType) q = q.eq("service_type", serviceType);
@@ -94,11 +95,11 @@ function buildHomeProviderMessage(booking, rankHint) {
 }
 
 async function fetchServiceProviders(sb, serviceType, bookingDistrict, bookingGasMode, bookingLocation) {
-  let q = sb
-    .from("users")
-    .select("id, phone, lat, lng, service_type, service_district, name")
-    .eq("role", "service");
-  const { data, error } = await q;
+  const { data, error } = await usersQueryResilient(
+    sb,
+    "id, phone, lat, lng, service_type, service_district, name",
+    (q) => q.eq("role", "service")
+  );
   if (error || !Array.isArray(data)) {
     const phones = await getServiceProviderPhones(sb, serviceType);
     return phones.map((phone) => ({ phone, dist: Infinity }));

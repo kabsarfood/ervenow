@@ -129,37 +129,19 @@
     if (!global.PlatformAPI || typeof global.PlatformAPI.getToken !== "function" || !global.PlatformAPI.getToken()) {
       return Promise.resolve(null);
     }
-    return fetch(apiUrl("/api/core/me"), {
-      headers: { Authorization: "Bearer " + global.PlatformAPI.getToken() },
-    })
-      .then(function (r) {
-        return r.json();
-      })
-      .then(function (me) {
-        var role = String((me.profile && me.profile.role) || "").toLowerCase();
-        if (role === "admin") return null;
-        if (role === "driver") {
-          return global.PlatformAPI.api("/api/driver/wallet").then(function (j) {
-            return Number(j.balance) || 0;
-          });
-        }
-        if (role === "store" || role === "merchant" || role === "restaurant") {
-          return global.PlatformAPI.api("/api/store/merchant-dashboard")
-            .then(function (md) {
-              return Number((md.wallet && md.wallet.balance) || 0);
-            })
-            .catch(function () {
-              return global.PlatformAPI.api("/api/wallet").then(function (w) {
-                return Number(w.balance) || 0;
-              });
-            });
-        }
-        return global.PlatformAPI.api("/api/wallet").then(function (w) {
-          return Number(w.balance) || 0;
-        });
+    return global.PlatformAPI.api("/api/wallet/me")
+      .then(function (payload) {
+        var bal = Number(payload && payload.balance);
+        return Number.isFinite(bal) ? bal : 0;
       })
       .catch(function () {
-        return null;
+        return global.PlatformAPI.api("/api/wallet")
+          .then(function (w) {
+            return Number(w.balance) || 0;
+          })
+          .catch(function () {
+            return null;
+          });
       });
   }
 

@@ -32,6 +32,8 @@ function parseMissingOrdersColumnFromError(err) {
   if (m) return m[1];
   m = /column (\w+) of relation orders does not exist/i.exec(msg);
   if (m) return m[1];
+  m = /column orders\.(\w+) does not exist/i.exec(msg);
+  if (m) return m[1];
   if (String(err && err.code) === "42703") {
     const m2 = /column "([^"]+)" does not exist/i.exec(msg);
     if (m2) return m2[1];

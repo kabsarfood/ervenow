@@ -31,6 +31,12 @@ const {
 } = require("../../shared/restaurantCategories");
 const { countOrdersByStatus, enrichOrderForBoard } = require("../../shared/utils/storeOrderBoard");
 const { orderVisibleInPortal } = require("../../shared/utils/orderPortalRouting");
+const { enrichDriverOrderRows } = require("../../shared/utils/orderDisplayFields");
+const {
+  MERCHANT_ORDER_BOARD_COLUMNS,
+  MERCHANT_DASHBOARD_ORDER_COLUMNS,
+  selectOrdersResilient,
+} = require("../../shared/utils/ordersSchemaOptional");
 const {
   isMarketStoreType,
   productCategoryLabelAr,
@@ -1977,21 +1983,17 @@ router.get("/order-board", requireAuth, requireStoreRole, async (req, res) => {
     if (sErr) return fail(res, sErr.message, 400);
     if (!st) return fail(res, "لا يوجد متجر معتمد لجوالك.", 404);
 
-    const { data: rows, error: oErr } = await sb
-      .from("orders")
-      .select(
-        "id,order_number,order_total,total_with_vat,total_amount,delivery_fee,platform_fee,status,delivery_status,created_at,breakdown,data,customer_phone,drop_address,drop_lat,drop_lng,pickup_address,pickup_lat,pickup_lng,store_id,store_name,payment_status,payment_method,driver_id"
-      )
-      .eq("store_id", st.id)
-      .order("created_at", { ascending: false })
-      .limit(150);
+    const { data: rows, error: oErr } = await selectOrdersResilient(sb, MERCHANT_ORDER_BOARD_COLUMNS, (q) =>
+      q.eq("store_id", st.id).order("created_at", { ascending: false }).limit(150)
+    );
 
     if (oErr) return fail(res, oErr.message, 400);
 
-    let orders = (rows || []).map(enrichOrderForBoard);
+    const normalizedRows = enrichDriverOrderRows(rows || []);
+    let orders = normalizedRows.map(enrichOrderForBoard);
     orders = orders.filter((o) => orderVisibleInPortal(o, "merchant"));
     orders = await attachDriversToOrders(sb, orders);
-    const status_counts = countOrdersByStatus(rows || []);
+    const status_counts = countOrdersByStatus(normalizedRows);
 
     const walletPayload = await getStoreWalletPayloadWithFallback(sb, req.appUser.id, st.id);
 
@@ -2032,14 +2034,9 @@ router.get("/merchant-dashboard", requireAuth, requireStoreRole, async (req, res
 
     const sid = st.id;
     const [oRes, walletPayload, txRes, pCountRes] = await Promise.all([
-      sb
-        .from("orders")
-        .select(
-          "id,order_number,order_total,total_with_vat,delivery_fee,platform_fee,status,delivery_status,created_at,breakdown,customer_phone,drop_address,store_id,payment_status,payment_method"
-        )
-        .eq("store_id", sid)
-        .order("created_at", { ascending: false })
-        .limit(100),
+      selectOrdersResilient(sb, MERCHANT_DASHBOARD_ORDER_COLUMNS, (q) =>
+        q.eq("store_id", sid).order("created_at", { ascending: false }).limit(100)
+      ),
       getStoreWalletPayloadWithFallback(sb, req.appUser.id, sid),
       sb
         .from("store_transactions")
@@ -2054,7 +2051,7 @@ router.get("/merchant-dashboard", requireAuth, requireStoreRole, async (req, res
     if (oRes.error) {
       if (!isStoresTableMissing(oRes.error)) console.warn("[merchant-dashboard] orders", oRes.error.message || oRes.error);
     } else {
-      orders = oRes.data || [];
+      orders = enrichDriverOrderRows(oRes.data || []);
     }
 
     let wallet = {

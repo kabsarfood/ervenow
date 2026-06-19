@@ -2,7 +2,8 @@
  * منع تكرار طلبات الزائر — idempotency_key + كشف طلب مشابه حديثاً.
  */
 
-const DEFAULT_DEDUP_WINDOW_MS = 2 * 60 * 1000;
+/** نافذة كشف الطلب المكرر — تغطي إعادة محاولة الدفع بعد 429 */
+const DEFAULT_DEDUP_WINDOW_MS = 15 * 60 * 1000;
 
 function roundCoord(n) {
   const x = Number(n);

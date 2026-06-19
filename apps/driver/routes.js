@@ -29,6 +29,7 @@ const {
   sendCustomerDeliveringNotice,
   sendDriverArrived,
 } = require("../../shared/services/whatsappService");
+const { notifyDriverUser } = require("../../shared/services/notificationEvents");
 const {
   broadcastDriverUpdate,
   broadcastOrderPatch,
@@ -40,6 +41,11 @@ const { parseOptionalPayoutPayload, payoutRowForDriversOrStores } = require("../
 const { sanitizeDriverOrStoreRowForApi } = require("../../shared/utils/bankApiSafe");
 const { filterDriverDispatchOrders } = require("../../shared/utils/driverDispatchOrders");
 const { filterOrdersForPortal } = require("../../shared/utils/orderPortalRouting");
+const { enrichDriverOrderRows } = require("../../shared/utils/orderDisplayFields");
+const {
+  DRIVER_COMPLETED_ORDER_COLUMNS,
+  selectOrdersResilient,
+} = require("../../shared/utils/ordersSchemaOptional");
 const {
   isMerchantDispatchOrder,
   isLegacyOpenOrderForDriver,
@@ -457,6 +463,18 @@ router.post("/register", async (req, res) => {
   }
 });
 
+async function fetchDriverCompletedOrders(sb, driverId) {
+  const result = await selectOrdersResilient(sb, DRIVER_COMPLETED_ORDER_COLUMNS, (q) =>
+    q
+      .eq("driver_id", driverId)
+      .eq("delivery_status", "delivered")
+      .order("updated_at", { ascending: false })
+      .limit(12)
+  );
+  if (result.error) return { data: null, error: result.error };
+  return { data: enrichDriverOrderRows(result.data || []), error: null };
+}
+
 router.get("/orders", requireAuth, async (req, res) => {
   try {
     const drv = await ensureApprovedDriver(req, res);
@@ -486,13 +504,7 @@ router.get("/orders", requireAuth, async (req, res) => {
       .order("created_at", { ascending: false });
     if (rdErr) return fail(res, rdErr.message, 400);
 
-    const { data: completedRecent, error: doneErr } = await req.supabase
-      .from("orders")
-      .select("id,order_number,delivery_status,status,created_at,updated_at,store_name,drop_address")
-      .eq("driver_id", driverId)
-      .eq("delivery_status", "delivered")
-      .order("updated_at", { ascending: false })
-      .limit(12);
+    const { data: completedRecent, error: doneErr } = await fetchDriverCompletedOrders(req.supabase, driverId);
     if (doneErr) return fail(res, doneErr.message, 400);
 
     const { data: activeDrivers, error: drErr } = await req.supabase
@@ -532,16 +544,17 @@ router.get("/orders", requireAuth, async (req, res) => {
       return allowed;
     });
 
-    const activeAssigned = filterDriverDispatchOrders(assignedOrders || []);
+    const activeAssigned = enrichDriverOrderRows(filterDriverDispatchOrders(assignedOrders || []));
+    const visibleOpenEnriched = enrichDriverOrderRows(visibleOpenOrders);
     const finalOrders = filterOrdersForPortal(
-      filterDriverDispatchOrders([...activeAssigned, ...visibleOpenOrders]),
+      filterDriverDispatchOrders([...activeAssigned, ...visibleOpenEnriched]),
       "driver"
     );
 
     return ok(res, {
       orders: finalOrders,
-      ready_queue: visibleOpenOrders.filter(isReadyQueueOrderForDriver),
-      legacy_open: visibleOpenOrders.filter(isLegacyOpenOrderForDriver),
+      ready_queue: visibleOpenEnriched.filter(isReadyQueueOrderForDriver),
+      legacy_open: visibleOpenEnriched.filter(isLegacyOpenOrderForDriver),
       active: activeAssigned.filter(
         (o) =>
           String(o.driver_id || "") === String(driverId) &&
@@ -677,6 +690,20 @@ router.post("/accept/:id", requireAuth, async (req, res) => {
         return fail(res, msg, msg === "Forbidden" ? 403 : 400);
       }
       await bumpDeliveryOrdersListEpoch();
+      if (out.data) {
+        try {
+          await notifyDriverUser(
+            req.supabase,
+            driverId,
+            "driver.task.assigned",
+            "تم استلام الطلب",
+            `تم إسناد طلب ${out.data.order_number || out.data.id} إليك.`,
+            out.data
+          );
+        } catch (notifyErr) {
+          console.warn("[driver/accept] assignment notification:", notifyErr.message || notifyErr);
+        }
+      }
       return ok(res, { accepted: true, picked_up: true, order: out.data });
     }
 
@@ -711,6 +738,18 @@ router.post("/accept/:id", requireAuth, async (req, res) => {
     await bumpDeliveryOrdersListEpoch();
     if (data.customer_phone) {
       await sendOrderAcceptedToCustomer(data, req.appUser.phone);
+    }
+    try {
+      await notifyDriverUser(
+        req.supabase,
+        driverId,
+        "driver.task.assigned",
+        "مهمة جديدة",
+        `تم إسناد طلب ${data.order_number || data.id} إليك.`,
+        data
+      );
+    } catch (notifyErr) {
+      console.warn("[driver/accept] assignment notification:", notifyErr.message || notifyErr);
     }
     broadcastOrderPatch(orderId, orderPatchFromRow(data));
     return ok(res, { accepted: true, order: data });

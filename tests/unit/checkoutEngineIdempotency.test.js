@@ -6,18 +6,15 @@ const CHECKOUT_ENGINE = path.join(__dirname, "../../public/assets/checkout-engin
 describe("checkout-engine.js — idempotency + confirm UX", () => {
   const source = fs.readFileSync(CHECKOUT_ENGINE, "utf8");
 
-  test("confirmOrder catch clears session idempotency key before re-enable", () => {
+  test("confirmOrder catch keeps idempotency key (except auth) to prevent duplicate orders", () => {
     const fnStart = source.indexOf("async function confirmOrder()");
     const fnEnd = source.indexOf("function bindEvents()", fnStart);
     const confirmOrderSrc = source.slice(fnStart, fnEnd);
     const catchStart = confirmOrderSrc.lastIndexOf("} catch (e) {");
     const catchBlock = confirmOrderSrc.slice(catchStart);
 
-    expect(catchBlock).toMatch(/clearCheckoutIdempotencyKey\s*\(\s*\)/);
     expect(catchBlock).toMatch(/resetCheckoutBtnIdle\s*\(\s*btn\s*\)/);
-    expect(catchBlock.indexOf("clearCheckoutIdempotencyKey")).toBeLessThan(
-      catchBlock.indexOf("resetCheckoutBtnIdle(btn)")
-    );
+    expect(catchBlock).not.toMatch(/clearCheckoutIdempotencyKey\s*\(\s*\)\s*;\s*\n\s*if\s*\(\/401/);
   });
 
   test("confirm button disables immediately with processing label", () => {

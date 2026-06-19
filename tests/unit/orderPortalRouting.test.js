@@ -16,6 +16,12 @@ describe("orderPortalRouting", () => {
     expect(resolveOrderPortalType({ order_type: "service", service_type: "electrician" })).toBe("service");
     expect(resolveOrderPortalType({ order_type: "service", service_type: "pickup_truck" })).toBe("transport");
     expect(resolveOrderPortalType({ order_type: "gas_delivery", service_type: "gas_delivery" })).toBe("transport");
+    expect(
+      resolveOrderPortalType({
+        order_type: "service",
+        data: { service_type: "car_transport" },
+      })
+    ).toBe("transport");
   });
 
   test("applyPortalTypeToOrderRow stamps row and data", () => {

@@ -26,7 +26,7 @@ const checkoutLimiter = rateLimit({
 /** POST /api/delivery/orders */
 const deliveryOrdersCreateLimiter = rateLimit({
   windowMs: 60 * 1000,
-  max: Number(process.env.RATE_LIMIT_DELIVERY_ORDERS_PER_MIN) || 10,
+  max: Number(process.env.RATE_LIMIT_DELIVERY_ORDERS_PER_MIN) || 24,
   standardHeaders: true,
   legacyHeaders: false,
   keyGenerator: userAwareKey,

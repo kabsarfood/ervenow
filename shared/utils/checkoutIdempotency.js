@@ -3,12 +3,27 @@
  * Uses a short-lived { pending: true } claim to reduce duplicate inserts under concurrency.
  */
 
+/** Pending claims older than this are treated as abandoned (client timeout / crash). */
+const STALE_PENDING_MS = 120 * 1000;
+
 function isCompleteResponse(response) {
   return Boolean(response && response.ok === true && Array.isArray(response.orders));
 }
 
+function isPendingResponse(response) {
+  return Boolean(response && response.pending === true);
+}
+
+function isStalePendingRow(row, nowMs) {
+  if (!row || !isPendingResponse(row.response)) return false;
+  const created = row.created_at ? new Date(row.created_at).getTime() : 0;
+  if (!Number.isFinite(created) || created <= 0) return true;
+  const now = Number.isFinite(nowMs) ? nowMs : Date.now();
+  return now - created > STALE_PENDING_MS;
+}
+
 /**
- * @returns {Promise<{ replay?: object, claimed?: boolean, conflict?: boolean }>}
+ * @returns {Promise<{ replay?: object, claimed?: boolean, conflict?: boolean, staleReclaimed?: boolean }>}
  */
 async function claimOrReplayCheckout(sb, customerId, idempotencyKey) {
   const { data: row, error: selErr } = await sb
@@ -22,8 +37,11 @@ async function claimOrReplayCheckout(sb, customerId, idempotencyKey) {
   if (row && isCompleteResponse(row.response)) {
     return { replay: row.response };
   }
-  if (row && row.response && row.response.pending === true) {
-    return { conflict: true };
+  if (row && isPendingResponse(row.response)) {
+    if (!isStalePendingRow(row)) {
+      return { conflict: true };
+    }
+    await releaseCheckoutIdempotency(sb, customerId, idempotencyKey);
   }
 
   const ins = await sb
@@ -37,7 +55,7 @@ async function claimOrReplayCheckout(sb, customerId, idempotencyKey) {
     .maybeSingle();
 
   if (!ins.error) {
-    return { claimed: true };
+    return { claimed: true, staleReclaimed: Boolean(row && isPendingResponse(row.response)) };
   }
 
   if (String(ins.error.code || "") === "23505") {
@@ -49,6 +67,22 @@ async function claimOrReplayCheckout(sb, customerId, idempotencyKey) {
       .maybeSingle();
     if (row2 && isCompleteResponse(row2.response)) {
       return { replay: row2.response };
+    }
+    if (row2 && isPendingResponse(row2.response) && !isStalePendingRow(row2)) {
+      return { conflict: true };
+    }
+    if (row2 && isPendingResponse(row2.response) && isStalePendingRow(row2)) {
+      await releaseCheckoutIdempotency(sb, customerId, idempotencyKey);
+      const retry = await sb
+        .from("checkout_idempotency")
+        .insert({
+          customer_id: customerId,
+          idempotency_key: idempotencyKey,
+          response: { pending: true },
+        })
+        .select()
+        .maybeSingle();
+      if (!retry.error) return { claimed: true, staleReclaimed: true };
     }
     return { conflict: true };
   }
@@ -70,8 +104,11 @@ async function releaseCheckoutIdempotency(sb, customerId, idempotencyKey) {
 }
 
 module.exports = {
+  STALE_PENDING_MS,
   claimOrReplayCheckout,
   finalizeCheckoutIdempotency,
   releaseCheckoutIdempotency,
   isCompleteResponse,
+  isPendingResponse,
+  isStalePendingRow,
 };

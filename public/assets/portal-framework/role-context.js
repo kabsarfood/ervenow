@@ -49,6 +49,7 @@
       brand: "ERVENOW Merchant",
       roleLabel: "تاجر",
       theme: "merchant",
+      loginUrl: "/login?role=store",
       defaultSection: "dashboard",
       items: [
         "dashboard",
@@ -73,6 +74,7 @@
       brand: "ERVENOW Driver",
       roleLabel: "مندوب",
       theme: "driver",
+      loginUrl: "/driver-login",
       defaultSection: "dashboard",
       items: ["dashboard", "ready", "active", "completed", "earnings", "wallet", "rating", "notifications", "settings"],
       sidebarFoot: [
@@ -85,6 +87,7 @@
       brand: "ERVENOW Service",
       roleLabel: "مزوّد خدمة",
       theme: "service",
+      loginUrl: "/service-provider-login",
       defaultSection: "dashboard",
       items: ["dashboard", "requests", "schedule", "wallet", "rating", "notifications", "settings"],
       sidebarFoot: [{ href: "/services-provider.html", label: "البوابة الكلاسيكية" }],
@@ -94,6 +97,7 @@
       brand: "ERVENOW Transport",
       roleLabel: "نقل",
       theme: "transport",
+      loginUrl: "/service-provider-login",
       defaultSection: "dashboard",
       items: ["dashboard", "transport-orders", "wallet", "notifications", "fleet", "pricing", "settings"],
       sidebarFoot: [{ href: "/services-provider.html", label: "بوابة النقل الكلاسيكية" }],

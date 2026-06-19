@@ -67,7 +67,13 @@ async function handleUnifiedCartCheckoutHttp(req, res, opts = {}) {
           );
         }
       }
-      return res.status(failStatus).json({ ok: false, message: insertResult.message });
+      return res.status(failStatus).json({
+        ok: false,
+        message: insertResult.message,
+        balance: insertResult.balance,
+        required: insertResult.required,
+        reason: insertResult.reason || null,
+      });
     }
 
     await bumpDeliveryOrdersListEpoch();

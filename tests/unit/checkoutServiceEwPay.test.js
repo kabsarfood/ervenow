@@ -130,7 +130,8 @@ describe("checkout service ew_pay", () => {
     expect(applyErvenowPayForCheckoutOrders).toHaveBeenCalledWith(
       sb,
       "cust-1",
-      expect.arrayContaining([expect.objectContaining({ id: "ord-1" })])
+      expect.arrayContaining([expect.objectContaining({ id: "ord-1" })]),
+      expect.objectContaining({ financialIntent: undefined })
     );
   });
 });

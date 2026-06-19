@@ -9,6 +9,49 @@
     return global.ErvenowPortalFramework || {};
   };
 
+  var PORTAL_LOGIN_URLS = {
+    driver: "/driver-login",
+    merchant: "/login?role=store",
+    store: "/login?role=store",
+    service: "/service-provider-login",
+    transport: "/service-provider-login",
+    customer: "/login?role=customer",
+    admin: "/login?role=admin",
+  };
+
+  function loginUrlForRole(role, config) {
+    if (config && config.loginUrl) return String(config.loginUrl);
+    return PORTAL_LOGIN_URLS[String(role || "").toLowerCase()] || "/login";
+  }
+
+  function performPortalLogout(loginUrl) {
+    var finish = function () {
+      try {
+        if (global.ErvenowAuthGuard && typeof global.ErvenowAuthGuard.clearSession === "function") {
+          global.ErvenowAuthGuard.clearSession();
+        }
+      } catch (_) {}
+      try {
+        global.__ervSessionMe = null;
+      } catch (_) {}
+      try {
+        global.dispatchEvent(new CustomEvent("ervenow:auth-changed"));
+      } catch (_) {}
+      global.location.replace(loginUrl || "/login");
+    };
+
+    try {
+      if (
+        global.ErvenowOrderDraft &&
+        typeof global.ErvenowOrderDraft.prepareLogoutDraftState === "function"
+      ) {
+        global.ErvenowOrderDraft.prepareLogoutDraftState().then(finish).catch(finish);
+        return;
+      }
+    } catch (_) {}
+    finish();
+  }
+
   function createShell(options) {
     options = options || {};
     if (options.showHeader == null) options.showHeader = true;
@@ -86,7 +129,9 @@
         '<main class="pf-content" aria-live="polite">' +
         '<div class="pf-msg" data-pf-msg hidden></div>' +
         '<div data-pf-main></div>' +
-        "</main></div></div>" +
+        "</main>" +
+        '<div data-pf-footer></div>' +
+        "</div></div>" +
         (options.showBottomNav ? '<nav class="pf-bottom-nav" data-pf-bottom-nav aria-label="التنقل التشغيلي"></nav>' : "") +
         "";
       els.overlay = els.app.querySelector("[data-pf-overlay]");
@@ -121,6 +166,16 @@
       if (options.showBottomNav) {
         mountBottomNav();
       }
+      mountFooter();
+    }
+
+    function mountFooter() {
+      var host = els.app && els.app.querySelector("[data-pf-footer]");
+      if (!host || !PF().PortalFooter) return;
+      host.innerHTML = PF().PortalFooter.renderHtml({
+        roleLabel: state.config && state.config.roleLabel,
+        portalTitle: options.portalTitle,
+      });
     }
 
     function mountBottomNav() {
@@ -189,7 +244,17 @@
         }
         var openBtn = ev.target.closest('[data-pf-action="open-sidebar"]');
         if (openBtn) {
-          openSidebar();
+          ev.preventDefault();
+          toggleSidebar();
+          return;
+        }
+        var logoutBtn = ev.target.closest('[data-pf-action="logout"]');
+        if (logoutBtn) {
+          ev.preventDefault();
+          closeSidebar();
+          performPortalLogout(
+            options.loginUrl || loginUrlForRole(state.role, state.config)
+          );
           return;
         }
         var navBtn = ev.target.closest("[data-pf-section]");
@@ -220,20 +285,40 @@
       }
     }
 
-    function openSidebar() {
-      if (els.sidebar) els.sidebar.classList.add("is-open");
+    function updateMenuBtn(open) {
+      if (!els.app) return;
+      var btn = els.app.querySelector('[data-pf-action="open-sidebar"]');
+      if (!btn) return;
+      btn.setAttribute("aria-expanded", open ? "true" : "false");
+      btn.setAttribute("aria-label", open ? "إغلاق القائمة" : "فتح القائمة");
+    }
+
+    function setSidebarOpen(open) {
+      if (els.sidebar) els.sidebar.classList.toggle("is-open", !!open);
       if (els.overlay) {
-        els.overlay.classList.add("is-open");
-        els.overlay.setAttribute("aria-hidden", "false");
+        els.overlay.classList.toggle("is-open", !!open);
+        els.overlay.setAttribute("aria-hidden", open ? "false" : "true");
       }
+      if (document.body) document.body.classList.toggle("pf-sidebar-open", !!open);
+      updateMenuBtn(!!open);
+    }
+
+    function openSidebar() {
+      setSidebarOpen(true);
     }
 
     function closeSidebar() {
-      if (els.sidebar) els.sidebar.classList.remove("is-open");
-      if (els.overlay) {
-        els.overlay.classList.remove("is-open");
-        els.overlay.setAttribute("aria-hidden", "true");
-      }
+      setSidebarOpen(false);
+    }
+
+    function toggleSidebar() {
+      var open = !!(els.sidebar && els.sidebar.classList.contains("is-open"));
+      setSidebarOpen(!open);
+    }
+
+    function syncSidebarInitialState() {
+      var wide = global.matchMedia && global.matchMedia("(min-width: 1025px)").matches;
+      setSidebarOpen(!!wide);
     }
 
     function navigate(section) {
@@ -325,6 +410,7 @@
       parseInitialHash();
       renderNav();
       syncBottomNav(state.activeSection);
+      syncSidebarInitialState();
       state.mounted = true;
       if (els.app) els.app.hidden = false;
       return api;
@@ -362,6 +448,7 @@
       updateHeader: updateHeader,
       openSidebar: openSidebar,
       closeSidebar: closeSidebar,
+      toggleSidebar: toggleSidebar,
       mountNotifications: mountNotifications,
       showApp: showApp,
       showLogin: showLogin,
@@ -394,5 +481,5 @@
 
   global.ErvenowPortalFramework = global.ErvenowPortalFramework || {};
   global.ErvenowPortalFramework.PortalShell = { create: createShell };
-  global.ErvenowPortalFramework.version = "2.1.1-portal-header";
+  global.ErvenowPortalFramework.version = "2.1.2-portal-logout";
 })(typeof window !== "undefined" ? window : global);

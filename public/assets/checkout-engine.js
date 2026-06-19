@@ -13,7 +13,8 @@
   var CHECKOUT_BTN_WAITING = "جاري معالجة الطلب...";
   var CHECKOUT_BTN_SUCCESS = "✅ تم إنشاء الطلب بنجاح";
   var CHECKOUT_IN_PROGRESS_POLL_MS = 2000;
-  var CHECKOUT_IN_PROGRESS_MAX_POLLS = 15;
+  var CHECKOUT_IN_PROGRESS_MAX_POLLS = 30;
+  var CHECKOUT_API_TIMEOUT_MS = 60000;
 
   var checkoutInFlight = false;
   var labelEnrichInFlight = false;
@@ -61,6 +62,12 @@
     return (items || []).some(function (i) {
       var d = i && i.data;
       return lineKind(i) === "product" && d && d.store_id;
+    });
+  }
+
+  function isInternalDeliveryDraft(items) {
+    return (items || []).some(function (it) {
+      return String((it && it.type) || "").toLowerCase() === "internal_delivery";
     });
   }
 
@@ -423,14 +430,38 @@
   }
 
   function isCheckoutInProgressError(msg) {
-    return /already in progress|checkout already/i.test(String(msg || ""));
+    return /already in progress|checkout already|checkout_stuck_in_progress|طلب التأكيد قيد المعالجة/i.test(
+      String(msg || "")
+    );
+  }
+
+  function isCheckoutTransientError(msg) {
+    var m = String(msg || "");
+    return (
+      isCheckoutInProgressError(m) ||
+      /انتهت مهلة الاتصال|timeout|AbortError|الخادم مشغول/i.test(m)
+    );
   }
 
   function humanizeCheckoutError(msg) {
     var m = String(msg || "").trim();
-    if (!m || isCheckoutInProgressError(m)) return "تعذّر إتمام الطلب — أعد المحاولة بعد لحظة.";
+    if (/طلبات كثيرة|RATE_LIMIT|too many/i.test(m)) {
+      return "طلبات كثيرة — انتظر دقيقة ثم اضغط «تأكيد الطلب» مرة أخرى (لن يُنشأ طلب مكرر).";
+    }
+    if (!m || /checkout_stuck_in_progress/i.test(m)) {
+      return "تعذّر إتمام الطلب — حدّث الصفحة واضغط «تأكيد الطلب» مرة واحدة.";
+    }
+    if (isCheckoutInProgressError(m)) {
+      return "طلب التأكيد قيد المعالجة — انتظر نصف دقيقة ثم أعد المحاولة.";
+    }
     if (/رصيد|غير كاف|insufficient/i.test(m)) return "رصيد المحفظة غير كافٍ لإتمام الطلب.";
+    if (/amount_mismatch|تعارض في مبلغ/i.test(m)) {
+      return "تعارض في مبلغ الطلب — حدّث الصفحة ثم اضغط «تأكيد الطلب» مرة واحدة.";
+    }
     if (/موقع|GPS|توصيل|متجر|دفع|فارغ/i.test(m) && /[\u0600-\u06FF]/.test(m)) return m;
+    if (/platform_wallet|migration_missing|ledger|schema cache|function.*not found/i.test(m)) {
+      return "نظام الدفع غير جاهز — تواصل مع دعم ERVENOW أو أعد المحاولة لاحقاً.";
+    }
     if (/database not configured|idempotency unavailable/i.test(m)) {
       return "الخدمة غير متاحة مؤقتاً — أعد المحاولة بعد قليل.";
     }
@@ -472,6 +503,7 @@
       method: "POST",
       body: payload,
       idempotencyKey: idemKey,
+      timeoutMs: CHECKOUT_API_TIMEOUT_MS,
     });
   }
 
@@ -482,7 +514,10 @@
         return await submitCheckoutOrder(payload, idemKey);
       } catch (e) {
         var msg = String((e && e.message) || "");
-        if (!isCheckoutInProgressError(msg) || polls >= CHECKOUT_IN_PROGRESS_MAX_POLLS) {
+        if (!isCheckoutTransientError(msg) || polls >= CHECKOUT_IN_PROGRESS_MAX_POLLS) {
+          if (isCheckoutInProgressError(msg) || /انتهت مهلة/i.test(msg)) {
+            throw new Error("checkout_stuck_in_progress");
+          }
           throw e;
         }
         setCheckoutBtnState(btn, "processing", CHECKOUT_BTN_WAITING);
@@ -602,7 +637,20 @@
     var showLocEdit = hasStoreProducts(items) && mode !== "pickup";
     if (delEdit) delEdit.hidden = !showLocEdit;
     if (delEl) {
-      if (!hasStoreProducts(items)) {
+      if (isInternalDeliveryDraft(items)) {
+        var idItem = items.find(function (it) {
+          return String((it && it.type) || "").toLowerCase() === "internal_delivery";
+        });
+        var idData = (idItem && idItem.data) || {};
+        var idLabel = String(idData.shipment_name || (idItem && idItem.title) || "توصيل داخلي").trim();
+        if (idData.from && idData.to) {
+          delEl.textContent = "توصيل داخلي — " + idLabel;
+        } else if (Number.isFinite(Number(idData.pickup_lat)) && Number.isFinite(Number(idData.drop_lat))) {
+          delEl.textContent = "توصيل داخلي — موقع الاستلام والتسليم محفوظ";
+        } else {
+          delEl.textContent = "توصيل داخلي — أكمل موقع الاستلام والتسليم من صفحة التوصيل";
+        }
+      } else if (!hasStoreProducts(items)) {
         delEl.textContent = "لا يتطلب توصيل متجر";
       } else if (mode === "pickup") {
         delEl.textContent = "الاستلام من المتجر — لا توصيل";
@@ -807,11 +855,15 @@
       global.location.href = resolvePostCheckoutRedirectUrl(orders);
     } catch (e) {
       var msg = String((e && e.message) || "حدث خطأ، حاول مرة أخرى");
-      clearCheckoutIdempotencyKey();
+      /* احتفظ بمفتاح idempotency عند الفشل — يمنع طلباً مكرراً عند إعادة الدفع */
       if (/401|غير مصرح|token/i.test(msg)) {
+        clearCheckoutIdempotencyKey();
         checkoutInFlight = false;
         global.location.href = "/login?mode=register&role=customer&next=" + encodeURIComponent("/checkout");
         return;
+      }
+      if (/checkout_stuck_in_progress|already in progress|checkout already|طلب التأكيد قيد المعالجة/i.test(msg)) {
+        clearCheckoutIdempotencyKey();
       }
       resetCheckoutBtnIdle(btn);
       showToast(humanizeCheckoutError(msg), "error");

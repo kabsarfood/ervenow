@@ -422,7 +422,7 @@ if (servePublicUi) {
   });
 
   app.get("/driver", (_req, res) => {
-    res.sendFile(path.join(publicPath, "driver.html"));
+    res.redirect(301, "/driver-preview");
   });
 
   app.get("/driver-login", (_req, res) => {
@@ -438,7 +438,7 @@ if (servePublicUi) {
   });
 
   app.get(["/driver-dashboard", "/driver-dashboard.html"], (_req, res) => {
-    res.redirect(301, "/driver");
+    res.redirect(301, "/driver-preview");
   });
 
   app.get("/driver-wallet", (_req, res) => {

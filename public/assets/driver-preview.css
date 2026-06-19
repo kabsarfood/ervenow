@@ -371,6 +371,18 @@ body.driver-preview-page {
   line-height: 1.5;
 }
 
+.dp-legacy-tag {
+  display: inline-block;
+  margin-inline-start: 6px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  background: color-mix(in srgb, var(--pf-accent, #2d6a4f) 14%, #fff);
+  color: var(--pf-sidebar, #1a2e24);
+  vertical-align: middle;
+}
+
 .dp-order-card__actions {
   display: flex;
   flex-wrap: wrap;

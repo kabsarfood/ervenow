@@ -1,0 +1,499 @@
+{
+  "generated_at": "2026-06-19T12:10:23.498Z",
+  "table": "public.orders",
+  "summary": {
+    "expected_count": 62,
+    "actual_count": 58,
+    "present_expected": 55,
+    "missing_expected": 7,
+    "extra_columns": 3,
+    "schema_cache_missing": 0,
+    "consistent": false
+  },
+  "expected_columns": [
+    "breakdown",
+    "city",
+    "country_code",
+    "created_at",
+    "currency_code",
+    "customer_id",
+    "customer_phone",
+    "data",
+    "delivered_at",
+    "delivery_fee",
+    "delivery_order_id",
+    "delivery_status",
+    "distance_km",
+    "district",
+    "driver_earning",
+    "driver_id",
+    "driver_lat",
+    "driver_lng",
+    "drop_address",
+    "drop_lat",
+    "drop_lng",
+    "external_order_id",
+    "id",
+    "idempotency_key",
+    "invoice_issued_at",
+    "invoice_number",
+    "invoice_url",
+    "last_location_at",
+    "merchant_id",
+    "notes",
+    "order_number",
+    "order_total",
+    "order_type",
+    "payment_method",
+    "payment_status",
+    "pickup_address",
+    "pickup_lat",
+    "pickup_lng",
+    "platform_commission",
+    "platform_fee",
+    "portal_type",
+    "provider_id",
+    "rated_at",
+    "rating",
+    "review",
+    "scheduled_at",
+    "seller_name",
+    "seller_vat_number",
+    "series_source",
+    "service_location",
+    "service_name",
+    "service_provider_id",
+    "service_type",
+    "status",
+    "store_address",
+    "store_id",
+    "store_name",
+    "total_amount",
+    "total_with_vat",
+    "updated_at",
+    "vat_amount",
+    "wallet_credited_at"
+  ],
+  "actual_columns": [
+    {
+      "name": "id",
+      "type": "uuid",
+      "nullable": false,
+      "default": "uuid_generate_v4()"
+    },
+    {
+      "name": "order_number",
+      "type": "text",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "name": "customer_name",
+      "type": "text",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "name": "customer_phone",
+      "type": "text",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "name": "total_amount",
+      "type": "numeric",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "name": "delivery_fee",
+      "type": "numeric",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "name": "status",
+      "type": "text",
+      "nullable": true,
+      "default": "'new'::text"
+    },
+    {
+      "name": "data",
+      "type": "jsonb",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "name": "created_at",
+      "type": "timestamp without time zone",
+      "nullable": true,
+      "default": "now()"
+    },
+    {
+      "name": "updated_at",
+      "type": "timestamp without time zone",
+      "nullable": true,
+      "default": "now()"
+    },
+    {
+      "name": "series_source",
+      "type": "text",
+      "nullable": true,
+      "default": "'kabsar'::text"
+    },
+    {
+      "name": "date_key",
+      "type": "date",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "name": "hijri_date",
+      "type": "text",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "name": "driver_id",
+      "type": "uuid",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "name": "delivery_status",
+      "type": "text",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "name": "customer_id",
+      "type": "uuid",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "name": "distance_km",
+      "type": "numeric",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "name": "driver_lat",
+      "type": "numeric",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "name": "driver_lng",
+      "type": "numeric",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "name": "last_location_at",
+      "type": "timestamp with time zone",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "name": "external_order_id",
+      "type": "text",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "name": "pickup_address",
+      "type": "text",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "name": "drop_address",
+      "type": "text",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "name": "pickup_lat",
+      "type": "numeric",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "name": "pickup_lng",
+      "type": "numeric",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "name": "drop_lat",
+      "type": "numeric",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "name": "drop_lng",
+      "type": "numeric",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "name": "notes",
+      "type": "text",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "name": "platform_fee",
+      "type": "numeric",
+      "nullable": true,
+      "default": "0"
+    },
+    {
+      "name": "order_total",
+      "type": "numeric",
+      "nullable": true,
+      "default": "0"
+    },
+    {
+      "name": "driver_earning",
+      "type": "numeric",
+      "nullable": true,
+      "default": "0"
+    },
+    {
+      "name": "vat_amount",
+      "type": "numeric",
+      "nullable": true,
+      "default": "0"
+    },
+    {
+      "name": "total_with_vat",
+      "type": "numeric",
+      "nullable": true,
+      "default": "0"
+    },
+    {
+      "name": "rating",
+      "type": "integer",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "name": "review",
+      "type": "text",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "name": "invoice_number",
+      "type": "text",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "name": "invoice_issued_at",
+      "type": "timestamp with time zone",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "name": "seller_name",
+      "type": "text",
+      "nullable": true,
+      "default": "'ERVENOW'::text"
+    },
+    {
+      "name": "seller_vat_number",
+      "type": "text",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "name": "invoice_url",
+      "type": "text",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "name": "wallet_credited_at",
+      "type": "timestamp with time zone",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "name": "provider_id",
+      "type": "uuid",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "name": "service_type",
+      "type": "text",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "name": "order_type",
+      "type": "text",
+      "nullable": true,
+      "default": "'food'::text"
+    },
+    {
+      "name": "idempotency_key",
+      "type": "text",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "name": "portal_type",
+      "type": "text",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "name": "store_name",
+      "type": "text",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "name": "store_address",
+      "type": "text",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "name": "payment_status",
+      "type": "text",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "name": "payment_method",
+      "type": "text",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "name": "store_id",
+      "type": "uuid",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "name": "breakdown",
+      "type": "jsonb",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "name": "merchant_id",
+      "type": "uuid",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "name": "service_provider_id",
+      "type": "uuid",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "name": "delivery_order_id",
+      "type": "uuid",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "name": "country_code",
+      "type": "text",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "name": "city",
+      "type": "text",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "name": "currency_code",
+      "type": "text",
+      "nullable": true,
+      "default": null
+    }
+  ],
+  "present_expected": [
+    "breakdown",
+    "city",
+    "country_code",
+    "created_at",
+    "currency_code",
+    "customer_id",
+    "customer_phone",
+    "data",
+    "delivery_fee",
+    "delivery_order_id",
+    "delivery_status",
+    "distance_km",
+    "driver_earning",
+    "driver_id",
+    "driver_lat",
+    "driver_lng",
+    "drop_address",
+    "drop_lat",
+    "drop_lng",
+    "external_order_id",
+    "id",
+    "idempotency_key",
+    "invoice_issued_at",
+    "invoice_number",
+    "invoice_url",
+    "last_location_at",
+    "merchant_id",
+    "notes",
+    "order_number",
+    "order_total",
+    "order_type",
+    "payment_method",
+    "payment_status",
+    "pickup_address",
+    "pickup_lat",
+    "pickup_lng",
+    "platform_fee",
+    "portal_type",
+    "provider_id",
+    "rating",
+    "review",
+    "seller_name",
+    "seller_vat_number",
+    "series_source",
+    "service_provider_id",
+    "service_type",
+    "status",
+    "store_address",
+    "store_id",
+    "store_name",
+    "total_amount",
+    "total_with_vat",
+    "updated_at",
+    "vat_amount",
+    "wallet_credited_at"
+  ],
+  "missing_expected": [
+    "delivered_at",
+    "district",
+    "platform_commission",
+    "rated_at",
+    "scheduled_at",
+    "service_location",
+    "service_name"
+  ],
+  "schema_cache_missing": [],
+  "extra_columns": [
+    "customer_name",
+    "date_key",
+    "hijri_date"
+  ]
+}

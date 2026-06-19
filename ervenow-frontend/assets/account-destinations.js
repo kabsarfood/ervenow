@@ -4,7 +4,7 @@
 (function (global) {
   var ROLE_HOME = {
     customer: { path: "/start-now.html", label: "المنصة الرئيسية", short: "عضو ERVENOW" },
-    driver: { path: "/driver", label: "لوحة شريك التوصيل", short: "شريك توصيل" },
+    driver: { path: "/driver-preview", label: "بوابة شريك التوصيل", short: "شريك توصيل" },
     store: { path: "/store-dashboard", label: "لوحة الشريك التجاري", short: "شريك تجاري" },
     merchant: { path: "/store-dashboard", label: "لوحة الشريك التجاري", short: "شريك تجاري" },
     restaurant: { path: "/store-dashboard", label: "لوحة الشريك التجاري", short: "شريك تجاري" },
@@ -39,7 +39,7 @@
     service: "لوحة مزود الخدمة",
   };
 
-  var DRIVER_HOME_PATH = "/driver";
+  var DRIVER_HOME_PATH = "/driver-preview";
 
   function canonicalPath(path, role) {
     var p = String(path || "/").split("?")[0].split("#")[0];
