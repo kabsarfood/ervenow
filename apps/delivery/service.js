@@ -358,10 +358,18 @@ async function createDeliveryOrderFromBody(sb, appUser, body, opts) {
   }));
 }
 
+function formatEdDaySeq(seq) {
+  const n = Math.max(1, Number(seq) || 1);
+  if (n < 10) return `00${n}`;
+  if (n < 100) return `0${n}`;
+  return String(n);
+}
+
 /**
- * تسلسل يومي ED-<day>-<seq> — العدّ داخل نفس يوم created_at؛ تنسيق 001/010 ثم 100+ بدون سقف خانات.
+ * تسلسل يومي ED-<day>-<seq> — يتحقق من الفهرس الفريد عالمياً (orders_order_number_key).
+ * يتخطى أرقاماً محجوزة من أيام/أشهر سابقة (مثل ED-17-001 من شهر سابق).
  */
-async function buildNextDeliveryOrderNumber(sb) {
+async function buildNextDeliveryOrderNumber(sb, startSeq = null) {
   const today = new Date();
   const day = String(today.getDate()).padStart(2, "0");
 
@@ -378,23 +386,34 @@ async function buildNextDeliveryOrderNumber(sb) {
     .lte("created_at", end.toISOString());
   if (error) throw error;
 
-  const seq = (count ?? 0) + 1;
-  const formattedSeq =
-    seq < 10
-      ? `00${seq}`
-      : seq < 100
-        ? `0${seq}`
-        : String(seq);
-  return `ED-${day}-${formattedSeq}`;
+  let seq = startSeq != null ? Number(startSeq) : (count ?? 0) + 1;
+  if (!Number.isFinite(seq) || seq < 1) seq = 1;
+
+  for (let bump = 0; bump < 500; bump += 1) {
+    const candidate = `ED-${day}-${formatEdDaySeq(seq + bump)}`;
+    const { data: exists, error: exErr } = await sb
+      .from("orders")
+      .select("id")
+      .eq("order_number", candidate)
+      .maybeSingle();
+    if (exErr) throw exErr;
+    if (!exists) return candidate;
+  }
+
+  throw new Error("buildNextDeliveryOrderNumber: no free order_number slot");
 }
 
 const PG_UNIQUE_VIOLATION = "23505";
 
 function isOrderNumberUniqueViolation(err) {
   if (!err) return false;
-  if (err.code === PG_UNIQUE_VIOLATION) return true;
-  const m = String(err.message || err.details || "");
-  return /duplicate key|unique constraint/i.test(m);
+  const m = String(err.message || err.details || err.hint || "");
+  if (/orders_order_number_key|order_number/i.test(m)) return true;
+  if (err.code === PG_UNIQUE_VIOLATION && /order_number|orders_order_number/i.test(m)) return true;
+  if (err.code === PG_UNIQUE_VIOLATION && !/idempotency/i.test(m)) {
+    return /duplicate key|unique constraint/i.test(m);
+  }
+  return false;
 }
 
 /**
@@ -458,6 +477,7 @@ async function insertDeliveryOrderWithRetry(sb, buildRow) {
   }
 
   const maxAttempts = 12;
+  let nextSeqHint = null;
   for (let a = 0; a < maxAttempts; a++) {
     const base = 20;
     const cap = 2000; // 2s كحد أعلى
@@ -465,14 +485,18 @@ async function insertDeliveryOrderWithRetry(sb, buildRow) {
     const jitter = Math.random() * 50;
 
     await new Promise((r) => setTimeout(r, delay + jitter));
-    const order_number = await buildNextDeliveryOrderNumber(sb);
+    const order_number = await buildNextDeliveryOrderNumber(sb, nextSeqHint);
     const row = applyPortalTypeToOrderRow(normalizeOrderFinancialsForInsert(buildRow(order_number)));
     const { data, error } = await insertOrdersResilient(sb, row);
     if (!error) {
       if (data) await insertVatRecordForOrder(sb, data);
       return { data, error: null };
     }
-    if (isOrderNumberUniqueViolation(error)) continue;
+    if (isOrderNumberUniqueViolation(error)) {
+      const m = /ED-\d+-(\d+)/i.exec(String(order_number || ""));
+      if (m) nextSeqHint = Number(m[1]) + 1;
+      continue;
+    }
 
     if (isIdempotencyKeyUniqueViolation(error) && customerId && idemKey) {
       try {
@@ -819,6 +843,7 @@ module.exports = {
   getRiyadhDate,
   buildInvoiceNumber,
   createDeliveryOrderFromBody,
+  formatEdDaySeq,
   buildNextDeliveryOrderNumber,
   insertDeliveryOrderWithRetry,
   refineDeliveryOrderPricingFromOsrm,

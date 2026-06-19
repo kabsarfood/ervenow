@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-06-19T19:00:46.121Z",
+  "updated_at": "2026-06-19T19:06:48.685Z",
   "portal_visits": {
     "customer": {
       "visits": 29,
@@ -12,9 +12,9 @@
       "last_at": "2026-06-19T12:00:40.637Z"
     },
     "driver": {
-      "visits": 291,
+      "visits": 325,
       "unique_users": {},
-      "last_at": "2026-06-19T19:00:46.121Z"
+      "last_at": "2026-06-19T19:04:36.372Z"
     },
     "service": {
       "visits": 151,
@@ -41,9 +41,9 @@
       "active_users": {}
     },
     "driver": {
-      "visits": 246,
+      "visits": 278,
       "unique_users": {},
-      "last_at": "2026-06-19T19:00:46.121Z",
+      "last_at": "2026-06-19T19:04:36.372Z",
       "active_users": {}
     },
     "service": {
@@ -89,6 +89,26 @@
   "user_snapshots": {},
   "broadcast_history": [],
   "redirect_events": [
+    {
+      "at": "2026-06-19T19:06:48.684Z",
+      "portal": "admin",
+      "role": "admin",
+      "path": "/admin-dashboard",
+      "success": true,
+      "raw_role": "admin",
+      "service_type": null,
+      "user_id": null
+    },
+    {
+      "at": "2026-06-19T19:04:36.254Z",
+      "portal": "driver",
+      "role": "driver",
+      "path": "/driver",
+      "success": true,
+      "raw_role": "driver",
+      "service_type": null,
+      "user_id": null
+    },
     {
       "at": "2026-06-19T18:35:25.486Z",
       "portal": "customer",
