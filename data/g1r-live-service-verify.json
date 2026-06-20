@@ -1,0 +1,56 @@
+{
+  "generated_at": "2026-06-20T14:04:26.636Z",
+  "gas": {
+    "flow": "gas",
+    "verdict": "FAIL",
+    "steps": [
+      {
+        "step": "create",
+        "portal_type": "service",
+        "portal": "service"
+      }
+    ],
+    "proofs": {
+      "portal_type": "service",
+      "visible_service": true,
+      "visible_transport": false,
+      "blocker": "no_service_provider_in_db"
+    }
+  },
+  "internal_delivery": {
+    "flow": "internal_delivery",
+    "verdict": "PASS",
+    "steps": [
+      {
+        "step": "create",
+        "portal_type": "driver",
+        "portal": "driver"
+      },
+      {
+        "step": "accepted",
+        "status": "accepted",
+        "portal": "driver"
+      },
+      {
+        "step": "delivering",
+        "status": "delivering",
+        "portal": "driver",
+        "via": "accepted→delivering"
+      },
+      {
+        "step": "delivered",
+        "status": "delivered",
+        "portal": "driver"
+      }
+    ],
+    "proofs": {
+      "portal_type": "driver",
+      "visible_driver": true,
+      "visible_transport": false,
+      "in_driver_dispatch": true,
+      "final_status": "delivered",
+      "driver_id": "3dcd8139-62a6-44d3-95fc-3825b28ee192"
+    }
+  },
+  "verdict": "FAIL"
+}

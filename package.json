@@ -34,7 +34,11 @@
     "migrate:hero-banners-v2": "node scripts/run-migration-hero-banners-v2.js",
     "migrate:orders-portal-type": "node scripts/run-migration-orders-portal-type.js",
     "migrate:orders-schema-cache": "node scripts/run-migration-orders-schema-cache-columns.js",
-    "report:orders-schema": "node scripts/orders-schema-consistency-report.js"
+    "migrate:orders-schema-closure-g1r": "node scripts/run-migration-orders-schema-closure-g1r.js",
+    "migrate:notifications": "node scripts/run-migration-notifications.js",
+    "report:orders-schema": "node scripts/orders-schema-consistency-report.js",
+    "report:redis-closure": "node scripts/redis-closure-audit.js",
+    "test:live-e2e": "node scripts/reconnect-lifecycle-live-e2e.js"
   },
   "engines": {
     "node": ">=20"

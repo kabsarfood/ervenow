@@ -4,9 +4,6 @@
   "roleLabel": "مندوب",
   "theme": "driver",
   "defaultSection": "dashboard",
-  "items": ["dashboard", "ready", "active", "completed", "earnings", "wallet", "rating", "notifications", "settings"],
-  "sidebarFoot": [
-    { "href": "/driver", "label": "لوحة المندوب" },
-    { "href": "/driver-app", "label": "التتبع الحي" }
-  ]
+  "items": ["dashboard", "ready", "active", "live-track", "completed", "earnings", "wallet", "rating", "notifications", "settings"],
+  "sidebarFoot": []
 }

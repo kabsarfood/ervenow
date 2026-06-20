@@ -1,6 +1,5 @@
 /** أنواع مقدّمي الخدمات — تسجيل، لوحة، ومطابقة الطلبات */
 const SERVICE_PROVIDER_OPTIONS = [
-  { value: "internal_delivery", label: "توصيل داخلي", panelTitle: "لوحة التوصيل الداخلي", icon: "📦" },
   { value: "pickup_truck", label: "نقل مركبات (سطحة)", panelTitle: "لوحة نقل المركبات", icon: "🚗" },
   { value: "electrician", label: "مهندس كهربائي", panelTitle: "لوحة فني الكهرباء", icon: "⚡" },
   { value: "plumber", label: "سباك", panelTitle: "لوحة فني السباكة", icon: "🔧" },

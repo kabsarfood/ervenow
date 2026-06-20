@@ -50,7 +50,7 @@ function buildInternalDeliveryProviderMessage(booking) {
     `💳 الدفع: ${pay}\n` +
     `عمولة المنصة (${pct}): ${comm.toFixed(2)} ريال\n` +
     `صافيك بعد الإتمام: ${net.toFixed(2)} ريال\n\n` +
-    `🔗 قبول الطلب: ${publicBase()}/driver\n` +
+    `🔗 قبول الطلب: ${publicBase()}/driver-preview\n` +
     `🔗 تتبع العميل: ${trackUrl}\n\n` +
     "بعد إتمام المهمة من تطبيق المندوب تُسجَّل العمولة (7%) في ذمتك."
   );

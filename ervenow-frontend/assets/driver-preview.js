@@ -40,6 +40,7 @@
     wallet: null,
     rating: { avg: null, count: 0 },
     activeSection: "dashboard",
+    liveTrackOrderId: null,
     earningsRange: "today",
     earnings: null,
     online: true,
@@ -211,6 +212,35 @@
       completed: o.completed || [],
       orders: o.orders || [],
     };
+    if (global.ErvenowDriverOperational && ErvenowDriverOperational.syncActiveProximity) {
+      ErvenowDriverOperational.syncActiveProximity(state.orders.active, proximityHandlers());
+    }
+  }
+
+  function proximityHandlers() {
+    return {
+      patchStatus: async function (orderId, status) {
+        var st = String(status || "").toLowerCase();
+        if (st === "delivering") {
+          await api("/api/driver/start-delivery/" + encodeURIComponent(orderId), { method: "POST" });
+        } else if (st === "delivered") {
+          await api("/api/driver/complete-order/" + encodeURIComponent(orderId), { method: "POST" });
+        } else {
+          await api("/api/order/" + encodeURIComponent(orderId) + "/status", {
+            method: "PATCH",
+            body: { delivery_status: status },
+          });
+        }
+      },
+      onPickup: function () {
+        showMsg("تم بدء التوصيل (قرب نقطة الاستلام)", true);
+        refreshOrders().catch(function () {});
+      },
+      onDeliver: function () {
+        showMsg("تم التسليم (قرب نقطة التسليم)", true);
+        refreshOrders().catch(function () {});
+      },
+    };
   }
 
   function shouldSendLocation(lat, lng) {
@@ -240,6 +270,9 @@
       state.gpsActive = true;
       state.lastLocationSentAt = new Date().toISOString();
       updateOnlineUi();
+      if (global.ErvenowDriverOperational && ErvenowDriverOperational.checkProximityAuto) {
+        ErvenowDriverOperational.checkProximityAuto(lat, lng, proximityHandlers());
+      }
     } catch (_e) {
       state.gpsActive = false;
       updateOnlineUi();
@@ -278,6 +311,9 @@
       clearInterval(presenceTimer);
       presenceTimer = null;
     }
+    if (global.ErvenowDriverOperational && ErvenowDriverOperational.stopProximityLoop) {
+      ErvenowDriverOperational.stopProximityLoop();
+    }
   }
 
   function startOperationalLoops() {
@@ -313,6 +349,13 @@
       ? '<span class="pf-status-pill"><span>🟢</span><span>متصل · ' + esc(gpsLabel) + "</span></span>"
       : '<span class="pf-status-pill is-paused"><span>🔴</span><span>غير متصل</span></span>';
     shell.updateHeader({ toolsHtml: statusHtml });
+    if (global.ErvenowPortalProviderLocation) {
+      if (state.gpsActive && Number.isFinite(lastLat) && Number.isFinite(lastLng)) {
+        ErvenowPortalProviderLocation.syncButtonLabel({ lat: lastLat, lng: lastLng });
+      } else {
+        ErvenowPortalProviderLocation.syncButtonLabel(null);
+      }
+    }
   }
 
   function updateHeader() {
@@ -391,6 +434,32 @@
     );
   }
 
+  function locationReady() {
+    if (state.gpsActive || state.locationOk) return true;
+    return !!(global.ErvenowPortalProviderLocation && ErvenowPortalProviderLocation.isReady());
+  }
+
+  function locationBannerHtml() {
+    if (locationReady()) return "";
+    return global.ErvenowPortalProviderLocation && ErvenowPortalProviderLocation.renderBanner
+      ? ErvenowPortalProviderLocation.renderBanner()
+      : "";
+  }
+
+  async function ensureDriverLocationForOrders() {
+    var Loc = global.ErvenowPortalProviderLocation;
+    if (!Loc) return;
+    try {
+      if (typeof Loc.ensureForOrders === "function") {
+        await Loc.ensureForOrders("driver");
+      } else if (typeof Loc.captureAndSave === "function") {
+        await Loc.captureAndSave("driver");
+      }
+    } catch (e) {
+      showMsg((e && e.message) || "فعّل الموقع من القائمة لاستقبال الطلبات", false);
+    }
+  }
+
   function renderDashboard() {
     var bal = state.wallet && state.wallet.balance != null ? fmtMoney(state.wallet.balance) + " ر.س" : "—";
     var avg = state.rating.avg != null ? Number(state.rating.avg).toFixed(1) : "—";
@@ -399,6 +468,7 @@
     var doneN = completedToday().length;
 
     return (
+      locationBannerHtml() +
       (W ? W.sectionHeader("الرئيسية", "بيئة عمل المندوب") : "") +
       (W
         ? W.kpiGrid([
@@ -472,9 +542,12 @@
           '">تم التسليم</button>';
       }
       actions +=
-        '<a class="dp-btn dp-btn--ghost" href="/driver-app?order=' +
-        encodeURIComponent(o.id) +
-        '#track">تتبع حي</a>';
+        '<button type="button" class="dp-btn dp-btn--ghost dp-live-track" data-order-id="' +
+        esc(o.id) +
+        '">تتبع حي</button>';
+      if (global.ErvenowDriverOperational && ErvenowDriverOperational.renderNavButtons) {
+        actions += ErvenowDriverOperational.renderNavButtons(o, st);
+      }
     }
     return (
       '<article class="dp-order-card"><div class="dp-order-card__head"><span class="dp-order-card__num">' +
@@ -599,21 +672,40 @@
           })
           .join("")
       : '<tr><td colspan="3" class="dp-empty">لا عمليات بعد</td></tr>';
+    var withdrawPanel =
+      global.ErvenowPortalWalletWithdraw && ErvenowPortalWalletWithdraw.renderWithdrawPanel
+        ? ErvenowPortalWalletWithdraw.renderWithdrawPanel({ prefix: "dp", minAmount: 20 })
+        : "";
     return (
       '<h2 class="dp-section-title">المحفظة</h2>' +
-      '<p class="dp-section-sub">Wallet — النظام الحالي</p>' +
+      '<p class="dp-section-sub">Wallet — الرصيد والسحب</p>' +
       '<div class="dp-kpi-grid">' +
       kpi("الرصيد", fmtMoney(w.balance) + " ر.س") +
       kpi("إجمالي المكتسب", fmtMoney(w.total_earned) + " ر.س") +
       kpi("إجمالي المسحوب", fmtMoney(w.total_withdrawn) + " ر.س") +
       "</div>" +
+      withdrawPanel +
       '<div class="dp-card dp-table-wrap"><h3>آخر الحركات</h3><table class="dp-table"><thead><tr>' +
       "<th>التاريخ</th><th>الوصف</th><th>المبلغ</th></tr></thead><tbody>" +
       rows +
-      "</tbody></table></div>" +
-      '<div class="dp-classic-links">' +
-      '<a class="dp-btn dp-btn--primary" href="/driver-wallet">السحب والعمليات الكاملة</a>' +
-      "</div>"
+      "</tbody></table></div>"
+    );
+  }
+
+  function renderLiveTrack() {
+    var oid = state.liveTrackOrderId || "";
+    if (!oid) {
+      var active = state.orders.active || [];
+      if (active.length) oid = active[0].id;
+    }
+    return (
+      '<h2 class="dp-section-title">التتبع الحي</h2>' +
+      '<p class="dp-section-sub">Live Track — خريطة ومسار التوصيل</p>' +
+      (oid
+        ? '<iframe class="dp-live-frame" title="التتبع الحي" src="/driver-app?order=' +
+          encodeURIComponent(oid) +
+          '#track"></iframe>'
+        : '<div class="dp-card"><p class="dp-empty" style="margin:0">لا يوجد طلب نشط للتتبع — ابدأ توصيلاً من الطلبات النشطة.</p></div>')
     );
   }
 
@@ -677,6 +769,8 @@
         return renderEarnings();
       case "wallet":
         return renderWallet();
+      case "live-track":
+        return renderLiveTrack();
       case "rating":
         return renderRating();
       case "notifications":
@@ -699,6 +793,22 @@
       var host = document.getElementById("dpNotifHost");
       if (host) ErvenowPortalInlineNotifications.mountIn(host, "driver-notif");
     }
+    if (sectionId === "wallet" && global.ErvenowPortalWalletWithdraw) {
+      ErvenowPortalWalletWithdraw.wireWithdrawPanel({
+        prefix: "dp",
+        minAmount: 20,
+        onMessage: function (text, ok) {
+          if (text) showMsg(text, ok);
+        },
+        onSuccess: function () {
+          loadCoreData()
+            .then(function () {
+              renderMain();
+            })
+            .catch(function () {});
+        },
+      });
+    }
   }
 
   async function refreshOrders(opts) {
@@ -709,6 +819,10 @@
   }
 
   function wireSectionEvents() {
+    var main = shell ? shell.getMainEl() : document;
+    if (global.ErvenowDriverOperational && ErvenowDriverOperational.wireNavButtons) {
+      ErvenowDriverOperational.wireNavButtons(main);
+    }
     document.querySelectorAll("[data-earn-range]").forEach(function (btn) {
       btn.onclick = function () {
         state.earningsRange = btn.getAttribute("data-earn-range");
@@ -723,10 +837,25 @@
         });
       };
     }
+    document.querySelectorAll(".dp-live-track").forEach(function (btn) {
+      btn.onclick = function () {
+        state.liveTrackOrderId = btn.getAttribute("data-order-id");
+        if (shell) shell.navigate("live-track");
+        else {
+          state.activeSection = "live-track";
+          renderMain();
+        }
+      };
+    });
     document.querySelectorAll(".dp-accept").forEach(function (btn) {
       btn.onclick = async function () {
         btn.disabled = true;
         try {
+          await ensureDriverLocationForOrders();
+          if (!locationReady()) {
+            showMsg("فعّل الموقع من القائمة (📍) لاستقبال الطلبات", false);
+            return;
+          }
           var res = await api("/api/driver/accept/" + encodeURIComponent(btn.getAttribute("data-id")), {
             method: "POST",
           });
@@ -734,6 +863,9 @@
             showMsg((res && res.message) || "تعذّر الاستلام", false);
           } else {
             showMsg("تم الاستلام بنجاح", true);
+            if (global.ErvenowDriverOperational && ErvenowDriverOperational.speakArabic) {
+              ErvenowDriverOperational.speakArabic("تم قبول الطلب. توجه إلى نقطة الاستلام.");
+            }
             await refreshOrders();
           }
         } catch (e) {
@@ -751,6 +883,9 @@
             method: "POST",
           });
           showMsg("بدء التوصيل", true);
+          if (global.ErvenowDriverOperational && ErvenowDriverOperational.speakArabic) {
+            ErvenowDriverOperational.speakArabic("بدء التوصيل. اتبع المسار إلى العميل.");
+          }
           await refreshOrders();
         } catch (e) {
           showMsg(e.message || String(e), false);
@@ -767,6 +902,9 @@
             method: "POST",
           });
           showMsg("تم التسليم", true);
+          if (global.ErvenowDriverOperational && ErvenowDriverOperational.speakArabic) {
+            ErvenowDriverOperational.speakArabic("تم تسليم الطلب بنجاح.");
+          }
           await refreshOrders();
           state.wallet = await api("/api/driver/wallet");
         } catch (e) {
@@ -784,6 +922,7 @@
 
   async function boot() {
     await loadCoreData();
+    await ensureDriverLocationForOrders();
     renderMain();
     startOperationalLoops();
     if (shell.getActiveSection() === "dashboard") renderMain();
@@ -800,7 +939,12 @@
       operationalV2: true,
       portalTitle: "بوابة المندوب",
       onAcceptOrder: function (orderId) {
-        return api("/api/driver/accept/" + encodeURIComponent(orderId), { method: "POST" }).then(function (res) {
+        return ensureDriverLocationForOrders().then(function () {
+          if (!locationReady()) {
+            throw new Error("فعّل الموقع من القائمة (📍) لاستقبال الطلبات");
+          }
+          return api("/api/driver/accept/" + encodeURIComponent(orderId), { method: "POST" });
+        }).then(function (res) {
           if (res && res.accepted === false) throw new Error(res.message || "تعذّر الاستلام");
           showMsg("تم حجز الطلب — انتقل إلى الطلبات الجارية", true);
           return refreshOrders();
@@ -837,6 +981,15 @@
       global.addEventListener("online", updateOnlineUi);
       global.addEventListener("offline", updateOnlineUi);
       global.addEventListener("beforeunload", stopOperationalLoops);
+      global.addEventListener("ervenow:provider-location-updated", function (ev) {
+        var d = (ev && ev.detail) || {};
+        if (Number.isFinite(d.lat) && Number.isFinite(d.lng)) {
+          lastLat = d.lat;
+          lastLng = d.lng;
+          state.gpsActive = true;
+          updateOnlineUi();
+        }
+      });
     }
 
     if (!global.PlatformAPI || !PlatformAPI.getToken || !PlatformAPI.getToken()) {

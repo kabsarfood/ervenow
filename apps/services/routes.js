@@ -25,7 +25,7 @@ const { completeServiceBooking } = require("../../shared/services/completeServic
 const { sendReserveWelcomeWhatsApp } = require("../../shared/services/serviceProviderReserve");
 const { sendOrderAcceptedToCustomer, sendCustomerDeliveringNotice, sendDriverArrived } = require("../../shared/services/whatsappService");
 const { currentGasRadiusKm, providerCoords, providerWithinGasRadius } = require("../../shared/utils/gasDeliveryRadius");
-const { usersQueryResilient } = require("../../shared/utils/usersGeoSelect");
+const { usersQueryResilient, isUsersGeoColumnError } = require("../../shared/utils/usersGeoSelect");
 const { broadcastDriverUpdate, broadcastOrderPatch, orderPatchFromRow } = require("../../shared/lib/trackingSocket");
 const { getWalletPayloadWithLedgerFallback } = require("../../shared/utils/ledgerWallet");
 const { resolvePortalRole, portalRoleForProvider } = require("../../shared/utils/resolvePortalRole");
@@ -93,6 +93,25 @@ function normalizeQty(v) {
   return Math.max(1, Math.floor(n));
 }
 
+async function mergeProviderLocationFromBody(sb, uid, profile, body) {
+  const bodyLat = Number(body?.lat);
+  const bodyLng = Number(body?.lng);
+  if (!Number.isFinite(bodyLat) || !Number.isFinite(bodyLng)) return profile || {};
+  if (Math.abs(bodyLat) > 90 || Math.abs(bodyLng) > 180) return profile || {};
+  const now = new Date().toISOString();
+  let result = await sb
+    .from("users")
+    .update({ lat: bodyLat, lng: bodyLng, updated_at: now })
+    .eq("id", uid)
+    .select("id, name, phone, service_type, service_district, service_vehicle_type, lat, lng")
+    .maybeSingle();
+  if (result.error && isUsersGeoColumnError(result.error)) {
+    return { ...(profile || {}), lat: bodyLat, lng: bodyLng };
+  }
+  if (result.error) return profile || {};
+  return result.data || { ...(profile || {}), lat: bodyLat, lng: bodyLng };
+}
+
 function filterBookingsForProvider(rows, providerId, providerType, providerDistrict, _providerVehicleType, providerProfile) {
   const pid = String(providerId || "");
   const providerUser = providerProfile && typeof providerProfile === "object" ? providerProfile : {};
@@ -100,23 +119,23 @@ function filterBookingsForProvider(rows, providerId, providerType, providerDistr
     const st = String(b.service_type || "").toLowerCase();
     if (st === "internal_delivery") return false;
     if (!providerMatchesBookingType(providerType, st, b.gas_mode)) return false;
-    if (st === "gas_delivery") {
-      const bookingLoc = b.service_location || b.location;
-      if (providerCoords(providerUser)) {
-        if (!providerWithinGasRadius(providerUser, b, currentGasRadiusKm(b))) return false;
-      } else if (!providerAreaMatches(providerType, providerDistrict, b.district, bookingLoc)) {
-        return false;
-      }
-    }
+
     const status = bookingStatus(b);
     const bookedBy = b.provider_id ? String(b.provider_id) : "";
     if (bookedBy && bookedBy !== pid) return false;
     if (bookedBy === pid) return true;
     if (status !== "new" && status !== "pending") return false;
+
+    if (st === "gas_delivery") {
+      if (!providerCoords(providerUser)) return false;
+      if (!providerWithinGasRadius(providerUser, b, currentGasRadiusKm(b))) return false;
+      return true;
+    }
+
     if (st === "car_transport" || st === "vehicle_transfer" || st === "pickup_truck") {
       return providerAreaMatchesCarBooking(providerType, providerDistrict, b);
     }
-    if (st === "gas_delivery") return true;
+
     const loc = b.service_location || b.location;
     return providerAreaMatches(providerType, providerDistrict, b.district, loc);
   });
@@ -523,6 +542,7 @@ router.get("/me/dashboard", requireAuth, requireServiceProviderRole(), async (re
         wallet_source: walletSource,
         rating_avg: Number(profile?.service_rating_avg) || 0,
         rating_count: Number(profile?.service_rating_count) || 0,
+        location_ready: !!providerCoords(profile),
       },
     });
   } catch (e) {
@@ -659,17 +679,24 @@ router.get("/me/pricing", requireAuth, requireServiceProviderRole(), async (req,
     const transportSamples = [
       { label: "نقل داخلي (10 كم)", fee: priceCarTransportInternal(10, "running") },
       { label: "نقل خارجي (50 كم)", fee: computeUnifiedDeliveryFee("car_transport", { transfer_mode: "external", distance_km: 50 }).delivery_fee },
-      { label: "توصيل داخلي ثابت", fee: computeUnifiedDeliveryFee("local_delivery", {}).delivery_fee },
+    ].filter((r) => Number.isFinite(Number(r.fee)));
+    const gasSamples = [
       { label: "أسطوانة غاز", fee: computeUnifiedDeliveryFee("gas_delivery", { mode: "cylinder", cylinders: 1 }).delivery_fee },
     ].filter((r) => Number.isFinite(Number(r.fee)));
+    const { isTransportPortalType } = require("../../shared/utils/resolvePortalRole");
+    const isTransport = isTransportPortalType(providerType);
+    const isGasService =
+      providerType === "gas_cylinder_swap" || providerType === "gas_central_refill" || providerType === "gas_delivery";
     return ok(res, {
       provider_type: providerType,
-      gas: gasPricing,
-      transport_rates: {
-        external_per_km: CAR_TRANSPORT_EXTERNAL_RATE,
-        international_per_km: CAR_TRANSPORT_INTERNATIONAL_RATE,
-      },
-      samples: transportSamples,
+      gas: isGasService ? gasPricing : undefined,
+      transport_rates: isTransport
+        ? {
+            external_per_km: CAR_TRANSPORT_EXTERNAL_RATE,
+            international_per_km: CAR_TRANSPORT_INTERNATIONAL_RATE,
+          }
+        : undefined,
+      samples: isGasService ? gasSamples : isTransport ? transportSamples : gasSamples.concat(transportSamples),
       note: "الأسعار المرجعية من محرك التسعير الموحّد — التعديل الإداري لاحقاً",
     });
   } catch (e) {
@@ -725,7 +752,7 @@ router.post("/bookings/:id/reserve", requireAuth, requireServiceProviderRole(), 
   try {
     const sb = req.supabase || createServiceClient();
     const uid = req.appUser.id;
-    const { data: profile } = await usersQueryResilient(
+    let { data: profile } = await usersQueryResilient(
       sb,
       "id, name, phone, service_type, service_district, service_vehicle_type, lat, lng",
       (q) => q.eq("id", uid),
@@ -734,32 +761,30 @@ router.post("/bookings/:id/reserve", requireAuth, requireServiceProviderRole(), 
     const providerType = String(profile?.service_type || "").trim().toLowerCase();
     if (!providerType) return fail(res, "نوع الخدمة غير مضبوط في حسابك", 400);
 
+    profile = await mergeProviderLocationFromBody(sb, uid, profile, req.body || {});
+
     const { data: booking, error: gErr } = await fetchServiceOrderById(sb, req.params.id);
     if (gErr || !booking) return fail(res, "الطلب غير موجود", 404);
 
     if (String(booking.service_type || "").toLowerCase() === "internal_delivery") {
       return fail(res, "طلبات التوصيل الداخلي للمناديب فقط — استخدم تطبيق المندوب", 403);
     }
+    if (!providerCoords(profile)) {
+      return fail(res, "حدّد موقعك من قائمة البوابة (📍 تحديد الموقع) لاستقبال الطلبات", 403);
+    }
     if (!providerMatchesBookingType(providerType, booking.service_type, booking.gas_mode)) {
       return fail(res, "هذا الطلب لا يطابق تخصصك", 403);
     }
     if (String(booking.service_type || "").toLowerCase() === "gas_delivery") {
-      if (providerCoords(profile)) {
-        if (!providerWithinGasRadius(profile, booking, currentGasRadiusKm(booking))) {
-          return fail(
-            res,
-            `الطلب خارج نطاق التوصيل الحالي (${currentGasRadiusKm(booking)} كم من موقع العميل)`,
-            403
-          );
-        }
-      } else {
-        const bookingLoc = booking.service_location || booking.location;
-        if (!providerAreaMatches(providerType, profile?.service_district, booking.district, bookingLoc)) {
-          return fail(res, "الطلب خارج حيّك المسجّل", 403);
-        }
+      if (!providerWithinGasRadius(profile, booking, currentGasRadiusKm(booking))) {
+        return fail(
+          res,
+          `الطلب خارج نطاق التوصيل الحالي (${currentGasRadiusKm(booking)} كم من موقع العميل)`,
+          403
+        );
       }
     }
-  const bookingLoc = booking.service_location || booking.location;
+    const bookingLoc = booking.service_location || booking.location;
     const bookingSt = String(booking.service_type || "").toLowerCase();
     if (
       bookingSt !== "gas_delivery" &&
@@ -1079,6 +1104,38 @@ router.get("/me/checkout-payment-methods", requireAuth, requireServiceProviderRo
     return ok(res, { methods: checkoutPaymentMethods.intersectMethods(platform, userPart) });
   } catch (e) {
     return fail(res, e.message || String(e), 500);
+  }
+});
+
+router.patch("/me/location", requireAuth, requireServiceProviderRole(), async (req, res) => {
+  try {
+    const sb = req.supabase || createServiceClient();
+    if (!sb) return fail(res, "قاعدة البيانات غير جاهزة", 503);
+    const uid = req.appUser.id;
+    const lat = Number(req.body?.lat);
+    const lng = Number(req.body?.lng);
+    if (!Number.isFinite(lat) || !Number.isFinite(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180) {
+      return fail(res, "إحداثيات غير صالحة", 400);
+    }
+    const now = new Date().toISOString();
+    let result = await sb
+      .from("users")
+      .update({ lat, lng, updated_at: now })
+      .eq("id", uid)
+      .select("id, name, phone, service_type, service_district, lat, lng")
+      .maybeSingle();
+    if (result.error && isUsersGeoColumnError(result.error)) {
+      return fail(res, "موقع المزود غير مدعوم في قاعدة البيانات بعد", 503);
+    }
+    if (result.error) return fail(res, result.error.message, 400);
+    return ok(res, {
+      profile: result.data || {},
+      lat,
+      lng,
+      message: "تم تحديث موقعك — الطلبات تُطابَق حسب موقعك وموقع العميل",
+    });
+  } catch (e) {
+    return fail(res, e.message, 500);
   }
 });
 

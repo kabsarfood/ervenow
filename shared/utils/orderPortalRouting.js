@@ -1,17 +1,18 @@
 /**
  * ERVENOW Flow Separation 3.0 — Order Routing Engine
- * portal_type: merchant | service | transport
+ * portal_type: merchant | service | transport | driver
  */
 
 const {
   isTransportPortalType,
   isServicePortalType,
+  isDriverPortalType,
   normServiceType,
 } = require("./resolvePortalRole");
-const { isDriverDispatchOrder } = require("./driverDispatchOrders");
+const { isInternalDeliveryOrder, isDriverDispatchOrder } = require("./driverDispatchOrders");
 
 /** @type {readonly string[]} */
-const ORDER_PORTAL_TYPES = ["merchant", "service", "transport"];
+const ORDER_PORTAL_TYPES = ["merchant", "service", "transport", "driver"];
 
 const ORDER_PORTAL_TYPE_SET = new Set(ORDER_PORTAL_TYPES);
 
@@ -26,7 +27,7 @@ function normServiceTypeFromOrder(order) {
 
 /**
  * @param {object|null|undefined} order
- * @returns {"merchant"|"service"|"transport"|null}
+ * @returns {"merchant"|"service"|"transport"|"driver"|null}
  */
 function resolveOrderPortalType(order) {
   if (!order) return null;
@@ -40,6 +41,8 @@ function resolveOrderPortalType(order) {
 
   const ot = String(order.order_type || "").trim().toLowerCase();
   const st = normServiceTypeFromOrder(order);
+
+  if (isDriverPortalType(st) || isInternalDeliveryOrder(order)) return "driver";
 
   if (ot === "service" || ot === "gas_delivery") {
     if (isTransportPortalType(st)) return "transport";
@@ -83,8 +86,9 @@ function orderVisibleInPortal(order, portalType) {
   if (portal === "service") return ownerPortal === "service";
   if (portal === "transport") return ownerPortal === "transport";
   if (portal === "driver") {
-    if (ownerPortal !== "merchant") return false;
-    return isDriverDispatchOrder(order);
+    if (ownerPortal === "driver") return true;
+    if (ownerPortal === "merchant") return isDriverDispatchOrder(order);
+    return false;
   }
   return false;
 }

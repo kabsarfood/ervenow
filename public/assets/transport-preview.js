@@ -9,7 +9,6 @@
     pickup_truck: 1,
     car_transport: 1,
     vehicle_transfer: 1,
-    internal_delivery: 1,
     furniture_move: 1,
     gas_cylinder_swap: 1,
     gas_central_refill: 1,
@@ -19,7 +18,6 @@
   var TYPE_FILTER_LABELS = {
     all: "الكل",
     pickup_truck: "سطحة",
-    internal_delivery: "توصيل داخلي",
     furniture_move: "نقل أثاث",
     gas_delivery: "توصيل غاز",
   };
@@ -231,6 +229,38 @@
     );
   }
 
+  function locationReady() {
+    var Loc = global.ErvenowPortalProviderLocation;
+    if (Loc && Loc.isReady && Loc.isReady(state.profile)) return true;
+    return !!(state.stats && state.stats.location_ready);
+  }
+
+  function locationBannerHtml() {
+    if (locationReady()) return "";
+    return global.ErvenowPortalProviderLocation && ErvenowPortalProviderLocation.renderBanner
+      ? ErvenowPortalProviderLocation.renderBanner()
+      : "";
+  }
+
+  async function activateOrderLocation() {
+    var Loc = global.ErvenowPortalProviderLocation;
+    if (!Loc) return;
+    try {
+      if (typeof Loc.ensureForOrders === "function") {
+        await Loc.ensureForOrders("transport", state.profile);
+      } else if (typeof Loc.captureAndSave === "function") {
+        await Loc.captureAndSave("transport");
+      }
+      if (typeof Loc.startPresenceLoop === "function") {
+        Loc.startPresenceLoop("transport", 15000);
+      }
+    } catch (e) {
+      if (shell) {
+        shell.showMessage((e && e.message) || "فعّل الموقع من القائمة لاستقبال الطلبات", false);
+      }
+    }
+  }
+
   function renderDashboard() {
     var s = state.stats || {};
     var ratingVal =
@@ -250,6 +280,7 @@
       .join("");
     var newList = filterBookings("new").slice(0, 5);
     return (
+      locationBannerHtml() +
       W.sectionHeader(state.panelTitle || "الرئيسية", "بيئة عمل مزوّد النقل") +
       W.kpiGrid([
         { label: "طلبات جديدة", value: String(s.new_orders || filterBookings("new").length) },
@@ -283,10 +314,10 @@
       ? list.map(renderBookingCard).join("")
       : '<p class="pf-empty">لا توجد طلبات في هذا القسم.</p>';
     return (
+      locationBannerHtml() +
       W.sectionHeader("طلبات النقل", "Transport Orders — جديدة · جارية · مكتملة") +
       '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px">' +
-      '<button type="button" class="pf-btn" id="tpRefreshOrders">تحديث</button>' +
-      '<a class="pf-btn" href="/services-provider.html">البوابة الكلاسيكية</a></div>' +
+      '<button type="button" class="pf-btn" id="tpRefreshOrders">تحديث</button></div>' +
       '<div class="pf-tabs">' +
       '<button type="button" class="pf-tab' +
       (tab === "new" ? " is-active" : "") +
@@ -431,9 +462,10 @@
           suffix: "ر.س",
         },
       ]) +
+      (global.ErvenowPortalWalletWithdraw && ErvenowPortalWalletWithdraw.renderWithdrawPanel
+        ? ErvenowPortalWalletWithdraw.renderWithdrawPanel({ prefix: "tp", minAmount: 20 })
+        : "") +
       '<div class="pf-card">' +
-      '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px">' +
-      '<a class="pf-btn pf-btn--primary" href="/wallet.html">فتح المحفظة</a></div>' +
       '<h3 class="pf-card__title">آخر العمليات</h3>' +
       (rows
         ? '<div class="pf-table-wrap"><table class="pf-table"><thead><tr><th>التاريخ</th><th>النوع</th><th>المبلغ</th></tr></thead><tbody>' +
@@ -468,6 +500,10 @@
   function renderSettings() {
     var p = state.profile || {};
     var areaLabel = String(p.service_type || "").toLowerCase() === "pickup_truck" ? "المدينة" : "الحي";
+    var payPanel =
+      global.ErvenowPortalProviderPayment && ErvenowPortalProviderPayment.renderPanel
+        ? ErvenowPortalProviderPayment.renderPanel("tp")
+        : "";
     return (
       W.sectionHeader("الإعدادات", "Settings — بيانات مزود النقل") +
       '<div class="pf-card">' +
@@ -487,8 +523,8 @@
       "</p>" +
       vehicleLine(p) +
       '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px">' +
-      '<a class="pf-btn" href="/login?role=service">إدارة الحساب</a>' +
-      '<a class="pf-btn pf-btn--primary" href="/services-provider.html">البوابة الكلاسيكية</a></div></div>'
+      '<a class="pf-btn" href="/login?role=service">إدارة الحساب</a></div></div>' +
+      payPanel
     );
   }
 
@@ -509,6 +545,9 @@
       subtitle: p.name || "مزود النقل",
       sidebarName: p.name || "مزود النقل",
     });
+    if (global.ErvenowPortalProviderLocation) {
+      ErvenowPortalProviderLocation.syncButtonLabel(p);
+    }
   }
 
   async function reserveBooking(id, btn) {
@@ -517,7 +556,20 @@
       btn.textContent = "جاري الحجز...";
     }
     try {
-      var j = await api("/api/services/bookings/" + encodeURIComponent(id) + "/reserve", { method: "POST" });
+      var Loc = global.ErvenowPortalProviderLocation;
+      if (Loc) {
+        if (typeof Loc.ensureForOrders === "function") {
+          await Loc.ensureForOrders("transport", state.profile);
+        } else if (typeof Loc.captureAndSave === "function") {
+          await Loc.captureAndSave("transport");
+        }
+      }
+      var coords = Loc && Loc.getLastCoords ? Loc.getLastCoords() : null;
+      var body = coords ? { lat: coords.lat, lng: coords.lng } : {};
+      var j = await api("/api/services/bookings/" + encodeURIComponent(id) + "/reserve", {
+        method: "POST",
+        body: body,
+      });
       shell.showMessage(j.message || "تم حجز الطلب", true);
       await loadData();
       renderMain(shell.getActiveSection());
@@ -657,6 +709,28 @@
         wireSectionEvents();
       });
     }
+    if (section === "wallet" && global.ErvenowPortalWalletWithdraw) {
+      ErvenowPortalWalletWithdraw.wireWithdrawPanel({
+        prefix: "tp",
+        minAmount: 20,
+        onMessage: function (text, ok) {
+          if (text && shell) shell.showMessage(text, ok);
+        },
+        onSuccess: function () {
+          loadData().then(function () {
+            renderMain("wallet");
+          });
+        },
+      });
+    }
+    if (section === "settings" && global.ErvenowPortalProviderPayment) {
+      ErvenowPortalProviderPayment.loadAndWire({
+        prefix: "tp",
+        onMessage: function (text, ok) {
+          if (text && shell) shell.showMessage(text, ok);
+        },
+      });
+    }
   }
 
   async function loadData() {
@@ -672,6 +746,9 @@
       state.transactions = Array.isArray(txRes.transactions) ? txRes.transactions : [];
     } catch (_) {
       state.transactions = [];
+    }
+    if (global.ErvenowPortalProviderJobGps && ErvenowPortalProviderJobGps.syncJobGps) {
+      ErvenowPortalProviderJobGps.syncJobGps(state.bookings);
     }
   }
 
@@ -699,6 +776,13 @@
     if (pollTimer) {
       clearInterval(pollTimer);
       pollTimer = null;
+    }
+  }
+
+  function stopAll() {
+    stopPolling();
+    if (global.ErvenowPortalProviderLocation && ErvenowPortalProviderLocation.stopPresenceLoop) {
+      ErvenowPortalProviderLocation.stopPresenceLoop();
     }
   }
 
@@ -744,6 +828,31 @@
     W = shell.getWidgets();
     shell.mountChrome();
 
+    global.addEventListener("ervenow:provider-location-updated", function (ev) {
+      var d = (ev && ev.detail) || {};
+      if (d.lat != null && d.lng != null) {
+        state.profile = Object.assign({}, state.profile || {}, { lat: d.lat, lng: d.lng });
+        if (state.stats) state.stats.location_ready = true;
+        paintHeader();
+      }
+      if (d.silent) {
+        loadData()
+          .then(function () {
+            if (shell && sectionsWithLiveBookings(shell.getActiveSection())) {
+              renderMain(shell.getActiveSection());
+            }
+          })
+          .catch(function () {});
+        return;
+      }
+      loadData()
+        .then(function () {
+          paintHeader();
+          renderMain(shell.getActiveSection());
+        })
+        .catch(function () {});
+    });
+
     global.addEventListener("ervenow:auth-changed", function () {
       global.location.reload();
     });
@@ -770,6 +879,10 @@
         return;
       }
       await loadData();
+      await activateOrderLocation();
+      if (global.ErvenowPortalProviderLocation && ErvenowPortalProviderLocation.isReady(state.profile)) {
+        await loadData();
+      }
       shell.showApp();
       renderMain(shell.getActiveSection());
       notifOpsApi = await shell.mountNotifications();
@@ -780,5 +893,5 @@
     }
   }
 
-  global.ErvenowTransportPreview = { init: init, refresh: loadData, stop: stopPolling };
+  global.ErvenowTransportPreview = { init: init, refresh: loadData, stop: stopAll };
 })(typeof window !== "undefined" ? window : global);

@@ -257,6 +257,23 @@
           );
           return;
         }
+        var locBtn = ev.target.closest('[data-pf-action="set-location"]');
+        if (locBtn) {
+          ev.preventDefault();
+          if (global.ErvenowPortalProviderLocation && ErvenowPortalProviderLocation.captureAndSave) {
+            ErvenowPortalProviderLocation.captureAndSave(state.role)
+              .then(function () {
+                showMessage("تم تفعيل موقعك — يمكنك الآن استقبال الطلبات", true);
+                closeSidebar();
+              })
+              .catch(function (e) {
+                showMessage((e && e.message) || "تعذّر تحديد الموقع", false);
+              });
+          } else {
+            showMessage("خدمة تحديد الموقع غير متاحة", false);
+          }
+          return;
+        }
         var navBtn = ev.target.closest("[data-pf-section]");
         if (navBtn && navBtn.closest("[data-pf-nav]")) {
           ev.preventDefault();

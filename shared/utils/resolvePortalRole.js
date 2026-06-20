@@ -11,23 +11,24 @@ const OPERATIONAL_PORTALS = new Set(OPERATIONAL_PORTAL_ROLES);
 
 const MERCHANT_DB_ROLES = new Set(["store", "merchant", "restaurant"]);
 
+const DRIVER_PORTAL_TYPES = new Set(["internal_delivery"]);
+
 const SERVICE_PORTAL_TYPES = new Set([
   "electrician",
   "plumber",
   "ac_technician",
   "laundry_estates",
   "agricultural_engineer",
+  "gas_cylinder_swap",
+  "gas_central_refill",
+  "gas_delivery",
 ]);
 
 const TRANSPORT_PORTAL_TYPES = new Set([
   "pickup_truck",
   "car_transport",
   "vehicle_transfer",
-  "internal_delivery",
   "furniture_move",
-  "gas_cylinder_swap",
-  "gas_central_refill",
-  "gas_delivery",
 ]);
 
 const {
@@ -66,6 +67,11 @@ function normServiceType(serviceType) {
   if (t === "cleaning" || t === "cleaning_villa" || t === "cleaning_building") return "laundry_estates";
   if (t === "nursery") return "agricultural_engineer";
   return t;
+}
+
+function isDriverPortalType(serviceType) {
+  const t = normServiceType(serviceType);
+  return !!t && DRIVER_PORTAL_TYPES.has(t);
 }
 
 function isTransportPortalType(serviceType) {
@@ -110,6 +116,9 @@ function resolvePortalRole(user) {
   }
 
   if (rawRole === "service") {
+    if (isDriverPortalType(serviceType)) {
+      return { portalRole: "driver", unknownRole: false, unknownServiceType: false, rawRole, serviceType };
+    }
     if (isTransportPortalType(serviceType)) {
       return { portalRole: "transport", unknownRole: false, unknownServiceType: false, rawRole, serviceType };
     }
@@ -168,8 +177,10 @@ module.exports = {
   OPERATIONAL_PORTALS,
   isOperationalPortal,
   MERCHANT_DB_ROLES,
+  DRIVER_PORTAL_TYPES,
   SERVICE_PORTAL_TYPES,
   TRANSPORT_PORTAL_TYPES,
+  isDriverPortalType,
   PORTAL_PREVIEW_PATHS,
   PORTAL_LABELS_AR,
   normServiceType,

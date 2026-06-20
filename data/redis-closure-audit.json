@@ -1,0 +1,25 @@
+{
+  "generated_at": "2026-06-20T14:03:45.026Z",
+  "queue_name": "ervenow-delivery",
+  "dlq_name": "ervenow-delivery:dlq",
+  "redis_url_configured": true,
+  "ping": {
+    "skipped": false,
+    "ok": false,
+    "message": "Connection is closed."
+  },
+  "main_queue": null,
+  "dlq": null,
+  "retry_policy": {
+    "attempts": 5,
+    "backoff": {
+      "type": "exponential",
+      "delay": 2000
+    }
+  },
+  "stalled_jobs": [],
+  "verdict": "FAIL",
+  "notes": [
+    "فشل اتصال Redis: Connection is closed."
+  ]
+}

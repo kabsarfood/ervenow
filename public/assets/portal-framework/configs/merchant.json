@@ -10,6 +10,8 @@
     "products",
     "categories",
     "offers",
+    "reviews",
+    "visitor-preview",
     "wallet",
     "withdrawals",
     "reports",
@@ -17,8 +19,5 @@
     "settings",
     "pos"
   ],
-  "sidebarFoot": [
-    { "href": "/store-dashboard", "label": "لوحة المتجر" },
-    { "href": "/order-board", "label": "Order Board" }
-  ]
+  "sidebarFoot": []
 }

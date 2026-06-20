@@ -1,0 +1,107 @@
+{
+  "report": "ERVENOW Legacy Gas Workflow Report",
+  "generated_at": "2026-06-20",
+  "workflow_classification": {
+    "primary": "service",
+    "driver_workflow": false,
+    "standalone_workflow": false,
+    "hybrid_artifacts": true,
+    "evidence": [
+      "apps/services/routes.js — reserve/complete",
+      "shared/services/completeServiceOrder.js",
+      "shared/utils/driverDispatchOrders.js — gas excluded"
+    ]
+  },
+  "customer_journey": {
+    "screens": ["/gas-delivery.html", "/checkout.html", "/track"],
+    "apis": {
+      "primary": "POST /api/checkout → createServiceOrder",
+      "legacy": "POST /api/services/gas-order → createGasDelivery (deprecated)"
+    },
+    "order_shape": {
+      "order_type": "gas_delivery",
+      "service_type": "gas_delivery",
+      "initial_status_checkout": "new",
+      "initial_status_legacy": "pending"
+    },
+    "status_flow": ["new|pending", "accepted", "delivering", "delivered"]
+  },
+  "provider_journey": {
+    "account": {
+      "role": "service",
+      "service_types": ["gas_cylinder_swap", "gas_central_refill"]
+    },
+    "screens": {
+      "legacy": "/services-provider.html",
+      "portal_historical": "/transport-preview",
+      "portal_g1r_backend": "/service-preview"
+    },
+    "apis": [
+      "GET /api/services/bookings",
+      "POST /api/services/bookings/:id/reserve",
+      "POST /api/services/bookings/:id/location",
+      "POST /api/services/bookings/:id/complete"
+    ],
+    "radius_km": { "initial": 15, "expanded": 20, "expand_delay_minutes_default": 5 }
+  },
+  "routing_audit": {
+    "customer_role": "customer",
+    "provider_db_role": "service",
+    "portal_type_pre_g1r": "transport",
+    "portal_type_post_g1r": "service",
+    "frontend_drift": {
+      "files": [
+        "ervenow-frontend/assets/account-destinations.js",
+        "ervenow-frontend/assets/role-routing.js",
+        "ervenow-frontend/assets/transport-preview.js"
+      ],
+      "issue": "gas still routed to transport-preview in frontend mirrors"
+    }
+  },
+  "settlement": {
+    "on_delivered": [
+      "settleCompletedServiceLedgerOnly",
+      "creditProviderOnDelivered → ervenow_ledger_credit"
+    ],
+    "credit_amount_field": "orders.total_amount",
+    "provider_net_stored_in_data": true,
+    "provider_net_used_in_credit": false,
+    "cylinder_pricing": {
+      "customer_unit_sar": 39,
+      "provider_net_per_cylinder_sar": 37,
+      "platform_fee_per_cylinder_sar": 2
+    },
+    "withdraw": {
+      "apis": [
+        "/api/wallet/withdraw",
+        "/api/wallet/withdraw/send-otp",
+        "/api/wallet/withdraw/confirm-otp"
+      ],
+      "eligible_roles": ["driver", "store", "restaurant", "merchant", "service"]
+    }
+  },
+  "notifications": {
+    "provider": {
+      "in_app": ["service.request.new", "transport.request.new (historical portal_type)"],
+      "whatsapp": ["notifyGasDeliveryProviders", "sendReserveWelcomeWhatsApp"],
+      "settlement": ["service.payment.settled", "transport.payment.settled (historical)"]
+    },
+    "customer": {
+      "whatsapp": ["sendOrderAcceptedToCustomer", "sendCustomerOrderPaidWhatsApp", "sendCustomerRateWhatsApp"],
+      "in_app_defined": [
+        "customer.order.received",
+        "customer.order.accepted",
+        "customer.order.delivered"
+      ]
+    },
+    "env_flags": {
+      "ERVENOW_SERVICE_WA_ON_CREATE": "1 enables provider WA on create",
+      "ERVENOW_GAS_RADIUS_EXPAND_MINUTES": "radius expand delay"
+    }
+  },
+  "recommendation": {
+    "option": "A",
+    "label": "Gas → Service Portal",
+    "rationale": "Operational engine is Service; Driver explicitly excluded; provider account is role=service; G1-R backend already maps gas to service portal_type"
+  }
+}

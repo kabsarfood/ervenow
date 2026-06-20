@@ -1,0 +1,58 @@
+{
+  "generated_at": "2026-06-20T14:04:11.695Z",
+  "verdict": "PASS",
+  "order_id": "9ee77720-408a-4040-95df-7c78ae28d748",
+  "steps": [
+    {
+      "step": "merchant accept",
+      "status": "accepted"
+    },
+    {
+      "step": "merchant preparing",
+      "status": "preparing"
+    },
+    {
+      "step": "merchant ready",
+      "status": "ready"
+    },
+    {
+      "step": "driver accept",
+      "status": "picked_up"
+    },
+    {
+      "step": "delivering",
+      "status": "delivering"
+    },
+    {
+      "step": "delivered",
+      "status": "delivered",
+      "settlement": {
+        "ok": true,
+        "driver": 12,
+        "ew_pay": false,
+        "reason": "settled",
+        "merchant": 0,
+        "platform": 3
+      },
+      "driver_credit": {
+        "ok": true,
+        "reason": "settled_via_rpc",
+        "driver": 12
+      }
+    }
+  ],
+  "proofs": {
+    "order_status": "delivered",
+    "wallet_credited_at": null,
+    "delivered_at": null,
+    "driver_id": "ba07ca03-a6fc-4b18-a9db-8807b1d5dd90",
+    "notifications_count": 12,
+    "driver_wallet": {
+      "before": 477.38,
+      "after": 489.38,
+      "delta": 12
+    }
+  },
+  "error": null,
+  "cleanup": "deleted"
+}

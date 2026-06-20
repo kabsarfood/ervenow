@@ -1,0 +1,86 @@
+{
+  "generated_at": "2026-06-20T14:05:00.000Z",
+  "sprint": "G1-R Final Verification",
+  "verdict_overall": "NOT_STABLE",
+  "platform_core_stable_v2": false,
+  "phase_2_pos_core": "BLOCKED",
+  "scores": {
+    "Merchant": "PASS",
+    "Driver": "PASS",
+    "Service": "FAIL",
+    "Transport": "PASS",
+    "Wallet": "PASS",
+    "Notifications": "PASS",
+    "Routing": "PASS",
+    "Database": "PASS",
+    "Redis": "FAIL",
+    "E2E": "PASS"
+  },
+  "pass_count": 8,
+  "fail_count": 2,
+  "live_validations": {
+    "merchant_driver_lifecycle": {
+      "verdict": "PASS",
+      "report": "data/reconnect-lifecycle-live-e2e.json",
+      "proofs": {
+        "order_status": "delivered",
+        "notifications_count": 12,
+        "driver_wallet_delta_sar": 12,
+        "settlement_ok": true
+      }
+    },
+    "gas_service_portal": {
+      "verdict": "FAIL",
+      "report": "data/g1r-live-service-verify.json",
+      "proofs": {
+        "portal_type": "service",
+        "visible_service": true,
+        "visible_transport": false,
+        "blocker": "no_service_provider_in_db"
+      }
+    },
+    "internal_delivery_driver_portal": {
+      "verdict": "PASS",
+      "report": "data/g1r-live-service-verify.json",
+      "proofs": {
+        "portal_type": "driver",
+        "visible_driver": true,
+        "final_status": "delivered",
+        "driver_id_assigned": true
+      }
+    }
+  },
+  "merchant_completion_audit": {
+    "Product Images": "PASS",
+    "Product Stock": "PASS",
+    "Reviews": "PASS",
+    "Visitor Preview": "PASS"
+  },
+  "driver_completion_audit": {
+    "Google Maps": "PASS",
+    "Waze": "PASS",
+    "Apple Maps": "PASS",
+    "Proximity Alerts": "PASS",
+    "TTS": "PASS"
+  },
+  "blockers": [
+    {
+      "area": "Service",
+      "reason": "لا يوجد حساب role=service في Supabase — دورة الغاز الكاملة (قبول → تنفيذ → تسوية) غير قابلة للاختبار الحي",
+      "action": "إنشاء مزوّد غاز (gas_cylinder_swap) + إعادة g1r-live-service-verify"
+    },
+    {
+      "area": "Redis",
+      "reason": "REDIS_URL → 127.0.0.1:6379 — ECONNREFUSED",
+      "action": "Redis production URL + npm run worker:delivery + redis-closure-audit"
+    }
+  ],
+  "evidence": {
+    "database_closure": "data/database-closure-report.json",
+    "schema": "data/orders-schema-consistency-report.json",
+    "routing": "data/routing-validation-report.json",
+    "e2e": "data/reconnect-lifecycle-live-e2e.json",
+    "gas_internal": "data/g1r-live-service-verify.json",
+    "redis": "data/redis-closure-audit.json"
+  }
+}

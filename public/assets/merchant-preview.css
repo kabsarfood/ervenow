@@ -502,6 +502,26 @@ body.merchant-preview-page {
   font-weight: 700;
 }
 
+.mp-review-item {
+  padding: 12px 0;
+  border-bottom: 1px solid var(--mp-border, #e8dfd4);
+}
+
+.mp-review-item__stars {
+  color: #d97706;
+  letter-spacing: 1px;
+}
+
+.mp-review-item__text {
+  margin: 6px 0;
+  line-height: 1.5;
+}
+
+.mp-review-item__date {
+  font-size: 0.78rem;
+  color: var(--mp-muted);
+}
+
 .mp-msg {
   margin: 10px 0;
   padding: 10px 12px;
@@ -595,6 +615,54 @@ body.merchant-preview-page {
 
 .mp-notif-host .erv-notif-page {
   padding: 0;
+}
+
+.mp-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.mp-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.mp-modal__box {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 480px);
+  max-height: min(85vh, 640px);
+  overflow: auto;
+  background: var(--mp-surface);
+  border-radius: var(--mp-radius);
+  padding: 16px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+}
+
+.mp-modal__close {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  border: 0;
+  background: transparent;
+  font-size: 1.5rem;
+  cursor: pointer;
+  min-width: 44px;
+  min-height: 44px;
+}
+
+.mp-pay-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0;
+  font-weight: 600;
 }
 
 .mp-notif-host .erv-notif-page-title {

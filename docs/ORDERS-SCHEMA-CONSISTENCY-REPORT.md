@@ -1,30 +1,22 @@
 # Orders Schema Consistency Report
 
-Generated: 2026-06-19T12:10:23.498Z
+Generated: 2026-06-20T14:04:33.994Z
 
 ## Summary
 
 | Metric | Value |
 |--------|-------|
 | Expected columns (platform) | 62 |
-| Actual columns (database) | 58 |
-| Present & expected | 55 |
-| Missing expected | 7 |
+| Actual columns (database) | 65 |
+| Present & expected | 62 |
+| Missing expected | 0 |
 | Extra (not in registry) | 3 |
 | Schema-cache migration gaps | 0 |
-| **Consistent** | **NO** |
+| **Consistent** | **YES** |
 
 ## Missing expected columns
 
-```
-delivered_at
-district
-platform_commission
-rated_at
-scheduled_at
-service_location
-service_name
-```
+_None — all expected columns exist._
 
 ## Extra columns (in DB, not in registry)
 
@@ -96,3 +88,10 @@ hijri_date
 | country_code | text | yes |
 | city | text | yes |
 | currency_code | text | yes |
+| district | text | yes |
+| platform_commission | numeric | yes |
+| rated_at | timestamp with time zone | yes |
+| scheduled_at | timestamp with time zone | yes |
+| service_location | text | yes |
+| service_name | text | yes |
+| delivered_at | timestamp with time zone | yes |

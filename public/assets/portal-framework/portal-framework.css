@@ -211,6 +211,47 @@ body.pf-page .pf-main-wrap {
   font-weight: 800;
 }
 
+.pf-nav__item--location {
+  margin-top: 8px;
+  color: color-mix(in srgb, var(--pf-accent-soft) 85%, white);
+  font-weight: 800;
+}
+
+.pf-nav__item--location.is-located {
+  color: #b8f5c8;
+}
+
+.pf-location-banner {
+  margin: 0 0 14px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(185, 135, 47, 0.45);
+  background: linear-gradient(180deg, rgba(255, 249, 235, 0.98), rgba(255, 244, 220, 0.92));
+  color: var(--pf-text, #3d2213);
+}
+
+.pf-location-banner p {
+  margin: 0 0 8px;
+  line-height: 1.5;
+}
+
+.pf-location-banner__sub {
+  font-size: 0.88rem;
+  color: var(--pf-muted, #5c4a3d);
+  font-weight: 600;
+}
+
+.pf-location-banner .pf-btn {
+  min-height: 48px;
+  margin-top: 4px;
+}
+
+.pf-nav__item--location:hover,
+.pf-nav__item--location:focus-visible {
+  background: rgba(185, 135, 47, 0.22);
+  color: #fff;
+}
+
 .pf-nav__item--logout:hover,
 .pf-nav__item--logout:focus-visible {
   background: rgba(255, 90, 90, 0.18);

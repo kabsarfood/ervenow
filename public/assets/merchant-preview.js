@@ -24,6 +24,7 @@
     merchantCategories: [],
     withdrawals: [],
     withdrawalMeta: { balance: 0, available: 0, pending_reserved: 0, total_withdrawn: 0 },
+    reviews: [],
     activeSection: "dashboard",
     orderFilter: "new",
     reportRange: "today",
@@ -35,6 +36,20 @@
     ready: ["ready"],
     done: ["picked_up", "delivering", "delivered", "picked"],
   };
+
+  var HUB_PAY_ROWS = [
+    { key: "ew_pay", label: "EW PAY" },
+    { key: "mada", label: "مدى" },
+    { key: "visa", label: "Visa" },
+    { key: "mastercard", label: "Mastercard" },
+    { key: "apple_pay", label: "Apple Pay" },
+    { key: "stc_pay", label: "STC Pay" },
+    { key: "cash_on_delivery", label: "الدفع عند الوصول" },
+    { key: "tabby", label: "Tabby" },
+    { key: "tamara", label: "Tamara" },
+  ];
+
+  var checkoutPlatform = {};
 
   function esc(s) {
     return String(s || "")
@@ -376,6 +391,9 @@
       sidebarName: name,
       toolsHtml: statusHtml,
     });
+    if (global.ErvenowPortalProviderLocation) {
+      ErvenowPortalProviderLocation.syncButtonLabel(state.store);
+    }
   }
 
   function ordersList() {
@@ -441,9 +459,10 @@
           ])
         : "") +
       '<div class="mp-card"><h3>اختصارات</h3><div class="mp-classic-links">' +
-      '<a class="mp-btn mp-btn--ghost" href="/order-board" target="_blank" rel="noopener">لوحة الطلبات الكلاسيكية</a>' +
-      '<a class="mp-btn mp-btn--ghost" href="/store-dashboard" target="_blank" rel="noopener">بوابة المتجر الكلاسيكية</a>' +
-      '<a class="mp-btn mp-btn--ghost" href="/merchant-dashboard" target="_blank" rel="noopener">الطلبات والإيرادات</a>' +
+      '<button type="button" class="mp-btn mp-btn--primary" data-pf-section="orders">الطلبات</button>' +
+      '<button type="button" class="mp-btn mp-btn--ghost" data-pf-section="products">المنتجات</button>' +
+      '<button type="button" class="mp-btn mp-btn--ghost" data-pf-section="withdrawals">السحب</button>' +
+      '<button type="button" class="mp-btn mp-btn--ghost" data-pf-section="settings">الإعدادات</button>' +
       "</div></div>"
     );
   }
@@ -498,6 +517,22 @@
                 esc(next.label) +
                 "</button>"
               : "—";
+            var tools =
+              '<button type="button" class="mp-btn mp-btn--ghost mp-order-detail" data-order-id="' +
+              esc(o.id) +
+              '">تفاصيل</button>';
+            if (st === "ready" || st === "preparing" || st === "accepted") {
+              tools +=
+                ' <button type="button" class="mp-btn mp-btn--ghost mp-order-print" data-order-id="' +
+                esc(o.id) +
+                '">طباعة</button>';
+            }
+            if (st === "picked_up" || st === "delivering") {
+              tools +=
+                ' <a class="mp-btn mp-btn--ghost" href="/track?id=' +
+                encodeURIComponent(o.id) +
+                '" target="_blank" rel="noopener">تتبع</a>';
+            }
             return (
               "<tr><td>" +
               fmtDate(o.created_at) +
@@ -511,24 +546,25 @@
               fmtMoney(o.total || o.order_total) +
               "</td><td>" +
               actionBtn +
+              "</td><td>" +
+              tools +
               "</td></tr>"
             );
           })
           .join("")
-      : '<tr><td colspan="6" class="mp-empty">لا طلبات في هذا القسم</td></tr>';
+      : '<tr><td colspan="7" class="mp-empty">لا طلبات في هذا القسم</td></tr>';
 
     return (
       '<h2 class="mp-section-title">الطلبات</h2>' +
-      '<p class="mp-section-sub">Orders — يعتمد على Order Board الحالي</p>' +
+      '<p class="mp-section-sub">Orders — إدارة دورة الطلب من البوابة</p>' +
       '<div class="mp-tabs" role="tablist">' +
       tabsHtml +
       "</div>" +
       '<div class="mp-card mp-table-wrap"><table class="mp-table"><thead><tr>' +
-      "<th>التاريخ</th><th>الطلب</th><th>الحالة</th><th>الدفع</th><th>الإجمالي</th><th>إجراء</th>" +
+      "<th>التاريخ</th><th>الطلب</th><th>الحالة</th><th>الدفع</th><th>الإجمالي</th><th>إجراء</th><th>أدوات</th>" +
       "</tr></thead><tbody>" +
       tableRows +
-      "</tbody></table></div>" +
-      '<p class="mp-section-sub"><a href="/order-board">فتح لوحة الطلبات الكاملة ↗</a></p>'
+      "</tbody></table></div>"
     );
   }
 
@@ -564,6 +600,11 @@
     );
   }
 
+  function starsHtml(rating) {
+    var n = Math.max(0, Math.min(5, Math.round(Number(rating) || 0)));
+    return "★★★★★".slice(0, n) + "☆☆☆☆☆".slice(n);
+  }
+
   function renderProducts() {
     var grid = state.products.length
       ? '<div class="mp-product-grid">' +
@@ -594,11 +635,79 @@
       "<label>القسم</label><select id='mpPCategory'><option value=''>— بدون —</option>" +
       catOpts +
       "</select>" +
+      "<label>المخزون (اختياري)</label><input id='mpPStock' type='number' min='0' step='1' />" +
+      "<label><input id='mpPActive' type='checkbox' checked /> متاح للبيع</label>" +
+      "<label>صورة المنتج</label><input id='mpPImage' type='file' accept='image/*' />" +
       '<div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">' +
       '<button type="button" class="mp-btn mp-btn--primary" id="mpSaveProduct">حفظ المنتج</button>' +
       '<button type="button" class="mp-btn mp-btn--ghost" id="mpResetProduct">مسح</button>' +
       "</div></div>" +
       '<div class="mp-card"><h3>جميع المنتجات</h3>' +
+      grid +
+      "</div>"
+    );
+  }
+
+  function renderReviews() {
+    var store = state.store || {};
+    var avg = Number(store.average_rating) || 0;
+    var count = Number(store.rating_count) || 0;
+    var rows = state.reviews.length
+      ? state.reviews
+          .map(function (r) {
+            return (
+              '<div class="mp-review-item"><div class="mp-review-item__stars">' +
+              starsHtml(r.rating) +
+              "</div>" +
+              (r.comment
+                ? '<p class="mp-review-item__text">' + esc(r.comment) + "</p>"
+                : '<p class="mp-review-item__text mp-empty">بدون تعليق نصي</p>') +
+              '<div class="mp-review-item__date">' +
+              fmtDate(r.created_at) +
+              "</div></div>"
+            );
+          })
+          .join("")
+      : '<p class="mp-empty">لا توجد تقييمات بعد.</p>';
+    return (
+      '<h2 class="mp-section-title">تقييمات العملاء</h2>' +
+      '<p class="mp-section-sub">Reviews</p>' +
+      '<div class="mp-kpi-grid">' +
+      kpiCard("متوسط التقييم", count > 0 ? avg.toFixed(1) + " ★" : "—") +
+      kpiCard("عدد التقييمات", String(count)) +
+      "</div>" +
+      '<div class="mp-card"><h3>آخر التقييمات</h3>' +
+      rows +
+      "</div>"
+    );
+  }
+
+  function renderVisitorPreview() {
+    var store = state.store || {};
+    var href = state.storeId ? "/store.html?store_id=" + encodeURIComponent(state.storeId) + "&preview=1" : "#";
+    var grid = state.products.length
+      ? '<div class="mp-product-grid">' +
+        state.products
+          .filter(function (p) {
+            return p.active !== false;
+          })
+          .slice(0, 8)
+          .map(function (p) {
+            return productCardHtml(p);
+          })
+          .join("") +
+        "</div>"
+      : '<p class="mp-empty">لا منتجات بعد.</p>';
+    return (
+      '<h2 class="mp-section-title">معاينة المتجر</h2>' +
+      '<p class="mp-section-sub">Visitor Preview</p>' +
+      '<div class="mp-card"><p><strong>' +
+      esc(store.name || store.store_name || "متجرك") +
+      "</strong></p>" +
+      '<a class="mp-btn mp-btn--primary" href="' +
+      esc(href) +
+      '" target="_blank" rel="noopener">فتح صفحة المتجر</a>' +
+      "<h3>عينة من المنتجات</h3>" +
       grid +
       "</div>"
     );
@@ -676,7 +785,6 @@
       "</tbody></table></div>" +
       '<div class="mp-classic-links">' +
       '<button type="button" class="mp-btn mp-btn--primary" data-pf-section="withdrawals">طلب سحب</button>' +
-      '<a class="mp-btn mp-btn--ghost" href="/store-dashboard#wallet">المحفظة الكلاسيكية</a>' +
       "</div>"
     );
   }
@@ -750,30 +858,138 @@
     );
   }
 
+  function platformCheckoutAllows(key) {
+    if (!checkoutPlatform || typeof checkoutPlatform !== "object") return true;
+    if (Object.prototype.hasOwnProperty.call(checkoutPlatform, key)) return !!checkoutPlatform[key];
+    return true;
+  }
+
+  function hubPayCheckboxesHtml() {
+    var hm =
+      state.hub && state.hub.checkout_payment_methods && typeof state.hub.checkout_payment_methods === "object"
+        ? state.hub.checkout_payment_methods
+        : {};
+    return HUB_PAY_ROWS.map(function (row) {
+      var allowed = platformCheckoutAllows(row.key);
+      var checked = hm[row.key] !== false;
+      return (
+        '<label class="mp-pay-row">' +
+        '<input type="checkbox" id="mpHubPay_' +
+        row.key +
+        '"' +
+        (checked ? " checked" : "") +
+        (allowed ? "" : " disabled") +
+        " /> " +
+        esc(row.label) +
+        "</label>"
+      );
+    }).join("");
+  }
+
+  function findBoardOrder(id) {
+    var list = ordersList();
+    var hit = list.find(function (o) {
+      return String(o.id) === String(id);
+    });
+    if (hit) return hit;
+    return (state.board && state.board.orders ? state.board.orders : []).find(function (o) {
+      return String(o.id) === String(id);
+    });
+  }
+
+  function showOrderDetailModal(order) {
+    if (!order) return;
+    var wf = global.ErvenowMerchantOrderWorkflow;
+    var items = wf && wf.itemsFromBreakdown ? wf.itemsFromBreakdown(order) : [];
+    var itemsHtml = items.length
+      ? "<ul>" +
+        items
+          .map(function (it) {
+            return (
+              "<li>" +
+              esc(it.name || it.title || it.product_name || "صنف") +
+              " × " +
+              (Number(it.qty || it.quantity) || 1) +
+              "</li>"
+            );
+          })
+          .join("") +
+        "</ul>"
+      : "";
+    var driver = order.driver;
+    var existing = document.getElementById("mpOrderModal");
+    if (existing) existing.remove();
+    var el = document.createElement("div");
+    el.id = "mpOrderModal";
+    el.className = "mp-modal";
+    el.innerHTML =
+      '<div class="mp-modal__backdrop"></div><div class="mp-modal__box" role="dialog">' +
+      '<button type="button" class="mp-modal__close" id="mpOrderModalClose" aria-label="إغلاق">×</button>' +
+      "<h3>طلب " +
+      esc(order.order_number || order.id) +
+      "</h3>" +
+      "<p><strong>العضو:</strong> " +
+      esc(order.customer_name || "—") +
+      "</p>" +
+      "<p><strong>الجوال:</strong> " +
+      esc(order.customer_phone || "—") +
+      "</p>" +
+      "<p><strong>العنوان:</strong> " +
+      esc(order.drop_address || order.delivery_address || "—") +
+      "</p>" +
+      itemsHtml +
+      (driver
+        ? "<p><strong>المندوب:</strong> " + esc(driver.name || "—") + " · " + esc(driver.phone || "—") + "</p>"
+        : "<p><strong>المندوب:</strong> لم يُعيَّن بعد</p>") +
+      "<p><strong>قيمة الطلب:</strong> " +
+      fmtMoney(order.order_value != null ? order.order_value : order.total || order.order_total) +
+      " ر.س</p>" +
+      "<p><strong>صافي المتجر:</strong> " +
+      fmtMoney(order.store_net != null ? order.store_net : order.total || order.order_total) +
+      " ر.س</p>" +
+      "</div>";
+    document.body.appendChild(el);
+    function close() {
+      el.remove();
+    }
+    el.querySelector(".mp-modal__backdrop").onclick = close;
+    document.getElementById("mpOrderModalClose").onclick = close;
+  }
+
   function renderSettings() {
     var hub = state.hub || {};
     var store = state.store || {};
     return (
       '<h2 class="mp-section-title">الإعدادات</h2>' +
-      '<p class="mp-section-sub">Settings — إعدادات المنشأة الحالية</p>' +
-      '<div class="mp-card"><h3>الهوية والبروفايل</h3>' +
+      '<p class="mp-section-sub">Settings — إدارة المنشأة من البوابة</p>' +
+      '<div class="mp-card mp-form"><h3>الهوية والبروفايل</h3>' +
       "<p><strong>الاسم:</strong> " +
       esc(store.name || store.store_name) +
       "</p>" +
-      "<p><strong>النوع:</strong> " +
-      esc(store.store_type || store.type || "—") +
+      "<label for='mpHubBio'>الوصف</label>" +
+      "<textarea id='mpHubBio' rows='3'>" +
+      esc(hub.bio || store.bio || "") +
+      "</textarea>" +
+      "<label for='mpHubLogo'>الشعار (صورة)</label>" +
+      "<input id='mpHubLogo' type='file' accept='image/*' />" +
+      "<label for='mpHubBanner'>الغلاف (صورة)</label>" +
+      "<input id='mpHubBanner' type='file' accept='image/*' />" +
+      '<button type="button" class="mp-btn mp-btn--primary" id="mpSaveHub">حفظ الهوية</button></div>' +
+      '<div class="mp-card mp-form"><h3>الموقع</h3>' +
+      "<p><strong>العنوان الحالي:</strong> " +
+      esc(store.address || store.location_text || store.location || "—") +
       "</p>" +
-      "<p><strong>الوصف:</strong> " +
-      esc(hub.bio || store.bio || "—") +
-      "</p>" +
-      "<p><strong>الموقع:</strong> " +
-      esc(store.address || store.location || "—") +
-      "</p></div>" +
-      '<div class="mp-classic-links">' +
-      '<a class="mp-btn mp-btn--primary" href="/store-dashboard#brandingAnchor">تعديل الشعار والبروفايل</a>' +
-      '<a class="mp-btn mp-btn--ghost" href="/store-dashboard#storeLocationAnchor">تعديل الموقع</a>' +
-      '<a class="mp-btn mp-btn--ghost" href="/store-dashboard#hubPayGrid">وسائل الدفع</a>' +
-      "</div>"
+      "<label for='mpStoreLoc'>رابط Google Maps أو lat,lng</label>" +
+      "<input id='mpStoreLoc' type='text' placeholder='https://maps.google.com/... أو 24.7,46.6' />" +
+      '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">' +
+      '<button type="button" class="mp-btn mp-btn--ghost" id="mpStoreLocGps">موقعي الحالي (GPS)</button>' +
+      '<button type="button" class="mp-btn mp-btn--primary" id="mpSaveStoreLoc">حفظ الموقع</button>' +
+      "</div></div>" +
+      '<div class="mp-card mp-form"><h3>وسائل الدفع (ERVENOW PAY)</h3>' +
+      '<div id="mpHubPayGrid">' +
+      hubPayCheckboxesHtml() +
+      "</div>" +
+      '<p class="mp-section-sub">يُحفظ مع الهوية أعلاه.</p></div>'
     );
   }
 
@@ -789,6 +1005,10 @@
         return renderCategories();
       case "offers":
         return renderOffers();
+      case "reviews":
+        return renderReviews();
+      case "visitor-preview":
+        return renderVisitorPreview();
       case "wallet":
         return renderWallet();
       case "withdrawals":
@@ -849,15 +1069,43 @@
         }
       });
     }
+    if (sectionId === "settings") {
+      api("/api/core/checkout-payment-methods")
+        .then(function (j) {
+          checkoutPlatform = (j && j.methods) || j || {};
+          var sec = document.getElementById("mpSection-settings");
+          if (sec) {
+            sec.innerHTML = renderSettings();
+            wireSectionEvents();
+          }
+        })
+        .catch(function () {});
+    }
+    if (sectionId === "reviews" && state.storeId) {
+      api("/api/store/reviews?store_id=" + encodeURIComponent(state.storeId) + "&limit=20")
+        .then(function (j) {
+          state.reviews = (j && j.reviews) || [];
+          var sec = document.getElementById("mpSection-reviews");
+          if (sec) {
+            sec.innerHTML = renderReviews();
+            wireSectionEvents();
+          }
+        })
+        .catch(function () {});
+    }
   }
 
   function resetProductForm() {
-    ["mpEditId", "mpPName", "mpPDesc", "mpPPrice", "mpPOffer", "mpPCategory"].forEach(function (id) {
+    ["mpEditId", "mpPName", "mpPDesc", "mpPPrice", "mpPOffer", "mpPCategory", "mpPStock"].forEach(function (id) {
       var el = document.getElementById(id);
       if (!el) return;
       if (el.tagName === "SELECT") el.value = "";
       else el.value = id === "mpEditId" ? "" : el.type === "number" ? "" : "";
     });
+    var img = document.getElementById("mpPImage");
+    if (img) img.value = "";
+    var active = document.getElementById("mpPActive");
+    if (active) active.checked = true;
   }
 
   function fillProductForm(p) {
@@ -868,6 +1116,10 @@
     document.getElementById("mpPOffer").value =
       p.offer_price != null && Number(p.offer_price) > 0 ? p.offer_price : "";
     document.getElementById("mpPCategory").value = p.category ? String(p.category) : "";
+    var stockEl = document.getElementById("mpPStock");
+    if (stockEl) stockEl.value = p.stock != null ? p.stock : "";
+    var activeEl = document.getElementById("mpPActive");
+    if (activeEl) activeEl.checked = p.active !== false;
   }
 
   async function saveProduct() {
@@ -883,6 +1135,15 @@
     var offer = document.getElementById("mpPOffer").value;
     if (offer !== "" && Number(offer) > 0) body.offer_price = Number(offer);
     else body.offer_price = null;
+    var stockEl = document.getElementById("mpPStock");
+    if (stockEl && stockEl.value !== "") body.stock = Number(stockEl.value);
+    var activeEl = document.getElementById("mpPActive");
+    if (activeEl) body.active = !!activeEl.checked;
+    var imgInput = document.getElementById("mpPImage");
+    if (imgInput && imgInput.files && imgInput.files[0] && global.compressImageToDataUrl) {
+      body.image_base64 = await global.compressImageToDataUrl(imgInput.files[0], 0.78, 1200);
+      body.image_file_name = imgInput.files[0].name || "product.jpg";
+    }
     if (!body.name || !Number.isFinite(body.price)) {
       showMsg("اسم المنتج والسعر مطلوبان", false);
       return;
@@ -918,6 +1179,13 @@
         renderMain();
       };
     });
+    document.querySelectorAll("[data-pf-section]").forEach(function (btn) {
+      if (btn.tagName === "BUTTON" && btn.getAttribute("data-pf-section")) {
+        btn.onclick = function () {
+          navigate(btn.getAttribute("data-pf-section"));
+        };
+      }
+    });
     document.querySelectorAll(".mp-order-action").forEach(function (btn) {
       btn.onclick = async function () {
         var id = btn.getAttribute("data-order-id");
@@ -942,6 +1210,90 @@
         }
       };
     });
+    document.querySelectorAll(".mp-order-detail").forEach(function (btn) {
+      btn.onclick = function () {
+        showOrderDetailModal(findBoardOrder(btn.getAttribute("data-order-id")));
+      };
+    });
+    document.querySelectorAll(".mp-order-print").forEach(function (btn) {
+      btn.onclick = function () {
+        var o = findBoardOrder(btn.getAttribute("data-order-id"));
+        var wf = global.ErvenowMerchantOrderWorkflow;
+        if (o && wf && wf.printThermal80) wf.printThermal80(o, state.store || {});
+      };
+    });
+    var saveHub = document.getElementById("mpSaveHub");
+    if (saveHub) {
+      saveHub.onclick = async function () {
+        if (!state.storeId) return;
+        var body = { bio: String(document.getElementById("mpHubBio").value || "").trim() };
+        var payBody = {};
+        HUB_PAY_ROWS.forEach(function (row) {
+          var cb = document.getElementById("mpHubPay_" + row.key);
+          if (!cb) return;
+          payBody[row.key] = cb.disabled ? false : !!cb.checked;
+        });
+        body.checkout_payment_methods = payBody;
+        var bf = document.getElementById("mpHubBanner").files && document.getElementById("mpHubBanner").files[0];
+        var lf = document.getElementById("mpHubLogo").files && document.getElementById("mpHubLogo").files[0];
+        try {
+          if (bf && global.compressImageToDataUrl) {
+            body.banner_base64 = await global.compressImageToDataUrl(bf, 0.72, 1600);
+          }
+          if (lf && global.compressImageToDataUrl) {
+            body.logo_base64 = await global.compressImageToDataUrl(lf, 0.78, 800);
+          }
+          await api("/api/store/merchant-hub", { method: "PATCH", body: body });
+          showMsg("تم حفظ الإعدادات", true);
+          var r = await api("/api/store/my-store");
+          state.hub = r.merchant_hub || state.hub;
+          state.store = r.store || state.store;
+          renderMain();
+        } catch (e) {
+          showMsg(e.message || String(e), false);
+        }
+      };
+    }
+    var saveLoc = document.getElementById("mpSaveStoreLoc");
+    if (saveLoc) {
+      saveLoc.onclick = async function () {
+        if (!state.storeId) return;
+        var raw = String(document.getElementById("mpStoreLoc").value || "").trim();
+        if (!raw) return showMsg("أدخل رابط Maps أو lat,lng", false);
+        var body = {};
+        if (/^https?:\/\//i.test(raw) || /maps\.|goo\.gl|google\.com/i.test(raw)) body.maps_url = raw;
+        else if (/^-?\d+(\.\d+)?\s*,\s*-?\d+(\.\d+)?$/.test(raw)) {
+          var parts = raw.split(",");
+          body.lat = Number(parts[0].trim());
+          body.lng = Number(parts[1].trim());
+        } else body.maps_url = raw;
+        try {
+          await api("/api/store/location", { method: "PATCH", body: body });
+          showMsg("تم حفظ الموقع", true);
+          var r = await api("/api/store/my-store");
+          state.store = r.store || state.store;
+          renderMain();
+        } catch (e) {
+          showMsg(e.message || String(e), false);
+        }
+      };
+    }
+    var gpsBtn = document.getElementById("mpStoreLocGps");
+    if (gpsBtn && navigator.geolocation) {
+      gpsBtn.onclick = function () {
+        navigator.geolocation.getCurrentPosition(
+          function (pos) {
+            var inp = document.getElementById("mpStoreLoc");
+            if (inp) inp.value = pos.coords.latitude + "," + pos.coords.longitude;
+          },
+          function () {
+            showMsg("تعذر الوصول للموقع — فعّل GPS", false);
+          },
+          { enableHighAccuracy: true, timeout: 12000 }
+        );
+      };
+    }
+
     var saveBtn = document.getElementById("mpSaveProduct");
     if (saveBtn) saveBtn.onclick = saveProduct;
     var resetBtn = document.getElementById("mpResetProduct");
@@ -1166,6 +1518,12 @@
       W = shell.getWidgets();
       shell.mountChrome();
       shell.mountNotifications();
+      global.addEventListener("ervenow:provider-location-updated", function (ev) {
+        var d = (ev && ev.detail) || {};
+        var store = d.response && d.response.store;
+        if (store) state.store = store;
+        updateHeader();
+      });
     }
 
     if (!global.ErvenowAuthGuard) {

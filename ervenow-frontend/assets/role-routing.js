@@ -88,7 +88,7 @@
 
     driver: true,
 
-    merchant: false,
+    merchant: true,
 
   };
 
@@ -223,6 +223,12 @@
     }
 
     if (rawRole === "driver") {
+
+      if (isTransportPortalType(serviceType)) {
+
+        return { portalRole: "transport", unknownRole: false, unknownServiceType: false, rawRole: rawRole, serviceType: serviceType };
+
+      }
 
       return { portalRole: "driver", unknownRole: false, unknownServiceType: false, rawRole: rawRole, serviceType: serviceType };
 

@@ -37,7 +37,17 @@
     );
   }
 
-  function renderNavItems(navItems, activeSection) {
+  function renderLocationNavItem(enabled) {
+    if (!enabled) return "";
+    return (
+      '<button type="button" class="pf-nav__item pf-nav__item--location" data-pf-action="set-location" title="Location — GPS" aria-pressed="false">' +
+      '<span class="pf-nav__icon" aria-hidden="true">📍</span>' +
+      '<span data-pf-field="location-label">تحديد الموقع</span></button>'
+    );
+  }
+
+  function renderNavItems(navItems, activeSection, opts) {
+    opts = opts || {};
     return (
       (navItems || [])
         .map(function (item) {
@@ -68,7 +78,9 @@
             "</span></button>"
           );
         })
-        .join("") + renderLogoutNavItem()
+        .join("") +
+      renderLocationNavItem(!!opts.sidebarLocation) +
+      renderLogoutNavItem()
     );
   }
 
@@ -87,7 +99,7 @@
     return {
       el: sidebarEl,
       renderNav: function (activeSection) {
-        renderNav(sidebarEl, config.nav, activeSection);
+        renderNav(sidebarEl, config.nav, activeSection, { sidebarLocation: !!config.sidebarLocation });
       },
       setSidebarName: function (name) {
         var el = sidebarEl.querySelector('[data-pf-field="sidebar-name"]');
@@ -96,10 +108,10 @@
     };
   }
 
-  function renderNav(sidebarEl, navItems, activeSection) {
+  function renderNav(sidebarEl, navItems, activeSection, opts) {
     var nav = sidebarEl ? sidebarEl.querySelector("[data-pf-nav]") : null;
     if (!nav) return;
-    nav.innerHTML = renderNavItems(navItems, activeSection);
+    nav.innerHTML = renderNavItems(navItems, activeSection, opts);
   }
 
   global.ErvenowPortalFramework = global.ErvenowPortalFramework || {};

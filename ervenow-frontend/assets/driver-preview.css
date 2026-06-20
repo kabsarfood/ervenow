@@ -390,6 +390,27 @@ body.driver-preview-page {
   margin-top: 10px;
 }
 
+.dp-nav-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  width: 100%;
+  margin-top: 6px;
+}
+
+.dp-nav-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--dp-muted, #64748b);
+}
+
+.dp-nav-hint {
+  margin: 6px 0 0;
+  font-size: 0.78rem;
+  color: var(--dp-muted, #64748b);
+}
+
 .dp-btn {
   min-height: var(--dp-touch);
   padding: 0 14px;
@@ -571,8 +592,10 @@ body.driver-preview-page {
   }
 }
 
-@media (min-width: 641px) and (max-width: 1024px) {
-  .dp-kpi-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
+.dp-live-frame {
+  width: 100%;
+  min-height: min(70vh, 560px);
+  border: 0;
+  border-radius: 14px;
+  background: #0f172a;
 }

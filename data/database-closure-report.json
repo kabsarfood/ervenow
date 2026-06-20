@@ -1,0 +1,46 @@
+{
+  "generated_at": "2026-06-20T14:05:00.000Z",
+  "sprint": "G1-R Final Verification",
+  "consistent": true,
+  "schema_consistency": {
+    "expected_count": 62,
+    "present_expected": 62,
+    "missing_expected": 0,
+    "extra_columns": 3,
+    "schema_cache_missing": 0
+  },
+  "missing_columns": [],
+  "failed_constraints": [],
+  "failed_indexes": [],
+  "migrations_applied": [
+    "shared/migration_orders_schema_closure_g1r.sql",
+    "shared/migration_orders_portal_type.sql",
+    "shared/migration_notifications.sql"
+  ],
+  "tables_verified": ["orders", "notifications", "ervenow_ledger_wallets"],
+  "indexes_verified": [
+    "orders_delivered_at_idx",
+    "orders_scheduled_at_idx",
+    "orders_rated_at_idx",
+    "orders_pkey"
+  ],
+  "constraints_verified": ["orders_portal_type_check"],
+  "portal_type_distribution": {
+    "driver": 6,
+    "merchant": 23,
+    "service": 1,
+    "transport": 4,
+    "null": 0
+  },
+  "optional_gaps": [
+    "gas_mode",
+    "gas_liters",
+    "service_qty",
+    "provider_completed_at",
+    "customer_confirmed_at",
+    "commission_settled"
+  ],
+  "notes": [
+    "optional_gaps are handled by resilient insert — run migration_orders_service_provider_columns.sql for full gas columns"
+  ]
+}

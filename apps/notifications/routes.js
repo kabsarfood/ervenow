@@ -144,7 +144,11 @@ router.post("/read-all", requireAuth, async (req, res) => {
     for (const recipientType of types) {
       await markAllNotificationsRead(req.supabase, recipientType, recipientId);
     }
-    return ok(res, { unread_count: 0 });
+    broadcastNotificationRead(roomForAppUser(req.appUser), {
+      all: true,
+      unread_count: 0,
+    });
+    return ok(res, { unread_count: 0, portal: portalCtx.portalRole });
   } catch (e) {
     return fail(res, e.message || String(e), 500);
   }

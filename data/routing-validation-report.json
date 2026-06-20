@@ -1,0 +1,254 @@
+{
+  "generated_at": "2026-06-20T14:02:49.351Z",
+  "freeze": "G1-R Final Portal Role Classification",
+  "status": "PASS",
+  "summary": {
+    "order_routing_pass": 14,
+    "order_routing_total": 14,
+    "provider_routing_pass": 7,
+    "provider_routing_total": 7,
+    "transport_exclusions_pass": 4,
+    "transport_exclusions_total": 4
+  },
+  "taxonomy": {
+    "order_portal_types": [
+      "merchant",
+      "service",
+      "transport",
+      "driver"
+    ],
+    "service_portal_types": [
+      "ac_technician",
+      "agricultural_engineer",
+      "electrician",
+      "gas_central_refill",
+      "gas_cylinder_swap",
+      "gas_delivery",
+      "laundry_estates",
+      "plumber"
+    ],
+    "transport_portal_types": [
+      "car_transport",
+      "furniture_move",
+      "pickup_truck",
+      "vehicle_transfer"
+    ],
+    "driver_portal_types": [
+      "internal_delivery"
+    ]
+  },
+  "order_routing": [
+    {
+      "label": "مطعم",
+      "order_type": "restaurant",
+      "service_type": null,
+      "expected_portal": "merchant",
+      "resolved_portal_type": "merchant",
+      "visible_in_portal": true,
+      "pass": true
+    },
+    {
+      "label": "متجر",
+      "order_type": "store",
+      "service_type": null,
+      "expected_portal": "merchant",
+      "resolved_portal_type": "merchant",
+      "visible_in_portal": true,
+      "pass": true
+    },
+    {
+      "label": "سباك",
+      "order_type": "service",
+      "service_type": "plumber",
+      "expected_portal": "service",
+      "resolved_portal_type": "service",
+      "visible_in_portal": true,
+      "pass": true
+    },
+    {
+      "label": "كهربائي",
+      "order_type": "service",
+      "service_type": "electrician",
+      "expected_portal": "service",
+      "resolved_portal_type": "service",
+      "visible_in_portal": true,
+      "pass": true
+    },
+    {
+      "label": "تكييف",
+      "order_type": "service",
+      "service_type": "ac_technician",
+      "expected_portal": "service",
+      "resolved_portal_type": "service",
+      "visible_in_portal": true,
+      "pass": true
+    },
+    {
+      "label": "غسيل",
+      "order_type": "service",
+      "service_type": "laundry_estates",
+      "expected_portal": "service",
+      "resolved_portal_type": "service",
+      "visible_in_portal": true,
+      "pass": true
+    },
+    {
+      "label": "تشجير",
+      "order_type": "service",
+      "service_type": "agricultural_engineer",
+      "expected_portal": "service",
+      "resolved_portal_type": "service",
+      "visible_in_portal": true,
+      "pass": true
+    },
+    {
+      "label": "غاز",
+      "order_type": "gas_delivery",
+      "service_type": "gas_delivery",
+      "expected_portal": "service",
+      "resolved_portal_type": "service",
+      "visible_in_portal": true,
+      "pass": true
+    },
+    {
+      "label": "توصيل داخلي",
+      "order_type": "service",
+      "service_type": "internal_delivery",
+      "expected_portal": "driver",
+      "resolved_portal_type": "driver",
+      "visible_in_portal": true,
+      "pass": true
+    },
+    {
+      "label": "طلب جاهز للتوصيل",
+      "order_type": "restaurant",
+      "service_type": null,
+      "expected_portal": "driver",
+      "resolved_portal_type": "merchant",
+      "visible_in_portal": true,
+      "pass": true
+    },
+    {
+      "label": "سطحة",
+      "order_type": "service",
+      "service_type": "pickup_truck",
+      "expected_portal": "transport",
+      "resolved_portal_type": "transport",
+      "visible_in_portal": true,
+      "pass": true
+    },
+    {
+      "label": "نقل مركبة",
+      "order_type": "service",
+      "service_type": "car_transport",
+      "expected_portal": "transport",
+      "resolved_portal_type": "transport",
+      "visible_in_portal": true,
+      "pass": true
+    },
+    {
+      "label": "نقل مركبة",
+      "order_type": "service",
+      "service_type": "vehicle_transfer",
+      "expected_portal": "transport",
+      "resolved_portal_type": "transport",
+      "visible_in_portal": true,
+      "pass": true
+    },
+    {
+      "label": "نقل أثاث",
+      "order_type": "service",
+      "service_type": "furniture_move",
+      "expected_portal": "transport",
+      "resolved_portal_type": "transport",
+      "visible_in_portal": true,
+      "pass": true
+    }
+  ],
+  "provider_routing": [
+    {
+      "role": "service",
+      "service_type": "plumber",
+      "expected_portal": "service",
+      "resolved_portal": "service",
+      "pass": true
+    },
+    {
+      "role": "service",
+      "service_type": "gas_cylinder_swap",
+      "expected_portal": "service",
+      "resolved_portal": "service",
+      "pass": true
+    },
+    {
+      "role": "service",
+      "service_type": "gas_delivery",
+      "expected_portal": "service",
+      "resolved_portal": "service",
+      "pass": true
+    },
+    {
+      "role": "service",
+      "service_type": "pickup_truck",
+      "expected_portal": "transport",
+      "resolved_portal": "transport",
+      "pass": true
+    },
+    {
+      "role": "service",
+      "service_type": "internal_delivery",
+      "expected_portal": "driver",
+      "resolved_portal": "driver",
+      "pass": true
+    },
+    {
+      "role": "driver",
+      "service_type": null,
+      "expected_portal": "driver",
+      "resolved_portal": "driver",
+      "pass": true
+    },
+    {
+      "role": "store",
+      "service_type": null,
+      "expected_portal": "merchant",
+      "resolved_portal": "merchant",
+      "pass": true
+    }
+  ],
+  "transport_exclusions": [
+    {
+      "service_type": "internal_delivery",
+      "is_transport": false,
+      "is_service": false,
+      "is_driver": true,
+      "pass": true
+    },
+    {
+      "service_type": "gas_delivery",
+      "is_transport": false,
+      "is_service": true,
+      "is_driver": false,
+      "pass": true
+    },
+    {
+      "service_type": "gas_cylinder_swap",
+      "is_transport": false,
+      "is_service": true,
+      "is_driver": false,
+      "pass": true
+    },
+    {
+      "service_type": "gas_central_refill",
+      "is_transport": false,
+      "is_service": true,
+      "is_driver": false,
+      "pass": true
+    }
+  ],
+  "decisions": {
+    "gas_portal": "service",
+    "internal_delivery_portal": "driver",
+    "transport_portal_scope": "pickup_truck, car_transport, vehicle_transfer, furniture_move only"
+  }
+}

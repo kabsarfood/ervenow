@@ -528,20 +528,23 @@ router.get("/orders", requireAuth, async (req, res) => {
     const visibleOpenOrders = openCandidates.filter((order) => {
       const orderLat = toNumberOrNaN(order.pickup_lat);
       const orderLng = toNumberOrNaN(order.pickup_lng);
-      if (!Number.isFinite(orderLat) || !Number.isFinite(orderLng)) return true;
-      if (!Number.isFinite(meLat) || !Number.isFinite(meLng)) return false;
-      if (!activeList.length) return true;
-
-      const nearest = activeList
-        .map((d) => ({
-          id: String(d.id || ""),
-          dist: haversineKm(orderLat, orderLng, Number(d.lat), Number(d.lng)),
-        }))
-        .sort((a, b) => a.dist - b.dist)
-        .slice(0, 3);
-      const allowed = nearest.some((d) => d.id === meId);
-      if (allowed) notifyDriver(drv, order);
-      return allowed;
+      if (
+        Number.isFinite(orderLat) &&
+        Number.isFinite(orderLng) &&
+        Number.isFinite(meLat) &&
+        Number.isFinite(meLng) &&
+        activeList.length
+      ) {
+        const nearest = activeList
+          .map((d) => ({
+            id: String(d.id || ""),
+            dist: haversineKm(orderLat, orderLng, Number(d.lat), Number(d.lng)),
+          }))
+          .sort((a, b) => a.dist - b.dist)
+          .slice(0, 3);
+        if (nearest.some((d) => d.id === meId)) notifyDriver(drv, order);
+      }
+      return true;
     });
 
     const activeAssigned = enrichDriverOrderRows(filterDriverDispatchOrders(assignedOrders || []));
@@ -674,11 +677,24 @@ router.post("/accept/:id", requireAuth, async (req, res) => {
       return fail(res, debtErr.message || "تعذر قبول الطلب", debtErr.code === "DRIVER_DEBT_LIMIT" ? 403 : 400);
     }
 
+    const meLat = toNumberOrNaN(drv.lat);
+    const meLng = toNumberOrNaN(drv.lng);
+
     const { data: cur, error: curErr } = await req.supabase.from("orders").select("*").eq("id", orderId).maybeSingle();
     if (curErr) return fail(res, curErr.message, 400);
     if (!cur) return fail(res, "Not found", 404);
     if (cur.driver_id) {
       return ok(res, { accepted: false, message: "تم استلام الطلب من مندوب آخر" });
+    }
+
+    const pickupLat = toNumberOrNaN(cur.pickup_lat);
+    const pickupLng = toNumberOrNaN(cur.pickup_lng);
+    if (
+      Number.isFinite(pickupLat) &&
+      Number.isFinite(pickupLng) &&
+      (!Number.isFinite(meLat) || !Number.isFinite(meLng))
+    ) {
+      return fail(res, "فعّل الموقع (GPS) أولاً قبل قبول الطلب", 403);
     }
 
     const current = getOrderDeliveryStatus(cur);

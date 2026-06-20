@@ -15,7 +15,13 @@ describe("orderPortalRouting", () => {
   test("resolves service vs transport", () => {
     expect(resolveOrderPortalType({ order_type: "service", service_type: "electrician" })).toBe("service");
     expect(resolveOrderPortalType({ order_type: "service", service_type: "pickup_truck" })).toBe("transport");
-    expect(resolveOrderPortalType({ order_type: "gas_delivery", service_type: "gas_delivery" })).toBe("transport");
+    expect(resolveOrderPortalType({ order_type: "gas_delivery", service_type: "gas_delivery" })).toBe("service");
+    expect(
+      resolveOrderPortalType({
+        order_type: "service",
+        service_type: "internal_delivery",
+      })
+    ).toBe("driver");
     expect(
       resolveOrderPortalType({
         order_type: "service",
@@ -46,6 +52,16 @@ describe("orderPortalRouting", () => {
 
     expect(orderVisibleInPortal(transportOrder, "transport")).toBe(true);
     expect(orderVisibleInPortal(transportOrder, "service")).toBe(false);
+
+    const driverOrder = { order_type: "service", service_type: "internal_delivery" };
+    expect(orderVisibleInPortal(driverOrder, "driver")).toBe(true);
+    expect(orderVisibleInPortal(driverOrder, "transport")).toBe(false);
+    expect(orderVisibleInPortal(driverOrder, "service")).toBe(false);
+
+    const gasOrder = { order_type: "gas_delivery", service_type: "gas_delivery" };
+    expect(orderVisibleInPortal(gasOrder, "service")).toBe(true);
+    expect(orderVisibleInPortal(gasOrder, "transport")).toBe(false);
+    expect(orderVisibleInPortal(gasOrder, "driver")).toBe(false);
   });
 
   test("filterOrdersForPortal", () => {

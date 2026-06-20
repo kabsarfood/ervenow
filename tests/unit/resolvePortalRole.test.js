@@ -20,9 +20,10 @@ describe("resolvePortalRole", () => {
   test("splits service vs transport by service_type", () => {
     expect(resolvePortalRole({ role: "service", service_type: "electrician" }).portalRole).toBe("service");
     expect(resolvePortalRole({ role: "service", service_type: "plumber" }).portalRole).toBe("service");
+    expect(resolvePortalRole({ role: "service", service_type: "internal_delivery" }).portalRole).toBe("driver");
     expect(resolvePortalRole({ role: "service", service_type: "pickup_truck" }).portalRole).toBe("transport");
     expect(resolvePortalRole({ role: "service", service_type: "car_transport" }).portalRole).toBe("transport");
-    expect(resolvePortalRole({ role: "service", service_type: "gas_delivery" }).portalRole).toBe("transport");
+    expect(resolvePortalRole({ role: "service", service_type: "gas_delivery" }).portalRole).toBe("service");
     expect(resolvePortalRole({ role: "driver", service_type: "pickup_truck" }).portalRole).toBe("transport");
   });
 
@@ -61,8 +62,9 @@ describe("resolvePortalRole", () => {
 
   test("type helpers", () => {
     expect(isTransportPortalType("pickup_truck")).toBe(true);
-    expect(isTransportPortalType("electrician")).toBe(false);
-    expect(isServicePortalType("ac_technician")).toBe(true);
+    expect(isTransportPortalType("gas_delivery")).toBe(false);
+    expect(isTransportPortalType("internal_delivery")).toBe(false);
+    expect(isServicePortalType("gas_delivery")).toBe(true);
     expect(isServicePortalType("car_transport")).toBe(false);
   });
 });

@@ -1,14 +1,14 @@
 {
-  "generated_at": "2026-06-19T12:10:23.498Z",
+  "generated_at": "2026-06-20T14:04:33.994Z",
   "table": "public.orders",
   "summary": {
     "expected_count": 62,
-    "actual_count": 58,
-    "present_expected": 55,
-    "missing_expected": 7,
+    "actual_count": 65,
+    "present_expected": 62,
+    "missing_expected": 0,
     "extra_columns": 3,
     "schema_cache_missing": 0,
-    "consistent": false
+    "consistent": true
   },
   "expected_columns": [
     "breakdown",
@@ -422,6 +422,48 @@
       "type": "text",
       "nullable": true,
       "default": null
+    },
+    {
+      "name": "district",
+      "type": "text",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "name": "platform_commission",
+      "type": "numeric",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "name": "rated_at",
+      "type": "timestamp with time zone",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "name": "scheduled_at",
+      "type": "timestamp with time zone",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "name": "service_location",
+      "type": "text",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "name": "service_name",
+      "type": "text",
+      "nullable": true,
+      "default": null
+    },
+    {
+      "name": "delivered_at",
+      "type": "timestamp with time zone",
+      "nullable": true,
+      "default": null
     }
   ],
   "present_expected": [
@@ -433,10 +475,12 @@
     "customer_id",
     "customer_phone",
     "data",
+    "delivered_at",
     "delivery_fee",
     "delivery_order_id",
     "delivery_status",
     "distance_km",
+    "district",
     "driver_earning",
     "driver_id",
     "driver_lat",
@@ -461,14 +505,19 @@
     "pickup_address",
     "pickup_lat",
     "pickup_lng",
+    "platform_commission",
     "platform_fee",
     "portal_type",
     "provider_id",
+    "rated_at",
     "rating",
     "review",
+    "scheduled_at",
     "seller_name",
     "seller_vat_number",
     "series_source",
+    "service_location",
+    "service_name",
     "service_provider_id",
     "service_type",
     "status",
@@ -481,15 +530,7 @@
     "vat_amount",
     "wallet_credited_at"
   ],
-  "missing_expected": [
-    "delivered_at",
-    "district",
-    "platform_commission",
-    "rated_at",
-    "scheduled_at",
-    "service_location",
-    "service_name"
-  ],
+  "missing_expected": [],
   "schema_cache_missing": [],
   "extra_columns": [
     "customer_name",
