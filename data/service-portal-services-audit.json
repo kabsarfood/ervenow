@@ -1,0 +1,24 @@
+{
+  "generated_at": "2026-06-20T14:30:00.000Z",
+  "audit": "Service Portal Services",
+  "service_portal_stable": false,
+  "pass_count": 2,
+  "fail_count": 6,
+  "provider_separation": "PASS",
+  "matrix": {
+    "plumber": { "customer_ui": "FAIL", "pricing": "PASS", "workflow": "FAIL", "wallet": "PASS", "notifications": "PASS", "overall": "FAIL" },
+    "electrician": { "customer_ui": "FAIL", "pricing": "PASS", "workflow": "FAIL", "wallet": "PASS", "notifications": "PASS", "overall": "FAIL" },
+    "ac_technician": { "customer_ui": "FAIL", "pricing": "PASS", "workflow": "FAIL", "wallet": "PASS", "notifications": "PASS", "overall": "FAIL" },
+    "laundry_estates": { "customer_ui": "PASS", "pricing": "PASS", "workflow": "FAIL", "wallet": "PASS", "notifications": "PASS", "overall": "FAIL" },
+    "agricultural_engineer": { "customer_ui": "FAIL", "pricing": "PASS", "workflow": "FAIL", "wallet": "PASS", "notifications": "PASS", "overall": "FAIL" },
+    "car_polishing": { "customer_ui": "PASS", "pricing": "PASS", "workflow": "PASS", "wallet": "PASS", "notifications": "PASS", "overall": "PASS" },
+    "gas_cylinder_swap": { "customer_ui": "PASS", "pricing": "PASS", "workflow": "FAIL", "wallet": "PASS", "notifications": "PASS", "overall": "FAIL" },
+    "gas_central_refill": { "customer_ui": "PASS", "pricing": "PASS", "workflow": "PASS", "wallet": "PASS", "notifications": "PASS", "overall": "PASS" }
+  },
+  "blockers": [
+    "Customer job subtypes missing for plumber, electrician, ac_technician, agricultural_engineer",
+    "Home service workflow conflates en-route with provider-complete (except car_polishing and gas_central_refill)",
+    "Home service forms lack photos, scheduling, and notes"
+  ],
+  "reference_implementations": ["car_polishing", "gas_central_refill"]
+}

@@ -53,6 +53,284 @@
     return state.profile && state.profile.id ? String(state.profile.id) : "";
   }
 
+  function providerServiceType() {
+    return String((state.profile && state.profile.service_type) || "").toLowerCase();
+  }
+
+  function isGasCentralProvider() {
+    return providerServiceType() === "gas_central_refill";
+  }
+
+  function bookingGasMode(b) {
+    var d = b && b.data && typeof b.data === "object" ? b.data : {};
+    return String(b.gas_mode || d.gas_mode || "").toLowerCase();
+  }
+
+  function isGasCentralBooking(b) {
+    var mode = bookingGasMode(b);
+    return mode === "central_refill" || mode === "bulk";
+  }
+
+  function isServicePhaseBooking(b) {
+    var st = String((b && b.service_type) || "").toLowerCase();
+    if (st === "car_polishing") return false;
+    if (st === "gas_delivery") {
+      var mode = bookingGasMode(b);
+      return mode !== "central_refill" && mode !== "bulk";
+    }
+    return (
+      ["plumber", "electrician", "ac_technician", "agricultural_engineer", "nursery", "cleaning_villa", "cleaning_building", "cleaning", "laundry_estates"].indexOf(
+        st
+      ) !== -1
+    );
+  }
+
+  function isServicePhaseProviderForBooking(b) {
+    if (!isServicePhaseBooking(b)) return false;
+    var pt = providerServiceType();
+    var st = String(b.service_type || "").toLowerCase();
+    if (pt === "gas_cylinder_swap" && st === "gas_delivery") return true;
+    if (pt === "laundry_estates") {
+      return ["cleaning_villa", "cleaning_building", "cleaning", "laundry_estates"].indexOf(st) !== -1;
+    }
+    if (pt === "nursery") pt = "agricultural_engineer";
+    return pt === st;
+  }
+
+  function findBooking(id) {
+    return (state.bookings || []).find(function (b) {
+      return String(b.id) === String(id);
+    });
+  }
+
+  function carPolishingCpStatus(b) {
+    var d = b && b.data && typeof b.data === "object" ? b.data : {};
+    if (b.cp_status) return String(b.cp_status).toLowerCase();
+    if (d.cp_status) return String(d.cp_status).toLowerCase();
+    var st = bookingStatus(b);
+    if (st === "accepted") {
+      return String(d.schedule_mode || b.schedule_mode || "").toLowerCase() === "scheduled" &&
+        (d.scheduled_at || b.scheduled_at)
+        ? "scheduled"
+        : "accepted";
+    }
+    if (st === "delivering") {
+      if (d.cp_phase === "in_progress" || d.cp_status === "in_progress") return "in_progress";
+      return "on_the_way";
+    }
+    if (st === "delivered") return "completed";
+    if (st === "cancelled") return "cancelled";
+    return "new";
+  }
+
+  function gasCentralLiters(b) {
+    var d = b && b.data && typeof b.data === "object" ? b.data : {};
+    return b.gas_liters || d.gas_liters || b.service_qty || d.qty || "—";
+  }
+
+  function gasCentralFacility(b, d) {
+    return d.establishment_name || b.district || b.service_name || "—";
+  }
+
+  function servicePhaseStatus(b) {
+    var d = b && b.data && typeof b.data === "object" ? b.data : {};
+    if (b.sp_status) return String(b.sp_status).toLowerCase();
+    if (d.sp_status) return String(d.sp_status).toLowerCase();
+    var st = bookingStatus(b);
+    if (st === "accepted") {
+      return String(d.schedule_mode || b.schedule_mode || "").toLowerCase() === "scheduled" &&
+        (d.scheduled_at || b.scheduled_at)
+        ? "scheduled"
+        : "accepted";
+    }
+    if (st === "delivering") {
+      if (d.sp_phase === "in_progress" || d.sp_status === "in_progress") return "in_progress";
+      return "on_the_way";
+    }
+    if (st === "delivered") return "completed";
+    if (st === "cancelled") return "cancelled";
+    return "new";
+  }
+
+  function spScheduleText(b) {
+    return cpScheduleText(b);
+  }
+
+  function servicePhaseDetail(b) {
+    if (!isServicePhaseBooking(b)) return "";
+    var d = b.data && typeof b.data === "object" ? b.data : {};
+    var subtype = b.service_subtype_label || d.service_subtype_label || d.service_subtype || "";
+    var photos = Array.isArray(b.service_photos)
+      ? b.service_photos
+      : Array.isArray(d.service_photos)
+        ? d.service_photos
+        : [];
+    var notes = String(b.notes || d.order_notes || d.customer_notes || "").trim();
+    var html =
+      (subtype ? "<p>نوع الخدمة: " + esc(subtype) + "</p>" : "") +
+      "<p>الموعد: " +
+      esc(spScheduleText(b)) +
+      "</p>" +
+      "<p>الحالة: " +
+      esc(cpStatusLabelAr(servicePhaseStatus(b))) +
+      "</p>" +
+      (notes ? "<p>ملاحظات: " + esc(notes) + "</p>" : "");
+    if (photos.length) {
+      html +=
+        '<p style="margin-bottom:6px">صور الطلب (' +
+        photos.length +
+        "):</p><div class=\"sp-cp-photos\">" +
+        photos
+          .slice(0, 10)
+          .map(function (item, i) {
+            var url = typeof item === "string" ? item : item && item.url ? item.url : "";
+            if (!url) return "";
+            return (
+              '<a href="' +
+              esc(String(url)) +
+              '" target="_blank" rel="noopener" title="صورة ' +
+              (i + 1) +
+              '"><img src="' +
+              esc(String(url)) +
+              '" alt="صورة ' +
+              (i + 1) +
+              '" loading="lazy" /></a>'
+            );
+          })
+          .join("") +
+        "</div>";
+    }
+    return html;
+  }
+
+  function cpStatusLabelAr(status) {
+    var map = {
+      new: "جديدة",
+      accepted: "مقبولة",
+      scheduled: "مجدولة",
+      on_the_way: "في الطريق",
+      in_progress: "قيد التنفيذ",
+      completed: "مكتملة",
+      cancelled: "ملغاة",
+    };
+    return map[String(status || "").toLowerCase()] || status || "—";
+  }
+
+  function cpScheduleText(b) {
+    var d = b && b.data && typeof b.data === "object" ? b.data : {};
+    var mode = String(d.schedule_mode || b.schedule_mode || "immediate").toLowerCase();
+    if (mode === "scheduled") {
+      var when = d.scheduled_at || b.scheduled_at;
+      return when ? "مجدول — " + fmtDate(when) : "مجدول";
+    }
+    return "تنفيذ فوري — الآن";
+  }
+
+  var CP_REJECT_REASONS = [
+    { code: "workload", label: "ضغط عمل" },
+    { code: "out_of_area", label: "خارج نطاق الخدمة" },
+    { code: "bad_schedule", label: "الموعد غير مناسب" },
+    { code: "other", label: "سبب آخر" },
+  ];
+
+  var CP_CANCEL_REASONS = [
+    { code: "workload", label: "ضغط عمل" },
+    { code: "vehicle_breakdown", label: "عطل مركبة" },
+    { code: "emergency", label: "ظرف طارئ" },
+    { code: "other", label: "سبب آخر" },
+  ];
+
+  var PHOTO_SLOT_LABELS = { front: "أمامية", back: "خلفية", side: "جانبية", extra: "إضافية" };
+
+  function pickReasonCode(reasons, promptTitle) {
+    var lines = (reasons || []).map(function (r, i) {
+      return i + 1 + ") " + r.label + " [" + r.code + "]";
+    });
+    var raw = global.prompt(promptTitle + "\n\n" + lines.join("\n") + "\n\nأدخل رقم السبب أو الكود:", "1");
+    if (raw == null) return null;
+    var t = String(raw).trim().toLowerCase();
+    var byIdx = Number(t);
+    if (Number.isInteger(byIdx) && byIdx >= 1 && byIdx <= reasons.length) return reasons[byIdx - 1].code;
+    var hit = (reasons || []).find(function (r) {
+      return r.code === t;
+    });
+    return hit ? hit.code : "other";
+  }
+
+  function carPolishingDetail(b) {
+    if (String(b.service_type || "").toLowerCase() !== "car_polishing") return "";
+    var d = b.data && typeof b.data === "object" ? b.data : {};
+    var labels = { sedan: "سيدان", jeep: "جيب", van: "فان", bus: "باص" };
+    var vt = String(d.vehicle_type || "").toLowerCase();
+    var addons = [];
+    if (d.addon_engine_wash) addons.push("غسيل المحرك");
+    if (d.addon_wheels) addons.push("تلميع الجنوط");
+    if (d.addon_exterior) addons.push("البدي الخارجي");
+    var photos = Array.isArray(b.vehicle_photos)
+      ? b.vehicle_photos
+      : Array.isArray(d.vehicle_photos)
+        ? d.vehicle_photos
+        : [];
+    var notes = String(b.notes || d.order_notes || d.customer_notes || "").trim();
+    var html =
+      "<p>نوع المركبة: " +
+      esc(labels[vt] || vt || "—") +
+      "</p>" +
+      (addons.length ? "<p>الخدمات المختارة: " + esc(addons.join(" · ")) + "</p>" : "") +
+      "<p>الموعد: " +
+      esc(cpScheduleText(b)) +
+      "</p>" +
+      "<p>الحالة: " +
+      esc(cpStatusLabelAr(carPolishingCpStatus(b))) +
+      "</p>" +
+      "<p>السعر: " +
+      esc(fmtMoney(b.total_amount || 0)) +
+      " ر.س</p>" +
+      (notes ? "<p>ملاحظات: " + esc(notes) + "</p>" : "");
+    if (photos.length) {
+      html +=
+        '<p style="margin-bottom:6px">صور المركبة (' +
+        photos.length +
+        "):</p><div class=\"sp-cp-photos\">" +
+        photos
+          .slice(0, 10)
+          .map(function (item, i) {
+            var url = typeof item === "string" ? item : item && item.url ? item.url : "";
+            var slot =
+              typeof item === "object" && item && item.slot
+                ? PHOTO_SLOT_LABELS[item.slot] || item.slot
+                : "صورة " + (i + 1);
+            if (!url) return "";
+            return (
+              '<a href="' +
+              esc(String(url)) +
+              '" target="_blank" rel="noopener" title="' +
+              esc(slot) +
+              '"><img src="' +
+              esc(String(url)) +
+              '" alt="' +
+              esc(slot) +
+              '" loading="lazy" /></a>'
+            );
+          })
+          .join("") +
+        "</div>";
+    }
+    return html;
+  }
+
+  function isCarPolishingProvider() {
+    return providerServiceType() === "car_polishing";
+  }
+
+  function actualLitersFromCard(cardEl) {
+    if (!cardEl) return null;
+    var input = cardEl.querySelector(".sp-gas-actual-liters");
+    if (!input) return null;
+    var n = Number(String(input.value || "").trim());
+    return Number.isFinite(n) && n > 0 ? Math.floor(n) : null;
+  }
+
   function bookingStatus(b) {
     return String((b && b.status) || "")
       .toLowerCase()
@@ -74,6 +352,12 @@
 
   function statusLabel(v, booking) {
     var s = String(v || "").toLowerCase();
+    if (booking && String(booking.service_type || "").toLowerCase() === "car_polishing") {
+      return cpStatusLabelAr(carPolishingCpStatus(booking));
+    }
+    if (booking && isServicePhaseBooking(booking)) {
+      return cpStatusLabelAr(servicePhaseStatus(booking));
+    }
     if (s === "new" || s === "pending") return "جديد — متاح للحجز";
     if (s === "accepted") return "محجوز — قيد التنفيذ";
     if (s === "delivering") {
@@ -105,11 +389,85 @@
     });
   }
 
+  function renderCarPolishingActions(b, mine, canReserve) {
+    var cp = carPolishingCpStatus(b);
+    var html = "";
+    if (canReserve && isCarPolishingProvider()) {
+      html +=
+        '<button type="button" class="pf-btn pf-btn--primary sp-reserve" data-id="' +
+        esc(b.id) +
+        '">قبول</button>' +
+        '<button type="button" class="pf-btn sp-reject" data-id="' +
+        esc(b.id) +
+        '">رفض</button>';
+      return html;
+    }
+    if (!mine) return "";
+    if (cp === "accepted" || cp === "scheduled") {
+      html +=
+        '<button type="button" class="pf-btn sp-en-route" data-id="' +
+        esc(b.id) +
+        '">في الطريق</button>' +
+        '<button type="button" class="pf-btn sp-cancel-task" data-id="' +
+        esc(b.id) +
+        '">إلغاء المهمة</button>';
+    } else if (cp === "on_the_way") {
+      html +=
+        '<button type="button" class="pf-btn sp-cp-progress" data-id="' +
+        esc(b.id) +
+        '">بدء التنفيذ</button>' +
+        '<button type="button" class="pf-btn sp-cancel-task" data-id="' +
+        esc(b.id) +
+        '">إلغاء المهمة</button>';
+    } else if (cp === "in_progress") {
+      html +=
+        '<button type="button" class="pf-btn pf-btn--primary sp-complete" data-id="' +
+        esc(b.id) +
+        '" data-default-label="إتمام الخدمة">إتمام الخدمة</button>' +
+        '<button type="button" class="pf-btn sp-cancel-task" data-id="' +
+        esc(b.id) +
+        '">إلغاء المهمة</button>';
+    }
+    return html;
+  }
+
+  function renderServicePhaseActions(b, mine, canReserve) {
+    var sp = servicePhaseStatus(b);
+    var html = "";
+    if (canReserve && isServicePhaseProviderForBooking(b)) {
+      html +=
+        '<button type="button" class="pf-btn pf-btn--primary sp-reserve" data-id="' +
+        esc(b.id) +
+        '">قبول</button>';
+      return html;
+    }
+    if (!mine || !isServicePhaseProviderForBooking(b)) return "";
+    if (sp === "accepted" || sp === "scheduled") {
+      html +=
+        '<button type="button" class="pf-btn sp-en-route" data-id="' +
+        esc(b.id) +
+        '">في الطريق</button>';
+    } else if (sp === "on_the_way") {
+      html +=
+        '<button type="button" class="pf-btn sp-sp-progress" data-id="' +
+        esc(b.id) +
+        '">بدء التنفيذ</button>';
+    } else if (sp === "in_progress") {
+      html +=
+        '<button type="button" class="pf-btn pf-btn--primary sp-complete" data-id="' +
+        esc(b.id) +
+        '" data-default-label="إتمام الخدمة">إتمام الخدمة</button>';
+    }
+    return html;
+  }
+
   function renderBookingCard(b) {
     var st = bookingStatus(b);
     var mine = String(b.provider_id || "") === providerId();
     var canReserve = (st === "new" || st === "pending") && !b.provider_id;
-    var canProviderExecute = mine && st === "accepted";
+    var isCpBooking = String(b.service_type || "").toLowerCase() === "car_polishing";
+    var isSpBooking = isServicePhaseBooking(b) && !isGasCentralBooking(b);
+    var canProviderExecute = mine && st === "accepted" && !isCpBooking && !isSpBooking;
     var d = b.data && typeof b.data === "object" ? b.data : {};
     var maps =
       b.location && String(b.location).indexOf(",") !== -1
@@ -132,6 +490,30 @@
           esc(d.recipient_phone || "—") +
           "</p>"
         : "";
+    var extraGasCentral =
+      isGasCentralBooking(b) || (isGasCentralProvider() && String(b.service_type || "").toLowerCase() === "gas_delivery")
+        ? "<div class='sp-gas-central'>" +
+          "<p><strong>تعبئة غاز مركزي</strong></p>" +
+          "<p>المنشأة / الحي: " +
+          esc(gasCentralFacility(b, d)) +
+          "</p>" +
+          "<p>اللترات المطلوبة: " +
+          esc(String(gasCentralLiters(b))) +
+          " لتر</p>" +
+          (d.actual_liters_delivered
+            ? "<p>اللترات الفعلية: " + esc(String(d.actual_liters_delivered)) + " لتر</p>"
+            : "") +
+          (canProviderExecute || (mine && st === "delivering")
+            ? "<label class='sp-gas-liters-label'>اللترات الفعلية المُسلَّمة" +
+              "<input type='number' class='sp-gas-actual-liters pf-input' min='1' step='1' " +
+              'placeholder="' +
+              esc(String(gasCentralLiters(b))) +
+              '" value="' +
+              esc(String(d.actual_liters_delivered || gasCentralLiters(b) || "")) +
+              '" /></label>'
+            : "") +
+          "</div>"
+        : "";
     return (
       '<article class="sp-booking' +
       (mine ? " is-mine" : "") +
@@ -153,9 +535,12 @@
       esc(b.customer_phone || "—") +
       "</p>" +
       extraInternal +
-      (maps && !extraInternal
+      extraGasCentral +
+      carPolishingDetail(b) +
+      servicePhaseDetail(b) +
+      (maps && !extraInternal && !extraGasCentral && !carPolishingDetail(b) && !servicePhaseDetail(b)
         ? '<p><a href="' + esc(maps) + '" target="_blank" rel="noopener">فتح الموقع على الخرائط</a></p>'
-        : !extraInternal
+        : !extraInternal && !extraGasCentral
           ? "<p>الموقع: " + esc(b.location || "—") + "</p>"
           : "") +
       "<p>الدفع: " +
@@ -168,16 +553,36 @@
       " ريال</p>" +
       (b.rating ? "<p>تقييم: " + esc(b.rating) + "/5</p>" : "") +
       '<div class="sp-booking__actions">' +
-      (canReserve
-        ? '<button type="button" class="pf-btn pf-btn--primary sp-reserve" data-id="' + esc(b.id) + '">حجز الطلب</button>'
-        : "") +
-      (canProviderExecute
-        ? '<button type="button" class="pf-btn sp-complete" data-id="' +
-          esc(b.id) +
-          '">تم التنفيذ</button>'
-        : st === "delivering" && mine
-          ? '<span style="font-size:0.82rem;color:var(--pf-muted)">بانتظار تأكيد العضو</span>'
+      (isCpBooking && isCarPolishingProvider()
+        ? renderCarPolishingActions(b, mine, canReserve)
+        : isSpBooking
+          ? renderServicePhaseActions(b, mine, canReserve)
           : "") +
+      (!isCpBooking || !isCarPolishingProvider()) && !isSpBooking
+        ? (canReserve
+            ? '<button type="button" class="pf-btn pf-btn--primary sp-reserve" data-id="' +
+              esc(b.id) +
+              '">حجز الطلب</button>'
+            : "") +
+          (mine && st === "accepted" && !isGasCentralBooking(b)
+            ? '<button type="button" class="pf-btn sp-en-route" data-id="' + esc(b.id) + '">في الطريق</button>'
+            : "") +
+          (canProviderExecute && isGasCentralBooking(b)
+            ? '<button type="button" class="pf-btn sp-gas-start" data-id="' +
+              esc(b.id) +
+              '">بدء التعبئة</button>'
+            : canProviderExecute
+              ? '<button type="button" class="pf-btn sp-complete" data-id="' +
+                esc(b.id) +
+                '">تم التنفيذ</button>'
+              : mine && st === "delivering" && isGasCentralBooking(b)
+                ? '<button type="button" class="pf-btn pf-btn--primary sp-gas-finish" data-id="' +
+                  esc(b.id) +
+                  '">إنهاء المهمة</button>'
+                : st === "delivering" && mine
+                  ? '<span style="font-size:0.82rem;color:var(--pf-muted)">بانتظار تأكيد العضو</span>'
+                  : "")
+        : "") +
       "</div></article>"
     );
   }
@@ -266,7 +671,10 @@
       : '<p class="pf-empty">لا توجد طلبات في هذا القسم.</p>';
     return (
       locationBannerHtml() +
-      W.sectionHeader("الطلبات", "Requests — جديدة · جارية · مكتملة") +
+      W.sectionHeader(
+        isCarPolishingProvider() ? "طلبات تلميع المركبات" : "الطلبات",
+        "Requests — جديدة · جارية · مكتملة"
+      ) +
       '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px">' +
       '<button type="button" class="pf-btn" id="spRefreshRequests">تحديث</button></div>' +
       '<div class="pf-tabs">' +
@@ -477,7 +885,7 @@
   async function reserveBooking(id, btn) {
     if (btn) {
       btn.disabled = true;
-      btn.textContent = "جاري الحجز...";
+      btn.textContent = isCarPolishingProvider() ? "جاري القبول..." : "جاري الحجز...";
     }
     try {
       var Loc = global.ErvenowPortalProviderLocation;
@@ -494,7 +902,7 @@
         method: "POST",
         body: body,
       });
-      shell.showMessage(j.message || "تم حجز الطلب", true);
+      shell.showMessage(j.message || (isCarPolishingProvider() ? "تم قبول الطلب" : "تم حجز الطلب"), true);
       await loadData();
       renderMain(shell.getActiveSection());
     } catch (e) {
@@ -502,20 +910,139 @@
     } finally {
       if (btn) {
         btn.disabled = false;
-        btn.textContent = "حجز الطلب";
+        btn.textContent = isCarPolishingProvider() ? "قبول" : "حجز الطلب";
       }
     }
   }
 
-  async function completeBooking(id, btn) {
+  async function rejectBooking(id, btn) {
+    var reasonCode = pickReasonCode(CP_REJECT_REASONS, "سبب رفض الطلب");
+    if (!reasonCode) return;
+    var reasonText = "";
+    if (reasonCode === "other") {
+      reasonText = String(global.prompt("اكتب سبب الرفض:", "") || "").trim();
+    }
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = "جاري الرفض...";
+    }
+    try {
+      var j = await api("/api/services/bookings/" + encodeURIComponent(id) + "/reject", {
+        method: "POST",
+        body: { reason_code: reasonCode, reason_text: reasonText },
+      });
+      shell.showMessage(j.message || "تم رفض الطلب", true);
+      await loadData();
+      renderMain(shell.getActiveSection());
+    } catch (e) {
+      shell.showMessage((e && e.message) || "تعذر الرفض", false);
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = "رفض";
+      }
+    }
+  }
+
+  async function cancelTaskBooking(id, btn) {
+    if (!global.confirm("إلغاء المهمة وإعادة نشر الطلب لمزود آخر؟")) return;
+    var reasonCode = pickReasonCode(CP_CANCEL_REASONS, "سبب إلغاء المهمة");
+    if (!reasonCode) return;
+    var reasonText = "";
+    if (reasonCode === "other") {
+      reasonText = String(global.prompt("اكتب سبب الإلغاء:", "") || "").trim();
+    }
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = "جاري الإلغاء...";
+    }
+    try {
+      var j = await api("/api/services/bookings/" + encodeURIComponent(id) + "/cancel-task", {
+        method: "POST",
+        body: { reason_code: reasonCode, reason_text: reasonText },
+      });
+      shell.showMessage(j.message || "تم إلغاء المهمة", true);
+      await loadData();
+      renderMain(shell.getActiveSection());
+    } catch (e) {
+      shell.showMessage((e && e.message) || "تعذر الإلغاء", false);
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = "إلغاء المهمة";
+      }
+    }
+  }
+
+  async function enRouteBooking(id, btn) {
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = "جاري التحديث...";
+    }
+    try {
+      var b = findBooking(id);
+      var body = b && isServicePhaseBooking(b)
+        ? { sp_status: "on_the_way" }
+        : isCarPolishingProvider()
+          ? { cp_status: "on_the_way" }
+          : { status: "delivering" };
+      await api("/api/services/bookings/" + encodeURIComponent(id) + "/status", {
+        method: "PATCH",
+        body: body,
+      });
+      shell.showMessage("تم تحديث الحالة — المزود في الطريق", true);
+      await loadData();
+      renderMain(shell.getActiveSection());
+    } catch (e) {
+      shell.showMessage((e && e.message) || "تعذر التحديث", false);
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = "في الطريق";
+      }
+    }
+  }
+
+  async function startCpProgress(id, btn) {
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = "جاري البدء...";
+    }
+    try {
+      var b = findBooking(id);
+      var body = b && isServicePhaseBooking(b) ? { sp_status: "in_progress" } : { cp_status: "in_progress" };
+      await api("/api/services/bookings/" + encodeURIComponent(id) + "/status", {
+        method: "PATCH",
+        body: body,
+      });
+      shell.showMessage("بدأ التنفيذ", true);
+      await loadData();
+      renderMain(shell.getActiveSection());
+    } catch (e) {
+      shell.showMessage((e && e.message) || "تعذر التحديث", false);
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = "بدء التنفيذ";
+      }
+    }
+  }
+
+  async function completeBooking(id, btn, body) {
     if (btn) {
       btn.disabled = true;
       btn.textContent = "جاري الإتمام...";
     }
     try {
+      var bk = findBooking(id);
+      var payload =
+        body ||
+        (isCarPolishingProvider() || (bk && isServicePhaseBooking(bk) && servicePhaseStatus(bk) === "in_progress")
+          ? { actor: "both" }
+          : { step: "provider" });
       var j = await api("/api/services/bookings/" + encodeURIComponent(id) + "/complete", {
         method: "POST",
-        body: { step: "provider" },
+        body: payload,
       });
       shell.showMessage(j.message || "تم التحديث", true);
       await loadData();
@@ -525,9 +1052,25 @@
     } finally {
       if (btn) {
         btn.disabled = false;
-        btn.textContent = "تم التنفيذ";
+        btn.textContent = btn.getAttribute("data-default-label") || "تم التنفيذ";
       }
     }
+  }
+
+  async function startGasRefill(id, btn) {
+    if (btn) btn.setAttribute("data-default-label", "بدء التعبئة");
+    await completeBooking(id, btn, { step: "provider" });
+  }
+
+  async function finishGasRefill(id, btn) {
+    var card = btn && btn.closest ? btn.closest("[data-booking-id]") : null;
+    var liters = actualLitersFromCard(card);
+    if (!liters) {
+      shell.showMessage("أدخل اللترات الفعلية المُسلَّمة", false);
+      return;
+    }
+    if (btn) btn.setAttribute("data-default-label", "إنهاء المهمة");
+    await completeBooking(id, btn, { step: "legacy", actual_liters: liters });
   }
 
   async function loadSchedule() {
@@ -586,9 +1129,39 @@
         reserveBooking(btn.getAttribute("data-id"), btn);
       };
     });
+    main.querySelectorAll(".sp-reject").forEach(function (btn) {
+      btn.onclick = function () {
+        rejectBooking(btn.getAttribute("data-id"), btn);
+      };
+    });
+    main.querySelectorAll(".sp-cancel-task").forEach(function (btn) {
+      btn.onclick = function () {
+        cancelTaskBooking(btn.getAttribute("data-id"), btn);
+      };
+    });
+    main.querySelectorAll(".sp-cp-progress, .sp-sp-progress").forEach(function (btn) {
+      btn.onclick = function () {
+        startCpProgress(btn.getAttribute("data-id"), btn);
+      };
+    });
+    main.querySelectorAll(".sp-en-route").forEach(function (btn) {
+      btn.onclick = function () {
+        enRouteBooking(btn.getAttribute("data-id"), btn);
+      };
+    });
     main.querySelectorAll(".sp-complete").forEach(function (btn) {
       btn.onclick = function () {
         completeBooking(btn.getAttribute("data-id"), btn);
+      };
+    });
+    main.querySelectorAll(".sp-gas-start").forEach(function (btn) {
+      btn.onclick = function () {
+        startGasRefill(btn.getAttribute("data-id"), btn);
+      };
+    });
+    main.querySelectorAll(".sp-gas-finish").forEach(function (btn) {
+      btn.onclick = function () {
+        finishGasRefill(btn.getAttribute("data-id"), btn);
       };
     });
     main.querySelectorAll("[data-schedule-tab]").forEach(function (btn) {

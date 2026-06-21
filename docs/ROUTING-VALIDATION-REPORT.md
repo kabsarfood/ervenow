@@ -1,14 +1,14 @@
 # ERVENOW — Routing Validation Report (G1-R Final)
 
-Generated: 2026-06-20T14:02:49.351Z
+Generated: 2026-06-21T12:19:05.040Z
 
 **Status: PASS**
 
 ## Summary
 
-- Order routing: 14/14
-- Provider routing: 7/7
-- Transport exclusions: 4/4
+- Order routing: 15/15
+- Provider routing: 8/8
+- Transport exclusions: 5/5
 
 ## Final Decisions
 
@@ -29,6 +29,7 @@ Generated: 2026-06-20T14:02:49.351Z
 | تكييف | service | ac_technician | service | service | true | ✓ |
 | غسيل | service | laundry_estates | service | service | true | ✓ |
 | تشجير | service | agricultural_engineer | service | service | true | ✓ |
+| تلميع مركبات | service | car_polishing | service | service | true | ✓ |
 | غاز | gas_delivery | gas_delivery | service | service | true | ✓ |
 | توصيل داخلي | service | internal_delivery | driver | driver | true | ✓ |
 | طلب جاهز للتوصيل | restaurant | — | driver | merchant | true | ✓ |
@@ -43,6 +44,7 @@ Generated: 2026-06-20T14:02:49.351Z
 |------|--------------|----------|----------|------|
 | service | plumber | service | service | ✓ |
 | service | gas_cylinder_swap | service | service | ✓ |
+| service | car_polishing | service | service | ✓ |
 | service | gas_delivery | service | service | ✓ |
 | service | pickup_truck | transport | transport | ✓ |
 | service | internal_delivery | driver | driver | ✓ |
@@ -55,6 +57,7 @@ Generated: 2026-06-20T14:02:49.351Z
 - `gas_delivery`: transport=false, service=true, driver=false → OK
 - `gas_cylinder_swap`: transport=false, service=true, driver=false → OK
 - `gas_central_refill`: transport=false, service=true, driver=false → OK
+- `car_polishing`: transport=false, service=true, driver=false → OK
 
 ## Taxonomy Sets
 
@@ -69,6 +72,7 @@ Generated: 2026-06-20T14:02:49.351Z
   "service_portal_types": [
     "ac_technician",
     "agricultural_engineer",
+    "car_polishing",
     "electrician",
     "gas_central_refill",
     "gas_cylinder_swap",

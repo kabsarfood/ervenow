@@ -58,8 +58,39 @@
         display: grid;
         gap: 10px;
       }
-      .gd-subopts[hidden] {
+      .gd-subopts[hidden],
+      .gd-mode-only[hidden] {
         display: none !important;
+      }
+      .gd-cylinder-visual {
+        display: flex;
+        align-items: center;
+        gap: clamp(12px, 3vw, 18px);
+        padding: 12px;
+        border-radius: 12px;
+        background: rgba(255, 254, 251, 0.92);
+        border: 1px solid rgba(61, 34, 19, 0.08);
+      }
+      .gd-cylinder-visual img {
+        width: clamp(72px, 22vw, 96px);
+        height: auto;
+        object-fit: contain;
+        flex-shrink: 0;
+      }
+      .gd-cylinder-visual img.gd-visual-wide {
+        width: clamp(96px, 32vw, 140px);
+      }
+      .gd-cylinder-visual__text {
+        flex: 1;
+        min-width: 0;
+        line-height: 1.55;
+        font-size: clamp(0.84rem, 2.4vw, 0.92rem);
+        color: var(--brown, #3d2213);
+      }
+      .gd-cylinder-visual__text strong {
+        display: block;
+        font-size: clamp(0.95rem, 2.6vw, 1.02rem);
+        margin-bottom: 4px;
       }
       .gd-actions {
         display: flex;
@@ -133,11 +164,9 @@
           <h1 class="guest-page-title">توصيل الغاز</h1>
 
       <div class="card" style="margin-top: 12px">
-        <div class="gd-welcome">
+        <div class="gd-welcome" id="gdWelcomeHint">
           <strong>أهلاً بك في خدمة توصيل الغاز من ERVENOW</strong><br />
-          اختر نوع الخدمة، حدّد الكمية، ثم موقع التوصيل. الأسعار: أسطوانة واحدة
-          <strong>39 ر.س</strong>، اثنتان <strong>78 ر.س</strong>، وتعبئة المركزي
-          <strong>0.90 ر.س/لتر</strong>.
+          <span id="gdWelcomeDetail">اختر نوع الخدمة ثم أكمل التفاصيل أدناه.</span>
         </div>
 
         <form class="gd-box" id="gdForm">
@@ -150,11 +179,25 @@
           </div>
 
           <div class="gd-subopts" id="gdCylinderBox">
+            <div class="gd-cylinder-visual" aria-hidden="false">
+              <img
+                src="/assets/ervenow-gas-cylinder-home.png"
+                alt="أسطوانة غاز منزلية للتبديل — حجم منزلي"
+                width="96"
+                height="160"
+                loading="lazy"
+                decoding="async"
+              />
+              <div class="gd-cylinder-visual__text">
+                <strong>أسطوانة غاز منزلية</strong>
+                للاستخدام في البيوت — تبديل أسطوانة فارغة بأسطوانة مملوءة وجاهزة للاستخدام.
+              </div>
+            </div>
             <div class="gd-row">
               <label for="gdCylQty">عدد الأسطوانات</label>
               <select id="gdCylQty">
-                <option value="1">1 أسطوانة — 39 ر.س</option>
-                <option value="2">2 أسطوانة — 78 ر.س</option>
+                <option value="1">1 أسطوانة — 38 ر.س</option>
+                <option value="2">2 أسطوانة — 76 ر.س</option>
                 <option value="3">3 أسطوانات</option>
                 <option value="4">4 أسطوانات</option>
                 <option value="5">5 أسطوانات</option>
@@ -168,23 +211,38 @@
           </div>
 
           <div class="gd-subopts" id="gdCentralBox" hidden>
+            <div class="gd-cylinder-visual" aria-hidden="false">
+              <img
+                src="/assets/ervenow-gas-central-refill-home.png"
+                alt="خزان غاز مركزي يُعبّأ من تانكي مزود التعبئة باللتر"
+                width="140"
+                height="100"
+                loading="lazy"
+                decoding="async"
+                class="gd-visual-wide"
+              />
+              <div class="gd-cylinder-visual__text">
+                <strong>تعبئة غاز مركزي</strong>
+                تعبئة خزانات الغاز للمطاعم والفنادق والمنشآت التجارية — باللتر من تانكي مزود معتمد.
+              </div>
+            </div>
             <div class="gd-row">
               <label for="gdLiters">الكمية (لتر)</label>
               <select id="gdLiters">
-                <option value="250">250 لتر — 225 ر.س</option>
-                <option value="500">500 لتر — 450 ر.س</option>
-                <option value="1000">1000 لتر — 900 ر.س</option>
-                <option value="2000">2000 لتر — 1800 ر.س</option>
-                <option value="3000">3000 لتر — 2700 ر.س</option>
-                <option value="4000">4000 لتر — 3600 ر.س</option>
+                <option value="250">250 لتر — 250 ر.س</option>
+                <option value="500">500 لتر — 500 ر.س</option>
+                <option value="1000">1000 لتر — 1000 ر.س</option>
+                <option value="2000">2000 لتر — 2000 ر.س</option>
+                <option value="3000">3000 لتر — 3000 ر.س</option>
+                <option value="4000">4000 لتر — 4000 ر.س</option>
               </select>
             </div>
           </div>
 
           <div class="gd-price" id="gdPrice">السعر: —</div>
 
-          <div class="gd-row">
-            <label for="gdDistrict">الحي (اختياري)</label>
+          <div class="gd-row gd-mode-only" id="gdDistrictRow">
+            <label for="gdDistrict" id="gdDistrictLabel">الحي</label>
             <input id="gdDistrict" type="text" placeholder="اسم الحي" />
           </div>
 
@@ -239,9 +297,9 @@
     </script>
     <script>
       (function () {
-        var CYL_ONE = 39;
-        var CYL_UNIT = 39;
-        var PER_LITER = 0.9;
+        var CYL_ONE = 38;
+        var CYL_UNIT = 38;
+        var PER_LITER = 1;
         var map = null;
         var marker = null;
 
@@ -268,10 +326,53 @@
           return total;
         }
 
+        function setPanelEnabled(panelId, enabled) {
+          var panel = document.getElementById(panelId);
+          if (!panel) return;
+          panel.querySelectorAll("select, input, button").forEach(function (el) {
+            el.disabled = !enabled;
+          });
+        }
+
+        function welcomeForMode(mode) {
+          if (mode === "central_refill") {
+            return (
+              "تعبئة غاز مركزي — اختر الكمية باللتر ثم حدّد موقع التوصيل. السعر: " +
+              "<strong>1.00 ر.س/لتر</strong> (250 · 500 · 1000 · 2000 · 3000 · 4000)."
+            );
+          }
+          return (
+            "تبديل أسطوانة غاز منزلية — اختر العدد ثم حدّد موقع التوصيل. السعر: " +
+            "<strong>38 ر.س/أسطوانة</strong> (حتى 10 أسطوانات)."
+          );
+        }
+
         function toggleSubforms() {
           var mode = currentMode();
-          document.getElementById("gdCylinderBox").hidden = mode !== "cylinder_swap";
-          document.getElementById("gdCentralBox").hidden = mode !== "central_refill";
+          var isCylinder = mode === "cylinder_swap";
+          var isCentral = mode === "central_refill";
+
+          document.getElementById("gdCylinderBox").hidden = !isCylinder;
+          document.getElementById("gdCentralBox").hidden = !isCentral;
+
+          setPanelEnabled("gdCylinderBox", isCylinder);
+          setPanelEnabled("gdCentralBox", isCentral);
+
+          var districtLabel = document.getElementById("gdDistrictLabel");
+          var districtInput = document.getElementById("gdDistrict");
+          if (districtLabel && districtInput) {
+            if (isCentral) {
+              districtLabel.textContent = "اسم المنشأة / الحي";
+              districtInput.placeholder = "اسم المنشأة أو الحي";
+            } else {
+              districtLabel.textContent = "الحي";
+              districtInput.placeholder = "اسم الحي";
+            }
+          }
+
+          var welcomeDetail = document.getElementById("gdWelcomeDetail");
+          if (welcomeDetail) welcomeDetail.innerHTML = welcomeForMode(mode);
+
           updatePrice();
         }
 
@@ -296,6 +397,7 @@
               gas_liters: liters,
               qty: qty,
               district: document.getElementById("gdDistrict").value.trim(),
+              establishment_name: document.getElementById("gdDistrict").value.trim(),
               location: document.getElementById("gdLocation").value.trim(),
               customer_phone: document.getElementById("gdPhone").value.trim(),
               total_amount: total,

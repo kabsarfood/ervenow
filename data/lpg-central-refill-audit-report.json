@@ -1,0 +1,63 @@
+{
+  "report": "ERVENOW LPG Central Refill Audit Report",
+  "generated_at": "2026-06-20",
+  "service_inventory": {
+    "gas_central_refill": { "exists": true, "layer": "users.service_type" },
+    "central_refill": { "exists": true, "layer": "orders.gas_mode" },
+    "bulk": { "exists": true, "layer": "alias for central_refill in notify/pricing" },
+    "gas_delivery": { "exists": true, "layer": "orders.service_type (unified gas order type)" },
+    "bulk_gas_refill": { "exists": false },
+    "lpg_refill": { "exists": false }
+  },
+  "implementation_status": {
+    "backend": "partial_ready",
+    "customer_ui": "partial_ready",
+    "service_portal": "not_ready",
+    "live_e2e": "not_tested"
+  },
+  "pricing": {
+    "customer_per_liter_sar": 0.9,
+    "user_example_1_00_per_liter": false,
+    "mechanism": "fixed_per_liter_times_tier_liters",
+    "tiers_liters": [250, 500, 1000, 2000, 3000, 4000],
+    "platform_commission": "7_percent_of_total",
+    "fixed_per_liter_platform_fee": false,
+    "source_file": "shared/utils/gasDeliveryPricing.js"
+  },
+  "settlement": {
+    "provider_net_stored": "total_minus_platform_commission",
+    "wallet_credit_amount": "total_amount",
+    "matches_provider_net": false,
+    "matches_user_1_00_0_90_0_10_model": false
+  },
+  "customer_entry_points": {
+    "gas_delivery_html": true,
+    "delivery_services_html": false
+  },
+  "provider_entry_points": {
+    "service_preview": false,
+    "transport_preview": true,
+    "services_provider_legacy": true,
+    "self_registration": false
+  },
+  "gaps": [
+    "frontend_routing_drift_gas_central_to_transport",
+    "service_preview_blocks_gas_central_refill",
+    "settlement_credits_full_total_amount",
+    "no_provider_self_registration",
+    "no_live_gas_central_provider_in_db",
+    "no_actual_liters_capture_at_completion",
+    "no_unit_tests"
+  ],
+  "live_readiness_score": {
+    "routing": "FAIL",
+    "orders": "PASS",
+    "pricing": "PASS",
+    "wallet": "PASS",
+    "settlement": "FAIL",
+    "notifications": "PASS",
+    "service_portal": "FAIL",
+    "overall": "4_PASS_3_FAIL"
+  },
+  "recommendation": "Fix routing/UI, settlement model, provider onboarding, and live E2E before production in Service Portal"
+}

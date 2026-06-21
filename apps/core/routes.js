@@ -122,6 +122,7 @@ const ALLOWED_SERVICE_TYPES = new Set([
   "gas_delivery",
   "gas_cylinder_swap",
   "gas_central_refill",
+  "car_polishing",
 ]);
 
 function normalizeServiceType(v) {

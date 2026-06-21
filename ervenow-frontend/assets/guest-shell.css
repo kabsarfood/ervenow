@@ -911,9 +911,18 @@ body.guest-shell-page.stores-page {
     gap: 4px;
   }
 
-  /* ═══ خدمات — إخفاء اللوحة المكررة في التدفق ═══ */
-  html.erv-mobile-shell body.guest-shell-page.stores-page.services-page #svcOrderPanel {
-    display: none !important;
+  /* ═══ خدمات — عرض بطاقات الاختيار على الجوال ثم يختار العضو ═══ */
+  html.erv-mobile-shell body.guest-shell-page.stores-page.services-page #svcOrderPanel:not(.erv-svc-panel--sheet-ready) {
+    display: block !important;
+    margin-top: 10px;
+    padding: 12px clamp(12px, 3vw, 16px);
+  }
+
+  html.erv-mobile-shell body.guest-shell-page.stores-page.services-page #svcOrderPanel:not(.erv-svc-panel--sheet-ready) .svc-order-cards {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    margin-bottom: 10px;
   }
 
   html.erv-mobile-shell body.guest-shell-page.stores-page.services-page .stores-toolbar #svcOrderPanel.erv-svc-panel--sheet-ready {
@@ -1036,6 +1045,16 @@ body.guest-shell-page.stores-page {
   font-family: inherit;
   font-size: 1.2rem;
   cursor: pointer;
+}
+
+.erv-svc-order-sheet.is-picker .svc-order-cards,
+.erv-svc-order-sheet.is-picker .svc-order-panel__title,
+.erv-svc-order-sheet.is-picker .svc-order-panel__sub {
+  display: block !important;
+}
+
+.erv-svc-order-sheet.is-picker .svc-order-panel__sub {
+  margin-bottom: 10px;
 }
 
 .erv-svc-order-sheet .svc-order-panel__sub {

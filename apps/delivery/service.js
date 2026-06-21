@@ -9,7 +9,14 @@ const { logger } = require("../../shared/utils/logger");
 const { normalizeOrderFinancialsForInsert } = require("../../shared/utils/orderTotals");
 const { isOrdersStoreColumnMissingError, insertOrdersResilient } = require("../../shared/utils/idempotency");
 const { applyPortalTypeToOrderRow } = require("../../shared/utils/orderPortalRouting");
-const { notifyOrderCancelled } = require("../../shared/services/notificationEvents");
+const { notifyOrderCancelled, notifyCustomer } = require("../../shared/services/notificationEvents");
+const {
+  isCarPolishingOrder,
+  orderData,
+  resolveCpStatus,
+  CP_STATUS,
+  mergeCarPolishingData,
+} = require("../../shared/utils/carPolishingWorkflow");
 const {
   isIdempotencyKeyUniqueViolation,
   fetchOrderByCustomerIdempotencyKey,
@@ -728,23 +735,73 @@ async function cancelOrderByCustomer(sb, orderId, appUser) {
     return { data: null, error: new Error("Forbidden"), refund: null };
   }
   const current = getOrderDeliveryStatus(order);
+  const cpData = orderData(order);
+  const cpStatus = isCarPolishingOrder(order) ? resolveCpStatus(order) : null;
+  const providerAccepted =
+    isCarPolishingOrder(order) &&
+    (order.provider_id ||
+      ["accepted", "scheduled", "on_the_way", "in_progress"].includes(cpStatus || "") ||
+      current === "accepted" ||
+      current === "delivering");
+
+  if (isCarPolishingOrder(order) && providerAccepted) {
+    return {
+      data: null,
+      error: new Error(
+        "تم قبول طلبك من مزود الخدمة. سيُطبَّق لاحقاً سياسة الإلغاء المعتمدة — تواصل مع الدعم إن لزم."
+      ),
+      refund: null,
+    };
+  }
+
   if (!["draft", "new", "pending", "accepted"].includes(current)) {
     return { data: null, error: new Error("لا يمكن إلغاء الطلب في هذه المرحلة"), refund: null };
   }
+  if (isCarPolishingOrder(order) && order.provider_id) {
+    return {
+      data: null,
+      error: new Error(
+        "تم قبول طلبك من مزود الخدمة. سيُطبَّق لاحقاً سياسة الإلغاء المعتمدة — تواصل مع الدعم إن لزم."
+      ),
+      refund: null,
+    };
+  }
+
+  const cancelPatch = {
+    delivery_status: "cancelled_by_customer",
+    status: "cancelled",
+    updated_at: new Date().toISOString(),
+    ...(isCarPolishingOrder(order)
+      ? { data: mergeCarPolishingData(cpData, { cp_status: CP_STATUS.CANCELLED }) }
+      : {}),
+  };
 
   const { data, error } = await sb
     .from("orders")
-    .update({
-      delivery_status: "cancelled_by_customer",
-      status: "cancelled",
-      updated_at: new Date().toISOString(),
-    })
+    .update(cancelPatch)
     .eq("id", orderId)
     .select()
     .single();
   if (error) return { data: null, error, refund: null };
 
   const refund = await refundCustomerWalletIfPaid(sb, order);
+  if (refund.refunded && data.customer_id) {
+    try {
+      await notifyCustomer(
+        sb,
+        data.customer_id,
+        "wallet.refund",
+        "تم إعادة المبلغ للمحفظة",
+        `تم إعادة ${refund.amount} ر.س إلى محفظة ERVENOW بعد إلغاء الطلب رقم ${data.order_number || data.id}.`,
+        { ...data, refund_amount: refund.amount }
+      );
+    } catch (notifyErr) {
+      logger.warn(
+        { err: notifyErr.message || String(notifyErr), orderId },
+        "[delivery/cancel] wallet refund notify"
+      );
+    }
+  }
   try {
     await notifyOrderCancelled(sb, data);
   } catch (notifyErr) {

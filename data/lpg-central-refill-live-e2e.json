@@ -1,0 +1,107 @@
+{
+  "report": "LPG Central Refill Live Validation Report",
+  "generated_at": "2026-06-21T06:51:06.349Z",
+  "steps": [
+    {
+      "step": "1_create_refill_order",
+      "detail": "order bbe00803-6b04-4eb6-9199-28473b0157ad, gas_mode=central_refill, 1000L, total=900"
+    },
+    {
+      "step": "2_visible_to_provider",
+      "detail": "yes"
+    },
+    {
+      "step": "3_accept",
+      "detail": "accepted"
+    },
+    {
+      "step": "4_start_refill",
+      "detail": "delivering"
+    },
+    {
+      "step": "5_record_actual_liters",
+      "detail": "1000 L"
+    },
+    {
+      "step": "6_finish_task",
+      "detail": "delivered"
+    },
+    {
+      "step": "7_settlement",
+      "detail": "credit=837, expected=837, total=900"
+    },
+    {
+      "step": "8_wallet_credit",
+      "detail": "before=837, after=1674, delta=837"
+    },
+    {
+      "step": "9_notifications",
+      "detail": "count=1"
+    }
+  ],
+  "checks": {
+    "1_create_refill_order": {
+      "pass": true
+    },
+    "2_visible_to_provider": {
+      "pass": true
+    },
+    "3_accept": {
+      "pass": true
+    },
+    "4_start_refill": {
+      "pass": true
+    },
+    "5_record_actual_liters": {
+      "pass": true
+    },
+    "6_finish_task": {
+      "pass": true
+    },
+    "7_settlement": {
+      "pass": true
+    },
+    "8_wallet_credit": {
+      "pass": true
+    },
+    "9_notifications": {
+      "pass": true
+    }
+  },
+  "proofs": {
+    "portal_type": "service",
+    "visible_service": true,
+    "gas_mode": "central_refill",
+    "gas_liters": 1000,
+    "actual_liters_delivered": 1000,
+    "total_amount": 1035,
+    "platform_commission": 63,
+    "provider_net": 837,
+    "ledger_credit": 837,
+    "expected_credit": 837,
+    "wallet": {
+      "before": 837,
+      "after": 1674,
+      "delta": 837
+    },
+    "notifications_count": 1,
+    "provider_credit": {
+      "ok": true,
+      "reason": "inserted",
+      "amount": 837,
+      "credit_basis": "provider_net"
+    }
+  },
+  "verdict": "PASS",
+  "error": null,
+  "order_id": "bbe00803-6b04-4eb6-9199-28473b0157ad",
+  "provider": {
+    "id": "45eee92d-9889-4a02-9bb9-100db6d5f626",
+    "role": "service",
+    "service_type": "gas_central_refill",
+    "status": "approved",
+    "phone": "966509998001",
+    "lat": 24.7136,
+    "lng": 46.6753
+  }
+}

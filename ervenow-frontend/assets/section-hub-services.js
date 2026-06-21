@@ -2,11 +2,10 @@
   "use strict";
 
   var SERVICE_CATEGORIES = [
+    { id: "car_polishing", icon: "✨", label: "تلميع المركبات" },
     { id: "plumber", icon: "🔧", label: "سباك" },
     { id: "electrician", icon: "⚡", label: "كهربائي" },
-    { id: "nursery", icon: "🪴", label: "مشتل" },
     { id: "agricultural_engineer", icon: "🌾", label: "مهندس زراعي" },
-    { id: "pickup_truck", icon: "🛻", label: "سائق سطحى" },
     { id: "ac_technician", icon: "❄️", label: "فني مكيفات" },
     { id: "cleaning_villa", icon: "🧼", label: "غسيل درج فيلا" },
     { id: "cleaning_building", icon: "🏢", label: "غسيل درج عمارة" },
@@ -17,7 +16,6 @@
     electrician: 1,
     nursery: 1,
     agricultural_engineer: 1,
-    pickup_truck: 1,
     laundry_estates: 1,
     ac_technician: 1,
     cleaning: 1,
@@ -59,6 +57,7 @@
     var cat = String(store.category || "").toLowerCase();
     if (!isHomeServiceStore(store)) return false;
     if (!filter) return true;
+    if (filter === "agricultural_engineer" && (t === "nursery" || cat === "nursery")) return true;
     if (t === filter) return true;
     if (filter === "cleaning_villa" && t === "cleaning") return true;
     if (t === "services" && cat === filter) return true;
@@ -96,6 +95,10 @@
     },
     onCategoryChange: function (cat) {
       syncServiceHeader(cat === "all" ? "" : cat);
+      if (cat === "car_polishing") {
+        location.href = "/car-polishing.html";
+        return;
+      }
       if (window.__svcSelectOrderType) window.__svcSelectOrderType(cat || "all");
     },
     onOpenStore: function (id, store) {
@@ -123,6 +126,15 @@
         return;
       }
       if (type === "cleaning") type = "cleaning_villa";
+      if (type === "nursery") type = "agricultural_engineer";
+      if (type === "car_polishing") {
+        location.replace("/car-polishing.html");
+        return;
+      }
+      if (type === "pickup_truck" || type === "vehicle_transfer" || type === "car_transport") {
+        location.replace("/delivery-services.html?service=car_transport");
+        return;
+      }
       if (type === "service" || type === "services") type = "";
       var valid = SERVICE_CATEGORIES.map(function (c) {
         return c.id;

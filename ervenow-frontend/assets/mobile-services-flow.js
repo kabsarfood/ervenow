@@ -42,14 +42,15 @@
   function closeSheet() {
     var sheet = document.getElementById("ervSvcOrderSheet");
     if (!sheet) return;
-    sheet.classList.remove("is-open");
+    sheet.classList.remove("is-open", "is-picker");
     sheet.setAttribute("aria-hidden", "true");
     if (global.ErvenowViewport && typeof ErvenowViewport.unlockScroll === "function") {
       ErvenowViewport.unlockScroll();
     }
   }
 
-  function openSheet(providerName) {
+  function openSheet(providerName, opts) {
+    var options = opts && typeof opts === "object" ? opts : {};
     var panel = document.getElementById("svcOrderPanel");
     var body = document.getElementById("ervSvcSheetBody");
     if (!panel || !body) return;
@@ -60,9 +61,12 @@
       panel.classList.add("erv-svc-panel--sheet-ready");
     }
 
+    if (options.picker) sheet.classList.add("is-picker");
+    else sheet.classList.remove("is-picker");
+
     var title = document.getElementById("ervSvcSheetTitle");
     if (title) {
-      title.textContent = providerName ? "طلب — " + providerName : "طلب الخدمة";
+      title.textContent = providerName ? "طلب — " + providerName : options.picker ? "اختر الخدمة" : "طلب الخدمة";
     }
 
     sheet.classList.add("is-open");
@@ -71,8 +75,10 @@
       ErvenowViewport.lockScroll();
     }
 
-    var district = document.getElementById("svcDistrict");
-    if (district) global.setTimeout(function () { district.focus(); }, 280);
+    if (!options.picker) {
+      var district = document.getElementById("svcDistrict");
+      if (district) global.setTimeout(function () { district.focus(); }, 280);
+    }
   }
 
   function openForStore(storeId) {

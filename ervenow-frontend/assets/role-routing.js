@@ -36,6 +36,11 @@
 
     agricultural_engineer: 1,
 
+    gas_cylinder_swap: 1,
+
+    gas_central_refill: 1,
+    gas_delivery: 1,
+    car_polishing: 1,
   };
 
 
@@ -51,12 +56,6 @@
     internal_delivery: 1,
 
     furniture_move: 1,
-
-    gas_cylinder_swap: 1,
-
-    gas_central_refill: 1,
-
-    gas_delivery: 1,
 
   };
 

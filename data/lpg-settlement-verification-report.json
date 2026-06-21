@@ -1,0 +1,41 @@
+{
+  "report": "LPG Settlement Verification Report",
+  "generated_at": "2026-06-21T09:55:12.385Z",
+  "scenario": {
+    "liters": 1000,
+    "customer_price_per_liter_sar": 1
+  },
+  "table": {
+    "customer_price_per_liter": 1,
+    "customer_price": 1,
+    "total_amount": 1000,
+    "provider_net": 930,
+    "platform_commission": 70,
+    "ledger_credit": 930,
+    "resolved_credit_amount": 930,
+    "legacy_bug_credit_total_amount": 1000
+  },
+  "proof": {
+    "resolveProviderCreditAmount": 930,
+    "rpc_call": [
+      "ervenow_ledger_credit",
+      {
+        "p_user_id": "provider-verify",
+        "p_amount": 930,
+        "p_reference": "verify-central-1000",
+        "p_role": "service",
+        "p_reference_suffix": "provider_credit"
+      }
+    ],
+    "credit_row": {
+      "ok": true,
+      "reason": "inserted",
+      "amount": 930,
+      "credit_basis": "provider_net"
+    },
+    "option_a_expected": 930,
+    "option_b_not_used": "Split ledger entries deferred — Option A adopted"
+  },
+  "decision": "Option A — Ledger Credit = Provider Net",
+  "verdict": "PASS"
+}

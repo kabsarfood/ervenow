@@ -246,7 +246,7 @@ async function installPortalMocks(page, profile) {
     if (p.endsWith("/api/services/me/pricing")) {
       return json({
         ok: true,
-        gas: { cylinder_one: 39, cylinder_two: 78, central_per_liter: 0.9 },
+        gas: { cylinder_one: 38, cylinder_two: 76, central_per_liter: 1 },
         samples: [{ label: "نقل 10كم", fee: 120 }],
       });
     }

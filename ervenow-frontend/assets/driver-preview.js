@@ -26,6 +26,7 @@
     gas_cylinder_swap: 1,
     gas_central_refill: 1,
     gas_delivery: 1,
+    car_polishing: 1,
   };
 
   function isTransportProviderProfile(profile) {

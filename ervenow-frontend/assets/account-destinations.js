@@ -20,9 +20,6 @@
     vehicle_transfer: 1,
     internal_delivery: 1,
     furniture_move: 1,
-    gas_cylinder_swap: 1,
-    gas_central_refill: 1,
-    gas_delivery: 1,
   };
 
   var SERVICE_HOME_LABELS = {
@@ -35,7 +32,10 @@
     furniture_move: "لوحة نقل الأثاث",
     vehicle_transfer: "لوحة نقل المركبات",
     car_transport: "لوحة نقل المركبات",
+    gas_cylinder_swap: "لوحة تبديل أسطوانة الغاز",
+    gas_central_refill: "لوحة تعبئة الغاز المركزي",
     gas_delivery: "لوحة توصيل الغاز",
+    car_polishing: "لوحة تلميع المركبات",
     service: "لوحة مزود الخدمة",
   };
 

@@ -375,6 +375,13 @@ if (servePublicUi) {
     res.sendFile(path.join(publicPath, "index.html"));
   });
 
+  app.get("/delivery-services.html", (req, res) => {
+    if (String(req.query.service || "").trim().toLowerCase() === "gas_delivery") {
+      return res.redirect(302, "/gas-delivery.html");
+    }
+    res.sendFile(path.join(publicPath, "delivery-services.html"));
+  });
+
   const staticMaxAgeMs = isProd ? 7 * 24 * 60 * 60 * 1000 : 60 * 60 * 1000;
   app.use(
     express.static(publicPath, {
@@ -471,6 +478,16 @@ if (servePublicUi) {
 
   app.get("/gas-delivery", (_req, res) => {
     res.sendFile(path.join(publicPath, "gas-delivery.html"));
+  });
+
+  app.get("/car-polishing", (_req, res) => {
+    res.sendFile(path.join(publicPath, "car-polishing.html"));
+  });
+  app.get("/service-book", (_req, res) => {
+    res.sendFile(path.join(publicPath, "service-book.html"));
+  });
+  app.get("/service-book.html", (_req, res) => {
+    res.sendFile(path.join(publicPath, "service-book.html"));
   });
 
   app.get("/admin/withdrawals", (_req, res) => {

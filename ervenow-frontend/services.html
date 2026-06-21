@@ -564,6 +564,35 @@
         font-weight: 700;
         line-height: 1.55;
       }
+      .svc-cp-panel {
+        display: grid;
+        gap: 12px;
+        margin-top: 4px;
+      }
+      .svc-cp-panel[hidden] {
+        display: none !important;
+      }
+      .svc-cp-addons {
+        font-size: clamp(0.82rem, 2.2vw, 0.9rem);
+        line-height: 1.55;
+        color: rgba(42, 24, 16, 0.78);
+        padding: 12px 14px;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.72);
+        border: 1px solid rgba(61, 34, 19, 0.08);
+      }
+      .svc-cp-addons ul {
+        margin: 8px 0 0;
+        padding-right: 18px;
+      }
+      .svc-cp-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+      .svc-cp-actions .btn {
+        min-height: 48px;
+      }
     </style>
     <link rel="stylesheet" href="/assets/erv-interactive-surfaces.css?erv=20260612" />
     <link rel="stylesheet" href="/assets/design-system/erv-typography-pr1-tokens.css" />
@@ -649,8 +678,24 @@
 
       <section class="svc-order-panel" id="svcOrderPanel" aria-labelledby="svcOrderTitle">
         <h2 class="svc-order-panel__title" id="svcOrderTitle">طلب الخدمة</h2>
-        <p class="svc-order-panel__sub">اختر نوع الخدمة، حدّد الحي والموقع والجوال، ثم أرسل الطلب أو أضفه للسلة.</p>
+          <p class="svc-order-panel__sub" id="svcOrderSub">اختر نوع الخدمة المناسب — ثم أكمل التفاصيل.</p>
         <div class="svc-order-cards" id="svcOrderCards" role="list"></div>
+        <div id="svcCpPanel" class="svc-cp-panel" hidden>
+          <p class="svc-order-panel__sub" style="margin: 0">اختر نوع المركبة — ثم أكمل: موعد التنفيذ · صور المركبة · الموقع · الدفع.</p>
+          <div class="svc-order-cards" id="svcCpVehicleCards" role="list" aria-label="أنواع المركبات"></div>
+          <div class="svc-cp-addons">
+            <strong>خدمات إضافية (اختياري)</strong>
+            <ul>
+              <li>غسيل وتلميع المحرك — 85 ر.س</li>
+              <li>تلميع الكفرات والجنوط — 60 ر.س</li>
+              <li>غسيل وتلميع البدي الخارجي — 45 ر.س</li>
+            </ul>
+          </div>
+          <div class="svc-cp-actions">
+            <a class="btn btn-primary" href="/car-polishing.html" id="svcCpBookBtn">متابعة طلب التلميع</a>
+            <a class="btn btn-ghost" href="/car-polishing.html">فتح صفحة الحجز الكاملة</a>
+          </div>
+        </div>
         <div id="svcOrderSuccess" class="svc-order-success" hidden role="status"></div>
         <form class="svc-order-form" id="svcOrderForm">
           <div class="svc-order-form__row">
@@ -707,18 +752,40 @@
       ErvenowGuestShell.init({ activeNav: "services", pageTag: "خدمات منزلية" });
     </script>
     <script src="/assets/section-hub.js"></script>
+    <script src="/assets/mobile-services-flow.js"></script>
     <script src="/assets/section-hub-services.js"></script>
-    <script src="/assets/mobile-services-flow.js" defer></script>
     <script>
       (function () {
         var catalog = {};
-        var selectedType = "plumber";
+        var selectedType = "";
+        var selectedCpVehicle = "sedan";
         var cardsEl = document.getElementById("svcOrderCards");
+        var cpPanel = document.getElementById("svcCpPanel");
+        var cpVehicleCards = document.getElementById("svcCpVehicleCards");
+        var cpBookBtn = document.getElementById("svcCpBookBtn");
+        var orderTitle = document.getElementById("svcOrderTitle");
         var formEl = document.getElementById("svcOrderForm");
         var successEl = document.getElementById("svcOrderSuccess");
         var priceHint = document.getElementById("svcPriceHint");
         var paySel = document.getElementById("svcPayMode");
         var cartLink = document.getElementById("svcCartLink");
+
+        var ORDER_CARD_KEYS = [
+          "car_polishing",
+          "plumber",
+          "electrician",
+          "agricultural_engineer",
+          "ac_technician",
+          "cleaning_villa",
+          "cleaning_building",
+        ];
+
+        var CP_VEHICLES = [
+          { id: "sedan", icon: "🚘", label: "سيدان", price: "280 ر.س" },
+          { id: "jeep", icon: "🚙", label: "جيب", price: "350 ر.س" },
+          { id: "van", icon: "🚐", label: "فان", price: "380 ر.س" },
+          { id: "bus", icon: "🚌", label: "باص", price: "420 ر.س" },
+        ];
         if (paySel) {
           paySel.addEventListener("change", function () {
             var submitBtn = document.getElementById("svcSubmitBtn");
@@ -774,11 +841,77 @@
         }
 
         function effectiveType(filter) {
-          var t = String(filter || selectedType || "plumber").toLowerCase();
+          var t = String(filter || "").toLowerCase();
           if (t === "cleaning") t = "cleaning_villa";
-          if (t === "all" || t === "service" || t === "services") return "plumber";
-          if (catalog[t]) return t;
-          return "plumber";
+          if (t === "nursery") t = "agricultural_engineer";
+          if (!t || t === "all" || t === "service" || t === "services") return "";
+          if (catalog[t] || t === "car_polishing") return t;
+          if (ORDER_CARD_KEYS.indexOf(t) !== -1) return t;
+          return "";
+        }
+
+        function cpBookUrl(vehicle) {
+          var v = vehicle || selectedCpVehicle || "sedan";
+          return "/car-polishing.html?vehicle=" + encodeURIComponent(v);
+        }
+
+        function goCarPolishingPage(vehicle) {
+          location.href = cpBookUrl(vehicle);
+        }
+
+        function updateCpBookLink() {
+          if (cpBookBtn) cpBookBtn.href = cpBookUrl(selectedCpVehicle);
+        }
+
+        function renderCpVehicleCards() {
+          if (!cpVehicleCards) return;
+          var html = "";
+          for (var i = 0; i < CP_VEHICLES.length; i++) {
+            var row = CP_VEHICLES[i];
+            var on = row.id === selectedCpVehicle;
+            html +=
+              '<button type="button" class="svc-order-card' +
+              (on ? " is-active" : "") +
+              '" data-cp-vehicle="' +
+              row.id +
+              '" role="listitem">' +
+              '<span class="svc-order-card__ic" aria-hidden="true">' +
+              row.icon +
+              "</span>" +
+              '<span class="svc-order-card__label">' +
+              row.label +
+              "</span>" +
+              '<span class="svc-order-card__price">تلميع داخلي — ' +
+              row.price +
+              "</span></button>";
+          }
+          cpVehicleCards.innerHTML = html;
+          updateCpBookLink();
+        }
+
+        function toggleOrderPanels() {
+          var isCp = selectedType === "car_polishing";
+          var hasPick = !!selectedType;
+          if (formEl) formEl.hidden = !hasPick || isCp;
+          if (cpPanel) cpPanel.hidden = !isCp;
+          if (orderTitle) {
+            orderTitle.textContent = !hasPick
+              ? "اختر الخدمة"
+              : isCp
+                ? "طلب تلميع المركبات"
+                : "طلب الخدمة";
+          }
+          if (isCp) {
+            renderCpVehicleCards();
+            if (priceHint) {
+              priceHint.textContent =
+                "تلميع داخلي في موقعك — تنفيذ فوري أو موعد مجدول · حتى 10 صور للمركبة · من " +
+                (CP_VEHICLES[0] && CP_VEHICLES[0].price ? CP_VEHICLES[0].price.replace(" ر.س", "") : "280") +
+                " ر.س للسيدان.";
+            }
+          } else if (!hasPick && priceHint) {
+            priceHint.textContent = "";
+          }
         }
 
         function updatePayOptions() {
@@ -817,10 +950,17 @@
         function renderOrderCards() {
           if (!cardsEl) return;
           var html = "";
-          var keys = ["plumber", "electrician", "ac_technician", "nursery", "cleaning_villa", "cleaning_building"];
-          for (var i = 0; i < keys.length; i++) {
-            var k = keys[i];
+          for (var i = 0; i < ORDER_CARD_KEYS.length; i++) {
+            var k = ORDER_CARD_KEYS[i];
             var e = catalog[k];
+            if (!e && k !== "car_polishing") continue;
+            if (k === "car_polishing" && !e) {
+              e = {
+                label: "تلميع المركبات",
+                icon: "🚗",
+                priceLabel: "من 280 ر.س",
+              };
+            }
             if (!e) continue;
             var on = k === selectedType;
             html +=
@@ -840,23 +980,54 @@
               "</span></button>";
           }
           cardsEl.innerHTML = html;
+          toggleOrderPanels();
+        }
+
+        function pickTypeFromUrl() {
+          var p = new URLSearchParams(location.search);
+          var raw = String(p.get("type") || "").trim().toLowerCase();
+          if (!raw || raw === "all" || raw === "service" || raw === "services") return "";
+          return effectiveType(raw);
         }
 
         window.__svcSelectOrderType = function (filter) {
-          selectedType = effectiveType(filter);
+          var next = effectiveType(filter);
+          if (filter === "all" || !filter) next = "";
+          if (next === "car_polishing") {
+            goCarPolishingPage();
+            return;
+          }
+          selectedType = next;
           renderOrderCards();
-          updatePayOptions();
-          updatePriceHint();
+          if (selectedType !== "car_polishing") {
+            updatePayOptions();
+            updatePriceHint();
+          }
         };
 
         if (cardsEl) {
           cardsEl.addEventListener("click", function (ev) {
             var btn = ev.target.closest(".svc-order-card");
             if (!btn) return;
-            selectedType = btn.getAttribute("data-svc-type") || "plumber";
+            selectedType = btn.getAttribute("data-svc-type") || "";
+            if (selectedType === "car_polishing") {
+              goCarPolishingPage();
+              return;
+            }
             renderOrderCards();
-            updatePayOptions();
-            updatePriceHint();
+            if (selectedType !== "car_polishing") {
+              updatePayOptions();
+              updatePriceHint();
+            }
+          });
+        }
+
+        if (cpVehicleCards) {
+          cpVehicleCards.addEventListener("click", function (ev) {
+            var btn = ev.target.closest("[data-cp-vehicle]");
+            if (!btn) return;
+            selectedCpVehicle = btn.getAttribute("data-cp-vehicle") || "sedan";
+            renderCpVehicleCards();
           });
         }
 
@@ -920,24 +1091,41 @@
             .then(function (data) {
               if (data && data.catalog) catalog = data.catalog;
               var p = new URLSearchParams(location.search);
-              var t = effectiveType(p.get("type") || "plumber");
+              var t = pickTypeFromUrl();
+              if (t === "car_polishing") {
+                goCarPolishingPage();
+                return;
+              }
               selectedType = t;
               renderOrderCards();
-              updatePayOptions();
-              updatePriceHint();
+              if (selectedType !== "car_polishing") {
+                updatePayOptions();
+                updatePriceHint();
+              }
             })
             .catch(function () {
               catalog = {
                 plumber: { label: "سباك", icon: "🔧", priceLabel: "60 ريال معاينة وتقييم", inspectionOnly: true, fixedPrice: false, desc: "" },
                 electrician: { label: "كهربائي", icon: "⚡", priceLabel: "60 ريال معاينة وتقييم", inspectionOnly: true, fixedPrice: false, desc: "" },
+                agricultural_engineer: { label: "مهندس زراعي", icon: "🌾", priceLabel: "60 ريال معاينة وتقييم", inspectionOnly: true, fixedPrice: false, desc: "" },
                 ac_technician: { label: "فني مكيفات", icon: "❄️", priceLabel: "60 ريال معاينة وتقييم", inspectionOnly: true, fixedPrice: false, desc: "" },
-                nursery: { label: "مشتل", icon: "🪴", priceLabel: "60 ريال معاينة وتقييم", inspectionOnly: true, fixedPrice: false, desc: "" },
+                agricultural_engineer: { label: "مهندس زراعي", icon: "🌾", priceLabel: "60 ريال معاينة وتقييم", inspectionOnly: true, fixedPrice: false, desc: "" },
                 cleaning_villa: { label: "غسيل درج فيلا", icon: "🧼", priceLabel: "60 ريال ثابت", inspectionOnly: false, fixedPrice: true, desc: "" },
                 cleaning_building: { label: "غسيل درج عمارة", icon: "🏢", priceLabel: "120 ريال (3 أدوار)", inspectionOnly: false, fixedPrice: true, desc: "" },
+                car_polishing: { label: "تلميع المركبات", icon: "🚗", priceLabel: "من 280 ر.س", inspectionOnly: false, fixedPrice: true, desc: "تلميع وتنظيف المركبات في موقع العميل." },
               };
+              var p = new URLSearchParams(location.search);
+              var t = pickTypeFromUrl();
+              if (t === "car_polishing") {
+                goCarPolishingPage();
+                return;
+              }
+              selectedType = t;
               renderOrderCards();
-              updatePayOptions();
-              updatePriceHint();
+              if (selectedType !== "car_polishing") {
+                updatePayOptions();
+                updatePriceHint();
+              }
             });
         }
 

@@ -1,14 +1,14 @@
 {
-  "generated_at": "2026-06-20T14:02:49.351Z",
+  "generated_at": "2026-06-21T12:19:05.040Z",
   "freeze": "G1-R Final Portal Role Classification",
   "status": "PASS",
   "summary": {
-    "order_routing_pass": 14,
-    "order_routing_total": 14,
-    "provider_routing_pass": 7,
-    "provider_routing_total": 7,
-    "transport_exclusions_pass": 4,
-    "transport_exclusions_total": 4
+    "order_routing_pass": 15,
+    "order_routing_total": 15,
+    "provider_routing_pass": 8,
+    "provider_routing_total": 8,
+    "transport_exclusions_pass": 5,
+    "transport_exclusions_total": 5
   },
   "taxonomy": {
     "order_portal_types": [
@@ -20,6 +20,7 @@
     "service_portal_types": [
       "ac_technician",
       "agricultural_engineer",
+      "car_polishing",
       "electrician",
       "gas_central_refill",
       "gas_cylinder_swap",
@@ -96,6 +97,15 @@
       "label": "تشجير",
       "order_type": "service",
       "service_type": "agricultural_engineer",
+      "expected_portal": "service",
+      "resolved_portal_type": "service",
+      "visible_in_portal": true,
+      "pass": true
+    },
+    {
+      "label": "تلميع مركبات",
+      "order_type": "service",
+      "service_type": "car_polishing",
       "expected_portal": "service",
       "resolved_portal_type": "service",
       "visible_in_portal": true,
@@ -182,6 +192,13 @@
     },
     {
       "role": "service",
+      "service_type": "car_polishing",
+      "expected_portal": "service",
+      "resolved_portal": "service",
+      "pass": true
+    },
+    {
+      "role": "service",
       "service_type": "gas_delivery",
       "expected_portal": "service",
       "resolved_portal": "service",
@@ -240,6 +257,13 @@
     },
     {
       "service_type": "gas_central_refill",
+      "is_transport": false,
+      "is_service": true,
+      "is_driver": false,
+      "pass": true
+    },
+    {
+      "service_type": "car_polishing",
       "is_transport": false,
       "is_service": true,
       "is_driver": false,

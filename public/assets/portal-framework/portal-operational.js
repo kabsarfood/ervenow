@@ -17,9 +17,6 @@
     vehicle_transfer: 1,
     internal_delivery: 1,
     furniture_move: 1,
-    gas_cylinder_swap: 1,
-    gas_central_refill: 1,
-    gas_delivery: 1,
   };
 
   var SERVICE_ONLY_TYPES = {
@@ -28,6 +25,10 @@
     ac_technician: 1,
     laundry_estates: 1,
     agricultural_engineer: 1,
+    gas_cylinder_swap: 1,
+    gas_central_refill: 1,
+    gas_delivery: 1,
+    car_polishing: 1,
   };
 
   var TRANSPORT_TYPE_LABELS = {
@@ -36,9 +37,13 @@
     vehicle_transfer: "نقل مركبات",
     internal_delivery: "توصيل داخلي",
     furniture_move: "نقل أثاث",
+  };
+
+  var SERVICE_TYPE_LABELS = {
     gas_cylinder_swap: "تبديل أسطوانة غاز",
     gas_central_refill: "تعبئة غاز مركزي",
     gas_delivery: "توصيل غاز",
+    car_polishing: "تلميع المركبات",
   };
 
   function portalTitle(role) {
@@ -81,6 +86,7 @@
     TRANSPORT_SERVICE_TYPES: TRANSPORT_SERVICE_TYPES,
     SERVICE_ONLY_TYPES: SERVICE_ONLY_TYPES,
     TRANSPORT_TYPE_LABELS: TRANSPORT_TYPE_LABELS,
+    SERVICE_TYPE_LABELS: SERVICE_TYPE_LABELS,
     portalTitle: portalTitle,
     isTransportType: isTransportType,
     isServiceOnlyType: isServiceOnlyType,

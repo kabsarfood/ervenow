@@ -29,6 +29,7 @@ const FINAL_ROUTING_TABLE = [
   { orderKind: "service", serviceType: "ac_technician", expectedPortal: "service", label: "تكييف" },
   { orderKind: "service", serviceType: "laundry_estates", expectedPortal: "service", label: "غسيل" },
   { orderKind: "service", serviceType: "agricultural_engineer", expectedPortal: "service", label: "تشجير" },
+  { orderKind: "service", serviceType: "car_polishing", expectedPortal: "service", label: "تلميع مركبات" },
   { orderKind: "gas_delivery", serviceType: "gas_delivery", expectedPortal: "service", label: "غاز" },
   { orderKind: "service", serviceType: "internal_delivery", expectedPortal: "driver", label: "توصيل داخلي" },
   { orderKind: "restaurant", serviceType: null, expectedPortal: "driver", label: "طلب جاهز للتوصيل", viaDispatch: true },
@@ -41,6 +42,7 @@ const FINAL_ROUTING_TABLE = [
 const PROVIDER_ROUTING_TABLE = [
   { role: "service", serviceType: "plumber", expectedPortal: "service" },
   { role: "service", serviceType: "gas_cylinder_swap", expectedPortal: "service" },
+  { role: "service", serviceType: "car_polishing", expectedPortal: "service" },
   { role: "service", serviceType: "gas_delivery", expectedPortal: "service" },
   { role: "service", serviceType: "pickup_truck", expectedPortal: "transport" },
   { role: "service", serviceType: "internal_delivery", expectedPortal: "driver" },
@@ -96,7 +98,7 @@ function validateProviderRouting() {
 }
 
 function validateTransportExclusions() {
-  const removedFromTransport = ["internal_delivery", "gas_delivery", "gas_cylinder_swap", "gas_central_refill"];
+  const removedFromTransport = ["internal_delivery", "gas_delivery", "gas_cylinder_swap", "gas_central_refill", "car_polishing"];
   return removedFromTransport.map((t) => ({
     service_type: t,
     is_transport: isTransportPortalType(t),

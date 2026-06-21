@@ -48,3 +48,18 @@
   color: var(--pf-muted);
   font-weight: 600;
 }
+
+.sp-cp-photos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.sp-cp-photos img {
+  width: clamp(64px, 18vw, 88px);
+  height: clamp(64px, 18vw, 88px);
+  object-fit: cover;
+  border-radius: 10px;
+  border: 1px solid var(--pf-border);
+}

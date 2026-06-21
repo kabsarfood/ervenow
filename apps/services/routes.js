@@ -11,6 +11,8 @@ const {
   computeGasTotal,
   gasServiceLabel,
   CENTRAL_LITERS,
+  CENTRAL_PRICE_PER_LITER,
+  GAS_CYLINDER_CUSTOMER_UNIT,
 } = require("../../shared/utils/gasDeliveryPricing");
 const {
   HOME_SERVICE_CATALOG,
@@ -24,6 +26,8 @@ const { createGasDelivery } = require("../delivery/gasDeliveryCreate");
 const { completeServiceBooking } = require("../../shared/services/completeServiceBooking");
 const { sendReserveWelcomeWhatsApp } = require("../../shared/services/serviceProviderReserve");
 const { sendOrderAcceptedToCustomer, sendCustomerDeliveringNotice, sendDriverArrived } = require("../../shared/services/whatsappService");
+const { notifyCustomer } = require("../../shared/services/notificationEvents");
+const { notifyProvidersForBooking } = require("../../shared/services/serviceBookingNotify");
 const { currentGasRadiusKm, providerCoords, providerWithinGasRadius } = require("../../shared/utils/gasDeliveryRadius");
 const { usersQueryResilient, isUsersGeoColumnError } = require("../../shared/utils/usersGeoSelect");
 const { broadcastDriverUpdate, broadcastOrderPatch, orderPatchFromRow } = require("../../shared/lib/trackingSocket");
@@ -39,6 +43,33 @@ const {
   labelForType,
   providerMatchesBookingType,
 } = require("../../shared/utils/serviceProviderTypes");
+const {
+  isCarPolishingOrder,
+  providerRejectedOrder,
+  resolveCpStatus,
+  cpStatusLabel,
+  PROVIDER_REJECT_REASONS,
+  PROVIDER_CANCEL_REASONS,
+  CP_STATUS,
+  mergeCarPolishingData,
+  orderData,
+} = require("../../shared/utils/carPolishingWorkflow");
+const {
+  rejectCarPolishingBooking,
+  republishCarPolishingBooking,
+  patchCarPolishingCpStatus,
+  buildAcceptCarPolishingData,
+} = require("../../shared/services/carPolishingOrderActions");
+const {
+  isServicePhaseOrder,
+  mergeServicePhaseData,
+  SP_STATUS,
+  SERVICE_SUBTYPES,
+} = require("../../shared/utils/servicePhaseWorkflow");
+const {
+  patchServicePhaseStatus,
+  buildAcceptServicePhaseData,
+} = require("../../shared/services/servicePhaseOrderActions");
 const { toStorageDigits } = require("../../shared/utils/phone");
 const {
   bookingStatus,
@@ -53,7 +84,7 @@ const { DELIVERY_STATUS } = require("../../shared/domain/orders/constants");
 const { patchUnifiedOrderStatus } = require("../../shared/services/unifiedOrderStatus");
 const { updateOrdersResilient } = require("../../shared/utils/idempotency");
 const { applyProviderIdToPatch } = require("../../shared/utils/orderProviderId");
-const { providerAreaMatchesCarBooking } = require("../../shared/services/carTransportNotify");
+const { deferServiceProviderDispatch, isPrepaidServiceType } = require("../../shared/utils/serviceOrderPaymentHold");
 
 const router = express.Router();
 const SERVICE_TYPES = new Set([
@@ -72,6 +103,7 @@ const SERVICE_TYPES = new Set([
   "pickup_truck",
   "furniture_move",
   "gas_delivery",
+  "car_polishing",
   "service",
 ]);
 
@@ -122,9 +154,20 @@ function filterBookingsForProvider(rows, providerId, providerType, providerDistr
 
     const status = bookingStatus(b);
     const bookedBy = b.provider_id ? String(b.provider_id) : "";
+    const pay = String(b.payment_status || "").toLowerCase();
+    const ds = String(b.status || b.delivery_status || "").toLowerCase();
+
+    if (ds === "draft") return false;
+    if (isPrepaidServiceType(st) && pay !== "paid" && bookedBy !== pid) return false;
+
     if (bookedBy && bookedBy !== pid) return false;
     if (bookedBy === pid) return true;
     if (status !== "new" && status !== "pending") return false;
+
+    if (st === "car_polishing") {
+      const data = b.data && typeof b.data === "object" ? b.data : {};
+      if (providerRejectedOrder(data, pid)) return false;
+    }
 
     if (st === "gas_delivery") {
       if (!providerCoords(providerUser)) return false;
@@ -178,6 +221,7 @@ function labelByType(type) {
     pickup_truck: "ونيت",
     furniture_move: "نقل أثاث",
     gas_delivery: "تبديل غاز",
+    car_polishing: "تلميع المركبات",
     agricultural_engineer: "مهندس زراعي",
     laundry_estates: "مغسل فلل وعمائر",
     service: "خدمة عامة",
@@ -195,6 +239,27 @@ async function sendCustomerRateWhatsApp(booking) {
   } catch (e) {
     console.error("[services] customer rate WhatsApp:", e && (e.message || e));
   }
+}
+
+async function persistGasActualLiters(sb, booking, actualLitersRaw) {
+  const liters = Math.floor(Number(actualLitersRaw));
+  if (!Number.isFinite(liters) || liters <= 0) {
+    return { ok: false, message: "أدخل لترات فعلية صحيحة" };
+  }
+  const mode = String(booking.gas_mode || (booking.data && booking.data.gas_mode) || "").toLowerCase();
+  if (mode !== "central_refill" && mode !== "bulk") {
+    return { ok: true, skipped: true, booking };
+  }
+  const data = booking.data && typeof booking.data === "object" ? { ...booking.data } : {};
+  data.actual_liters_delivered = liters;
+  const now = new Date().toISOString();
+  const { data: raw, error } = await updateOrdersResilient(
+    sb,
+    { data, updated_at: now },
+    { id: booking.id }
+  );
+  if (error) return { ok: false, message: error.message || String(error) };
+  return { ok: true, booking: raw || booking };
 }
 
 async function recalcProviderRating(sb, providerId) {
@@ -228,7 +293,7 @@ async function recalcProviderRating(sb, providerId) {
 }
 
 router.get("/catalog", (_req, res) => {
-  return ok(res, { catalog: HOME_SERVICE_CATALOG, currency: "SAR" });
+  return ok(res, { catalog: HOME_SERVICE_CATALOG, subtypes: SERVICE_SUBTYPES, currency: "SAR" });
 });
 
 router.post("/home-order", optionalAuth, async (req, res) => {
@@ -311,15 +376,56 @@ router.post("/home-order", optionalAuth, async (req, res) => {
 });
 
 router.get("/gas/pricing", (_req, res) => {
+  const { computePlatformCommission } = require("../../shared/utils/platformCommission");
+  const cylinderOne = GAS_CYLINDER_CUSTOMER_UNIT;
+  const cylinderCommission = computePlatformCommission(cylinderOne);
   return ok(res, {
-    cylinder_one: 39,
-    cylinder_two: 78,
-    cylinder_provider_net: 37,
-    cylinder_platform_fee: 2,
-    cylinder_customer_unit: 39,
-    central_per_liter: 0.9,
+    cylinder_one: cylinderOne,
+    cylinder_two: cylinderOne * 2,
+    cylinder_provider_net: Math.round((cylinderOne - cylinderCommission) * 100) / 100,
+    cylinder_platform_fee: cylinderCommission,
+    cylinder_customer_unit: cylinderOne,
+    central_per_liter: CENTRAL_PRICE_PER_LITER,
     central_liters: CENTRAL_LITERS,
     commission_rate: require("../../shared/utils/platformCommission").PLATFORM_COMMISSION_RATE,
+  });
+});
+
+router.get("/car-polishing/pricing", (_req, res) => {
+  const {
+    VEHICLE_TYPES,
+    BASE_INTERIOR_PRICES,
+    ADDON_ENGINE_WASH,
+    ADDON_WHEELS,
+    ADDON_EXTERIOR,
+    VEHICLE_LABELS,
+    VAT_RATE,
+    computeCarPolishingBreakdown,
+    computeCarPolishingFinancials,
+  } = require("../../shared/utils/carPolishingPricing");
+  const { computePlatformCommission, PLATFORM_COMMISSION_RATE } = require("../../shared/utils/platformCommission");
+  const example = computeCarPolishingFinancials({
+    vehicle_type: "sedan",
+    addon_engine_wash: true,
+    addon_wheels: true,
+    addon_exterior: true,
+  });
+  return ok(res, {
+    vehicle_types: VEHICLE_TYPES,
+    vehicle_labels: VEHICLE_LABELS,
+    base_interior_prices: BASE_INTERIOR_PRICES,
+    addons: {
+      engine_wash: ADDON_ENGINE_WASH,
+      wheels: ADDON_WHEELS,
+      exterior: ADDON_EXTERIOR,
+    },
+    vat_rate: VAT_RATE,
+    example_total: example.subtotal_ex_vat,
+    example_breakdown: example,
+    commission_rate: PLATFORM_COMMISSION_RATE,
+    example_commission: computePlatformCommission(example.subtotal_ex_vat),
+    example_vat: example.vat_amount,
+    example_total_with_vat: example.total_with_vat,
   });
 });
 
@@ -672,9 +778,9 @@ router.get("/me/pricing", requireAuth, requireServiceProviderRole(), async (req,
       priceCarTransportInternal,
     } = require("../delivery/unifiedDeliveryPricing");
     const gasPricing = {
-      cylinder_one: 39,
-      cylinder_two: 78,
-      central_per_liter: 0.9,
+      cylinder_one: GAS_CYLINDER_CUSTOMER_UNIT,
+      cylinder_two: GAS_CYLINDER_CUSTOMER_UNIT * 2,
+      central_per_liter: CENTRAL_PRICE_PER_LITER,
     };
     const transportSamples = [
       { label: "نقل داخلي (10 كم)", fee: priceCarTransportInternal(10, "running") },
@@ -797,6 +903,12 @@ router.post("/bookings/:id/reserve", requireAuth, requireServiceProviderRole(), 
     if (booking.provider_id && String(booking.provider_id) !== String(uid)) {
       return fail(res, "تم حجز الطلب من مزود آخر", 409);
     }
+    if (isCarPolishingOrder(booking)) {
+      const bData = booking.data && typeof booking.data === "object" ? booking.data : {};
+      if (providerRejectedOrder(bData, uid)) {
+        return fail(res, "رفضت هذا الطلب مسبقاً", 403);
+      }
+    }
 
     const now = new Date().toISOString();
     const provLat = Number(profile?.lat);
@@ -810,6 +922,8 @@ router.post("/bookings/:id/reserve", requireAuth, requireServiceProviderRole(), 
           ? { driver_lat: provLat, driver_lng: provLng }
           : {}),
         ...buildOrderStatusPatch(DELIVERY_STATUS.ACCEPTED),
+        ...(isCarPolishingOrder(booking) ? { data: buildAcceptCarPolishingData(booking) } : {}),
+        ...(isServicePhaseOrder(booking) ? { data: buildAcceptServicePhaseData(booking) } : {}),
       },
       uid
     );
@@ -833,13 +947,78 @@ router.post("/bookings/:id/reserve", requireAuth, requireServiceProviderRole(), 
         console.error("[services] reserve customer WA:", waErr && (waErr.message || waErr));
       }
     }
+    if (raw.customer_id) {
+      try {
+        await notifyCustomer(
+          sb,
+          raw.customer_id,
+          "customer.order.accepted",
+          "تم قبول طلبك",
+          `تم قبول طلب ${raw.service_name || "الخدمة"} رقم ${raw.order_number || raw.id} — المزود في الطريق قريباً.`,
+          raw
+        );
+      } catch (notifyErr) {
+        console.error("[services] reserve customer in-app:", notifyErr && (notifyErr.message || notifyErr));
+      }
+    }
 
     broadcastOrderPatch(raw.id, orderPatchFromRow(raw));
 
-    return ok(res, { booking: data, message: "تم حجز الطلب وإرسال تفاصيله عبر واتساب" });
+    return ok(res, {
+      booking: data,
+      message: isCarPolishingOrder(raw) ? "تم قبول الطلب" : "تم حجز الطلب وإرسال تفاصيله عبر واتساب",
+    });
   } catch (e) {
     return fail(res, e.message, 500);
   }
+});
+
+router.post("/bookings/:id/reject", requireAuth, requireServiceProviderRole(), async (req, res) => {
+  try {
+    const sb = req.supabase || createServiceClient();
+    const uid = req.appUser.id;
+    const { data: booking, error: gErr, raw } = await fetchServiceOrderById(sb, req.params.id);
+    if (gErr || !booking) return fail(res, "الطلب غير موجود", 404);
+    const orderRow = raw || booking;
+    const out = await rejectCarPolishingBooking(sb, orderRow, uid, req.body || {});
+    if (!out.ok) return fail(res, out.message, out.status || 400);
+    try {
+      await notifyProvidersForBooking(sb, out.order);
+    } catch (notifyErr) {
+      console.error("[services] reject republish notify:", notifyErr && (notifyErr.message || notifyErr));
+    }
+    return ok(res, { booking: orderToBookingView(out.order), message: out.message, reasons: PROVIDER_REJECT_REASONS });
+  } catch (e) {
+    return fail(res, e.message, 500);
+  }
+});
+
+router.post("/bookings/:id/cancel-task", requireAuth, requireServiceProviderRole(), async (req, res) => {
+  try {
+    const sb = req.supabase || createServiceClient();
+    const uid = req.appUser.id;
+    const { data: booking, error: gErr, raw } = await fetchServiceOrderById(sb, req.params.id);
+    if (gErr || !booking) return fail(res, "الطلب غير موجود", 404);
+    const orderRow = raw || booking;
+    const out = await republishCarPolishingBooking(sb, orderRow, uid, req.body || {});
+    if (!out.ok) return fail(res, out.message, out.status || 400);
+    return ok(res, {
+      booking: orderToBookingView(out.order),
+      message: out.message,
+      reasons: PROVIDER_CANCEL_REASONS,
+    });
+  } catch (e) {
+    return fail(res, e.message, 500);
+  }
+});
+
+router.get("/car-polishing/config", (_req, res) => {
+  return ok(res, {
+    reject_reasons: PROVIDER_REJECT_REASONS,
+    cancel_reasons: PROVIDER_CANCEL_REASONS,
+    max_photos: 10,
+    cp_statuses: CP_STATUS,
+  });
 });
 
 router.post("/bookings/:id/location", requireAuth, requireServiceProviderRole(), async (req, res) => {
@@ -906,6 +1085,22 @@ router.post("/bookings/:id/complete", requireAuth, async (req, res) => {
     else if (isProvider) actor = "provider";
     else if (isCustomer) actor = "customer";
 
+    let workingBooking = booking;
+    const actualLiters = req.body?.actual_liters ?? req.body?.actual_liters_delivered;
+    if (actualLiters != null && String(actualLiters).trim() !== "") {
+      const persisted = await persistGasActualLiters(sb, workingBooking, actualLiters);
+      if (!persisted.ok) return fail(res, persisted.message || "تعذر حفظ اللترات", 400);
+      if (persisted.booking) workingBooking = persisted.booking;
+    } else if (
+      isProvider &&
+      (step === "legacy" || actor === "legacy") &&
+      ["central_refill", "bulk"].includes(
+        String(workingBooking.gas_mode || (workingBooking.data && workingBooking.data.gas_mode) || "").toLowerCase()
+      )
+    ) {
+      return fail(res, "أدخل اللترات الفعلية المُسلَّمة قبل إنهاء المهمة", 400);
+    }
+
     const done = await completeServiceBooking(sb, req.params.id, providerId, { actor });
     if (done.error) return fail(res, done.error.message || "فشل الإتمام", 400);
     if (done.already_done) {
@@ -913,8 +1108,39 @@ router.post("/bookings/:id/complete", requireAuth, async (req, res) => {
     }
 
     if (done.finalized) {
-      const view = orderToBookingView(done.data);
+      let finalRow = done.data;
+      if (isCarPolishingOrder(done.data)) {
+        const merged = mergeCarPolishingData(orderData(done.data), {
+          cp_status: CP_STATUS.COMPLETED,
+          cp_phase: null,
+        });
+        const cpUpd = await updateOrdersResilient(sb, { data: merged, updated_at: new Date().toISOString() }, { id: req.params.id });
+        if (cpUpd.data) finalRow = cpUpd.data;
+      }
+      if (isServicePhaseOrder(done.data)) {
+        const merged = mergeServicePhaseData(orderData(done.data), {
+          sp_status: SP_STATUS.COMPLETED,
+          sp_phase: null,
+        });
+        const spUpd = await updateOrdersResilient(sb, { data: merged, updated_at: new Date().toISOString() }, { id: req.params.id });
+        if (spUpd.data) finalRow = spUpd.data;
+      }
+      const view = orderToBookingView(finalRow);
       await sendCustomerRateWhatsApp(view);
+      if (done.data.customer_id) {
+        try {
+          await notifyCustomer(
+            sb,
+            finalRow.customer_id,
+            "customer.order.delivered",
+            "اكتملت الخدمة",
+            `تم إنجاز طلبك رقم ${finalRow.order_number || finalRow.id}.`,
+            finalRow
+          );
+        } catch (notifyErr) {
+          console.error("[services] complete customer in-app:", notifyErr && (notifyErr.message || notifyErr));
+        }
+      }
       return ok(res, {
         booking: view,
         message: "تمت المهمة — شكراً. يمكن للعميل تقييم الخدمة الآن.",
@@ -1007,12 +1233,154 @@ router.post("/checkout", optionalAuth, async (req, res) => {
 
 router.patch("/bookings/:id/status", requireAuth, requireServiceProviderOrAdmin(), async (req, res) => {
   try {
-    const nextStatus = String(req.body?.status || req.body?.delivery_status || "").trim().toLowerCase();
-    if (!nextStatus) return fail(res, "status required", 400);
+    const sb = req.supabase || createServiceClient();
+    const cpStatusRaw = String(req.body?.cp_status || "").trim().toLowerCase();
+    const spStatusRaw = String(req.body?.sp_status || "").trim().toLowerCase();
+    let nextStatus = String(req.body?.status || req.body?.delivery_status || "").trim().toLowerCase();
+    if (!nextStatus && !cpStatusRaw && !spStatusRaw) return fail(res, "status required", 400);
+
+    const { data: bookingView, raw: bookingRaw, error: gErr } = await fetchServiceOrderById(sb, req.params.id);
+    if (gErr || !bookingView) return fail(res, "Not found", 404);
+    const orderRow = bookingRaw || bookingView;
+
+    if (isServicePhaseOrder(orderRow) && spStatusRaw) {
+      const providerId = req.appUser.id;
+      const out = await patchServicePhaseStatus(sb, orderRow, providerId, spStatusRaw);
+      if (!out.ok) return fail(res, out.message, out.status || 400);
+      const updated = out.order;
+      if (updated.customer_id) {
+        try {
+          if (spStatusRaw === SP_STATUS.ON_THE_WAY) {
+            await notifyCustomer(
+              sb,
+              updated.customer_id,
+              "customer.driver.en_route",
+              "المزود في الطريق",
+              `مزود الخدمة في الطريق لتنفيذ طلبك رقم ${updated.order_number || updated.id}.`,
+              updated
+            );
+          } else if (spStatusRaw === SP_STATUS.IN_PROGRESS) {
+            await notifyCustomer(
+              sb,
+              updated.customer_id,
+              "customer.order.in_progress",
+              "بدأ التنفيذ",
+              `بدأ مزود الخدمة تنفيذ طلبك رقم ${updated.order_number || updated.id}.`,
+              updated
+            );
+          } else if (spStatusRaw === SP_STATUS.COMPLETED) {
+            await notifyCustomer(
+              sb,
+              updated.customer_id,
+              "customer.order.delivered",
+              "اكتملت الخدمة",
+              `تم إنجاز طلبك رقم ${updated.order_number || updated.id}.`,
+              updated
+            );
+          }
+        } catch (notifyErr) {
+          console.error("[services] sp status customer in-app:", notifyErr && (notifyErr.message || notifyErr));
+        }
+      }
+      broadcastOrderPatch(updated.id, orderPatchFromRow(updated));
+      return ok(res, { booking: orderToBookingView(updated) });
+    }
+
+    if (isServicePhaseOrder(orderRow) && nextStatus === "delivering") {
+      const out = await patchServicePhaseStatus(sb, orderRow, req.appUser.id, SP_STATUS.ON_THE_WAY);
+      if (!out.ok) return fail(res, out.message, out.status || 400);
+      const updated = out.order;
+      if (updated.customer_id) {
+        try {
+          await notifyCustomer(
+            sb,
+            updated.customer_id,
+            "customer.driver.en_route",
+            "المزود في الطريق",
+            `مزود الخدمة في الطريق لتنفيذ طلبك رقم ${updated.order_number || updated.id}.`,
+            updated
+          );
+        } catch (notifyErr) {
+          console.error("[services] sp delivering notify:", notifyErr && (notifyErr.message || notifyErr));
+        }
+      }
+      broadcastOrderPatch(updated.id, orderPatchFromRow(updated));
+      return ok(res, { booking: orderToBookingView(updated) });
+    }
+
+    if (isCarPolishingOrder(orderRow) && cpStatusRaw) {
+      const providerId = req.appUser.id;
+      const out = await patchCarPolishingCpStatus(sb, orderRow, providerId, cpStatusRaw);
+      if (!out.ok) return fail(res, out.message, out.status || 400);
+      const updated = out.order;
+      if (updated.customer_id) {
+        try {
+          if (cpStatusRaw === CP_STATUS.ON_THE_WAY) {
+            await notifyCustomer(
+              sb,
+              updated.customer_id,
+              "customer.driver.en_route",
+              "المزود في الطريق",
+              `مزود الخدمة في الطريق لتنفيذ طلبك رقم ${updated.order_number || updated.id}.`,
+              updated
+            );
+          } else if (cpStatusRaw === CP_STATUS.IN_PROGRESS) {
+            await notifyCustomer(
+              sb,
+              updated.customer_id,
+              "customer.order.in_progress",
+              "بدأ التنفيذ",
+              `بدأ مزود الخدمة تنفيذ طلبك رقم ${updated.order_number || updated.id}.`,
+              updated
+            );
+          } else if (cpStatusRaw === CP_STATUS.COMPLETED) {
+            await notifyCustomer(
+              sb,
+              updated.customer_id,
+              "customer.order.delivered",
+              "اكتملت الخدمة",
+              `تم إنجاز طلب تلميع المركبات رقم ${updated.order_number || updated.id}.`,
+              updated
+            );
+          }
+        } catch (notifyErr) {
+          console.error("[services] cp status customer in-app:", notifyErr && (notifyErr.message || notifyErr));
+        }
+      }
+      broadcastOrderPatch(updated.id, orderPatchFromRow(updated));
+      return ok(res, { booking: orderToBookingView(updated) });
+    }
+
+    if (isCarPolishingOrder(orderRow) && nextStatus === "delivering") {
+      const out = await patchCarPolishingCpStatus(sb, orderRow, req.appUser.id, CP_STATUS.ON_THE_WAY);
+      if (!out.ok) return fail(res, out.message, out.status || 400);
+      const updated = out.order;
+      if (updated.customer_id) {
+        try {
+          await notifyCustomer(
+            sb,
+            updated.customer_id,
+            "customer.driver.en_route",
+            "المزود في الطريق",
+            `مزود الخدمة في الطريق لتنفيذ طلبك رقم ${updated.order_number || updated.id}.`,
+            updated
+          );
+        } catch (notifyErr) {
+          console.error("[services] cp delivering notify:", notifyErr && (notifyErr.message || notifyErr));
+        }
+      }
+      broadcastOrderPatch(updated.id, orderPatchFromRow(updated));
+      return ok(res, { booking: orderToBookingView(updated) });
+    }
+
+    if (!nextStatus && !cpStatusRaw && !spStatusRaw) return fail(res, "status required", 400);
     const allowed = new Set(["accepted", "delivering", "delivered", "cancelled"]);
     if (!allowed.has(nextStatus)) return fail(res, "invalid status", 400);
 
     if (nextStatus === "delivered" || nextStatus === "delivering") {
+      if (isServicePhaseOrder(orderRow)) {
+        return fail(res, "استخدم sp_status للانتقال بين مراحل الخدمة", 400);
+      }
       const out = await patchUnifiedOrderStatus(req.supabase, req.params.id, nextStatus, req.appUser);
       if (out.error) return fail(res, out.error.message, 400);
       const view = orderToBookingView(out.data);
@@ -1022,6 +1390,31 @@ router.patch("/bookings/:id/status", requireAuth, requireServiceProviderOrAdmin(
           else if (nextStatus === "delivered") await sendDriverArrived(out.data);
         } catch (waErr) {
           console.error("[services] status customer WA:", waErr && (waErr.message || waErr));
+        }
+      }
+      if (out.data && out.data.customer_id) {
+        try {
+          if (nextStatus === "delivering") {
+            await notifyCustomer(
+              req.supabase,
+              out.data.customer_id,
+              "customer.driver.en_route",
+              "المزود في الطريق",
+              `مزود الخدمة في الطريق لتنفيذ طلبك رقم ${out.data.order_number || out.data.id}.`,
+              out.data
+            );
+          } else if (nextStatus === "delivered") {
+            await notifyCustomer(
+              req.supabase,
+              out.data.customer_id,
+              "customer.order.delivered",
+              "تم الانتهاء من الخدمة",
+              `تم إنجاز طلبك رقم ${out.data.order_number || out.data.id}.`,
+              out.data
+            );
+          }
+        } catch (notifyErr) {
+          console.error("[services] status customer in-app:", notifyErr && (notifyErr.message || notifyErr));
         }
       }
       if (nextStatus === "delivered") await sendCustomerRateWhatsApp(view);

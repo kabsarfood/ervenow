@@ -10,16 +10,12 @@
     car_transport: 1,
     vehicle_transfer: 1,
     furniture_move: 1,
-    gas_cylinder_swap: 1,
-    gas_central_refill: 1,
-    gas_delivery: 1,
   };
 
   var TYPE_FILTER_LABELS = {
     all: "الكل",
     pickup_truck: "سطحة",
     furniture_move: "نقل أثاث",
-    gas_delivery: "توصيل غاز",
   };
 
   var shell = null;
@@ -134,9 +130,6 @@
   function matchesTypeFilter(b) {
     if (state.typeFilter === "all") return true;
     var st = String((b && b.service_type) || "").toLowerCase();
-    if (state.typeFilter === "gas_delivery") {
-      return st === "gas_delivery" || st === "gas_cylinder_swap" || st === "gas_central_refill";
-    }
     if (state.typeFilter === "pickup_truck") {
       return st === "pickup_truck" || st === "car_transport" || st === "vehicle_transfer";
     }
@@ -397,7 +390,6 @@
 
   function renderPricing() {
     var p = state.pricing || {};
-    var gas = p.gas || {};
     var samples = p.samples || [];
     var rows = samples
       .map(function (s) {
@@ -411,13 +403,8 @@
       })
       .join("");
     return (
-      W.sectionHeader("التسعير", "Pricing — أسعار النقل والغاز") +
+      W.sectionHeader("التسعير", "Pricing — أسعار النقل") +
       '<button type="button" class="pf-btn" id="tpRefreshPricing" style="margin-bottom:12px">تحديث</button>' +
-      W.kpiGrid([
-        { label: "أسطوانة غاز", value: fmtMoney(gas.cylinder_one || 0), suffix: "ر.س" },
-        { label: "أسطوانتان", value: fmtMoney(gas.cylinder_two || 0), suffix: "ر.س" },
-        { label: "غاز مركزي / لتر", value: fmtMoney(gas.central_per_liter || 0), suffix: "ر.س" },
-      ]) +
       '<div class="pf-card"><h3 class="pf-card__title">عينات التسعير (مسافات)</h3>' +
       (rows
         ? '<div class="pf-table-wrap"><table class="pf-table"><thead><tr><th>الخدمة</th><th>السعر</th></tr></thead><tbody>' +

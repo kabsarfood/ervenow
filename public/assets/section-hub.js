@@ -114,6 +114,9 @@
       categories.forEach(function (c) {
         if (!c || !c.id) return;
         var on = activeCategory === c.id;
+        var chipMedia = c.image
+          ? '<img class="stores-cuisine-chip__img" src="' + esc(c.image) + '" alt="" loading="lazy" />'
+          : '<span class="stores-cuisine-chip__icon" aria-hidden="true">' + esc(c.icon || "▫") + "</span>";
         html +=
           '<button type="button" class="stores-cuisine-chip' +
           (on ? " is-active" : "") +
@@ -121,9 +124,9 @@
           esc(c.id) +
           '" role="tab" aria-selected="' +
           (on ? "true" : "false") +
-          '"><span class="stores-cuisine-chip__icon" aria-hidden="true">' +
-          esc(c.icon || "▫") +
-          "</span><span>" +
+          '">' +
+          chipMedia +
+          "<span>" +
           esc(c.label || c.id) +
           "</span></button>";
       });

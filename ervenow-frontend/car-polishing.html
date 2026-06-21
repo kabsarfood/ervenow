@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+  <head>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <script src="/assets/viewport-fit.js?erv=20260612"></script>
+    <title>ERVENOW | تلميع المركبات</title>
+    <link rel="stylesheet" href="/assets/styles.css" />
+    <link rel="stylesheet" href="/assets/guest-shell.css?erv=20260612" />
+    <link rel="stylesheet" href="/assets/ervenow-responsive.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+      .cp-wrap {
+        max-width: 640px;
+        margin: 20px auto;
+        padding: 0 14px 48px;
+      }
+      .cp-wrap .guest-page-title {
+        text-align: center;
+        line-height: 1.45;
+        margin-inline: auto;
+        margin-bottom: 10px;
+      }
+      .cp-page-lead {
+        margin: -6px 0 14px;
+        text-align: center;
+        font-size: clamp(0.88rem, 2.4vw, 0.96rem);
+        color: rgba(61, 34, 19, 0.82);
+        line-height: 1.55;
+        max-width: 38ch;
+        margin-inline: auto;
+      }
+      .cp-box {
+        display: grid;
+        gap: 12px;
+      }
+      .cp-row label {
+        font-weight: 700;
+        font-size: 0.9rem;
+        display: block;
+        margin-bottom: 6px;
+      }
+      .cp-row select,
+      .cp-row input {
+        width: 100%;
+        padding: 10px 12px;
+        border-radius: 10px;
+        border: 1px solid var(--border, #e8dfd4);
+        font-family: inherit;
+        font-size: 16px;
+      }
+      .cp-section {
+        padding: 12px;
+        border: 1px dashed rgba(61, 34, 19, 0.15);
+        border-radius: 10px;
+        display: grid;
+        gap: 10px;
+      }
+      .cp-section__title {
+        margin: 0;
+        font-size: clamp(0.95rem, 2.6vw, 1.05rem);
+        font-weight: 800;
+      }
+      .cp-section__sub {
+        margin: 0;
+        font-size: clamp(0.82rem, 2.3vw, 0.9rem);
+        color: rgba(61, 34, 19, 0.72);
+        line-height: 1.5;
+      }
+      .cp-vehicle-field {
+        display: grid;
+        gap: 8px;
+      }
+      .cp-vehicle-field__label {
+        margin: 0;
+        font-weight: 700;
+        font-size: clamp(0.88rem, 2.4vw, 0.94rem);
+        color: rgba(61, 34, 19, 0.88);
+        text-align: right;
+        line-height: 1.4;
+      }
+      .cp-vehicle-type-card {
+        display: flex;
+        align-items: stretch;
+        gap: clamp(10px, 2.5vw, 12px);
+      }
+      .cp-vehicle-type-card__img,
+      .cp-vehicle-type-card__select {
+        border-radius: 12px;
+        background: rgba(255, 254, 251, 0.92);
+        border: 1px solid rgba(61, 34, 19, 0.1);
+        padding: clamp(10px, 2.5vw, 12px);
+        min-height: 56px;
+      }
+      .cp-vehicle-type-card__img {
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: clamp(88px, 24vw, 112px);
+      }
+      .cp-vehicle-type-card__img img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        max-height: 52px;
+        object-fit: contain;
+      }
+      .cp-vehicle-type-card__select {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        margin: 0;
+      }
+      .cp-vehicle-type-card__select select {
+        width: 100%;
+        min-height: 48px;
+        padding: 10px 12px;
+        border-radius: 10px;
+        border: 1px solid var(--border, #e8dfd4);
+        font-family: inherit;
+        font-size: 16px;
+        background: #fff;
+      }
+      @media (max-width: 640px) {
+        .cp-vehicle-type-card__img {
+          width: clamp(76px, 22vw, 96px);
+        }
+        .cp-vehicle-type-card__img img {
+          max-height: 44px;
+        }
+      }
+      .cp-addon {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        min-height: 48px;
+        padding: 10px 12px;
+        border-radius: 10px;
+        border: 1px solid rgba(61, 34, 19, 0.1);
+        background: rgba(255, 254, 251, 0.92);
+        cursor: pointer;
+      }
+      .cp-addon input {
+        width: 20px;
+        height: 20px;
+        margin-top: 2px;
+        flex-shrink: 0;
+      }
+      .cp-addon__text {
+        flex: 1;
+        min-width: 0;
+        line-height: 1.45;
+      }
+      .cp-addon__text strong {
+        display: block;
+        font-size: clamp(0.88rem, 2.4vw, 0.95rem);
+      }
+      .cp-addon__text span {
+        font-size: clamp(0.8rem, 2.2vw, 0.86rem);
+        color: rgba(61, 34, 19, 0.7);
+      }
+      .cp-price {
+        font-size: clamp(1.1rem, 3vw, 1.25rem);
+        font-weight: 800;
+        color: var(--brown, #3d2213);
+        padding: 12px;
+        background: rgba(185, 135, 47, 0.08);
+        border-radius: 10px;
+        text-align: center;
+      }
+      .cp-breakdown {
+        font-size: clamp(0.82rem, 2.3vw, 0.9rem);
+        line-height: 1.55;
+        color: rgba(61, 34, 19, 0.85);
+        padding: 0 4px;
+      }
+      .cp-breakdown div {
+        display: flex;
+        justify-content: space-between;
+        gap: 8px;
+      }
+      .cp-breakdown__divider {
+        margin: 6px 0;
+        border-top: 1px dashed rgba(61, 34, 19, 0.14);
+        height: 0;
+      }
+      .cp-breakdown__meta {
+        font-size: clamp(0.78rem, 2.1vw, 0.84rem);
+        color: rgba(61, 34, 19, 0.68);
+      }
+      .cp-breakdown__total {
+        font-weight: 800;
+        margin-top: 4px;
+        padding-top: 6px;
+        border-top: 1px solid rgba(61, 34, 19, 0.12);
+      }
+      .cp-breakdown__note {
+        margin: 8px 0 0;
+        font-size: clamp(0.76rem, 2vw, 0.82rem);
+        color: rgba(61, 34, 19, 0.62);
+        line-height: 1.5;
+        text-align: right;
+      }
+      .cp-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 8px;
+      }
+      .cp-photo-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 8px;
+      }
+      .cp-photo-grid img {
+        width: clamp(72px, 22vw, 96px);
+        height: clamp(72px, 22vw, 96px);
+        object-fit: cover;
+        border-radius: 10px;
+        border: 1px solid rgba(61, 34, 19, 0.12);
+      }
+      .cp-photo-hint {
+        margin: 6px 0 0;
+        font-size: clamp(0.78rem, 2.1vw, 0.84rem);
+        color: rgba(61, 34, 19, 0.65);
+        line-height: 1.45;
+      }
+      .cp-schedule-modes {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 6px;
+      }
+      .cp-schedule-modes label {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 44px;
+        padding: 8px 14px;
+        border: 1px solid rgba(61, 34, 19, 0.14);
+        border-radius: 10px;
+        cursor: pointer;
+        font-size: 16px;
+      }
+      .cp-schedule-modes input {
+        width: auto;
+        min-height: auto;
+      }
+      .cp-schedule-fields {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 10px;
+        margin-top: 10px;
+      }
+      .cp-photo-slots {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr));
+        gap: 10px;
+        margin-top: 8px;
+      }
+      .cp-photo-slot {
+        border: 1px dashed rgba(61, 34, 19, 0.2);
+        border-radius: 10px;
+        padding: 10px;
+        background: rgba(255, 255, 255, 0.6);
+      }
+      .cp-photo-slot strong {
+        display: block;
+        font-size: clamp(0.82rem, 2.2vw, 0.9rem);
+        margin-bottom: 6px;
+      }
+      .cp-photo-slot input[type="file"] {
+        font-size: 16px;
+        width: 100%;
+      }
+      .cp-photo-slot img {
+        width: 100%;
+        max-height: 96px;
+        object-fit: cover;
+        border-radius: 8px;
+        margin-top: 6px;
+      }
+      .cp-photo-count {
+        margin-top: 6px;
+        font-size: clamp(0.78rem, 2.1vw, 0.84rem);
+        color: rgba(61, 34, 19, 0.7);
+      }
+      #cpMapModal {
+        position: fixed;
+        inset: 0;
+        background: rgba(26, 18, 12, 0.45);
+        z-index: 2000;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+      }
+      #cpMapModal.open {
+        display: flex;
+      }
+      #cpMapBox {
+        height: min(60vh, 400px);
+      }
+      #cpMapInner {
+        width: min(560px, 100%);
+        background: #fff;
+        border-radius: 14px;
+        overflow: hidden;
+      }
+    </style>
+  </head>
+  <body class="guest-shell-page">
+    <header class="dash-site-header">
+      <div class="dash-site-header__inner">
+        <div class="dash-site-header__brand">
+          <a class="dash-site-header__logo" href="/">
+            ERVENOW
+            <span class="dash-site-header__logo-dot" aria-hidden="true"></span>
+          </a>
+          <p class="dash-site-header__tag" id="guestShellPageTag">تلميع المركبات</p>
+        </div>
+        <nav class="dash-site-header__nav" aria-label="التنقل الرئيسي">
+          <div class="dash-site-header__links">
+            <a class="dash-site-header__link" href="/dashboard" data-nav="guest">منصة ERVENOW</a>
+            <a class="dash-site-header__link" href="/restaurants" data-nav="restaurants">مطاعم</a>
+            <a class="dash-site-header__link" href="/stores" data-nav="stores">متاجر</a>
+            <a class="dash-site-header__link" href="/delivery-services.html" data-nav="delivery">توصيل</a>
+            <a class="dash-site-header__link is-active" href="/services" data-nav="services" aria-current="page">خدمات</a>
+            <a class="dash-site-header__link" href="/" data-nav="home">الرئيسية</a>
+          </div>
+        </nav>
+        <div class="dash-site-header__tools">
+          <a class="dash-header-wallet" id="dashHeaderWallet" href="/wallet.html" hidden aria-label="المحفظة">
+            <span class="dash-header-wallet__label">محفظة</span>
+            <span class="dash-header-wallet__val" id="dashHeaderWalletAmount">—</span>
+            <span class="dash-header-wallet__cur">ر.س</span>
+          </a>
+          <a class="dash-header-cart" href="/checkout" aria-label="السلة — الدفع">
+            <span aria-hidden="true">🛒</span>
+            <span class="dash-header-cart__label">السلة</span>
+            <span class="dash-header-cart__badge" id="cartCount" data-empty="true">0</span>
+          </a>
+        </div>
+        <a class="dash-site-header__btn dash-site-header__btn--primary" href="/login?role=customer" id="switchAccount">دخول الأعضاء</a>
+      </div>
+    </header>
+
+    <div class="dash-main">
+      <div class="layout">
+        <div class="cp-wrap">
+          <h1 class="guest-page-title">أهلاً بكم في خدمة تلميع المركبات من ERVENOW</h1>
+          <p class="cp-page-lead">اختر نوع المركبة والخدمات الإضافية — حدد موقعك لتنفيذ الخدمة</p>
+
+          <div class="card" style="margin-top: 12px">
+            <form class="cp-box" id="cpForm">
+              <div class="cp-section">
+                <div class="cp-vehicle-field">
+                  <label class="cp-vehicle-field__label" for="cpVehicle">نوع المركبة</label>
+                  <div class="cp-vehicle-type-card" id="cpVehicleVisual">
+                    <div class="cp-vehicle-type-card__img">
+                      <img
+                        id="cpVehicleImg"
+                        src="/assets/ervenow-car-sedan.png"
+                        alt="سيدان — مثال لنوع المركبة"
+                        width="112"
+                        height="52"
+                        loading="lazy"
+                        decoding="async"
+                      />
+                    </div>
+                    <div class="cp-vehicle-type-card__select">
+                      <select id="cpVehicle" required aria-label="نوع المركبة">
+                        <option value="sedan">سيدان — 280 ر.س</option>
+                        <option value="jeep">جيب — 350 ر.س</option>
+                        <option value="van">فان — 380 ر.س</option>
+                        <option value="bus">باص — 420 ر.س</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="cp-section">
+                <p class="cp-section__title">تلميع داخلي</p>
+                <p class="cp-section__sub">يشمل: تنظيف داخلي · تنظيف المقاعد · تنظيف السقف · تلميع داخلي (مُضمَّن في السعر الأساسي)</p>
+              </div>
+
+              <div class="cp-section">
+                <p class="cp-section__title">خدمات إضافية</p>
+                <label class="cp-addon" for="cpAddonEngine">
+                  <input type="checkbox" id="cpAddonEngine" />
+                  <span class="cp-addon__text">
+                    <strong>☐ إضافة غسيل وتلميع المحرك</strong>
+                    <span>85 ريال — لكافة أنواع المركبات</span>
+                  </span>
+                </label>
+                <label class="cp-addon" for="cpAddonWheels">
+                  <input type="checkbox" id="cpAddonWheels" />
+                  <span class="cp-addon__text">
+                    <strong>☐ إضافة تلميع الكفرات والجنوط</strong>
+                    <span>60 ريال — لكافة أنواع المركبات</span>
+                  </span>
+                </label>
+                <label class="cp-addon" for="cpAddonExterior">
+                  <input type="checkbox" id="cpAddonExterior" />
+                  <span class="cp-addon__text">
+                    <strong>☐ إضافة غسيل وتلميع البدي الخارجي</strong>
+                    <span>45 ريال — لكافة أنواع المركبات</span>
+                  </span>
+                </label>
+              </div>
+
+              <div class="cp-breakdown" id="cpBreakdown" aria-live="polite"></div>
+              <div class="cp-price" id="cpPrice">السعر: —</div>
+
+              <div class="cp-row">
+                <span class="cp-section__title" style="margin: 0">موعد التنفيذ</span>
+                <div class="cp-schedule-modes">
+                  <label><input type="radio" name="cpScheduleMode" value="immediate" checked /> الآن — تنفيذ فوري</label>
+                  <label><input type="radio" name="cpScheduleMode" value="scheduled" /> موعد مجدول</label>
+                </div>
+                <div class="cp-schedule-fields" id="cpScheduleFields" hidden>
+                  <div>
+                    <label for="cpScheduleDate">التاريخ</label>
+                    <input id="cpScheduleDate" type="date" />
+                  </div>
+                  <div>
+                    <label for="cpScheduleTime">الساعة</label>
+                    <input id="cpScheduleTime" type="time" />
+                  </div>
+                </div>
+                <p class="cp-photo-hint" id="cpScheduleHint">سيتم إرسال الطلب للمزودين المتاحين فوراً.</p>
+              </div>
+
+              <div class="cp-row">
+                <label>صور المركبة (حتى 10)</label>
+                <p class="cp-photo-hint">صورة أمامية · خلفية · جانبية · وصور إضافية اختيارية — تساعد المزود على التحضير.</p>
+                <div class="cp-photo-slots">
+                  <div class="cp-photo-slot">
+                    <strong>أمامية</strong>
+                    <input type="file" id="cpPhotoFront" accept="image/*" />
+                    <img id="cpPreviewFront" alt="" hidden />
+                  </div>
+                  <div class="cp-photo-slot">
+                    <strong>خلفية</strong>
+                    <input type="file" id="cpPhotoBack" accept="image/*" />
+                    <img id="cpPreviewBack" alt="" hidden />
+                  </div>
+                  <div class="cp-photo-slot">
+                    <strong>جانبية</strong>
+                    <input type="file" id="cpPhotoSide" accept="image/*" />
+                    <img id="cpPreviewSide" alt="" hidden />
+                  </div>
+                  <div class="cp-photo-slot">
+                    <strong>صور إضافية</strong>
+                    <input type="file" id="cpPhotoExtra" accept="image/*" multiple />
+                    <div class="cp-photo-grid" id="cpExtraPreview"></div>
+                  </div>
+                </div>
+                <p class="cp-photo-count" id="cpPhotoCount">0 / 10 صور</p>
+              </div>
+
+              <div class="cp-row">
+                <label for="cpNotes">ملاحظات (اختياري)</label>
+                <input id="cpNotes" type="text" maxlength="300" placeholder="مثال: لون المركبة، مكان الوقوف، تعليمات خاصة" />
+              </div>
+
+              <div class="cp-row">
+                <label for="cpDistrict">الحي</label>
+                <input id="cpDistrict" type="text" placeholder="اسم الحي" />
+              </div>
+
+              <div class="cp-row">
+                <label>موقع الخدمة</label>
+                <input id="cpLocation" type="text" readonly placeholder="اضغط لتحديد الموقع على الخريطة" />
+                <div class="cp-actions">
+                  <button type="button" class="btn btn-outline" id="cpBtnMap">تحديد الموقع على الخريطة</button>
+                  <button type="button" class="btn btn-ghost" id="cpBtnGps">موقعي الحالي</button>
+                </div>
+              </div>
+
+              <div class="cp-row">
+                <label for="cpPhone">جوال طالب الخدمة</label>
+                <input id="cpPhone" type="tel" placeholder="05xxxxxxxx" required />
+              </div>
+
+              <p id="cpMsg" class="sub" role="status" style="margin: 0"></p>
+              <button type="button" class="btn btn-solid" id="cpPayCart" style="min-height: 48px">إضافة للسلة والمتابعة للدفع</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="cpMapModal" role="dialog" aria-modal="true" aria-label="تحديد موقع الخدمة">
+      <div id="cpMapInner">
+        <div style="padding: 12px; display: flex; justify-content: space-between; align-items: center; gap: 8px">
+          <strong>حدّد موقع المركبة</strong>
+          <button type="button" class="btn btn-solid" id="cpMapConfirm">تأكيد</button>
+        </div>
+        <div id="cpMapBox"></div>
+      </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="/assets/compressImage.js"></script>
+    <script src="/assets/order-draft-store.js"></script>
+    <script src="/assets/order-draft-vertical.js"></script>
+    <script src="/assets/api-config.js"></script>
+    <script src="/assets/api.js?erv=20260612"></script>
+    <script src="/assets/guestBrowse.js"></script>
+    <script src="/assets/guest-shell.js?erv=20260612"></script>
+    <script>
+      ErvenowGuestShell.init({ activeNav: "services", pageTag: "تلميع المركبات" });
+    </script>
+    <script>
+      (function () {
+        var BASE = { sedan: 280, jeep: 350, van: 380, bus: 420 };
+        var LABELS = { sedan: "سيدان", jeep: "جيب", van: "فان", bus: "باص" };
+        var ADDON_ENGINE = 85;
+        var ADDON_WHEELS = 60;
+        var COMMISSION_RATE = 0.07;
+        var VAT_RATE = 0.15;
+        var VEHICLE_VISUALS = {
+          sedan: {
+            img: "/assets/ervenow-car-sedan.png",
+            alt: "سيدان — مثال لنوع المركبة",
+          },
+          jeep: {
+            img: "/assets/ervenow-car-jeep.png",
+            alt: "جيب — مثال لنوع المركبة",
+          },
+          van: {
+            img: "/assets/ervenow-car-van.png",
+            alt: "فان — مثال لنوع المركبة",
+          },
+          bus: {
+            img: "/assets/ervenow-car-bus.png",
+            alt: "باص — مثال لنوع المركبة",
+          },
+        };
+        var map = null;
+        var marker = null;
+        var MAX_PHOTOS = 10;
+        var photoStore = { front: "", back: "", side: "", extras: [] };
+
+        function scheduleMode() {
+          var checked = document.querySelector('input[name="cpScheduleMode"]:checked');
+          return checked ? checked.value : "immediate";
+        }
+
+        function toggleScheduleFields() {
+          var scheduled = scheduleMode() === "scheduled";
+          var fields = document.getElementById("cpScheduleFields");
+          var hint = document.getElementById("cpScheduleHint");
+          if (fields) fields.hidden = !scheduled;
+          if (hint) {
+            hint.textContent = scheduled
+              ? "اختر التاريخ والساعة المناسبين — مثال: 25/06/2026 الساعة 5:00 مساءً"
+              : "سيتم إرسال الطلب للمزودين المتاحين فوراً.";
+          }
+        }
+
+        function countPhotos() {
+          var n = 0;
+          if (photoStore.front) n += 1;
+          if (photoStore.back) n += 1;
+          if (photoStore.side) n += 1;
+          n += (photoStore.extras || []).length;
+          return n;
+        }
+
+        function updatePhotoCount() {
+          var el = document.getElementById("cpPhotoCount");
+          if (el) el.textContent = countPhotos() + " / " + MAX_PHOTOS + " صور";
+        }
+
+        function showPreview(imgEl, dataUrl) {
+          if (!imgEl) return;
+          if (dataUrl) {
+            imgEl.src = dataUrl;
+            imgEl.hidden = false;
+          } else {
+            imgEl.removeAttribute("src");
+            imgEl.hidden = true;
+          }
+        }
+
+        function renderExtraPreviews() {
+          var wrap = document.getElementById("cpExtraPreview");
+          if (!wrap) return;
+          wrap.innerHTML = (photoStore.extras || [])
+            .map(function (src, i) {
+              return '<img src="' + src + '" alt="صورة إضافية ' + (i + 1) + '" />';
+            })
+            .join("");
+        }
+
+        async function compressFile(file) {
+          if (!file || !window.compressImageToDataUrl) return "";
+          try {
+            return await window.compressImageToDataUrl(file, 0.72, 1200);
+          } catch (e) {
+            return "";
+          }
+        }
+
+        async function handleSlotPhoto(slot, input, previewId) {
+          var file = input && input.files && input.files[0];
+          if (!file) return;
+          var current = countPhotos() - (photoStore[slot] ? 1 : 0);
+          if (current >= MAX_PHOTOS) {
+            alert("الحد الأقصى 10 صور");
+            input.value = "";
+            return;
+          }
+          var dataUrl = await compressFile(file);
+          if (!dataUrl) return;
+          photoStore[slot] = dataUrl;
+          showPreview(document.getElementById(previewId), dataUrl);
+          updatePhotoCount();
+        }
+
+        async function handleExtraPhotos(input) {
+          if (!input || !input.files || !input.files.length) return;
+          var remaining = MAX_PHOTOS - countPhotos() + (photoStore.extras || []).length;
+          var files = Array.prototype.slice.call(input.files, 0, Math.max(0, remaining));
+          var out = [];
+          for (var i = 0; i < files.length; i++) {
+            if (countPhotos() - (photoStore.extras || []).length + out.length >= MAX_PHOTOS) break;
+            var dataUrl = await compressFile(files[i]);
+            if (dataUrl) out.push(dataUrl);
+          }
+          photoStore.extras = out;
+          renderExtraPreviews();
+          updatePhotoCount();
+        }
+
+        function collectVehiclePhotos() {
+          var out = [];
+          if (photoStore.front) out.push({ slot: "front", url: photoStore.front });
+          if (photoStore.back) out.push({ slot: "back", url: photoStore.back });
+          if (photoStore.side) out.push({ slot: "side", url: photoStore.side });
+          (photoStore.extras || []).forEach(function (url) {
+            out.push({ slot: "extra", url: url });
+          });
+          return out.slice(0, MAX_PHOTOS);
+        }
+
+        function resolveScheduledAt() {
+          if (scheduleMode() !== "scheduled") return null;
+          var dateVal = document.getElementById("cpScheduleDate").value;
+          var timeVal = document.getElementById("cpScheduleTime").value;
+          if (!dateVal || !timeVal) return null;
+          var dt = new Date(dateVal + "T" + timeVal);
+          return Number.isNaN(dt.getTime()) ? null : dt.toISOString();
+        }
+
+        document.querySelectorAll('input[name="cpScheduleMode"]').forEach(function (el) {
+          el.addEventListener("change", toggleScheduleFields);
+        });
+        document.getElementById("cpPhotoFront").addEventListener("change", function () {
+          handleSlotPhoto("front", this, "cpPreviewFront").catch(function () {});
+        });
+        document.getElementById("cpPhotoBack").addEventListener("change", function () {
+          handleSlotPhoto("back", this, "cpPreviewBack").catch(function () {});
+        });
+        document.getElementById("cpPhotoSide").addEventListener("change", function () {
+          handleSlotPhoto("side", this, "cpPreviewSide").catch(function () {});
+        });
+        document.getElementById("cpPhotoExtra").addEventListener("change", function () {
+          handleExtraPhotos(this).catch(function () {});
+        });
+        toggleScheduleFields();
+        updatePhotoCount();
+
+        function updateVehicleVisual() {
+          var vehicle = document.getElementById("cpVehicle").value;
+          var row = VEHICLE_VISUALS[vehicle] || VEHICLE_VISUALS.sedan;
+          var img = document.getElementById("cpVehicleImg");
+          if (img) {
+            img.src = row.img;
+            img.alt = row.alt;
+          }
+        }
+
+        function breakdown() {
+          var vehicle = document.getElementById("cpVehicle").value;
+          var base = BASE[vehicle] || 0;
+          var engine = document.getElementById("cpAddonEngine").checked ? ADDON_ENGINE : 0;
+          var wheels = document.getElementById("cpAddonWheels").checked ? ADDON_WHEELS : 0;
+          var exterior = document.getElementById("cpAddonExterior").checked ? ADDON_EXTERIOR : 0;
+          return {
+            vehicle_type: vehicle,
+            base_interior: base,
+            addon_engine_wash: engine,
+            addon_wheels: wheels,
+            addon_exterior: exterior,
+            total: Math.round((base + engine + wheels + exterior) * 100) / 100,
+          };
+        }
+
+        function financialBreakdown(b) {
+          var sub = b.total;
+          var commission = Math.round(sub * COMMISSION_RATE * 100) / 100;
+          var vat = Math.round(sub * VAT_RATE * 100) / 100;
+          var grand = Math.round((sub + vat) * 100) / 100;
+          return {
+            subtotal_ex_vat: sub,
+            platform_commission: commission,
+            provider_net: Math.round((sub - commission) * 100) / 100,
+            vat_amount: vat,
+            total_with_vat: grand,
+          };
+        }
+
+        function updatePrice() {
+          updateVehicleVisual();
+          var b = breakdown();
+          var fin = financialBreakdown(b);
+          var lines = [
+            '<div><span>تلميع داخلي (' + (LABELS[b.vehicle_type] || b.vehicle_type) + ")</span><span>" + b.base_interior.toFixed(2) + " ر.س</span></div>",
+          ];
+          if (b.addon_engine_wash) lines.push('<div><span>غسيل وتلميع المحرك</span><span>+' + b.addon_engine_wash.toFixed(2) + " ر.س</span></div>");
+          if (b.addon_wheels) lines.push('<div><span>تلميع الكفرات والجنوط</span><span>+' + b.addon_wheels.toFixed(2) + " ر.س</span></div>");
+          if (b.addon_exterior) lines.push('<div><span>غسيل وتلميع البدي الخارجي</span><span>+' + b.addon_exterior.toFixed(2) + " ر.س</span></div>");
+          lines.push('<div class="cp-breakdown__divider" role="presentation"></div>');
+          lines.push('<div><span>المجموع (قبل الضريبة)</span><span>' + fin.subtotal_ex_vat.toFixed(2) + " ر.س</span></div>");
+          lines.push(
+            '<div class="cp-breakdown__meta"><span>عمولة المنصة (' + Math.round(COMMISSION_RATE * 100) + "%)</span><span>" + fin.platform_commission.toFixed(2) + " ر.س</span></div>"
+          );
+          lines.push(
+            '<div><span>ضريبة القيمة المضافة (' + Math.round(VAT_RATE * 100) + "%)</span><span>" + fin.vat_amount.toFixed(2) + " ر.س</span></div>"
+          );
+          lines.push(
+            '<div class="cp-breakdown__total"><span>الإجمالي شامل الضريبة</span><span>' + fin.total_with_vat.toFixed(2) + " ر.س</span></div>"
+          );
+          lines.push(
+            '<p class="cp-breakdown__note">عند استلام المبلغ تُستحق ضريبة القيمة المضافة وتُسجَّل عمولة المنصة ' +
+              Math.round(COMMISSION_RATE * 100) +
+              "% من مبلغ الخدمة قبل الضريبة.</p>"
+          );
+          document.getElementById("cpBreakdown").innerHTML = lines.join("");
+          document.getElementById("cpPrice").textContent = "الإجمالي: " + fin.total_with_vat.toFixed(2) + " ر.س (شامل الضريبة)";
+          return Object.assign({}, b, fin);
+        }
+
+        function buildCartItem(photos) {
+          var b = updatePrice();
+          var mode = scheduleMode();
+          var scheduledAt = resolveScheduledAt();
+          var notes = document.getElementById("cpNotes").value.trim();
+          return {
+            type: "car_polishing",
+            title: "تلميع المركبات — " + (LABELS[b.vehicle_type] || b.vehicle_type),
+            price: b.subtotal_ex_vat,
+            scheduled_at: scheduledAt,
+            data: {
+              vehicle_type: b.vehicle_type,
+              addon_engine_wash: !!b.addon_engine_wash,
+              addon_wheels: !!b.addon_wheels,
+              addon_exterior: !!b.addon_exterior,
+              pricing_breakdown: b,
+              platform_commission: b.platform_commission,
+              provider_net: b.provider_net,
+              vat_amount: b.vat_amount,
+              total_with_vat: b.total_with_vat,
+              schedule_mode: mode,
+              scheduled_at: scheduledAt,
+              execution_time: scheduledAt,
+              order_notes: notes,
+              customer_notes: notes,
+              vehicle_photos: photos || [],
+              district: document.getElementById("cpDistrict").value.trim(),
+              location: document.getElementById("cpLocation").value.trim(),
+              customer_phone: document.getElementById("cpPhone").value.trim(),
+              total_amount: b.subtotal_ex_vat,
+            },
+          };
+        }
+
+        function validateForm() {
+          if (scheduleMode() === "scheduled" && !resolveScheduledAt()) {
+            alert("يرجى اختيار التاريخ والساعة للموعد المجدول");
+            return false;
+          }
+          if (!document.getElementById("cpLocation").value.trim()) {
+            alert("يرجى تحديد موقع الخدمة");
+            return false;
+          }
+          var phone = document.getElementById("cpPhone").value.trim();
+          if (!/^05\d{8}$/.test(phone)) {
+            alert("أدخل رقم جوال سعودي صحيح (05xxxxxxxx)");
+            return false;
+          }
+          return true;
+        }
+
+        function showMsg(text, ok) {
+          var el = document.getElementById("cpMsg");
+          el.textContent = text;
+          el.style.color = ok ? "#1b5e20" : "#b71c1c";
+          el.style.fontWeight = "700";
+        }
+
+        async function goCart() {
+          if (!validateForm()) return;
+          var photos = collectVehiclePhotos();
+          var item = buildCartItem(photos);
+          item.customer_phone = document.getElementById("cpPhone").value.trim();
+          item.payment_status = "unpaid";
+          if (item.data) {
+            item.data.payment_mode = "cart";
+            item.data.payment_status = "unpaid";
+          }
+          if (!window.ErvenowOrderDraftVertical || typeof ErvenowOrderDraftVertical.commit !== "function") {
+            showMsg("تعذر تحميل مسودة الطلب — حدّث الصفحة", false);
+            return;
+          }
+          var res = ErvenowOrderDraftVertical.commit(item, {
+            sourcePage: "/car-polishing",
+            vertical: "service",
+            message: "تمت إضافة طلب تلميع المركبات — أكمل تأكيد الطلب",
+          });
+          if (!res.ok) showMsg(res.message || "تعذر الإضافة للمسودة", false);
+          else showMsg(res.message || "تمت الإضافة — انتقل للسلة", true);
+        }
+
+        function openMap() {
+          document.getElementById("cpMapModal").classList.add("open");
+          setTimeout(function () {
+            if (!map) {
+              var center = [24.7136, 46.6753];
+              map = L.map("cpMapBox").setView(center, 11);
+              L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19 }).addTo(map);
+              marker = L.marker(center, { draggable: true }).addTo(map);
+              map.on("click", function (e) {
+                marker.setLatLng(e.latlng);
+              });
+            } else {
+              map.invalidateSize();
+            }
+          }, 80);
+        }
+
+        ["cpVehicle", "cpAddonEngine", "cpAddonWheels", "cpAddonExterior"].forEach(function (id) {
+          document.getElementById(id).addEventListener("change", updatePrice);
+        });
+        document.getElementById("cpPayCart").onclick = goCart;
+        document.getElementById("cpBtnMap").onclick = openMap;
+        document.getElementById("cpMapConfirm").onclick = function () {
+          if (!marker) return;
+          var ll = marker.getLatLng();
+          document.getElementById("cpLocation").value = ll.lat.toFixed(6) + "," + ll.lng.toFixed(6);
+          document.getElementById("cpMapModal").classList.remove("open");
+        };
+        document.getElementById("cpBtnGps").onclick = function () {
+          if (!navigator.geolocation) return alert("المتصفح لا يدعم تحديد الموقع");
+          navigator.geolocation.getCurrentPosition(
+            function (pos) {
+              document.getElementById("cpLocation").value =
+                pos.coords.latitude.toFixed(6) + "," + pos.coords.longitude.toFixed(6);
+            },
+            function () {
+              alert("تعذر تحميل موقعك");
+            }
+          );
+        };
+
+        var vehicleParam = new URLSearchParams(window.location.search).get("vehicle");
+        if (vehicleParam && VEHICLE_VISUALS[String(vehicleParam).toLowerCase()]) {
+          document.getElementById("cpVehicle").value = String(vehicleParam).toLowerCase();
+        }
+
+        updatePrice();
+      })();
+    </script>
+  </body>
+</html>

@@ -1,16 +1,14 @@
 /** تسعير توصيل الغاز — أسطوانات وتعبئة مركزية */
 
-const GAS_CYLINDER_PROVIDER_NET = 37;
-const GAS_CYLINDER_PLATFORM_FEE = 2;
-/** سعر العميل للأسطوانة = 37 مزود + 2 منصة */
-const GAS_CYLINDER_CUSTOMER_UNIT = GAS_CYLINDER_PROVIDER_NET + GAS_CYLINDER_PLATFORM_FEE;
+/** سعر العميل للأسطوانة الواحدة (تبديل) */
+const GAS_CYLINDER_CUSTOMER_UNIT = 38;
 
 /** توافق قديم — سعر أسطوانة واحدة للعميل */
 const CYLINDER_PRICE_ONE = GAS_CYLINDER_CUSTOMER_UNIT;
 /** سعر أسطوانتين للعميل (بدون خصم — نفس الآلية خطية) */
 const CYLINDER_PRICE_TWO = GAS_CYLINDER_CUSTOMER_UNIT * 2;
 
-const CENTRAL_PRICE_PER_LITER = 0.9;
+const CENTRAL_PRICE_PER_LITER = 1;
 const CENTRAL_LITERS = [250, 500, 1000, 2000, 3000, 4000];
 
 function roundMoney(n) {
@@ -34,30 +32,25 @@ function priceCentralRefill(litersRaw) {
   return roundMoney(liters * CENTRAL_PRICE_PER_LITER);
 }
 
+function computeGasPlatformCommission(_gasMode, _qtyRaw, _litersRaw, totalAmount) {
+  const { computePlatformCommission } = require("./platformCommission");
+  return computePlatformCommission(totalAmount);
+}
+
+/** عمولة المنصة لأسطوانة واحدة — 7% من 38 ر.س */
 function computeGasCylinderPlatformFee(qtyRaw) {
-  return roundMoney(normalizeCylinderQty(qtyRaw) * GAS_CYLINDER_PLATFORM_FEE);
+  return computeGasPlatformCommission("cylinder_swap", qtyRaw, null, priceCylinderSwap(qtyRaw));
 }
 
-function computeGasPlatformCommission(gasMode, qtyRaw, _litersRaw, totalAmount) {
-  const mode = String(gasMode || "cylinder_swap").trim().toLowerCase();
-  if (mode === "central_refill" || mode === "bulk") {
-    const { computePlatformCommission } = require("./platformCommission");
-    return computePlatformCommission(totalAmount);
-  }
-  return computeGasCylinderPlatformFee(qtyRaw);
+function gasCylinderProviderNet(qtyRaw, totalAmount) {
+  const total = roundMoney(Number(totalAmount) > 0 ? Number(totalAmount) : priceCylinderSwap(qtyRaw));
+  const commission = computeGasPlatformCommission("cylinder_swap", qtyRaw, null, total);
+  return roundMoney(Math.max(0, total - commission));
 }
 
-function gasCylinderProviderNet(qtyRaw, _totalAmount) {
-  return roundMoney(normalizeCylinderQty(qtyRaw) * GAS_CYLINDER_PROVIDER_NET);
-}
-
-function gasCommissionLabel(gasMode) {
-  const mode = String(gasMode || "cylinder_swap").trim().toLowerCase();
-  if (mode === "central_refill" || mode === "bulk") {
-    const { commissionPercentLabel } = require("./platformCommission");
-    return commissionPercentLabel();
-  }
-  return `${GAS_CYLINDER_PLATFORM_FEE} ر.س / أسطوانة`;
+function gasCommissionLabel(_gasMode) {
+  const { commissionPercentLabel } = require("./platformCommission");
+  return commissionPercentLabel();
 }
 
 function gasServiceLabel(gasMode) {
@@ -80,6 +73,10 @@ function googleMapsUrl(lat, lng) {
   if (!Number.isFinite(Number(lat)) || !Number.isFinite(Number(lng))) return null;
   return `https://www.google.com/maps?q=${lat},${lng}`;
 }
+
+/** حصة مزود أسطوانة واحدة بعد عمولة 7% — للتوافق مع API */
+const GAS_CYLINDER_PLATFORM_FEE = computeGasCylinderPlatformFee(1);
+const GAS_CYLINDER_PROVIDER_NET = gasCylinderProviderNet(1, GAS_CYLINDER_CUSTOMER_UNIT);
 
 module.exports = {
   GAS_CYLINDER_PROVIDER_NET,

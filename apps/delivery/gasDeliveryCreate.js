@@ -11,6 +11,7 @@ const {
 } = require("../../shared/utils/gasDeliveryPricing");
 const { createDeliveryOrderFromBody } = require("./service");
 const { GAS_RADIUS_INITIAL_KM } = require("../../shared/utils/gasDeliveryRadius");
+const { SP_STATUS } = require("../../shared/utils/servicePhaseWorkflow");
 
 function str(v) {
   return String(v == null ? "" : v).trim();
@@ -114,6 +115,7 @@ async function createGasDelivery(sb, appUser, rawBody) {
         payment_method: pay.payment_method,
         gas_radius_km: GAS_RADIUS_INITIAL_KM,
         district: str(dataBlock.district || payload.district || body.district),
+        ...(mode === "cylinder_swap" ? { sp_status: SP_STATUS.NEW } : {}),
       },
     },
     {

@@ -22,6 +22,7 @@ const DRIVER_EXCLUDED_SERVICE_TYPES = new Set([
   "gas_cylinder_swap",
   "gas_central_refill",
   "gas_delivery",
+  "car_polishing",
   "service",
 ]);
 

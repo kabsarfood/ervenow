@@ -22,6 +22,7 @@ const SERVICE_PORTAL_TYPES = new Set([
   "gas_cylinder_swap",
   "gas_central_refill",
   "gas_delivery",
+  "car_polishing",
 ]);
 
 const TRANSPORT_PORTAL_TYPES = new Set([

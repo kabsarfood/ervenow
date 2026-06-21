@@ -36,6 +36,7 @@
       pickup_truck: 1,
       furniture_move: 1,
       gas_delivery: 1,
+      car_polishing: 1,
     };
     if (types[String((item && item.type) || "")]) return "delivery";
     return "service";

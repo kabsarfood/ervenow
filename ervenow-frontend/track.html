@@ -1158,7 +1158,17 @@
         if (!infoEl || !btn) return;
         var isService = String(order && order.service_type || "").toLowerCase() === "internal_delivery";
         var hasParty = order && (order.driver_id || order.provider_id);
-        if (!order || !hasParty) {
+        var isServiceOrder =
+          String(order.order_type || "").toLowerCase() === "service" ||
+          String(order.service_type || "").toLowerCase() === "gas_delivery";
+        var prepaidService = ["car_polishing", "cleaning_villa", "cleaning_building"].includes(
+          String(order.service_type || "").toLowerCase()
+        );
+        var hidePartyUntilPaid =
+          isServiceOrder &&
+          prepaidService &&
+          String(order.payment_status || "").toLowerCase() !== "paid";
+        if (!order || !hasParty || hidePartyUntilPaid) {
           infoEl.textContent = "";
           btn.style.display = "none";
           btn.onclick = null;

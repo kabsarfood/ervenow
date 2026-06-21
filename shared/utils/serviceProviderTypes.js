@@ -7,8 +7,9 @@ const SERVICE_PROVIDER_OPTIONS = [
   { value: "laundry_estates", label: "مغسل فلل وعمائر", panelTitle: "لوحة مغسل الفلل والعمائر", icon: "🧼" },
   { value: "furniture_move", label: "نقل أثاث", panelTitle: "لوحة نقل الأثاث", icon: "🛋️" },
   { value: "agricultural_engineer", label: "مهندس زراعي", panelTitle: "لوحة المهندس الزراعي", icon: "🌾" },
-  { value: "gas_cylinder_swap", label: "تبديل غاز اسطوانات", panelTitle: "لوحة تبديل غاز الاسطوانات", icon: "🔥" },
-  { value: "gas_central_refill", label: "تعبئة غاز مركزي", panelTitle: "لوحة تعبئة الغاز المركزي", icon: "⛽" },
+  { value: "gas_cylinder_swap", label: "مزود تبديل غاز أسطوانات", panelTitle: "لوحة تبديل غاز الاسطوانات", icon: "🔥", registrationDescription: "تبديل وتوصيل أسطوانات الغاز للعملاء." },
+  { value: "gas_central_refill", label: "مزود تعبئة غاز مركزي", panelTitle: "لوحة تعبئة الغاز المركزي", icon: "⛽", registrationDescription: "تعبئة خزانات الغاز للمطاعم والفنادق والمنشآت التجارية." },
+  { value: "car_polishing", label: "مزود تلميع المركبات", panelTitle: "لوحة تلميع المركبات", icon: "🚗", registrationDescription: "خدمات تلميع وتنظيف المركبات في موقع العميل." },
 ];
 
 const ALLOWED_SERVICE_PROVIDER_TYPES = new Set(SERVICE_PROVIDER_OPTIONS.map((o) => o.value));

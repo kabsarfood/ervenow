@@ -2,6 +2,14 @@
 <html lang="ar" dir="rtl">
   <head>
     <meta charset="utf-8" />
+    <script>
+      (function () {
+        var p = new URLSearchParams(location.search);
+        if (String(p.get("service") || "").trim().toLowerCase() === "gas_delivery") {
+          location.replace("/gas-delivery.html");
+        }
+      })();
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover" />
     <script src="/assets/viewport-fit.js?erv=20260612"></script>
     <meta name="theme-color" content="#f8f4ee" />
@@ -1297,7 +1305,7 @@
           furniture: "تفاصيل الطلب",
         };
 
-        var GAS_SMALL_CYLINDER_PRICE = 39;
+        var GAS_SMALL_CYLINDER_PRICE = 38;
         var FURNITURE_RATE_PICKUP = 200;
         var FURNITURE_RATE_DYNA = 600;
 
@@ -1390,6 +1398,10 @@
             .trim()
             .toLowerCase();
           if (!s) return null;
+          if (s === "gas_delivery") {
+            location.replace("/gas-delivery.html");
+            return null;
+          }
           if (s === "pickup_truck" || s === "vehicle_transfer") return "car_transport";
           return s;
         }
@@ -2084,6 +2096,10 @@
               (SERVICE_DESC[s.id] || "") +
               "</span></span>";
             b.onclick = function () {
+              if (s.id === "gas_delivery") {
+                window.location.href = "/gas-delivery.html";
+                return;
+              }
               if (state.service === s.id) {
                 closeServicePicker();
                 return;
@@ -2412,7 +2428,7 @@
             "</div>" +
             "<div class='ds-price-box' style='grid-template-columns:1fr'>" +
             "<div class='ds-price-cell'><span class='ds-price-cell__ic'>🔥</span><p class='ds-price-cell__lbl'>السعر</p>" +
-            "<p class='ds-price-cell__val' id='dsGasPriceVal'>39</p><span class='ds-price-cell__unit'>ريال — أسطوانة صغيرة " +
+            "<p class='ds-price-cell__val' id='dsGasPriceVal'>38</p><span class='ds-price-cell__unit'>ريال — أسطوانة منزلية " +
             GAS_SMALL_CYLINDER_PRICE +
             " ر.س</span></div></div>" +
             "<p id='dsGasEstimate' aria-live='polite'></p>" +

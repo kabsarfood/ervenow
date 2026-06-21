@@ -12,15 +12,25 @@ const { applyPortalTypeToOrderRow } = require("../utils/orderPortalRouting");
 const { normalizeOrderFinancialsForInsert } = require("../utils/orderTotals");
 const { applyProviderIdToInsertRow } = require("../utils/orderProviderId");
 const { computePlatformCommission } = require("../utils/serviceCommission");
-const { computeGasPlatformCommission, gasCylinderProviderNet } = require("../utils/gasDeliveryPricing");
+const { computeGasPlatformCommission } = require("../utils/gasDeliveryPricing");
 const { isHomeServiceType } = require("../utils/homeServicePricing");
+const { validateCarPolishingOrder, carPolishingServiceTitle } = require("../utils/carPolishingPricing");
+const { CP_STATUS } = require("../utils/carPolishingWorkflow");
+const {
+  isServicePhaseOrder,
+  mergeServicePhaseData,
+  SP_STATUS,
+  normalizeServicePhotos,
+  normalizeScheduleMode,
+} = require("../utils/servicePhaseWorkflow");
 const { DELIVERY_STATUS } = require("../domain/orders/constants");
 const { enqueueDeliveryJob } = require("../../queues/deliveryQueue");
 const { notifyProvidersForBooking } = require("./serviceBookingNotify");
+const { notifyCustomer } = require("./notificationEvents");
 const { notifyInternalDeliveryOrder } = require("./internalDeliveryNotify");
 const { sendCustomerOrderPaidWhatsApp } = require("../messages/deliveryCustomerWhatsApp");
 const { logger } = require("../utils/logger");
-const { GAS_RADIUS_INITIAL_KM } = require("../utils/gasDeliveryRadius");
+const { deferServiceProviderDispatch } = require("../utils/serviceOrderPaymentHold");
 
 const SERVICE_ORDER_TYPES = new Set([
   "service",
@@ -39,6 +49,7 @@ const SERVICE_ORDER_TYPES = new Set([
   "pickup_truck",
   "furniture_move",
   "gas_delivery",
+  "car_polishing",
 ]);
 
 function isServiceOrderType(type) {
@@ -79,9 +90,63 @@ async function createServiceOrder(sb, appUser, body) {
     return { ok: false, status: 400, message: "invalid service_type" };
   }
 
-  const total = normalizeMoney(raw.total_amount ?? raw.total ?? raw.price);
+  let total = normalizeMoney(raw.total_amount ?? raw.total ?? raw.price);
   const orderType = resolveOrderType(serviceType);
-  const payloadData = raw.data && typeof raw.data === "object" ? raw.data : {};
+  const payloadData = raw.data && typeof raw.data === "object" ? { ...raw.data } : {};
+  const scheduledAt =
+    raw.scheduled_at ||
+    payloadData.scheduled_at ||
+    payloadData.execution_time ||
+    null;
+
+  if (serviceType === "car_polishing") {
+    const cp = validateCarPolishingOrder({ ...raw, data: payloadData });
+    if (!cp.ok) return { ok: false, status: 400, message: cp.message || "invalid car_polishing order" };
+    if (total > 0 && Math.abs(total - cp.total) > 0.02) {
+      return { ok: false, status: 400, message: "car_polishing price mismatch" };
+    }
+    total = cp.total;
+    if (cp.breakdown) {
+      payloadData.pricing_breakdown = cp.breakdown;
+      payloadData.platform_commission = cp.breakdown.platform_commission;
+      payloadData.vat_amount = cp.breakdown.vat_amount;
+      payloadData.total_with_vat = cp.breakdown.total_with_vat;
+      payloadData.provider_net = cp.breakdown.provider_net;
+      payloadData.vehicle_type = cp.input.vehicle_type;
+      payloadData.addon_engine_wash = cp.input.addon_engine_wash;
+      payloadData.addon_wheels = cp.input.addon_wheels;
+      payloadData.addon_exterior = cp.input.addon_exterior;
+      payloadData.vehicle_photos = cp.input.vehicle_photos || [];
+      payloadData.schedule_mode = cp.input.schedule_mode || "immediate";
+      payloadData.scheduled_at = cp.input.scheduled_at || scheduledAt || null;
+      payloadData.cp_status = CP_STATUS.NEW;
+    }
+  }
+
+  const phaseProbe = {
+    service_type: serviceType,
+    gas_mode: raw.gas_mode || payloadData.gas_mode,
+    data: payloadData,
+  };
+  if (isServicePhaseOrder(phaseProbe)) {
+    payloadData.service_subtype = String(payloadData.service_subtype || raw.service_subtype || "").trim() || null;
+    payloadData.service_photos = normalizeServicePhotos(
+      payloadData.service_photos || raw.service_photos || payloadData.photos || []
+    );
+    payloadData.schedule_mode = normalizeScheduleMode(payloadData.schedule_mode || raw.schedule_mode);
+    payloadData.scheduled_at = payloadData.scheduled_at || scheduledAt || null;
+    payloadData.sp_status = SP_STATUS.NEW;
+  }
+
+  const orderNotes = String(
+    raw.notes || payloadData.order_notes || payloadData.customer_notes || ""
+  ).trim();
+
+  if (isServicePhaseOrder(phaseProbe) && orderNotes) {
+    payloadData.order_notes = orderNotes;
+    payloadData.customer_notes = orderNotes;
+  }
+
   const platformCommission = normalizeMoney(
     raw.platform_commission ??
       (serviceType === "gas_delivery"
@@ -108,6 +173,9 @@ async function createServiceOrder(sb, appUser, body) {
   const dropLng = Number(payloadData.drop_lng);
   const hasPickup = Number.isFinite(pickupLat) && Number.isFinite(pickupLng);
   const hasDrop = Number.isFinite(dropLat) && Number.isFinite(dropLng);
+
+  const heldForPayment = deferServiceProviderDispatch(serviceType, paymentStatus, payloadData);
+  const initialDeliveryStatus = heldForPayment ? DELIVERY_STATUS.DRAFT : DELIVERY_STATUS.NEW;
 
   if (idempotencyKey) {
     try {
@@ -154,8 +222,15 @@ async function createServiceOrder(sb, appUser, body) {
       customer_phone: String(appUser.phone || raw.customer_phone || payloadData.customer_phone || "").trim(),
       order_type: orderType,
       service_type: serviceType,
-      service_name: String(raw.service_name || raw.title || payloadData.shipment_name || serviceType).trim(),
-      delivery_status: DELIVERY_STATUS.NEW,
+      service_name: String(
+        raw.service_name ||
+          raw.title ||
+          payloadData.shipment_name ||
+          (serviceType === "car_polishing" && payloadData.vehicle_type
+            ? carPolishingServiceTitle(payloadData.vehicle_type)
+            : serviceType)
+      ).trim(),
+      delivery_status: initialDeliveryStatus,
       order_number,
       order_total: goodsBase,
       total_amount: total,
@@ -168,7 +243,7 @@ async function createServiceOrder(sb, appUser, body) {
       service_qty: normalizeQty(raw.qty ?? raw.service_qty ?? 1),
       gas_mode: raw.gas_mode || null,
       gas_liters: raw.gas_liters != null ? Number(raw.gas_liters) : null,
-      scheduled_at: raw.scheduled_at || null,
+      scheduled_at: scheduledAt,
       pickup_address: pickupAddress || district || "خدمة منزلية",
       pickup_lat: hasPickup ? pickupLat : null,
       pickup_lng: hasPickup ? pickupLng : null,
@@ -180,16 +255,12 @@ async function createServiceOrder(sb, appUser, body) {
           : null,
       delivery_fee: serviceDeliveryFee,
       idempotency_key: idempotencyKey,
-      notes: String(raw.notes || "").trim() || (noteLines.length ? noteLines.join("\n") : null),
+      notes: orderNotes || (noteLines.length ? noteLines.join("\n") : null),
       data: {
         order_type: orderType,
         service_type: serviceType,
         unified: true,
-        provider_net:
-          serviceType === "gas_delivery" &&
-          String((raw.gas_mode ?? payloadData.gas_mode) || "cylinder_swap").toLowerCase() !== "central_refill"
-            ? gasCylinderProviderNet(raw.qty ?? raw.service_qty ?? payloadData.qty ?? 1, total)
-            : Math.max(0, Math.round((total - platformCommission) * 100) / 100),
+        provider_net: Math.max(0, Math.round((total - platformCommission) * 100) / 100),
         ...(serviceType === "gas_delivery" ? { gas_radius_km: GAS_RADIUS_INITIAL_KM } : {}),
         ...payloadData,
       },
@@ -216,11 +287,28 @@ async function createServiceOrder(sb, appUser, body) {
     if (serviceType === "internal_delivery") {
       await enqueueDeliveryJob("new-order", { orderId: orderData.id });
       await notifyInternalDeliveryOrder(sb, orderData);
-    } else {
+    } else if (!heldForPayment) {
       await notifyProvidersForBooking(sb, orderData);
     }
   } catch (waErr) {
     logger.error({ err: waErr.message || String(waErr), orderId: orderData.id }, "[serviceOrderCreate] notify");
+  }
+
+  if (orderData.customer_id) {
+    try {
+      await notifyCustomer(
+        sb,
+        orderData.customer_id,
+        "customer.order.received",
+        "تم استلام طلبك",
+        heldForPayment
+          ? `تم حفظ طلب ${orderData.service_name || "الخدمة"} رقم ${orderData.order_number || orderData.id} — أكمل الدفع لإرساله لمزوّدي الخدمة.`
+          : `تم استلام طلب ${orderData.service_name || "الخدمة"} رقم ${orderData.order_number || orderData.id} — بانتظار قبول مزود.`,
+        orderData
+      );
+    } catch (notifyErr) {
+      logger.warn({ err: notifyErr.message || String(notifyErr), orderId: orderData.id }, "[serviceOrderCreate] customer received");
+    }
   }
 
   if (paymentStatus === "paid") {

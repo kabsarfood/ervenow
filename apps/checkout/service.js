@@ -69,6 +69,7 @@ function normalizedGroup(typeRaw) {
       "pickup_truck",
       "furniture_move",
       "gas_delivery",
+      "car_polishing",
     ].includes(type)
   ) {
     return "service";
@@ -95,6 +96,7 @@ function labelByType(type) {
     pickup_truck: "ونيت",
     furniture_move: "نقل أثاث",
     gas_delivery: "تبديل غاز",
+    car_polishing: "تلميع المركبات",
     service: "خدمة عامة",
   };
   return map[type] || type || "خدمة";
@@ -222,6 +224,8 @@ async function runCheckoutInsert(sb, appUser, body, options) {
           qty: normalizeQty(data.qty || 1),
           gas_mode: data.gas_mode || null,
           gas_liters: data.gas_liters != null ? Number(data.gas_liters) : null,
+          scheduled_at: data.scheduled_at || data.execution_time || null,
+          notes: String(data.order_notes || data.customer_notes || "").trim() || undefined,
           total_amount: total,
           payment_status: svcPaymentStatus,
           idempotency_key: checkoutIdempotencyKey

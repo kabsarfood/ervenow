@@ -1,10 +1,23 @@
 /** أسعار الخدمات المنزلية (ريال سعودي) — مصدر موحّد للواجهة والـ API */
 const INSPECTION_FEE_SAR = 60;
 
+const SERVICE_IMG_BASE = "/assets/services";
+
 const HOME_SERVICE_CATALOG = {
+  car_polishing: {
+    label: "تلميع المركبات",
+    image: "/assets/ervenow-car-sedan.png",
+    price: 280,
+    priceLabel: "من 280 ريال",
+    payAfterDiagnosis: false,
+    inspectionOnly: false,
+    fixedPrice: true,
+    agreement: false,
+    desc: "تلميع وتنظيف المركبات في موقع العميل — السعر حسب نوع المركبة والإضافات.",
+  },
   plumber: {
     label: "سباك",
-    icon: "🔧",
+    image: SERVICE_IMG_BASE + "/plumber.png",
     price: INSPECTION_FEE_SAR,
     priceLabel: "60 ريال معاينة وتقييم",
     payAfterDiagnosis: true,
@@ -15,7 +28,7 @@ const HOME_SERVICE_CATALOG = {
   },
   electrician: {
     label: "كهربائي",
-    icon: "⚡",
+    image: SERVICE_IMG_BASE + "/electrician.png",
     price: INSPECTION_FEE_SAR,
     priceLabel: "60 ريال معاينة وتقييم",
     payAfterDiagnosis: true,
@@ -26,7 +39,7 @@ const HOME_SERVICE_CATALOG = {
   },
   ac_technician: {
     label: "فني مكيفات",
-    icon: "❄️",
+    image: SERVICE_IMG_BASE + "/ac_technician.png",
     price: INSPECTION_FEE_SAR,
     priceLabel: "60 ريال معاينة وتقييم",
     payAfterDiagnosis: true,
@@ -35,20 +48,9 @@ const HOME_SERVICE_CATALOG = {
     agreement: false,
     desc: "معاينة وتقييم أعطال المكيف — الإصلاح يُحسب عند الموافقة.",
   },
-  nursery: {
-    label: "مشتل",
-    icon: "🪴",
-    price: INSPECTION_FEE_SAR,
-    priceLabel: "60 ريال معاينة وتقييم",
-    payAfterDiagnosis: true,
-    inspectionOnly: true,
-    fixedPrice: false,
-    agreement: false,
-    desc: "معاينة الطلب في الموقع — التنفيذ والتسعير حسب الاتفاق عند الرغبة.",
-  },
   agricultural_engineer: {
     label: "مهندس زراعي",
-    icon: "🌾",
+    image: SERVICE_IMG_BASE + "/agricultural_engineer.png",
     price: INSPECTION_FEE_SAR,
     priceLabel: "60 ريال معاينة وتقييم",
     payAfterDiagnosis: true,
@@ -59,7 +61,7 @@ const HOME_SERVICE_CATALOG = {
   },
   laundry_estates: {
     label: "مغسل فلل وعمائر",
-    icon: "🧼",
+    image: SERVICE_IMG_BASE + "/cleaning_villa.png",
     price: INSPECTION_FEE_SAR,
     priceLabel: "حسب نوع العقار",
     payAfterDiagnosis: false,
@@ -68,20 +70,9 @@ const HOME_SERVICE_CATALOG = {
     agreement: true,
     desc: "غسيل فلل وعمائر — يُحدد السعر بعد المعاينة أو حسب نوع العقار.",
   },
-  pickup_truck: {
-    label: "سائق سطحى",
-    icon: "🛻",
-    price: INSPECTION_FEE_SAR,
-    priceLabel: "حسب المسافة والحمولة",
-    payAfterDiagnosis: false,
-    inspectionOnly: false,
-    fixedPrice: false,
-    agreement: true,
-    desc: "نقل بالسطحية — التسعير حسب الاتفاق والمسافة.",
-  },
   cleaning_villa: {
     label: "غسيل درج فيلا",
-    icon: "🧼",
+    image: SERVICE_IMG_BASE + "/cleaning_villa.png",
     price: 60,
     priceLabel: "60 ريال ثابت",
     payAfterDiagnosis: false,
@@ -92,7 +83,7 @@ const HOME_SERVICE_CATALOG = {
   },
   cleaning_building: {
     label: "غسيل درج عمارة",
-    icon: "🏢",
+    image: SERVICE_IMG_BASE + "/cleaning_building.png",
     price: 120,
     priceLabel: "120 ريال (3 أدوار)",
     payAfterDiagnosis: false,
@@ -111,6 +102,7 @@ const HOME_SERVICE_TYPES = new Set(Object.keys(HOME_SERVICE_CATALOG));
 function normalizeServiceType(t) {
   const key = String(t || "").trim().toLowerCase();
   if (key === "cleaning") return "cleaning_villa";
+  if (key === "nursery") return "agricultural_engineer";
   return key;
 }
 

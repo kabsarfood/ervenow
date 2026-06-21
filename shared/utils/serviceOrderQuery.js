@@ -3,6 +3,17 @@
  */
 
 const { breakdownFromOrder } = require("./orderDisplayFields");
+const {
+  isCarPolishingOrder,
+  resolveCpStatus,
+  cpStatusLabel,
+} = require("./carPolishingWorkflow");
+const {
+  isServicePhaseOrder,
+  resolveSpStatus,
+  spStatusLabel,
+  subtypeLabel,
+} = require("./servicePhaseWorkflow");
 
 const SERVICE_ORDER_TYPES = Object.freeze(["service", "gas_delivery"]);
 
@@ -43,6 +54,22 @@ function orderToBookingView(order) {
     qty: order.service_qty ?? order.qty ?? 1,
   };
   if (Object.keys(breakdown).length) out.breakdown = breakdown;
+  if (isCarPolishingOrder(order)) {
+    out.cp_status = resolveCpStatus(order);
+    out.cp_status_label = cpStatusLabel(out.cp_status);
+    out.schedule_mode = data.schedule_mode || "immediate";
+    out.vehicle_photos = Array.isArray(data.vehicle_photos) ? data.vehicle_photos : [];
+  }
+  if (isServicePhaseOrder(order)) {
+    out.sp_status = resolveSpStatus(order);
+    out.sp_status_label = spStatusLabel(out.sp_status);
+    out.schedule_mode = data.schedule_mode || "immediate";
+    out.service_subtype = data.service_subtype || null;
+    out.service_subtype_label = data.service_subtype
+      ? subtypeLabel(service_type, data.service_subtype)
+      : null;
+    out.service_photos = Array.isArray(data.service_photos) ? data.service_photos : [];
+  }
   return out;
 }
 
