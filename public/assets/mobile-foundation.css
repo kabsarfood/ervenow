@@ -12,7 +12,7 @@
   --erv-plus-fab-bg-deep: #2d1810;
   --erv-mobile-nav-offset: 0;
   --erv-mobile-nav-icon-size: 1rem;
-  --erv-mobile-header-target: 52px;
+  --erv-mobile-header-target: 62px;
 }
 
 /* ——— تفعيل الغلاف ——— */
@@ -50,7 +50,7 @@
     grid-template-rows: unset !important;
     grid-template-areas: unset !important;
     min-height: var(--erv-mobile-header-target);
-    padding: 4px max(12px, env(safe-area-inset-left, 12px)) 6px max(12px, env(safe-area-inset-right, 12px)) !important;
+    padding: 5px max(14px, env(safe-area-inset-left, 14px)) 7px max(14px, env(safe-area-inset-right, 14px)) !important;
   }
 
   body.erv-mobile-foundation .dash-site-header__nav,
@@ -66,7 +66,7 @@
   }
 
   body.erv-mobile-foundation .dash-site-header__logo {
-    font-size: 1.05rem;
+    font-size: 1.26rem;
     line-height: 1.2;
   }
 
@@ -144,7 +144,7 @@
   }
 
   body.erv-mobile-foundation .lp-header__logo-img {
-    max-height: 38px !important;
+    max-height: 46px !important;
     width: auto;
   }
 

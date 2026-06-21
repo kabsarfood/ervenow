@@ -16,7 +16,7 @@
   }
 
   html.erv-mobile-shell body.guest-shell-page {
-    padding-top: var(--erv-mobile-header-h, var(--erv-mobile-header-reserve, 56px));
+    padding-top: var(--erv-mobile-header-h, var(--erv-mobile-header-reserve, 67px));
   }
 
   /* ——— هيدر guest-shell مضغوط فوراً ——— */
@@ -33,9 +33,9 @@
     grid-template-columns: unset !important;
     grid-template-rows: unset !important;
     grid-template-areas: unset !important;
-    min-height: var(--erv-mobile-header-target, 52px);
-    max-height: var(--erv-mobile-header-reserve, 56px);
-    padding: 4px max(12px, env(safe-area-inset-left, 12px)) 6px max(12px, env(safe-area-inset-right, 12px)) !important;
+    min-height: var(--erv-mobile-header-target, 62px);
+    max-height: none;
+    padding: 5px max(14px, env(safe-area-inset-left, 14px)) 7px max(14px, env(safe-area-inset-right, 14px)) !important;
   }
 
   html.erv-mobile-shell .dash-site-header__nav,
@@ -53,11 +53,11 @@
 
   /* ——— هيدر الرئيسية مضغوط فوراً (يتفوق على index-header-banner) ——— */
   html.erv-mobile-shell body.lp-home-premium .lp-header.lp-header--refined {
-    min-height: var(--erv-mobile-header-reserve, 98px);
+    min-height: var(--erv-mobile-header-reserve, 118px);
   }
 
   html.erv-mobile-shell body.lp-home-premium .lp-header.lp-header--refined .lp-header__inner {
-    padding: 4px max(12px, env(safe-area-inset-left, 12px)) 6px max(12px, env(safe-area-inset-right, 12px)) !important;
+    padding: 5px max(14px, env(safe-area-inset-left, 14px)) 7px max(14px, env(safe-area-inset-right, 14px)) !important;
     gap: 0 !important;
   }
 
@@ -69,7 +69,7 @@
     flex-wrap: nowrap !important;
     align-items: center !important;
     row-gap: 0 !important;
-    min-height: var(--erv-mobile-header-target, 52px);
+    min-height: var(--erv-mobile-header-target, 62px);
     width: 100%;
   }
 

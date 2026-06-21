@@ -12,6 +12,8 @@
     <link rel="stylesheet" href="/assets/styles.css" />
     <link rel="stylesheet" href="/assets/guest-shell.css?erv=20260612" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="/assets/ervenow-responsive.css" />
+    <link rel="stylesheet" href="/assets/responsive-audit-base.css" />
     <link rel="stylesheet" href="/assets/register-store-page.css" />
   </head>
   <body class="guest-shell-page reg-store-page">
@@ -35,40 +37,79 @@
       </div>
     </header>
 
-    <div class="guest-section-hero" aria-labelledby="regStoreHeroTitle">
-      <div class="guest-section-hero__inner">
+    <div class="guest-section-hero reg-store-hero" aria-labelledby="regStoreHeroTitle">
+      <div class="guest-section-hero__inner reg-store-hero__inner">
         <p class="guest-section-hero__eyebrow">انضم إلى ERVENOW</p>
         <h1 class="guest-section-hero__title" id="regStoreHeroTitle">تسجيل متجر جديد</h1>
+        <p class="guest-section-hero__sub reg-store-hero__sub">سجّل نشاطك التجاري — نراجع طلبك ونفعّل لوحة التاجر خلال فترة قصيرة.</p>
+        <p class="reg-store-hero__tip">📍 تحديد موقع المتجر بدقة يزيد ظهورك في البحث وفرص البيع.</p>
       </div>
     </div>
 
     <div class="dash-main">
       <div class="layout reg-store-layout reg-store-page">
         <ul class="reg-store-perks" aria-label="مزايا التسجيل">
-          <li class="reg-store-perks__item"><span class="reg-store-perks__ic" aria-hidden="true">✓</span> مراجعة واعتماد الإدارة</li>
-          <li class="reg-store-perks__item"><span class="reg-store-perks__ic" aria-hidden="true">🏪</span> لوحة تحكم للتاجر</li>
-          <li class="reg-store-perks__item"><span class="reg-store-perks__ic" aria-hidden="true">📍</span> نطاق توصيل حسب موقعك</li>
+          <li class="reg-store-perks__item">
+            <span class="reg-store-perks__badge" aria-hidden="true">✓</span>
+            <span class="reg-store-perks__text"><strong>مراجعة واعتماد</strong><span>فريق ERVENOW يراجع طلبك</span></span>
+          </li>
+          <li class="reg-store-perks__item">
+            <span class="reg-store-perks__badge" aria-hidden="true">🏪</span>
+            <span class="reg-store-perks__text"><strong>لوحة تحكم</strong><span>إدارة الطلبات والمنتجات</span></span>
+          </li>
+          <li class="reg-store-perks__item">
+            <span class="reg-store-perks__badge" aria-hidden="true">📍</span>
+            <span class="reg-store-perks__text"><strong>نطاق توصيل</strong><span>حسب موقع متجرك</span></span>
+          </li>
         </ul>
 
-        <div class="reg-store-intro card">
-          <p class="reg-store-intro__lead">تحديد موقع المتجر يزيد من فرص البيع.</p>
-        </div>
+        <nav class="reg-store-progress" aria-label="خطوات التسجيل">
+          <ol class="reg-store-progress__list">
+            <li class="reg-store-progress__step is-current"><span>1</span> البيانات</li>
+            <li class="reg-store-progress__step"><span>2</span> الموقع</li>
+            <li class="reg-store-progress__step"><span>3</span> التوصيل</li>
+            <li class="reg-store-progress__step"><span>4</span> الهوية</li>
+            <li class="reg-store-progress__step"><span>5</span> اختياري</li>
+            <li class="reg-store-progress__step"><span>6</span> الدفع</li>
+          </ol>
+        </nav>
 
         <div class="card reg-store-form-card">
-          <section class="reg-store-section" aria-labelledby="h-store-data">
+          <section class="reg-store-section" id="regStep1" aria-labelledby="h-store-data">
             <div class="reg-store-section__head">
               <span class="reg-store-section__num" aria-hidden="true">1</span>
               <div>
-                <h2 class="reg-store-section__title" id="h-store-data">بيانات المتجر</h2>
+                <div class="reg-store-section__meta">
+                  <h2 class="reg-store-section__title" id="h-store-data">بيانات المتجر</h2>
+                  <span class="reg-store-badge reg-store-badge--req">مطلوب</span>
+                </div>
                 <p class="reg-store-section__hint">الاسم، النشاط، والجوال للتواصل والتفعيل.</p>
               </div>
             </div>
             <label for="name">اسم المتجر</label>
-            <input id="name" type="text" autocomplete="organization" />
+            <input id="name" type="text" autocomplete="organization" placeholder="مثال: مطعم النخبة" />
 
             <div class="field-gap">
-              <label for="type">فئة النشاط</label>
-              <select id="type">
+              <span class="reg-store-field-label" id="storeTypeLabel">فئة النشاط</span>
+              <div class="reg-store-type-grid" id="storeTypePicker" role="radiogroup" aria-labelledby="storeTypeLabel">
+                <button type="button" class="reg-store-type-card is-active" data-type="restaurant" role="radio" aria-checked="true">
+                  <span class="reg-store-type-card__ic" aria-hidden="true">🍽️</span>
+                  <span class="reg-store-type-card__label">مطعم</span>
+                </button>
+                <button type="button" class="reg-store-type-card" data-type="pharmacy" role="radio" aria-checked="false">
+                  <span class="reg-store-type-card__ic" aria-hidden="true">💊</span>
+                  <span class="reg-store-type-card__label">صيدلية</span>
+                </button>
+                <button type="button" class="reg-store-type-card" data-type="supermarket" role="radio" aria-checked="false">
+                  <span class="reg-store-type-card__ic" aria-hidden="true">🛒</span>
+                  <span class="reg-store-type-card__label">سوبرماركت</span>
+                </button>
+                <button type="button" class="reg-store-type-card" data-type="other" role="radio" aria-checked="false">
+                  <span class="reg-store-type-card__ic" aria-hidden="true">🏷️</span>
+                  <span class="reg-store-type-card__label">غيره</span>
+                </button>
+              </div>
+              <select id="type" class="reg-store-type-select-hidden" tabindex="-1" aria-hidden="true">
                 <option value="restaurant">مطعم</option>
                 <option value="pharmacy">صيدلية</option>
                 <option value="supermarket">سوبرماركت</option>
@@ -115,15 +156,19 @@
             </div>
           </section>
 
-          <section class="reg-store-section" aria-labelledby="h-map">
+          <section class="reg-store-section" id="regStep2" aria-labelledby="h-map">
             <div class="reg-store-section__head">
               <span class="reg-store-section__num" aria-hidden="true">2</span>
               <div>
-                <h2 class="reg-store-section__title" id="h-map">الموقع على الخريطة</h2>
+                <div class="reg-store-section__meta">
+                  <h2 class="reg-store-section__title" id="h-map">الموقع على الخريطة</h2>
+                  <span class="reg-store-badge reg-store-badge--req">مطلوب</span>
+                </div>
                 <p class="reg-store-section__hint">الصق رابط موقع متجرك من Google Maps — يُعتمد للخريطة والطلبات والمناديب.</p>
               </div>
             </div>
 
+            <div class="reg-store-map-panel">
             <div class="field-gap reg-store-maps-paste">
               <label for="regStoreMapsUrl">رابط موقع المتجر على Google Maps <span aria-hidden="true">*</span></label>
               <div class="reg-store-maps-paste__row">
@@ -167,13 +212,17 @@
               <label for="address">العنوان التفصيلي</label>
               <textarea id="address" rows="3" placeholder="يُقترح من الخريطة ويمكنك تعديله"></textarea>
             </div>
+            </div>
           </section>
 
-          <section class="reg-store-section" aria-labelledby="h-radius">
+          <section class="reg-store-section" id="regStep3" aria-labelledby="h-radius">
             <div class="reg-store-section__head">
               <span class="reg-store-section__num" aria-hidden="true">3</span>
               <div>
-                <h2 class="reg-store-section__title" id="h-radius">نطاق التوصيل</h2>
+                <div class="reg-store-section__meta">
+                  <h2 class="reg-store-section__title" id="h-radius">نطاق التوصيل</h2>
+                  <span class="reg-store-badge reg-store-badge--req">مطلوب</span>
+                </div>
                 <p class="reg-store-section__hint">المسافة من موقع المتجر التي تغطيها طلبات التوصيل.</p>
               </div>
             </div>
@@ -187,29 +236,45 @@
             </select>
           </section>
 
-          <section class="reg-store-section" aria-labelledby="h-logo">
+          <section class="reg-store-section" id="regStep4" aria-labelledby="h-logo">
             <div class="reg-store-section__head">
               <span class="reg-store-section__num" aria-hidden="true">4</span>
               <div>
-                <h2 class="reg-store-section__title" id="h-logo">شعار المتجر وصورة الغلاف</h2>
+                <div class="reg-store-section__meta">
+                  <h2 class="reg-store-section__title" id="h-logo">شعار المتجر وصورة الغلاف</h2>
+                  <span class="reg-store-badge reg-store-badge--opt">اختياري</span>
+                </div>
                 <p class="reg-store-section__hint">اختياري — تظهر في صفحة المتجر العامة بعد الموافقة.</p>
               </div>
             </div>
-            <div class="field-gap">
-              <label for="logo_file">صورة الشعار</label>
-              <input id="logo_file" type="file" accept="image/*" />
-            </div>
-            <div class="field-gap">
-              <label for="cover_file">صورة الغلاف (بانر أعلى الصفحة)</label>
-              <input id="cover_file" type="file" accept="image/*" />
+            <div class="reg-store-upload-grid">
+              <div class="reg-store-upload">
+                <label class="reg-store-upload__label" for="logo_file">صورة الشعار</label>
+                <div class="reg-store-upload__zone" data-upload-for="logo_file">
+                  <img class="reg-store-upload__preview" id="logoPreview" alt="" hidden />
+                  <span class="reg-store-upload__placeholder" id="logoPlaceholder">📷 اختر شعاراً مربّعاً واضحاً</span>
+                  <input id="logo_file" type="file" accept="image/*" />
+                </div>
+              </div>
+              <div class="reg-store-upload">
+                <label class="reg-store-upload__label" for="cover_file">صورة الغلاف (بانر أعلى الصفحة)</label>
+                <div class="reg-store-upload__zone reg-store-upload__zone--wide" data-upload-for="cover_file">
+                  <img class="reg-store-upload__preview" id="coverPreview" alt="" hidden />
+                  <span class="reg-store-upload__placeholder" id="coverPlaceholder">🖼️ بانر عريض يعكس هوية متجرك</span>
+                  <input id="cover_file" type="file" accept="image/*" />
+                </div>
+              </div>
             </div>
           </section>
 
-          <section class="reg-store-section" aria-labelledby="h-opt">
+          <section class="reg-store-section" id="regStep5" aria-labelledby="h-opt">
             <div class="reg-store-section__head">
               <span class="reg-store-section__num" aria-hidden="true">5</span>
               <div>
-                <h2 class="reg-store-section__title" id="h-opt">بيانات اختيارية</h2>
+                <div class="reg-store-section__meta">
+                  <h2 class="reg-store-section__title" id="h-opt">بيانات اختيارية</h2>
+                  <span class="reg-store-badge reg-store-badge--opt">اختياري</span>
+                </div>
                 <p class="reg-store-section__hint">سجل تجاري وبريد — يمكن إكمالها لاحقاً.</p>
               </div>
             </div>
@@ -230,11 +295,14 @@
             </details>
           </section>
 
-          <section class="reg-store-section" aria-labelledby="h-payout">
+          <section class="reg-store-section" id="regStep6" aria-labelledby="h-payout">
             <div class="reg-store-section__head">
               <span class="reg-store-section__num" aria-hidden="true">6</span>
               <div>
-                <h2 class="reg-store-section__title" id="h-payout">الحساب البنكي ووسائل الدفع</h2>
+                <div class="reg-store-section__meta">
+                  <h2 class="reg-store-section__title" id="h-payout">الحساب البنكي ووسائل الدفع</h2>
+                  <span class="reg-store-badge reg-store-badge--opt">اختياري</span>
+                </div>
                 <p class="reg-store-section__hint">اختياري — لتسوية الأرباح بعد الموافقة.</p>
               </div>
             </div>
@@ -268,6 +336,7 @@
           </section>
 
           <div class="reg-store-submit-wrap">
+            <p class="reg-store-submit__note">بالضغط على «إرسال طلب التسجيل» تؤكد صحة البيانات — سيتواصل معك فريق ERVENOW بعد المراجعة.</p>
             <button type="button" class="btn btn-primary" id="btnSend">إرسال طلب التسجيل</button>
             <div class="msg" id="msg" style="display: none" role="status" aria-live="polite"></div>
           </div>
@@ -288,6 +357,90 @@
     <script src="/assets/guest-shell.js?erv=20260612"></script>
     <script>
       ErvenowGuestShell.init({ activeNav: "home", pageTag: "تسجيل متجر" });
+    </script>
+    <script>
+      (function initRegStoreUi() {
+        var typeSel = document.getElementById("type");
+        var typePicker = document.getElementById("storeTypePicker");
+        if (typePicker && typeSel) {
+          function syncTypeCards() {
+            var v = typeSel.value;
+            typePicker.querySelectorAll(".reg-store-type-card").forEach(function (btn) {
+              var on = btn.getAttribute("data-type") === v;
+              btn.classList.toggle("is-active", on);
+              btn.setAttribute("aria-checked", on ? "true" : "false");
+            });
+          }
+          typePicker.addEventListener("click", function (e) {
+            var btn = e.target.closest(".reg-store-type-card");
+            if (!btn) return;
+            var t = btn.getAttribute("data-type") || "";
+            if (!t || typeSel.value === t) return;
+            typeSel.value = t;
+            syncTypeCards();
+            typeSel.dispatchEvent(new Event("change", { bubbles: true }));
+          });
+          syncTypeCards();
+        }
+
+        function wireUpload(inputId, previewId, placeholderId) {
+          var input = document.getElementById(inputId);
+          var preview = document.getElementById(previewId);
+          var placeholder = document.getElementById(placeholderId);
+          var zone = input && input.closest(".reg-store-upload__zone");
+          if (!input || !zone) return;
+          input.addEventListener("change", function () {
+            var file = input.files && input.files[0];
+            if (!file) {
+              if (preview) {
+                preview.hidden = true;
+                preview.removeAttribute("src");
+              }
+              if (placeholder) placeholder.hidden = false;
+              zone.classList.remove("has-file");
+              return;
+            }
+            var url = URL.createObjectURL(file);
+            if (preview) {
+              preview.src = url;
+              preview.hidden = false;
+            }
+            if (placeholder) placeholder.hidden = true;
+            zone.classList.add("has-file");
+          });
+        }
+        wireUpload("logo_file", "logoPreview", "logoPlaceholder");
+        wireUpload("cover_file", "coverPreview", "coverPlaceholder");
+
+        var steps = Array.prototype.slice.call(document.querySelectorAll(".reg-store-progress__step"));
+        var sections = [
+          document.getElementById("regStep1"),
+          document.getElementById("regStep2"),
+          document.getElementById("regStep3"),
+          document.getElementById("regStep4"),
+          document.getElementById("regStep5"),
+          document.getElementById("regStep6"),
+        ].filter(Boolean);
+        if (steps.length && sections.length && "IntersectionObserver" in window) {
+          var obs = new IntersectionObserver(
+            function (entries) {
+              entries.forEach(function (entry) {
+                if (!entry.isIntersecting || entry.intersectionRatio < 0.35) return;
+                var idx = sections.indexOf(entry.target);
+                if (idx < 0) return;
+                steps.forEach(function (step, i) {
+                  step.classList.toggle("is-current", i === idx);
+                  step.classList.toggle("is-done", i < idx);
+                });
+              });
+            },
+            { root: null, threshold: [0.35, 0.5, 0.65], rootMargin: "-20% 0px -55% 0px" }
+          );
+          sections.forEach(function (sec) {
+            obs.observe(sec);
+          });
+        }
+      })();
     </script>
     <script>
       var latEl = document.getElementById("lat");

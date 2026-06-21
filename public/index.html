@@ -2335,6 +2335,95 @@
         border-radius: 14px;
       }
 
+      /* ——— بطاقة «سجّل الآن» — شريط ذهبي متحرك على الحافة ——— */
+      #register-store-cta {
+        padding-top: clamp(28px, 5vw, 48px);
+        padding-bottom: clamp(28px, 5vw, 48px);
+      }
+
+      #register-store-cta .lp-register-cta {
+        position: relative;
+        max-width: min(580px, 100%);
+        margin: 0 auto;
+        border-radius: clamp(20px, 4vw, 26px);
+        overflow: hidden;
+        box-shadow:
+          0 16px 48px rgba(45, 26, 14, 0.1),
+          0 0 0 1px rgba(201, 162, 39, 0.12);
+      }
+
+      #register-store-cta .lp-register-cta__ring {
+        position: absolute;
+        inset: -70%;
+        background: conic-gradient(
+          from 0deg,
+          rgba(201, 162, 39, 0.08) 0deg 250deg,
+          rgba(232, 197, 71, 0.35) 280deg,
+          #f0d48a 300deg,
+          #c9a227 320deg,
+          #e8c547 340deg,
+          rgba(240, 212, 138, 0.55) 360deg
+        );
+        animation: lpRegisterBorderSpin 4s linear infinite;
+        pointer-events: none;
+      }
+
+      @keyframes lpRegisterBorderSpin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      #register-store-cta .lp-register-cta__panel {
+        position: relative;
+        z-index: 1;
+        margin: 3px;
+        border-radius: calc(clamp(20px, 4vw, 26px) - 3px);
+        padding: clamp(26px, 5vw, 40px) clamp(20px, 4vw, 32px);
+        text-align: center;
+        background: linear-gradient(155deg, rgba(255, 254, 251, 0.99), rgba(248, 241, 229, 0.92));
+      }
+
+      #register-store-cta .lp-register-cta__panel .lp-section__title {
+        margin-bottom: 12px;
+      }
+
+      #register-store-cta .lp-register-cta__panel .lp-section__lead {
+        margin: 0 auto clamp(22px, 4vw, 28px);
+      }
+
+      #register-store-cta .lp-register-cta__btn {
+        min-height: 48px;
+        padding: 14px clamp(28px, 8vw, 40px);
+        font-size: clamp(0.95rem, 2.4vw, 1.05rem);
+      }
+
+      @media (max-width: 640px) {
+        #register-store-cta.lp-wrap {
+          padding-left: max(clamp(18px, 5vw, 24px), env(safe-area-inset-left, 0px));
+          padding-right: max(clamp(18px, 5vw, 24px), env(safe-area-inset-right, 0px));
+        }
+
+        #register-store-cta .lp-register-cta {
+          width: calc(100% - clamp(16px, 5vw, 28px));
+          max-width: calc(100% - clamp(16px, 5vw, 28px));
+          margin-inline: auto;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        #register-store-cta .lp-register-cta__ring {
+          animation: none;
+          inset: 0;
+          background: linear-gradient(
+            135deg,
+            rgba(201, 162, 39, 0.45),
+            rgba(232, 197, 71, 0.25),
+            rgba(201, 162, 39, 0.45)
+          );
+        }
+      }
+
       /* ——— Footer ——— */
       .lp-footer {
         background: linear-gradient(180deg, rgba(61, 34, 19, 0.07), rgba(61, 34, 19, 0.03));
@@ -2963,10 +3052,13 @@
 
     <main>
       <section class="lp-section lp-wrap lp-reveal" id="register-store-cta" aria-labelledby="register-store-title">
-        <h2 class="lp-section__title" id="register-store-title">&#127978; ⚡ ابدأ البيع الآن على ERVENOW</h2>
-        <p class="lp-section__lead">انضم إلى منصة ERVENOW وابدأ استقبال الطلبات من العملاء</p>
-        <div class="lp-contact">
-          <a class="lp-btn-solid" href="/register-store">سجّل الآن</a>
+        <div class="lp-register-cta">
+          <div class="lp-register-cta__ring" aria-hidden="true"></div>
+          <div class="lp-register-cta__panel">
+            <h2 class="lp-section__title" id="register-store-title">&#127978; ⚡ ابدأ البيع الآن على ERVENOW</h2>
+            <p class="lp-section__lead">انضم إلى منصة ERVENOW وابدأ استقبال الطلبات من العملاء</p>
+            <a class="lp-btn-solid lp-register-cta__btn" href="/register-store">سجّل الآن</a>
+          </div>
         </div>
       </section>
 

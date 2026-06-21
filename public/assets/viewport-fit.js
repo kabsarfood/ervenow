@@ -46,9 +46,9 @@
   }
 
   function mobileHeaderReservePx() {
-    if (document.body && document.body.classList.contains("lp-home-premium")) return 56;
-    if (document.body && document.body.classList.contains("guest-shell-page")) return 56;
-    return 56;
+    if (document.body && document.body.classList.contains("lp-home-premium")) return 118;
+    if (document.body && document.body.classList.contains("guest-shell-page")) return 67;
+    return 67;
   }
 
   function applyMobileShellHeaderVars() {
