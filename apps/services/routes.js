@@ -125,6 +125,10 @@ function normalizeQty(v) {
   return Math.max(1, Math.floor(n));
 }
 
+function serviceTypeRequiresProviderGps(serviceType) {
+  return String(serviceType || "").toLowerCase() === "gas_delivery";
+}
+
 async function mergeProviderLocationFromBody(sb, uid, profile, body) {
   const bodyLat = Number(body?.lat);
   const bodyLng = Number(body?.lng);
@@ -875,8 +879,8 @@ router.post("/bookings/:id/reserve", requireAuth, requireServiceProviderRole(), 
     if (String(booking.service_type || "").toLowerCase() === "internal_delivery") {
       return fail(res, "طلبات التوصيل الداخلي للمناديب فقط — استخدم تطبيق المندوب", 403);
     }
-    if (!providerCoords(profile)) {
-      return fail(res, "حدّد موقعك من قائمة البوابة (📍 تحديد الموقع) لاستقبال الطلبات", 403);
+    if (serviceTypeRequiresProviderGps(booking.service_type) && !providerCoords(profile)) {
+      return fail(res, "حدّد موقعك من قائمة البوابة (📍 تحديد الموقع) لاستقبال طلبات الغاز", 403);
     }
     if (!providerMatchesBookingType(providerType, booking.service_type, booking.gas_mode)) {
       return fail(res, "هذا الطلب لا يطابق تخصصك", 403);
@@ -1518,13 +1522,27 @@ router.patch("/me/location", requireAuth, requireServiceProviderRole(), async (r
       .select("id, name, phone, service_type, service_district, lat, lng")
       .maybeSingle();
     if (result.error && isUsersGeoColumnError(result.error)) {
-      return fail(res, "موقع المزود غير مدعوم في قاعدة البيانات بعد", 503);
+      const { data: baseProfile } = await usersQueryResilient(
+        sb,
+        "id, name, phone, service_type, service_district",
+        (q) => q.eq("id", uid),
+        "maybeSingle"
+      );
+      return ok(res, {
+        profile: { ...(baseProfile || {}), lat, lng },
+        lat,
+        lng,
+        geo_persisted: false,
+        message:
+          "تم تفعيل موقعك لهذه الجلسة — نفّذ shared/migration_users_lat_lng.sql لحفظه دائماً في قاعدة البيانات",
+      });
     }
     if (result.error) return fail(res, result.error.message, 400);
     return ok(res, {
       profile: result.data || {},
       lat,
       lng,
+      geo_persisted: true,
       message: "تم تحديث موقعك — الطلبات تُطابَق حسب موقعك وموقع العميل",
     });
   } catch (e) {

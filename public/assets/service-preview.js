@@ -57,6 +57,11 @@
     return String((state.profile && state.profile.service_type) || "").toLowerCase();
   }
 
+  function providerNeedsLiveGps() {
+    var pt = providerServiceType();
+    return pt === "gas_cylinder_swap" || pt === "gas_central_refill";
+  }
+
   function isGasCentralProvider() {
     return providerServiceType() === "gas_central_refill";
   }
@@ -595,26 +600,28 @@
 
   function locationBannerHtml() {
     if (locationReady()) return "";
+    if (!providerNeedsLiveGps()) return "";
     return global.ErvenowPortalProviderLocation && ErvenowPortalProviderLocation.renderBanner
-      ? ErvenowPortalProviderLocation.renderBanner()
+      ? ErvenowPortalProviderLocation.renderBanner({ gasRequired: true })
       : "";
   }
 
   async function activateOrderLocation() {
     var Loc = global.ErvenowPortalProviderLocation;
     if (!Loc) return;
+    var needsGps = providerNeedsLiveGps();
     try {
       if (typeof Loc.ensureForOrders === "function") {
-        await Loc.ensureForOrders("service", state.profile);
-      } else if (typeof Loc.captureAndSave === "function") {
-        await Loc.captureAndSave("service");
+        await Loc.ensureForOrders("service", state.profile, { required: needsGps, silent: true });
       }
-      if (typeof Loc.startPresenceLoop === "function") {
-        Loc.startPresenceLoop("service", 15000);
+      if (Loc.isReady && (Loc.isReady(state.profile) || Loc.isReady())) {
+        if (typeof Loc.startPresenceLoop === "function") {
+          Loc.startPresenceLoop("service", 15000);
+        }
       }
     } catch (e) {
-      if (shell) {
-        shell.showMessage((e && e.message) || "فعّل الموقع من القائمة لاستقبال الطلبات", false);
+      if (needsGps && shell) {
+        shell.showMessage((e && e.message) || "فعّل الموقع من القائمة لاستقبال طلبات الغاز", false);
       }
     }
   }
@@ -882,21 +889,36 @@
     }
   }
 
+  function bookingNeedsProviderGps(booking) {
+    return String((booking && booking.service_type) || "").toLowerCase() === "gas_delivery";
+  }
+
+  async function tryEnsureLocationForReserve(booking) {
+    var Loc = global.ErvenowPortalProviderLocation;
+    if (!Loc) return null;
+    var needsGps = bookingNeedsProviderGps(booking);
+    try {
+      if (typeof Loc.ensureForOrders === "function") {
+        await Loc.ensureForOrders("service", state.profile);
+      } else if (typeof Loc.captureAndSave === "function") {
+        await Loc.captureAndSave("service");
+      }
+    } catch (e) {
+      if (needsGps) throw e;
+    }
+    return Loc.getLastCoords ? Loc.getLastCoords() : null;
+  }
+
   async function reserveBooking(id, btn) {
     if (btn) {
       btn.disabled = true;
       btn.textContent = isCarPolishingProvider() ? "جاري القبول..." : "جاري الحجز...";
     }
     try {
-      var Loc = global.ErvenowPortalProviderLocation;
-      if (Loc) {
-        if (typeof Loc.ensureForOrders === "function") {
-          await Loc.ensureForOrders("service", state.profile);
-        } else if (typeof Loc.captureAndSave === "function") {
-          await Loc.captureAndSave("service");
-        }
-      }
-      var coords = Loc && Loc.getLastCoords ? Loc.getLastCoords() : null;
+      var booking = (state.bookings || []).find(function (b) {
+        return String(b.id) === String(id);
+      });
+      var coords = await tryEnsureLocationForReserve(booking);
       var body = coords ? { lat: coords.lat, lng: coords.lng } : {};
       var j = await api("/api/services/bookings/" + encodeURIComponent(id) + "/reserve", {
         method: "POST",

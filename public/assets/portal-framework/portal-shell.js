@@ -267,10 +267,40 @@
                 closeSidebar();
               })
               .catch(function (e) {
-                showMessage((e && e.message) || "تعذّر تحديد الموقع", false);
+                if (ErvenowPortalProviderLocation.offerManualFallback) {
+                  ErvenowPortalProviderLocation.offerManualFallback(state.role)
+                    .then(function () {
+                      showMessage("تم حفظ موقعك يدوياً", true);
+                      closeSidebar();
+                    })
+                    .catch(function (e2) {
+                      if (String((e2 && e2.message) || "") !== "تم الإلغاء") {
+                        showMessage((e2 && e2.message) || (e && e.message) || "تعذّر تحديد الموقع", false);
+                      }
+                    });
+                } else {
+                  showMessage((e && e.message) || "تعذّر تحديد الموقع", false);
+                }
               });
           } else {
             showMessage("خدمة تحديد الموقع غير متاحة", false);
+          }
+          return;
+        }
+        var locManualBtn = ev.target.closest('[data-pf-action="set-location-manual"]');
+        if (locManualBtn) {
+          ev.preventDefault();
+          if (global.ErvenowPortalProviderLocation && ErvenowPortalProviderLocation.offerManualFallback) {
+            ErvenowPortalProviderLocation.offerManualFallback(state.role)
+              .then(function () {
+                showMessage("تم حفظ موقعك", true);
+                closeSidebar();
+              })
+              .catch(function (e) {
+                if (String((e && e.message) || "") !== "تم الإلغاء") {
+                  showMessage((e && e.message) || "تعذّر حفظ الموقع", false);
+                }
+              });
           }
           return;
         }

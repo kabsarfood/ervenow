@@ -66,9 +66,22 @@ function normDistrictText(s) {
     .replace(/ة/g, "ه");
 }
 
-function districtsMatch(providerDistrict, bookingDistrict) {
+function isLatLngPairText(raw) {
+  const parts = String(raw || "")
+    .split(",")
+    .map((x) => x.trim());
+  if (parts.length < 2) return false;
+  const lat = Number(parts[0]);
+  const lng = Number(parts[1]);
+  return Number.isFinite(lat) && Number.isFinite(lng) && Math.abs(lat) <= 90 && Math.abs(lng) <= 180;
+}
+
+function districtsMatch(providerDistrict, bookingDistrict, bookingLocation) {
   const a = normDistrictText(providerDistrict);
-  const b = normDistrictText(bookingDistrict);
+  let b = normDistrictText(bookingDistrict);
+  if (!b && bookingLocation && !isLatLngPairText(bookingLocation)) {
+    b = normDistrictText(bookingLocation);
+  }
   if (!a) return true;
   if (!b) return false;
   return a === b || a.includes(b) || b.includes(a);
@@ -88,7 +101,7 @@ function providerAreaMatches(providerType, providerArea, bookingDistrict, bookin
   if (t === "pickup_truck") {
     return citiesMatch(providerArea, bookingDistrict, bookingLocation);
   }
-  return districtsMatch(providerArea, bookingDistrict);
+  return districtsMatch(providerArea, bookingDistrict, bookingLocation);
 }
 
 function providerAreaLabel(serviceType) {
