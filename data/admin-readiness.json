@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-06-21T20:08:42.977Z",
+  "updated_at": "2026-06-21T21:41:05.806Z",
   "portal_visits": {
     "customer": {
       "visits": 30,
@@ -17,9 +17,9 @@
       "last_at": "2026-06-21T20:08:42.977Z"
     },
     "service": {
-      "visits": 151,
+      "visits": 153,
       "unique_users": {},
-      "last_at": "2026-06-19T18:31:22.765Z"
+      "last_at": "2026-06-21T21:41:05.806Z"
     },
     "transport": {
       "visits": 109,
@@ -76,9 +76,9 @@
       "last_at": null
     },
     "services-provider": {
-      "visits": 22,
+      "visits": 24,
       "unique_users": {},
-      "last_at": "2026-06-19T11:11:56.612Z"
+      "last_at": "2026-06-21T21:41:05.806Z"
     }
   },
   "redirect_errors": {

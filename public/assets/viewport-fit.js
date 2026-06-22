@@ -7,7 +7,7 @@
   global.__ervViewportReady = true;
 
   /** يُرفَع عند كل تحديث Mobile Shell لإجبار تحميل نسخة جديدة (تجاوز cache الجوال) */
-  var ERV_SHELL_ASSET_VER = "20260623";
+  var ERV_SHELL_ASSET_VER = "20260723";
 
   function shellAssetUrl(path) {
     var p = String(path || "");
@@ -45,17 +45,33 @@
     return !!(document.body && document.body.classList.contains("pf-page"));
   }
 
+  function mobileHeaderFullPx() {
+    return 74;
+  }
+
   function mobileHeaderReservePx() {
-    if (document.body && document.body.classList.contains("lp-home-premium")) return 118;
-    if (document.body && document.body.classList.contains("guest-shell-page")) return 67;
-    return 67;
+    var lift = 0.15;
+    return Math.round(mobileHeaderFullPx() * (1 - lift));
   }
 
   function applyMobileShellHeaderVars() {
+    var header = document.querySelector(".lp-header.lp-header--refined, .dash-site-header");
+    if (header) {
+      var h = Math.ceil(header.getBoundingClientRect().height);
+      if (h > 0) {
+        document.documentElement.style.setProperty("--erv-mobile-header-h", h + "px");
+        document.documentElement.style.setProperty("--erw-header-h", h + "px");
+        document.documentElement.style.setProperty(
+          "--erv-mobile-header-reserve",
+          Math.round(h * (1 - 0.15)) + "px"
+        );
+        return;
+      }
+    }
     var reserve = mobileHeaderReservePx();
     document.documentElement.style.setProperty("--erv-mobile-header-reserve", reserve + "px");
-    document.documentElement.style.setProperty("--erv-mobile-header-h", reserve + "px");
-    document.documentElement.style.setProperty("--erw-header-h", reserve + "px");
+    document.documentElement.style.setProperty("--erv-mobile-header-h", mobileHeaderFullPx() + "px");
+    document.documentElement.style.setProperty("--erw-header-h", mobileHeaderFullPx() + "px");
   }
 
   function injectMobileFoundationCss() {

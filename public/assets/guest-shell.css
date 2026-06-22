@@ -716,17 +716,32 @@ body.guest-shell-page.stores-page {
     padding-bottom: max(8px, env(safe-area-inset-bottom, 0px));
   }
   html.erv-mobile-shell body.guest-shell-page {
-    padding-top: var(--erv-mobile-header-h, var(--erv-mobile-header-reserve, 67px));
+    padding-top: 0;
   }
   html.erv-mobile-shell body.guest-shell-page .dash-site-header {
-    box-shadow: 0 1px 0 rgba(61, 34, 19, 0.08);
+    min-height: var(--erv-mobile-header-target, 62px) !important;
+    position: sticky !important;
+    top: 0;
+    left: auto;
+    right: auto;
+    width: auto;
+    max-width: none;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-inline: 0 !important;
+    background: #f8f4ee !important;
+    border-bottom: 0 !important;
+    box-shadow: 0 1px 0 rgba(61, 34, 19, 0.08) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    transform: none !important;
+    -webkit-transform: none !important;
   }
   html.erv-mobile-shell body.guest-shell-page .dash-site-header__inner {
     display: grid !important;
     grid-template-columns: auto 1fr auto !important;
     grid-template-areas: "logo identity menu" !important;
     align-items: center !important;
-    gap: 10px !important;
+    gap: 8px !important;
     min-height: var(--erv-mobile-header-target, 62px) !important;
     max-height: none !important;
     direction: ltr !important;

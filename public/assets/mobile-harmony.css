@@ -23,9 +23,9 @@
     pointer-events: none !important;
   }
 
-  /* ═══ الرئيسية — lp-header: يسار شعار · وسط هوية · يمين قائمة ═══ */
+  /* ═══ الرئيسية — lp-header: يسار شعار · وسط هوية · يمين قائمة (+25%) ═══ */
   html.erv-mobile-shell body.lp-home-premium .lp-header.lp-header--refined {
-    min-height: var(--erv-mobile-header-target, 62px) !important;
+    min-height: var(--erv-home-header-row, 78px) !important;
   }
 
   html.erv-mobile-shell body.lp-home-premium .lp-header.lp-header--refined .lp-header__inner {
@@ -37,7 +37,7 @@
     grid-template-columns: auto 1fr auto !important;
     grid-template-rows: auto !important;
     align-items: center !important;
-    min-height: var(--erv-mobile-header-target, 62px) !important;
+    min-height: var(--erv-home-header-row, 78px) !important;
     max-height: none !important;
     width: 100%;
     direction: ltr !important;
@@ -82,12 +82,12 @@
   }
 
   html.erv-mobile-shell body.lp-home-premium .lp-header__logo-img {
-    max-height: 43px !important;
+    max-height: var(--erv-home-header-logo, 54px) !important;
     width: auto;
   }
 
   html.erv-mobile-shell body.lp-home-premium .lp-header__brand-mid .lp-brand__name {
-    font-size: 0.92rem !important;
+    font-size: var(--erv-home-header-name, 1.15rem) !important;
     font-weight: 900 !important;
     letter-spacing: 0.05em;
     line-height: 1.15;
@@ -95,7 +95,7 @@
 
   html.erv-mobile-shell body.lp-home-premium .lp-header__brand-mid .lp-brand__tag {
     display: block !important;
-    font-size: 0.68rem !important;
+    font-size: var(--erv-home-header-tag, 0.85rem) !important;
     font-weight: 700 !important;
     color: #b9872f;
     line-height: 1.2;
@@ -122,24 +122,25 @@
   }
 
   html.erv-mobile-shell body.lp-home-premium .lp-header.lp-header--refined .lp-header__inner {
-    padding: 5px max(14px, env(safe-area-inset-left, 14px)) 7px max(14px, env(safe-area-inset-right, 14px)) !important;
+    padding: var(--erv-home-header-pad-top, 6px) max(14px, env(safe-area-inset-left, 14px)) var(--erv-home-header-pad-bottom, 9px)
+      max(14px, env(safe-area-inset-right, 14px)) !important;
     gap: 0 !important;
   }
 
   html.erv-mobile-shell body.lp-home-premium .lp-header.lp-header--refined .lp-header__top-row {
-    gap: 8px !important;
+    gap: 10px !important;
   }
 
   html.erv-mobile-shell body.lp-home-premium .lp-header__logo-slot.lp-header__logo-slot--has-img {
     padding: 0 !important;
-    min-width: 43px;
+    min-width: var(--erv-home-header-logo, 54px);
   }
 
   html.erv-mobile-shell body.lp-home-premium .lp-header__logo-img {
     display: block;
-    width: 43px !important;
-    height: 43px !important;
-    max-height: 43px !important;
+    width: var(--erv-home-header-logo, 54px) !important;
+    height: var(--erv-home-header-logo, 54px) !important;
+    max-height: var(--erv-home-header-logo, 54px) !important;
     object-fit: contain;
   }
 
@@ -155,15 +156,15 @@
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
-    min-width: 44px !important;
-    min-height: 44px !important;
+    min-width: var(--erv-home-header-menu-hit, 55px) !important;
+    min-height: var(--erv-home-header-menu-hit, 55px) !important;
     padding: 0 !important;
     border: 0 !important;
-    border-radius: 12px !important;
+    border-radius: 15px !important;
     background: rgba(61, 34, 19, 0.06) !important;
     box-shadow: none !important;
     font-family: inherit;
-    font-size: 1.35rem;
+    font-size: var(--erv-home-header-menu-icon, 1.69rem);
     line-height: 1;
     color: #3d2213;
     cursor: pointer;
@@ -176,7 +177,7 @@
 
   html.erv-mobile-shell body.lp-home-premium .lp-quick-dd__btn::before {
     content: "☰";
-    font-size: 1.35rem;
+    font-size: var(--erv-home-header-menu-icon, 1.69rem);
     line-height: 1;
     color: #3d2213;
   }
@@ -261,7 +262,31 @@
     }
   }
 
-  /* ═══ guest-shell — هيدر موحّد ═══ */
+  /* ═══ guest-shell — نفس مقاس/مظهر هيدر الرئيسية ═══ */
+  html.erv-mobile-shell body.guest-shell-page {
+    padding-top: 0 !important;
+  }
+
+  html.erv-mobile-shell body.guest-shell-page .dash-site-header {
+    min-height: var(--erv-mobile-header-target, 62px) !important;
+    position: sticky !important;
+    top: 0;
+    left: auto;
+    right: auto;
+    width: auto;
+    max-width: none;
+    z-index: 200;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-inline: 0 !important;
+    background: #f8f4ee !important;
+    border-bottom: 0 !important;
+    box-shadow: 0 1px 0 rgba(61, 34, 19, 0.08) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    transform: none !important;
+    -webkit-transform: none !important;
+  }
+
   html.erv-mobile-shell body.guest-shell-page .dash-site-header__inner {
     display: grid !important;
     grid-template-columns: auto 1fr auto !important;
@@ -272,6 +297,7 @@
     max-height: none !important;
     direction: ltr !important;
     unicode-bidi: isolate !important;
+    padding: 5px max(14px, env(safe-area-inset-left, 14px)) 7px max(14px, env(safe-area-inset-right, 14px)) !important;
   }
 
   html.erv-mobile-shell body.guest-shell-page .dash-site-header__brand {
@@ -424,6 +450,14 @@
     left: auto !important;
     inset-inline-start: auto !important;
     inset-inline-end: auto !important;
+  }
+
+  html.erv-mobile-shell body.erv-typography-pr2-home.lp-home-premium .lp-header__brand-mid .lp-brand__name {
+    font-size: var(--erv-home-header-name, 1.15rem) !important;
+  }
+
+  html.erv-mobile-shell body.erv-typography-pr2-home.lp-home-premium .lp-header__brand-mid .lp-brand__tag {
+    font-size: var(--erv-home-header-tag, 0.85rem) !important;
   }
 }
 
