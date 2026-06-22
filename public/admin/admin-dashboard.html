@@ -34,10 +34,6 @@
         <nav class="dash-site-header__nav" aria-label="التنقل">
           <div class="dash-site-header__links">
             <a class="dash-site-header__link" href="/">الرئيسية</a>
-            <a class="dash-site-header__link admin-nav-pay" href="#" id="adminNavErvenowPay" style="display:none" title="ERVENOW PAY">
-              ⚡ ERVENOW PAY
-              <span class="admin-nav-pay__badge zero" id="navTopupPendingBadge" hidden>0</span>
-            </a>
             <a class="dash-site-header__link is-active" href="/admin-dashboard" aria-current="page">⚙️ لوحة التحكم</a>
           </div>
         </nav>
@@ -70,7 +66,6 @@
       </div>
       <div class="admin-mobile-nav-panel" id="adminMobileNavPanel" hidden>
         <a class="admin-mobile-nav-panel__link" href="/">الرئيسية</a>
-        <a class="admin-mobile-nav-panel__link" href="#" id="adminMobileNavErvenowPay" style="display:none">⚡ ERVENOW PAY</a>
         <a class="admin-mobile-nav-panel__link is-current" href="/admin-dashboard" aria-current="page">⚙️ لوحة التحكم</a>
         <a class="admin-mobile-nav-panel__link" href="/admin/categories">📂 الأقسام</a>
         <button type="button" class="admin-mobile-nav-panel__link admin-mobile-nav-panel__btn" data-proxy-click="adminHeaderOffers">
@@ -1064,16 +1059,7 @@
       (function wireAdminMobileNav() {
         var toggle = document.getElementById("adminMobileNavToggle");
         var panel = document.getElementById("adminMobileNavPanel");
-        var payDesktop = document.getElementById("adminNavErvenowPay");
-        var payMobile = document.getElementById("adminMobileNavErvenowPay");
         if (!toggle || !panel) return;
-        function syncPayVisibility() {
-          if (!payDesktop || !payMobile) return;
-          var show = payDesktop.style.display !== "none";
-          payMobile.style.display = show ? "" : "none";
-        }
-        syncPayVisibility();
-        setInterval(syncPayVisibility, 800);
         toggle.addEventListener("click", function () {
           var willOpen = panel.hidden;
           panel.hidden = !willOpen;

@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-06-21T21:41:05.806Z",
+  "updated_at": "2026-06-22T06:24:16.732Z",
   "portal_visits": {
     "customer": {
       "visits": 30,
@@ -12,9 +12,9 @@
       "last_at": "2026-06-19T12:00:40.637Z"
     },
     "driver": {
-      "visits": 372,
+      "visits": 376,
       "unique_users": {},
-      "last_at": "2026-06-21T20:08:42.977Z"
+      "last_at": "2026-06-22T05:31:24.305Z"
     },
     "service": {
       "visits": 153,
@@ -41,9 +41,9 @@
       "active_users": {}
     },
     "driver": {
-      "visits": 321,
+      "visits": 325,
       "unique_users": {},
-      "last_at": "2026-06-21T20:08:42.977Z",
+      "last_at": "2026-06-22T05:31:24.305Z",
       "active_users": {}
     },
     "service": {

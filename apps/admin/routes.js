@@ -1129,13 +1129,22 @@ router.get("/finance-summary", requireAuth, requireRole("admin"), requireAdminPe
     return ok(res, summary);
   } catch (e) {
     console.error("[admin/finance-summary]", e);
+    const { getSupabaseFetchErrorHint } = require("../../shared/config/supabase");
+    const networkHint = getSupabaseFetchErrorHint(e);
     const detail = String((e && e.message) || e || "");
-    const friendly = /not a function/i.test(detail)
-      ? "خطأ تحميل الملخص المالي — أعد تشغيل الخادم (تم إصلاح تبعية دائرية في النظام)"
-      : detail
-        ? `تعذر جلب الملخص المالي: ${detail}`
-        : "تعذر جلب الملخص المالي";
-    return fail(res, friendly, 500, { reason: "finance_summary_error", detail });
+    const friendly = networkHint
+      ? networkHint
+      : /not a function/i.test(detail)
+        ? "خطأ تحميل الملخص المالي — أعد تشغيل الخادم (تم إصلاح تبعية دائرية في النظام)"
+        : detail
+          ? `تعذر جلب الملخص المالي: ${detail}`
+          : "تعذر جلب الملخص المالي";
+    const status = networkHint ? 503 : 500;
+    return fail(res, friendly, status, {
+      reason: networkHint ? "supabase_network" : "finance_summary_error",
+      detail,
+      code: e && e.cause && e.cause.code ? String(e.cause.code) : null,
+    });
   }
 });
 

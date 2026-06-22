@@ -4,8 +4,8 @@
   "description": "ERVENOW — Platform Core: modular gateway + apps (delivery, food, market, services)",
   "main": "server/server.js",
   "scripts": {
-    "start": "node server/server.js",
-    "dev": "node server/server.js",
+    "start": "node --use-system-ca server/server.js",
+    "dev": "node --use-system-ca server/server.js",
     "worker:delivery": "node workers/deliveryWorker.js",
     "apply:store-branding": "node scripts/apply-store-branding-infra.mjs",
     "frontend:sync": "node scripts/sync-ervenow-frontend.js",
