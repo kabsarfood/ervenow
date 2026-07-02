@@ -164,9 +164,10 @@
         gap: 12px;
         margin-bottom: 10px;
       }
-      .stores-restaurant-cuisine-block__emoji {
-        font-size: 1.65rem;
-        line-height: 1;
+      .stores-restaurant-cuisine-block__thumb {
+        width: clamp(40px, 12vw, 52px);
+        height: clamp(40px, 12vw, 52px);
+        object-fit: contain;
         flex-shrink: 0;
       }
       .stores-restaurant-cuisine-block__title {
@@ -223,6 +224,12 @@
       .stores-cuisine-chip__icon {
         font-size: 1.4rem;
         line-height: 1;
+      }
+      .stores-cuisine-chip__img {
+        width: clamp(28px, 8vw, 36px);
+        height: clamp(28px, 8vw, 36px);
+        object-fit: contain;
+        display: block;
       }
       .stores-cuisine-chip.is-active {
         background: linear-gradient(135deg, #3d2213, #5c3220);
@@ -491,6 +498,39 @@
         gap: 10px;
         margin-bottom: 14px;
       }
+      .svc-order-cards--picked {
+        grid-template-columns: minmax(140px, min(100%, 220px));
+      }
+      .svc-order-back {
+        grid-column: 1 / -1;
+        justify-self: start;
+        min-height: 44px;
+        margin-bottom: 2px;
+        font-family: inherit;
+        font-weight: 700;
+        font-size: 0.88rem;
+        padding: 8px 14px;
+        border-radius: 999px;
+        border: 1px solid rgba(61, 34, 19, 0.12);
+        background: rgba(255, 255, 255, 0.88);
+        color: #5c4638;
+        cursor: pointer;
+      }
+      .svc-order-back:hover {
+        background: #fff;
+      }
+      #svcSubtypeRow[hidden],
+      #svcScheduledRow[hidden] {
+        display: none !important;
+      }
+      .erv-svc-order-sheet .svc-order-cards.svc-order-cards--picked {
+        display: grid !important;
+        grid-template-columns: minmax(120px, 1fr);
+        margin-bottom: 10px;
+      }
+      .erv-svc-order-sheet .svc-order-cards.svc-order-cards--picked .svc-order-back {
+        display: inline-flex !important;
+      }
       .svc-order-card {
         border: 1px solid rgba(61, 34, 19, 0.1);
         border-radius: 14px;
@@ -499,6 +539,9 @@
         cursor: pointer;
         text-align: center;
         font-family: inherit;
+        text-decoration: none;
+        color: inherit;
+        display: block;
         transition: transform 0.15s, box-shadow 0.2s, border-color 0.2s;
       }
       .svc-order-card:hover {
@@ -511,11 +554,13 @@
         color: #fff8ee;
         box-shadow: 0 12px 28px rgba(61, 34, 19, 0.28);
       }
-      .svc-order-card__ic {
-        font-size: 1.5rem;
-        line-height: 1;
+      .svc-order-card__img {
+        width: clamp(52px, 16vw, 72px);
+        height: clamp(52px, 16vw, 72px);
+        object-fit: contain;
         display: block;
-        margin-bottom: 6px;
+        margin: 0 auto 6px;
+        border-radius: 10px;
       }
       .svc-order-card__label {
         font-weight: 800;
@@ -538,13 +583,58 @@
         font-size: 0.86rem;
       }
       .svc-order-form input,
-      .svc-order-form select {
+      .svc-order-form select,
+      .svc-order-form textarea {
         width: 100%;
         padding: 10px 12px;
         border-radius: 10px;
         border: 1px solid rgba(61, 34, 19, 0.12);
         font-family: inherit;
         font-weight: 600;
+      }
+      .svc-order-form textarea {
+        min-height: 88px;
+        resize: vertical;
+        line-height: 1.5;
+      }
+      .svc-schedule-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px 16px;
+      }
+      .svc-radio {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 600;
+        font-size: 0.88rem;
+        cursor: pointer;
+        min-height: 44px;
+      }
+      .svc-radio input {
+        width: 18px;
+        height: 18px;
+        accent-color: #5c3220;
+      }
+      .svc-photo-preview {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 8px;
+      }
+      .svc-photo-preview img {
+        width: 72px;
+        height: 72px;
+        object-fit: cover;
+        border-radius: 10px;
+        border: 1px solid rgba(61, 34, 19, 0.12);
+      }
+      @media (max-width: 640px) {
+        .svc-order-form input,
+        .svc-order-form select,
+        .svc-order-form textarea {
+          font-size: 16px;
+        }
       }
       .svc-order-form__row {
         display: grid;
@@ -667,7 +757,7 @@
       <p class="erv-section-hub__count" id="hubCountLine" aria-live="polite">—</p>
       <div class="stores-restaurant-cuisine-block" id="storesCategoryBlock">
         <div class="stores-restaurant-cuisine-block__head">
-          <span class="stores-restaurant-cuisine-block__emoji" aria-hidden="true">🔧</span>
+          <img class="stores-restaurant-cuisine-block__thumb" src="/assets/services/plumber.png" alt="" loading="lazy" width="52" height="52" />
           <div>
             <p class="stores-restaurant-cuisine-block__title">تصنيفات الخدمات</p>
             <p class="stores-restaurant-cuisine-block__sub">اختر نوع الخدمة — أو «الكل» لعرض جميع مقدّمي الخدمات.</p>
@@ -677,54 +767,9 @@
       </div>
 
       <section class="svc-order-panel" id="svcOrderPanel" aria-labelledby="svcOrderTitle">
-        <h2 class="svc-order-panel__title" id="svcOrderTitle">طلب الخدمة</h2>
-          <p class="svc-order-panel__sub" id="svcOrderSub">اختر نوع الخدمة المناسب — ثم أكمل التفاصيل.</p>
+        <h2 class="svc-order-panel__title" id="svcOrderTitle">احجز خدمة</h2>
+        <p class="svc-order-panel__sub" id="svcOrderSub">اختر نوع الخدمة — ستُفتح صفحة حجز كاملة (مثل تلميع المركبات).</p>
         <div class="svc-order-cards" id="svcOrderCards" role="list"></div>
-        <div id="svcCpPanel" class="svc-cp-panel" hidden>
-          <p class="svc-order-panel__sub" style="margin: 0">اختر نوع المركبة — ثم أكمل: موعد التنفيذ · صور المركبة · الموقع · الدفع.</p>
-          <div class="svc-order-cards" id="svcCpVehicleCards" role="list" aria-label="أنواع المركبات"></div>
-          <div class="svc-cp-addons">
-            <strong>خدمات إضافية (اختياري)</strong>
-            <ul>
-              <li>غسيل وتلميع المحرك — 85 ر.س</li>
-              <li>تلميع الكفرات والجنوط — 60 ر.س</li>
-              <li>غسيل وتلميع البدي الخارجي — 45 ر.س</li>
-            </ul>
-          </div>
-          <div class="svc-cp-actions">
-            <a class="btn btn-primary" href="/car-polishing.html" id="svcCpBookBtn">متابعة طلب التلميع</a>
-            <a class="btn btn-ghost" href="/car-polishing.html">فتح صفحة الحجز الكاملة</a>
-          </div>
-        </div>
-        <div id="svcOrderSuccess" class="svc-order-success" hidden role="status"></div>
-        <form class="svc-order-form" id="svcOrderForm">
-          <div class="svc-order-form__row">
-            <label for="svcDistrict">الحي</label>
-            <input type="text" id="svcDistrict" name="district" placeholder="مثال: العزيزية" required autocomplete="address-level2" />
-          </div>
-          <div class="svc-order-form__row">
-            <label for="svcPhone">رقم الجوال</label>
-            <input type="tel" id="svcPhone" name="phone" placeholder="05XXXXXXXX" required dir="ltr" />
-          </div>
-          <div class="svc-order-form__row">
-            <label for="svcLocation">الموقع (إحداثيات أو وصف)</label>
-            <input type="text" id="svcLocation" name="location" placeholder="اضغط «موقعي» أو اكتب العنوان" />
-            <button type="button" class="btn btn-ghost" id="svcGeoBtn" style="justify-self: start">📍 موقعي الحالي</button>
-          </div>
-          <div class="svc-order-form__row">
-            <label for="svcPayMode">طريقة الدفع</label>
-            <select id="svcPayMode" name="pay_mode">
-              <option value="cart" selected>إضافة للسلة ثم الدفع (موصى به)</option>
-              <option value="on_service">الدفع عند إتمام الخدمة</option>
-              <option value="after_diagnosis">الدفع بعد تقييم العطل</option>
-            </select>
-          </div>
-          <p id="svcPriceHint" class="stores-brand__hint" style="margin: 0; max-width: none"></p>
-          <div class="svc-order-form__actions">
-            <button type="submit" class="btn btn-primary" id="svcSubmitBtn">إضافة للسلة والدفع</button>
-            <a class="btn btn-ghost" href="/checkout" id="svcCartLink" hidden>الذهاب للسلة</a>
-          </div>
-        </form>
       </section>
 
     </div>
@@ -751,25 +796,14 @@
     <script>
       ErvenowGuestShell.init({ activeNav: "services", pageTag: "خدمات منزلية" });
     </script>
+    <script src="/assets/service-book-page.js"></script>
     <script src="/assets/section-hub.js"></script>
-    <script src="/assets/mobile-services-flow.js"></script>
     <script src="/assets/section-hub-services.js"></script>
     <script>
       (function () {
-        var catalog = {};
-        var selectedType = "";
-        var selectedCpVehicle = "sedan";
+        var SB = window.ErvenowServiceBook;
+        var catalog = Object.assign({}, SB && SB.FALLBACK_CATALOG ? SB.FALLBACK_CATALOG : {});
         var cardsEl = document.getElementById("svcOrderCards");
-        var cpPanel = document.getElementById("svcCpPanel");
-        var cpVehicleCards = document.getElementById("svcCpVehicleCards");
-        var cpBookBtn = document.getElementById("svcCpBookBtn");
-        var orderTitle = document.getElementById("svcOrderTitle");
-        var formEl = document.getElementById("svcOrderForm");
-        var successEl = document.getElementById("svcOrderSuccess");
-        var priceHint = document.getElementById("svcPriceHint");
-        var paySel = document.getElementById("svcPayMode");
-        var cartLink = document.getElementById("svcCartLink");
-
         var ORDER_CARD_KEYS = [
           "car_polishing",
           "plumber",
@@ -780,176 +814,15 @@
           "cleaning_building",
         ];
 
-        var CP_VEHICLES = [
-          { id: "sedan", icon: "🚘", label: "سيدان", price: "280 ر.س" },
-          { id: "jeep", icon: "🚙", label: "جيب", price: "350 ر.س" },
-          { id: "van", icon: "🚐", label: "فان", price: "380 ر.س" },
-          { id: "bus", icon: "🚌", label: "باص", price: "420 ر.س" },
-        ];
-        if (paySel) {
-          paySel.addEventListener("change", function () {
-            var submitBtn = document.getElementById("svcSubmitBtn");
-            if (submitBtn) submitBtn.textContent = "إضافة للسلة والدفع";
-          });
-        }
-
-        function servicePriceAmount(type) {
-          var e = entry(type);
-          if (!e) return 60;
-          if (Number.isFinite(Number(e.price))) return Number(e.price);
-          return 60;
-        }
-
-        function buildServiceCartItem(district, phone, location, pay_mode) {
-          var e = entry(selectedType);
-          var amount = servicePriceAmount(selectedType);
-          return {
-            type: selectedType,
-            title: (e && e.label) || selectedType,
-            price: amount,
-            payment_status: "unpaid",
-            customer_phone: phone,
-            data: {
-              district: district,
-              location: location,
-              customer_phone: phone,
-              total_amount: amount,
-              payment_mode: pay_mode,
-              payment_status: "unpaid",
-            },
-          };
-        }
-
-        function validateServiceForm(district, phone, location) {
-          if (!district) {
-            alert("حدد الحي");
-            return false;
-          }
-          if (!/^05\d{8}$/.test(String(phone || "").replace(/\s/g, ""))) {
-            alert("أدخل رقم جوال سعودي صحيح (05xxxxxxxx)");
-            return false;
-          }
-          if (!String(location || "").trim()) {
-            alert("حدد موقع الخدمة");
-            return false;
-          }
-          return true;
-        }
-
-        function entry(type) {
-          return catalog[type] || null;
-        }
-
-        function effectiveType(filter) {
-          var t = String(filter || "").toLowerCase();
-          if (t === "cleaning") t = "cleaning_villa";
-          if (t === "nursery") t = "agricultural_engineer";
-          if (!t || t === "all" || t === "service" || t === "services") return "";
-          if (catalog[t] || t === "car_polishing") return t;
-          if (ORDER_CARD_KEYS.indexOf(t) !== -1) return t;
-          return "";
-        }
-
-        function cpBookUrl(vehicle) {
-          var v = vehicle || selectedCpVehicle || "sedan";
-          return "/car-polishing.html?vehicle=" + encodeURIComponent(v);
-        }
-
-        function goCarPolishingPage(vehicle) {
-          location.href = cpBookUrl(vehicle);
-        }
-
-        function updateCpBookLink() {
-          if (cpBookBtn) cpBookBtn.href = cpBookUrl(selectedCpVehicle);
-        }
-
-        function renderCpVehicleCards() {
-          if (!cpVehicleCards) return;
-          var html = "";
-          for (var i = 0; i < CP_VEHICLES.length; i++) {
-            var row = CP_VEHICLES[i];
-            var on = row.id === selectedCpVehicle;
-            html +=
-              '<button type="button" class="svc-order-card' +
-              (on ? " is-active" : "") +
-              '" data-cp-vehicle="' +
-              row.id +
-              '" role="listitem">' +
-              '<span class="svc-order-card__ic" aria-hidden="true">' +
-              row.icon +
-              "</span>" +
-              '<span class="svc-order-card__label">' +
-              row.label +
-              "</span>" +
-              '<span class="svc-order-card__price">تلميع داخلي — ' +
-              row.price +
-              "</span></button>";
-          }
-          cpVehicleCards.innerHTML = html;
-          updateCpBookLink();
-        }
-
-        function toggleOrderPanels() {
-          var isCp = selectedType === "car_polishing";
-          var hasPick = !!selectedType;
-          if (formEl) formEl.hidden = !hasPick || isCp;
-          if (cpPanel) cpPanel.hidden = !isCp;
-          if (orderTitle) {
-            orderTitle.textContent = !hasPick
-              ? "اختر الخدمة"
-              : isCp
-                ? "طلب تلميع المركبات"
-                : "طلب الخدمة";
-          }
-          if (isCp) {
-            renderCpVehicleCards();
-            if (priceHint) {
-              priceHint.textContent =
-                "تلميع داخلي في موقعك — تنفيذ فوري أو موعد مجدول · حتى 10 صور للمركبة · من " +
-                (CP_VEHICLES[0] && CP_VEHICLES[0].price ? CP_VEHICLES[0].price.replace(" ر.س", "") : "280") +
-                " ر.س للسيدان.";
-            }
-          } else if (!hasPick && priceHint) {
-            priceHint.textContent = "";
-          }
-        }
-
-        function updatePayOptions() {
-          if (!paySel) return;
-          var e = entry(selectedType);
-          var inspect = e && e.inspectionOnly;
-          var fixed = e && e.fixedPrice;
-          for (var i = 0; i < paySel.options.length; i++) {
-            var opt = paySel.options[i];
-            if (opt.value === "after_diagnosis") {
-              opt.hidden = !inspect;
-              opt.textContent = "دفع رسوم المعاينة (60 ريال) عند الزيارة";
-            }
-            if (opt.value === "on_service") {
-              opt.hidden = inspect;
-              opt.disabled = false;
-              opt.textContent = "الدفع عند إتمام الخدمة";
-            }
-          }
-          if (inspect) paySel.value = "after_diagnosis";
-          else paySel.value = "cart";
-          var submitBtn = document.getElementById("svcSubmitBtn");
-          if (submitBtn) submitBtn.textContent = "إضافة للسلة والدفع";
-        }
-
-        function updatePriceHint() {
-          if (!priceHint) return;
-          var e = entry(selectedType);
-          if (!e) {
-            priceHint.textContent = "";
-            return;
-          }
-          priceHint.textContent = e.desc + " — " + (e.priceLabel || "");
+        function bookUrl(type) {
+          if (SB && typeof SB.serviceBookUrl === "function") return SB.serviceBookUrl(type);
+          if (String(type).toLowerCase() === "car_polishing") return "/car-polishing.html";
+          return "/service-book.html?type=" + encodeURIComponent(type);
         }
 
         function renderOrderCards() {
           if (!cardsEl) return;
-          var html = "";
+          var out = "";
           for (var i = 0; i < ORDER_CARD_KEYS.length; i++) {
             var k = ORDER_CARD_KEYS[i];
             var e = catalog[k];
@@ -957,175 +830,47 @@
             if (k === "car_polishing" && !e) {
               e = {
                 label: "تلميع المركبات",
-                icon: "🚗",
+                image: "/assets/ervenow-car-sedan.png",
                 priceLabel: "من 280 ر.س",
               };
             }
             if (!e) continue;
-            var on = k === selectedType;
-            html +=
-              '<button type="button" class="svc-order-card' +
-              (on ? " is-active" : "") +
+            var media =
+              SB && typeof SB.serviceCardImageHtml === "function"
+                ? SB.serviceCardImageHtml(Object.assign({ type: k }, e))
+                : "";
+            out +=
+              '<a class="svc-order-card" href="' +
+              bookUrl(k) +
               '" data-svc-type="' +
               k +
               '" role="listitem">' +
-              '<span class="svc-order-card__ic" aria-hidden="true">' +
-              e.icon +
-              "</span>" +
+              media +
               '<span class="svc-order-card__label">' +
               e.label +
               "</span>" +
               '<span class="svc-order-card__price">' +
               (e.priceLabel || "") +
-              "</span></button>";
+              "</span></a>";
           }
-          cardsEl.innerHTML = html;
-          toggleOrderPanels();
-        }
-
-        function pickTypeFromUrl() {
-          var p = new URLSearchParams(location.search);
-          var raw = String(p.get("type") || "").trim().toLowerCase();
-          if (!raw || raw === "all" || raw === "service" || raw === "services") return "";
-          return effectiveType(raw);
-        }
-
-        window.__svcSelectOrderType = function (filter) {
-          var next = effectiveType(filter);
-          if (filter === "all" || !filter) next = "";
-          if (next === "car_polishing") {
-            goCarPolishingPage();
-            return;
-          }
-          selectedType = next;
-          renderOrderCards();
-          if (selectedType !== "car_polishing") {
-            updatePayOptions();
-            updatePriceHint();
-          }
-        };
-
-        if (cardsEl) {
-          cardsEl.addEventListener("click", function (ev) {
-            var btn = ev.target.closest(".svc-order-card");
-            if (!btn) return;
-            selectedType = btn.getAttribute("data-svc-type") || "";
-            if (selectedType === "car_polishing") {
-              goCarPolishingPage();
-              return;
-            }
-            renderOrderCards();
-            if (selectedType !== "car_polishing") {
-              updatePayOptions();
-              updatePriceHint();
-            }
-          });
-        }
-
-        if (cpVehicleCards) {
-          cpVehicleCards.addEventListener("click", function (ev) {
-            var btn = ev.target.closest("[data-cp-vehicle]");
-            if (!btn) return;
-            selectedCpVehicle = btn.getAttribute("data-cp-vehicle") || "sedan";
-            renderCpVehicleCards();
-          });
-        }
-
-        var geoBtn = document.getElementById("svcGeoBtn");
-        if (geoBtn) {
-          geoBtn.addEventListener("click", function () {
-            if (!navigator.geolocation) {
-              alert("المتصفح لا يدعم تحديد الموقع");
-              return;
-            }
-            geoBtn.disabled = true;
-            navigator.geolocation.getCurrentPosition(
-              function (p) {
-                geoBtn.disabled = false;
-                var loc = document.getElementById("svcLocation");
-                if (loc) loc.value = p.coords.latitude.toFixed(6) + "," + p.coords.longitude.toFixed(6);
-              },
-              function () {
-                geoBtn.disabled = false;
-                alert("تعذر الحصول على الموقع");
-              },
-              { timeout: 12000 }
-            );
-          });
-        }
-
-        if (formEl) {
-          formEl.addEventListener("submit", function (e) {
-            e.preventDefault();
-            var district = document.getElementById("svcDistrict").value.trim();
-            var phone = document.getElementById("svcPhone").value.trim();
-            var location = document.getElementById("svcLocation").value.trim();
-            var pay_mode = paySel ? paySel.value : "cart";
-            var submitBtn = document.getElementById("svcSubmitBtn");
-            if (!validateServiceForm(district, phone, location)) return;
-            if (submitBtn) submitBtn.disabled = true;
-            try {
-              var ci = buildServiceCartItem(district, phone, location, pay_mode);
-              if (!window.ErvenowOrderDraftVertical || typeof ErvenowOrderDraftVertical.commit !== "function") {
-                alert("تعذر تحميل مسودة الطلب — حدّث الصفحة");
-                return;
-              }
-              var draftRes = ErvenowOrderDraftVertical.commit(ci, {
-                sourcePage: "/services",
-                vertical: "service",
-                message: "تمت إضافة الخدمة — أكمل تأكيد الطلب",
-              });
-              if (!draftRes.ok) alert(draftRes.message || "تعذر الإضافة للمسودة");
-            } finally {
-              if (submitBtn) submitBtn.disabled = false;
-            }
-          });
+          cardsEl.innerHTML = out;
         }
 
         function loadCatalog() {
+          renderOrderCards();
           if (!window.PlatformAPI || !PlatformAPI.apiUrl) return;
           fetch(PlatformAPI.apiUrl("/api/services/catalog"))
             .then(function (r) {
               return r.json();
             })
             .then(function (data) {
-              if (data && data.catalog) catalog = data.catalog;
-              var p = new URLSearchParams(location.search);
-              var t = pickTypeFromUrl();
-              if (t === "car_polishing") {
-                goCarPolishingPage();
-                return;
+              if (data && data.catalog) {
+                catalog = Object.assign({}, SB && SB.FALLBACK_CATALOG ? SB.FALLBACK_CATALOG : {}, data.catalog);
               }
-              selectedType = t;
               renderOrderCards();
-              if (selectedType !== "car_polishing") {
-                updatePayOptions();
-                updatePriceHint();
-              }
             })
             .catch(function () {
-              catalog = {
-                plumber: { label: "سباك", icon: "🔧", priceLabel: "60 ريال معاينة وتقييم", inspectionOnly: true, fixedPrice: false, desc: "" },
-                electrician: { label: "كهربائي", icon: "⚡", priceLabel: "60 ريال معاينة وتقييم", inspectionOnly: true, fixedPrice: false, desc: "" },
-                agricultural_engineer: { label: "مهندس زراعي", icon: "🌾", priceLabel: "60 ريال معاينة وتقييم", inspectionOnly: true, fixedPrice: false, desc: "" },
-                ac_technician: { label: "فني مكيفات", icon: "❄️", priceLabel: "60 ريال معاينة وتقييم", inspectionOnly: true, fixedPrice: false, desc: "" },
-                agricultural_engineer: { label: "مهندس زراعي", icon: "🌾", priceLabel: "60 ريال معاينة وتقييم", inspectionOnly: true, fixedPrice: false, desc: "" },
-                cleaning_villa: { label: "غسيل درج فيلا", icon: "🧼", priceLabel: "60 ريال ثابت", inspectionOnly: false, fixedPrice: true, desc: "" },
-                cleaning_building: { label: "غسيل درج عمارة", icon: "🏢", priceLabel: "120 ريال (3 أدوار)", inspectionOnly: false, fixedPrice: true, desc: "" },
-                car_polishing: { label: "تلميع المركبات", icon: "🚗", priceLabel: "من 280 ر.س", inspectionOnly: false, fixedPrice: true, desc: "تلميع وتنظيف المركبات في موقع العميل." },
-              };
-              var p = new URLSearchParams(location.search);
-              var t = pickTypeFromUrl();
-              if (t === "car_polishing") {
-                goCarPolishingPage();
-                return;
-              }
-              selectedType = t;
               renderOrderCards();
-              if (selectedType !== "car_polishing") {
-                updatePayOptions();
-                updatePriceHint();
-              }
             });
         }
 

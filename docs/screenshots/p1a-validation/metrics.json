@@ -1,0 +1,89 @@
+{
+  "viewport": {
+    "w": 390,
+    "h": 844
+  },
+  "viewportMeta": "width=device-width, initial-scale=1, viewport-fit=cover",
+  "hasErvHomeIdentity": false,
+  "hasSnWave": false,
+  "hasTrustId": true,
+  "domOrder": {
+    "bannerBeforeHub": true,
+    "hubBeforeTrust": true
+  },
+  "header": {
+    "top": 0,
+    "bottom": 93,
+    "h": 93,
+    "visiblePct": 100,
+    "inFold": true
+  },
+  "banner": {
+    "hiddenAttr": true
+  },
+  "firstCard": {
+    "top": 228,
+    "bottom": 320,
+    "h": 92,
+    "visiblePct": 100,
+    "inFold": true
+  },
+  "cardsTotal": 4,
+  "cardsInFold": 4,
+  "trust": {
+    "top": 429,
+    "bottom": 554,
+    "h": 125,
+    "visiblePct": 100,
+    "inFold": true
+  },
+  "stats": {
+    "top": 562,
+    "bottom": 579,
+    "h": 17,
+    "visiblePct": 100,
+    "inFold": true
+  },
+  "bottomNav": {
+    "top": 727,
+    "bottom": 834,
+    "h": 107,
+    "visiblePct": 100,
+    "inFold": true
+  },
+  "wordsAboveFold": 43,
+  "wordsSample": [
+    "ERVENOW",
+    "المنصة",
+    "الذكية",
+    "اختر",
+    "ما",
+    "يناسبك",
+    "🍽️",
+    "مطاعم",
+    "🛒",
+    "متاجر",
+    "🚚",
+    "توصيل",
+    "🔧",
+    "خدمات",
+    "⚡",
+    "توصيل",
+    "سريع",
+    "🛡️",
+    "دفع",
+    "آمن",
+    "📍",
+    "تتبع",
+    "لحظي",
+    "💬",
+    "دعم",
+    "فوري",
+    "300+",
+    "طلب",
+    "يومي",
+    "·"
+  ],
+  "interactiveAboveFold": 13,
+  "scrollToFirstCard": 228
+}

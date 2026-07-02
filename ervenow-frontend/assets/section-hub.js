@@ -57,6 +57,19 @@
           '<svg xmlns="http://www.w3.org/2000/svg" width="320" height="200" viewBox="0 0 320 200"><defs><linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#f0ebe3"/><stop offset="100%" stop-color="#e5dcd2"/></linearGradient></defs><rect fill="url(#g)" width="320" height="200"/><text x="50%" y="52%" dominant-baseline="middle" text-anchor="middle" fill="#c9a227" font-family="sans-serif" font-size="18" font-weight="700">ERVENOW</text></svg>'
         );
 
+    function iconSvg(kind) {
+      var paths = {
+        pin: '<path d="M12 21s6-5.1 6-11a6 6 0 1 0-12 0c0 5.9 6 11 6 11Z"/><circle cx="12" cy="10" r="2.2"/>',
+        clock: '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3.2 2"/>',
+        star: '<path d="m12 3.8 2.3 4.7 5.2.8-3.8 3.7.9 5.2L12 15.8l-4.6 2.4.9-5.2-3.8-3.7 5.2-.8L12 3.8Z"/>',
+      };
+      return (
+        '<svg class="store-meta__icon" aria-hidden="true" viewBox="0 0 24 24" fill="none">' +
+        (paths[kind] || paths.star) +
+        "</svg>"
+      );
+    }
+
     var categories = [];
     var allStores = [];
     var activeCategory = cfg.defaultCategory != null ? String(cfg.defaultCategory) : "";
@@ -114,6 +127,9 @@
       categories.forEach(function (c) {
         if (!c || !c.id) return;
         var on = activeCategory === c.id;
+        var chipMedia = c.image
+          ? '<img class="stores-cuisine-chip__img" src="' + esc(c.image) + '" alt="" loading="lazy" />'
+          : '<span class="stores-cuisine-chip__icon" aria-hidden="true">' + esc(c.icon || "▫") + "</span>";
         html +=
           '<button type="button" class="stores-cuisine-chip' +
           (on ? " is-active" : "") +
@@ -121,9 +137,9 @@
           esc(c.id) +
           '" role="tab" aria-selected="' +
           (on ? "true" : "false") +
-          '"><span class="stores-cuisine-chip__icon" aria-hidden="true">' +
-          esc(c.icon || "▫") +
-          "</span><span>" +
+          '">' +
+          chipMedia +
+          "<span>" +
           esc(c.label || c.id) +
           "</span></button>";
       });
@@ -262,9 +278,13 @@
         if (km != null) {
           var eta = etaMinutesFromKm(km);
           metaHtml =
-            '<div class="store-meta"><span>📍 ' +
+            '<div class="store-meta"><span>' +
+            iconSvg("pin") +
+            " " +
             esc(km.toFixed(1)) +
-            ' كم</span><span class="store-meta__dot" aria-hidden="true">·</span><span>⏱ نحو ' +
+            ' كم</span><span class="store-meta__dot" aria-hidden="true">·</span><span>' +
+            iconSvg("clock") +
+            " نحو " +
             esc(String(eta)) +
             " د</span></div>";
         } else if (activeSort === "nearest") {
@@ -274,7 +294,7 @@
 
         var rating =
           store.average_rating != null && Number(store.average_rating) > 0
-            ? '<span>⭐ ' + esc(String(Number(store.average_rating).toFixed(1))) + "</span>"
+            ? "<span>" + iconSvg("star") + " " + esc(String(Number(store.average_rating).toFixed(1))) + "</span>"
             : "";
 
         var logo = store.logo_url || defaultLogo;

@@ -268,10 +268,8 @@ app.applyErvenowPayVisibility = function () {
   var show = app.hasPermission("finance");
   var btn = document.getElementById("panelErvenowPayBtn");
   var panel = document.getElementById("panelErvenowPay");
-  var navLink = document.getElementById("adminNavErvenowPay");
   var heroChip = document.getElementById("adminHeroPayChip");
   if (btn) btn.style.display = show ? "" : "none";
-  if (navLink) navLink.style.display = show ? "" : "none";
   if (heroChip) heroChip.style.display = show ? "" : "none";
   if (panel && !show) panel.style.display = "none";
 };

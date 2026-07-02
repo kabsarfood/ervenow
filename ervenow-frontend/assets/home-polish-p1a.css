@@ -1,0 +1,164 @@
+/**
+ * ERVENOW Platform Polishing — Sprint P1-A (Home)
+ * الحذف قبل الإضافة · Eye Flow · تقليل الكلمات
+ */
+
+/* ——— عنوان واحد للأقسام ——— */
+body.lp-home-premium .sn-section--hub .sn-section__title--solo {
+  margin-bottom: clamp(14px, 3vw, 22px);
+}
+
+body.lp-home-premium .sn-section--hub .sn-section__label {
+  display: none;
+}
+
+body.lp-home-premium #snHomeHub .sn-card__arrow {
+  display: none !important;
+}
+
+body.lp-home-premium #snHomeHub .sn-card__desc {
+  font-size: 0.82rem;
+  line-height: 1.45;
+  text-align: center;
+  color: var(--sn-muted, #5c4a3d);
+}
+
+/* ——— شريط الثقة: بعد البطاقات · أخف ——— */
+body.lp-home-premium .sn-section--hub .sn-trust {
+  margin-top: clamp(16px, 3.5vw, 24px);
+  margin-bottom: 0;
+  padding: clamp(14px, 3vw, 20px) clamp(12px, 3vw, 20px);
+}
+
+/* ——— أرقام مدمجة (بدل 3 بطاقات) ——— */
+body.lp-home-premium .sn-stats {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px 10px;
+  margin: clamp(12px, 2.5vw, 18px) auto 0;
+  padding: 0;
+  max-width: 640px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--sn-muted, #5c4a3d);
+  line-height: 1.5;
+  text-align: center;
+}
+
+body.lp-home-premium .sn-stats__item strong {
+  font-weight: 900;
+  color: var(--sn-gold, #b9872f);
+}
+
+body.lp-home-premium .sn-stats__sep {
+  opacity: 0.45;
+  user-select: none;
+}
+
+/* ——— أقسام سفلية: أقل فراغ ——— */
+body.lp-home-premium main .lp-section {
+  padding-top: clamp(28px, 5vw, 44px);
+  padding-bottom: clamp(28px, 5vw, 44px);
+}
+
+body.lp-home-premium main .lp-section__lead {
+  display: none;
+}
+
+body.lp-home-premium .lp-why__grid--compact .lp-why-item p {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
+body.lp-home-premium .lp-contact {
+  text-align: center;
+}
+
+body.lp-home-premium .lp-contact p {
+  display: none;
+}
+
+body.lp-home-premium #register-store-cta .lp-register-cta__panel .lp-section__lead {
+  display: none;
+}
+
+/* ——— Desktop: بطاقات أوضح · ثقة مضغوطة ——— */
+@media (min-width: 641px) {
+  body.lp-home-premium .sn-section--hub {
+    padding-top: clamp(20px, 3.5vw, 28px);
+    padding-bottom: clamp(24px, 4vw, 36px);
+  }
+
+  body.lp-home-premium #snHomeHub .sn-card {
+    padding: clamp(18px, 3vw, 24px) 14px 20px;
+    gap: 10px;
+  }
+
+  body.lp-home-premium #snHomeHub .sn-card__desc {
+    display: block;
+  }
+}
+
+/* ——— جوال: Eye Flow — بطاقات أولاً ——— */
+@media (max-width: 640px), ((max-width: 932px) and (max-height: 500px) and (pointer: coarse)) {
+  html.erv-mobile-shell body.lp-home-premium .sn-section--hub .sn-section__title--solo {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  html.erv-mobile-shell body.lp-home-premium .sn-section--hub {
+    margin-top: clamp(6px, 1.8vw, 10px);
+    padding: clamp(10px, 2.8vw, 14px) max(12px, env(safe-area-inset-left, 12px)) 8px
+      max(12px, env(safe-area-inset-right, 12px)) !important;
+  }
+
+  html.erv-mobile-shell body.lp-home-premium .sn-section--hub > #snHomeHub {
+    order: 1;
+    margin-top: 0;
+  }
+
+  html.erv-mobile-shell body.lp-home-premium .sn-section--hub > .sn-trust {
+    order: 2;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    margin-top: 10px;
+    overflow: visible;
+    flex-wrap: wrap;
+  }
+
+  html.erv-mobile-shell body.lp-home-premium .sn-section--hub > .sn-trust .sn-trust__item {
+    width: 100%;
+    justify-content: center;
+    font-size: 0.68rem;
+    min-height: 36px;
+    padding: 8px 6px;
+    white-space: normal;
+    text-align: center;
+  }
+
+  html.erv-mobile-shell body.lp-home-premium .sn-section--hub > .sn-stats {
+    order: 3;
+    margin-top: 8px;
+    font-size: 0.72rem;
+  }
+
+  html.erv-mobile-shell body.lp-home-premium .sn-section--hub {
+    display: flex;
+    flex-direction: column;
+  }
+
+  html.erv-mobile-shell body.lp-home-premium #snHomeHub .sn-card__desc {
+    display: none !important;
+  }
+}

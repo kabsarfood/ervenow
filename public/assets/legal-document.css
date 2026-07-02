@@ -1,0 +1,100 @@
+/* ERVENOW — صفحات السياسات القانونية */
+.legal-doc {
+  max-width: min(720px, 100%);
+  margin: 0 auto;
+  padding: clamp(20px, 4vw, 32px) 0 clamp(40px, 8vw, 64px);
+}
+
+.legal-doc__meta {
+  margin: 0 0 clamp(20px, 4vw, 28px);
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--muted, rgba(61, 34, 19, 0.72));
+  line-height: 1.55;
+}
+
+.legal-doc__lead {
+  margin: 0 0 clamp(24px, 5vw, 32px);
+  font-size: clamp(0.95rem, 2.4vw, 1.05rem);
+  font-weight: 600;
+  line-height: 1.75;
+  color: var(--brown, #3d2213);
+}
+
+.legal-doc__section {
+  margin: 0 0 clamp(22px, 4vw, 28px);
+  padding: clamp(18px, 4vw, 24px);
+  border-radius: 16px;
+  background: rgba(255, 254, 251, 0.92);
+  border: 1px solid rgba(61, 34, 19, 0.1);
+  box-shadow: 0 4px 18px rgba(45, 26, 14, 0.04);
+}
+
+.legal-doc__section h2 {
+  margin: 0 0 12px;
+  font-size: clamp(1.05rem, 2.6vw, 1.15rem);
+  font-weight: 800;
+  line-height: 1.45;
+  color: var(--brown, #3d2213);
+}
+
+.legal-doc__section p {
+  margin: 0 0 10px;
+  font-size: clamp(0.9rem, 2.2vw, 0.96rem);
+  font-weight: 600;
+  line-height: 1.75;
+  color: rgba(61, 34, 19, 0.88);
+}
+
+.legal-doc__section p:last-child {
+  margin-bottom: 0;
+}
+
+.legal-doc__list {
+  margin: 0;
+  padding: 0 1.15em 0 0;
+  list-style: disc;
+}
+
+.legal-doc__list li {
+  margin: 0 0 8px;
+  font-size: clamp(0.9rem, 2.2vw, 0.96rem);
+  font-weight: 600;
+  line-height: 1.7;
+  color: rgba(61, 34, 19, 0.88);
+}
+
+.legal-doc__list li:last-child {
+  margin-bottom: 0;
+}
+
+.legal-doc__back {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  margin-bottom: 16px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--gold, #b9872f);
+  text-decoration: none;
+}
+
+.legal-doc__back:hover {
+  text-decoration: underline;
+}
+
+.legal-doc__golden {
+  border-color: rgba(185, 135, 47, 0.28);
+  background: linear-gradient(155deg, rgba(255, 254, 251, 0.98), rgba(248, 241, 229, 0.92));
+}
+
+.legal-doc__golden h2 {
+  color: var(--gold, #b9872f);
+}
+
+@media (max-width: 640px) {
+  .legal-doc__section {
+    padding: 16px;
+    border-radius: 14px;
+  }
+}

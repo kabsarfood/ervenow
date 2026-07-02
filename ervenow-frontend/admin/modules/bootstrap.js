@@ -163,16 +163,6 @@ if (closeBtn) {
       if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
     });
   }
-  var payHeader = document.getElementById("adminNavErvenowPay");
-  if (payHeader) {
-    payHeader.addEventListener("click", function (e) {
-      e.preventDefault();
-      app.showPanel("panelErvenowPay");
-      void app.loadErvenowPayPanel();
-      var el = document.getElementById("panelErvenowPay");
-      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
-    });
-  }
   app.setupExecUi();
   app.initAdminDashboardSocket();
   app.startAdminAlertsTimer();

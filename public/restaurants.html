@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <script src="/assets/viewport-fit.js?erv=20260612"></script>
     <title>ERVENOW | اكتشف المطاعم</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -494,6 +494,7 @@
     <link rel="stylesheet" href="/assets/erv-interactive-surfaces.css?erv=20260612" />
     <link rel="stylesheet" href="/assets/design-system/erv-typography-pr1-tokens.css" />
     <link rel="stylesheet" href="/assets/design-system/erv-typography-guest-hub-pr1.css" />
+    <link rel="stylesheet" href="/assets/restaurants-polish.css?erv=20260701" />
   </head>
   <body class="guest-shell-page stores-page restaurants-page erv-typography-pr1-guest-hub">
     <header class="dash-site-header">
@@ -522,7 +523,12 @@
             <span class="dash-header-wallet__cur">ر.س</span>
           </a>
           <a class="dash-header-cart" href="/checkout" aria-label="السلة — الدفع">
-            <span aria-hidden="true">🛒</span>
+            <svg aria-hidden="true" class="dash-header-cart__icon" viewBox="0 0 24 24" fill="none">
+              <path d="M6.2 6.5h14l-1.4 7.1a2 2 0 0 1-2 1.6H9.3a2 2 0 0 1-2-1.7L6.2 6.5Z" />
+              <path d="M6.2 6.5 5.7 4H3.8" />
+              <circle cx="9.7" cy="19" r="1.2" />
+              <circle cx="17.2" cy="19" r="1.2" />
+            </svg>
             <span class="dash-header-cart__label">السلة</span>
             <span class="dash-header-cart__badge" id="cartCount" data-empty="true">0</span>
           </a>
@@ -557,18 +563,23 @@
         />
       </div>
       <div class="erv-section-hub__sort" id="hubSortBar" role="group" aria-label="ترتيب النتائج">
-        <button type="button" class="erv-section-hub__sort-btn" data-sort="nearest">📍 الأقرب</button>
-        <button type="button" class="erv-section-hub__sort-btn is-active" data-sort="rating">⭐ الأعلى تقييماً</button>
-        <button type="button" class="erv-section-hub__sort-btn" data-sort="offers">🎁 عروض</button>
+        <button type="button" class="erv-section-hub__sort-btn" data-sort="nearest">الأقرب</button>
+        <button type="button" class="erv-section-hub__sort-btn is-active" data-sort="rating">الأعلى تقييماً</button>
+        <button type="button" class="erv-section-hub__sort-btn" data-sort="offers">العروض</button>
       </div>
       <p class="erv-section-hub__count" id="hubCountLine" aria-live="polite">—</p>
 
       <div class="stores-restaurant-cuisine-block" id="storesRestaurantCuisineBlock">
         <div class="stores-restaurant-cuisine-block__head">
-          <span class="stores-restaurant-cuisine-block__emoji" aria-hidden="true">🍽️</span>
+          <svg class="stores-restaurant-cuisine-block__icon" aria-hidden="true" viewBox="0 0 24 24" fill="none">
+            <path d="M7 3v8" />
+            <path d="M4.8 3v4.6A3 3 0 0 0 7 10.5a3 3 0 0 0 2.2-2.9V3" />
+            <path d="M7 10.5V21" />
+            <path d="M16.5 3c1.7 1.4 2.7 3.5 2.7 5.8 0 2.2-1 3.9-2.7 4.5V21" />
+          </svg>
           <div>
             <p class="stores-restaurant-cuisine-block__title">تصنيفات المطاعم</p>
-            <p class="stores-restaurant-cuisine-block__sub">اختر نوع المطبخ — أو «الكل» لعرض جميع المطاعم المعتمدة.</p>
+            <p class="stores-restaurant-cuisine-block__sub">اختر نوع المطبخ أو اعرض الكل.</p>
           </div>
         </div>
         <div class="stores-cuisine-scroll" id="storesCuisineBar" role="tablist" aria-label="تصنيف المطعم"></div>
@@ -576,14 +587,12 @@
     </div>
 
     <main class="stores-main">
-      <p class="stores-note" id="guestNote">
-        أنت تتصفّح كضيف ERVENOW: قد تظهر أسماء المطاعم بشكل مختصر حتى تسجّل الدخول. يتم تفعيل الحساب بعد المراجعة واعتماده من إدارة ERVENOW. بشكل افتراضي تُعرض
-        <strong>كل المطاعم المعتمدة</strong>؛ إن فعّلت «تصفية حسب قرب موقعي» تُعرض المطاعم التي يصلها التوصيل من موقعك الحالي.
-      </p>
-
       <div class="stores-panel">
         <div id="container" class="stores-grid stores-grid--skeleton" aria-busy="true" aria-label="جاري تحميل المطاعم"></div>
       </div>
+      <p class="stores-note" id="guestNote">
+        تتصفح كضيف: قد تظهر أسماء مختصرة. تظهر هنا كل المطاعم المعتمدة.
+      </p>
     </main>
       </div>
 

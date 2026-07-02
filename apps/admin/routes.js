@@ -652,6 +652,61 @@ router.patch("/platform-modules/:id", requireAuth, requireRole("admin"), async (
   }
 });
 
+const marketingEngine = require("../../shared/utils/marketingEngine");
+
+router.get("/marketing/experiences/:surface", requireAuth, requireRole("admin"), requireAdminPermission("dashboard"), async (req, res) => {
+  try {
+    const surface = String(req.params.surface || "").trim().toLowerCase();
+    if (!marketingEngine.SURFACES.includes(surface)) {
+      return fail(res, `unsupported surface; allowed: ${marketingEngine.SURFACES.join(", ")}`, 400);
+    }
+    const experience = marketingEngine.readExperience(surface);
+    return ok(res, {
+      experience,
+      module_statuses: marketingEngine.MODULE_STATUSES,
+      target_audiences: marketingEngine.TARGET_AUDIENCES,
+      animations: marketingEngine.ANIMATIONS,
+      surfaces: marketingEngine.SURFACES,
+    });
+  } catch (e) {
+    return fail(res, e.message || String(e), 500);
+  }
+});
+
+router.put("/marketing/experiences/:surface", requireAuth, requireRole("admin"), requireAdminPermission("dashboard"), async (req, res) => {
+  try {
+    const surface = String(req.params.surface || "").trim().toLowerCase();
+    if (!marketingEngine.SURFACES.includes(surface)) {
+      return fail(res, `unsupported surface; allowed: ${marketingEngine.SURFACES.join(", ")}`, 400);
+    }
+    const modules = req.body?.modules;
+    if (!Array.isArray(modules)) return fail(res, "modules array required", 400);
+    const actor = {
+      id: req.authUser?.id || null,
+      phone: req.authUser?.phone || null,
+    };
+    const saved = marketingEngine.updateExperienceModules(surface, modules, actor);
+    return ok(res, {
+      experience: saved,
+      message: "تم حفظ تجربة الصفحة",
+    });
+  } catch (e) {
+    return fail(res, e.message || String(e), 500);
+  }
+});
+
+router.get("/marketing/audit-log", requireAuth, requireRole("admin"), requireAdminPermission("dashboard"), async (req, res) => {
+  try {
+    const limit = Math.min(Math.max(parseInt(String(req.query.limit || "50"), 10) || 50, 1), 200);
+    const surface = String(req.query.surface || "").trim().toLowerCase();
+    let items = marketingEngine.readAuditLog(limit);
+    if (surface) items = items.filter((row) => String(row.surface || "") === surface);
+    return ok(res, { items, generated_at: new Date().toISOString() });
+  } catch (e) {
+    return fail(res, e.message || String(e), 500);
+  }
+});
+
 router.get("/live-map-public", requireAuth, requireRole("admin"), async (_req, res) => {
   try {
     const enabled = await readLiveMapPublicAsync();

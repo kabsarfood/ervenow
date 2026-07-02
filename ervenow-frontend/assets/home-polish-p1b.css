@@ -1,0 +1,215 @@
+/**
+ * ERVENOW Platform Polishing — Sprint P1-B (Home)
+ * Focus · Noise Reduction · Premium · Desktop balance
+ */
+
+/* ——— Mobile Eye Flow: هيدر → أقسام → ثقة → بنر (إن وُجد) → بقية ——— */
+@media (max-width: 640px), ((max-width: 932px) and (max-height: 500px) and (pointer: coarse)) {
+  html.erv-mobile-shell body.lp-home-premium {
+    display: flex;
+    flex-direction: column;
+  }
+
+  html.erv-mobile-shell body.lp-home-premium .lp-header {
+    order: 0;
+  }
+
+  html.erv-mobile-shell body.lp-home-premium .sn-section--hub {
+    order: 1;
+  }
+
+  html.erv-mobile-shell body.lp-home-premium #homeMainBanner {
+    order: 2;
+  }
+
+  html.erv-mobile-shell body.lp-home-premium main {
+    order: 3;
+    margin-top: clamp(20px, 5vw, 32px);
+  }
+
+  html.erv-mobile-shell body.lp-home-premium .lp-footer {
+    order: 4;
+  }
+
+  html.erv-mobile-shell body.lp-home-premium .lp-header__brand-mid .lp-brand__name {
+    font-size: clamp(0.94rem, 4vw, 1.05rem) !important;
+    letter-spacing: 0.05em;
+    line-height: 1.12;
+  }
+
+  html.erv-mobile-shell body.lp-home-premium .lp-header__brand-mid .lp-brand__tag {
+    display: block !important;
+    font-size: clamp(0.62rem, 2.6vw, 0.72rem) !important;
+    font-weight: 700 !important;
+    color: #b9872f !important;
+    line-height: 1.2;
+  }
+
+  /* أرقام المنصة — تحت الطية */
+  html.erv-mobile-shell body.lp-home-premium .sn-section--hub > .sn-stats {
+    display: none !important;
+  }
+
+  html.erv-mobile-shell body.lp-home-premium .sn-section--hub {
+    margin-top: 4px;
+    padding-top: clamp(8px, 2.2vw, 12px) !important;
+  }
+
+  html.erv-mobile-shell body.lp-home-premium #snHomeHub.sn-home-hub--direct {
+    gap: 10px;
+  }
+
+  html.erv-mobile-shell body.lp-home-premium #snHomeHub .sn-card {
+    min-height: 88px;
+    box-shadow: 0 2px 12px rgba(45, 26, 14, 0.07);
+    border-color: rgba(61, 34, 19, 0.1);
+  }
+
+  html.erv-mobile-shell body.lp-home-premium .sn-section--hub > .sn-trust {
+    margin-top: 12px;
+    padding: 10px 8px;
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+  }
+
+  html.erv-mobile-shell body.lp-home-premium .sn-section--hub > .sn-trust .sn-trust__item {
+    background: rgba(255, 254, 251, 0.88);
+    border-color: rgba(61, 34, 19, 0.07);
+    box-shadow: 0 1px 6px rgba(45, 26, 14, 0.04);
+  }
+}
+
+/* ——— أيقونات SVG موحّدة ——— */
+body.lp-home-premium .sn-card__icon-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+body.lp-home-premium .sn-card__icon {
+  width: 26px;
+  height: 26px;
+  display: block;
+  color: #5c3d24;
+  flex-shrink: 0;
+}
+
+body.lp-home-premium .sn-card--restaurants .sn-card__icon-wrap {
+  background: linear-gradient(145deg, #f5ebe0, #efe3d4);
+}
+
+body.lp-home-premium .sn-card--stores .sn-card__icon-wrap {
+  background: linear-gradient(145deg, #f3ebe3, #ebe2d8);
+}
+
+body.lp-home-premium .sn-card--delivery .sn-card__icon-wrap {
+  background: linear-gradient(145deg, #efe8de, #e8dfd3);
+}
+
+body.lp-home-premium .sn-card--services .sn-card__icon-wrap {
+  background: linear-gradient(145deg, #ede6dc, #e6ddd2);
+}
+
+body.lp-home-premium .sn-trust__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  font-size: 0;
+  line-height: 0;
+}
+
+body.lp-home-premium .sn-trust__icon .sn-trust__svg {
+  width: 16px;
+  height: 16px;
+  display: block;
+  color: #8f6a35;
+}
+
+/* ——— بطاقات: فخامة وتوازن ——— */
+body.lp-home-premium #snHomeHub .sn-card {
+  box-shadow: 0 3px 14px rgba(45, 26, 14, 0.07);
+  border-color: rgba(61, 34, 19, 0.1);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+body.lp-home-premium #snHomeHub .sn-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 28px rgba(45, 26, 14, 0.11);
+  border-color: rgba(185, 135, 47, 0.28);
+}
+
+body.lp-home-premium #snHomeHub .sn-card__name {
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+body.lp-home-premium .sn-section--hub .sn-trust {
+  background: rgba(255, 254, 251, 0.72);
+  border-color: rgba(61, 34, 19, 0.08);
+  box-shadow: 0 2px 12px rgba(45, 26, 14, 0.05);
+}
+
+body.lp-home-premium .sn-stats {
+  opacity: 0.88;
+}
+
+/* ——— Desktop: توازن البنر والبطاقات · تقليل الفراغ ——— */
+@media (min-width: 641px) {
+  body.lp-home-premium .lp-home-premium .card.guest-offers-carousel--home,
+  body.lp-home-premium .guest-offers-carousel--home {
+    margin-top: clamp(8px, 1.5vw, 14px);
+    margin-bottom: clamp(10px, 2vw, 16px);
+  }
+
+  body.lp-home-premium .guest-offers-carousel--home .guest-offers-shell {
+    aspect-ratio: 1920 / 520;
+    min-height: clamp(140px, 18vw, 220px);
+    max-height: 240px;
+  }
+
+  body.lp-home-premium .sn-section--hub {
+    padding-top: clamp(12px, 2.5vw, 20px);
+    padding-bottom: clamp(18px, 3vw, 28px);
+  }
+
+  body.lp-home-premium .sn-section--hub .sn-section__title--solo {
+    margin-bottom: clamp(12px, 2.5vw, 18px);
+    font-size: clamp(1.1rem, 2.2vw, 1.28rem);
+  }
+
+  body.lp-home-premium #snHomeHub {
+    gap: clamp(12px, 2vw, 18px);
+  }
+
+  body.lp-home-premium #snHomeHub .sn-card {
+    padding: clamp(20px, 2.8vw, 26px) 16px 22px;
+  }
+
+  body.lp-home-premium .sn-section--hub .sn-trust {
+    margin-top: clamp(20px, 3.5vw, 28px);
+    padding: clamp(16px, 2.5vw, 22px) clamp(14px, 2.5vw, 20px);
+  }
+
+  body.lp-home-premium main .lp-section {
+    padding-top: clamp(24px, 4vw, 36px);
+    padding-bottom: clamp(24px, 4vw, 36px);
+  }
+
+  body.lp-home-premium #register-store-cta .lp-register-cta__ring {
+    opacity: 0.55;
+  }
+}
+
+/* ——— CTA البائعين: بعد محتوى العميل ——— */
+body.lp-home-premium #register-store-cta .lp-register-cta__panel {
+  padding: clamp(22px, 4vw, 32px) clamp(20px, 4vw, 28px);
+}
+
+body.lp-home-premium #register-store-cta .lp-register-cta__panel .lp-section__title {
+  font-size: clamp(1.05rem, 2.5vw, 1.2rem);
+  margin-bottom: 14px;
+}

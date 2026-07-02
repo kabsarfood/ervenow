@@ -7,7 +7,7 @@
   global.__ervViewportReady = true;
 
   /** يُرفَع عند كل تحديث Mobile Shell لإجبار تحميل نسخة جديدة (تجاوز cache الجوال) */
-  var ERV_SHELL_ASSET_VER = "20260623";
+  var ERV_SHELL_ASSET_VER = "20260723";
 
   function shellAssetUrl(path) {
     var p = String(path || "");
@@ -17,6 +17,16 @@
 
   var VIEWPORT_LOCKED =
     "width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover";
+  var VIEWPORT_HOME_ACCESSIBLE = "width=device-width, initial-scale=1, viewport-fit=cover";
+
+  function isHomePolishPage() {
+    var p = String(global.location.pathname || "").replace(/\/+$/, "") || "/";
+    return p === "" || p === "/" || p === "/index.html";
+  }
+
+  function viewportContent() {
+    return isHomePolishPage() ? VIEWPORT_HOME_ACCESSIBLE : VIEWPORT_LOCKED;
+  }
 
   var lockCount = 0;
   var savedScrollY = 0;
@@ -45,17 +55,33 @@
     return !!(document.body && document.body.classList.contains("pf-page"));
   }
 
+  function mobileHeaderFullPx() {
+    return 74;
+  }
+
   function mobileHeaderReservePx() {
-    if (document.body && document.body.classList.contains("lp-home-premium")) return 56;
-    if (document.body && document.body.classList.contains("guest-shell-page")) return 56;
-    return 56;
+    var lift = 0.15;
+    return Math.round(mobileHeaderFullPx() * (1 - lift));
   }
 
   function applyMobileShellHeaderVars() {
+    var header = document.querySelector(".lp-header.lp-header--refined, .dash-site-header");
+    if (header) {
+      var h = Math.ceil(header.getBoundingClientRect().height);
+      if (h > 0) {
+        document.documentElement.style.setProperty("--erv-mobile-header-h", h + "px");
+        document.documentElement.style.setProperty("--erw-header-h", h + "px");
+        document.documentElement.style.setProperty(
+          "--erv-mobile-header-reserve",
+          Math.round(h * (1 - 0.15)) + "px"
+        );
+        return;
+      }
+    }
     var reserve = mobileHeaderReservePx();
     document.documentElement.style.setProperty("--erv-mobile-header-reserve", reserve + "px");
-    document.documentElement.style.setProperty("--erv-mobile-header-h", reserve + "px");
-    document.documentElement.style.setProperty("--erw-header-h", reserve + "px");
+    document.documentElement.style.setProperty("--erv-mobile-header-h", mobileHeaderFullPx() + "px");
+    document.documentElement.style.setProperty("--erw-header-h", mobileHeaderFullPx() + "px");
   }
 
   function injectMobileFoundationCss() {
@@ -157,8 +183,8 @@
       meta.setAttribute("name", "viewport");
       document.head.appendChild(meta);
     }
-    if (meta.getAttribute("content") !== VIEWPORT_LOCKED) {
-      meta.setAttribute("content", VIEWPORT_LOCKED);
+    if (meta.getAttribute("content") !== viewportContent()) {
+      meta.setAttribute("content", viewportContent());
     }
   }
 
@@ -174,9 +200,9 @@
     clampHorizontalScroll();
     var meta = document.querySelector('meta[name="viewport"]');
     if (!meta) return;
-    meta.setAttribute("content", VIEWPORT_LOCKED + ", shrink-to-fit=no");
+    meta.setAttribute("content", viewportContent() + ", shrink-to-fit=no");
     global.setTimeout(function () {
-      meta.setAttribute("content", VIEWPORT_LOCKED);
+      meta.setAttribute("content", viewportContent());
       setViewportVars();
       clampHorizontalScroll();
     }, 280);
@@ -208,7 +234,7 @@
     root.style.setProperty("--erw-viewport-w", w + "px");
     root.classList.add("erw-viewport-ready");
     syncSiteHeaderHeight();
-    if (vv && vv.scale > 1.02) resetViewportScale();
+    if (!isHomePolishPage() && vv && vv.scale > 1.02) resetViewportScale();
   }
 
   function lockScroll() {
@@ -229,12 +255,14 @@
   }
 
   function blockPinchZoom(e) {
+    if (isHomePolishPage()) return;
     if (e.touches && e.touches.length > 1) {
       e.preventDefault();
     }
   }
 
   function blockGestureZoom(e) {
+    if (isHomePolishPage()) return;
     e.preventDefault();
   }
 

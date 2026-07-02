@@ -2,13 +2,13 @@
   "use strict";
 
   var SERVICE_CATEGORIES = [
-    { id: "car_polishing", icon: "✨", label: "تلميع المركبات" },
-    { id: "plumber", icon: "🔧", label: "سباك" },
-    { id: "electrician", icon: "⚡", label: "كهربائي" },
-    { id: "agricultural_engineer", icon: "🌾", label: "مهندس زراعي" },
-    { id: "ac_technician", icon: "❄️", label: "فني مكيفات" },
-    { id: "cleaning_villa", icon: "🧼", label: "غسيل درج فيلا" },
-    { id: "cleaning_building", icon: "🏢", label: "غسيل درج عمارة" },
+    { id: "car_polishing", label: "تلميع المركبات", image: "/assets/ervenow-car-sedan.png" },
+    { id: "plumber", label: "سباك", image: "/assets/services/plumber.png" },
+    { id: "electrician", label: "كهربائي", image: "/assets/services/electrician.png" },
+    { id: "agricultural_engineer", label: "مهندس زراعي", image: "/assets/services/agricultural_engineer.png" },
+    { id: "ac_technician", label: "فني مكيفات", image: "/assets/services/ac_technician.png" },
+    { id: "cleaning_villa", label: "غسيل درج فيلا", image: "/assets/services/cleaning_villa.png" },
+    { id: "cleaning_building", label: "غسيل درج عمارة", image: "/assets/services/cleaning_building.png" },
   ];
 
   var HOME_SERVICE_TYPES = {
@@ -99,17 +99,21 @@
         location.href = "/car-polishing.html";
         return;
       }
-      if (window.__svcSelectOrderType) window.__svcSelectOrderType(cat || "all");
+      if (cat && cat !== "all" && window.ErvenowServiceBook && ErvenowServiceBook.isBookableType(cat)) {
+        location.href = ErvenowServiceBook.serviceBookUrl(cat);
+        return;
+      }
     },
     onOpenStore: function (id, store) {
-      if (window.ErvenowMobileServicesFlow && ErvenowMobileServicesFlow.isMobile()) {
-        var name = store && (store.name || store.label);
-        ErvenowMobileServicesFlow.openSheet(name ? String(name).trim() : "");
-        if (store && store.type) {
-          var t = String(store.type || store.category || "").toLowerCase();
-          if (t === "cleaning") t = "cleaning_villa";
-          if (window.__svcSelectOrderType) window.__svcSelectOrderType(t || "all");
-        }
+      var t = store && String(store.type || store.category || "").toLowerCase();
+      if (t === "cleaning") t = "cleaning_villa";
+      if (t === "nursery") t = "agricultural_engineer";
+      if (t === "car_polishing") {
+        location.href = "/car-polishing.html";
+        return;
+      }
+      if (window.ErvenowServiceBook && ErvenowServiceBook.isBookableType(t)) {
+        location.href = ErvenowServiceBook.serviceBookUrl(t);
         return;
       }
       window.location.href = "/store.html?id=" + encodeURIComponent(id);
@@ -141,7 +145,13 @@
       });
       if (valid.indexOf(type) !== -1) {
         syncServiceHeader(type);
-        if (window.__svcSelectOrderType) window.__svcSelectOrderType(type || "all");
+        if (type === "car_polishing") {
+          location.replace("/car-polishing.html");
+          return;
+        }
+        if (window.ErvenowServiceBook && ErvenowServiceBook.isBookableType(type)) {
+          location.replace(ErvenowServiceBook.serviceBookUrl(type));
+        }
       }
     },
   });

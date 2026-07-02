@@ -295,6 +295,7 @@ app.applyPermissionVisibility = function () {
     panelPlatformModules: "dashboard",
     panelOffers: "dashboard",
     panelHeroBanners: "dashboard",
+    panelMarketingStudio: "dashboard",
     panelServices: "providers",
     panelTransport: "providers",
     panelRoleSeparation: "dashboard",
@@ -402,6 +403,8 @@ app.loadPanelById = function (panelId) {
       return done(app.loadOffersPanel());
     case "panelHeroBanners":
       return done(app.loadHeroBannersPanel());
+    case "panelMarketingStudio":
+      return done(app.loadMarketingStudioPanel());
     case "panelServices":
       return done(app.loadServicesPanel());
     case "panelTransport":

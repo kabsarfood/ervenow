@@ -400,6 +400,65 @@ router.get("/live-map-public", async (_req, res) => {
 
 const platformOffers = require("../../shared/utils/platformOffersStore");
 const heroBanners = require("../../shared/utils/heroBannerStore");
+const marketingEngine = require("../../shared/utils/marketingEngine");
+
+function marketingContextFromReq(req) {
+  return {
+    isLoggedIn: !!(req.authUser && req.authUser.id),
+    city: String(req.query?.city || req.headers["x-erv-city"] || "").trim() || null,
+    now: new Date(),
+  };
+}
+
+async function buildMarketingSurfacePayload(surface, ctx) {
+  const experience = marketingEngine.buildPublicExperience(surface, ctx);
+  const sb = createServiceClient();
+  let hero = null;
+  let offers = [];
+  try {
+    if (surface === "home" && sb) {
+      const byPlacement = await heroBanners.getActiveBannersByPlacement(sb);
+      hero = {
+        home_promo: byPlacement.home_promo || [],
+        home_hero: byPlacement.home_hero || [],
+      };
+      offers = await platformOffers.loadOffers(sb);
+    }
+  } catch (e) {
+    console.warn("[marketing/home] payload enrich:", e && (e.message || e));
+  }
+  return {
+    ...experience,
+    payloads: {
+      hero,
+      offers,
+    },
+  };
+}
+
+router.get("/marketing/home", optionalAuth, async (req, res) => {
+  try {
+    const payload = await buildMarketingSurfacePayload("home", marketingContextFromReq(req));
+    res.set("Cache-Control", "public, max-age=60");
+    return ok(res, payload);
+  } catch (e) {
+    return fail(res, e.message || String(e), 500);
+  }
+});
+
+router.get("/marketing/:surface", optionalAuth, async (req, res) => {
+  try {
+    const surface = String(req.params.surface || "").trim().toLowerCase();
+    if (!marketingEngine.SURFACES.includes(surface)) {
+      return fail(res, `unsupported surface; allowed: ${marketingEngine.SURFACES.join(", ")}`, 400);
+    }
+    const payload = await buildMarketingSurfacePayload(surface, marketingContextFromReq(req));
+    res.set("Cache-Control", "public, max-age=60");
+    return ok(res, payload);
+  } catch (e) {
+    return fail(res, e.message || String(e), 500);
+  }
+});
 
 router.get("/hero-banner", async (_req, res) => {
   try {

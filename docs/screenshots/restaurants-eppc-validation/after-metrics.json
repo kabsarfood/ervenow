@@ -1,0 +1,140 @@
+{
+  "capturedAt": "2026-07-01T08:02:28.841Z",
+  "label": "after",
+  "mobile": {
+    "viewport": {
+      "w": 390,
+      "h": 844
+    },
+    "title": "ERVENOW | اكتشف المطاعم",
+    "hero": null,
+    "toolbar": {
+      "top": 62,
+      "bottom": 220,
+      "left": 14,
+      "right": 376,
+      "w": 362,
+      "h": 158,
+      "inFold": true
+    },
+    "search": {
+      "top": 64,
+      "bottom": 112,
+      "left": 26,
+      "right": 364,
+      "w": 338,
+      "h": 48,
+      "inFold": true
+    },
+    "sort": null,
+    "cuisine": {
+      "top": 140,
+      "bottom": 215,
+      "left": 26,
+      "right": 364,
+      "w": 338,
+      "h": 75,
+      "inFold": true
+    },
+    "grid": {
+      "top": 236,
+      "bottom": 475,
+      "left": 26,
+      "right": 364,
+      "w": 338,
+      "h": 240,
+      "inFold": true
+    },
+    "firstInteractiveTop": 64,
+    "firstCardTop": 236,
+    "firstCtaTop": 418,
+    "cardsInFold": 1,
+    "cardCount": 1,
+    "chipCount": 10,
+    "sortCount": 0,
+    "emptyVisible": false,
+    "skeletonVisible": 0,
+    "countLine": "1 مطاعم — كل التصنيفات · ترتيب: الأعلى تقييماً",
+    "searchDisabled": false,
+    "words": {
+      "useful": 25,
+      "noise": 8
+    }
+  },
+  "desktop": {
+    "viewport": {
+      "w": 1280,
+      "h": 800
+    },
+    "title": "ERVENOW | اكتشف المطاعم",
+    "hero": {
+      "top": 64,
+      "bottom": 179,
+      "left": 0,
+      "right": 1280,
+      "w": 1280,
+      "h": 115,
+      "inFold": true
+    },
+    "toolbar": {
+      "top": 207,
+      "bottom": 396,
+      "left": 94,
+      "right": 1186,
+      "w": 1092,
+      "h": 189,
+      "inFold": true
+    },
+    "search": {
+      "top": 207,
+      "bottom": 267,
+      "left": 691,
+      "right": 1186,
+      "w": 495,
+      "h": 60,
+      "inFold": true
+    },
+    "sort": {
+      "top": 292,
+      "bottom": 338,
+      "left": 691,
+      "right": 1186,
+      "w": 495,
+      "h": 46,
+      "inFold": true
+    },
+    "cuisine": {
+      "top": 207,
+      "bottom": 376,
+      "left": 94,
+      "right": 675,
+      "w": 581,
+      "h": 169,
+      "inFold": true
+    },
+    "grid": {
+      "top": 412,
+      "bottom": 698,
+      "left": 94,
+      "right": 1186,
+      "w": 1092,
+      "h": 286,
+      "inFold": true
+    },
+    "firstInteractiveTop": 207,
+    "firstCardTop": 412,
+    "firstCtaTop": 638,
+    "cardsInFold": 1,
+    "cardCount": 1,
+    "chipCount": 10,
+    "sortCount": 3,
+    "emptyVisible": false,
+    "skeletonVisible": 0,
+    "countLine": "1 مطاعم — كل التصنيفات · ترتيب: الأعلى تقييماً",
+    "searchDisabled": false,
+    "words": {
+      "useful": 50,
+      "noise": 41
+    }
+  }
+}

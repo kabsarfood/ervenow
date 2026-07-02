@@ -1,0 +1,26 @@
+{
+  "items": [
+    {
+      "id": "1782903459096-xtp1wp",
+      "at": "2026-07-01T10:57:39.096Z",
+      "surface": "home",
+      "module_id": "trust_bar",
+      "change_type": "module.display_order",
+      "actor_id": "test-admin",
+      "actor_phone": "0500000000",
+      "previous_value": 41,
+      "new_value": 40
+    },
+    {
+      "id": "1782903459092-v9221z",
+      "at": "2026-07-01T10:57:39.092Z",
+      "surface": "home",
+      "module_id": "trust_bar",
+      "change_type": "module.display_order",
+      "actor_id": "test-admin",
+      "actor_phone": "0500000000",
+      "previous_value": 40,
+      "new_value": 41
+    }
+  ]
+}

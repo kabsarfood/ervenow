@@ -1,117 +1,22 @@
 /**
- * ERVENOW Phase C P1 — Home Conversion (mobile only)
- * الهدف: فهم ERVENOW + 4 أقسام فوق الطية · بدون تغيير Desktop
+ * ERVENOW — Home mobile conversion (P1-A aligned)
+ * Eye Flow: هيدر → بطاقات → ثقة → أرقام
  */
 
 @media (max-width: 640px), ((max-width: 932px) and (max-height: 500px) and (pointer: coarse)) {
-  /* البنر: نفس مقاس guest-offers-carousel.css (عرض كامل + aspect-ratio 1920/730) */
-
-  /* ═══ هوية ERVENOW — شريط خفيف (ليس في الهيدر) ═══ */
-  html.erv-mobile-shell body.lp-home-premium .erv-home-identity {
-    display: block;
-    max-width: 100%;
-    margin: 0 0 10px;
-    padding: 8px max(14px, env(safe-area-inset-left, 14px)) 6px max(14px, env(safe-area-inset-right, 14px));
-    text-align: center;
-    box-sizing: border-box;
-  }
-
-  html.erv-mobile-shell body.lp-home-premium .erv-home-identity__brand {
-    margin: 0 0 4px;
-    display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    justify-content: center;
-    gap: 6px 8px;
-    line-height: 1.2;
-  }
-
-  html.erv-mobile-shell body.lp-home-premium .erv-home-identity__name {
-    font-size: 1rem;
-    font-weight: 900;
-    letter-spacing: 0.06em;
-    color: #3d2213;
-  }
-
-  html.erv-mobile-shell body.lp-home-premium .erv-home-identity__tag {
-    font-size: 0.78rem;
-    font-weight: 700;
-    color: #b9872f;
-  }
-
-  html.erv-mobile-shell body.lp-home-premium .erv-home-identity__scope {
-    margin: 0;
-    font-size: 0.72rem;
-    font-weight: 700;
-    color: #5c4a3d;
-    line-height: 1.45;
-    letter-spacing: 0.02em;
-  }
-
-  /* ═══ قسم الأقسام — مضغوط ═══ */
+  html.erv-mobile-shell body.lp-home-premium .sn-section--hub,
   html.erv-mobile-shell body.lp-home-premium .sn-section[aria-labelledby="home-cats-title"] {
     display: flex;
     flex-direction: column;
-    margin-top: clamp(10px, 2.8vw, 16px);
-    padding: clamp(12px, 3.2vw, 18px) max(12px, env(safe-area-inset-left, 12px)) 10px
+    margin-top: clamp(6px, 1.8vw, 10px);
+    padding: clamp(10px, 2.8vw, 14px) max(12px, env(safe-area-inset-left, 12px)) 8px
       max(12px, env(safe-area-inset-right, 12px)) !important;
   }
 
-  html.erv-mobile-shell body.lp-home-premium .sn-section[aria-labelledby="home-cats-title"] > .sn-section__label,
-  html.erv-mobile-shell body.lp-home-premium .sn-section[aria-labelledby="home-cats-title"] > .sn-section__title {
-    display: none !important;
-  }
-
-  html.erv-mobile-shell body.lp-home-premium .sn-section[aria-labelledby="home-cats-title"] > .sn-trust {
-    order: 1;
-  }
-
-  html.erv-mobile-shell body.lp-home-premium .sn-section[aria-labelledby="home-cats-title"] > #snHomeHub {
-    order: 2;
-  }
-
-  /* ═══ شريط ثقة مضغوط فوق البطاقات ═══ */
-  html.erv-mobile-shell body.lp-home-premium .sn-section[aria-labelledby="home-cats-title"] > .sn-trust {
-    display: flex;
-    flex-wrap: nowrap;
-    justify-content: flex-start;
-    align-items: center;
-    gap: 6px;
-    margin: 0 0 8px;
-    padding: 0;
-    max-width: 100%;
-    background: transparent;
-    border: 0;
-    box-shadow: none;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-  }
-
-  html.erv-mobile-shell body.lp-home-premium .sn-section[aria-labelledby="home-cats-title"] > .sn-trust::-webkit-scrollbar {
-    display: none;
-  }
-
-  html.erv-mobile-shell body.lp-home-premium .sn-section[aria-labelledby="home-cats-title"] > .sn-trust .sn-trust__item {
-    flex: 0 0 auto;
-    min-height: 32px;
-    padding: 4px 9px;
-    font-size: 0.65rem;
-    font-weight: 700;
-    white-space: nowrap;
-    background: rgba(255, 254, 251, 0.92);
-    border: 1px solid rgba(61, 34, 19, 0.08);
-    border-radius: 999px;
-  }
-
-  html.erv-mobile-shell body.lp-home-premium .sn-section[aria-labelledby="home-cats-title"] > .sn-trust .sn-trust__icon {
-    font-size: 0.85rem;
-  }
-
-  /* ═══ بطاقات الأقسام — 4/4 فوق الطية ═══ */
   html.erv-mobile-shell body.lp-home-premium #snHomeHub.sn-home-hub--direct {
     gap: 8px;
-    margin: clamp(6px, 1.8vw, 10px) 0 0;
+    margin: 0;
+    order: 1;
   }
 
   html.erv-mobile-shell body.lp-home-premium #snHomeHub .sn-card {
@@ -135,24 +40,6 @@
 
   html.erv-mobile-shell body.lp-home-premium #snHomeHub .sn-card__desc,
   html.erv-mobile-shell body.lp-home-premium #snHomeHub .sn-card__arrow {
-    display: none !important;
-  }
-
-  /* ═══ أرقام المنصة — مسافة متوازنة تحت بطاقات الأقسام ═══ */
-  html.erv-mobile-shell body.lp-home-premium .sn-section--stats.lp-counters {
-    margin-top: clamp(10px, 3vw, 16px) !important;
-    padding-top: 0 !important;
-    padding-bottom: clamp(18px, 4.5vw, 28px) !important;
-  }
-}
-
-/* Desktop / tablet — إخفاء شريط الهوية الإضافي (الهوية في الهيدر) */
-.erv-home-identity {
-  display: none;
-}
-
-@media (min-width: 641px) {
-  .erv-home-identity {
     display: none !important;
   }
 }

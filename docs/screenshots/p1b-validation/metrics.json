@@ -1,0 +1,83 @@
+{
+  "viewport": {
+    "w": 390,
+    "h": 844
+  },
+  "viewportMeta": "width=device-width, initial-scale=1, viewport-fit=cover",
+  "hasErvHomeIdentity": false,
+  "hasSnWave": false,
+  "hasTrustId": true,
+  "domOrder": {
+    "bannerBeforeHub": true,
+    "hubBeforeTrust": true
+  },
+  "header": {
+    "top": 0,
+    "bottom": 93,
+    "h": 93,
+    "visiblePct": 100,
+    "inFold": true
+  },
+  "banner": {
+    "hiddenAttr": true
+  },
+  "firstCard": {
+    "top": 111,
+    "bottom": 203,
+    "h": 92,
+    "visiblePct": 100,
+    "inFold": true
+  },
+  "cardsTotal": 4,
+  "cardsInFold": 4,
+  "trust": {
+    "top": 316,
+    "bottom": 421,
+    "h": 105,
+    "visiblePct": 100,
+    "inFold": true
+  },
+  "stats": null,
+  "bottomNav": {
+    "top": 727,
+    "bottom": 834,
+    "h": 107,
+    "visiblePct": 100,
+    "inFold": true
+  },
+  "wordsAboveFold": 39,
+  "wordsSample": [
+    "ERVENOW",
+    "اختر",
+    "ما",
+    "يناسبك",
+    "مطاعم",
+    "متاجر",
+    "توصيل",
+    "خدمات",
+    "توصيل",
+    "سريع",
+    "دفع",
+    "آمن",
+    "تتبع",
+    "لحظي",
+    "دعم",
+    "فوري",
+    "كيف",
+    "تعمل",
+    "ERVENOW؟",
+    "١",
+    "اطلب",
+    "من",
+    "مطعم",
+    "أو",
+    "متجر",
+    "أو",
+    "خدمة.",
+    "٢",
+    "يوزّع",
+    "للمندوب"
+  ],
+  "interactiveAboveFold": 12,
+  "scrollToFirstCard": 111
+}

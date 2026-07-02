@@ -75,6 +75,18 @@
     }
   }
 
+  function isMobileHomeFocus() {
+    try {
+      return (
+        global.matchMedia(
+          "(max-width: 640px), ((max-width: 932px) and (max-height: 500px) and (pointer: coarse))"
+        ).matches && document.body && document.body.classList.contains("lp-home-premium")
+      );
+    } catch (_e) {
+      return global.innerWidth <= 640;
+    }
+  }
+
   /** يحجز ارتفاع البنر قبل تحميل API لتقليل CLS */
   function reserveCarouselSlot(root) {
     if (!root || root.dataset.ervBannerReserved === "1") return;
@@ -121,7 +133,13 @@
         .join("") +
       "</div>" +
       (n > 1
-        ? '<div class="guest-offers-dots" aria-hidden="true">' +
+        ? '<div class="guest-offers-nav" role="group" aria-label="تنقل الشرائح">' +
+          '<button type="button" class="guest-offers-nav__btn guest-offers-nav__btn--prev" aria-label="الشريحة السابقة">' +
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></button>' +
+          '<button type="button" class="guest-offers-nav__btn guest-offers-nav__btn--next" aria-label="الشريحة التالية">' +
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>' +
+          "</div>" +
+          '<div class="guest-offers-dots" aria-hidden="true">' +
           slides
             .map(function (_s, i) {
               return (
@@ -142,6 +160,8 @@
     if (n > 1) {
       var track = root.querySelector(".guest-offers-track");
       var dots = root.querySelectorAll(".guest-offers-dots .guest-offers-dot");
+      var prevBtn = root.querySelector(".guest-offers-nav__btn--prev");
+      var nextBtn = root.querySelector(".guest-offers-nav__btn--next");
       var idx = 0;
 
       function goTo(i) {
@@ -152,22 +172,45 @@
         }
       }
 
+      function resetAuto() {
+        if (global[timerKey]) clearInterval(global[timerKey]);
+        if (!prefersReducedMotion()) {
+          global[timerKey] = setInterval(function () {
+            goTo(idx + 1);
+          }, opts.intervalMs || AUTO_MS);
+        }
+      }
+
       for (var di = 0; di < dots.length; di++) {
         (function (dotIdx) {
           dots[dotIdx].onclick = function (ev) {
             ev.preventDefault();
             ev.stopPropagation();
             goTo(dotIdx);
+            resetAuto();
           };
         })(di);
       }
 
-      if (global[timerKey]) clearInterval(global[timerKey]);
-      if (!prefersReducedMotion()) {
-        global[timerKey] = setInterval(function () {
-          goTo(idx + 1);
-        }, opts.intervalMs || AUTO_MS);
+      if (prevBtn) {
+        prevBtn.onclick = function (ev) {
+          ev.preventDefault();
+          ev.stopPropagation();
+          goTo(idx - 1);
+          resetAuto();
+        };
       }
+
+      if (nextBtn) {
+        nextBtn.onclick = function (ev) {
+          ev.preventDefault();
+          ev.stopPropagation();
+          goTo(idx + 1);
+          resetAuto();
+        };
+      }
+
+      resetAuto();
       goTo(0);
     }
     return true;

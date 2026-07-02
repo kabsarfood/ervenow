@@ -16,26 +16,33 @@
   }
 
   html.erv-mobile-shell body.guest-shell-page {
-    padding-top: var(--erv-mobile-header-h, var(--erv-mobile-header-reserve, 56px));
+    padding-top: 0;
   }
 
   /* ——— هيدر guest-shell مضغوط فوراً ——— */
   html.erv-mobile-shell body.guest-shell-page .dash-site-header {
+    min-height: var(--erv-mobile-header-target, 62px);
+    position: sticky;
+    top: 0;
+    z-index: 200;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-inline: 0;
+    background: #f8f4ee;
+    border-bottom: 0;
     box-shadow: 0 1px 0 rgba(61, 34, 19, 0.08);
   }
 
   html.erv-mobile-shell body.guest-shell-page .dash-site-header__inner {
-    display: flex !important;
-    flex-direction: row !important;
+    display: grid !important;
+    grid-template-columns: auto 1fr auto !important;
+    grid-template-areas: "logo identity menu" !important;
     align-items: center !important;
-    justify-content: space-between !important;
-    gap: 10px !important;
-    grid-template-columns: unset !important;
-    grid-template-rows: unset !important;
-    grid-template-areas: unset !important;
-    min-height: var(--erv-mobile-header-target, 52px);
-    max-height: var(--erv-mobile-header-reserve, 56px);
-    padding: 4px max(12px, env(safe-area-inset-left, 12px)) 6px max(12px, env(safe-area-inset-right, 12px)) !important;
+    gap: 8px !important;
+    min-height: var(--erv-mobile-header-target, 62px);
+    max-height: none;
+    direction: ltr !important;
+    unicode-bidi: isolate !important;
+    padding: 5px max(14px, env(safe-area-inset-left, 14px)) 7px max(14px, env(safe-area-inset-right, 14px)) !important;
   }
 
   html.erv-mobile-shell .dash-site-header__nav,
@@ -53,11 +60,12 @@
 
   /* ——— هيدر الرئيسية مضغوط فوراً (يتفوق على index-header-banner) ——— */
   html.erv-mobile-shell body.lp-home-premium .lp-header.lp-header--refined {
-    min-height: var(--erv-mobile-header-reserve, 98px);
+    min-height: var(--erv-home-header-row, 78px);
   }
 
   html.erv-mobile-shell body.lp-home-premium .lp-header.lp-header--refined .lp-header__inner {
-    padding: 4px max(12px, env(safe-area-inset-left, 12px)) 6px max(12px, env(safe-area-inset-right, 12px)) !important;
+    padding: var(--erv-home-header-pad-top, 6px) max(14px, env(safe-area-inset-left, 14px)) var(--erv-home-header-pad-bottom, 9px)
+      max(14px, env(safe-area-inset-right, 14px)) !important;
     gap: 0 !important;
   }
 
@@ -69,7 +77,7 @@
     flex-wrap: nowrap !important;
     align-items: center !important;
     row-gap: 0 !important;
-    min-height: var(--erv-mobile-header-target, 52px);
+    min-height: var(--erv-home-header-row, 78px);
     width: 100%;
   }
 

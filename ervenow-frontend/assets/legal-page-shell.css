@@ -1,0 +1,270 @@
+/* ERVENOW — غلاف صفحات السياسات (هيدر + محتوى + فوتر) */
+body.legal-page-shell .dash-main {
+  flex: 1 1 auto;
+}
+
+body.legal-page-shell .lp-footer {
+  margin-top: auto;
+  flex-shrink: 0;
+  background: linear-gradient(180deg, rgba(61, 34, 19, 0.07), rgba(61, 34, 19, 0.03));
+  border-top: 1px solid rgba(61, 34, 19, 0.1);
+  padding: clamp(36px, 5vw, 52px) clamp(16px, 4vw, 24px) clamp(24px, 4vw, 36px);
+}
+
+body.legal-page-shell .lp-footer__brand {
+  font-weight: 800;
+  font-size: 1.2rem;
+  color: #3d2213;
+  margin: 0 0 10px;
+  letter-spacing: 0.04em;
+}
+
+body.legal-page-shell .lp-footer__mobile-only {
+  display: none;
+}
+
+body.legal-page-shell .lp-footer__legal-link.is-active {
+  border-color: rgba(185, 135, 47, 0.45);
+  box-shadow: 0 6px 18px rgba(45, 26, 14, 0.08);
+  color: #b9872f;
+}
+
+@media (min-width: 641px) {
+  html:not(.erv-mobile-shell) body.legal-page-shell .lp-footer {
+    background: linear-gradient(180deg, #f5ede2 0%, #ebe3d6 100%);
+    border-top: 1px solid rgba(61, 34, 19, 0.1);
+    padding: clamp(40px, 5vw, 56px) clamp(24px, 4vw, 48px) clamp(36px, 4vw, 48px);
+  }
+
+  html:not(.erv-mobile-shell) body.legal-page-shell .lp-footer__inner {
+    display: block;
+    max-width: min(880px, 100%);
+    margin-inline: auto;
+    text-align: center;
+  }
+
+  html:not(.erv-mobile-shell) body.legal-page-shell .lp-footer__desktop-panel {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+    max-width: min(400px, 100%);
+    margin-inline: auto;
+  }
+
+  html:not(.erv-mobile-shell) body.legal-page-shell .lp-footer__desktop-panel .lp-footer__brand {
+    margin: 0;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(61, 34, 19, 0.1);
+    font-size: clamp(1.1rem, 1.6vw, 1.35rem);
+    letter-spacing: 0.06em;
+  }
+
+  html:not(.erv-mobile-shell) body.legal-page-shell .lp-footer__legal-links {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  html:not(.erv-mobile-shell) body.legal-page-shell .lp-footer__desktop-panel .lp-footer__legal-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 48px;
+    padding: 14px 18px;
+    border-radius: 12px;
+    background: rgba(255, 254, 251, 0.92);
+    border: 1px solid rgba(61, 34, 19, 0.1);
+    color: #3d2213;
+    font-size: 0.92rem;
+    font-weight: 700;
+    text-decoration: none;
+    box-shadow: 0 4px 14px rgba(45, 26, 14, 0.04);
+    transition:
+      border-color 0.2s ease,
+      box-shadow 0.2s ease;
+  }
+
+  html:not(.erv-mobile-shell) body.legal-page-shell .lp-footer__desktop-panel .lp-footer__legal-link:hover {
+    border-color: rgba(185, 135, 47, 0.35);
+    box-shadow: 0 6px 18px rgba(45, 26, 14, 0.07);
+  }
+
+  html:not(.erv-mobile-shell) body.legal-page-shell .lp-footer__desktop-panel .lp-footer__channels {
+    padding: 16px 18px;
+    border-radius: 16px;
+    background: rgba(255, 254, 251, 0.92);
+    border: 1px solid rgba(61, 34, 19, 0.1);
+    box-shadow: 0 6px 20px rgba(45, 26, 14, 0.05);
+  }
+
+  html:not(.erv-mobile-shell) body.legal-page-shell .lp-footer__desktop-panel .lp-footer__channels-title {
+    margin: 0 0 12px;
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #b9872f;
+  }
+
+  html:not(.erv-mobile-shell) body.legal-page-shell .lp-footer__desktop-panel .lp-footer__social--channels {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    margin: 0;
+  }
+
+  html:not(.erv-mobile-shell) body.legal-page-shell .lp-footer__desktop-panel .lp-footer__social--channels a {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    background: #fffefb;
+    border: 1px solid rgba(61, 34, 19, 0.1);
+    box-shadow: 0 4px 14px rgba(45, 26, 14, 0.05);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #3d2213;
+    transition:
+      transform 0.2s ease,
+      border-color 0.2s ease,
+      box-shadow 0.2s ease;
+  }
+
+  html:not(.erv-mobile-shell) body.legal-page-shell .lp-footer__desktop-panel .lp-footer__social--channels a:hover {
+    transform: translateY(-2px);
+    border-color: rgba(185, 135, 47, 0.35);
+    box-shadow: 0 8px 22px rgba(45, 26, 14, 0.08);
+  }
+
+  html:not(.erv-mobile-shell) body.legal-page-shell .lp-footer__desktop-panel .lp-footer__social--channels svg {
+    width: 20px;
+    height: 20px;
+    fill: currentColor;
+  }
+
+  html:not(.erv-mobile-shell) body.legal-page-shell .lp-footer__desktop-panel .lp-footer__rights {
+    margin: 4px 0 0;
+    font-size: 0.84rem;
+    font-weight: 600;
+    line-height: 1.55;
+    color: rgba(61, 34, 19, 0.72);
+  }
+}
+
+@media (min-width: 641px) and (max-width: 900px) {
+  html:not(.erv-mobile-shell) body.legal-page-shell .lp-footer__desktop-panel {
+    max-width: min(400px, 100%);
+    margin-inline: auto;
+  }
+}
+
+@media (max-width: 640px), ((max-width: 932px) and (max-height: 500px) and (pointer: coarse)) {
+  html.erv-mobile-shell body.legal-page-shell .lp-footer {
+    padding: clamp(28px, 6vw, 36px) max(16px, env(safe-area-inset-left, 16px))
+      max(calc(env(safe-area-inset-bottom, 0px) + 24px), 24px) max(16px, env(safe-area-inset-right, 16px));
+    background: linear-gradient(180deg, #f5ede2 0%, #ebe3d6 100%);
+    border-top: 1px solid rgba(61, 34, 19, 0.1);
+  }
+
+  html.erv-mobile-shell body.legal-page-shell .lp-footer__desktop-only {
+    display: none !important;
+  }
+
+  html.erv-mobile-shell body.legal-page-shell .lp-footer__inner {
+    display: block;
+    max-width: min(400px, 100%);
+    margin-inline: auto;
+    text-align: center;
+  }
+
+  html.erv-mobile-shell body.legal-page-shell .lp-footer__mobile-only {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+  }
+
+  html.erv-mobile-shell body.legal-page-shell .lp-footer__mobile-only .lp-footer__brand {
+    margin: 0;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(61, 34, 19, 0.1);
+    font-size: clamp(1.1rem, 4.8vw, 1.25rem);
+    letter-spacing: 0.06em;
+  }
+
+  html.erv-mobile-shell body.legal-page-shell .lp-footer__legal-links {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  html.erv-mobile-shell body.legal-page-shell .lp-footer__legal-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 48px;
+    padding: 12px 16px;
+    border-radius: 12px;
+    background: rgba(255, 254, 251, 0.92);
+    border: 1px solid rgba(61, 34, 19, 0.1);
+    color: #3d2213;
+    font-size: clamp(0.86rem, 3.6vw, 0.92rem);
+    font-weight: 700;
+    text-decoration: none;
+    box-shadow: 0 4px 14px rgba(45, 26, 14, 0.04);
+  }
+
+  html.erv-mobile-shell body.legal-page-shell .lp-footer__channels {
+    padding: 14px;
+    border-radius: 16px;
+    background: rgba(255, 254, 251, 0.92);
+    border: 1px solid rgba(61, 34, 19, 0.1);
+    box-shadow: 0 6px 20px rgba(45, 26, 14, 0.05);
+  }
+
+  html.erv-mobile-shell body.legal-page-shell .lp-footer__channels-title {
+    margin: 0 0 10px;
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #b9872f;
+  }
+
+  html.erv-mobile-shell body.legal-page-shell .lp-footer__social--channels {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    margin: 0;
+  }
+
+  html.erv-mobile-shell body.legal-page-shell .lp-footer__social--channels a {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    background: #fffefb;
+    border: 1px solid rgba(61, 34, 19, 0.1);
+    box-shadow: 0 4px 14px rgba(45, 26, 14, 0.05);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #3d2213;
+  }
+
+  html.erv-mobile-shell body.legal-page-shell .lp-footer__social--channels svg {
+    width: 20px;
+    height: 20px;
+    fill: currentColor;
+  }
+
+  html.erv-mobile-shell body.legal-page-shell .lp-footer__rights {
+    margin: 4px 0 0;
+    font-size: clamp(0.76rem, 3.2vw, 0.84rem);
+    font-weight: 600;
+    line-height: 1.55;
+    color: rgba(61, 34, 19, 0.72);
+  }
+}

@@ -71,11 +71,83 @@
         flex-shrink: 0;
       }
       .auth-sn-hero {
-        padding: clamp(36px, 8vw, 52px) 20px clamp(44px, 9vw, 60px);
+        padding: clamp(28px, 6vw, 44px) max(16px, env(safe-area-inset-left, 16px))
+          clamp(36px, 7vw, 52px) max(16px, env(safe-area-inset-right, 16px));
         margin: 0;
       }
-      .auth-sn-hero .sn-hero__title {
-        font-size: clamp(1.5rem, 4.5vw, 2.2rem);
+      .auth-hero__stack {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: clamp(12px, 2.8vw, 16px);
+        width: 100%;
+        max-width: min(560px, 100%);
+        margin-inline: auto;
+        text-align: center;
+      }
+      .auth-hero__line {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 8px 10px;
+        line-height: 1.45;
+      }
+      .auth-hero__emoji {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        font-size: 1.15em;
+        line-height: 1;
+      }
+      .auth-hero__eyebrow {
+        margin: 0;
+        padding: 8px 14px;
+        border-radius: 999px;
+        background: rgba(255, 254, 251, 0.72);
+        border: 1px solid rgba(185, 135, 47, 0.22);
+        box-shadow: 0 4px 14px rgba(45, 26, 14, 0.05);
+      }
+      .auth-hero__eyebrow-text {
+        font-size: clamp(0.82rem, 2.8vw, 0.92rem);
+        font-weight: 800;
+        letter-spacing: 0.02em;
+        color: var(--gold, #b9872f);
+      }
+      .auth-hero__title {
+        margin: 0;
+        font-size: clamp(1.35rem, 4.8vw, 2rem);
+        font-weight: 900;
+        line-height: 1.4;
+        color: var(--brown, #3d2213);
+      }
+      .auth-hero__title strong {
+        color: var(--gold, #b9872f);
+        font-weight: 900;
+      }
+      .auth-hero__badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin: 4px 0 0;
+        padding: 10px 16px;
+        border-radius: 14px;
+        background: rgba(61, 34, 19, 0.06);
+        border: 1px solid rgba(61, 34, 19, 0.1);
+        font-size: clamp(0.84rem, 2.6vw, 0.94rem);
+        font-weight: 700;
+        line-height: 1.55;
+        color: rgba(61, 34, 19, 0.82);
+        max-width: 100%;
+      }
+      .auth-hero__badge-icon {
+        font-size: 1rem;
+        line-height: 1;
+        flex-shrink: 0;
       }
       .auth-sn-hero .auth-hero__note {
         margin: 8px auto 0;
@@ -471,35 +543,51 @@
       .auth-login-page .lp-footer {
         display: none;
       }
-      /* كمبيوتر — توسيط رسائل الترحيب في منتصف البانر */
-      @media (min-width: 1025px) {
+      /* كمبيوتر وتابلت — توسيط رسائل الترحيب */
+      @media (min-width: 641px) {
         .auth-banner {
           display: flex;
           flex-direction: column;
           align-items: center;
         }
         .auth-sn-hero {
-          text-align: center;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
           width: 100%;
-          max-width: min(720px, 92vw);
+          max-width: min(800px, 94vw);
           margin-inline: auto;
-          padding: clamp(32px, 6vh, 56px) 24px clamp(40px, 7vh, 64px);
+          padding: clamp(36px, 5vh, 56px) 24px clamp(44px, 6vh, 60px);
         }
-        .auth-sn-hero .sn-hero__eyebrow,
-        .auth-sn-hero .sn-hero__title,
-        .auth-sn-hero .sn-hero__sub {
-          text-align: center;
-          margin-inline: auto;
+        .auth-hero__stack {
+          max-width: min(640px, 100%);
+          gap: 14px;
         }
-        .auth-sn-hero .sn-hero__title {
-          max-width: none;
+        .auth-hero__title {
+          font-size: clamp(1.65rem, 3.2vw, 2.15rem);
         }
-        .auth-sn-hero .sn-hero__sub {
-          max-width: 36rem;
+        .auth-hero__badge {
+          margin-top: 6px;
+          padding: 11px 18px;
+        }
+      }
+      @media (min-width: 1025px) {
+        .auth-sn-hero {
+          padding: clamp(40px, 6vh, 60px) 32px clamp(48px, 7vh, 68px);
+        }
+        .auth-hero__stack {
+          gap: 16px;
+        }
+      }
+      @media (max-width: 640px) {
+        .auth-hero__line {
+          flex-direction: column;
+          gap: 6px;
+        }
+        .auth-hero__eyebrow {
+          width: 100%;
+          max-width: 100%;
+          box-sizing: border-box;
+        }
+        .auth-hero__title .auth-hero__line {
+          flex-direction: row;
         }
       }
     </style>
@@ -526,9 +614,24 @@
 
     <div class="auth-banner" id="authBanner">
       <section class="sn-hero auth-sn-hero" aria-labelledby="authTitle">
-        <p class="sn-hero__eyebrow" id="authBannerEyebrow">👋 مرحباً بك ضيف ERVENOW</p>
-        <h1 class="sn-hero__title" id="authTitle">⭐ أهلاً بك — <span>دخول الأعضاء</span></h1>
-        <p class="sn-hero__sub" id="authSubtitle">صلاحية الرمز 5 دقائق.</p>
+        <div class="auth-hero__stack">
+          <p class="auth-hero__eyebrow" id="authBannerEyebrow">
+            <span class="auth-hero__line">
+              <span class="auth-hero__emoji" id="authBannerEmoji" aria-hidden="true">👋</span>
+              <span class="auth-hero__eyebrow-text" id="authBannerEyebrowText">مرحباً بك ضيف ERVENOW</span>
+            </span>
+          </p>
+          <h1 class="auth-hero__title" id="authTitle">
+            <span class="auth-hero__line">
+              <span class="auth-hero__emoji" id="authTitleEmoji" aria-hidden="true">⭐</span>
+              <span id="authTitleText">أهلاً بك — <strong>دخول الأعضاء</strong></span>
+            </span>
+          </h1>
+          <p class="auth-hero__badge" id="authSubtitle">
+            <span class="auth-hero__badge-icon" aria-hidden="true">⏱</span>
+            <span id="authSubtitleText">صلاحية الرمز 5 دقائق</span>
+          </p>
+        </div>
       </section>
       <div class="sn-wave" aria-hidden="true">
         <svg viewBox="0 0 1440 48" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
@@ -1241,21 +1344,25 @@
 
       function syncAuthHead() {
         var reg = isRegisterMode();
-        var eyebrow = document.getElementById("authBannerEyebrow");
-        var title = document.getElementById("authTitle");
-        var sub = document.getElementById("authSubtitle");
-        if (eyebrow) {
-          eyebrow.textContent = reg ? "⭐ ERVENOW — إنشاء عضوية" : "👋 مرحباً بك ضيف ERVENOW";
+        var bannerEmoji = document.getElementById("authBannerEmoji");
+        var eyebrowText = document.getElementById("authBannerEyebrowText");
+        var titleEmoji = document.getElementById("authTitleEmoji");
+        var titleText = document.getElementById("authTitleText");
+        var subtitleText = document.getElementById("authSubtitleText");
+        if (bannerEmoji) bannerEmoji.textContent = reg ? "⭐" : "👋";
+        if (eyebrowText) {
+          eyebrowText.textContent = reg ? "ERVENOW — إنشاء عضوية" : "مرحباً بك ضيف ERVENOW";
         }
-        if (title) {
-          title.innerHTML = reg
-            ? 'أنشئ <span>عضويتك</span> للاستفادة من جميع الخدمات'
-            : "⭐ أهلاً بك — <span>دخول الأعضاء</span>";
+        if (titleEmoji) titleEmoji.textContent = reg ? "✨" : "⭐";
+        if (titleText) {
+          titleText.innerHTML = reg
+            ? 'أنشئ <strong>عضويتك</strong> للاستفادة من جميع الخدمات'
+            : "أهلاً بك — <strong>دخول الأعضاء</strong>";
         }
-        if (sub) {
-          sub.textContent = reg
+        if (subtitleText) {
+          subtitleText.textContent = reg
             ? "يُراجع طلبك فريق الإدارة — بعد الاعتماد استخدم دخول الأعضاء برمز واتساب."
-            : "صلاحية الرمز 5 دقائق.";
+            : "صلاحية الرمز 5 دقائق";
         }
       }
 

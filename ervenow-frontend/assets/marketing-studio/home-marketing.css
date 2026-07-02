@@ -1,0 +1,14 @@
+/**
+ * ERVENOW Marketing Studio — M1 (no visual chrome; visibility + layout only)
+ */
+.marketing-slot-placeholder,
+.marketing-hidden {
+  display: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-marketing-applied="1"] [data-marketing-slot] {
+    animation: none !important;
+    transition: none !important;
+  }
+}

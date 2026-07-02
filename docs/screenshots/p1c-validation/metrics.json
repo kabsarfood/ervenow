@@ -1,0 +1,39 @@
+{
+  "capturedAt": "2026-07-01T07:35:26.836Z",
+  "mobile": {
+    "viewport": {
+      "w": 390,
+      "h": 844
+    },
+    "firstCardTop": 116,
+    "trustBottom": 730,
+    "whyInFold": false,
+    "whyTop": 865,
+    "mainInFold": false,
+    "cardsInFold": 4,
+    "bannerInFold": true,
+    "bannerHidden": false,
+    "words": {
+      "useful": 12,
+      "noise": 61
+    }
+  },
+  "desktop": {
+    "viewport": {
+      "w": 1280,
+      "h": 800
+    },
+    "firstCardTop": 211,
+    "trustBottom": 494,
+    "whyInFold": true,
+    "whyTop": 773,
+    "mainInFold": true,
+    "cardsInFold": 4,
+    "bannerInFold": true,
+    "bannerHidden": false,
+    "words": {
+      "useful": 12,
+      "noise": 92
+    }
+  }
+}

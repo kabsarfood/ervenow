@@ -82,8 +82,8 @@
 
   .lp-home-premium .guest-offers-carousel--home .guest-offers-shell {
     width: 100%;
-    aspect-ratio: 1920 / 730;
-    min-height: clamp(200px, 52vw, 380px);
+    aspect-ratio: 1920 / 560;
+    min-height: clamp(200px, 27.5vw, 325px);
     height: auto;
   }
 
@@ -99,11 +99,10 @@
   html.erv-mobile-shell body.lp-home-premium .guest-offers-carousel--home .guest-offers-shell,
   html.erv-mobile-shell body.lp-home-premium .guest-offers-carousel--reserved .guest-offers-shell--placeholder {
     width: 100% !important;
-    aspect-ratio: 1920 / 730 !important;
-    /* vw فقط — vh يختلف على Safari iOS ويكسر التلاؤم */
-    min-height: clamp(200px, 52vw, 380px) !important;
+    aspect-ratio: 1920 / 480 !important;
+    min-height: clamp(140px, 37.5vw, 210px) !important;
+    max-height: 210px !important;
     height: auto !important;
-    max-height: none !important;
   }
 
   html.erv-mobile-shell body.lp-home-premium .guest-offers-carousel--home .guest-offers-track {
@@ -187,26 +186,34 @@
 @media (max-width: 640px) {
   .lp-home-premium .guest-offers-carousel--reserved .guest-offers-shell--placeholder,
   .guest-offers-carousel--reserved .guest-offers-shell--placeholder {
-    min-height: clamp(200px, 52vw, 380px);
-    aspect-ratio: 1920 / 730;
+    min-height: clamp(140px, 37.5vw, 210px);
+    max-height: 210px;
+    aspect-ratio: 1920 / 480;
   }
 
-  /* حجز مكان البنر قبل تحميل JS — يمنع قفز sn-section */
+  /* P1-B: لا حجز مكان للبنر المخفي على الجوال — الأقسام أولاً */
   html.erv-mobile-shell #homeMainBanner.guest-offers-carousel--home[hidden] {
-    display: block !important;
-    min-height: clamp(200px, 52vw, 380px);
-    aspect-ratio: 1920 / 730;
-    margin-bottom: clamp(10px, 2.2vw, 14px);
+    display: none !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
     visibility: hidden;
     pointer-events: none;
-    background: linear-gradient(135deg, #e9dccb 0%, #f8f4ee 55%, #efe6d8 100%);
-    border-radius: 0;
-    border-inline: 0;
+    border: 0;
     box-shadow: none;
   }
 
   html.erv-mobile-shell #homeMainBanner.guest-offers-carousel--home:not([hidden]) {
     visibility: visible;
+    margin-top: clamp(8px, 2vw, 12px);
+    margin-bottom: clamp(8px, 2vw, 12px);
+  }
+
+  html.erv-mobile-shell body.lp-home-premium #homeMainBanner.guest-offers-carousel--home:not([hidden]) .guest-offers-shell {
+    aspect-ratio: 1920 / 480 !important;
+    min-height: clamp(140px, 37.5vw, 175px) !important;
+    max-height: 175px !important;
   }
 }
 
@@ -343,6 +350,124 @@
 .guest-offers-dot.is-active::after {
   background: #f5d78e;
   transform: scale(1.08);
+}
+
+/* ——— حاوية البنر الرئيسي + أسهم التنقل ——— */
+.guest-offers-carousel-wrap--home {
+  box-sizing: border-box;
+  max-width: min(1000px, calc(100% - 32px));
+  margin: clamp(8px, 2vw, 14px) auto;
+  padding: clamp(8px, 2vw, 12px);
+  border-radius: 20px;
+  background: linear-gradient(155deg, rgba(255, 254, 251, 0.96), rgba(248, 241, 229, 0.9));
+  border: 1px solid rgba(61, 34, 19, 0.1);
+  box-shadow: 0 8px 28px rgba(45, 26, 14, 0.06);
+}
+
+.guest-offers-carousel-wrap--home:has(#homeMainBanner[hidden]) {
+  display: none !important;
+}
+
+.guest-offers-carousel-wrap--home #homeMainBanner.guest-offers-carousel--home {
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  border-radius: 16px;
+  border: 1px solid rgba(61, 34, 19, 0.08);
+  box-shadow: none;
+}
+
+.guest-offers-carousel-wrap--home #homeMainBanner .guest-offers-shell {
+  border-radius: 14px;
+}
+
+.guest-offers-nav {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.guest-offers-nav__btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  min-height: 40px;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 50%;
+  background: rgba(26, 18, 12, 0.42);
+  color: #fffefb;
+  cursor: pointer;
+  pointer-events: auto;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+  transition: background 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.guest-offers-nav__btn svg {
+  width: 20px;
+  height: 20px;
+  display: block;
+}
+
+.guest-offers-nav__btn:hover {
+  background: rgba(26, 18, 12, 0.62);
+  border-color: rgba(245, 215, 142, 0.55);
+}
+
+.guest-offers-nav__btn:active {
+  transform: translateY(-50%) scale(0.96);
+}
+
+.guest-offers-nav__btn:focus-visible {
+  outline: 3px solid rgba(245, 215, 142, 0.75);
+  outline-offset: 2px;
+}
+
+.guest-offers-nav__btn--prev {
+  inset-inline-end: 10px;
+}
+
+.guest-offers-nav__btn--next {
+  inset-inline-start: 10px;
+}
+
+@media (max-width: 640px), ((max-width: 932px) and (max-height: 500px) and (pointer: coarse)) {
+  .guest-offers-carousel-wrap--home {
+    max-width: calc(100% - 24px);
+    margin-inline: 12px;
+    padding: 8px;
+    border-radius: 18px;
+  }
+
+  .guest-offers-nav__btn {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    min-height: 36px;
+  }
+
+  .guest-offers-nav__btn svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .guest-offers-nav__btn--prev {
+    inset-inline-end: 8px;
+  }
+
+  .guest-offers-nav__btn--next {
+    inset-inline-start: 8px;
+  }
 }
 
 .dash-offer-card__img {

@@ -114,22 +114,65 @@
     inner.dataset.ervHarmonyReady = "1";
   }
 
-  function syncHomePanelAnchor(btn, panel) {
+  function getHomeNavWidth() {
+    var vw = global.innerWidth || 1280;
+    if (isMobile()) {
+      return Math.min(272, Math.max(200, vw - 16));
+    }
+    return Math.min(380, Math.max(320, Math.round(vw * 0.24)));
+  }
+
+  function ensurePanelParent(panel, parent) {
+    if (panel && parent && panel.parentElement !== parent) {
+      parent.appendChild(panel);
+    }
+  }
+
+  function syncHomePanelAnchor(btn, panel, root) {
     if (!btn || !panel) return;
-    var r = btn.getBoundingClientRect();
-    var gap = 6;
-    var maxW = Math.min(272, Math.max(200, global.innerWidth - 16));
-    var panelLeft = Math.max(8, Math.round(r.right - maxW));
-    panel.style.setProperty("top", Math.round(r.bottom + gap) + "px", "important");
-    panel.style.setProperty("left", panelLeft + "px", "important");
-    panel.style.setProperty("right", "auto", "important");
+    var maxW = getHomeNavWidth();
+
+    if (isMobile()) {
+      ensurePanelParent(panel, document.body);
+      panel.classList.remove("lp-quick-dd__panel--desktop-pop");
+
+      var r = btn.getBoundingClientRect();
+      var vw = global.innerWidth || 1280;
+      var gap = 6;
+      var top = Math.round(r.bottom + gap);
+      var btnCenter = r.left + r.width / 2;
+      var panelLeft = Math.max(8, Math.round(r.right - maxW));
+      var caretX = Math.round(btnCenter - panelLeft);
+      caretX = Math.max(32, Math.min(maxW - 32, caretX));
+
+      panel.style.setProperty("--lp-home-nav-top", top + "px");
+      panel.style.setProperty("--lp-home-nav-caret-x", caretX + "px");
+      panel.style.setProperty("top", top + "px", "important");
+      panel.style.setProperty("left", panelLeft + "px", "important");
+      panel.style.setProperty("right", "auto", "important");
+      panel.style.setProperty("width", maxW + "px", "important");
+      panel.style.removeProperty("inset-inline-start");
+      panel.style.removeProperty("inset-inline-end");
+      return;
+    }
+
+    ensurePanelParent(panel, root || btn.closest(".lp-quick-dd") || document.body);
+    panel.classList.add("lp-quick-dd__panel--desktop-pop");
+
+    var btnCenterLocal = btn.offsetWidth / 2;
+    var caretXLocal = Math.round(Math.max(32, Math.min(maxW - 32, btnCenterLocal)));
+
+    panel.style.setProperty("--lp-home-nav-caret-x", caretXLocal + "px");
     panel.style.setProperty("width", maxW + "px", "important");
+    panel.style.removeProperty("--lp-home-nav-top");
+    panel.style.removeProperty("top");
+    panel.style.removeProperty("left");
+    panel.style.removeProperty("right");
     panel.style.removeProperty("inset-inline-start");
     panel.style.removeProperty("inset-inline-end");
   }
 
   function setupHomeQuickNav() {
-    if (!isMobile()) return;
     if (!document.body.classList.contains("lp-home-premium")) return;
 
     var root = document.getElementById("lpQuickNav");
@@ -139,15 +182,21 @@
 
     ensureNavBackdrop();
     panel.classList.add("lp-quick-dd__panel--harmony");
-    document.body.appendChild(panel);
+    if (!isMobile() && !panel.querySelector(".lp-quick-dd__panel-scroll")) {
+      var scroll = document.createElement("div");
+      scroll.className = "lp-quick-dd__panel-scroll";
+      while (panel.firstChild) scroll.appendChild(panel.firstChild);
+      panel.appendChild(scroll);
+    }
+    ensurePanelParent(panel, isMobile() ? document.body : root);
 
     function openHomeNav() {
-      syncHomePanelAnchor(btn, panel);
+      syncHomePanelAnchor(btn, panel, root);
       document.body.classList.add("erv-harmony-nav-open");
       btn.setAttribute("aria-expanded", "true");
       panel.hidden = false;
       root.classList.add("is-open");
-      lockPageScroll();
+      if (isMobile()) lockPageScroll();
     }
 
     function toggleHomeNav(e) {
@@ -176,14 +225,16 @@
     global.addEventListener(
       "resize",
       function () {
-        if (!panel.hidden) syncHomePanelAnchor(btn, panel);
+        ensurePanelParent(panel, isMobile() ? document.body : root);
+        if (!panel.hidden) syncHomePanelAnchor(btn, panel, root);
       },
       { passive: true }
     );
 
     global.addEventListener("orientationchange", function () {
       global.setTimeout(function () {
-        if (!panel.hidden) syncHomePanelAnchor(btn, panel);
+        ensurePanelParent(panel, isMobile() ? document.body : root);
+        if (!panel.hidden) syncHomePanelAnchor(btn, panel, root);
       }, 200);
     });
 
@@ -191,12 +242,9 @@
   }
 
   function init() {
-    if (!isMobile()) {
-      closeHarmonyNav();
-      return;
-    }
-    setupGuestHeader();
     setupHomeQuickNav();
+    if (!isMobile()) return;
+    setupGuestHeader();
   }
 
   global.ErvenowMobileHarmony = {
@@ -212,6 +260,8 @@
   }
 
   global.addEventListener("resize", function () {
-    if (!isMobile()) closeHarmonyNav();
+    if (isMobile()) return;
+    if (!document.body.classList.contains("guest-shell-page")) return;
+    closeHarmonyNav();
   });
 })(window);

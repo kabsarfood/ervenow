@@ -57,6 +57,11 @@
     return String((state.profile && state.profile.service_type) || "").toLowerCase();
   }
 
+  function providerNeedsLiveGps() {
+    var pt = providerServiceType();
+    return pt === "gas_cylinder_swap" || pt === "gas_central_refill";
+  }
+
   function isGasCentralProvider() {
     return providerServiceType() === "gas_central_refill";
   }
@@ -71,13 +76,36 @@
     return mode === "central_refill" || mode === "bulk";
   }
 
-  function gasCentralLiters(b) {
-    var d = b && b.data && typeof b.data === "object" ? b.data : {};
-    return b.gas_liters || d.gas_liters || b.service_qty || d.qty || "—";
+  function isServicePhaseBooking(b) {
+    var st = String((b && b.service_type) || "").toLowerCase();
+    if (st === "car_polishing") return false;
+    if (st === "gas_delivery") {
+      var mode = bookingGasMode(b);
+      return mode !== "central_refill" && mode !== "bulk";
+    }
+    return (
+      ["plumber", "electrician", "ac_technician", "agricultural_engineer", "nursery", "cleaning_villa", "cleaning_building", "cleaning", "laundry_estates"].indexOf(
+        st
+      ) !== -1
+    );
   }
 
-  function gasCentralFacility(b, d) {
-    return d.establishment_name || b.district || b.service_name || "—";
+  function isServicePhaseProviderForBooking(b) {
+    if (!isServicePhaseBooking(b)) return false;
+    var pt = providerServiceType();
+    var st = String(b.service_type || "").toLowerCase();
+    if (pt === "gas_cylinder_swap" && st === "gas_delivery") return true;
+    if (pt === "laundry_estates") {
+      return ["cleaning_villa", "cleaning_building", "cleaning", "laundry_estates"].indexOf(st) !== -1;
+    }
+    if (pt === "nursery") pt = "agricultural_engineer";
+    return pt === st;
+  }
+
+  function findBooking(id) {
+    return (state.bookings || []).find(function (b) {
+      return String(b.id) === String(id);
+    });
   }
 
   function carPolishingCpStatus(b) {
@@ -98,6 +126,86 @@
     if (st === "delivered") return "completed";
     if (st === "cancelled") return "cancelled";
     return "new";
+  }
+
+  function gasCentralLiters(b) {
+    var d = b && b.data && typeof b.data === "object" ? b.data : {};
+    return b.gas_liters || d.gas_liters || b.service_qty || d.qty || "—";
+  }
+
+  function gasCentralFacility(b, d) {
+    return d.establishment_name || b.district || b.service_name || "—";
+  }
+
+  function servicePhaseStatus(b) {
+    var d = b && b.data && typeof b.data === "object" ? b.data : {};
+    if (b.sp_status) return String(b.sp_status).toLowerCase();
+    if (d.sp_status) return String(d.sp_status).toLowerCase();
+    var st = bookingStatus(b);
+    if (st === "accepted") {
+      return String(d.schedule_mode || b.schedule_mode || "").toLowerCase() === "scheduled" &&
+        (d.scheduled_at || b.scheduled_at)
+        ? "scheduled"
+        : "accepted";
+    }
+    if (st === "delivering") {
+      if (d.sp_phase === "in_progress" || d.sp_status === "in_progress") return "in_progress";
+      return "on_the_way";
+    }
+    if (st === "delivered") return "completed";
+    if (st === "cancelled") return "cancelled";
+    return "new";
+  }
+
+  function spScheduleText(b) {
+    return cpScheduleText(b);
+  }
+
+  function servicePhaseDetail(b) {
+    if (!isServicePhaseBooking(b)) return "";
+    var d = b.data && typeof b.data === "object" ? b.data : {};
+    var subtype = b.service_subtype_label || d.service_subtype_label || d.service_subtype || "";
+    var photos = Array.isArray(b.service_photos)
+      ? b.service_photos
+      : Array.isArray(d.service_photos)
+        ? d.service_photos
+        : [];
+    var notes = String(b.notes || d.order_notes || d.customer_notes || "").trim();
+    var html =
+      (subtype ? "<p>نوع الخدمة: " + esc(subtype) + "</p>" : "") +
+      "<p>الموعد: " +
+      esc(spScheduleText(b)) +
+      "</p>" +
+      "<p>الحالة: " +
+      esc(cpStatusLabelAr(servicePhaseStatus(b))) +
+      "</p>" +
+      (notes ? "<p>ملاحظات: " + esc(notes) + "</p>" : "");
+    if (photos.length) {
+      html +=
+        '<p style="margin-bottom:6px">صور الطلب (' +
+        photos.length +
+        "):</p><div class=\"sp-cp-photos\">" +
+        photos
+          .slice(0, 10)
+          .map(function (item, i) {
+            var url = typeof item === "string" ? item : item && item.url ? item.url : "";
+            if (!url) return "";
+            return (
+              '<a href="' +
+              esc(String(url)) +
+              '" target="_blank" rel="noopener" title="صورة ' +
+              (i + 1) +
+              '"><img src="' +
+              esc(String(url)) +
+              '" alt="صورة ' +
+              (i + 1) +
+              '" loading="lazy" /></a>'
+            );
+          })
+          .join("") +
+        "</div>";
+    }
+    return html;
   }
 
   function cpStatusLabelAr(status) {
@@ -252,6 +360,9 @@
     if (booking && String(booking.service_type || "").toLowerCase() === "car_polishing") {
       return cpStatusLabelAr(carPolishingCpStatus(booking));
     }
+    if (booking && isServicePhaseBooking(booking)) {
+      return cpStatusLabelAr(servicePhaseStatus(booking));
+    }
     if (s === "new" || s === "pending") return "جديد — متاح للحجز";
     if (s === "accepted") return "محجوز — قيد التنفيذ";
     if (s === "delivering") {
@@ -325,12 +436,43 @@
     return html;
   }
 
+  function renderServicePhaseActions(b, mine, canReserve) {
+    var sp = servicePhaseStatus(b);
+    var html = "";
+    if (canReserve && isServicePhaseProviderForBooking(b)) {
+      html +=
+        '<button type="button" class="pf-btn pf-btn--primary sp-reserve" data-id="' +
+        esc(b.id) +
+        '">قبول</button>';
+      return html;
+    }
+    if (!mine || !isServicePhaseProviderForBooking(b)) return "";
+    if (sp === "accepted" || sp === "scheduled") {
+      html +=
+        '<button type="button" class="pf-btn sp-en-route" data-id="' +
+        esc(b.id) +
+        '">في الطريق</button>';
+    } else if (sp === "on_the_way") {
+      html +=
+        '<button type="button" class="pf-btn sp-sp-progress" data-id="' +
+        esc(b.id) +
+        '">بدء التنفيذ</button>';
+    } else if (sp === "in_progress") {
+      html +=
+        '<button type="button" class="pf-btn pf-btn--primary sp-complete" data-id="' +
+        esc(b.id) +
+        '" data-default-label="إتمام الخدمة">إتمام الخدمة</button>';
+    }
+    return html;
+  }
+
   function renderBookingCard(b) {
     var st = bookingStatus(b);
     var mine = String(b.provider_id || "") === providerId();
     var canReserve = (st === "new" || st === "pending") && !b.provider_id;
     var isCpBooking = String(b.service_type || "").toLowerCase() === "car_polishing";
-    var canProviderExecute = mine && st === "accepted" && !isCpBooking;
+    var isSpBooking = isServicePhaseBooking(b) && !isGasCentralBooking(b);
+    var canProviderExecute = mine && st === "accepted" && !isCpBooking && !isSpBooking;
     var d = b.data && typeof b.data === "object" ? b.data : {};
     var maps =
       b.location && String(b.location).indexOf(",") !== -1
@@ -400,7 +542,8 @@
       extraInternal +
       extraGasCentral +
       carPolishingDetail(b) +
-      (maps && !extraInternal && !extraGasCentral
+      servicePhaseDetail(b) +
+      (maps && !extraInternal && !extraGasCentral && !carPolishingDetail(b) && !servicePhaseDetail(b)
         ? '<p><a href="' + esc(maps) + '" target="_blank" rel="noopener">فتح الموقع على الخرائط</a></p>'
         : !extraInternal && !extraGasCentral
           ? "<p>الموقع: " + esc(b.location || "—") + "</p>"
@@ -417,8 +560,10 @@
       '<div class="sp-booking__actions">' +
       (isCpBooking && isCarPolishingProvider()
         ? renderCarPolishingActions(b, mine, canReserve)
-        : "") +
-      (!isCpBooking || !isCarPolishingProvider()
+        : isSpBooking
+          ? renderServicePhaseActions(b, mine, canReserve)
+          : "") +
+      (!isCpBooking || !isCarPolishingProvider()) && !isSpBooking
         ? (canReserve
             ? '<button type="button" class="pf-btn pf-btn--primary sp-reserve" data-id="' +
               esc(b.id) +
@@ -455,26 +600,28 @@
 
   function locationBannerHtml() {
     if (locationReady()) return "";
+    if (!providerNeedsLiveGps()) return "";
     return global.ErvenowPortalProviderLocation && ErvenowPortalProviderLocation.renderBanner
-      ? ErvenowPortalProviderLocation.renderBanner()
+      ? ErvenowPortalProviderLocation.renderBanner({ gasRequired: true })
       : "";
   }
 
   async function activateOrderLocation() {
     var Loc = global.ErvenowPortalProviderLocation;
     if (!Loc) return;
+    var needsGps = providerNeedsLiveGps();
     try {
       if (typeof Loc.ensureForOrders === "function") {
-        await Loc.ensureForOrders("service", state.profile);
-      } else if (typeof Loc.captureAndSave === "function") {
-        await Loc.captureAndSave("service");
+        await Loc.ensureForOrders("service", state.profile, { required: needsGps, silent: true });
       }
-      if (typeof Loc.startPresenceLoop === "function") {
-        Loc.startPresenceLoop("service", 15000);
+      if (Loc.isReady && (Loc.isReady(state.profile) || Loc.isReady())) {
+        if (typeof Loc.startPresenceLoop === "function") {
+          Loc.startPresenceLoop("service", 15000);
+        }
       }
     } catch (e) {
-      if (shell) {
-        shell.showMessage((e && e.message) || "فعّل الموقع من القائمة لاستقبال الطلبات", false);
+      if (needsGps && shell) {
+        shell.showMessage((e && e.message) || "فعّل الموقع من القائمة لاستقبال طلبات الغاز", false);
       }
     }
   }
@@ -742,21 +889,36 @@
     }
   }
 
+  function bookingNeedsProviderGps(booking) {
+    return String((booking && booking.service_type) || "").toLowerCase() === "gas_delivery";
+  }
+
+  async function tryEnsureLocationForReserve(booking) {
+    var Loc = global.ErvenowPortalProviderLocation;
+    if (!Loc) return null;
+    var needsGps = bookingNeedsProviderGps(booking);
+    try {
+      if (typeof Loc.ensureForOrders === "function") {
+        await Loc.ensureForOrders("service", state.profile);
+      } else if (typeof Loc.captureAndSave === "function") {
+        await Loc.captureAndSave("service");
+      }
+    } catch (e) {
+      if (needsGps) throw e;
+    }
+    return Loc.getLastCoords ? Loc.getLastCoords() : null;
+  }
+
   async function reserveBooking(id, btn) {
     if (btn) {
       btn.disabled = true;
       btn.textContent = isCarPolishingProvider() ? "جاري القبول..." : "جاري الحجز...";
     }
     try {
-      var Loc = global.ErvenowPortalProviderLocation;
-      if (Loc) {
-        if (typeof Loc.ensureForOrders === "function") {
-          await Loc.ensureForOrders("service", state.profile);
-        } else if (typeof Loc.captureAndSave === "function") {
-          await Loc.captureAndSave("service");
-        }
-      }
-      var coords = Loc && Loc.getLastCoords ? Loc.getLastCoords() : null;
+      var booking = (state.bookings || []).find(function (b) {
+        return String(b.id) === String(id);
+      });
+      var coords = await tryEnsureLocationForReserve(booking);
       var body = coords ? { lat: coords.lat, lng: coords.lng } : {};
       var j = await api("/api/services/bookings/" + encodeURIComponent(id) + "/reserve", {
         method: "POST",
@@ -840,9 +1002,12 @@
       btn.textContent = "جاري التحديث...";
     }
     try {
-      var body = isCarPolishingProvider()
-        ? { cp_status: "on_the_way" }
-        : { status: "delivering" };
+      var b = findBooking(id);
+      var body = b && isServicePhaseBooking(b)
+        ? { sp_status: "on_the_way" }
+        : isCarPolishingProvider()
+          ? { cp_status: "on_the_way" }
+          : { status: "delivering" };
       await api("/api/services/bookings/" + encodeURIComponent(id) + "/status", {
         method: "PATCH",
         body: body,
@@ -866,9 +1031,11 @@
       btn.textContent = "جاري البدء...";
     }
     try {
+      var b = findBooking(id);
+      var body = b && isServicePhaseBooking(b) ? { sp_status: "in_progress" } : { cp_status: "in_progress" };
       await api("/api/services/bookings/" + encodeURIComponent(id) + "/status", {
         method: "PATCH",
-        body: { cp_status: "in_progress" },
+        body: body,
       });
       shell.showMessage("بدأ التنفيذ", true);
       await loadData();
@@ -889,9 +1056,12 @@
       btn.textContent = "جاري الإتمام...";
     }
     try {
+      var bk = findBooking(id);
       var payload =
         body ||
-        (isCarPolishingProvider() ? { actor: "both" } : { step: "provider" });
+        (isCarPolishingProvider() || (bk && isServicePhaseBooking(bk) && servicePhaseStatus(bk) === "in_progress")
+          ? { actor: "both" }
+          : { step: "provider" });
       var j = await api("/api/services/bookings/" + encodeURIComponent(id) + "/complete", {
         method: "POST",
         body: payload,
@@ -991,7 +1161,7 @@
         cancelTaskBooking(btn.getAttribute("data-id"), btn);
       };
     });
-    main.querySelectorAll(".sp-cp-progress").forEach(function (btn) {
+    main.querySelectorAll(".sp-cp-progress, .sp-sp-progress").forEach(function (btn) {
       btn.onclick = function () {
         startCpProgress(btn.getAttribute("data-id"), btn);
       };

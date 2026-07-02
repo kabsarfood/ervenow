@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <script src="/assets/viewport-fit.js?erv=20260623"></script>
     <meta
       name="description"
@@ -19,21 +19,19 @@
     <link rel="stylesheet" href="/assets/start-now-landing.css" />
     <link rel="stylesheet" href="/assets/ervenow-responsive.css" />
     <link rel="stylesheet" href="/assets/mobile-foundation.css?erv=20260623" />
-    <link rel="stylesheet" href="/assets/mobile-home-conversion.css?erv=20260612" />
+    <link rel="stylesheet" href="/assets/mobile-home-conversion.css?erv=20260630" />
+    <link rel="stylesheet" href="/assets/home-polish-p1a.css?erv=20260630" />
+    <link rel="stylesheet" href="/assets/home-polish-p1b.css?erv=20260630" />
+    <link rel="stylesheet" href="/assets/home-polish-p1c.css?erv=20260630" />
+    <link rel="stylesheet" href="/assets/home-polish-final.css?erv=20260702l" />
     <script src="/assets/mobile-foundation.js?erv=20260623" defer></script>
     <script src="/assets/mobile-orders-nav-badge.js?erv=20260612" defer></script>
-    <script src="/assets/mobile-harmony.js?erv=20260612" defer></script>
+    <script src="/assets/mobile-harmony.js?erv=20260702o" defer></script>
     <script src="/assets/api-config.js"></script>
     <script src="/assets/phonePrivacy.js"></script>
     <script src="/assets/api.js?erv=20260612"></script>
     <script src="/assets/account-destinations.js" defer></script>
     <script src="/assets/platform-access.js" defer></script>
-    <script>
-      document.addEventListener("DOMContentLoaded", function () {
-        var el = document.getElementById("ervenowHealthFooterLink");
-        if (el && window.PlatformAPI) el.href = PlatformAPI.apiUrl("/api/health");
-      });
-    </script>
     <style>
       html {
         scroll-behavior: smooth;
@@ -2335,6 +2333,95 @@
         border-radius: 14px;
       }
 
+      /* ——— بطاقة «سجّل الآن» — شريط ذهبي متحرك على الحافة ——— */
+      #register-store-cta {
+        padding-top: clamp(28px, 5vw, 48px);
+        padding-bottom: clamp(28px, 5vw, 48px);
+      }
+
+      #register-store-cta .lp-register-cta {
+        position: relative;
+        max-width: min(580px, 100%);
+        margin: 0 auto;
+        border-radius: clamp(20px, 4vw, 26px);
+        overflow: hidden;
+        box-shadow:
+          0 16px 48px rgba(45, 26, 14, 0.1),
+          0 0 0 1px rgba(201, 162, 39, 0.12);
+      }
+
+      #register-store-cta .lp-register-cta__ring {
+        position: absolute;
+        inset: -70%;
+        background: conic-gradient(
+          from 0deg,
+          rgba(201, 162, 39, 0.08) 0deg 250deg,
+          rgba(232, 197, 71, 0.35) 280deg,
+          #f0d48a 300deg,
+          #c9a227 320deg,
+          #e8c547 340deg,
+          rgba(240, 212, 138, 0.55) 360deg
+        );
+        animation: lpRegisterBorderSpin 4s linear infinite;
+        pointer-events: none;
+      }
+
+      @keyframes lpRegisterBorderSpin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      #register-store-cta .lp-register-cta__panel {
+        position: relative;
+        z-index: 1;
+        margin: 3px;
+        border-radius: calc(clamp(20px, 4vw, 26px) - 3px);
+        padding: clamp(26px, 5vw, 40px) clamp(20px, 4vw, 32px);
+        text-align: center;
+        background: linear-gradient(155deg, rgba(255, 254, 251, 0.99), rgba(248, 241, 229, 0.92));
+      }
+
+      #register-store-cta .lp-register-cta__panel .lp-section__title {
+        margin-bottom: 12px;
+      }
+
+      #register-store-cta .lp-register-cta__panel .lp-section__lead {
+        margin: 0 auto clamp(22px, 4vw, 28px);
+      }
+
+      #register-store-cta .lp-register-cta__btn {
+        min-height: 48px;
+        padding: 14px clamp(28px, 8vw, 40px);
+        font-size: clamp(0.95rem, 2.4vw, 1.05rem);
+      }
+
+      @media (max-width: 640px) {
+        #register-store-cta.lp-wrap {
+          padding-left: max(clamp(18px, 5vw, 24px), env(safe-area-inset-left, 0px));
+          padding-right: max(clamp(18px, 5vw, 24px), env(safe-area-inset-right, 0px));
+        }
+
+        #register-store-cta .lp-register-cta {
+          width: calc(100% - clamp(16px, 5vw, 28px));
+          max-width: calc(100% - clamp(16px, 5vw, 28px));
+          margin-inline: auto;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        #register-store-cta .lp-register-cta__ring {
+          animation: none;
+          inset: 0;
+          background: linear-gradient(
+            135deg,
+            rgba(201, 162, 39, 0.45),
+            rgba(232, 197, 71, 0.25),
+            rgba(201, 162, 39, 0.45)
+          );
+        }
+      }
+
       /* ——— Footer ——— */
       .lp-footer {
         background: linear-gradient(180deg, rgba(61, 34, 19, 0.07), rgba(61, 34, 19, 0.03));
@@ -2706,13 +2793,13 @@
     </style>
     <link rel="stylesheet" href="/assets/order-draft-badge.css" />
     <link rel="stylesheet" href="/assets/index-header-banner.css" />
-    <link rel="stylesheet" href="/assets/guest-offers-carousel.css?erv=20260612" />
-    <link rel="stylesheet" href="/assets/mobile-harmony.css?erv=20260612" />
+    <link rel="stylesheet" href="/assets/guest-offers-carousel.css?erv=20260630" />
+    <link rel="stylesheet" href="/assets/mobile-harmony.css?erv=20260702o" />
     <link rel="stylesheet" href="/assets/design-system/erv-typography-pr1-tokens.css" />
-    <link rel="stylesheet" href="/assets/design-system/erv-typography-home-pr2.css" />
+    <link rel="stylesheet" href="/assets/marketing-studio/home-marketing.css?erv=20260701m1" />
   </head>
   <body class="lp-body lp-home-premium erv-typography-pr2-home">
-    <header class="lp-header lp-header--refined lp-header--menu-right" id="top">
+    <header class="lp-header lp-header--refined lp-header--menu-right" id="top" data-marketing-slot="header" data-marketing-parent="body">
       <div class="lp-header__inner" id="lpHeaderInner">
         <div class="lp-header__top-row">
         <div class="lp-header__menu-slot">
@@ -2753,9 +2840,6 @@
               ><span class="lp-dd-ic" aria-hidden="true">📋</span><span class="lp-dd-link__text">طلباتي</span
               ><span class="lp-dd-badge" id="ordersBadge">0</span></a
             >
-            <a role="menuitem" class="lp-dd-item" href="/track" aria-label="الخريطة الحية"
-              ><span class="lp-dd-ic" aria-hidden="true">📍</span><span class="lp-dd-link__text">الخريطة الحية</span></a
-            >
             <a role="menuitem" class="lp-dd-item" href="/dashboard" aria-label="الإعدادات"
               ><span class="lp-dd-ic" aria-hidden="true">⚙️</span><span class="lp-dd-link__text">الإعدادات</span></a
             >
@@ -2772,11 +2856,8 @@
                 <a role="menuitem" class="lp-dd-item" href="#trust" aria-label="الثقة"
                   ><span class="lp-dd-ic" aria-hidden="true">&#128737;</span><span class="lp-dd-link__text">الثقة</span></a
                 >
-                <a role="menuitem" class="lp-dd-item" href="#why" aria-label="لماذا ERVENOW"
-                  ><span class="lp-dd-ic" aria-hidden="true">&#10067;</span><span class="lp-dd-link__text">لماذا ERVENOW</span></a
-                >
-                <a role="menuitem" class="lp-dd-item" href="#how" aria-label="كيف تعمل"
-                  ><span class="lp-dd-ic" aria-hidden="true">&#128218;</span><span class="lp-dd-link__text">كيف تعمل</span></a
+                <a role="menuitem" class="lp-dd-item" href="#why" aria-label="كيف تعمل ERVENOW"
+                  ><span class="lp-dd-ic" aria-hidden="true">&#10067;</span><span class="lp-dd-link__text">كيف تعمل</span></a
                 >
                 <a role="menuitem" class="lp-dd-item" href="#contact" aria-label="تواصل معنا"
                   ><span class="lp-dd-ic" aria-hidden="true">&#128231;</span><span class="lp-dd-link__text">تواصل معنا</span></a
@@ -2862,223 +2943,289 @@
       </div>
     </header>
 
+    <div
+      class="marketing-slot-placeholder"
+      data-marketing-slot="announcement_bar"
+      data-marketing-parent="body"
+      hidden
+      aria-hidden="true"
+    ></div>
+
+    <div
+      class="guest-offers-carousel-wrap guest-offers-carousel-wrap--home"
+      id="homeMainBannerWrap"
+      data-marketing-slot="hero_banner"
+      data-marketing-parent="body"
+    >
     <section
       class="card guest-offers-carousel guest-offers-carousel--home"
       id="homeMainBanner"
       hidden
-      aria-label="بنرات المنصة الرئيسية"
+      aria-label="عروض المنصة"
     ></section>
-
-    <div class="sn-wave" aria-hidden="true">
-      <svg viewBox="0 0 1440 48" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
-        <path fill="#e9dccb" d="M0,32 C360,0 1080,64 1440,32 L1440,0 L0,0 Z"/>
-        <path fill="#f8f4ee" d="M0,48 C360,16 1080,80 1440,48 L1440,0 L0,0 Z" opacity=".0"/>
-        <rect x="0" y="44" width="1440" height="4" fill="#f8f4ee"/>
-      </svg>
     </div>
 
-    <div class="erv-home-identity" id="ervHomeIdentity" aria-label="ERVENOW — المنصة الذكية">
-      <p class="erv-home-identity__brand">
-        <strong class="erv-home-identity__name">ERVENOW</strong>
-        <span class="erv-home-identity__tag">المنصة الذكية</span>
-      </p>
-      <p class="erv-home-identity__scope">مطاعم · متاجر · خدمات · توصيل</p>
-    </div>
+    <section
+      class="sn-section sn-section--hub"
+      aria-labelledby="home-cats-title"
+      data-marketing-slot="hub_section"
+      data-marketing-parent="body"
+    >
+      <h2 class="sn-section__title sn-section__title--solo" id="home-cats-title" aria-hidden="true">اختر ما يناسبك</h2>
 
-    <section class="sn-section" aria-labelledby="home-cats-title">
-      <p class="sn-section__label">الأقسام الرئيسية</p>
-      <h2 class="sn-section__title" id="home-cats-title">اختر ما يناسبك</h2>
-
-      <div class="sn-grid sn-home-hub sn-home-hub--direct" id="snHomeHub">
+      <div class="sn-grid sn-home-hub sn-home-hub--direct" id="snHomeHub" data-marketing-slot="hub_categories" data-marketing-parent="hub_section">
         <a class="sn-card sn-card--restaurants sn-hub-link-card" href="/restaurants">
-          <div class="sn-card__icon-wrap" aria-hidden="true">🍽️</div>
+          <div class="sn-card__icon-wrap" aria-hidden="true">
+            <svg class="sn-card__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round"><path d="M4 3h16v4H4z"/><path d="M6 7v12"/><path d="M18 7v12"/><path d="M8 11h8"/><path d="M8 15h8"/></svg>
+          </div>
           <div>
             <div class="sn-card__name">مطاعم</div>
-            <div class="sn-card__desc">مشاوي، برقر، شاورما<br>وأكثر من مطاعم معتمدة</div>
+            <div class="sn-card__desc">مشاوي وبرقر وشاورما</div>
           </div>
-          <div class="sn-card__arrow">← اكتشف</div>
         </a>
         <a class="sn-card sn-card--stores sn-hub-link-card" href="/stores">
-          <div class="sn-card__icon-wrap" aria-hidden="true">🛒</div>
+          <div class="sn-card__icon-wrap" aria-hidden="true">
+            <svg class="sn-card__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M3 4h2l2.2 11.2a1 1 0 0 0 1 .8h9.2a1 1 0 0 0 1-.86l1.3-7.4H6.2"/></svg>
+          </div>
           <div>
             <div class="sn-card__name">متاجر</div>
-            <div class="sn-card__desc">سوبرماركت، صيدليات<br>وبقالة مع توصيل سريع</div>
+            <div class="sn-card__desc">سوبرماركت وصيدليات</div>
           </div>
-          <div class="sn-card__arrow">← اكتشف</div>
         </a>
         <a class="sn-card sn-card--delivery sn-hub-link-card" href="/delivery-services.html">
-          <div class="sn-card__icon-wrap" aria-hidden="true">🚚</div>
+          <div class="sn-card__icon-wrap" aria-hidden="true">
+            <svg class="sn-card__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h11v8H3z"/><path d="M14 10h4l2 3v2h-6"/><circle cx="7" cy="18" r="1.5"/><circle cx="17" cy="18" r="1.5"/></svg>
+          </div>
           <div>
             <div class="sn-card__name">توصيل</div>
-            <div class="sn-card__desc">توصيل من نقطة لأخرى<br>وتوصيل غاز منزلي</div>
+            <div class="sn-card__desc">من نقطة لأخرى وغاز</div>
           </div>
-          <div class="sn-card__arrow">← اطلب</div>
         </a>
         <a class="sn-card sn-card--services sn-hub-link-card" href="/services">
-          <div class="sn-card__icon-wrap" aria-hidden="true">🔧</div>
+          <div class="sn-card__icon-wrap" aria-hidden="true">
+            <svg class="sn-card__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L4 17l3 3 5.3-5.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.9-2.9 2.5-2.5z"/></svg>
+          </div>
           <div>
             <div class="sn-card__name">خدمات</div>
-            <div class="sn-card__desc">سباكة، كهرباء، تنظيف<br>وخدمات منزلية متنوعة</div>
+            <div class="sn-card__desc">سباكة وكهرباء وتنظيف</div>
           </div>
-          <div class="sn-card__arrow">← احجز</div>
         </a>
       </div>
 
-      <div class="sn-trust" role="list" aria-label="مزايا المنصة">
+      <div class="sn-trust" id="trust" role="list" aria-label="مزايا المنصة" data-marketing-slot="trust_bar" data-marketing-parent="hub_section">
         <div class="sn-trust__item" role="listitem">
-          <span class="sn-trust__icon" aria-hidden="true">⚡</span>
+          <span class="sn-trust__icon" aria-hidden="true"><svg class="sn-trust__svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 14h7l-1 8 10-14h-7l0-6z"/></svg></span>
           توصيل سريع
         </div>
         <div class="sn-trust__item" role="listitem">
-          <span class="sn-trust__icon" aria-hidden="true">🛡️</span>
+          <span class="sn-trust__icon" aria-hidden="true"><svg class="sn-trust__svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V6l-8-3-8 3v6c0 6 8 10 8 10z"/></svg></span>
           دفع آمن
         </div>
         <div class="sn-trust__item" role="listitem">
-          <span class="sn-trust__icon" aria-hidden="true">📍</span>
+          <span class="sn-trust__icon" aria-hidden="true"><svg class="sn-trust__svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s6-5.2 6-10a6 6 0 1 0-12 0c0 4.8 6 10 6 10z"/><circle cx="12" cy="11" r="2.5"/></svg></span>
           تتبع لحظي
         </div>
         <div class="sn-trust__item" role="listitem">
-          <span class="sn-trust__icon" aria-hidden="true">💬</span>
+          <span class="sn-trust__icon" aria-hidden="true"><svg class="sn-trust__svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-8 8H8l-5 3 1.6-4.8A8 8 0 1 1 21 12z"/></svg></span>
           دعم فوري
         </div>
       </div>
+
+      <p class="sn-stats" id="stats" aria-label="أرقام المنصة" data-marketing-slot="platform_stats" data-marketing-parent="hub_section">
+        <span class="sn-stats__item"><strong>300+</strong> طلب يومي</span>
+        <span class="sn-stats__sep" aria-hidden="true">·</span>
+        <span class="sn-stats__item"><strong>45+</strong> مندوب</span>
+        <span class="sn-stats__sep" aria-hidden="true">·</span>
+        <span class="sn-stats__item"><strong>120+</strong> متجر</span>
+      </p>
     </section>
 
-    <section class="sn-section sn-section--stats lp-counters lp-wrap lp-reveal" id="stats" aria-label="أرقام المنصة">
-      <div class="lp-counters__grid">
-        <div class="lp-counter">
-          <div class="lp-counter__value"><span class="js-count" data-target="300" data-suffix="+">0</span></div>
-          <p class="lp-counter__label">طلب يومي</p>
-        </div>
-        <div class="lp-counter">
-          <div class="lp-counter__value"><span class="js-count" data-target="45" data-suffix="+">0</span></div>
-          <p class="lp-counter__label">مندوب نشط</p>
-        </div>
-        <div class="lp-counter">
-          <div class="lp-counter__value"><span class="js-count" data-target="120" data-suffix="+">0</span></div>
-          <p class="lp-counter__label">متجر</p>
-        </div>
-      </div>
-    </section>
-
-    <main>
-      <section class="lp-section lp-wrap lp-reveal" id="register-store-cta" aria-labelledby="register-store-title">
-        <h2 class="lp-section__title" id="register-store-title">&#127978; ⚡ ابدأ البيع الآن على ERVENOW</h2>
-        <p class="lp-section__lead">انضم إلى منصة ERVENOW وابدأ استقبال الطلبات من العملاء</p>
-        <div class="lp-contact">
-          <a class="lp-btn-solid" href="/register-store">سجّل الآن</a>
-        </div>
-      </section>
-
-      <section class="lp-section lp-wrap lp-reveal" id="why" aria-labelledby="why-title">
-        <h2 class="lp-section__title" id="why-title">لماذا ERVENOW؟</h2>
-        <p class="lp-section__lead">منصة مصممة لتنمو مع عملك وتبقى جاهزة للمستقبل.</p>
-        <div class="lp-why__grid">
+    <main data-marketing-region="main" data-marketing-slot="main" data-marketing-parent="body">
+      <div
+        class="marketing-slot-placeholder"
+        data-marketing-slot="promotional_cards"
+        data-marketing-parent="main"
+        hidden
+        aria-hidden="true"
+      ></div>
+      <div
+        class="marketing-slot-placeholder"
+        data-marketing-slot="featured_collections"
+        data-marketing-parent="main"
+        hidden
+        aria-hidden="true"
+      ></div>
+      <div
+        class="marketing-slot-placeholder"
+        data-marketing-slot="featured_merchants"
+        data-marketing-parent="main"
+        hidden
+        aria-hidden="true"
+      ></div>
+      <div
+        class="marketing-slot-placeholder"
+        data-marketing-slot="app_promotion"
+        data-marketing-parent="main"
+        hidden
+        aria-hidden="true"
+      ></div>
+      <div
+        class="marketing-slot-placeholder"
+        data-marketing-slot="footer_promotions"
+        data-marketing-parent="main"
+        hidden
+        aria-hidden="true"
+      ></div>
+      <section class="lp-section lp-wrap lp-reveal" id="why" aria-labelledby="why-title" data-marketing-slot="why_section" data-marketing-parent="main">
+        <h2 class="lp-section__title" id="why-title">كيف تعمل ERVENOW؟</h2>
+        <div class="lp-why__grid lp-why__grid--compact">
           <article class="lp-why-item">
             <div class="lp-why-item__mark">١</div>
             <div>
-              <h3>نظام موحد</h3>
-              <p>مطاعم، متاجر، مناديب، وعملاء في تجربة واحدة متسقة وسهلة الإدارة.</p>
+              <h3>اطلب</h3>
+              <p>من مطعم أو متجر أو خدمة.</p>
             </div>
           </article>
           <article class="lp-why-item">
             <div class="lp-why-item__mark">٢</div>
             <div>
-              <h3>قابل للتوسع</h3>
-              <p>هيكل مرن يسمح بإضافة خدمات وشراكات جديدة دون البدء من الصفر.</p>
+              <h3>يوزّع</h3>
+              <p>للمندوب الأقرب تلقائياً.</p>
             </div>
           </article>
           <article class="lp-why-item">
             <div class="lp-why-item__mark">٣</div>
             <div>
-              <h3>تقنيات حديثة</h3>
-              <p>بنية حديثة تدعم التتبع والتكامل مع أدواتك التشغيلية المفضلة.</p>
+              <h3>يوصل</h3>
+              <p>مع تتبع لحظي حتى الباب.</p>
             </div>
           </article>
         </div>
       </section>
 
-      <section class="lp-section lp-wrap lp-reveal" id="how" aria-labelledby="how-title">
-        <h2 class="lp-section__title" id="how-title">كيف تعمل؟</h2>
-        <p class="lp-section__lead">ثلاث خطوات بسيطة من الطلب إلى وصول الشحنة.</p>
-        <div class="lp-how__steps">
-          <article class="lp-step">
-            <div class="lp-step__num">1</div>
-            <h3>اطلب</h3>
-            <p>يقدّم ضيف ERVENOW طلبه من المطعم أو المتجر عبر القنوات المتصلة بالمنصة.</p>
-          </article>
-          <article class="lp-step">
-            <div class="lp-step__num">2</div>
-            <h3>يتم توزيع الطلب</h3>
-            <p>النظام يوجّه الطلب إلى المندوب المناسب وفق التوفر والموقع.</p>
-          </article>
-          <article class="lp-step">
-            <div class="lp-step__num">3</div>
-            <h3>يتم التوصيل</h3>
-            <p>المندوب ينفّذ التسليم مع إمكانية التتبع حتى اكتمال الطلب.</p>
-          </article>
+      <div class="lp-home-cta-wrap" data-marketing-slot="cta_cards" data-marketing-parent="main">
+      <section class="lp-section lp-reveal lp-home-cta-section" id="contact" aria-labelledby="contact-title">
+        <div class="lp-home-cta-card">
+          <div class="lp-home-cta-card__mark" aria-hidden="true"></div>
+          <div class="lp-home-cta-card__body">
+            <h2 class="lp-home-cta-card__title" id="contact-title">
+              <span class="lp-home-cta-card__title-line">تواصل</span>
+            </h2>
+            <a
+              class="lp-btn-solid lp-home-cta-card__btn"
+              href="https://wa.me/966505745650"
+              target="_blank"
+              rel="noopener noreferrer"
+              >واتساب الدعم</a
+            >
+          </div>
         </div>
       </section>
 
-      <section class="lp-section lp-wrap lp-reveal" id="contact" aria-labelledby="contact-title">
-        <h2 class="lp-section__title" id="contact-title">تواصل معنا</h2>
-        <p class="lp-section__lead">نحن هنا لدعم شركائك وفرق التشغيل.</p>
-        <div class="lp-contact">
-          <p>تحدث معنا مباشرة عبر واتساب — الرد السريع على استفسارات التسجيل والشراكة.</p>
-          <a
-            class="lp-btn-solid"
-            href="https://wa.me/966505745650"
-            target="_blank"
-            rel="noopener noreferrer"
-            >واتساب 0505745650</a
-          >
+      <section class="lp-section lp-reveal lp-home-cta-section" id="register-store-cta" aria-labelledby="register-store-title">
+        <div class="lp-home-cta-card">
+          <div class="lp-home-cta-card__mark" aria-hidden="true"></div>
+          <div class="lp-home-cta-card__body">
+            <h2 class="lp-home-cta-card__title" id="register-store-title">
+              <span class="lp-home-cta-card__title-line">انضم كشريك</span>
+            </h2>
+            <a class="lp-btn-solid lp-home-cta-card__btn" href="/register-store">سجّل متجرك</a>
+          </div>
         </div>
       </section>
+      </div>
     </main>
 
-    <footer class="lp-footer">
+    <footer class="lp-footer" data-marketing-slot="footer" data-marketing-parent="body">
       <div class="lp-footer__inner">
-        <div>
+        <div class="lp-footer__desktop-only lp-footer__desktop-panel" aria-label="فوتر الدسكتوب">
           <p class="lp-footer__brand">ERVENOW</p>
-          <p class="lp-footer__copy">© جميع الحقوق محفوظة ERVENOW<br />المنصة الذكية — طلبك إلى باب بيتك.</p>
-        </div>
-        <div class="lp-footer__contact">
-          <span>تواصل</span>
-          <a href="mailto:support@ervenow.com">support@ervenow.com</a>
-          <a href="tel:+966505745650">+966 50 574 5650</a>
-          <a href="https://wa.me/966505745650" target="_blank" rel="noopener noreferrer">واتساب مباشر</a>
-        </div>
-        <div>
-          <div class="lp-footer__links">
-            <a href="#">سياسة الخصوصية</a>
-            <a href="#">سياسة الاستخدام</a>
-            <a href="#contact">الدعم</a>
-            <a href="/track">تتبع الطلب</a>
-            <a href="#" id="ervenowHealthFooterLink" target="_blank" rel="noopener">حالة المنصة</a>
+          <div class="lp-footer__legal-links">
+            <a class="lp-footer__legal-link" href="/privacy-policy">سياسة الخصوصية</a>
+            <a class="lp-footer__legal-link" href="/payments-refund-policy">سياسة المدفوعات والإلغاء والاسترجاع</a>
+            <a class="lp-footer__legal-link" href="/terms-of-use">سياسة الاستخدام</a>
           </div>
-          <div class="lp-footer__social" aria-label="وسائل التواصل">
-            <a href="https://wa.me/966505745650" target="_blank" rel="noopener noreferrer" aria-label="واتساب">
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path
-                  d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.435 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"
-                />
-              </svg>
-            </a>
-            <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" aria-label="تويتر">
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path
-                  d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"
-                />
-              </svg>
-            </a>
-            <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" aria-label="إنستقرام">
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path
-                  d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"
-                />
-              </svg>
-            </a>
+          <div class="lp-footer__channels">
+              <p class="lp-footer__channels-title">قنوات التواصل</p>
+              <div class="lp-footer__social lp-footer__social--channels" aria-label="قنوات التواصل">
+                <a href="https://x.com/ervenow" target="_blank" rel="noopener noreferrer" aria-label="منصة X">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path
+                      d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"
+                    />
+                  </svg>
+                </a>
+                <a href="https://www.snapchat.com/add/ervenow" target="_blank" rel="noopener noreferrer" aria-label="سناب شات">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path
+                      d="M12 2c-2.2 0-4.5.45-6.1 2.05C4.3 5.7 4 7.9 4 9.5c0 1.1.2 2 .5 2.8-.9.3-1.7.7-2.3 1.2-.5.4-.2 1 .6 1 1.1 0 2.1-.2 3-.6-.3 1.5-.5 2.8 0 3.8.4.8 1.2 1.2 2.2 1.5-.3.9-.4 1.7 0 2.2.5.6 1.4.4 2.5 0 1.2-.5 2.6-1.2 4-1.2s2.8.7 4 1.2c1.1.4 2 .6 2.5 0 .4-.5.3-1.3 0-2.2 1-.3 1.8-.7 2.2-1.5.5-1 .3-2.3 0-3.8.9.4 1.9.6 3 .6.8 0 1.1-.6.6-1-.6-.5-1.4-.9-2.3-1.2.3-.8.5-1.7.5-2.8 0-1.6-.3-3.8-1.9-5.45C16.5 2.45 14.2 2 12 2z"
+                    />
+                  </svg>
+                </a>
+                <a href="https://t.me/ervenow" target="_blank" rel="noopener noreferrer" aria-label="تلغرام">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path
+                      d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.33 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71L12.6 16.3l-1.99 1.93c-.23.23-.42.42-.83.42z"
+                    />
+                  </svg>
+                </a>
+                <a href="https://wa.me/966505745650" target="_blank" rel="noopener noreferrer" aria-label="واتساب">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path
+                      d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.435 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"
+                    />
+                  </svg>
+                </a>
+              </div>
+            </div>
+          <p class="lp-footer__rights">
+            © <span class="lp-footer__year"></span> ERVENOW — جميع الحقوق محفوظة
+          </p>
+        </div>
+
+        <div class="lp-footer__mobile-only" aria-label="فوتر الجوال">
+          <p class="lp-footer__brand">ERVENOW</p>
+          <div class="lp-footer__legal-links">
+            <a class="lp-footer__legal-link" href="/privacy-policy">سياسة الخصوصية</a>
+            <a class="lp-footer__legal-link" href="/payments-refund-policy">سياسة المدفوعات والإلغاء والاسترجاع</a>
+            <a class="lp-footer__legal-link" href="/terms-of-use">سياسة الاستخدام</a>
           </div>
+          <div class="lp-footer__channels">
+            <p class="lp-footer__channels-title">قنوات التواصل</p>
+            <div class="lp-footer__social lp-footer__social--channels" aria-label="قنوات التواصل">
+              <a href="https://x.com/ervenow" target="_blank" rel="noopener noreferrer" aria-label="منصة X">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path
+                    d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"
+                  />
+                </svg>
+              </a>
+              <a href="https://www.snapchat.com/add/ervenow" target="_blank" rel="noopener noreferrer" aria-label="سناب شات">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path
+                    d="M12 2c-2.2 0-4.5.45-6.1 2.05C4.3 5.7 4 7.9 4 9.5c0 1.1.2 2 .5 2.8-.9.3-1.7.7-2.3 1.2-.5.4-.2 1 .6 1 1.1 0 2.1-.2 3-.6-.3 1.5-.5 2.8 0 3.8.4.8 1.2 1.2 2.2 1.5-.3.9-.4 1.7 0 2.2.5.6 1.4.4 2.5 0 1.2-.5 2.6-1.2 4-1.2s2.8.7 4 1.2c1.1.4 2 .6 2.5 0 .4-.5.3-1.3 0-2.2 1-.3 1.8-.7 2.2-1.5.5-1 .3-2.3 0-3.8.9.4 1.9.6 3 .6.8 0 1.1-.6.6-1-.6-.5-1.4-.9-2.3-1.2.3-.8.5-1.7.5-2.8 0-1.6-.3-3.8-1.9-5.45C16.5 2.45 14.2 2 12 2z"
+                  />
+                </svg>
+              </a>
+              <a href="https://t.me/ervenow" target="_blank" rel="noopener noreferrer" aria-label="تلغرام">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path
+                    d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.33 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71L12.6 16.3l-1.99 1.93c-.23.23-.42.42-.83.42z"
+                  />
+                </svg>
+              </a>
+              <a href="https://wa.me/966505745650" target="_blank" rel="noopener noreferrer" aria-label="واتساب">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path
+                    d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.435 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"
+                  />
+                </svg>
+              </a>
+            </div>
+          </div>
+          <p class="lp-footer__rights">
+            © <span class="lp-footer__year"></span> ERVENOW — جميع الحقوق محفوظة
+          </p>
         </div>
       </div>
     </footer>
@@ -3086,83 +3233,15 @@
     <audio id="newOrderSound" src="/sound.mp3" preload="none"></audio>
     <script src="/assets/order-draft-store.js"></script>
     <script src="/assets/order-draft-badge.js"></script>
-
     <script>
       (function () {
-        var MOBILE_MQ =
-          "(max-width: 640px), ((max-width: 932px) and (max-height: 500px) and (pointer: coarse))";
-        function isMobileMenuShell() {
-          try {
-            return window.matchMedia(MOBILE_MQ).matches;
-          } catch (e) {
-            return window.innerWidth <= 640;
-          }
-        }
-
-        var root = document.getElementById("lpQuickNav");
-        var btn = document.getElementById("lpQuickNavBtn");
-        var panel = document.getElementById("lpQuickNavPanel");
-        if (!root || !btn || !panel) return;
-        if (isMobileMenuShell()) return;
-
-        function syncPanelAnchor() {
-          try {
-            if (!window.matchMedia("(max-width: 900px)").matches) {
-              panel.style.removeProperty("--lp-dd-anchor-top");
-              return;
-            }
-            var r = btn.getBoundingClientRect();
-            var gap = 8;
-            panel.style.setProperty("--lp-dd-anchor-top", Math.round(r.bottom + gap) + "px");
-          } catch (e) {}
-        }
-
-        function openDd(open) {
-          root.classList.toggle("is-open", open);
-          btn.setAttribute("aria-expanded", open ? "true" : "false");
-          panel.hidden = !open;
-          if (open) syncPanelAnchor();
-        }
-
-        btn.addEventListener("click", function (e) {
-          e.stopPropagation();
-          syncPanelAnchor();
-          openDd(panel.hidden);
-        });
-
-        window.addEventListener(
-          "resize",
-          function () {
-            if (root.classList.contains("is-open")) syncPanelAnchor();
-          },
-          { passive: true }
-        );
-
-        window.addEventListener("orientationchange", function () {
-          setTimeout(function () {
-            if (root.classList.contains("is-open")) syncPanelAnchor();
-          }, 200);
-        });
-
-        panel.querySelectorAll('[role="menuitem"]').forEach(function (a) {
-          a.addEventListener("click", function () {
-            openDd(false);
-          });
-        });
-
-        document.addEventListener("click", function () {
-          openDd(false);
-        });
-
-        root.addEventListener("click", function (e) {
-          e.stopPropagation();
-        });
-
-        document.addEventListener("keydown", function (e) {
-          if (e.key === "Escape") openDd(false);
+        var year = String(new Date().getFullYear());
+        document.querySelectorAll(".lp-footer__year").forEach(function (el) {
+          el.textContent = year;
         });
       })();
     </script>
+
     <script>
       (function () {
         document.querySelectorAll(".lp-reveal").forEach(function (el) {
@@ -3196,7 +3275,7 @@
         }
 
         var stats = document.getElementById("stats");
-        if (stats && "IntersectionObserver" in window) {
+        if (stats && stats.querySelectorAll(".js-count").length && "IntersectionObserver" in window) {
           var once = new IntersectionObserver(
             function (entries) {
               entries.forEach(function (en) {
@@ -3215,7 +3294,8 @@
         }
       })();
     </script>
-    <script src="/assets/guest-offers-carousel.js?erv=20260612" defer></script>
+    <script src="/assets/marketing-studio/home-renderer.js?erv=20260701m1" defer></script>
+    <script src="/assets/guest-offers-carousel.js?erv=20260630" defer></script>
     <script src="/assets/guestBrowse.js"></script>
     <script src="/assets/ervenow-toggle.js"></script>
     <script src="/assets/guest-shell.js?erv=20260612"></script>

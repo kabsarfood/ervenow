@@ -17,6 +17,16 @@
 
   var VIEWPORT_LOCKED =
     "width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover";
+  var VIEWPORT_HOME_ACCESSIBLE = "width=device-width, initial-scale=1, viewport-fit=cover";
+
+  function isHomePolishPage() {
+    var p = String(global.location.pathname || "").replace(/\/+$/, "") || "/";
+    return p === "" || p === "/" || p === "/index.html";
+  }
+
+  function viewportContent() {
+    return isHomePolishPage() ? VIEWPORT_HOME_ACCESSIBLE : VIEWPORT_LOCKED;
+  }
 
   var lockCount = 0;
   var savedScrollY = 0;
@@ -173,8 +183,8 @@
       meta.setAttribute("name", "viewport");
       document.head.appendChild(meta);
     }
-    if (meta.getAttribute("content") !== VIEWPORT_LOCKED) {
-      meta.setAttribute("content", VIEWPORT_LOCKED);
+    if (meta.getAttribute("content") !== viewportContent()) {
+      meta.setAttribute("content", viewportContent());
     }
   }
 
@@ -190,9 +200,9 @@
     clampHorizontalScroll();
     var meta = document.querySelector('meta[name="viewport"]');
     if (!meta) return;
-    meta.setAttribute("content", VIEWPORT_LOCKED + ", shrink-to-fit=no");
+    meta.setAttribute("content", viewportContent() + ", shrink-to-fit=no");
     global.setTimeout(function () {
-      meta.setAttribute("content", VIEWPORT_LOCKED);
+      meta.setAttribute("content", viewportContent());
       setViewportVars();
       clampHorizontalScroll();
     }, 280);
@@ -224,7 +234,7 @@
     root.style.setProperty("--erw-viewport-w", w + "px");
     root.classList.add("erw-viewport-ready");
     syncSiteHeaderHeight();
-    if (vv && vv.scale > 1.02) resetViewportScale();
+    if (!isHomePolishPage() && vv && vv.scale > 1.02) resetViewportScale();
   }
 
   function lockScroll() {
@@ -245,12 +255,14 @@
   }
 
   function blockPinchZoom(e) {
+    if (isHomePolishPage()) return;
     if (e.touches && e.touches.length > 1) {
       e.preventDefault();
     }
   }
 
   function blockGestureZoom(e) {
+    if (isHomePolishPage()) return;
     e.preventDefault();
   }
 

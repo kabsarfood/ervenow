@@ -538,6 +538,18 @@ if (servePublicUi) {
     res.sendFile(path.join(publicPath, "start-now.html"));
   });
 
+  app.get(["/privacy-policy", "/privacy-policy.html"], (_req, res) => {
+    res.sendFile(path.join(publicPath, "privacy-policy.html"));
+  });
+
+  app.get(["/terms-of-use", "/terms-of-use.html"], (_req, res) => {
+    res.sendFile(path.join(publicPath, "terms-of-use.html"));
+  });
+
+  app.get(["/payments-refund-policy", "/payments-refund-policy.html"], (_req, res) => {
+    res.sendFile(path.join(publicPath, "payments-refund-policy.html"));
+  });
+
   app.get("/track", (_req, res) => {
     res.sendFile(path.join(publicPath, "track.html"));
   });
