@@ -16,8 +16,20 @@
     <link rel="stylesheet" href="/assets/responsive-audit-base.css" />
     <link rel="stylesheet" href="/assets/register-store-page.css" />
     <script>
-      document.documentElement.classList.add("reg-store-root");
-      if ("scrollRestoration" in history) history.scrollRestoration = "auto";
+      (function () {
+        var root = document.documentElement;
+        var ua = navigator.userAgent || "";
+        root.classList.add("reg-store-root");
+        if (
+          /iPhone|iPad|iPod/i.test(ua) ||
+          (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1)
+        ) {
+          root.classList.add("reg-store-root--ios");
+        } else {
+          root.classList.add("reg-store-root--android");
+        }
+        if ("scrollRestoration" in history) history.scrollRestoration = "auto";
+      })();
     </script>
   </head>
   <body class="guest-shell-page reg-store-page">

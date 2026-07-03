@@ -79,6 +79,11 @@
     return /^\/checkout(\/|$)/.test(p) || /^\/cart(\/|$)/.test(p) || /^\/pay(\/|$)/.test(p);
   }
 
+  function shouldHideBottomNav() {
+    if (isPaymentFlowPath()) return true;
+    return document.documentElement.classList.contains("erv-mobile-no-nav");
+  }
+
   function hasToken() {
     try {
       return !!(global.PlatformAPI && global.PlatformAPI.getToken && global.PlatformAPI.getToken());
@@ -470,7 +475,7 @@
   }
 
   function mountBottomNav() {
-    if (isPaymentFlowPath()) {
+    if (shouldHideBottomNav()) {
       unmountBottomNav();
       return;
     }
@@ -517,7 +522,7 @@
     syncShellState();
     document.documentElement.classList.add("erv-plus-nav-active");
     document.body.classList.add("erv-mobile-foundation");
-    if (!isPaymentFlowPath()) mountBottomNav();
+    if (!shouldHideBottomNav()) mountBottomNav();
     else unmountBottomNav();
     setActiveNav();
     syncCartBadge();

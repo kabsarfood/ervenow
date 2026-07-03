@@ -38,6 +38,10 @@
     return Number.isFinite(n) && n > 0 ? n : 5;
   }
 
+  function isAndroidMobile() {
+    return /Android/i.test(navigator.userAgent || "");
+  }
+
   function ErvenowStoreMap(options) {
     this.opts = options || {};
     this.map = null;
@@ -169,7 +173,22 @@
     wrap.classList.add("is-scroll-pass-through");
 
     var mapContainer = self.map.getContainer && self.map.getContainer();
-    if (mapContainer) mapContainer.style.touchAction = "pan-y pinch-zoom";
+    if (mapContainer) {
+      mapContainer.style.touchAction = isAndroidMobile() ? "pan-y" : "pan-y pinch-zoom";
+    }
+
+    var scrollShield = null;
+    if (isAndroidMobile()) {
+      scrollShield = document.createElement("div");
+      scrollShield.className = "reg-store-map-scroll-shield";
+      scrollShield.setAttribute("aria-hidden", "true");
+      wrap.appendChild(scrollShield);
+      if (self.map._handlers && Array.isArray(self.map._handlers)) {
+        self.map._handlers.forEach(function (handler) {
+          if (handler && typeof handler.disable === "function") handler.disable();
+        });
+      }
+    }
 
     var actions =
       wrap.parentElement && wrap.parentElement.querySelector
@@ -184,6 +203,23 @@
       actions.insertBefore(toggleBtn, actions.firstChild);
     } else {
       wrap.parentElement.appendChild(toggleBtn);
+    }
+
+    function syncPassThroughState(passThrough) {
+      if (scrollShield) scrollShield.hidden = !passThrough;
+      syncMarkerTouch();
+      var container = self.map.getContainer && self.map.getContainer();
+      if (!container) return;
+      if (passThrough) {
+        container.style.touchAction = "pan-y";
+        if (isAndroidMobile() && self.map._handlers && Array.isArray(self.map._handlers)) {
+          self.map._handlers.forEach(function (handler) {
+            if (handler && typeof handler.disable === "function") handler.disable();
+          });
+        }
+      } else {
+        container.style.touchAction = "none";
+      }
     }
 
     function syncMarkerTouch() {
@@ -203,15 +239,13 @@
     function activateMap() {
       wrap.classList.remove("is-scroll-pass-through");
       wrap.classList.add("is-map-active");
+      updateToggleLabel();
+      syncPassThroughState(false);
       self.map.dragging.enable();
       self.map.touchZoom.enable();
       if (self.map.tap && typeof self.map.tap.enable === "function") {
         self.map.tap.enable();
       }
-      updateToggleLabel();
-      syncMarkerTouch();
-      var container = self.map.getContainer && self.map.getContainer();
-      if (container) container.style.touchAction = "none";
       setTimeout(function () {
         if (self.map) self.map.invalidateSize();
       }, 80);
@@ -227,9 +261,7 @@
         self.map.tap.disable();
       }
       updateToggleLabel();
-      syncMarkerTouch();
-      var container = self.map.getContainer && self.map.getContainer();
-      if (container) container.style.touchAction = "pan-y pinch-zoom";
+      syncPassThroughState(true);
     }
 
     toggleBtn.addEventListener("click", function (ev) {
@@ -254,7 +286,7 @@
       deactivateMap();
     }, { passive: true });
 
-    syncMarkerTouch();
+    syncPassThroughState(true);
   };
 
   ErvenowStoreMap.prototype._setStatus = function (text, ok) {

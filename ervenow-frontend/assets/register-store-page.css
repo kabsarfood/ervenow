@@ -794,7 +794,8 @@ body.guest-shell-page.reg-store-page {
 }
 
 @media (max-width: 640px) {
-  html.reg-store-root {
+  /* ——— iOS: تمرير المستند عبر html ——— */
+  html.reg-store-root--ios {
     height: auto;
     min-height: 100%;
     overflow-y: auto;
@@ -804,12 +805,42 @@ body.guest-shell-page.reg-store-page {
     overscroll-behavior-y: auto;
   }
 
-  body.guest-shell-page.reg-store-page {
+  html.reg-store-root--ios body.guest-shell-page.reg-store-page {
     display: block;
     overflow-y: visible;
     overscroll-behavior-y: auto;
     -webkit-overflow-scrolling: touch;
     touch-action: pan-y pinch-zoom;
+  }
+
+  /* ——— Android / Samsung / Chromium: تمرير body (أكثر استجابة) ——— */
+  html.reg-store-root--android {
+    height: 100%;
+    overflow: hidden;
+    overscroll-behavior-y: auto;
+  }
+
+  html.reg-store-root--android body.guest-shell-page.reg-store-page {
+    display: block;
+    height: 100%;
+    max-height: 100%;
+    overflow-x: hidden;
+    overflow-y: scroll;
+    overscroll-behavior-y: auto;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+    scroll-behavior: auto;
+  }
+
+  html.reg-store-root--android body.guest-shell-page.reg-store-page .btn,
+  html.reg-store-root--android body.guest-shell-page.reg-store-page button:not(:disabled),
+  html.reg-store-root--android body.guest-shell-page.reg-store-page .reg-store-type-card,
+  html.reg-store-root--android body.guest-shell-page.reg-store-page .reg-store-cuisine-chip,
+  html.reg-store-root--android body.guest-shell-page.reg-store-page .reg-store-upload__zone,
+  html.reg-store-root--android body.guest-shell-page.reg-store-page .reg-store-optional > summary,
+  html.reg-store-root--android body.guest-shell-page.reg-store-page .reg-store-map-panel,
+  html.reg-store-root--android body.guest-shell-page.reg-store-page .reg-store-form-card {
+    touch-action: pan-y !important;
   }
 
   body.guest-shell-page.reg-store-page .dash-main,
@@ -818,11 +849,11 @@ body.guest-shell-page.reg-store-page {
     touch-action: pan-y pinch-zoom;
   }
 
-  body.guest-shell-page.reg-store-page button:not(:disabled),
-  body.guest-shell-page.reg-store-page .reg-store-type-card,
-  body.guest-shell-page.reg-store-page .reg-store-cuisine-chip,
-  body.guest-shell-page.reg-store-page .reg-store-upload__zone,
-  body.guest-shell-page.reg-store-page .reg-store-optional > summary {
+  html.reg-store-root--ios body.guest-shell-page.reg-store-page button:not(:disabled),
+  html.reg-store-root--ios body.guest-shell-page.reg-store-page .reg-store-type-card,
+  html.reg-store-root--ios body.guest-shell-page.reg-store-page .reg-store-cuisine-chip,
+  html.reg-store-root--ios body.guest-shell-page.reg-store-page .reg-store-upload__zone,
+  html.reg-store-root--ios body.guest-shell-page.reg-store-page .reg-store-optional > summary {
     touch-action: pan-y pinch-zoom;
   }
 
@@ -853,6 +884,26 @@ body.guest-shell-page.reg-store-page {
 
   .reg-store-map-wrap.is-scroll-pass-through {
     touch-action: pan-y pinch-zoom;
+  }
+
+  html.reg-store-root--android .reg-store-map-wrap.is-scroll-pass-through {
+    touch-action: pan-y;
+  }
+
+  .reg-store-map-scroll-shield {
+    position: absolute;
+    inset: 0;
+    z-index: 450;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    touch-action: pan-y;
+    pointer-events: auto;
+  }
+
+  .reg-store-map-wrap.is-map-active .reg-store-map-scroll-shield {
+    display: none;
   }
 
   .reg-store-map-actions {

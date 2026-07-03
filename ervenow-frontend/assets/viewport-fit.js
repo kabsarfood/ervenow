@@ -46,6 +46,11 @@
     return /^\/checkout(\/|$)/.test(p) || /^\/cart(\/|$)/.test(p) || /^\/pay(\/|$)/.test(p);
   }
 
+  function isLongFormScrollPage(path) {
+    var p = path || global.location.pathname || "";
+    return /^\/register-store(\/|$|\.html)/.test(p);
+  }
+
   /** بوابات موحّدة — بدون شريط سفلي للمنصة الرئيسية */
   function isUnifiedPortalPage() {
     try {
@@ -156,7 +161,7 @@
       return;
     }
     root.classList.add("erv-mobile-shell");
-    if (isPaymentFlowPath() || isUnifiedPortalPage()) root.classList.add("erv-mobile-no-nav");
+    if (isPaymentFlowPath() || isUnifiedPortalPage() || isLongFormScrollPage()) root.classList.add("erv-mobile-no-nav");
     else root.classList.remove("erv-mobile-no-nav");
     applyMobileShellHeaderVars();
     injectMobileFoundationCss();
@@ -164,7 +169,7 @@
   }
 
   function ensureBottomNavShell() {
-    if (!isMobileShellViewport() || isPaymentFlowPath() || isUnifiedPortalPage() || !document.body) return;
+    if (!isMobileShellViewport() || isPaymentFlowPath() || isUnifiedPortalPage() || isLongFormScrollPage() || !document.body) return;
     var nav = document.getElementById("ervMobileBottomNav");
     if (!nav) {
       nav = document.createElement("nav");
