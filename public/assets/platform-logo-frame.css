@@ -1,0 +1,30 @@
+/**
+ * ERVENOW — إطار شعار المنصة (حواف منحنية + حد بني غامق واضح)
+ * يُطبَّق على صور الشعار وعناصر الخلفية المكافئة في كل الصفحات.
+ */
+:root {
+  --erv-platform-logo-border-color: var(--brown, #3d2213);
+  --erv-platform-logo-border-width: 2.5px;
+}
+
+/* صور شعار المنصة — نفس انحناء زر «دخول الأعضاء» */
+.lp-header__logo-img,
+#ervBrandLogo,
+.auth-hero__logo,
+.driver-auth-banner__logo,
+.logo-preview img,
+img.erv-platform-logo,
+img[src*="ervenow-logo"] {
+  border-radius: var(--erv-header-btn-radius, 10px);
+  border: var(--erv-platform-logo-border-width) solid var(--erv-platform-logo-border-color);
+  box-sizing: border-box;
+  background-color: #fffefb;
+}
+
+/* شعار الهيدر على الجوال (guest-shell / harmony) */
+.dash-site-header__logo::before {
+  border-radius: var(--erv-header-btn-radius, 10px);
+  border: var(--erv-platform-logo-border-width) solid var(--erv-platform-logo-border-color);
+  box-sizing: border-box;
+  background-color: #fffefb;
+}

@@ -159,15 +159,16 @@
     ensurePanelParent(panel, root || btn.closest(".lp-quick-dd") || document.body);
     panel.classList.add("lp-quick-dd__panel--desktop-pop");
 
-    var btnCenterLocal = btn.offsetWidth / 2;
-    var caretXLocal = Math.round(Math.max(32, Math.min(maxW - 32, btnCenterLocal)));
+    var btnW = btn.offsetWidth || 44;
+    var caretXLocal = Math.round(btnW / 2);
+    caretXLocal = Math.round(Math.max(28, Math.min(maxW - 28, caretXLocal)));
 
     panel.style.setProperty("--lp-home-nav-caret-x", caretXLocal + "px");
     panel.style.setProperty("width", maxW + "px", "important");
     panel.style.removeProperty("--lp-home-nav-top");
     panel.style.removeProperty("top");
-    panel.style.removeProperty("left");
     panel.style.removeProperty("right");
+    panel.style.setProperty("left", "0", "important");
     panel.style.removeProperty("inset-inline-start");
     panel.style.removeProperty("inset-inline-end");
   }
@@ -182,7 +183,7 @@
 
     ensureNavBackdrop();
     panel.classList.add("lp-quick-dd__panel--harmony");
-    if (!isMobile() && !panel.querySelector(".lp-quick-dd__panel-scroll")) {
+    if (!panel.querySelector(".lp-quick-dd__panel-scroll")) {
       var scroll = document.createElement("div");
       scroll.className = "lp-quick-dd__panel-scroll";
       while (panel.firstChild) scroll.appendChild(panel.firstChild);

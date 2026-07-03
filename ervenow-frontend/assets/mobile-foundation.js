@@ -9,7 +9,7 @@
     { key: "home", href: "/", label: "الرئيسية", match: [/^\/$/, /^\/index\.html$/] },
     {
       key: "explore",
-      href: "/start-now.html",
+      href: "/start-now",
       label: "استكشاف",
       match: [/^\/start-now/, /^\/dashboard/, /^\/browse/, /^\/restaurants/, /^\/stores/, /^\/services/, /^\/delivery/],
     },

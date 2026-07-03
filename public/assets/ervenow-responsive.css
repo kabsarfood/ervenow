@@ -580,3 +580,5 @@ a.btn {
     grid-column: auto;
   }
 }
+
+@import url("/assets/platform-logo-frame.css");

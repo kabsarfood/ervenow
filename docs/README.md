@@ -7,7 +7,7 @@
 | [ERVENOW-3.0-EXPERIENCE-ENGINEERING-DIRECTIVE.md](./ERVENOW-3.0-EXPERIENCE-ENGINEERING-DIRECTIVE.md) | **🚀 التوجيه الرسمي لفريق التطوير** — Living Experience Platform |
 | [ERVENOW-MARKETING-STUDIO-VISION-2030.md](./ERVENOW-MARKETING-STUDIO-VISION-2030.md) | Vision 2030 — الرؤية الاستراتيجية |
 
-**تسلسل المراجع:** Vision 2030 → Engineering Policy → EPPC → Quality Standard → Marketing Studio → Context Studio → EHX → Living Experience
+**تسلسل المراجع:** Vision 2030 → Engineering Policy → **Naming Standard** → EPPC → Quality Standard → …
 
 ---
 
@@ -16,6 +16,7 @@
 | الملف | الوصف |
 |--------|--------|
 | [ERVENOW-ENGINEERING-POLICY.md](./ERVENOW-ENGINEERING-POLICY.md) | **🏛️ السياسة الرسمية** — المرجع الهندسي لجودة المنصة |
+| [ERVENOW-NAMING-STANDARD-v1.0.md](./ERVENOW-NAMING-STANDARD-v1.0.md) | **معيار التسمية الرسمي** — محركات · Profiles · APIs · جداول |
 | [ERVENOW-PLATFORM-POLISHING-CYCLE-EPPC.md](./ERVENOW-PLATFORM-POLISHING-CYCLE-EPPC.md) | دليل تنفيذ EPPC — Assessment → Polishing → Validation → اعتماد |
 | [ERVENOW-PLATFORM-QUALITY-STANDARD-v1.0.md](./ERVENOW-PLATFORM-QUALITY-STANDARD-v1.0.md) | معيار الجودة الفني (ألوان · أداء · وصول · محتوى) |
 | [PLATFORM-CERTIFICATION-BOARD.md](./PLATFORM-CERTIFICATION-BOARD.md) | لوحة اعتماد الصفحات |
@@ -28,6 +29,9 @@
 
 | الملف | الوصف |
 |--------|--------|
+| [ERVENOW-NAMING-STANDARD-v1.0.md](./ERVENOW-NAMING-STANDARD-v1.0.md) | **معيار التسمية الرسمي v1.0** — لغة هندسية موحدة |
+| [ERVENOW-LIVE-ORDER-v2-ARCHITECTURE.md](./ERVENOW-LIVE-ORDER-v2-ARCHITECTURE.md) | **ERVENOW Live Order™ v2.2** — معمارية |
+| [ERVENOW-LIVE-ORDER-LOFS.md](./ERVENOW-LIVE-ORDER-LOFS.md) | **LOFS v1.2** — مرجع وظيفي |
 | [STABILIZATION-PLAN.md](./STABILIZATION-PLAN.md) | خطة CORE STABILIZATION + ما تم + الخطوات التالية |
 | [legacy-inventory.md](./legacy-inventory.md) | جرد `delivery_orders`، `food_orders`، `wallet-server` |
 | [architecture.md](./architecture.md) | هيكلة المنصة والطبقات |

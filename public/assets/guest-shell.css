@@ -38,6 +38,7 @@ body.guest-shell-page.stores-page {
   box-sizing: border-box;
   width: 100%;
   max-width: 100%;
+  --erv-header-btn-radius: 10px;
   padding-inline: max(14px, env(safe-area-inset-left, 14px)) max(14px, env(safe-area-inset-right, 14px));
   background: linear-gradient(180deg, rgba(248, 244, 238, 0.98), rgba(255, 254, 251, 0.95));
   border-bottom: 1px solid var(--border, rgba(61, 34, 19, 0.12));
@@ -234,7 +235,7 @@ body.guest-shell-page.stores-page {
 .dash-site-header__btn {
   flex: 0 0 auto;
   padding: 8px 14px;
-  border-radius: 10px;
+  border-radius: var(--erv-header-btn-radius);
   font-size: 0.8rem;
   font-weight: 700;
   font-family: inherit;
