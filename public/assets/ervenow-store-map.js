@@ -68,7 +68,14 @@
     if (this.lngInput) this.lngInput.value = "";
     this._setStatus("انقر على الخريطة أو اسحب الدبوس الذهبي لتحديد موقع متجرك.", false);
 
-    this.map = L.map(mapId, { zoomControl: true }).setView(DEFAULT_CENTER, DEFAULT_ZOOM);
+    this.map = L.map(mapId, {
+      zoomControl: true,
+      inertia: true,
+      tap: false,
+    }).setView(DEFAULT_CENTER, DEFAULT_ZOOM);
+
+    this.map.boxZoom.disable();
+    this.map.keyboard.disable();
 
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       maxZoom: 19,
@@ -161,6 +168,9 @@
 
     wrap.classList.add("is-scroll-pass-through");
 
+    var mapContainer = self.map.getContainer && self.map.getContainer();
+    if (mapContainer) mapContainer.style.touchAction = "pan-y pinch-zoom";
+
     var actions =
       wrap.parentElement && wrap.parentElement.querySelector
         ? wrap.parentElement.querySelector(".reg-store-map-actions")
@@ -174,6 +184,14 @@
       actions.insertBefore(toggleBtn, actions.firstChild);
     } else {
       wrap.parentElement.appendChild(toggleBtn);
+    }
+
+    function syncMarkerTouch() {
+      if (!self.marker) return;
+      var passThrough = wrap.classList.contains("is-scroll-pass-through");
+      if (self.hasLocation) {
+        self.marker.setInteractive(!passThrough);
+      }
     }
 
     function updateToggleLabel() {
@@ -191,6 +209,9 @@
         self.map.tap.enable();
       }
       updateToggleLabel();
+      syncMarkerTouch();
+      var container = self.map.getContainer && self.map.getContainer();
+      if (container) container.style.touchAction = "none";
       setTimeout(function () {
         if (self.map) self.map.invalidateSize();
       }, 80);
@@ -206,6 +227,9 @@
         self.map.tap.disable();
       }
       updateToggleLabel();
+      syncMarkerTouch();
+      var container = self.map.getContainer && self.map.getContainer();
+      if (container) container.style.touchAction = "pan-y pinch-zoom";
     }
 
     toggleBtn.addEventListener("click", function (ev) {
@@ -229,6 +253,8 @@
       if (wrap.contains(ev.target)) return;
       deactivateMap();
     }, { passive: true });
+
+    syncMarkerTouch();
   };
 
   ErvenowStoreMap.prototype._setStatus = function (text, ok) {
@@ -268,6 +294,14 @@
     this.marker.setLatLng([lat, lng]);
     this.marker.setOpacity(1);
     this.marker.setInteractive(true);
+    if (window.matchMedia && window.matchMedia("(max-width: 640px)").matches) {
+      var wrap = this.map.getContainer && this.map.getContainer().closest
+        ? this.map.getContainer().closest(".reg-store-map-wrap")
+        : null;
+      if (wrap && wrap.classList.contains("is-scroll-pass-through")) {
+        this.marker.setInteractive(false);
+      }
+    }
     this._syncStorePinLabel();
     this._setStatus("تم تحديد موقع متجرك — الدائرة تمثل نطاق التوصيل.", true);
     this._updateRadiusCircle();

@@ -15,6 +15,10 @@
     <link rel="stylesheet" href="/assets/ervenow-responsive.css" />
     <link rel="stylesheet" href="/assets/responsive-audit-base.css" />
     <link rel="stylesheet" href="/assets/register-store-page.css" />
+    <script>
+      document.documentElement.classList.add("reg-store-root");
+      if ("scrollRestoration" in history) history.scrollRestoration = "auto";
+    </script>
   </head>
   <body class="guest-shell-page reg-store-page">
     <header class="dash-site-header">
@@ -455,7 +459,10 @@
         el.style.display = "block";
         el.className = "msg " + (isOk ? "ok" : "err");
         el.textContent = text;
-        el.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        el.scrollIntoView({
+          behavior: window.matchMedia && window.matchMedia("(max-width: 640px)").matches ? "auto" : "smooth",
+          block: "nearest",
+        });
       }
 
       function normalizePhoneInput() {

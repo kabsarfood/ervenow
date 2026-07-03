@@ -99,9 +99,12 @@ body.guest-shell-page.reg-store-page {
 .reg-store-progress {
   margin-bottom: clamp(14px, 3vw, 20px);
   overflow-x: auto;
+  overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
-  touch-action: pan-x;
+  touch-action: pan-x pan-y;
+  overscroll-behavior-x: contain;
+  overscroll-behavior-y: none;
 }
 
 .reg-store-progress::-webkit-scrollbar {
@@ -791,11 +794,36 @@ body.guest-shell-page.reg-store-page {
 }
 
 @media (max-width: 640px) {
+  html.reg-store-root {
+    height: auto;
+    min-height: 100%;
+    overflow-y: auto;
+    overflow-x: clip;
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: auto;
+    overscroll-behavior-y: auto;
+  }
+
   body.guest-shell-page.reg-store-page {
     display: block;
     overflow-y: visible;
     overscroll-behavior-y: auto;
     -webkit-overflow-scrolling: touch;
+    touch-action: pan-y pinch-zoom;
+  }
+
+  body.guest-shell-page.reg-store-page .dash-main,
+  body.guest-shell-page.reg-store-page .reg-store-layout,
+  body.guest-shell-page.reg-store-page .reg-store-form-card {
+    touch-action: pan-y pinch-zoom;
+  }
+
+  body.guest-shell-page.reg-store-page button:not(:disabled),
+  body.guest-shell-page.reg-store-page .reg-store-type-card,
+  body.guest-shell-page.reg-store-page .reg-store-cuisine-chip,
+  body.guest-shell-page.reg-store-page .reg-store-upload__zone,
+  body.guest-shell-page.reg-store-page .reg-store-optional > summary {
+    touch-action: pan-y pinch-zoom;
   }
 
   body.guest-shell-page.reg-store-page .dash-main {
@@ -806,18 +834,25 @@ body.guest-shell-page.reg-store-page {
   }
 
   body.guest-shell-page.reg-store-page .reg-store-layout {
-    padding-bottom: max(108px, calc(80px + env(safe-area-inset-bottom, 0px)));
+    padding-bottom: max(32px, env(safe-area-inset-bottom, 0px));
+  }
+
+  .reg-store-page #map {
+    height: min(42vw, 200px);
+    min-height: 168px;
   }
 
   .reg-store-map-wrap.is-scroll-pass-through .leaflet-container,
   .reg-store-map-wrap.is-scroll-pass-through .leaflet-pane,
+  .reg-store-map-wrap.is-scroll-pass-through .leaflet-marker-pane,
+  .reg-store-map-wrap.is-scroll-pass-through .leaflet-tooltip-pane,
   .reg-store-map-wrap.is-scroll-pass-through #map {
     pointer-events: none !important;
-    touch-action: pan-y !important;
+    touch-action: pan-y pinch-zoom !important;
   }
 
   .reg-store-map-wrap.is-scroll-pass-through {
-    touch-action: pan-y;
+    touch-action: pan-y pinch-zoom;
   }
 
   .reg-store-map-actions {
@@ -826,6 +861,15 @@ body.guest-shell-page.reg-store-page {
 
   .reg-store-map-actions .btn {
     width: 100%;
+  }
+
+  .reg-store-submit-wrap {
+    position: relative;
+    bottom: auto;
+    z-index: 1;
+    padding-bottom: max(18px, env(safe-area-inset-bottom, 0px));
+    box-shadow: none;
+    border-top: 1px solid rgba(61, 34, 19, 0.08);
   }
 
   .reg-store-perks {
@@ -838,14 +882,6 @@ body.guest-shell-page.reg-store-page {
 
   .reg-store-upload-grid {
     grid-template-columns: 1fr;
-  }
-
-  .reg-store-submit-wrap {
-    position: sticky;
-    bottom: 0;
-    z-index: 30;
-    padding-bottom: max(18px, env(safe-area-inset-bottom, 0px));
-    box-shadow: 0 -8px 28px rgba(45, 26, 14, 0.1);
   }
 
   .reg-store-maps-paste__row {
