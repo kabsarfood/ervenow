@@ -101,6 +101,7 @@ body.guest-shell-page.reg-store-page {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
+  touch-action: pan-x;
 }
 
 .reg-store-progress::-webkit-scrollbar {
@@ -397,10 +398,16 @@ body.guest-shell-page.reg-store-page {
 }
 
 .reg-store-map-wrap {
+  position: relative;
   border-radius: 14px;
   overflow: hidden;
   border: 1px solid rgba(185, 135, 47, 0.25);
   box-shadow: 0 6px 24px rgba(45, 26, 14, 0.08);
+}
+
+.reg-store-map-mode-btn {
+  flex: 1 1 auto;
+  min-width: min(100%, 160px);
 }
 
 .reg-store-map-legend {
@@ -784,6 +791,43 @@ body.guest-shell-page.reg-store-page {
 }
 
 @media (max-width: 640px) {
+  body.guest-shell-page.reg-store-page {
+    display: block;
+    overflow-y: visible;
+    overscroll-behavior-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  body.guest-shell-page.reg-store-page .dash-main {
+    display: block;
+    flex: none;
+    min-height: 0;
+    overflow: visible;
+  }
+
+  body.guest-shell-page.reg-store-page .reg-store-layout {
+    padding-bottom: max(108px, calc(80px + env(safe-area-inset-bottom, 0px)));
+  }
+
+  .reg-store-map-wrap.is-scroll-pass-through .leaflet-container,
+  .reg-store-map-wrap.is-scroll-pass-through .leaflet-pane,
+  .reg-store-map-wrap.is-scroll-pass-through #map {
+    pointer-events: none !important;
+    touch-action: pan-y !important;
+  }
+
+  .reg-store-map-wrap.is-scroll-pass-through {
+    touch-action: pan-y;
+  }
+
+  .reg-store-map-actions {
+    flex-direction: column;
+  }
+
+  .reg-store-map-actions .btn {
+    width: 100%;
+  }
+
   .reg-store-perks {
     grid-template-columns: 1fr;
   }

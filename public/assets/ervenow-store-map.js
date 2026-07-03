@@ -138,8 +138,97 @@
       if (self.map) self.map.invalidateSize();
     }, 600);
 
+    this._installMobileScrollCoop(el);
+
     this._loadContextStores();
     this._tryCenterOnUser(false);
+  };
+
+  ErvenowStoreMap.prototype._installMobileScrollCoop = function (mapEl) {
+    var self = this;
+    if (!this.map || !mapEl || !window.matchMedia) return;
+    if (!window.matchMedia("(max-width: 640px)").matches) return;
+
+    var wrap = mapEl.closest ? mapEl.closest(".reg-store-map-wrap") : null;
+    if (!wrap) return;
+
+    this.map.scrollWheelZoom.disable();
+    this.map.dragging.disable();
+    this.map.touchZoom.disable();
+    if (this.map.tap && typeof this.map.tap.disable === "function") {
+      this.map.tap.disable();
+    }
+
+    wrap.classList.add("is-scroll-pass-through");
+
+    var actions =
+      wrap.parentElement && wrap.parentElement.querySelector
+        ? wrap.parentElement.querySelector(".reg-store-map-actions")
+        : null;
+    var toggleBtn = document.createElement("button");
+    toggleBtn.type = "button";
+    toggleBtn.className = "btn btn-ghost reg-store-map-mode-btn";
+    toggleBtn.setAttribute("aria-pressed", "false");
+    toggleBtn.textContent = "تحريك الخريطة";
+    if (actions) {
+      actions.insertBefore(toggleBtn, actions.firstChild);
+    } else {
+      wrap.parentElement.appendChild(toggleBtn);
+    }
+
+    function updateToggleLabel() {
+      var active = wrap.classList.contains("is-map-active");
+      toggleBtn.textContent = active ? "إنهاء تحريك الخريطة" : "تحريك الخريطة";
+      toggleBtn.setAttribute("aria-pressed", active ? "true" : "false");
+    }
+
+    function activateMap() {
+      wrap.classList.remove("is-scroll-pass-through");
+      wrap.classList.add("is-map-active");
+      self.map.dragging.enable();
+      self.map.touchZoom.enable();
+      if (self.map.tap && typeof self.map.tap.enable === "function") {
+        self.map.tap.enable();
+      }
+      updateToggleLabel();
+      setTimeout(function () {
+        if (self.map) self.map.invalidateSize();
+      }, 80);
+    }
+
+    function deactivateMap() {
+      if (wrap.classList.contains("is-scroll-pass-through")) return;
+      wrap.classList.add("is-scroll-pass-through");
+      wrap.classList.remove("is-map-active");
+      self.map.dragging.disable();
+      self.map.touchZoom.disable();
+      if (self.map.tap && typeof self.map.tap.disable === "function") {
+        self.map.tap.disable();
+      }
+      updateToggleLabel();
+    }
+
+    toggleBtn.addEventListener("click", function (ev) {
+      ev.preventDefault();
+      if (wrap.classList.contains("is-map-active")) deactivateMap();
+      else activateMap();
+    });
+
+    document.addEventListener(
+      "click",
+      function (ev) {
+        if (!wrap.classList.contains("is-map-active")) return;
+        if (wrap.contains(ev.target)) return;
+        deactivateMap();
+      },
+      true
+    );
+
+    document.addEventListener("touchstart", function (ev) {
+      if (!wrap.classList.contains("is-map-active")) return;
+      if (wrap.contains(ev.target)) return;
+      deactivateMap();
+    }, { passive: true });
   };
 
   ErvenowStoreMap.prototype._setStatus = function (text, ok) {
