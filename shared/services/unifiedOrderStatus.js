@@ -96,12 +96,16 @@ async function canUserPatchOrderStatus(sb, order, appUser, nextStatus) {
   const next = normalizeIncomingStatus(nextStatus);
   if (!next) return false;
 
+  const { assertActorDeliveryTransition } = require("../utils/closedAlphaTransitions");
+  const current = getOrderDeliveryStatus(order);
+  const actorGate = assertActorDeliveryTransition(order, appUser, current, next);
+  if (!actorGate.ok) return false;
+
   if (canPatchOrderStatus(order, appUser, next)) return true;
 
   if (!["store", "merchant", "restaurant"].includes(appUser?.role)) return false;
   if (!MERCHANT_WORKFLOW_STATUSES.includes(next)) return false;
 
-  const current = getOrderDeliveryStatus(order);
   if (!isValidDeliveryTransition(current, next)) return false;
 
   const ot = String(order.order_type || "").toLowerCase();

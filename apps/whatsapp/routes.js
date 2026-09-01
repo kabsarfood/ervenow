@@ -11,7 +11,7 @@ const {
   sendOrderAcceptedToCustomer,
   buildSupportMenuBody,
 } = require("../../shared/services/whatsappService");
-const { buildPublicTrackUrl } = require("../../shared/messages/deliveryCustomerWhatsApp");
+const { verifyTwilioWebhook } = require("../../shared/utils/twilioWebhookAuth");
 
 const router = express.Router();
 router.use(express.urlencoded({ extended: false }));
@@ -60,6 +60,16 @@ router.get("/webhook", (_req, res) => {
 });
 
 router.post("/webhook", async (req, res) => {
+  const verified = verifyTwilioWebhook(req);
+  if (!verified.ok) {
+    if (verified.reason === "replay") {
+      res.type("text/xml").send(twimlMessage("تم استلام الرسالة مسبقاً."));
+      return;
+    }
+    res.status(verified.status || 403).type("text/xml").send(twimlMessage("طلب غير مصرّح."));
+    return;
+  }
+
   const fromRaw = req.body.From || "";
   const bodyRaw = String(req.body.Body || "").trim();
   const choice = bodyRaw.replace(/\s/g, "").charAt(0);

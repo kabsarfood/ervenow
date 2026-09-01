@@ -31,8 +31,8 @@
     align-items: center !important;
     justify-content: space-between !important;
     gap: 16px !important;
-    max-width: 1120px !important;
-    padding: 14px 20px !important;
+    max-width: 1440px !important;
+    padding: 14px clamp(20px, 3vw, 40px) !important;
   }
 
   html:not(.erv-mobile-shell) body.lp-home-premium .lp-header.lp-header--refined .lp-header__top-row {
@@ -135,9 +135,9 @@ body.lp-home-premium #homeMainBanner.guest-offers-carousel--home:not([hidden]) .
 
 @media (min-width: 641px) {
   body.lp-home-premium #homeMainBanner.guest-offers-carousel--home:not([hidden]) .guest-offers-shell {
-    aspect-ratio: 1920 / 480;
-    min-height: clamp(150px, 17.5vw, 225px);
-    max-height: 225px;
+    aspect-ratio: 21 / 9;
+    min-height: clamp(240px, 22vw, 400px);
+    max-height: min(460px, 42vh);
   }
 
   body.lp-home-premium .lp-nav-wrap {
@@ -168,8 +168,8 @@ body.lp-home-premium #homeMainBanner.guest-offers-carousel--home:not([hidden]) .
 
   html.erv-mobile-shell body.lp-home-premium #homeMainBanner.guest-offers-carousel--home:not([hidden]) .guest-offers-shell {
     border-radius: 14px;
-    max-height: 175px;
-    min-height: clamp(140px, 37.5vw, 175px);
+    max-height: min(220px, 30vh);
+    min-height: clamp(168px, 42vw, 210px);
   }
 
   /* إزالة الفراغ بين البطاقات وشريط الثقة — كان min-height + margin-top:auto يدفع الثقة لأسفل الطية */

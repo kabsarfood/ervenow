@@ -1,5 +1,5 @@
 const { roughDistanceKm } = require("./geo");
-const { getOsrmRouteKmOrHaversine } = require("./osrmClient");
+const { getOsrmRouteKmOrHaversine, haversineKm, preferHaversineIfOsrmInsane } = require("./osrmClient");
 const { cacheGet, cacheSet } = require("./redisCache");
 
 const ROUTE_CACHE_TTL_MS = Number(process.env.ROUTE_CACHE_TTL_MS || 120000);
@@ -38,18 +38,21 @@ async function getRouteDistanceKm(from, to) {
 
   const fromPt = { lat: flat, lng: flng };
   const toPt = { lat: tlat, lng: tlng };
-  const redisKey = `route:v1:${makeKey(fromPt, toPt)}`;
+  const redisKey = `route:v2:${makeKey(fromPt, toPt)}`;
+  const hv = haversineKm(flat, flng, tlat, tlng);
 
   const mem = getCached(fromPt, toPt);
-  if (mem != null) return mem;
+  if (mem != null) return preferHaversineIfOsrmInsane(mem, hv);
 
   const redisKm = await cacheGet(redisKey);
   if (redisKm != null && Number.isFinite(redisKm)) {
-    setCached(fromPt, toPt, redisKm);
-    return redisKm;
+    const sane = preferHaversineIfOsrmInsane(redisKm, hv);
+    setCached(fromPt, toPt, sane);
+    return sane;
   }
 
-  const km = await getOsrmRouteKmOrHaversine(fromPt, toPt);
+  let km = await getOsrmRouteKmOrHaversine(fromPt, toPt);
+  if (Number.isFinite(km)) km = preferHaversineIfOsrmInsane(km, hv);
   if (km != null && Number.isFinite(km)) {
     if (km) setCached(fromPt, toPt, km);
     await cacheSet(redisKey, km, ROUTE_CACHE_TTL_MS);
@@ -61,7 +64,7 @@ async function getRouteDistanceKm(from, to) {
 }
 
 async function routeKmWithRoughFallback(lat1, lng1, lat2, lng2) {
-  let km = await getRouteDistanceKm({ lat: lat1, lng: lng1 }, { lat: lat2, lng: lat2 });
+  let km = await getRouteDistanceKm({ lat: lat1, lng: lng1 }, { lat: lat2, lng: lng2 });
   if (km == null || !Number.isFinite(km)) {
     km = roughDistanceKm(lat1, lng1, lat2, lng2);
   }

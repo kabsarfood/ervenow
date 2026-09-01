@@ -6,9 +6,9 @@ const {
 } = require("../../shared/utils/adminRoleTaxonomy");
 
 describe("adminRoleTaxonomy", () => {
-  test("classifies transport service users", () => {
+  test("classifies transport vs home/gas service users", () => {
     expect(classifyUserRoleBucket({ role: "service", service_type: "pickup_truck" })).toBe("transport");
-    expect(classifyUserRoleBucket({ role: "service", service_type: "gas_cylinder_swap" })).toBe("transport");
+    expect(classifyUserRoleBucket({ role: "service", service_type: "gas_cylinder_swap" })).toBe("service");
     expect(classifyUserRoleBucket({ role: "service", service_type: "electrician" })).toBe("service");
   });
 

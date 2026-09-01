@@ -63,6 +63,29 @@ describe("checkout service ew_pay", () => {
     insertOrdersResilient.mockResolvedValueOnce({ data: insertedOrder, error: null });
 
     const from = jest.fn((table) => {
+      if (table === "store_products") {
+        return {
+          select: () => ({
+            eq: () => ({
+              in: () =>
+                Promise.resolve({
+                  data: [
+                    {
+                      id: "p1",
+                      store_id: "store-1",
+                      price: 100,
+                      offer_price: null,
+                      active: true,
+                      name: "طبق",
+                      includes_delivery: false,
+                    },
+                  ],
+                  error: null,
+                }),
+            }),
+          }),
+        };
+      }
       if (table === "stores") {
         return {
           select: () => ({
@@ -131,7 +154,116 @@ describe("checkout service ew_pay", () => {
       sb,
       "cust-1",
       expect.arrayContaining([expect.objectContaining({ id: "ord-1" })]),
-      expect.objectContaining({ financialIntent: undefined })
+      {}
+    );
+  });
+
+  test("P0-04 manipulated client price 1 does not change catalog goods total 100", async () => {
+    insertOrdersResilient.mockResolvedValueOnce({
+      data: {
+        id: "ord-2",
+        store_id: "store-1",
+        order_total: 100,
+        total_with_vat: 115,
+        payment_status: "pending",
+      },
+      error: null,
+    });
+
+    const from = jest.fn((table) => {
+      if (table === "store_products") {
+        return {
+          select: () => ({
+            eq: () => ({
+              in: () =>
+                Promise.resolve({
+                  data: [
+                    {
+                      id: "p1",
+                      store_id: "store-1",
+                      price: 100,
+                      offer_price: null,
+                      active: true,
+                      name: "طبق",
+                      includes_delivery: false,
+                    },
+                  ],
+                  error: null,
+                }),
+            }),
+          }),
+        };
+      }
+      if (table === "stores") {
+        return {
+          select: () => ({
+            eq: () => ({
+              eq: () => ({
+                maybeSingle: () =>
+                  Promise.resolve({
+                    data: {
+                      id: "store-1",
+                      name: "مطعم",
+                      phone: "966501234567",
+                      lat: 24.7,
+                      lng: 46.7,
+                      address: "الرياض",
+                      delivery_radius_km: 5,
+                    },
+                    error: null,
+                  }),
+              }),
+            }),
+          }),
+        };
+      }
+      if (table === "orders") {
+        return {
+          update: () => ({
+            eq: () => Promise.resolve({ error: null }),
+          }),
+        };
+      }
+      if (table === "users") {
+        return {
+          select: () => ({
+            eq: () => ({
+              maybeSingle: () => Promise.resolve({ data: { id: "merchant-uuid", role: "merchant" }, error: null }),
+            }),
+          }),
+        };
+      }
+      return { select: () => ({ eq: () => ({ maybeSingle: () => Promise.resolve({ data: null, error: null }) }) }) };
+    });
+
+    const sb = { from };
+    const out = await runCheckoutInsert(
+      sb,
+      { id: "cust-1", role: "customer", phone: "966509876543" },
+      {
+        items: [
+          {
+            type: "restaurant",
+            price: 1,
+            subtotal: 1,
+            discount: 99,
+            data: { store_id: "store-1", product_id: "p1", qty: 1, delivery_fee: 1 },
+          },
+        ],
+        payment_method: "cash",
+        customer_lat: 24.71,
+        customer_lng: 46.71,
+      },
+      { applyPaymentGate: false }
+    );
+
+    expect(out.ok).toBe(true);
+    expect(insertOrdersResilient).toHaveBeenCalledWith(
+      sb,
+      expect.objectContaining({
+        order_total: 100,
+        breakdown: expect.objectContaining({ total: 100, price_source: "server_catalog" }),
+      })
     );
   });
 });

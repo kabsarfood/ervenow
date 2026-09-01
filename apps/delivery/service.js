@@ -9,7 +9,7 @@ const { logger } = require("../../shared/utils/logger");
 const { normalizeOrderFinancialsForInsert } = require("../../shared/utils/orderTotals");
 const { isOrdersStoreColumnMissingError, insertOrdersResilient } = require("../../shared/utils/idempotency");
 const { applyPortalTypeToOrderRow } = require("../../shared/utils/orderPortalRouting");
-const { notifyOrderCancelled, notifyCustomer } = require("../../shared/services/notificationEvents");
+const { notifyOrderCancelled, notifyCustomer, isCancelledStatus } = require("../../shared/services/notificationEvents");
 const {
   isCarPolishingOrder,
   orderData,
@@ -22,6 +22,7 @@ const {
   fetchOrderByCustomerIdempotencyKey,
   findRecentSimilarDeliveryOrder,
 } = require("../../shared/utils/orderDedup");
+const { refundPaidOrderOnLedger } = require("../../shared/services/ledgerCancelRefund");
 const { computePlatformCommission } = require("../../shared/utils/platformCommission");
 const { isDriverDispatchOrder, filterDriverDispatchOrders } = require("../../shared/utils/driverDispatchOrders");
 function haversineDistanceKm(lat1, lng1, lat2, lng2) {
@@ -199,25 +200,10 @@ async function refundCustomerWalletIfPaid(sb, order) {
   if (!isOrderPaid(order)) return { refunded: false, reason: "not_paid" };
   const customerId = await resolveCustomerId(sb, order);
   if (!customerId) return { refunded: false, reason: "customer_not_found" };
-  const refundAmount = calcRefundAmount(order);
-  if (!(refundAmount > 0)) return { refunded: false, reason: "zero_amount" };
-
   const orderId = String(order.id || "").trim();
   if (!orderId) return { refunded: false, reason: "no_order_id" };
 
-  const { data: rpcData, error: rpcErr } = await sb.rpc("ervenow_wallet_customer_refund_atomic", {
-    p_order_id: orderId,
-    p_customer_id: customerId,
-    p_amount: refundAmount,
-  });
-  if (rpcErr) {
-    return { refunded: false, reason: "refund_rpc_error", detail: String(rpcErr.message || rpcErr) };
-  }
-  const row = typeof rpcData === "object" && rpcData !== null && !Array.isArray(rpcData) ? rpcData : {};
-  if (row.ok === true || row.ok === "true") {
-    return { refunded: true, amount: refundAmount, customer_id: customerId, reason: row.reason || "refunded" };
-  }
-  return { refunded: false, reason: String(row.reason || "refund_failed"), wallet: row };
+  return refundPaidOrderOnLedger(sb, order, customerId);
 }
 
 /**
@@ -595,6 +581,15 @@ async function acceptOrder(sb, orderId, driverId) {
     .single();
 
   if (gErr || !order) return { data: null, error: gErr || new Error("Not found") };
+  if (isCancelledStatus(getOrderDeliveryStatus(order))) {
+    return { data: null, error: new Error("الطلب ملغي") };
+  }
+  if (String(order.driver_id || "") === String(driverId)) {
+    return { data: order, error: null };
+  }
+  if (order.driver_id) {
+    return { data: null, error: new Error("تم استلام الطلب من مندوب آخر") };
+  }
   if (!isDriverDispatchOrder(order)) {
     return { data: null, error: new Error("هذا الطلب ليس من اختصاص مندوب التوصيل") };
   }

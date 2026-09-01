@@ -29,7 +29,7 @@
 .lp-home-premium .guest-offers-carousel--home {
   box-sizing: border-box;
   display: block;
-  max-width: min(1120px, 100%);
+  max-width: min(1440px, 100%);
   margin: 0 auto clamp(12px, 2.5vw, 18px);
   overflow: hidden;
   border-radius: clamp(14px, 2.5vw, 18px);
@@ -41,7 +41,7 @@
 .lp-home-premium .card.guest-offers-carousel--home {
   padding: 0;
   margin-top: clamp(10px, 2vw, 16px);
-  width: min(1120px, calc(100% - 2 * max(clamp(14px, 3vw, 24px), env(safe-area-inset-left, 0px))));
+  width: min(1440px, calc(100% - 2 * max(clamp(14px, 3vw, 24px), env(safe-area-inset-left, 0px))));
 }
 
 @media (max-width: 1024px) {
@@ -99,9 +99,9 @@
   html.erv-mobile-shell body.lp-home-premium .guest-offers-carousel--home .guest-offers-shell,
   html.erv-mobile-shell body.lp-home-premium .guest-offers-carousel--reserved .guest-offers-shell--placeholder {
     width: 100% !important;
-    aspect-ratio: 1920 / 480 !important;
-    min-height: clamp(140px, 37.5vw, 210px) !important;
-    max-height: 210px !important;
+    aspect-ratio: 16 / 9 !important;
+    min-height: clamp(168px, 42vw, 210px) !important;
+    max-height: min(220px, 30vh) !important;
     height: auto !important;
   }
 
@@ -186,9 +186,9 @@
 @media (max-width: 640px) {
   .lp-home-premium .guest-offers-carousel--reserved .guest-offers-shell--placeholder,
   .guest-offers-carousel--reserved .guest-offers-shell--placeholder {
-    min-height: clamp(140px, 37.5vw, 210px);
-    max-height: 210px;
-    aspect-ratio: 1920 / 480;
+    min-height: clamp(168px, 42vw, 210px);
+    max-height: min(220px, 30vh);
+    aspect-ratio: 16 / 9;
   }
 
   /* P1-B: لا حجز مكان للبنر المخفي على الجوال — الأقسام أولاً */
@@ -211,9 +211,9 @@
   }
 
   html.erv-mobile-shell body.lp-home-premium #homeMainBanner.guest-offers-carousel--home:not([hidden]) .guest-offers-shell {
-    aspect-ratio: 1920 / 480 !important;
-    min-height: clamp(140px, 37.5vw, 175px) !important;
-    max-height: 175px !important;
+    aspect-ratio: 16 / 9 !important;
+    min-height: clamp(168px, 42vw, 210px) !important;
+    max-height: min(220px, 30vh) !important;
   }
 }
 
@@ -355,7 +355,7 @@
 /* ——— حاوية البنر الرئيسي + أسهم التنقل ——— */
 .guest-offers-carousel-wrap--home {
   box-sizing: border-box;
-  max-width: min(1000px, calc(100% - 32px));
+  max-width: min(1440px, calc(100% - 32px));
   margin: clamp(8px, 2vw, 14px) auto;
   padding: clamp(8px, 2vw, 12px);
   border-radius: 20px;

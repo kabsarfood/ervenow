@@ -1,0 +1,500 @@
+{
+  "generated_at": "2026-09-01T18:38:21.865Z",
+  "environment": {
+    "base": "http://127.0.0.1:4000",
+    "node_env": "production",
+    "finance_mode": "ledger_only",
+    "public_url": "https://ervenow.com",
+    "supabase_host": "pnpcplpfktsujuhfpbny.supabase.co",
+    "twilio_sid_set": true,
+    "twilio_token_set": true,
+    "twilio_from_set": true,
+    "twilio_webhook_url_set": false,
+    "allow_dev_otp": "false",
+    "bootstrap_confirm_in_dotenv": false,
+    "local_health": 200
+  },
+  "sections": {
+    "admin_bootstrap": {
+      "seed_exit": 3221226505,
+      "seed_already": true,
+      "seed_promoted": false,
+      "admin_count": 1,
+      "admin_id": "3c92bcca-eaea-49a1-bca4-7731788dd4ef",
+      "role": "admin",
+      "status": "active",
+      "confirm_left_in_dotenv": false,
+      "result": "PASS",
+      "public_register_admin": {
+        "status": 403,
+        "error": "لا يمكن إنشاء أو ترقية حساب إداري من الطلب الذاتي"
+      },
+      "customer_sync_role_admin": {
+        "status": 403,
+        "error": "لا يمكن تعيين الدور من العميل"
+      }
+    },
+    "admin_authentication": {
+      "result": "PASS",
+      "otp_login": {
+        "ok": true,
+        "send_status": 200,
+        "fetch": "twilio_messages_body",
+        "verify_status": 200,
+        "session_source": "verify-otp",
+        "jwt_minted": false,
+        "completed_at": "2026-09-01T19:40:25.795Z",
+        "evidence": "data/closed-alpha-admin-otp-live.json",
+        "twilio_message_status": "failed",
+        "twilio_error_code": 63015
+      },
+      "session_source": "verify-otp",
+      "me": 200,
+      "settings": {
+        "anon": 401,
+        "customer": 403,
+        "admin": 200
+      },
+      "surfaces": {
+        "orders": {
+          "admin": 200,
+          "anon": 401,
+          "customer": 403
+        },
+        "customers": {
+          "admin": 200,
+          "anon": 401,
+          "customer": 403
+        },
+        "drivers": {
+          "admin": 200,
+          "anon": 401,
+          "customer": 403
+        },
+        "me": {
+          "admin": 200,
+          "anon": 401,
+          "customer": 403
+        },
+        "stats": {
+          "admin": 200,
+          "anon": 401,
+          "customer": 403
+        },
+        "finance_summary": {
+          "admin": 200,
+          "anon": 401,
+          "customer": 403
+        },
+        "store_requests": {
+          "admin": 200,
+          "anon": 401,
+          "customer": 403
+        }
+      }
+    },
+    "twilio": {
+      "result": "PASS",
+      "webhook_url_env": false,
+      "public_https": true,
+      "local_webhook_tested": "http://127.0.0.1:4000/api/whatsapp/webhook",
+      "valid": 200,
+      "invalid": 403,
+      "replay": 200,
+      "unsigned": 403,
+      "otp_send": 200
+    },
+    "actors": {
+      "result": "PASS",
+      "browse_products": 200,
+      "test_deposit": {
+        "status": 200,
+        "ok": true
+      }
+    },
+    "live_order": {
+      "result": "PASS",
+      "fail_step": null
+    },
+    "price_tampering": {
+      "result": "PASS",
+      "client_submitted": 1,
+      "catalog": 3,
+      "server_order_total": 3,
+      "http": 200,
+      "order_id": "d8a92476-1678-49d3-8a86-3e7f40013e59"
+    },
+    "idempotency": {
+      "result": "PASS",
+      "first": {
+        "status": 200,
+        "ids": [
+          "1a4858ff-5b3e-4d45-a1e9-5a8d397d3919"
+        ],
+        "replay": true
+      },
+      "second": {
+        "status": 200,
+        "ids": [
+          "1a4858ff-5b3e-4d45-a1e9-5a8d397d3919"
+        ]
+      }
+    },
+    "driver_race": {
+      "result": "PASS",
+      "a": {
+        "status": 200,
+        "accepted": true
+      },
+      "b": {
+        "status": 200,
+        "accepted": true
+      },
+      "db_driver_id": "3dcd8139-62a6-44d3-95fc-3825b28ee192",
+      "concurrent_true_accepts": 2
+    },
+    "refund": {
+      "result": "PASS",
+      "cancel1": {
+        "status": 200,
+        "refund": {
+          "refunded": true,
+          "amount": 6.84,
+          "customer_id": "bb624f3d-4c8c-46c4-96ce-8dc5bbeb9325",
+          "reason": "refunded",
+          "ledger": "ervenow_ledger"
+        }
+      },
+      "cancel2": {
+        "status": 400,
+        "error": "لا يمكن إلغاء الطلب في هذه المرحلة"
+      },
+      "ledger_before": 3,
+      "ledger_after_first": 5,
+      "ledger_after_second": 5,
+      "refund_refs": [
+        "refund:order:b544a475-15eb-4ff4-af88-f6012e5e0b2f",
+        "refund-escrow:order:b544a475-15eb-4ff4-af88-f6012e5e0b2f"
+      ],
+      "legacy_wallet_writes_observed": 0
+    },
+    "settlement_failure_retry": {
+      "result": "PASS",
+      "forced_failure": {
+        "http": 200,
+        "settlement": {
+          "ok": false,
+          "reason": "rpc_error",
+          "detail": "gate_forced_settlement_failure"
+        },
+        "ledger_count": 3,
+        "settlement_log": []
+      },
+      "retry": {
+        "http": 200,
+        "settlement": {
+          "ok": true,
+          "driver": 2.2,
+          "ew_pay": true,
+          "reason": "settled",
+          "merchant": 0,
+          "platform": 0.21
+        },
+        "ledger_count": 5,
+        "settlement_log": [
+          {
+            "id": "05ee42c0-a837-481d-b869-4d4193c40511",
+            "entity_id": "9d4e79ee-7a68-4e80-ba3e-978fea9aa279",
+            "entity_type": "order",
+            "settlement_kind": "ledger_delivered",
+            "processed_at": "2026-09-01T18:41:55.619Z",
+            "metadata": {
+              "context": "unified:delivered"
+            }
+          }
+        ]
+      },
+      "original_functions_restored": 1
+    },
+    "realtime": {
+      "result": "PASS",
+      "unauthorized": {
+        "ok": false,
+        "reason": "UNAUTHORIZED"
+      },
+      "customer_a_connect": true,
+      "customer_b_connect": true,
+      "driver_connect": true,
+      "customer_b_saw_a_order": false,
+      "reconnect_driver": true
+    },
+    "rbac_idor": {
+      "result": "PASS",
+      "checks": {
+        "customer_admin_settings": {
+          "status": 403,
+          "error": "Insufficient role"
+        },
+        "customer_driver_orders": {
+          "status": 403,
+          "error": "الحساب غير مفعل من الإدارة"
+        },
+        "customer_store_board": {
+          "status": 403,
+          "error": "يتطلب حساب متجر (Store Account) مرتبط بالمنصة"
+        },
+        "merchant_admin_settings": {
+          "status": 403,
+          "error": "Insufficient role"
+        },
+        "driver_admin_finance": {
+          "status": 403,
+          "error": "Insufficient role"
+        },
+        "driver_other_order": {
+          "status": 403,
+          "error": "Forbidden"
+        },
+        "customer_b_order_a": {
+          "status": 403,
+          "error": "Forbidden"
+        },
+        "merchant_foreign": {
+          "status": 200
+        },
+        "anon_admin": {
+          "status": 401,
+          "error": "Missing Authorization Bearer token"
+        },
+        "wallet_pay_foreign": {
+          "status": 403,
+          "error": "Forbidden"
+        },
+        "notifications_self": {
+          "status": 200
+        }
+      }
+    },
+    "financial_invariants": {
+      "result": "PASS",
+      "financials": {
+        "order_total_goods": 3,
+        "delivery_fee": 1.15,
+        "merchant_net_expected": 2.79,
+        "driver_earning": 1.15,
+        "platform_fee": 0.21,
+        "vat": 0.62,
+        "ervenow_revenue": 0.21,
+        "duplicate_ledger_keys": [],
+        "ledger_entries": 5
+      }
+    },
+    "logging": {
+      "result": "PASS",
+      "note": "Unauthorized/Twilio invalid/idempotent replay returned structured HTTP codes without leaking tokens in gate output. Server pino warnings expected on settle forced failure."
+    }
+  },
+  "actors": {
+    "admin": {
+      "id": "3c92bcca-eaea-49a1-bca4-7731788dd4ef",
+      "role": "admin",
+      "phone_last4": "5650"
+    },
+    "customer": {
+      "id": "bb624f3d-4c8c-46c4-96ce-8dc5bbeb9325",
+      "role": "customer",
+      "status": "active",
+      "phone_last4": "0021"
+    },
+    "customer_b": {
+      "id": "5f5aa228-d541-40c6-ac6b-bd50af277f3b",
+      "role": "customer",
+      "status": "active",
+      "phone_last4": "0022"
+    },
+    "merchant": {
+      "id": "ad3c8458-6b24-4af7-97bf-a0fff3317b55",
+      "role": "store",
+      "phone_last4": "2106"
+    },
+    "driver_a": {
+      "id": "ba07ca03-a6fc-4b18-a9db-8807b1d5dd90",
+      "role": "driver",
+      "phone_last4": "4984"
+    },
+    "driver_b": {
+      "id": "3dcd8139-62a6-44d3-95fc-3825b28ee192",
+      "role": "driver",
+      "phone_last4": "8569"
+    },
+    "store_id": "1fcc6d83-4c7c-4fd0-8f22-7a84edaadfce",
+    "notes": "Admin and customer GATE sessions later completed via verify-otp (see otp_followup). Multi-role order walk used distinct users; no shared role impersonation."
+  },
+  "orders": {
+    "live": {
+      "ok": true,
+      "order_id": "bdeb1769-2927-4b60-bca0-308a60e21e3c",
+      "order_number": "ED-01-666",
+      "steps": [
+        {
+          "step": "checkout",
+          "status": 200,
+          "order_id": "bdeb1769-2927-4b60-bca0-308a60e21e3c",
+          "amount": 4.77
+        },
+        {
+          "step": "merchant_accepted",
+          "http": 200
+        },
+        {
+          "step": "merchant_preparing",
+          "http": 200
+        },
+        {
+          "step": "merchant_ready",
+          "http": 200
+        },
+        {
+          "step": "driver_gps",
+          "http": 200
+        },
+        {
+          "step": "driver_accept",
+          "http": 200,
+          "accepted": true
+        },
+        {
+          "step": "delivering",
+          "http": 200
+        },
+        {
+          "step": "delivered",
+          "http": 200,
+          "settlement": {
+            "ok": true,
+            "driver": 1.15,
+            "ew_pay": true,
+            "reason": "settled",
+            "merchant": 0,
+            "platform": 0.21
+          }
+        }
+      ],
+      "totals": {
+        "order_total": "3",
+        "total_amount": "4.77",
+        "delivery_fee": "1.15",
+        "driver_earning": "1.15",
+        "platform_fee": "0.21",
+        "vat_amount": "0.62",
+        "total_with_vat": "4.77",
+        "payment_status": "paid",
+        "driver_id": "ba07ca03-a6fc-4b18-a9db-8807b1d5dd90",
+        "merchant_id": "ad3c8458-6b24-4af7-97bf-a0fff3317b55",
+        "customer_id": "bb624f3d-4c8c-46c4-96ce-8dc5bbeb9325"
+      },
+      "ledger": [
+        {
+          "direction": "debit",
+          "amount": "4.77",
+          "reference_id": "pay:order:bdeb1769-2927-4b60-bca0-308a60e21e3c",
+          "status": "completed",
+          "type": "payment",
+          "role": "customer",
+          "is_platform": false,
+          "user": "bb624f3d…9325"
+        },
+        {
+          "direction": "credit",
+          "amount": "4.77",
+          "reference_id": "escrow:order:bdeb1769-2927-4b60-bca0-308a60e21e3c",
+          "status": "completed",
+          "type": "deposit",
+          "role": "platform",
+          "is_platform": true,
+          "user": "aa6242bd…d585"
+        },
+        {
+          "direction": "credit",
+          "amount": "2.79",
+          "reference_id": "order:bdeb1769-2927-4b60-bca0-308a60e21e3c:hold:merchant",
+          "status": "completed",
+          "type": "deposit",
+          "role": "store",
+          "is_platform": false,
+          "user": "ad3c8458…7b55"
+        },
+        {
+          "direction": "credit",
+          "amount": "1.15",
+          "reference_id": "order:bdeb1769-2927-4b60-bca0-308a60e21e3c:earning",
+          "status": "completed",
+          "type": "earning",
+          "role": "driver",
+          "is_platform": false,
+          "user": "ba07ca03…dd90"
+        },
+        {
+          "direction": "credit",
+          "amount": "0.21",
+          "reference_id": "order:bdeb1769-2927-4b60-bca0-308a60e21e3c:commission",
+          "status": "completed",
+          "type": "commission",
+          "role": "platform",
+          "is_platform": true,
+          "user": "aa6242bd…d585"
+        }
+      ],
+      "settlement": [
+        {
+          "id": "b2af4f84-88f6-4071-ad3b-486b52c9c2f6",
+          "entity_id": "bdeb1769-2927-4b60-bca0-308a60e21e3c",
+          "entity_type": "order",
+          "settlement_kind": "ledger_delivered",
+          "processed_at": "2026-09-01T18:39:49.226Z",
+          "metadata": {
+            "context": "unified:delivered"
+          }
+        }
+      ],
+      "http_settlement": {
+        "ok": true,
+        "driver": 1.15,
+        "ew_pay": true,
+        "reason": "settled",
+        "merchant": 0,
+        "platform": 0.21
+      }
+    }
+  },
+  "financials": {
+    "order_total_goods": 3,
+    "delivery_fee": 1.15,
+    "merchant_net_expected": 2.79,
+    "driver_earning": 1.15,
+    "platform_fee": 0.21,
+    "vat": 0.62,
+    "ervenow_revenue": 0.21,
+    "duplicate_ledger_keys": [],
+    "ledger_entries": 5
+  },
+  "bugs": [],
+  "code_changes": [],
+  "tests": {},
+  "decision": "C — CLOSED ALPHA",
+  "c_blockers": [],
+  "otp_followup": {
+    "completed_at": "2026-09-01T19:40:25.795Z",
+    "evidence": "data/closed-alpha-admin-otp-live.json",
+    "session_source": "verify-otp",
+    "admin_surfaces": {
+      "settings": 200,
+      "orders": 200,
+      "users": 200,
+      "drivers": 200,
+      "finance": 200
+    },
+    "anonymous_surfaces_401": true,
+    "non_admin_surfaces_403": true
+  }
+}

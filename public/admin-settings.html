@@ -184,10 +184,24 @@
     </div>
 
     <script src="/assets/api-config.js"></script>
+    <script src="/assets/api.js"></script>
     <script>
       (function () {
         var grid = document.getElementById("asGrid");
         var statusEl = document.getElementById("asStatus");
+
+        function authHeaders(extra) {
+          var h = extra ? Object.assign({}, extra) : {};
+          var t = "";
+          try {
+            if (window.PlatformAPI && typeof window.PlatformAPI.getToken === "function") {
+              t = window.PlatformAPI.getToken() || "";
+            }
+            if (!t) t = localStorage.getItem("ervenow_access_token") || localStorage.getItem("token") || "";
+          } catch (e) {}
+          if (t) h.Authorization = "Bearer " + t;
+          return h;
+        }
 
         function apiUrl(path) {
           var base =
@@ -215,7 +229,14 @@
           setStatus("جارٍ تحميل الإعدادات…");
           grid.innerHTML = "";
           try {
-            var r = await fetch(apiUrl("/api/admin/settings"), { credentials: "same-origin" });
+            var r = await fetch(apiUrl("/api/admin/settings"), {
+              credentials: "same-origin",
+              headers: authHeaders(),
+            });
+            if (r.status === 401 || r.status === 403) {
+              window.location.href = "/admin-login";
+              return;
+            }
             var j = await r.json().catch(function () {
               return {};
             });
@@ -286,10 +307,14 @@
           try {
             var r = await fetch(apiUrl("/api/admin/settings/update"), {
               method: "POST",
-              headers: { "Content-Type": "application/json" },
+              headers: authHeaders({ "Content-Type": "application/json" }),
               credentials: "same-origin",
               body: JSON.stringify({ key: key, value: inputEl.value }),
             });
+            if (r.status === 401 || r.status === 403) {
+              window.location.href = "/admin-login";
+              return;
+            }
             var j = await r.json().catch(function () {
               return {};
             });

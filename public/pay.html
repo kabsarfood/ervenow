@@ -201,6 +201,7 @@
         var uid = params.get("uid") || "";
         var amount = params.get("amount") || "";
         var type = params.get("type") || "debt";
+        var token = params.get("token") || "";
         var root = document.getElementById("root");
         var supportLink = document.getElementById("supportLink");
 
@@ -284,6 +285,7 @@
                   uid: d.user_id,
                   amount: Number(amt),
                   type: "debt",
+                  token: token || undefined,
                 }),
               })
                 .then(function (r) {
@@ -349,8 +351,8 @@
           }
         }
 
-        if (!uid) {
-          renderError("رابط غير صالح — معرّف المستخدم (uid) مطلوب.");
+        if (!uid && !token) {
+          renderError("رابط غير صالح — يلزم توكن السداد أو تسجيل الدخول.");
           return;
         }
 
@@ -367,7 +369,8 @@
           "&amount=" +
           encodeURIComponent(amount) +
           "&type=" +
-          encodeURIComponent(type);
+          encodeURIComponent(type) +
+          (token ? "&token=" + encodeURIComponent(token) : "");
 
         fetch(api)
           .then(function (r) {

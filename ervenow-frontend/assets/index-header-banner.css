@@ -10,7 +10,7 @@
 
 :root {
 
-  --erv-header-max: 1120px;
+  --erv-header-max: 1440px;
 
   --erv-header-pad-x: clamp(14px, 3vw, 24px);
 
@@ -353,9 +353,9 @@ html:not(.erv-mobile-shell) .lp-header.lp-header--refined .lp-header__top-row > 
 
   left: auto !important;
 
-  inset-inline-start: auto !important;
+  inset-inline-start: unset !important;
 
-  inset-inline-end: 0 !important;
+  inset-inline-end: unset !important;
 
 }
 
@@ -929,9 +929,9 @@ html[dir="ltr"] .lp-header.lp-header--menu-left .lp-quick-dd__panel:not(.lp-quic
 
   left: auto !important;
 
-  inset-inline-start: auto !important;
+  inset-inline-start: unset !important;
 
-  inset-inline-end: 0 !important;
+  inset-inline-end: unset !important;
 
 }
 

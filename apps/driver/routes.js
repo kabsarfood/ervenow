@@ -52,6 +52,9 @@ const {
   isReadyQueueOrderForDriver,
 } = require("../../shared/utils/driverStoreHandoff");
 const { getOrderDeliveryStatus } = require("../../shared/domain/orders/orderStatus");
+const { isCancelledStatus } = require("../../shared/services/notificationEvents");
+const { isDriverRecordOffline } = require("../../shared/utils/closedAlphaTransitions");
+const { isDriverDispatchOrder } = require("../../shared/utils/driverDispatchOrders");
 const {
   assertPayoutIbanGloballyAvailable,
   iqamaDigitsNormalized,
@@ -683,8 +686,26 @@ router.post("/accept/:id", requireAuth, async (req, res) => {
     const { data: cur, error: curErr } = await req.supabase.from("orders").select("*").eq("id", orderId).maybeSingle();
     if (curErr) return fail(res, curErr.message, 400);
     if (!cur) return fail(res, "Not found", 404);
+
+    if (isDriverRecordOffline(drv)) {
+      return fail(res, "المندوب غير متاح (غير متصل أو غير مفعّل)", 403);
+    }
+
+    const current = getOrderDeliveryStatus(cur);
+    if (isCancelledStatus(current)) {
+      return fail(res, "الطلب ملغي", 400);
+    }
+
+    if (String(cur.driver_id || "") === String(driverId)) {
+      return ok(res, { accepted: true, already: true, order: cur });
+    }
+
     if (cur.driver_id) {
       return ok(res, { accepted: false, message: "تم استلام الطلب من مندوب آخر" });
+    }
+
+    if (!isMerchantDispatchOrder(cur) && !isDriverDispatchOrder(cur)) {
+      return fail(res, "هذا الطلب ليس من اختصاص مندوب التوصيل", 403);
     }
 
     const pickupLat = toNumberOrNaN(cur.pickup_lat);
@@ -696,8 +717,6 @@ router.post("/accept/:id", requireAuth, async (req, res) => {
     ) {
       return fail(res, "فعّل الموقع (GPS) أولاً قبل قبول الطلب", 403);
     }
-
-    const current = getOrderDeliveryStatus(cur);
 
     if (current === "ready" && isMerchantDispatchOrder(cur)) {
       const out = await patchUnifiedOrderStatus(req.supabase, orderId, "picked_up", req.appUser);

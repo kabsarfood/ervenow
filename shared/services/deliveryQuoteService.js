@@ -73,7 +73,17 @@ async function buildDeliveryQuote(params) {
   const radius = cfg.delivery_radius_km;
   const within_radius = km <= radius;
   if (!within_radius) {
-    return { ok: false, message: "هذا المتجر لا يغطي منطقتك", status: 400, distance_km: roundKm(km) };
+    return {
+      ok: false,
+      message: "هذا المتجر لا يغطي منطقتك",
+      status: 400,
+      distance_km: roundKm(km),
+      radius_km: radius,
+      store_lat: slat,
+      store_lng: slng,
+      drop_lat: lat,
+      drop_lng: lng,
+    };
   }
 
   const feePart = computeDeliveryFeeQuote({

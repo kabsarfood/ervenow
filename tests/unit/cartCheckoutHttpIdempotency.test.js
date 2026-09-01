@@ -89,7 +89,7 @@ describe("handleUnifiedCartCheckoutHttp — idempotency release on 4xx", () => {
     expect(releaseCheckoutIdempotency).toHaveBeenCalledWith(req.supabase, "cust-1", "idem-test-key");
     expect(finalizeCheckoutIdempotency).not.toHaveBeenCalled();
     expect(res.status).toHaveBeenCalledWith(status);
-    expect(res.json).toHaveBeenCalledWith({ ok: false, message });
+    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ ok: false, message }));
   });
 
   test("retry after 400 can claim again without 409 conflict", async () => {

@@ -21,7 +21,7 @@ const { logger } = require("../../shared/utils/logger");
 const { handleUnifiedCartCheckoutHttp } = require("./cartCheckoutHttp");
 const { createServiceOrder, isServiceOrderType } = require("../../shared/services/serviceOrderCreate");
 const { runUnifiedDeliveryOnlyCreate } = require("./deliveryOrderCreateShared");
-const { patchUnifiedOrderStatus, normalizeIncomingStatus } = require("../../shared/services/unifiedOrderStatus");
+const { patchUnifiedOrderStatus, normalizeIncomingStatus, merchantOwnsOrder } = require("../../shared/services/unifiedOrderStatus");
 const { isAllowedDeliveryStatusTransition } = require("../../shared/utils/deliveryStateMachine");
 const { getOrderDeliveryStatus } = require("../../shared/domain/orders/orderStatus");
 const { broadcastOrderPatch, orderPatchFromRow } = require("../../shared/lib/trackingSocket");
@@ -349,6 +349,16 @@ router.get("/:id", requireAuth, async (req, res) => {
         ((o.delivery_status || o.status) === "new" || (o.delivery_status || o.status) === "pending") &&
         !o.driver_id;
       if (!mine && !open) return fail(res, "Forbidden", 403);
+      return ok(res, { order: o });
+    }
+    if (["store", "merchant", "restaurant"].includes(String(req.appUser.role || ""))) {
+      if (!(await merchantOwnsOrder(sb, o, req.appUser))) return fail(res, "Forbidden", 403);
+      return ok(res, { order: o });
+    }
+    if (req.appUser.role === "service") {
+      if (String(getOrderProviderId(o) || "") !== String(req.appUser.id)) {
+        return fail(res, "Forbidden", 403);
+      }
       return ok(res, { order: o });
     }
     return fail(res, "Forbidden", 403);

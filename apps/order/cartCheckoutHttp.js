@@ -73,6 +73,12 @@ async function handleUnifiedCartCheckoutHttp(req, res, opts = {}) {
         balance: insertResult.balance,
         required: insertResult.required,
         reason: insertResult.reason || null,
+        distance_km: insertResult.distance_km != null ? insertResult.distance_km : undefined,
+        radius_km: insertResult.radius_km != null ? insertResult.radius_km : undefined,
+        store_lat: insertResult.store_lat,
+        store_lng: insertResult.store_lng,
+        drop_lat: insertResult.drop_lat,
+        drop_lng: insertResult.drop_lng,
       });
     }
 

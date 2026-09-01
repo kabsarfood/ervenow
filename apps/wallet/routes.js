@@ -35,6 +35,7 @@ const {
   redeemTopupCode,
 } = require("../../shared/services/walletTopupService");
 const { notifyWalletCredit } = require("../../shared/services/notificationEvents");
+const { orderChargeAmount } = require("../../shared/services/ervenowPayCheckout");
 
 const router = express.Router();
 const MIN_WITHDRAW = 20;
@@ -236,9 +237,16 @@ router.post("/ledger/deposit", requireAuth, requireRole("admin"), async (req, re
 router.post("/ledger/pay", requireAuth, requireRole("customer"), async (req, res) => {
   try {
     const orderId = String(req.body?.order_id || "").trim();
-    const amount = Number(req.body?.amount);
     if (!orderId) return fail(res, "order_id مطلوب", 400);
-    if (!Number.isFinite(amount) || amount <= 0) return fail(res, "مبلغ غير صالح", 400);
+    const sb = req.supabase || createServiceClient();
+    const { data: order, error: oErr } = await sb.from("orders").select("*").eq("id", orderId).maybeSingle();
+    if (oErr) return fail(res, oErr.message, 400);
+    if (!order) return fail(res, "الطلب غير موجود", 404);
+    if (String(order.customer_id || "") !== String(req.appUser.id)) {
+      return fail(res, "Forbidden", 403);
+    }
+    const amount = orderChargeAmount(order);
+    if (!(amount > 0)) return fail(res, "مبلغ الطلب غير صالح", 400);
     const description = String(req.body?.description || "دفع من محفظة ledger").trim();
 
     const { data, error } = await req.supabase.rpc("ervenow_ledger_pay", {

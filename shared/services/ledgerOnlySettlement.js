@@ -1,46 +1,50 @@
 /**
- * تسوية التسليم/الإتمام — ledger فقط (ervenow_ledger_settle_*).
+ * تسوية التسليم/الإتمام — ledger فقط. FAIL CLOSED على claim.
  */
 
 const { shadowLedgerSettleDeliveredOrder } = require("./shadowLedger");
-const { SETTLEMENT_KINDS, tryClaimSettlement } = require("./settlementGuard");
+const { SETTLEMENT_KINDS, claimSettlement, releaseSettlementClaim } = require("./settlementGuard");
 
-/**
- * @param {import("@supabase/supabase-js").SupabaseClient} sb
- * @param {string} orderId
- * @param {string} [context]
- */
+function settleOk(row) {
+  return row && (row.ok === true || row.ok === "true");
+}
+
 async function settleDeliveredOrderLedgerOnly(sb, orderId, context = "ledger_only:delivered") {
   const id = String(orderId || "").trim();
   if (!id || !sb) return { ok: false, reason: "missing_id" };
 
-  const shouldProceed = await tryClaimSettlement(sb, id, "order", SETTLEMENT_KINDS.LEDGER_DELIVERED, {
-    context,
-  });
-  if (!shouldProceed) {
-    return { ok: true, reason: "already_settled", skipped: true };
+  const claim = await claimSettlement(sb, id, "order", SETTLEMENT_KINDS.LEDGER_DELIVERED, { context });
+  if (!claim.proceed) {
+    if (claim.reason === "already_claimed") {
+      return { ok: true, reason: "already_settled", skipped: true };
+    }
+    return { ok: false, reason: claim.reason, detail: claim.detail || null };
   }
 
-  return shadowLedgerSettleDeliveredOrder(sb, id, { context });
+  const row = await shadowLedgerSettleDeliveredOrder(sb, id, { context });
+  if (!settleOk(row)) {
+    await releaseSettlementClaim(sb, id, "order", SETTLEMENT_KINDS.LEDGER_DELIVERED);
+  }
+  return row;
 }
 
-/**
- * @param {import("@supabase/supabase-js").SupabaseClient} sb
- * @param {string} bookingId
- * @param {string} [context]
- */
 async function settleCompletedServiceLedgerOnly(sb, bookingId, context = "ledger_only:service") {
   const id = String(bookingId || "").trim();
   if (!id || !sb) return { ok: false, reason: "missing_id" };
 
-  const shouldProceed = await tryClaimSettlement(sb, id, "order", SETTLEMENT_KINDS.LEDGER_SERVICE, {
-    context,
-  });
-  if (!shouldProceed) {
-    return { ok: true, reason: "already_settled", skipped: true };
+  const claim = await claimSettlement(sb, id, "order", SETTLEMENT_KINDS.LEDGER_SERVICE, { context });
+  if (!claim.proceed) {
+    if (claim.reason === "already_claimed") {
+      return { ok: true, reason: "already_settled", skipped: true };
+    }
+    return { ok: false, reason: claim.reason, detail: claim.detail || null };
   }
 
-  return shadowLedgerSettleDeliveredOrder(sb, id, { type: "service", context });
+  const row = await shadowLedgerSettleDeliveredOrder(sb, id, { type: "service", context });
+  if (!settleOk(row)) {
+    await releaseSettlementClaim(sb, id, "order", SETTLEMENT_KINDS.LEDGER_SERVICE);
+  }
+  return row;
 }
 
 module.exports = { settleDeliveredOrderLedgerOnly, settleCompletedServiceLedgerOnly };

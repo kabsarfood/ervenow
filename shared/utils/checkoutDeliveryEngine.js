@@ -65,7 +65,19 @@ async function resolveStoreCheckoutFromCartSnapshot(sb, groupItems, storeRowFrom
     subtotal: total,
     product_includes_delivery: !!d.includes_delivery,
   });
-  if (!quote.ok) return { ok: false, message: quote.message, status: quote.status || 400 };
+  if (!quote.ok) {
+    return {
+      ok: false,
+      message: quote.message,
+      status: quote.status || 400,
+      distance_km: quote.distance_km,
+      radius_km: quote.radius_km,
+      store_lat: quote.store_lat,
+      store_lng: quote.store_lng,
+      drop_lat: quote.drop_lat,
+      drop_lng: quote.drop_lng,
+    };
+  }
 
   const clientFee = Number(d.delivery_fee);
   if (Number.isFinite(clientFee) && Math.abs(clientFee - quote.delivery_fee) > 0.05) {

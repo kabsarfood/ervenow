@@ -18,6 +18,9 @@ const {
   isSessionsTableMissing,
 } = require("../../shared/services/debtPaymentSettlement");
 const { logger } = require("../../shared/utils/logger");
+const { optionalAuth } = require("../../shared/middleware/auth");
+const { insertAuditEvent } = require("../../shared/services/auditLog");
+const { verifyDebtPayToken } = require("../../shared/utils/debtPayToken");
 
 const router = express.Router();
 
@@ -38,16 +41,56 @@ function maskUserId(uid) {
   return s.slice(0, 8) + "…";
 }
 
+function requestIp(req) {
+  const xf = String(req.headers["x-forwarded-for"] || "")
+    .split(",")[0]
+    .trim();
+  return xf || (req.ip ? String(req.ip) : null);
+}
+
+function extractDebtToken(req) {
+  return String(req.query?.token || req.body?.token || req.headers["x-debt-token"] || "").trim();
+}
+
+/**
+ * Token موقّع أو جلسة المالك/الأدمن. لا uid حر مجهول.
+ */
+function resolveDebtSubject(req, uidRaw) {
+  const uidHint = String(uidRaw || "").trim();
+  const verified = verifyDebtPayToken(extractDebtToken(req));
+  if (verified.ok) {
+    if (uidHint && uidHint !== verified.userId) {
+      return { ok: false, status: 403, message: "token/user mismatch" };
+    }
+    return { ok: true, userId: verified.userId, via: "token" };
+  }
+  if (!req.appUser || !req.appUser.id) {
+    return { ok: false, status: 401, message: "Authentication required" };
+  }
+  const role = String(req.appUser.role || "").toLowerCase();
+  if (role === "admin") {
+    const uid = uidHint || req.appUser.id;
+    if (!uid) return { ok: false, status: 400, message: "uid required" };
+    return { ok: true, userId: uid, via: "admin" };
+  }
+  if (uidHint && uidHint !== String(req.appUser.id)) {
+    return { ok: false, status: 403, message: "Forbidden" };
+  }
+  return { ok: true, userId: String(req.appUser.id), via: "self" };
+}
+
 /**
  * GET /api/pay/debt-info?uid=&amount=&type=debt
  */
-router.get("/debt-info", async (req, res) => {
+router.get("/debt-info", optionalAuth, async (req, res) => {
   try {
-    const uid = String(req.query.uid || req.query.userId || "").trim();
+    const access = resolveDebtSubject(req, req.query.uid || req.query.userId);
+    if (!access.ok) return fail(res, access.message, access.status);
+
+    const uid = access.userId;
     const type = String(req.query.type || "debt").trim().toLowerCase();
     const amountReq = Number(req.query.amount);
 
-    if (!uid) return fail(res, "uid required", 400);
     if (type !== "debt") return fail(res, "unsupported type", 400);
 
     const sb = createServiceClient();
@@ -120,13 +163,15 @@ router.get("/debt-info", async (req, res) => {
  * POST /api/pay/create-session
  * Body: { uid, amount, type: "debt" }
  */
-router.post("/create-session", async (req, res) => {
+router.post("/create-session", optionalAuth, async (req, res) => {
   try {
-    const uid = String(req.body?.uid || req.body?.userId || "").trim();
+    const access = resolveDebtSubject(req, req.body?.uid || req.body?.userId);
+    if (!access.ok) return fail(res, access.message, access.status);
+
+    const uid = access.userId;
     const type = String(req.body?.type || "debt").trim().toLowerCase();
     const amountRaw = Number(req.body?.amount);
 
-    if (!uid) return fail(res, "uid required", 400);
     if (type !== "debt") return fail(res, "unsupported type", 400);
     if (!Number.isFinite(amountRaw) || amountRaw <= 0) return fail(res, "amount must be positive", 400);
 
@@ -139,8 +184,43 @@ router.post("/create-session", async (req, res) => {
 
     const amount = round2(amountRaw);
     const snap = await resolveDebtSnapshot(sb, uid);
-    if (snap.total_owed > 0 && amount > snap.total_owed + 0.01) {
+    if (!(snap.total_owed > 0)) {
+      return fail(res, "لا توجد مستحقات على هذا الحساب", 400);
+    }
+    if (amount > snap.total_owed + 0.01) {
       return fail(res, `المبلغ أكبر من المستحق (${snap.total_owed.toFixed(2)} ر.س)`, 400);
+    }
+
+    const existingPending = await sb
+      .from("debt_payment_sessions")
+      .select("id, user_id, amount, status, gateway, checkout_url, created_at")
+      .eq("user_id", uid)
+      .eq("status", "pending")
+      .eq("amount", amount)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (!existingPending.error && existingPending.data?.id) {
+      await insertAuditEvent(sb, {
+        scope: "pay",
+        action: "debt_session_reuse",
+        actor_type: access.via,
+        actor_id: req.appUser?.id || null,
+        subject_type: "user",
+        subject_id: uid,
+        ip: requestIp(req),
+        metadata: { session_id: existingPending.data.id, amount },
+      });
+      return ok(res, {
+        ok: true,
+        session_id: existingPending.data.id,
+        checkout_url: existingPending.data.checkout_url,
+        gateway: existingPending.data.gateway,
+        amount,
+        user_id: uid,
+        reused: true,
+        payment_link: buildDebtPaymentLink(uid, amount),
+      });
     }
 
     const base = getPublicSiteBase();
@@ -187,6 +267,17 @@ router.post("/create-session", async (req, res) => {
         updated_at: new Date().toISOString(),
       })
       .eq("id", sessionId);
+
+    await insertAuditEvent(sb, {
+      scope: "pay",
+      action: "debt_session_create",
+      actor_type: access.via,
+      actor_id: req.appUser?.id || null,
+      subject_type: "user",
+      subject_id: uid,
+      ip: requestIp(req),
+      metadata: { session_id: sessionId, amount, gateway: checkout.gateway },
+    });
 
     return ok(res, {
       ok: true,
@@ -254,6 +345,11 @@ router.post("/webhook", async (req, res) => {
 /** POST /api/pay/mock-complete — تطوير فقط (PAYMENT_GATEWAY=mock) */
 router.post("/mock-complete", async (req, res) => {
   if (gatewayMode() !== "mock") return fail(res, "mock gateway only", 403);
+  const secret = String(process.env.PAY_WEBHOOK_SECRET || process.env.PAY_MOCK_WEBHOOK_SECRET || "").trim();
+  const hdr = String(req.headers["x-pay-webhook-secret"] || req.headers["x-ervenow-pay-secret"] || "").trim();
+  if (!secret || hdr !== secret) {
+    return fail(res, "unauthorized", 401);
+  }
   try {
     const sessionId = String(req.body?.session_id || req.body?.sessionId || "").trim();
     if (!sessionId) return fail(res, "session_id required", 400);

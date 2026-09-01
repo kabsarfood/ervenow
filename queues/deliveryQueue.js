@@ -81,10 +81,35 @@ async function enqueueDeliveryJob(name, data, opts) {
     return { queued: false, mode: "inline" };
   }
 
-  await q.add(name, data, {
-    ...DEFAULT_JOB_OPTS,
-    ...(opts || {}),
-  });
+  try {
+    await Promise.race([
+      q.add(name, data, {
+        ...DEFAULT_JOB_OPTS,
+        ...(opts || {}),
+      }),
+      new Promise((_, reject) => {
+        setTimeout(() => reject(new Error("redis_enqueue_timeout")), 2000);
+      }),
+    ]);
+  } catch (err) {
+    logger.warn(
+      { err: err && (err.message || String(err)), jobName: name },
+      "deliveryQueue.enqueue_failed_fallback_inline"
+    );
+    const { processDeliveryJob } = require("./deliveryProcessor");
+    metrics.queueJobsTotal.inc({ job_name: String(name || "unknown"), result: "inline_fallback" });
+    setImmediate(() => {
+      processDeliveryJob(name, data).catch((procErr) => {
+        metrics.queueJobsTotal.inc({ job_name: String(name || "unknown"), result: "inline_failed" });
+        metrics.errorsTotal.inc({ source: "delivery_queue_inline" });
+        logger.error(
+          { err: procErr && (procErr.message || String(procErr)), jobName: name },
+          "deliveryQueue.inline_failed"
+        );
+      });
+    });
+    return { queued: false, mode: "inline_fallback" };
+  }
   metrics.queueJobsTotal.inc({ job_name: String(name || "unknown"), result: "queued" });
   return { queued: true, mode: "bullmq" };
 }

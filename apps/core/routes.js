@@ -30,6 +30,13 @@ const {
   isUserAccountPending,
   accountApprovedFlag,
 } = require("../../shared/utils/accountApproval");
+const {
+  resolveSelfServiceSignupRole,
+  denyClientRolePayload,
+  existingUserSessionRole,
+  canAdminOtpLogin,
+  isSensitiveRole,
+} = require("../../shared/utils/roleAssignment");
 
 const router = express.Router();
 const OTP_TTL_MS = 5 * 60 * 1000;
@@ -102,7 +109,7 @@ function signPlatformToken(userId, phoneDigits, role) {
 /* ======================
    upsert مستخدم (بدون Supabase Auth)
 ====================== */
-const ALLOWED_USER_ROLES = new Set(["customer", "driver", "store", "restaurant", "merchant", "service", "admin"]);
+const ALLOWED_USER_ROLES = new Set(["customer", "driver", "store", "restaurant", "merchant", "service"]);
 const { normalizeProviderServiceType } = require("../../shared/utils/serviceProviderTypes");
 
 const ALLOWED_SERVICE_TYPES = new Set([
@@ -309,26 +316,39 @@ async function upsertDriverByPhone(
       if (touch.error) return { data: existing, error: null };
       return touch;
     }
-    const patch = { role, service_type: serviceType, updated_at: now };
-    if (trimmedName && role === "customer" && !String(existing.name || "").trim()) {
+    const frozenRole = existingUserSessionRole(existing.role);
+    const patch = { updated_at: now };
+    if (frozenRole === "service") {
+      if (serviceType) patch.service_type = serviceType;
+      if (trimmedName) patch.name = trimmedName;
+      if (trimmedDistrict) patch.service_district = trimmedDistrict;
+      if (applyVehicle) Object.assign(patch, serviceVehicle);
+    }
+    if (trimmedName && frozenRole === "customer" && !String(existing.name || "").trim()) {
       patch.name = trimmedName;
     }
-    if (trimmedName && role === "service") patch.name = trimmedName;
-    if (trimmedDistrict && role === "service") patch.service_district = trimmedDistrict;
-    if (applyVehicle) Object.assign(patch, serviceVehicle);
     return resilientUserUpdate(sb, existing.id, patch);
   }
 
+  if (isSensitiveRole(role)) {
+    return { data: null, error: new Error("ROLE_NOT_SELF_SERVICE") };
+  }
+  const signup = resolveSelfServiceSignupRole(role);
+  if (!signup.ok) {
+    return { data: null, error: new Error(signup.message || "ROLE_NOT_SELF_SERVICE") };
+  }
+  const insertRole = signup.role;
+
   const insertRow = {
     phone: phoneDigits,
-    role,
-    service_type: serviceType,
+    role: insertRole,
+    service_type: insertRole === "service" ? serviceType : null,
     updated_at: now,
-    ...(trimmedName && (role === "customer" || role === "service") ? { name: trimmedName } : {}),
-    ...(trimmedDistrict && role === "service" ? { service_district: trimmedDistrict } : {}),
+    ...(trimmedName && (insertRole === "customer" || insertRole === "service") ? { name: trimmedName } : {}),
+    ...(trimmedDistrict && insertRole === "service" ? { service_district: trimmedDistrict } : {}),
     ...(applyVehicle ? serviceVehicle : {}),
   };
-  const initialStatus = role === "admin" ? "active" : "pending";
+  const initialStatus = "pending";
   return resilientUserInsert(sb, insertRow, initialStatus);
 }
 
@@ -651,7 +671,6 @@ router.post("/verify-otp", async (req, res) => {
     const codeIn = String(req.body?.code || "").trim();
     const loginOnly = req.body?.login_only === true || req.body?.login_only === "true";
     const roleIn = String(req.body?.role || "customer").trim().toLowerCase();
-    const wantRole = ALLOWED_USER_ROLES.has(roleIn) ? roleIn : "customer";
 
     const e164 = toE164(raw);
     if (!e164) return fail(res, "رقم الجوال غير صالح", 400);
@@ -672,14 +691,6 @@ router.post("/verify-otp", async (req, res) => {
     }
 
     const digits = canonicalPhoneDigits(toStorageDigits(e164));
-
-    if (wantRole === "admin") {
-      if (!isAllowedAdminPhoneDigits(digits)) {
-        return fail(res, "غير مصرح لهذا الرقم بدخول لوحة الإدارة", 403);
-      }
-    }
-
-    const key = otpKey(loginOnly ? "login" : wantRole, digits);
     const mode = otpBackendMode();
     const sbOtp = mode === "supabase" ? createServiceClient() : null;
     const sbEarly = createServiceClient();
@@ -698,9 +709,15 @@ router.post("/verify-otp", async (req, res) => {
         console.error("[ERVENOW] verify-otp user lookup:", exFound.error.message || exFound.error);
       }
     }
-    const existingRole = existingUser ? String(existingUser.role || "").toLowerCase() : null;
+    const existingRole = existingUser ? existingUserSessionRole(existingUser.role) : null;
 
-    const STAFF_LOGIN_ROLES = new Set(["admin", "driver", "store", "merchant", "restaurant", "service"]);
+    if (isSensitiveRole(roleIn)) {
+      if (!canAdminOtpLogin(existingUser, isAllowedAdminPhoneDigits(digits))) {
+        return fail(res, "لا يمكن ترقية الحساب إلى مدير أو دور حسّاس", 403);
+      }
+    }
+
+    const key = otpKey(loginOnly ? "login" : (isSensitiveRole(roleIn) ? "admin" : roleIn || "customer"), digits);
     const checked = await verifyOtpChallenge({
       sb: sbOtp,
       mode,
@@ -730,11 +747,13 @@ router.post("/verify-otp", async (req, res) => {
       );
     }
 
-    let roleForSession = wantRole;
-    if (loginOnly && existingRole && STAFF_LOGIN_ROLES.has(existingRole)) {
-      roleForSession = existingRole;
-    } else if (loginOnly) {
+    let roleForSession;
+    if (existingUser) {
       roleForSession = existingRole || "customer";
+    } else {
+      const resolved = resolveSelfServiceSignupRole(roleIn);
+      if (!resolved.ok) return fail(res, resolved.message, resolved.status);
+      roleForSession = resolved.role;
     }
 
     let wantServiceType = req.body?.service_type;
@@ -901,7 +920,9 @@ router.post("/verify-otp", async (req, res) => {
 async function handleRegisterAccount(req, res) {
   const raw = req.body?.phone;
   const roleIn = String(req.body?.role || "customer").trim().toLowerCase();
-  const wantRole = ALLOWED_USER_ROLES.has(roleIn) ? roleIn : "customer";
+  const resolvedRole = resolveSelfServiceSignupRole(roleIn);
+  if (!resolvedRole.ok) return fail(res, resolvedRole.message, resolvedRole.status);
+  const wantRole = resolvedRole.role;
 
   const e164 = toE164(raw);
   if (!e164) return fail(res, "رقم الجوال غير صالح", 400);
@@ -1155,34 +1176,17 @@ router.get("/login-destinations", requireAuth, async (req, res) => {
 
 router.post("/users/sync", requireAuth, async (req, res) => {
   try {
-    const roleIn = String(req.body?.role || "").trim();
-    const allowed = ["driver", "customer", "admin", "store", "restaurant", "merchant", "service"];
-    const role = allowed.includes(roleIn) ? roleIn : req.appUser.role;
-    const serviceType = role === "service" ? normalizeServiceType(req.body?.service_type) : null;
+    const denied = denyClientRolePayload(req.body);
+    if (denied) return fail(res, denied.message, denied.status);
 
-    let phone = req.body?.phone || req.appUser.phone;
-    if (phone) {
-      const e164 = toE164(phone);
-      if (e164) {
-        if (!isErvnowSaudiMobileE164(e164)) {
-          return fail(res, "رقم غير صالح — أدخل 05xxxxxxxx أو 9665xxxxxxxx", 400);
-        }
-        phone = toStorageDigits(e164);
-      }
-    }
-
-    const row = {
-      id: req.appUser.id,
-      phone,
-      role,
-      service_type: serviceType,
-      updated_at: new Date().toISOString(),
-    };
-
-    const { data, error } = await req.supabase.from("users").upsert(row, { onConflict: "id" }).select().single();
+    const { data, error } = await req.supabase
+      .from("users")
+      .select("id, phone, role, status, service_type, name, updated_at")
+      .eq("id", req.appUser.id)
+      .maybeSingle();
 
     if (error) return fail(res, error.message, 400);
-    ok(res, { profile: data });
+    ok(res, { profile: data || req.appUser });
   } catch (e) {
     fail(res, e.message || "sync failed", 500);
   }

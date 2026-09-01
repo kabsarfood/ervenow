@@ -300,7 +300,7 @@ router.get("/catalog", (_req, res) => {
   return ok(res, { catalog: HOME_SERVICE_CATALOG, subtypes: SERVICE_SUBTYPES, currency: "SAR" });
 });
 
-router.post("/home-order", optionalAuth, async (req, res) => {
+router.post("/home-order", requireAuth, async (req, res) => {
   try {
     const sb = req.supabase || createServiceClient();
     if (!sb) return fail(res, "تعذر تهيئة الاتصال بقاعدة البيانات", 503);
@@ -433,7 +433,7 @@ router.get("/car-polishing/pricing", (_req, res) => {
   });
 });
 
-router.post("/gas-order", optionalAuth, async (req, res) => {
+router.post("/gas-order", requireAuth, async (req, res) => {
   try {
     const { deprecateLegacyOrderRoute, UNIFIED_ORDER_CREATE } = require("../../shared/middleware/deprecateLegacyRoute");
     deprecateLegacyOrderRoute(req, res, "POST /api/services/gas-order", UNIFIED_ORDER_CREATE);
@@ -1193,7 +1193,7 @@ router.post("/bookings", requireAuth, denyUnlessCanPlaceOrders, async (req, res)
   }
 });
 
-router.post("/checkout", optionalAuth, async (req, res) => {
+router.post("/checkout", requireAuth, async (req, res) => {
   try {
     const sb = req.supabase || createServiceClient();
     if (!sb) return fail(res, "تعذر تهيئة الاتصال بقاعدة البيانات", 503);

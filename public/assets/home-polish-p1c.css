@@ -120,7 +120,7 @@ body.lp-home-premium .lp-why-item {
   }
 
   body.lp-home-premium .sn-section--hub {
-    max-width: 1000px;
+    max-width: 1280px;
   }
 
   body.lp-home-premium #snHomeHub .sn-card {
@@ -133,7 +133,7 @@ body.lp-home-premium .lp-why-item {
   }
 
   body.lp-home-premium main .lp-section {
-    max-width: 920px;
+    max-width: 1280px;
     margin-inline: auto;
   }
 
@@ -142,7 +142,7 @@ body.lp-home-premium .lp-why-item {
   }
 
   body.lp-home-premium .guest-offers-carousel--home {
-    max-width: min(1000px, calc(100% - 32px));
+    max-width: min(1440px, calc(100% - 32px));
     margin-inline: auto;
     border-radius: 18px !important;
   }
@@ -159,7 +159,7 @@ body.lp-home-premium .lp-why-item {
   }
 
   body.lp-home-premium #snHomeHub {
-    max-width: 920px;
+    max-width: 1280px;
     margin-inline: auto;
   }
 }

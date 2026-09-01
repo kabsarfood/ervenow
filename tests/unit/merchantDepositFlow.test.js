@@ -16,7 +16,7 @@ describe("merchant deposit flow (HOTFIX-001)", () => {
     const orderId = "11111111-1111-1111-1111-111111111111";
     const rpc = jest.fn((name) => {
       if (name === "settlement_log_try_claim") {
-        return Promise.resolve({ data: false, error: null });
+        return Promise.resolve({ data: true, error: null });
       }
       if (name === "ervenow_ledger_settle_delivered_order") {
         return Promise.resolve({
@@ -112,7 +112,7 @@ describe("merchant deposit flow (HOTFIX-001)", () => {
     const sb = {
       rpc: jest.fn((name) => {
         if (name === "settlement_log_try_claim") {
-          return Promise.resolve({ data: false, error: null });
+          return Promise.resolve({ data: true, error: null });
         }
         if (name === "ervenow_ledger_settle_delivered_order") {
           return Promise.resolve({

@@ -47,19 +47,11 @@ function orderChargeAmount(order) {
   return roundMoney((sub + del) * 1.15);
 }
 
-function resolveCheckoutGrandTotal(orders, financialIntent) {
+function resolveCheckoutGrandTotal(orders, _financialIntent) {
   const list = Array.isArray(orders) ? orders.filter(Boolean) : [];
   const computed = roundMoney(list.reduce((s, o) => s + orderChargeAmount(o), 0));
-  const intent = roundMoney(Number(financialIntent && financialIntent.grand_total));
   if (!(computed > 0)) {
-    if (intent > 0) return { ok: true, amount: intent };
     return { ok: true, amount: 0 };
-  }
-  if (intent > 0 && Math.abs(intent - computed) > 0.05) {
-    logger.warn(
-      { computed, intent },
-      "[ervenowPay] financial_intent drift — charging server-computed total"
-    );
   }
   return { ok: true, amount: computed };
 }

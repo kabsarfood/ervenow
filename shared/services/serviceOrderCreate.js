@@ -12,8 +12,8 @@ const { applyPortalTypeToOrderRow } = require("../utils/orderPortalRouting");
 const { normalizeOrderFinancialsForInsert } = require("../utils/orderTotals");
 const { applyProviderIdToInsertRow } = require("../utils/orderProviderId");
 const { computePlatformCommission } = require("../utils/serviceCommission");
-const { computeGasPlatformCommission } = require("../utils/gasDeliveryPricing");
-const { isHomeServiceType } = require("../utils/homeServicePricing");
+const { computeGasPlatformCommission, computeGasTotal } = require("../utils/gasDeliveryPricing");
+const { isHomeServiceType, computeHomeServiceTotal } = require("../utils/homeServicePricing");
 const { validateCarPolishingOrder, carPolishingServiceTitle } = require("../utils/carPolishingPricing");
 const { CP_STATUS } = require("../utils/carPolishingWorkflow");
 const {
@@ -98,6 +98,17 @@ async function createServiceOrder(sb, appUser, body) {
     payloadData.scheduled_at ||
     payloadData.execution_time ||
     null;
+
+  if (isHomeServiceType(serviceType) && serviceType !== "car_polishing") {
+    total = computeHomeServiceTotal(serviceType);
+  }
+  if (serviceType === "gas_delivery") {
+    total = computeGasTotal(
+      raw.gas_mode ?? payloadData.gas_mode,
+      raw.qty ?? raw.service_qty ?? payloadData.qty ?? 1,
+      raw.gas_liters ?? payloadData.gas_liters
+    );
+  }
 
   if (serviceType === "car_polishing") {
     const cp = validateCarPolishingOrder({ ...raw, data: payloadData });

@@ -23,6 +23,11 @@ const {
   isErvenowPayMethod,
   resolveMerchantUserIdForStore,
 } = require("../../shared/services/ervenowPayCheckout");
+const {
+  repriceStoreCartItems,
+  repriceServiceCartItem,
+  repriceDeliveryOnlyFromCoords,
+} = require("../../shared/services/checkoutServerPricing");
 const { publishDraftOrderAfterPayment } = require("../../shared/services/publishOrderAfterPayment");
 const { sendCustomerOrderPaidWhatsApp } = require("../../shared/messages/deliveryCustomerWhatsApp");
 const { computePlatformCommission } = require("../../shared/utils/platformCommission");
@@ -166,7 +171,6 @@ async function runCheckoutInsert(sb, appUser, body, options) {
         const it = groupItems[svcIdx];
         const data = it && typeof it.data === "object" && it.data ? it.data : {};
         const serviceType = String(it.type || "service").trim().toLowerCase();
-        const total = Number(it.price) || Number(data.total_amount) || 0;
         const svcPaymentStatus = paymentConfirmed
           ? "paid"
           : String(data.payment_status || "").toLowerCase() === "paid"
@@ -215,23 +219,30 @@ async function runCheckoutInsert(sb, appUser, body, options) {
           continue;
         }
 
+        const priced = repriceServiceCartItem(it);
+        if (!priced.ok) {
+          return { ok: false, message: priced.message, status: priced.status || 400 };
+        }
+        const total = priced.total;
+        const pricedData = priced.data || data;
+
         const created = await createServiceOrder(sb, appUser, {
           order_type: "service",
-          service_type: serviceType,
+          service_type: priced.serviceType || serviceType,
           service_name: String(it.title || labelByType(serviceType)).trim(),
-          district: String(data.district || "").trim(),
-          location: String(data.location || data.to || "").trim(),
-          qty: normalizeQty(data.qty || 1),
-          gas_mode: data.gas_mode || null,
-          gas_liters: data.gas_liters != null ? Number(data.gas_liters) : null,
-          scheduled_at: data.scheduled_at || data.execution_time || null,
-          notes: String(data.order_notes || data.customer_notes || "").trim() || undefined,
+          district: String(pricedData.district || data.district || "").trim(),
+          location: String(pricedData.location || data.location || data.to || "").trim(),
+          qty: normalizeQty(pricedData.qty || data.qty || 1),
+          gas_mode: pricedData.gas_mode || data.gas_mode || null,
+          gas_liters: pricedData.gas_liters != null ? Number(pricedData.gas_liters) : data.gas_liters != null ? Number(data.gas_liters) : null,
+          scheduled_at: pricedData.scheduled_at || data.scheduled_at || data.execution_time || null,
+          notes: String(pricedData.order_notes || data.order_notes || data.customer_notes || "").trim() || undefined,
           total_amount: total,
           payment_status: svcPaymentStatus,
           idempotency_key: checkoutIdempotencyKey
             ? `${checkoutIdempotencyKey}:svc:${svcIdx}:${serviceType}`
             : null,
-          data,
+          data: pricedData,
         });
         if (!created.ok) {
           return { ok: false, message: created.message, status: created.status || 400 };
@@ -241,10 +252,33 @@ async function runCheckoutInsert(sb, appUser, body, options) {
       continue;
     }
 
-    const total = groupItems.reduce((sum, i) => sum + (Number(i && i.price) || 0), 0);
+    let groupItemsPriced = groupItems;
+    let total = 0;
+
+    if (type === "store" || type === "restaurant") {
+      const storeIdsPre = new Set(
+        groupItems.map((i) => String((i.data && i.data.store_id) || "").trim()).filter(Boolean)
+      );
+      if (storeIdsPre.size !== 1) {
+        return {
+          ok: false,
+          message: storeIdsPre.size > 1 ? "يجب أن تكون منتجات السلة من متجر واحد" : "متجر غير محدد",
+          status: 400,
+        };
+      }
+      const preStoreId = [...storeIdsPre][0];
+      const repriced = await repriceStoreCartItems(sb, preStoreId, groupItems);
+      if (!repriced.ok) {
+        return { ok: false, message: repriced.message, status: repriced.status || 400 };
+      }
+      total = repriced.goodsTotal;
+      groupItemsPriced = repriced.pricedItems;
+    } else {
+      total = 0;
+    }
 
     const storeIds = new Set(
-      groupItems.map((i) => String((i.data && i.data.store_id) || "").trim()).filter(Boolean)
+      groupItemsPriced.map((i) => String((i.data && i.data.store_id) || "").trim()).filter(Boolean)
     );
     if (storeIds.size > 1) {
       return { ok: false, message: "يجب أن تكون منتجات السلة من متجر واحد", status: 400 };
@@ -265,9 +299,10 @@ async function runCheckoutInsert(sb, appUser, body, options) {
         appUser.phone || groupItems[0]?.data?.customer_phone || groupItems[0]?.customer_phone || ""
       ).trim(),
       breakdown: {
-        items: groupItems,
+        items: groupItemsPriced,
         type,
         total,
+        price_source: "server_catalog",
       },
       notes: `Checkout group: ${type}`,
       payment_status,
@@ -291,10 +326,20 @@ async function runCheckoutInsert(sb, appUser, body, options) {
         return { ok: false, message: "متجر غير متاح أو بلا موقع مسجّل", status: 400 };
       }
 
-      if (useCartDeliverySnapshot(groupItems)) {
-        const resolved = await resolveStoreCheckoutFromCartSnapshot(sb, groupItems, storeRow, total);
+      if (useCartDeliverySnapshot(groupItemsPriced)) {
+        const resolved = await resolveStoreCheckoutFromCartSnapshot(sb, groupItemsPriced, storeRow, total);
         if (!resolved.ok) {
-          return { ok: false, message: resolved.message, status: resolved.status || 400 };
+          return {
+            ok: false,
+            message: resolved.message,
+            status: resolved.status || 400,
+      distance_km: resolved.distance_km,
+      radius_km: resolved.radius_km,
+      store_lat: resolved.store_lat,
+      store_lng: resolved.store_lng,
+      drop_lat: resolved.drop_lat,
+      drop_lng: resolved.drop_lng,
+          };
         }
         Object.assign(row, resolved.patch);
         row.platform_fee = computePlatformCommission(total);
@@ -317,14 +362,24 @@ async function runCheckoutInsert(sb, appUser, body, options) {
         const km = await routeKmWithRoughFallback(slat, slng, custLat, custLng);
         const radius = Number(storeRow.delivery_radius_km) > 0 ? Number(storeRow.delivery_radius_km) : 5;
         if (!Number.isFinite(km) || km > radius) {
-          return { ok: false, message: "هذا المتجر لا يغطي منطقتك", status: 400 };
+          return {
+            ok: false,
+            message: "هذا المتجر لا يغطي منطقتك",
+            status: 400,
+            distance_km: Number.isFinite(km) ? km : null,
+            radius_km: radius,
+            store_lat: slat,
+            store_lng: slng,
+            drop_lat: custLat,
+            drop_lng: custLng,
+          };
         }
         const deliveryFee = Math.round(km * 2.3 * 100) / 100;
         const dropAddress =
           String(
             body.customer_address ||
-              groupItems[0]?.data?.drop_address ||
-              groupItems[0]?.data?.location ||
+              groupItemsPriced[0]?.data?.drop_address ||
+              groupItemsPriced[0]?.data?.location ||
               ""
           ).trim() || "عنوان التوصيل";
         row.pickup_address = String(storeRow.address || storeRow.name || "").trim() || String(storeRow.name || "");
@@ -359,8 +414,11 @@ async function runCheckoutInsert(sb, appUser, body, options) {
       const dlat = Number(d0.drop_lat);
       const dlng = Number(d0.drop_lng);
       if (Number.isFinite(plat) && Number.isFinite(plng) && Number.isFinite(dlat) && Number.isFinite(dlng)) {
-        const deliveryFee =
-          Number(d0.delivery_fee) >= 0 ? Number(d0.delivery_fee) : total;
+        const serverDel = await repriceDeliveryOnlyFromCoords(d0);
+        if (!serverDel.ok) {
+          return { ok: false, message: serverDel.message, status: serverDel.status || 400 };
+        }
+        const deliveryFee = serverDel.delivery_fee;
         const isMapsLike = (s) =>
           /^(https?:\/\/)/i.test(String(s || "").trim()) ||
           /google\.com\/maps|maps\.app\.goo|goo\.gl\/maps/i.test(String(s || ""));
@@ -382,21 +440,12 @@ async function runCheckoutInsert(sb, appUser, body, options) {
         row.pickup_lng = plng;
         row.drop_lat = dlat;
         row.drop_lng = dlng;
-        row.delivery_fee = Math.round(deliveryFee * 100) / 100;
-        row.distance_km =
-          Number(d0.distance_km) >= 0
-            ? Math.round(Number(d0.distance_km) * 100) / 100
-            : null;
-        row.platform_fee =
-          Number(d0.platform_fee) >= 0
-            ? Math.round(Number(d0.platform_fee) * 100) / 100
-            : computePlatformCommission(deliveryFee);
-        row.driver_earning =
-          Number(d0.driver_earning) >= 0
-            ? Math.round(Number(d0.driver_earning) * 100) / 100
-            : Math.round((deliveryFee - row.platform_fee) * 100) / 100;
-        row.order_total = Math.round(deliveryFee * 100) / 100;
-        row.total_amount = row.order_total;
+        row.delivery_fee = deliveryFee;
+        row.distance_km = serverDel.distance_km;
+        row.platform_fee = serverDel.platform_fee;
+        row.driver_earning = serverDel.driver_earning;
+        row.order_total = serverDel.order_total;
+        row.total_amount = serverDel.order_total;
         row.vehicle_type = String(d0.vehicle_type || "").trim() || null;
         const productLabel = String(d0.product_label || "").trim();
         row.notes = productLabel
@@ -469,7 +518,7 @@ async function runCheckoutInsert(sb, appUser, body, options) {
 
     if ((type === "store" || type === "restaurant") && data?.store_id && storeRowForCheckout) {
       try {
-        await runStoreCheckoutSideEffects({ order: data, groupItems, storeRow: storeRowForCheckout });
+        await runStoreCheckoutSideEffects({ order: data, groupItems: groupItemsPriced, storeRow: storeRowForCheckout });
       } catch (sideErr) {
         logger.error(
           { err: sideErr && (sideErr.message || String(sideErr)), orderId: data.id },
@@ -523,7 +572,7 @@ async function runCheckoutInsert(sb, appUser, body, options) {
       try {
         await enqueueDeliveryJob("checkout-dispatch", {
           orderId: data.id,
-          groupItems,
+          groupItems: groupItemsPriced,
           total,
           appUserPhone: appUser?.phone || "",
         });
@@ -537,9 +586,7 @@ async function runCheckoutInsert(sb, appUser, body, options) {
   }
 
   if (useErvenowPay && results.length) {
-    const payResult = await applyErvenowPayForCheckoutOrders(sb, appUser.id, results, {
-      financialIntent: body?.financial_intent,
-    });
+    const payResult = await applyErvenowPayForCheckoutOrders(sb, appUser.id, results, {});
     if (!payResult.ok) {
       return {
         ok: false,

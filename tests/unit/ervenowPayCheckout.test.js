@@ -40,7 +40,7 @@ describe("ervenowPayCheckout — internal_delivery amounts", () => {
     expect(out.amount).toBe(47.15);
   });
 
-  test("resolveCheckoutGrandTotal charges server total when intent drifts", () => {
+  test("resolveCheckoutGrandTotal ignores client financial_intent", () => {
     const order = {
       service_type: "internal_delivery",
       order_total: 41,

@@ -4,7 +4,7 @@
 
 const { getOrderProviderId } = require("../utils/orderProviderId");
 const { logger } = require("../utils/logger");
-const { SETTLEMENT_KINDS, tryClaimSettlement } = require("./settlementGuard");
+const { SETTLEMENT_KINDS, claimSettlement, releaseSettlementClaim } = require("./settlementGuard");
 const { creditDriverOnDelivered } = require("./driverLedgerCredit");
 const { creditStoreMerchantOnDelivered } = require("./storeMerchantLedgerCredit");
 
@@ -128,10 +128,43 @@ async function runDeliveredFinancialSettlement(sb, order, context = "unified:del
     };
   }
 
-  await tryClaimSettlement(sb, orderId, "order", SETTLEMENT_KINDS.LEDGER_DELIVERED, { context });
+  const claim = await claimSettlement(sb, orderId, "order", SETTLEMENT_KINDS.LEDGER_DELIVERED, { context });
+  if (!claim.proceed) {
+    if (claim.reason === "already_claimed") {
+      return {
+        settlement: { ok: true, skipped: true, reason: "already_settled" },
+        provider_credit: { ok: true, skipped: true, reason: "already_settled" },
+        driver_credit: { ok: true, skipped: true, reason: "already_settled" },
+        merchant_credit: { ok: true, skipped: true, reason: "already_settled" },
+      };
+    }
+    logger.warn(
+      { orderId, reason: claim.reason, detail: claim.detail, context },
+      "[deliveredFinancialSettlement] claim fail-closed — settlement not completed"
+    );
+    return {
+      settlement: { ok: false, reason: claim.reason, detail: claim.detail || null },
+      provider_credit: null,
+      driver_credit: null,
+      merchant_credit: null,
+    };
+  }
 
-  /* دائماً نستدعي RPC — idempotent عبر reference_id؛ claim قد يمنع إعادة المحاولة خطأً */
   const settlementRow = await callLedgerSettleDeliveredOrder(sb, orderId, context);
+  const settleOk = settlementRow && (settlementRow.ok === true || settlementRow.ok === "true");
+  if (!settleOk) {
+    await releaseSettlementClaim(sb, orderId, "order", SETTLEMENT_KINDS.LEDGER_DELIVERED);
+    logger.warn(
+      { orderId, settlementRow, context },
+      "[deliveredFinancialSettlement] settle RPC failed — claim released, not completed"
+    );
+    return {
+      settlement: settlementRow && typeof settlementRow === "object" ? settlementRow : { ok: false, reason: "rpc_error" },
+      provider_credit: null,
+      driver_credit: null,
+      merchant_credit: null,
+    };
+  }
 
   const driverCreditRow = await creditDriverOnDelivered(sb, order, settlementRow, context);
 

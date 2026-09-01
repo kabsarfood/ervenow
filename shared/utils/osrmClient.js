@@ -92,6 +92,21 @@ breaker.on("halfOpen", () => {
 });
 
 /**
+ * OSRM العام قد يعيد مساراً عابراً للقارات لنقاط متجاورة أو متطابقة.
+ * إن كان الناتج غير معقول مقابل Haversine نستخدم المسافة التقريبية.
+ */
+function preferHaversineIfOsrmInsane(osrmKm, hvKm) {
+  const osrm = Number(osrmKm);
+  const hv = Number(hvKm);
+  if (!Number.isFinite(osrm) || osrm < 0) return Number.isFinite(hv) ? hv : NaN;
+  if (!Number.isFinite(hv) || hv < 0) return osrm;
+  if (hv <= 0.05 && osrm > 1) return hv;
+  if (hv < 20 && osrm > 100) return hv;
+  if (osrm > 50 && osrm > hv * 5) return hv;
+  return osrm;
+}
+
+/**
  * مسافة بالكم: OSRM عبر circuit + حد التزامن؛ عند الفشل أو الفتح: Haversine.
  */
 async function getOsrmRouteKmOrHaversine(from, to) {
@@ -107,7 +122,7 @@ async function getOsrmRouteKmOrHaversine(from, to) {
 
   try {
     const km = await withConcurrency(() => breaker.fire(coords));
-    if (Number.isFinite(km) && km >= 0) return km;
+    if (Number.isFinite(km) && km >= 0) return preferHaversineIfOsrmInsane(km, fallback());
   } catch {
     /* circuit أو رفض */
   }
@@ -117,6 +132,7 @@ async function getOsrmRouteKmOrHaversine(from, to) {
 module.exports = {
   getOsrmRouteKmOrHaversine,
   haversineKm,
+  preferHaversineIfOsrmInsane,
   OSRM_TIMEOUT_MS,
   MAX_CONCURRENT,
 };

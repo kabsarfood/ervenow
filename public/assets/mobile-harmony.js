@@ -131,46 +131,36 @@
   function syncHomePanelAnchor(btn, panel, root) {
     if (!btn || !panel) return;
     var maxW = getHomeNavWidth();
+    var r = btn.getBoundingClientRect();
+    var vw = global.innerWidth || 1280;
+    var gap = isMobile() ? 6 : 8;
+    var top = Math.round(r.bottom + gap);
+    var minLeft = 8;
+    var panelLeft = Math.round(r.right - maxW);
+    var maxLeft = Math.max(minLeft, vw - 8 - maxW);
+    if (panelLeft < minLeft) panelLeft = minLeft;
+    if (panelLeft > maxLeft) panelLeft = maxLeft;
 
+    var btnCenter = r.left + r.width / 2;
+    var caretX = Math.round(btnCenter - panelLeft);
+    caretX = Math.max(22, Math.min(maxW - 22, caretX));
+
+    ensurePanelParent(panel, document.body);
     if (isMobile()) {
-      ensurePanelParent(panel, document.body);
       panel.classList.remove("lp-quick-dd__panel--desktop-pop");
-
-      var r = btn.getBoundingClientRect();
-      var vw = global.innerWidth || 1280;
-      var gap = 6;
-      var top = Math.round(r.bottom + gap);
-      var btnCenter = r.left + r.width / 2;
-      var panelLeft = Math.max(8, Math.round(r.right - maxW));
-      var caretX = Math.round(btnCenter - panelLeft);
-      caretX = Math.max(32, Math.min(maxW - 32, caretX));
-
-      panel.style.setProperty("--lp-home-nav-top", top + "px");
-      panel.style.setProperty("--lp-home-nav-caret-x", caretX + "px");
-      panel.style.setProperty("top", top + "px", "important");
-      panel.style.setProperty("left", panelLeft + "px", "important");
-      panel.style.setProperty("right", "auto", "important");
-      panel.style.setProperty("width", maxW + "px", "important");
-      panel.style.removeProperty("inset-inline-start");
-      panel.style.removeProperty("inset-inline-end");
-      return;
+    } else {
+      panel.classList.add("lp-quick-dd__panel--desktop-pop");
     }
 
-    ensurePanelParent(panel, root || btn.closest(".lp-quick-dd") || document.body);
-    panel.classList.add("lp-quick-dd__panel--desktop-pop");
-
-    var btnW = btn.offsetWidth || 44;
-    var caretXLocal = Math.round(btnW / 2);
-    caretXLocal = Math.round(Math.max(28, Math.min(maxW - 28, caretXLocal)));
-
-    panel.style.setProperty("--lp-home-nav-caret-x", caretXLocal + "px");
-    panel.style.setProperty("width", maxW + "px", "important");
-    panel.style.removeProperty("--lp-home-nav-top");
-    panel.style.removeProperty("top");
-    panel.style.removeProperty("right");
-    panel.style.setProperty("left", "0", "important");
+    panel.style.setProperty("--lp-home-nav-top", top + "px");
+    panel.style.setProperty("--lp-home-nav-caret-x", caretX + "px");
+    panel.style.setProperty("position", "fixed", "important");
+    panel.style.setProperty("top", top + "px", "important");
+    panel.style.setProperty("left", panelLeft + "px", "important");
+    panel.style.setProperty("right", "auto", "important");
     panel.style.removeProperty("inset-inline-start");
     panel.style.removeProperty("inset-inline-end");
+    panel.style.setProperty("width", maxW + "px", "important");
   }
 
   function setupHomeQuickNav() {
@@ -189,7 +179,7 @@
       while (panel.firstChild) scroll.appendChild(panel.firstChild);
       panel.appendChild(scroll);
     }
-    ensurePanelParent(panel, isMobile() ? document.body : root);
+    ensurePanelParent(panel, document.body);
 
     function openHomeNav() {
       syncHomePanelAnchor(btn, panel, root);
@@ -226,15 +216,24 @@
     global.addEventListener(
       "resize",
       function () {
-        ensurePanelParent(panel, isMobile() ? document.body : root);
+        ensurePanelParent(panel, document.body);
         if (!panel.hidden) syncHomePanelAnchor(btn, panel, root);
+      },
+      { passive: true }
+    );
+
+    global.addEventListener(
+      "scroll",
+      function () {
+        if (panel.hidden) return;
+        syncHomePanelAnchor(btn, panel, root);
       },
       { passive: true }
     );
 
     global.addEventListener("orientationchange", function () {
       global.setTimeout(function () {
-        ensurePanelParent(panel, isMobile() ? document.body : root);
+        ensurePanelParent(panel, document.body);
         if (!panel.hidden) syncHomePanelAnchor(btn, panel, root);
       }, 200);
     });

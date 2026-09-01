@@ -20,7 +20,11 @@ function buildDebtPaymentLink(userId, amount) {
   const uid = String(userId || "").trim();
   const amt = roundAmount(amount);
   const base = getPublicSiteBase();
-  return `${base}/pay?uid=${encodeURIComponent(uid)}&amount=${encodeURIComponent(amt)}&type=debt`;
+  const { createDebtPayToken } = require("./debtPayToken");
+  const token = createDebtPayToken(uid);
+  const qs = new URLSearchParams({ uid, amount: amt, type: "debt" });
+  if (token) qs.set("token", token);
+  return `${base}/pay?${qs.toString()}`;
 }
 
 /**

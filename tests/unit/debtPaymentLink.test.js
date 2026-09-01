@@ -17,7 +17,10 @@ describe("debtPaymentLink", () => {
 
   test("buildDebtPaymentLink matches spec", () => {
     const link = buildDebtPaymentLink("user-abc", 150.5);
-    expect(link).toBe("https://ervenow.com/pay?uid=user-abc&amount=150.50&type=debt");
+    expect(link).toContain("https://ervenow.com/pay?");
+    expect(link).toContain("uid=user-abc");
+    expect(link).toContain("amount=150.50");
+    expect(link).toContain("type=debt");
   });
 
   test("warning message includes amount and link", () => {

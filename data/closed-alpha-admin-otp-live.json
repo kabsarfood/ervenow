@@ -1,0 +1,88 @@
+{
+  "generated_at": "2026-09-01T19:40:25.795Z",
+  "base": "http://127.0.0.1:4000",
+  "allow_dev_otp": "false",
+  "twilio_sid_set": true,
+  "twilio_token_set": true,
+  "twilio_from_set": true,
+  "jwt_minted": false,
+  "otp_bypass": false,
+  "health": 200,
+  "send_otp": {
+    "status": 200,
+    "ok": true,
+    "error": "تم إرسال الرمز عبر واتساب"
+  },
+  "twilio_fetch": {
+    "ok": true,
+    "reason": null,
+    "source": "body",
+    "attempt": 2,
+    "n": null,
+    "meta": [
+      {
+        "via": "list",
+        "summary": {
+          "sid_prefix": "SM20",
+          "status": "failed",
+          "direction": "outbound-api",
+          "error_code": 63015,
+          "body_len": 78,
+          "has_content_sid": false,
+          "has_content_vars": false,
+          "to_last4": "5650",
+          "date_created": "Tue, 01 Sep 2026 19:40:27 +0000"
+        },
+        "extracted": true
+      }
+    ]
+  },
+  "verify_otp": {
+    "status": 200,
+    "has_token": true,
+    "role": "admin",
+    "error": null
+  },
+  "admin_surfaces": {
+    "settings": 200,
+    "orders": 200,
+    "users": 200,
+    "drivers": 200,
+    "finance": 200
+  },
+  "anonymous_surfaces": {
+    "settings": 401,
+    "orders": 401,
+    "users": 401,
+    "drivers": 401,
+    "finance": 401
+  },
+  "customer_send_otp": {
+    "status": 200,
+    "ok": true
+  },
+  "customer_twilio_fetch": {
+    "ok": true,
+    "source": "body",
+    "reason": null
+  },
+  "customer_verify_otp": {
+    "status": 200,
+    "has_token": true
+  },
+  "non_admin_surfaces": {
+    "settings": 403,
+    "orders": 403,
+    "users": 403,
+    "drivers": 403,
+    "finance": 403
+  },
+  "ok": true,
+  "rbac": {
+    "admin_all_200": true,
+    "anonymous_all_401": true,
+    "non_admin_all_403": true,
+    "non_admin_available": true
+  },
+  "session_source": "verify-otp"
+}

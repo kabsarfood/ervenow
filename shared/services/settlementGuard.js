@@ -1,9 +1,7 @@
 /**
  * Idempotent settlement guard — settlement_log (migration_database_refactor_05).
- * Ledger-only: claim required (no settlement without log).
+ * FAIL CLOSED: claim RPC/DB error → do not settle.
  */
-
-const { isLedgerOnlyMode } = require("../utils/financeMode");
 
 const SETTLEMENT_KINDS = {
   LEDGER_DELIVERED: "ledger_delivered",
@@ -19,18 +17,13 @@ function isMissingSettlementSchema(err) {
 }
 
 /**
- * @param {import("@supabase/supabase-js").SupabaseClient} sb
- * @param {string} entityId
- * @param {'order'|'service_booking'|'withdraw_request'|'other'} entityType
- * @param {string} settlementKind
- * @param {object} [metadata]
- * @returns {Promise<boolean>} true = proceed with settlement
+ * P1-03 FAIL CLOSED: any claim RPC/DB error → do not settle.
+ * @returns {Promise<{ proceed: boolean, reason: string, detail?: string }>}
  */
-async function tryClaimSettlement(sb, entityId, entityType, settlementKind, metadata = {}) {
+async function claimSettlement(sb, entityId, entityType, settlementKind, metadata = {}) {
   const eid = String(entityId || "").trim();
   if (!eid || !sb) {
-    if (isLedgerOnlyMode()) return false;
-    return true;
+    return { proceed: false, reason: "missing_ids" };
   }
 
   try {
@@ -41,27 +34,57 @@ async function tryClaimSettlement(sb, entityId, entityType, settlementKind, meta
       p_metadata: metadata,
     });
     if (error) {
+      const detail = String(error.message || error);
       if (isMissingSettlementSchema(error)) {
         console.warn(
-          "[settlement_guard] settlement_log missing — proceed (ledger reference_id is idempotent); run migration_database_refactor_05_settlement_log.sql"
+          "[settlement_guard] settlement_log missing — FAIL CLOSED; run migration_database_refactor_05_settlement_log.sql"
         );
-        return true;
+        return { proceed: false, reason: "schema_missing", detail };
       }
-      console.warn("[settlement_guard] claim error:", error.message || error);
-      /* ledger idempotent — لا نمنع التسوية بسبب فشل claim */
-      return true;
+      console.warn("[settlement_guard] claim error (fail closed):", detail);
+      return { proceed: false, reason: "rpc_error", detail };
     }
-    return data === true;
+    if (data === true) return { proceed: true, reason: "claimed" };
+    return { proceed: false, reason: "already_claimed" };
   } catch (e) {
+    const detail = e && (e.message || String(e));
     if (isMissingSettlementSchema(e)) {
-      console.warn(
-        "[settlement_guard] settlement_log missing — proceed (ledger reference_id is idempotent)"
-      );
-      return true;
+      console.warn("[settlement_guard] settlement_log missing — FAIL CLOSED");
+      return { proceed: false, reason: "schema_missing", detail };
     }
-    console.warn("[settlement_guard] claim exception:", e.message || e);
-    return true;
+    console.warn("[settlement_guard] claim exception (fail closed):", detail);
+    return { proceed: false, reason: "exception", detail };
   }
 }
 
-module.exports = { SETTLEMENT_KINDS, tryClaimSettlement, isMissingSettlementSchema };
+/** @returns {Promise<boolean>} true = proceed with settlement */
+async function tryClaimSettlement(sb, entityId, entityType, settlementKind, metadata = {}) {
+  const out = await claimSettlement(sb, entityId, entityType, settlementKind, metadata);
+  return out.proceed === true;
+}
+
+async function releaseSettlementClaim(sb, entityId, entityType, settlementKind) {
+  if (!sb || !entityId) return { ok: false, reason: "missing" };
+  try {
+    const { error } = await sb.rpc("settlement_log_release_claim", {
+      p_entity_id: String(entityId),
+      p_entity_type: entityType,
+      p_settlement_kind: settlementKind,
+    });
+    if (error) {
+      if (isMissingSettlementSchema(error)) return { ok: false, reason: "schema_missing" };
+      return { ok: false, reason: "rpc_error", detail: error.message };
+    }
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, reason: "exception", detail: e && e.message };
+  }
+}
+
+module.exports = {
+  SETTLEMENT_KINDS,
+  tryClaimSettlement,
+  claimSettlement,
+  releaseSettlementClaim,
+  isMissingSettlementSchema,
+};
