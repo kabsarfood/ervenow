@@ -48,14 +48,14 @@
   --erv-nav-v2-dock-margin: 12px;
   --erv-nav-v2-float-gap: 10px;
   --erv-nav-v2-fab-size: 56px;
-  --erv-nav-v2-fab-lift: 10px;
+  --erv-nav-v2-fab-lift: 2px;
   --erv-nav-v2-cradle-gap: 7px;
   --erv-nav-v2-cradle-slot: calc(var(--erv-nav-v2-fab-size, 56px) + var(--erv-nav-v2-cradle-gap, 7px) * 2);
   --erv-nav-v2-cradle-inset: 8px;
   --erv-nav-v2-accent: #b9872f;
   --erv-nav-v2-reserve: calc(
-    var(--erv-nav-v2-dock-h, 58px) + var(--erv-nav-v2-float-gap, 10px) + var(--erv-nav-v2-fab-size, 56px) * 0.52 +
-      var(--erv-nav-v2-fab-lift, 10px)
+    var(--erv-nav-v2-dock-h, 58px) + var(--erv-nav-v2-float-gap, 10px) + var(--erv-nav-v2-fab-size, 56px) * 0.48 +
+      var(--erv-nav-v2-fab-lift, 2px)
   );
   /* هيدر علوي — صف الأيقونات ثابت · الشريط يُرفع 15% من الأسفل */
   --erv-mobile-header-target: 62px;
@@ -605,7 +605,7 @@
 
   .erv-mobile-bottom-nav--v2 .erv-mobile-bottom-nav__dock {
     position: relative;
-    height: calc(var(--erv-nav-v2-dock-h, 58px) + var(--erv-nav-v2-fab-size, 56px) * 0.52 + var(--erv-nav-v2-cradle-gap, 7px));
+    height: calc(var(--erv-nav-v2-dock-h, 58px) + var(--erv-nav-v2-fab-size, 56px) * 0.48 + var(--erv-nav-v2-cradle-gap, 7px));
     pointer-events: auto;
     filter: drop-shadow(0 8px 28px rgba(45, 26, 14, 0.12)) drop-shadow(0 2px 8px rgba(45, 26, 14, 0.06));
   }
@@ -674,7 +674,7 @@
     position: absolute;
     left: 50%;
     bottom: calc(
-      var(--erv-nav-v2-dock-h, 58px) - var(--erv-nav-v2-fab-size, 56px) / 2 + var(--erv-nav-v2-fab-lift, 10px)
+      var(--erv-nav-v2-dock-h, 58px) - var(--erv-nav-v2-fab-size, 56px) / 2 + var(--erv-nav-v2-fab-lift, 2px)
     );
     transform: translateX(-50%);
     z-index: 3;

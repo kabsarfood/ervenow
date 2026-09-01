@@ -177,7 +177,7 @@
     var cradleGap = readNavToken("--erv-nav-v2-cradle-gap", 7);
     var dockH = readNavToken("--erv-nav-v2-dock-h", 58);
     var dockRadius = readNavToken("--erv-nav-v2-dock-radius", 22);
-    var svgPxH = dockH + fabSize * 0.52 + cradleGap;
+    var svgPxH = dockH + fabSize * 0.48 + cradleGap;
     var cornerR = Math.min((dockRadius / svgPxH) * vbH, 18);
     var pitR = (fabSize / 2 + cradleGap) * scale;
     var barTopY = vbH - (dockH / svgPxH) * vbH;
