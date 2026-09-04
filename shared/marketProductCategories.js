@@ -48,6 +48,7 @@ const MARKET_STORE_TYPES = new Set([
   "home_business",
   "flowers_gifts",
   "pharmacy",
+  "beauty_care",
 ]);
 
 function normalizeProductCategory(value) {

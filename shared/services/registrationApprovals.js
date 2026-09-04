@@ -10,6 +10,9 @@ function storeTypeLabelAr(type) {
   if (t === "restaurant") return "مطعم";
   if (t === "supermarket") return "بقالة";
   if (t === "pharmacy") return "صيدلية";
+  if (t === "flowers_gifts") return "ورود وهدايا";
+  if (t === "beauty_care") return "التجميل والعناية";
+  if (t === "clothing") return "الملابس والأزياء";
   return t || "متجر";
 }
 

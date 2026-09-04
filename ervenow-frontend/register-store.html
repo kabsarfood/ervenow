@@ -14,7 +14,7 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="/assets/ervenow-responsive.css" />
     <link rel="stylesheet" href="/assets/responsive-audit-base.css" />
-    <link rel="stylesheet" href="/assets/register-store-page.css" />
+    <link rel="stylesheet" href="/assets/register-store-page.css?erv=20260904e" />
     <script>
       (function () {
         var root = document.documentElement;
@@ -58,7 +58,10 @@
         <p class="guest-section-hero__eyebrow">انضم إلى ERVENOW</p>
         <h1 class="guest-section-hero__title" id="regStoreHeroTitle">تسجيل متجر جديد</h1>
         <p class="guest-section-hero__sub reg-store-hero__sub">سجّل نشاطك التجاري — نراجع طلبك ونفعّل لوحة التاجر خلال فترة قصيرة.</p>
-        <p class="reg-store-hero__tip">📍 تحديد موقع المتجر بدقة يزيد ظهورك في البحث وفرص البيع.</p>
+        <p class="reg-store-hero__tip">
+          <span class="reg-store-hero__tip-ic" aria-hidden="true">📍</span>
+          <span class="reg-store-hero__tip-text">تحديد موقع المتجر بدقة يزيد ظهورك في البحث وفرص البيع.</span>
+        </p>
       </div>
     </div>
 
@@ -120,6 +123,18 @@
                   <span class="reg-store-type-card__ic" aria-hidden="true">🛒</span>
                   <span class="reg-store-type-card__label">سوبرماركت</span>
                 </button>
+                <button type="button" class="reg-store-type-card" data-type="beauty_care" role="radio" aria-checked="false">
+                  <span class="reg-store-type-card__ic" aria-hidden="true">✨</span>
+                  <span class="reg-store-type-card__label">التجميل والعناية</span>
+                </button>
+                <button type="button" class="reg-store-type-card" data-type="flowers_gifts" role="radio" aria-checked="false">
+                  <span class="reg-store-type-card__ic" aria-hidden="true">💐</span>
+                  <span class="reg-store-type-card__label">ورود وهدايا</span>
+                </button>
+                <button type="button" class="reg-store-type-card" data-type="clothing" role="radio" aria-checked="false">
+                  <span class="reg-store-type-card__ic" aria-hidden="true">👗</span>
+                  <span class="reg-store-type-card__label">الملابس والأزياء</span>
+                </button>
                 <button type="button" class="reg-store-type-card" data-type="other" role="radio" aria-checked="false">
                   <span class="reg-store-type-card__ic" aria-hidden="true">🏷️</span>
                   <span class="reg-store-type-card__label">غيره</span>
@@ -129,6 +144,9 @@
                 <option value="restaurant">مطعم</option>
                 <option value="pharmacy">صيدلية</option>
                 <option value="supermarket">سوبرماركت</option>
+                <option value="beauty_care">التجميل والعناية</option>
+                <option value="flowers_gifts">ورود وهدايا</option>
+                <option value="clothing">الملابس والأزياء</option>
                 <option value="other">غيره</option>
               </select>
             </div>
@@ -160,10 +178,53 @@
             </div>
 
             <div id="marketCategoryWrap" class="field-gap" style="display: none">
-              <label for="store_category">قسم البقالة الرئيسي</label>
-              <select id="store_category">
-                <option value="">— اختر التصنيف —</option>
-              </select>
+              <div class="reg-store-cuisine-block" aria-labelledby="regStoreMarketTitle">
+                <div class="reg-store-cuisine-block__head">
+                  <span class="reg-store-cuisine-block__emoji" aria-hidden="true">🛒</span>
+                  <div>
+                    <p class="reg-store-cuisine-block__title" id="regStoreMarketTitle">تصنيف السوبرماركت</p>
+                    <p class="reg-store-cuisine-block__sub">
+                      اختر صنفاً واحداً بزر الاختيار — يظهر متجرك حسب القسم (خضار، لحوم، ألبان…) وليس كسوبرماركت عام.
+                    </p>
+                  </div>
+                </div>
+                <div
+                  class="reg-store-cuisine-grid"
+                  id="marketCategoryPicker"
+                  role="radiogroup"
+                  aria-labelledby="regStoreMarketTitle"
+                  aria-required="true"
+                ></div>
+                <p class="reg-store-cuisine-hint" id="marketCategoryHint">لم يُختر صنف بعد.</p>
+                <select id="store_category" class="reg-store-category-select-hidden" tabindex="-1" aria-hidden="true">
+                  <option value="">— اختر التصنيف —</option>
+                </select>
+              </div>
+            </div>
+
+            <div id="clothingCategoryWrap" class="field-gap" style="display: none">
+              <div class="reg-store-cuisine-block" aria-labelledby="regStoreClothingTitle">
+                <div class="reg-store-cuisine-block__head">
+                  <span class="reg-store-cuisine-block__emoji" aria-hidden="true">👗</span>
+                  <div>
+                    <p class="reg-store-cuisine-block__title" id="regStoreClothingTitle">تصنيف الملابس والأزياء</p>
+                    <p class="reg-store-cuisine-block__sub">
+                      اختر تصنيفاً واحداً بزر الاختيار — نسائي، رجالي، أطفال، عبايات…
+                    </p>
+                  </div>
+                </div>
+                <div
+                  class="reg-store-cuisine-grid"
+                  id="clothingCategoryPicker"
+                  role="radiogroup"
+                  aria-labelledby="regStoreClothingTitle"
+                  aria-required="true"
+                ></div>
+                <p class="reg-store-cuisine-hint" id="clothingCategoryHint">لم يُختر تصنيف بعد.</p>
+                <select id="clothing_category" class="reg-store-category-select-hidden" tabindex="-1" aria-hidden="true">
+                  <option value="">— اختر التصنيف —</option>
+                </select>
+              </div>
             </div>
 
             <div class="field-gap">
@@ -537,7 +598,17 @@
         }
         if (wrapM && selM) {
           wrapM.style.display = type === "supermarket" ? "block" : "none";
-          if (type !== "supermarket") selM.selectedIndex = 0;
+          if (type !== "supermarket") {
+            setMarketCategorySelection("");
+          }
+        }
+        var wrapC = document.getElementById("clothingCategoryWrap");
+        var selC = document.getElementById("clothing_category");
+        if (wrapC && selC) {
+          wrapC.style.display = type === "clothing" ? "block" : "none";
+          if (type !== "clothing") {
+            setClothingCategorySelection("");
+          }
         }
       }
 
@@ -611,6 +682,154 @@
         }
       }
 
+      function marketCategoriesFallback() {
+        return [
+          { slug: "vegetables", name_ar: "خضار وفواكه", icon: "🥬" },
+          { slug: "meat", name_ar: "لحوم", icon: "🥩" },
+          { slug: "dairy", name_ar: "ألبان", icon: "🥛" },
+          { slug: "bakery", name_ar: "مخبوزات", icon: "🥖" },
+          { slug: "drinks", name_ar: "مشروبات", icon: "🧃" },
+          { slug: "snacks", name_ar: "سناكات", icon: "🍿" },
+          { slug: "frozen", name_ar: "مجمدات", icon: "🧊" },
+          { slug: "cleaning", name_ar: "منظفات", icon: "🧽" },
+        ];
+      }
+
+      function setMarketCategorySelection(slug) {
+        var sel = document.getElementById("store_category");
+        var picker = document.getElementById("marketCategoryPicker");
+        var hint = document.getElementById("marketCategoryHint");
+        var v = String(slug || "").trim().toLowerCase();
+        if (sel) sel.value = v;
+        if (picker) {
+          picker.querySelectorAll(".reg-store-cuisine-chip").forEach(function (btn) {
+            var on = (btn.getAttribute("data-slug") || "") === v;
+            btn.classList.toggle("is-active", on);
+            btn.setAttribute("aria-checked", on ? "true" : "false");
+          });
+        }
+        if (hint) {
+          if (!v) {
+            hint.textContent = "لم يُختر صنف بعد.";
+            hint.classList.remove("is-ok");
+          } else {
+            var active = picker && picker.querySelector('.reg-store-cuisine-chip[data-slug="' + v + '"]');
+            var label = active ? active.querySelector(".reg-store-cuisine-chip__label") : null;
+            hint.textContent = "الصنف المختار: " + (label ? label.textContent.trim() : v);
+            hint.classList.add("is-ok");
+          }
+        }
+      }
+
+      function populateMarketCategoryPicker(categories) {
+        var picker = document.getElementById("marketCategoryPicker");
+        var sel = document.getElementById("store_category");
+        if (!picker || !sel) return;
+        var list = dedupeCategoriesBySlug(categories && categories.length ? categories : marketCategoriesFallback());
+        populateCategorySelect(sel, list);
+        picker.innerHTML = list
+          .map(function (c) {
+            var slug = String(c.slug || "").trim().toLowerCase();
+            var icon = c.icon || "";
+            var label = c.name_ar || c.label_ar || c.label || slug;
+            return (
+              '<button type="button" class="reg-store-cuisine-chip" data-slug="' +
+              slug +
+              '" role="radio" aria-checked="false">' +
+              '<span class="reg-store-cuisine-chip__icon" aria-hidden="true">' +
+              icon +
+              "</span>" +
+              '<span class="reg-store-cuisine-chip__label">' +
+              label +
+              "</span></button>"
+            );
+          })
+          .join("");
+        if (!picker.getAttribute("data-wired")) {
+          picker.setAttribute("data-wired", "1");
+          picker.addEventListener("click", function (e) {
+            var btn = e.target.closest(".reg-store-cuisine-chip");
+            if (!btn) return;
+            setMarketCategorySelection(btn.getAttribute("data-slug") || "");
+          });
+        }
+        setMarketCategorySelection(sel.value || "");
+      }
+
+      function clothingCategoriesFallback() {
+        return [
+          { slug: "women", name_ar: "ملابس نسائية", icon: "👗" },
+          { slug: "men", name_ar: "ملابس رجالية", icon: "👔" },
+          { slug: "kids", name_ar: "ملابس أطفال", icon: "👶" },
+          { slug: "abayas", name_ar: "عبايات", icon: "🧕" },
+          { slug: "sportswear", name_ar: "ملابس رياضية", icon: "🏃" },
+          { slug: "underwear", name_ar: "ملابس داخلية", icon: "🩲" },
+          { slug: "shoes_bags", name_ar: "أحذية وشنط", icon: "👜" },
+          { slug: "occasions", name_ar: "أزياء ومناسبات", icon: "✨" },
+        ];
+      }
+
+      function setClothingCategorySelection(slug) {
+        var sel = document.getElementById("clothing_category");
+        var picker = document.getElementById("clothingCategoryPicker");
+        var hint = document.getElementById("clothingCategoryHint");
+        var v = String(slug || "").trim().toLowerCase();
+        if (sel) sel.value = v;
+        if (picker) {
+          picker.querySelectorAll(".reg-store-cuisine-chip").forEach(function (btn) {
+            var on = (btn.getAttribute("data-slug") || "") === v;
+            btn.classList.toggle("is-active", on);
+            btn.setAttribute("aria-checked", on ? "true" : "false");
+          });
+        }
+        if (hint) {
+          if (!v) {
+            hint.textContent = "لم يُختر تصنيف بعد.";
+            hint.classList.remove("is-ok");
+          } else {
+            var active = picker && picker.querySelector('.reg-store-cuisine-chip[data-slug="' + v + '"]');
+            var label = active ? active.querySelector(".reg-store-cuisine-chip__label") : null;
+            hint.textContent = "التصنيف المختار: " + (label ? label.textContent.trim() : v);
+            hint.classList.add("is-ok");
+          }
+        }
+      }
+
+      function populateClothingCategoryPicker(categories) {
+        var picker = document.getElementById("clothingCategoryPicker");
+        var sel = document.getElementById("clothing_category");
+        if (!picker || !sel) return;
+        var list = dedupeCategoriesBySlug(categories && categories.length ? categories : clothingCategoriesFallback());
+        populateCategorySelect(sel, list);
+        picker.innerHTML = list
+          .map(function (c) {
+            var slug = String(c.slug || "").trim().toLowerCase();
+            var icon = c.icon || "";
+            var label = c.name_ar || c.label_ar || c.label || slug;
+            return (
+              '<button type="button" class="reg-store-cuisine-chip" data-slug="' +
+              slug +
+              '" role="radio" aria-checked="false">' +
+              '<span class="reg-store-cuisine-chip__icon" aria-hidden="true">' +
+              icon +
+              "</span>" +
+              '<span class="reg-store-cuisine-chip__label">' +
+              label +
+              "</span></button>"
+            );
+          })
+          .join("");
+        if (!picker.getAttribute("data-wired")) {
+          picker.setAttribute("data-wired", "1");
+          picker.addEventListener("click", function (e) {
+            var btn = e.target.closest(".reg-store-cuisine-chip");
+            if (!btn) return;
+            setClothingCategorySelection(btn.getAttribute("data-slug") || "");
+          });
+        }
+        setClothingCategorySelection(sel.value || "");
+      }
+
       function populateRestaurantCategoryPicker(categories) {
         var picker = document.getElementById("restaurantCategoryPicker");
         var sel = document.getElementById("restaurant_category");
@@ -670,11 +889,14 @@
           var selM = document.getElementById("store_category");
           if (selM) {
             var catsM = Array.isArray(j2 && j2.categories) ? j2.categories : [];
-            populateCategorySelect(selM, catsM);
+            populateMarketCategoryPicker(catsM.length ? catsM : marketCategoriesFallback());
           }
+          populateClothingCategoryPicker(clothingCategoriesFallback());
         } catch (e) {
           console.warn("[register-store] categories", e);
           populateRestaurantCategoryPicker(restaurantCategoriesFallback());
+          populateMarketCategoryPicker(marketCategoriesFallback());
+          populateClothingCategoryPicker(clothingCategoriesFallback());
         } finally {
           fillCategorySelectsInFlight = false;
         }
@@ -683,7 +905,7 @@
       document.getElementById("type").addEventListener("change", function () {
         syncRestaurantCategoryField();
         var t = document.getElementById("type").value;
-        if (t === "restaurant" || t === "supermarket") void fillCategorySelects();
+        if (t === "restaurant" || t === "supermarket" || t === "clothing") void fillCategorySelects();
       });
       syncRestaurantCategoryField();
       fillCategorySelects();
@@ -851,7 +1073,16 @@
           if (type === "supermarket") {
             var sc = document.getElementById("store_category") ? document.getElementById("store_category").value : "";
             if (!sc) {
-              show("اختر قسم البقالة من القائمة.", false);
+              show("اختر صنف السوبرماركت من الأزرار (خضار، لحوم، ألبان…).", false);
+              return;
+            }
+          }
+          if (type === "clothing") {
+            var cc = document.getElementById("clothing_category")
+              ? document.getElementById("clothing_category").value
+              : "";
+            if (!cc) {
+              show("اختر تصنيف الملابس من الأزرار (نسائي، رجالي، عبايات…).", false);
               return;
             }
           }
@@ -908,6 +1139,12 @@
           if (type === "supermarket") {
             var scVal = document.getElementById("store_category") ? document.getElementById("store_category").value : "";
             if (scVal) body.category = scVal;
+          }
+          if (type === "clothing") {
+            var ccVal = document.getElementById("clothing_category")
+              ? document.getElementById("clothing_category").value
+              : "";
+            if (ccVal) body.category = ccVal;
           }
           if (crDataUrl) {
             body.commercialRegistrationFileBase64 = crDataUrl;

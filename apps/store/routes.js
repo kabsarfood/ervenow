@@ -49,6 +49,7 @@ const {
   iconForProductSlug,
   storeSupportsProductCategoryBrowse,
   builtinSlugSet,
+  normalizeProductSlugForCatalog,
 } = require("../../shared/productCategoryTypes");
 const {
   fetchProductCategoryCatalog,
@@ -94,6 +95,10 @@ const STORE_TYPES = new Set([
   "fish",
   "home_business",
   "services",
+  "flowers_gifts",
+  "beauty_care",
+  "clothing",
+  "sweets",
   "other",
 ]);
 
@@ -107,6 +112,10 @@ const TYPE_LABEL_AR = {
   fish: "بيع الأسماك",
   home_business: "أسرة منتجة",
   services: "خدمات",
+  flowers_gifts: "ورود وهدايا",
+  beauty_care: "التجميل والعناية",
+  clothing: "الملابس والأزياء",
+  sweets: "حلويات",
   other: "غيره",
 };
 
@@ -274,7 +283,9 @@ function browseTypesForStoreQuery(browseType) {
     butcher: ["butcher"],
     fish: ["fish"],
     home_business: ["home_business"],
-    flowers_gifts: ["supermarket", "restaurant"],
+    flowers_gifts: ["flowers_gifts"],
+    beauty_care: ["beauty_care"],
+    clothing: ["clothing", "fashion", "apparel"],
     sweets: ["supermarket", "restaurant"],
     services: ["services"],
     other: ["other"],
@@ -643,6 +654,7 @@ router.get("/", optionalAuth, async (req, res) => {
         "home_business",
         "sweets",
         "flowers_gifts",
+        "beauty_care",
       ];
       const extendedSelAll =
         "id,name,phone,type,category,lat,lng,status,is_active,logo_url,location_text,address,delivery_radius_km,average_rating,rating_count,total_orders,created_at";
@@ -1707,6 +1719,12 @@ router.post("/register", async (req, res) => {
         return fail(res, "اختر قسم البقالة من القائمة المعتمدة", 400);
       }
       categoryValue = resolved;
+    } else if (type === "clothing") {
+      const resolved = normalizeProductSlugForCatalog("clothing", storeCategorySlug);
+      if (!resolved) {
+        return fail(res, "اختر تصنيف الملابس من القائمة المعتمدة", 400);
+      }
+      categoryValue = resolved;
     }
 
     const phoneDisplay = phoneRaw || phoneDigits;
@@ -1862,6 +1880,8 @@ router.post("/register", async (req, res) => {
       cuisineLine = `تصنيف المطعم: ${lab}`;
     } else if (type === "supermarket" && categoryValue) {
       cuisineLine = `قسم البقالة: ${categoryValue}`;
+    } else if (type === "clothing" && categoryValue) {
+      cuisineLine = `تصنيف الملابس: ${labelForProductSlug("clothing", categoryValue) || categoryValue}`;
     }
 
     const payoutSummaryParts = [];

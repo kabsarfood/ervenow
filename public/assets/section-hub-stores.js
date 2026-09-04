@@ -6,6 +6,8 @@
     { id: "pharmacy", icon: "💊", label: "صيدليات" },
     { id: "vegetables", icon: "🥬", label: "خضار" },
     { id: "flowers_gifts", icon: "💐", label: "ورود وهدايا" },
+    { id: "beauty_care", icon: "✨", label: "تجميل وعناية" },
+    { id: "clothing", icon: "👗", label: "ملابس وأزياء" },
     { id: "sweets", icon: "🍰", label: "حلويات" },
     { id: "home_business", icon: "🏠", label: "أسر منتجة" },
   ];
@@ -17,6 +19,8 @@
     if (filter === "pharmacy") return t === "pharmacy";
     if (filter === "vegetables") return t === "vegetables";
     if (filter === "flowers_gifts") return t === "flowers_gifts";
+    if (filter === "beauty_care") return t === "beauty_care";
+    if (filter === "clothing") return t === "clothing" || t === "fashion" || t === "apparel";
     if (filter === "sweets") return t === "sweets";
     if (filter === "home_business") return t === "home_business";
     return t === filter && t !== "restaurant";

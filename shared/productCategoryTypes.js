@@ -60,12 +60,28 @@ const FUEL_BUILTIN = {
 };
 
 const CLOTHING_BUILTIN = {
-  men: { label: "رجالي", icon: "👔" },
-  women: { label: "نسائي", icon: "👗" },
-  kids: { label: "أطفال", icon: "👶" },
+  women: { label: "ملابس نسائية", icon: "👗" },
+  men: { label: "ملابس رجالية", icon: "👔" },
+  kids: { label: "ملابس أطفال", icon: "👶" },
+  abayas: { label: "عبايات", icon: "🧕" },
+  sportswear: { label: "ملابس رياضية", icon: "🏃" },
+  underwear: { label: "ملابس داخلية", icon: "🩲" },
+  shoes_bags: { label: "أحذية وشنط", icon: "👜" },
+  occasions: { label: "أزياء ومناسبات", icon: "✨" },
   shoes: { label: "أحذية", icon: "👟" },
   accessories: { label: "إكسسوارات", icon: "👜" },
 };
+
+const CLOTHING_REGISTER_SLUGS = [
+  "women",
+  "men",
+  "kids",
+  "abayas",
+  "sportswear",
+  "underwear",
+  "shoes_bags",
+  "occasions",
+];
 
 const RESTAURANT_MENU_EXTRA = {
   appetizers: { label: "مقبلات", icon: "🥗" },
@@ -82,6 +98,7 @@ const MARKET_STORE_TYPES = new Set([
   "sweets",
   "home_business",
   "flowers_gifts",
+  "beauty_care",
 ]);
 
 const SERVICES_STORE_TYPES = new Set([
@@ -228,6 +245,8 @@ function isMarketStoreType(storeType) {
 module.exports = {
   PRODUCT_CATALOG_TYPES,
   PRODUCT_CATALOG_TYPE_SET,
+  CLOTHING_BUILTIN,
+  CLOTHING_REGISTER_SLUGS,
   productCatalogTypeForStoreType,
   normalizeProductCatalogType,
   builtinCatalogEntries,

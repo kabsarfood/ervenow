@@ -1,0 +1,401 @@
+[
+  {
+    "name": "desktop-1440",
+    "overflowX": false,
+    "scrollW": 1440,
+    "clientW": 1440,
+    "hero": {
+      "w": 1440,
+      "h": 257,
+      "x": 0,
+      "y": 132,
+      "font": "16px",
+      "radius": "0px 0px 24px 24px",
+      "display": "block"
+    },
+    "inner": {
+      "w": 760,
+      "h": 196,
+      "x": 340,
+      "y": 164,
+      "font": "16px",
+      "radius": "0px",
+      "display": "flex"
+    },
+    "title": {
+      "w": 265,
+      "h": 42,
+      "x": 835,
+      "y": 202,
+      "font": "32.8px",
+      "radius": "0px",
+      "display": "block"
+    },
+    "sub": {
+      "w": 484,
+      "h": 27,
+      "x": 616,
+      "y": 254,
+      "font": "16.32px",
+      "radius": "0px",
+      "display": "block"
+    },
+    "tip": {
+      "w": 446,
+      "h": 60,
+      "x": 654,
+      "y": 299,
+      "font": "14.4px",
+      "radius": "14px",
+      "display": "flex"
+    },
+    "texts": {
+      "eyebrow": "انضم إلى ERVENOW",
+      "title": "تسجيل متجر جديد",
+      "sub": "سجّل نشاطك التجاري — نراجع طلبك ونفعّل لوحة التاجر خلال فترة قصيرة.",
+      "tip": "📍 تحديد موقع المتجر بدقة يزيد ظهورك في البحث وفرص البيع."
+    }
+  },
+  {
+    "name": "desktop-1280",
+    "overflowX": false,
+    "scrollW": 1280,
+    "clientW": 1280,
+    "hero": {
+      "w": 1280,
+      "h": 257,
+      "x": 0,
+      "y": 132,
+      "font": "16px",
+      "radius": "0px 0px 24px 24px",
+      "display": "block"
+    },
+    "inner": {
+      "w": 760,
+      "h": 196,
+      "x": 260,
+      "y": 164,
+      "font": "16px",
+      "radius": "0px",
+      "display": "flex"
+    },
+    "title": {
+      "w": 265,
+      "h": 42,
+      "x": 755,
+      "y": 202,
+      "font": "32.8px",
+      "radius": "0px",
+      "display": "block"
+    },
+    "sub": {
+      "w": 484,
+      "h": 27,
+      "x": 536,
+      "y": 254,
+      "font": "16.32px",
+      "radius": "0px",
+      "display": "block"
+    },
+    "tip": {
+      "w": 446,
+      "h": 60,
+      "x": 574,
+      "y": 299,
+      "font": "14.4px",
+      "radius": "14px",
+      "display": "flex"
+    },
+    "texts": {
+      "eyebrow": "انضم إلى ERVENOW",
+      "title": "تسجيل متجر جديد",
+      "sub": "سجّل نشاطك التجاري — نراجع طلبك ونفعّل لوحة التاجر خلال فترة قصيرة.",
+      "tip": "📍 تحديد موقع المتجر بدقة يزيد ظهورك في البحث وفرص البيع."
+    }
+  },
+  {
+    "name": "tablet-1024",
+    "overflowX": false,
+    "scrollW": 1024,
+    "clientW": 1024,
+    "hero": {
+      "w": 1024,
+      "h": 233,
+      "x": 0,
+      "y": 139,
+      "font": "16px",
+      "radius": "0px 0px 24px 24px",
+      "display": "block"
+    },
+    "inner": {
+      "w": 760,
+      "h": 186,
+      "x": 132,
+      "y": 163,
+      "font": "16px",
+      "radius": "0px",
+      "display": "flex"
+    },
+    "title": {
+      "w": 239,
+      "h": 38,
+      "x": 653,
+      "y": 202,
+      "font": "29.6px",
+      "radius": "0px",
+      "display": "block"
+    },
+    "sub": {
+      "w": 456,
+      "h": 25,
+      "x": 436,
+      "y": 250,
+      "font": "15.36px",
+      "radius": "0px",
+      "display": "block"
+    },
+    "tip": {
+      "w": 434,
+      "h": 58,
+      "x": 458,
+      "y": 291,
+      "font": "14.08px",
+      "radius": "14px",
+      "display": "flex"
+    },
+    "texts": {
+      "eyebrow": "انضم إلى ERVENOW",
+      "title": "تسجيل متجر جديد",
+      "sub": "سجّل نشاطك التجاري — نراجع طلبك ونفعّل لوحة التاجر خلال فترة قصيرة.",
+      "tip": "📍 تحديد موقع المتجر بدقة يزيد ظهورك في البحث وفرص البيع."
+    }
+  },
+  {
+    "name": "tablet-768",
+    "overflowX": false,
+    "scrollW": 768,
+    "clientW": 768,
+    "hero": {
+      "w": 768,
+      "h": 228,
+      "x": 0,
+      "y": 139,
+      "font": "16px",
+      "radius": "0px",
+      "display": "block"
+    },
+    "inner": {
+      "w": 724,
+      "h": 181,
+      "x": 22,
+      "y": 163,
+      "font": "16px",
+      "radius": "0px",
+      "display": "flex"
+    },
+    "title": {
+      "w": 207,
+      "h": 33,
+      "x": 539,
+      "y": 202,
+      "font": "25.6px",
+      "radius": "0px",
+      "display": "block"
+    },
+    "sub": {
+      "w": 456,
+      "h": 25,
+      "x": 290,
+      "y": 244,
+      "font": "15.36px",
+      "radius": "0px",
+      "display": "block"
+    },
+    "tip": {
+      "w": 434,
+      "h": 58,
+      "x": 312,
+      "y": 286,
+      "font": "14.08px",
+      "radius": "14px",
+      "display": "flex"
+    },
+    "texts": {
+      "eyebrow": "انضم إلى ERVENOW",
+      "title": "تسجيل متجر جديد",
+      "sub": "سجّل نشاطك التجاري — نراجع طلبك ونفعّل لوحة التاجر خلال فترة قصيرة.",
+      "tip": "📍 تحديد موقع المتجر بدقة يزيد ظهورك في البحث وفرص البيع."
+    }
+  },
+  {
+    "name": "mobile-390",
+    "overflowX": false,
+    "scrollW": 390,
+    "clientW": 390,
+    "hero": {
+      "w": 390,
+      "h": 241,
+      "x": 0,
+      "y": 334,
+      "font": "16px",
+      "radius": "0px",
+      "display": "block"
+    },
+    "inner": {
+      "w": 362,
+      "h": 206,
+      "x": 14,
+      "y": 350,
+      "font": "16px",
+      "radius": "0px",
+      "display": "flex"
+    },
+    "title": {
+      "w": 200,
+      "h": 32,
+      "x": 176,
+      "y": 384,
+      "font": "24.8px",
+      "radius": "0px",
+      "display": "block"
+    },
+    "sub": {
+      "w": 362,
+      "h": 46,
+      "x": 14,
+      "y": 424,
+      "font": "14.4px",
+      "radius": "0px",
+      "display": "block"
+    },
+    "tip": {
+      "w": 362,
+      "h": 74,
+      "x": 14,
+      "y": 482,
+      "font": "13.44px",
+      "radius": "12px",
+      "display": "flex"
+    },
+    "texts": {
+      "eyebrow": "انضم إلى ERVENOW",
+      "title": "تسجيل متجر جديد",
+      "sub": "سجّل نشاطك التجاري — نراجع طلبك ونفعّل لوحة التاجر خلال فترة قصيرة.",
+      "tip": "📍 تحديد موقع المتجر بدقة يزيد ظهورك في البحث وفرص البيع."
+    }
+  },
+  {
+    "name": "mobile-360",
+    "overflowX": false,
+    "scrollW": 360,
+    "clientW": 360,
+    "hero": {
+      "w": 360,
+      "h": 234,
+      "x": 0,
+      "y": 334,
+      "font": "16px",
+      "radius": "0px",
+      "display": "block"
+    },
+    "inner": {
+      "w": 332,
+      "h": 199,
+      "x": 14,
+      "y": 350,
+      "font": "16px",
+      "radius": "0px",
+      "display": "flex"
+    },
+    "title": {
+      "w": 171,
+      "h": 27,
+      "x": 175,
+      "y": 384,
+      "font": "21.12px",
+      "radius": "0px",
+      "display": "block"
+    },
+    "sub": {
+      "w": 332,
+      "h": 45,
+      "x": 14,
+      "y": 419,
+      "font": "14.08px",
+      "radius": "0px",
+      "display": "block"
+    },
+    "tip": {
+      "w": 332,
+      "h": 73,
+      "x": 14,
+      "y": 476,
+      "font": "13.12px",
+      "radius": "12px",
+      "display": "flex"
+    },
+    "texts": {
+      "eyebrow": "انضم إلى ERVENOW",
+      "title": "تسجيل متجر جديد",
+      "sub": "سجّل نشاطك التجاري — نراجع طلبك ونفعّل لوحة التاجر خلال فترة قصيرة.",
+      "tip": "📍 تحديد موقع المتجر بدقة يزيد ظهورك في البحث وفرص البيع."
+    }
+  },
+  {
+    "name": "mobile-320",
+    "overflowX": false,
+    "scrollW": 320,
+    "clientW": 320,
+    "hero": {
+      "w": 320,
+      "h": 234,
+      "x": 0,
+      "y": 334,
+      "font": "16px",
+      "radius": "0px",
+      "display": "block"
+    },
+    "inner": {
+      "w": 292,
+      "h": 199,
+      "x": 14,
+      "y": 350,
+      "font": "16px",
+      "radius": "0px",
+      "display": "flex"
+    },
+    "title": {
+      "w": 171,
+      "h": 27,
+      "x": 135,
+      "y": 384,
+      "font": "21.12px",
+      "radius": "0px",
+      "display": "block"
+    },
+    "sub": {
+      "w": 292,
+      "h": 45,
+      "x": 14,
+      "y": 419,
+      "font": "14.08px",
+      "radius": "0px",
+      "display": "block"
+    },
+    "tip": {
+      "w": 292,
+      "h": 73,
+      "x": 14,
+      "y": 476,
+      "font": "13.12px",
+      "radius": "12px",
+      "display": "flex"
+    },
+    "texts": {
+      "eyebrow": "انضم إلى ERVENOW",
+      "title": "تسجيل متجر جديد",
+      "sub": "سجّل نشاطك التجاري — نراجع طلبك ونفعّل لوحة التاجر خلال فترة قصيرة.",
+      "tip": "📍 تحديد موقع المتجر بدقة يزيد ظهورك في البحث وفرص البيع."
+    }
+  }
+]

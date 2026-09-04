@@ -29,6 +29,12 @@ function mapCategoryFromStoreType(type) {
     t === "butcher" ||
     t === "fish" ||
     t === "home_business" ||
+    t === "flowers_gifts" ||
+    t === "beauty_care" ||
+    t === "clothing" ||
+    t === "fashion" ||
+    t === "apparel" ||
+    t === "sweets" ||
     t === "other"
   ) {
     return "store";

@@ -15,6 +15,10 @@ const TYPE_LABEL_AR = {
   home_business: "أسرة منتجة",
   services: "خدمات",
   service: "خدمات",
+  flowers_gifts: "ورود وهدايا",
+  beauty_care: "التجميل والعناية",
+  clothing: "الملابس والأزياء",
+  sweets: "حلويات",
   other: "متجر",
 };
 
