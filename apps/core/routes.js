@@ -7,6 +7,9 @@ const { toE164, toStorageDigits, isErvnowSaudiMobileE164 } = require("../../shar
 const { createServiceClient, getDatabaseConfigHint } = require("../../shared/config/supabase");
 const { sendOTP } = require("../../shared/services/whatsappService");
 const { getLastWhatsAppError } = require("../../shared/utils/whatsapp");
+const { twilioUserMessage } = require("../../shared/utils/twilioRuntime");
+const { sendOtpLimiter } = require("../../shared/middleware/apiRateLimits");
+const { isPublicOrderingEnabled, SERVICE_NOT_LAUNCHED_AR } = require("../../shared/utils/publicOrdering");
 const { buildAuthOtpMessage } = require("../../shared/messages/authWhatsApp");
 const {
   OTP_SCOPE,
@@ -387,6 +390,8 @@ router.get("/public-config", (_req, res) => {
       supabaseUrl: getUrl(),
       supabaseAnonKey: getAnonKey(),
       dev_otp_enabled: allowDevOtpBypass(),
+      public_ordering_enabled: isPublicOrderingEnabled(),
+      pre_registration: !isPublicOrderingEnabled(),
     });
   } catch (e) {
     fail(res, e.message || "config error", 500);
@@ -563,7 +568,36 @@ router.get("/site-gate-logout", (req, res) => {
   res.redirect(302, safe);
 });
 
-router.post("/send-otp", async (req, res) => {
+function pickPreRegistrationFields(body) {
+  const b = body && typeof body === "object" ? body : {};
+  const clip = (v, n) => {
+    const s = String(v == null ? "" : v).trim();
+    return s ? s.slice(0, n) : null;
+  };
+  const out = {};
+  const city = clip(b.city, 80);
+  const district = clip(b.district || b.area || b.neighborhood, 80);
+  const source = clip(b.acquisition_source || b.source, 80);
+  const utm_source = clip(b.utm_source, 80);
+  const utm_medium = clip(b.utm_medium, 80);
+  const utm_campaign = clip(b.utm_campaign, 120);
+  const utm_content = clip(b.utm_content, 120);
+  const gclid = clip(b.gclid, 120);
+  if (city) out.city = city;
+  if (district) out.district = district;
+  if (source) out.acquisition_source = source;
+  if (utm_source) out.utm_source = utm_source;
+  if (utm_medium) out.utm_medium = utm_medium;
+  if (utm_campaign) out.utm_campaign = utm_campaign;
+  if (utm_content) out.utm_content = utm_content;
+  if (gclid) out.gclid = gclid;
+  return out;
+}
+
+const PRE_REG_SUCCESS_AR =
+  "تم تسجيلك بنجاح ضمن المستخدمين الأوائل في ERVENOW. سنبلغك عند بدء الخدمة.";
+
+router.post("/send-otp", sendOtpLimiter, async (req, res) => {
   try {
     const raw = req.body?.phone;
     const roleIn = String(req.body?.role || "").trim().toLowerCase();
@@ -633,7 +667,10 @@ router.post("/send-otp", async (req, res) => {
       let userMsg =
         "تعذر إرسال رمز واتساب — غير مضبوط على الخادم: TWILIO_ACCOUNT_SID و TWILIO_AUTH_TOKEN و TWILIO_WHATSAPP_NUMBER";
       if (twilioReady) {
-        if (Number(waCode) === 63038) {
+        const mapped = twilioUserMessage(waErr);
+        if (mapped) {
+          userMsg = mapped;
+        } else if (Number(waCode) === 63038) {
           userMsg =
             "تم تجاوز حد رسائل واتساب اليومي في Twilio (خطأ 63038). انتظر حتى 24 ساعة أو رقِّ الحساب من لوحة Twilio.";
         } else if (Number(waCode) === 63016 || Number(waCode) === 21608) {
@@ -868,6 +905,16 @@ router.post("/verify-otp", async (req, res) => {
 
     const sessionPhone = canonicalPhoneDigits(userRow.phone || digits) || digits;
 
+    const attrPatch = pickPreRegistrationFields(req.body);
+    attrPatch.phone_verified_at = new Date().toISOString();
+    const attrRes = await sb
+      .from("users")
+      .update({ ...attrPatch, updated_at: new Date().toISOString() })
+      .eq("id", userRow.id);
+    if (attrRes.error && !/column|does not exist|schema cache/i.test(String(attrRes.error.message || ""))) {
+      console.warn("[ERVENOW] verify-otp pre-reg fields:", attrRes.error.message);
+    }
+
     const payoutPatch = payoutRowForUsers(payoutParsed);
     const payoutRoles = new Set(["store", "merchant", "restaurant", "service"]);
     if (payoutRoles.has(String(roleForSession).toLowerCase()) && Object.keys(payoutPatch).length) {
@@ -893,10 +940,16 @@ router.post("/verify-otp", async (req, res) => {
     const token = signPlatformToken(userRow.id, sessionPhone, userRow.role || roleForSession);
     attachSiteSessionCookie(req, res, token);
 
+    const customerPreReg =
+      String(userRow.role || roleForSession || "").toLowerCase() === "customer" && !isPublicOrderingEnabled();
+
     ok(res, {
       success: true,
       token,
       approved: true,
+      pre_registration: customerPreReg,
+      public_ordering_enabled: isPublicOrderingEnabled(),
+      message: customerPreReg ? PRE_REG_SUCCESS_AR : undefined,
       user: {
         id: userRow.id,
         phone: userRow.phone,

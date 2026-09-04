@@ -4,6 +4,7 @@ const { requireRole } = require("../../shared/middleware/roles");
 const { isDeliveryEngineStoreOtpEnabled } = require("../../shared/utils/deliveryEngineFlags");
 const { confirmStoreDeliveryReceipt } = require("../../shared/services/storeDeliveryOtpConfirm");
 const { denyUnlessCanPlaceOrders } = require("../../shared/middleware/platformAccess");
+const { denyUnlessPublicOrdering } = require("../../shared/middleware/publicOrderingGate");
 const { createServiceClient, getDatabaseConfigHint } = require("../../shared/config/supabase");
 const { ok, fail } = require("../../shared/utils/helpers");
 const { normalizeIdempotencyKey } = require("../../shared/utils/idempotency");
@@ -128,7 +129,7 @@ router.get("/orders", optionalAuth, async (req, res) => {
  * POST /api/order/create — مسار موحد: سلة أو توصيل.
  * افتراضياً: payment_status=pending على orders، والتوصيل يبقى نشطاً؛ إيداع محفظة المتجر فقط عند payment_status=paid.
  */
-router.post("/create", requireAuth, denyUnlessCanPlaceOrders, deliveryOrdersCreateLimiter, async (req, res) => {
+router.post("/create", requireAuth, denyUnlessCanPlaceOrders, denyUnlessPublicOrdering, deliveryOrdersCreateLimiter, async (req, res) => {
   try {
     const sb = req.supabase || createServiceClient();
     if (!sb) return fail(res, "database not configured", 503);

@@ -863,6 +863,12 @@
         global.location.href = "/login?mode=register&role=customer&next=" + encodeURIComponent("/checkout");
         return;
       }
+      if (/SERVICE_NOT_LAUNCHED|لم تُطلق|التسجيل مفتوح/i.test(msg)) {
+        clearCheckoutIdempotencyKey();
+        resetCheckoutBtnIdle(btn);
+        showToast("التسجيل مفتوح — الطلبات التجارية لم تُطلق بعد. سنبلغك عند بدء الخدمة.", "error");
+        return;
+      }
       if (/checkout_stuck_in_progress|already in progress|checkout already|طلب التأكيد قيد المعالجة/i.test(msg)) {
         clearCheckoutIdempotencyKey();
       }

@@ -37,13 +37,15 @@ npm run worker:delivery
 
 ## 4. OTP في الإنتاج
 
-1. نفّذ `shared/migration_ervenow_otp_challenges.sql` في Supabase.
+1. نفّذ `shared/migration_ervenow_otp_challenges.sql` و`shared/migration_prelaunch_otp_consumed.sql` في Supabase.
 2. عيّن:
-   - `ERVENOW_OTP_BACKEND=supabase`
+   - `ERVENOW_OTP_BACKEND=supabase` (هذا هو الافتراضي الآن؛ `memory` مرفوض في الإنتاج إلا مع `ERVENOW_OTP_ALLOW_MEMORY=1`)
    - `ERVENOW_OTP_PEPPER` — سلسلة سرية طويلة (مستقلة عن JWT؛ 32+ حرفاً موصى به)
    - اختياري: `ERVENOW_OTP_RESEND_COOLDOWN_MS` (افتراضي 45000)، `ERVENOW_OTP_LOCK_MS` (افتراضي 300000)
+   - `PUBLIC_ORDERING_ENABLED=false` لحملة التسجيل المسبق
+   - `SOCKET_IO_SINGLE_INSTANCE_REQUIRED=true`
 
-الافتراضي `ERVENOW_OTP_BACKEND=memory` مناسب للتطوير المحلي فقط (لا يتحمّل تعدد النسخ).
+الوضع `ERVENOW_OTP_BACKEND=memory` مسموح في Jest فقط (`tests/jest.otp-memory.env.js`).
 
 ## 5. Audit
 
@@ -61,4 +63,4 @@ npm run worker:delivery
 ## 8. Rollback
 
 - إصدارات قابلة للتراجع: احتفظ بنسخ `.env` وقائمة هجرات مطبّقة لكل بيئة.
-- عند المشاكل مع OTP الجدول: أعد `ERVENOW_OTP_BACKEND=memory` مؤقتاً **مع علم مخاطر إعادة التشغيل**.
+- عند المشاكل مع OTP الجدول: لا تعُد إلى `memory` في الإنتاج. أصلح الهجرة/`ERVENOW_OTP_PEPPER` وأعد التشغيل.

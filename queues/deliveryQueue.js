@@ -23,9 +23,41 @@ function getConnection() {
   if (!connection) {
     connection = new IORedis(url, {
       maxRetriesPerRequest: null,
+      connectTimeout: 2000,
+      commandTimeout: 3000,
+      enableOfflineQueue: false,
+      lazyConnect: true,
+      retryStrategy(times) {
+        if (times > 4) return null;
+        return Math.min(times * 200, 1500);
+      },
+    });
+    connection.on("error", (err) => {
+      const { logger } = require("../shared/utils/logger");
+      logger.warn({ err: err && err.message }, "redis.connection_error");
     });
   }
   return connection;
+}
+
+async function pingRedis() {
+  const conn = getConnection();
+  if (!conn) return { skipped: true, ok: false, required: false };
+  try {
+    if (conn.status === "wait") {
+      await Promise.race([
+        conn.connect(),
+        new Promise((_, reject) => setTimeout(() => reject(new Error("redis_connect_timeout")), 2000)),
+      ]).catch(() => {});
+    }
+    const pong = await Promise.race([
+      conn.ping(),
+      new Promise((_, reject) => setTimeout(() => reject(new Error("redis_ping_timeout")), 1500)),
+    ]);
+    return { skipped: false, ok: pong === "PONG", required: false };
+  } catch (e) {
+    return { skipped: false, ok: false, required: false, message: e && e.message };
+  }
 }
 
 function getQueue() {
@@ -46,18 +78,6 @@ function getDlqQueue() {
     dlqInstance = new Queue(DLQ_NAME, { connection: conn });
   }
   return dlqInstance;
-}
-
-/** فحص اتصال Redis (صحة الطابور). بدون REDIS_URL يُعاد skipped */
-async function pingRedis() {
-  const conn = getConnection();
-  if (!conn) return { skipped: true, ok: false };
-  try {
-    const pong = await conn.ping();
-    return { skipped: false, ok: pong === "PONG" };
-  } catch (e) {
-    return { skipped: false, ok: false, message: e && e.message };
-  }
 }
 
 /**

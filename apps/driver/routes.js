@@ -11,6 +11,7 @@ const { notifyDriver } = require("./notify");
 const { bumpDeliveryOrdersListEpoch } = require("../../shared/utils/deliveryOrdersListCache");
 const { patchUnifiedOrderStatus } = require("../../shared/services/unifiedOrderStatus");
 const { setDeprecationHeaders, UNIFIED_ORDER_STATUS } = require("../../shared/middleware/deprecateLegacyRoute");
+const { sendOtpLimiter } = require("../../shared/middleware/apiRateLimits");
 const { requireRole } = require("../../shared/middleware/roles");
 const { getWalletPayloadWithLedgerFallback } = require("../../shared/utils/ledgerWallet");
 const { getDriverFreezeFlags } = require("../../shared/services/autoFreeze");
@@ -242,7 +243,7 @@ function toNumberOrNaN(v) {
   return Number.isFinite(n) ? n : NaN;
 }
 
-router.post("/send-otp", async (req, res) => {
+router.post("/send-otp", sendOtpLimiter, async (req, res) => {
   try {
     const e164 = toE164(req.body?.phone);
     if (!e164 || !isErvnowSaudiMobileE164(e164)) {
@@ -251,8 +252,9 @@ router.post("/send-otp", async (req, res) => {
     const digits = toStorageDigits(e164);
     const code = genOtp();
     const mode = otpBackendMode();
+    const sbOtp = req.supabase || createServiceClient();
     const started = await startOtpChallenge({
-      sb: req.supabase,
+      sb: sbOtp,
       mode,
       scope: OTP_SCOPE.DRIVER_LOGIN,
       subjectKey: digits,

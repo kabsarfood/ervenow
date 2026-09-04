@@ -1,6 +1,7 @@
 const express = require("express");
 const { requireAuth, optionalAuth } = require("../../shared/middleware/auth");
 const { denyUnlessCanPlaceOrders } = require("../../shared/middleware/platformAccess");
+const { denyUnlessPublicOrdering } = require("../../shared/middleware/publicOrderingGate");
 const { requireRole, requireServiceProviderRole, requireServiceProviderOrAdmin } = require("../../shared/middleware/roles");
 const { createServiceClient } = require("../../shared/config/supabase");
 const { ok, fail } = require("../../shared/utils/helpers");
@@ -300,7 +301,7 @@ router.get("/catalog", (_req, res) => {
   return ok(res, { catalog: HOME_SERVICE_CATALOG, subtypes: SERVICE_SUBTYPES, currency: "SAR" });
 });
 
-router.post("/home-order", requireAuth, async (req, res) => {
+router.post("/home-order", requireAuth, denyUnlessPublicOrdering, async (req, res) => {
   try {
     const sb = req.supabase || createServiceClient();
     if (!sb) return fail(res, "تعذر تهيئة الاتصال بقاعدة البيانات", 503);
@@ -433,7 +434,7 @@ router.get("/car-polishing/pricing", (_req, res) => {
   });
 });
 
-router.post("/gas-order", requireAuth, async (req, res) => {
+router.post("/gas-order", requireAuth, denyUnlessPublicOrdering, async (req, res) => {
   try {
     const { deprecateLegacyOrderRoute, UNIFIED_ORDER_CREATE } = require("../../shared/middleware/deprecateLegacyRoute");
     deprecateLegacyOrderRoute(req, res, "POST /api/services/gas-order", UNIFIED_ORDER_CREATE);
@@ -1169,7 +1170,7 @@ router.post("/bookings/:id/complete", requireAuth, async (req, res) => {
   }
 });
 
-router.post("/bookings", requireAuth, denyUnlessCanPlaceOrders, async (req, res) => {
+router.post("/bookings", requireAuth, denyUnlessCanPlaceOrders, denyUnlessPublicOrdering, async (req, res) => {
   try {
     const b = req.body || {};
     const service_type = String(b.service_type || "").trim().toLowerCase() || "service";
@@ -1193,7 +1194,7 @@ router.post("/bookings", requireAuth, denyUnlessCanPlaceOrders, async (req, res)
   }
 });
 
-router.post("/checkout", requireAuth, async (req, res) => {
+router.post("/checkout", requireAuth, denyUnlessPublicOrdering, async (req, res) => {
   try {
     const sb = req.supabase || createServiceClient();
     if (!sb) return fail(res, "تعذر تهيئة الاتصال بقاعدة البيانات", 503);

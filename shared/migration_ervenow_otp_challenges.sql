@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS public.ervenow_otp_challenges (
   expires_at timestamptz NOT NULL,
   ip text,
   metadata jsonb NOT NULL DEFAULT '{}'::jsonb,
+  consumed_at timestamptz,
   created_at timestamptz NOT NULL DEFAULT now()
 );
 

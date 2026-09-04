@@ -10,6 +10,20 @@ import "./panels.js";
 import "./approvals.js";
 
 document.getElementById("reloadDriversBtn").onclick = app.loadDrivers;
+var reloadLaunchReadinessBtn = document.getElementById("reloadLaunchReadinessBtn");
+if (reloadLaunchReadinessBtn) reloadLaunchReadinessBtn.onclick = app.loadLaunchReadinessPanel;
+var btnEnablePublicOrdering = document.getElementById("btnEnablePublicOrdering");
+if (btnEnablePublicOrdering) {
+  btnEnablePublicOrdering.onclick = function () {
+    void app.togglePublicOrdering(true);
+  };
+}
+var btnDisablePublicOrdering = document.getElementById("btnDisablePublicOrdering");
+if (btnDisablePublicOrdering) {
+  btnDisablePublicOrdering.onclick = function () {
+    void app.togglePublicOrdering(false);
+  };
+}
 document.getElementById("reloadComplaintsBtn").onclick = app.loadComplaints;
 document.getElementById("reloadOrdersBtn").onclick = app.loadRecentOrders;
 document.getElementById("reloadNotificationsBtn").onclick = app.loadNotifications;

@@ -436,6 +436,10 @@
         <h2 class="dash-zone-title">اختر القسم</h2>
         <p class="sub" style="margin: 0 0 4px">اضغط على بطاقة لفتح إدارة الطلبات، المتاجر، المندوبين، والمالية.</p>
         <div class="panel-switcher">
+          <button type="button" class="panel-btn" data-panel="panelLaunchReadiness" id="panelLaunchReadinessBtn">
+            إطلاق المنصة
+            <span class="panel-badge zero" id="badgeLaunchReadiness">0</span>
+          </button>
           <button type="button" class="panel-btn" data-panel="panelOrders">
             📦 الطلبات
             <span class="panel-badge zero" id="badgeOrders">0</span>
@@ -512,6 +516,28 @@
           <button type="button" class="panel-btn panel-btn-close" id="closePanelsBtn">✕ إغلاق</button>
         </div>
       </section>
+
+      <div class="card admin-panel" id="panelLaunchReadiness">
+        <div class="panel-toolbar">
+          <strong class="panel-title">Launch Readiness</strong>
+          <div class="panel-toolbar-actions">
+            <button type="button" class="btn btn-primary" id="reloadLaunchReadinessBtn">تحديث</button>
+          </div>
+        </div>
+        <p class="ledger-tx-updated" id="launchReadinessBand">—</p>
+        <p id="launchReadinessPercent" style="font-size: 1.75rem; font-weight: 700; margin: 8px 0">—</p>
+        <p class="muted" id="launchReadinessOrdering">الطلبات العامة: —</p>
+        <div id="launchReadinessTable"></div>
+        <h3 class="panel-subtitle" style="margin-top: 1rem">آخر 7 أيام</h3>
+        <div id="launchReadinessTrend"></div>
+        <div class="card" style="margin-top: 12px">
+          <strong>الطلبات العامة (Kill Switch)</strong>
+          <p class="sub">لا يفتح العداد الطلبات تلقائياً. التفعيل يدوي بعد التأكيد.</p>
+          <p class="muted" id="launchOrderingHint">—</p>
+          <button type="button" class="btn btn-ghost" id="btnDisablePublicOrdering">إغلاق الطلبات</button>
+          <button type="button" class="btn btn-primary" id="btnEnablePublicOrdering">فتح الطلبات يدوياً</button>
+        </div>
+      </div>
 
       <div class="grid admin-panel" id="panelOrders">
         <div class="card">

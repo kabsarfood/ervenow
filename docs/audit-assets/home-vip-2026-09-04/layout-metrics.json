@@ -1,0 +1,2626 @@
+{
+  "desktop-1440": {
+    "viewport": {
+      "name": "desktop-1440",
+      "width": 1440,
+      "height": 900,
+      "isMobile": false
+    },
+    "files": {
+      "atf": "C:\\Users\\USER\\Desktop\\ervenow\\docs\\audit-assets\\home-vip-2026-09-04\\desktop-1440-atf.png",
+      "full": "C:\\Users\\USER\\Desktop\\ervenow\\docs\\audit-assets\\home-vip-2026-09-04\\desktop-1440-full.png"
+    },
+    "metrics": {
+      "vw": 1440,
+      "vh": 900,
+      "docH": 1824,
+      "htmlClass": "erw-viewport-ready",
+      "bodyClass": "lp-body lp-home-premium erv-typography-pr2-home",
+      "title": "ERVENOW | المنصة الذكية",
+      "brand": "ERVENOW",
+      "tag": "المنصة الذكية",
+      "hubTitle": "اختر ما يناسبك",
+      "hubCards": [
+        {
+          "href": "/restaurants",
+          "text": "مطاعم مشاوي وبرقر وشاورما"
+        },
+        {
+          "href": "/stores",
+          "text": "متاجر سوبرماركت وصيدليات"
+        },
+        {
+          "href": "/delivery-services.html",
+          "text": "توصيل من نقطة لأخرى وغاز"
+        },
+        {
+          "href": "/services",
+          "text": "خدمات سباكة وكهرباء وتنظيف"
+        }
+      ],
+      "navLinks": [
+        {
+          "href": "/",
+          "text": "الرئيسية"
+        },
+        {
+          "href": "/dashboard",
+          "text": "منصة ERVENOW"
+        },
+        {
+          "href": "/live-map",
+          "text": "الخريطة الحية"
+        },
+        {
+          "href": "/login?role=customer",
+          "text": "دخول"
+        }
+      ],
+      "menuLinks": [
+        {
+          "href": "/login",
+          "text": "🔐الدخول",
+          "hidden": false
+        },
+        {
+          "href": "/login?mode=register&role=customer",
+          "text": "➕إنشاء عضوية",
+          "hidden": false
+        },
+        {
+          "href": "/login?role=customer&next=%2Fmy-orders",
+          "text": "📋طلباتي0",
+          "hidden": false
+        },
+        {
+          "href": "/dashboard",
+          "text": "⚙️الإعدادات",
+          "hidden": false
+        },
+        {
+          "href": "#contact",
+          "text": "📞تواصل معنا",
+          "hidden": false
+        },
+        {
+          "href": "/",
+          "text": "•الرئيسية",
+          "hidden": false
+        },
+        {
+          "href": "/dashboard",
+          "text": "•منصة ERVENOW",
+          "hidden": false
+        },
+        {
+          "href": "/live-map",
+          "text": "•الخريطة الحية",
+          "hidden": false
+        },
+        {
+          "href": "/login?role=customer",
+          "text": "•دخول",
+          "hidden": false
+        },
+        {
+          "href": "#trust",
+          "text": "🛡الثقة",
+          "hidden": false
+        },
+        {
+          "href": "#why",
+          "text": "❓كيف تعمل",
+          "hidden": false
+        },
+        {
+          "href": "#contact",
+          "text": "📧تواصل معنا",
+          "hidden": false
+        },
+        {
+          "href": "/track",
+          "text": "📍تتبع الحي",
+          "hidden": false
+        },
+        {
+          "href": "/services-provider.html",
+          "text": "🏪طلبات الخدمات",
+          "hidden": true
+        },
+        {
+          "href": "/driver",
+          "text": "🚗لوحة المندوب",
+          "hidden": true
+        },
+        {
+          "href": "/orders",
+          "text": "🚗طلباتي",
+          "hidden": true
+        },
+        {
+          "href": "logout()",
+          "text": "🚪تسجيل الخروج",
+          "hidden": true
+        }
+      ],
+      "bottomItems": [],
+      "els": {
+        "header": {
+          "present": true,
+          "hidden": false,
+          "x": 0,
+          "y": 0,
+          "w": 1440,
+          "h": 187,
+          "inFirstScreen": true,
+          "display": "block",
+          "text": "ERVENOW المنصة الذكية رصيدك — ر.س 🛒 0 الرئيسية منصة ERVENOW الخريطة الحية دخول"
+        },
+        "logo": {
+          "present": true,
+          "hidden": false,
+          "x": 40,
+          "y": 19,
+          "w": 72,
+          "h": 68,
+          "inFirstScreen": true,
+          "display": "flex",
+          "text": ""
+        },
+        "brand": {
+          "present": true,
+          "hidden": false,
+          "x": 136,
+          "y": 32,
+          "w": 106,
+          "h": 42,
+          "inFirstScreen": true,
+          "display": "flex",
+          "text": "ERVENOW المنصة الذكية"
+        },
+        "hamburger": {
+          "present": true,
+          "hidden": false,
+          "x": 1356,
+          "y": 32,
+          "w": 44,
+          "h": 44,
+          "inFirstScreen": true,
+          "display": "inline-flex",
+          "text": ""
+        },
+        "cart": {
+          "present": true,
+          "hidden": false,
+          "x": 1125,
+          "y": 31,
+          "w": 78,
+          "h": 44,
+          "inFirstScreen": true,
+          "display": "flex",
+          "text": "🛒 0"
+        },
+        "wallet": {
+          "present": true,
+          "hidden": true,
+          "x": 1215,
+          "y": 31,
+          "w": 115,
+          "h": 44,
+          "inFirstScreen": true,
+          "display": "flex",
+          "text": "رصيدك — ر.س"
+        },
+        "auth": {
+          "present": true,
+          "hidden": true,
+          "x": 1113,
+          "y": 53,
+          "w": 0,
+          "h": 0,
+          "inFirstScreen": true,
+          "display": "flex",
+          "text": ""
+        },
+        "nav": {
+          "present": true,
+          "hidden": false,
+          "x": 40,
+          "y": 101,
+          "w": 1360,
+          "h": 71,
+          "inFirstScreen": true,
+          "display": "flex",
+          "text": "الرئيسية منصة ERVENOW الخريطة الحية دخول"
+        },
+        "banner": {
+          "present": true,
+          "hidden": false,
+          "x": 35,
+          "y": 218,
+          "w": 1370,
+          "h": 380,
+          "inFirstScreen": true,
+          "display": "block",
+          "text": "promotional ERVENOW وصف مختصر للبنر اكتشف المزيد ← promotional ERVENOW وصف مختصر للبنر اكتشف المزيد ← promotional ERVENOW وصف مختصر للبنر اكتشف المزيد ← promoti"
+        },
+        "bannerWrap": {
+          "present": true,
+          "hidden": false,
+          "x": 24,
+          "y": 207,
+          "w": 1392,
+          "h": 402,
+          "inFirstScreen": true,
+          "display": "block",
+          "text": "promotional ERVENOW وصف مختصر للبنر اكتشف المزيد ← promotional ERVENOW وصف مختصر للبنر اكتشف المزيد ← promotional ERVENOW وصف مختصر للبنر اكتشف المزيد ← promoti"
+        },
+        "hub": {
+          "present": true,
+          "hidden": false,
+          "x": 80,
+          "y": 672,
+          "w": 1280,
+          "h": 208,
+          "inFirstScreen": true,
+          "display": "grid",
+          "text": "مطاعم مشاوي وبرقر وشاورما متاجر سوبرماركت وصيدليات توصيل من نقطة لأخرى وغاز خدمات سباكة وكهرباء وتنظيف"
+        },
+        "hubSection": {
+          "present": true,
+          "hidden": false,
+          "x": 40,
+          "y": 637,
+          "w": 1360,
+          "h": 456,
+          "inFirstScreen": true,
+          "display": "block",
+          "text": "اختر ما يناسبك مطاعم مشاوي وبرقر وشاورما متاجر سوبرماركت وصيدليات توصيل من نقطة لأخرى وغاز خدمات سباكة وكهرباء وتنظيف توصيل سريع دفع آمن تتبع لحظي دعم فوري 300+"
+        },
+        "trust": {
+          "present": true,
+          "hidden": false,
+          "x": 80,
+          "y": 912,
+          "w": 1280,
+          "h": 94,
+          "inFirstScreen": false,
+          "display": "flex",
+          "text": "توصيل سريع دفع آمن تتبع لحظي دعم فوري"
+        },
+        "stats": {
+          "present": true,
+          "hidden": false,
+          "x": 80,
+          "y": 1028,
+          "w": 1280,
+          "h": 22,
+          "inFirstScreen": false,
+          "display": "flex",
+          "text": "300+ طلب يومي · 45+ مندوب · 120+ متجر"
+        },
+        "why": {
+          "present": true,
+          "hidden": false,
+          "x": 40,
+          "y": 1093,
+          "w": 1360,
+          "h": 258,
+          "inFirstScreen": false,
+          "display": "block",
+          "text": "كيف تعمل ERVENOW؟ ١ اطلب من مطعم أو متجر أو خدمة. ٢ يوزّع للمندوب الأقرب تلقائياً. ٣ يوصل مع تتبع لحظي حتى الباب."
+        },
+        "contact": {
+          "present": true,
+          "hidden": false,
+          "x": 734,
+          "y": 1387,
+          "w": 626,
+          "h": 140,
+          "inFirstScreen": false,
+          "display": "flex",
+          "text": "تواصل واتساب الدعم"
+        },
+        "partner": {
+          "present": true,
+          "hidden": false,
+          "x": 80,
+          "y": 1387,
+          "w": 626,
+          "h": 140,
+          "inFirstScreen": false,
+          "display": "flex",
+          "text": "انضم كشريك سجّل متجرك"
+        },
+        "footer": {
+          "present": true,
+          "hidden": false,
+          "x": 0,
+          "y": 1551,
+          "w": 1440,
+          "h": 273,
+          "inFirstScreen": false,
+          "display": "block",
+          "text": "ERVENOW سياسة الخصوصية سياسة المدفوعات والإلغاء والاسترجاع سياسة الاستخدام قنوات التواصل © 2026 ERVENOW — جميع الحقوق محفوظة"
+        },
+        "bottomNav": {
+          "present": false
+        },
+        "plusFab": {
+          "present": false
+        },
+        "search": {
+          "present": false
+        },
+        "location": {
+          "present": false
+        }
+      }
+    }
+  },
+  "desktop-1280": {
+    "viewport": {
+      "name": "desktop-1280",
+      "width": 1280,
+      "height": 800,
+      "isMobile": false
+    },
+    "files": {
+      "atf": "C:\\Users\\USER\\Desktop\\ervenow\\docs\\audit-assets\\home-vip-2026-09-04\\desktop-1280-atf.png",
+      "full": "C:\\Users\\USER\\Desktop\\ervenow\\docs\\audit-assets\\home-vip-2026-09-04\\desktop-1280-full.png"
+    },
+    "metrics": {
+      "vw": 1280,
+      "vh": 800,
+      "docH": 1772,
+      "htmlClass": "erw-viewport-ready",
+      "bodyClass": "lp-body lp-home-premium erv-typography-pr2-home",
+      "title": "ERVENOW | المنصة الذكية",
+      "brand": "ERVENOW",
+      "tag": "المنصة الذكية",
+      "hubTitle": "اختر ما يناسبك",
+      "hubCards": [
+        {
+          "href": "/restaurants",
+          "text": "مطاعم مشاوي وبرقر وشاورما"
+        },
+        {
+          "href": "/stores",
+          "text": "متاجر سوبرماركت وصيدليات"
+        },
+        {
+          "href": "/delivery-services.html",
+          "text": "توصيل من نقطة لأخرى وغاز"
+        },
+        {
+          "href": "/services",
+          "text": "خدمات سباكة وكهرباء وتنظيف"
+        }
+      ],
+      "navLinks": [
+        {
+          "href": "/",
+          "text": "الرئيسية"
+        },
+        {
+          "href": "/dashboard",
+          "text": "منصة ERVENOW"
+        },
+        {
+          "href": "/live-map",
+          "text": "الخريطة الحية"
+        },
+        {
+          "href": "/login?role=customer",
+          "text": "دخول"
+        }
+      ],
+      "menuLinks": [
+        {
+          "href": "/login",
+          "text": "🔐الدخول",
+          "hidden": false
+        },
+        {
+          "href": "/login?mode=register&role=customer",
+          "text": "➕إنشاء عضوية",
+          "hidden": false
+        },
+        {
+          "href": "/login?role=customer&next=%2Fmy-orders",
+          "text": "📋طلباتي0",
+          "hidden": false
+        },
+        {
+          "href": "/dashboard",
+          "text": "⚙️الإعدادات",
+          "hidden": false
+        },
+        {
+          "href": "#contact",
+          "text": "📞تواصل معنا",
+          "hidden": false
+        },
+        {
+          "href": "/",
+          "text": "•الرئيسية",
+          "hidden": false
+        },
+        {
+          "href": "/dashboard",
+          "text": "•منصة ERVENOW",
+          "hidden": false
+        },
+        {
+          "href": "/live-map",
+          "text": "•الخريطة الحية",
+          "hidden": false
+        },
+        {
+          "href": "/login?role=customer",
+          "text": "•دخول",
+          "hidden": false
+        },
+        {
+          "href": "#trust",
+          "text": "🛡الثقة",
+          "hidden": false
+        },
+        {
+          "href": "#why",
+          "text": "❓كيف تعمل",
+          "hidden": false
+        },
+        {
+          "href": "#contact",
+          "text": "📧تواصل معنا",
+          "hidden": false
+        },
+        {
+          "href": "/track",
+          "text": "📍تتبع الحي",
+          "hidden": false
+        },
+        {
+          "href": "/services-provider.html",
+          "text": "🏪طلبات الخدمات",
+          "hidden": true
+        },
+        {
+          "href": "/driver",
+          "text": "🚗لوحة المندوب",
+          "hidden": true
+        },
+        {
+          "href": "/orders",
+          "text": "🚗طلباتي",
+          "hidden": true
+        },
+        {
+          "href": "logout()",
+          "text": "🚪تسجيل الخروج",
+          "hidden": true
+        }
+      ],
+      "bottomItems": [],
+      "els": {
+        "header": {
+          "present": true,
+          "hidden": false,
+          "x": 0,
+          "y": 0,
+          "w": 1280,
+          "h": 187,
+          "inFirstScreen": true,
+          "display": "block",
+          "text": "ERVENOW المنصة الذكية رصيدك — ر.س 🛒 0 الرئيسية منصة ERVENOW الخريطة الحية دخول"
+        },
+        "logo": {
+          "present": true,
+          "hidden": false,
+          "x": 40,
+          "y": 19,
+          "w": 72,
+          "h": 68,
+          "inFirstScreen": true,
+          "display": "flex",
+          "text": ""
+        },
+        "brand": {
+          "present": true,
+          "hidden": false,
+          "x": 136,
+          "y": 33,
+          "w": 94,
+          "h": 40,
+          "inFirstScreen": true,
+          "display": "flex",
+          "text": "ERVENOW المنصة الذكية"
+        },
+        "hamburger": {
+          "present": true,
+          "hidden": false,
+          "x": 1196,
+          "y": 32,
+          "w": 44,
+          "h": 44,
+          "inFirstScreen": true,
+          "display": "inline-flex",
+          "text": ""
+        },
+        "cart": {
+          "present": true,
+          "hidden": false,
+          "x": 965,
+          "y": 31,
+          "w": 78,
+          "h": 44,
+          "inFirstScreen": true,
+          "display": "flex",
+          "text": "🛒 0"
+        },
+        "wallet": {
+          "present": true,
+          "hidden": true,
+          "x": 1055,
+          "y": 31,
+          "w": 115,
+          "h": 44,
+          "inFirstScreen": true,
+          "display": "flex",
+          "text": "رصيدك — ر.س"
+        },
+        "auth": {
+          "present": true,
+          "hidden": true,
+          "x": 953,
+          "y": 53,
+          "w": 0,
+          "h": 0,
+          "inFirstScreen": true,
+          "display": "flex",
+          "text": ""
+        },
+        "nav": {
+          "present": true,
+          "hidden": false,
+          "x": 40,
+          "y": 101,
+          "w": 1200,
+          "h": 71,
+          "inFirstScreen": true,
+          "display": "flex",
+          "text": "الرئيسية منصة ERVENOW الخريطة الحية دخول"
+        },
+        "banner": {
+          "present": true,
+          "hidden": false,
+          "x": 35,
+          "y": 218,
+          "w": 1210,
+          "h": 338,
+          "inFirstScreen": true,
+          "display": "block",
+          "text": "promotional ERVENOW وصف مختصر للبنر اكتشف المزيد ← promotional ERVENOW وصف مختصر للبنر اكتشف المزيد ← promotional ERVENOW وصف مختصر للبنر اكتشف المزيد ← promoti"
+        },
+        "bannerWrap": {
+          "present": true,
+          "hidden": false,
+          "x": 24,
+          "y": 207,
+          "w": 1232,
+          "h": 360,
+          "inFirstScreen": true,
+          "display": "block",
+          "text": "promotional ERVENOW وصف مختصر للبنر اكتشف المزيد ← promotional ERVENOW وصف مختصر للبنر اكتشف المزيد ← promotional ERVENOW وصف مختصر للبنر اكتشف المزيد ← promoti"
+        },
+        "hub": {
+          "present": true,
+          "hidden": false,
+          "x": 40,
+          "y": 626,
+          "w": 1200,
+          "h": 190,
+          "inFirstScreen": true,
+          "display": "grid",
+          "text": "مطاعم مشاوي وبرقر وشاورما متاجر سوبرماركت وصيدليات توصيل من نقطة لأخرى وغاز خدمات سباكة وكهرباء وتنظيف"
+        },
+        "hubSection": {
+          "present": true,
+          "hidden": false,
+          "x": 0,
+          "y": 595,
+          "w": 1280,
+          "h": 428,
+          "inFirstScreen": true,
+          "display": "block",
+          "text": "اختر ما يناسبك مطاعم مشاوي وبرقر وشاورما متاجر سوبرماركت وصيدليات توصيل من نقطة لأخرى وغاز خدمات سباكة وكهرباء وتنظيف توصيل سريع دفع آمن تتبع لحظي دعم فوري 300+"
+        },
+        "trust": {
+          "present": true,
+          "hidden": false,
+          "x": 40,
+          "y": 847,
+          "w": 1200,
+          "h": 94,
+          "inFirstScreen": false,
+          "display": "flex",
+          "text": "توصيل سريع دفع آمن تتبع لحظي دعم فوري"
+        },
+        "stats": {
+          "present": true,
+          "hidden": false,
+          "x": 40,
+          "y": 963,
+          "w": 1200,
+          "h": 22,
+          "inFirstScreen": false,
+          "display": "flex",
+          "text": "300+ طلب يومي · 45+ مندوب · 120+ متجر"
+        },
+        "why": {
+          "present": true,
+          "hidden": false,
+          "x": 0,
+          "y": 1023,
+          "w": 1280,
+          "h": 258,
+          "inFirstScreen": false,
+          "display": "block",
+          "text": "كيف تعمل ERVENOW؟ ١ اطلب من مطعم أو متجر أو خدمة. ٢ يوزّع للمندوب الأقرب تلقائياً. ٣ يوصل مع تتبع لحظي حتى الباب."
+        },
+        "contact": {
+          "present": true,
+          "hidden": false,
+          "x": 653,
+          "y": 1318,
+          "w": 563,
+          "h": 140,
+          "inFirstScreen": false,
+          "display": "flex",
+          "text": "تواصل واتساب الدعم"
+        },
+        "partner": {
+          "present": true,
+          "hidden": false,
+          "x": 64,
+          "y": 1318,
+          "w": 563,
+          "h": 140,
+          "inFirstScreen": false,
+          "display": "flex",
+          "text": "انضم كشريك سجّل متجرك"
+        },
+        "footer": {
+          "present": true,
+          "hidden": false,
+          "x": 0,
+          "y": 1481,
+          "w": 1280,
+          "h": 292,
+          "inFirstScreen": false,
+          "display": "block",
+          "text": "ERVENOW سياسة الخصوصية سياسة المدفوعات والإلغاء والاسترجاع سياسة الاستخدام قنوات التواصل © 2026 ERVENOW — جميع الحقوق محفوظة"
+        },
+        "bottomNav": {
+          "present": false
+        },
+        "plusFab": {
+          "present": false
+        },
+        "search": {
+          "present": false
+        },
+        "location": {
+          "present": false
+        }
+      }
+    }
+  },
+  "tablet-1024": {
+    "viewport": {
+      "name": "tablet-1024",
+      "width": 1024,
+      "height": 768,
+      "isMobile": false
+    },
+    "files": {
+      "atf": "C:\\Users\\USER\\Desktop\\ervenow\\docs\\audit-assets\\home-vip-2026-09-04\\tablet-1024-atf.png",
+      "full": "C:\\Users\\USER\\Desktop\\ervenow\\docs\\audit-assets\\home-vip-2026-09-04\\tablet-1024-full.png"
+    },
+    "metrics": {
+      "vw": 1024,
+      "vh": 768,
+      "docH": 1721,
+      "htmlClass": "erw-viewport-ready",
+      "bodyClass": "lp-body lp-home-premium erv-typography-pr2-home",
+      "title": "ERVENOW | المنصة الذكية",
+      "brand": "ERVENOW",
+      "tag": "المنصة الذكية",
+      "hubTitle": "اختر ما يناسبك",
+      "hubCards": [
+        {
+          "href": "/restaurants",
+          "text": "مطاعم مشاوي وبرقر وشاورما"
+        },
+        {
+          "href": "/stores",
+          "text": "متاجر سوبرماركت وصيدليات"
+        },
+        {
+          "href": "/delivery-services.html",
+          "text": "توصيل من نقطة لأخرى وغاز"
+        },
+        {
+          "href": "/services",
+          "text": "خدمات سباكة وكهرباء وتنظيف"
+        }
+      ],
+      "navLinks": [
+        {
+          "href": "/",
+          "text": "الرئيسية"
+        },
+        {
+          "href": "/dashboard",
+          "text": "منصة ERVENOW"
+        },
+        {
+          "href": "/live-map",
+          "text": "الخريطة الحية"
+        },
+        {
+          "href": "/login?role=customer",
+          "text": "دخول"
+        }
+      ],
+      "menuLinks": [
+        {
+          "href": "/login",
+          "text": "🔐الدخول",
+          "hidden": false
+        },
+        {
+          "href": "/login?mode=register&role=customer",
+          "text": "➕إنشاء عضوية",
+          "hidden": false
+        },
+        {
+          "href": "/login?role=customer&next=%2Fmy-orders",
+          "text": "📋طلباتي0",
+          "hidden": false
+        },
+        {
+          "href": "/dashboard",
+          "text": "⚙️الإعدادات",
+          "hidden": false
+        },
+        {
+          "href": "#contact",
+          "text": "📞تواصل معنا",
+          "hidden": false
+        },
+        {
+          "href": "/",
+          "text": "•الرئيسية",
+          "hidden": false
+        },
+        {
+          "href": "/dashboard",
+          "text": "•منصة ERVENOW",
+          "hidden": false
+        },
+        {
+          "href": "/live-map",
+          "text": "•الخريطة الحية",
+          "hidden": false
+        },
+        {
+          "href": "/login?role=customer",
+          "text": "•دخول",
+          "hidden": false
+        },
+        {
+          "href": "#trust",
+          "text": "🛡الثقة",
+          "hidden": false
+        },
+        {
+          "href": "#why",
+          "text": "❓كيف تعمل",
+          "hidden": false
+        },
+        {
+          "href": "#contact",
+          "text": "📧تواصل معنا",
+          "hidden": false
+        },
+        {
+          "href": "/track",
+          "text": "📍تتبع الحي",
+          "hidden": false
+        },
+        {
+          "href": "/services-provider.html",
+          "text": "🏪طلبات الخدمات",
+          "hidden": true
+        },
+        {
+          "href": "/driver",
+          "text": "🚗لوحة المندوب",
+          "hidden": true
+        },
+        {
+          "href": "/orders",
+          "text": "🚗طلباتي",
+          "hidden": true
+        },
+        {
+          "href": "logout()",
+          "text": "🚪تسجيل الخروج",
+          "hidden": true
+        }
+      ],
+      "bottomItems": [],
+      "els": {
+        "header": {
+          "present": true,
+          "hidden": false,
+          "x": 0,
+          "y": 0,
+          "w": 1024,
+          "h": 88,
+          "inFirstScreen": true,
+          "display": "block",
+          "text": "رصيدك — ر.س 🛒 0"
+        },
+        "logo": {
+          "present": true,
+          "hidden": false,
+          "x": 20,
+          "y": 15,
+          "w": 64,
+          "h": 60,
+          "inFirstScreen": true,
+          "display": "flex",
+          "text": ""
+        },
+        "brand": {
+          "present": true,
+          "hidden": true,
+          "x": 0,
+          "y": 0,
+          "w": 0,
+          "h": 0,
+          "inFirstScreen": false,
+          "display": "none",
+          "text": "ERVENOW المنصة الذكية"
+        },
+        "hamburger": {
+          "present": true,
+          "hidden": false,
+          "x": 960,
+          "y": 24,
+          "w": 44,
+          "h": 44,
+          "inFirstScreen": true,
+          "display": "inline-flex",
+          "text": ""
+        },
+        "cart": {
+          "present": true,
+          "hidden": false,
+          "x": 731,
+          "y": 23,
+          "w": 78,
+          "h": 44,
+          "inFirstScreen": true,
+          "display": "flex",
+          "text": "🛒 0"
+        },
+        "wallet": {
+          "present": true,
+          "hidden": true,
+          "x": 821,
+          "y": 23,
+          "w": 115,
+          "h": 44,
+          "inFirstScreen": true,
+          "display": "flex",
+          "text": "رصيدك — ر.س"
+        },
+        "auth": {
+          "present": true,
+          "hidden": true,
+          "x": 719,
+          "y": 45,
+          "w": 0,
+          "h": 0,
+          "inFirstScreen": true,
+          "display": "flex",
+          "text": ""
+        },
+        "nav": {
+          "present": true,
+          "hidden": true,
+          "x": 0,
+          "y": 0,
+          "w": 0,
+          "h": 0,
+          "inFirstScreen": false,
+          "display": "none",
+          "text": "الرئيسيةمنصة ERVENOWالخريطة الحيةدخول"
+        },
+        "banner": {
+          "present": true,
+          "hidden": false,
+          "x": 25,
+          "y": 109,
+          "w": 974,
+          "h": 302,
+          "inFirstScreen": true,
+          "display": "block",
+          "text": "promotional ERVENOW وصف مختصر للبنر اكتشف المزيد ← promotional ERVENOW وصف مختصر للبنر اكتشف المزيد ← promotional ERVENOW وصف مختصر للبنر اكتشف المزيد ← promoti"
+        },
+        "bannerWrap": {
+          "present": true,
+          "hidden": false,
+          "x": 16,
+          "y": 100,
+          "w": 992,
+          "h": 320,
+          "inFirstScreen": true,
+          "display": "block",
+          "text": "promotional ERVENOW وصف مختصر للبنر اكتشف المزيد ← promotional ERVENOW وصف مختصر للبنر اكتشف المزيد ← promotional ERVENOW وصف مختصر للبنر اكتشف المزيد ← promoti"
+        },
+        "hub": {
+          "present": true,
+          "hidden": false,
+          "x": 20,
+          "y": 462,
+          "w": 984,
+          "h": 150,
+          "inFirstScreen": true,
+          "display": "grid",
+          "text": "مطاعم مشاوي وبرقر وشاورما متاجر سوبرماركت وصيدليات توصيل من نقطة لأخرى وغاز خدمات سباكة وكهرباء وتنظيف"
+        },
+        "hubSection": {
+          "present": true,
+          "hidden": false,
+          "x": 0,
+          "y": 438,
+          "w": 1024,
+          "h": 357,
+          "inFirstScreen": true,
+          "display": "block",
+          "text": "اختر ما يناسبك مطاعم مشاوي وبرقر وشاورما متاجر سوبرماركت وصيدليات توصيل من نقطة لأخرى وغاز خدمات سباكة وكهرباء وتنظيف توصيل سريع دفع آمن تتبع لحظي دعم فوري 300+"
+        },
+        "trust": {
+          "present": true,
+          "hidden": false,
+          "x": 20,
+          "y": 640,
+          "w": 984,
+          "h": 88,
+          "inFirstScreen": true,
+          "display": "flex",
+          "text": "توصيل سريع دفع آمن تتبع لحظي دعم فوري"
+        },
+        "stats": {
+          "present": true,
+          "hidden": false,
+          "x": 192,
+          "y": 745,
+          "w": 640,
+          "h": 19,
+          "inFirstScreen": true,
+          "display": "flex",
+          "text": "300+ طلب يومي · 45+ مندوب · 120+ متجر"
+        },
+        "why": {
+          "present": true,
+          "hidden": false,
+          "x": 0,
+          "y": 795,
+          "w": 1024,
+          "h": 251,
+          "inFirstScreen": false,
+          "display": "block",
+          "text": "كيف تعمل ERVENOW؟ ١ اطلب من مطعم أو متجر أو خدمة. ٢ يوزّع للمندوب الأقرب تلقائياً. ٣ يوصل مع تتبع لحظي حتى الباب."
+        },
+        "contact": {
+          "present": true,
+          "hidden": false,
+          "x": 520,
+          "y": 1074,
+          "w": 460,
+          "h": 127,
+          "inFirstScreen": false,
+          "display": "flex",
+          "text": "تواصل واتساب الدعم"
+        },
+        "partner": {
+          "present": true,
+          "hidden": false,
+          "x": 44,
+          "y": 1074,
+          "w": 460,
+          "h": 127,
+          "inFirstScreen": false,
+          "display": "flex",
+          "text": "انضم كشريك سجّل متجرك"
+        },
+        "footer": {
+          "present": true,
+          "hidden": false,
+          "x": 0,
+          "y": 1209,
+          "w": 1024,
+          "h": 493,
+          "inFirstScreen": false,
+          "display": "block",
+          "text": "ERVENOW سياسة الخصوصية سياسة المدفوعات والإلغاء والاسترجاع سياسة الاستخدام قنوات التواصل © 2026 ERVENOW — جميع الحقوق محفوظة"
+        },
+        "bottomNav": {
+          "present": false
+        },
+        "plusFab": {
+          "present": false
+        },
+        "search": {
+          "present": false
+        },
+        "location": {
+          "present": false
+        }
+      }
+    }
+  },
+  "tablet-768": {
+    "viewport": {
+      "name": "tablet-768",
+      "width": 768,
+      "height": 1024,
+      "isMobile": false
+    },
+    "files": {
+      "atf": "C:\\Users\\USER\\Desktop\\ervenow\\docs\\audit-assets\\home-vip-2026-09-04\\tablet-768-atf.png",
+      "full": "C:\\Users\\USER\\Desktop\\ervenow\\docs\\audit-assets\\home-vip-2026-09-04\\tablet-768-full.png"
+    },
+    "metrics": {
+      "vw": 768,
+      "vh": 1024,
+      "docH": 1692,
+      "htmlClass": "erw-viewport-ready",
+      "bodyClass": "lp-body lp-home-premium erv-typography-pr2-home",
+      "title": "ERVENOW | المنصة الذكية",
+      "brand": "ERVENOW",
+      "tag": "المنصة الذكية",
+      "hubTitle": "اختر ما يناسبك",
+      "hubCards": [
+        {
+          "href": "/restaurants",
+          "text": "مطاعم مشاوي وبرقر وشاورما"
+        },
+        {
+          "href": "/stores",
+          "text": "متاجر سوبرماركت وصيدليات"
+        },
+        {
+          "href": "/delivery-services.html",
+          "text": "توصيل من نقطة لأخرى وغاز"
+        },
+        {
+          "href": "/services",
+          "text": "خدمات سباكة وكهرباء وتنظيف"
+        }
+      ],
+      "navLinks": [
+        {
+          "href": "/",
+          "text": "الرئيسية"
+        },
+        {
+          "href": "/dashboard",
+          "text": "منصة ERVENOW"
+        },
+        {
+          "href": "/live-map",
+          "text": "الخريطة الحية"
+        },
+        {
+          "href": "/login?role=customer",
+          "text": "دخول"
+        }
+      ],
+      "menuLinks": [
+        {
+          "href": "/login",
+          "text": "🔐الدخول",
+          "hidden": false
+        },
+        {
+          "href": "/login?mode=register&role=customer",
+          "text": "➕إنشاء عضوية",
+          "hidden": false
+        },
+        {
+          "href": "/login?role=customer&next=%2Fmy-orders",
+          "text": "📋طلباتي0",
+          "hidden": false
+        },
+        {
+          "href": "/dashboard",
+          "text": "⚙️الإعدادات",
+          "hidden": false
+        },
+        {
+          "href": "#contact",
+          "text": "📞تواصل معنا",
+          "hidden": false
+        },
+        {
+          "href": "/",
+          "text": "•الرئيسية",
+          "hidden": false
+        },
+        {
+          "href": "/dashboard",
+          "text": "•منصة ERVENOW",
+          "hidden": false
+        },
+        {
+          "href": "/live-map",
+          "text": "•الخريطة الحية",
+          "hidden": false
+        },
+        {
+          "href": "/login?role=customer",
+          "text": "•دخول",
+          "hidden": false
+        },
+        {
+          "href": "#trust",
+          "text": "🛡الثقة",
+          "hidden": false
+        },
+        {
+          "href": "#why",
+          "text": "❓كيف تعمل",
+          "hidden": false
+        },
+        {
+          "href": "#contact",
+          "text": "📧تواصل معنا",
+          "hidden": false
+        },
+        {
+          "href": "/track",
+          "text": "📍تتبع الحي",
+          "hidden": false
+        },
+        {
+          "href": "/services-provider.html",
+          "text": "🏪طلبات الخدمات",
+          "hidden": true
+        },
+        {
+          "href": "/driver",
+          "text": "🚗لوحة المندوب",
+          "hidden": true
+        },
+        {
+          "href": "/orders",
+          "text": "🚗طلباتي",
+          "hidden": true
+        },
+        {
+          "href": "logout()",
+          "text": "🚪تسجيل الخروج",
+          "hidden": true
+        }
+      ],
+      "bottomItems": [],
+      "els": {
+        "header": {
+          "present": true,
+          "hidden": false,
+          "x": 0,
+          "y": 0,
+          "w": 768,
+          "h": 88,
+          "inFirstScreen": true,
+          "display": "block",
+          "text": "رصيدك — ر.س 🛒 0"
+        },
+        "logo": {
+          "present": true,
+          "hidden": false,
+          "x": 20,
+          "y": 15,
+          "w": 64,
+          "h": 60,
+          "inFirstScreen": true,
+          "display": "flex",
+          "text": ""
+        },
+        "brand": {
+          "present": true,
+          "hidden": true,
+          "x": 0,
+          "y": 0,
+          "w": 0,
+          "h": 0,
+          "inFirstScreen": false,
+          "display": "none",
+          "text": "ERVENOW المنصة الذكية"
+        },
+        "hamburger": {
+          "present": true,
+          "hidden": false,
+          "x": 704,
+          "y": 24,
+          "w": 44,
+          "h": 44,
+          "inFirstScreen": true,
+          "display": "inline-flex",
+          "text": ""
+        },
+        "cart": {
+          "present": true,
+          "hidden": false,
+          "x": 481,
+          "y": 23,
+          "w": 78,
+          "h": 44,
+          "inFirstScreen": true,
+          "display": "flex",
+          "text": "🛒 0"
+        },
+        "wallet": {
+          "present": true,
+          "hidden": true,
+          "x": 570,
+          "y": 23,
+          "w": 115,
+          "h": 44,
+          "inFirstScreen": true,
+          "display": "flex",
+          "text": "رصيدك — ر.س"
+        },
+        "auth": {
+          "present": true,
+          "hidden": true,
+          "x": 469,
+          "y": 45,
+          "w": 0,
+          "h": 0,
+          "inFirstScreen": true,
+          "display": "flex",
+          "text": ""
+        },
+        "nav": {
+          "present": true,
+          "hidden": true,
+          "x": 0,
+          "y": 0,
+          "w": 0,
+          "h": 0,
+          "inFirstScreen": false,
+          "display": "none",
+          "text": "الرئيسيةمنصة ERVENOWالخريطة الحيةدخول"
+        },
+        "banner": {
+          "present": true,
+          "hidden": false,
+          "x": 25,
+          "y": 109,
+          "w": 718,
+          "h": 315,
+          "inFirstScreen": true,
+          "display": "block",
+          "text": "promotional ERVENOW وصف مختصر للبنر اكتشف المزيد ← promotional ERVENOW وصف مختصر للبنر اكتشف المزيد ← promotional ERVENOW وصف مختصر للبنر اكتشف المزيد ← promoti"
+        },
+        "bannerWrap": {
+          "present": true,
+          "hidden": false,
+          "x": 16,
+          "y": 100,
+          "w": 736,
+          "h": 333,
+          "inFirstScreen": true,
+          "display": "block",
+          "text": "promotional ERVENOW وصف مختصر للبنر اكتشف المزيد ← promotional ERVENOW وصف مختصر للبنر اكتشف المزيد ← promotional ERVENOW وصف مختصر للبنر اكتشف المزيد ← promoti"
+        },
+        "hub": {
+          "present": true,
+          "hidden": false,
+          "x": 20,
+          "y": 470,
+          "w": 728,
+          "h": 148,
+          "inFirstScreen": true,
+          "display": "grid",
+          "text": "مطاعم مشاوي وبرقر وشاورما متاجر سوبرماركت وصيدليات توصيل من نقطة لأخرى وغاز خدمات سباكة وكهرباء وتنظيف"
+        },
+        "hubSection": {
+          "present": true,
+          "hidden": false,
+          "x": 0,
+          "y": 451,
+          "w": 768,
+          "h": 336,
+          "inFirstScreen": true,
+          "display": "block",
+          "text": "اختر ما يناسبك مطاعم مشاوي وبرقر وشاورما متاجر سوبرماركت وصيدليات توصيل من نقطة لأخرى وغاز خدمات سباكة وكهرباء وتنظيف توصيل سريع دفع آمن تتبع لحظي دعم فوري 300+"
+        },
+        "trust": {
+          "present": true,
+          "hidden": false,
+          "x": 20,
+          "y": 645,
+          "w": 728,
+          "h": 82,
+          "inFirstScreen": true,
+          "display": "flex",
+          "text": "توصيل سريع دفع آمن تتبع لحظي دعم فوري"
+        },
+        "stats": {
+          "present": true,
+          "hidden": false,
+          "x": 64,
+          "y": 745,
+          "w": 640,
+          "h": 19,
+          "inFirstScreen": true,
+          "display": "flex",
+          "text": "300+ طلب يومي · 45+ مندوب · 120+ متجر"
+        },
+        "why": {
+          "present": true,
+          "hidden": false,
+          "x": 0,
+          "y": 787,
+          "w": 768,
+          "h": 251,
+          "inFirstScreen": true,
+          "display": "block",
+          "text": "كيف تعمل ERVENOW؟ ١ اطلب من مطعم أو متجر أو خدمة. ٢ يوزّع للمندوب الأقرب تلقائياً. ٣ يوصل مع تتبع لحظي حتى الباب."
+        },
+        "contact": {
+          "present": true,
+          "hidden": false,
+          "x": 392,
+          "y": 1038,
+          "w": 332,
+          "h": 127,
+          "inFirstScreen": false,
+          "display": "flex",
+          "text": "تواصل واتساب الدعم"
+        },
+        "partner": {
+          "present": true,
+          "hidden": false,
+          "x": 44,
+          "y": 1038,
+          "w": 332,
+          "h": 127,
+          "inFirstScreen": false,
+          "display": "flex",
+          "text": "انضم كشريك سجّل متجرك"
+        },
+        "footer": {
+          "present": true,
+          "hidden": false,
+          "x": 0,
+          "y": 1196,
+          "w": 768,
+          "h": 477,
+          "inFirstScreen": false,
+          "display": "block",
+          "text": "ERVENOW سياسة الخصوصية سياسة المدفوعات والإلغاء والاسترجاع سياسة الاستخدام قنوات التواصل © 2026 ERVENOW — جميع الحقوق محفوظة"
+        },
+        "bottomNav": {
+          "present": false
+        },
+        "plusFab": {
+          "present": false
+        },
+        "search": {
+          "present": false
+        },
+        "location": {
+          "present": false
+        }
+      }
+    }
+  },
+  "mobile-430": {
+    "viewport": {
+      "name": "mobile-430",
+      "width": 430,
+      "height": 932,
+      "isMobile": true
+    },
+    "files": {
+      "atf": "C:\\Users\\USER\\Desktop\\ervenow\\docs\\audit-assets\\home-vip-2026-09-04\\mobile-430-atf.png",
+      "full": "C:\\Users\\USER\\Desktop\\ervenow\\docs\\audit-assets\\home-vip-2026-09-04\\mobile-430-full.png"
+    },
+    "metrics": {
+      "vw": 430,
+      "vh": 932,
+      "docH": 1943,
+      "htmlClass": "erv-mobile-shell erw-viewport-ready erv-plus-nav-active",
+      "bodyClass": "lp-body lp-home-premium erv-typography-pr2-home erv-mobile-foundation",
+      "title": "ERVENOW | المنصة الذكية",
+      "brand": "ERVENOW",
+      "tag": "المنصة الذكية",
+      "hubTitle": "اختر ما يناسبك",
+      "hubCards": [
+        {
+          "href": "/restaurants",
+          "text": "مطاعم"
+        },
+        {
+          "href": "/stores",
+          "text": "متاجر"
+        },
+        {
+          "href": "/delivery-services.html",
+          "text": "توصيل"
+        },
+        {
+          "href": "/services",
+          "text": "خدمات"
+        }
+      ],
+      "navLinks": [
+        {
+          "href": "/",
+          "text": "الرئيسية"
+        },
+        {
+          "href": "/dashboard",
+          "text": "منصة ERVENOW"
+        },
+        {
+          "href": "/live-map",
+          "text": "الخريطة الحية"
+        },
+        {
+          "href": "/login?role=customer",
+          "text": "دخول"
+        }
+      ],
+      "menuLinks": [
+        {
+          "href": "/login",
+          "text": "🔐الدخول",
+          "hidden": false
+        },
+        {
+          "href": "/login?mode=register&role=customer",
+          "text": "➕إنشاء عضوية",
+          "hidden": false
+        },
+        {
+          "href": "/login?role=customer&next=%2Fmy-orders",
+          "text": "📋طلباتي0",
+          "hidden": false
+        },
+        {
+          "href": "/dashboard",
+          "text": "⚙️الإعدادات",
+          "hidden": false
+        },
+        {
+          "href": "#contact",
+          "text": "📞تواصل معنا",
+          "hidden": false
+        },
+        {
+          "href": "/",
+          "text": "•الرئيسية",
+          "hidden": false
+        },
+        {
+          "href": "/dashboard",
+          "text": "•منصة ERVENOW",
+          "hidden": false
+        },
+        {
+          "href": "/live-map",
+          "text": "•الخريطة الحية",
+          "hidden": false
+        },
+        {
+          "href": "/login?role=customer",
+          "text": "•دخول",
+          "hidden": false
+        },
+        {
+          "href": "#trust",
+          "text": "🛡الثقة",
+          "hidden": false
+        },
+        {
+          "href": "#why",
+          "text": "❓كيف تعمل",
+          "hidden": false
+        },
+        {
+          "href": "#contact",
+          "text": "📧تواصل معنا",
+          "hidden": false
+        },
+        {
+          "href": "/track",
+          "text": "📍تتبع الحي",
+          "hidden": false
+        },
+        {
+          "href": "/services-provider.html",
+          "text": "🏪طلبات الخدمات",
+          "hidden": true
+        },
+        {
+          "href": "/driver",
+          "text": "🚗لوحة المندوب",
+          "hidden": true
+        },
+        {
+          "href": "/orders",
+          "text": "🚗طلباتي",
+          "hidden": true
+        },
+        {
+          "href": "logout()",
+          "text": "🚪تسجيل الخروج",
+          "hidden": true
+        }
+      ],
+      "bottomItems": [
+        {
+          "href": "/",
+          "text": "الرئيسية"
+        },
+        {
+          "href": "/start-now",
+          "text": "استكشاف"
+        },
+        {
+          "href": "/login?role=customer&next=%2Fmy-orders",
+          "text": "طلباتي"
+        },
+        {
+          "href": "/login?role=customer",
+          "text": "حسابي"
+        },
+        {
+          "href": "ervPlusNavFab",
+          "text": "+"
+        }
+      ],
+      "els": {
+        "header": {
+          "present": true,
+          "hidden": false,
+          "x": 0,
+          "y": 0,
+          "w": 430,
+          "h": 93,
+          "inFirstScreen": true,
+          "display": "block",
+          "text": "ERVENOW المنصة الذكية"
+        },
+        "logo": {
+          "present": true,
+          "hidden": false,
+          "x": 14,
+          "y": 18,
+          "w": 54,
+          "h": 54,
+          "inFirstScreen": true,
+          "display": "flex",
+          "text": ""
+        },
+        "brand": {
+          "present": true,
+          "hidden": false,
+          "x": 169,
+          "y": 26,
+          "w": 90,
+          "h": 38,
+          "inFirstScreen": true,
+          "display": "flex",
+          "text": "ERVENOW المنصة الذكية"
+        },
+        "hamburger": {
+          "present": true,
+          "hidden": false,
+          "x": 361,
+          "y": 18,
+          "w": 55,
+          "h": 55,
+          "inFirstScreen": true,
+          "display": "inline-flex",
+          "text": ""
+        },
+        "cart": {
+          "present": true,
+          "hidden": true,
+          "x": 0,
+          "y": 0,
+          "w": 0,
+          "h": 0,
+          "inFirstScreen": false,
+          "display": "none",
+          "text": "🛒 0"
+        },
+        "wallet": {
+          "present": true,
+          "hidden": true,
+          "x": 0,
+          "y": 0,
+          "w": 0,
+          "h": 0,
+          "inFirstScreen": false,
+          "display": "none",
+          "text": "رصيدك — ر.س"
+        },
+        "auth": {
+          "present": true,
+          "hidden": true,
+          "x": 0,
+          "y": 0,
+          "w": 0,
+          "h": 0,
+          "inFirstScreen": false,
+          "display": "none",
+          "text": ""
+        },
+        "nav": {
+          "present": true,
+          "hidden": true,
+          "x": 0,
+          "y": 0,
+          "w": 0,
+          "h": 0,
+          "inFirstScreen": false,
+          "display": "none",
+          "text": "الرئيسيةمنصة ERVENOWالخريطة الحيةدخول"
+        },
+        "banner": {
+          "present": true,
+          "hidden": false,
+          "x": 17,
+          "y": 108,
+          "w": 396,
+          "h": 222,
+          "inFirstScreen": true,
+          "display": "block",
+          "text": "promotional ERVENOW وصف مختصر للبنر اكتشف المزيد ← promotional ERVENOW وصف مختصر للبنر اكتشف المزيد ← promotional ERVENOW وصف مختصر للبنر اكتشف المزيد ← promoti"
+        },
+        "bannerWrap": {
+          "present": true,
+          "hidden": false,
+          "x": 10,
+          "y": 101,
+          "w": 410,
+          "h": 236,
+          "inFirstScreen": true,
+          "display": "block",
+          "text": "promotional ERVENOW وصف مختصر للبنر اكتشف المزيد ← promotional ERVENOW وصف مختصر للبنر اكتشف المزيد ← promotional ERVENOW وصف مختصر للبنر اكتشف المزيد ← promoti"
+        },
+        "hub": {
+          "present": true,
+          "hidden": false,
+          "x": 12,
+          "y": 366,
+          "w": 406,
+          "h": 220,
+          "inFirstScreen": true,
+          "display": "grid",
+          "text": "مطاعم متاجر توصيل خدمات"
+        },
+        "hubSection": {
+          "present": true,
+          "hidden": false,
+          "x": 0,
+          "y": 349,
+          "w": 430,
+          "h": 359,
+          "inFirstScreen": true,
+          "display": "flex",
+          "text": "اختر ما يناسبك مطاعم متاجر توصيل خدمات توصيل سريع دفع آمن تتبع لحظي دعم فوري"
+        },
+        "trust": {
+          "present": true,
+          "hidden": false,
+          "x": 103,
+          "y": 598,
+          "w": 225,
+          "h": 102,
+          "inFirstScreen": true,
+          "display": "grid",
+          "text": "توصيل سريع دفع آمن تتبع لحظي دعم فوري"
+        },
+        "stats": {
+          "present": true,
+          "hidden": true,
+          "x": 0,
+          "y": 0,
+          "w": 0,
+          "h": 0,
+          "inFirstScreen": false,
+          "display": "none",
+          "text": "300+ طلب يومي · 45+ مندوب · 120+ متجر"
+        },
+        "why": {
+          "present": true,
+          "hidden": false,
+          "x": 0,
+          "y": 717,
+          "w": 430,
+          "h": 401,
+          "inFirstScreen": true,
+          "display": "block",
+          "text": "كيف تعمل ERVENOW؟ ١ اطلب من مطعم أو متجر أو خدمة. ٢ يوزّع للمندوب الأقرب تلقائياً. ٣ يوصل مع تتبع لحظي حتى الباب."
+        },
+        "contact": {
+          "present": true,
+          "hidden": false,
+          "x": 31,
+          "y": 1142,
+          "w": 368,
+          "h": 125,
+          "inFirstScreen": false,
+          "display": "block",
+          "text": "تواصل واتساب الدعم"
+        },
+        "partner": {
+          "present": true,
+          "hidden": false,
+          "x": 31,
+          "y": 1279,
+          "w": 368,
+          "h": 125,
+          "inFirstScreen": false,
+          "display": "block",
+          "text": "انضم كشريك سجّل متجرك"
+        },
+        "footer": {
+          "present": true,
+          "hidden": false,
+          "x": 0,
+          "y": 1412,
+          "w": 430,
+          "h": 531,
+          "inFirstScreen": false,
+          "display": "block",
+          "text": "ERVENOW سياسة الخصوصية سياسة المدفوعات والإلغاء والاسترجاع سياسة الاستخدام قنوات التواصل © 2026 ERVENOW — جميع الحقوق محفوظة"
+        },
+        "bottomNav": {
+          "present": true,
+          "hidden": false,
+          "x": 12,
+          "y": 825,
+          "w": 406,
+          "h": 97,
+          "inFirstScreen": true,
+          "display": "block",
+          "text": "الرئيسية استكشاف طلباتي حسابي +"
+        },
+        "plusFab": {
+          "present": true,
+          "hidden": false,
+          "x": 187,
+          "y": 829,
+          "w": 56,
+          "h": 56,
+          "inFirstScreen": true,
+          "display": "flex",
+          "text": "+"
+        },
+        "search": {
+          "present": false
+        },
+        "location": {
+          "present": false
+        }
+      }
+    }
+  },
+  "mobile-390": {
+    "viewport": {
+      "name": "mobile-390",
+      "width": 390,
+      "height": 844,
+      "isMobile": true
+    },
+    "files": {
+      "atf": "C:\\Users\\USER\\Desktop\\ervenow\\docs\\audit-assets\\home-vip-2026-09-04\\mobile-390-atf.png",
+      "full": "C:\\Users\\USER\\Desktop\\ervenow\\docs\\audit-assets\\home-vip-2026-09-04\\mobile-390-full.png"
+    },
+    "metrics": {
+      "vw": 390,
+      "vh": 844,
+      "docH": 1914,
+      "htmlClass": "erv-mobile-shell erw-viewport-ready erv-plus-nav-active",
+      "bodyClass": "lp-body lp-home-premium erv-typography-pr2-home erv-mobile-foundation",
+      "title": "ERVENOW | المنصة الذكية",
+      "brand": "ERVENOW",
+      "tag": "المنصة الذكية",
+      "hubTitle": "اختر ما يناسبك",
+      "hubCards": [
+        {
+          "href": "/restaurants",
+          "text": "مطاعم"
+        },
+        {
+          "href": "/stores",
+          "text": "متاجر"
+        },
+        {
+          "href": "/delivery-services.html",
+          "text": "توصيل"
+        },
+        {
+          "href": "/services",
+          "text": "خدمات"
+        }
+      ],
+      "navLinks": [
+        {
+          "href": "/",
+          "text": "الرئيسية"
+        },
+        {
+          "href": "/dashboard",
+          "text": "منصة ERVENOW"
+        },
+        {
+          "href": "/live-map",
+          "text": "الخريطة الحية"
+        },
+        {
+          "href": "/login?role=customer",
+          "text": "دخول"
+        }
+      ],
+      "menuLinks": [
+        {
+          "href": "/login",
+          "text": "🔐الدخول",
+          "hidden": false
+        },
+        {
+          "href": "/login?mode=register&role=customer",
+          "text": "➕إنشاء عضوية",
+          "hidden": false
+        },
+        {
+          "href": "/login?role=customer&next=%2Fmy-orders",
+          "text": "📋طلباتي0",
+          "hidden": false
+        },
+        {
+          "href": "/dashboard",
+          "text": "⚙️الإعدادات",
+          "hidden": false
+        },
+        {
+          "href": "#contact",
+          "text": "📞تواصل معنا",
+          "hidden": false
+        },
+        {
+          "href": "/",
+          "text": "•الرئيسية",
+          "hidden": false
+        },
+        {
+          "href": "/dashboard",
+          "text": "•منصة ERVENOW",
+          "hidden": false
+        },
+        {
+          "href": "/live-map",
+          "text": "•الخريطة الحية",
+          "hidden": false
+        },
+        {
+          "href": "/login?role=customer",
+          "text": "•دخول",
+          "hidden": false
+        },
+        {
+          "href": "#trust",
+          "text": "🛡الثقة",
+          "hidden": false
+        },
+        {
+          "href": "#why",
+          "text": "❓كيف تعمل",
+          "hidden": false
+        },
+        {
+          "href": "#contact",
+          "text": "📧تواصل معنا",
+          "hidden": false
+        },
+        {
+          "href": "/track",
+          "text": "📍تتبع الحي",
+          "hidden": false
+        },
+        {
+          "href": "/services-provider.html",
+          "text": "🏪طلبات الخدمات",
+          "hidden": true
+        },
+        {
+          "href": "/driver",
+          "text": "🚗لوحة المندوب",
+          "hidden": true
+        },
+        {
+          "href": "/orders",
+          "text": "🚗طلباتي",
+          "hidden": true
+        },
+        {
+          "href": "logout()",
+          "text": "🚪تسجيل الخروج",
+          "hidden": true
+        }
+      ],
+      "bottomItems": [
+        {
+          "href": "/",
+          "text": "الرئيسية"
+        },
+        {
+          "href": "/start-now",
+          "text": "استكشاف"
+        },
+        {
+          "href": "/login?role=customer&next=%2Fmy-orders",
+          "text": "طلباتي"
+        },
+        {
+          "href": "/login?role=customer",
+          "text": "حسابي"
+        },
+        {
+          "href": "ervPlusNavFab",
+          "text": "+"
+        }
+      ],
+      "els": {
+        "header": {
+          "present": true,
+          "hidden": false,
+          "x": 0,
+          "y": 0,
+          "w": 390,
+          "h": 93,
+          "inFirstScreen": true,
+          "display": "block",
+          "text": "ERVENOW المنصة الذكية"
+        },
+        "logo": {
+          "present": true,
+          "hidden": false,
+          "x": 14,
+          "y": 18,
+          "w": 54,
+          "h": 54,
+          "inFirstScreen": true,
+          "display": "flex",
+          "text": ""
+        },
+        "brand": {
+          "present": true,
+          "hidden": false,
+          "x": 149,
+          "y": 26,
+          "w": 90,
+          "h": 38,
+          "inFirstScreen": true,
+          "display": "flex",
+          "text": "ERVENOW المنصة الذكية"
+        },
+        "hamburger": {
+          "present": true,
+          "hidden": false,
+          "x": 321,
+          "y": 18,
+          "w": 55,
+          "h": 55,
+          "inFirstScreen": true,
+          "display": "inline-flex",
+          "text": ""
+        },
+        "cart": {
+          "present": true,
+          "hidden": true,
+          "x": 0,
+          "y": 0,
+          "w": 0,
+          "h": 0,
+          "inFirstScreen": false,
+          "display": "none",
+          "text": "🛒 0"
+        },
+        "wallet": {
+          "present": true,
+          "hidden": true,
+          "x": 0,
+          "y": 0,
+          "w": 0,
+          "h": 0,
+          "inFirstScreen": false,
+          "display": "none",
+          "text": "رصيدك — ر.س"
+        },
+        "auth": {
+          "present": true,
+          "hidden": true,
+          "x": 0,
+          "y": 0,
+          "w": 0,
+          "h": 0,
+          "inFirstScreen": false,
+          "display": "none",
+          "text": ""
+        },
+        "nav": {
+          "present": true,
+          "hidden": true,
+          "x": 0,
+          "y": 0,
+          "w": 0,
+          "h": 0,
+          "inFirstScreen": false,
+          "display": "none",
+          "text": "الرئيسيةمنصة ERVENOWالخريطة الحيةدخول"
+        },
+        "banner": {
+          "present": true,
+          "hidden": false,
+          "x": 17,
+          "y": 108,
+          "w": 356,
+          "h": 202,
+          "inFirstScreen": true,
+          "display": "block",
+          "text": "promotional ERVENOW وصف مختصر للبنر اكتشف المزيد ← promotional ERVENOW وصف مختصر للبنر اكتشف المزيد ← promotional ERVENOW وصف مختصر للبنر اكتشف المزيد ← promoti"
+        },
+        "bannerWrap": {
+          "present": true,
+          "hidden": false,
+          "x": 10,
+          "y": 101,
+          "w": 370,
+          "h": 216,
+          "inFirstScreen": true,
+          "display": "block",
+          "text": "promotional ERVENOW وصف مختصر للبنر اكتشف المزيد ← promotional ERVENOW وصف مختصر للبنر اكتشف المزيد ← promotional ERVENOW وصف مختصر للبنر اكتشف المزيد ← promoti"
+        },
+        "hub": {
+          "present": true,
+          "hidden": false,
+          "x": 12,
+          "y": 345,
+          "w": 366,
+          "h": 216,
+          "inFirstScreen": true,
+          "display": "grid",
+          "text": "مطاعم متاجر توصيل خدمات"
+        },
+        "hubSection": {
+          "present": true,
+          "hidden": false,
+          "x": 0,
+          "y": 329,
+          "w": 390,
+          "h": 354,
+          "inFirstScreen": true,
+          "display": "flex",
+          "text": "اختر ما يناسبك مطاعم متاجر توصيل خدمات توصيل سريع دفع آمن تتبع لحظي دعم فوري"
+        },
+        "trust": {
+          "present": true,
+          "hidden": false,
+          "x": 83,
+          "y": 573,
+          "w": 225,
+          "h": 102,
+          "inFirstScreen": true,
+          "display": "grid",
+          "text": "توصيل سريع دفع آمن تتبع لحظي دعم فوري"
+        },
+        "stats": {
+          "present": true,
+          "hidden": true,
+          "x": 0,
+          "y": 0,
+          "w": 0,
+          "h": 0,
+          "inFirstScreen": false,
+          "display": "none",
+          "text": "300+ طلب يومي · 45+ مندوب · 120+ متجر"
+        },
+        "why": {
+          "present": true,
+          "hidden": false,
+          "x": 0,
+          "y": 691,
+          "w": 390,
+          "h": 401,
+          "inFirstScreen": true,
+          "display": "block",
+          "text": "كيف تعمل ERVENOW؟ ١ اطلب من مطعم أو متجر أو خدمة. ٢ يوزّع للمندوب الأقرب تلقائياً. ٣ يوصل مع تتبع لحظي حتى الباب."
+        },
+        "contact": {
+          "present": true,
+          "hidden": false,
+          "x": 28,
+          "y": 1116,
+          "w": 334,
+          "h": 125,
+          "inFirstScreen": false,
+          "display": "block",
+          "text": "تواصل واتساب الدعم"
+        },
+        "partner": {
+          "present": true,
+          "hidden": false,
+          "x": 28,
+          "y": 1253,
+          "w": 334,
+          "h": 125,
+          "inFirstScreen": false,
+          "display": "block",
+          "text": "انضم كشريك سجّل متجرك"
+        },
+        "footer": {
+          "present": true,
+          "hidden": false,
+          "x": 0,
+          "y": 1386,
+          "w": 390,
+          "h": 528,
+          "inFirstScreen": false,
+          "display": "block",
+          "text": "ERVENOW سياسة الخصوصية سياسة المدفوعات والإلغاء والاسترجاع سياسة الاستخدام قنوات التواصل © 2026 ERVENOW — جميع الحقوق محفوظة"
+        },
+        "bottomNav": {
+          "present": true,
+          "hidden": false,
+          "x": 12,
+          "y": 737,
+          "w": 366,
+          "h": 97,
+          "inFirstScreen": true,
+          "display": "block",
+          "text": "الرئيسية استكشاف طلباتي حسابي +"
+        },
+        "plusFab": {
+          "present": true,
+          "hidden": false,
+          "x": 167,
+          "y": 741,
+          "w": 56,
+          "h": 56,
+          "inFirstScreen": true,
+          "display": "flex",
+          "text": "+"
+        },
+        "search": {
+          "present": false
+        },
+        "location": {
+          "present": false
+        }
+      }
+    }
+  },
+  "mobile-375": {
+    "viewport": {
+      "name": "mobile-375",
+      "width": 375,
+      "height": 812,
+      "isMobile": true
+    },
+    "files": {
+      "atf": "C:\\Users\\USER\\Desktop\\ervenow\\docs\\audit-assets\\home-vip-2026-09-04\\mobile-375-atf.png",
+      "full": "C:\\Users\\USER\\Desktop\\ervenow\\docs\\audit-assets\\home-vip-2026-09-04\\mobile-375-full.png"
+    },
+    "metrics": {
+      "vw": 375,
+      "vh": 812,
+      "docH": 1903,
+      "htmlClass": "erv-mobile-shell erw-viewport-ready erv-plus-nav-active",
+      "bodyClass": "lp-body lp-home-premium erv-typography-pr2-home erv-mobile-foundation",
+      "title": "ERVENOW | المنصة الذكية",
+      "brand": "ERVENOW",
+      "tag": "المنصة الذكية",
+      "hubTitle": "اختر ما يناسبك",
+      "hubCards": [
+        {
+          "href": "/restaurants",
+          "text": "مطاعم"
+        },
+        {
+          "href": "/stores",
+          "text": "متاجر"
+        },
+        {
+          "href": "/delivery-services.html",
+          "text": "توصيل"
+        },
+        {
+          "href": "/services",
+          "text": "خدمات"
+        }
+      ],
+      "navLinks": [
+        {
+          "href": "/",
+          "text": "الرئيسية"
+        },
+        {
+          "href": "/dashboard",
+          "text": "منصة ERVENOW"
+        },
+        {
+          "href": "/live-map",
+          "text": "الخريطة الحية"
+        },
+        {
+          "href": "/login?role=customer",
+          "text": "دخول"
+        }
+      ],
+      "menuLinks": [
+        {
+          "href": "/login",
+          "text": "🔐الدخول",
+          "hidden": false
+        },
+        {
+          "href": "/login?mode=register&role=customer",
+          "text": "➕إنشاء عضوية",
+          "hidden": false
+        },
+        {
+          "href": "/login?role=customer&next=%2Fmy-orders",
+          "text": "📋طلباتي0",
+          "hidden": false
+        },
+        {
+          "href": "/dashboard",
+          "text": "⚙️الإعدادات",
+          "hidden": false
+        },
+        {
+          "href": "#contact",
+          "text": "📞تواصل معنا",
+          "hidden": false
+        },
+        {
+          "href": "/",
+          "text": "•الرئيسية",
+          "hidden": false
+        },
+        {
+          "href": "/dashboard",
+          "text": "•منصة ERVENOW",
+          "hidden": false
+        },
+        {
+          "href": "/live-map",
+          "text": "•الخريطة الحية",
+          "hidden": false
+        },
+        {
+          "href": "/login?role=customer",
+          "text": "•دخول",
+          "hidden": false
+        },
+        {
+          "href": "#trust",
+          "text": "🛡الثقة",
+          "hidden": false
+        },
+        {
+          "href": "#why",
+          "text": "❓كيف تعمل",
+          "hidden": false
+        },
+        {
+          "href": "#contact",
+          "text": "📧تواصل معنا",
+          "hidden": false
+        },
+        {
+          "href": "/track",
+          "text": "📍تتبع الحي",
+          "hidden": false
+        },
+        {
+          "href": "/services-provider.html",
+          "text": "🏪طلبات الخدمات",
+          "hidden": true
+        },
+        {
+          "href": "/driver",
+          "text": "🚗لوحة المندوب",
+          "hidden": true
+        },
+        {
+          "href": "/orders",
+          "text": "🚗طلباتي",
+          "hidden": true
+        },
+        {
+          "href": "logout()",
+          "text": "🚪تسجيل الخروج",
+          "hidden": true
+        }
+      ],
+      "bottomItems": [
+        {
+          "href": "/",
+          "text": "الرئيسية"
+        },
+        {
+          "href": "/start-now",
+          "text": "استكشاف"
+        },
+        {
+          "href": "/login?role=customer&next=%2Fmy-orders",
+          "text": "طلباتي"
+        },
+        {
+          "href": "/login?role=customer",
+          "text": "حسابي"
+        },
+        {
+          "href": "ervPlusNavFab",
+          "text": "+"
+        }
+      ],
+      "els": {
+        "header": {
+          "present": true,
+          "hidden": false,
+          "x": 0,
+          "y": 0,
+          "w": 375,
+          "h": 93,
+          "inFirstScreen": true,
+          "display": "block",
+          "text": "ERVENOW المنصة الذكية"
+        },
+        "logo": {
+          "present": true,
+          "hidden": false,
+          "x": 14,
+          "y": 18,
+          "w": 54,
+          "h": 54,
+          "inFirstScreen": true,
+          "display": "flex",
+          "text": ""
+        },
+        "brand": {
+          "present": true,
+          "hidden": false,
+          "x": 142,
+          "y": 26,
+          "w": 90,
+          "h": 38,
+          "inFirstScreen": true,
+          "display": "flex",
+          "text": "ERVENOW المنصة الذكية"
+        },
+        "hamburger": {
+          "present": true,
+          "hidden": false,
+          "x": 306,
+          "y": 18,
+          "w": 55,
+          "h": 55,
+          "inFirstScreen": true,
+          "display": "inline-flex",
+          "text": ""
+        },
+        "cart": {
+          "present": true,
+          "hidden": true,
+          "x": 0,
+          "y": 0,
+          "w": 0,
+          "h": 0,
+          "inFirstScreen": false,
+          "display": "none",
+          "text": "🛒 0"
+        },
+        "wallet": {
+          "present": true,
+          "hidden": true,
+          "x": 0,
+          "y": 0,
+          "w": 0,
+          "h": 0,
+          "inFirstScreen": false,
+          "display": "none",
+          "text": "رصيدك — ر.س"
+        },
+        "auth": {
+          "present": true,
+          "hidden": true,
+          "x": 0,
+          "y": 0,
+          "w": 0,
+          "h": 0,
+          "inFirstScreen": false,
+          "display": "none",
+          "text": ""
+        },
+        "nav": {
+          "present": true,
+          "hidden": true,
+          "x": 0,
+          "y": 0,
+          "w": 0,
+          "h": 0,
+          "inFirstScreen": false,
+          "display": "none",
+          "text": "الرئيسيةمنصة ERVENOWالخريطة الحيةدخول"
+        },
+        "banner": {
+          "present": true,
+          "hidden": false,
+          "x": 17,
+          "y": 108,
+          "w": 341,
+          "h": 194,
+          "inFirstScreen": true,
+          "display": "block",
+          "text": "promotional ERVENOW وصف مختصر للبنر اكتشف المزيد ← promotional ERVENOW وصف مختصر للبنر اكتشف المزيد ← promotional ERVENOW وصف مختصر للبنر اكتشف المزيد ← promoti"
+        },
+        "bannerWrap": {
+          "present": true,
+          "hidden": false,
+          "x": 10,
+          "y": 101,
+          "w": 355,
+          "h": 208,
+          "inFirstScreen": true,
+          "display": "block",
+          "text": "promotional ERVENOW وصف مختصر للبنر اكتشف المزيد ← promotional ERVENOW وصف مختصر للبنر اكتشف المزيد ← promotional ERVENOW وصف مختصر للبنر اكتشف المزيد ← promoti"
+        },
+        "hub": {
+          "present": true,
+          "hidden": false,
+          "x": 12,
+          "y": 336,
+          "w": 351,
+          "h": 216,
+          "inFirstScreen": true,
+          "display": "grid",
+          "text": "مطاعم متاجر توصيل خدمات"
+        },
+        "hubSection": {
+          "present": true,
+          "hidden": false,
+          "x": 0,
+          "y": 321,
+          "w": 375,
+          "h": 353,
+          "inFirstScreen": true,
+          "display": "flex",
+          "text": "اختر ما يناسبك مطاعم متاجر توصيل خدمات توصيل سريع دفع آمن تتبع لحظي دعم فوري"
+        },
+        "trust": {
+          "present": true,
+          "hidden": false,
+          "x": 75,
+          "y": 564,
+          "w": 225,
+          "h": 102,
+          "inFirstScreen": true,
+          "display": "grid",
+          "text": "توصيل سريع دفع آمن تتبع لحظي دعم فوري"
+        },
+        "stats": {
+          "present": true,
+          "hidden": true,
+          "x": 0,
+          "y": 0,
+          "w": 0,
+          "h": 0,
+          "inFirstScreen": false,
+          "display": "none",
+          "text": "300+ طلب يومي · 45+ مندوب · 120+ متجر"
+        },
+        "why": {
+          "present": true,
+          "hidden": false,
+          "x": 0,
+          "y": 682,
+          "w": 375,
+          "h": 401,
+          "inFirstScreen": true,
+          "display": "block",
+          "text": "كيف تعمل ERVENOW؟ ١ اطلب من مطعم أو متجر أو خدمة. ٢ يوزّع للمندوب الأقرب تلقائياً. ٣ يوصل مع تتبع لحظي حتى الباب."
+        },
+        "contact": {
+          "present": true,
+          "hidden": false,
+          "x": 28,
+          "y": 1107,
+          "w": 319,
+          "h": 125,
+          "inFirstScreen": false,
+          "display": "block",
+          "text": "تواصل واتساب الدعم"
+        },
+        "partner": {
+          "present": true,
+          "hidden": false,
+          "x": 28,
+          "y": 1244,
+          "w": 319,
+          "h": 125,
+          "inFirstScreen": false,
+          "display": "block",
+          "text": "انضم كشريك سجّل متجرك"
+        },
+        "footer": {
+          "present": true,
+          "hidden": false,
+          "x": 0,
+          "y": 1377,
+          "w": 375,
+          "h": 526,
+          "inFirstScreen": false,
+          "display": "block",
+          "text": "ERVENOW سياسة الخصوصية سياسة المدفوعات والإلغاء والاسترجاع سياسة الاستخدام قنوات التواصل © 2026 ERVENOW — جميع الحقوق محفوظة"
+        },
+        "bottomNav": {
+          "present": true,
+          "hidden": false,
+          "x": 12,
+          "y": 705,
+          "w": 351,
+          "h": 97,
+          "inFirstScreen": true,
+          "display": "block",
+          "text": "الرئيسية استكشاف طلباتي حسابي +"
+        },
+        "plusFab": {
+          "present": true,
+          "hidden": false,
+          "x": 160,
+          "y": 709,
+          "w": 56,
+          "h": 56,
+          "inFirstScreen": true,
+          "display": "flex",
+          "text": "+"
+        },
+        "search": {
+          "present": false
+        },
+        "location": {
+          "present": false
+        }
+      }
+    }
+  }
+}

@@ -20,6 +20,7 @@ import "./modules/approvals.js";
 import "./modules/broadcast.js";
 import "./modules/platform-modules.js";
 import "./modules/marketing-studio.js";
+import "./modules/launch-readiness.js";
 import "./modules/bootstrap.js";
 
 globalThis.__ERVENOW_FETCH_TIMEOUT_MS = 30000;

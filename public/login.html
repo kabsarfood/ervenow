@@ -1890,6 +1890,13 @@
 
           var loginOnly = !isRegisterMode();
           var verifyBody = Object.assign({ phone: phone, code: code }, extra);
+          try {
+            var qsTrack = new URLSearchParams(window.location.search);
+            ["utm_source", "utm_medium", "utm_campaign", "utm_content", "gclid", "city", "district"].forEach(function (k) {
+              var v = String(qsTrack.get(k) || "").trim();
+              if (v) verifyBody[k] = v;
+            });
+          } catch (_utm) {}
           if (loginOnly) {
             verifyBody.login_only = true;
             var qsRole = String(
@@ -2018,6 +2025,18 @@
             );
             setTimeout(function () {
               window.location.href = "/driver-login";
+            }, 1400);
+            return;
+          }
+
+          if (res.pre_registration) {
+            show(
+              res.message ||
+                "تم تسجيلك بنجاح ضمن المستخدمين الأوائل في ERVENOW. سنبلغك عند بدء الخدمة.",
+              true
+            );
+            setTimeout(function () {
+              window.location.href = "/pre-registered.html";
             }, 1400);
             return;
           }

@@ -4,6 +4,7 @@
 const express = require("express");
 const { requireAuth } = require("../../shared/middleware/auth");
 const { requireRole } = require("../../shared/middleware/roles");
+const { denyUnlessPublicOrdering } = require("../../shared/middleware/publicOrderingGate");
 const { ok, fail } = require("../../shared/utils/helpers");
 const { sendWhatsApp } = require("../../shared/utils/whatsapp");
 const { buildAuthOtpMessage } = require("../../shared/messages/authWhatsApp");
@@ -234,7 +235,7 @@ router.post("/ledger/deposit", requireAuth, requireRole("admin"), async (req, re
   }
 });
 
-router.post("/ledger/pay", requireAuth, requireRole("customer"), async (req, res) => {
+router.post("/ledger/pay", requireAuth, requireRole("customer"), denyUnlessPublicOrdering, async (req, res) => {
   try {
     const orderId = String(req.body?.order_id || "").trim();
     if (!orderId) return fail(res, "order_id مطلوب", 400);

@@ -13,6 +13,16 @@ function userAwareKey(req) {
   return `ip:${ip}`;
 }
 
+/** POST /api/core/send-otp — حد لكل IP */
+const sendOtpLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  max: Number(process.env.RATE_LIMIT_SEND_OTP_PER_10MIN) || 12,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => "ip:" + clientIp(req),
+  message: { ok: false, error: "RATE_LIMIT", message: "too many OTP requests, try again shortly" },
+});
+
 /** POST /api/checkout — حماية من الإفراط */
 const checkoutLimiter = rateLimit({
   windowMs: 60 * 1000,
@@ -36,5 +46,6 @@ const deliveryOrdersCreateLimiter = rateLimit({
 module.exports = {
   checkoutLimiter,
   deliveryOrdersCreateLimiter,
+  sendOtpLimiter,
   userAwareKey,
 };

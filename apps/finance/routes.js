@@ -1,6 +1,7 @@
 const express = require("express");
 const { requireAuth } = require("../../shared/middleware/auth");
 const { requireRole } = require("../../shared/middleware/roles");
+const { denyUnlessPublicOrdering } = require("../../shared/middleware/publicOrderingGate");
 const { ok, fail } = require("../../shared/utils/helpers");
 const {
   fetchCommissionRates,
@@ -46,7 +47,7 @@ function canReadFinanceOrder(order, u) {
 }
 
 /** POST /orders — إنشاء طلب مالي */
-router.post("/orders", requireAuth, async (req, res) => {
+router.post("/orders", requireAuth, denyUnlessPublicOrdering, async (req, res) => {
   try {
     const body = req.body || {};
     const customerId =

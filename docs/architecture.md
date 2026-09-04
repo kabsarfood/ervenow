@@ -36,7 +36,7 @@ Client (Browser / POS / Mobile)
 
 ## 4. قرارات تثبيت (Stabilization)
 
-- **OTP:** خدمة موحّدة `shared/services/otpChallengeService.js` — وضع `memory` (افتراضي) أو `supabase` عبر `ERVENOW_OTP_BACKEND`.
+- **OTP:** خدمة موحّدة `shared/services/otpChallengeService.js` — افتراضي `supabase` (جدول hashed). `memory` للاختبارات فقط (`ERVENOW_OTP_BACKEND=memory` + `ERVENOW_OTP_ALLOW_MEMORY=1`).
 - **Legacy:** `delivery_orders` غير مستخدم من Node — انظر `docs/legacy-inventory.md`.
 - **تنبيه:** `apps/finance/wallet-server.js` غير آمن للنشر العام.
 

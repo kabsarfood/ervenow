@@ -36,6 +36,13 @@ router.post("/update", async (req, res) => {
   if (!key) {
     return res.status(400).json({ success: false, error: { message: "key مطلوب" } });
   }
+  const blocked = new Set(["public_ordering_enabled", "public_ordering", "launch_targets"]);
+  if (blocked.has(String(key).toLowerCase())) {
+    return res.status(403).json({
+      success: false,
+      error: { message: "استخدم مسار الإطلاق المخصص مع تأكيد. لا يمكن تغيير هذا المفتاح من هنا." },
+    });
+  }
   const { error } = await sb
     .from("platform_settings")
     .update({ value, updated_at: new Date() })

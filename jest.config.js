@@ -4,5 +4,5 @@ module.exports = {
   roots: ["<rootDir>/tests"],
   testMatch: ["**/*.test.js"],
   clearMocks: true,
-  restoreMocks: true,
+  setupFiles: ["<rootDir>/tests/jest.otp-memory.env.js"],
 };

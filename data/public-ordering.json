@@ -1,0 +1,5 @@
+{
+  "enabled": false,
+  "updated_at": "2026-09-02T00:00:00.000Z",
+  "note": "Pre-registration default. Admin toggle requires confirmation. Env PUBLIC_ORDERING_ENABLED=false is a kill switch."
+}

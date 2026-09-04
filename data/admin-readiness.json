@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-09-01T16:26:43.065Z",
+  "updated_at": "2026-09-04T16:25:18.796Z",
   "portal_visits": {
     "customer": {
       "visits": 30,
@@ -12,14 +12,14 @@
       "last_at": "2026-06-19T12:00:40.637Z"
     },
     "driver": {
-      "visits": 416,
+      "visits": 420,
       "unique_users": {},
-      "last_at": "2026-08-07T14:48:55.444Z"
+      "last_at": "2026-09-01T21:13:49.173Z"
     },
     "service": {
-      "visits": 159,
+      "visits": 160,
       "unique_users": {},
-      "last_at": "2026-09-01T16:26:43.065Z"
+      "last_at": "2026-09-01T20:54:30.236Z"
     },
     "transport": {
       "visits": 109,
@@ -41,9 +41,9 @@
       "active_users": {}
     },
     "driver": {
-      "visits": 357,
+      "visits": 359,
       "unique_users": {},
-      "last_at": "2026-08-07T14:48:55.444Z",
+      "last_at": "2026-09-01T21:13:49.173Z",
       "active_users": {}
     },
     "service": {
@@ -76,9 +76,9 @@
       "last_at": null
     },
     "services-provider": {
-      "visits": 28,
+      "visits": 29,
       "unique_users": {},
-      "last_at": "2026-08-07T14:49:14.884Z"
+      "last_at": "2026-09-01T20:54:30.236Z"
     }
   },
   "redirect_errors": {

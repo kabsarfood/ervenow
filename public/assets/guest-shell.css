@@ -1106,4 +1106,46 @@ body.guest-shell-page.stores-page {
   }
 }
 
+.erv-prereg-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1rem;
+  margin: 0;
+  padding: 0.75rem clamp(0.75rem, 3vw, 1.5rem);
+  padding-left: max(0.75rem, env(safe-area-inset-left));
+  padding-right: max(0.75rem, env(safe-area-inset-right));
+  background: #3d2213;
+  color: #f8f4ee;
+  line-height: 1.5;
+  font-size: clamp(0.85rem, 2.4vw, 1rem);
+}
+.erv-prereg-banner p {
+  margin: 0;
+  flex: 1 1 12rem;
+}
+.erv-prereg-banner__cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0.4rem 1rem;
+  border-radius: 999px;
+  background: #f4c430;
+  color: #3d2213;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+}
+@media (max-width: 640px) {
+  .erv-prereg-banner {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .erv-prereg-banner__cta {
+    width: 100%;
+  }
+}
+
 @import url("/assets/erv-interactive-surfaces.css");

@@ -153,4 +153,22 @@ describe("P0-02 admin settings auth", () => {
     expect(status).toBe(200);
     expect(body.success).toBe(true);
   });
+
+  test("admin cannot flip public_ordering_enabled via generic settings", async () => {
+    createServiceClient.mockReturnValue(
+      userClient({ id: "a1", role: "admin", status: "active", phone: "966503333333" })
+    );
+    const token = signUser("a1", "admin", "966503333333");
+    const app = makeApp();
+    const { status, body } = await withServer(app, async (port) => {
+      const res = await fetch(`http://127.0.0.1:${port}/api/admin/settings/update`, {
+        method: "POST",
+        headers: { Authorization: "Bearer " + token, "Content-Type": "application/json" },
+        body: JSON.stringify({ key: "public_ordering_enabled", value: "1" }),
+      });
+      return { status: res.status, body: await res.json().catch(() => ({})) };
+    });
+    expect(status).toBe(403);
+    expect(body.success).toBe(false);
+  });
 });

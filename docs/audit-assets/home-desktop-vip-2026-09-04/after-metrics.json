@@ -1,0 +1,251 @@
+{
+  "desktop-1440": {
+    "header": {
+      "y": 0,
+      "w": 1440,
+      "h": 73,
+      "display": "block",
+      "hidden": false
+    },
+    "banner": {
+      "y": 94,
+      "w": 1346,
+      "h": 272,
+      "display": "block",
+      "hidden": false
+    },
+    "hub": {
+      "y": 393,
+      "w": 1200,
+      "h": 124,
+      "display": "grid",
+      "hidden": false
+    },
+    "nav": {
+      "y": 10,
+      "w": 834,
+      "h": 54,
+      "display": "flex",
+      "hidden": false
+    },
+    "bottomNav": null,
+    "htmlClass": "erw-viewport-ready",
+    "docH": 1215
+  },
+  "desktop-1280": {
+    "header": {
+      "y": 0,
+      "w": 1280,
+      "h": 73,
+      "display": "block",
+      "hidden": false
+    },
+    "banner": {
+      "y": 94,
+      "w": 1218,
+      "h": 258,
+      "display": "block",
+      "hidden": false
+    },
+    "hub": {
+      "y": 379,
+      "w": 1203,
+      "h": 120,
+      "display": "grid",
+      "hidden": false
+    },
+    "nav": {
+      "y": 10,
+      "w": 757,
+      "h": 54,
+      "display": "flex",
+      "hidden": false
+    },
+    "bottomNav": null,
+    "htmlClass": "erw-viewport-ready",
+    "docH": 1222
+  },
+  "tablet-768": {
+    "header": {
+      "y": 0,
+      "w": 768,
+      "h": 84,
+      "display": "block",
+      "hidden": false
+    },
+    "banner": {
+      "y": 101,
+      "w": 722,
+      "h": 302,
+      "display": "block",
+      "hidden": false
+    },
+    "hub": {
+      "y": 441,
+      "w": 728,
+      "h": 136,
+      "display": "grid",
+      "hidden": false
+    },
+    "nav": {
+      "y": 0,
+      "w": 0,
+      "h": 0,
+      "display": "none",
+      "hidden": true
+    },
+    "bottomNav": null,
+    "htmlClass": "erw-viewport-ready",
+    "docH": 1614
+  },
+  "mobile-390": {
+    "header": {
+      "y": 0,
+      "w": 390,
+      "h": 93,
+      "display": "block",
+      "hidden": false
+    },
+    "banner": {
+      "y": 108,
+      "w": 356,
+      "h": 202,
+      "display": "block",
+      "hidden": false
+    },
+    "hub": {
+      "y": 345,
+      "w": 366,
+      "h": 216,
+      "display": "grid",
+      "hidden": false
+    },
+    "nav": {
+      "y": 0,
+      "w": 0,
+      "h": 0,
+      "display": "none",
+      "hidden": true
+    },
+    "bottomNav": {
+      "y": 737,
+      "w": 366,
+      "h": 97,
+      "display": "block",
+      "hidden": false
+    },
+    "htmlClass": "erv-mobile-shell erw-viewport-ready erv-plus-nav-active",
+    "docH": 1914
+  },
+  "tablet-1024": {
+    "header": {
+      "y": 0,
+      "w": 1024,
+      "h": 84,
+      "display": "block",
+      "hidden": false
+    },
+    "banner": {
+      "y": 101,
+      "w": 978,
+      "h": 268,
+      "display": "block",
+      "hidden": false
+    },
+    "hub": {
+      "y": 412,
+      "w": 984,
+      "h": 136,
+      "display": "grid",
+      "hidden": false
+    },
+    "nav": {
+      "y": 0,
+      "w": 0,
+      "h": 0,
+      "display": "none",
+      "hidden": true
+    },
+    "bottomNav": null,
+    "htmlClass": "erw-viewport-ready",
+    "docH": 1603
+  },
+  "mobile-430": {
+    "header": {
+      "y": 0,
+      "w": 430,
+      "h": 93,
+      "display": "block",
+      "hidden": false
+    },
+    "banner": {
+      "y": 108,
+      "w": 396,
+      "h": 222,
+      "display": "block",
+      "hidden": false
+    },
+    "hub": {
+      "y": 366,
+      "w": 406,
+      "h": 220,
+      "display": "grid",
+      "hidden": false
+    },
+    "nav": {
+      "y": 0,
+      "w": 0,
+      "h": 0,
+      "display": "none",
+      "hidden": true
+    },
+    "bottomNav": {
+      "y": 825,
+      "w": 406,
+      "h": 97,
+      "display": "block",
+      "hidden": false
+    },
+    "htmlClass": "erv-mobile-shell erw-viewport-ready erv-plus-nav-active",
+    "docH": 1943
+  },
+  "mobile-375": {
+    "header": {
+      "y": 0,
+      "w": 375,
+      "h": 93,
+      "display": "block",
+      "hidden": false
+    },
+    "banner": {
+      "y": 108,
+      "w": 341,
+      "h": 194,
+      "display": "block",
+      "hidden": false
+    },
+    "hub": {
+      "y": 336,
+      "w": 351,
+      "h": 216,
+      "display": "grid",
+      "hidden": false
+    },
+    "nav": {
+      "y": 0,
+      "w": 0,
+      "h": 0,
+      "display": "none",
+      "hidden": true
+    },
+    "bottomNav": {
+      "y": 705,
+      "w": 351,
+      "h": 97,
+      "display": "block",
+      "hidden": false
+    },
+    "htmlClass": "erv-mobile-shell erw-viewport-ready erv-plus-nav-active",
+    "docH": 1903
+  }
+}

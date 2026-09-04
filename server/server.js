@@ -351,8 +351,17 @@ app.get("/api/health/full", async (_req, res) => {
     result.services.redis = "skipped";
   } else {
     result.services.redis = redisPing.ok ? "ok" : "fail";
-    if (!redisPing.ok) result.ok = false;
   }
+
+  const { getTwilioRuntimeStatus } = require("../shared/utils/twilioRuntime");
+  const { getSocketRuntimeStatus } = require("../shared/utils/socketRuntime");
+  const { otpBackendMode } = require("../shared/services/otpChallengeService");
+  const { isPublicOrderingEnabled } = require("../shared/utils/publicOrdering");
+  const twilio = getTwilioRuntimeStatus();
+  result.services.twilio = twilio.status;
+  result.services.socket = getSocketRuntimeStatus().mode;
+  result.services.otp_backend = otpBackendMode();
+  result.services.ordering = isPublicOrderingEnabled() ? "enabled" : "disabled";
 
   res.status(result.ok ? 200 : 503).json(result);
 });
@@ -709,6 +718,18 @@ app.use((err, _req, res, _next) => {
           "[boot] عرّف CORS_ORIGINS أو ERVENOW_PUBLIC_URL (يُضاف أصل الموقع تلقائياً للـ CORS) وإلا المتصفح قد يمنع طلبات API من نطاق آخر."
         );
       }
+      const { otpBackendMode } = require("../shared/services/otpChallengeService");
+      const { getTwilioRuntimeStatus } = require("../shared/utils/twilioRuntime");
+      const { getSocketRuntimeStatus } = require("../shared/utils/socketRuntime");
+      const { isPublicOrderingEnabled } = require("../shared/utils/publicOrdering");
+      console.log("[boot] OTP backend=" + otpBackendMode());
+      const twBoot = getTwilioRuntimeStatus();
+      console.log("[boot] Twilio=" + twBoot.status + (twBoot.from_last4 ? " from_last4=" + twBoot.from_last4 : ""));
+      if (twBoot.sandbox) {
+        console.warn("[boot] Twilio sender looks like WhatsApp Sandbox — OTP delivery will fail for numbers not in the sandbox.");
+      }
+      console.log("[boot] Socket.IO mode=" + getSocketRuntimeStatus().mode);
+      console.log("[boot] Public ordering=" + (isPublicOrderingEnabled() ? "enabled" : "disabled (pre-registration)"));
     });
     startRetryNotificationsWorker();
     startClosedOrdersPurgeWorker();

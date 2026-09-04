@@ -817,6 +817,34 @@
     document.head.appendChild(h);
   }
 
+  function loadPreRegistrationBanner() {
+    var path = (global.location && global.location.pathname) || "";
+    if (/\/admin|\/driver-app|\/pending-approval/i.test(path)) return;
+    var api = global.PlatformAPI;
+    var url = api && typeof api.apiUrl === "function" ? api.apiUrl("/api/core/public-config") : "/api/core/public-config";
+    fetch(url, { credentials: "same-origin" })
+      .then(function (r) {
+        return r.json().catch(function () {
+          return {};
+        });
+      })
+      .then(function (j) {
+        if (!j || j.pre_registration !== true) return;
+        if (document.getElementById("ervPreRegBanner")) return;
+        var bar = document.createElement("div");
+        bar.id = "ervPreRegBanner";
+        bar.className = "erv-prereg-banner";
+        bar.setAttribute("role", "status");
+        bar.innerHTML =
+          '<p>التسجيل مفتوح الآن — الطلبات التجارية لم تُطلق بعد. سجّل برقمك وسنبلغك عند بدء الخدمة.</p>' +
+          '<a class="erv-prereg-banner__cta" href="/login?mode=register&amp;role=customer">تسجيل مسبق</a>';
+        var header = document.querySelector(".dash-site-header") || document.querySelector("header");
+        if (header && header.parentNode) header.parentNode.insertBefore(bar, header.nextSibling);
+        else document.body.insertBefore(bar, document.body.firstChild);
+      })
+      .catch(function () {});
+  }
+
   function init(opts) {
     opts = opts || {};
     ensureMobileFoundation();
@@ -843,6 +871,7 @@
     whenPlatformApiReady(function () {
       initAuthHeader();
     });
+    loadPreRegistrationBanner();
   }
 
   function onStorageAuth(ev) {

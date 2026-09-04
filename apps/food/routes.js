@@ -1,6 +1,7 @@
 const express = require("express");
 const { requireAuth } = require("../../shared/middleware/auth");
 const { requireRole } = require("../../shared/middleware/roles");
+const { denyUnlessPublicOrdering } = require("../../shared/middleware/publicOrderingGate");
 const { ok, fail } = require("../../shared/utils/helpers");
 const {
   insertDeliveryOrderWithRetry,
@@ -69,7 +70,7 @@ router.get("/orders", requireAuth, async (req, res) => {
 const { normalizeIdempotencyKey } = require("../../shared/utils/idempotency");
 
 /** إنشاء طلب مطعم + ربط طلب توصيل */
-router.post("/orders", requireAuth, async (req, res) => {
+router.post("/orders", requireAuth, denyUnlessPublicOrdering, async (req, res) => {
   try {
     const { deprecateLegacyOrderRoute, UNIFIED_ORDER_CREATE } = require("../../shared/middleware/deprecateLegacyRoute");
     deprecateLegacyOrderRoute(req, res, "POST /api/food/orders", UNIFIED_ORDER_CREATE);

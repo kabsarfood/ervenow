@@ -7,6 +7,18 @@ const { sendWhatsApp } = require("../../shared/utils/whatsapp");
 const { accountApprovedBody } = require("../../shared/messages/accountApprovalWhatsApp");
 const { getRiyadhDate } = require("../delivery/service");
 const { readStateAsync, writeState } = require("../../shared/utils/siteMaintenanceStore");
+const { insertAuditEvent } = require("../../shared/services/auditLog");
+const {
+  getPublicOrderingState,
+  writePublicOrderingFile,
+  parseTriState,
+  isPublicOrderingEnabled,
+} = require("../../shared/utils/publicOrdering");
+const { computeLaunchReadiness, registrationTrend7d } = require("../../shared/services/launchReadiness");
+const { pingRedis } = require("../../queues/deliveryQueue");
+const { getTwilioRuntimeStatus } = require("../../shared/utils/twilioRuntime");
+const { getSocketRuntimeStatus } = require("../../shared/utils/socketRuntime");
+const { otpBackendMode } = require("../../shared/services/otpChallengeService");
 const {
   readStateAsync: readLiveMapPublicAsync,
   writeState: writeLiveMapPublicState,
@@ -612,6 +624,91 @@ router.post("/site-maintenance", requireAuth, requireRole("admin"), async (req, 
   } catch (e) {
     return fail(res, e.message || String(e), 500);
   }
+});
+
+router.get("/launch-readiness", requireAuth, requireRole("admin"), async (_req, res) => {
+  try {
+    const data = await computeLaunchReadiness();
+    return ok(res, data);
+  } catch (e) {
+    return fail(res, e.message || String(e), 500);
+  }
+});
+
+router.get("/launch-trend", requireAuth, requireRole("admin"), async (_req, res) => {
+  try {
+    const data = await registrationTrend7d();
+    return ok(res, data);
+  } catch (e) {
+    return fail(res, e.message || String(e), 500);
+  }
+});
+
+router.get("/public-ordering", requireAuth, requireRole("admin"), async (_req, res) => {
+  return ok(res, getPublicOrderingState());
+});
+
+router.post("/public-ordering", requireAuth, requireRole("admin"), async (req, res) => {
+  try {
+    const enabled = !!req.body?.enabled;
+    const confirm = String(req.body?.confirm || "").trim();
+    const expected = enabled ? "ENABLE_PUBLIC_ORDERING" : "DISABLE_PUBLIC_ORDERING";
+    if (confirm !== expected) {
+      return fail(res, "أكد العملية بكتابة " + expected, 400, { reason: "CONFIRM_REQUIRED" });
+    }
+    const envLock = parseTriState(process.env.PUBLIC_ORDERING_ENABLED);
+    if (envLock === false && enabled) {
+      return fail(res, "PUBLIC_ORDERING_ENABLED=false يمنع الفتح من اللوحة. غيّر البيئة ثم أعد التشغيل.", 409, {
+        reason: "ENV_KILL_SWITCH",
+      });
+    }
+    if (envLock === true && !enabled) {
+      return fail(res, "PUBLIC_ORDERING_ENABLED=true قفل مفتوح من البيئة. غيّر البيئة لإغلاق الطلبات.", 409, {
+        reason: "ENV_LOCK_OPEN",
+      });
+    }
+    const saved = writePublicOrderingFile(enabled, req.appUser && req.appUser.id);
+    const sb = createServiceClient();
+    await insertAuditEvent(sb, {
+      scope: "launch",
+      action: enabled ? "public_ordering_on" : "public_ordering_off",
+      actor_type: "admin",
+      actor_id: req.appUser && req.appUser.id,
+      ip: req.ip,
+      metadata: { confirm: true, auto_launch: false },
+      payload_after: saved,
+    });
+    return ok(res, {
+      ...getPublicOrderingState(),
+      message: enabled
+        ? "تم تفعيل الطلبات العامة يدوياً. العداد لا يفتح الطلبات تلقائياً."
+        : "الطلبات العامة مغلقة — وضع التسجيل المسبق.",
+    });
+  } catch (e) {
+    return fail(res, e.message || String(e), 500);
+  }
+});
+
+router.get("/ops-health", requireAuth, requireRole("admin"), async (_req, res) => {
+  const redis = await pingRedis();
+  const twilio = getTwilioRuntimeStatus();
+  const socket = getSocketRuntimeStatus();
+  const sb = createServiceClient();
+  let db = "fail";
+  if (sb) {
+    const probe = await sb.from("users").select("id").limit(1);
+    db = probe.error ? "fail" : "healthy";
+  }
+  return ok(res, {
+    api: "healthy",
+    db,
+    redis: redis.skipped ? "skipped" : redis.ok ? "healthy" : "fail",
+    redis_optional: true,
+    twilio: twilio.status,
+    socket: socket.mode,
+    otp_backend: otpBackendMode(),
+    ordering: isPublicOrderingEnabled() ? "enabled" : "disabled",
+  });
 });
 
 router.get("/notification-audit", requireAuth, requireRole("admin"), async (_req, res) => {

@@ -2500,6 +2500,10 @@ async function runExecuteCartCheckout() {
       window.location.href = "/login?mode=register&role=customer&next=" + encodeURIComponent("/checkout");
       return;
     }
+    if (/SERVICE_NOT_LAUNCHED|لم تُطلق|التسجيل مفتوح/i.test(msg)) {
+      showError("التسجيل مفتوح — الطلبات التجارية لم تُطلق بعد. سنبلغك عند بدء الخدمة.");
+      return;
+    }
     showError(msg);
   } finally {
     if (!redirecting && btn) {

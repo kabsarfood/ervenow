@@ -375,6 +375,8 @@ app.loadPanelById = function (panelId) {
     });
   };
   switch (panelId) {
+    case "panelLaunchReadiness":
+      return done(app.loadLaunchReadinessPanel());
     case "panelOrders":
       return done(app.loadRecentOrders());
     case "panelNotifications":
