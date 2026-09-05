@@ -6,6 +6,8 @@
  * LEGACY_* للمتاجر المسجّلة سابقاً بـ slugs قديمة — تبقى صالحة للتحقق والعرض.
  */
 
+const { parseStoreCategorySlugs } = require("./utils/storeCategorySlugs");
+
 const LEGACY_RESTAURANT_CATEGORY_SLUGS = [
   "bukhari_mandi",
   "burger_broasted",
@@ -101,13 +103,21 @@ function storeNameLooksLikeRestaurant(row) {
 }
 
 function isRestaurantCategoryKey(value) {
-  const s = String(value || "")
-    .trim()
-    .toLowerCase();
-  return RESTAURANT_CATEGORY_SET.has(s);
+  const tokens = parseStoreCategorySlugs(value);
+  if (!tokens.length) {
+    const s = String(value || "")
+      .trim()
+      .toLowerCase();
+    return RESTAURANT_CATEGORY_SET.has(s);
+  }
+  return tokens.some((s) => RESTAURANT_CATEGORY_SET.has(s));
 }
 
 function normalizeRestaurantCategory(value) {
+  const tokens = parseStoreCategorySlugs(value);
+  for (let i = 0; i < tokens.length; i += 1) {
+    if (RESTAURANT_CATEGORY_SET.has(tokens[i])) return tokens[i];
+  }
   const s = String(value || "")
     .trim()
     .toLowerCase();
@@ -182,6 +192,8 @@ function restaurantRowMatchesCuisineFilter(row, cuisineSlug, allowedSlugs) {
   const valid = allowedSlugs && allowedSlugs.size ? allowedSlugs : RESTAURANT_CATEGORY_SET;
   if (!want || !valid.has(want)) return true;
   if (!storeRowCountsAsRestaurant(row)) return false;
+  const tokens = parseStoreCategorySlugs(row.category);
+  if (tokens.some((c) => restaurantCategoryMatchesCuisineSlug(c, want))) return true;
   const effective =
     resolveRestaurantBrowseCategory(row) ||
     String(row.category || "")

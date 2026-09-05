@@ -2174,18 +2174,42 @@
       @media (max-width: 768px) {
         .lp-why__grid {
           grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 10px;
         }
         .lp-why__grid .lp-why-item:last-child {
           grid-column: 1 / -1;
         }
       }
 
-      @media (max-width: 520px) {
-        .lp-why__grid {
-          grid-template-columns: 1fr;
+      @media (max-width: 640px) {
+        .lp-why-item {
+          flex-direction: row;
+          align-items: flex-start;
+          gap: 10px;
+          padding: 12px 10px;
         }
         .lp-why__grid .lp-why-item:last-child {
-          grid-column: auto;
+          padding: 14px;
+        }
+        .lp-why-item > div {
+          display: flex;
+          flex-wrap: wrap;
+          align-items: baseline;
+          gap: 0 6px;
+          min-width: 0;
+        }
+        .lp-why-item__mark {
+          width: 32px;
+          height: 32px;
+          font-size: 0.95rem;
+        }
+        .lp-why-item h3 {
+          margin: 0;
+          font-size: clamp(0.92rem, 3.8vw, 1.02rem);
+        }
+        .lp-why-item p {
+          font-size: clamp(0.75rem, 3.2vw, 0.84rem);
+          line-height: 1.5;
         }
       }
 
@@ -2797,7 +2821,7 @@
     <link rel="stylesheet" href="/assets/mobile-harmony.css?erv=20260901o" />
     <link rel="stylesheet" href="/assets/design-system/erv-typography-pr1-tokens.css" />
     <link rel="stylesheet" href="/assets/marketing-studio/home-marketing.css?erv=20260701m1" />
-    <link rel="stylesheet" href="/assets/home-stage-expand.css?erv=20260901j" />
+    <link rel="stylesheet" href="/assets/home-stage-expand.css?erv=20260904m" />
     <link rel="stylesheet" href="/assets/home-desktop-vip.css?erv=20260904b" />
   </head>
   <body class="lp-body lp-home-premium erv-typography-pr2-home">
@@ -3300,7 +3324,8 @@
     <script src="/assets/guest-offers-carousel.js?erv=20260630" defer></script>
     <script src="/assets/guestBrowse.js"></script>
     <script src="/assets/ervenow-toggle.js"></script>
-    <script src="/assets/guest-shell.js?erv=20260612"></script>
+    <script src="/assets/guest-shell.js?erv=20260905b"></script>
+    <script src="/assets/pre-reg-banner.js?erv=20260905b" defer></script>
     <script>
       function goLogin() {
         window.location.href = "/login";

@@ -3,7 +3,9 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover" />
-    <script src="/assets/viewport-fit.js?erv=20260612"></script>
+    <script src="/assets/viewport-fit.js?erv=20260905a"></script>
+    <script src="/assets/pre-reg-banner.js?erv=20260905b" defer></script>
+    <script src="/assets/form-draft.js?erv=20260905a" defer></script>
     <meta name="theme-color" content="#f8f4ee" />
     <title>ERVENOW | تسجيل متجر</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -14,7 +16,8 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="/assets/ervenow-responsive.css" />
     <link rel="stylesheet" href="/assets/responsive-audit-base.css" />
-    <link rel="stylesheet" href="/assets/register-store-page.css?erv=20260904e" />
+    <link rel="stylesheet" href="/assets/register-store-page.css?erv=20260905u" />
+    <link rel="stylesheet" href="/assets/register-store-desktop-vip.css?erv=20260905u" />
     <script>
       (function () {
         var root = document.documentElement;
@@ -56,17 +59,20 @@
     <div class="guest-section-hero reg-store-hero" aria-labelledby="regStoreHeroTitle">
       <div class="guest-section-hero__inner reg-store-hero__inner">
         <p class="guest-section-hero__eyebrow">انضم إلى ERVENOW</p>
-        <h1 class="guest-section-hero__title" id="regStoreHeroTitle">تسجيل متجر جديد</h1>
-        <p class="guest-section-hero__sub reg-store-hero__sub">سجّل نشاطك التجاري — نراجع طلبك ونفعّل لوحة التاجر خلال فترة قصيرة.</p>
-        <p class="reg-store-hero__tip">
-          <span class="reg-store-hero__tip-ic" aria-hidden="true">📍</span>
-          <span class="reg-store-hero__tip-text">تحديد موقع المتجر بدقة يزيد ظهورك في البحث وفرص البيع.</span>
-        </p>
-      </div>
-    </div>
-
-    <div class="dash-main">
-      <div class="layout reg-store-layout reg-store-page">
+        <h1 class="guest-section-hero__title" id="regStoreHeroTitle">
+          <span class="reg-store-hero__title-mobile">تسجيل متجر جديد</span>
+          <span class="reg-store-hero__title-desk">سجّل متجرك وانضم إلى Ervenow</span>
+        </h1>
+        <div class="reg-store-hero__cards">
+          <p class="guest-section-hero__sub reg-store-hero__sub reg-store-hero__sub-mobile reg-store-hero__mini">
+            <span class="reg-store-hero__tip-ic" aria-hidden="true">⚡</span>
+            <span class="reg-store-hero__tip-text">نراجع طلبك ونفعّل لوحتك سريعاً.</span>
+          </p>
+          <p class="reg-store-hero__tip reg-store-hero__mini">
+            <span class="reg-store-hero__tip-ic" aria-hidden="true">📍</span>
+            <span class="reg-store-hero__tip-text">موقع دقيق يزيد ظهورك والبيع.</span>
+          </p>
+        </div>
         <ul class="reg-store-perks" aria-label="مزايا التسجيل">
           <li class="reg-store-perks__item">
             <span class="reg-store-perks__badge" aria-hidden="true">✓</span>
@@ -81,21 +87,28 @@
             <span class="reg-store-perks__text"><strong>نطاق توصيل</strong><span>حسب موقع متجرك</span></span>
           </li>
         </ul>
+      </div>
+    </div>
 
+    <div class="dash-main">
+      <div class="layout reg-store-layout reg-store-page">
+
+        <div class="reg-store-desk">
+        <div class="reg-store-desk__main">
         <nav class="reg-store-progress" aria-label="خطوات التسجيل">
           <ol class="reg-store-progress__list">
             <li class="reg-store-progress__step is-current"><span>1</span> البيانات</li>
             <li class="reg-store-progress__step"><span>2</span> الموقع</li>
             <li class="reg-store-progress__step"><span>3</span> التوصيل</li>
             <li class="reg-store-progress__step"><span>4</span> الهوية</li>
-            <li class="reg-store-progress__step"><span>5</span> اختياري</li>
+            <li class="reg-store-progress__step"><span>5</span> السجل</li>
             <li class="reg-store-progress__step"><span>6</span> الدفع</li>
           </ol>
         </nav>
 
         <div class="card reg-store-form-card">
-          <section class="reg-store-section" id="regStep1" aria-labelledby="h-store-data">
-            <div class="reg-store-section__head">
+          <details class="reg-store-section reg-store-acc" id="regStep1" open>
+            <summary class="reg-store-section__head">
               <span class="reg-store-section__num" aria-hidden="true">1</span>
               <div>
                 <div class="reg-store-section__meta">
@@ -104,137 +117,137 @@
                 </div>
                 <p class="reg-store-section__hint">الاسم، النشاط، والجوال للتواصل والتفعيل.</p>
               </div>
+            </summary>
+            <div class="reg-store-section__body reg-store-step1-body">
+            <div class="reg-store-step1-name">
+              <label for="name">اسم المتجر</label>
+              <input id="name" type="text" autocomplete="organization" placeholder="مثال: مطعم النخبة" />
             </div>
-            <label for="name">اسم المتجر</label>
-            <input id="name" type="text" autocomplete="organization" placeholder="مثال: مطعم النخبة" />
 
-            <div class="field-gap">
-              <span class="reg-store-field-label" id="storeTypeLabel">فئة النشاط</span>
-              <div class="reg-store-type-grid" id="storeTypePicker" role="radiogroup" aria-labelledby="storeTypeLabel">
-                <button type="button" class="reg-store-type-card is-active" data-type="restaurant" role="radio" aria-checked="true">
-                  <span class="reg-store-type-card__ic" aria-hidden="true">🍽️</span>
-                  <span class="reg-store-type-card__label">مطعم</span>
+            <div class="field-gap reg-store-step1-type">
+              <label class="reg-store-field-label" for="type" id="storeTypeLabel">فئة النشاط</label>
+              <div class="reg-store-type-vip" id="storeTypePicker" role="radiogroup" aria-labelledby="storeTypeLabel">
+                <button type="button" class="reg-store-type-vip__card is-active" data-type="restaurant" role="radio" aria-checked="true">
+                  <span class="reg-store-type-vip__check" aria-hidden="true">✓</span>
+                  <span class="reg-store-type-vip__ic" aria-hidden="true">🍽️</span>
+                  <span class="reg-store-type-vip__name">مطعم</span>
                 </button>
-                <button type="button" class="reg-store-type-card" data-type="pharmacy" role="radio" aria-checked="false">
-                  <span class="reg-store-type-card__ic" aria-hidden="true">💊</span>
-                  <span class="reg-store-type-card__label">صيدلية</span>
+                <button type="button" class="reg-store-type-vip__card" data-type="pharmacy" role="radio" aria-checked="false">
+                  <span class="reg-store-type-vip__check" aria-hidden="true">✓</span>
+                  <span class="reg-store-type-vip__ic" aria-hidden="true">💊</span>
+                  <span class="reg-store-type-vip__name">صيدلية</span>
                 </button>
-                <button type="button" class="reg-store-type-card" data-type="supermarket" role="radio" aria-checked="false">
-                  <span class="reg-store-type-card__ic" aria-hidden="true">🛒</span>
-                  <span class="reg-store-type-card__label">سوبرماركت</span>
+                <button type="button" class="reg-store-type-vip__card" data-type="supermarket" role="radio" aria-checked="false">
+                  <span class="reg-store-type-vip__check" aria-hidden="true">✓</span>
+                  <span class="reg-store-type-vip__ic" aria-hidden="true">🛒</span>
+                  <span class="reg-store-type-vip__name">سوبرماركت</span>
                 </button>
-                <button type="button" class="reg-store-type-card" data-type="beauty_care" role="radio" aria-checked="false">
-                  <span class="reg-store-type-card__ic" aria-hidden="true">✨</span>
-                  <span class="reg-store-type-card__label">التجميل والعناية</span>
+                <button type="button" class="reg-store-type-vip__card" data-type="beauty_care" role="radio" aria-checked="false">
+                  <span class="reg-store-type-vip__check" aria-hidden="true">✓</span>
+                  <span class="reg-store-type-vip__ic" aria-hidden="true">✨</span>
+                  <span class="reg-store-type-vip__name">التجميل والعناية</span>
                 </button>
-                <button type="button" class="reg-store-type-card" data-type="flowers_gifts" role="radio" aria-checked="false">
-                  <span class="reg-store-type-card__ic" aria-hidden="true">💐</span>
-                  <span class="reg-store-type-card__label">ورود وهدايا</span>
+                <button type="button" class="reg-store-type-vip__card" data-type="flowers_gifts" role="radio" aria-checked="false">
+                  <span class="reg-store-type-vip__check" aria-hidden="true">✓</span>
+                  <span class="reg-store-type-vip__ic" aria-hidden="true">💐</span>
+                  <span class="reg-store-type-vip__name">ورود وهدايا</span>
                 </button>
-                <button type="button" class="reg-store-type-card" data-type="clothing" role="radio" aria-checked="false">
-                  <span class="reg-store-type-card__ic" aria-hidden="true">👗</span>
-                  <span class="reg-store-type-card__label">الملابس والأزياء</span>
-                </button>
-                <button type="button" class="reg-store-type-card" data-type="other" role="radio" aria-checked="false">
-                  <span class="reg-store-type-card__ic" aria-hidden="true">🏷️</span>
-                  <span class="reg-store-type-card__label">غيره</span>
+                <button type="button" class="reg-store-type-vip__card" data-type="clothing" role="radio" aria-checked="false">
+                  <span class="reg-store-type-vip__check" aria-hidden="true">✓</span>
+                  <span class="reg-store-type-vip__ic" aria-hidden="true">👗</span>
+                  <span class="reg-store-type-vip__name">الملابس والأزياء</span>
                 </button>
               </div>
-              <select id="type" class="reg-store-type-select-hidden" tabindex="-1" aria-hidden="true">
+              <select id="type" class="reg-store-select">
                 <option value="restaurant">مطعم</option>
                 <option value="pharmacy">صيدلية</option>
                 <option value="supermarket">سوبرماركت</option>
                 <option value="beauty_care">التجميل والعناية</option>
                 <option value="flowers_gifts">ورود وهدايا</option>
                 <option value="clothing">الملابس والأزياء</option>
-                <option value="other">غيره</option>
               </select>
             </div>
 
-            <div id="restaurantCategoryWrap" class="field-gap" style="display: none">
-              <div class="reg-store-cuisine-block" aria-labelledby="regStoreCuisineTitle">
-                <div class="reg-store-cuisine-block__head">
-                  <span class="reg-store-cuisine-block__emoji" aria-hidden="true">🍽️</span>
-                  <div>
-                    <p class="reg-store-cuisine-block__title" id="regStoreCuisineTitle">تصنيفات المطعم</p>
-                    <p class="reg-store-cuisine-block__sub">
-                      اختر تصنيفاً واحداً — يظهر مطعمك في بحث وتصفية
-                      <strong>المطاعم</strong> للزوار والمتسوقين (كبسة، شاورما، برقر…).
-                    </p>
-                  </div>
-                </div>
+            <details class="reg-store-dd field-gap" id="restaurantCategoryWrap">
+              <summary class="reg-store-dd__sum">
+                <span class="reg-store-dd__label" id="regStoreCuisineTitle">التصنيفات</span>
+                <span class="reg-store-dd__value" id="restaurantCategorySummary">اختر تصنيفاً أو أكثر</span>
+              </summary>
+              <div class="reg-store-dd__panel">
+                <p class="reg-store-dd__hint">يمكنك اختيار أكثر من تصنيف — يظهر مطعمك في بحث وتصفية المطاعم.</p>
                 <div
                   class="reg-store-cuisine-grid"
                   id="restaurantCategoryPicker"
-                  role="radiogroup"
+                  role="group"
                   aria-labelledby="regStoreCuisineTitle"
                   aria-required="true"
                 ></div>
                 <p class="reg-store-cuisine-hint" id="restaurantCategoryHint">لم يُختر تصنيف بعد.</p>
-                <select id="restaurant_category" class="reg-store-category-select-hidden" tabindex="-1" aria-hidden="true">
+                <select id="restaurant_category" class="reg-store-category-select-hidden" multiple tabindex="-1" aria-hidden="true">
                   <option value="">— اختر التصنيف —</option>
                 </select>
               </div>
-            </div>
+            </details>
 
-            <div id="marketCategoryWrap" class="field-gap" style="display: none">
-              <div class="reg-store-cuisine-block" aria-labelledby="regStoreMarketTitle">
-                <div class="reg-store-cuisine-block__head">
-                  <span class="reg-store-cuisine-block__emoji" aria-hidden="true">🛒</span>
-                  <div>
-                    <p class="reg-store-cuisine-block__title" id="regStoreMarketTitle">تصنيف السوبرماركت</p>
-                    <p class="reg-store-cuisine-block__sub">
-                      اختر صنفاً واحداً بزر الاختيار — يظهر متجرك حسب القسم (خضار، لحوم، ألبان…) وليس كسوبرماركت عام.
-                    </p>
-                  </div>
-                </div>
+            <details class="reg-store-dd field-gap" id="marketCategoryWrap" style="display: none">
+              <summary class="reg-store-dd__sum">
+                <span class="reg-store-dd__label" id="regStoreMarketTitle">التصنيفات</span>
+                <span class="reg-store-dd__value" id="marketCategorySummary">اختر صنفاً أو أكثر</span>
+              </summary>
+              <div class="reg-store-dd__panel">
+                <p class="reg-store-dd__hint">يمكنك اختيار أكثر من صنف — خضار، لحوم، ألبان…</p>
                 <div
                   class="reg-store-cuisine-grid"
                   id="marketCategoryPicker"
-                  role="radiogroup"
+                  role="group"
                   aria-labelledby="regStoreMarketTitle"
                   aria-required="true"
                 ></div>
                 <p class="reg-store-cuisine-hint" id="marketCategoryHint">لم يُختر صنف بعد.</p>
-                <select id="store_category" class="reg-store-category-select-hidden" tabindex="-1" aria-hidden="true">
+                <select id="store_category" class="reg-store-category-select-hidden" multiple tabindex="-1" aria-hidden="true">
                   <option value="">— اختر التصنيف —</option>
                 </select>
               </div>
-            </div>
+            </details>
 
-            <div id="clothingCategoryWrap" class="field-gap" style="display: none">
-              <div class="reg-store-cuisine-block" aria-labelledby="regStoreClothingTitle">
-                <div class="reg-store-cuisine-block__head">
-                  <span class="reg-store-cuisine-block__emoji" aria-hidden="true">👗</span>
-                  <div>
-                    <p class="reg-store-cuisine-block__title" id="regStoreClothingTitle">تصنيف الملابس والأزياء</p>
-                    <p class="reg-store-cuisine-block__sub">
-                      اختر تصنيفاً واحداً بزر الاختيار — نسائي، رجالي، أطفال، عبايات…
-                    </p>
-                  </div>
-                </div>
+            <details class="reg-store-dd field-gap" id="clothingCategoryWrap" style="display: none">
+              <summary class="reg-store-dd__sum">
+                <span class="reg-store-dd__label" id="regStoreClothingTitle">التصنيفات</span>
+                <span class="reg-store-dd__value" id="clothingCategorySummary">اختر تصنيفاً أو أكثر</span>
+              </summary>
+              <div class="reg-store-dd__panel">
+                <p class="reg-store-dd__hint">يمكنك اختيار أكثر من تصنيف — نسائي، رجالي، أطفال، عبايات…</p>
                 <div
                   class="reg-store-cuisine-grid"
                   id="clothingCategoryPicker"
-                  role="radiogroup"
+                  role="group"
                   aria-labelledby="regStoreClothingTitle"
                   aria-required="true"
                 ></div>
                 <p class="reg-store-cuisine-hint" id="clothingCategoryHint">لم يُختر تصنيف بعد.</p>
-                <select id="clothing_category" class="reg-store-category-select-hidden" tabindex="-1" aria-hidden="true">
+                <select id="clothing_category" class="reg-store-category-select-hidden" multiple tabindex="-1" aria-hidden="true">
                   <option value="">— اختر التصنيف —</option>
                 </select>
               </div>
-            </div>
+            </details>
 
-            <div class="field-gap">
+            <div class="field-gap reg-store-phone-card reg-store-step1-phone">
               <label for="phone">رقم الجوال</label>
-              <input id="phone" type="tel" inputmode="tel" placeholder="05xxxxxxxx أو 9665xxxxxxxx" maxlength="12" />
+              <input
+                id="phone"
+                type="tel"
+                inputmode="numeric"
+                autocomplete="tel"
+                placeholder="05**********"
+                maxlength="12"
+                dir="ltr"
+              />
             </div>
-          </section>
+            </div>
+          </details>
 
-          <section class="reg-store-section" id="regStep2" aria-labelledby="h-map">
-            <div class="reg-store-section__head">
+          <details class="reg-store-section reg-store-acc" id="regStep2">
+            <summary class="reg-store-section__head">
               <span class="reg-store-section__num" aria-hidden="true">2</span>
               <div>
                 <div class="reg-store-section__meta">
@@ -243,7 +256,8 @@
                 </div>
                 <p class="reg-store-section__hint">الصق رابط موقع متجرك من Google Maps — يُعتمد للخريطة والطلبات والمناديب.</p>
               </div>
-            </div>
+            </summary>
+            <div class="reg-store-section__body">
 
             <div class="reg-store-map-panel">
             <div class="field-gap reg-store-maps-paste">
@@ -290,10 +304,11 @@
               <textarea id="address" rows="3" placeholder="يُقترح من الخريطة ويمكنك تعديله"></textarea>
             </div>
             </div>
-          </section>
+            </div>
+          </details>
 
-          <section class="reg-store-section" id="regStep3" aria-labelledby="h-radius">
-            <div class="reg-store-section__head">
+          <details class="reg-store-section reg-store-acc" id="regStep3">
+            <summary class="reg-store-section__head">
               <span class="reg-store-section__num" aria-hidden="true">3</span>
               <div>
                 <div class="reg-store-section__meta">
@@ -302,19 +317,21 @@
                 </div>
                 <p class="reg-store-section__hint">المسافة من موقع المتجر التي تغطيها طلبات التوصيل.</p>
               </div>
-            </div>
+            </summary>
+            <div class="reg-store-section__body">
             <label for="delivery_radius_km">نطاق التوصيل (كم)</label>
-            <select id="delivery_radius_km">
+            <select id="delivery_radius_km" class="reg-store-select">
               <option value="5">5 كم</option>
               <option value="10">10 كم</option>
               <option value="15">15 كم</option>
               <option value="20">20 كم</option>
               <option value="30">30 كم</option>
             </select>
-          </section>
+            </div>
+          </details>
 
-          <section class="reg-store-section" id="regStep4" aria-labelledby="h-logo">
-            <div class="reg-store-section__head">
+          <details class="reg-store-section reg-store-acc" id="regStep4">
+            <summary class="reg-store-section__head">
               <span class="reg-store-section__num" aria-hidden="true">4</span>
               <div>
                 <div class="reg-store-section__meta">
@@ -323,7 +340,8 @@
                 </div>
                 <p class="reg-store-section__hint">اختياري — تظهر في صفحة المتجر العامة بعد الموافقة.</p>
               </div>
-            </div>
+            </summary>
+            <div class="reg-store-section__body">
             <div class="reg-store-upload-grid">
               <div class="reg-store-upload">
                 <label class="reg-store-upload__label" for="logo_file">صورة الشعار</label>
@@ -342,38 +360,40 @@
                 </div>
               </div>
             </div>
-          </section>
+            </div>
+          </details>
 
-          <section class="reg-store-section" id="regStep5" aria-labelledby="h-opt">
-            <div class="reg-store-section__head">
+          <details class="reg-store-section reg-store-acc" id="regStep5">
+            <summary class="reg-store-section__head">
               <span class="reg-store-section__num" aria-hidden="true">5</span>
               <div>
                 <div class="reg-store-section__meta">
-                  <h2 class="reg-store-section__title" id="h-opt">بيانات اختيارية</h2>
-                  <span class="reg-store-badge reg-store-badge--opt">اختياري</span>
+                  <h2 class="reg-store-section__title" id="h-opt">السجل التجاري</h2>
+                  <span class="reg-store-badge reg-store-badge--req">مطلوب</span>
                 </div>
-                <p class="reg-store-section__hint">سجل تجاري وبريد — يمكن إكمالها لاحقاً.</p>
+                <p class="reg-store-section__hint">رفع صورة السجل التجاري إلزامي لإكمال التسجيل.</p>
+              </div>
+            </summary>
+            <div class="reg-store-section__body">
+              <div class="reg-store-field-row">
+                <div class="field-gap">
+                  <label for="commercial_registration">رقم السجل التجاري</label>
+                  <input id="commercial_registration" type="text" name="commercial_registration" inputmode="numeric" placeholder="7000000000" dir="ltr" />
+                </div>
+                <div class="field-gap">
+                  <label for="email">البريد الإلكتروني <span class="reg-store-opt-note">(اختياري)</span></label>
+                  <input id="email" type="email" autocomplete="email" />
+                </div>
+              </div>
+              <div class="field-gap">
+                <label for="cr_file">صورة السجل التجاري <span aria-hidden="true">*</span></label>
+                <input id="cr_file" type="file" accept="image/*" required />
               </div>
             </div>
-            <details class="reg-store-optional">
-              <summary>عرض حقول السجل التجاري والبريد</summary>
-              <div class="field-gap">
-                <label for="email">البريد الإلكتروني</label>
-                <input id="email" type="email" autocomplete="email" />
-              </div>
-              <div class="field-gap">
-                <label for="commercial_registration">السجل التجاري (نص)</label>
-                <input id="commercial_registration" type="text" name="commercial_registration" />
-              </div>
-              <div class="field-gap">
-                <label for="cr_file">صورة السجل التجاري</label>
-                <input id="cr_file" type="file" accept="image/*" />
-              </div>
-            </details>
-          </section>
+          </details>
 
-          <section class="reg-store-section" id="regStep6" aria-labelledby="h-payout">
-            <div class="reg-store-section__head">
+          <details class="reg-store-section reg-store-acc" id="regStep6">
+            <summary class="reg-store-section__head">
               <span class="reg-store-section__num" aria-hidden="true">6</span>
               <div>
                 <div class="reg-store-section__meta">
@@ -382,48 +402,89 @@
                 </div>
                 <p class="reg-store-section__hint">اختياري — لتسوية الأرباح بعد الموافقة.</p>
               </div>
-            </div>
+            </summary>
+            <div class="reg-store-section__body">
             <div class="reg-store-payout">
-              <label for="storePayoutCountry">دولة الحساب البنكي</label>
-              <select id="storePayoutCountry">
-                <option value="SA">السعودية — قائمة بنوك المملكة</option>
-                <option value="XX">خارج السعودية — اسم البنك والآيبان يدوياً</option>
-              </select>
-              <div class="field-gap">
-                <label for="storePayoutBankSelect">اسم البنك (السعودية)</label>
-                <select id="storePayoutBankSelect"></select>
+              <div class="reg-store-field-row">
+                <div>
+                  <label for="storePayoutCountry">دولة الحساب البنكي</label>
+                  <select id="storePayoutCountry" class="reg-store-select">
+                    <option value="SA">السعودية — قائمة بنوك المملكة</option>
+                    <option value="XX">خارج السعودية — اسم البنك والآيبان يدوياً</option>
+                  </select>
+                </div>
+                <div class="field-gap">
+                  <label for="storePayoutBankSelect">اسم البنك (السعودية)</label>
+                  <select id="storePayoutBankSelect" class="reg-store-select"></select>
+                </div>
               </div>
               <div id="storePayoutBankOtherWrap" class="field-gap" style="display: none">
                 <label for="storePayoutBankOther" id="storePayoutBankOtherLabel">اسم البنك</label>
                 <input id="storePayoutBankOther" type="text" maxlength="200" placeholder="اسم البنك" />
               </div>
-              <div class="field-gap">
-                <label for="storePayoutIban">رقم الآيبان (IBAN)</label>
-                <input id="storePayoutIban" type="text" maxlength="34" placeholder="SA…" dir="ltr" style="text-align: left" />
+              <div class="reg-store-field-row">
+                <div class="field-gap">
+                  <label for="storePayoutIban">رقم الآيبان (IBAN)</label>
+                  <input id="storePayoutIban" type="text" maxlength="34" placeholder="SA…" dir="ltr" style="text-align: left" />
+                </div>
+                <div class="field-gap">
+                  <label for="storePayoutStc">STC Pay (اختياري)</label>
+                  <input id="storePayoutStc" type="tel" inputmode="numeric" maxlength="12" placeholder="05**********" dir="ltr" />
+                </div>
               </div>
-              <div class="field-gap">
-                <label for="storePayoutStc">STC Pay (اختياري)</label>
-                <input id="storePayoutStc" type="tel" inputmode="numeric" maxlength="12" placeholder="05xxxxxxxx أو 9665xxxxxxxx" />
-              </div>
-              <label class="reg-store-check field-gap">
-                <input id="storePayoutCrypto" type="checkbox" />
-                <span>أرغب في إتاحة استلام مستقبلي بالعملات المشفرة عند تفعيل الخدمة</span>
-              </label>
             </div>
-          </section>
+            </div>
+          </details>
 
           <div class="reg-store-submit-wrap">
+            <div class="reg-store-applicant reg-store-applicant--end" id="regStoreApplicant">
+              <p class="reg-store-applicant__title">بيانات من عبّأ الطلب <span class="reg-store-badge reg-store-badge--req">مطلوب</span></p>
+              <div class="reg-store-applicant__grid">
+                <div class="field-gap">
+                  <label for="applicant_name">اسم من عبّأ البيانات</label>
+                  <input id="applicant_name" type="text" autocomplete="name" required placeholder="الاسم الثلاثي" />
+                </div>
+                <div class="field-gap">
+                  <label for="applicant_phone">جوال من عبّأ البيانات</label>
+                  <input
+                    id="applicant_phone"
+                    type="tel"
+                    inputmode="numeric"
+                    autocomplete="tel"
+                    required
+                    placeholder="05**********"
+                    maxlength="12"
+                    dir="ltr"
+                  />
+                </div>
+              </div>
+            </div>
             <p class="reg-store-submit__note">بالضغط على «إرسال طلب التسجيل» تؤكد صحة البيانات — سيتواصل معك فريق ERVENOW بعد المراجعة.</p>
             <button type="button" class="btn btn-primary" id="btnSend">إرسال طلب التسجيل</button>
             <div class="msg" id="msg" style="display: none" role="status" aria-live="polite"></div>
           </div>
         </div>
+        </div>
+        </div>
+        <aside class="reg-store-aside reg-store-footer-card" aria-label="لماذا Ervenow">
+          <div class="reg-store-aside__card">
+            <span class="reg-store-aside__badge">Ervenow Partner</span>
+            <h2 class="reg-store-aside__title">لماذا Ervenow؟</h2>
+            <ul class="reg-store-aside__list">
+              <li>التسجيل سريع</li>
+              <li>استقبال الطلبات إلكترونيًا</li>
+              <li>لوحة لإدارة المتجر</li>
+              <li>الوصول للعملاء</li>
+              <li>دعم مستمر</li>
+            </ul>
+          </div>
+        </aside>
       </div>
 
       </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="/assets/ervenow-store-map.js"></script>
+    <script src="/assets/ervenow-store-map.js?erv=20260905s"></script>
     <script src="/assets/compressImage.js"></script>
     <script src="/assets/payoutRegistration.js"></script>
     <script src="/assets/api-config.js"></script>
@@ -442,14 +503,14 @@
         if (typePicker && typeSel) {
           function syncTypeCards() {
             var v = typeSel.value;
-            typePicker.querySelectorAll(".reg-store-type-card").forEach(function (btn) {
+            typePicker.querySelectorAll(".reg-store-type-vip__card").forEach(function (btn) {
               var on = btn.getAttribute("data-type") === v;
               btn.classList.toggle("is-active", on);
               btn.setAttribute("aria-checked", on ? "true" : "false");
             });
           }
           typePicker.addEventListener("click", function (e) {
-            var btn = e.target.closest(".reg-store-type-card");
+            var btn = e.target.closest(".reg-store-type-vip__card");
             if (!btn) return;
             var t = btn.getAttribute("data-type") || "";
             if (!t || typeSel.value === t) return;
@@ -457,6 +518,7 @@
             syncTypeCards();
             typeSel.dispatchEvent(new Event("change", { bubbles: true }));
           });
+          typeSel.addEventListener("change", syncTypeCards);
           syncTypeCards();
         }
 
@@ -498,25 +560,73 @@
           document.getElementById("regStep5"),
           document.getElementById("regStep6"),
         ].filter(Boolean);
-        if (steps.length && sections.length && "IntersectionObserver" in window) {
-          var obs = new IntersectionObserver(
-            function (entries) {
-              entries.forEach(function (entry) {
-                if (!entry.isIntersecting || entry.intersectionRatio < 0.35) return;
-                var idx = sections.indexOf(entry.target);
-                if (idx < 0) return;
-                steps.forEach(function (step, i) {
-                  step.classList.toggle("is-current", i === idx);
-                  step.classList.toggle("is-done", i < idx);
-                });
-              });
-            },
-            { root: null, threshold: [0.35, 0.5, 0.65], rootMargin: "-20% 0px -55% 0px" }
-          );
-          sections.forEach(function (sec) {
-            obs.observe(sec);
+
+        function markProgress(idx) {
+          steps.forEach(function (step, i) {
+            step.classList.toggle("is-current", i === idx);
+            step.classList.toggle("is-done", i < idx);
           });
         }
+
+        function refreshMapIfNeeded(idx) {
+          if (idx !== 1) return;
+          requestAnimationFrame(function () {
+            try {
+              if (window.storeMap && storeMap.map && storeMap.map.invalidateSize) {
+                storeMap.map.invalidateSize();
+              }
+            } catch (e) {}
+          });
+        }
+
+        var accLock = false;
+
+        function openRegStep(idx) {
+          if (idx < 0 || idx >= sections.length) return;
+          accLock = true;
+          sections.forEach(function (sec, i) {
+            sec.open = i === idx;
+          });
+          accLock = false;
+          markProgress(idx);
+          refreshMapIfNeeded(idx);
+          sections[idx].scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+
+        window.openRegStoreStep = openRegStep;
+        markProgress(0);
+
+        sections.forEach(function (sec, idx) {
+          sec.addEventListener("toggle", function () {
+            if (accLock) return;
+            if (!sec.open) {
+              var anyOpen = sections.some(function (s) { return s.open; });
+              if (!anyOpen) markProgress(-1);
+              return;
+            }
+            accLock = true;
+            sections.forEach(function (other) {
+              if (other !== sec) other.open = false;
+            });
+            accLock = false;
+            markProgress(idx);
+            refreshMapIfNeeded(idx);
+          });
+        });
+
+        steps.forEach(function (step, i) {
+          step.setAttribute("role", "button");
+          step.setAttribute("tabindex", "0");
+          step.addEventListener("click", function () {
+            openRegStep(i);
+          });
+          step.addEventListener("keydown", function (ev) {
+            if (ev.key === "Enter" || ev.key === " ") {
+              ev.preventDefault();
+              openRegStep(i);
+            }
+          });
+        });
       })();
     </script>
     <script>
@@ -532,6 +642,7 @@
         el.style.display = "block";
         el.className = "msg " + (isOk ? "ok" : "err");
         el.textContent = text;
+        if (isOk && window.ErvenowFormDraft) ErvenowFormDraft.clear();
         el.scrollIntoView({
           behavior: window.matchMedia && window.matchMedia("(max-width: 640px)").matches ? "auto" : "smooth",
           block: "nearest",
@@ -583,6 +694,21 @@
 
       document.getElementById("phone").addEventListener("input", normalizePhoneInput);
       document.getElementById("phone").addEventListener("blur", normalizePhoneInput);
+      (function wireApplicantPhone() {
+        var el = document.getElementById("applicant_phone");
+        if (!el) return;
+        function fmt() {
+          if (window.ErvenowSaPhone) return ErvenowSaPhone.formatField(el);
+          var d = String(el.value || "").replace(/\D/g, "");
+          if (d.startsWith("9665")) el.value = d.length >= 12 ? "0" + d.slice(3, 12) : d.slice(0, 12);
+          else {
+            if (d.startsWith("5") && d.length === 9) d = "0" + d;
+            el.value = d.slice(0, 10);
+          }
+        }
+        el.addEventListener("input", fmt);
+        el.addEventListener("blur", fmt);
+      })();
 
       function syncRestaurantCategoryField() {
         var wrapR = document.getElementById("restaurantCategoryWrap");
@@ -593,13 +719,13 @@
         if (wrapR && selR) {
           wrapR.style.display = type === "restaurant" ? "block" : "none";
           if (type !== "restaurant") {
-            setRestaurantCategorySelection("");
+            setRestaurantCategorySelection("", "clear");
           }
         }
         if (wrapM && selM) {
           wrapM.style.display = type === "supermarket" ? "block" : "none";
           if (type !== "supermarket") {
-            setMarketCategorySelection("");
+            setMarketCategorySelection("", "clear");
           }
         }
         var wrapC = document.getElementById("clothingCategoryWrap");
@@ -607,7 +733,7 @@
         if (wrapC && selC) {
           wrapC.style.display = type === "clothing" ? "block" : "none";
           if (type !== "clothing") {
-            setClothingCategorySelection("");
+            setClothingCategorySelection("", "clear");
           }
         }
       }
@@ -627,14 +753,75 @@
 
       function populateCategorySelect(sel, categories) {
         if (!sel) return;
+        var prev = getSelectedSlugs(sel);
         var list = dedupeCategoriesBySlug(categories);
-        sel.innerHTML = '<option value="">— اختر التصنيف —</option>';
+        sel.innerHTML = "";
         list.forEach(function (c) {
           var o = document.createElement("option");
           o.value = c.slug;
           o.textContent = (c.icon ? c.icon + " " : "") + (c.name_ar || c.label_ar || c.label || c.slug);
           sel.appendChild(o);
         });
+        applySelectedSlugs(sel, prev);
+      }
+
+      function getSelectedSlugs(sel) {
+        if (!sel) return [];
+        if (sel.multiple) {
+          return Array.prototype.map
+            .call(sel.selectedOptions || [], function (o) {
+              return String(o.value || "").trim().toLowerCase();
+            })
+            .filter(Boolean);
+        }
+        var one = String(sel.value || "").trim().toLowerCase();
+        return one ? [one] : [];
+      }
+
+      function applySelectedSlugs(sel, slugs) {
+        if (!sel) return;
+        var set = {};
+        (slugs || []).forEach(function (s) {
+          var k = String(s || "").trim().toLowerCase();
+          if (k) set[k] = true;
+        });
+        Array.prototype.forEach.call(sel.options || [], function (o) {
+          o.selected = !!set[String(o.value || "").trim().toLowerCase()];
+        });
+      }
+
+      function toggleSelectedSlug(sel, slug) {
+        var v = String(slug || "").trim().toLowerCase();
+        if (!sel || !v) return getSelectedSlugs(sel);
+        var cur = getSelectedSlugs(sel);
+        var i = cur.indexOf(v);
+        if (i >= 0) cur.splice(i, 1);
+        else cur.push(v);
+        applySelectedSlugs(sel, cur);
+        return cur;
+      }
+
+      function paintCategoryChips(picker, slugs) {
+        var set = {};
+        (slugs || []).forEach(function (s) {
+          set[String(s || "").toLowerCase()] = true;
+        });
+        if (!picker) return;
+        picker.querySelectorAll(".reg-store-cuisine-chip").forEach(function (btn) {
+          var on = !!set[btn.getAttribute("data-slug") || ""];
+          btn.classList.toggle("is-active", on);
+          btn.setAttribute("aria-checked", on ? "true" : "false");
+        });
+      }
+
+      function labelsForSlugs(picker, slugs) {
+        return (slugs || [])
+          .map(function (s) {
+            var btn = picker && picker.querySelector('.reg-store-cuisine-chip[data-slug="' + s + '"]');
+            var lab = btn && btn.querySelector(".reg-store-cuisine-chip__label");
+            return lab ? lab.textContent.trim() : s;
+          })
+          .filter(Boolean);
       }
 
       function restaurantCategoriesFallback() {
@@ -656,27 +843,25 @@
         ];
       }
 
-      function setRestaurantCategorySelection(slug) {
+      function setRestaurantCategorySelection(slug, mode) {
         var sel = document.getElementById("restaurant_category");
         var picker = document.getElementById("restaurantCategoryPicker");
         var hint = document.getElementById("restaurantCategoryHint");
-        var v = String(slug || "").trim().toLowerCase();
-        if (sel) sel.value = v;
-        if (picker) {
-          picker.querySelectorAll(".reg-store-cuisine-chip").forEach(function (btn) {
-            var on = (btn.getAttribute("data-slug") || "") === v;
-            btn.classList.toggle("is-active", on);
-            btn.setAttribute("aria-checked", on ? "true" : "false");
-          });
-        }
+        var slugs;
+        if (mode === "clear" || slug === "") slugs = [];
+        else if (mode === "toggle") slugs = toggleSelectedSlug(sel, slug);
+        else slugs = getSelectedSlugs(sel);
+        if (mode === "clear") applySelectedSlugs(sel, []);
+        paintCategoryChips(picker, slugs);
+        var labels = labelsForSlugs(picker, slugs);
+        var sum = document.getElementById("restaurantCategorySummary");
+        if (sum) sum.textContent = labels.length ? labels.join(" · ") : "اختر تصنيفاً أو أكثر";
         if (hint) {
-          if (!v) {
-            hint.textContent = "لم يُختر تصنيف بعد.";
+          if (!slugs.length) {
+            hint.textContent = "لم يُختر تصنيف بعد — يمكنك اختيار أكثر من تصنيف.";
             hint.classList.remove("is-ok");
           } else {
-            var active = picker && picker.querySelector('.reg-store-cuisine-chip[data-slug="' + v + '"]');
-            var label = active ? active.querySelector(".reg-store-cuisine-chip__label") : null;
-            hint.textContent = "التصنيف المختار: " + (label ? label.textContent.trim() : v);
+            hint.textContent = "التصنيفات المختارة: " + labels.join(" · ");
             hint.classList.add("is-ok");
           }
         }
@@ -695,27 +880,25 @@
         ];
       }
 
-      function setMarketCategorySelection(slug) {
+      function setMarketCategorySelection(slug, mode) {
         var sel = document.getElementById("store_category");
         var picker = document.getElementById("marketCategoryPicker");
         var hint = document.getElementById("marketCategoryHint");
-        var v = String(slug || "").trim().toLowerCase();
-        if (sel) sel.value = v;
-        if (picker) {
-          picker.querySelectorAll(".reg-store-cuisine-chip").forEach(function (btn) {
-            var on = (btn.getAttribute("data-slug") || "") === v;
-            btn.classList.toggle("is-active", on);
-            btn.setAttribute("aria-checked", on ? "true" : "false");
-          });
-        }
+        var slugs;
+        if (mode === "clear" || slug === "") slugs = [];
+        else if (mode === "toggle") slugs = toggleSelectedSlug(sel, slug);
+        else slugs = getSelectedSlugs(sel);
+        if (mode === "clear") applySelectedSlugs(sel, []);
+        paintCategoryChips(picker, slugs);
+        var labels = labelsForSlugs(picker, slugs);
+        var sum = document.getElementById("marketCategorySummary");
+        if (sum) sum.textContent = labels.length ? labels.join(" · ") : "اختر صنفاً أو أكثر";
         if (hint) {
-          if (!v) {
-            hint.textContent = "لم يُختر صنف بعد.";
+          if (!slugs.length) {
+            hint.textContent = "لم يُختر صنف بعد — يمكنك اختيار أكثر من صنف.";
             hint.classList.remove("is-ok");
           } else {
-            var active = picker && picker.querySelector('.reg-store-cuisine-chip[data-slug="' + v + '"]');
-            var label = active ? active.querySelector(".reg-store-cuisine-chip__label") : null;
-            hint.textContent = "الصنف المختار: " + (label ? label.textContent.trim() : v);
+            hint.textContent = "الأصناف المختارة: " + labels.join(" · ");
             hint.classList.add("is-ok");
           }
         }
@@ -735,7 +918,7 @@
             return (
               '<button type="button" class="reg-store-cuisine-chip" data-slug="' +
               slug +
-              '" role="radio" aria-checked="false">' +
+              '" role="checkbox" aria-checked="false">' +
               '<span class="reg-store-cuisine-chip__icon" aria-hidden="true">' +
               icon +
               "</span>" +
@@ -750,10 +933,10 @@
           picker.addEventListener("click", function (e) {
             var btn = e.target.closest(".reg-store-cuisine-chip");
             if (!btn) return;
-            setMarketCategorySelection(btn.getAttribute("data-slug") || "");
+            setMarketCategorySelection(btn.getAttribute("data-slug") || "", "toggle");
           });
         }
-        setMarketCategorySelection(sel.value || "");
+        setMarketCategorySelection();
       }
 
       function clothingCategoriesFallback() {
@@ -769,27 +952,25 @@
         ];
       }
 
-      function setClothingCategorySelection(slug) {
+      function setClothingCategorySelection(slug, mode) {
         var sel = document.getElementById("clothing_category");
         var picker = document.getElementById("clothingCategoryPicker");
         var hint = document.getElementById("clothingCategoryHint");
-        var v = String(slug || "").trim().toLowerCase();
-        if (sel) sel.value = v;
-        if (picker) {
-          picker.querySelectorAll(".reg-store-cuisine-chip").forEach(function (btn) {
-            var on = (btn.getAttribute("data-slug") || "") === v;
-            btn.classList.toggle("is-active", on);
-            btn.setAttribute("aria-checked", on ? "true" : "false");
-          });
-        }
+        var slugs;
+        if (mode === "clear" || slug === "") slugs = [];
+        else if (mode === "toggle") slugs = toggleSelectedSlug(sel, slug);
+        else slugs = getSelectedSlugs(sel);
+        if (mode === "clear") applySelectedSlugs(sel, []);
+        paintCategoryChips(picker, slugs);
+        var labels = labelsForSlugs(picker, slugs);
+        var sum = document.getElementById("clothingCategorySummary");
+        if (sum) sum.textContent = labels.length ? labels.join(" · ") : "اختر تصنيفاً أو أكثر";
         if (hint) {
-          if (!v) {
-            hint.textContent = "لم يُختر تصنيف بعد.";
+          if (!slugs.length) {
+            hint.textContent = "لم يُختر تصنيف بعد — يمكنك اختيار أكثر من تصنيف.";
             hint.classList.remove("is-ok");
           } else {
-            var active = picker && picker.querySelector('.reg-store-cuisine-chip[data-slug="' + v + '"]');
-            var label = active ? active.querySelector(".reg-store-cuisine-chip__label") : null;
-            hint.textContent = "التصنيف المختار: " + (label ? label.textContent.trim() : v);
+            hint.textContent = "التصنيفات المختارة: " + labels.join(" · ");
             hint.classList.add("is-ok");
           }
         }
@@ -809,7 +990,7 @@
             return (
               '<button type="button" class="reg-store-cuisine-chip" data-slug="' +
               slug +
-              '" role="radio" aria-checked="false">' +
+              '" role="checkbox" aria-checked="false">' +
               '<span class="reg-store-cuisine-chip__icon" aria-hidden="true">' +
               icon +
               "</span>" +
@@ -824,10 +1005,10 @@
           picker.addEventListener("click", function (e) {
             var btn = e.target.closest(".reg-store-cuisine-chip");
             if (!btn) return;
-            setClothingCategorySelection(btn.getAttribute("data-slug") || "");
+            setClothingCategorySelection(btn.getAttribute("data-slug") || "", "toggle");
           });
         }
-        setClothingCategorySelection(sel.value || "");
+        setClothingCategorySelection();
       }
 
       function populateRestaurantCategoryPicker(categories) {
@@ -844,7 +1025,7 @@
             return (
               '<button type="button" class="reg-store-cuisine-chip" data-slug="' +
               slug +
-              '" role="radio" aria-checked="false">' +
+              '" role="checkbox" aria-checked="false">' +
               '<span class="reg-store-cuisine-chip__icon" aria-hidden="true">' +
               icon +
               "</span>" +
@@ -859,10 +1040,10 @@
           picker.addEventListener("click", function (e) {
             var btn = e.target.closest(".reg-store-cuisine-chip");
             if (!btn) return;
-            setRestaurantCategorySelection(btn.getAttribute("data-slug") || "");
+            setRestaurantCategorySelection(btn.getAttribute("data-slug") || "", "toggle");
           });
         }
-        setRestaurantCategorySelection(sel.value || "");
+        setRestaurantCategorySelection();
       }
 
       async function fillCategorySelects() {
@@ -1020,9 +1201,10 @@
           var name = document.getElementById("name").value.trim();
           var phone = document.getElementById("phone").value.trim();
           var type = document.getElementById("type").value;
-          var restaurant_category = document.getElementById("restaurant_category")
-            ? document.getElementById("restaurant_category").value
-            : "";
+          var restaurantSlugs = getSelectedSlugs(document.getElementById("restaurant_category"));
+          var marketSlugs = getSelectedSlugs(document.getElementById("store_category"));
+          var clothingSlugs = getSelectedSlugs(document.getElementById("clothing_category"));
+          var restaurant_category = restaurantSlugs[0] || "";
           var address = document.getElementById("address").value.trim();
           var lat = latEl.value.trim();
           var lng = lngEl.value.trim();
@@ -1032,18 +1214,22 @@
           var commercial_registration = document.getElementById("commercial_registration").value.trim();
 
           if (!name) {
+            if (window.openRegStoreStep) openRegStoreStep(0);
             show("أدخل اسم المتجر", false);
             return;
           }
           if (!phone) {
+            if (window.openRegStoreStep) openRegStoreStep(0);
             show("أدخل رقم الجوال", false);
             return;
           }
           if (!isValidSaudiPhone05(phone)) {
+            if (window.openRegStoreStep) openRegStoreStep(0);
             show(ErvenowSaPhone ? ErvenowSaPhone.invalidMessage() : "أدخل رقم سعودي صحيح", false);
             return;
           }
           if (!maps_url) {
+            if (window.openRegStoreStep) openRegStoreStep(1);
             show("الصق رابط موقع المتجر على Google Maps.", false);
             return;
           }
@@ -1065,26 +1251,30 @@
             return;
           }
           if (type === "restaurant") {
-            if (!restaurant_category) {
-              show("اختر تصنيف المطعم من القائمة (شاورما، كبسة، …).", false);
+            if (!restaurantSlugs.length) {
+              if (window.openRegStoreStep) openRegStoreStep(0);
+              show("اختر تصنيفاً واحداً على الأقل للمطعم.", false);
               return;
             }
           }
           if (type === "supermarket") {
-            var sc = document.getElementById("store_category") ? document.getElementById("store_category").value : "";
-            if (!sc) {
-              show("اختر صنف السوبرماركت من الأزرار (خضار، لحوم، ألبان…).", false);
+            if (!marketSlugs.length) {
+              if (window.openRegStoreStep) openRegStoreStep(0);
+              show("اختر صنفاً واحداً على الأقل للسوبرماركت.", false);
               return;
             }
           }
           if (type === "clothing") {
-            var cc = document.getElementById("clothing_category")
-              ? document.getElementById("clothing_category").value
-              : "";
-            if (!cc) {
-              show("اختر تصنيف الملابس من الأزرار (نسائي، رجالي، عبايات…).", false);
+            if (!clothingSlugs.length) {
+              if (window.openRegStoreStep) openRegStoreStep(0);
+              show("اختر تصنيفاً واحداً على الأقل للملابس.", false);
               return;
             }
+          }
+          if (!commercial_registration) {
+            if (window.openRegStoreStep) openRegStoreStep(4);
+            show("أدخل رقم السجل التجاري.", false);
+            return;
           }
 
           var logoInput = document.getElementById("logo_file");
@@ -1112,14 +1302,43 @@
           }
 
           var crInput = document.getElementById("cr_file");
-          if (crInput.files && crInput.files[0] && !crDataUrl) {
+          if (!crInput || !crInput.files || !crInput.files[0]) {
+            if (window.openRegStoreStep) openRegStoreStep(4);
+            show("ارفع صورة السجل التجاري.", false);
+            return;
+          }
+          if (!crDataUrl) {
+            if (window.openRegStoreStep) openRegStoreStep(4);
             show("انتظر حتى تُحمّل صورة السجل", false);
+            return;
+          }
+
+          var applicantName = String((document.getElementById("applicant_name") || {}).value || "").trim();
+          var applicantPhoneEl = document.getElementById("applicant_phone");
+          if (applicantPhoneEl && window.ErvenowSaPhone) ErvenowSaPhone.formatField(applicantPhoneEl);
+          var applicantPhone = applicantPhoneEl ? String(applicantPhoneEl.value || "").trim() : "";
+          function focusApplicantField(id) {
+            var el = document.getElementById(id);
+            if (!el) return;
+            try { el.scrollIntoView({ behavior: "smooth", block: "center" }); } catch (se) {}
+            try { el.focus(); } catch (fe) {}
+          }
+          if (!applicantName || applicantName.length < 2) {
+            focusApplicantField("applicant_name");
+            show("أدخل اسم من عبّأ البيانات — بدونها لا يُرفع الطلب", false);
+            return;
+          }
+          if (!applicantPhone || !isValidSaudiPhone05(applicantPhone)) {
+            focusApplicantField("applicant_phone");
+            show("أدخل جوالاً صحيحاً لمن عبّأ البيانات — بدونها لا يُرفع الطلب", false);
             return;
           }
 
           var body = {
             name: name,
             phone: phone,
+            applicant_name: applicantName,
+            applicant_phone: applicantPhone,
             type: type,
             lat: Number(lat),
             lng: Number(lng),
@@ -1127,24 +1346,24 @@
             address: address,
             delivery_radius_km: Number.isFinite(radius) ? radius : 5,
             email: email || undefined,
-            commercial_registration: commercial_registration || undefined,
+            commercial_registration: commercial_registration,
             logoFileBase64: logoDataUrl || undefined,
             logoFileName: logoFile ? logoFile.name : undefined,
             bannerFileBase64: coverDataUrl || undefined,
             bannerFileName: coverFile ? coverFile.name : undefined,
           };
-          if (type === "restaurant" && restaurant_category) {
-            body.restaurant_category = restaurant_category;
+          if (type === "restaurant" && restaurantSlugs.length) {
+            body.restaurant_category = restaurantSlugs[0];
+            body.categories = restaurantSlugs;
+            body.category = restaurantSlugs.join(",");
           }
-          if (type === "supermarket") {
-            var scVal = document.getElementById("store_category") ? document.getElementById("store_category").value : "";
-            if (scVal) body.category = scVal;
+          if (type === "supermarket" && marketSlugs.length) {
+            body.categories = marketSlugs;
+            body.category = marketSlugs.join(",");
           }
-          if (type === "clothing") {
-            var ccVal = document.getElementById("clothing_category")
-              ? document.getElementById("clothing_category").value
-              : "";
-            if (ccVal) body.category = ccVal;
+          if (type === "clothing" && clothingSlugs.length) {
+            body.categories = clothingSlugs;
+            body.category = clothingSlugs.join(",");
           }
           if (crDataUrl) {
             body.commercialRegistrationFileBase64 = crDataUrl;
@@ -1159,7 +1378,7 @@
                 bankOtherInput: document.getElementById("storePayoutBankOther"),
                 ibanInput: document.getElementById("storePayoutIban"),
                 stcInput: document.getElementById("storePayoutStc"),
-                cryptoCheckbox: document.getElementById("storePayoutCrypto"),
+                cryptoCheckbox: null,
               });
               if (po) body.payout = po;
             } catch (pe) {
@@ -1191,6 +1410,29 @@
           btn.textContent = "إرسال طلب التسجيل";
         }
       };
+
+      function applyRegStoreDraftUi() {
+        if (typeof setRestaurantCategorySelection === "function") setRestaurantCategorySelection();
+        if (typeof setMarketCategorySelection === "function") setMarketCategorySelection();
+        if (typeof setClothingCategorySelection === "function") setClothingCategorySelection();
+        var la = Number(latEl && latEl.value);
+        var ln = Number(lngEl && lngEl.value);
+        if (
+          storeMap &&
+          typeof storeMap.placeAt === "function" &&
+          Number.isFinite(la) &&
+          Number.isFinite(ln) &&
+          (la !== 0 || ln !== 0)
+        ) {
+          storeMap.placeAt(la, ln, false);
+        }
+        if (mapsHintEl && Number.isFinite(la) && Number.isFinite(ln) && (latEl.value || lngEl.value)) {
+          mapsHintEl.textContent = "✓ تم اعتماد الموقع: " + la + ", " + ln;
+          mapsHintEl.classList.add("is-ok");
+          mapsHintEl.classList.remove("is-pending");
+        }
+      }
+      document.addEventListener("ervenow:form-draft-restored", applyRegStoreDraftUi);
 
     </script>
   </body>

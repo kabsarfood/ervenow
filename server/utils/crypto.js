@@ -19,15 +19,22 @@ function resolveBankSecretRaw() {
   if (bank.length >= MIN_SECRET_LEN) {
     return { material: bank, source: "BANK_DATA_SECRET" };
   }
-  if (bank.length > 0 && bank.length < MIN_SECRET_LEN) {
-    return { material: null, source: "BANK_DATA_SECRET_TOO_SHORT", hint: bank.length };
-  }
+
+  const tooShort = bank.length > 0 && bank.length < MIN_SECRET_LEN;
 
   if (!isProduction()) {
     const jwt = String(process.env.ERVENOW_JWT_SECRET || "").trim();
     if (jwt.length >= MIN_SECRET_LEN) {
-      return { material: jwt + DEV_BANK_KEY_SUFFIX, source: "ERVENOW_JWT_SECRET_DEV_DERIVED" };
+      return {
+        material: jwt + DEV_BANK_KEY_SUFFIX,
+        source: "ERVENOW_JWT_SECRET_DEV_DERIVED",
+        shortBankHint: tooShort ? bank.length : undefined,
+      };
     }
+  }
+
+  if (tooShort) {
+    return { material: null, source: "BANK_DATA_SECRET_TOO_SHORT", hint: bank.length };
   }
 
   return { material: null, source: "missing" };
@@ -44,9 +51,15 @@ function assertBankSecretConfigured() {
   if (r.material) {
     if (r.source === "ERVENOW_JWT_SECRET_DEV_DERIVED" && !warnedDevBankFallback) {
       warnedDevBankFallback = true;
-      console.warn(
-        "[bank-crypto] BANK_DATA_SECRET غير معيّن — يُستخدم اشتقاق من ERVENOW_JWT_SECRET للتطوير فقط. عيّن BANK_DATA_SECRET في الإنتاج."
-      );
+      if (r.shortBankHint) {
+        console.warn(
+          `[bank-crypto] BANK_DATA_SECRET قصير (${r.shortBankHint} حرفاً) — غالباً قُطع عند # في .env (ضع القيمة بين علامات اقتباس). يُستخدم اشتقاق JWT للتطوير فقط.`
+        );
+      } else {
+        console.warn(
+          "[bank-crypto] BANK_DATA_SECRET غير معيّن — يُستخدم اشتقاق من ERVENOW_JWT_SECRET للتطوير فقط. عيّن BANK_DATA_SECRET في الإنتاج."
+        );
+      }
     }
     return;
   }

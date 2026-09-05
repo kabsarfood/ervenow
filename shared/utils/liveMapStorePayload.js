@@ -3,6 +3,8 @@
  */
 const { resolveMapColorForStoreType, mapCategoryFromStoreType } = require("./mapCategoryColors");
 const { restaurantCategoryLabelAr } = require("../restaurantCategories");
+const { parseStoreCategorySlugs } = require("./storeCategorySlugs");
+const { labelForProductSlug } = require("../productCategoryTypes");
 
 const TYPE_LABEL_AR = {
   restaurant: "مطعم",
@@ -25,8 +27,16 @@ const TYPE_LABEL_AR = {
 function categoryLabelForLiveMap(row) {
   if (!row) return "—";
   const t = String(row.type || "").toLowerCase();
-  if (t === "restaurant" && row.category) {
-    return restaurantCategoryLabelAr(String(row.category)) || String(row.category);
+  if (row.category) {
+    const slugs = parseStoreCategorySlugs(row.category);
+    if (t === "restaurant") {
+      const labs = slugs.map((s) => restaurantCategoryLabelAr(s) || s).filter(Boolean);
+      if (labs.length) return labs.join(" · ");
+    }
+    if (t === "clothing") {
+      const labs = slugs.map((s) => labelForProductSlug("clothing", s) || s).filter(Boolean);
+      if (labs.length) return labs.join(" · ");
+    }
   }
   return TYPE_LABEL_AR[t] || TYPE_LABEL_AR.other;
 }

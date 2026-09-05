@@ -4,6 +4,7 @@
 
 const crypto = require("crypto");
 const { normalizePhone } = require("./phone");
+const { phoneLookupVariants, phonesEquivalent } = require("./userPhoneLookup");
 
 function stripIban(s) {
   return String(s || "")
@@ -77,20 +78,48 @@ async function assertPayoutIbanGloballyAvailable(sb, plainIban, ctx) {
   }
 }
 
-/** تسجيل متجر جديد: لا يُسمح بنفس جوال متجر قيد المراجعة أو معتمد. */
-async function assertStorePhoneNotDuplicateForRegister(sb, phoneDigits) {
+function storePhoneLookupKeys(phoneDigits) {
   const p = normalizePhone(phoneDigits);
-  if (!p) return;
+  const keys = new Set();
+  if (p && p.length >= 10) keys.add(p);
+  phoneLookupVariants(p).forEach((v) => {
+    const d = String(v || "").replace(/\D/g, "");
+    if (d.length >= 9 && d.length <= 15) keys.add(d);
+  });
+  return [...keys];
+}
+
+/**
+ * يبحث عن متجر بنفس الجوال (كل صيغ 05 / 9665) مع مطابقة فعلية في JS.
+ * لا يعتمد على eq خام وحده حتى لا يُرفض رقم جديد بالخطأ.
+ */
+async function resolveStorePhoneForRegister(sb, phoneDigits) {
+  const p = normalizePhone(phoneDigits);
+  if (!p || p.length < 10) return { approved: null, pending: null };
+  const keys = storePhoneLookupKeys(p);
+  if (!keys.length) return { approved: null, pending: null };
+
   const { data, error } = await sb
     .from("stores")
-    .select("id, status")
-    .eq("phone", p)
+    .select("id, status, phone")
+    .in("phone", keys)
     .in("status", ["pending", "approved"])
-    .limit(5);
+    .limit(20);
   if (error) throw new Error(error.message);
-  if (data && data.length) {
-    throw new Error("رقم الجوال مسجّل مسبقاً لطلب متجر قيد المراجعة أو متجر معتمد — لا يمكن تكرار رقم الجوال");
+
+  const hits = (data || []).filter((r) => phonesEquivalent(r.phone, p));
+  const approved = hits.find((r) => String(r.status || "").toLowerCase() === "approved") || null;
+  const pending = hits.find((r) => String(r.status || "").toLowerCase() === "pending") || null;
+  return { approved, pending };
+}
+
+/** يمنع فقط متجراً معتمداً بنفس الجوال. طلب قيد المراجعة يُعاد استخدامه (تحديث) لا رفض. */
+async function assertStorePhoneNotDuplicateForRegister(sb, phoneDigits) {
+  const found = await resolveStorePhoneForRegister(sb, phoneDigits);
+  if (found.approved) {
+    throw new Error("رقم الجوال مسجّل مسبقاً لمتجر معتمد — لا يمكن تكرار رقم الجوال");
   }
+  return found;
 }
 
 module.exports = {
@@ -99,5 +128,6 @@ module.exports = {
   digitsOnly,
   assertPayoutIbanGloballyAvailable,
   assertStorePhoneNotDuplicateForRegister,
+  resolveStorePhoneForRegister,
   stripIban,
 };

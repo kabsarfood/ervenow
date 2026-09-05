@@ -1,0 +1,499 @@
+/**
+ * ERVENOW — Register-store Desktop VIP
+ * Visual only. Scoped to 1025px+ and never under html.erv-mobile-shell.
+ */
+
+@media (min-width: 1025px) {
+  html:not(.erv-mobile-shell) body.guest-shell-page.reg-store-page {
+    --rs-vip-ink: #3d2213;
+    --rs-vip-muted: #5c4a3d;
+    --rs-vip-gold: #b9872f;
+    --rs-vip-gold-deep: #9a7024;
+    --rs-vip-bg: #f7f8fa;
+    --rs-vip-card: #ffffff;
+    --rs-vip-line: rgba(61, 34, 19, 0.1);
+    --rs-vip-max: 1220px;
+    --rs-vip-radius: 18px;
+    --rs-vip-shadow: 0 8px 28px rgba(45, 26, 14, 0.06);
+    background:
+      radial-gradient(900px 420px at 100% -8%, rgba(185, 135, 47, 0.08), transparent 55%),
+      radial-gradient(700px 380px at -6% 20%, rgba(61, 34, 19, 0.035), transparent 50%),
+      var(--rs-vip-bg);
+  }
+
+  html:not(.erv-mobile-shell) body.guest-shell-page.reg-store-page .erv-prereg-banner {
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    gap: 0.5rem;
+    font-size: 0.84rem;
+  }
+
+  html:not(.erv-mobile-shell) body.guest-shell-page.reg-store-page .erv-prereg-banner p {
+    flex: 0 1 auto;
+    text-align: center;
+  }
+
+  html:not(.erv-mobile-shell) body.guest-shell-page.reg-store-page .erv-prereg-banner__cta {
+    font-size: 0.78rem;
+  }
+
+  html:not(.erv-mobile-shell) body.guest-shell-page.reg-store-page .dash-site-header {
+    background: rgba(255, 255, 255, 0.92);
+    border-bottom: 1px solid var(--rs-vip-line);
+    box-shadow: 0 8px 24px rgba(45, 26, 14, 0.035);
+    backdrop-filter: blur(10px);
+  }
+
+  html:not(.erv-mobile-shell) body.guest-shell-page.reg-store-page .dash-site-header__inner {
+    max-width: var(--rs-vip-max);
+    margin-inline: auto;
+    padding-block: 10px;
+  }
+
+  html:not(.erv-mobile-shell) body.guest-shell-page.reg-store-page .dash-site-header__logo {
+    letter-spacing: 0.04em;
+  }
+
+  html:not(.erv-mobile-shell) body.guest-shell-page.reg-store-page .reg-store-hero {
+    padding: 22px 0 8px;
+    background: transparent;
+    border-bottom: 0;
+  }
+
+  html:not(.erv-mobile-shell) body.guest-shell-page.reg-store-page .reg-store-hero__inner,
+  html:not(.erv-mobile-shell) .reg-store-hero .guest-section-hero__inner {
+    max-width: var(--rs-vip-max);
+    width: calc(100% - 64px);
+    margin-inline: auto;
+    padding: 22px 28px 20px;
+    border-radius: 20px;
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(255, 254, 251, 0.94) 100%);
+    border: 1px solid rgba(61, 34, 19, 0.08);
+    box-shadow: var(--rs-vip-shadow);
+    position: relative;
+    overflow: hidden;
+    align-items: center;
+    text-align: center;
+  }
+
+  html:not(.erv-mobile-shell) body.guest-shell-page.reg-store-page .reg-store-hero__inner::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: -70px;
+    width: 280px;
+    height: 220px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(185, 135, 47, 0.14), transparent 68%);
+    transform: translateX(-50%);
+    pointer-events: none;
+  }
+
+  html:not(.erv-mobile-shell) .reg-store-hero__title-desk {
+    display: none;
+  }
+
+  html:not(.erv-mobile-shell) body.guest-shell-page.reg-store-page .reg-store-hero .guest-section-hero__eyebrow {
+    display: inline-flex;
+  }
+
+  html:not(.erv-mobile-shell) .reg-store-hero__title-mobile {
+    display: block;
+  }
+
+  html:not(.erv-mobile-shell) .reg-store-hero__sub-mobile {
+    display: flex;
+  }
+
+  html:not(.erv-mobile-shell) body.guest-shell-page.reg-store-page .reg-store-hero .guest-section-hero__title {
+    max-width: 18em;
+    margin-inline: auto;
+    font-size: clamp(1.55rem, 2.2vw, 1.85rem);
+    letter-spacing: -0.03em;
+    text-align: center;
+  }
+
+  html:not(.erv-mobile-shell) .reg-store-hero__cards {
+    max-width: 640px;
+    gap: 12px;
+    margin-top: 16px;
+  }
+
+  html:not(.erv-mobile-shell) .reg-store-hero__mini {
+    padding: 12px 14px;
+    font-size: 0.9rem;
+  }
+
+  html:not(.erv-mobile-shell) body.guest-shell-page.reg-store-page .reg-store-hero .reg-store-perks {
+    margin: 14px 0 0;
+    gap: 10px;
+  }
+
+  html:not(.erv-mobile-shell) body.guest-shell-page.reg-store-page .dash-main .reg-store-layout {
+    max-width: var(--rs-vip-max);
+    padding-inline: 32px;
+    padding-top: 22px;
+  }
+
+  html:not(.erv-mobile-shell) .reg-store-desk {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  html:not(.erv-mobile-shell) .reg-store-progress {
+    margin-bottom: 18px;
+    overflow: visible;
+    padding: 16px 12px 12px;
+    border: 1px solid var(--rs-vip-line);
+    border-radius: var(--rs-vip-radius);
+    background: var(--rs-vip-card);
+    box-shadow: var(--rs-vip-shadow);
+  }
+
+  html:not(.erv-mobile-shell) .reg-store-progress__list {
+    position: relative;
+    min-width: 0;
+    padding: 8px 4px 4px;
+    gap: 0;
+  }
+
+  html:not(.erv-mobile-shell) .reg-store-progress__list::before {
+    content: "";
+    position: absolute;
+    top: 23px;
+    inset-inline: 28px;
+    height: 2px;
+    background: linear-gradient(90deg, rgba(185, 135, 47, 0.35), rgba(61, 34, 19, 0.08));
+    pointer-events: none;
+  }
+
+  html:not(.erv-mobile-shell) .reg-store-progress__step {
+    position: relative;
+    z-index: 1;
+    min-width: 0;
+    font-size: 0.72rem;
+  }
+
+  html:not(.erv-mobile-shell) .reg-store-form-card {
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+    overflow: visible;
+    border-radius: 0;
+  }
+
+  html:not(.erv-mobile-shell) .reg-store-acc {
+    display: block;
+    margin: 0 0 14px;
+    padding: 0;
+    border: 1px solid var(--rs-vip-line);
+    border-radius: var(--rs-vip-radius);
+    background: var(--rs-vip-card);
+    box-shadow: var(--rs-vip-shadow);
+    overflow: hidden;
+    animation: rsVipIn 0.45s ease both;
+  }
+
+  html:not(.erv-mobile-shell) .reg-store-acc:hover {
+    border-color: rgba(185, 135, 47, 0.28);
+  }
+
+  html:not(.erv-mobile-shell) .reg-store-acc:nth-of-type(2) { animation-delay: 0.04s; }
+  html:not(.erv-mobile-shell) .reg-store-acc:nth-of-type(3) { animation-delay: 0.08s; }
+  html:not(.erv-mobile-shell) .reg-store-acc:nth-of-type(4) { animation-delay: 0.12s; }
+  html:not(.erv-mobile-shell) .reg-store-acc:nth-of-type(5) { animation-delay: 0.16s; }
+  html:not(.erv-mobile-shell) .reg-store-acc:nth-of-type(6) { animation-delay: 0.2s; }
+
+  html:not(.erv-mobile-shell) .reg-store-acc > .reg-store-section__head {
+    pointer-events: auto;
+    cursor: pointer;
+    margin-bottom: 0;
+    padding: 16px 20px;
+    padding-inline-end: 48px;
+    background: linear-gradient(180deg, #fff 0%, #fcfaf7 100%);
+  }
+
+  html:not(.erv-mobile-shell) .reg-store-acc[open] > .reg-store-section__head {
+    margin-bottom: 0;
+    border-bottom: 1px solid rgba(61, 34, 19, 0.08);
+    background: #fff;
+  }
+
+  html:not(.erv-mobile-shell) .reg-store-acc > .reg-store-section__body {
+    padding: 20px 22px 22px;
+  }
+
+  html:not(.erv-mobile-shell) .reg-store-acc > .reg-store-section__head::after {
+    inset-inline-end: 20px;
+  }
+
+  html:not(.erv-mobile-shell) .reg-store-section__title {
+    font-size: 1.12rem;
+  }
+
+  html:not(.erv-mobile-shell) body.guest-shell-page.reg-store-page input[type="text"],
+  html:not(.erv-mobile-shell) body.guest-shell-page.reg-store-page input[type="tel"],
+  html:not(.erv-mobile-shell) body.guest-shell-page.reg-store-page input[type="email"],
+  html:not(.erv-mobile-shell) body.guest-shell-page.reg-store-page input[type="url"],
+  html:not(.erv-mobile-shell) body.guest-shell-page.reg-store-page input[type="search"],
+  html:not(.erv-mobile-shell) body.guest-shell-page.reg-store-page input[type="file"],
+  html:not(.erv-mobile-shell) body.guest-shell-page.reg-store-page select,
+  html:not(.erv-mobile-shell) body.guest-shell-page.reg-store-page textarea {
+    min-height: 54px;
+    border-radius: 15px;
+    border-color: rgba(61, 34, 19, 0.12);
+    background: #fff;
+    box-shadow: none;
+  }
+
+  html:not(.erv-mobile-shell) body.guest-shell-page.reg-store-page textarea {
+    min-height: 96px;
+  }
+
+  html:not(.erv-mobile-shell) body.guest-shell-page.reg-store-page input:focus,
+  html:not(.erv-mobile-shell) body.guest-shell-page.reg-store-page select:focus,
+  html:not(.erv-mobile-shell) body.guest-shell-page.reg-store-page textarea:focus {
+    border-color: rgba(185, 135, 47, 0.7);
+    box-shadow: 0 0 0 4px rgba(185, 135, 47, 0.12);
+  }
+
+  html:not(.erv-mobile-shell) .reg-store-step1-body {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px 18px;
+    align-items: start;
+  }
+
+  html:not(.erv-mobile-shell) .reg-store-step1-name {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  html:not(.erv-mobile-shell) .reg-store-step1-phone {
+    grid-column: 2;
+    grid-row: 1;
+    margin-top: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+  }
+
+  html:not(.erv-mobile-shell) .reg-store-step1-type,
+  html:not(.erv-mobile-shell) .reg-store-step1-body > .reg-store-dd {
+    grid-column: 1 / -1;
+  }
+
+  html:not(.erv-mobile-shell) .reg-store-applicant--end {
+    grid-column: auto;
+    margin: 0 0 18px;
+  }
+
+  html:not(.erv-mobile-shell) .reg-store-field-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px 18px;
+  }
+
+  html:not(.erv-mobile-shell) .reg-store-field-row > .field-gap,
+  html:not(.erv-mobile-shell) .reg-store-field-row .reg-store-phone-card {
+    margin-top: 0;
+  }
+
+  html:not(.erv-mobile-shell) .reg-store-phone-card {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    border-radius: 0;
+  }
+
+  html:not(.erv-mobile-shell) .reg-store-type-vip {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    margin-bottom: 10px;
+  }
+
+  html:not(.erv-mobile-shell) #type.reg-store-select {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    padding: 0 !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    clip-path: inset(50%) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+    opacity: 0 !important;
+    pointer-events: none;
+  }
+
+  html:not(.erv-mobile-shell) .reg-store-type-vip__card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    min-height: 108px;
+    padding: 16px 14px 14px;
+    border-radius: 16px;
+    border: 1.5px solid rgba(61, 34, 19, 0.12);
+    background: #fff;
+    color: var(--rs-vip-ink);
+    cursor: pointer;
+    text-align: start;
+    font: inherit;
+    transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease, background 180ms ease;
+  }
+
+  html:not(.erv-mobile-shell) .reg-store-type-vip__card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(185, 135, 47, 0.45);
+    box-shadow: 0 10px 22px rgba(45, 26, 14, 0.07);
+  }
+
+  html:not(.erv-mobile-shell) .reg-store-type-vip__card.is-active {
+    border-color: var(--rs-vip-gold);
+    background: linear-gradient(180deg, #fffefb 0%, #f8f1e6 100%);
+    box-shadow: 0 0 0 3px rgba(185, 135, 47, 0.16);
+  }
+
+  html:not(.erv-mobile-shell) .reg-store-type-vip__check {
+    position: absolute;
+    inset-inline-end: 10px;
+    top: 10px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: var(--rs-vip-ink);
+    color: #fffefb;
+    font-size: 0.72rem;
+    font-weight: 900;
+  }
+
+  html:not(.erv-mobile-shell) .reg-store-type-vip__card.is-active .reg-store-type-vip__check {
+    display: flex;
+  }
+
+  html:not(.erv-mobile-shell) .reg-store-type-vip__ic {
+    width: 40px;
+    height: 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    background: rgba(185, 135, 47, 0.1);
+    font-size: 1.15rem;
+  }
+
+  html:not(.erv-mobile-shell) .reg-store-type-vip__name {
+    font-size: 0.92rem;
+    font-weight: 800;
+    line-height: 1.35;
+  }
+
+  html:not(.erv-mobile-shell) .reg-store-dd {
+    border-radius: 16px;
+  }
+
+  html:not(.erv-mobile-shell) .reg-store-page #map {
+    height: 320px;
+    min-height: 280px;
+  }
+
+  html:not(.erv-mobile-shell) .reg-store-submit-wrap {
+    margin-top: 4px;
+    padding: 22px 24px 24px;
+    border: 1px solid var(--rs-vip-line);
+    border-radius: var(--rs-vip-radius);
+    background: var(--rs-vip-card);
+    box-shadow: var(--rs-vip-shadow);
+  }
+
+  html:not(.erv-mobile-shell) .reg-store-submit-wrap .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    min-height: 56px;
+    border-radius: 16px;
+    font-size: 1.05rem;
+    transition: transform 160ms ease, box-shadow 160ms ease, filter 160ms ease;
+  }
+
+  html:not(.erv-mobile-shell) .reg-store-submit-wrap .btn-primary::before {
+    content: "✦";
+    font-size: 0.95rem;
+  }
+
+  html:not(.erv-mobile-shell) .reg-store-submit-wrap .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 24px rgba(185, 135, 47, 0.32);
+  }
+
+  html:not(.erv-mobile-shell) .reg-store-submit-wrap .btn-primary:active {
+    transform: translateY(0);
+    filter: brightness(0.97);
+  }
+
+  html:not(.erv-mobile-shell) .reg-store-footer-card {
+    margin-top: 22px;
+  }
+
+  html:not(.erv-mobile-shell) .reg-store-footer-card .reg-store-aside__card {
+    padding: 16px 22px;
+    border-radius: var(--rs-vip-radius);
+    box-shadow: var(--rs-vip-shadow);
+  }
+
+  html:not(.erv-mobile-shell) .reg-store-footer-card .reg-store-aside__title {
+    font-size: 1rem;
+  }
+
+  html:not(.erv-mobile-shell) .reg-store-footer-card .reg-store-aside__list li {
+    font-size: 0.84rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  html:not(.erv-mobile-shell) .reg-store-type-vip {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1024px) {
+  html:not(.erv-mobile-shell) body.guest-shell-page.reg-store-page .reg-store-layout {
+    max-width: min(980px, 100%);
+  }
+
+  html:not(.erv-mobile-shell) .reg-store-hero__title-desk {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html:not(.erv-mobile-shell) .reg-store-acc,
+  html:not(.erv-mobile-shell) .reg-store-type-vip__card,
+  html:not(.erv-mobile-shell) .reg-store-submit-wrap .btn-primary {
+    animation: none;
+    transition: none;
+  }
+}
+
+@keyframes rsVipIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}

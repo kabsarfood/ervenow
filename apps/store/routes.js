@@ -17,7 +17,7 @@ const { parseOptionalPayoutPayload, payoutRowForDriversOrStores } = require("../
 const { sanitizeDriverOrStoreRowForApi } = require("../../shared/utils/bankApiSafe");
 const {
   assertPayoutIbanGloballyAvailable,
-  assertStorePhoneNotDuplicateForRegister,
+  resolveStorePhoneForRegister,
   stripIban,
   ibanFingerprintFromPlain,
 } = require("../../shared/utils/payoutUniqueness");
@@ -71,6 +71,11 @@ const {
   fetchCategoryLabelMap,
 } = require("../../shared/categoriesDb");
 const { incrementCategoryUsage } = require("../../shared/categoryUsage");
+const {
+  parseStoreCategorySlugs,
+  joinStoreCategorySlugs,
+  collectCategoryInputs,
+} = require("../../shared/utils/storeCategorySlugs");
 const checkoutPaymentMethods = require("../../shared/utils/checkoutPaymentMethods");
 const { getStoreWalletPayloadWithFallback } = require("../../shared/utils/ledgerWallet");
 const {
@@ -207,7 +212,7 @@ async function mapProductsForApiResolved(sb, rows) {
   return resolveProductsForApi(sb, rows || [], resolveStoreImageUrl);
 }
 
-async function notifyAdminWhatsApp({ name, phoneDisplay, typeLabel, mapsUrl, requestId, payoutSummary, cuisineLine }) {
+async function notifyAdminWhatsApp({ name, phoneDisplay, typeLabel, mapsUrl, requestId, payoutSummary, cuisineLine, applicantName, applicantPhone }) {
   const client = getTwilioClient();
   const from = waFrom();
   const adminRaw = String(process.env.ERVENOW_ADMIN_WHATSAPP || process.env.ERWENOW_ADMIN_WHATSAPP || "").trim();
@@ -221,6 +226,8 @@ async function notifyAdminWhatsApp({ name, phoneDisplay, typeLabel, mapsUrl, req
     `طلب تسجيل متجر جديد\n` +
     `الاسم: ${name}\n` +
     `الجوال: ${phoneDisplay}\n` +
+    (applicantName ? `من عبّأ الطلب: ${applicantName}\n` : "") +
+    (applicantPhone ? `جوال من عبّأ الطلب: ${applicantPhone}\n` : "") +
     `النوع: ${typeLabel}\n` +
     (cuisineLine ? `${cuisineLine}\n` : "") +
     `الموقع: ${mapsUrl}\n` +
@@ -393,25 +400,46 @@ function filterAndSortStoresByUser(rows, userLat, userLng) {
 }
 
 function categoryLabelForStoreRow(row, labelOpts) {
+  const slugs = parseStoreCategorySlugs(row && row.category);
   const browseCat = resolveRestaurantBrowseCategory(row);
-  const catRaw = browseCat || (row.category != null ? String(row.category).trim() : "");
+  const catRaw = browseCat || slugs[0] || (row.category != null ? String(row.category).trim() : "");
   const t = String(row.type || "")
     .trim()
     .toLowerCase();
   const restMap = labelOpts && labelOpts.restaurantLabels;
   const marketMap = labelOpts && labelOpts.marketLabels;
+  function labelOne(slug) {
+    const k = String(slug || "").toLowerCase();
+    if (!k) return null;
+    if (t === "restaurant") {
+      if (restMap && restMap.has(k)) return restMap.get(k);
+      return restaurantCategoryDisplayAr(k, row.type) || restaurantCategoryLabelAr(k);
+    }
+    if (t === "clothing") return labelForProductSlug("clothing", k);
+    if (isMarketStoreType(row.type)) {
+      if (marketMap && marketMap.has(k)) return marketMap.get(k);
+      const pc = normalizeProductCategory(k);
+      if (pc) return productCategoryLabelAr(pc);
+    }
+    return restaurantCategoryDisplayAr(k, row.type) || restaurantCategoryLabelAr(k);
+  }
+  if (slugs.length > 1) {
+    const labels = slugs.map(labelOne).filter(Boolean);
+    if (labels.length) return labels.join(" · ");
+  }
   if (t === "restaurant") {
-    const k = catRaw.toLowerCase();
+    const k = String(catRaw || "").toLowerCase();
     if (restMap && restMap.has(k)) return restMap.get(k);
     return restaurantCategoryDisplayAr(catRaw, row.type);
   }
   if (isMarketStoreType(row.type)) {
-    const k = catRaw.toLowerCase();
+    const k = String(catRaw || "").toLowerCase();
     if (marketMap && marketMap.has(k)) return marketMap.get(k);
     const pc = normalizeProductCategory(catRaw);
     if (pc) return productCategoryLabelAr(pc);
     return TYPE_LABEL_AR[t] || null;
   }
+  if (t === "clothing") return labelOne(catRaw) || TYPE_LABEL_AR[t] || null;
   return restaurantCategoryDisplayAr(catRaw, row.type) || TYPE_LABEL_AR[t] || null;
 }
 
@@ -1670,6 +1698,14 @@ router.post("/register", async (req, res) => {
     const type = String(b.type || "").trim().toLowerCase();
     const restaurantCategoryRaw = String(b.restaurant_category || b.restaurantCategory || "").trim().toLowerCase();
     const storeCategorySlug = String(b.category || b.store_category || "").trim().toLowerCase();
+    const restaurantSlugs = collectCategoryInputs(b, [
+      "categories",
+      "restaurant_categories",
+      "restaurant_category",
+      "restaurantCategory",
+      "category",
+    ]);
+    const storeSlugs = collectCategoryInputs(b, ["categories", "category", "store_category"]);
 
     let lat = b.lat;
     let lng = b.lng;
@@ -1703,37 +1739,68 @@ router.post("/register", async (req, res) => {
 
     const phoneDigits = normalizePhone(phoneRaw);
     if (!phoneDigits || phoneDigits.length < 10) return fail(res, "رقم الجوال غير صالح", 400);
+    const applicantName = String(b.applicant_name || b.applicantName || "").trim();
+    const applicantPhoneDigits = normalizePhone(b.applicant_phone || b.applicantPhone || "");
+    if (!applicantName || applicantName.length < 2) {
+      return fail(res, "أدخل اسم من عبّأ البيانات", 400);
+    }
+    if (!applicantPhoneDigits || applicantPhoneDigits.length < 10) {
+      return fail(res, "أدخل جوالاً صحيحاً لمن عبّأ البيانات", 400);
+    }
     if (!STORE_TYPES.has(type)) return fail(res, "نوع النشاط غير صالح", 400);
 
     let categoryValue = type;
     if (type === "restaurant") {
-      const slugSrc = restaurantCategoryRaw || storeCategorySlug;
-      const resolved = await resolvePublicCategorySlug(sb, "restaurant", slugSrc);
-      if (!resolved) {
-        return fail(res, "اختر نوع المطعم (تصنيف المأكولات) من القائمة المعتمدة", 400);
+      const sources = restaurantSlugs.length
+        ? restaurantSlugs
+        : parseStoreCategorySlugs(restaurantCategoryRaw || storeCategorySlug);
+      const resolved = [];
+      for (let i = 0; i < sources.length; i += 1) {
+        const got = await resolvePublicCategorySlug(sb, "restaurant", sources[i]);
+        if (got && resolved.indexOf(got) === -1) resolved.push(got);
       }
-      categoryValue = resolved;
+      if (!resolved.length) {
+        return fail(res, "اختر تصنيف مطعم واحداً على الأقل من القائمة المعتمدة", 400);
+      }
+      categoryValue = joinStoreCategorySlugs(resolved);
     } else if (type === "supermarket") {
-      const resolved = await resolvePublicCategorySlug(sb, "market", storeCategorySlug);
-      if (!resolved) {
-        return fail(res, "اختر قسم البقالة من القائمة المعتمدة", 400);
+      const sources = storeSlugs.length ? storeSlugs : parseStoreCategorySlugs(storeCategorySlug);
+      const resolved = [];
+      for (let i = 0; i < sources.length; i += 1) {
+        const got = await resolvePublicCategorySlug(sb, "market", sources[i]);
+        if (got && resolved.indexOf(got) === -1) resolved.push(got);
       }
-      categoryValue = resolved;
+      if (!resolved.length) {
+        return fail(res, "اختر صنفاً واحداً على الأقل للسوبرماركت", 400);
+      }
+      categoryValue = joinStoreCategorySlugs(resolved);
     } else if (type === "clothing") {
-      const resolved = normalizeProductSlugForCatalog("clothing", storeCategorySlug);
-      if (!resolved) {
-        return fail(res, "اختر تصنيف الملابس من القائمة المعتمدة", 400);
+      const sources = storeSlugs.length ? storeSlugs : parseStoreCategorySlugs(storeCategorySlug);
+      const resolved = [];
+      sources.forEach((s) => {
+        const got = normalizeProductSlugForCatalog("clothing", s);
+        if (got && resolved.indexOf(got) === -1) resolved.push(got);
+      });
+      if (!resolved.length) {
+        return fail(res, "اختر تصنيفاً واحداً على الأقل للملابس", 400);
       }
-      categoryValue = resolved;
+      categoryValue = joinStoreCategorySlugs(resolved);
     }
 
     const phoneDisplay = phoneRaw || phoneDigits;
 
     let payoutCols = {};
     let parsedPayout = {};
+    let pendingStoreId = null;
     try {
       parsedPayout = parseOptionalPayoutPayload({ payout: b.payout });
-      await assertStorePhoneNotDuplicateForRegister(sb, phoneDigits);
+      const phoneConflict = await resolveStorePhoneForRegister(sb, phoneDigits);
+      if (phoneConflict.approved) {
+        throw new Error("رقم الجوال مسجّل مسبقاً لمتجر معتمد — لا يمكن تكرار رقم الجوال");
+      }
+      if (phoneConflict.pending && phoneConflict.pending.id) {
+        pendingStoreId = String(phoneConflict.pending.id);
+      }
       if (parsedPayout.iban) {
         await assertPayoutIbanGloballyAvailable(sb, parsedPayout.iban, {
           ownerPhonesDigits: [phoneDigits],
@@ -1747,6 +1814,8 @@ router.post("/register", async (req, res) => {
     const row = {
       name,
       phone: phoneDigits,
+      applicant_name: applicantName,
+      applicant_phone: applicantPhoneDigits,
       email,
       commercial_registration,
       file_url: null,
@@ -1773,7 +1842,19 @@ router.post("/register", async (req, res) => {
 
     let insertedRow = null;
     let insErr = null;
-    ({ data: insertedRow, error: insErr } = await sb.from("stores").insert(row).select("id").single());
+    async function saveStoreRow(payload) {
+      if (pendingStoreId) {
+        return sb
+          .from("stores")
+          .update(payload)
+          .eq("id", pendingStoreId)
+          .eq("status", "pending")
+          .select("id")
+          .single();
+      }
+      return sb.from("stores").insert(payload).select("id").single();
+    }
+    ({ data: insertedRow, error: insErr } = await saveStoreRow(row));
     if (
       insErr &&
       /location_text|address|delivery_radius_km|is_active|category|commercial_registration|\bemail\b|file_url|\blat\b|\blng\b|maps_url|bank_country|bank_name|bank_iban|bank_account|bank_swift|bank_last4|bank_verified|bank_added|bank_account_name|\biban\b|stc_pay|payout_crypto|column .* does not exist|schema cache/i.test(
@@ -1804,7 +1885,27 @@ router.post("/register", async (req, res) => {
       delete row.stc_pay_phone;
       delete row.payout_iban_fingerprint;
       delete row.payout_crypto_interest;
-      ({ data: insertedRow, error: insErr } = await sb.from("stores").insert(row).select("id").single());
+      delete row.applicant_name;
+      delete row.applicant_phone;
+      ({ data: insertedRow, error: insErr } = await saveStoreRow(row));
+    }
+    if (
+      insErr &&
+      /unique|duplicate|23505|uq_stores_phone|stores_phone/i.test(String(insErr.message || insErr.details || "")) &&
+      !pendingStoreId
+    ) {
+      try {
+        const again = await resolveStorePhoneForRegister(sb, phoneDigits);
+        if (again.approved) {
+          return fail(res, "رقم الجوال مسجّل مسبقاً لمتجر معتمد — لا يمكن تكرار رقم الجوال", 400);
+        }
+        if (again.pending && again.pending.id) {
+          pendingStoreId = String(again.pending.id);
+          ({ data: insertedRow, error: insErr } = await saveStoreRow(row));
+        }
+      } catch (retryPhoneErr) {
+        console.warn("[store/register] phone unique retry:", retryPhoneErr.message || retryPhoneErr);
+      }
     }
     if (insErr) {
       console.error("[store/register] insert FULL:", {
@@ -1815,7 +1916,7 @@ router.post("/register", async (req, res) => {
       });
       const em = String(insErr.message || insErr.details || "");
       if (/unique|duplicate|23505|uq_stores_phone|stores_phone/i.test(em)) {
-        return fail(res, "رقم الجوال مسجّل مسبقاً لمتجر قيد المراجعة أو معتمد", 400);
+        return fail(res, "رقم الجوال مسجّل مسبقاً لمتجر معتمد — لا يمكن تكرار رقم الجوال", 400);
       }
       if (/unique|duplicate|23505|payout_iban|fingerprint/i.test(em)) {
         return fail(res, "هذا الآيبان مسجّل لمتجر أو حساب آخر", 400);
@@ -1876,12 +1977,20 @@ router.post("/register", async (req, res) => {
     const typeLabel = TYPE_LABEL_AR[type] || type;
     let cuisineLine = "";
     if (type === "restaurant" && categoryValue) {
-      const lab = restaurantCategoryLabelAr(categoryValue) || categoryValue;
-      cuisineLine = `تصنيف المطعم: ${lab}`;
+      const labs = parseStoreCategorySlugs(categoryValue)
+        .map((s) => restaurantCategoryLabelAr(s) || s)
+        .filter(Boolean);
+      cuisineLine = `تصنيف المطعم: ${labs.join(" · ") || categoryValue}`;
     } else if (type === "supermarket" && categoryValue) {
-      cuisineLine = `قسم البقالة: ${categoryValue}`;
+      const labs = parseStoreCategorySlugs(categoryValue)
+        .map((s) => productCategoryLabelAr(s) || s)
+        .filter(Boolean);
+      cuisineLine = `قسم البقالة: ${labs.join(" · ") || categoryValue}`;
     } else if (type === "clothing" && categoryValue) {
-      cuisineLine = `تصنيف الملابس: ${labelForProductSlug("clothing", categoryValue) || categoryValue}`;
+      const labs = parseStoreCategorySlugs(categoryValue)
+        .map((s) => labelForProductSlug("clothing", s) || s)
+        .filter(Boolean);
+      cuisineLine = `تصنيف الملابس: ${labs.join(" · ") || categoryValue}`;
     }
 
     const payoutSummaryParts = [];
@@ -1899,6 +2008,8 @@ router.post("/register", async (req, res) => {
         requestId,
         payoutSummary,
         cuisineLine: cuisineLine || undefined,
+        applicantName,
+        applicantPhone: applicantPhoneDigits,
       });
     } catch (waErr) {
       console.error("[store/register] WhatsApp:", waErr.message || waErr);
@@ -1916,6 +2027,8 @@ router.post("/register", async (req, res) => {
           store_type: type,
           store_name: name,
           phone: phoneDisplay,
+          applicant_name: applicantName,
+          applicant_phone: applicantPhoneDigits,
         },
       });
     } catch (notifyErr) {

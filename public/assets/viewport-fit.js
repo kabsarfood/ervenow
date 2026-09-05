@@ -271,10 +271,38 @@
     e.preventDefault();
   }
 
+  function ensureFormDraftJs() {
+    if (global.__ervFormDraftInjected) return;
+    if (document.querySelector('script[src*="form-draft.js"]')) {
+      global.__ervFormDraftInjected = true;
+      return;
+    }
+    global.__ervFormDraftInjected = true;
+    var s = document.createElement("script");
+    s.src = "/assets/form-draft.js?erv=20260905a";
+    s.defer = true;
+    (document.head || document.documentElement).appendChild(s);
+  }
+
+  function ensurePreRegBannerJs() {
+    if (global.__ervPreRegBannerInjected) return;
+    if (document.querySelector('script[src*="pre-reg-banner.js"]')) {
+      global.__ervPreRegBannerInjected = true;
+      return;
+    }
+    global.__ervPreRegBannerInjected = true;
+    var s = document.createElement("script");
+    s.src = "/assets/pre-reg-banner.js?erv=20260905b";
+    s.defer = true;
+    (document.head || document.documentElement).appendChild(s);
+  }
+
   enforceViewportMeta();
   bootMobileShell();
   setViewportVars();
   clampHorizontalScroll();
+  ensureFormDraftJs();
+  ensurePreRegBannerJs();
 
   document.addEventListener("gesturestart", blockGestureZoom, { passive: false });
   document.addEventListener("gesturechange", blockGestureZoom, { passive: false });

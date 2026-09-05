@@ -76,10 +76,12 @@
       zoomControl: true,
       inertia: true,
       tap: false,
+      scrollWheelZoom: false,
     }).setView(DEFAULT_CENTER, DEFAULT_ZOOM);
 
     this.map.boxZoom.disable();
     this.map.keyboard.disable();
+    if (this.map.scrollWheelZoom) this.map.scrollWheelZoom.disable();
 
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       maxZoom: 19,
