@@ -455,6 +455,22 @@
       body.insertBefore(stage, header.nextSibling);
     }
     ensurePreregHeaderOrder();
+    /* سطح المكتب: أعد تسلسل الأقسام كاملة (لا تترك discover بعد الفوتر) */
+    if (isDesktopMp()) {
+      var hub = document.querySelector(".sn-section--hub");
+      var discover = document.getElementById("ervMpDiscover");
+      var main = document.querySelector("main[data-marketing-region='main'], main");
+      var footer = document.querySelector(".lp-footer");
+      var sequence = [prereg, header, stage, hub, discover, main, footer].filter(Boolean);
+      if (sequence.length > 1) {
+        body.insertBefore(sequence[0], body.firstChild);
+        for (var i = 1; i < sequence.length; i++) {
+          if (sequence[i - 1].nextElementSibling !== sequence[i]) {
+            body.insertBefore(sequence[i], sequence[i - 1].nextSibling);
+          }
+        }
+      }
+    }
   }
 
   var topChromeMo = null;

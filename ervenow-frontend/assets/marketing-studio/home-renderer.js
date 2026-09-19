@@ -49,19 +49,90 @@
     }
   }
 
+  function chromeAnchor(parent) {
+    if (!parent || parent !== document.body) return parent ? parent.firstChild : null;
+    var prereg = document.getElementById("ervPreRegBanner");
+    var header =
+      document.getElementById("top") ||
+      document.querySelector(".lp-header.lp-header--refined, .dash-site-header, .lp-header");
+    /* أبقِ شريط التسجيل ثم الهيدر في أعلى body — لا تُلحق الوحدات قبلهما */
+    if (prereg && prereg.parentElement === parent) {
+      if (header && header.parentElement === parent && prereg.nextElementSibling !== header) {
+        parent.insertBefore(header, prereg.nextSibling);
+      }
+      return header && header.parentElement === parent ? header.nextSibling : prereg.nextSibling;
+    }
+    if (header && header.parentElement === parent) {
+      if (parent.firstElementChild !== header) parent.insertBefore(header, parent.firstChild);
+      return header.nextSibling;
+    }
+    return parent.firstChild;
+  }
+
+  function pinBodyChrome() {
+    var body = document.body;
+    if (!body) return;
+    var prereg = document.getElementById("ervPreRegBanner");
+    var header =
+      document.getElementById("top") ||
+      document.querySelector(".lp-header.lp-header--refined, .dash-site-header, .lp-header");
+    var stage = document.querySelector(".erv-mp-stage");
+    var hub = document.querySelector(".sn-section--hub");
+    var discover = document.getElementById("ervMpDiscover");
+    var main = document.querySelector("main[data-marketing-region='main'], main");
+    var footer = document.querySelector(".lp-footer");
+    var isDesktop = false;
+    try {
+      isDesktop =
+        !document.documentElement.classList.contains("erv-mobile-shell") &&
+        window.matchMedia("(min-width: 1025px)").matches;
+    } catch (e) {}
+
+    if (prereg) {
+      if (body.firstElementChild !== prereg) body.insertBefore(prereg, body.firstElementChild);
+      if (header && prereg.nextElementSibling !== header) body.insertBefore(header, prereg.nextSibling);
+    } else if (header && body.firstElementChild !== header) {
+      body.insertBefore(header, body.firstElementChild);
+    }
+    if (header && stage && header.nextElementSibling !== stage) {
+      body.insertBefore(stage, header.nextSibling);
+    }
+
+    if (isDesktop) {
+      var sequence = [prereg, header, stage, hub, discover, main, footer].filter(Boolean);
+      if (sequence.length > 1) {
+        body.insertBefore(sequence[0], body.firstChild);
+        for (var i = 1; i < sequence.length; i++) {
+          if (sequence[i - 1].nextElementSibling !== sequence[i]) {
+            body.insertBefore(sequence[i], sequence[i - 1].nextSibling);
+          }
+        }
+      }
+    }
+
+    if (window.ErvenowPreRegBanner && typeof window.ErvenowPreRegBanner.measure === "function") {
+      window.ErvenowPreRegBanner.measure();
+    }
+  }
+
   function reorderParent(parentKey, modules) {
     var parent = resolveParent(parentKey);
     if (!parent || !modules || !modules.length) return;
     var sorted = modules.slice().sort(function (a, b) {
       return (a.display_order || 0) - (b.display_order || 0) || (a.priority || 0) - (b.priority || 0);
     });
+    var marker = chromeAnchor(parent);
     for (var i = 0; i < sorted.length; i++) {
       var mod = sorted[i];
       if (!mod.resolved_visible) continue;
       var el = slotEl(mod.id || mod.dom_slot);
       if (!el || el.parentElement !== parent) continue;
-      parent.appendChild(el);
+      /* لا تحرّك الهيدر عبر append — يبقى ضمن الـ chrome في الأعلى */
+      if (el.id === "top" || (el.classList && el.classList.contains("lp-header"))) continue;
+      parent.insertBefore(el, marker);
+      marker = el.nextSibling;
     }
+    if (parentKey === "body") pinBodyChrome();
   }
 
   function groupByParent(modules) {
@@ -86,6 +157,7 @@
     }
     document.documentElement.setAttribute("data-marketing-applied", "1");
     document.documentElement.setAttribute("data-marketing-surface", SURFACE);
+    pinBodyChrome();
     try {
       window.dispatchEvent(
         new CustomEvent("ervenow:marketing-applied", { detail: { surface: SURFACE, experience: data } })
