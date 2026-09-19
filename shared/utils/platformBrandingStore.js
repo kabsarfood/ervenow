@@ -18,11 +18,11 @@ const { DEFAULT_MAP_COLORS } = require("./mapCategoryColors");
 
 const DEFAULT_BRANDING = {
   logo_url: "",
-  primary_color: "#5b371d",
-  secondary_color: "#8b5e34",
-  accent_color: "#d4a76a",
-  background_color: "#f8f5f0",
-  text_color: "#2b1f16",
+  primary_color: "#146c43",
+  secondary_color: "#0f5a37",
+  accent_color: "#ff7a00",
+  background_color: "#f7f4ef",
+  text_color: "#111827",
   map_color_restaurant: DEFAULT_MAP_COLORS.map_color_restaurant,
   map_color_store: DEFAULT_MAP_COLORS.map_color_store,
   map_color_pharmacy: DEFAULT_MAP_COLORS.map_color_pharmacy,
@@ -151,11 +151,28 @@ async function loadBranding(sb) {
         out[k] = String(row.value);
       }
     }
-    return out;
+    return normalizeLegacyBranding(out);
   } catch (e) {
     console.warn("[platformBranding] load:", e && (e.message || String(e)));
     return { ...DEFAULT_BRANDING };
   }
+}
+
+/** Map brown/gold era colors stored in DB → official green marketplace identity */
+function normalizeLegacyBranding(settings) {
+  const s = { ...(settings || {}) };
+  const legacyPrimary = new Set(["#5b371d", "#3d2213", "#2a1810", "#2b1f16"]);
+  const legacyAccent = new Set(["#d4a76a", "#b9872f", "#c9a227", "#d4a84b"]);
+  const legacyBg = new Set(["#f8f5f0", "#f8f4ee", "#faf4ee"]);
+  const hex = (v) => String(v || "").trim().toLowerCase();
+  if (legacyPrimary.has(hex(s.primary_color))) s.primary_color = DEFAULT_BRANDING.primary_color;
+  if (legacyPrimary.has(hex(s.secondary_color)) || hex(s.secondary_color) === "#8b5e34") {
+    s.secondary_color = DEFAULT_BRANDING.secondary_color;
+  }
+  if (legacyAccent.has(hex(s.accent_color))) s.accent_color = DEFAULT_BRANDING.accent_color;
+  if (legacyBg.has(hex(s.background_color))) s.background_color = DEFAULT_BRANDING.background_color;
+  if (legacyPrimary.has(hex(s.text_color))) s.text_color = DEFAULT_BRANDING.text_color;
+  return s;
 }
 
 function platformSettingsHelpMessage(error) {

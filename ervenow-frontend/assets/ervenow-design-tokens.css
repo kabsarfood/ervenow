@@ -1,0 +1,161 @@
+/**
+ * ERVENOW Design Tokens
+ * Source of truth: Desktop homepage marketplace CSS (home-desktop-marketplace.css)
+ * Extracted values — do not invent colors/sizes.
+ *
+ * Primary green: #146c43 (homepage --erv-mp-green / pre-reg banner)
+ * Accent orange: #FF7A00 (homepage icon accent — use sparingly)
+ * Neutral ink: #111827 / #6b7280
+ * Surface cream: #f7f4ef
+ */
+
+@import url("https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=Cairo:wght@400;600;700;800;900&display=swap");
+
+:root {
+  /* ——— Color: brand ——— */
+  --erve-primary: #146c43;
+  --erve-primary-deep: #0f5a37;
+  --erve-primary-soft: #e8f6ef;
+  --erve-primary-open: #d8f3e4;
+  --erve-primary-line: rgba(20, 108, 67, 0.35);
+
+  --erve-accent: #ff7a00;
+  --erve-accent-soft: rgba(255, 122, 0, 0.12);
+
+  /* ——— Color: neutrals ——— */
+  --erve-ink: #111827;
+  --erve-ink-soft: #6b7280;
+  --erve-text: #111827;
+  --erve-text-muted: #6b7280;
+  --erve-bg: #f7f4ef;
+  --erve-surface: #ffffff;
+  --erve-card: #ffffff;
+  --erve-border: rgba(17, 24, 39, 0.08);
+  --erve-border-strong: rgba(20, 108, 67, 0.35);
+
+  /* ——— Color: status ——— */
+  --erve-danger: #e11d48;
+  --erve-success: #146c43;
+  --erve-warning: #ff7a00;
+  --erve-info: #1565c0;
+
+  /* ——— Radius (from homepage cards / quick / hub) ——— */
+  --erve-radius-xs: 10px;
+  --erve-radius-sm: 14px;
+  --erve-radius-md: 18px;
+  --erve-radius-lg: 20px;
+  --erve-radius-pill: 999px;
+
+  /* ——— Shadow (from homepage --erv-mp-shadow*) ——— */
+  --erve-shadow-sm: 0 2px 12px rgba(15, 40, 28, 0.05);
+  --erve-shadow-md: 0 4px 18px rgba(15, 40, 28, 0.06);
+  --erve-shadow-lg: 0 10px 28px rgba(15, 40, 28, 0.1);
+
+  /* ——— Layout ——— */
+  --erve-max: 1500px;
+  --erve-gutter: clamp(16px, 4vw, 64px);
+  --erve-space-1: 4px;
+  --erve-space-2: 8px;
+  --erve-space-3: 12px;
+  --erve-space-4: 16px;
+  --erve-space-5: 22px;
+  --erve-space-6: 28px;
+
+  /* ——— Typography (homepage Tajawal hierarchy) ——— */
+  --erve-font-family: "Tajawal", "Cairo", system-ui, sans-serif;
+  --erve-font-xs: 0.75rem; /* ~12px captions */
+  --erve-font-sm: 0.82rem; /* labels / secondary */
+  --erve-font-md: 0.95rem; /* body */
+  --erve-font-lg: 1.1rem; /* card titles */
+  --erve-font-xl: 1.25rem; /* section titles */
+  --erve-font-2xl: clamp(1.45rem, 1.8vw, 1.85rem); /* page / why titles */
+  --erve-font-hero: clamp(2.1rem, 2.6vw, 2.55rem); /* homepage hero */
+
+  --erve-lh-body: 1.5;
+  --erve-lh-heading: 1.35;
+  --erve-weight-regular: 400;
+  --erve-weight-medium: 500;
+  --erve-weight-bold: 700;
+  --erve-weight-extrabold: 800;
+
+  /* ——— Controls ——— */
+  --erve-control-h: 48px;
+  --erve-control-h-sm: 44px;
+  --erve-input-radius: 14px;
+  --erve-btn-radius: 14px;
+  --erve-focus-ring: 0 0 0 3px rgba(20, 108, 67, 0.22);
+
+  /* ——— Legacy aliases (map brown/gold era → green marketplace) ——— */
+  --bg: var(--erve-bg);
+  --card: var(--erve-card);
+  --brown: var(--erve-ink);
+  --gold: var(--erve-primary);
+  --muted: var(--erve-text-muted);
+  --border: var(--erve-border);
+  --radius: var(--erve-radius-sm);
+  --font: var(--erve-font-family);
+
+  /* Typography PR tokens often used across pages */
+  --erv-t-font: var(--erve-font-family);
+  --erv-t-h1: var(--erve-font-2xl);
+  --erv-t-h1-weight: var(--erve-weight-extrabold);
+  --erv-t-h2: var(--erve-font-xl);
+  --erv-t-h2-weight: var(--erve-weight-extrabold);
+  --erv-t-h3: var(--erve-font-lg);
+  --erv-t-h3-weight: var(--erve-weight-bold);
+  --erv-t-body: var(--erve-font-md);
+  --erv-t-body-weight: var(--erve-weight-medium);
+  --erv-t-caption: var(--erve-font-sm);
+  --erv-t-input: 16px;
+  --erv-t-lh-heading: var(--erve-lh-heading);
+  --erv-t-lh-body: var(--erve-lh-body);
+
+  /* Marketplace homepage vars — single source */
+  --erv-mp-ink: var(--erve-ink);
+  --erv-mp-ink-soft: var(--erve-ink-soft);
+  --erv-mp-green: var(--erve-primary);
+  --erv-mp-green-deep: var(--erve-primary-deep);
+  --erv-mp-green-soft: var(--erve-primary-soft);
+  --erv-mp-green-open: var(--erve-primary-open);
+  --erv-mp-gold: var(--erve-primary);
+  --erv-mp-cream: var(--erve-bg);
+  --erv-mp-card: var(--erve-card);
+  --erv-mp-line: var(--erve-border);
+  --erv-mp-line-strong: var(--erve-border-strong);
+  --erv-mp-danger: var(--erve-danger);
+  --erv-mp-radius: var(--erve-radius-md);
+  --erv-mp-radius-sm: var(--erve-radius-sm);
+  --erv-mp-shadow: var(--erve-shadow-md);
+  --erv-mp-shadow-hover: var(--erve-shadow-lg);
+  --erv-mp-max: var(--erve-max);
+  --erv-mp-gutter: var(--erve-gutter);
+
+  /* Icon tokens */
+  --erv-icon-green: var(--erve-primary);
+  --erv-icon-orange: var(--erve-accent);
+
+  /* Mobile nav surfaces (aligned to cream/white + green) */
+  --erv-mobile-nav-surface: rgba(255, 255, 255, 0.92);
+  --erv-mobile-nav-surface-solid: #ffffff;
+  --erv-plus-fab-bg: var(--erve-primary);
+  --erv-plus-fab-bg-deep: var(--erve-primary-deep);
+  --erv-mobile-nav-edge-gold: var(--erve-primary);
+  --erv-mobile-tab-card-gold: var(--erve-primary-soft);
+  --erv-mobile-nav-pit-shadow: rgba(15, 40, 28, 0.14);
+  --erv-mobile-nav-bar-shadow: 0 -8px 28px rgba(15, 40, 28, 0.08);
+}
+
+@media (max-width: 640px) {
+  :root {
+    --erve-font-xl: 1.15rem;
+    --erve-font-2xl: clamp(1.25rem, 5vw, 1.45rem);
+    --erve-gutter: clamp(12px, 4vw, 20px);
+  }
+}
+
+@media (min-width: 641px) and (max-width: 1024px) {
+  :root {
+    --erve-font-2xl: clamp(1.35rem, 2.4vw, 1.65rem);
+    --erve-gutter: clamp(18px, 3vw, 32px);
+  }
+}

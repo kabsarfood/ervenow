@@ -34,7 +34,7 @@ body.delivery-map-page {
   .delivery-map-page__shell {
     border-radius: 22px;
     border: 1px solid rgba(212, 168, 74, 0.38);
-    box-shadow: 0 16px 48px rgba(45, 26, 14, 0.12);
+    box-shadow: 0 16px 48px rgba(15, 40, 28, 0.12);
     min-height: calc(var(--erw-viewport-h, 100dvh) - var(--erw-header-h, 120px) - 32px);
   }
 }
@@ -113,8 +113,8 @@ body.delivery-map-page {
   align-items: center;
   justify-content: center;
   padding: clamp(18px, 3.5vw, 24px) clamp(48px, 8vw, 56px) clamp(16px, 3vw, 20px);
-  background: linear-gradient(155deg, #4a2c1a 0%, #3d2213 38%, #2b170d 72%, #181008 100%);
-  color: #f8f4ee;
+  background: linear-gradient(155deg, #4a2c1a 0%, #111827 38%, #0f5a37 72%, #181008 100%);
+  color: #f7f4ef;
   flex-shrink: 0;
   overflow: hidden;
 }
@@ -153,13 +153,13 @@ body.delivery-map-page {
   background: linear-gradient(180deg, #efe3d4 0%, #f6ede2 6%, #faf4eb 14%, #fffefb 100%);
 }
 .delivery-live-map-link {
-  color: var(--gold, #b9872f);
+  color: var(--erve-primary, #146c43);
   font-weight: 800;
   text-decoration: none;
 }
 .delivery-result--luxe:not(:empty) {
-  background: rgba(185, 135, 47, 0.1);
-  border: 1px solid rgba(185, 135, 47, 0.22);
+  background: rgba(20, 108, 67, 0.1);
+  border: 1px solid rgba(20, 108, 67, 0.22);
   border-radius: 12px;
   padding: 10px 12px;
   font-weight: 700;
@@ -191,7 +191,7 @@ body.delivery-map-page {
   }
   .delivery-map-page .map-canvas-map-stage {
     grid-area: map;
-    border: 1px solid rgba(61, 34, 19, 0.12);
+    border: 1px solid rgba(17, 24, 39, 0.12);
     border-radius: 14px;
     background: #fffefb;
     padding: 8px;
@@ -286,7 +286,7 @@ body.delivery-map-page {
         }
       }
       .map-canvas-cell {
-        border: 1px solid rgba(61, 34, 19, 0.12);
+        border: 1px solid rgba(17, 24, 39, 0.12);
         border-radius: 14px;
         background: #fffefb;
         padding: clamp(10px, 2.2vw, 14px);
@@ -316,15 +316,15 @@ body.delivery-map-page {
         padding-bottom: 8px;
         font-size: clamp(0.88rem, 2.2vw, 0.96rem);
         font-weight: 900;
-        color: var(--brown, #3d2213);
-        border-bottom: 2px solid rgba(61, 34, 19, 0.12);
+        color: var(--brown, #111827);
+        border-bottom: 2px solid rgba(17, 24, 39, 0.12);
       }
       .map-canvas-label {
         display: block;
         margin: 0 0 4px;
         font-size: 0.72rem;
         font-weight: 800;
-        color: rgba(61, 34, 19, 0.65);
+        color: rgba(17, 24, 39, 0.65);
       }
       .map-canvas-cell select,
       .map-canvas-cell input[type="text"],
@@ -336,12 +336,12 @@ body.delivery-map-page {
         margin-bottom: 8px;
         padding: 9px 12px;
         border-radius: 10px;
-        border: 1px solid rgba(61, 34, 19, 0.14);
+        border: 1px solid rgba(17, 24, 39, 0.14);
         background: #fff;
         font-family: inherit;
         font-size: 0.88rem;
         font-weight: 600;
-        color: var(--brown, #3d2213);
+        color: var(--brown, #111827);
       }
       .map-canvas-row-2 {
         display: grid;
@@ -367,7 +367,7 @@ body.delivery-map-page {
         font-family: inherit;
         font-size: 0.84rem;
         font-weight: 800;
-        color: var(--brown, #3d2213);
+        color: var(--brown, #111827);
         cursor: pointer;
         text-align: right;
         transition: background 0.15s, border-color 0.15s, color 0.15s;
@@ -416,7 +416,7 @@ body.delivery-map-page {
         flex: 1 1 auto;
         width: 100%;
         border-radius: 10px;
-        border: 1px solid rgba(61, 34, 19, 0.1);
+        border: 1px solid rgba(17, 24, 39, 0.1);
         overflow: hidden;
         max-height: none;
         box-shadow: none;
@@ -493,7 +493,7 @@ body.delivery-map-page {
       .map-canvas-loc-box {
         padding: 10px 12px;
         border-radius: 10px;
-        border: 2px solid rgba(61, 34, 19, 0.12);
+        border: 2px solid rgba(17, 24, 39, 0.12);
       }
       .map-canvas-loc-box--pickup {
         background: rgba(45, 90, 61, 0.08);
@@ -507,13 +507,13 @@ body.delivery-map-page {
         margin: 0 0 6px;
         font-size: 0.82rem;
         font-weight: 900;
-        color: var(--brown, #3d2213);
+        color: var(--brown, #111827);
       }
       .map-canvas-loc-box__hint {
         margin: 0 0 8px;
         font-size: 0.72rem;
         font-weight: 600;
-        color: rgba(61, 34, 19, 0.6);
+        color: rgba(17, 24, 39, 0.6);
         line-height: 1.4;
       }
       .map-canvas-loc-box input {
@@ -527,7 +527,7 @@ body.delivery-map-page {
         flex: 1;
         min-height: 38px;
         border-radius: 8px;
-        border: 1px solid rgba(61, 34, 19, 0.2);
+        border: 1px solid rgba(17, 24, 39, 0.2);
         background: #fff;
         font-family: inherit;
         font-size: 0.82rem;
@@ -557,7 +557,7 @@ body.delivery-map-page {
         color: #9b1830;
       }
       .map-canvas-map-btn.is-active {
-        background: linear-gradient(135deg, #3d2213, #5c3d28);
+        background: linear-gradient(135deg, #111827, #5c3d28);
         color: #fffefb;
         border-color: transparent;
       }
@@ -578,11 +578,11 @@ body.delivery-map-page {
         font-family: inherit;
         font-size: 0.82rem;
         font-weight: 900;
-        color: var(--brown, #3d2213);
+        color: var(--brown, #111827);
         cursor: pointer;
         line-height: 1.35;
         flex-shrink: 0;
-        box-shadow: 0 3px 12px rgba(45, 26, 14, 0.08);
+        box-shadow: 0 3px 12px rgba(15, 40, 28, 0.08);
       }
       .map-canvas-apply-btn:disabled {
         opacity: 0.65;
@@ -617,25 +617,25 @@ body.delivery-map-page {
         padding: 8px;
         border-radius: 10px;
         background: linear-gradient(135deg, #e8dcc8, #d4c4a8);
-        border: 1px solid rgba(185, 135, 47, 0.35);
+        border: 1px solid rgba(20, 108, 67, 0.35);
         text-align: center;
       }
       .map-canvas-price-box__label {
         font-size: 0.72rem;
         font-weight: 800;
-        color: rgba(61, 34, 19, 0.65);
+        color: rgba(17, 24, 39, 0.65);
       }
       .map-canvas-price-box__val {
         font-size: clamp(1rem, 2.8vw, 1.15rem);
         font-weight: 900;
-        color: var(--brown, #3d2213);
+        color: var(--brown, #111827);
         line-height: 1.2;
       }
       .map-canvas-price-box__dist,
       .map-canvas-price-box__time {
         font-size: 0.68rem;
         font-weight: 700;
-        color: rgba(61, 34, 19, 0.55);
+        color: rgba(17, 24, 39, 0.55);
         margin-top: 2px;
         line-height: 1.35;
       }
@@ -652,8 +652,8 @@ body.delivery-map-page {
         transition: opacity 0.15s, transform 0.12s;
       }
       .map-canvas-cart-btn:not(:disabled) {
-        background: linear-gradient(135deg, #3d2213, #5c3d28);
-        box-shadow: 0 6px 18px rgba(61, 34, 19, 0.25);
+        background: linear-gradient(135deg, #111827, #5c3d28);
+        box-shadow: 0 6px 18px rgba(17, 24, 39, 0.25);
       }
       .map-canvas-cart-btn:disabled {
         opacity: 0.55;
@@ -695,7 +695,7 @@ body.delivery-map-page {
       }
 
       #pickupDropMap.map-selecting {
-        outline: 3px solid rgba(185, 135, 47, 0.55);
+        outline: 3px solid rgba(20, 108, 67, 0.55);
         outline-offset: 2px;
       }
       .delivery-dropdown {

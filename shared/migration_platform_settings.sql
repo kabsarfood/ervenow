@@ -15,11 +15,11 @@ COMMENT ON TABLE public.platform_settings IS 'إعدادات المنصة الع
 INSERT INTO public.platform_settings (key, value)
 VALUES
   ('logo_url', ''),
-  ('primary_color', '#5b371d'),
-  ('secondary_color', '#8b5e34'),
-  ('accent_color', '#d4a76a'),
-  ('background_color', '#f8f5f0'),
-  ('text_color', '#2b1f16')
+  ('primary_color', '#146c43'),
+  ('secondary_color', '#0f5a37'),
+  ('accent_color', '#ff7a00'),
+  ('background_color', '#f7f4ef'),
+  ('text_color', '#111827')
 ON CONFLICT (key) DO NOTHING;
 
 -- يُحدّث واجهة REST (PostgREST) لتتعرّف على الجدول فوراً (يُجنّب PGRST205 / schema cache)

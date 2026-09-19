@@ -4,15 +4,17 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <script src="/assets/viewport-fit.js?erv=20260612"></script>
-    <script src="/assets/pre-reg-banner.js?erv=20260905b" defer></script>
+    <script src="/assets/pre-reg-banner.js?erv=20260919green" defer></script>
     <title>ERVENOW | اكتشف المطاعم</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Tajawal:wght@400;500;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="/assets/styles.css" />
+    <link rel="stylesheet" href="/assets/ervenow-design-tokens.css?erv=20260919id" />
+    <link rel="stylesheet" href="/assets/ervenow-identity.css?erv=20260919id" />
+    <link rel="stylesheet" href="/assets/styles.css?erv=20260919id" />
     <link rel="stylesheet" href="/assets/guest-shell.css?erv=20260612" />
     <link rel="stylesheet" href="/assets/mobile-harmony.css?erv=20260612" />
     <link rel="stylesheet" href="/assets/start-now-landing.css" />
@@ -20,15 +22,15 @@
     <link rel="stylesheet" href="/assets/section-hub.css" />
     <style>
       :root {
-        --stores-ink: #2a1810;
-        --stores-cream: #fdfbf7;
-        --stores-card: #fffcfa;
-        --stores-gold: #c9a227;
-        --stores-gold-soft: rgba(201, 162, 39, 0.2);
-        --stores-shadow: 0 10px 40px rgba(42, 24, 16, 0.09);
-        --stores-shadow-hover: 0 22px 56px rgba(42, 24, 16, 0.14);
-        --stores-radius: 20px;
-        --stores-radius-sm: 14px;
+        --stores-ink: var(--erve-ink, #111827);
+        --stores-cream: var(--erve-bg, #f7f4ef);
+        --stores-card: var(--erve-card, #ffffff);
+        --stores-gold: var(--erve-primary, #146c43);
+        --stores-gold-soft: var(--erve-primary-soft, #e8f6ef);
+        --stores-shadow: var(--erve-shadow-lg, 0 10px 28px rgba(15, 40, 28, 0.1));
+        --stores-shadow-hover: 0 14px 36px rgba(15, 40, 28, 0.14);
+        --stores-radius: var(--erve-radius-lg, 20px);
+        --stores-radius-sm: var(--erve-radius-sm, 14px);
       }
 
       .stores-page {
@@ -36,12 +38,12 @@
         min-height: 100dvh;
         min-height: calc(var(--erw-vh, 1vh) * 100);
         margin: 0;
-        font-family: "Cairo", var(--font, system-ui, sans-serif);
+        font-family: var(--erve-font-family, "Tajawal", "Cairo", system-ui, sans-serif);
         color: var(--stores-ink);
         background:
-          radial-gradient(1200px 600px at 100% -10%, rgba(255, 180, 140, 0.18), transparent 55%),
-          radial-gradient(900px 500px at -5% 40%, rgba(61, 34, 19, 0.05), transparent 50%),
-          linear-gradient(180deg, #faf4ee 0%, var(--stores-cream) 42%, #f2e9e0 100%);
+          radial-gradient(1200px 600px at 100% -10%, rgba(20, 108, 67, 0.08), transparent 55%),
+          radial-gradient(900px 500px at -5% 40%, rgba(17, 24, 39, 0.03), transparent 50%),
+          linear-gradient(180deg, #f7f4ef 0%, var(--stores-cream) 42%, #f0ebe3 100%);
       }
 
       .stores-toolbar {
@@ -72,7 +74,7 @@
         font-family: inherit;
         font-size: 1rem;
         font-weight: 600;
-        border: 1px solid rgba(61, 34, 19, 0.1);
+        border: 1px solid rgba(17, 24, 39, 0.1);
         border-radius: var(--stores-radius);
         background: rgba(255, 255, 255, 0.92);
         box-shadow: var(--stores-shadow);
@@ -106,22 +108,22 @@
         padding: 10px 16px;
         border-radius: 999px;
         background: rgba(255, 255, 255, 0.72);
-        color: #5c4638;
-        border: 1px solid rgba(61, 34, 19, 0.08);
+        color: #6b7280;
+        border: 1px solid rgba(17, 24, 39, 0.08);
         transition: transform 0.2s, box-shadow 0.2s, background 0.2s, color 0.2s;
       }
 
       .stores-filter:hover {
         transform: translateY(-2px);
-        box-shadow: 0 8px 24px rgba(42, 24, 16, 0.08);
+        box-shadow: 0 8px 24px rgba(15, 40, 28, 0.08);
         color: var(--stores-ink);
       }
 
       .stores-filter.is-active {
-        background: linear-gradient(135deg, #3d2213, #5c3220);
+        background: linear-gradient(135deg, #111827, #5c3220);
         color: #fff8ee;
         border-color: transparent;
-        box-shadow: 0 10px 28px rgba(61, 34, 19, 0.28);
+        box-shadow: 0 10px 28px rgba(17, 24, 39, 0.28);
       }
 
       .stores-geo-opt {
@@ -132,10 +134,10 @@
         padding: 10px 14px;
         border-radius: 12px;
         background: rgba(255, 255, 255, 0.55);
-        border: 1px solid rgba(61, 34, 19, 0.07);
+        border: 1px solid rgba(17, 24, 39, 0.07);
         font-size: 0.86rem;
         font-weight: 600;
-        color: #5c4638;
+        color: #6b7280;
         cursor: pointer;
         user-select: none;
       }
@@ -153,8 +155,8 @@
         padding: 14px 16px 12px;
         border-radius: var(--stores-radius-sm);
         background: linear-gradient(180deg, rgba(255, 252, 248, 0.98) 0%, rgba(255, 245, 235, 0.88) 100%);
-        border: 1px solid rgba(61, 34, 19, 0.1);
-        box-shadow: 0 6px 22px rgba(42, 24, 16, 0.06);
+        border: 1px solid rgba(17, 24, 39, 0.1);
+        box-shadow: 0 6px 22px rgba(15, 40, 28, 0.06);
       }
       .stores-restaurant-cuisine-block[hidden] {
         display: none !important;
@@ -206,30 +208,30 @@
         min-height: 88px;
         padding: 10px 8px 12px;
         border-radius: 16px;
-        border: 1px solid rgba(61, 34, 19, 0.1);
+        border: 1px solid rgba(17, 24, 39, 0.1);
         background: rgba(255, 255, 255, 0.92);
         font-family: inherit;
         cursor: pointer;
         font-weight: 800;
         font-size: 0.72rem;
-        color: #4a382e;
+        color: #6b7280;
         line-height: 1.3;
         text-align: center;
         transition: transform 0.15s ease, box-shadow 0.2s ease, border-color 0.2s ease, background 0.2s ease, color 0.2s ease;
       }
       .stores-cuisine-chip:hover {
         transform: translateY(-2px);
-        box-shadow: 0 8px 22px rgba(42, 24, 16, 0.1);
+        box-shadow: 0 8px 22px rgba(15, 40, 28, 0.1);
       }
       .stores-cuisine-chip__icon {
         font-size: 1.4rem;
         line-height: 1;
       }
       .stores-cuisine-chip.is-active {
-        background: linear-gradient(135deg, #3d2213, #5c3220);
+        background: linear-gradient(135deg, #111827, #5c3220);
         color: #fff8ee;
         border-color: transparent;
-        box-shadow: 0 12px 28px rgba(61, 34, 19, 0.28);
+        box-shadow: 0 12px 28px rgba(17, 24, 39, 0.28);
       }
 
       .stores-main {
@@ -246,7 +248,7 @@
         background: rgba(255, 248, 238, 0.96);
         border: 1px solid rgba(201, 162, 39, 0.22);
         font-size: 0.9rem;
-        color: #5c4638;
+        color: #6b7280;
         line-height: 1.55;
       }
 
@@ -295,7 +297,7 @@
       .stores-grid--skeleton .store-skel {
         border-radius: var(--stores-radius);
         background: rgba(255, 255, 255, 0.85);
-        border: 1px solid rgba(61, 34, 19, 0.06);
+        border: 1px solid rgba(17, 24, 39, 0.06);
         box-shadow: var(--stores-shadow);
         overflow: hidden;
         min-height: 260px;
@@ -439,7 +441,7 @@
         font-weight: 800;
         cursor: pointer;
         color: #fffdf8;
-        background: linear-gradient(135deg, #3d2213, #6b3d22);
+        background: linear-gradient(135deg, #111827, #6b3d22);
       }
 
       .store-card__btn:focus-visible {
@@ -454,7 +456,7 @@
         padding: 48px 28px;
         border-radius: var(--stores-radius);
         background: rgba(255, 255, 255, 0.88);
-        border: 1px solid rgba(61, 34, 19, 0.08);
+        border: 1px solid rgba(17, 24, 39, 0.08);
         box-shadow: var(--stores-shadow);
       }
 
@@ -601,14 +603,14 @@
     <script src="/assets/order-draft-store.js"></script>
     <script src="/assets/order-draft-badge.js"></script>
     <script src="/assets/api-config.js"></script>
-    <script src="/assets/api.js?erv=20260612"></script>
+    <script src="/assets/api.js?erv=20260919id"></script>
     <script src="/assets/guestBrowse.js"></script>
     <script src="/assets/restaurant-cuisines.js"></script>
     <script src="/assets/guest-shell.js?erv=20260612"></script>
     <script>
       ErvenowGuestShell.init({ activeNav: "restaurants", pageTag: "اكتشف المطاعم" });
     </script>
-    <script src="/assets/section-hub.js"></script>
+    <script src="/assets/section-hub.js?erv=20260919g"></script>
     <script src="/assets/section-hub-restaurants.js"></script>
   </body>
 </html>

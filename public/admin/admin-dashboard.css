@@ -6,7 +6,7 @@ body {
   margin: 0;
   font-family: Cairo, sans-serif;
   background: #f8f4ef;
-  color: #2b1f16;
+  color: #111827;
 }
 .wrap {
   max-width: 1080px;
@@ -14,7 +14,7 @@ body {
   padding: 14px;
 }
 h1 {
-  color: #5b371d;
+  color: #111827;
   margin: 0;
   font-size: 1.5rem;
   font-weight: 800;
@@ -50,11 +50,11 @@ h1 {
 .stat {
   font-size: 1.35rem;
   font-weight: 800;
-  color: #5b371d;
+  color: #111827;
   margin-top: 8px;
 }
 .muted {
-  color: #6f5441;
+  color: #6b7280;
   font-size: 0.9rem;
 }
 .item {
@@ -79,14 +79,14 @@ h1 {
   font-weight: 700;
 }
 .btn-primary {
-  background: #5b371d;
+  background: #111827;
   color: #fff;
 }
 .admin-dash-main .btn-ghost,
 .admin-layout .btn-ghost {
-  border: 1px solid #5b371d;
+  border: 1px solid #111827;
   background: #fff;
-  color: #5b371d;
+  color: #111827;
 }
 .line {
   margin: 6px 0;
@@ -112,9 +112,9 @@ select {
   margin-top: 12px;
 }
 .panel-btn {
-  border: 1px solid #5b371d;
+  border: 1px solid #111827;
   background: #fff;
-  color: #5b371d;
+  color: #111827;
   border-radius: 10px;
   padding: 8px 12px;
   font-family: inherit;
@@ -122,7 +122,7 @@ select {
   cursor: pointer;
 }
 .panel-btn.active {
-  background: #5b371d;
+  background: #111827;
   color: #fff;
 }
 .panel-btn-close {
@@ -165,7 +165,7 @@ select {
   margin: 0;
   font-size: 1.1rem;
   font-weight: 800;
-  color: #5b371d;
+  color: #111827;
 }
 .panel-toolbar-actions {
   display: flex;
@@ -178,7 +178,7 @@ select {
   margin: 18px 0 10px;
   font-size: 1.05rem;
   font-weight: 800;
-  color: #5b371d;
+  color: #111827;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -196,7 +196,7 @@ select {
 .panel-loader {
   padding: 14px;
   text-align: center;
-  color: #6f5441;
+  color: #6b7280;
   font-weight: 700;
   background: #fffdfa;
   border: 1px dashed #e5d8cb;
@@ -232,7 +232,7 @@ select {
   border: 1px solid #d9c8b7;
   border-radius: 12px;
   background: #fff;
-  color: #3d2213;
+  color: #111827;
   padding: 12px;
   text-align: right;
   font-family: inherit;
@@ -245,7 +245,7 @@ select {
 }
 
 .command-kpi-card:hover {
-  border-color: #b9872f;
+  border-color: #146c43;
   background: #fffaf2;
 }
 
@@ -256,14 +256,14 @@ select {
 
 .command-kpi-card__label {
   font-size: 0.86rem;
-  color: #6f5441;
+  color: #6b7280;
   font-weight: 700;
 }
 
 .command-kpi-card__value {
   font-size: 1.22rem;
   font-weight: 900;
-  color: #5b371d;
+  color: #111827;
 }
 
 .command-kpi-card__hint {
@@ -316,12 +316,12 @@ select {
   background: #fffdfa;
   font-size: 0.82rem;
   font-weight: 700;
-  color: #5b371d;
+  color: #111827;
 }
 .panel-empty {
   padding: 16px;
   text-align: center;
-  color: #6f5441;
+  color: #6b7280;
   font-weight: 600;
   background: #faf6f1;
   border-radius: 10px;
@@ -344,13 +344,13 @@ select {
 .finance-kpi-card strong {
   display: block;
   font-size: 0.88rem;
-  color: #6f5441;
+  color: #6b7280;
   margin-bottom: 6px;
 }
 .finance-kpi-card .stat {
   font-size: 1.35rem;
   font-weight: 800;
-  color: #5b371d;
+  color: #111827;
 }
 .finance-kpi-card--debt .stat {
   color: #b91c1c;
@@ -385,7 +385,7 @@ select {
 }
 .finance-table th {
   background: #faf6f1;
-  color: #5b371d;
+  color: #111827;
   font-weight: 800;
   white-space: nowrap;
 }
@@ -420,7 +420,7 @@ select {
 }
 .ledger-tx-collapse {
   margin-top: 14px;
-  border: 1px solid rgba(91, 55, 29, 0.14);
+  border: 1px solid rgba(20, 108, 67, 0.14);
   border-radius: 12px;
   background: #fffdf8;
   overflow: hidden;
@@ -435,7 +435,7 @@ select {
   list-style: none;
   font-size: 1rem;
   font-weight: 800;
-  color: #5b371d;
+  color: #111827;
   user-select: none;
 }
 .ledger-tx-collapse__toggle::-webkit-details-marker {
@@ -461,14 +461,14 @@ select {
 }
 .ledger-tx-collapse__body {
   padding: 0 14px 14px;
-  border-top: 1px solid rgba(91, 55, 29, 0.08);
+  border-top: 1px solid rgba(20, 108, 67, 0.08);
 }
 .ledger-tx-collapse__body .ledger-tx-updated {
   margin-top: 10px;
 }
 .ledger-tx-updated {
   font-size: 0.82rem;
-  color: #6f5441;
+  color: #6b7280;
   margin: 0 0 8px;
 }
 .financial-alerts-wrap {
@@ -512,7 +512,7 @@ select {
   color: #44403c;
 }
 .financial-alert-empty {
-  color: #6f5441;
+  color: #6b7280;
   font-size: 0.9rem;
   padding: 8px 0;
   margin: 0;
@@ -531,7 +531,7 @@ select {
 .finance-feature-control-wrap h3 {
   margin: 0 0 8px;
   font-size: 1rem;
-  color: #5b371d;
+  color: #111827;
 }
 .finance-feature-control-list {
   display: flex;
@@ -550,12 +550,12 @@ select {
 }
 .finance-feature-row__label {
   font-weight: 700;
-  color: #5b371d;
+  color: #111827;
   font-size: 0.92rem;
 }
 .finance-feature-row__desc {
   font-size: 0.78rem;
-  color: #6f5441;
+  color: #6b7280;
   margin-top: 2px;
 }
 .finance-feature-row select {
@@ -565,7 +565,7 @@ select {
   border: 1px solid #d4b8a8;
   background: #fff;
   font-weight: 700;
-  color: #5b371d;
+  color: #111827;
 }
 .finance-balance-pill {
   display: inline-block;
@@ -605,7 +605,7 @@ select {
   color: #b45309;
 }
 .finance-btn-collect {
-  background: #5b371d;
+  background: #111827;
   color: #fff;
   border: none;
   border-radius: 10px;
@@ -625,12 +625,12 @@ select {
 .finance-hint {
   margin: 0 0 10px;
   font-size: 0.88rem;
-  color: #6f5441;
+  color: #6b7280;
 }
 .finance-msg {
   padding: 16px;
   text-align: center;
-  color: #6f5441;
+  color: #6b7280;
 }
 .finance-msg--error {
   color: #b91c1c;
@@ -640,7 +640,7 @@ select {
   position: fixed;
   inset: 0;
   z-index: 12000;
-  background: rgba(42, 24, 16, 0.45);
+  background: rgba(15, 40, 28, 0.45);
   display: flex;
   justify-content: flex-start;
   align-items: stretch;
@@ -652,7 +652,7 @@ select {
   width: min(420px, 100%);
   max-width: 100%;
   background: #fff;
-  box-shadow: -8px 0 32px rgba(45, 26, 14, 0.2);
+  box-shadow: -8px 0 32px rgba(15, 40, 28, 0.2);
   display: flex;
   flex-direction: column;
   margin-inline-start: auto;
@@ -680,7 +680,7 @@ select {
 .finance-drawer-head h3 {
   margin: 0;
   font-size: 1.05rem;
-  color: #5b371d;
+  color: #111827;
 }
 .finance-drawer-close {
   border: none;
@@ -690,7 +690,7 @@ select {
   height: 36px;
   font-size: 1.25rem;
   cursor: pointer;
-  color: #5b371d;
+  color: #111827;
   flex-shrink: 0;
 }
 .finance-drawer-body {
@@ -708,7 +708,7 @@ select {
   font-size: 0.9rem;
 }
 .finance-drawer-meta strong {
-  color: #5b371d;
+  color: #111827;
 }
 .finance-ledger-list {
   display: flex;
@@ -740,7 +740,7 @@ select {
 .finance-collect-box label {
   display: block;
   font-weight: 700;
-  color: #5b371d;
+  color: #111827;
   margin-bottom: 6px;
   font-size: 0.9rem;
 }
@@ -769,14 +769,14 @@ select {
   margin: 0 0 12px;
   padding: 12px 14px;
   border-radius: 12px;
-  border: 1px dashed #d4a76a;
+  border: 1px dashed #ff7a00;
   background: linear-gradient(90deg, #fffbf5 0%, #faf6f1 100%);
 }
 .finance-smart-badge {
   display: inline-block;
   padding: 4px 10px;
   border-radius: 999px;
-  background: #5b371d;
+  background: #111827;
   color: #fff;
   font-size: 0.78rem;
   font-weight: 800;
@@ -806,7 +806,7 @@ select {
   border-radius: 12px;
   background: #fff;
   font-size: 0.88rem;
-  color: #5b371d;
+  color: #111827;
 }
 .finance-daily-report h4 {
   margin: 0 0 8px;
@@ -819,12 +819,12 @@ select {
 }
 .finance-daily-grid span {
   display: block;
-  color: #6f5441;
+  color: #6b7280;
   font-size: 0.78rem;
 }
 .finance-daily-grid strong {
   font-size: 1rem;
-  color: #5b371d;
+  color: #111827;
 }
 .finance-notify-badge {
   display: inline-block;
@@ -880,9 +880,9 @@ select {
   letter-spacing: 0.02em;
 }
 .finance-btn-copy-ref {
-  border: 1px solid #5b371d;
+  border: 1px solid #111827;
   background: #fff;
-  color: #5b371d;
+  color: #111827;
   border-radius: 8px;
   padding: 6px 12px;
   font-family: inherit;
@@ -898,7 +898,7 @@ select {
 }
 .finance-btn-remind {
   background: #fff;
-  color: #5b371d;
+  color: #111827;
   border: 1px solid #d8c8b8;
   border-radius: 10px;
   padding: 6px 10px;
@@ -934,9 +934,9 @@ select {
   margin: 0;
 }
 .finance-btn-export-csv {
-  border: 1px solid #5b371d;
+  border: 1px solid #111827;
   background: #fff;
-  color: #5b371d;
+  color: #111827;
   border-radius: 10px;
   padding: 6px 14px;
   font-family: inherit;
@@ -952,7 +952,7 @@ select {
   font-size: 0.92rem;
 }
 .finance-bulk-summary strong {
-  color: #5b371d;
+  color: #111827;
 }
 .finance-bulk-check {
   display: flex;
@@ -971,7 +971,7 @@ select {
 }
 .sub {
   margin: 6px 0 10px;
-  color: #6f5441;
+  color: #6b7280;
   font-size: 0.95rem;
 }
 
@@ -980,10 +980,10 @@ select {
   margin: 10px 0 18px;
   padding: 16px;
   border-radius: 18px;
-  background: linear-gradient(145deg, #2a1810 0%, #5b371d 52%, #3d2618 100%);
+  background: linear-gradient(145deg, #111827 0%, #111827 52%, #0f5a37 100%);
   color: #fff8ee;
-  box-shadow: 0 14px 40px rgba(45, 26, 14, 0.18);
-  border: 1px solid rgba(212, 167, 106, 0.35);
+  box-shadow: 0 14px 40px rgba(15, 40, 28, 0.18);
+  border: 1px solid rgba(20, 108, 67, 0.35);
 }
 .live-dash-head {
   display: flex;
@@ -1163,7 +1163,7 @@ select {
   border-radius: 10px;
   border: 1px solid rgba(255, 248, 230, 0.28);
   background: rgba(255, 255, 255, 0.96);
-  color: #2b1f16;
+  color: #111827;
   font-family: inherit;
   font-size: 16px;
   font-weight: 700;
@@ -1302,14 +1302,14 @@ select {
 .leaflet-popup-content .admin-map-popup strong {
   display: block;
   margin-bottom: 6px;
-  color: #5b371d;
+  color: #111827;
 }
 .leaflet-popup-content .admin-popup-row {
   margin: 4px 0;
   color: #3d2a1c;
 }
 .leaflet-popup-content .admin-popup-row.muted {
-  color: #6f5441;
+  color: #6b7280;
 }
 .live-alerts-card {
   margin-top: 14px;
@@ -1451,7 +1451,7 @@ select {
 }
 .exec-btn--primary {
   background: #fde68a;
-  color: #3d2618;
+  color: #0f5a37;
 }
 .exec-btn--quick {
   background: #22c55e;
@@ -1476,7 +1476,7 @@ select {
   gap: 6px;
   margin-top: 10px;
   padding-top: 8px;
-  border-top: 1px solid rgba(91, 55, 29, 0.15);
+  border-top: 1px solid rgba(20, 108, 67, 0.15);
 }
 .leaflet-popup-content .admin-exec-btn {
   border: 0;
@@ -1508,16 +1508,16 @@ select {
   border-radius: 16px;
   border: 1px solid #e5d8cb;
   padding: 16px;
-  box-shadow: 0 20px 50px rgba(45, 26, 14, 0.25);
+  box-shadow: 0 20px 50px rgba(15, 40, 28, 0.25);
 }
 .exec-modal h3 {
   margin: 0 0 6px;
-  color: #5b371d;
+  color: #111827;
   font-size: 1.1rem;
 }
 .exec-modal-sub {
   margin: 0 0 12px;
-  color: #6f5441;
+  color: #6b7280;
   font-size: 0.86rem;
   font-weight: 600;
 }
@@ -1555,7 +1555,7 @@ select {
   width: 100%;
 }
 .exec-driver-pick:hover {
-  border-color: #5b371d;
+  border-color: #111827;
   background: #fff8ee;
 }
 .exec-driver-pick.is-suggested {

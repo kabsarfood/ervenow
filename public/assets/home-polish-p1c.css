@@ -4,13 +4,13 @@
  */
 
 body.lp-home-premium {
-  background: linear-gradient(180deg, #faf6f0 0%, #f8f4ee 42%, #f5efe6 100%);
+  background: linear-gradient(180deg, #faf6f0 0%, #f7f4ef 42%, #f5efe6 100%);
 }
 
 /* ——— راحة بصرية: ظلال ناعمة · حواف متناسقة ——— */
 body.lp-home-premium #snHomeHub .sn-card {
   border-radius: 18px;
-  box-shadow: 0 2px 10px rgba(45, 26, 14, 0.06);
+  box-shadow: 0 2px 10px rgba(15, 40, 28, 0.06);
   transition:
     transform 0.22s cubic-bezier(0.22, 1, 0.36, 1),
     box-shadow 0.22s cubic-bezier(0.22, 1, 0.36, 1),
@@ -28,7 +28,7 @@ body.lp-home-premium #snHomeHub .sn-card__icon-wrap {
 
 body.lp-home-premium .sn-section--hub .sn-trust {
   border-radius: 16px;
-  box-shadow: 0 1px 8px rgba(45, 26, 14, 0.04);
+  box-shadow: 0 1px 8px rgba(15, 40, 28, 0.04);
 }
 
 body.lp-home-premium .sn-trust__item {
@@ -42,7 +42,7 @@ body.lp-home-premium .sn-stats {
 
 /* ——— فوتر ——— */
 body.lp-home-premium .lp-footer {
-  border-top-color: rgba(61, 34, 19, 0.08);
+  border-top-color: rgba(17, 24, 39, 0.08);
 }
 
 body.lp-home-premium .lp-footer__links a {
@@ -64,7 +64,7 @@ body.lp-home-premium #register-store-cta .lp-register-cta__ring {
 
 body.lp-home-premium .lp-why-item {
   border-radius: 16px;
-  box-shadow: 0 1px 8px rgba(45, 26, 14, 0.04);
+  box-shadow: 0 1px 8px rgba(15, 40, 28, 0.04);
 }
 
 /* ——— جوال: الطية = راحة + وضوح ——— */
@@ -109,14 +109,14 @@ body.lp-home-premium .lp-why-item {
   }
 
   html.erv-mobile-shell body.lp-home-premium .lp-header {
-    box-shadow: 0 1px 0 rgba(61, 34, 19, 0.06) !important;
+    box-shadow: 0 1px 0 rgba(17, 24, 39, 0.06) !important;
   }
 }
 
 /* ——— Desktop: أناقة وتوازن ——— */
 @media (min-width: 641px) {
   body.lp-home-premium .lp-header {
-    box-shadow: 0 2px 16px rgba(45, 26, 14, 0.05);
+    box-shadow: 0 2px 16px rgba(15, 40, 28, 0.05);
   }
 
   body.lp-home-premium .sn-section--hub {
@@ -129,7 +129,7 @@ body.lp-home-premium .lp-why-item {
 
   body.lp-home-premium .sn-section--hub .sn-section__title--solo {
     font-weight: 800;
-    color: #3d2213;
+    color: #111827;
   }
 
   body.lp-home-premium main .lp-section {

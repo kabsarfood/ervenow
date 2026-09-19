@@ -1,14 +1,16 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover" />
     <script src="/assets/viewport-fit.js?erv=20260612"></script>
-    <script src="/assets/pre-reg-banner.js?erv=20260905b" defer></script>
+    <script src="/assets/pre-reg-banner.js?erv=20260919green" defer></script>
     <title>ERVENOW | طلبات السحب</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="/assets/styles.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/assets/ervenow-design-tokens.css?erv=20260919id" />
+    <link rel="stylesheet" href="/assets/ervenow-identity.css?erv=20260919id" />
+    <link rel="stylesheet" href="/assets/styles.css?erv=20260919id" />
     <style>
       .wd-wrap {
         max-width: 1200px;
@@ -22,9 +24,9 @@
         margin: 12px 0 16px;
       }
       .wd-tab {
-        border: 1px solid #5b371d;
+        border: 1px solid #111827;
         background: #fff;
-        color: #5b371d;
+        color: #111827;
         padding: 10px 18px;
         border-radius: 10px;
         font-family: Cairo, sans-serif;
@@ -32,7 +34,7 @@
         cursor: pointer;
       }
       .wd-tab.active {
-        background: #5b371d;
+        background: #111827;
         color: #fff;
       }
       .wd-toolbar {
@@ -69,7 +71,7 @@
       .wd-table th {
         background: #faf6f1;
         font-weight: 800;
-        color: #5b371d;
+        color: #111827;
         white-space: nowrap;
       }
       .wd-table tr:hover td {
@@ -122,7 +124,7 @@
         color: #721c24;
       }
       .wd-muted {
-        color: #6f5441;
+        color: #6b7280;
         font-size: 0.85rem;
       }
     </style>
@@ -170,7 +172,7 @@
     </div>
 
     <script src="/assets/api-config.js"></script>
-    <script src="/assets/api.js?erv=20260612"></script>
+    <script src="/assets/api.js?erv=20260919id"></script>
     <script>
       if (!window.PlatformAPI.getToken()) {
         location.href = "/admin-login";

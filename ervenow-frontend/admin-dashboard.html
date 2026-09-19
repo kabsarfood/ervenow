@@ -4,12 +4,12 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover" />
     <script src="/assets/viewport-fit.js?erv=20260612"></script>
-    <script src="/assets/pre-reg-banner.js?erv=20260905b" defer></script>
+    <script src="/assets/pre-reg-banner.js?erv=20260919green" defer></script>
     <title>لوحة الإدارة | ERVENOW</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <meta name="theme-color" content="#5b371d" />
+    <meta name="theme-color" content="#146c43" />
     <link rel="stylesheet" href="/assets/responsive-audit-base.css" />
     <style>
       /* افتراضي = سطح مكتب كالتصميم الأصلي */
@@ -18,9 +18,9 @@
       }
       body {
         margin: 0;
-        font-family: Cairo, sans-serif;
-        background: #f8f4ef;
-        color: #2b1f16;
+        font-family: "Tajawal", Cairo, sans-serif;
+        background: #f7f4ef;
+        color: #111827;
         overflow-x: hidden;
         max-width: 100%;
         overscroll-behavior-x: none;
@@ -31,7 +31,7 @@
         padding: 14px;
       }
       h1 {
-        color: #5b371d;
+        color: #146c43;
         margin: 0;
         font-size: 1.5rem;
         font-weight: 800;
@@ -67,11 +67,11 @@
       .stat {
         font-size: 1.35rem;
         font-weight: 800;
-        color: #5b371d;
+        color: #146c43;
         margin-top: 8px;
       }
       .muted {
-        color: #6f5441;
+        color: #6b7280;
         font-size: 0.9rem;
       }
       .item {
@@ -96,13 +96,13 @@
         font-weight: 700;
       }
       .btn-primary {
-        background: #5b371d;
+        background: #146c43;
         color: #fff;
       }
       .btn-ghost {
-        border: 1px solid #5b371d;
+        border: 1px solid #146c43;
         background: #fff;
-        color: #5b371d;
+        color: #146c43;
       }
       .line {
         margin: 6px 0;
@@ -128,9 +128,9 @@
         margin-top: 12px;
       }
       .panel-btn {
-        border: 1px solid #5b371d;
+        border: 1px solid #146c43;
         background: #fff;
-        color: #5b371d;
+        color: #146c43;
         border-radius: 10px;
         padding: 8px 12px;
         font-family: inherit;
@@ -138,7 +138,7 @@
         cursor: pointer;
       }
       .panel-btn.active {
-        background: #5b371d;
+        background: #146c43;
         color: #fff;
       }
       .panel-btn-close {
@@ -181,7 +181,7 @@
         margin: 0;
         font-size: 1.1rem;
         font-weight: 800;
-        color: #5b371d;
+        color: #146c43;
       }
       .panel-toolbar-actions {
         display: flex;
@@ -194,7 +194,7 @@
         margin: 18px 0 10px;
         font-size: 1.05rem;
         font-weight: 800;
-        color: #5b371d;
+        color: #146c43;
         display: flex;
         align-items: center;
         gap: 8px;
@@ -212,7 +212,7 @@
       .panel-loader {
         padding: 14px;
         text-align: center;
-        color: #6f5441;
+        color: #6b7280;
         font-weight: 700;
         background: #fffdfa;
         border: 1px dashed #e5d8cb;
@@ -222,7 +222,7 @@
       .panel-empty {
         padding: 16px;
         text-align: center;
-        color: #6f5441;
+        color: #6b7280;
         font-weight: 600;
         background: #faf6f1;
         border-radius: 10px;
@@ -245,13 +245,13 @@
       .finance-kpi-card strong {
         display: block;
         font-size: 0.88rem;
-        color: #6f5441;
+        color: #6b7280;
         margin-bottom: 6px;
       }
       .finance-kpi-card .stat {
         font-size: 1.35rem;
         font-weight: 800;
-        color: #5b371d;
+        color: #146c43;
       }
       .finance-kpi-card--debt .stat {
         color: #b91c1c;
@@ -286,7 +286,7 @@
       }
       .finance-table th {
         background: #faf6f1;
-        color: #5b371d;
+        color: #146c43;
         font-weight: 800;
         white-space: nowrap;
       }
@@ -321,7 +321,7 @@
       }
       .ledger-tx-updated {
         font-size: 0.82rem;
-        color: #6f5441;
+        color: #6b7280;
         margin: 0 0 8px;
       }
       .financial-alerts-wrap {
@@ -365,7 +365,7 @@
         color: #44403c;
       }
       .financial-alert-empty {
-        color: #6f5441;
+        color: #6b7280;
         font-size: 0.9rem;
         padding: 8px 0;
         margin: 0;
@@ -384,7 +384,7 @@
       .finance-feature-control-wrap h3 {
         margin: 0 0 8px;
         font-size: 1rem;
-        color: #5b371d;
+        color: #146c43;
       }
       .finance-feature-control-list {
         display: flex;
@@ -403,12 +403,12 @@
       }
       .finance-feature-row__label {
         font-weight: 700;
-        color: #5b371d;
+        color: #146c43;
         font-size: 0.92rem;
       }
       .finance-feature-row__desc {
         font-size: 0.78rem;
-        color: #6f5441;
+        color: #6b7280;
         margin-top: 2px;
       }
       .finance-feature-row select {
@@ -418,7 +418,7 @@
         border: 1px solid #d4b8a8;
         background: #fff;
         font-weight: 700;
-        color: #5b371d;
+        color: #146c43;
       }
       .finance-balance-pill {
         display: inline-block;
@@ -454,7 +454,7 @@
         color: #15803d;
       }
       .finance-btn-collect {
-        background: #5b371d;
+        background: #146c43;
         color: #fff;
         border: none;
         border-radius: 10px;
@@ -474,12 +474,12 @@
       .finance-hint {
         margin: 0 0 10px;
         font-size: 0.88rem;
-        color: #6f5441;
+        color: #6b7280;
       }
       .finance-msg {
         padding: 16px;
         text-align: center;
-        color: #6f5441;
+        color: #6b7280;
       }
       .finance-msg--error {
         color: #b91c1c;
@@ -489,7 +489,7 @@
         position: fixed;
         inset: 0;
         z-index: 12000;
-        background: rgba(42, 24, 16, 0.45);
+        background: rgba(15, 40, 28, 0.45);
         display: flex;
         justify-content: flex-start;
         align-items: stretch;
@@ -501,7 +501,7 @@
         width: min(420px, 100%);
         max-width: 100%;
         background: #fff;
-        box-shadow: -8px 0 32px rgba(45, 26, 14, 0.2);
+        box-shadow: -8px 0 32px rgba(15, 40, 28, 0.2);
         display: flex;
         flex-direction: column;
         margin-inline-start: auto;
@@ -529,7 +529,7 @@
       .finance-drawer-head h3 {
         margin: 0;
         font-size: 1.05rem;
-        color: #5b371d;
+        color: #146c43;
       }
       .finance-drawer-close {
         border: none;
@@ -539,7 +539,7 @@
         height: 36px;
         font-size: 1.25rem;
         cursor: pointer;
-        color: #5b371d;
+        color: #146c43;
         flex-shrink: 0;
       }
       .finance-drawer-body {
@@ -557,7 +557,7 @@
         font-size: 0.9rem;
       }
       .finance-drawer-meta strong {
-        color: #5b371d;
+        color: #146c43;
       }
       .finance-ledger-list {
         display: flex;
@@ -589,7 +589,7 @@
       .finance-collect-box label {
         display: block;
         font-weight: 700;
-        color: #5b371d;
+        color: #146c43;
         margin-bottom: 6px;
         font-size: 0.9rem;
       }
@@ -618,14 +618,14 @@
         margin: 0 0 12px;
         padding: 12px 14px;
         border-radius: 12px;
-        border: 1px dashed #d4a76a;
+        border: 1px dashed #ff7a00;
         background: linear-gradient(90deg, #fffbf5 0%, #faf6f1 100%);
       }
       .finance-smart-badge {
         display: inline-block;
         padding: 4px 10px;
         border-radius: 999px;
-        background: #5b371d;
+        background: #146c43;
         color: #fff;
         font-size: 0.78rem;
         font-weight: 800;
@@ -655,7 +655,7 @@
         border-radius: 12px;
         background: #fff;
         font-size: 0.88rem;
-        color: #5b371d;
+        color: #146c43;
       }
       .finance-daily-report h4 {
         margin: 0 0 8px;
@@ -668,12 +668,12 @@
       }
       .finance-daily-grid span {
         display: block;
-        color: #6f5441;
+        color: #6b7280;
         font-size: 0.78rem;
       }
       .finance-daily-grid strong {
         font-size: 1rem;
-        color: #5b371d;
+        color: #146c43;
       }
       .finance-notify-badge {
         display: inline-block;
@@ -729,9 +729,9 @@
         letter-spacing: 0.02em;
       }
       .finance-btn-copy-ref {
-        border: 1px solid #5b371d;
+        border: 1px solid #146c43;
         background: #fff;
-        color: #5b371d;
+        color: #146c43;
         border-radius: 8px;
         padding: 6px 12px;
         font-family: inherit;
@@ -747,7 +747,7 @@
       }
       .finance-btn-remind {
         background: #fff;
-        color: #5b371d;
+        color: #146c43;
         border: 1px solid #d8c8b8;
         border-radius: 10px;
         padding: 6px 10px;
@@ -783,9 +783,9 @@
         margin: 0;
       }
       .finance-btn-export-csv {
-        border: 1px solid #5b371d;
+        border: 1px solid #146c43;
         background: #fff;
-        color: #5b371d;
+        color: #146c43;
         border-radius: 10px;
         padding: 6px 14px;
         font-family: inherit;
@@ -801,7 +801,7 @@
         font-size: 0.92rem;
       }
       .finance-bulk-summary strong {
-        color: #5b371d;
+        color: #146c43;
       }
       .finance-bulk-check {
         display: flex;
@@ -820,7 +820,7 @@
       }
       .sub {
         margin: 6px 0 10px;
-        color: #6f5441;
+        color: #6b7280;
         font-size: 0.95rem;
       }
 
@@ -829,10 +829,10 @@
         margin: 10px 0 18px;
         padding: 16px;
         border-radius: 18px;
-        background: linear-gradient(145deg, #2a1810 0%, #5b371d 52%, #3d2618 100%);
+        background: linear-gradient(145deg, #0f5a37 0%, #146c43 52%, #0f5a37 100%);
         color: #fff8ee;
-        box-shadow: 0 14px 40px rgba(45, 26, 14, 0.18);
-        border: 1px solid rgba(212, 167, 106, 0.35);
+        box-shadow: 0 14px 40px rgba(15, 40, 28, 0.18);
+        border: 1px solid rgba(20, 108, 67, 0.35);
       }
       .live-dash-head {
         display: flex;
@@ -994,7 +994,7 @@
         background: #1a120c;
       }
       #liveMap.leaflet-container {
-        font-family: Cairo, sans-serif;
+        font-family: "Tajawal", Cairo, sans-serif;
       }
       .live-map-legend {
         display: flex;
@@ -1045,7 +1045,7 @@
         animation: adminMapPulse 1.5s ease-out infinite;
       }
       .leaflet-popup-content .admin-map-popup {
-        font-family: Cairo, sans-serif;
+        font-family: "Tajawal", Cairo, sans-serif;
         font-size: 0.88rem;
         line-height: 1.5;
         min-width: 160px;
@@ -1053,14 +1053,14 @@
       .leaflet-popup-content .admin-map-popup strong {
         display: block;
         margin-bottom: 6px;
-        color: #5b371d;
+        color: #146c43;
       }
       .leaflet-popup-content .admin-popup-row {
         margin: 4px 0;
         color: #3d2a1c;
       }
       .leaflet-popup-content .admin-popup-row.muted {
-        color: #6f5441;
+        color: #6b7280;
       }
       .live-alerts-card {
         margin-top: 14px;
@@ -1202,7 +1202,7 @@
       }
       .exec-btn--primary {
         background: #fde68a;
-        color: #3d2618;
+        color: #0f5a37;
       }
       .exec-btn--quick {
         background: #22c55e;
@@ -1227,7 +1227,7 @@
         gap: 6px;
         margin-top: 10px;
         padding-top: 8px;
-        border-top: 1px solid rgba(91, 55, 29, 0.15);
+        border-top: 1px solid rgba(20, 108, 67, 0.15);
       }
       .leaflet-popup-content .admin-exec-btn {
         border: 0;
@@ -1236,7 +1236,7 @@
         font-size: 0.72rem;
         font-weight: 800;
         cursor: pointer;
-        font-family: Cairo, sans-serif;
+        font-family: "Tajawal", Cairo, sans-serif;
       }
       .exec-modal-backdrop {
         position: fixed;
@@ -1259,16 +1259,16 @@
         border-radius: 16px;
         border: 1px solid #e5d8cb;
         padding: 16px;
-        box-shadow: 0 20px 50px rgba(45, 26, 14, 0.25);
+        box-shadow: 0 20px 50px rgba(15, 40, 28, 0.25);
       }
       .exec-modal h3 {
         margin: 0 0 6px;
-        color: #5b371d;
+        color: #146c43;
         font-size: 1.1rem;
       }
       .exec-modal-sub {
         margin: 0 0 12px;
-        color: #6f5441;
+        color: #6b7280;
         font-size: 0.86rem;
         font-weight: 600;
       }
@@ -1306,7 +1306,7 @@
         width: 100%;
       }
       .exec-driver-pick:hover {
-        border-color: #5b371d;
+        border-color: #146c43;
         background: #fff8ee;
       }
       .exec-driver-pick.is-suggested {
@@ -1860,7 +1860,7 @@
               <button type="button" class="finance-btn-copy-ref" id="financeReceiptCopyBtn">نسخ</button>
             </div>
           </div>
-          <h4 style="margin: 0 0 8px; font-size: 0.95rem; color: #5b371d">سجل العمليات (Ledger)</h4>
+          <h4 style="margin: 0 0 8px; font-size: 0.95rem; color: #146c43">سجل العمليات (Ledger)</h4>
           <div class="finance-ledger-list" id="financeDrawerLedger">
             <div class="finance-msg">اختر مندوباً من الجدول</div>
           </div>
@@ -1920,7 +1920,7 @@
     </div>
 
     <script src="/assets/api-config.js"></script>
-    <script src="/assets/api.js?erv=20260612"></script>
+    <script src="/assets/api.js?erv=20260919id"></script>
     <script src="/assets/platform-access.js" defer></script>
     <script src="https://cdn.socket.io/4.8.1/socket.io.min.js" crossorigin="anonymous"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -3961,7 +3961,7 @@
         list.innerHTML = "";
         var drivers = getAssignableDrivers();
         if (!drivers.length) {
-          list.innerHTML = '<p class="live-dash-msg" style="color:#6f5441">لا يوجد مناديب معتمدون بموقع GPS.</p>';
+          list.innerHTML = '<p class="live-dash-msg" style="color:#6b7280">لا يوجد مناديب معتمدون بموقع GPS.</p>';
           return;
         }
         drivers.sort(function (a, b) {
@@ -3978,10 +3978,10 @@
             btn.classList.add("is-suggested");
           }
           var left = document.createElement("span");
-          left.innerHTML = "<strong>" + escapeHtml(d.name || "مندوب") + "</strong><br><span style=\"font-size:.78rem;color:#6f5441\">" + escapeHtml(d.phone || "") + "</span>";
+          left.innerHTML = "<strong>" + escapeHtml(d.name || "مندوب") + "</strong><br><span style=\"font-size:.78rem;color:#6b7280\">" + escapeHtml(d.phone || "") + "</span>";
           var dist = document.createElement("span");
           dist.style.fontWeight = "800";
-          dist.style.color = "#5b371d";
+          dist.style.color = "#146c43";
           if (execModalOrder) {
             var target = getOrderTargetLatLng(execModalOrder);
             var la = Number(d.lat != null ? d.lat : d.latitude);
@@ -4022,7 +4022,7 @@
         var html = '<div class="admin-popup-actions">';
         if (orderNeedsDriver(o)) {
           html +=
-            '<button type="button" class="admin-exec-btn exec-btn--primary" style="background:#fde68a;color:#3d2618" data-exec-action="assign" data-order-id="' +
+            '<button type="button" class="admin-exec-btn exec-btn--primary" style="background:#fde68a;color:#0f5a37" data-exec-action="assign" data-order-id="' +
             oid +
             '">تعيين</button>';
           html +=
@@ -4265,7 +4265,7 @@
           if (!root) return;
           var el = root.querySelector('[data-order-id="' + oid + '"]');
           if (el) {
-              el.style.outline = "2px solid #5b371d";
+              el.style.outline = "2px solid #146c43";
               el.style.background = "#fff7ed";
               try {
                 el.scrollIntoView({ behavior: "smooth", block: "nearest" });

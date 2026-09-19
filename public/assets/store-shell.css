@@ -1,6 +1,6 @@
 /* ERVENOW — هيدر/فوتر بوابة الشريك (متاجر · مطاعm · خدمات) */
 body.store-shell-page {
-  background: linear-gradient(165deg, #faf4ee 0%, #f0e6dc 45%, #ebe2d8 100%);
+  background: linear-gradient(165deg, var(--erve-bg, #f7f4ef) 0%, #f0ebe3 45%, #ebe4db 100%);
 }
 
 body.store-shell-page .dash-main {
@@ -31,9 +31,9 @@ body.store-shell-page .dash-main {
 }
 
 .store-shell-page .store-header-wallet {
-  border-color: rgba(185, 135, 47, 0.45);
-  background: linear-gradient(145deg, #fff9ee, #f3e4cc);
-  box-shadow: 0 3px 12px rgba(185, 135, 47, 0.15);
+  border-color: rgba(20, 108, 67, 0.45);
+  background: linear-gradient(145deg, #e8f6ef, #d8f3e4);
+  box-shadow: 0 3px 12px rgba(20, 108, 67, 0.15);
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -64,16 +64,16 @@ body.store-shell-page .dash-main {
 .store-shell-page .store-header-wallet .dash-header-wallet__val {
   font-size: 0.95rem;
   font-weight: 900;
-  color: #3d2213;
+  color: var(--erve-ink, #111827);
 }
 
 .store-header-support-btn {
   min-height: 40px;
   padding: 6px 12px;
   border-radius: 10px;
-  border: 1px solid rgba(61, 34, 19, 0.14);
+  border: 1px solid rgba(17, 24, 39, 0.14);
   background: rgba(255, 255, 255, 0.9);
-  color: #3d2213;
+  color: var(--erve-ink, #111827);
   font-family: inherit;
   font-size: 0.78rem;
   font-weight: 800;
@@ -86,7 +86,7 @@ body.store-shell-page .dash-main {
 
 .store-header-support-btn:hover {
   background: #fff;
-  border-color: rgba(185, 135, 47, 0.35);
+  border-color: rgba(20, 108, 67, 0.35);
 }
 
 .store-mobile-nav-btn {
@@ -94,11 +94,11 @@ body.store-shell-page .dash-main {
   min-width: 40px;
   min-height: 40px;
   border-radius: 10px;
-  border: 1px solid rgba(61, 34, 19, 0.14);
+  border: 1px solid rgba(17, 24, 39, 0.14);
   background: rgba(255, 255, 255, 0.92);
   font-size: 1.1rem;
   cursor: pointer;
-  color: #3d2213;
+  color: var(--erve-ink, #111827);
 }
 
 .store-mobile-nav-panel {
@@ -121,16 +121,16 @@ body.store-shell-page .dash-main {
   padding: 10px 14px;
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.92);
-  border: 1px solid rgba(61, 34, 19, 0.08);
-  color: #3d2213;
+  border: 1px solid rgba(17, 24, 39, 0.08);
+  color: var(--erve-ink, #111827);
   text-decoration: none;
   font-size: 0.88rem;
   font-weight: 800;
 }
 
 .store-mobile-nav__item--cta {
-  background: linear-gradient(145deg, #fff9ee, #f3e4cc);
-  border-color: rgba(185, 135, 47, 0.35);
+  background: linear-gradient(145deg, #e8f6ef, #d8f3e4);
+  border-color: rgba(20, 108, 67, 0.35);
 }
 
 .store-site-footer {
@@ -261,8 +261,8 @@ body.store-shell-page .dash-main {
 .store-support__card {
   border-radius: 18px;
   background: rgba(255, 252, 248, 0.96);
-  border: 1px solid rgba(61, 34, 19, 0.08);
-  box-shadow: 0 10px 36px rgba(42, 24, 16, 0.08);
+  border: 1px solid rgba(17, 24, 39, 0.08);
+  box-shadow: 0 10px 36px rgba(15, 40, 28, 0.08);
   padding: 20px 18px;
 }
 
@@ -270,13 +270,13 @@ body.store-shell-page .dash-main {
   margin: 0 0 6px;
   font-size: 1.15rem;
   font-weight: 900;
-  color: #3d2213;
+  color: var(--erve-ink, #111827);
 }
 
 .store-support__sub {
   margin: 0 0 16px;
   font-size: 0.88rem;
-  color: #5c4638;
+  color: var(--erve-ink-soft, #6b7280);
   line-height: 1.55;
 }
 
@@ -293,7 +293,7 @@ body.store-shell-page .dash-main {
   padding: 14px;
   border-radius: 14px;
   background: linear-gradient(145deg, #fffefb, #f8f0e6);
-  border: 1px solid rgba(185, 135, 47, 0.2);
+  border: 1px solid rgba(20, 108, 67, 0.2);
   text-decoration: none;
   color: inherit;
   transition: transform 0.15s, box-shadow 0.15s;
@@ -301,12 +301,12 @@ body.store-shell-page .dash-main {
 
 .store-support__tile:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(45, 26, 14, 0.1);
+  box-shadow: 0 8px 24px rgba(15, 40, 28, 0.1);
 }
 
 .store-support__tile strong {
   font-size: 0.95rem;
-  color: #3d2213;
+  color: var(--erve-ink, #111827);
 }
 
 .store-support__tile span {
@@ -319,7 +319,7 @@ body.store-shell-page .dash-main {
   font-style: normal;
   font-size: 0.78rem;
   font-weight: 800;
-  color: #b9872f;
+  color: var(--erve-primary, #146c43);
 }
 
 @media (max-width: 900px) {

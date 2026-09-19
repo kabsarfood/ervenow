@@ -31,7 +31,7 @@
   padding: 10px 12px 12px;
   margin: 0;
   background: linear-gradient(180deg, #fffefb 0%, #faf6f0 100%);
-  border-top: 1px solid rgba(61, 34, 19, 0.06);
+  border-top: 1px solid rgba(17, 24, 39, 0.06);
 }
 .store-quick-info__chip {
   flex: 0 0 auto;
@@ -39,11 +39,11 @@
   padding: 8px 12px;
   border-radius: 14px;
   background: #fffefb;
-  border: 1px solid rgba(61, 34, 19, 0.1);
-  box-shadow: 0 4px 14px rgba(42, 24, 16, 0.05);
+  border: 1px solid rgba(17, 24, 39, 0.1);
+  box-shadow: 0 4px 14px rgba(15, 40, 28, 0.05);
   font-size: 0.8rem;
   font-weight: 800;
-  color: #3d2213;
+  color: #111827;
   white-space: nowrap;
   line-height: 1.35;
 }
@@ -55,7 +55,7 @@
   margin: 0 0 8px;
   font-size: 0.82rem;
   font-weight: 800;
-  color: #5c4638;
+  color: #6b7280;
 }
 .store-quick-nav__scroll {
   display: flex;
@@ -69,19 +69,19 @@
   min-height: 48px;
   padding: 10px 16px;
   border-radius: 16px;
-  border: 1px solid rgba(61, 34, 19, 0.1);
+  border: 1px solid rgba(17, 24, 39, 0.1);
   background: linear-gradient(145deg, #fffefb, #f8f2ea);
   font-family: inherit;
   font-size: 0.88rem;
   font-weight: 800;
-  color: #3d2213;
+  color: #111827;
   cursor: pointer;
   white-space: nowrap;
   transition: transform 0.15s, box-shadow 0.2s;
 }
 .store-quick-nav__chip:hover {
   transform: translateY(-1px);
-  box-shadow: 0 8px 22px rgba(42, 24, 16, 0.1);
+  box-shadow: 0 8px 22px rgba(15, 40, 28, 0.1);
 }
 
 .store-section--products {
@@ -100,11 +100,11 @@
   margin: 0 0 12px;
   padding: 12px 14px;
   border-radius: 14px;
-  background: linear-gradient(135deg, rgba(185, 135, 47, 0.14), rgba(255, 252, 248, 0.95));
-  border: 1px solid rgba(185, 135, 47, 0.28);
+  background: linear-gradient(135deg, rgba(20, 108, 67, 0.14), rgba(255, 252, 248, 0.95));
+  border: 1px solid rgba(20, 108, 67, 0.28);
   font-size: 0.9rem;
   font-weight: 800;
-  color: #5b371d;
+  color: #111827;
   line-height: 1.5;
 }
 .store-free-nudge.is-visible {
@@ -213,7 +213,7 @@
   -webkit-overflow-scrolling: touch;
   background: #fffefb;
   border-radius: 22px 22px 0 0;
-  box-shadow: 0 20px 56px rgba(42, 24, 16, 0.25);
+  box-shadow: 0 20px 56px rgba(15, 40, 28, 0.25);
 }
 @media (min-width: 641px) {
   .store-prod-modal__panel {
@@ -240,7 +240,7 @@
   margin: 0 0 14px;
   font-size: 0.92rem;
   line-height: 1.55;
-  color: #5c4638;
+  color: #6b7280;
 }
 .store-prod-modal__close {
   position: absolute;

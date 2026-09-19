@@ -4,11 +4,11 @@
  */
 
 .checkout-page {
-  --checkout-gold: #c9a227;
-  --checkout-ink: #2a1810;
+  --checkout-gold: var(--erve-primary, #146c43);
+  --checkout-ink: #111827;
   --checkout-muted: #6b5348;
   --checkout-surface: #fffaf3;
-  --checkout-border: rgba(201, 162, 39, 0.35);
+  --checkout-border: rgba(20, 108, 67, 0.35);
   font-family: "Cairo", system-ui, sans-serif;
   line-height: 1.5;
 }
@@ -50,7 +50,7 @@
   background: linear-gradient(180deg, #fffdf8 0%, var(--checkout-surface) 100%);
   padding: clamp(10px, 2.5vw, 16px);
   box-shadow:
-    0 10px 36px rgba(42, 24, 16, 0.07),
+    0 10px 36px rgba(15, 40, 28, 0.07),
     inset 0 1px 0 rgba(255, 255, 255, 0.9);
   transition: border-color 0.2s, box-shadow 0.2s;
 }
@@ -60,7 +60,7 @@
 }
 
 .checkout-panel--active {
-  border-color: rgba(201, 162, 39, 0.55);
+  border-color: rgba(20, 108, 67, 0.55);
 }
 
 .checkout-panel--compact .checkout-panel__stack {
@@ -90,7 +90,7 @@
 }
 
 .checkout-card {
-  border: 1px solid rgba(201, 162, 39, 0.28);
+  border: 1px solid rgba(20, 108, 67, 0.28);
   border-radius: clamp(12px, 2.5vw, 16px);
   background: #fff;
   padding: clamp(14px, 3vw, 20px);
@@ -98,8 +98,8 @@
 }
 
 .checkout-invoice {
-  border-color: rgba(201, 162, 39, 0.55);
-  background: linear-gradient(180deg, #fff 0%, #fff9ee 100%);
+  border-color: rgba(20, 108, 67, 0.55);
+  background: linear-gradient(180deg, #fff 0%, #e8f6ef 100%);
   margin-top: clamp(2px, 0.5vw, 6px);
   padding-bottom: clamp(16px, 3vw, 22px);
 }
@@ -145,7 +145,7 @@
   gap: 12px;
   align-items: center;
   padding: 12px 0;
-  border-bottom: 1px dashed rgba(42, 24, 16, 0.12);
+  border-bottom: 1px dashed rgba(15, 40, 28, 0.12);
   font-size: clamp(0.95rem, 2.4vw, 1rem);
 }
 
@@ -285,7 +285,7 @@
   gap: 12px;
   margin-top: 12px;
   padding-top: 12px;
-  border-top: 1px dashed rgba(42, 24, 16, 0.12);
+  border-top: 1px dashed rgba(15, 40, 28, 0.12);
 }
 
 .checkout-delivery-summary {
@@ -314,7 +314,7 @@
   gap: 8px;
   min-height: 48px;
   padding: 12px 10px;
-  border: 2px solid rgba(42, 24, 16, 0.12);
+  border: 2px solid rgba(15, 40, 28, 0.12);
   border-radius: 14px;
   background: #fff;
   cursor: pointer;
@@ -363,7 +363,7 @@
   margin-top: 14px;
   padding: 12px 14px;
   border-radius: 12px;
-  background: rgba(201, 162, 39, 0.08);
+  background: rgba(20, 108, 67, 0.08);
   border: 1px solid var(--checkout-border);
 }
 
@@ -398,7 +398,7 @@
   justify-content: space-between;
   gap: 12px;
   padding: 8px 0;
-  border-bottom: 1px solid rgba(42, 24, 16, 0.08);
+  border-bottom: 1px solid rgba(15, 40, 28, 0.08);
   font-size: clamp(0.95rem, 2.4vw, 1rem);
 }
 
@@ -453,10 +453,10 @@
 
 .checkout-btn--primary {
   width: 100%;
-  background: linear-gradient(135deg, #3d2213, #2a1810);
+  background: linear-gradient(135deg, #111827, #111827);
   color: #fff;
   border-color: var(--checkout-gold);
-  box-shadow: 0 8px 24px rgba(42, 24, 16, 0.18);
+  box-shadow: 0 8px 24px rgba(15, 40, 28, 0.18);
 }
 
 .checkout-btn--primary:disabled {
@@ -525,7 +525,7 @@
 }
 
 .checkout-toast--info {
-  background: #2a1810;
+  background: #111827;
   color: #fff;
 }
 

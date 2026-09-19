@@ -412,7 +412,7 @@
       if (!d) return;
       if (d.querySelector("script[data-ervenow-branding=\"1\"]")) return;
       var s = d.createElement("script");
-      s.src = "/assets/applyBranding.js";
+      s.src = "/assets/applyBranding.js?erv=20260919id2";
       s.async = true;
       s.setAttribute("data-ervenow-branding", "1");
       (d.head || d.documentElement).appendChild(s);

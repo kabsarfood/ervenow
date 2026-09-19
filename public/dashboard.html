@@ -5,11 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover" />
     <meta name="description" content="يتم تفعيل الحساب بعد المراجعة واعتماده من إدارة ERVENOW." />
     <script src="/assets/viewport-fit.js?erv=20260612"></script>
-    <script src="/assets/pre-reg-banner.js?erv=20260905b" defer></script>
+    <script src="/assets/pre-reg-banner.js?erv=20260919green" defer></script>
     <title>ERVENOW | منصة ERVENOW</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="/assets/styles.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/assets/ervenow-design-tokens.css?erv=20260919id" />
+    <link rel="stylesheet" href="/assets/ervenow-identity.css?erv=20260919id" />
+    <link rel="stylesheet" href="/assets/styles.css?erv=20260919id" />
     <link rel="stylesheet" href="/assets/guest-shell.css?erv=20260612" />
     <link rel="stylesheet" href="/assets/order-draft-badge.css" />
     <link rel="stylesheet" href="/assets/start-now-landing.css" />
@@ -28,15 +30,15 @@
       .dash-alert--guest {
         background: rgba(185, 135, 47, 0.1);
         border-color: rgba(185, 135, 47, 0.22);
-        color: var(--brown-mid, #5c4a3d);
+        color: var(--brown-mid, #6b7280);
       }
       .dash-alert--admin {
-        background: linear-gradient(135deg, rgba(61, 34, 19, 0.06), rgba(185, 135, 47, 0.12));
+        background: linear-gradient(135deg, rgba(17, 24, 39, 0.06), rgba(185, 135, 47, 0.12));
         border-color: rgba(185, 135, 47, 0.28);
-        color: var(--brown, #3d2213);
+        color: var(--brown, #111827);
       }
       .dash-alert a {
-        color: var(--gold, #b9872f);
+        color: var(--gold, #146c43);
         font-weight: 800;
         text-decoration: none;
       }
@@ -110,17 +112,17 @@
         min-width: 140px;
         padding: 10px 12px;
         border-radius: 12px;
-        border: 1px solid rgba(61, 34, 19, 0.14);
+        border: 1px solid rgba(17, 24, 39, 0.14);
         background: #fff;
         font-family: inherit;
         font-size: 0.88rem;
         font-weight: 800;
         cursor: pointer;
-        color: var(--brown, #3d2213);
+        color: var(--brown, #111827);
       }
       .delivery-mode-tab.is-active {
-        background: linear-gradient(135deg, #3d2213, #5c3d28);
-        color: #f8f4ee;
+        background: linear-gradient(135deg, #111827, #5c3d28);
+        color: #f7f4ef;
         border-color: rgba(185, 135, 47, 0.45);
       }
       .delivery-mode-panel[hidden] {
@@ -144,7 +146,7 @@
         display: inline-block;
         margin-top: 4px;
         font-weight: 800;
-        color: var(--gold, #b9872f);
+        color: var(--gold, #146c43);
         text-decoration: none;
       }
         text-decoration: underline;
@@ -170,7 +172,7 @@
         font-size: 0.68rem;
         font-weight: 900;
         color: #fffefb;
-        background: linear-gradient(135deg, #b9872f 0%, #d4a84a 100%);
+        background: linear-gradient(135deg, #146c43 0%, #d4a84a 100%);
       }
 
       .delivery-dropdown {
@@ -197,15 +199,15 @@
       }
       .delivery-dropdown[open] .app-tile,
       .app-tile.is-active {
-        background: linear-gradient(180deg, #3d2213 0%, #2b170d 100%);
-        color: #f8f4ee;
+        background: linear-gradient(180deg, #111827 0%, #0f5a37 100%);
+        color: #f7f4ef;
         border-color: rgba(185, 135, 47, 0.35);
       }
       .delivery-dropdown[open] .app-tile span,
       .app-tile.is-active span,
       .delivery-dropdown[open] .app-tile strong,
       .app-tile.is-active strong {
-        color: #f8f4ee;
+        color: #f7f4ef;
       }
         padding: 0 12px 12px;
       }
@@ -219,8 +221,8 @@
         box-shadow: 0 0 0 3px rgba(185, 135, 47, 0.35);
       }
       .map-action-btn.is-active {
-        background: linear-gradient(180deg, #3d2213 0%, #2b170d 100%);
-        color: #f8f4ee;
+        background: linear-gradient(180deg, #111827 0%, #0f5a37 100%);
+        color: #f7f4ef;
         border-color: rgba(185, 135, 47, 0.45);
       }
         min-height: 360px;
@@ -279,7 +281,7 @@
         background: #fff;
         border: 1px solid rgba(0, 0, 0, 0.1);
         border-radius: 14px;
-        box-shadow: 0 16px 44px rgba(45, 26, 14, 0.16);
+        box-shadow: 0 16px 44px rgba(15, 40, 28, 0.16);
         z-index: 60;
         padding: 12px 14px 14px;
       }
@@ -301,7 +303,7 @@
       }
       .orders-dropdown__switch:hover {
         text-decoration: underline;
-        color: var(--brown, #3d2213);
+        color: var(--brown, #111827);
       }
 
       #dashStatus {
@@ -310,7 +312,7 @@
       .dash-profile-card {
         margin-bottom: 14px;
         background: linear-gradient(135deg, #fffefb 0%, #f8f0e6 100%);
-        border-color: rgba(61, 34, 19, 0.1);
+        border-color: rgba(17, 24, 39, 0.1);
       }
       .dash-profile-card__row {
         display: flex;
@@ -331,7 +333,7 @@
         font-size: 1.2rem;
         font-weight: 900;
         flex-shrink: 0;
-        box-shadow: 0 4px 14px rgba(45, 26, 14, 0.1);
+        box-shadow: 0 4px 14px rgba(15, 40, 28, 0.1);
         overflow: hidden;
       }
       .dash-profile-card__avatar img.erv-guest-icon {
@@ -350,7 +352,7 @@
         border-radius: 14px;
         background: linear-gradient(135deg, #fffefb 0%, #f5ede2 100%);
         border: 1px solid rgba(185, 135, 47, 0.22);
-        box-shadow: 0 4px 16px rgba(45, 26, 14, 0.06);
+        box-shadow: 0 4px 16px rgba(15, 40, 28, 0.06);
       }
       .dash-guest-badge__icon {
         width: 40px;
@@ -368,7 +370,7 @@
         margin: 0;
         font-size: 0.88rem;
         font-weight: 700;
-        color: var(--brown, #3d2213);
+        color: var(--brown, #111827);
         line-height: 1.45;
       }
       .dash-profile-card__meta {
@@ -380,7 +382,7 @@
         font-weight: 700;
         font-size: clamp(0.9rem, 2.5vw, 1rem);
         word-break: break-all;
-        color: var(--brown, #3d2213);
+        color: var(--brown, #111827);
       }
       .badge--role {
         display: inline-block;
@@ -389,7 +391,7 @@
         font-size: 0.78rem;
         font-weight: 800;
         background: rgba(185, 135, 47, 0.15);
-        color: var(--brown, #3d2213);
+        color: var(--brown, #111827);
         border: 1px solid rgba(185, 135, 47, 0.25);
       }
       @media (max-width: 720px) {
@@ -399,8 +401,8 @@
           gap: 10px;
           margin-bottom: 0;
           padding: clamp(12px, 3vw, 18px);
-          background: linear-gradient(135deg, rgba(91, 55, 29, 0.07) 0%, rgba(255, 254, 251, 0.98) 50%, #fff 100%);
-          border: 1px solid rgba(91, 55, 29, 0.12);
+          background: linear-gradient(135deg, rgba(20, 108, 67, 0.07) 0%, rgba(255, 254, 251, 0.98) 50%, #fff 100%);
+          border: 1px solid rgba(20, 108, 67, 0.12);
           border-radius: 16px;
           overflow: hidden;
         }
@@ -473,9 +475,9 @@
         font-weight: 800;
         font-size: clamp(0.82rem, 2.6vw, 0.9rem);
         text-decoration: none;
-        color: var(--brown, #3d2213);
+        color: var(--brown, #111827);
         background: #fff;
-        border: 1px solid rgba(91, 55, 29, 0.18);
+        border: 1px solid rgba(20, 108, 67, 0.18);
         box-shadow: 0 2px 10px rgba(45, 28, 14, 0.06);
         white-space: nowrap;
         min-height: 46px;
@@ -489,7 +491,7 @@
         margin: 0 0 4px;
         font-size: clamp(1rem, 2.8vw, 1.12rem);
         font-weight: 800;
-        color: var(--brown, #3d2213);
+        color: var(--brown, #111827);
         line-height: 1.3;
       }
       .dash-section-hint {
@@ -505,7 +507,7 @@
         margin: 0 0 10px;
         font-size: clamp(1rem, 2.8vw, 1.12rem);
         font-weight: 800;
-        color: var(--brown, #3d2213);
+        color: var(--brown, #111827);
       }
       .cat-grid {
         display: grid;
@@ -545,7 +547,7 @@
       .cat-card strong {
         font-size: clamp(0.86rem, 2.4vw, 0.95rem);
         font-weight: 800;
-        color: var(--brown, #3d2213);
+        color: var(--brown, #111827);
       }
       .cat-card span {
         font-size: clamp(0.74rem, 2.1vw, 0.82rem);
@@ -568,7 +570,7 @@
         box-shadow:
           0 0 0 1px rgba(255, 255, 255, 0.07) inset,
           0 40px 100px rgba(0, 0, 0, 0.5),
-          0 16px 40px rgba(61, 34, 19, 0.22);
+          0 16px 40px rgba(17, 24, 39, 0.22);
       }
       @media (min-width: 900px) {
           width: min(calc((100% - 32px) * 0.9), 728px);
@@ -586,20 +588,20 @@
       .cat-card__summary::-webkit-details-marker {
         display: none;
       }
-        background: linear-gradient(180deg, #3d2213 0%, #2b170d 100%);
-        color: #f8f4ee;
+        background: linear-gradient(180deg, #111827 0%, #0f5a37 100%);
+        color: #f7f4ef;
         border-bottom: 1px solid rgba(185, 135, 47, 0.28);
       }
-        color: #f8f4ee;
+        color: #f7f4ef;
       }
         margin: 0;
         padding: clamp(12px, 2.5vw, 16px);
-        border-top: 1px solid rgba(61, 34, 19, 0.08);
+        border-top: 1px solid rgba(17, 24, 39, 0.08);
       }
         margin: 0 0 10px;
         font-size: clamp(1rem, 2.4vw, 1.12rem);
         font-weight: 800;
-        color: var(--brown, #3d2213);
+        color: var(--brown, #111827);
       }
         display: grid;
         gap: clamp(10px, 2vw, 14px);
@@ -698,7 +700,7 @@
         margin: 0;
         font-size: clamp(1rem, 2.6vw, 1.12rem);
         font-weight: 900;
-        color: var(--brown, #3d2213);
+        color: var(--brown, #111827);
       }
       .dash-map-quick__hint {
         margin: 4px 0 0;
@@ -729,7 +731,7 @@
         font-family: inherit;
         font-size: 0.86rem;
         font-weight: 800;
-        color: var(--brown, #3d2213);
+        color: var(--brown, #111827);
         cursor: pointer;
       }
       .dash-map-quick .btn-row .btn {
@@ -753,7 +755,7 @@
         padding: 18px 12px 16px;
         border-radius: 16px;
         text-decoration: none;
-        color: var(--brown, #3d2213);
+        color: var(--brown, #111827);
         background: #fffefb;
         text-align: center;
       }
@@ -781,13 +783,13 @@
         min-height: 44px;
         padding: 11px 10px;
         border-radius: 999px;
-        border: 1px solid rgba(61, 34, 19, 0.12);
+        border: 1px solid rgba(17, 24, 39, 0.12);
         background: #fffefb;
         font-family: inherit;
         font-weight: 800;
         font-size: 0.86rem;
         cursor: pointer;
-        color: var(--brown, #3d2213);
+        color: var(--brown, #111827);
         transition: background 0.15s, color 0.15s;
         touch-action: manipulation;
         -webkit-tap-highlight-color: rgba(185, 135, 47, 0.15);
@@ -821,8 +823,8 @@
       }
       .dash-tabs__nav button.is-active,
       .dash-tabs__nav button[aria-selected="true"] {
-        background: linear-gradient(180deg, #3d2213 0%, #2b170d 100%);
-        color: #f8f4ee;
+        background: linear-gradient(180deg, #111827 0%, #0f5a37 100%);
+        color: #f7f4ef;
         border-color: rgba(185, 135, 47, 0.35);
       }
       .dash-tabs__panel[hidden] {
@@ -836,9 +838,9 @@
         padding: 20px 16px;
         text-align: center;
         border-radius: 14px;
-        border: 1px dashed rgba(61, 34, 19, 0.18);
+        border: 1px dashed rgba(17, 24, 39, 0.18);
         background: rgba(255, 254, 251, 0.85);
-        color: var(--muted, #6f5441);
+        color: var(--muted, #6b7280);
         font-weight: 700;
         font-size: 0.92rem;
         line-height: 1.55;
@@ -872,7 +874,7 @@
           padding: 12px 16px;
           border-radius: 14px;
           border: 1px solid rgba(185, 135, 47, 0.35);
-          background: linear-gradient(135deg, #b9872f 0%, #d4a84a 100%);
+          background: linear-gradient(135deg, #146c43 0%, #d4a84a 100%);
           color: #fffefb;
           font-family: inherit;
           font-size: 1rem;
@@ -893,22 +895,22 @@
         margin: 0 0 12px;
         font-size: 0.84rem;
         font-weight: 800;
-        color: var(--gold, #b9872f);
+        color: var(--gold, #146c43);
         text-decoration: none;
       }
       .dash-tabs__all:hover { text-decoration: underline; }
       .dash-tabs__foot {
         margin: 16px 0 0;
         padding-top: 14px;
-        border-top: 1px solid rgba(61, 34, 19, 0.08);
+        border-top: 1px solid rgba(17, 24, 39, 0.08);
         font-size: 0.82rem;
         font-weight: 600;
-        color: var(--muted, #5c4a3d);
+        color: var(--muted, #6b7280);
         text-align: center;
         line-height: 1.8;
       }
       .dash-tabs__foot a {
-        color: var(--gold, #b9872f);
+        color: var(--gold, #146c43);
         font-weight: 800;
         text-decoration: none;
       }
@@ -921,7 +923,7 @@
         align-items: center;
         gap: 8px;
         padding-bottom: 8px;
-        border-bottom: 1px solid rgba(61, 34, 19, 0.08);
+        border-bottom: 1px solid rgba(17, 24, 39, 0.08);
         margin-bottom: 12px;
       }
       @media (max-width: 720px) {
@@ -1014,13 +1016,13 @@
         margin-bottom: clamp(8px, 1.8vw, 10px);
         border-radius: clamp(14px, 2.5vw, 16px);
         overflow: hidden;
-        border: 1px solid rgba(61, 34, 19, 0.12);
-        background: linear-gradient(135deg, #3d2213, #6b4423 55%, #8b5a2b);
+        border: 1px solid rgba(17, 24, 39, 0.12);
+        background: linear-gradient(135deg, #111827, #6b4423 55%, #8b5a2b);
         color: #fffefb;
         padding: clamp(12px, 2.6vw, 18px) clamp(14px, 3vw, 20px);
       }
       .dash-platform-hero.sn-hero--has-platform-bg {
-        background-image: linear-gradient(135deg, rgba(61, 34, 19, 0.9), rgba(45, 26, 10, 0.82)),
+        background-image: linear-gradient(135deg, rgba(17, 24, 39, 0.9), rgba(45, 26, 10, 0.82)),
           var(--platform-hero-bg, none);
         background-size: cover;
         background-position: center;
@@ -1052,7 +1054,7 @@
         font-size: 0.88rem;
         font-weight: 800;
         text-decoration: none;
-        background: #c9a227;
+        background: #146c43;
         color: #1a1008;
       }
       .dash-platform-hero__actions a.sn-hero__cta--outline {
@@ -1248,7 +1250,7 @@
     <script src="/assets/order-draft-store.js"></script>
     <script src="/assets/order-draft-badge.js"></script>
     <script src="/assets/api-config.js"></script>
-    <script src="/assets/api.js?erv=20260612"></script>
+    <script src="/assets/api.js?erv=20260919id"></script>
     <script src="/assets/auth-account-guard.js"></script>
     <script src="/assets/guestBrowse.js"></script>
     <script src="/assets/guest-offers-carousel.js?erv=20260612"></script>
@@ -1331,7 +1333,7 @@
             '" width="48" height="48" alt="" decoding="async" />';
         } else {
           avatar.textContent = roleAvatarEmoji(r);
-          avatar.style.background = "linear-gradient(135deg, #b9872f, #7a5a1f)";
+          avatar.style.background = "linear-gradient(135deg, #146c43, #7a5a1f)";
         }
       }
 

@@ -4,11 +4,13 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover" />
     <script src="/assets/viewport-fit.js?erv=20260612"></script>
-    <script src="/assets/pre-reg-banner.js?erv=20260905b" defer></script>
+    <script src="/assets/pre-reg-banner.js?erv=20260919green" defer></script>
     <title>ERVENOW | لوحة تحكم المتجر</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="/assets/styles.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/assets/ervenow-design-tokens.css?erv=20260919id" />
+    <link rel="stylesheet" href="/assets/ervenow-identity.css?erv=20260919id" />
+    <link rel="stylesheet" href="/assets/styles.css?erv=20260919id" />
     <link rel="stylesheet" href="/assets/guest-shell.css?erv=20260612" />
     <link rel="stylesheet" href="/assets/store-shell.css" />
     <link rel="stylesheet" href="/assets/ervenow-responsive.css" />
@@ -18,8 +20,8 @@
     <link rel="stylesheet" href="/assets/design-system/erv-typography-operations-pr4.css" />
     <style>
       :root {
-        --portal-ink: #2a1810;
-        --portal-gold: #c9a227;
+        --portal-ink: #111827;
+        --portal-gold: #146c43;
         --portal-card: rgba(255, 252, 248, 0.96);
         --portal-radius: 18px;
       }
@@ -32,8 +34,8 @@
         border-radius: var(--portal-radius);
         overflow: hidden;
         min-height: 168px;
-        background: linear-gradient(135deg, #3d2213, #6b4423 55%, #8b5a2b);
-        box-shadow: 0 16px 48px rgba(42, 24, 16, 0.22);
+        background: linear-gradient(135deg, #111827, #6b4423 55%, #8b5a2b);
+        box-shadow: 0 16px 48px rgba(15, 40, 28, 0.22);
         margin-bottom: 18px;
       }
       .portal-hero__bg {
@@ -46,7 +48,7 @@
       .portal-hero__shade {
         position: absolute;
         inset: 0;
-        background: linear-gradient(180deg, rgba(42, 24, 16, 0.15) 0%, rgba(26, 14, 8, 0.75) 100%);
+        background: linear-gradient(180deg, rgba(15, 40, 28, 0.15) 0%, rgba(26, 14, 8, 0.75) 100%);
       }
       .portal-hero__inner {
         position: relative;
@@ -107,20 +109,20 @@
       .portal-card {
         border-radius: var(--portal-radius);
         background: var(--portal-card);
-        border: 1px solid rgba(61, 34, 19, 0.08);
-        box-shadow: 0 10px 36px rgba(42, 24, 16, 0.08);
+        border: 1px solid rgba(17, 24, 39, 0.08);
+        box-shadow: 0 10px 36px rgba(15, 40, 28, 0.08);
         padding: 18px 18px 16px;
       }
       .portal-card h2 {
         margin: 0 0 12px;
         font-size: 1.05rem;
         font-weight: 800;
-        color: #3d2213;
+        color: #111827;
       }
       .portal-wallet-balance {
         font-size: 2rem;
         font-weight: 800;
-        color: #3d2213;
+        color: #111827;
         letter-spacing: -0.02em;
       }
       .portal-wallet-cur {
@@ -140,20 +142,20 @@
         justify-content: space-between;
         gap: 10px;
         padding: 8px 0;
-        border-bottom: 1px solid rgba(61, 34, 19, 0.06);
+        border-bottom: 1px solid rgba(17, 24, 39, 0.06);
       }
       .portal-tx-row:last-child {
         border-bottom: none;
       }
       .portal-stat {
         font-size: 0.88rem;
-        color: #5c4638;
+        color: #6b7280;
         font-weight: 600;
       }
       .portal-stat strong {
         display: block;
         font-size: 1.35rem;
-        color: #3d2213;
+        color: #111827;
         margin-top: 4px;
       }
       .hub-pay-grid {
@@ -185,7 +187,7 @@
         border-radius: 8px;
         background: #fff;
         padding: 5px 10px;
-        box-shadow: 0 2px 8px rgba(45, 26, 14, 0.1);
+        box-shadow: 0 2px 8px rgba(15, 40, 28, 0.1);
       }
       .hub-pay-row input:disabled + img {
         opacity: 0.45;
@@ -195,8 +197,8 @@
       }
       .portal-panel .card {
         border-radius: var(--portal-radius);
-        border: 1px solid rgba(61, 34, 19, 0.08);
-        box-shadow: 0 8px 28px rgba(42, 24, 16, 0.06);
+        border: 1px solid rgba(17, 24, 39, 0.08);
+        box-shadow: 0 8px 28px rgba(15, 40, 28, 0.06);
       }
       #walletAnchor,
       #brandingAnchor,
@@ -216,8 +218,8 @@
       .portal-kpi {
         border-radius: 16px;
         background: var(--portal-card);
-        border: 1px solid rgba(61, 34, 19, 0.08);
-        box-shadow: 0 8px 28px rgba(42, 24, 16, 0.06);
+        border: 1px solid rgba(17, 24, 39, 0.08);
+        box-shadow: 0 8px 28px rgba(15, 40, 28, 0.06);
         padding: 14px 16px;
         text-align: center;
       }
@@ -232,7 +234,7 @@
         display: block;
         font-size: 1.5rem;
         font-weight: 900;
-        color: #3d2213;
+        color: #111827;
         line-height: 1.1;
       }
       .portal-kpi__sub {
@@ -251,15 +253,15 @@
       .portal-preview-note {
         margin: 0 0 14px;
         font-size: 0.86rem;
-        color: #5c4638;
+        color: #6b7280;
         line-height: 1.5;
       }
       .store-preview {
         border-radius: 18px;
         overflow: hidden;
-        border: 1px solid rgba(61, 34, 19, 0.1);
+        border: 1px solid rgba(17, 24, 39, 0.1);
         background: #fffcfa;
-        box-shadow: 0 12px 40px rgba(42, 24, 16, 0.08);
+        box-shadow: 0 12px 40px rgba(15, 40, 28, 0.08);
         margin-bottom: 16px;
       }
       .store-preview__banner {
@@ -290,7 +292,7 @@
         margin: 0 0 6px;
         font-size: 1.2rem;
         font-weight: 900;
-        color: #3d2213;
+        color: #111827;
       }
       .store-preview__meta {
         margin: 0 0 8px;
@@ -302,7 +304,7 @@
         margin: 0;
         font-size: 0.86rem;
         line-height: 1.55;
-        color: #5c4638;
+        color: #6b7280;
       }
       .portal-product-catalog {
         display: grid;
@@ -314,8 +316,8 @@
         border-radius: 16px;
         overflow: hidden;
         background: #fffefb;
-        border: 1px solid rgba(61, 34, 19, 0.08);
-        box-shadow: 0 6px 22px rgba(42, 24, 16, 0.06);
+        border: 1px solid rgba(17, 24, 39, 0.08);
+        box-shadow: 0 6px 22px rgba(15, 40, 28, 0.06);
         display: flex;
         flex-direction: column;
       }
@@ -331,7 +333,7 @@
         align-items: center;
         justify-content: center;
         font-size: 2rem;
-        color: #c9a227;
+        color: #146c43;
       }
       .portal-product-card__body {
         padding: 10px 12px 12px;
@@ -343,14 +345,14 @@
       .portal-product-card__name {
         font-size: 0.88rem;
         font-weight: 800;
-        color: #3d2213;
+        color: #111827;
         line-height: 1.35;
         margin: 0;
       }
       .portal-product-card__price {
         font-size: 0.95rem;
         font-weight: 900;
-        color: #3d2213;
+        color: #111827;
         margin: 0;
       }
       .portal-product-card__offer {
@@ -374,17 +376,17 @@
         padding: 12px 14px;
         border-radius: 14px;
         background: rgba(255, 252, 248, 0.9);
-        border: 1px solid rgba(61, 34, 19, 0.06);
+        border: 1px solid rgba(17, 24, 39, 0.06);
       }
       .portal-review-item__stars {
         font-weight: 900;
-        color: #b9872f;
+        color: #146c43;
         font-size: 0.9rem;
       }
       .portal-review-item__text {
         margin: 6px 0 0;
         font-size: 0.86rem;
-        color: #5c4638;
+        color: #6b7280;
         line-height: 1.5;
       }
       .portal-review-item__date {
@@ -410,8 +412,8 @@
         padding: 8px 14px;
         border-radius: 999px;
         background: rgba(255, 252, 248, 0.9);
-        border: 1px solid rgba(61, 34, 19, 0.1);
-        color: #3d2213;
+        border: 1px solid rgba(17, 24, 39, 0.1);
+        color: #111827;
         text-decoration: none;
       }
       .portal-panel-url {
@@ -607,7 +609,7 @@
               </div>
             </div>
           </div>
-          <h3 style="margin: 0 0 10px; font-size: 1rem; font-weight: 800; color: #3d2213">منتجاتك (معاينة)</h3>
+          <h3 style="margin: 0 0 10px; font-size: 1rem; font-weight: 800; color: #111827">منتجاتك (معاينة)</h3>
           <div class="portal-product-catalog" id="previewProductGrid">
             <p class="sub" style="margin: 0">جارٍ التحميل…</p>
           </div>
@@ -798,7 +800,7 @@
 
     <script src="/assets/compressImage.js"></script>
     <script src="/assets/api-config.js"></script>
-    <script src="/assets/api.js?erv=20260612"></script>
+    <script src="/assets/api.js?erv=20260919id"></script>
     <script src="/assets/auth-account-guard.js"></script>
     <script src="/assets/store-shell.js"></script>
     <script>
@@ -1015,7 +1017,7 @@
         var defSvg =
           "data:image/svg+xml," +
           encodeURIComponent(
-            '<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160"><rect fill="#f5ebe0" width="160" height="160" rx="24"/><text x="50%" y="52%" dominant-baseline="middle" text-anchor="middle" fill="#c9a227" font-family="sans-serif" font-size="15" font-weight="700">ERVENOW</text></svg>'
+            '<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160"><rect fill="#f5ebe0" width="160" height="160" rx="24"/><text x="50%" y="52%" dominant-baseline="middle" text-anchor="middle" fill="#146c43" font-family="sans-serif" font-size="15" font-weight="700">ERVENOW</text></svg>'
           );
         if (banner) {
           if (hub && hub.banner_url) {
@@ -1162,7 +1164,7 @@
           var defSvg =
             "data:image/svg+xml," +
             encodeURIComponent(
-              '<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160"><rect fill="#f5ebe0" width="160" height="160" rx="24"/><text x="50%" y="52%" dominant-baseline="middle" text-anchor="middle" fill="#c9a227" font-family="sans-serif" font-size="15" font-weight="700">ERVENOW</text></svg>'
+              '<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160"><rect fill="#f5ebe0" width="160" height="160" rx="24"/><text x="50%" y="52%" dominant-baseline="middle" text-anchor="middle" fill="#146c43" font-family="sans-serif" font-size="15" font-weight="700">ERVENOW</text></svg>'
             );
           logoEl.onerror = function () {
             logoEl.src = defSvg;

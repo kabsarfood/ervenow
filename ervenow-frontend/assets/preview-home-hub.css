@@ -5,8 +5,8 @@
 .preview-hub-page {
   margin: 0;
   font-family: "Cairo", system-ui, sans-serif;
-  background: linear-gradient(180deg, #faf4ee 0%, #f8f4ef 40%, #f2ebe3 100%);
-  color: #2b1f16;
+  background: linear-gradient(180deg, #f7f4ef 0%, #f8f4ef 40%, #f2ebe3 100%);
+  color: #111827;
   min-height: 100vh;
   min-height: 100dvh;
 }
@@ -15,10 +15,10 @@
   position: sticky;
   top: 0;
   z-index: 40;
-  background: linear-gradient(135deg, #3d2213 0%, #5c3820 55%, #6b4423 100%);
+  background: linear-gradient(135deg, #111827 0%, #5c3820 55%, #6b4423 100%);
   color: #fffefb;
   padding: max(12px, env(safe-area-inset-top, 0px)) clamp(14px, 3vw, 24px) clamp(14px, 2.5vw, 18px);
-  box-shadow: 0 8px 28px rgba(45, 26, 14, 0.22);
+  box-shadow: 0 8px 28px rgba(15, 40, 28, 0.22);
 }
 
 .preview-hub-banner__inner {
@@ -73,7 +73,7 @@
 }
 
 .preview-hub-tab.is-active {
-  background: #c9a227;
+  background: #146c43;
   border-color: #e8c547;
   color: #1a1008;
 }
@@ -104,7 +104,7 @@
 .sn-home-hub--direct .preview-hub-card {
   min-height: 100%;
   cursor: pointer;
-  -webkit-tap-highlight-color: rgba(185, 135, 47, 0.12);
+  -webkit-tap-highlight-color: rgba(20, 108, 67, 0.12);
 }
 
 .sn-home-hub--direct .preview-hub-card .sn-card__arrow {
@@ -112,7 +112,7 @@
   transform: translateX(0);
   font-size: 0.82rem;
   font-weight: 800;
-  color: var(--card-color, #b9872f);
+  color: var(--card-color, #146c43);
   margin-top: 2px;
 }
 
@@ -121,7 +121,7 @@
   padding: 8px 10px;
   margin-bottom: 4px;
   border-radius: 10px;
-  background: rgba(185, 135, 47, 0.12);
+  background: rgba(20, 108, 67, 0.12);
   color: #7a4a12;
   font-size: 0.78rem;
   font-weight: 700;
@@ -132,23 +132,23 @@
 .preview-section-demos {
   margin-top: clamp(28px, 5vw, 40px);
   padding-top: clamp(20px, 3vw, 28px);
-  border-top: 2px dashed rgba(61, 34, 19, 0.15);
+  border-top: 2px dashed rgba(17, 24, 39, 0.15);
 }
 
 .preview-section-demo {
   margin-bottom: clamp(20px, 3.5vw, 28px);
   border-radius: clamp(16px, 2.5vw, 20px);
-  border: 1px solid rgba(61, 34, 19, 0.1);
+  border: 1px solid rgba(17, 24, 39, 0.1);
   background: #fffefb;
-  box-shadow: 0 10px 32px rgba(45, 26, 14, 0.08);
+  box-shadow: 0 10px 32px rgba(15, 40, 28, 0.08);
   overflow: hidden;
   scroll-margin-top: clamp(120px, 22vw, 160px);
   transition: box-shadow 0.35s ease, border-color 0.35s ease;
 }
 
 .preview-section-demo.is-highlight {
-  border-color: rgba(201, 162, 39, 0.65);
-  box-shadow: 0 0 0 3px rgba(201, 162, 39, 0.25), 0 14px 40px rgba(45, 26, 14, 0.12);
+  border-color: rgba(20, 108, 67, 0.65);
+  box-shadow: 0 0 0 3px rgba(20, 108, 67, 0.25), 0 14px 40px rgba(15, 40, 28, 0.12);
 }
 
 .preview-section-demo__head {
@@ -157,10 +157,10 @@
 }
 
 .preview-section-demo__head--restaurants {
-  background: linear-gradient(135deg, #8a5a1f, #b9872f);
+  background: linear-gradient(135deg, #0f5a37, #146c43);
 }
 .preview-section-demo__head--stores {
-  background: linear-gradient(135deg, #7a5528, #a97b3a);
+  background: linear-gradient(135deg, #0f5a37, #0f5a37);
 }
 .preview-section-demo__head--delivery {
   background: linear-gradient(135deg, #6b4a22, #8f6a35);
@@ -209,9 +209,9 @@
   min-height: 88px;
   padding: 12px 10px;
   border-radius: 14px;
-  border: 1px solid rgba(61, 34, 19, 0.1);
+  border: 1px solid rgba(17, 24, 39, 0.1);
   background: #fdfbf7;
-  color: #3d2213;
+  color: #111827;
   font-size: clamp(0.82rem, 2.2vw, 0.88rem);
   font-weight: 800;
   text-align: center;
@@ -228,16 +228,16 @@
 .preview-cat-tile:hover,
 .preview-cat-tile:focus-visible {
   transform: translateY(-2px);
-  border-color: rgba(185, 135, 47, 0.45);
-  box-shadow: 0 8px 20px rgba(45, 26, 14, 0.1);
+  border-color: rgba(20, 108, 67, 0.45);
+  box-shadow: 0 8px 20px rgba(15, 40, 28, 0.1);
 }
 
 .preview-cat-tile--all {
   grid-column: 1 / -1;
   min-height: 52px;
   flex-direction: row;
-  background: rgba(201, 162, 39, 0.12);
-  border-color: rgba(201, 162, 39, 0.35);
+  background: rgba(20, 108, 67, 0.12);
+  border-color: rgba(20, 108, 67, 0.35);
 }
 
 .preview-section-demo__foot {
@@ -263,7 +263,7 @@
   padding: clamp(16px, 3vw, 24px);
   font-size: 0.85rem;
   color: rgba(43, 31, 22, 0.65);
-  border-top: 1px solid rgba(61, 34, 19, 0.08);
+  border-top: 1px solid rgba(17, 24, 39, 0.08);
 }
 
 .preview-hub-footer a {

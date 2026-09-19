@@ -27,9 +27,9 @@
     z-index: 200;
     padding-top: env(safe-area-inset-top, 0px);
     padding-inline: 0;
-    background: #f8f4ee;
+    background: #f7f4ef;
     border-bottom: 0;
-    box-shadow: 0 1px 0 rgba(61, 34, 19, 0.08);
+    box-shadow: 0 1px 0 rgba(17, 24, 39, 0.08);
   }
 
   html.erv-mobile-shell body.guest-shell-page .dash-site-header__inner {

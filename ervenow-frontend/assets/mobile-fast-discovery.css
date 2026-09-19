@@ -20,8 +20,8 @@
     max-width: 100%;
     margin: 0;
     padding: 2px max(12px, env(safe-area-inset-left, 12px)) 4px max(12px, env(safe-area-inset-right, 12px));
-    background: linear-gradient(180deg, #faf4ee 0%, rgba(253, 251, 247, 0.98) 100%);
-    border-bottom: 1px solid rgba(61, 34, 19, 0.06);
+    background: linear-gradient(180deg, #f7f4ef 0%, rgba(253, 251, 247, 0.98) 100%);
+    border-bottom: 1px solid rgba(17, 24, 39, 0.06);
   }
 
   html.erv-mobile-shell body.guest-shell-page.stores-page .stores-search-wrap {
@@ -33,7 +33,7 @@
     padding: 8px 42px 8px 14px;
     font-size: 16px;
     border-radius: 14px;
-    box-shadow: 0 4px 16px rgba(42, 24, 16, 0.05);
+    box-shadow: 0 4px 16px rgba(15, 40, 28, 0.05);
   }
 
   /* ترتيب افتراضي — إخفاء شريط الفلاتر الثقيل على الجوال */
@@ -197,7 +197,7 @@
   border-radius: 18px 18px 0 0;
   padding: 12px max(14px, env(safe-area-inset-left, 14px)) max(16px, env(safe-area-inset-bottom, 16px))
     max(14px, env(safe-area-inset-right, 14px));
-  box-shadow: 0 -8px 40px rgba(45, 26, 14, 0.18);
+  box-shadow: 0 -8px 40px rgba(15, 40, 28, 0.18);
   transform: translateY(100%);
   transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
 }
@@ -218,7 +218,7 @@
   margin: 0;
   font-size: 1rem;
   font-weight: 900;
-  color: #3d2213;
+  color: #111827;
 }
 
 .erv-svc-order-sheet__close {
@@ -226,7 +226,7 @@
   min-height: 44px;
   border: 0;
   border-radius: 12px;
-  background: rgba(61, 34, 19, 0.08);
+  background: rgba(17, 24, 39, 0.08);
   font-family: inherit;
   font-size: 1.2rem;
   cursor: pointer;

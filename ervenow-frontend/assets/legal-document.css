@@ -9,7 +9,7 @@
   margin: 0 0 clamp(20px, 4vw, 28px);
   font-size: 0.88rem;
   font-weight: 600;
-  color: var(--muted, rgba(61, 34, 19, 0.72));
+  color: var(--muted, rgba(17, 24, 39, 0.72));
   line-height: 1.55;
 }
 
@@ -18,7 +18,7 @@
   font-size: clamp(0.95rem, 2.4vw, 1.05rem);
   font-weight: 600;
   line-height: 1.75;
-  color: var(--brown, #3d2213);
+  color: var(--brown, #111827);
 }
 
 .legal-doc__section {
@@ -26,8 +26,8 @@
   padding: clamp(18px, 4vw, 24px);
   border-radius: 16px;
   background: rgba(255, 254, 251, 0.92);
-  border: 1px solid rgba(61, 34, 19, 0.1);
-  box-shadow: 0 4px 18px rgba(45, 26, 14, 0.04);
+  border: 1px solid rgba(17, 24, 39, 0.1);
+  box-shadow: 0 4px 18px rgba(15, 40, 28, 0.04);
 }
 
 .legal-doc__section h2 {
@@ -35,7 +35,7 @@
   font-size: clamp(1.05rem, 2.6vw, 1.15rem);
   font-weight: 800;
   line-height: 1.45;
-  color: var(--brown, #3d2213);
+  color: var(--brown, #111827);
 }
 
 .legal-doc__section p {
@@ -43,7 +43,7 @@
   font-size: clamp(0.9rem, 2.2vw, 0.96rem);
   font-weight: 600;
   line-height: 1.75;
-  color: rgba(61, 34, 19, 0.88);
+  color: rgba(17, 24, 39, 0.88);
 }
 
 .legal-doc__section p:last-child {
@@ -61,7 +61,7 @@
   font-size: clamp(0.9rem, 2.2vw, 0.96rem);
   font-weight: 600;
   line-height: 1.7;
-  color: rgba(61, 34, 19, 0.88);
+  color: rgba(17, 24, 39, 0.88);
 }
 
 .legal-doc__list li:last-child {
@@ -75,7 +75,7 @@
   margin-bottom: 16px;
   font-size: 0.9rem;
   font-weight: 700;
-  color: var(--gold, #b9872f);
+  color: var(--erve-primary, #146c43);
   text-decoration: none;
 }
 
@@ -84,12 +84,12 @@
 }
 
 .legal-doc__golden {
-  border-color: rgba(185, 135, 47, 0.28);
+  border-color: rgba(20, 108, 67, 0.28);
   background: linear-gradient(155deg, rgba(255, 254, 251, 0.98), rgba(248, 241, 229, 0.92));
 }
 
 .legal-doc__golden h2 {
-  color: var(--gold, #b9872f);
+  color: var(--erve-primary, #146c43);
 }
 
 @media (max-width: 640px) {

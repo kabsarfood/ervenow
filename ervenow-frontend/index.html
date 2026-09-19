@@ -4,7 +4,6 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <script src="/assets/viewport-fit.js?erv=20260623"></script>
-    <script src="/assets/pre-reg-banner.js?erv=20260905b" defer></script>
     <meta
       name="description"
       content="ERVENOW — نربط المطاعم والمتاجر والعملاء والمناديب في نظام ذكي واحد. يتم تفعيل الحساب بعد المراجعة واعتماده من إدارة ERVENOW."
@@ -13,10 +12,12 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Tajawal:wght@400;500;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="/assets/styles.css" />
+    <link rel="stylesheet" href="/assets/ervenow-design-tokens.css?erv=20260919id" />
+    <link rel="stylesheet" href="/assets/ervenow-identity.css?erv=20260919search6" />
+    <link rel="stylesheet" href="/assets/styles.css?erv=20260919id" />
     <link rel="stylesheet" href="/assets/start-now-landing.css?erv=20260901h" />
     <link rel="stylesheet" href="/assets/ervenow-responsive.css" />
     <link rel="stylesheet" href="/assets/mobile-foundation.css?erv=20260623" />
@@ -25,12 +26,12 @@
     <link rel="stylesheet" href="/assets/home-polish-p1b.css?erv=20260901h" />
     <link rel="stylesheet" href="/assets/home-polish-p1c.css?erv=20260901h" />
     <link rel="stylesheet" href="/assets/home-polish-final.css?erv=20260901h" />
-    <script src="/assets/mobile-foundation.js?erv=20260702t" defer></script>
+    <script src="/assets/mobile-foundation.js?erv=20260919emoji" defer></script>
     <script src="/assets/mobile-orders-nav-badge.js?erv=20260612" defer></script>
     <script src="/assets/mobile-harmony.js?erv=20260901o" defer></script>
     <script src="/assets/api-config.js"></script>
     <script src="/assets/phonePrivacy.js"></script>
-    <script src="/assets/api.js?erv=20260612"></script>
+    <script src="/assets/api.js?erv=20260919id"></script>
     <script src="/assets/account-destinations.js" defer></script>
     <script src="/assets/platform-access.js" defer></script>
     <style>
@@ -116,7 +117,7 @@
         border-bottom: 1px solid var(--border);
         backdrop-filter: blur(12px);
         -webkit-backdrop-filter: blur(12px);
-        box-shadow: 0 4px 24px rgba(45, 26, 14, 0.06);
+        box-shadow: 0 4px 24px rgba(15, 40, 28, 0.06);
       }
 
       .lp-header__inner {
@@ -267,7 +268,7 @@
       }
 
       .lp-nav a.lp-nav__cta:hover {
-        background: #a97b3a;
+        background: #0f5a37;
         color: #fff;
       }
 
@@ -345,7 +346,7 @@
         font-size: 0.9rem;
         color: var(--brown);
         cursor: pointer;
-        box-shadow: 0 4px 14px rgba(45, 26, 14, 0.08);
+        box-shadow: 0 4px 14px rgba(15, 40, 28, 0.08);
         transition: transform 0.2s, box-shadow 0.25s, border-color 0.2s;
       }
 
@@ -470,7 +471,7 @@
         border: none;
         border-radius: 22px;
         box-shadow:
-          0 22px 48px rgba(45, 26, 14, 0.18),
+          0 22px 48px rgba(15, 40, 28, 0.18),
           0 0 0 1px rgba(255, 255, 255, 0.35) inset,
           0 0 40px rgba(201, 162, 39, 0.12);
         opacity: 0;
@@ -562,7 +563,7 @@
           )
           border-box;
         box-shadow:
-          0 12px 32px rgba(45, 26, 14, 0.09),
+          0 12px 32px rgba(15, 40, 28, 0.09),
           0 0 0 1px rgba(255, 255, 255, 0.45) inset,
           0 0 28px rgba(201, 162, 39, 0.1);
         overflow: hidden;
@@ -592,7 +593,7 @@
         margin: 0;
         font-size: clamp(1.2rem, 3vw, 1.45rem);
         font-weight: 900;
-        color: var(--gold, #b9872f);
+        color: var(--gold, #146c43);
         letter-spacing: 0.02em;
         text-shadow: 0 1px 0 rgba(255, 255, 255, 0.45);
       }
@@ -603,7 +604,7 @@
         padding: 4px 11px;
         border-radius: 999px;
         background: rgba(185, 135, 47, 0.22);
-        color: #5c3710;
+        color: #0f5a37;
       }
 
       .lp-cart-card--head__badge[hidden] {
@@ -672,13 +673,13 @@
       }
 
       .lp-cart-card--fin .lp-cart-panel__fin-row--grand .lp-cart-panel__fin-val {
-        color: #5c3710;
+        color: #0f5a37;
         font-size: 1.08rem;
       }
 
       .lp-cart-card--checkout {
         box-shadow:
-          0 14px 36px rgba(45, 26, 14, 0.11),
+          0 14px 36px rgba(15, 40, 28, 0.11),
           0 0 0 1px rgba(255, 255, 255, 0.5) inset,
           0 0 36px rgba(201, 162, 39, 0.14);
       }
@@ -737,19 +738,19 @@
       .lp-cart-panel__continue-shop:hover {
         background: rgba(201, 162, 39, 0.14);
         border-color: rgba(185, 135, 47, 0.35);
-        color: #3d2213;
+        color: #111827;
       }
 
       @media (prefers-color-scheme: dark) {
         .lp-cart-panel__shop-bar {
           background: linear-gradient(180deg, rgba(36, 28, 22, 0.96), rgba(28, 22, 18, 0.92));
-          border-bottom-color: rgba(212, 167, 106, 0.18);
+          border-bottom-color: rgba(20, 108, 67, 0.18);
         }
         .lp-cart-panel__continue-shop {
           color: #faf6ef;
         }
         .lp-cart-panel__continue-shop:hover {
-          background: rgba(212, 167, 106, 0.12);
+          background: rgba(20, 108, 67, 0.12);
           color: #fffef8;
         }
       }
@@ -844,7 +845,7 @@
         border-radius: 14px;
         background: linear-gradient(165deg, rgba(255, 255, 255, 0.94), rgba(250, 246, 238, 0.88));
         border: 1px solid rgba(185, 135, 47, 0.18);
-        box-shadow: 0 8px 22px rgba(45, 26, 14, 0.06);
+        box-shadow: 0 8px 22px rgba(15, 40, 28, 0.06);
       }
 
       .lp-cart-line__top {
@@ -875,7 +876,7 @@
 
       .lp-cart-line__badge--service {
         background: rgba(185, 135, 47, 0.2);
-        color: #5c3710;
+        color: #0f5a37;
       }
 
       .lp-cart-line__title {
@@ -902,7 +903,7 @@
         gap: 10px;
         margin-top: 10px;
         padding-top: 8px;
-        border-top: 1px dashed rgba(61, 34, 19, 0.1);
+        border-top: 1px dashed rgba(17, 24, 39, 0.1);
       }
 
       .lp-cart-line__price {
@@ -992,7 +993,7 @@
         padding: 3px 10px;
         border-radius: 999px;
         background: rgba(185, 135, 47, 0.22);
-        color: #5c3710;
+        color: #0f5a37;
       }
 
       .lp-cart-panel__count-badge[hidden] {
@@ -1095,7 +1096,7 @@
       .lp-cart-panel__fin-row--grand {
         margin-top: 4px;
         padding-top: 8px;
-        border-top: 1px dashed rgba(61, 34, 19, 0.12);
+        border-top: 1px dashed rgba(17, 24, 39, 0.12);
         font-size: 0.88rem;
         color: var(--brown);
       }
@@ -1151,7 +1152,7 @@
         font-weight: 800;
         cursor: pointer;
         color: #fffef8;
-        background: linear-gradient(135deg, #b9872f, #7a5a1f);
+        background: linear-gradient(135deg, #146c43, #7a5a1f);
         box-shadow: 0 8px 24px rgba(155, 111, 37, 0.38);
         transition: transform 0.2s, filter 0.2s, box-shadow 0.25s;
       }
@@ -1240,7 +1241,7 @@
         font-size: 0.9rem;
         font-family: inherit;
         box-sizing: border-box;
-        box-shadow: 0 4px 14px rgba(45, 26, 14, 0.08);
+        box-shadow: 0 4px 14px rgba(15, 40, 28, 0.08);
         transition: transform 0.2s, box-shadow 0.25s, border-color 0.2s;
       }
       .lp-header-wallet:hover {
@@ -1291,7 +1292,7 @@
       .lp-btn-outline:hover {
         border-color: rgba(185, 135, 47, 0.45);
         transform: translateY(-1px);
-        box-shadow: 0 6px 20px rgba(45, 26, 14, 0.08);
+        box-shadow: 0 6px 20px rgba(15, 40, 28, 0.08);
       }
 
       .lp-btn-solid {
@@ -1304,7 +1305,7 @@
         border: none;
         cursor: pointer;
         color: #fffef8;
-        background: linear-gradient(135deg, #b9872f, #7a5a1f);
+        background: linear-gradient(135deg, #146c43, #7a5a1f);
         box-shadow: 0 6px 22px rgba(155, 111, 37, 0.35);
         transition: transform 0.25s, filter 0.25s, box-shadow 0.35s;
       }
@@ -1381,7 +1382,7 @@
           justify-content: safe center;
           padding-top: 10px;
           margin-top: 2px;
-          border-top: 1px solid rgba(61, 34, 19, 0.08);
+          border-top: 1px solid rgba(17, 24, 39, 0.08);
           overflow-x: auto;
           -webkit-overflow-scrolling: touch;
           scrollbar-width: thin;
@@ -1505,9 +1506,9 @@
           gap: 10px;
           flex-wrap: unset;
           background: linear-gradient(145deg, rgba(255, 254, 251, 0.98), rgba(248, 241, 229, 0.96));
-          border: 1px solid rgba(61, 34, 19, 0.1);
+          border: 1px solid rgba(17, 24, 39, 0.1);
           border-radius: 14px;
-          box-shadow: 0 4px 20px rgba(45, 26, 14, 0.08);
+          box-shadow: 0 4px 20px rgba(15, 40, 28, 0.08);
         }
 
         .lp-header__actions .lp-cart-wrap {
@@ -1539,7 +1540,7 @@
           justify-content: center;
           padding-top: 8px;
           margin-top: 2px;
-          border-top: 1px solid rgba(61, 34, 19, 0.08);
+          border-top: 1px solid rgba(17, 24, 39, 0.08);
           overflow-x: auto;
           -webkit-overflow-scrolling: touch;
         }
@@ -1671,7 +1672,7 @@
             var(--bg) 100%
           ),
           radial-gradient(ellipse 100% 70% at 50% -15%, rgba(185, 135, 47, 0.18), transparent 58%),
-          radial-gradient(ellipse 55% 45% at 100% 40%, rgba(61, 34, 19, 0.06), transparent 50%),
+          radial-gradient(ellipse 55% 45% at 100% 40%, rgba(17, 24, 39, 0.06), transparent 50%),
           radial-gradient(ellipse 50% 40% at 0% 70%, rgba(185, 135, 47, 0.07), transparent 48%);
       }
 
@@ -1755,12 +1756,12 @@
         font-weight: 800;
         text-decoration: none;
         color: #fffef8;
-        background: linear-gradient(145deg, #c99a3d, #b9872f 40%, #6d4c18);
+        background: linear-gradient(145deg, #c99a3d, #146c43 40%, #6d4c18);
         border: 1px solid rgba(255, 254, 248, 0.25);
         box-shadow:
           0 4px 0 rgba(90, 62, 28, 0.15),
           0 14px 40px rgba(155, 111, 37, 0.45),
-          0 2px 12px rgba(61, 34, 19, 0.12);
+          0 2px 12px rgba(17, 24, 39, 0.12);
         transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.35s, filter 0.3s;
       }
 
@@ -1770,7 +1771,7 @@
         box-shadow:
           0 6px 0 rgba(90, 62, 28, 0.12),
           0 22px 52px rgba(155, 111, 37, 0.5),
-          0 4px 20px rgba(61, 34, 19, 0.14);
+          0 4px 20px rgba(17, 24, 39, 0.14);
       }
 
       .lp-start-dd {
@@ -1787,8 +1788,8 @@
         padding: 10px;
         border-radius: 14px;
         border: 1px solid var(--border);
-        background: linear-gradient(180deg, #fffef9, #f8f4ee);
-        box-shadow: 0 18px 48px rgba(45, 26, 14, 0.14);
+        background: linear-gradient(180deg, #fffef9, #f7f4ef);
+        box-shadow: 0 18px 48px rgba(15, 40, 28, 0.14);
         text-align: right;
         z-index: 1200;
       }
@@ -1856,13 +1857,13 @@
         border-radius: 20px;
         padding: clamp(22px, 4vw, 30px) 20px;
         text-align: center;
-        box-shadow: 0 10px 36px rgba(45, 26, 14, 0.07);
+        box-shadow: 0 10px 36px rgba(15, 40, 28, 0.07);
         transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.35s, border-color 0.3s;
       }
 
       .lp-counter:hover {
         transform: translateY(-4px);
-        box-shadow: 0 18px 48px rgba(45, 26, 14, 0.11);
+        box-shadow: 0 18px 48px rgba(15, 40, 28, 0.11);
         border-color: rgba(185, 135, 47, 0.28);
       }
 
@@ -1913,13 +1914,13 @@
         border-radius: 22px;
         padding: clamp(26px, 4vw, 34px) 24px;
         text-align: center;
-        box-shadow: 0 8px 32px rgba(45, 26, 14, 0.06);
+        box-shadow: 0 8px 32px rgba(15, 40, 28, 0.06);
         transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.35s, border-color 0.3s;
       }
 
       .lp-trust-card:hover {
         transform: translateY(-5px);
-        box-shadow: 0 20px 50px rgba(45, 26, 14, 0.1);
+        box-shadow: 0 20px 50px rgba(15, 40, 28, 0.1);
         border-color: rgba(185, 135, 47, 0.32);
       }
 
@@ -1956,7 +1957,7 @@
           z-index: 40;
           padding: 8px max(14px, env(safe-area-inset-right, 0px)) 6px max(14px, env(safe-area-inset-left, 0px));
           background: linear-gradient(180deg, rgba(255, 254, 251, 0.98) 0%, rgba(248, 244, 238, 0.92) 100%);
-          border-bottom: 1px solid rgba(61, 34, 19, 0.08);
+          border-bottom: 1px solid rgba(17, 24, 39, 0.08);
         }
 
         .lp-home-hub__box {
@@ -1966,7 +1967,7 @@
           border-radius: 16px;
           background: rgba(255, 254, 249, 0.96);
           border: 1px solid rgba(185, 135, 47, 0.22);
-          box-shadow: 0 8px 28px rgba(61, 34, 19, 0.08);
+          box-shadow: 0 8px 28px rgba(17, 24, 39, 0.08);
         }
 
         .lp-home-hub__row {
@@ -1984,7 +1985,7 @@
           min-height: 52px;
           padding: 6px 4px;
           border-radius: 12px;
-          border: 1px solid rgba(61, 34, 19, 0.1);
+          border: 1px solid rgba(17, 24, 39, 0.1);
           background: #fffef9;
           color: var(--brown);
           font-family: inherit;
@@ -2074,7 +2075,7 @@
         .lp-header {
           backdrop-filter: none;
           -webkit-backdrop-filter: none;
-          background: #f8f4ee;
+          background: #f7f4ef;
         }
       }
 
@@ -2126,13 +2127,13 @@
         text-align: center;
         text-decoration: none;
         color: inherit;
-        box-shadow: 0 10px 36px rgba(45, 26, 14, 0.07);
+        box-shadow: 0 10px 36px rgba(15, 40, 28, 0.07);
         transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.4s, border-color 0.35s;
       }
 
       .lp-card:hover {
         transform: translateY(-10px);
-        box-shadow: 0 28px 56px rgba(45, 26, 14, 0.14);
+        box-shadow: 0 28px 56px rgba(15, 40, 28, 0.14);
         border-color: rgba(185, 135, 47, 0.4);
       }
 
@@ -2166,10 +2167,21 @@
       /* ——— Why ——— */
       .lp-why__grid {
         display: grid;
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(4, minmax(0, 1fr));
         gap: clamp(16px, 3vw, 24px);
         max-width: 1280px;
         margin: 0 auto;
+      }
+
+      .lp-why__grid--4 {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+
+      @media (max-width: 1024px) {
+        .lp-why__grid,
+        .lp-why__grid--4 {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
       }
 
       @media (max-width: 768px) {
@@ -2177,32 +2189,40 @@
           grid-template-columns: repeat(2, minmax(0, 1fr));
           gap: 10px;
         }
-        .lp-why__grid .lp-why-item:last-child {
-          grid-column: 1 / -1;
+        .lp-why__grid--4 .lp-why-item:last-child {
+          grid-column: auto;
         }
       }
 
       @media (max-width: 640px) {
         .lp-why-item {
-          flex-direction: row;
+          flex-direction: column;
           align-items: flex-start;
           gap: 10px;
-          padding: 12px 10px;
+          padding: 14px 12px;
+          min-height: 0;
         }
         .lp-why__grid .lp-why-item:last-child {
-          padding: 14px;
+          padding: 14px 12px;
         }
-        .lp-why-item > div {
+        .lp-why-item__body {
           display: flex;
-          flex-wrap: wrap;
-          align-items: baseline;
-          gap: 0 6px;
+          flex-direction: column;
+          gap: 4px;
           min-width: 0;
         }
         .lp-why-item__mark {
-          width: 32px;
-          height: 32px;
+          width: 48px;
+          height: 48px;
           font-size: 0.95rem;
+        }
+        .lp-why-item__mark--icon {
+          padding: 6px;
+        }
+        .lp-why-item__svg {
+          width: 100%;
+          height: 100%;
+          display: block;
         }
         .lp-why-item h3 {
           margin: 0;
@@ -2222,28 +2242,56 @@
         border: 1px solid var(--border);
         border-radius: 20px;
         padding: 24px 22px;
-        box-shadow: 0 8px 28px rgba(45, 26, 14, 0.05);
+        box-shadow: 0 8px 28px rgba(15, 40, 28, 0.05);
         transition: transform 0.3s, box-shadow 0.3s;
       }
 
       .lp-why-item:hover {
         transform: translateY(-3px);
-        box-shadow: 0 14px 40px rgba(45, 26, 14, 0.09);
+        box-shadow: 0 14px 40px rgba(15, 40, 28, 0.09);
       }
 
       .lp-why-item__mark {
         flex-shrink: 0;
-        width: 42px;
-        height: 42px;
-        border-radius: 12px;
-        background: linear-gradient(135deg, rgba(185, 135, 47, 0.2), rgba(185, 135, 47, 0.08));
-        border: 1px solid rgba(185, 135, 47, 0.25);
+        width: 52px;
+        height: 52px;
+        border-radius: 14px;
+        background: #e8f6ef;
+        border: none;
         display: flex;
         align-items: center;
         justify-content: center;
         font-weight: 800;
-        color: var(--gold);
+        color: #146c43;
         font-size: 1.1rem;
+      }
+
+      .lp-why-item__mark--icon {
+        padding: 8px;
+        box-sizing: border-box;
+      }
+
+      .lp-why-item__svg {
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+
+      .lp-why__grid--4 .lp-why-item:nth-child(1) .lp-why-item__mark {
+        background: #fff3e0;
+        color: #ef6c00;
+      }
+      .lp-why__grid--4 .lp-why-item:nth-child(2) .lp-why-item__mark {
+        background: #e3f2fd;
+        color: #1565c0;
+      }
+      .lp-why__grid--4 .lp-why-item:nth-child(3) .lp-why-item__mark {
+        background: #e8f5e9;
+        color: #146c43;
+      }
+      .lp-why__grid--4 .lp-why-item:nth-child(4) .lp-why-item__mark {
+        background: #f3e5f5;
+        color: #7b1fa2;
       }
 
       .lp-why-item h3 {
@@ -2294,13 +2342,13 @@
         border-radius: 20px;
         padding: 28px 22px;
         text-align: center;
-        box-shadow: 0 8px 28px rgba(45, 26, 14, 0.05);
+        box-shadow: 0 8px 28px rgba(15, 40, 28, 0.05);
         transition: transform 0.3s ease, box-shadow 0.3s;
       }
 
       .lp-step:hover {
         transform: translateY(-4px);
-        box-shadow: 0 16px 40px rgba(45, 26, 14, 0.09);
+        box-shadow: 0 16px 40px rgba(15, 40, 28, 0.09);
       }
 
       .lp-step__num {
@@ -2314,7 +2362,7 @@
         font-weight: 800;
         font-size: 1.1rem;
         color: #fffef8;
-        background: linear-gradient(135deg, #b9872f, #7a5a1f);
+        background: linear-gradient(135deg, #146c43, #7a5a1f);
         box-shadow: 0 8px 22px rgba(155, 111, 37, 0.38);
       }
 
@@ -2340,7 +2388,7 @@
         border-radius: 24px;
         padding: clamp(28px, 5vw, 44px);
         text-align: center;
-        box-shadow: 0 14px 44px rgba(45, 26, 14, 0.08);
+        box-shadow: 0 14px 44px rgba(15, 40, 28, 0.08);
       }
 
       .lp-contact p {
@@ -2371,7 +2419,7 @@
         border-radius: clamp(20px, 4vw, 26px);
         overflow: hidden;
         box-shadow:
-          0 16px 48px rgba(45, 26, 14, 0.1),
+          0 16px 48px rgba(15, 40, 28, 0.1),
           0 0 0 1px rgba(201, 162, 39, 0.12);
       }
 
@@ -2383,7 +2431,7 @@
           rgba(201, 162, 39, 0.08) 0deg 250deg,
           rgba(232, 197, 71, 0.35) 280deg,
           #f0d48a 300deg,
-          #c9a227 320deg,
+          #146c43 320deg,
           #e8c547 340deg,
           rgba(240, 212, 138, 0.55) 360deg
         );
@@ -2449,7 +2497,7 @@
 
       /* ——— Footer ——— */
       .lp-footer {
-        background: linear-gradient(180deg, rgba(61, 34, 19, 0.07), rgba(61, 34, 19, 0.03));
+        background: linear-gradient(180deg, rgba(17, 24, 39, 0.07), rgba(17, 24, 39, 0.03));
         border-top: 1px solid var(--border);
         padding: clamp(36px, 5vw, 52px) clamp(16px, 4vw, 24px) clamp(24px, 4vw, 36px);
         margin-top: 0;
@@ -2530,7 +2578,7 @@
           padding: 10px 12px;
           border-radius: 12px;
           background: rgba(255, 254, 251, 0.65);
-          border: 1px solid rgba(61, 34, 19, 0.08);
+          border: 1px solid rgba(17, 24, 39, 0.08);
         }
       }
 
@@ -2618,7 +2666,7 @@
       .lp-footer__social a:hover {
         transform: translateY(-2px);
         border-color: rgba(185, 135, 47, 0.4);
-        box-shadow: 0 8px 22px rgba(45, 26, 14, 0.08);
+        box-shadow: 0 8px 22px rgba(15, 40, 28, 0.08);
       }
 
       .lp-footer__social svg {
@@ -2663,14 +2711,14 @@
         font-size: 0.88rem;
         color: var(--brown);
         cursor: pointer;
-        box-shadow: 0 4px 16px rgba(45, 26, 14, 0.08);
+        box-shadow: 0 4px 16px rgba(15, 40, 28, 0.08);
         transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
         direction: ltr;
       }
 
       .lp-quick-dd__btn:hover {
         border-color: rgba(185, 135, 47, 0.55);
-        box-shadow: 0 8px 22px rgba(45, 26, 14, 0.1);
+        box-shadow: 0 8px 22px rgba(15, 40, 28, 0.1);
       }
 
       .lp-quick-dd.is-open .lp-quick-dd__btn {
@@ -2700,8 +2748,8 @@
         padding: 10px;
         border-radius: 14px;
         border: 1px solid var(--border);
-        background: linear-gradient(180deg, #fffef9, #f8f4ee);
-        box-shadow: 0 18px 48px rgba(45, 26, 14, 0.14);
+        background: linear-gradient(180deg, #fffef9, #f7f4ef);
+        box-shadow: 0 18px 48px rgba(15, 40, 28, 0.14);
         z-index: 1200;
         overflow-y: auto;
       }
@@ -2740,7 +2788,7 @@
         display: none;
         height: 1px;
         margin: 8px 6px;
-        background: rgba(61, 34, 19, 0.1);
+        background: rgba(17, 24, 39, 0.1);
         border: 0;
       }
 
@@ -2801,7 +2849,7 @@
       .lp-quick-dd__panel-title {
         margin: 4px 8px 10px;
         padding-bottom: 8px;
-        border-bottom: 1px solid rgba(61, 34, 19, 0.1);
+        border-bottom: 1px solid rgba(17, 24, 39, 0.1);
         font-size: 0.68rem;
         font-weight: 800;
         letter-spacing: 0.16em;
@@ -2812,7 +2860,7 @@
       .lp-quick-dd__sep {
         height: 1px;
         margin: 8px 6px;
-        background: rgba(61, 34, 19, 0.1);
+        background: rgba(17, 24, 39, 0.1);
         border: 0;
       }
     </style>
@@ -2822,8 +2870,9 @@
     <link rel="stylesheet" href="/assets/mobile-harmony.css?erv=20260901o" />
     <link rel="stylesheet" href="/assets/design-system/erv-typography-pr1-tokens.css" />
     <link rel="stylesheet" href="/assets/marketing-studio/home-marketing.css?erv=20260701m1" />
-    <link rel="stylesheet" href="/assets/home-stage-expand.css?erv=20260904m" />
-    <link rel="stylesheet" href="/assets/home-desktop-vip.css?erv=20260904b" />
+    <link rel="stylesheet" href="/assets/home-stage-expand.css?erv=20260919e" />
+    <link rel="stylesheet" href="/assets/home-desktop-vip.css?erv=20260919e" />
+    <link rel="stylesheet" href="/assets/home-desktop-marketplace.css?erv=20260919search6" />
   </head>
   <body class="lp-body lp-home-premium erv-typography-pr2-home">
     <header class="lp-header lp-header--refined lp-header--menu-right" id="top" data-marketing-slot="header" data-marketing-parent="body">
@@ -2929,17 +2978,40 @@
           <img
             id="ervBrandLogo"
             class="lp-header__logo-img"
-            src="/assets/ervenow-logo.png"
+            src="/assets/ervenow-logo.png?erv=20260919logo"
             alt="ERVENOW"
-            width="160"
-            height="56"
+            width="200"
+            height="45"
             decoding="async"
           />
         </a>
-        <a class="lp-header__brand-mid" href="/" aria-label="ERVENOW">
+        <a class="lp-header__brand-mid" href="/" aria-label="ERVENOW" hidden>
           <span class="lp-brand__name">ERVENOW</span>
           <span class="lp-brand__tag">المنصة الذكية</span>
         </a>
+        <button
+          type="button"
+          class="erv-mp-header-locate erv-mp-only"
+          data-erv-mp-locate
+          aria-label="تحديد الموقع"
+        >
+          <span class="erv-mp-header-locate__ic" aria-hidden="true">📍</span>
+          <span data-erv-mp-locate-label>حدد موقعك</span>
+        </button>
+        <div class="erv-mp-header-search erv-mp-only" role="search">
+          <form class="erv-mp-header-search__form" data-erv-mp-search action="/restaurants" method="get">
+            <span class="erv-mp-header-search__ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7" /><path d="M20 20l-4.2-4.2" stroke-linecap="round" /></svg></span>
+            <input
+              class="erv-mp-header-search__input"
+              type="search"
+              name="q"
+              placeholder="ابحث عن مطعم، متجر، منتج أو خدمة..."
+              autocomplete="off"
+              enterkeyhint="search"
+              aria-label="بحث"
+            />
+          </form>
+        </div>
         <button type="button" class="lp-header__user-mid" id="lpHeaderUserMid" hidden aria-label="فتح لوحة حسابك">
           <span class="lp-header__user-mid__num" id="lpHeaderUserMidText" dir="ltr"></span>
         </button>
@@ -2951,12 +3023,18 @@
               <span class="lp-header-wallet__cur">ر.س</span>
             </span>
           </a>
-          <a class="lp-draft-checkout-badge" href="/checkout" id="indexDraftBadge" aria-label="تأكيد الطلب">
-            <span aria-hidden="true">🛒</span>
+          <a class="lp-draft-checkout-badge erv-mp-header-cart" href="/checkout" id="indexDraftBadge" aria-label="السلة">
+            <span class="erv-mp-header-cart__ic" aria-hidden="true">🛒</span>
+            <span class="erv-mp-header-cart__label erv-mp-only">السلة</span>
             <span class="lp-draft-checkout-badge__count" id="cartCount" data-empty="true">0</span>
             <span class="lp-draft-checkout-badge__total" id="indexDraftTotal" hidden></span>
           </a>
-          <div id="authArea"></div>
+          <a class="erv-mp-header-orders erv-mp-only" href="/my-orders" aria-label="طلباتي">
+            <span class="erv-mp-header-orders__ic" aria-hidden="true">📋</span>
+            <span>طلباتي</span>
+            <span class="erv-mp-header-orders__badge" id="ervMpOrdersBadge">0</span>
+          </a>
+          <div id="authArea" class="erv-mp-header-account"></div>
         </div>
         </div>
         <div class="lp-nav-wrap" id="lpNavWrap">
@@ -2978,18 +3056,56 @@
       aria-hidden="true"
     ></div>
 
-    <div
-      class="guest-offers-carousel-wrap guest-offers-carousel-wrap--home"
-      id="homeMainBannerWrap"
-      data-marketing-slot="hero_banner"
-      data-marketing-parent="body"
-    >
-    <section
-      class="card guest-offers-carousel guest-offers-carousel--home"
-      id="homeMainBanner"
-      hidden
-      aria-label="عروض المنصة"
-    ></section>
+    <div class="erv-mp-stage">
+      <section class="erv-mp-hero" aria-label="ابدأ طلبك">
+        <div class="erv-mp-hero__copy erv-mp-only">
+          <h1 class="erv-mp-hero__title">ماذا تحتاج اليوم؟</h1>
+          <p class="erv-mp-hero__sub">اطلب من مطعم، متجر، صيدلية أو أي خدمة حولك</p>
+          <form class="erv-mp-hero-search" data-erv-mp-search action="/restaurants" method="get" role="search">
+            <span class="erv-mp-hero-search__ic" aria-hidden="true">🔍</span>
+            <input
+              class="erv-mp-hero-search__input"
+              type="search"
+              name="q"
+              placeholder="ابحث عن مطعم أو منتج أو خدمة..."
+              autocomplete="off"
+              enterkeyhint="search"
+              aria-label="بحث في المنصة"
+            />
+            <button class="erv-mp-hero-search__btn" type="submit">بحث</button>
+          </form>
+          <button type="button" class="erv-mp-hero-locate" data-erv-mp-locate>
+            <span aria-hidden="true">📍</span>
+            <span data-erv-mp-locate-label>حدد موقعك الحالي</span>
+          </button>
+          <ul class="erv-mp-hero-trust" aria-label="مزايا المنصة">
+            <li><span aria-hidden="true">⚡</span> توصيل سريع</li>
+            <li><span aria-hidden="true">🛡️</span> متاجر موثوقة</li>
+            <li><span aria-hidden="true">✨</span> خدمة مميزة</li>
+          </ul>
+        </div>
+        <div class="erv-mp-hero__visual" id="ervMpHeroVisual">
+          <div
+            class="guest-offers-carousel-wrap guest-offers-carousel-wrap--home"
+            id="homeMainBannerWrap"
+            data-marketing-slot="hero_banner"
+            data-marketing-parent="body"
+          >
+            <section
+              class="card guest-offers-carousel guest-offers-carousel--home"
+              id="homeMainBanner"
+              hidden
+              aria-label="عروض المنصة"
+            ></section>
+          </div>
+          <div class="erv-mp-tiles" id="ervMpTiles" aria-label="اختصارات سريعة">
+            <a href="/restaurants">مطاعم<span>اطلب الآن</span></a>
+            <a href="/stores">متاجر<span>سوبرماركت وصيدليات</span></a>
+            <a href="/delivery-services.html">توصيل<span>غاز وسطحات</span></a>
+            <a href="/services">خدمات<span>منزلية فورية</span></a>
+          </div>
+        </div>
+      </section>
     </div>
 
     <section
@@ -2998,43 +3114,94 @@
       data-marketing-slot="hub_section"
       data-marketing-parent="body"
     >
-      <h2 class="sn-section__title sn-section__title--solo" id="home-cats-title" aria-hidden="true">اختر ما يناسبك</h2>
+      <div class="erv-mp-hub-head">
+        <h2 class="sn-section__title sn-section__title--solo" id="home-cats-title">ماذا تريد اليوم؟</h2>
+        <a class="erv-mp-section__more erv-mp-only" href="/stores">عرض جميع الفئات ←</a>
+      </div>
 
       <div class="sn-grid sn-home-hub sn-home-hub--direct" id="snHomeHub" data-marketing-slot="hub_categories" data-marketing-parent="hub_section">
         <a class="sn-card sn-card--restaurants sn-hub-link-card" href="/restaurants">
-          <div class="sn-card__icon-wrap" aria-hidden="true">
-            <svg class="sn-card__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round"><path d="M4 3h16v4H4z"/><path d="M6 7v12"/><path d="M18 7v12"/><path d="M8 11h8"/><path d="M8 15h8"/></svg>
-          </div>
+          <div class="sn-card__icon-wrap" aria-hidden="true">🍽️</div>
           <div>
             <div class="sn-card__name">مطاعم</div>
             <div class="sn-card__desc">مشاوي وبرقر وشاورما</div>
           </div>
         </a>
         <a class="sn-card sn-card--stores sn-hub-link-card" href="/stores">
-          <div class="sn-card__icon-wrap" aria-hidden="true">
-            <svg class="sn-card__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M3 4h2l2.2 11.2a1 1 0 0 0 1 .8h9.2a1 1 0 0 0 1-.86l1.3-7.4H6.2"/></svg>
-          </div>
+          <div class="sn-card__icon-wrap" aria-hidden="true">🏪</div>
           <div>
             <div class="sn-card__name">متاجر</div>
             <div class="sn-card__desc">سوبرماركت وصيدليات</div>
           </div>
         </a>
-        <a class="sn-card sn-card--delivery sn-hub-link-card" href="/delivery-services.html">
-          <div class="sn-card__icon-wrap" aria-hidden="true">
-            <svg class="sn-card__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h11v8H3z"/><path d="M14 10h4l2 3v2h-6"/><circle cx="7" cy="18" r="1.5"/><circle cx="17" cy="18" r="1.5"/></svg>
+        <a class="sn-card sn-card--extra sn-hub-link-card erv-mp-only" href="/stores?type=supermarket">
+          <div class="sn-card__icon-wrap" aria-hidden="true">🛒</div>
+          <div>
+            <div class="sn-card__name">سوبرماركت</div>
+            <div class="sn-card__desc">مواد غذائية</div>
           </div>
+        </a>
+        <a class="sn-card sn-card--extra sn-hub-link-card erv-mp-only" href="/stores?type=pharmacy">
+          <div class="sn-card__icon-wrap" aria-hidden="true">💊</div>
+          <div>
+            <div class="sn-card__name">صيدليات</div>
+            <div class="sn-card__desc">أدوية ومستلزمات</div>
+          </div>
+        </a>
+        <a class="sn-card sn-card--delivery sn-hub-link-card" href="/delivery-services.html">
+          <div class="sn-card__icon-wrap" aria-hidden="true">🚚</div>
           <div>
             <div class="sn-card__name">توصيل</div>
             <div class="sn-card__desc">من نقطة لأخرى وغاز</div>
           </div>
         </a>
-        <a class="sn-card sn-card--services sn-hub-link-card" href="/services">
-          <div class="sn-card__icon-wrap" aria-hidden="true">
-            <svg class="sn-card__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L4 17l3 3 5.3-5.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.9-2.9 2.5-2.5z"/></svg>
+        <a class="sn-card sn-card--extra sn-hub-link-card erv-mp-only" href="/delivery-services.html?service=gas_delivery">
+          <div class="sn-card__icon-wrap" aria-hidden="true">⛽</div>
+          <div>
+            <div class="sn-card__name">غاز</div>
+            <div class="sn-card__desc">أسطوانات لبابك</div>
           </div>
+        </a>
+        <a class="sn-card sn-card--extra sn-hub-link-card erv-mp-only" href="/delivery-services.html?service=car_transport">
+          <div class="sn-card__icon-wrap" aria-hidden="true">🚛</div>
+          <div>
+            <div class="sn-card__name">سطحات</div>
+            <div class="sn-card__desc">نقل مركبات</div>
+          </div>
+        </a>
+        <a class="sn-card sn-card--services sn-hub-link-card" href="/services">
+          <div class="sn-card__icon-wrap" aria-hidden="true">🔧</div>
           <div>
             <div class="sn-card__name">خدمات</div>
             <div class="sn-card__desc">سباكة وكهرباء وتنظيف</div>
+          </div>
+        </a>
+        <a class="sn-card sn-card--extra sn-hub-link-card erv-mp-only" href="/stores?type=beauty_care">
+          <div class="sn-card__icon-wrap" aria-hidden="true">✨</div>
+          <div>
+            <div class="sn-card__name">تجميل</div>
+            <div class="sn-card__desc">عناية وتجميل</div>
+          </div>
+        </a>
+        <a class="sn-card sn-card--extra sn-hub-link-card erv-mp-only" href="/stores?type=flowers_gifts">
+          <div class="sn-card__icon-wrap" aria-hidden="true">💐</div>
+          <div>
+            <div class="sn-card__name">ورود وهدايا</div>
+            <div class="sn-card__desc">مناسبات</div>
+          </div>
+        </a>
+        <a class="sn-card sn-card--extra sn-hub-link-card erv-mp-only" href="/stores?type=clothing">
+          <div class="sn-card__icon-wrap" aria-hidden="true">👗</div>
+          <div>
+            <div class="sn-card__name">ملابس</div>
+            <div class="sn-card__desc">أزياء</div>
+          </div>
+        </a>
+        <a class="sn-card sn-card--extra sn-hub-link-card erv-mp-only" href="/delivery-services.html?service=local_delivery">
+          <div class="sn-card__icon-wrap" aria-hidden="true">📦</div>
+          <div>
+            <div class="sn-card__name">توصيل محلي</div>
+            <div class="sn-card__desc">من نقطة لأخرى</div>
           </div>
         </a>
       </div>
@@ -3057,15 +3224,93 @@
           دعم فوري
         </div>
       </div>
-
-      <p class="sn-stats" id="stats" aria-label="أرقام المنصة" data-marketing-slot="platform_stats" data-marketing-parent="hub_section">
-        <span class="sn-stats__item"><strong>300+</strong> طلب يومي</span>
-        <span class="sn-stats__sep" aria-hidden="true">·</span>
-        <span class="sn-stats__item"><strong>45+</strong> مندوب</span>
-        <span class="sn-stats__sep" aria-hidden="true">·</span>
-        <span class="sn-stats__item"><strong>120+</strong> متجر</span>
-      </p>
     </section>
+
+    <div class="erv-mp-discover erv-mp-only" id="ervMpDiscover" hidden>
+      <section class="erv-mp-section" id="ervMpNearbySection" hidden aria-labelledby="ervMpNearbyTitle">
+        <div class="erv-mp-section__head">
+          <h2 class="erv-mp-section__title" id="ervMpNearbyTitle">متاجر قريبة منك</h2>
+          <a class="erv-mp-section__more" href="/restaurants">عرض الكل ←</a>
+        </div>
+        <div class="erv-mp-grid" id="ervMpNearbyGrid"></div>
+      </section>
+
+      <section class="erv-mp-promos" id="ervMpPromos" aria-label="مداخل سريعة">
+        <a class="erv-mp-promo erv-mp-promo--flowers" href="/stores?type=flowers_gifts">
+          <div>
+            <strong>ورود وهدايا</strong>
+            <span>لحظات أجمل توصلك للباب</span>
+          </div>
+          <em>اطلب الآن</em>
+        </a>
+        <a class="erv-mp-promo erv-mp-promo--market" href="/stores?type=supermarket">
+          <div>
+            <strong>احتياجات المنزل</strong>
+            <span>سوبرماركت ومستلزمات يومية</span>
+          </div>
+          <em>تسوق الآن</em>
+        </a>
+        <a class="erv-mp-promo erv-mp-promo--food" href="/restaurants">
+          <div>
+            <strong>عروض المطاعم</strong>
+            <span>أشهى الأكلات أقرب إليك</span>
+          </div>
+          <em>استكشف العروض</em>
+        </a>
+      </section>
+
+      <section class="erv-mp-section" id="ervMpProductsSection" hidden aria-labelledby="ervMpProductsTitle">
+        <div class="erv-mp-section__head">
+          <h2 class="erv-mp-section__title" id="ervMpProductsTitle">الأكثر طلباً</h2>
+          <a class="erv-mp-section__more" href="/restaurants">عرض الكل ←</a>
+        </div>
+        <div class="erv-mp-products" id="ervMpProductsGrid"></div>
+      </section>
+
+      <section class="erv-mp-section" id="ervMpQuickSection" aria-labelledby="ervMpQuickTitle">
+        <div class="erv-mp-section__head">
+          <h2 class="erv-mp-section__title" id="ervMpQuickTitle">خدمات سريعة</h2>
+          <a class="erv-mp-section__more" href="/delivery-services.html">عرض الكل ←</a>
+        </div>
+        <div class="erv-mp-quick">
+          <a class="erv-mp-quick__card" href="/delivery-services.html?service=car_transport">
+            <span class="erv-mp-quick__ic" aria-hidden="true">🚛</span>
+            <strong>سطحات</strong>
+            <span>نقل المركبات</span>
+          </a>
+          <a class="erv-mp-quick__card" href="/delivery-services.html?service=gas_delivery">
+            <span class="erv-mp-quick__ic" aria-hidden="true">⛽</span>
+            <strong>غاز</strong>
+            <span>توصيل أسطوانات</span>
+          </a>
+          <a class="erv-mp-quick__card" href="/services">
+            <span class="erv-mp-quick__ic" aria-hidden="true">🧹</span>
+            <strong>تنظيف</strong>
+            <span>خدمات منزلية</span>
+          </a>
+          <a class="erv-mp-quick__card" href="/services">
+            <span class="erv-mp-quick__ic" aria-hidden="true">🔧</span>
+            <strong>صيانة</strong>
+            <span>سباكة وكهرباء</span>
+          </a>
+        </div>
+      </section>
+
+      <section class="erv-mp-section" id="ervMpRestaurantsSection" hidden aria-labelledby="ervMpRestaurantsTitle">
+        <div class="erv-mp-section__head">
+          <h2 class="erv-mp-section__title" id="ervMpRestaurantsTitle">مطاعم مقترحة</h2>
+          <a class="erv-mp-section__more" href="/restaurants">عرض الكل ←</a>
+        </div>
+        <div class="erv-mp-grid" id="ervMpRestaurantsGrid"></div>
+      </section>
+      <section class="erv-mp-section" id="ervMpStoresSection" hidden aria-labelledby="ervMpStoresTitle">
+        <div class="erv-mp-section__head">
+          <h2 class="erv-mp-section__title" id="ervMpStoresTitle">متاجر أخرى</h2>
+          <a class="erv-mp-section__more" href="/stores">عرض الكل ←</a>
+        </div>
+        <div class="erv-mp-grid" id="ervMpStoresGrid"></div>
+      </section>
+    </div>
 
     <main data-marketing-region="main" data-marketing-slot="main" data-marketing-parent="body">
       <div
@@ -3103,41 +3348,129 @@
         hidden
         aria-hidden="true"
       ></div>
-      <section class="lp-section lp-wrap lp-reveal" id="why" aria-labelledby="why-title" data-marketing-slot="why_section" data-marketing-parent="main">
-        <h2 class="lp-section__title" id="why-title">كيف تعمل ERVENOW؟</h2>
-        <div class="lp-why__grid lp-why__grid--compact">
+      <section class="lp-section lp-wrap lp-reveal erv-mp-why" id="why" aria-labelledby="why-title" data-marketing-slot="why_section" data-marketing-parent="main">
+        <div class="erv-mp-why__head">
+          <h2 class="lp-section__title" id="why-title">كيف تعمل ERVENOW؟</h2>
+          <p class="erv-mp-why__lead">أربع خطوات بسيطة من الطلب حتى باب بيتك</p>
+        </div>
+        <div class="lp-why__grid lp-why__grid--compact lp-why__grid--4">
           <article class="lp-why-item">
-            <div class="lp-why-item__mark">١</div>
-            <div>
-              <h3>اطلب</h3>
-              <p>من مطعم أو متجر أو خدمة.</p>
+            <div class="lp-why-item__mark lp-why-item__mark--icon" aria-hidden="true">
+              <svg class="lp-why-item__svg" viewBox="0 0 48 48" fill="none">
+                <path d="M10 16h8.2l1.6-4.8A3 3 0 0 1 22.6 9h2.8a3 3 0 0 1 2.8 2.2L29.8 16H38a2 2 0 0 1 2 2.3l-2.2 16A3 3 0 0 1 34.9 37H13.1a3 3 0 0 1-2.9-2.7L8 18.3A2 2 0 0 1 10 16z" fill="currentColor" opacity=".2"/>
+                <path d="M16 20v12M24 20v12M32 20v12" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+                <path d="M14 16c0-4.4 3.1-8 7-8h6c3.9 0 7 3.6 7 8" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+                <path d="M9.5 16h29l-2 15.2A3.5 3.5 0 0 1 33 34.5H15a3.5 3.5 0 0 1-3.5-3.3L9.5 16z" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/>
+                <path d="M19 9.5c0-1.4 1.3-2.5 3-2.5h4c1.7 0 3 1.1 3 2.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <div class="lp-why-item__body">
+              <h3>اختر ما تريد</h3>
+              <p>من مطاعم ومتاجر وخدمات قريبة منك.</p>
             </div>
           </article>
           <article class="lp-why-item">
-            <div class="lp-why-item__mark">٢</div>
-            <div>
-              <h3>يوزّع</h3>
-              <p>للمندوب الأقرب تلقائياً.</p>
+            <div class="lp-why-item__mark lp-why-item__mark--icon" aria-hidden="true">
+              <svg class="lp-why-item__svg" viewBox="0 0 48 48" fill="none">
+                <rect x="6" y="8" width="36" height="28" rx="4" stroke="currentColor" stroke-width="2.2"/>
+                <path d="M6 30h36" stroke="currentColor" stroke-width="2" opacity=".35"/>
+                <path d="M12 34h8M28 34h8" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" opacity=".45"/>
+                <path d="M24 12.5c-4.1 0-7.5 3.2-7.5 7.2 0 5.1 7.5 12.3 7.5 12.3s7.5-7.2 7.5-12.3c0-4-3.4-7.2-7.5-7.2z" fill="currentColor"/>
+                <circle cx="24" cy="19.5" r="2.6" fill="#fff"/>
+              </svg>
+            </div>
+            <div class="lp-why-item__body">
+              <h3>حدد موقعك</h3>
+              <p>ثبّت عنوان التوصيل بدقة على الخريطة.</p>
             </div>
           </article>
           <article class="lp-why-item">
-            <div class="lp-why-item__mark">٣</div>
-            <div>
-              <h3>يوصل</h3>
-              <p>مع تتبع لحظي حتى الباب.</p>
+            <div class="lp-why-item__mark lp-why-item__mark--icon" aria-hidden="true">
+              <svg class="lp-why-item__svg" viewBox="0 0 48 48" fill="none">
+                <rect x="14" y="5" width="20" height="38" rx="4" stroke="currentColor" stroke-width="2.2"/>
+                <path d="M20 8.5h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                <rect x="17.5" y="12" width="13" height="22" rx="1.5" fill="currentColor" opacity=".12"/>
+                <path d="M19 18h4M25 18h4M19 22h10M19 26h7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".55"/>
+                <path d="M24 16.2c-2.2 0-4 1.7-4 3.8 0 2.8 4 6.8 4 6.8s4-4 4-6.8c0-2.1-1.8-3.8-4-3.8z" fill="currentColor"/>
+                <circle cx="24" cy="20" r="1.35" fill="#fff"/>
+                <circle cx="24" cy="38.5" r="1.4" fill="currentColor"/>
+              </svg>
+            </div>
+            <div class="lp-why-item__body">
+              <h3>تابع طلبك</h3>
+              <p>تتبع لحظي لحركة المندوب حتى يصل.</p>
+            </div>
+          </article>
+          <article class="lp-why-item">
+            <div class="lp-why-item__mark lp-why-item__mark--icon" aria-hidden="true">
+              <svg class="lp-why-item__svg" viewBox="0 0 48 48" fill="none">
+                <circle cx="14" cy="34" r="5.5" stroke="currentColor" stroke-width="2.2"/>
+                <circle cx="34" cy="34" r="5.5" stroke="currentColor" stroke-width="2.2"/>
+                <circle cx="14" cy="34" r="1.8" fill="currentColor"/>
+                <circle cx="34" cy="34" r="1.8" fill="currentColor"/>
+                <path d="M19.5 34h9.2" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+                <path d="M12 34H8.5l1.2-8.5A3 3 0 0 1 12.7 23H22l3.2-7.2A2.5 2.5 0 0 1 27.5 14H33a2 2 0 0 1 2 2.4L34 23h2.2a2 2 0 0 1 1.9 2.5L37 30.5" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/>
+                <circle cx="27" cy="12" r="4" fill="currentColor"/>
+                <path d="M25.2 11.2c.4-.7 1.2-1 2-1 .9 0 1.6.4 1.9 1.1" stroke="#fff" stroke-width="1.3" stroke-linecap="round"/>
+                <path d="M24.5 16.5c1.2 2.2 3.2 3.5 5.5 3.8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                <path d="M7 26h5.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity=".5"/>
+              </svg>
+            </div>
+            <div class="lp-why-item__body">
+              <h3>استلم بسرعة</h3>
+              <p>مندوب يوصل طلبك لبابك في أسرع وقت.</p>
             </div>
           </article>
         </div>
       </section>
 
+      <div
+        class="erv-mp-stats sn-stats"
+        id="stats"
+        role="list"
+        aria-label="أرقام المنصة"
+        data-marketing-slot="platform_stats"
+        data-marketing-parent="main"
+      >
+        <div class="erv-mp-stats__item" role="listitem">
+          <span class="erv-mp-stats__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 2 4 14h7l-1 8 10-14h-7l0-6z"/></svg>
+          </span>
+          <strong class="erv-mp-stats__value">30 دقيقة</strong>
+          <span class="erv-mp-stats__label">توصيل سريع</span>
+        </div>
+        <div class="erv-mp-stats__item" role="listitem">
+          <span class="erv-mp-stats__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.1 2 5 5.1 5 9c0 5.2 7 13 7 13s7-7.8 7-13c0-3.9-3.1-7-7-7zm0 9.5A2.5 2.5 0 1 1 12 6a2.5 2.5 0 0 1 0 5.5z"/></svg>
+          </span>
+          <strong class="erv-mp-stats__value"><span class="js-count" data-target="12" data-suffix="+">12+</span></strong>
+          <span class="erv-mp-stats__label">المدن المخدومة</span>
+        </div>
+        <div class="erv-mp-stats__item" role="listitem">
+          <span class="erv-mp-stats__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 9.5 12 3l9 6.5V20a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1V9.5z"/></svg>
+          </span>
+          <strong class="erv-mp-stats__value"><span class="js-count" data-erv-mp-stat="stores" data-target="120" data-suffix="+">120+</span></strong>
+          <span class="erv-mp-stats__label">متجر نشط</span>
+        </div>
+        <div class="erv-mp-stats__item" role="listitem">
+          <span class="erv-mp-stats__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12a4.5 4.5 0 1 0-4.5-4.5A4.5 4.5 0 0 0 12 12zm0 2c-4 0-8 2-8 5v1h16v-1c0-3-4-5-8-5z"/></svg>
+          </span>
+          <strong class="erv-mp-stats__value"><span class="js-count" data-target="5000" data-suffix="+">5000+</span></strong>
+          <span class="erv-mp-stats__label">عدد العملاء</span>
+        </div>
+      </div>
+
       <div class="lp-home-cta-wrap" data-marketing-slot="cta_cards" data-marketing-parent="main">
       <section class="lp-section lp-reveal lp-home-cta-section" id="contact" aria-labelledby="contact-title">
-        <div class="lp-home-cta-card">
-          <div class="lp-home-cta-card__mark" aria-hidden="true"></div>
+        <div class="lp-home-cta-card lp-home-cta-card--support">
+          <div class="lp-home-cta-card__mark" aria-hidden="true">💬</div>
           <div class="lp-home-cta-card__body">
             <h2 class="lp-home-cta-card__title" id="contact-title">
-              <span class="lp-home-cta-card__title-line">تواصل</span>
+              <span class="lp-home-cta-card__title-line">تواصل معنا</span>
             </h2>
+            <p class="lp-home-cta-card__text">فريق الدعم جاهز لمساعدتك عبر واتساب في أي وقت.</p>
             <a
               class="lp-btn-solid lp-home-cta-card__btn"
               href="https://wa.me/966505745650"
@@ -3150,12 +3483,13 @@
       </section>
 
       <section class="lp-section lp-reveal lp-home-cta-section" id="register-store-cta" aria-labelledby="register-store-title">
-        <div class="lp-home-cta-card">
-          <div class="lp-home-cta-card__mark" aria-hidden="true"></div>
+        <div class="lp-home-cta-card lp-home-cta-card--partner">
+          <div class="lp-home-cta-card__mark" aria-hidden="true">🏪</div>
           <div class="lp-home-cta-card__body">
             <h2 class="lp-home-cta-card__title" id="register-store-title">
               <span class="lp-home-cta-card__title-line">انضم كشريك</span>
             </h2>
+            <p class="lp-home-cta-card__text">وسّع مبيعات متجرك ووصل لعملاء أكثر عبر ERVENOW.</p>
             <a class="lp-btn-solid lp-home-cta-card__btn" href="/register-store">سجّل متجرك</a>
           </div>
         </div>
@@ -3166,48 +3500,76 @@
     <footer class="lp-footer" data-marketing-slot="footer" data-marketing-parent="body">
       <div class="lp-footer__inner">
         <div class="lp-footer__desktop-only lp-footer__desktop-panel" aria-label="فوتر الدسكتوب">
-          <p class="lp-footer__brand">ERVENOW</p>
-          <div class="lp-footer__legal-links">
-            <a class="lp-footer__legal-link" href="/privacy-policy">سياسة الخصوصية</a>
-            <a class="lp-footer__legal-link" href="/payments-refund-policy">سياسة المدفوعات والإلغاء والاسترجاع</a>
-            <a class="lp-footer__legal-link" href="/terms-of-use">سياسة الاستخدام</a>
-          </div>
-          <div class="lp-footer__channels">
-              <p class="lp-footer__channels-title">قنوات التواصل</p>
-              <div class="lp-footer__social lp-footer__social--channels" aria-label="قنوات التواصل">
-                <a href="https://x.com/ervenow" target="_blank" rel="noopener noreferrer" aria-label="منصة X">
-                  <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path
-                      d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"
-                    />
-                  </svg>
-                </a>
-                <a href="https://www.snapchat.com/add/ervenow" target="_blank" rel="noopener noreferrer" aria-label="سناب شات">
-                  <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path
-                      d="M12 2c-2.2 0-4.5.45-6.1 2.05C4.3 5.7 4 7.9 4 9.5c0 1.1.2 2 .5 2.8-.9.3-1.7.7-2.3 1.2-.5.4-.2 1 .6 1 1.1 0 2.1-.2 3-.6-.3 1.5-.5 2.8 0 3.8.4.8 1.2 1.2 2.2 1.5-.3.9-.4 1.7 0 2.2.5.6 1.4.4 2.5 0 1.2-.5 2.6-1.2 4-1.2s2.8.7 4 1.2c1.1.4 2 .6 2.5 0 .4-.5.3-1.3 0-2.2 1-.3 1.8-.7 2.2-1.5.5-1 .3-2.3 0-3.8.9.4 1.9.6 3 .6.8 0 1.1-.6.6-1-.6-.5-1.4-.9-2.3-1.2.3-.8.5-1.7.5-2.8 0-1.6-.3-3.8-1.9-5.45C16.5 2.45 14.2 2 12 2z"
-                    />
-                  </svg>
-                </a>
-                <a href="https://t.me/ervenow" target="_blank" rel="noopener noreferrer" aria-label="تلغرام">
-                  <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path
-                      d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.33 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71L12.6 16.3l-1.99 1.93c-.23.23-.42.42-.83.42z"
-                    />
-                  </svg>
-                </a>
-                <a href="https://wa.me/966505745650" target="_blank" rel="noopener noreferrer" aria-label="واتساب">
-                  <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path
-                      d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.435 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"
-                    />
-                  </svg>
-                </a>
+          <div class="erv-mp-footer-grid">
+            <div class="erv-mp-footer-brand">
+              <p class="lp-footer__brand">ERVENOW</p>
+              <p class="erv-mp-footer-tag">المنصة الذكية للتوصيل والخدمات حولك</p>
+              <div class="lp-footer__channels">
+                <p class="lp-footer__channels-title">قنوات التواصل</p>
+                <div class="lp-footer__social lp-footer__social--channels" aria-label="قنوات التواصل">
+                  <a href="https://x.com/ervenow" target="_blank" rel="noopener noreferrer" aria-label="منصة X">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path
+                        d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"
+                      />
+                    </svg>
+                  </a>
+                  <a href="https://www.snapchat.com/add/ervenow" target="_blank" rel="noopener noreferrer" aria-label="سناب شات">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path
+                        d="M12 2c-2.2 0-4.5.45-6.1 2.05C4.3 5.7 4 7.9 4 9.5c0 1.1.2 2 .5 2.8-.9.3-1.7.7-2.3 1.2-.5.4-.2 1 .6 1 1.1 0 2.1-.2 3-.6-.3 1.5-.5 2.8 0 3.8.4.8 1.2 1.2 2.2 1.5-.3.9-.4 1.7 0 2.2.5.6 1.4.4 2.5 0 1.2-.5 2.6-1.2 4-1.2s2.8.7 4 1.2c1.1.4 2 .6 2.5 0 .4-.5.3-1.3 0-2.2 1-.3 1.8-.7 2.2-1.5.5-1 .3-2.3 0-3.8.9.4 1.9.6 3 .6.8 0 1.1-.6.6-1-.6-.5-1.4-.9-2.3-1.2.3-.8.5-1.7.5-2.8 0-1.6-.3-3.8-1.9-5.45C16.5 2.45 14.2 2 12 2z"
+                      />
+                    </svg>
+                  </a>
+                  <a href="https://t.me/ervenow" target="_blank" rel="noopener noreferrer" aria-label="تلغرام">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path
+                        d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.33 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71L12.6 16.3l-1.99 1.93c-.23.23-.42.42-.83.42z"
+                      />
+                    </svg>
+                  </a>
+                  <a href="https://wa.me/966505745650" target="_blank" rel="noopener noreferrer" aria-label="واتساب">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path
+                        d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.435 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"
+                      />
+                    </svg>
+                  </a>
+                </div>
               </div>
             </div>
-          <p class="lp-footer__rights">
-            © <span class="lp-footer__year"></span> ERVENOW — جميع الحقوق محفوظة
-          </p>
+
+            <nav class="erv-mp-footer-col" aria-label="الخدمات">
+              <p class="erv-mp-footer-col__title">الخدمات</p>
+              <a href="/restaurants">مطاعم</a>
+              <a href="/stores">متاجر</a>
+              <a href="/delivery-services.html">توصيل</a>
+              <a href="/services">خدمات منزلية</a>
+            </nav>
+
+            <nav class="erv-mp-footer-col" aria-label="انضم إلينا">
+              <p class="erv-mp-footer-col__title">انضم إلينا</p>
+              <a href="/register-store">سجّل متجرك</a>
+              <a href="/login?mode=register&amp;role=customer">تسجيل مسبق</a>
+              <a href="/login?role=customer">دخول الحساب</a>
+              <a href="/start-now">ابدأ الآن</a>
+            </nav>
+
+            <nav class="erv-mp-footer-col" aria-label="الدعم والسياسات">
+              <p class="erv-mp-footer-col__title">الدعم والسياسات</p>
+              <a class="lp-footer__legal-link" href="/privacy-policy">سياسة الخصوصية</a>
+              <a class="lp-footer__legal-link" href="/payments-refund-policy">سياسة المدفوعات والإلغاء والاسترجاع</a>
+              <a class="lp-footer__legal-link" href="/terms-of-use">سياسة الاستخدام</a>
+              <a href="https://wa.me/966505745650" target="_blank" rel="noopener noreferrer">واتساب الدعم</a>
+            </nav>
+          </div>
+
+          <div class="erv-mp-footer-bottom">
+            <p class="lp-footer__rights">
+              © <span class="lp-footer__year"></span> ERVENOW — جميع الحقوق محفوظة
+            </p>
+            <p class="erv-mp-footer-credit">صُنع بكل حب في المملكة العربية السعودية</p>
+          </div>
         </div>
 
         <div class="lp-footer__mobile-only" aria-label="فوتر الجوال">
@@ -3325,7 +3687,9 @@
     <script src="/assets/guest-offers-carousel.js?erv=20260630" defer></script>
     <script src="/assets/guestBrowse.js"></script>
     <script src="/assets/ervenow-toggle.js"></script>
-    <script src="/assets/guest-shell.js?erv=20260612"></script>
+    <script src="/assets/guest-shell.js?erv=20260905b"></script>
+    <script src="/assets/pre-reg-banner.js?erv=20260919green" defer></script>
+    <script src="/assets/home-desktop-marketplace.js?erv=20260919ref12" defer></script>
     <script>
       function goLogin() {
         window.location.href = "/login";
@@ -3538,6 +3902,13 @@
           await refreshHeaderWallet("", "");
           clearHeaderUserMid();
           setQuickLogoutVisible(false);
+          var guestAuth = document.getElementById("authArea");
+          if (guestAuth && !guestAuth.querySelector("button, a")) {
+            guestAuth.innerHTML =
+              '<a class="erv-mp-header-account-link" href="/login?role=customer" aria-label="حسابي">' +
+              '<span class="erv-mp-header-account-link__ic" aria-hidden="true">👤</span>' +
+              "<span>حسابي</span></a>";
+          }
           if (window.ErvenowGuestShell && ErvenowGuestShell.paintIndexNav) {
             ErvenowGuestShell.paintIndexNav("", { authenticated: false });
           }

@@ -1,0 +1,147 @@
+/**
+ * ERVENOW icon system
+ * Source SVGs: /assets/icons/*.svg
+ * Brand: green #00594F · accent orange #FF7A00
+ */
+:root {
+  --erv-icon-green: #00594f;
+  --erv-icon-orange: #ff7a00;
+  --erv-icon-header: 24px;
+  --erv-icon-nav: 24px;
+  --erv-icon-hub: 36px;
+}
+
+.erv-icon-img {
+  display: block;
+  width: var(--erv-icon-header);
+  height: var(--erv-icon-header);
+  object-fit: contain;
+  flex-shrink: 0;
+  pointer-events: none;
+  user-select: none;
+}
+
+.erv-icon-img--sm {
+  width: 22px;
+  height: 22px;
+}
+
+.erv-icon-img--md {
+  width: 24px;
+  height: 24px;
+}
+
+.erv-icon-img--lg {
+  width: 26px;
+  height: 26px;
+}
+
+.erv-icon-img--hub {
+  width: var(--erv-icon-hub);
+  height: var(--erv-icon-hub);
+}
+
+/* Header chrome */
+.erv-mp-header-locate__ic,
+.erv-mp-header-search__ic,
+.erv-mp-header-cart__ic,
+.erv-mp-header-orders__ic,
+.erv-mp-header-account-link__ic,
+.erv-mp-hero-search__ic,
+.erv-mp-hero-locate__ic {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 0;
+  font-size: 0;
+}
+
+.erv-mp-header-locate__ic .erv-icon-img,
+.erv-mp-header-search__ic .erv-icon-img,
+.erv-mp-header-cart__ic .erv-icon-img,
+.erv-mp-header-orders__ic .erv-icon-img,
+.erv-mp-header-account-link__ic .erv-icon-img {
+  width: var(--erv-icon-header);
+  height: var(--erv-icon-header);
+}
+
+.erv-mp-hero-search__ic .erv-icon-img,
+.erv-mp-hero-locate .erv-icon-img {
+  width: 22px;
+  height: 22px;
+}
+
+/* Hub service cards */
+body.lp-home-premium #snHomeHub .sn-card__icon-wrap {
+  background: #e8f6ef !important;
+}
+
+body.lp-home-premium #snHomeHub .sn-card__icon.erv-icon-img,
+body.lp-home-premium #snHomeHub img.sn-card__icon {
+  width: var(--erv-icon-hub) !important;
+  height: var(--erv-icon-hub) !important;
+  min-width: var(--erv-icon-hub) !important;
+  min-height: var(--erv-icon-hub) !important;
+  fill: none !important;
+  display: block !important;
+  object-fit: contain;
+}
+
+html:not(.erv-mobile-shell) body.lp-home-premium #snHomeHub .sn-card__icon.erv-icon-img,
+html:not(.erv-mobile-shell) body.lp-home-premium #snHomeHub img.sn-card__icon {
+  width: 38px !important;
+  height: 38px !important;
+  min-width: 38px !important;
+  min-height: 38px !important;
+}
+
+/* Soft tinted wraps still OK; icon itself carries brand colors */
+html:not(.erv-mobile-shell) body.lp-home-premium #snHomeHub .sn-card__icon-wrap,
+html.erv-mobile-shell body.lp-home-premium #snHomeHub .sn-card__icon-wrap {
+  color: var(--erv-icon-green) !important;
+}
+
+/* Bottom nav */
+.erv-mobile-bottom-nav__icon .erv-icon-img,
+.erv-mobile-bottom-nav__icon img.erv-nav-svg {
+  width: var(--erv-icon-nav);
+  height: var(--erv-icon-nav);
+  display: block;
+  margin-inline: auto;
+}
+
+.erv-mobile-bottom-nav__item.is-active .erv-icon-img {
+  filter: none;
+}
+
+.erv-mobile-bottom-nav__item.is-active .erv-mobile-bottom-nav__icon-wrap {
+  background: rgba(255, 122, 0, 0.12);
+}
+
+.erv-mobile-bottom-nav__item.is-active .erv-mobile-bottom-nav__label {
+  color: var(--erv-icon-orange);
+}
+
+/* CTA / quick cards: replace emoji-sized icons */
+.erv-mp-quick__ic .erv-icon-img {
+  width: 28px;
+  height: 28px;
+}
+
+.lp-home-cta-card__mark .erv-icon-img {
+  width: 28px;
+  height: 28px;
+}
+
+.lp-dd-ic .erv-icon-img {
+  width: 20px;
+  height: 20px;
+}
+
+@media (max-width: 640px) {
+  :root {
+    --erv-icon-hub: 32px;
+    --erv-icon-header: 22px;
+    --erv-icon-nav: 22px;
+  }
+}
