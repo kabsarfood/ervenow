@@ -123,6 +123,19 @@
     padding-top: env(safe-area-inset-top, 0px);
   }
 
+  /* مع شريط التسجيل المسبق: الهيدر تحت الشريط مباشرة — بدون تداخل */
+  html.erv-mobile-shell.erv-has-prereg body.lp-home-premium .lp-header.lp-header--refined,
+  html.erv-has-prereg body.lp-home-premium .lp-header.lp-header--refined {
+    top: var(--erv-prereg-h, 0px) !important;
+    padding-top: 0 !important;
+  }
+
+  html.erv-mobile-shell.erv-has-prereg body.guest-shell-page .dash-site-header,
+  html.erv-has-prereg body.guest-shell-page .dash-site-header {
+    top: var(--erv-prereg-h, 0px) !important;
+    padding-top: 0 !important;
+  }
+
   html.erv-mobile-shell body.lp-home-premium .lp-header.lp-header--refined::before {
     display: none !important;
   }

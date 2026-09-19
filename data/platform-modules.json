@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-09-01T21:46:23.854Z",
+  "updated_at": "2026-09-19T21:14:26.569Z",
   "notes": "Platform Modules — تشغيل/إيقاف الخدمات المستقبلية من لوحة الأدمن دون تعديل الكود.",
   "modules": {
     "meshwar": {
@@ -28,7 +28,7 @@
       "label": "QR Payments",
       "label_ar": "دفع QR",
       "description": "الدفع عبر رمز QR",
-      "status": "beta"
+      "status": "disabled"
     },
     "service_schedule": {
       "id": "service_schedule",

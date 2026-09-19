@@ -286,15 +286,23 @@
 
   function ensurePreRegBannerJs() {
     if (global.__ervPreRegBannerInjected) return;
-    if (document.querySelector('script[src*="pre-reg-banner.js"]')) {
+    function inject() {
+      if (global.__ervPreRegBannerInjected) return;
+      if (document.querySelector('script[src*="pre-reg-banner.js"]')) {
+        global.__ervPreRegBannerInjected = true;
+        return;
+      }
       global.__ervPreRegBannerInjected = true;
-      return;
+      var s = document.createElement("script");
+      s.src = "/assets/pre-reg-banner.js?erv=20260920mob7";
+      s.defer = true;
+      (document.head || document.documentElement).appendChild(s);
     }
-    global.__ervPreRegBannerInjected = true;
-    var s = document.createElement("script");
-    s.src = "/assets/pre-reg-banner.js?erv=20260919green";
-    s.defer = true;
-    (document.head || document.documentElement).appendChild(s);
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", inject);
+    } else {
+      inject();
+    }
   }
 
   enforceViewportMeta();

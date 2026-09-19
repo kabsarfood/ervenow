@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-09-19T20:39:25.793Z",
+  "updated_at": "2026-09-19T21:16:14.352Z",
   "portal_visits": {
     "customer": {
       "visits": 30,
@@ -7,24 +7,24 @@
       "last_at": "2026-06-20T12:30:05.786Z"
     },
     "merchant": {
-      "visits": 80,
+      "visits": 82,
       "unique_users": {},
-      "last_at": "2026-06-19T12:00:40.637Z"
+      "last_at": "2026-09-19T21:15:10.509Z"
     },
     "driver": {
-      "visits": 420,
+      "visits": 422,
       "unique_users": {},
-      "last_at": "2026-09-01T21:13:49.173Z"
+      "last_at": "2026-09-19T21:15:24.073Z"
     },
     "service": {
-      "visits": 160,
+      "visits": 164,
       "unique_users": {},
-      "last_at": "2026-09-01T20:54:30.236Z"
+      "last_at": "2026-09-19T21:15:44.030Z"
     },
     "transport": {
-      "visits": 109,
+      "visits": 115,
       "unique_users": {},
-      "last_at": "2026-06-18T20:54:23.313Z"
+      "last_at": "2026-09-19T21:16:14.351Z"
     }
   },
   "preview_visits": {
@@ -35,27 +35,27 @@
       "active_users": {}
     },
     "merchant": {
-      "visits": 79,
+      "visits": 81,
       "unique_users": {},
-      "last_at": "2026-06-19T12:00:40.637Z",
+      "last_at": "2026-09-19T21:15:10.509Z",
       "active_users": {}
     },
     "driver": {
-      "visits": 359,
+      "visits": 361,
       "unique_users": {},
-      "last_at": "2026-09-01T21:13:49.173Z",
+      "last_at": "2026-09-19T21:15:24.073Z",
       "active_users": {}
     },
     "service": {
-      "visits": 131,
+      "visits": 135,
       "unique_users": {},
-      "last_at": "2026-09-01T16:26:43.065Z",
+      "last_at": "2026-09-19T21:15:44.030Z",
       "active_users": {}
     },
     "transport": {
-      "visits": 109,
+      "visits": 115,
       "unique_users": {},
-      "last_at": "2026-06-18T20:54:23.313Z",
+      "last_at": "2026-09-19T21:16:14.351Z",
       "active_users": {}
     }
   },
@@ -89,6 +89,16 @@
   "user_snapshots": {},
   "broadcast_history": [],
   "redirect_events": [
+    {
+      "at": "2026-09-19T20:51:09.165Z",
+      "portal": "admin",
+      "role": "admin",
+      "path": "/admin-dashboard",
+      "success": true,
+      "raw_role": "admin",
+      "service_type": null,
+      "user_id": null
+    },
     {
       "at": "2026-06-20T12:31:52.079Z",
       "portal": "driver",

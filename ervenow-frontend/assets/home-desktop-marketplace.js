@@ -423,6 +423,63 @@
     }
   }
 
+  function ensurePreregHeaderOrder() {
+    var body = document.body;
+    var prereg = document.getElementById("ervPreRegBanner");
+    var header = document.getElementById("top") || document.querySelector(".lp-header");
+    if (!header || !body) return;
+    /* دائماً: شريط التسجيل أولاً ثم الهيدر مباشرة — حتى لو كان الشريط أول عنصر مسبقاً */
+    if (prereg) {
+      if (body.firstElementChild !== prereg) {
+        body.insertBefore(prereg, body.firstElementChild);
+      }
+      if (prereg.nextElementSibling !== header) {
+        body.insertBefore(header, prereg.nextSibling);
+      }
+    } else if (body.firstElementChild !== header) {
+      body.insertBefore(header, body.firstElementChild);
+    }
+    if (global.ErvenowPreRegBanner && typeof global.ErvenowPreRegBanner.measure === "function") {
+      global.ErvenowPreRegBanner.measure();
+    }
+  }
+
+  function pinTopChrome() {
+    var body = document.body;
+    if (!body) return;
+    var prereg = document.getElementById("ervPreRegBanner");
+    var header = document.getElementById("top") || document.querySelector(".lp-header");
+    var stage = document.querySelector(".erv-mp-stage");
+    ensurePreregHeaderOrder();
+    if (header && stage && header.nextElementSibling !== stage) {
+      body.insertBefore(stage, header.nextSibling);
+    }
+    ensurePreregHeaderOrder();
+  }
+
+  var topChromeMo = null;
+  var topChromeMoTimer = null;
+  function watchTopChrome(ms) {
+    pinTopChrome();
+    if (topChromeMo || !document.body) return;
+    try {
+      topChromeMo = new MutationObserver(function () {
+        if (topChromeMoTimer) return;
+        topChromeMoTimer = setTimeout(function () {
+          topChromeMoTimer = null;
+          pinTopChrome();
+        }, 40);
+      });
+      topChromeMo.observe(document.body, { childList: true });
+      setTimeout(function () {
+        if (topChromeMo) {
+          topChromeMo.disconnect();
+          topChromeMo = null;
+        }
+      }, ms || 8000);
+    } catch (e) {}
+  }
+
   function pinMarketplaceLayout() {
     var body = document.body;
     if (!body) return;
@@ -439,6 +496,7 @@
     }
 
     placeStatsStrip();
+    pinTopChrome();
 
     if (!isDesktopMp()) {
       watchBannerVisual();
@@ -454,10 +512,14 @@
     var footer = document.querySelector(".lp-footer");
 
     var sequence = [prereg, header, stage, hub, discover, main, footer].filter(Boolean);
-    for (var i = 0; i < sequence.length; i++) {
-      body.appendChild(sequence[i]);
+    if (sequence.length) {
+      body.insertBefore(sequence[0], body.firstChild);
+      for (var i = 1; i < sequence.length; i++) {
+        body.insertBefore(sequence[i], sequence[i - 1].nextSibling);
+      }
     }
 
+    pinTopChrome();
     placeStatsStrip();
     watchBannerVisual();
   }
@@ -495,16 +557,25 @@
     watchBannerVisual();
     hydrateStatsStrip();
     refreshMp();
+    watchTopChrome(10000);
 
-    window.addEventListener("ervenow:marketing-applied", refreshMp);
+    window.addEventListener("ervenow:marketing-applied", function () {
+      refreshMp();
+      watchTopChrome(6000);
+    });
 
     // One delayed settle pass after marketing/shell may finish
     setTimeout(refreshMp, 900);
+    setTimeout(pinTopChrome, 1400);
+    setTimeout(pinTopChrome, 2400);
 
     var resizeTimer = null;
     window.addEventListener("resize", function () {
       clearTimeout(resizeTimer);
-      resizeTimer = setTimeout(refreshMp, 250);
+      resizeTimer = setTimeout(function () {
+        refreshMp();
+        pinTopChrome();
+      }, 250);
     });
   }
 

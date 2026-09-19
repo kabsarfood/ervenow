@@ -824,7 +824,7 @@
     }
     if (document.querySelector('script[src*="pre-reg-banner.js"]')) return;
     var s = document.createElement("script");
-    s.src = "/assets/pre-reg-banner.js?erv=20260919green";
+    s.src = "/assets/pre-reg-banner.js?erv=20260920mob7";
     s.defer = true;
     document.head.appendChild(s);
   }
