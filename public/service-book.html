@@ -14,6 +14,7 @@
     <link rel="stylesheet" href="/assets/styles.css?erv=20260919id" />
     <link rel="stylesheet" href="/assets/guest-shell.css?erv=20260612" />
     <link rel="stylesheet" href="/assets/ervenow-responsive.css" />
+    <link rel="stylesheet" href="/assets/service-booking-wizard.css?erv=20260920wiz1" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
       .cp-wrap {
@@ -189,19 +190,6 @@
         gap: 10px;
         margin-top: 8px;
       }
-      .cp-photo-grid {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        margin-top: 8px;
-      }
-      .cp-photo-grid img {
-        width: clamp(72px, 22vw, 96px);
-        height: clamp(72px, 22vw, 96px);
-        object-fit: cover;
-        border-radius: 10px;
-        border: 1px solid rgba(17, 24, 39, 0.12);
-      }
       .cp-photo-hint {
         margin: 6px 0 0;
         font-size: clamp(0.78rem, 2.1vw, 0.84rem);
@@ -235,33 +223,74 @@
         gap: 10px;
         margin-top: 10px;
       }
-      .cp-photo-slots {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr));
-        gap: 10px;
+      .cp-photo-upload {
         margin-top: 8px;
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
       }
-      .cp-photo-slot {
-        border: 1px dashed rgba(17, 24, 39, 0.2);
-        border-radius: 10px;
-        padding: 10px;
-        background: rgba(255, 255, 255, 0.6);
-      }
-      .cp-photo-slot strong {
-        display: block;
-        font-size: clamp(0.82rem, 2.2vw, 0.9rem);
-        margin-bottom: 6px;
-      }
-      .cp-photo-slot input[type="file"] {
+      .cp-photo-upload__btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        min-height: 48px;
+        width: 100%;
+        max-width: 320px;
+        padding: 10px 18px;
+        border-radius: 999px;
+        border: 1px solid rgba(20, 108, 67, 0.28);
+        background: #fff;
+        color: #0f5a37;
+        font-family: inherit;
         font-size: 16px;
-        width: 100%;
+        font-weight: 800;
+        cursor: pointer;
+        box-shadow: 0 2px 12px rgba(15, 40, 28, 0.05);
       }
-      .cp-photo-slot img {
+      .cp-photo-upload__btn:hover {
+        border-color: rgba(20, 108, 67, 0.45);
+        background: #e8f6ef;
+      }
+      .cp-photo-upload__btn:focus-visible {
+        outline: 3px solid #146c43;
+        outline-offset: 2px;
+      }
+      .cp-photo-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .cp-photo-grid__item {
+        position: relative;
+        width: clamp(72px, 22vw, 96px);
+        height: clamp(72px, 22vw, 96px);
+      }
+      .cp-photo-grid__item img {
         width: 100%;
-        max-height: 96px;
+        height: 100%;
         object-fit: cover;
-        border-radius: 8px;
-        margin-top: 6px;
+        border-radius: 10px;
+        border: 1px solid rgba(17, 24, 39, 0.12);
+        display: block;
+      }
+      .cp-photo-grid__remove {
+        position: absolute;
+        top: 4px;
+        left: 4px;
+        width: 28px;
+        height: 28px;
+        border: 0;
+        border-radius: 999px;
+        background: rgba(17, 24, 39, 0.72);
+        color: #fff;
+        font-size: 1rem;
+        line-height: 1;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
       }
       .cp-photo-count {
         margin-top: 6px;
@@ -322,9 +351,9 @@
       }
       .sb-subtype-card.is-active {
         border-color: transparent;
-        background: linear-gradient(135deg, #111827, #5c3220);
-        color: #fff8ee;
-        box-shadow: 0 12px 28px rgba(17, 24, 39, 0.28);
+        background: linear-gradient(145deg, #146c43, #0f5a37);
+        color: #f4faf7;
+        box-shadow: 0 12px 28px rgba(20, 108, 67, 0.3);
       }
       .sb-subtype-card__media {
         display: flex;
@@ -389,7 +418,7 @@
       }
     </style>
   </head>
-  <body class="guest-shell-page">
+  <body class="guest-shell-page erv-sb-page">
     <header class="dash-site-header">
       <div class="dash-site-header__inner">
         <div class="dash-site-header__brand">
@@ -427,112 +456,147 @@
 
     <div class="dash-main">
       <div class="layout">
-        <div class="cp-wrap">
+        <div class="cp-wrap erv-sb-wizard" id="sbWizard">
           <a class="cp-back" href="/services" id="sbBackLink">← العودة للخدمات</a>
           <h1 class="guest-page-title" id="sbPageTitle">أهلاً بكم في خدمة ERVENOW</h1>
-          <p class="cp-page-lead" id="sbPageLead">اختر نوع الخدمة — حدد موعد التنفيذ · الصور · الموقع</p>
+          <p class="cp-page-lead" id="sbPageLead">أكمل الطلب على 3 خطوات بسيطة</p>
 
-          <div class="card" style="margin-top: 12px">
+          <ol class="erv-sb-steps" aria-label="خطوات الطلب">
+            <li class="erv-sb-steps__item is-active" data-sb-step-label="0">
+              <span class="erv-sb-steps__dot">1</span>
+              <span class="erv-sb-steps__label">الخدمة</span>
+            </li>
+            <li class="erv-sb-steps__item" data-sb-step-label="1">
+              <span class="erv-sb-steps__dot">2</span>
+              <span class="erv-sb-steps__label">التفاصيل</span>
+            </li>
+            <li class="erv-sb-steps__item" data-sb-step-label="2">
+              <span class="erv-sb-steps__dot">3</span>
+              <span class="erv-sb-steps__label">التأكيد</span>
+            </li>
+          </ol>
+
+          <div class="erv-sb-shell">
             <form class="cp-box" id="sbForm">
-              <div class="cp-section" id="sbSubtypeSection" hidden>
-                <p class="cp-section__title">نوع الخدمة</p>
-                <p class="cp-section__sub">اختر ما تحتاجه — اضغط على البطاقة المناسبة</p>
-                <div class="sb-subtype-grid" id="sbSubtypeGrid" role="list"></div>
-                <input type="hidden" id="sbSubtype" name="service_subtype" value="" />
-                <p class="sb-subtype-pick" id="sbSubtypePick" hidden role="status"></p>
-              </div>
+              <!-- خطوة 1: الخدمة -->
+              <section class="erv-sb-panel is-active" data-sb-step="0" aria-labelledby="sbStep1Title">
+                <div class="erv-sb-panel__head">
+                  <p class="erv-sb-panel__eyebrow">الخطوة 1 من 3</p>
+                  <h2 class="erv-sb-panel__title" id="sbStep1Title">اختر نوع الخدمة</h2>
+                  <p class="erv-sb-panel__sub">حدّد ما تحتاجه بدقة ليصل الطلب للمزود المناسب</p>
+                </div>
 
-              <div class="cp-section">
-                <p class="cp-section__title" id="sbServiceTitle">الخدمة</p>
-                <p class="cp-section__sub" id="sbServiceDesc">—</p>
-                <div class="cp-vehicle-type-card" id="sbServiceHero" style="margin-top: 4px">
-                  <div class="cp-vehicle-type-card__img" id="sbServiceIconWrap" aria-hidden="true">
-                    <img id="sbServiceIconImg" class="cp-vehicle-type-card__img-photo" src="" alt="" loading="lazy" hidden />
-                    <span id="sbServiceIcon" class="cp-vehicle-type-card__ic-fallback" hidden aria-hidden="true"></span>
-                  </div>
-                  <div class="cp-vehicle-type-card__select" style="align-items: flex-start; flex-direction: column; justify-content: center; gap: 4px">
-                    <strong id="sbServiceHeroLabel" style="font-size: clamp(0.95rem, 2.6vw, 1.05rem)">—</strong>
-                    <span id="sbServiceHeroSub" style="font-size: clamp(0.8rem, 2.2vw, 0.88rem); color: rgba(17, 24, 39, 0.72); line-height: 1.45">—</span>
+                <div class="cp-section" id="sbSubtypeSection" hidden>
+                  <p class="cp-section__title">نوع الخدمة</p>
+                  <p class="cp-section__sub">اضغط على البطاقة المناسبة</p>
+                  <div class="sb-subtype-grid" id="sbSubtypeGrid" role="list"></div>
+                  <input type="hidden" id="sbSubtype" name="service_subtype" value="" />
+                  <p class="sb-subtype-pick" id="sbSubtypePick" hidden role="status"></p>
+                </div>
+
+                <div class="cp-section">
+                  <p class="cp-section__title" id="sbServiceTitle">الخدمة</p>
+                  <p class="cp-section__sub" id="sbServiceDesc">—</p>
+                  <div class="cp-vehicle-type-card" id="sbServiceHero" style="margin-top: 4px">
+                    <div class="cp-vehicle-type-card__img" id="sbServiceIconWrap" aria-hidden="true">
+                      <img id="sbServiceIconImg" class="cp-vehicle-type-card__img-photo" src="" alt="" loading="lazy" hidden />
+                      <span id="sbServiceIcon" class="cp-vehicle-type-card__ic-fallback" hidden aria-hidden="true"></span>
+                    </div>
+                    <div class="cp-vehicle-type-card__select" style="align-items: flex-start; flex-direction: column; justify-content: center; gap: 4px">
+                      <strong id="sbServiceHeroLabel" style="font-size: clamp(0.95rem, 2.6vw, 1.05rem)">—</strong>
+                      <span id="sbServiceHeroSub" style="font-size: clamp(0.8rem, 2.2vw, 0.88rem); color: rgba(17, 24, 39, 0.72); line-height: 1.45">—</span>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <div class="cp-breakdown" id="sbBreakdown" aria-live="polite"></div>
-              <div class="cp-price" id="sbPrice">السعر: —</div>
-
-              <div class="cp-row">
-                <span class="cp-section__title" style="margin: 0">موعد التنفيذ</span>
-                <div class="cp-schedule-modes">
-                  <label><input type="radio" name="sbScheduleMode" value="immediate" checked /> ⚡ الآن — تنفيذ فوري</label>
-                  <label><input type="radio" name="sbScheduleMode" value="scheduled" /> 📅 موعد مجدول</label>
+                <div class="erv-sb-price-strip" aria-live="polite">
+                  <span class="erv-sb-price-strip__label">السعر التقريبي</span>
+                  <span class="erv-sb-price-strip__value" id="sbPriceStrip">—</span>
                 </div>
-                <div class="cp-schedule-fields" id="sbScheduleFields" hidden>
-                  <div>
-                    <label for="sbScheduleDate">التاريخ</label>
-                    <input id="sbScheduleDate" type="date" />
+              </section>
+
+              <!-- خطوة 2: التفاصيل -->
+              <section class="erv-sb-panel" data-sb-step="1" hidden aria-labelledby="sbStep2Title">
+                <div class="erv-sb-panel__head">
+                  <p class="erv-sb-panel__eyebrow">الخطوة 2 من 3</p>
+                  <h2 class="erv-sb-panel__title" id="sbStep2Title">الموعد والصور</h2>
+                  <p class="erv-sb-panel__sub">متى تريد التنفيذ؟ وأضف صوراً تساعد المزود</p>
+                </div>
+
+                <div class="cp-row">
+                  <span class="cp-section__title">موعد التنفيذ</span>
+                  <div class="cp-schedule-modes">
+                    <label><input type="radio" name="sbScheduleMode" value="immediate" checked /> ⚡ الآن — تنفيذ فوري</label>
+                    <label><input type="radio" name="sbScheduleMode" value="scheduled" /> 📅 موعد مجدول</label>
                   </div>
-                  <div>
-                    <label for="sbScheduleTime">الساعة</label>
-                    <input id="sbScheduleTime" type="time" />
+                  <div class="cp-schedule-fields" id="sbScheduleFields" hidden>
+                    <div>
+                      <label for="sbScheduleDate">التاريخ</label>
+                      <input id="sbScheduleDate" type="date" />
+                    </div>
+                    <div>
+                      <label for="sbScheduleTime">الساعة</label>
+                      <input id="sbScheduleTime" type="time" />
+                    </div>
+                  </div>
+                  <p class="cp-photo-hint" id="sbScheduleHint">سيتم إرسال الطلب للمزودين المتاحين فوراً.</p>
+                </div>
+
+                <div class="cp-row">
+                  <label>صور (حتى 10)</label>
+                  <p class="cp-photo-hint">أضف صوراً للموقع أو المشكلة — تساعد المزود على التحضير.</p>
+                  <div class="cp-photo-upload">
+                    <input type="file" id="sbPhotos" accept="image/*" multiple hidden />
+                    <button type="button" class="cp-photo-upload__btn" id="sbPhotosBtn">📷 رفع الصور</button>
+                    <div class="cp-photo-grid" id="sbPhotoPreview" role="list" aria-label="الصور المرفقة"></div>
+                  </div>
+                  <p class="cp-photo-count" id="sbPhotoCount">0 / 10 صور</p>
+                </div>
+
+                <div class="cp-row">
+                  <label for="sbNotes">ملاحظات (اختياري)</label>
+                  <input id="sbNotes" type="text" maxlength="300" placeholder="مثال: وصف المشكلة، تعليمات الوصول، تفاصيل إضافية" />
+                </div>
+              </section>
+
+              <!-- خطوة 3: التأكيد -->
+              <section class="erv-sb-panel" data-sb-step="2" hidden aria-labelledby="sbStep3Title">
+                <div class="erv-sb-panel__head">
+                  <p class="erv-sb-panel__eyebrow">الخطوة 3 من 3</p>
+                  <h2 class="erv-sb-panel__title" id="sbStep3Title">الموقع والدفع</h2>
+                  <p class="erv-sb-panel__sub">أكد الموقع ورقم الجوال ثم أضف للسلة</p>
+                </div>
+
+                <div class="cp-breakdown" id="sbBreakdown" aria-live="polite"></div>
+                <div class="cp-price" id="sbPrice">السعر: —</div>
+
+                <div class="cp-row">
+                  <label for="sbDistrict">الحي</label>
+                  <input id="sbDistrict" type="text" placeholder="اسم الحي" />
+                </div>
+
+                <div class="cp-row">
+                  <label>موقع الخدمة</label>
+                  <input id="sbLocation" type="text" readonly placeholder="اضغط لتحديد الموقع على الخريطة" />
+                  <div class="cp-actions">
+                    <button type="button" class="btn btn-outline" id="sbBtnMap">تحديد الموقع على الخريطة</button>
+                    <button type="button" class="btn btn-ghost" id="sbBtnGps">موقعي الحالي</button>
                   </div>
                 </div>
-                <p class="cp-photo-hint" id="sbScheduleHint">سيتم إرسال الطلب للمزودين المتاحين فوراً.</p>
-              </div>
 
-              <div class="cp-row">
-                <label>صور (حتى 10)</label>
-                <p class="cp-photo-hint">صورة أمامية · خلفية · جانبية · وصور إضافية — تساعد المزود على التحضير.</p>
-                <div class="cp-photo-slots">
-                  <div class="cp-photo-slot">
-                    <strong>📷 أمامية</strong>
-                    <input type="file" id="sbPhotoFront" accept="image/*" />
-                    <img id="sbPreviewFront" alt="" hidden />
-                  </div>
-                  <div class="cp-photo-slot">
-                    <strong>📷 خلفية</strong>
-                    <input type="file" id="sbPhotoBack" accept="image/*" />
-                    <img id="sbPreviewBack" alt="" hidden />
-                  </div>
-                  <div class="cp-photo-slot">
-                    <strong>📷 جانبية</strong>
-                    <input type="file" id="sbPhotoSide" accept="image/*" />
-                    <img id="sbPreviewSide" alt="" hidden />
-                  </div>
-                  <div class="cp-photo-slot">
-                    <strong>🖼️ صور إضافية</strong>
-                    <input type="file" id="sbPhotoExtra" accept="image/*" multiple />
-                    <div class="cp-photo-grid" id="sbExtraPreview"></div>
-                  </div>
+                <div class="cp-row">
+                  <label for="sbPhone">جوال طالب الخدمة</label>
+                  <input id="sbPhone" type="tel" placeholder="05xxxxxxxx" required />
                 </div>
-                <p class="cp-photo-count" id="sbPhotoCount">0 / 10 صور</p>
-              </div>
 
-              <div class="cp-row">
-                <label for="sbNotes">ملاحظات (اختياري)</label>
-                <input id="sbNotes" type="text" maxlength="300" placeholder="مثال: وصف المشكلة، تعليمات الوصول، تفاصيل إضافية" />
-              </div>
+                <p id="sbMsg" class="erv-sb-msg" role="status"></p>
+              </section>
 
-              <div class="cp-row">
-                <label for="sbDistrict">الحي</label>
-                <input id="sbDistrict" type="text" placeholder="اسم الحي" />
+              <div class="erv-sb-nav">
+                <button type="button" class="erv-sb-nav__btn" data-sb-prev hidden>السابق</button>
+                <button type="button" class="erv-sb-nav__btn erv-sb-nav__btn--primary" data-sb-next>التالي</button>
+                <button type="button" class="erv-sb-nav__btn erv-sb-nav__btn--primary" id="sbPayCart" data-sb-submit hidden>إضافة للسلة والمتابعة للدفع</button>
               </div>
-
-              <div class="cp-row">
-                <label>موقع الخدمة</label>
-                <input id="sbLocation" type="text" readonly placeholder="اضغط لتحديد الموقع على الخريطة" />
-                <div class="cp-actions">
-                  <button type="button" class="btn btn-outline" id="sbBtnMap">تحديد الموقع على الخريطة</button>
-                  <button type="button" class="btn btn-ghost" id="sbBtnGps">موقعي الحالي</button>
-                </div>
-              </div>
-
-              <div class="cp-row">
-                <label for="sbPhone">جوال طالب الخدمة</label>
-                <input id="sbPhone" type="tel" placeholder="05xxxxxxxx" required />
-              </div>
-
-              <p id="sbMsg" class="sub" role="status" style="margin: 0"></p>
-              <button type="button" class="btn btn-solid" id="sbPayCart" style="min-height: 48px">إضافة للسلة والمتابعة للدفع</button>
             </form>
           </div>
         </div>
@@ -551,6 +615,7 @@
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="/assets/compressImage.js"></script>
+    <script src="/assets/service-booking-wizard.js?erv=20260920wiz1"></script>
     <script src="/assets/service-book-page.js"></script>
     <script src="/assets/order-draft-store.js"></script>
     <script src="/assets/order-draft-vertical.js"></script>
@@ -579,7 +644,7 @@
         var MAX_PHOTOS = 10;
         var map = null;
         var marker = null;
-        var photoStore = { front: "", back: "", side: "", extras: [] };
+        var photoStore = [];
         var selectedSubtype = "";
 
         function findSubtype(code) {
@@ -661,36 +726,38 @@
         }
 
         function countPhotos() {
-          var n = 0;
-          if (photoStore.front) n += 1;
-          if (photoStore.back) n += 1;
-          if (photoStore.side) n += 1;
-          n += (photoStore.extras || []).length;
-          return n;
+          return (photoStore || []).length;
         }
 
         function updatePhotoCount() {
           var el = document.getElementById("sbPhotoCount");
           if (el) el.textContent = countPhotos() + " / " + MAX_PHOTOS + " صور";
-        }
-
-        function showPreview(imgEl, dataUrl) {
-          if (!imgEl) return;
-          if (dataUrl) {
-            imgEl.src = dataUrl;
-            imgEl.hidden = false;
-          } else {
-            imgEl.removeAttribute("src");
-            imgEl.hidden = true;
+          var btn = document.getElementById("sbPhotosBtn");
+          if (btn) {
+            btn.textContent = countPhotos() >= MAX_PHOTOS ? "تم بلوغ الحد الأقصى" : "📷 رفع الصور";
+            btn.disabled = countPhotos() >= MAX_PHOTOS;
           }
         }
 
-        function renderExtraPreviews() {
-          var wrap = document.getElementById("sbExtraPreview");
+        function renderPhotoPreviews() {
+          var wrap = document.getElementById("sbPhotoPreview");
           if (!wrap) return;
-          wrap.innerHTML = (photoStore.extras || [])
+          wrap.innerHTML = (photoStore || [])
             .map(function (src, i) {
-              return '<img src="' + src + '" alt="صورة إضافية ' + (i + 1) + '" />';
+              return (
+                '<div class="cp-photo-grid__item" role="listitem">' +
+                '<img src="' +
+                src +
+                '" alt="صورة ' +
+                (i + 1) +
+                '" />' +
+                '<button type="button" class="cp-photo-grid__remove" data-index="' +
+                i +
+                '" aria-label="حذف الصورة ' +
+                (i + 1) +
+                '">×</button>' +
+                "</div>"
+              );
             })
             .join("");
         }
@@ -704,46 +771,35 @@
           }
         }
 
-        async function handleSlotPhoto(slot, input, previewId) {
-          var file = input && input.files && input.files[0];
-          if (!file) return;
-          var current = countPhotos() - (photoStore[slot] ? 1 : 0);
-          if (current >= MAX_PHOTOS) {
+        async function handlePhotos(input) {
+          if (!input || !input.files || !input.files.length) return;
+          var remaining = MAX_PHOTOS - countPhotos();
+          if (remaining <= 0) {
             alert("الحد الأقصى 10 صور");
             input.value = "";
             return;
           }
-          var dataUrl = await compressFile(file);
-          if (!dataUrl) return;
-          photoStore[slot] = dataUrl;
-          showPreview(document.getElementById(previewId), dataUrl);
+          var files = Array.prototype.slice.call(input.files, 0, remaining);
+          for (var i = 0; i < files.length; i++) {
+            if (countPhotos() >= MAX_PHOTOS) break;
+            var dataUrl = await compressFile(files[i]);
+            if (dataUrl) photoStore.push(dataUrl);
+          }
+          input.value = "";
+          renderPhotoPreviews();
           updatePhotoCount();
         }
 
-        async function handleExtraPhotos(input) {
-          if (!input || !input.files || !input.files.length) return;
-          var remaining = MAX_PHOTOS - countPhotos() + (photoStore.extras || []).length;
-          var files = Array.prototype.slice.call(input.files, 0, Math.max(0, remaining));
-          var out = [];
-          for (var i = 0; i < files.length; i++) {
-            if (countPhotos() - (photoStore.extras || []).length + out.length >= MAX_PHOTOS) break;
-            var dataUrl = await compressFile(files[i]);
-            if (dataUrl) out.push(dataUrl);
-          }
-          photoStore.extras = out;
-          renderExtraPreviews();
+        function removePhoto(index) {
+          var i = Number(index);
+          if (!Number.isFinite(i) || i < 0 || i >= photoStore.length) return;
+          photoStore.splice(i, 1);
+          renderPhotoPreviews();
           updatePhotoCount();
         }
 
         function collectServicePhotos() {
-          var out = [];
-          if (photoStore.front) out.push(photoStore.front);
-          if (photoStore.back) out.push(photoStore.back);
-          if (photoStore.side) out.push(photoStore.side);
-          (photoStore.extras || []).forEach(function (url) {
-            out.push(url);
-          });
-          return out.slice(0, MAX_PHOTOS);
+          return (photoStore || []).slice(0, MAX_PHOTOS);
         }
 
         function resolveScheduledAt() {
@@ -803,6 +859,8 @@
           );
           document.getElementById("sbBreakdown").innerHTML = lines.join("");
           document.getElementById("sbPrice").textContent = "الإجمالي: " + fin.total_with_vat.toFixed(2) + " ر.س (شامل الضريبة)";
+          var strip = document.getElementById("sbPriceStrip");
+          if (strip) strip.textContent = fin.total_with_vat.toFixed(2) + " ر.س";
           return fin;
         }
 
@@ -812,8 +870,7 @@
           document.title = "ERVENOW | " + label;
           document.getElementById("guestShellPageTag").textContent = label;
           document.getElementById("sbPageTitle").textContent = "أهلاً بكم في خدمة " + label + " من ERVENOW";
-          document.getElementById("sbPageLead").textContent =
-            "اختر نوع الخدمة — حدد موعد التنفيذ · الصور · الموقع لتنفيذ " + label;
+          document.getElementById("sbPageLead").textContent = "أكمل الطلب على 3 خطوات بسيطة — خدمة · تفاصيل · تأكيد";
           document.getElementById("sbServiceTitle").textContent = label;
           document.getElementById("sbServiceDesc").textContent = (e && e.desc) || (e && e.priceLabel) || "";
           if (SB.applyHeroMedia) {
@@ -907,16 +964,26 @@
           };
         }
 
+        function validateStep(toIndex, fromIndex) {
+          if (fromIndex === 0) {
+            var list = subtypeList();
+            if (list.length && !selectedSubtype) {
+              alert("يرجى اختيار نوع الخدمة من البطاقات");
+              return false;
+            }
+          }
+          if (fromIndex === 1) {
+            if (scheduleMode() === "scheduled" && !resolveScheduledAt()) {
+              alert("يرجى اختيار التاريخ والساعة للموعد المجدول");
+              return false;
+            }
+          }
+          return true;
+        }
+
         function validateForm() {
-          var list = subtypeList();
-          if (list.length && !selectedSubtype) {
-            alert("يرجى اختيار نوع الخدمة من البطاقات");
-            return false;
-          }
-          if (scheduleMode() === "scheduled" && !resolveScheduledAt()) {
-            alert("يرجى اختيار التاريخ والساعة للموعد المجدول");
-            return false;
-          }
+          if (!validateStep(1, 0)) return false;
+          if (!validateStep(2, 1)) return false;
           if (!document.getElementById("sbDistrict").value.trim()) {
             alert("يرجى إدخال الحي");
             return false;
@@ -980,18 +1047,19 @@
         document.querySelectorAll('input[name="sbScheduleMode"]').forEach(function (el) {
           el.addEventListener("change", toggleScheduleFields);
         });
-        document.getElementById("sbPhotoFront").addEventListener("change", function () {
-          handleSlotPhoto("front", this, "sbPreviewFront").catch(function () {});
+        document.getElementById("sbPhotosBtn").addEventListener("click", function () {
+          var input = document.getElementById("sbPhotos");
+          if (input && countPhotos() < MAX_PHOTOS) input.click();
         });
-        document.getElementById("sbPhotoBack").addEventListener("change", function () {
-          handleSlotPhoto("back", this, "sbPreviewBack").catch(function () {});
+        document.getElementById("sbPhotos").addEventListener("change", function () {
+          handlePhotos(this).catch(function () {});
         });
-        document.getElementById("sbPhotoSide").addEventListener("change", function () {
-          handleSlotPhoto("side", this, "sbPreviewSide").catch(function () {});
+        document.getElementById("sbPhotoPreview").addEventListener("click", function (ev) {
+          var btn = ev.target && ev.target.closest ? ev.target.closest("[data-index]") : null;
+          if (!btn) return;
+          removePhoto(btn.getAttribute("data-index"));
         });
-        document.getElementById("sbPhotoExtra").addEventListener("change", function () {
-          handleExtraPhotos(this).catch(function () {});
-        });
+        updatePhotoCount();
         document.getElementById("sbPayCart").onclick = goCart;
         document.getElementById("sbBtnMap").onclick = openMap;
         document.getElementById("sbMapConfirm").onclick = function () {
@@ -1012,6 +1080,16 @@
             }
           );
         };
+
+        if (window.ErvenowServiceBookingWizard) {
+          new ErvenowServiceBookingWizard({
+            root: "#sbWizard",
+            validateStep: validateStep,
+            onStepChange: function () {
+              updatePrice();
+            },
+          });
+        }
 
         function initFromCatalog() {
           renderPageMeta();

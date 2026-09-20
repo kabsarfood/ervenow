@@ -14,6 +14,7 @@
     <link rel="stylesheet" href="/assets/styles.css?erv=20260919id" />
     <link rel="stylesheet" href="/assets/guest-shell.css?erv=20260612" />
     <link rel="stylesheet" href="/assets/ervenow-responsive.css" />
+    <link rel="stylesheet" href="/assets/service-booking-wizard.css?erv=20260920wiz1" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
       .cp-wrap {
@@ -215,19 +216,6 @@
         gap: 10px;
         margin-top: 8px;
       }
-      .cp-photo-grid {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        margin-top: 8px;
-      }
-      .cp-photo-grid img {
-        width: clamp(72px, 22vw, 96px);
-        height: clamp(72px, 22vw, 96px);
-        object-fit: cover;
-        border-radius: 10px;
-        border: 1px solid rgba(17, 24, 39, 0.12);
-      }
       .cp-photo-hint {
         margin: 6px 0 0;
         font-size: clamp(0.78rem, 2.1vw, 0.84rem);
@@ -261,33 +249,78 @@
         gap: 10px;
         margin-top: 10px;
       }
-      .cp-photo-slots {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr));
-        gap: 10px;
+      .cp-photo-upload {
         margin-top: 8px;
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
       }
-      .cp-photo-slot {
-        border: 1px dashed rgba(17, 24, 39, 0.2);
-        border-radius: 10px;
-        padding: 10px;
-        background: rgba(255, 255, 255, 0.6);
-      }
-      .cp-photo-slot strong {
-        display: block;
-        font-size: clamp(0.82rem, 2.2vw, 0.9rem);
-        margin-bottom: 6px;
-      }
-      .cp-photo-slot input[type="file"] {
+      .cp-photo-upload__btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        min-height: 48px;
+        width: 100%;
+        max-width: 320px;
+        padding: 10px 18px;
+        border-radius: 999px;
+        border: 1px solid rgba(20, 108, 67, 0.28);
+        background: #fff;
+        color: #0f5a37;
+        font-family: inherit;
         font-size: 16px;
-        width: 100%;
+        font-weight: 800;
+        cursor: pointer;
+        box-shadow: 0 2px 12px rgba(15, 40, 28, 0.05);
       }
-      .cp-photo-slot img {
+      .cp-photo-upload__btn:hover {
+        border-color: rgba(20, 108, 67, 0.45);
+        background: #e8f6ef;
+      }
+      .cp-photo-upload__btn:focus-visible {
+        outline: 3px solid #146c43;
+        outline-offset: 2px;
+      }
+      .cp-photo-upload__btn:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+      }
+      .cp-photo-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .cp-photo-grid__item {
+        position: relative;
+        width: clamp(72px, 22vw, 96px);
+        height: clamp(72px, 22vw, 96px);
+      }
+      .cp-photo-grid__item img {
         width: 100%;
-        max-height: 96px;
+        height: 100%;
         object-fit: cover;
-        border-radius: 8px;
-        margin-top: 6px;
+        border-radius: 10px;
+        border: 1px solid rgba(17, 24, 39, 0.12);
+        display: block;
+      }
+      .cp-photo-grid__remove {
+        position: absolute;
+        top: 4px;
+        left: 4px;
+        width: 28px;
+        height: 28px;
+        border: 0;
+        border-radius: 999px;
+        background: rgba(17, 24, 39, 0.72);
+        color: #fff;
+        font-size: 1rem;
+        line-height: 1;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
       }
       .cp-photo-count {
         margin-top: 6px;
@@ -318,7 +351,7 @@
       }
     </style>
   </head>
-  <body class="guest-shell-page">
+  <body class="guest-shell-page erv-sb-page">
     <header class="dash-site-header">
       <div class="dash-site-header__inner">
         <div class="dash-site-header__brand">
@@ -356,145 +389,178 @@
 
     <div class="dash-main">
       <div class="layout">
-        <div class="cp-wrap">
+        <div class="cp-wrap erv-sb-wizard" id="cpWizard">
+          <a class="cp-back" href="/services">← العودة للخدمات</a>
           <h1 class="guest-page-title">أهلاً بكم في خدمة تلميع المركبات من ERVENOW</h1>
-          <p class="cp-page-lead">اختر نوع المركبة والخدمات الإضافية — حدد موقعك لتنفيذ الخدمة</p>
+          <p class="cp-page-lead">أكمل الطلب على 3 خطوات بسيطة</p>
 
-          <div class="card" style="margin-top: 12px">
+          <ol class="erv-sb-steps" aria-label="خطوات الطلب">
+            <li class="erv-sb-steps__item is-active">
+              <span class="erv-sb-steps__dot">1</span>
+              <span class="erv-sb-steps__label">المركبة</span>
+            </li>
+            <li class="erv-sb-steps__item">
+              <span class="erv-sb-steps__dot">2</span>
+              <span class="erv-sb-steps__label">التفاصيل</span>
+            </li>
+            <li class="erv-sb-steps__item">
+              <span class="erv-sb-steps__dot">3</span>
+              <span class="erv-sb-steps__label">التأكيد</span>
+            </li>
+          </ol>
+
+          <div class="erv-sb-shell">
             <form class="cp-box" id="cpForm">
-              <div class="cp-section">
-                <div class="cp-vehicle-field">
-                  <label class="cp-vehicle-field__label" for="cpVehicle">نوع المركبة</label>
-                  <div class="cp-vehicle-type-card" id="cpVehicleVisual">
-                    <div class="cp-vehicle-type-card__img">
-                      <img
-                        id="cpVehicleImg"
-                        src="/assets/ervenow-car-sedan.png"
-                        alt="سيدان — مثال لنوع المركبة"
-                        width="112"
-                        height="52"
-                        loading="lazy"
-                        decoding="async"
-                      />
+              <section class="erv-sb-panel is-active" data-sb-step="0" aria-labelledby="cpStep1Title">
+                <div class="erv-sb-panel__head">
+                  <p class="erv-sb-panel__eyebrow">الخطوة 1 من 3</p>
+                  <h2 class="erv-sb-panel__title" id="cpStep1Title">نوع المركبة والإضافات</h2>
+                  <p class="erv-sb-panel__sub">اختر المركبة والخدمات الإضافية التي تريدها</p>
+                </div>
+
+                <div class="cp-section">
+                  <div class="cp-vehicle-field">
+                    <label class="cp-vehicle-field__label" for="cpVehicle">نوع المركبة</label>
+                    <div class="cp-vehicle-type-card" id="cpVehicleVisual">
+                      <div class="cp-vehicle-type-card__img">
+                        <img
+                          id="cpVehicleImg"
+                          src="/assets/ervenow-car-sedan.png"
+                          alt="سيدان — مثال لنوع المركبة"
+                          width="112"
+                          height="52"
+                          loading="lazy"
+                          decoding="async"
+                        />
+                      </div>
+                      <div class="cp-vehicle-type-card__select">
+                        <select id="cpVehicle" required aria-label="نوع المركبة">
+                          <option value="sedan">سيدان — 280 ر.س</option>
+                          <option value="jeep">جيب — 350 ر.س</option>
+                          <option value="van">فان — 380 ر.س</option>
+                          <option value="bus">باص — 420 ر.س</option>
+                        </select>
+                      </div>
                     </div>
-                    <div class="cp-vehicle-type-card__select">
-                      <select id="cpVehicle" required aria-label="نوع المركبة">
-                        <option value="sedan">سيدان — 280 ر.س</option>
-                        <option value="jeep">جيب — 350 ر.س</option>
-                        <option value="van">فان — 380 ر.س</option>
-                        <option value="bus">باص — 420 ر.س</option>
-                      </select>
+                  </div>
+                </div>
+
+                <div class="cp-section">
+                  <p class="cp-section__title">تلميع داخلي</p>
+                  <p class="cp-section__sub">يشمل: تنظيف داخلي · تنظيف المقاعد · تنظيف السقف · تلميع داخلي (مُضمَّن في السعر الأساسي)</p>
+                </div>
+
+                <div class="cp-section">
+                  <p class="cp-section__title">خدمات إضافية</p>
+                  <label class="cp-addon" for="cpAddonEngine">
+                    <input type="checkbox" id="cpAddonEngine" />
+                    <span class="cp-addon__text">
+                      <strong>إضافة غسيل وتلميع المحرك</strong>
+                      <span>85 ريال — لكافة أنواع المركبات</span>
+                    </span>
+                  </label>
+                  <label class="cp-addon" for="cpAddonWheels">
+                    <input type="checkbox" id="cpAddonWheels" />
+                    <span class="cp-addon__text">
+                      <strong>إضافة تلميع الكفرات والجنوط</strong>
+                      <span>60 ريال — لكافة أنواع المركبات</span>
+                    </span>
+                  </label>
+                  <label class="cp-addon" for="cpAddonExterior">
+                    <input type="checkbox" id="cpAddonExterior" />
+                    <span class="cp-addon__text">
+                      <strong>إضافة غسيل وتلميع البدي الخارجي</strong>
+                      <span>45 ريال — لكافة أنواع المركبات</span>
+                    </span>
+                  </label>
+                </div>
+
+                <div class="erv-sb-price-strip" aria-live="polite">
+                  <span class="erv-sb-price-strip__label">السعر التقريبي</span>
+                  <span class="erv-sb-price-strip__value" id="cpPriceStrip">—</span>
+                </div>
+              </section>
+
+              <section class="erv-sb-panel" data-sb-step="1" hidden aria-labelledby="cpStep2Title">
+                <div class="erv-sb-panel__head">
+                  <p class="erv-sb-panel__eyebrow">الخطوة 2 من 3</p>
+                  <h2 class="erv-sb-panel__title" id="cpStep2Title">الموعد والصور</h2>
+                  <p class="erv-sb-panel__sub">متى تريد التنفيذ؟ وأضف صوراً للمركبة</p>
+                </div>
+
+                <div class="cp-row">
+                  <span class="cp-section__title">موعد التنفيذ</span>
+                  <div class="cp-schedule-modes">
+                    <label><input type="radio" name="cpScheduleMode" value="immediate" checked /> ⚡ الآن — تنفيذ فوري</label>
+                    <label><input type="radio" name="cpScheduleMode" value="scheduled" /> 📅 موعد مجدول</label>
+                  </div>
+                  <div class="cp-schedule-fields" id="cpScheduleFields" hidden>
+                    <div>
+                      <label for="cpScheduleDate">التاريخ</label>
+                      <input id="cpScheduleDate" type="date" />
+                    </div>
+                    <div>
+                      <label for="cpScheduleTime">الساعة</label>
+                      <input id="cpScheduleTime" type="time" />
                     </div>
                   </div>
+                  <p class="cp-photo-hint" id="cpScheduleHint">سيتم إرسال الطلب للمزودين المتاحين فوراً.</p>
                 </div>
-              </div>
 
-              <div class="cp-section">
-                <p class="cp-section__title">تلميع داخلي</p>
-                <p class="cp-section__sub">يشمل: تنظيف داخلي · تنظيف المقاعد · تنظيف السقف · تلميع داخلي (مُضمَّن في السعر الأساسي)</p>
-              </div>
-
-              <div class="cp-section">
-                <p class="cp-section__title">خدمات إضافية</p>
-                <label class="cp-addon" for="cpAddonEngine">
-                  <input type="checkbox" id="cpAddonEngine" />
-                  <span class="cp-addon__text">
-                    <strong>☐ إضافة غسيل وتلميع المحرك</strong>
-                    <span>85 ريال — لكافة أنواع المركبات</span>
-                  </span>
-                </label>
-                <label class="cp-addon" for="cpAddonWheels">
-                  <input type="checkbox" id="cpAddonWheels" />
-                  <span class="cp-addon__text">
-                    <strong>☐ إضافة تلميع الكفرات والجنوط</strong>
-                    <span>60 ريال — لكافة أنواع المركبات</span>
-                  </span>
-                </label>
-                <label class="cp-addon" for="cpAddonExterior">
-                  <input type="checkbox" id="cpAddonExterior" />
-                  <span class="cp-addon__text">
-                    <strong>☐ إضافة غسيل وتلميع البدي الخارجي</strong>
-                    <span>45 ريال — لكافة أنواع المركبات</span>
-                  </span>
-                </label>
-              </div>
-
-              <div class="cp-breakdown" id="cpBreakdown" aria-live="polite"></div>
-              <div class="cp-price" id="cpPrice">السعر: —</div>
-
-              <div class="cp-row">
-                <span class="cp-section__title" style="margin: 0">موعد التنفيذ</span>
-                <div class="cp-schedule-modes">
-                  <label><input type="radio" name="cpScheduleMode" value="immediate" checked /> الآن — تنفيذ فوري</label>
-                  <label><input type="radio" name="cpScheduleMode" value="scheduled" /> موعد مجدول</label>
-                </div>
-                <div class="cp-schedule-fields" id="cpScheduleFields" hidden>
-                  <div>
-                    <label for="cpScheduleDate">التاريخ</label>
-                    <input id="cpScheduleDate" type="date" />
+                <div class="cp-row">
+                  <label>صور (حتى 10)</label>
+                  <p class="cp-photo-hint">أضف صوراً للمركبة — تساعد المزود على التحضير.</p>
+                  <div class="cp-photo-upload">
+                    <input type="file" id="cpPhotos" accept="image/*" multiple hidden />
+                    <button type="button" class="cp-photo-upload__btn" id="cpPhotosBtn">📷 رفع الصور</button>
+                    <div class="cp-photo-grid" id="cpPhotoPreview" role="list" aria-label="الصور المرفقة"></div>
                   </div>
-                  <div>
-                    <label for="cpScheduleTime">الساعة</label>
-                    <input id="cpScheduleTime" type="time" />
+                  <p class="cp-photo-count" id="cpPhotoCount">0 / 10 صور</p>
+                </div>
+
+                <div class="cp-row">
+                  <label for="cpNotes">ملاحظات (اختياري)</label>
+                  <input id="cpNotes" type="text" maxlength="300" placeholder="مثال: وصف المشكلة، تعليمات الوصول، تفاصيل إضافية" />
+                </div>
+              </section>
+
+              <section class="erv-sb-panel" data-sb-step="2" hidden aria-labelledby="cpStep3Title">
+                <div class="erv-sb-panel__head">
+                  <p class="erv-sb-panel__eyebrow">الخطوة 3 من 3</p>
+                  <h2 class="erv-sb-panel__title" id="cpStep3Title">الموقع والدفع</h2>
+                  <p class="erv-sb-panel__sub">أكد الموقع ورقم الجوال ثم أضف للسلة</p>
+                </div>
+
+                <div class="cp-breakdown" id="cpBreakdown" aria-live="polite"></div>
+                <div class="cp-price" id="cpPrice">السعر: —</div>
+
+                <div class="cp-row">
+                  <label for="cpDistrict">الحي</label>
+                  <input id="cpDistrict" type="text" placeholder="اسم الحي" />
+                </div>
+
+                <div class="cp-row">
+                  <label>موقع الخدمة</label>
+                  <input id="cpLocation" type="text" readonly placeholder="اضغط لتحديد الموقع على الخريطة" />
+                  <div class="cp-actions">
+                    <button type="button" class="btn btn-outline" id="cpBtnMap">تحديد الموقع على الخريطة</button>
+                    <button type="button" class="btn btn-ghost" id="cpBtnGps">موقعي الحالي</button>
                   </div>
                 </div>
-                <p class="cp-photo-hint" id="cpScheduleHint">سيتم إرسال الطلب للمزودين المتاحين فوراً.</p>
-              </div>
 
-              <div class="cp-row">
-                <label>صور المركبة (حتى 10)</label>
-                <p class="cp-photo-hint">صورة أمامية · خلفية · جانبية · وصور إضافية اختيارية — تساعد المزود على التحضير.</p>
-                <div class="cp-photo-slots">
-                  <div class="cp-photo-slot">
-                    <strong>أمامية</strong>
-                    <input type="file" id="cpPhotoFront" accept="image/*" />
-                    <img id="cpPreviewFront" alt="" hidden />
-                  </div>
-                  <div class="cp-photo-slot">
-                    <strong>خلفية</strong>
-                    <input type="file" id="cpPhotoBack" accept="image/*" />
-                    <img id="cpPreviewBack" alt="" hidden />
-                  </div>
-                  <div class="cp-photo-slot">
-                    <strong>جانبية</strong>
-                    <input type="file" id="cpPhotoSide" accept="image/*" />
-                    <img id="cpPreviewSide" alt="" hidden />
-                  </div>
-                  <div class="cp-photo-slot">
-                    <strong>صور إضافية</strong>
-                    <input type="file" id="cpPhotoExtra" accept="image/*" multiple />
-                    <div class="cp-photo-grid" id="cpExtraPreview"></div>
-                  </div>
+                <div class="cp-row">
+                  <label for="cpPhone">جوال طالب الخدمة</label>
+                  <input id="cpPhone" type="tel" placeholder="05xxxxxxxx" required />
                 </div>
-                <p class="cp-photo-count" id="cpPhotoCount">0 / 10 صور</p>
-              </div>
 
-              <div class="cp-row">
-                <label for="cpNotes">ملاحظات (اختياري)</label>
-                <input id="cpNotes" type="text" maxlength="300" placeholder="مثال: لون المركبة، مكان الوقوف، تعليمات خاصة" />
-              </div>
+                <p id="cpMsg" class="erv-sb-msg" role="status"></p>
+              </section>
 
-              <div class="cp-row">
-                <label for="cpDistrict">الحي</label>
-                <input id="cpDistrict" type="text" placeholder="اسم الحي" />
+              <div class="erv-sb-nav">
+                <button type="button" class="erv-sb-nav__btn" data-sb-prev hidden>السابق</button>
+                <button type="button" class="erv-sb-nav__btn erv-sb-nav__btn--primary" data-sb-next>التالي</button>
+                <button type="button" class="erv-sb-nav__btn erv-sb-nav__btn--primary" id="cpPayCart" data-sb-submit hidden>إضافة للسلة والمتابعة للدفع</button>
               </div>
-
-              <div class="cp-row">
-                <label>موقع الخدمة</label>
-                <input id="cpLocation" type="text" readonly placeholder="اضغط لتحديد الموقع على الخريطة" />
-                <div class="cp-actions">
-                  <button type="button" class="btn btn-outline" id="cpBtnMap">تحديد الموقع على الخريطة</button>
-                  <button type="button" class="btn btn-ghost" id="cpBtnGps">موقعي الحالي</button>
-                </div>
-              </div>
-
-              <div class="cp-row">
-                <label for="cpPhone">جوال طالب الخدمة</label>
-                <input id="cpPhone" type="tel" placeholder="05xxxxxxxx" required />
-              </div>
-
-              <p id="cpMsg" class="sub" role="status" style="margin: 0"></p>
-              <button type="button" class="btn btn-solid" id="cpPayCart" style="min-height: 48px">إضافة للسلة والمتابعة للدفع</button>
             </form>
           </div>
         </div>
@@ -513,6 +579,7 @@
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="/assets/compressImage.js"></script>
+    <script src="/assets/service-booking-wizard.js?erv=20260920wiz1"></script>
     <script src="/assets/order-draft-store.js"></script>
     <script src="/assets/order-draft-vertical.js"></script>
     <script src="/assets/api-config.js"></script>
@@ -528,6 +595,7 @@
         var LABELS = { sedan: "سيدان", jeep: "جيب", van: "فان", bus: "باص" };
         var ADDON_ENGINE = 85;
         var ADDON_WHEELS = 60;
+        var ADDON_EXTERIOR = 45;
         var COMMISSION_RATE = 0.07;
         var VAT_RATE = 0.15;
         var VEHICLE_VISUALS = {
@@ -551,7 +619,7 @@
         var map = null;
         var marker = null;
         var MAX_PHOTOS = 10;
-        var photoStore = { front: "", back: "", side: "", extras: [] };
+        var photoStore = [];
 
         function scheduleMode() {
           var checked = document.querySelector('input[name="cpScheduleMode"]:checked');
@@ -571,36 +639,38 @@
         }
 
         function countPhotos() {
-          var n = 0;
-          if (photoStore.front) n += 1;
-          if (photoStore.back) n += 1;
-          if (photoStore.side) n += 1;
-          n += (photoStore.extras || []).length;
-          return n;
+          return (photoStore || []).length;
         }
 
         function updatePhotoCount() {
           var el = document.getElementById("cpPhotoCount");
           if (el) el.textContent = countPhotos() + " / " + MAX_PHOTOS + " صور";
-        }
-
-        function showPreview(imgEl, dataUrl) {
-          if (!imgEl) return;
-          if (dataUrl) {
-            imgEl.src = dataUrl;
-            imgEl.hidden = false;
-          } else {
-            imgEl.removeAttribute("src");
-            imgEl.hidden = true;
+          var btn = document.getElementById("cpPhotosBtn");
+          if (btn) {
+            btn.textContent = countPhotos() >= MAX_PHOTOS ? "تم بلوغ الحد الأقصى" : "📷 رفع الصور";
+            btn.disabled = countPhotos() >= MAX_PHOTOS;
           }
         }
 
-        function renderExtraPreviews() {
-          var wrap = document.getElementById("cpExtraPreview");
+        function renderPhotoPreviews() {
+          var wrap = document.getElementById("cpPhotoPreview");
           if (!wrap) return;
-          wrap.innerHTML = (photoStore.extras || [])
+          wrap.innerHTML = (photoStore || [])
             .map(function (src, i) {
-              return '<img src="' + src + '" alt="صورة إضافية ' + (i + 1) + '" />';
+              return (
+                '<div class="cp-photo-grid__item" role="listitem">' +
+                '<img src="' +
+                src +
+                '" alt="صورة ' +
+                (i + 1) +
+                '" />' +
+                '<button type="button" class="cp-photo-grid__remove" data-index="' +
+                i +
+                '" aria-label="حذف الصورة ' +
+                (i + 1) +
+                '">×</button>' +
+                "</div>"
+              );
             })
             .join("");
         }
@@ -614,46 +684,37 @@
           }
         }
 
-        async function handleSlotPhoto(slot, input, previewId) {
-          var file = input && input.files && input.files[0];
-          if (!file) return;
-          var current = countPhotos() - (photoStore[slot] ? 1 : 0);
-          if (current >= MAX_PHOTOS) {
+        async function handlePhotos(input) {
+          if (!input || !input.files || !input.files.length) return;
+          var remaining = MAX_PHOTOS - countPhotos();
+          if (remaining <= 0) {
             alert("الحد الأقصى 10 صور");
             input.value = "";
             return;
           }
-          var dataUrl = await compressFile(file);
-          if (!dataUrl) return;
-          photoStore[slot] = dataUrl;
-          showPreview(document.getElementById(previewId), dataUrl);
+          var files = Array.prototype.slice.call(input.files, 0, remaining);
+          for (var i = 0; i < files.length; i++) {
+            if (countPhotos() >= MAX_PHOTOS) break;
+            var dataUrl = await compressFile(files[i]);
+            if (dataUrl) photoStore.push(dataUrl);
+          }
+          input.value = "";
+          renderPhotoPreviews();
           updatePhotoCount();
         }
 
-        async function handleExtraPhotos(input) {
-          if (!input || !input.files || !input.files.length) return;
-          var remaining = MAX_PHOTOS - countPhotos() + (photoStore.extras || []).length;
-          var files = Array.prototype.slice.call(input.files, 0, Math.max(0, remaining));
-          var out = [];
-          for (var i = 0; i < files.length; i++) {
-            if (countPhotos() - (photoStore.extras || []).length + out.length >= MAX_PHOTOS) break;
-            var dataUrl = await compressFile(files[i]);
-            if (dataUrl) out.push(dataUrl);
-          }
-          photoStore.extras = out;
-          renderExtraPreviews();
+        function removePhoto(index) {
+          var i = Number(index);
+          if (!Number.isFinite(i) || i < 0 || i >= photoStore.length) return;
+          photoStore.splice(i, 1);
+          renderPhotoPreviews();
           updatePhotoCount();
         }
 
         function collectVehiclePhotos() {
-          var out = [];
-          if (photoStore.front) out.push({ slot: "front", url: photoStore.front });
-          if (photoStore.back) out.push({ slot: "back", url: photoStore.back });
-          if (photoStore.side) out.push({ slot: "side", url: photoStore.side });
-          (photoStore.extras || []).forEach(function (url) {
-            out.push({ slot: "extra", url: url });
+          return (photoStore || []).slice(0, MAX_PHOTOS).map(function (url) {
+            return { url: url };
           });
-          return out.slice(0, MAX_PHOTOS);
         }
 
         function resolveScheduledAt() {
@@ -668,17 +729,17 @@
         document.querySelectorAll('input[name="cpScheduleMode"]').forEach(function (el) {
           el.addEventListener("change", toggleScheduleFields);
         });
-        document.getElementById("cpPhotoFront").addEventListener("change", function () {
-          handleSlotPhoto("front", this, "cpPreviewFront").catch(function () {});
+        document.getElementById("cpPhotosBtn").addEventListener("click", function () {
+          var input = document.getElementById("cpPhotos");
+          if (input && countPhotos() < MAX_PHOTOS) input.click();
         });
-        document.getElementById("cpPhotoBack").addEventListener("change", function () {
-          handleSlotPhoto("back", this, "cpPreviewBack").catch(function () {});
+        document.getElementById("cpPhotos").addEventListener("change", function () {
+          handlePhotos(this).catch(function () {});
         });
-        document.getElementById("cpPhotoSide").addEventListener("change", function () {
-          handleSlotPhoto("side", this, "cpPreviewSide").catch(function () {});
-        });
-        document.getElementById("cpPhotoExtra").addEventListener("change", function () {
-          handleExtraPhotos(this).catch(function () {});
+        document.getElementById("cpPhotoPreview").addEventListener("click", function (ev) {
+          var btn = ev.target && ev.target.closest ? ev.target.closest("[data-index]") : null;
+          if (!btn) return;
+          removePhoto(btn.getAttribute("data-index"));
         });
         toggleScheduleFields();
         updatePhotoCount();
@@ -751,6 +812,8 @@
           );
           document.getElementById("cpBreakdown").innerHTML = lines.join("");
           document.getElementById("cpPrice").textContent = "الإجمالي: " + fin.total_with_vat.toFixed(2) + " ر.س (شامل الضريبة)";
+          var strip = document.getElementById("cpPriceStrip");
+          if (strip) strip.textContent = fin.total_with_vat.toFixed(2) + " ر.س";
           return Object.assign({}, b, fin);
         }
 
@@ -788,9 +851,20 @@
           };
         }
 
+        function validateStep(toIndex, fromIndex) {
+          if (fromIndex === 1) {
+            if (scheduleMode() === "scheduled" && !resolveScheduledAt()) {
+              alert("يرجى اختيار التاريخ والساعة للموعد المجدول");
+              return false;
+            }
+          }
+          return true;
+        }
+
         function validateForm() {
-          if (scheduleMode() === "scheduled" && !resolveScheduledAt()) {
-            alert("يرجى اختيار التاريخ والساعة للموعد المجدول");
+          if (!validateStep(2, 1)) return false;
+          if (!document.getElementById("cpDistrict").value.trim()) {
+            alert("يرجى إدخال الحي");
             return false;
           }
           if (!document.getElementById("cpLocation").value.trim()) {
@@ -875,6 +949,16 @@
             }
           );
         };
+
+        if (window.ErvenowServiceBookingWizard) {
+          new ErvenowServiceBookingWizard({
+            root: "#cpWizard",
+            validateStep: validateStep,
+            onStepChange: function () {
+              updatePrice();
+            },
+          });
+        }
 
         var vehicleParam = new URLSearchParams(window.location.search).get("vehicle");
         if (vehicleParam && VEHICLE_VISUALS[String(vehicleParam).toLowerCase()]) {

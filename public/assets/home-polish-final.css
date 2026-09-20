@@ -14,13 +14,7 @@
   }
 
   html.erv-mobile-shell body.lp-home-premium .lp-header__brand-mid .lp-brand__tag {
-    display: block !important;
-    font-size: clamp(0.62rem, 2.6vw, 0.74rem);
-    font-weight: 700;
-    color: #146c43;
-    line-height: 1.25;
-    letter-spacing: 0.02em;
-    white-space: nowrap;
+    display: none !important;
   }
 }
 

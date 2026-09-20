@@ -294,7 +294,7 @@
       }
       global.__ervPreRegBannerInjected = true;
       var s = document.createElement("script");
-      s.src = "/assets/pre-reg-banner.js?erv=20260920mob7";
+      s.src = "/assets/pre-reg-banner.js?erv=20260920auth1";
       s.defer = true;
       (document.head || document.documentElement).appendChild(s);
     }

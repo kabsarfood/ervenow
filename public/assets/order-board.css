@@ -8,35 +8,35 @@
 
 .ob-hero {
   position: relative;
-  border-radius: var(--ob-radius);
+  border-radius: clamp(18px, 3vw, 22px);
   overflow: hidden;
   min-height: 120px;
-  background: linear-gradient(135deg, #111827, #6b4423 55%, #8b5a2b);
-  box-shadow: 0 16px 48px rgba(15, 40, 28, 0.22);
+  background: linear-gradient(145deg, #146c43 0%, #0f5a37 55%, #0c4a2d 100%);
+  box-shadow: 0 16px 40px rgba(20, 108, 67, 0.28);
   margin-bottom: 16px;
 }
 .ob-hero__shade {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(15, 40, 28, 0.1) 0%, rgba(26, 14, 8, 0.72) 100%);
+  background: linear-gradient(180deg, rgba(15, 90, 55, 0.2) 0%, rgba(12, 74, 45, 0.72) 100%);
 }
 .ob-hero__inner {
   position: relative;
   z-index: 1;
-  padding: 20px 18px;
+  padding: clamp(16px, 3vw, 20px);
 }
 .ob-hero__inner h1 {
   margin: 0 0 6px;
   font-size: clamp(1.2rem, 4vw, 1.45rem);
-  font-weight: 800;
-  color: #fff8ee;
-  line-height: 1.45;
+  font-weight: 900;
+  color: #f4faf7;
+  line-height: 1.35;
 }
 .ob-hero__sub {
   margin: 0;
   font-size: 0.88rem;
   font-weight: 700;
-  color: rgba(255, 248, 238, 0.88);
+  color: rgba(244, 250, 247, 0.9);
 }
 .ob-hero__actions {
   display: flex;

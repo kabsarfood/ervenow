@@ -38,11 +38,7 @@
   }
 
   html.erv-mobile-shell body.lp-home-premium .lp-header__brand-mid .lp-brand__tag {
-    display: block !important;
-    font-size: clamp(0.62rem, 2.6vw, 0.72rem) !important;
-    font-weight: 700 !important;
-    color: #146c43 !important;
-    line-height: 1.2;
+    display: none !important;
   }
 
   /* أرقام المنصة — تحت الطية */

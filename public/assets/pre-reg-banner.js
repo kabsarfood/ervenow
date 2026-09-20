@@ -1,9 +1,10 @@
 /**
  * ERVENOW — شريط التسجيل المسبق على كامل المنصة
+ * يظهر للضيوف/العملاء الجدد فقط — يُخفى عند تسجيل الدخول.
  * الترتيب: الشريط أعلى الصفحة، ثم الهيدر sticky أسفله (بدون تداخل على الجوال/التابلت).
  */
 (function (global) {
-  var VER = "20260920mob7";
+  var VER = "20260920auth1";
   if (
     global.ErvenowPreRegBanner &&
     String(global.ErvenowPreRegBanner.__ervVer || "") >= VER
@@ -16,6 +17,7 @@
   var SKIP = /\/admin(\/|$|-)/i;
   var CTA_LABEL = "سجّل";
   var BANNER_COPY = "التسجيل مفتوح — سجّل برقمك.";
+  var preRegEnabled = null;
 
   var BANNER_CSS =
     /* Base */
@@ -48,6 +50,21 @@
     ".erv-prereg-banner__cta{min-height:32px;padding:4px 10px;font-size:0.7rem;}" +
     "}";
 
+  function isLoggedIn() {
+    try {
+      if (global.PlatformAPI && typeof global.PlatformAPI.getToken === "function") {
+        if (global.PlatformAPI.getToken()) return true;
+      }
+      var tok =
+        localStorage.getItem("ervenow_access_token") ||
+        localStorage.getItem("token") ||
+        localStorage.getItem("erwenow_access_token");
+      return !!(tok && String(tok).trim());
+    } catch (e) {
+      return false;
+    }
+  }
+
   function ensureCss() {
     if (document.getElementById(CSS_ID)) return;
     var el = document.createElement("style");
@@ -68,7 +85,6 @@
     var h = Math.ceil(bar.getBoundingClientRect().height) || 0;
     root.style.setProperty("--erv-prereg-h", h + "px");
     root.classList.add("erv-has-prereg");
-    /* حدّث ارتفاع الهيدر المحسوب بعد استقرار الشريط */
     try {
       var header = document.querySelector(".lp-header.lp-header--refined, .dash-site-header");
       if (header) {
@@ -112,10 +128,26 @@
     }
   }
 
+  function removeBanner() {
+    var bar = document.getElementById(BAR_ID);
+    var root = document.documentElement;
+    if (bar && bar.parentNode) bar.parentNode.removeChild(bar);
+    if (root) {
+      root.classList.remove("erv-has-prereg");
+      root.style.setProperty("--erv-prereg-h", "0px");
+    }
+  }
+
   function render() {
+    if (isLoggedIn() || shouldSkip()) {
+      removeBanner();
+      return;
+    }
     if (document.getElementById(BAR_ID)) {
       ensureCss();
+      ensureOrder();
       measureBanner();
+      watchOrder(2500);
       return;
     }
     ensureCss();
@@ -131,7 +163,7 @@
     insertBar(bar);
     ensureOrder();
     measureBanner();
-    watchOrder(4500);
+    watchOrder(2500);
     if (global.requestAnimationFrame) {
       global.requestAnimationFrame(function () {
         ensureOrder();
@@ -140,20 +172,36 @@
     }
   }
 
+  function applyVisibility() {
+    if (shouldSkip() || isLoggedIn()) {
+      removeBanner();
+      return false;
+    }
+    if (preRegEnabled === true) {
+      render();
+      return true;
+    }
+    if (preRegEnabled === false) {
+      removeBanner();
+      return false;
+    }
+    return null;
+  }
+
   function boot() {
-    if (shouldSkip()) return;
-    if (document.getElementById(BAR_ID)) {
-      ensureCss();
-      /* حدّث نص الزر إن وُجد شريط قديم */
-      var cta = document.querySelector("#" + BAR_ID + " .erv-prereg-banner__cta");
-      if (cta && /تسجيل مسبق|سجّل/.test(cta.textContent || "")) cta.textContent = CTA_LABEL;
-      var p = document.querySelector("#" + BAR_ID + " p");
-      if (p && (p.textContent || "").trim() !== BANNER_COPY) {
-        p.textContent = BANNER_COPY;
-      }
+    if (shouldSkip() || isLoggedIn()) {
+      removeBanner();
+      return;
+    }
+    ensureCss();
+    var existing = document.getElementById(BAR_ID);
+    if (existing) {
+      var cta = existing.querySelector(".erv-prereg-banner__cta");
+      if (cta) cta.textContent = CTA_LABEL;
+      var p = existing.querySelector("p");
+      if (p) p.textContent = BANNER_COPY;
       ensureOrder();
       measureBanner();
-      return;
     }
     var api = global.PlatformAPI;
     var url =
@@ -167,16 +215,36 @@
         });
       })
       .then(function (j) {
-        if (!j || j.pre_registration !== true) return;
+        if (isLoggedIn()) {
+          removeBanner();
+          return;
+        }
+        preRegEnabled = !!(j && j.pre_registration === true);
+        if (!preRegEnabled) {
+          removeBanner();
+          return;
+        }
         render();
       })
-      .catch(function () {});
+      .catch(function () {
+        if (isLoggedIn()) {
+          removeBanner();
+          return;
+        }
+        if (document.getElementById(BAR_ID)) {
+          ensureOrder();
+          measureBanner();
+        }
+      });
   }
 
-  /* إعادة تثبيت الترتيب بعد سكربتات الجوال التي قد تحرّك الهيدر */
   function watchOrder(ms) {
     var end = Date.now() + (ms || 4000);
     function tick() {
+      if (isLoggedIn()) {
+        removeBanner();
+        return;
+      }
       if (!document.getElementById(BAR_ID)) return;
       ensureOrder();
       measureBanner();
@@ -185,6 +253,10 @@
     if (global.requestAnimationFrame) tick();
     [50, 100, 200, 300, 500, 700, 1000, 1400, 2000, 2800, 4000, 6000].forEach(function (t) {
       global.setTimeout(function () {
+        if (isLoggedIn()) {
+          removeBanner();
+          return;
+        }
         if (!document.getElementById(BAR_ID)) return;
         ensureOrder();
         measureBanner();
@@ -197,6 +269,10 @@
           if (moTimer) return;
           moTimer = global.setTimeout(function () {
             moTimer = null;
+            if (isLoggedIn()) {
+              removeBanner();
+              return;
+            }
             ensureOrder();
             measureBanner();
           }, 30);
@@ -218,13 +294,42 @@
     render: render,
     measure: measureBanner,
     ensureOrder: ensureOrder,
+    isLoggedIn: isLoggedIn,
+    applyVisibility: applyVisibility,
   };
+
+  /* إخفاء فوري للشريط الثابت إذا كان المستخدم مسجّلاً */
+  if (isLoggedIn()) {
+    removeBanner();
+  }
 
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", boot);
   } else {
     boot();
   }
+
+  global.addEventListener("ervenow:auth-changed", function () {
+    if (isLoggedIn()) {
+      removeBanner();
+      return;
+    }
+    if (preRegEnabled === true) render();
+    else boot();
+  });
+
+  global.addEventListener("storage", function (ev) {
+    if (!ev) return;
+    var k = String(ev.key || "");
+    if (
+      k === "ervenow_access_token" ||
+      k === "token" ||
+      k === "erwenow_access_token"
+    ) {
+      if (isLoggedIn()) removeBanner();
+      else if (preRegEnabled === true) render();
+    }
+  });
 
   global.addEventListener("resize", function () {
     if (document.getElementById(BAR_ID)) {
@@ -239,5 +344,5 @@
     }, 180);
   });
 
-  watchOrder(4500);
+  if (!isLoggedIn()) watchOrder(4500);
 })(window);

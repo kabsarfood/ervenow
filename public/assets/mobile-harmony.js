@@ -76,10 +76,8 @@
       var identity = document.createElement("a");
       identity.className = "erv-harmony-identity";
       identity.href = "/";
-      identity.setAttribute("aria-label", "ERVENOW — المنصة الذكية");
-      identity.innerHTML =
-        '<span class="erv-harmony-identity__name">ERVENOW</span>' +
-        '<span class="erv-harmony-identity__tag">المنصة الذكية</span>';
+      identity.setAttribute("aria-label", "ERVENOW");
+      identity.innerHTML = '<span class="erv-harmony-identity__name">ERVENOW</span>';
       inner.insertBefore(identity, nav);
     }
 

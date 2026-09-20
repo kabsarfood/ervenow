@@ -241,7 +241,49 @@
   }
 
   function renderFooter() {
-    return "";
+    return (
+      '<footer class="store-site-footer" role="contentinfo">' +
+      '<p class="store-site-footer__intro">ERVENOW شركاء</p>' +
+      '<p class="store-site-footer__tagline">لوحة المتجر · الطلبات · المحفظة · الدعم — منصة واحدة لإدارة عملك</p>' +
+      '<div class="store-footer__grid">' +
+      '<div class="store-footer__col">' +
+      "<h3>لوحاتك</h3>" +
+      '<div class="store-footer__links">' +
+      '<a href="/store-dashboard">لوحة تحكم المتجر</a>' +
+      '<a href="/order-board">لوحة الطلبات</a>' +
+      '<a href="/merchant-dashboard">الطلبات والإيرادات</a>' +
+      '<a href="/store-dashboard#walletAnchor">المحفظة المالية</a>' +
+      "</div>" +
+      "</div>" +
+      '<div class="store-footer__col">' +
+      "<h3>التشغيل</h3>" +
+      '<div class="store-footer__links">' +
+      '<a href="/store-dashboard#productsAnchor">المنتجات والأسعار</a>' +
+      '<a href="/store-dashboard#brandingAnchor">الشعار والغلاف</a>' +
+      '<a href="/store-dashboard#reviewsAnchor">التقييمات</a>' +
+      '<a href="#storeSupport">تواصل المنصة</a>' +
+      "</div>" +
+      "</div>" +
+      '<div class="store-footer__col">' +
+      "<h3>الدعم</h3>" +
+      "<p>فريق ERVENOW بجانبك في التفعيل والتشغيل والسحب.</p>" +
+      '<a class="store-footer__contact-chip" href="' +
+      whatsappUrl("لوحة المتجر") +
+      '" target="_blank" rel="noopener">💬 واتساب ' +
+      SUPPORT_PHONE_DISPLAY +
+      "</a>" +
+      '<a class="store-footer__contact-chip" href="mailto:' +
+      SUPPORT_EMAIL +
+      '">✉️ ' +
+      SUPPORT_EMAIL +
+      "</a>" +
+      "</div>" +
+      "</div>" +
+      '<p class="store-site-footer__copy">© ' +
+      new Date().getFullYear() +
+      " ERVENOW — بوابة الشركاء</p>" +
+      "</footer>"
+    );
   }
 
   function isMarketplaceHomeHref(href) {

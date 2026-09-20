@@ -94,17 +94,15 @@
   }
 
   html.erv-mobile-shell body.lp-home-premium .lp-header__brand-mid .lp-brand__tag {
-    display: block !important;
-    height: auto;
-    overflow: visible;
-    margin: 0;
-    padding: 0;
-    font-size: clamp(0.64rem, 2.8vw, 0.78rem) !important;
-    font-weight: 700 !important;
-    color: var(--erve-primary, #146c43) !important;
-    line-height: 1.25 !important;
-    letter-spacing: 0.02em;
-    white-space: nowrap;
+    display: none !important;
+  }
+
+  /* إخفاء «المنصة الذكية» على كل شاشات الجوال حتى بدون class */
+  @media (max-width: 640px) {
+    .lp-brand__tag,
+    .erv-harmony-identity__tag {
+      display: none !important;
+    }
   }
 
   html.erv-mobile-shell body.lp-home-premium .lp-header__user-mid,
@@ -405,9 +403,7 @@
   }
 
   html.erv-mobile-shell body.guest-shell-page .erv-harmony-identity__tag {
-    font-size: 0.68rem;
-    font-weight: 700;
-    color: var(--erve-primary, #146c43);
+    display: none !important;
   }
 
   html.erv-mobile-shell body.guest-shell-page .erv-harmony-menu {
@@ -511,7 +507,7 @@
   }
 
   html.erv-mobile-shell body.erv-typography-pr2-home.lp-home-premium .lp-header__brand-mid .lp-brand__tag {
-    font-size: var(--erv-home-header-tag, 0.85rem) !important;
+    display: none !important;
   }
 }
 

@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-09-19T21:16:14.352Z",
+  "updated_at": "2026-09-20T14:19:45.027Z",
   "portal_visits": {
     "customer": {
       "visits": 30,
@@ -7,14 +7,14 @@
       "last_at": "2026-06-20T12:30:05.786Z"
     },
     "merchant": {
-      "visits": 82,
+      "visits": 164,
       "unique_users": {},
-      "last_at": "2026-09-19T21:15:10.509Z"
+      "last_at": "2026-09-20T06:05:05.616Z"
     },
     "driver": {
-      "visits": 422,
+      "visits": 452,
       "unique_users": {},
-      "last_at": "2026-09-19T21:15:24.073Z"
+      "last_at": "2026-09-20T10:54:31.193Z"
     },
     "service": {
       "visits": 164,
@@ -35,15 +35,15 @@
       "active_users": {}
     },
     "merchant": {
-      "visits": 81,
+      "visits": 99,
       "unique_users": {},
-      "last_at": "2026-09-19T21:15:10.509Z",
+      "last_at": "2026-09-20T06:04:05.345Z",
       "active_users": {}
     },
     "driver": {
-      "visits": 361,
+      "visits": 375,
       "unique_users": {},
-      "last_at": "2026-09-19T21:15:24.073Z",
+      "last_at": "2026-09-20T10:54:31.193Z",
       "active_users": {}
     },
     "service": {
@@ -61,19 +61,19 @@
   },
   "legacy_access": {
     "store-dashboard": {
-      "visits": 1,
+      "visits": 65,
       "unique_users": {},
-      "last_at": "2026-06-16T06:20:33.745Z"
+      "last_at": "2026-09-20T06:05:05.616Z"
     },
     "driver-app": {
-      "visits": 0,
+      "visits": 14,
       "unique_users": {},
-      "last_at": null
+      "last_at": "2026-09-20T06:28:06.947Z"
     },
     "order-board": {
-      "visits": 0,
+      "visits": 7,
       "unique_users": {},
-      "last_at": null
+      "last_at": "2026-09-20T06:02:07.638Z"
     },
     "services-provider": {
       "visits": 29,
@@ -89,6 +89,56 @@
   "user_snapshots": {},
   "broadcast_history": [],
   "redirect_events": [
+    {
+      "at": "2026-09-20T14:19:45.027Z",
+      "portal": "admin",
+      "role": "admin",
+      "path": "/admin-dashboard",
+      "success": true,
+      "raw_role": "admin",
+      "service_type": null,
+      "user_id": null
+    },
+    {
+      "at": "2026-09-20T06:25:42.339Z",
+      "portal": "driver",
+      "role": "driver",
+      "path": "/driver-preview",
+      "success": true,
+      "raw_role": "driver",
+      "service_type": null,
+      "user_id": null
+    },
+    {
+      "at": "2026-09-20T05:36:59.151Z",
+      "portal": "merchant",
+      "role": "store",
+      "path": "/merchant-preview",
+      "success": true,
+      "raw_role": "store",
+      "service_type": null,
+      "user_id": null
+    },
+    {
+      "at": "2026-09-20T05:35:25.127Z",
+      "portal": "merchant",
+      "role": "store",
+      "path": "/merchant-preview",
+      "success": true,
+      "raw_role": "store",
+      "service_type": null,
+      "user_id": null
+    },
+    {
+      "at": "2026-09-20T05:34:52.668Z",
+      "portal": "merchant",
+      "role": "store",
+      "path": "/merchant-preview",
+      "success": true,
+      "raw_role": "store",
+      "service_type": null,
+      "user_id": null
+    },
     {
       "at": "2026-09-19T20:51:09.165Z",
       "portal": "admin",

@@ -12,7 +12,7 @@
     <link rel="stylesheet" href="/assets/ervenow-identity.css?erv=20260919id" />
     <link rel="stylesheet" href="/assets/styles.css?erv=20260919id" />
     <link rel="stylesheet" href="/assets/guest-shell.css?erv=20260612" />
-    <link rel="stylesheet" href="/assets/store-shell.css" />
+    <link rel="stylesheet" href="/assets/store-shell.css?erv=20260920store1" />
     <link rel="stylesheet" href="/assets/ervenow-responsive.css" />
     <link rel="stylesheet" href="/assets/live-store-map.css" />
     <link rel="stylesheet" href="/assets/design-system/erv-typography-pr1-tokens.css" />
@@ -26,16 +26,16 @@
         --portal-radius: 18px;
       }
       body.store-shell-page {
-        font-family: "Cairo", system-ui, sans-serif;
+        font-family: "Tajawal", "Cairo", system-ui, sans-serif;
         color: var(--portal-ink);
       }
       .portal-hero {
         position: relative;
-        border-radius: var(--portal-radius);
+        border-radius: clamp(18px, 3vw, 22px);
         overflow: hidden;
         min-height: 168px;
-        background: linear-gradient(135deg, #111827, #6b4423 55%, #8b5a2b);
-        box-shadow: 0 16px 48px rgba(15, 40, 28, 0.22);
+        background: linear-gradient(145deg, #146c43 0%, #0f5a37 55%, #0c4a2d 100%);
+        box-shadow: 0 16px 40px rgba(20, 108, 67, 0.28);
         margin-bottom: 18px;
       }
       .portal-hero__bg {
@@ -43,12 +43,12 @@
         inset: 0;
         background-size: cover;
         background-position: center;
-        opacity: 0.35;
+        opacity: 0.28;
       }
       .portal-hero__shade {
         position: absolute;
         inset: 0;
-        background: linear-gradient(180deg, rgba(15, 40, 28, 0.15) 0%, rgba(26, 14, 8, 0.75) 100%);
+        background: linear-gradient(180deg, rgba(15, 90, 55, 0.2) 0%, rgba(12, 74, 45, 0.72) 100%);
       }
       .portal-hero__inner {
         position: relative;
@@ -60,20 +60,21 @@
         flex-wrap: wrap;
       }
       .portal-logo {
-        width: 88px;
-        height: 88px;
+        width: clamp(72px, 18vw, 88px);
+        height: clamp(72px, 18vw, 88px);
         border-radius: 20px;
         object-fit: cover;
-        border: 3px solid rgba(255, 248, 238, 0.95);
-        box-shadow: 0 8px 28px rgba(0, 0, 0, 0.25);
-        background: #fff8ee;
+        border: 3px solid rgba(255, 255, 255, 0.92);
+        box-shadow: 0 8px 28px rgba(0, 0, 0, 0.22);
+        background: #e8f6ef;
       }
       .portal-hero__text h1 {
         margin: 0 0 6px;
-        font-size: 1.45rem;
-        font-weight: 800;
-        color: #fff8ee;
-        text-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
+        font-size: clamp(1.2rem, 3.2vw, 1.5rem);
+        font-weight: 900;
+        color: #f4faf7;
+        text-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
+        line-height: 1.3;
       }
       .portal-badges {
         display: flex;
@@ -86,13 +87,14 @@
         font-weight: 700;
         padding: 6px 12px;
         border-radius: 999px;
-        background: rgba(255, 248, 238, 0.2);
-        color: #fff0d4;
-        border: 1px solid rgba(255, 248, 238, 0.28);
+        background: rgba(255, 255, 255, 0.16);
+        color: #f4faf7;
+        border: 1px solid rgba(255, 255, 255, 0.22);
       }
       .portal-badge--gold {
-        background: rgba(201, 162, 39, 0.35);
-        border-color: rgba(255, 220, 160, 0.45);
+        background: rgba(232, 246, 239, 0.95);
+        border-color: transparent;
+        color: #0f5a37;
       }
       .portal-actions {
         display: flex;
@@ -128,7 +130,7 @@
       .portal-wallet-cur {
         font-size: 0.95rem;
         font-weight: 700;
-        color: #7a6558;
+        color: #6b7280;
         margin-inline-start: 6px;
       }
       .portal-tx {
@@ -802,7 +804,7 @@
     <script src="/assets/api-config.js"></script>
     <script src="/assets/api.js?erv=20260919id"></script>
     <script src="/assets/auth-account-guard.js"></script>
-    <script src="/assets/store-shell.js"></script>
+    <script src="/assets/store-shell.js?erv=20260920store1"></script>
     <script>
       void ErvenowAuthGuard.ensureApprovedAccount({ loginUrl: "/login?role=store" });
     </script>

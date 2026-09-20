@@ -46,7 +46,11 @@
       '" href="' +
       esc(href) +
       '">' +
-      (img ? '<img class="guest-offers-slide__img" src="' + esc(img) + '" alt="" loading="lazy" decoding="async" />' : "") +
+      (img
+        ? '<img class="guest-offers-slide__img" src="' +
+          esc(img) +
+          '" alt="" width="1920" height="730" loading="lazy" decoding="async" />'
+        : "") +
       '<div class="guest-offers-slide__shade"></div>' +
       '<div class="guest-offers-slide__body">' +
       (price ? '<span class="guest-offers-slide__price">' + esc(price) + "</span>" : "") +
@@ -68,10 +72,13 @@
       root.removeAttribute("hidden");
       root.style.display = "";
     } else {
-      root.hidden = true;
-      root.setAttribute("hidden", "");
-      root.innerHTML = "";
-      root.classList.remove("guest-offers-carousel--reserved");
+      /* أبقِ الحجز المكاني — لا تُسقط الارتفاع إلى صفر (CLS) */
+      root.hidden = false;
+      root.removeAttribute("hidden");
+      root.classList.add("guest-offers-carousel--reserved");
+      root.innerHTML =
+        '<div class="guest-offers-shell guest-offers-shell--placeholder" aria-hidden="true"></div>';
+      root.setAttribute("aria-hidden", "true");
     }
   }
 
