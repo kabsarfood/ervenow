@@ -67,11 +67,15 @@
       root.hidden = false;
       root.removeAttribute("hidden");
       root.style.display = "";
-    } else {
-      root.hidden = true;
-      root.setAttribute("hidden", "");
-      root.innerHTML = "";
       root.classList.remove("guest-offers-carousel--reserved");
+    } else {
+      /* keep reserved height — do not collapse to zero (CLS) */
+      root.hidden = false;
+      root.removeAttribute("hidden");
+      root.classList.add("guest-offers-carousel--reserved");
+      root.innerHTML =
+        '<div class="guest-offers-shell guest-offers-shell--placeholder" aria-hidden="true"></div>';
+      root.setAttribute("aria-hidden", "true");
     }
   }
 
