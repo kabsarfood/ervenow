@@ -391,14 +391,6 @@
         if (searchEl) searchEl.disabled = false;
         if (typeof cfg.onAfterLoad === "function") cfg.onAfterLoad(allStores, activeCategory);
 
-        // Re-apply URL search after async load (some shells reset inputs)
-        try {
-          var qAgain = String(new URLSearchParams(location.search).get("q") || new URLSearchParams(location.search).get("search") || "").trim();
-          if (qAgain && searchEl && !String(searchEl.value || "").trim()) {
-            searchEl.value = qAgain;
-          }
-        } catch (eQ) {}
-
         if (!allStores.length) {
           renderEmptyBlock("none");
           updateCountLine(0);
@@ -436,13 +428,6 @@
       if (fromType === "minimarket") fromType = "supermarket";
       if (fromCat) activeCategory = fromCat;
       else if (fromType && fromType !== "all") activeCategory = fromType;
-      var fromQ = String(p.get("q") || p.get("search") || "").trim();
-      if (fromQ) {
-        if (!searchEl) searchEl = document.getElementById(cfg.searchId || "storeSearch");
-        if (searchEl) {
-          searchEl.value = fromQ;
-        }
-      }
       if (typeof cfg.onUrlParams === "function") cfg.onUrlParams(p, { setCategory: setCategory });
     }
 

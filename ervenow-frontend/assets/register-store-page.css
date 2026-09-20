@@ -3,9 +3,9 @@
  */
 body.guest-shell-page.reg-store-page {
   background:
-    radial-gradient(1200px 600px at 100% -10%, rgba(20, 108, 67, 0.1), transparent 55%),
-    radial-gradient(900px 500px at -5% 50%, rgba(17, 24, 39, 0.04), transparent 50%),
-    var(--bg, #f7f4ef);
+    radial-gradient(1200px 600px at 100% -10%, rgba(185, 135, 47, 0.1), transparent 55%),
+    radial-gradient(900px 500px at -5% 50%, rgba(61, 34, 19, 0.04), transparent 50%),
+    var(--bg, #f8f4ee);
 }
 
 .reg-store-layout {
@@ -33,9 +33,9 @@ body.guest-shell-page.reg-store-page {
   gap: 10px 18px;
   padding: 14px 16px;
   border-radius: 16px;
-  border: 1px solid rgba(17, 24, 39, 0.1);
+  border: 1px solid rgba(61, 34, 19, 0.1);
   background: #fffefb;
-  box-shadow: 0 6px 20px rgba(15, 40, 28, 0.05);
+  box-shadow: 0 6px 20px rgba(45, 26, 14, 0.05);
 }
 
 .reg-store-footer-card .reg-store-aside__badge {
@@ -45,8 +45,8 @@ body.guest-shell-page.reg-store-page {
   margin: 0;
   padding: 3px 10px;
   border-radius: 999px;
-  background: rgba(20, 108, 67, 0.12);
-  border: 1px solid rgba(20, 108, 67, 0.26);
+  background: rgba(185, 135, 47, 0.12);
+  border: 1px solid rgba(185, 135, 47, 0.26);
   color: #9a7024;
   font-size: 0.66rem;
   font-weight: 800;
@@ -56,7 +56,7 @@ body.guest-shell-page.reg-store-page {
   margin: 0;
   font-size: 0.95rem;
   font-weight: 900;
-  color: var(--brown, #111827);
+  color: var(--brown, #3d2213);
   line-height: 1.35;
 }
 
@@ -76,7 +76,7 @@ body.guest-shell-page.reg-store-page {
   font-size: 0.78rem;
   font-weight: 700;
   line-height: 1.45;
-  color: var(--muted, #6b7280);
+  color: var(--muted, #5c4a3d);
 }
 
 .reg-store-footer-card .reg-store-aside__list li::before {
@@ -96,7 +96,7 @@ body.guest-shell-page.reg-store-page {
   margin-top: 8px;
   padding: 14px 14px 16px;
   border-radius: 16px;
-  border: 1px solid rgba(20, 108, 67, 0.28);
+  border: 1px solid rgba(185, 135, 47, 0.28);
   background: rgba(255, 249, 238, 0.7);
 }
 
@@ -113,7 +113,7 @@ body.guest-shell-page.reg-store-page {
   margin: 0 0 12px;
   font-size: 0.92rem;
   font-weight: 800;
-  color: var(--brown, #111827);
+  color: var(--brown, #3d2213);
   line-height: 1.45;
 }
 
@@ -154,14 +154,14 @@ body.guest-shell-page.reg-store-page .erv-prereg-banner__cta {
 
 /* ——— Hero ——— */
 body.guest-shell-page.reg-store-page .reg-store-hero {
-  --reg-hero-ink: #111827;
-  --reg-hero-muted: #6b7280;
-  --reg-hero-gold: var(--erve-primary, #146c43);
+  --reg-hero-ink: #3d2213;
+  --reg-hero-muted: #5c4a3d;
+  --reg-hero-gold: #b9872f;
   padding: clamp(20px, 3.2vw, 36px) max(20px, env(safe-area-inset-left, 20px))
     clamp(18px, 2.8vw, 30px) max(20px, env(safe-area-inset-right, 20px));
   background:
-    linear-gradient(180deg, rgba(255, 254, 251, 0.98) 0%, rgba(246, 241, 233, 0.94) 62%, var(--bg, #f7f4ef) 100%);
-  border-bottom: 1px solid rgba(17, 24, 39, 0.08);
+    linear-gradient(180deg, rgba(255, 254, 251, 0.98) 0%, rgba(246, 241, 233, 0.94) 62%, var(--bg, #f8f4ee) 100%);
+  border-bottom: 1px solid rgba(61, 34, 19, 0.08);
 }
 
 body.guest-shell-page.reg-store-page .reg-store-hero__inner,
@@ -181,8 +181,8 @@ body.guest-shell-page.reg-store-page .reg-store-hero .guest-section-hero__eyebro
   margin: 0 0 10px;
   padding: 5px 12px;
   border-radius: 999px;
-  background: rgba(20, 108, 67, 0.12);
-  border: 1px solid rgba(20, 108, 67, 0.24);
+  background: rgba(185, 135, 47, 0.12);
+  border: 1px solid rgba(185, 135, 47, 0.24);
   color: #9a7024;
   font-size: 0.72rem;
   font-weight: 800;
@@ -223,11 +223,11 @@ body.guest-shell-page.reg-store-page .reg-store-hero .guest-section-hero__title 
   padding: 10px 12px;
   border-radius: 14px;
   background: #fffefb;
-  border: 1px solid rgba(20, 108, 67, 0.22);
-  box-shadow: 0 4px 14px rgba(15, 40, 28, 0.045);
+  border: 1px solid rgba(185, 135, 47, 0.22);
+  box-shadow: 0 4px 14px rgba(45, 26, 14, 0.045);
   font-size: clamp(0.78rem, 2.4vw, 0.9rem);
   font-weight: 700;
-  color: var(--reg-hero-ink, #111827);
+  color: var(--reg-hero-ink, #3d2213);
   line-height: 1.45;
   text-align: start;
 }
@@ -509,9 +509,9 @@ body.guest-shell-page.reg-store-page .reg-store-hero .reg-store-perks {
   gap: 10px;
   padding: clamp(12px, 2.5vw, 14px);
   border-radius: 16px;
-  border: 1px solid rgba(20, 108, 67, 0.2);
+  border: 1px solid rgba(185, 135, 47, 0.2);
   background: linear-gradient(155deg, #fffefb 0%, #f8f0e6 100%);
-  box-shadow: 0 4px 16px rgba(15, 40, 28, 0.05);
+  box-shadow: 0 4px 16px rgba(45, 26, 14, 0.05);
   min-height: 72px;
 }
 
@@ -523,11 +523,11 @@ body.guest-shell-page.reg-store-page .reg-store-hero .reg-store-perks {
   align-items: center;
   justify-content: center;
   border-radius: 11px;
-  background: linear-gradient(145deg, #111827, #5c3820);
-  color: #f7f4ef;
+  background: linear-gradient(145deg, #3d2213, #5c3820);
+  color: #f8f4ee;
   font-size: 1rem;
   line-height: 1;
-  box-shadow: 0 4px 12px rgba(15, 40, 28, 0.18);
+  box-shadow: 0 4px 12px rgba(45, 26, 14, 0.18);
 }
 
 .reg-store-perks__text {
@@ -540,14 +540,14 @@ body.guest-shell-page.reg-store-page .reg-store-hero .reg-store-perks {
 .reg-store-perks__text strong {
   font-size: 0.82rem;
   font-weight: 900;
-  color: var(--brown, #111827);
+  color: var(--brown, #3d2213);
   line-height: 1.35;
 }
 
 .reg-store-perks__text span {
   font-size: 0.72rem;
   font-weight: 600;
-  color: var(--muted, #6b7280);
+  color: var(--muted, #5c4a3d);
   line-height: 1.45;
 }
 
@@ -597,7 +597,7 @@ body.guest-shell-page.reg-store-page .reg-store-hero .reg-store-perks {
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  border: 2px solid rgba(17, 24, 39, 0.12);
+  border: 2px solid rgba(61, 34, 19, 0.12);
   background: #fffefb;
   font-size: 0.82rem;
   font-weight: 900;
@@ -605,10 +605,10 @@ body.guest-shell-page.reg-store-page .reg-store-hero .reg-store-perks {
 }
 
 .reg-store-progress__step.is-current span {
-  border-color: var(--erve-primary, #146c43);
-  background: linear-gradient(145deg, #111827, #5c3820);
+  border-color: var(--gold, #b9872f);
+  background: linear-gradient(145deg, #3d2213, #5c3820);
   color: #fffefb;
-  box-shadow: 0 4px 14px rgba(15, 40, 28, 0.2);
+  box-shadow: 0 4px 14px rgba(45, 26, 14, 0.2);
 }
 
 .reg-store-progress__step.is-done span {
@@ -618,7 +618,7 @@ body.guest-shell-page.reg-store-page .reg-store-hero .reg-store-perks {
 }
 
 .reg-store-progress__step.is-current {
-  color: var(--brown, #111827);
+  color: var(--brown, #3d2213);
 }
 
 /* ——— Form card ——— */
@@ -626,17 +626,17 @@ body.guest-shell-page.reg-store-page .reg-store-hero .reg-store-perks {
   padding: 0;
   overflow: hidden;
   border-radius: clamp(18px, 3vw, 24px);
-  border: 1px solid var(--border, rgba(17, 24, 39, 0.12));
+  border: 1px solid var(--border, rgba(61, 34, 19, 0.12));
   background: var(--card, #fffefb);
   box-shadow:
-    0 16px 48px rgba(15, 40, 28, 0.08),
-    0 0 0 1px rgba(20, 108, 67, 0.05);
+    0 16px 48px rgba(45, 26, 14, 0.08),
+    0 0 0 1px rgba(185, 135, 47, 0.05);
 }
 
 .reg-store-section {
   margin: 0;
   padding: clamp(20px, 4vw, 28px) clamp(16px, 4vw, 24px);
-  border-top: 1px solid rgba(17, 24, 39, 0.08);
+  border-top: 1px solid rgba(61, 34, 19, 0.08);
 }
 
 .reg-store-section:first-child {
@@ -665,18 +665,18 @@ body.guest-shell-page.reg-store-page .reg-store-hero .reg-store-perks {
   align-items: center;
   justify-content: center;
   border-radius: 13px;
-  background: linear-gradient(145deg, #111827, #0f5a37);
-  color: #f7f4ef;
+  background: linear-gradient(145deg, #3d2213, #2b170d);
+  color: #f8f4ee;
   font-size: 0.95rem;
   font-weight: 900;
-  box-shadow: 0 4px 14px rgba(15, 40, 28, 0.2);
+  box-shadow: 0 4px 14px rgba(45, 26, 14, 0.2);
 }
 
 .reg-store-section__title {
   margin: 0;
   font-size: clamp(1.02rem, 2.6vw, 1.14rem);
   font-weight: 900;
-  color: var(--brown, #111827);
+  color: var(--brown, #3d2213);
   line-height: 1.3;
 }
 
@@ -684,7 +684,7 @@ body.guest-shell-page.reg-store-page .reg-store-hero .reg-store-perks {
   margin: 6px 0 0;
   font-size: 0.86rem;
   font-weight: 600;
-  color: var(--muted, #6b7280);
+  color: var(--muted, #5c4a3d);
   line-height: 1.55;
 }
 
@@ -759,7 +759,7 @@ body.guest-shell-page .reg-store-select {
 
 .reg-store-dd {
   margin-top: 14px;
-  border: 1px solid rgba(17, 24, 39, 0.12);
+  border: 1px solid rgba(61, 34, 19, 0.12);
   border-radius: 14px;
   background: #fffefb;
   overflow: hidden;
@@ -806,7 +806,7 @@ body.guest-shell-page .reg-store-select {
 .reg-store-dd__label {
   font-weight: 800;
   font-size: 0.85rem;
-  color: var(--brown, #111827);
+  color: var(--brown, #3d2213);
 }
 
 .reg-store-dd__value {
@@ -814,13 +814,13 @@ body.guest-shell-page .reg-store-select {
   text-align: start;
   font-size: 0.82rem;
   font-weight: 600;
-  color: var(--muted, #6b7280);
+  color: var(--muted, #5c4a3d);
   line-height: 1.45;
 }
 
 .reg-store-dd__panel {
   padding: 0 14px 14px;
-  border-top: 1px solid rgba(17, 24, 39, 0.08);
+  border-top: 1px solid rgba(61, 34, 19, 0.08);
 }
 
 .reg-store-dd__hint {
@@ -828,13 +828,13 @@ body.guest-shell-page .reg-store-select {
   font-size: 0.8rem;
   font-weight: 600;
   line-height: 1.5;
-  color: var(--muted, #6b7280);
+  color: var(--muted, #5c4a3d);
 }
 
 .reg-store-phone-card {
   padding: 14px 16px 16px;
   border-radius: 16px;
-  border: 1px solid rgba(17, 24, 39, 0.1);
+  border: 1px solid rgba(61, 34, 19, 0.1);
   background: rgba(248, 244, 238, 0.7);
 }
 
@@ -848,7 +848,7 @@ body.guest-shell-page .reg-store-select {
 
 .reg-store-opt-note {
   font-weight: 600;
-  color: var(--muted, #6b7280);
+  color: var(--muted, #5c4a3d);
 }
 
 .reg-store-badge {
@@ -862,15 +862,15 @@ body.guest-shell-page .reg-store-select {
 }
 
 .reg-store-badge--req {
-  background: rgba(20, 108, 67, 0.14);
-  color: #0f5a37;
-  border: 1px solid rgba(20, 108, 67, 0.28);
+  background: rgba(185, 135, 47, 0.14);
+  color: #7a5a1f;
+  border: 1px solid rgba(185, 135, 47, 0.28);
 }
 
 .reg-store-badge--opt {
-  background: rgba(17, 24, 39, 0.06);
-  color: var(--muted, #6b7280);
-  border: 1px solid rgba(17, 24, 39, 0.1);
+  background: rgba(61, 34, 19, 0.06);
+  color: var(--muted, #5c4a3d);
+  border: 1px solid rgba(61, 34, 19, 0.1);
 }
 
 .reg-store-field-label {
@@ -878,7 +878,7 @@ body.guest-shell-page .reg-store-select {
   font-weight: 800;
   font-size: 0.85rem;
   margin-bottom: 8px;
-  color: var(--brown, #111827);
+  color: var(--brown, #3d2213);
 }
 
 .reg-store-page label {
@@ -886,7 +886,7 @@ body.guest-shell-page .reg-store-select {
   font-weight: 800;
   font-size: 0.85rem;
   margin-bottom: 6px;
-  color: var(--brown, #111827);
+  color: var(--brown, #3d2213);
 }
 
 .reg-store-page input[type="text"],
@@ -898,12 +898,12 @@ body.guest-shell-page .reg-store-select {
   width: 100%;
   padding: 12px 14px;
   border-radius: 12px;
-  border: 1px solid rgba(17, 24, 39, 0.14);
+  border: 1px solid rgba(61, 34, 19, 0.14);
   background: #fffefb;
   font-family: inherit;
   font-size: 16px;
   margin-bottom: 0;
-  box-shadow: inset 0 1px 2px rgba(15, 40, 28, 0.04);
+  box-shadow: inset 0 1px 2px rgba(45, 26, 14, 0.04);
   transition: border-color 0.15s, box-shadow 0.15s;
 }
 
@@ -911,8 +911,8 @@ body.guest-shell-page .reg-store-select {
 .reg-store-page select:focus,
 .reg-store-page textarea:focus {
   outline: none;
-  border-color: rgba(20, 108, 67, 0.55);
-  box-shadow: 0 0 0 3px rgba(20, 108, 67, 0.18);
+  border-color: rgba(185, 135, 47, 0.55);
+  box-shadow: 0 0 0 3px rgba(185, 135, 47, 0.18);
 }
 
 .reg-store-page .field-gap {
@@ -946,7 +946,7 @@ body.guest-shell-page .reg-store-select {
   min-height: 76px;
   padding: 10px 6px;
   border-radius: 14px;
-  border: 2px solid rgba(17, 24, 39, 0.1);
+  border: 2px solid rgba(61, 34, 19, 0.1);
   background: #fffefb;
   font-family: inherit;
   cursor: pointer;
@@ -954,14 +954,14 @@ body.guest-shell-page .reg-store-select {
 }
 
 .reg-store-type-card:hover {
-  border-color: rgba(20, 108, 67, 0.4);
+  border-color: rgba(185, 135, 47, 0.4);
   transform: translateY(-1px);
 }
 
 .reg-store-type-card.is-active {
-  border-color: var(--erve-primary, #146c43);
-  background: linear-gradient(145deg, #e8f6ef, #d8f3e4);
-  box-shadow: 0 6px 20px rgba(20, 108, 67, 0.2);
+  border-color: var(--gold, #b9872f);
+  background: linear-gradient(145deg, #fff9ee, #f3e4cc);
+  box-shadow: 0 6px 20px rgba(185, 135, 47, 0.2);
 }
 
 .reg-store-type-card__ic {
@@ -972,7 +972,7 @@ body.guest-shell-page .reg-store-select {
 .reg-store-type-card__label {
   font-size: 0.72rem;
   font-weight: 800;
-  color: var(--brown, #111827);
+  color: var(--brown, #3d2213);
   line-height: 1.35;
   text-align: center;
 }
@@ -994,7 +994,7 @@ body.guest-shell-page .reg-store-select {
   padding: clamp(14px, 3vw, 18px);
   border-radius: 16px;
   background: linear-gradient(180deg, rgba(248, 244, 238, 0.7), rgba(255, 254, 251, 0.95));
-  border: 1px solid rgba(17, 24, 39, 0.08);
+  border: 1px solid rgba(61, 34, 19, 0.08);
 }
 
 .reg-store-map-toolbar {
@@ -1009,7 +1009,7 @@ body.guest-shell-page .reg-store-select {
   min-width: 0;
   padding: 11px 14px;
   border-radius: 12px;
-  border: 1px solid rgba(17, 24, 39, 0.14);
+  border: 1px solid rgba(61, 34, 19, 0.14);
   background: #fffefb;
   font-family: inherit;
   font-size: 16px;
@@ -1024,8 +1024,8 @@ body.guest-shell-page .reg-store-select {
   position: relative;
   border-radius: 14px;
   overflow: hidden;
-  border: 1px solid rgba(20, 108, 67, 0.25);
-  box-shadow: 0 6px 24px rgba(15, 40, 28, 0.08);
+  border: 1px solid rgba(185, 135, 47, 0.25);
+  box-shadow: 0 6px 24px rgba(45, 26, 14, 0.08);
 }
 
 .reg-store-map-mode-btn {
@@ -1037,7 +1037,7 @@ body.guest-shell-page .reg-store-select {
   margin: 10px 0 0;
   font-size: 0.78rem;
   font-weight: 700;
-  color: var(--muted, #6b7280);
+  color: var(--muted, #5c4a3d);
   line-height: 1.5;
 }
 
@@ -1064,11 +1064,11 @@ body.guest-shell-page .reg-store-select {
   margin: 10px 0 0;
   padding: 10px 14px;
   border-radius: 12px;
-  background: rgba(20, 108, 67, 0.08);
-  border: 1px solid rgba(20, 108, 67, 0.2);
+  background: rgba(185, 135, 47, 0.08);
+  border: 1px solid rgba(185, 135, 47, 0.2);
   font-size: 0.86rem;
   font-weight: 700;
-  color: var(--brown-mid, #6b7280);
+  color: var(--brown-mid, #5c4a3d);
 }
 
 .reg-store-map-status.is-ok {
@@ -1078,8 +1078,8 @@ body.guest-shell-page .reg-store-select {
 }
 
 .reg-store-map-status.is-pending {
-  background: rgba(20, 108, 67, 0.08);
-  border-color: rgba(20, 108, 67, 0.22);
+  background: rgba(185, 135, 47, 0.08);
+  border-color: rgba(185, 135, 47, 0.22);
 }
 
 .erv-store-map__pin {
@@ -1091,10 +1091,10 @@ body.guest-shell-page .reg-store-select {
   display: block;
   width: 28px;
   height: 36px;
-  background: linear-gradient(180deg, #a8e0c4 0%, #146c43 55%, #0f5a37 100%);
+  background: linear-gradient(180deg, #e8c078 0%, #b9872f 55%, #7a5a1f 100%);
   border-radius: 50% 50% 50% 0;
   transform: rotate(-45deg);
-  box-shadow: 0 4px 12px rgba(15, 40, 28, 0.35);
+  box-shadow: 0 4px 12px rgba(45, 26, 14, 0.35);
   border: 2px solid #fffef8;
 }
 
@@ -1105,7 +1105,7 @@ body.guest-shell-page .reg-store-select {
   border-radius: 50%;
   background: #9a8475;
   border: 2px solid #fffef8;
-  box-shadow: 0 1px 4px rgba(15, 40, 28, 0.25);
+  box-shadow: 0 1px 4px rgba(45, 26, 14, 0.25);
 }
 
 .erv-store-map .leaflet-container {
@@ -1132,7 +1132,7 @@ body.guest-shell-page .reg-store-select {
   min-height: 132px;
   padding: 12px;
   border-radius: 14px;
-  border: 2px dashed rgba(20, 108, 67, 0.35);
+  border: 2px dashed rgba(185, 135, 47, 0.35);
   background: rgba(255, 254, 251, 0.9);
   overflow: hidden;
   cursor: pointer;
@@ -1144,7 +1144,7 @@ body.guest-shell-page .reg-store-select {
 }
 
 .reg-store-upload__zone:hover {
-  border-color: rgba(20, 108, 67, 0.55);
+  border-color: rgba(185, 135, 47, 0.55);
   background: rgba(255, 249, 238, 0.95);
 }
 
@@ -1168,7 +1168,7 @@ body.guest-shell-page .reg-store-select {
 .reg-store-upload__placeholder {
   font-size: 0.82rem;
   font-weight: 700;
-  color: var(--muted, #6b7280);
+  color: var(--muted, #5c4a3d);
   text-align: center;
   line-height: 1.5;
   padding: 8px;
@@ -1189,7 +1189,7 @@ body.guest-shell-page .reg-store-select {
   margin-top: 8px;
   padding: 14px 16px;
   border-radius: 14px;
-  border: 1px dashed rgba(17, 24, 39, 0.16);
+  border: 1px dashed rgba(61, 34, 19, 0.16);
   background: rgba(248, 244, 238, 0.6);
 }
 
@@ -1197,7 +1197,7 @@ body.guest-shell-page .reg-store-select {
   cursor: pointer;
   font-weight: 800;
   font-size: 0.9rem;
-  color: var(--brown, #111827);
+  color: var(--brown, #3d2213);
   list-style: none;
   min-height: 44px;
   display: flex;
@@ -1212,7 +1212,7 @@ body.guest-shell-page .reg-store-select {
   padding: 16px;
   border-radius: 14px;
   background: linear-gradient(180deg, rgba(245, 237, 226, 0.5), rgba(255, 254, 251, 0.9));
-  border: 1px solid rgba(17, 24, 39, 0.1);
+  border: 1px solid rgba(61, 34, 19, 0.1);
 }
 
 .reg-store-check {
@@ -1223,7 +1223,7 @@ body.guest-shell-page .reg-store-select {
   font-size: 0.88rem;
   line-height: 1.55;
   cursor: pointer;
-  color: var(--brown-mid, #6b7280);
+  color: var(--brown-mid, #5c4a3d);
 }
 
 .reg-store-check input {
@@ -1231,14 +1231,14 @@ body.guest-shell-page .reg-store-select {
   min-width: 18px;
   min-height: 18px;
   margin-top: 4px;
-  accent-color: var(--erve-primary, #146c43);
+  accent-color: var(--gold, #b9872f);
 }
 
 /* ——— Submit ——— */
 .reg-store-submit-wrap {
   padding: clamp(18px, 4vw, 24px);
   background: linear-gradient(180deg, rgba(245, 237, 226, 0.35), rgba(255, 254, 251, 0.98));
-  border-top: 1px solid rgba(17, 24, 39, 0.08);
+  border-top: 1px solid rgba(61, 34, 19, 0.08);
 }
 
 .reg-store-submit__note {
@@ -1246,7 +1246,7 @@ body.guest-shell-page .reg-store-select {
   font-size: 0.82rem;
   font-weight: 600;
   line-height: 1.55;
-  color: var(--muted, #6b7280);
+  color: var(--muted, #5c4a3d);
   text-align: center;
 }
 
@@ -1256,7 +1256,7 @@ body.guest-shell-page .reg-store-select {
   font-size: 1.05rem;
   font-weight: 900;
   border-radius: 14px;
-  box-shadow: 0 6px 22px rgba(20, 108, 67, 0.35);
+  box-shadow: 0 6px 22px rgba(185, 135, 47, 0.35);
 }
 
 .reg-store-page #msg {
@@ -1286,9 +1286,9 @@ body.guest-shell-page .reg-store-select {
   margin-top: 4px;
   padding: 16px 14px;
   border-radius: 16px;
-  border: 1px solid rgba(20, 108, 67, 0.28);
+  border: 1px solid rgba(185, 135, 47, 0.28);
   background: linear-gradient(145deg, #fffefb 0%, #f8f0e6 100%);
-  box-shadow: 0 6px 22px rgba(15, 40, 28, 0.06);
+  box-shadow: 0 6px 22px rgba(45, 26, 14, 0.06);
 }
 
 .reg-store-cuisine-block__head {
@@ -1308,14 +1308,14 @@ body.guest-shell-page .reg-store-select {
   margin: 0 0 4px;
   font-size: 1rem;
   font-weight: 900;
-  color: var(--brown, #111827);
+  color: var(--brown, #3d2213);
 }
 
 .reg-store-cuisine-block__sub {
   margin: 0;
   font-size: 0.82rem;
   line-height: 1.55;
-  color: var(--muted, #6b7280);
+  color: var(--muted, #5c4a3d);
 }
 
 .reg-store-cuisine-grid {
@@ -1333,7 +1333,7 @@ body.guest-shell-page .reg-store-select {
   min-height: 88px;
   padding: 12px 10px;
   border-radius: 14px;
-  border: 2px solid rgba(17, 24, 39, 0.1);
+  border: 2px solid rgba(61, 34, 19, 0.1);
   background: #fff;
   font-family: inherit;
   cursor: pointer;
@@ -1342,15 +1342,15 @@ body.guest-shell-page .reg-store-select {
 }
 
 .reg-store-cuisine-chip:hover {
-  border-color: rgba(20, 108, 67, 0.45);
-  box-shadow: 0 6px 18px rgba(15, 40, 28, 0.08);
+  border-color: rgba(185, 135, 47, 0.45);
+  box-shadow: 0 6px 18px rgba(45, 26, 14, 0.08);
   transform: translateY(-1px);
 }
 
 .reg-store-cuisine-chip.is-active {
-  border-color: var(--erve-primary, #146c43);
-  background: linear-gradient(145deg, #e8f6ef, #d8f3e4);
-  box-shadow: 0 8px 24px rgba(20, 108, 67, 0.22);
+  border-color: var(--gold, #b9872f);
+  background: linear-gradient(145deg, #fff9ee, #f3e4cc);
+  box-shadow: 0 8px 24px rgba(185, 135, 47, 0.22);
 }
 
 .reg-store-cuisine-chip__icon {
@@ -1361,7 +1361,7 @@ body.guest-shell-page .reg-store-select {
 .reg-store-cuisine-chip__label {
   font-size: 0.78rem;
   font-weight: 800;
-  color: var(--brown, #111827);
+  color: var(--brown, #3d2213);
   line-height: 1.35;
 }
 
@@ -1540,7 +1540,7 @@ body.guest-shell-page .reg-store-select {
     z-index: 1;
     padding-bottom: max(18px, env(safe-area-inset-bottom, 0px));
     box-shadow: none;
-    border-top: 1px solid rgba(17, 24, 39, 0.08);
+    border-top: 1px solid rgba(61, 34, 19, 0.08);
   }
 
   .reg-store-type-grid {

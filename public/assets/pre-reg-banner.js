@@ -1,69 +1,23 @@
 /**
- * ERVENOW — شريط التسجيل المسبق على كامل المنصة
- * يظهر للضيوف/العملاء الجدد فقط — يُخفى عند تسجيل الدخول.
- * الترتيب: الشريط أعلى الصفحة، ثم الهيدر sticky أسفله (بدون تداخل على الجوال/التابلت).
+ * ERVENOW — شريط التسجيل المسبق (أسلوب صفحة تسجيل المتجر) على كامل المنصة
  */
 (function (global) {
-  var VER = "20260920auth1";
-  if (
-    global.ErvenowPreRegBanner &&
-    String(global.ErvenowPreRegBanner.__ervVer || "") >= VER
-  ) {
-    return;
-  }
+  if (global.ErvenowPreRegBanner) return;
 
   var CSS_ID = "ervPreRegBannerCss";
   var BAR_ID = "ervPreRegBanner";
   var SKIP = /\/admin(\/|$|-)/i;
-  var CTA_LABEL = "سجّل";
-  var BANNER_COPY = "التسجيل مفتوح — سجّل برقمك.";
-  var preRegEnabled = null;
 
   var BANNER_CSS =
-    /* Base */
-    ".erv-prereg-banner{display:flex;flex-wrap:nowrap;align-items:center;justify-content:center;gap:0.35rem 0.45rem;margin:0;padding:0.4rem max(0.65rem,env(safe-area-inset-left,0px)) 0.4rem max(0.65rem,env(safe-area-inset-right,0px));padding-top:calc(0.4rem + env(safe-area-inset-top,0px));background:#146c43;color:#f4faf7;line-height:1.35;font-size:0.78rem;text-align:center;position:sticky;top:0;z-index:120;flex-shrink:0;font-family:Tajawal,Cairo,system-ui,sans-serif;box-sizing:border-box;}" +
-    ".erv-prereg-banner p{margin:0;flex:1 1 auto;text-align:center;max-width:36rem;min-width:0;}" +
-    ".erv-prereg-banner__cta{display:inline-flex;align-items:center;justify-content:center;min-height:36px;padding:0.28rem 0.75rem;border-radius:999px;background:#ffffff;color:#0f5a37;font-weight:800;font-size:0.75rem;text-decoration:none;white-space:nowrap;flex:0 0 auto;box-shadow:0 1px 4px rgba(15,40,28,0.12);}" +
-    ".erv-prereg-banner__cta:hover{background:#e8f6ef;filter:none;}" +
-    /* Header sits under sticky banner */
-    "html.erv-has-prereg .lp-header.lp-header--refined," +
-    "html.erv-has-prereg .dash-site-header{" +
-    "top:var(--erv-prereg-h,0px)!important;}" +
-    /* Tablet */
-    "@media (min-width:641px) and (max-width:1024px){" +
-    ".erv-prereg-banner{font-size:0.76rem;gap:0.35rem 0.5rem;padding-block:0.42rem;padding-top:calc(0.42rem + env(safe-area-inset-top,0px));}" +
-    ".erv-prereg-banner__cta{font-size:0.74rem;min-height:38px;}" +
-    "}" +
-    /* Desktop */
-    "@media (min-width:1025px){" +
-    ".erv-prereg-banner{font-size:0.82rem;gap:0.45rem 0.55rem;padding:0.5rem max(0.75rem,env(safe-area-inset-left,0px));padding-top:calc(0.5rem + env(safe-area-inset-top,0px));}" +
-    ".erv-prereg-banner__cta{font-size:0.76rem;min-height:40px;}" +
-    "}" +
-    /* Mobile: compact single row — لا يضغط الهيدر */
-    "@media (max-width:640px){" +
-    ".erv-prereg-banner{flex-direction:row;flex-wrap:nowrap;align-items:center;justify-content:space-between;gap:6px;padding:6px max(10px,env(safe-area-inset-left,10px)) 6px max(10px,env(safe-area-inset-right,10px));padding-top:calc(6px + env(safe-area-inset-top,0px));font-size:0.7rem;line-height:1.3;}" +
-    ".erv-prereg-banner p{flex:1 1 auto;text-align:start;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;}" +
-    ".erv-prereg-banner__cta{flex:0 0 auto;min-height:34px;min-width:44px;padding:5px 12px;font-size:0.72rem;}" +
-    "}" +
-    "@media (max-width:360px){" +
-    ".erv-prereg-banner{font-size:0.66rem;gap:5px;padding-block:5px;padding-top:calc(5px + env(safe-area-inset-top,0px));}" +
-    ".erv-prereg-banner__cta{min-height:32px;padding:4px 10px;font-size:0.7rem;}" +
-    "}";
-
-  function isLoggedIn() {
-    try {
-      if (global.PlatformAPI && typeof global.PlatformAPI.getToken === "function") {
-        if (global.PlatformAPI.getToken()) return true;
-      }
-      var tok =
-        localStorage.getItem("ervenow_access_token") ||
-        localStorage.getItem("token") ||
-        localStorage.getItem("erwenow_access_token");
-      return !!(tok && String(tok).trim());
-    } catch (e) {
-      return false;
-    }
-  }
+    ".erv-prereg-banner{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:0.38rem 0.5rem;margin:0;padding:0.55rem max(0.75rem,env(safe-area-inset-left,0px)) 0.55rem max(0.75rem,env(safe-area-inset-right,0px));background:#3d2213;color:#f8f4ee;line-height:1.5;font-size:0.82rem;text-align:center;position:relative;z-index:90;flex-shrink:0;font-family:Cairo,system-ui,sans-serif;}" +
+    ".erv-prereg-banner p{margin:0;flex:0 1 auto;text-align:center;max-width:42rem;}" +
+    ".erv-prereg-banner__cta{display:inline-flex;align-items:center;justify-content:center;min-height:40px;padding:0.35rem 0.9rem;border-radius:999px;background:#f4c430;color:#3d2213;font-weight:800;font-size:0.78rem;text-decoration:none;white-space:nowrap;flex:0 0 auto;}" +
+    ".erv-prereg-banner__cta:hover{filter:brightness(1.04);}" +
+    "@media (min-width:641px) and (max-width:1024px){.erv-prereg-banner{font-size:0.78rem;gap:0.4rem 0.55rem;}.erv-prereg-banner__cta{font-size:0.76rem;min-height:40px;}}" +
+    "@media (min-width:1025px){.erv-prereg-banner{font-size:0.84rem;gap:0.5rem;}.erv-prereg-banner__cta{font-size:0.78rem;min-height:40px;}}" +
+    "@media (max-width:640px){.erv-prereg-banner{flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:10px max(14px,env(safe-area-inset-left,14px)) 10px max(14px,env(safe-area-inset-right,14px));font-size:0.72rem;line-height:1.5;}.erv-prereg-banner p{flex:none;text-align:center;}.erv-prereg-banner__cta{width:auto;align-self:center;min-height:40px;padding:6px 14px;font-size:0.72rem;}}" +
+    "@media (min-width:361px) and (max-width:640px){.erv-prereg-banner{flex-direction:row;flex-wrap:wrap;justify-content:center;align-items:center;gap:5px 6px;font-size:0.74rem;}.erv-prereg-banner p{flex:0 1 auto;min-width:0;}.erv-prereg-banner__cta{flex:0 0 auto;font-size:0.72rem;}}" +
+    "@media (max-width:360px){.erv-prereg-banner{font-size:0.7rem;padding-block:9px;}}";
 
   function ensureCss() {
     if (document.getElementById(CSS_ID)) return;
@@ -78,130 +32,37 @@
     return SKIP.test(path);
   }
 
-  function measureBanner() {
-    var bar = document.getElementById(BAR_ID);
-    var root = document.documentElement;
-    if (!bar || !root) return;
-    var h = Math.ceil(bar.getBoundingClientRect().height) || 0;
-    root.style.setProperty("--erv-prereg-h", h + "px");
-    root.classList.add("erv-has-prereg");
-    try {
-      var header = document.querySelector(".lp-header.lp-header--refined, .dash-site-header");
-      if (header) {
-        var hh = Math.ceil(header.getBoundingClientRect().height);
-        if (hh > 0) {
-          root.style.setProperty("--erv-mobile-header-h", hh + "px");
-          root.style.setProperty("--erw-header-h", hh + "px");
-        }
-      }
-    } catch (e) {}
-  }
-
   function insertBar(bar) {
     var header =
-      document.getElementById("top") ||
-      document.querySelector(".lp-header") ||
       document.querySelector(".dash-site-header") ||
+      document.querySelector(".lp-header") ||
       document.querySelector("header.dash-site-header") ||
       document.querySelector("header");
     if (header && header.parentNode) {
-      header.parentNode.insertBefore(bar, header);
+      header.parentNode.insertBefore(bar, header.nextSibling);
       return;
     }
     if (document.body) document.body.insertBefore(bar, document.body.firstChild);
   }
 
-  function ensureOrder() {
-    var bar = document.getElementById(BAR_ID);
-    var header =
-      document.getElementById("top") ||
-      document.querySelector(".lp-header") ||
-      document.querySelector(".dash-site-header");
-    if (!header || !document.body) return;
-    if (bar) {
-      if (document.body.firstElementChild !== bar) {
-        document.body.insertBefore(bar, document.body.firstElementChild);
-      }
-      if (bar.nextElementSibling !== header) {
-        document.body.insertBefore(header, bar.nextSibling);
-      }
-    }
-  }
-
-  function removeBanner() {
-    var bar = document.getElementById(BAR_ID);
-    var root = document.documentElement;
-    if (bar && bar.parentNode) bar.parentNode.removeChild(bar);
-    if (root) {
-      root.classList.remove("erv-has-prereg");
-      root.style.setProperty("--erv-prereg-h", "0px");
-    }
-  }
-
   function render() {
-    if (isLoggedIn() || shouldSkip()) {
-      removeBanner();
-      return;
-    }
-    if (document.getElementById(BAR_ID)) {
-      ensureCss();
-      ensureOrder();
-      measureBanner();
-      watchOrder(2500);
-      return;
-    }
+    if (document.getElementById(BAR_ID)) return;
     ensureCss();
     var bar = document.createElement("div");
     bar.id = BAR_ID;
     bar.className = "erv-prereg-banner";
     bar.setAttribute("role", "status");
     bar.innerHTML =
-      "<p>" + BANNER_COPY + "</p>" +
-      '<a class="erv-prereg-banner__cta" href="/login?mode=register&amp;role=customer">' +
-      CTA_LABEL +
-      "</a>";
+      "<p>التسجيل مفتوح الآن — الطلبات التجارية لم تُطلق بعد. سجّل برقمك وسنبلغك عند بدء الخدمة.</p>" +
+      '<a class="erv-prereg-banner__cta" href="/login?mode=register&amp;role=customer">تسجيل مسبق</a>';
     insertBar(bar);
-    ensureOrder();
-    measureBanner();
-    watchOrder(2500);
-    if (global.requestAnimationFrame) {
-      global.requestAnimationFrame(function () {
-        ensureOrder();
-        measureBanner();
-      });
-    }
-  }
-
-  function applyVisibility() {
-    if (shouldSkip() || isLoggedIn()) {
-      removeBanner();
-      return false;
-    }
-    if (preRegEnabled === true) {
-      render();
-      return true;
-    }
-    if (preRegEnabled === false) {
-      removeBanner();
-      return false;
-    }
-    return null;
   }
 
   function boot() {
-    if (shouldSkip() || isLoggedIn()) {
-      removeBanner();
+    if (shouldSkip()) return;
+    if (document.getElementById(BAR_ID)) {
+      ensureCss();
       return;
-    }
-    ensureCss();
-    var existing = document.getElementById(BAR_ID);
-    if (existing) {
-      var cta = existing.querySelector(".erv-prereg-banner__cta");
-      if (cta) cta.textContent = CTA_LABEL;
-      var p = existing.querySelector("p");
-      if (p) p.textContent = BANNER_COPY;
-      ensureOrder();
-      measureBanner();
     }
     var api = global.PlatformAPI;
     var url =
@@ -215,134 +76,17 @@
         });
       })
       .then(function (j) {
-        if (isLoggedIn()) {
-          removeBanner();
-          return;
-        }
-        preRegEnabled = !!(j && j.pre_registration === true);
-        if (!preRegEnabled) {
-          removeBanner();
-          return;
-        }
+        if (!j || j.pre_registration !== true) return;
         render();
       })
-      .catch(function () {
-        if (isLoggedIn()) {
-          removeBanner();
-          return;
-        }
-        if (document.getElementById(BAR_ID)) {
-          ensureOrder();
-          measureBanner();
-        }
-      });
+      .catch(function () {});
   }
 
-  function watchOrder(ms) {
-    var end = Date.now() + (ms || 4000);
-    function tick() {
-      if (isLoggedIn()) {
-        removeBanner();
-        return;
-      }
-      if (!document.getElementById(BAR_ID)) return;
-      ensureOrder();
-      measureBanner();
-      if (Date.now() < end) global.requestAnimationFrame(tick);
-    }
-    if (global.requestAnimationFrame) tick();
-    [50, 100, 200, 300, 500, 700, 1000, 1400, 2000, 2800, 4000, 6000].forEach(function (t) {
-      global.setTimeout(function () {
-        if (isLoggedIn()) {
-          removeBanner();
-          return;
-        }
-        if (!document.getElementById(BAR_ID)) return;
-        ensureOrder();
-        measureBanner();
-      }, t);
-    });
-    try {
-      if (document.body && !global.__ervPreRegOrderMo) {
-        var moTimer = null;
-        global.__ervPreRegOrderMo = new MutationObserver(function () {
-          if (moTimer) return;
-          moTimer = global.setTimeout(function () {
-            moTimer = null;
-            if (isLoggedIn()) {
-              removeBanner();
-              return;
-            }
-            ensureOrder();
-            measureBanner();
-          }, 30);
-        });
-        global.__ervPreRegOrderMo.observe(document.body, { childList: true });
-        global.setTimeout(function () {
-          if (global.__ervPreRegOrderMo) {
-            global.__ervPreRegOrderMo.disconnect();
-            global.__ervPreRegOrderMo = null;
-          }
-        }, ms || 8000);
-      }
-    } catch (e) {}
-  }
-
-  global.ErvenowPreRegBanner = {
-    __ervVer: VER,
-    boot: boot,
-    render: render,
-    measure: measureBanner,
-    ensureOrder: ensureOrder,
-    isLoggedIn: isLoggedIn,
-    applyVisibility: applyVisibility,
-  };
-
-  /* إخفاء فوري للشريط الثابت إذا كان المستخدم مسجّلاً */
-  if (isLoggedIn()) {
-    removeBanner();
-  }
+  global.ErvenowPreRegBanner = { boot: boot, render: render };
 
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", boot);
   } else {
     boot();
   }
-
-  global.addEventListener("ervenow:auth-changed", function () {
-    if (isLoggedIn()) {
-      removeBanner();
-      return;
-    }
-    if (preRegEnabled === true) render();
-    else boot();
-  });
-
-  global.addEventListener("storage", function (ev) {
-    if (!ev) return;
-    var k = String(ev.key || "");
-    if (
-      k === "ervenow_access_token" ||
-      k === "token" ||
-      k === "erwenow_access_token"
-    ) {
-      if (isLoggedIn()) removeBanner();
-      else if (preRegEnabled === true) render();
-    }
-  });
-
-  global.addEventListener("resize", function () {
-    if (document.getElementById(BAR_ID)) {
-      ensureOrder();
-      measureBanner();
-    }
-  });
-  global.addEventListener("orientationchange", function () {
-    global.setTimeout(function () {
-      ensureOrder();
-      measureBanner();
-    }, 180);
-  });
-
-  if (!isLoggedIn()) watchOrder(4500);
 })(window);

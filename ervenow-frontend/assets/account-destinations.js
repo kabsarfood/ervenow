@@ -139,13 +139,13 @@
       style.textContent =
         "#ervAccountPickerOverlay{position:fixed;inset:0;z-index:100000;background:rgba(20,12,8,.55);display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box}" +
         "#ervAccountPickerOverlay[hidden]{display:none!important}" +
-        ".erv-account-picker{background:#fffdf8;border:1px solid rgba(185,135,47,.35);border-radius:16px;padding:18px;max-width:400px;width:100%;box-shadow:0 20px 50px rgba(15,40,28,.2);font-family:Cairo,system-ui,sans-serif;color:#111827}" +
+        ".erv-account-picker{background:#fffdf8;border:1px solid rgba(185,135,47,.35);border-radius:16px;padding:18px;max-width:400px;width:100%;box-shadow:0 20px 50px rgba(45,26,14,.2);font-family:Cairo,system-ui,sans-serif;color:#3d2213}" +
         ".erv-account-picker h2{margin:0 0 6px;font-size:1.1rem;font-weight:900}" +
-        ".erv-account-picker__sub{margin:0 0 14px;font-size:.88rem;line-height:1.5;color:#6b7280}" +
+        ".erv-account-picker__sub{margin:0 0 14px;font-size:.88rem;line-height:1.5;color:#5c4a3d}" +
         ".erv-account-picker__list{display:flex;flex-direction:column;gap:8px}" +
-        ".erv-account-picker__btn{width:100%;min-height:48px;border-radius:12px;border:1px solid rgba(185,135,47,.4);background:linear-gradient(180deg,#fffefb,#f7f4ef);font-family:inherit;font-size:.95rem;font-weight:800;cursor:pointer;color:#111827}" +
-        ".erv-account-picker__btn:hover{border-color:#b9872f;background:#e8f6ef}" +
-        ".erv-account-picker__close{margin-top:12px;width:100%;min-height:44px;border:0;background:transparent;font-family:inherit;font-weight:700;color:#6b7280;cursor:pointer}";
+        ".erv-account-picker__btn{width:100%;min-height:48px;border-radius:12px;border:1px solid rgba(185,135,47,.4);background:linear-gradient(180deg,#fffefb,#f8f4ee);font-family:inherit;font-size:.95rem;font-weight:800;cursor:pointer;color:#3d2213}" +
+        ".erv-account-picker__btn:hover{border-color:#b9872f;background:#fff9ee}" +
+        ".erv-account-picker__close{margin-top:12px;width:100%;min-height:44px;border:0;background:transparent;font-family:inherit;font-weight:700;color:#5c4a3d;cursor:pointer}";
       document.head.appendChild(style);
     }
     return el;

@@ -104,15 +104,15 @@ const MAINTENANCE_HTML = `<!DOCTYPE html>
 <meta name="robots" content="noindex, nofollow"/>
 <title>المنصة تحت التطوير والصيانة | ERVENOW</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;800&family=Tajawal:wght@400;700;800&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;800&display=swap" rel="stylesheet"/>
 <style>
 *{box-sizing:border-box}
 body{margin:0;min-height:100dvh;display:flex;align-items:center;justify-content:center;
-font-family:Tajawal,Cairo,sans-serif;background:linear-gradient(160deg,#f7f4ef 0%,#e8f6ef 100%);color:#111827}
+font-family:Cairo,sans-serif;background:linear-gradient(160deg,#f8f4ef 0%,#e8ddd2 100%);color:#2b1f16}
 .box{text-align:center;padding:32px 28px;max-width:420px}
-h1{font-size:1.75rem;font-weight:800;color:#146c43;margin:0 0 12px}
-p{margin:0;font-size:1.05rem;color:#6b7280;line-height:1.6}
-mark{background:transparent;color:#146c43;font-weight:700}
+h1{font-size:1.75rem;font-weight:800;color:#5b371d;margin:0 0 12px}
+p{margin:0;font-size:1.05rem;color:#6f5441;line-height:1.6}
+mark{background:transparent;color:#5b371d;font-weight:700}
 </style>
 </head>
 <body>

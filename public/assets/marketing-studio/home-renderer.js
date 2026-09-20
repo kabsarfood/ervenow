@@ -50,20 +50,7 @@
   }
 
   function chromeAnchor(parent) {
-    if (!parent) return null;
-    if (parent !== document.body) {
-      /* عناوين الأقسام (مثل ماذا تريد اليوم؟) تبقى أولاً داخل hub/main */
-      var head = parent.querySelector(
-        ":scope > .erv-mp-hub-head, :scope > .erv-mp-section__head, :scope > .sn-section__title"
-      );
-      if (head && head.parentElement === parent) {
-        if (parent.firstElementChild !== head) {
-          parent.insertBefore(head, parent.firstElementChild);
-        }
-        return head.nextSibling;
-      }
-      return parent.firstChild;
-    }
+    if (!parent || parent !== document.body) return parent ? parent.firstChild : null;
     var prereg = document.getElementById("ervPreRegBanner");
     var header =
       document.getElementById("top") ||
@@ -80,42 +67,6 @@
       return header.nextSibling;
     }
     return parent.firstChild;
-  }
-
-  function pinHubSectionOrder() {
-    var hub =
-      document.querySelector('[data-marketing-slot="hub_section"]') ||
-      document.querySelector(".sn-section--hub");
-    if (!hub) return;
-    var head = hub.querySelector(".erv-mp-hub-head");
-    var cats = document.getElementById("snHomeHub");
-    var trust = document.getElementById("trust");
-    if (head && hub.firstElementChild !== head) {
-      hub.insertBefore(head, hub.firstElementChild);
-    }
-    if (head && cats && head.nextElementSibling !== cats) {
-      hub.insertBefore(cats, head.nextSibling);
-    }
-    if (cats && trust && cats.nextElementSibling !== trust) {
-      hub.insertBefore(trust, cats.nextSibling);
-    } else if (!cats && head && trust && head.nextElementSibling !== trust) {
-      hub.insertBefore(trust, head.nextSibling);
-    }
-  }
-
-  function pinMainSectionOrder() {
-    var why = document.getElementById("why");
-    var stats = document.getElementById("stats");
-    var cta = document.querySelector(".lp-home-cta-wrap");
-    if (why && stats && stats.previousElementSibling !== why) {
-      why.insertAdjacentElement("afterend", stats);
-    }
-    if (stats && cta && stats.nextElementSibling !== cta && cta.parentElement === stats.parentElement) {
-      /* أبقِ بطاقات التواصل بعد الإحصائيات مباشرة */
-      if (cta.previousElementSibling !== stats) {
-        stats.insertAdjacentElement("afterend", cta);
-      }
-    }
   }
 
   function pinBodyChrome() {
@@ -159,9 +110,6 @@
       }
     }
 
-    pinHubSectionOrder();
-    pinMainSectionOrder();
-
     if (window.ErvenowPreRegBanner && typeof window.ErvenowPreRegBanner.measure === "function") {
       window.ErvenowPreRegBanner.measure();
     }
@@ -181,13 +129,9 @@
       if (!el || el.parentElement !== parent) continue;
       /* لا تحرّك الهيدر عبر append — يبقى ضمن الـ chrome في الأعلى */
       if (el.id === "top" || (el.classList && el.classList.contains("lp-header"))) continue;
-      /* لا تُدخل عنوان القسم ضمن إعادة الترتيب */
-      if (el.classList && el.classList.contains("erv-mp-hub-head")) continue;
       parent.insertBefore(el, marker);
       marker = el.nextSibling;
     }
-    if (parentKey === "hub_section") pinHubSectionOrder();
-    if (parentKey === "main") pinMainSectionOrder();
     if (parentKey === "body") pinBodyChrome();
   }
 
@@ -213,17 +157,12 @@
     }
     document.documentElement.setAttribute("data-marketing-applied", "1");
     document.documentElement.setAttribute("data-marketing-surface", SURFACE);
-    pinHubSectionOrder();
-    pinMainSectionOrder();
     pinBodyChrome();
     try {
       window.dispatchEvent(
         new CustomEvent("ervenow:marketing-applied", { detail: { surface: SURFACE, experience: data } })
       );
     } catch (e) {}
-    /* تثبيت نهائي بعد أي مستمعين لـ marketing-applied */
-    pinHubSectionOrder();
-    pinMainSectionOrder();
   }
 
   function fetchExperience() {

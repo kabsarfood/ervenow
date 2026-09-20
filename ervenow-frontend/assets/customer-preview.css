@@ -1,14 +1,14 @@
 /* ERVENOW — Customer Portal Preview (experimental) */
 :root {
-  --cp-bg: #f7f4ef;
+  --cp-bg: #f8f4ee;
   --cp-surface: #fffefb;
-  --cp-sidebar: #111827;
+  --cp-sidebar: #3d2213;
   --cp-sidebar-text: #f5ebe0;
-  --cp-accent: var(--erve-primary, #146c43);
-  --cp-accent-soft: #d8f3e4;
-  --cp-text: #111827;
-  --cp-muted: #6b7280;
-  --cp-border: rgba(17, 24, 39, 0.12);
+  --cp-accent: #b9872f;
+  --cp-accent-soft: #f3e4cc;
+  --cp-text: #2b1f16;
+  --cp-muted: #6f5441;
+  --cp-border: rgba(61, 34, 19, 0.12);
   --cp-radius: 14px;
   --cp-sidebar-w: clamp(220px, 24vw, 260px);
   --cp-touch: 48px;
@@ -30,7 +30,7 @@ body.customer-preview-page {
 }
 
 .cp-preview-banner {
-  background: linear-gradient(90deg, #111827, #111827);
+  background: linear-gradient(90deg, #3d2213, #5b371d);
   color: #f5ebe0;
   text-align: center;
   font-size: 0.78rem;
@@ -102,7 +102,7 @@ body.customer-preview-page {
 }
 
 .cp-nav__item.is-active {
-  background: rgba(20, 108, 67, 0.28);
+  background: rgba(185, 135, 47, 0.28);
   color: #ffe8b8;
 }
 
@@ -165,7 +165,7 @@ body.customer-preview-page {
 
 .cp-header__logo {
   font-weight: 900;
-  color: #111827;
+  color: #3d2213;
   text-decoration: none;
   white-space: nowrap;
 }
@@ -211,7 +211,7 @@ body.customer-preview-page {
   align-items: center;
   justify-content: center;
   font-weight: 900;
-  color: #111827;
+  color: #3d2213;
 }
 
 .cp-content {
@@ -239,7 +239,7 @@ body.customer-preview-page {
   border-radius: var(--cp-radius);
   padding: clamp(14px, 3vw, 18px);
   margin-bottom: 14px;
-  box-shadow: 0 6px 20px rgba(15, 40, 28, 0.06);
+  box-shadow: 0 6px 20px rgba(45, 26, 14, 0.06);
 }
 
 .cp-loc-card {
@@ -248,7 +248,7 @@ body.customer-preview-page {
   gap: 12px;
   padding: 14px;
   border-radius: var(--cp-radius);
-  border: 1px solid rgba(20, 108, 67, 0.28);
+  border: 1px solid rgba(185, 135, 47, 0.28);
   background: linear-gradient(145deg, #fffefb, #faf4ea);
   margin-bottom: 14px;
 }
@@ -423,7 +423,7 @@ body.customer-preview-page {
 
 .cp-tab.is-active {
   background: var(--cp-accent-soft);
-  border-color: rgba(20, 108, 67, 0.45);
+  border-color: rgba(185, 135, 47, 0.45);
 }
 
 .cp-btn {
@@ -436,7 +436,7 @@ body.customer-preview-page {
   font-size: 0.86rem;
   font-weight: 800;
   cursor: pointer;
-  color: #111827;
+  color: #3d2213;
   text-decoration: none;
   display: inline-flex;
   align-items: center;

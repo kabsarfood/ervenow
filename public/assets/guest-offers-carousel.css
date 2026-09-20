@@ -16,7 +16,7 @@
   margin-bottom: 14px;
   overflow: hidden;
   border-radius: 18px;
-  border: 1px solid rgba(17, 24, 39, 0.1);
+  border: 1px solid rgba(61, 34, 19, 0.1);
   background: #1a120c;
 }
 
@@ -33,7 +33,7 @@
   margin: 0 auto clamp(12px, 2.5vw, 18px);
   overflow: hidden;
   border-radius: clamp(14px, 2.5vw, 18px);
-  border: 1px solid rgba(17, 24, 39, 0.1);
+  border: 1px solid rgba(61, 34, 19, 0.1);
   background: #1a120c;
   box-shadow: 0 8px 28px rgba(45, 26, 10, 0.1);
 }
@@ -167,7 +167,7 @@
 }
 
 .guest-offers-slide--noimg {
-  background: linear-gradient(135deg, #111827 0%, #6b4a2e 42%, #1a120c 100%);
+  background: linear-gradient(135deg, #3d2213 0%, #6b4a2e 42%, #1a120c 100%);
 }
 
 .guest-offers-shell {
@@ -179,7 +179,7 @@
 }
 
 .guest-offers-shell--placeholder {
-  background: linear-gradient(135deg, #e9dccb 0%, #f7f4ef 55%, #efe6d8 100%);
+  background: linear-gradient(135deg, #e9dccb 0%, #f8f4ee 55%, #efe6d8 100%);
   pointer-events: none;
 }
 
@@ -284,7 +284,7 @@
   padding: 4px 10px;
   border-radius: 999px;
   background: rgba(212, 168, 74, 0.92);
-  color: #0f5a37;
+  color: #2b170d;
   font-size: clamp(0.72rem, 2vw, 0.78rem);
   font-weight: 900;
   line-height: 1.35;
@@ -360,8 +360,8 @@
   padding: clamp(8px, 2vw, 12px);
   border-radius: 20px;
   background: linear-gradient(155deg, rgba(255, 254, 251, 0.96), rgba(248, 241, 229, 0.9));
-  border: 1px solid rgba(17, 24, 39, 0.1);
-  box-shadow: 0 8px 28px rgba(15, 40, 28, 0.06);
+  border: 1px solid rgba(61, 34, 19, 0.1);
+  box-shadow: 0 8px 28px rgba(45, 26, 14, 0.06);
 }
 
 .guest-offers-carousel-wrap--home:has(#homeMainBanner[hidden]) {
@@ -373,7 +373,7 @@
   max-width: 100%;
   margin: 0;
   border-radius: 16px;
-  border: 1px solid rgba(17, 24, 39, 0.08);
+  border: 1px solid rgba(61, 34, 19, 0.08);
   box-shadow: none;
 }
 

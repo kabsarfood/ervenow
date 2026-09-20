@@ -11,9 +11,9 @@
   --text: #2e241c;
   --muted: #7a6a5a;
   --shadow: 0 8px 24px rgba(92, 58, 33, 0.08);
-  --gold-edge: rgba(20, 108, 67, 0.26);
-  --gold-glow: rgba(20, 108, 67, 0.07);
-  --gold-ring: rgba(20, 108, 67, 0.11);
+  --gold-edge: rgba(185, 135, 47, 0.26);
+  --gold-glow: rgba(201, 162, 39, 0.07);
+  --gold-ring: rgba(201, 162, 39, 0.11);
 }
 
 .cart-checkout-v3 .dash-main {
@@ -307,7 +307,7 @@
 .cart-checkout-v3 .payment-option:has(input:checked),
 .cart-checkout-v3 .erv-pay-card.payment-option--selected {
   border-color: var(--primary);
-  background: #f7f4ef;
+  background: #f8f4ee;
 }
 
 .cart-checkout-v3 .payment-label,

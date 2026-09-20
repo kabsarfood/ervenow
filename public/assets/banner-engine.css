@@ -191,14 +191,14 @@
   margin: 0 0 14px;
   padding: clamp(12px, 2.5vw, 16px);
   border-radius: 12px;
-  border: 1px solid rgba(20, 108, 67, 0.28);
+  border: 1px solid rgba(185, 135, 47, 0.28);
   background: rgba(255, 248, 235, 0.92);
   line-height: 1.55;
   font-size: clamp(0.88rem, 2.2vw, 0.95rem);
 }
 
 .hero-banners-spec-notice strong {
-  color: #111827;
+  color: #3d2213;
 }
 
 .hero-banner-preview {

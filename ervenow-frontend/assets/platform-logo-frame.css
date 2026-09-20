@@ -3,7 +3,7 @@
  * يُطبَّق على صور الشعار وعناصر الخلفية المكافئة في كل الصفحات.
  */
 :root {
-  --erv-platform-logo-border-color: var(--brown, #111827);
+  --erv-platform-logo-border-color: var(--brown, #3d2213);
   --erv-platform-logo-border-width: 2.5px;
 }
 

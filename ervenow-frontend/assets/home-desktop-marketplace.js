@@ -190,10 +190,10 @@
       openBadge +
       '<img class="erv-mp-store__cover" src="' +
       esc(cover) +
-      '" alt="" width="640" height="400" loading="lazy" decoding="async" />' +
+      '" alt="" loading="lazy" decoding="async" />' +
       '<img class="erv-mp-store__logo" src="' +
       esc(logo) +
-      '" alt="" width="88" height="88" loading="lazy" decoding="async" />' +
+      '" alt="" loading="lazy" decoding="async" />' +
       "</div>" +
       '<div class="erv-mp-store__body">' +
       '<h3 class="erv-mp-store__name">' +
@@ -224,7 +224,7 @@
       '">' +
       '<div class="erv-mp-product__media"><img src="' +
       esc(img) +
-      '" alt="" width="320" height="320" loading="lazy" decoding="async" /></div>' +
+      '" alt="" loading="lazy" decoding="async" /></div>' +
       '<div class="erv-mp-product__body">' +
       '<h3 class="erv-mp-product__name">' +
       esc(name) +
@@ -318,10 +318,7 @@
     var productsGrid = document.getElementById("ervMpProductsGrid");
     var discover = document.getElementById("ervMpDiscover");
 
-    if (discover) {
-      discover.hidden = false;
-      discover.removeAttribute("hidden");
-    }
+    if (discover) discover.hidden = false;
 
     var geo = readGeo();
     var geoQs = "";
@@ -424,21 +421,6 @@
     if (stats.previousElementSibling !== why) {
       why.insertAdjacentElement("afterend", stats);
     }
-    var cta = document.querySelector(".lp-home-cta-wrap");
-    if (cta && stats.parentElement === cta.parentElement && stats.nextElementSibling !== cta) {
-      stats.insertAdjacentElement("afterend", cta);
-    }
-  }
-
-  function pinHubSectionOrder() {
-    var hub = document.querySelector(".sn-section--hub");
-    if (!hub) return;
-    var head = hub.querySelector(".erv-mp-hub-head");
-    var cats = document.getElementById("snHomeHub");
-    var trust = document.getElementById("trust");
-    if (head && hub.firstElementChild !== head) hub.insertBefore(head, hub.firstElementChild);
-    if (head && cats && head.nextElementSibling !== cats) hub.insertBefore(cats, head.nextSibling);
-    if (cats && trust && cats.nextElementSibling !== trust) hub.insertBefore(trust, cats.nextSibling);
   }
 
   function ensurePreregHeaderOrder() {
@@ -497,15 +479,12 @@
     pinTopChrome();
     if (topChromeMo || !document.body) return;
     try {
-      var bumps = 0;
       topChromeMo = new MutationObserver(function () {
         if (topChromeMoTimer) return;
-        if (bumps > 12) return;
         topChromeMoTimer = setTimeout(function () {
           topChromeMoTimer = null;
-          bumps += 1;
           pinTopChrome();
-        }, 80);
+        }, 40);
       });
       topChromeMo.observe(document.body, { childList: true });
       setTimeout(function () {
@@ -513,7 +492,7 @@
           topChromeMo.disconnect();
           topChromeMo = null;
         }
-      }, Math.min(ms || 4000, 4000));
+      }, ms || 8000);
     } catch (e) {}
   }
 
@@ -533,12 +512,9 @@
     }
 
     placeStatsStrip();
-    pinHubSectionOrder();
     pinTopChrome();
 
     if (!isDesktopMp()) {
-      pinHubSectionOrder();
-      placeStatsStrip();
       watchBannerVisual();
       return;
     }
@@ -560,7 +536,6 @@
     }
 
     pinTopChrome();
-    pinHubSectionOrder();
     placeStatsStrip();
     watchBannerVisual();
   }

@@ -16,9 +16,9 @@ body.store-preview-mode .dash-site-footer__links {
 }
 
 .store-preview-banner {
-  background: linear-gradient(135deg, rgba(17, 24, 39, 0.94), rgba(92, 55, 32, 0.92));
+  background: linear-gradient(135deg, rgba(61, 34, 19, 0.94), rgba(92, 55, 32, 0.92));
   color: #fffefb;
-  border-bottom: 1px solid rgba(20, 108, 67, 0.35);
+  border-bottom: 1px solid rgba(185, 135, 47, 0.35);
   padding: max(10px, env(safe-area-inset-top, 0px)) max(14px, env(safe-area-inset-right, 14px)) 10px
     max(14px, env(safe-area-inset-left, 14px));
 }

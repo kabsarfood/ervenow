@@ -136,7 +136,7 @@ app.renderExecDriverModalUi = function () {
   list.innerHTML = "";
   var drivers = app.getAssignableDrivers();
   if (!drivers.length) {
-    list.innerHTML = '<p class="live-dash-msg" style="color:#6b7280">لا يوجد مناديب معتمدون بموقع GPS.</p>';
+    list.innerHTML = '<p class="live-dash-msg" style="color:#6f5441">لا يوجد مناديب معتمدون بموقع GPS.</p>';
     return;
   }
   drivers.sort(function (a, b) {
@@ -153,10 +153,10 @@ app.renderExecDriverModalUi = function () {
       btn.classList.add("is-suggested");
     }
     var left = document.createElement("span");
-    left.innerHTML = "<strong>" + app.escapeHtml(d.name || "مندوب") + "</strong><br><span style=\"font-size:.78rem;color:#6b7280\">" + app.escapeHtml(d.phone || "") + "</span>";
+    left.innerHTML = "<strong>" + app.escapeHtml(d.name || "مندوب") + "</strong><br><span style=\"font-size:.78rem;color:#6f5441\">" + app.escapeHtml(d.phone || "") + "</span>";
     var dist = document.createElement("span");
     dist.style.fontWeight = "800";
-    dist.style.color = "#146c43";
+    dist.style.color = "#5b371d";
     if (app.execModalOrder) {
       var target = app.getOrderTargetLatLng(app.execModalOrder);
       var la = Number(d.lat != null ? d.lat : d.latitude);
@@ -197,7 +197,7 @@ app.buildOrderExecPopupActions = function (o) {
   var html = '<div class="admin-popup-actions">';
   if (app.orderNeedsDriver(o)) {
     html +=
-      '<button type="button" class="admin-exec-btn exec-btn--primary" style="background:#fde68a;color:#0f5a37" data-exec-action="assign" data-order-id="' +
+      '<button type="button" class="admin-exec-btn exec-btn--primary" style="background:#fde68a;color:#3d2618" data-exec-action="assign" data-order-id="' +
       oid +
       '">تعيين</button>';
     html +=
@@ -336,7 +336,7 @@ app.focusLiveOrderRow = function (orderId) {
     if (!root) return;
     var el = root.querySelector('[data-order-id="' + oid + '"]');
     if (el) {
-        el.style.outline = "2px solid #146c43";
+        el.style.outline = "2px solid #5b371d";
         el.style.background = "#fff7ed";
         try {
           el.scrollIntoView({ behavior: "smooth", block: "nearest" });

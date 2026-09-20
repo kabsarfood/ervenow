@@ -12,29 +12,22 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      rel="preload"
-      as="style"
-      href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Tajawal:wght@400;500;700;800&display=optional"
-    />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Tajawal:wght@400;500;700;800&display=optional"
+      href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Tajawal:wght@400;500;700;800&display=swap"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="/assets/ervenow-design-tokens.css?erv=20260919id" />
-    <link rel="stylesheet" href="/assets/ervenow-cls-stability.css?erv=20260920cls1" />
-    <link rel="stylesheet" href="/assets/ervenow-identity.css?erv=20260919search6" />
     <link rel="stylesheet" href="/assets/styles.css?erv=20260919id" />
     <link rel="stylesheet" href="/assets/start-now-landing.css?erv=20260901h" />
     <link rel="stylesheet" href="/assets/ervenow-responsive.css" />
     <link rel="stylesheet" href="/assets/mobile-foundation.css?erv=20260623" />
     <link rel="stylesheet" href="/assets/mobile-home-conversion.css?erv=20260630" />
     <link rel="stylesheet" href="/assets/home-polish-p1a.css?erv=20260630" />
-    <link rel="stylesheet" href="/assets/home-polish-p1b.css?erv=20260920tag1" />
+    <link rel="stylesheet" href="/assets/home-polish-p1b.css?erv=20260901h" />
     <link rel="stylesheet" href="/assets/home-polish-p1c.css?erv=20260901h" />
-    <link rel="stylesheet" href="/assets/home-polish-final.css?erv=20260920tag1" />
+    <link rel="stylesheet" href="/assets/home-polish-final.css?erv=20260901h" />
     <script src="/assets/mobile-foundation.js?erv=20260919emoji" defer></script>
     <script src="/assets/mobile-orders-nav-badge.js?erv=20260612" defer></script>
-    <script src="/assets/mobile-harmony.js?erv=20260920tag1" defer></script>
+    <script src="/assets/mobile-harmony.js?erv=20260901o" defer></script>
     <script src="/assets/api-config.js"></script>
     <script src="/assets/phonePrivacy.js"></script>
     <script src="/assets/api.js?erv=20260919id"></script>
@@ -2871,39 +2864,16 @@
       }
     </style>
     <link rel="stylesheet" href="/assets/order-draft-badge.css" />
-    <link rel="stylesheet" href="/assets/index-header-banner.css?erv=20260920tag1" />
+    <link rel="stylesheet" href="/assets/index-header-banner.css?erv=20260901m" />
     <link rel="stylesheet" href="/assets/guest-offers-carousel.css?erv=20260901h" />
-    <link rel="stylesheet" href="/assets/mobile-harmony.css?erv=20260920tag1" />
+    <link rel="stylesheet" href="/assets/mobile-harmony.css?erv=20260920mob1" />
     <link rel="stylesheet" href="/assets/design-system/erv-typography-pr1-tokens.css" />
     <link rel="stylesheet" href="/assets/marketing-studio/home-marketing.css?erv=20260701m1" />
     <link rel="stylesheet" href="/assets/home-stage-expand.css?erv=20260919e" />
     <link rel="stylesheet" href="/assets/home-desktop-vip.css?erv=20260919e" />
-    <link rel="stylesheet" href="/assets/home-desktop-marketplace.css?erv=20260920cls1" />
+    <link rel="stylesheet" href="/assets/home-desktop-marketplace.css?erv=20260920desk1" />
   </head>
   <body class="lp-body lp-home-premium erv-typography-pr2-home">
-    <div id="ervPreRegBanner" class="erv-prereg-banner" role="status" data-erv-prereg-static="1">
-      <p>التسجيل مفتوح — سجّل برقمك.</p>
-      <a class="erv-prereg-banner__cta" href="/login?mode=register&amp;role=customer">سجّل</a>
-    </div>
-    <script>
-      (function () {
-        try {
-          var tok =
-            localStorage.getItem("ervenow_access_token") ||
-            localStorage.getItem("token") ||
-            localStorage.getItem("erwenow_access_token");
-          if (tok && String(tok).trim()) {
-            var bar = document.getElementById("ervPreRegBanner");
-            if (bar && bar.parentNode) bar.parentNode.removeChild(bar);
-            document.documentElement.classList.remove("erv-has-prereg");
-            document.documentElement.style.setProperty("--erv-prereg-h", "0px");
-            return;
-          }
-          document.documentElement.classList.add("erv-has-prereg");
-          document.documentElement.style.setProperty("--erv-prereg-h", "48px");
-        } catch (e) {}
-      })();
-    </script>
     <header class="lp-header lp-header--refined lp-header--menu-right" id="top" data-marketing-slot="header" data-marketing-parent="body">
       <div class="lp-header__inner" id="lpHeaderInner">
         <div class="lp-header__top-row">
@@ -3088,7 +3058,7 @@
     <div class="erv-mp-stage">
       <section class="erv-mp-hero" aria-label="ابدأ طلبك">
         <div class="erv-mp-hero__copy erv-mp-only">
-          <h1 class="erv-mp-hero__title section-title">ماذا تحتاج اليوم؟</h1>
+          <h1 class="erv-mp-hero__title">ماذا تحتاج اليوم؟</h1>
           <p class="erv-mp-hero__sub">اطلب من مطعم، متجر، صيدلية أو أي خدمة حولك</p>
           <form class="erv-mp-hero-search" data-erv-mp-search action="/restaurants" method="get" role="search">
             <span class="erv-mp-hero-search__ic" aria-hidden="true">🔍</span>
@@ -3121,13 +3091,11 @@
             data-marketing-parent="body"
           >
             <section
-              class="card guest-offers-carousel guest-offers-carousel--home guest-offers-carousel--reserved"
+              class="card guest-offers-carousel guest-offers-carousel--home"
               id="homeMainBanner"
+              hidden
               aria-label="عروض المنصة"
-              data-erv-banner-reserved="1"
-            >
-              <div class="guest-offers-shell guest-offers-shell--placeholder" aria-hidden="true"></div>
-            </section>
+            ></section>
           </div>
           <div class="erv-mp-tiles" id="ervMpTiles" aria-label="اختصارات سريعة">
             <a href="/restaurants">مطاعم<span>اطلب الآن</span></a>
@@ -3146,7 +3114,7 @@
       data-marketing-parent="body"
     >
       <div class="erv-mp-hub-head">
-        <h2 class="sn-section__title sn-section__title--solo section-title" id="home-cats-title">ماذا تريد اليوم؟</h2>
+        <h2 class="sn-section__title sn-section__title--solo" id="home-cats-title">ماذا تريد اليوم؟</h2>
         <a class="erv-mp-section__more erv-mp-only" href="/stores">عرض جميع الفئات ←</a>
       </div>
 
@@ -3257,7 +3225,7 @@
       </div>
     </section>
 
-    <div class="erv-mp-discover erv-mp-only" id="ervMpDiscover">
+    <div class="erv-mp-discover erv-mp-only" id="ervMpDiscover" hidden>
       <section class="erv-mp-section" id="ervMpNearbySection" hidden aria-labelledby="ervMpNearbyTitle">
         <div class="erv-mp-section__head">
           <h2 class="erv-mp-section__title" id="ervMpNearbyTitle">متاجر قريبة منك</h2>
@@ -3300,7 +3268,7 @@
 
       <section class="erv-mp-section" id="ervMpQuickSection" aria-labelledby="ervMpQuickTitle">
         <div class="erv-mp-section__head">
-          <h2 class="erv-mp-section__title section-title" id="ervMpQuickTitle">خدمات سريعة</h2>
+          <h2 class="erv-mp-section__title" id="ervMpQuickTitle">خدمات سريعة</h2>
           <a class="erv-mp-section__more" href="/delivery-services.html">عرض الكل ←</a>
         </div>
         <div class="erv-mp-quick">
@@ -3381,7 +3349,7 @@
       ></div>
       <section class="lp-section lp-wrap lp-reveal erv-mp-why" id="why" aria-labelledby="why-title" data-marketing-slot="why_section" data-marketing-parent="main">
         <div class="erv-mp-why__head">
-          <h2 class="lp-section__title section-title" id="why-title">كيف تعمل ERVENOW؟</h2>
+          <h2 class="lp-section__title" id="why-title">كيف تعمل ERVENOW؟</h2>
           <p class="erv-mp-why__lead">أربع خطوات بسيطة من الطلب حتى باب بيتك</p>
         </div>
         <div class="lp-why__grid lp-why__grid--compact lp-why__grid--4">
@@ -3714,13 +3682,13 @@
         }
       })();
     </script>
-    <script src="/assets/marketing-studio/home-renderer.js?erv=20260920hub1" defer></script>
-    <script src="/assets/guest-offers-carousel.js?erv=20260920cls1" defer></script>
+    <script src="/assets/marketing-studio/home-renderer.js?erv=20260920desk1" defer></script>
+    <script src="/assets/guest-offers-carousel.js?erv=20260630" defer></script>
     <script src="/assets/guestBrowse.js"></script>
     <script src="/assets/ervenow-toggle.js"></script>
     <script src="/assets/guest-shell.js?erv=20260905b"></script>
-    <script src="/assets/pre-reg-banner.js?erv=20260920auth1" defer></script>
-    <script src="/assets/home-desktop-marketplace.js?erv=20260920hub1" defer></script>
+    <script src="/assets/pre-reg-banner.js?erv=20260920mob7" defer></script>
+    <script src="/assets/home-desktop-marketplace.js?erv=20260920desk1" defer></script>
     <script>
       function goLogin() {
         window.location.href = "/login";

@@ -22,7 +22,7 @@
 .track-header {
   padding: 18px 18px 16px;
   border-radius: 22px;
-  border: 1px solid rgba(17, 24, 39, 0.14);
+  border: 1px solid rgba(61, 34, 19, 0.14);
   background:
     linear-gradient(145deg, rgba(255, 255, 255, 0.95), rgba(248, 241, 229, 0.88)),
     linear-gradient(135deg, rgba(74, 41, 23, 0.06), transparent 55%);
@@ -67,7 +67,7 @@
   font-weight: 700;
   font-size: 14px;
   text-align: center;
-  border: 1px solid rgba(17, 24, 39, 0.12);
+  border: 1px solid rgba(61, 34, 19, 0.12);
   background: rgba(255, 255, 255, 0.85);
   color: var(--muted);
 }
@@ -138,7 +138,7 @@
   font-size: 13px;
   font-weight: 800;
   background: rgba(248, 241, 229, 0.95);
-  border: 1px solid rgba(17, 24, 39, 0.14);
+  border: 1px solid rgba(61, 34, 19, 0.14);
   color: var(--brown2);
 }
 
@@ -201,7 +201,7 @@
   font-size: 12px;
   font-weight: 700;
   color: var(--muted);
-  border-top: 1px solid rgba(17, 24, 39, 0.1);
+  border-top: 1px solid rgba(61, 34, 19, 0.1);
   background: rgba(255, 253, 248, 0.95);
 }
 
@@ -233,7 +233,7 @@
   margin-top: 8px;
   padding: 16px 18px;
   border-radius: 18px;
-  background: linear-gradient(135deg, #4a2917, #0f5a37);
+  background: linear-gradient(135deg, #4a2917, #2b170d);
   color: #f5e6c8;
   border: 1px solid rgba(185, 135, 47, 0.28);
   box-shadow: 0 14px 36px rgba(43, 23, 13, 0.2);

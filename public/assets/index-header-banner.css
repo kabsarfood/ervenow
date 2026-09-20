@@ -1037,7 +1037,11 @@ html[lang="en"] .lp-header.lp-header--menu-left .lp-quick-dd__panel {
     line-height: 1.15;
   }
   html.erv-mobile-shell body.lp-home-premium .lp-header__brand-mid .lp-brand__tag {
-    display: none !important;
+    display: block !important;
+    font-size: var(--erv-home-header-tag, 0.85rem) !important;
+    font-weight: 700 !important;
+    color: var(--erve-primary, #146c43);
+    line-height: 1.2;
   }
   html.erv-mobile-shell body.lp-home-premium .lp-header.lp-header--refined .lp-header__top-row > .lp-header__menu-slot {
     grid-column: 3 !important;

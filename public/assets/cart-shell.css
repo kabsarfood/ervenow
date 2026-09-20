@@ -26,13 +26,13 @@
   padding: 8px 14px;
   border-radius: 12px;
   background: linear-gradient(145deg, rgba(255, 254, 251, 0.98), rgba(248, 241, 229, 0.92));
-  border: 1px solid rgba(20, 108, 67, 0.38);
+  border: 1px solid rgba(185, 135, 47, 0.38);
   font-weight: 800;
   font-family: inherit;
   font-size: 0.9rem;
-  color: var(--brown, var(--erve-ink, #111827));
+  color: var(--brown, #3d2213);
   cursor: pointer;
-  box-shadow: 0 4px 14px rgba(15, 40, 28, 0.08);
+  box-shadow: 0 4px 14px rgba(45, 26, 14, 0.08);
   transition: transform 0.2s, box-shadow 0.25s, border-color 0.2s;
 }
 
@@ -40,13 +40,13 @@
 .dash-header-cart-btn:hover {
   transform: translateY(-1px);
   box-shadow: 0 8px 22px rgba(155, 111, 37, 0.18);
-  border-color: rgba(20, 108, 67, 0.55);
+  border-color: rgba(185, 135, 47, 0.55);
 }
 
 .cart-btn[aria-expanded="true"],
 .dash-header-cart-btn[aria-expanded="true"] {
-  border-color: rgba(20, 108, 67, 0.75);
-  box-shadow: 0 0 0 3px rgba(20, 108, 67, 0.22);
+  border-color: rgba(185, 135, 47, 0.75);
+  box-shadow: 0 0 0 3px rgba(185, 135, 47, 0.22);
 }
 
 body.lp-cart-no-scroll {
@@ -139,10 +139,10 @@ body.lp-cart-no-scroll {
   background: linear-gradient(
     135deg,
     rgba(232, 197, 106, 0.95) 0%,
-    rgba(20, 108, 67, 0.55) 38%,
+    rgba(185, 135, 47, 0.55) 38%,
     rgba(122, 90, 31, 0.75) 100%
   );
-  box-shadow: 0 22px 48px rgba(15, 40, 28, 0.18);
+  box-shadow: 0 22px 48px rgba(45, 26, 14, 0.18);
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
@@ -219,7 +219,7 @@ body.lp-cart-no-scroll {
   -webkit-overflow-scrolling: touch;
   scrollbar-gutter: stable;
   scrollbar-width: thin;
-  scrollbar-color: rgba(20, 108, 67, 0.35) transparent;
+  scrollbar-color: rgba(91, 55, 29, 0.35) transparent;
 }
 
 .lp-cart-panel:not(.lp-cart-panel--page) .lp-cart-accordion--items[open] .lp-cart-card__body--items::-webkit-scrollbar {
@@ -227,7 +227,7 @@ body.lp-cart-no-scroll {
 }
 
 .lp-cart-panel:not(.lp-cart-panel--page) .lp-cart-accordion--items[open] .lp-cart-card__body--items::-webkit-scrollbar-thumb {
-  background: rgba(20, 108, 67, 0.28);
+  background: rgba(91, 55, 29, 0.28);
   border-radius: 999px;
 }
 
@@ -277,7 +277,7 @@ body.lp-cart-no-scroll {
 .lp-cart-panel__fin-details summary {
   font-size: 0.72rem;
   font-weight: 700;
-  color: var(--muted, #6b7280);
+  color: var(--muted, #5c4a3d);
   cursor: pointer;
   list-style: none;
   padding: 6px 0;
@@ -291,7 +291,7 @@ body.lp-cart-no-scroll {
   font-size: 0.72rem;
   margin: 0 0 6px;
   line-height: 1.45;
-  color: var(--muted, #6b7280);
+  color: var(--muted, #5c4a3d);
 }
 
 .lp-cart-panel__fin-note[hidden] {

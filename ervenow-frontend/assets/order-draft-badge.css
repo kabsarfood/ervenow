@@ -9,7 +9,7 @@
   min-height: 44px;
   padding: 8px 12px;
   border-radius: 12px;
-  border: 1px solid rgba(20, 108, 67, 0.45);
+  border: 1px solid rgba(201, 162, 39, 0.45);
   background: rgba(255, 250, 243, 0.95);
   color: inherit;
   text-decoration: none;
@@ -20,8 +20,8 @@
 
 .erv-draft-badge:hover,
 .lp-draft-checkout-badge:hover {
-  border-color: #146c43;
-  box-shadow: 0 4px 14px rgba(15, 40, 28, 0.1);
+  border-color: #c9a227;
+  box-shadow: 0 4px 14px rgba(42, 24, 16, 0.1);
 }
 
 .erv-draft-badge__count,

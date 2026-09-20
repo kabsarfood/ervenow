@@ -6,18 +6,18 @@
 body.guest-shell-page.stores-page.restaurants-page {
   --restaurants-ink: #2f1b10;
   --restaurants-muted: #6f5848;
-  --restaurants-gold: var(--erve-primary, #146c43);
+  --restaurants-gold: #b9872f;
   --restaurants-card: #fffefb;
-  --restaurants-border: rgba(17, 24, 39, 0.1);
-  --restaurants-shadow: 0 10px 30px rgba(15, 40, 28, 0.08);
-  --restaurants-shadow-soft: 0 4px 16px rgba(15, 40, 28, 0.05);
+  --restaurants-border: rgba(61, 34, 19, 0.1);
+  --restaurants-shadow: 0 10px 30px rgba(45, 26, 14, 0.08);
+  --restaurants-shadow-soft: 0 4px 16px rgba(45, 26, 14, 0.05);
   background:
-    radial-gradient(720px 320px at 82% -12%, rgba(20, 108, 67, 0.11), transparent 60%),
+    radial-gradient(720px 320px at 82% -12%, rgba(185, 135, 47, 0.11), transparent 60%),
     linear-gradient(180deg, #fbf6ef 0%, #fffdf9 44%, #f7efe6 100%);
 }
 
 .restaurants-page .dash-site-header {
-  box-shadow: 0 2px 16px rgba(15, 40, 28, 0.05);
+  box-shadow: 0 2px 16px rgba(45, 26, 14, 0.05);
 }
 
 .restaurants-page .dash-header-cart__icon {
@@ -39,17 +39,17 @@ body.guest-shell-page.stores-page.restaurants-page {
   max-width: 1100px;
   min-height: 0;
   padding: clamp(18px, 3vw, 28px) clamp(18px, 3vw, 30px);
-  border: 1px solid rgba(17, 24, 39, 0.08);
+  border: 1px solid rgba(61, 34, 19, 0.08);
   border-radius: clamp(18px, 2.4vw, 24px);
   background:
     linear-gradient(135deg, rgba(255, 254, 251, 0.96), rgba(247, 238, 226, 0.92)),
-    radial-gradient(circle at 12% 20%, rgba(20, 108, 67, 0.14), transparent 34%);
+    radial-gradient(circle at 12% 20%, rgba(185, 135, 47, 0.14), transparent 34%);
   box-shadow: var(--restaurants-shadow-soft);
 }
 
 .restaurants-page .guest-section-hero__eyebrow {
   margin-bottom: 6px;
-  color: rgba(17, 24, 39, 0.62);
+  color: rgba(61, 34, 19, 0.62);
   font-size: clamp(0.72rem, 1.6vw, 0.82rem);
   letter-spacing: 0;
 }
@@ -94,15 +94,15 @@ body.guest-shell-page.stores-page.restaurants-page {
   box-sizing: border-box;
   max-width: 100%;
   min-height: 54px;
-  border-color: rgba(17, 24, 39, 0.09);
+  border-color: rgba(61, 34, 19, 0.09);
   border-radius: 18px;
   background: rgba(255, 254, 251, 0.96);
   box-shadow: var(--restaurants-shadow-soft);
 }
 
 .restaurants-page .stores-search:focus {
-  border-color: rgba(20, 108, 67, 0.55);
-  box-shadow: 0 0 0 3px rgba(20, 108, 67, 0.18), var(--restaurants-shadow-soft);
+  border-color: rgba(185, 135, 47, 0.55);
+  box-shadow: 0 0 0 3px rgba(185, 135, 47, 0.18), var(--restaurants-shadow-soft);
 }
 
 .restaurants-page .erv-section-hub__sort {
@@ -137,13 +137,13 @@ body.guest-shell-page.stores-page.restaurants-page {
 
 .restaurants-page .erv-section-hub__sort-btn:hover {
   transform: translateY(-1px);
-  border-color: rgba(20, 108, 67, 0.28);
+  border-color: rgba(185, 135, 47, 0.28);
 }
 
 .restaurants-page .erv-section-hub__sort-btn:focus-visible,
 .restaurants-page .stores-cuisine-chip:focus-visible,
 .restaurants-page .store-card__btn:focus-visible {
-  outline: 3px solid rgba(20, 108, 67, 0.55);
+  outline: 3px solid rgba(185, 135, 47, 0.55);
   outline-offset: 3px;
 }
 
@@ -151,7 +151,7 @@ body.guest-shell-page.stores-page.restaurants-page {
   grid-area: count;
   margin: 0;
   padding-inline: 4px;
-  color: rgba(17, 24, 39, 0.62);
+  color: rgba(61, 34, 19, 0.62);
   font-size: 0.84rem;
 }
 
@@ -162,7 +162,7 @@ body.guest-shell-page.stores-page.restaurants-page {
   grid-area: cuisine;
   margin: 0;
   padding: 13px 14px 10px;
-  border-color: rgba(17, 24, 39, 0.08);
+  border-color: rgba(61, 34, 19, 0.08);
   border-radius: 18px;
   background: rgba(255, 254, 251, 0.9);
   box-shadow: var(--restaurants-shadow-soft);
@@ -195,7 +195,7 @@ body.guest-shell-page.stores-page.restaurants-page {
 .restaurants-page .stores-restaurant-cuisine-block__sub {
   margin-top: 2px;
   font-size: 0.72rem;
-  color: rgba(17, 24, 39, 0.58);
+  color: rgba(61, 34, 19, 0.58);
 }
 
 .restaurants-page .stores-cuisine-scroll {
@@ -213,7 +213,7 @@ body.guest-shell-page.stores-page.restaurants-page {
   min-width: 82px;
   min-height: 70px;
   padding: 9px 8px 10px;
-  border-color: rgba(17, 24, 39, 0.08);
+  border-color: rgba(61, 34, 19, 0.08);
   border-radius: 15px;
   background: rgba(255, 255, 255, 0.92);
   box-shadow: none;
@@ -253,20 +253,20 @@ body.guest-shell-page.stores-page.restaurants-page {
 .restaurants-page .stores-note {
   margin: 14px 0 0;
   padding: 10px 12px;
-  color: rgba(17, 24, 39, 0.62);
+  color: rgba(61, 34, 19, 0.62);
   font-size: 0.82rem;
   box-shadow: none;
 }
 
 .restaurants-page .store-card {
-  border: 1px solid rgba(17, 24, 39, 0.08);
+  border: 1px solid rgba(61, 34, 19, 0.08);
   box-shadow: var(--restaurants-shadow-soft);
   transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
 }
 
 .restaurants-page .store-card:hover {
   transform: translateY(-2px);
-  border-color: rgba(20, 108, 67, 0.18);
+  border-color: rgba(185, 135, 47, 0.18);
   box-shadow: var(--restaurants-shadow);
 }
 
@@ -285,7 +285,7 @@ body.guest-shell-page.stores-page.restaurants-page {
 
 .restaurants-page .store-info .store-type {
   margin-bottom: 7px;
-  color: rgba(17, 24, 39, 0.58);
+  color: rgba(61, 34, 19, 0.58);
 }
 
 .restaurants-page .store-meta > span {
@@ -308,13 +308,13 @@ body.guest-shell-page.stores-page.restaurants-page {
   min-height: 44px;
   border: 0;
   border-radius: 13px;
-  box-shadow: 0 8px 22px rgba(17, 24, 39, 0.16);
+  box-shadow: 0 8px 22px rgba(61, 34, 19, 0.16);
   transition: transform 0.16s ease, box-shadow 0.16s ease;
 }
 
 .restaurants-page .store-card__btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 10px 26px rgba(17, 24, 39, 0.2);
+  box-shadow: 0 10px 26px rgba(61, 34, 19, 0.2);
 }
 
 .restaurants-page .stores-empty {
@@ -360,8 +360,8 @@ body.guest-shell-page.stores-page.restaurants-page {
     margin: 0;
     padding: 7px 13px;
     border-radius: 999px;
-    background: rgba(20, 108, 67, 0.11);
-    border: 1px solid rgba(20, 108, 67, 0.16);
+    background: rgba(185, 135, 47, 0.11);
+    border: 1px solid rgba(185, 135, 47, 0.16);
     white-space: nowrap;
   }
 

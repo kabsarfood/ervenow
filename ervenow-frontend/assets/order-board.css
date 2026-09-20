@@ -1,42 +1,42 @@
 /* ERVENOW — لوحة إدارة الطلبات V1 */
 :root {
-  --ob-ink: #111827;
-  --ob-gold: #146c43;
+  --ob-ink: #2a1810;
+  --ob-gold: #c9a227;
   --ob-card: rgba(255, 252, 248, 0.96);
   --ob-radius: 18px;
 }
 
 .ob-hero {
   position: relative;
-  border-radius: clamp(18px, 3vw, 22px);
+  border-radius: var(--ob-radius);
   overflow: hidden;
   min-height: 120px;
-  background: linear-gradient(145deg, #146c43 0%, #0f5a37 55%, #0c4a2d 100%);
-  box-shadow: 0 16px 40px rgba(20, 108, 67, 0.28);
+  background: linear-gradient(135deg, #3d2213, #6b4423 55%, #8b5a2b);
+  box-shadow: 0 16px 48px rgba(42, 24, 16, 0.22);
   margin-bottom: 16px;
 }
 .ob-hero__shade {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(15, 90, 55, 0.2) 0%, rgba(12, 74, 45, 0.72) 100%);
+  background: linear-gradient(180deg, rgba(42, 24, 16, 0.1) 0%, rgba(26, 14, 8, 0.72) 100%);
 }
 .ob-hero__inner {
   position: relative;
   z-index: 1;
-  padding: clamp(16px, 3vw, 20px);
+  padding: 20px 18px;
 }
 .ob-hero__inner h1 {
   margin: 0 0 6px;
   font-size: clamp(1.2rem, 4vw, 1.45rem);
-  font-weight: 900;
-  color: #f4faf7;
-  line-height: 1.35;
+  font-weight: 800;
+  color: #fff8ee;
+  line-height: 1.45;
 }
 .ob-hero__sub {
   margin: 0;
   font-size: 0.88rem;
   font-weight: 700;
-  color: rgba(244, 250, 247, 0.9);
+  color: rgba(255, 248, 238, 0.88);
 }
 .ob-hero__actions {
   display: flex;
@@ -60,7 +60,7 @@
   border-radius: 14px;
   border: 2px solid transparent;
   background: var(--ob-card);
-  box-shadow: 0 4px 18px rgba(15, 40, 28, 0.08);
+  box-shadow: 0 4px 18px rgba(42, 24, 16, 0.08);
   cursor: pointer;
   text-align: start;
   font-family: inherit;
@@ -68,12 +68,12 @@
 }
 .ob-counter:hover,
 .ob-counter:focus-visible {
-  border-color: rgba(20, 108, 67, 0.45);
+  border-color: rgba(185, 135, 47, 0.45);
   outline: none;
 }
 .ob-counter.is-active {
   border-color: var(--ob-gold);
-  box-shadow: 0 6px 22px rgba(20, 108, 67, 0.22);
+  box-shadow: 0 6px 22px rgba(201, 162, 39, 0.22);
 }
 .ob-counter__emoji {
   font-size: 1.1rem;
@@ -84,7 +84,7 @@
   margin-top: 6px;
   font-size: 0.78rem;
   font-weight: 800;
-  color: rgba(15, 40, 28, 0.72);
+  color: rgba(42, 24, 16, 0.72);
 }
 .ob-counter__val {
   display: block;
@@ -122,8 +122,8 @@
 .ob-card {
   background: var(--ob-card);
   border-radius: var(--ob-radius);
-  border: 1px solid rgba(17, 24, 39, 0.1);
-  box-shadow: 0 8px 28px rgba(15, 40, 28, 0.08);
+  border: 1px solid rgba(61, 34, 19, 0.1);
+  box-shadow: 0 8px 28px rgba(42, 24, 16, 0.08);
   padding: 16px;
   display: flex;
   flex-direction: column;
@@ -146,7 +146,7 @@
   margin: 0;
   font-size: 0.88rem;
   line-height: 1.5;
-  color: rgba(15, 40, 28, 0.88);
+  color: rgba(42, 24, 16, 0.88);
 }
 .ob-card__row strong {
   font-weight: 800;
@@ -157,12 +157,12 @@
   gap: 6px 12px;
   padding: 10px;
   border-radius: 12px;
-  background: rgba(20, 108, 67, 0.08);
+  background: rgba(201, 162, 39, 0.08);
   font-size: 0.82rem;
 }
 .ob-card__fin span {
   display: block;
-  color: rgba(15, 40, 28, 0.7);
+  color: rgba(42, 24, 16, 0.7);
   font-weight: 700;
 }
 .ob-card__fin strong {
@@ -204,7 +204,7 @@
 .ob-empty {
   text-align: center;
   padding: 32px 16px;
-  color: rgba(15, 40, 28, 0.65);
+  color: rgba(42, 24, 16, 0.65);
   font-weight: 700;
 }
 
@@ -257,7 +257,7 @@
   min-height: 44px;
   border: none;
   border-radius: 12px;
-  background: rgba(15, 40, 28, 0.08);
+  background: rgba(42, 24, 16, 0.08);
   font-size: 1.25rem;
   cursor: pointer;
 }
@@ -275,7 +275,7 @@
 }
 .ob-detail-grid dt {
   font-weight: 800;
-  color: rgba(15, 40, 28, 0.65);
+  color: rgba(42, 24, 16, 0.65);
 }
 .ob-detail-grid dd {
   margin: 0;
@@ -291,7 +291,7 @@
   justify-content: space-between;
   gap: 8px;
   padding: 8px 0;
-  border-bottom: 1px solid rgba(17, 24, 39, 0.08);
+  border-bottom: 1px solid rgba(61, 34, 19, 0.08);
   font-size: 0.9rem;
   line-height: 1.45;
 }

@@ -86,6 +86,8 @@ function originsFromPublicSiteUrl() {
 function getCorsAllowedOrigins() {
   const raw = String(process.env.CORS_ORIGINS || "").trim();
   const localDefaults = [
+    "http://localhost:4000",
+    "http://127.0.0.1:4000",
     "http://localhost:3000",
     "http://127.0.0.1:3000",
     "http://localhost:5173",

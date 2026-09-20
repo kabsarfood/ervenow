@@ -1,16 +1,14 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ar" dir="rtl">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover" />
     <script src="/assets/viewport-fit.js?erv=20260612"></script>
-    <script src="/assets/pre-reg-banner.js?erv=20260920mob1" defer></script>
+    <script src="/assets/pre-reg-banner.js?erv=20260905b" defer></script>
     <title>ERVENOW | المتجر</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="/assets/ervenow-design-tokens.css?erv=20260919id" />
-    <link rel="stylesheet" href="/assets/ervenow-identity.css?erv=20260919id" />
-    <link rel="stylesheet" href="/assets/styles.css?erv=20260919id" />
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/assets/styles.css" />
     <link rel="stylesheet" href="/assets/guest-shell.css?erv=20260612" />
     <link rel="stylesheet" href="/assets/ervenow-responsive.css" />
     <link rel="stylesheet" href="/assets/pre-cart-delivery.css" />
@@ -19,8 +17,8 @@
     <style>
       :root {
         --sp-radius: 22px;
-        --sp-shadow: 0 14px 48px rgba(15, 40, 28, 0.1);
-        --sp-shadow-soft: 0 8px 32px rgba(15, 40, 28, 0.07);
+        --sp-shadow: 0 14px 48px rgba(42, 24, 16, 0.1);
+        --sp-shadow-soft: 0 8px 32px rgba(42, 24, 16, 0.07);
       }
 
       .store-shell {
@@ -46,7 +44,7 @@
         border-radius: var(--sp-radius);
         overflow: hidden;
         background: #fffcfa;
-        border: 1px solid rgba(17, 24, 39, 0.08);
+        border: 1px solid rgba(61, 34, 19, 0.08);
         box-shadow: var(--sp-shadow);
       }
 
@@ -79,7 +77,7 @@
         border: 3px solid #fffefb;
         object-fit: cover;
         background: #fffefb;
-        box-shadow: 0 10px 32px rgba(15, 40, 28, 0.22);
+        box-shadow: 0 10px 32px rgba(42, 24, 16, 0.22);
         display: block;
       }
 
@@ -91,7 +89,7 @@
         margin: 0 0 14px;
         font-size: 0.92rem;
         line-height: 1.55;
-        color: #6b7280;
+        color: #5c4638;
         font-weight: 600;
       }
 
@@ -114,13 +112,13 @@
         margin: 0 0 8px;
         font-size: 0.92rem;
         font-weight: 800;
-        color: #146c43;
+        color: #b9872f;
       }
 
       .store-header__rating {
         margin: 0 0 18px;
         font-size: 0.88rem;
-        color: #6b7280;
+        color: #5c4638;
       }
 
       .store-order-btn {
@@ -138,14 +136,14 @@
         font-weight: 800;
         cursor: pointer;
         color: #fffdf8;
-        background: linear-gradient(135deg, #111827, #6b3d22);
-        box-shadow: 0 10px 32px rgba(17, 24, 39, 0.28);
+        background: linear-gradient(135deg, #3d2213, #6b3d22);
+        box-shadow: 0 10px 32px rgba(61, 34, 19, 0.28);
         transition: transform 0.2s, box-shadow 0.2s, filter 0.2s;
       }
 
       .store-order-btn:hover {
         transform: translateY(-2px);
-        box-shadow: 0 14px 40px rgba(17, 24, 39, 0.32);
+        box-shadow: 0 14px 40px rgba(61, 34, 19, 0.32);
         filter: brightness(1.05);
       }
 
@@ -154,7 +152,7 @@
       }
 
       .store-order-btn:focus-visible {
-        outline: 3px solid #146c43;
+        outline: 3px solid #c9a227;
         outline-offset: 3px;
       }
 
@@ -176,7 +174,7 @@
         margin: 0;
         font-size: clamp(1.2rem, 3vw, 1.45rem);
         font-weight: 800;
-        color: #111827;
+        color: #3d2213;
       }
 
       .store-prod-cat {
@@ -186,7 +184,7 @@
         margin: 0 0 10px;
         font-size: 0.82rem;
         font-weight: 800;
-        color: #6b7280;
+        color: #5c4638;
       }
       .store-prod-cat__scroll {
         display: flex;
@@ -207,12 +205,12 @@
         padding: 10px 14px;
         min-height: 44px;
         border-radius: 999px;
-        border: 1px solid rgba(17, 24, 39, 0.12);
+        border: 1px solid rgba(61, 34, 19, 0.12);
         background: rgba(255, 255, 255, 0.92);
         font-family: inherit;
         font-size: 0.82rem;
         font-weight: 800;
-        color: #111827;
+        color: #3d2213;
         cursor: pointer;
         white-space: nowrap;
         transition: background 0.2s, color 0.2s, border-color 0.2s, box-shadow 0.2s;
@@ -228,14 +226,14 @@
         margin: 4px 0 0;
         font-size: 0.82rem;
         font-weight: 800;
-        color: #146c43;
+        color: #b9872f;
       }
 
       .prod-card__stock {
         margin: 2px 0 0;
         font-size: 0.78rem;
         font-weight: 700;
-        color: #6b7280;
+        color: #5c4638;
       }
 
       .store-cart-link {
@@ -245,11 +243,11 @@
         text-decoration: none;
         font-weight: 800;
         font-size: 0.95rem;
-        color: #111827;
+        color: #5b371d;
         padding: 10px 14px;
         border-radius: 14px;
         background: rgba(201, 162, 39, 0.12);
-        border: 1px solid rgba(20, 108, 67, 0.12);
+        border: 1px solid rgba(91, 55, 29, 0.12);
         transition: background 0.2s, transform 0.15s;
       }
 
@@ -351,15 +349,15 @@
         display: flex;
         flex-direction: column;
         background: #fffefb;
-        border: 1px solid rgba(17, 24, 39, 0.07);
-        box-shadow: 0 10px 36px rgba(15, 40, 28, 0.07);
+        border: 1px solid rgba(61, 34, 19, 0.07);
+        box-shadow: 0 10px 36px rgba(42, 24, 16, 0.07);
         transition: box-shadow 0.25s, transform 0.2s;
         height: 100%;
       }
 
       .prod-card:hover {
         transform: translateY(-4px);
-        box-shadow: 0 20px 48px rgba(15, 40, 28, 0.11);
+        box-shadow: 0 20px 48px rgba(42, 24, 16, 0.11);
       }
 
       .prod-card--unavailable {
@@ -423,7 +421,7 @@
 
       .prod-gallery__dot.is-on {
         background: #fffefb;
-        box-shadow: 0 0 0 2px rgba(17, 24, 39, 0.25);
+        box-shadow: 0 0 0 2px rgba(61, 34, 19, 0.25);
       }
 
       .prod-card__cat {
@@ -535,7 +533,7 @@
         justify-content: center;
         margin-top: 14px;
         border-radius: 14px;
-        border: 1px solid rgba(17, 24, 39, 0.12);
+        border: 1px solid rgba(61, 34, 19, 0.12);
         overflow: hidden;
         background: #faf7f2;
       }
@@ -547,7 +545,7 @@
         background: transparent;
         font-size: 1.35rem;
         font-weight: 700;
-        color: #111827;
+        color: #3d2213;
         cursor: pointer;
         line-height: 1;
         transition: background 0.15s;
@@ -555,12 +553,12 @@
       }
 
       .prod-qty-btn:hover {
-        background: rgba(17, 24, 39, 0.06);
+        background: rgba(61, 34, 19, 0.06);
       }
 
       .prod-qty-btn:focus-visible {
         outline: none;
-        box-shadow: inset 0 0 0 2px #146c43;
+        box-shadow: inset 0 0 0 2px #c9a227;
       }
 
       .prod-qty-input {
@@ -593,15 +591,15 @@
         font-weight: 800;
         cursor: pointer;
         color: #fffdf8;
-        background: linear-gradient(135deg, #111827, #6b3d22);
-        box-shadow: 0 8px 24px rgba(17, 24, 39, 0.22);
+        background: linear-gradient(135deg, #3d2213, #6b3d22);
+        box-shadow: 0 8px 24px rgba(61, 34, 19, 0.22);
         transition: transform 0.15s, box-shadow 0.2s, filter 0.15s;
       }
 
       .btn-add-cart:hover:not(:disabled) {
         transform: translateY(-1px);
         filter: brightness(1.04);
-        box-shadow: 0 12px 28px rgba(17, 24, 39, 0.28);
+        box-shadow: 0 12px 28px rgba(61, 34, 19, 0.28);
       }
 
       .btn-add-cart:disabled {
@@ -789,7 +787,7 @@
     <script src="/assets/pre-cart-delivery.js"></script>
     <script src="/assets/kabsar-store-polish.js"></script>
     <script src="/assets/api-config.js"></script>
-    <script src="/assets/api.js?erv=20260919id"></script>
+    <script src="/assets/api.js?erv=20260612"></script>
     <script src="/assets/guestBrowse.js"></script>
     <script src="/assets/store-preview-mode.js"></script>
     <script src="/assets/guest-shell.js?erv=20260612"></script>
@@ -995,7 +993,7 @@
       var defaultBanner =
         "data:image/svg+xml," +
         encodeURIComponent(
-          '<svg xmlns="http://www.w3.org/2000/svg" width="920" height="394" viewBox="0 0 920 394"><defs><linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#efe6dc"/><stop offset="100%" stop-color="#e5d8cc"/></linearGradient></defs><rect fill="url(#g)" width="920" height="394"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="#146c43" font-family="sans-serif" font-size="28" font-weight="700">ERVENOW</text></svg>'
+          '<svg xmlns="http://www.w3.org/2000/svg" width="920" height="394" viewBox="0 0 920 394"><defs><linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#efe6dc"/><stop offset="100%" stop-color="#e5d8cc"/></linearGradient></defs><rect fill="url(#g)" width="920" height="394"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="#c9a227" font-family="sans-serif" font-size="28" font-weight="700">ERVENOW</text></svg>'
         );
 
       function getUserGeo() {
@@ -1313,7 +1311,7 @@
         var defLogo =
           "data:image/svg+xml," +
           encodeURIComponent(
-            '<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160"><rect fill="#f5ebe0" width="160" height="160" rx="24"/><text x="50%" y="52%" dominant-baseline="middle" text-anchor="middle" fill="#146c43" font-family="sans-serif" font-size="15" font-weight="700">ERVENOW</text></svg>'
+            '<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160"><rect fill="#f5ebe0" width="160" height="160" rx="24"/><text x="50%" y="52%" dominant-baseline="middle" text-anchor="middle" fill="#c9a227" font-family="sans-serif" font-size="15" font-weight="700">ERVENOW</text></svg>'
           );
         imgEl.onerror = function () {
           imgEl.onerror = null;
@@ -1400,7 +1398,7 @@
             var base = Number(p.price) || 0;
             var hasOffer = unit < base && base > 0;
             var badgeOffer = hasOffer
-              ? '<span class="prod-badge prod-badge--ok" style="background:linear-gradient(135deg,#146c43,#8a6a1f)">🏷️ عرض</span>'
+              ? '<span class="prod-badge prod-badge--ok" style="background:linear-gradient(135deg,#b9872f,#8a6a1f)">🏷️ عرض</span>'
               : "";
             var badgeHot =
               window.KabsarStorePolish && KabsarStorePolish.isPopularProduct(p, rowIndex)

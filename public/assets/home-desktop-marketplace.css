@@ -602,9 +602,9 @@ html:not(.erv-mobile-shell) body.lp-home-premium {
   }
 
   html:not(.erv-mobile-shell) body.lp-home-premium .erv-mp-hero__visual .guest-offers-shell {
-    aspect-ratio: unset !important;
-    min-height: 100% !important;
-    max-height: 100% !important;
+    aspect-ratio: auto !important;
+    min-height: 260px !important;
+    max-height: 320px !important;
     height: 100% !important;
     border-radius: 0 !important;
   }

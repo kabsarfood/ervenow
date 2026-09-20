@@ -4,32 +4,30 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover" />
     <script src="/assets/viewport-fit.js?erv=20260612"></script>
-    <script src="/assets/pre-reg-banner.js?erv=20260920mob1" defer></script>
+    <script src="/assets/pre-reg-banner.js?erv=20260905b" defer></script>
     <title>ERVENOW | طلباتي</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="/assets/ervenow-design-tokens.css?erv=20260919id" />
-    <link rel="stylesheet" href="/assets/ervenow-identity.css?erv=20260919id" />
-    <link rel="stylesheet" href="/assets/styles.css?erv=20260919id" />
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/assets/styles.css" />
     <link rel="stylesheet" href="/assets/guest-shell.css?erv=20260612" />
     <style>
       .my-orders-hero {
         margin-bottom: 16px;
         padding: clamp(18px, 4vw, 24px);
         border-radius: 18px;
-        border: 1px solid var(--border, rgba(17, 24, 39, 0.12));
+        border: 1px solid var(--border, rgba(61, 34, 19, 0.12));
         background: linear-gradient(145deg, #fffefb 0%, #f5ebe0 55%, #efe3d4 100%);
-        box-shadow: 0 10px 32px rgba(15, 40, 28, 0.08);
+        box-shadow: 0 10px 32px rgba(45, 26, 14, 0.08);
       }
       .my-orders-hero h1 {
         margin: 0 0 8px;
         font-size: clamp(1.2rem, 4vw, 1.5rem);
         font-weight: 900;
-        color: var(--brown, #111827);
+        color: var(--brown, #3d2213);
       }
       .my-orders-hero p {
         margin: 0;
-        color: var(--muted, #6b7280);
+        color: var(--muted, #5c4a3d);
         font-weight: 600;
         line-height: 1.55;
       }
@@ -40,10 +38,10 @@
         margin: 0 0 10px;
         font-size: 1rem;
         font-weight: 800;
-        color: var(--brown, #111827);
+        color: var(--brown, #3d2213);
       }
       .my-order-card {
-        border: 1px solid rgba(17, 24, 39, 0.1);
+        border: 1px solid rgba(61, 34, 19, 0.1);
         border-radius: 14px;
         padding: 14px;
         margin-bottom: 10px;
@@ -59,7 +57,7 @@
       }
       .my-order-card__id {
         font-weight: 900;
-        color: var(--brown, #111827);
+        color: var(--brown, #3d2213);
       }
       .my-order-badge {
         display: inline-block;
@@ -91,7 +89,7 @@
       .my-order-meta {
         margin: 0;
         font-size: 0.86rem;
-        color: var(--muted, #6b7280);
+        color: var(--muted, #5c4a3d);
         line-height: 1.5;
       }
       .my-order-route {
@@ -108,11 +106,11 @@
       .my-order-route__item {
         margin: 0;
         font-size: 0.86rem;
-        color: var(--muted, #6b7280);
+        color: var(--muted, #5c4a3d);
         line-height: 1.45;
       }
       .my-order-route__item strong {
-        color: var(--brown, #111827);
+        color: var(--brown, #3d2213);
         font-weight: 800;
       }
       .my-order-route__item.is-loading {
@@ -134,7 +132,7 @@
       .my-orders-empty p {
         margin: 0 0 12px;
         font-weight: 700;
-        color: var(--brown-mid, #6b7280);
+        color: var(--brown-mid, #5c4a3d);
       }
       .my-orders-login {
         text-align: center;
@@ -154,8 +152,8 @@
         padding: 14px;
         border-radius: 14px;
         border: 1px solid rgba(185, 135, 47, 0.35);
-        background: linear-gradient(180deg, #e8f6ef 0%, #fffefb 100%);
-        color: var(--brown-mid, #6b7280);
+        background: linear-gradient(180deg, #fff9ee 0%, #fffefb 100%);
+        color: var(--brown-mid, #5c4a3d);
         font-weight: 600;
         line-height: 1.55;
       }
@@ -163,7 +161,7 @@
         display: none !important;
       }
       #myOrdersDupBanner strong {
-        color: var(--brown, #111827);
+        color: var(--brown, #3d2213);
       }
       #myOrdersDupBanner .my-orders-dup-actions {
         display: flex;
@@ -191,7 +189,7 @@
         background: transparent;
         font: inherit;
         font-weight: 800;
-        color: var(--brown, #111827);
+        color: var(--brown, #3d2213);
         cursor: pointer;
         text-align: inherit;
       }
@@ -209,7 +207,7 @@
         padding: 2px 8px;
         border-radius: 999px;
         background: rgba(185, 135, 47, 0.14);
-        color: var(--brown, #111827);
+        color: var(--brown, #3d2213);
         font-size: 0.78rem;
         font-weight: 900;
       }
@@ -234,8 +232,8 @@
         margin-bottom: 12px;
         padding: 4px;
         border-radius: 14px;
-        background: rgba(17, 24, 39, 0.06);
-        border: 1px solid rgba(17, 24, 39, 0.08);
+        background: rgba(61, 34, 19, 0.06);
+        border: 1px solid rgba(61, 34, 19, 0.08);
       }
       .my-orders-tab {
         flex: 1 1 0;
@@ -247,13 +245,13 @@
         font: inherit;
         font-size: 0.86rem;
         font-weight: 800;
-        color: rgba(17, 24, 39, 0.72);
+        color: rgba(61, 34, 19, 0.72);
         cursor: pointer;
         transition: background 0.15s, color 0.15s, box-shadow 0.15s;
       }
       .my-orders-tab.is-active {
         background: #fffefb;
-        color: var(--brown, #111827);
+        color: var(--brown, #3d2213);
         box-shadow: 0 4px 14px rgba(45, 28, 14, 0.08);
       }
       .my-orders-tab__count {
@@ -270,7 +268,7 @@
         border: 1px solid rgba(185, 135, 47, 0.18);
         font-size: 0.82rem;
         font-weight: 600;
-        color: var(--muted, #6b7280);
+        color: var(--muted, #5c4a3d);
         line-height: 1.5;
       }
       .my-orders-tab-panel[hidden] {
@@ -413,7 +411,7 @@
       </div>
 
     <script src="/assets/api-config.js"></script>
-    <script src="/assets/api.js?erv=20260919id"></script>
+    <script src="/assets/api.js?erv=20260612"></script>
     <script src="/assets/auth-account-guard.js"></script>
     <script src="/assets/order-draft-store.js"></script>
     <script src="/assets/order-draft-badge.js"></script>

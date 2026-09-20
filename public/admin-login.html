@@ -4,18 +4,18 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover" />
     <script src="/assets/viewport-fit.js?erv=20260612"></script>
-    <script src="/assets/pre-reg-banner.js?erv=20260920mob1" defer></script>
+    <script src="/assets/pre-reg-banner.js?erv=20260905b" defer></script>
     <meta name="robots" content="noindex, nofollow" />
-    <meta name="theme-color" content="#0f5a37" />
+    <meta name="theme-color" content="#2b170d" />
     <title>لوحة التحكم | ERVENOW</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
     <style>
       :root {
-        --gold: #146c43;
-        --gold-light: #e8f6ef;
-        --brown: #111827;
-        --brown-deep: #0f5a37;
+        --gold: #d4a84b;
+        --gold-light: #f5e6b8;
+        --brown: #3d2213;
+        --brown-deep: #1f1209;
         --touch: 52px;
         --safe-t: env(safe-area-inset-top, 0px);
         --safe-b: env(safe-area-inset-bottom, 0px);
@@ -29,7 +29,7 @@
       body {
         margin: 0;
         min-height: 100dvh;
-        font-family: "Tajawal", Cairo, system-ui, sans-serif;
+        font-family: Cairo, system-ui, sans-serif;
         color: var(--brown);
         display: flex;
         align-items: center;
@@ -37,9 +37,9 @@
         padding: calc(16px + var(--safe-t)) max(16px, env(safe-area-inset-left, 16px))
           calc(20px + var(--safe-b)) max(16px, env(safe-area-inset-right, 16px));
         background:
-          radial-gradient(ellipse 120% 80% at 50% -20%, rgba(20, 108, 67, 0.35), transparent 55%),
-          radial-gradient(ellipse 90% 60% at 100% 100%, rgba(15, 90, 55, 0.45), transparent 50%),
-          linear-gradient(165deg, #0a3d26 0%, #0f5a37 38%, #146c43 72%, #0f5a37 100%) !important;
+          radial-gradient(ellipse 120% 80% at 50% -20%, rgba(212, 168, 75, 0.28), transparent 55%),
+          radial-gradient(ellipse 90% 60% at 100% 100%, rgba(61, 34, 19, 0.5), transparent 50%),
+          linear-gradient(165deg, #1a0f08 0%, #2b170d 38%, #4a2e1a 72%, #3d2213 100%);
       }
       .admin-login-scene {
         width: 100%;
@@ -50,11 +50,11 @@
         position: relative;
         border-radius: 24px;
         overflow: hidden;
-        background: linear-gradient(155deg, #ffffff 0%, #f7f4ef 48%, #e8f6ef 100%);
+        background: linear-gradient(155deg, #fffefb 0%, #faf3e8 48%, #f0e4d4 100%);
         box-shadow:
-          0 4px 0 rgba(20, 108, 67, 0.45),
+          0 4px 0 rgba(212, 168, 75, 0.45),
           0 28px 64px rgba(0, 0, 0, 0.38);
-        outline: 1px solid rgba(20, 108, 67, 0.35);
+        outline: 1px solid rgba(212, 168, 75, 0.35);
       }
       .admin-login-card::before {
         content: "";
@@ -62,7 +62,7 @@
         inset: 0;
         border-radius: inherit;
         padding: 2px;
-        background: linear-gradient(135deg, #e8f6ef, #146c43 40%, #0f5a37 100%);
+        background: linear-gradient(135deg, #f5e6b8, #d4a84b 40%, #8f6420 100%);
         -webkit-mask:
           linear-gradient(#fff 0 0) content-box,
           linear-gradient(#fff 0 0);
@@ -75,7 +75,7 @@
       }
       .admin-login-card__ribbon {
         height: 7px;
-        background: linear-gradient(90deg, #0f5a37, #146c43 35%, #e8f6ef 50%, #146c43 65%, #0f5a37);
+        background: linear-gradient(90deg, #8f6420, #d4a84b 35%, #f5e6b8 50%, #d4a84b 65%, #8f6420);
       }
       .admin-login-card__body {
         padding: clamp(22px, 5vw, 28px) clamp(20px, 4.5vw, 26px) clamp(24px, 5vw, 30px);
@@ -93,7 +93,7 @@
         margin-bottom: 12px;
         border-radius: 20px;
         font-size: 2rem;
-        background: linear-gradient(145deg, #e8f6ef, #146c43 55%, #0f5a37);
+        background: linear-gradient(145deg, #f5e6b8, #d4a84b 55%, #8f6420);
         border: 2px solid rgba(255, 255, 255, 0.65);
         box-shadow:
           0 10px 28px rgba(139, 100, 32, 0.4),
@@ -110,7 +110,7 @@
         margin: 6px 0 0;
         font-size: 0.88rem;
         font-weight: 800;
-        color: #0f5a37;
+        color: #8f6420;
       }
       .admin-login-card__title {
         margin: 0 0 8px;
@@ -124,7 +124,7 @@
         font-size: 0.88rem;
         font-weight: 600;
         line-height: 1.6;
-        color: #6b7280;
+        color: #5c4a3d;
         text-align: center;
       }
       .admin-login-card__hint strong {
@@ -138,28 +138,28 @@
         margin-bottom: 6px;
         font-size: 0.8rem;
         font-weight: 800;
-        color: #111827;
+        color: #6b4528;
       }
       .admin-field input {
         width: 100%;
         min-height: var(--touch);
         padding: 0 14px;
         border-radius: 14px;
-        border: 1px solid rgba(17, 24, 39, 0.14);
+        border: 1px solid rgba(61, 34, 19, 0.14);
         background: rgba(255, 255, 255, 0.85);
         font-family: inherit;
         font-size: 1.02rem;
         font-weight: 700;
         color: var(--brown);
-        box-shadow: inset 0 1px 3px rgba(15, 40, 28, 0.06);
+        box-shadow: inset 0 1px 3px rgba(45, 26, 14, 0.06);
         transition: border-color 0.15s, box-shadow 0.15s;
       }
       .admin-field input:focus {
         outline: none;
         border-color: var(--gold);
         box-shadow:
-          0 0 0 3px rgba(20, 108, 67, 0.22),
-          inset 0 1px 3px rgba(15, 40, 28, 0.06);
+          0 0 0 3px rgba(212, 168, 75, 0.22),
+          inset 0 1px 3px rgba(45, 26, 14, 0.06);
       }
       .auth-code-group[hidden] {
         display: none !important;
@@ -178,12 +178,12 @@
         font-family: inherit;
         font-size: 1.02rem;
         font-weight: 900;
-        color: #ffffff;
+        color: #fff8e8;
         cursor: pointer;
-        background: linear-gradient(135deg, #146c43 0%, #0f5a37 100%);
-        border: 1px solid rgba(20, 108, 67, 0.35);
+        background: linear-gradient(135deg, #3d2213 0%, #5a3820 45%, #3d2213 100%);
+        border: 1px solid rgba(245, 230, 184, 0.3);
         box-shadow:
-          0 6px 20px rgba(15, 40, 28, 0.28),
+          0 6px 20px rgba(45, 26, 14, 0.28),
           inset 0 1px 0 rgba(255, 255, 255, 0.12);
         transition: filter 0.15s, transform 0.12s;
       }
@@ -205,7 +205,7 @@
       .admin-login-card__foot a {
         font-size: 0.84rem;
         font-weight: 700;
-        color: #0f5a37;
+        color: #8f6420;
         text-decoration: none;
       }
       .admin-login-card__foot a:hover {
@@ -218,7 +218,7 @@
         font-weight: 700;
         line-height: 1.5;
         text-align: center;
-        color: #6b7280;
+        color: #5c4a3d;
       }
       #msg.err {
         color: #b91c1c;
@@ -230,7 +230,7 @@
         margin-top: 16px;
         padding: 12px 14px;
         border-radius: 14px;
-        border: 1px dashed rgba(20, 108, 67, 0.5);
+        border: 1px dashed rgba(212, 168, 75, 0.5);
         background: rgba(255, 255, 255, 0.06);
       }
       .auth-dev-panel__label {
@@ -252,8 +252,8 @@
         width: 100%;
         padding: 12px 14px;
         border-radius: 12px;
-        border: 1px solid rgba(20, 108, 67, 0.65);
-        background: linear-gradient(180deg, rgba(20, 108, 67, 0.22), rgba(20, 108, 67, 0.1));
+        border: 1px solid rgba(212, 168, 75, 0.65);
+        background: linear-gradient(180deg, rgba(212, 168, 75, 0.22), rgba(212, 168, 75, 0.1));
         color: #fffef8;
         font-family: inherit;
         font-size: 0.92rem;
@@ -261,18 +261,18 @@
         cursor: pointer;
       }
       .auth-dev-direct:hover {
-        background: rgba(20, 108, 67, 0.32);
+        background: rgba(212, 168, 75, 0.32);
       }
     </style>
       <link rel="stylesheet" href="/assets/responsive-audit-base.css" />
   </head>
-  <body class="erv-keep-page-bg">
+  <body>
     <main class="admin-login-scene" aria-label="دخول لوحة التحكم">
       <article class="admin-login-card">
         <div class="admin-login-card__ribbon" aria-hidden="true"></div>
         <div class="admin-login-card__body">
           <header class="admin-login-card__brand">
-            <div class="admin-login-card__seal" aria-hidden="true">🔒</div>
+            <div class="admin-login-card__seal" aria-hidden="true">🔐</div>
             <p class="admin-login-card__logo">ERVENOW</p>
             <p class="admin-login-card__tag">لوحة التحكم</p>
           </header>
@@ -311,7 +311,7 @@
     <script>
       window.__ERVENOW_FETCH_TIMEOUT_MS = 20000;
     </script>
-    <script src="/assets/api.js?erv=20260919id"></script>
+    <script src="/assets/api.js?erv=20260612"></script>
     <script src="/assets/sa-phone-input.js"></script>
     <script src="/assets/auth-otp-flow.js"></script>
     <script>
