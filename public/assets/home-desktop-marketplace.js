@@ -416,10 +416,20 @@
 
   function placeStatsStrip() {
     var stats = document.getElementById("stats");
-    var why = document.getElementById("why");
-    if (!stats || !why) return;
-    if (stats.previousElementSibling !== why) {
-      why.insertAdjacentElement("afterend", stats);
+    var hub = document.querySelector(".sn-section--hub");
+    var trust = document.getElementById("trust");
+    if (!stats || !hub) return;
+    /* ثبّت الأرقام داخل الهب بعد شريط الثقة — لا تُدفع لأسفل الصفحة فوق الفوتر */
+    if (stats.parentElement !== hub) {
+      if (trust && trust.parentElement === hub) {
+        trust.insertAdjacentElement("afterend", stats);
+      } else {
+        hub.appendChild(stats);
+      }
+      return;
+    }
+    if (trust && trust.parentElement === hub && stats.previousElementSibling !== trust) {
+      trust.insertAdjacentElement("afterend", stats);
     }
   }
 
@@ -496,28 +506,43 @@
     } catch (e) {}
   }
 
+  function revealDiscoverShell() {
+    var discover = document.getElementById("ervMpDiscover");
+    if (!discover) return;
+    if (isDesktopMp()) {
+      discover.hidden = false;
+      discover.removeAttribute("hidden");
+    }
+  }
+
+  function pinBannerIntoVisual() {
+    var visual = document.getElementById("ervMpHeroVisual");
+    var bannerWrap = document.getElementById("homeMainBannerWrap");
+    if (!visual || !bannerWrap) return;
+    if (bannerWrap.parentElement === visual) return;
+    var tiles = document.getElementById("ervMpTiles");
+    if (tiles && tiles.parentElement === visual) {
+      visual.insertBefore(bannerWrap, tiles);
+    } else {
+      visual.insertBefore(bannerWrap, visual.firstChild);
+    }
+  }
+
   function pinMarketplaceLayout() {
     var body = document.body;
     if (!body) return;
 
-    var visual = document.getElementById("ervMpHeroVisual");
-    var bannerWrap = document.getElementById("homeMainBannerWrap");
-    if (visual && bannerWrap && bannerWrap.parentElement !== visual) {
-      var tiles = document.getElementById("ervMpTiles");
-      if (tiles && tiles.parentElement === visual) {
-        visual.insertBefore(bannerWrap, tiles);
-      } else {
-        visual.insertBefore(bannerWrap, visual.firstChild);
-      }
-    }
-
+    pinBannerIntoVisual();
     placeStatsStrip();
     pinTopChrome();
+    pinBannerIntoVisual();
 
     if (!isDesktopMp()) {
       watchBannerVisual();
       return;
     }
+
+    revealDiscoverShell();
 
     var prereg = document.getElementById("ervPreRegBanner");
     var header = document.getElementById("top");
@@ -535,14 +560,38 @@
       }
     }
 
+    revealDiscoverShell();
     pinTopChrome();
+    pinBannerIntoVisual();
     placeStatsStrip();
     watchBannerVisual();
   }
 
   function refreshMp() {
     pinMarketplaceLayout();
-    if (isDesktopMp()) scheduleDiscovery(80);
+    if (isDesktopMp()) {
+      revealDiscoverShell();
+      scheduleDiscovery(80);
+    }
+    placeStatsStrip();
+  }
+
+  function watchStatsAnchor(ms) {
+    var hub = document.querySelector(".sn-section--hub");
+    var main = document.querySelector("main");
+    if (!window.MutationObserver) return;
+    try {
+      var mo = new MutationObserver(function () {
+        placeStatsStrip();
+      });
+      if (hub) mo.observe(hub, { childList: true });
+      if (main) mo.observe(main, { childList: true });
+      setTimeout(function () {
+        try {
+          mo.disconnect();
+        } catch (e) {}
+      }, ms || 45000);
+    } catch (e) {}
   }
 
   async function hydrateStatsStrip() {
@@ -574,16 +623,25 @@
     hydrateStatsStrip();
     refreshMp();
     watchTopChrome(10000);
+    watchStatsAnchor(45000);
 
     window.addEventListener("ervenow:marketing-applied", function () {
       refreshMp();
       watchTopChrome(6000);
+      placeStatsStrip();
     });
 
     // One delayed settle pass after marketing/shell may finish
     setTimeout(refreshMp, 900);
+    setTimeout(placeStatsStrip, 1200);
     setTimeout(pinTopChrome, 1400);
-    setTimeout(pinTopChrome, 2400);
+    setTimeout(function () {
+      placeStatsStrip();
+      pinTopChrome();
+    }, 2400);
+    setTimeout(placeStatsStrip, 8000);
+    setTimeout(placeStatsStrip, 20000);
+    setTimeout(placeStatsStrip, 35000);
 
     var resizeTimer = null;
     window.addEventListener("resize", function () {

@@ -69,6 +69,19 @@
     return parent.firstChild;
   }
 
+  function pinHeroBanner() {
+    var visual = document.getElementById("ervMpHeroVisual");
+    var wrap = document.getElementById("homeMainBannerWrap");
+    if (!visual || !wrap) return;
+    if (wrap.parentElement === visual) return;
+    var tiles = document.getElementById("ervMpTiles");
+    if (tiles && tiles.parentElement === visual) {
+      visual.insertBefore(wrap, tiles);
+    } else {
+      visual.insertBefore(wrap, visual.firstChild);
+    }
+  }
+
   function pinBodyChrome() {
     var body = document.body;
     if (!body) return;
@@ -110,6 +123,8 @@
       }
     }
 
+    pinHeroBanner();
+
     if (window.ErvenowPreRegBanner && typeof window.ErvenowPreRegBanner.measure === "function") {
       window.ErvenowPreRegBanner.measure();
     }
@@ -126,7 +141,25 @@
       var mod = sorted[i];
       if (!mod.resolved_visible) continue;
       var el = slotEl(mod.id || mod.dom_slot);
-      if (!el || el.parentElement !== parent) continue;
+      if (!el) continue;
+      var slotId = mod.id || mod.dom_slot || "";
+      /* لا تسحب بنر الصور من داخل الـ stage إلى body */
+      if (
+        slotId === "hero_banner" ||
+        el.id === "homeMainBannerWrap" ||
+        (el.classList && el.classList.contains("guest-offers-carousel-wrap--home"))
+      ) {
+        continue;
+      }
+      /* انقل فقط الأرقام/الثقة إن كانت في أب خاطئ */
+      if (el.parentElement !== parent) {
+        if (slotId !== "platform_stats" && slotId !== "trust_bar") continue;
+        try {
+          parent.appendChild(el);
+        } catch (e) {
+          continue;
+        }
+      }
       /* لا تحرّك الهيدر عبر append — يبقى ضمن الـ chrome في الأعلى */
       if (el.id === "top" || (el.classList && el.classList.contains("lp-header"))) continue;
       parent.insertBefore(el, marker);
@@ -158,6 +191,19 @@
     document.documentElement.setAttribute("data-marketing-applied", "1");
     document.documentElement.setAttribute("data-marketing-surface", SURFACE);
     pinBodyChrome();
+    try {
+      var stats = document.getElementById("stats");
+      var hub = document.querySelector('.sn-section--hub, [data-marketing-slot="hub_section"]');
+      var trust = document.getElementById("trust");
+      if (stats && hub) {
+        if (stats.parentElement !== hub) {
+          if (trust && trust.parentElement === hub) trust.insertAdjacentElement("afterend", stats);
+          else hub.appendChild(stats);
+        } else if (trust && trust.parentElement === hub && stats.previousElementSibling !== trust) {
+          trust.insertAdjacentElement("afterend", stats);
+        }
+      }
+    } catch (ePin) {}
     try {
       window.dispatchEvent(
         new CustomEvent("ervenow:marketing-applied", { detail: { surface: SURFACE, experience: data } })

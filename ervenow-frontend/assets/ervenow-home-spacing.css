@@ -1,0 +1,195 @@
+/**
+ * ERVENOW — تباعد أقسام الصفحة الرئيسية
+ * Mobile ≤640 · Tablet 641–1024 · Desktop ≥1025
+ */
+
+body.lp-home-premium {
+  --erv-home-gap-xs: 12px;
+  --erv-home-gap-sm: 18px;
+  --erv-home-gap-md: 28px;
+  --erv-home-gap-lg: 40px;
+  --erv-home-section-pad-y: 28px;
+}
+
+@media (min-width: 641px) and (max-width: 1024px) {
+  body.lp-home-premium {
+    --erv-home-gap-xs: 14px;
+    --erv-home-gap-sm: 22px;
+    --erv-home-gap-md: 34px;
+    --erv-home-gap-lg: 48px;
+    --erv-home-section-pad-y: 34px;
+  }
+}
+
+@media (min-width: 1025px) {
+  body.lp-home-premium {
+    --erv-home-gap-xs: 16px;
+    --erv-home-gap-sm: 24px;
+    --erv-home-gap-md: 40px;
+    --erv-home-gap-lg: 56px;
+    --erv-home-section-pad-y: 44px;
+  }
+}
+
+/* Hero / stage → hub */
+body.lp-home-premium .erv-mp-stage {
+  margin-bottom: var(--erv-home-gap-sm) !important;
+  min-height: 0 !important;
+}
+
+/* البنر يبقى داخل الـ visual ويمدّ ارتفاع الـ stage */
+body.lp-home-premium .erv-mp-hero__visual,
+body.lp-home-premium #ervMpHeroVisual {
+  display: block !important;
+  overflow: visible !important;
+  min-height: 0 !important;
+  height: auto !important;
+}
+
+body.lp-home-premium .erv-mp-hero__visual > .guest-offers-carousel-wrap--home,
+body.lp-home-premium #ervMpHeroVisual > #homeMainBannerWrap {
+  display: block !important;
+  width: 100% !important;
+  margin: 0 auto !important;
+}
+
+body.lp-home-premium .sn-section--hub {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: var(--erv-home-gap-sm) !important;
+  margin-top: var(--erv-home-gap-xs) !important;
+  margin-bottom: var(--erv-home-gap-md) !important;
+  padding-top: var(--erv-home-gap-xs) !important;
+  padding-bottom: var(--erv-home-gap-sm) !important;
+}
+
+/* عنوان الأقسام فوق البطاقات دائماً */
+body.lp-home-premium .sn-section--hub > .erv-mp-hub-head {
+  order: -2 !important;
+  margin: 0 !important;
+  gap: 8px 12px !important;
+  min-height: 1.6em !important;
+}
+
+body.lp-home-premium .sn-section--hub > #snHomeHub {
+  order: 0 !important;
+  margin: 0 !important;
+  gap: clamp(10px, 2vw, 14px) !important;
+}
+
+body.lp-home-premium .sn-section--hub > .sn-trust {
+  margin: 0 !important;
+  margin-top: var(--erv-home-gap-xs) !important;
+}
+
+body.lp-home-premium .sn-section--hub > .sn-stats,
+body.lp-home-premium .erv-mp-stats {
+  margin-top: var(--erv-home-gap-sm) !important;
+  margin-bottom: 0 !important;
+}
+
+/* Discover / marketplace blocks */
+body.lp-home-premium #ervMpDiscover,
+body.lp-home-premium .erv-mp-discover {
+  margin-top: var(--erv-home-gap-md) !important;
+  margin-bottom: var(--erv-home-gap-md) !important;
+  padding-block: var(--erv-home-gap-xs) !important;
+}
+
+body.lp-home-premium .erv-mp-section__title,
+body.lp-home-premium .erv-mp-hub-head .sn-section__title--solo,
+body.lp-home-premium .sn-section--hub .sn-section__title--solo {
+  margin-bottom: var(--erv-home-gap-xs) !important;
+}
+
+body.lp-home-premium .erv-mp-grid,
+body.lp-home-premium .erv-mp-products,
+body.lp-home-premium .erv-mp-promos,
+body.lp-home-premium .erv-mp-nearby {
+  gap: clamp(12px, 2vw, 18px) !important;
+  margin-bottom: var(--erv-home-gap-sm) !important;
+}
+
+/* Main content sections (باستثناء بلوكتي CTA — لها ملف توحيد منفصل) */
+body.lp-home-premium main .lp-section:not(.lp-home-cta-section),
+body.lp-home-premium .lp-why {
+  margin-top: 0 !important;
+  margin-bottom: var(--erv-home-gap-sm) !important;
+  padding-top: var(--erv-home-section-pad-y) !important;
+  padding-bottom: var(--erv-home-section-pad-y) !important;
+}
+
+body.lp-home-premium main > .lp-section:not(.lp-home-cta-section) + .lp-section:not(.lp-home-cta-section) {
+  margin-top: var(--erv-home-gap-xs) !important;
+}
+
+body.lp-home-premium .lp-home-cta-wrap {
+  margin-top: var(--erv-home-gap-sm) !important;
+  margin-bottom: var(--erv-home-gap-sm) !important;
+}
+
+body.lp-home-premium .lp-why__grid,
+body.lp-home-premium .lp-why__grid--4,
+body.lp-home-premium .lp-why__grid--compact {
+  gap: clamp(12px, 2.2vw, 18px) !important;
+  margin-top: var(--erv-home-gap-xs) !important;
+}
+
+body.lp-home-premium .lp-section__title,
+body.lp-home-premium .lp-why__title,
+body.lp-home-premium .lp-home-cta__title {
+  margin-bottom: var(--erv-home-gap-xs) !important;
+}
+
+body.lp-home-premium .lp-footer {
+  margin-top: var(--erv-home-gap-md) !important;
+}
+
+/* Banner wrap under header */
+body.lp-home-premium .guest-offers-carousel-wrap--home {
+  margin-top: var(--erv-home-gap-xs) !important;
+  margin-bottom: var(--erv-home-gap-sm) !important;
+}
+
+@media (max-width: 640px) {
+  html.erv-mobile-shell:not(.erv-mobile-no-nav) body.lp-home-premium {
+  padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px)) !important;
+}
+
+  html.erv-mobile-shell body.lp-home-premium .sn-section--hub {
+    margin-top: 10px !important;
+    margin-bottom: 22px !important;
+    padding-top: 8px !important;
+    padding-bottom: 18px !important;
+    gap: 14px !important;
+  }
+
+  html.erv-mobile-shell body.lp-home-premium .sn-section--hub > .sn-trust {
+    margin-top: 4px !important;
+  }
+
+  html.erv-mobile-shell body.lp-home-premium .sn-section--hub > .erv-mp-stats,
+  html.erv-mobile-shell body.lp-home-premium .sn-section--hub > .sn-stats {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+    margin-top: 8px !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+
+  html.erv-mobile-shell body.lp-home-premium .erv-mp-stage {
+    margin-bottom: 12px !important;
+  }
+
+  html.erv-mobile-shell body.lp-home-premium .guest-offers-carousel-wrap--home {
+    margin-top: 8px !important;
+    margin-bottom: 10px !important;
+  }
+
+  html.erv-mobile-shell body.lp-home-premium main .lp-section:not(.lp-home-cta-section),
+  html.erv-mobile-shell body.lp-home-premium .lp-why {
+    padding-top: 26px !important;
+    padding-bottom: 26px !important;
+  }
+}

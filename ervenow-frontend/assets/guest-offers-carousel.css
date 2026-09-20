@@ -265,6 +265,19 @@
   pointer-events: none;
 }
 
+/* جوال/تابلت: ظل أخف حتى تظهر صورة البنر بوضوح */
+@media (max-width: 1024px) {
+  html.erv-mobile-shell body.lp-home-premium .guest-offers-carousel--home .guest-offers-slide__shade,
+  body.lp-home-premium .guest-offers-carousel--home .guest-offers-slide__shade {
+    background: linear-gradient(
+      180deg,
+      rgba(26, 18, 12, 0.12) 0%,
+      rgba(26, 18, 12, 0.28) 55%,
+      rgba(26, 18, 12, 0.55) 100%
+    ) !important;
+  }
+}
+
 .guest-offers-slide__body {
   position: absolute;
   inset: auto auto 0 0;

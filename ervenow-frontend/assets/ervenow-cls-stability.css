@@ -200,11 +200,14 @@ body.lp-home-premium .guest-offers-shell--placeholder {
   }
 }
 
+/* شرائح البنر أفقية داخل track (flex) — absolute يكسر الصور */
 body.lp-home-premium .guest-offers-slide {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
+  position: relative !important;
+  inset: auto !important;
+  flex: 0 0 100% !important;
+  width: 100% !important;
+  min-width: 100% !important;
+  height: 100% !important;
 }
 
 body.lp-home-premium .guest-offers-track {
@@ -403,10 +406,11 @@ body.lp-home-premium .lp-home-cta-card {
   }
 
   html:not(.erv-mobile-shell) body.lp-home-premium #ervMpDiscover[hidden] {
+    /* لا نخفي المحتوى — العروض وخدمات سريعة ثابتة ويجب أن تظهر */
     display: block !important;
-    visibility: hidden;
+    visibility: visible !important;
     min-height: 280px;
-    pointer-events: none;
+    pointer-events: auto;
   }
 
   html:not(.erv-mobile-shell) body.lp-home-premium #ervMpDiscover:not([hidden]) {

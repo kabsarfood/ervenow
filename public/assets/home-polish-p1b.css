@@ -45,9 +45,10 @@
     line-height: 1.2;
   }
 
-  /* أرقام المنصة — تحت الطية */
-  html.erv-mobile-shell body.lp-home-premium .sn-section--hub > .sn-stats {
-    display: none !important;
+  /* أرقام المنصة — ظاهرة داخل الهب (بطاقة أرقام) */
+  html.erv-mobile-shell body.lp-home-premium .sn-section--hub > .sn-stats,
+  html.erv-mobile-shell body.lp-home-premium .sn-section--hub > .erv-mp-stats {
+    display: grid !important;
   }
 
   html.erv-mobile-shell body.lp-home-premium .sn-section--hub {
