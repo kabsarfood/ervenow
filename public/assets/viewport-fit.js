@@ -292,7 +292,7 @@
     }
     global.__ervPreRegBannerInjected = true;
     var s = document.createElement("script");
-    s.src = "/assets/pre-reg-banner.js?erv=20260905b";
+    s.src = "/assets/pre-reg-banner.js?erv=20260920off1";
     s.defer = true;
     (document.head || document.documentElement).appendChild(s);
   }

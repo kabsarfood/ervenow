@@ -40,9 +40,9 @@
 
   background: linear-gradient(180deg, rgba(255, 254, 251, 0.98), rgba(248, 244, 238, 0.96));
 
-  border-bottom: 1px solid rgba(20, 108, 67, 0.2);
+  border-bottom: 1px solid rgba(185, 135, 47, 0.2);
 
-  box-shadow: 0 6px 28px rgba(15, 40, 28, 0.07);
+  box-shadow: 0 6px 28px rgba(45, 26, 14, 0.07);
 
   direction: ltr;
 
@@ -66,11 +66,11 @@
 
     transparent 0%,
 
-    rgba(20, 108, 67, 0.35) 20%,
+    rgba(185, 135, 47, 0.35) 20%,
 
-    rgba(20, 108, 67, 0.85) 50%,
+    rgba(185, 135, 47, 0.85) 50%,
 
-    rgba(20, 108, 67, 0.35) 80%,
+    rgba(185, 135, 47, 0.35) 80%,
 
     transparent 100%
 
@@ -259,7 +259,7 @@ html:not(.erv-mobile-shell) .lp-header.lp-header--refined .lp-header__top-row > 
 
   font-weight: 700;
 
-  color: var(--gold, var(--erve-primary, #146c43));
+  color: var(--gold, #b9872f);
 
   letter-spacing: 0.02em;
 
@@ -395,7 +395,7 @@ html:not(.erv-mobile-shell) .lp-header.lp-header--refined .lp-header__top-row > 
 
   border-radius: var(--erv-header-btn-radius, 12px);
 
-  box-shadow: 0 2px 10px rgba(15, 40, 28, 0.06);
+  box-shadow: 0 2px 10px rgba(45, 26, 14, 0.06);
 
 }
 
@@ -413,7 +413,7 @@ html:not(.erv-mobile-shell) .lp-header.lp-header--refined .lp-header__top-row > 
 
   justify-content: center;
 
-  border: 1px solid rgba(20, 108, 67, 0.22);
+  border: 1px solid rgba(185, 135, 47, 0.22);
 
   background: rgba(255, 254, 251, 0.95);
 
@@ -471,7 +471,7 @@ html:not(.erv-mobile-shell) .lp-header.lp-header--refined .lp-header__top-row > 
 
   margin-top: 0 !important;
 
-  border-top: 1px solid rgba(20, 108, 67, 0.12);
+  border-top: 1px solid rgba(185, 135, 47, 0.12);
 
   overflow-x: auto;
 
@@ -505,7 +505,7 @@ html:not(.erv-mobile-shell) .lp-header.lp-header--refined .lp-header__top-row > 
 
   background: rgba(255, 255, 255, 0.55);
 
-  border: 1px solid rgba(20, 108, 67, 0.14);
+  border: 1px solid rgba(185, 135, 47, 0.14);
 
   flex-wrap: nowrap;
 
@@ -539,9 +539,9 @@ html:not(.erv-mobile-shell) .lp-header.lp-header--refined .lp-header__top-row > 
 
 .lp-header.lp-header--refined .lp-nav a[aria-current="page"] {
 
-  color: var(--brown, var(--erve-ink, #111827));
+  color: var(--brown, #3d2213);
 
-  background: rgba(20, 108, 67, 0.14);
+  background: rgba(185, 135, 47, 0.14);
 
   font-weight: 800;
 
@@ -721,11 +721,11 @@ html:not(.erv-mobile-shell) .lp-header.lp-header--refined .lp-header__top-row > 
 
     background: linear-gradient(145deg, rgba(255, 254, 251, 0.98), rgba(248, 241, 229, 0.96)) !important;
 
-    border: 1px solid rgba(17, 24, 39, 0.1) !important;
+    border: 1px solid rgba(61, 34, 19, 0.1) !important;
 
     border-radius: 14px !important;
 
-    box-shadow: 0 4px 20px rgba(15, 40, 28, 0.08) !important;
+    box-shadow: 0 4px 20px rgba(45, 26, 14, 0.08) !important;
 
   }
 
@@ -979,9 +979,9 @@ html[lang="en"] .lp-header.lp-header--menu-left .lp-quick-dd__panel {
   }
   html.erv-mobile-shell body.lp-home-premium .lp-header.lp-header--refined {
     min-height: var(--erv-home-header-row, 78px);
-    background: #f7f4ef !important;
+    background: #f8f4ee !important;
     border-bottom: 0 !important;
-    box-shadow: 0 1px 0 rgba(17, 24, 39, 0.08) !important;
+    box-shadow: 0 1px 0 rgba(61, 34, 19, 0.08) !important;
   }
   html.erv-mobile-shell body.lp-home-premium .lp-header.lp-header--refined::before {
     display: none !important;
@@ -1033,14 +1033,14 @@ html[lang="en"] .lp-header.lp-header--menu-left .lp-quick-dd__panel {
     font-size: var(--erv-home-header-name, 1.15rem) !important;
     font-weight: 900 !important;
     letter-spacing: 0.05em;
-    color: var(--erve-ink, #111827);
+    color: #3d2213;
     line-height: 1.15;
   }
   html.erv-mobile-shell body.lp-home-premium .lp-header__brand-mid .lp-brand__tag {
     display: block !important;
     font-size: var(--erv-home-header-tag, 0.85rem) !important;
     font-weight: 700 !important;
-    color: var(--erve-primary, #146c43);
+    color: #b9872f;
     line-height: 1.2;
   }
   html.erv-mobile-shell body.lp-home-premium .lp-header.lp-header--refined .lp-header__top-row > .lp-header__menu-slot {

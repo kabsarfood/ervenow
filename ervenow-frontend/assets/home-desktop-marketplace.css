@@ -1,13 +1,59 @@
 /**
+ * Desktop marketplace local tokens (1025px+ only).
+ * Mobile/tablet intentionally do NOT load ervenow-design-tokens.css.
+ */
+@import url("https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap");
+
+@media (min-width: 1025px) {
+  html:not(.erv-mobile-shell) body.lp-home-premium {
+    --erve-primary: #146c43;
+    --erve-primary-deep: #0f5a37;
+    --erve-primary-soft: #e8f6ef;
+    --erve-primary-open: #d8f3e4;
+    --erve-ink: #111827;
+    --erve-ink-soft: #6b7280;
+    --erve-bg: #f7f4ef;
+    --erve-card: #ffffff;
+    --erve-border: rgba(17, 24, 39, 0.08);
+    --erve-border-strong: rgba(20, 108, 67, 0.35);
+    --erve-danger: #e11d48;
+    --erve-radius-sm: 14px;
+    --erve-radius-md: 18px;
+    --erve-shadow-md: 0 4px 18px rgba(15, 40, 28, 0.06);
+    --erve-shadow-lg: 0 10px 28px rgba(15, 40, 28, 0.1);
+    --erve-max: 1500px;
+    --erve-gutter: clamp(16px, 4vw, 64px);
+    --erve-font-family: "Tajawal", "Cairo", system-ui, sans-serif;
+
+    --erv-mp-ink: var(--erve-ink);
+    --erv-mp-ink-soft: var(--erve-ink-soft);
+    --erv-mp-green: var(--erve-primary);
+    --erv-mp-green-deep: var(--erve-primary-deep);
+    --erv-mp-green-soft: var(--erve-primary-soft);
+    --erv-mp-green-open: var(--erve-primary-open);
+    --erv-mp-gold: var(--erve-primary);
+    --erv-mp-cream: var(--erve-bg);
+    --erv-mp-card: var(--erve-card);
+    --erv-mp-line: var(--erve-border);
+    --erv-mp-line-strong: var(--erve-border-strong);
+    --erv-mp-danger: var(--erve-danger);
+    --erv-mp-radius: var(--erve-radius-md);
+    --erv-mp-radius-sm: var(--erve-radius-sm);
+    --erv-mp-shadow: var(--erve-shadow-md);
+    --erv-mp-shadow-hover: var(--erve-shadow-lg);
+    --erv-mp-max: var(--erve-max);
+    --erv-mp-gutter: var(--erve-gutter);
+
+    font-family: var(--erve-font-family);
+    background: var(--erv-mp-cream);
+  }
+}
+
+/**
  * ERVENOW — Desktop Marketplace homepage (1025px+)
  * Radical layout for a real delivery platform feel.
  * Does not apply under html.erv-mobile-shell or ≤1024px.
  */
-
-html:not(.erv-mobile-shell) body.lp-home-premium {
-  /* Tokens come from :root (ervenow-design-tokens.css) */
-  font-family: var(--erve-font-family);
-}
 
 /* Mobile / tablet: hide marketplace-only chrome */
 .erv-mp-only {
@@ -1828,46 +1874,48 @@ body.lp-home-premium img[src*="ervenow-logo"] {
   object-fit: contain !important;
 }
 
-body.lp-home-premium .lp-header__logo-slot.lp-header__logo-slot--has-img ~ .lp-header__brand-mid,
-body.lp-home-premium .lp-header__brand-mid[hidden] {
-  display: none !important;
+/* Desktop only: hide text brand when image logo is present */
+@media (min-width: 1025px) {
+  html:not(.erv-mobile-shell) body.lp-home-premium .lp-header__logo-slot.lp-header__logo-slot--has-img ~ .lp-header__brand-mid,
+  html:not(.erv-mobile-shell) body.lp-home-premium .lp-header__brand-mid[hidden] {
+    display: none !important;
+  }
 }
 
-/* جوال */
-html.erv-mobile-shell body.lp-home-premium .lp-header__logo-slot.lp-header__logo-slot--has-img {
-  max-width: min(158px, 46vw) !important;
-  padding: 0 !important;
-}
-
+/* جوال + تابلت: إخفاء الشعار الجديد — الإبقاء على اسم ERVENOW النصي */
+html.erv-mobile-shell body.lp-home-premium .lp-header__logo-slot,
 html.erv-mobile-shell body.lp-home-premium .lp-header__logo-img,
 html.erv-mobile-shell body.lp-home-premium #ervBrandLogo {
-  max-height: 36px !important;
-  width: auto !important;
-  max-width: 100% !important;
+  display: none !important;
+  width: 0 !important;
+  max-width: 0 !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  overflow: hidden !important;
 }
 
-@media (max-width: 360px) {
-  html.erv-mobile-shell body.lp-home-premium .lp-header__logo-slot.lp-header__logo-slot--has-img {
-    max-width: min(132px, 42vw) !important;
-  }
-  html.erv-mobile-shell body.lp-home-premium .lp-header__logo-img,
-  html.erv-mobile-shell body.lp-home-premium #ervBrandLogo {
-    max-height: 32px !important;
-  }
+html.erv-mobile-shell body.lp-home-premium .lp-header__brand-mid,
+html.erv-mobile-shell body.lp-home-premium .lp-header__brand-mid[hidden] {
+  display: flex !important;
+  visibility: visible !important;
 }
 
-/* تابلت */
-@media (min-width: 641px) and (max-width: 1024px) {
-  body.lp-home-premium .lp-header__logo-slot.lp-header__logo-slot--has-img {
-    max-width: min(200px, 34vw);
-  }
+@media (max-width: 1024px) {
+  body.lp-home-premium .lp-header__logo-slot,
   body.lp-home-premium .lp-header__logo-img,
   body.lp-home-premium #ervBrandLogo {
-    max-height: 42px !important;
-    width: auto !important;
-  }
-  body.lp-home-premium .lp-header__brand-mid {
     display: none !important;
+    width: 0 !important;
+    max-width: 0 !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    overflow: hidden !important;
+  }
+
+  body.lp-home-premium .lp-header__brand-mid,
+  body.lp-home-premium .lp-header__brand-mid[hidden] {
+    display: flex !important;
+    visibility: visible !important;
   }
 }
 

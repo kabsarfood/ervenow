@@ -347,11 +347,10 @@
   }
 
   html.erv-mobile-shell body.guest-shell-page .dash-site-header__logo {
+    display: none !important;
     font-size: 0 !important;
     line-height: 0;
-    display: inline-flex;
-    align-items: center;
-    min-height: 43px;
+    min-height: 0 !important;
   }
 
   html.erv-mobile-shell body.guest-shell-page .dash-site-header__logo-dot {
@@ -359,11 +358,9 @@
   }
 
   html.erv-mobile-shell body.guest-shell-page .dash-site-header__logo::before {
-    content: "";
-    display: block;
-    width: 43px;
-    height: 43px;
-    background: url("/assets/ervenow-logo.png") center / contain no-repeat;
+    content: none !important;
+    display: none !important;
+    background: none !important;
   }
 
   html.erv-mobile-shell body.guest-shell-page .dash-site-header__tag {
