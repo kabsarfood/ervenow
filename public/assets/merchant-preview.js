@@ -1209,6 +1209,11 @@
               method: "POST",
               body: { action: "start_preparing" },
             });
+          } else if (st === "ready") {
+            await api("/api/order/" + encodeURIComponent(id) + "/action", {
+              method: "POST",
+              body: { action: "mark_ready" },
+            });
           } else if (global.ErvenowMerchantOrderWorkflow) {
             await ErvenowMerchantOrderWorkflow.patchOrderStatus(id, st);
           } else {
