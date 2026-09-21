@@ -94,7 +94,7 @@
     <script src="/assets/api-config.js"></script>
     <script src="/assets/api.js?erv=20260612"></script>
     <script src="/assets/sa-phone-input.js"></script>
-    <script src="/assets/role-routing.js?erv=20260616"></script>
+    <script src="/assets/role-routing.js?erv=20260921dest1"></script>
     <script src="/assets/auth-otp-flow.js"></script>
     <script>
       function showInlineMsg(text, isOk) {
@@ -169,8 +169,30 @@
       function redirectAfterLogin(user) {
         var qs = new URLSearchParams(location.search);
         var next = qs.get("next");
-        location.href =
-          next && next.startsWith("/") && !next.startsWith("//") ? next.split("#")[0] : defaultNext(user);
+        if (next && next.startsWith("/") && !next.startsWith("//")) {
+          location.href = next.split("#")[0];
+          return;
+        }
+        if (window.PlatformAPI && PlatformAPI.getToken()) {
+          window.PlatformAPI.api("/api/core/login-destinations")
+            .then(function (destRes) {
+              var dests = (destRes && destRes.destinations) || [];
+              if (dests.length === 1 && dests[0].path) {
+                location.href = dests[0].path;
+                return;
+              }
+              if (destRes && destRes.default && destRes.default.path) {
+                location.href = destRes.default.path;
+                return;
+              }
+              location.href = defaultNext(user);
+            })
+            .catch(function () {
+              location.href = defaultNext(user);
+            });
+          return;
+        }
+        location.href = defaultNext(user);
       }
 
       ErvenowAuthOtpFlow.mount({

@@ -50,12 +50,8 @@
     if (r === "admin") return ID.partner.admin;
     if (r === "service" || r === "provider") {
       var st = String(serviceType || "").toLowerCase();
-      if (
-        st === "pickup_truck" ||
-        st === "car_transport" ||
-        st === "vehicle_transfer" ||
-        st === "internal_delivery"
-      ) {
+      if (st === "internal_delivery") return ID.partner.driver;
+      if (st === "pickup_truck" || st === "car_transport" || st === "vehicle_transfer" || st === "furniture_move") {
         return ID.partner.transport;
       }
       return ID.partner.service;

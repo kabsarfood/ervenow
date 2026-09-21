@@ -25,6 +25,9 @@ const { runUnifiedDeliveryOnlyCreate } = require("./deliveryOrderCreateShared");
 const { patchUnifiedOrderStatus, normalizeIncomingStatus, merchantOwnsOrder } = require("../../shared/services/unifiedOrderStatus");
 const { isAllowedDeliveryStatusTransition } = require("../../shared/utils/deliveryStateMachine");
 const { getOrderDeliveryStatus } = require("../../shared/domain/orders/orderStatus");
+const { projectUnifiedOrdersReadModel, projectUnifiedOrderReadModel } = require("../../shared/domain/orders/unifiedReadModel");
+const { actorFromAppUser } = require("../../shared/domain/orders/availableActions");
+const { dispatchUnifiedOrderAction } = require("../../shared/domain/orders/unifiedActionDispatcher");
 const { broadcastOrderPatch, orderPatchFromRow } = require("../../shared/lib/trackingSocket");
 const { repairInconsistentOrderFinancials } = require("../../shared/utils/orderTotals");
 const { getOrderProviderId } = require("../../shared/utils/orderProviderId");
@@ -117,7 +120,7 @@ router.get("/orders", optionalAuth, async (req, res) => {
 
     const { data, error } = await listOrders(sb, req.appUser);
     if (error) return fail(res, error.message, 400);
-    const payload = { ok: true, orders: data || [] };
+    const payload = { ok: true, orders: projectUnifiedOrdersReadModel(data || [], actorFromAppUser(req.appUser, { role: "customer" })) };
     await cacheSetJson(cacheKey, payload, LIST_CACHE_TTL_MS);
     return res.json(payload);
   } catch (e) {
@@ -187,6 +190,36 @@ router.post("/:id/confirm-receipt", requireAuth, async (req, res) => {
     return ok(res, { order: out.order, settlement: out.settlement || null, already: !!out.already });
   } catch (e) {
     return fail(res, e.message || "confirm receipt failed", 500);
+  }
+});
+
+/**
+ * POST /api/order/:id/action — Unified Action Dispatcher فوق المحرك الحالي.
+ * مدعوم الآن: start_preparing · mark_ready. لا accept_delivery بعد.
+ */
+router.post("/:id/action", requireAuth, async (req, res) => {
+  try {
+    const sb = req.supabase || createServiceClient();
+    if (!sb) return fail(res, "database not configured", 503);
+    const orderId = String(req.params.id || "").trim();
+    const action = req.body && (req.body.action || req.body.name);
+    const out = await dispatchUnifiedOrderAction(sb, orderId, action, req.appUser);
+    if (!out.ok) return fail(res, out.error, out.status || 400);
+    const order = out.order;
+    if (order && order.id) broadcastOrderPatch(String(order.id), orderPatchFromRow(order));
+    return ok(res, {
+      action: out.action,
+      order_id: out.order_id,
+      workflow: out.workflow,
+      previous_status: out.previous_status,
+      previous_status_unified: out.previous_status_unified,
+      status_unified: out.status_unified,
+      current_actor_type: out.current_actor_type,
+      available_actions: out.available_actions,
+      order,
+    });
+  } catch (e) {
+    return fail(res, e.message || "action failed", 500);
   }
 });
 
@@ -335,7 +368,10 @@ router.get("/:id", requireAuth, async (req, res) => {
     else q = q.eq("order_number", key);
     const { data, error } = await q.single();
     if (error) return fail(res, error.message, 404);
-    const o = repairInconsistentOrderFinancials(data);
+    const o = projectUnifiedOrderReadModel(
+      repairInconsistentOrderFinancials(data),
+      actorFromAppUser(req.appUser)
+    );
     await attachOrderTrackingMeta(sb, o);
     if (req.appUser.role === "admin") {
       return ok(res, { order: o });

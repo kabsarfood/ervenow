@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-09-20T17:24:56.003Z",
+  "updated_at": "2026-09-21T18:58:45.715Z",
   "portal_visits": {
     "customer": {
       "visits": 30,
@@ -7,9 +7,9 @@
       "last_at": "2026-06-20T12:30:05.786Z"
     },
     "merchant": {
-      "visits": 164,
+      "visits": 198,
       "unique_users": {},
-      "last_at": "2026-09-20T06:05:05.616Z"
+      "last_at": "2026-09-21T18:58:45.715Z"
     },
     "driver": {
       "visits": 452,
@@ -35,9 +35,9 @@
       "active_users": {}
     },
     "merchant": {
-      "visits": 99,
+      "visits": 130,
       "unique_users": {},
-      "last_at": "2026-09-20T06:04:05.345Z",
+      "last_at": "2026-09-21T18:11:13.388Z",
       "active_users": {}
     },
     "driver": {
@@ -61,9 +61,9 @@
   },
   "legacy_access": {
     "store-dashboard": {
-      "visits": 65,
+      "visits": 68,
       "unique_users": {},
-      "last_at": "2026-09-20T06:05:05.616Z"
+      "last_at": "2026-09-21T18:58:45.715Z"
     },
     "driver-app": {
       "visits": 14,
@@ -89,6 +89,36 @@
   "user_snapshots": {},
   "broadcast_history": [],
   "redirect_events": [
+    {
+      "at": "2026-09-21T18:51:25.658Z",
+      "portal": "admin",
+      "role": "admin",
+      "path": "/admin-dashboard",
+      "success": true,
+      "raw_role": "admin",
+      "service_type": null,
+      "user_id": null
+    },
+    {
+      "at": "2026-09-21T17:33:33.116Z",
+      "portal": "merchant",
+      "role": "store",
+      "path": "/merchant-preview",
+      "success": true,
+      "raw_role": "store",
+      "service_type": null,
+      "user_id": null
+    },
+    {
+      "at": "2026-09-20T18:58:47.663Z",
+      "portal": "admin",
+      "role": "admin",
+      "path": "/admin-dashboard",
+      "success": true,
+      "raw_role": "admin",
+      "service_type": null,
+      "user_id": null
+    },
     {
       "at": "2026-09-20T14:19:45.027Z",
       "portal": "admin",

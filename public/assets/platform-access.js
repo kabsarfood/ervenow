@@ -3,7 +3,15 @@
  */
 (function (global) {
   var ADMIN_PREFIXES = ["/admin", "/admin-dashboard", "/admin-login", "/admin-settings", "/admin-finance", "/admin-approvals", "/admin-branding", "/admin-categories", "/admin-commissions", "/admin-debts", "/admin-withdrawals"];
-  var DRIVER_HUB = ["/driver", "/driver-wallet", "/driver-app", "/driver-login", "/orders"];
+  var DRIVER_HUB = [
+    "/driver",
+    "/driver-preview",
+    "/driver.html",
+    "/driver-wallet",
+    "/driver-app",
+    "/driver-login",
+    "/orders",
+  ];
   var DRIVER_BLOCKED_ORDER = ["/cart", "/checkout", "/order"];
 
   function normalizeRole(role) {
@@ -51,6 +59,7 @@
     var role = normalizeRole(me && me.profile && me.profile.role);
     return {
       role: role,
+      service_type: (me && me.profile && me.profile.service_type) || null,
       can_place_orders: role !== "driver",
       can_access_admin: role === "admin",
       can_access_driver_dispatch: role === "driver" || role === "admin",
@@ -83,18 +92,37 @@
     }
   }
 
+  function canonicalHomeFor(role, access) {
+    var user = {
+      role: normalizeRole(role),
+      service_type: access && access.service_type,
+    };
+    if (global.ErvenowRoleRouting && typeof ErvenowRoleRouting.resolvePostLoginPath === "function") {
+      return ErvenowRoleRouting.resolvePostLoginPath(user);
+    }
+    if (global.ErvenowAccountDest && typeof ErvenowAccountDest.homeFor === "function") {
+      return ErvenowAccountDest.homeFor(user.role, user.service_type).path;
+    }
+    var r = user.role;
+    if (r === "admin") return "/admin-dashboard";
+    if (r === "driver") return "/driver-preview";
+    if (r === "store" || r === "merchant" || r === "restaurant") return "/merchant-preview";
+    if (r === "service") return "/service-preview";
+    return "/";
+  }
+
   function guardPage(role, access) {
     var path = location.pathname;
     role = normalizeRole(role);
     access = access || {};
 
     if (!access.can_access_admin && isAdminPath(path)) {
-      location.replace(role === "driver" ? "/driver" : "/dashboard");
+      location.replace(canonicalHomeFor(role, access));
       return true;
     }
 
     if (role === "driver" && pathMatches(path, DRIVER_BLOCKED_ORDER)) {
-      location.replace("/driver");
+      location.replace(canonicalHomeFor("driver", access));
       return true;
     }
 
@@ -144,6 +172,9 @@
     if (!me) return null;
     var access = accessFromMe(me);
     var role = access.role || normalizeRole(me.profile && me.profile.role);
+    if (me.profile && me.profile.service_type && !access.service_type) {
+      access.service_type = me.profile.service_type;
+    }
 
     if (guardPage(role, access)) return me;
 

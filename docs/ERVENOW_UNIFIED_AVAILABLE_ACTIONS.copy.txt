@@ -1,0 +1,66 @@
+تقرير Unified Available Actions — قراءة فقط
+تاريخ: 21 سبتمبر 2026
+
+هذه المرحلة قراءة فقط. لم يُمس أي Write API ولم يُبنَ Unified Action Dispatcher.
+
+1) تصحيح current_actor_type
+عند status_unified = completed أو cancelled
+current_actor_type = null
+لا تعني Driver أو Merchant «آخر من نفّذ»
+لم نُضف last_actor_type
+
+2) الدالة الجديدة
+availableActionsForRole(order, actor)
+الملف: shared/domain/orders/availableActions.js
+تُحسب من المحرك الحالي حسب workflow و status_unified والدور وعلاقة المستخدم بالطلب
+الاستجابات الموحدة تضيف: "available_actions": ["mark_ready"]
+الحقل للوصف فقط، لا يُنفَّذ منه شيء
+الواجهات لم تُخفِ أزرارًا ولم تغيّر سلوكها
+للمراقبة: localStorage.setItem("erv_unified_actions_log", "1")
+
+3) Action Policy Matrix (من الكود الفعلي)
+store / merchant / created → accept → PATCH /api/order/:id/status (pending/new → accepted)
+store / merchant / accepted → start_preparing → PATCH status (accepted → preparing)
+store / merchant / preparing → mark_ready → PATCH status (preparing → ready)
+store / merchant / ready وبعدها → لا Action تشغيلية (انتظار المندوب)
+store / driver / ready بدون driver → accept_delivery → POST /api/driver/accept/:id (ready → picked_up + driver_id)
+store / driver / picked_up → start_delivery → POST /api/driver/start-delivery/:id
+store / driver / in_transit → complete → POST /api/driver/complete-order/:id
+store / customer / created أو accepted → cancel → POST /api/order/:id/cancel
+store / customer / completed بدون تقييم → review → POST /api/order/:id/rate
+store / admin / غير نهائي → cancel و assign_driver
+internal_delivery / driver / created → accept_delivery
+internal_delivery / driver / assigned → start_delivery و complete
+service مرحلة / created → accept عبر reserve
+service تلميع / created → accept + reject
+service مرحلة / assigned أو scheduled → mark_en_route
+service مرحلة / in_transit → start_service
+service مرحلة / in_progress → complete
+service عامة / assigned → mark_en_route + complete
+غاز مركزي / assigned → start_service
+غاز مركزي / in_transit → complete
+transport / created → accept
+transport / assigned → complete
+service أو transport / customer / in_transit → confirm
+الكل / completed أو cancelled → لا تشغيل و current_actor_type = null
+
+لا يوجد reject للتاجر. لا يوجد reorder. review ليس تنفيذ طلب.
+
+4) نتائج الاختبارات
+5 suites / 60 tests / كلها نجحت
+دورة المتجر كاملة + من يرى ماذا + دورة الخدمة + دورة النقل
+internal_delivery صلاحيات Driver وليس Transport
+الحالات النهائية: current_actor_type = null
+
+5) فروقات UI × Backend
+my-orders يخفي الإلغاء إذا وُجد driver_id حتى في accepted — الواجهة أضيق من المحرك
+driver-preview يظهر بدء التوصيل على accepted للمتجر بينما الـBackend يرفض
+confirm للعميل بلا زر في my-orders
+complete من accepted للتوصيل الداخلي بلا زر مطابق
+نفس Action بأكثر من API (cancel / rate / accept / status)
+complete يلمسه أكثر من Role
+أخطر توحيد الآن: complete ثم accept_delivery
+
+6) أول Action مقترحة للتوحيد
+start_preparing — تاجر فقط — accepted → preparing
+لم يُنشأ POST /api/orders/:id/action في تلك المرحلة

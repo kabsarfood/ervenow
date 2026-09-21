@@ -53,6 +53,8 @@ const {
   isReadyQueueOrderForDriver,
 } = require("../../shared/utils/driverStoreHandoff");
 const { getOrderDeliveryStatus } = require("../../shared/domain/orders/orderStatus");
+const { projectUnifiedOrdersReadModel } = require("../../shared/domain/orders/unifiedReadModel");
+const { actorFromAppUser } = require("../../shared/domain/orders/availableActions");
 const { isCancelledStatus } = require("../../shared/services/notificationEvents");
 const { isDriverRecordOffline } = require("../../shared/utils/closedAlphaTransitions");
 const { isDriverDispatchOrder } = require("../../shared/utils/driverDispatchOrders");
@@ -554,21 +556,37 @@ router.get("/orders", requireAuth, async (req, res) => {
 
     const activeAssigned = enrichDriverOrderRows(filterDriverDispatchOrders(assignedOrders || []));
     const visibleOpenEnriched = enrichDriverOrderRows(visibleOpenOrders);
-    const finalOrders = filterOrdersForPortal(
-      filterDriverDispatchOrders([...activeAssigned, ...visibleOpenEnriched]),
-      "driver"
+    const driverActor = actorFromAppUser(req.appUser, { role: "driver" });
+    const finalOrders = projectUnifiedOrdersReadModel(
+      filterOrdersForPortal(
+        filterDriverDispatchOrders([...activeAssigned, ...visibleOpenEnriched]),
+        "driver"
+      ),
+      driverActor
     );
-
-    return ok(res, {
-      orders: finalOrders,
-      ready_queue: visibleOpenEnriched.filter(isReadyQueueOrderForDriver),
-      legacy_open: visibleOpenEnriched.filter(isLegacyOpenOrderForDriver),
-      active: activeAssigned.filter(
+    const readyProjected = projectUnifiedOrdersReadModel(
+      visibleOpenEnriched.filter(isReadyQueueOrderForDriver),
+      driverActor
+    );
+    const legacyProjected = projectUnifiedOrdersReadModel(
+      visibleOpenEnriched.filter(isLegacyOpenOrderForDriver),
+      driverActor
+    );
+    const activeProjected = projectUnifiedOrdersReadModel(
+      activeAssigned.filter(
         (o) =>
           String(o.driver_id || "") === String(driverId) &&
           ["accepted", "picked", "picked_up", "delivering"].includes(getOrderDeliveryStatus(o))
       ),
-      completed: completedRecent || [],
+      driverActor
+    );
+
+    return ok(res, {
+      orders: finalOrders,
+      ready_queue: readyProjected,
+      legacy_open: legacyProjected,
+      active: activeProjected,
+      completed: projectUnifiedOrdersReadModel(completedRecent || [], driverActor),
     });
   } catch (e) {
     return fail(res, e.message, 500);

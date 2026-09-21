@@ -1,0 +1,21 @@
+---
+description: End every user-facing report with an easy-copy block
+alwaysApply: true
+---
+
+# علامة نسخ في نهاية كل تقرير
+
+When the user gets a تقرير / report / ملخص تنفيذ / النقاط 1–7:
+
+1. Write the report to `docs/` so it is not trapped in chat.
+2. End the **chat message** with this exact marker and a single fenced `text` block that contains the full report. Cursor shows a copy button on that fence — that is the copy mark. Do not wait for the user to ask.
+
+```
+📋 نسخ التقرير
+```text
+...full report here...
+```
+```
+
+3. The copy block must be self-contained (no “see above”). Prefer plain text over nested markdown tables if they break the fence.
+4. Do not ask «هل تريد التقرير؟» and do not require «إذا سمحت».

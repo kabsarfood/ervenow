@@ -90,4 +90,29 @@ test.describe("G1-R reconnect lifecycle (mocked)", () => {
     expect(live).toBe(true);
     expect(path).toBe("/merchant-preview");
   });
+
+  test("unified destinations match canonical portals", async ({ page }) => {
+    await page.goto(BASE + "/assets/role-routing.js");
+    const map = await page.evaluate(() => {
+      var RR = window.ErvenowRoleRouting;
+      return {
+        customer: RR.resolvePostLoginPath({ role: "customer" }),
+        merchant: RR.resolvePostLoginPath({ role: "store" }),
+        driver: RR.resolvePostLoginPath({ role: "driver" }),
+        service: RR.resolvePostLoginPath({ role: "service", service_type: "plumber" }),
+        transport: RR.resolvePostLoginPath({ role: "service", service_type: "pickup_truck" }),
+        internalDelivery: RR.resolvePostLoginPath({ role: "service", service_type: "internal_delivery" }),
+        admin: RR.resolvePostLoginPath({ role: "admin" }),
+        merchantWallet: RR.walletPathForUser({ role: "merchant" }),
+      };
+    });
+    expect(map.customer).toBe("/");
+    expect(map.merchant).toBe("/merchant-preview");
+    expect(map.driver).toBe("/driver-preview");
+    expect(map.service).toBe("/service-preview");
+    expect(map.transport).toBe("/transport-preview");
+    expect(map.internalDelivery).toBe("/driver-preview");
+    expect(map.admin).toBe("/admin-dashboard");
+    expect(map.merchantWallet).toBe("/merchant-preview#wallet");
+  });
 });

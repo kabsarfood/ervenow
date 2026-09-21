@@ -83,6 +83,8 @@ const {
 const { buildOrderStatusPatch } = require("../../shared/domain/orders/orderStatus");
 const { DELIVERY_STATUS } = require("../../shared/domain/orders/constants");
 const { patchUnifiedOrderStatus } = require("../../shared/services/unifiedOrderStatus");
+const { projectUnifiedOrdersReadModel } = require("../../shared/domain/orders/unifiedReadModel");
+const { actorFromAppUser } = require("../../shared/domain/orders/availableActions");
 const { updateOrdersResilient } = require("../../shared/utils/idempotency");
 const { applyProviderIdToPatch } = require("../../shared/utils/orderProviderId");
 const { deferServiceProviderDispatch, isPrepaidServiceType } = require("../../shared/utils/serviceOrderPaymentHold");
@@ -578,7 +580,10 @@ router.get("/me/dashboard", requireAuth, requireServiceProviderRole(), async (re
       uid
     );
     const portalRole = portalRoleForProvider(req.appUser, profile);
-    const portalBookings = filterOrdersForPortal(bookings, portalRole);
+    const portalBookings = projectUnifiedOrdersReadModel(
+      filterOrdersForPortal(bookings, portalRole),
+      actorFromAppUser(req.appUser, { role: portalRole })
+    );
 
     const newCount = portalBookings.filter((b) => {
       const s = bookingStatus(b);
@@ -689,7 +694,10 @@ router.get("/me/schedule", requireAuth, requireServiceProviderRole(), async (req
         uid
       );
       const portalRole = portalRoleForProvider(req.appUser, profile);
-      return filterOrdersForPortal(bookings, portalRole);
+      return projectUnifiedOrdersReadModel(
+        filterOrdersForPortal(bookings, portalRole),
+        actorFromAppUser(req.appUser, { role: portalRole })
+      );
     })();
     const now = new Date();
     const weekEnd = new Date(now);
@@ -838,19 +846,22 @@ router.get("/bookings", requireAuth, async (req, res) => {
     if (error) throw error;
 
     const portalRole = portalRoleForProvider(user, profile);
-    const filtered = filterOrdersForPortal(
-      sortBookingsByPriority(
-        filterBookingsForProvider(
-          mapOrdersToBookings(data),
-          user.id,
-          providerType,
-          profile?.service_district,
-          profile?.service_vehicle_type,
-          profile
+    const filtered = projectUnifiedOrdersReadModel(
+      filterOrdersForPortal(
+        sortBookingsByPriority(
+          filterBookingsForProvider(
+            mapOrdersToBookings(data),
+            user.id,
+            providerType,
+            profile?.service_district,
+            profile?.service_vehicle_type,
+            profile
+          ),
+          user.id
         ),
-        user.id
+        portalRole
       ),
-      portalRole
+      actorFromAppUser(user, { role: portalRole })
     );
     return res.json({ ok: true, bookings: filtered, portal_type: portalRole });
   } catch (e) {

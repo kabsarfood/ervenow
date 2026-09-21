@@ -1,6 +1,9 @@
 (function (global) {
+  var DRIVER_HOME =
+    (typeof window !== "undefined" && window.ErvenowRoleRouting && window.ErvenowRoleRouting.portalPathForRole("driver")) ||
+    "/driver-preview";
   var NAV = [
-    { key: "driver", href: "/driver", label: "لوحة المندوب" },
+    { key: "driver", href: DRIVER_HOME, label: "لوحة المندوب" },
     { key: "orders", href: "/orders", label: "طلبات المنصة" },
     { key: "home", href: "/", label: "الرئيسية" },
     { key: "track", href: "/driver-app", label: "تتبع الحي" },
@@ -34,7 +37,9 @@
       '<header class="dash-site-header">' +
       '<div class="dash-site-header__inner">' +
       '<div class="dash-site-header__brand">' +
-      '<a class="dash-site-header__logo" href="/">ERVENOW<span class="dash-site-header__logo-dot" aria-hidden="true"></span></a>' +
+      '<a class="dash-site-header__logo" href="' +
+      DRIVER_HOME +
+      '">ERVENOW<span class="dash-site-header__logo-dot" aria-hidden="true"></span></a>' +
       tagHtml +
       "</div>" +
       '<nav class="dash-site-header__nav" aria-label="تنقل المندوب">' +
@@ -43,7 +48,9 @@
       "</div></nav>" +
       '<div class="dash-site-header__tools">' +
       '<div id="driverHeaderNotifications"></div>' +
-      '<a class="drv-tool-balance" id="drvHeaderBalance" href="/driver-wallet" hidden aria-label="الرصيد">' +
+      '<a class="drv-tool-balance" id="drvHeaderBalance" href="' +
+      DRIVER_HOME +
+      '#wallet" hidden aria-label="الرصيد">' +
       '<span class="drv-tool-balance__label">الرصيد</span>' +
       '<span class="drv-tool-balance__val" id="drvHeaderBalanceAmount">—</span>' +
       '<span class="drv-tool-balance__cur">ر.س</span></a>' +

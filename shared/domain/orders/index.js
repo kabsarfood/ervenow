@@ -7,6 +7,25 @@ const {
   buildOrderStatusPatch,
   isTerminalOrderStatus,
 } = require("./orderStatus");
+const {
+  WORKFLOW,
+  UNIFIED_STATUS,
+  CURRENT_ACTOR_TYPE,
+  FULFILLER_TYPE,
+  resolveCustomerOrderWorkflow,
+  resolveUnifiedOrderStatus,
+  resolveCurrentActorType,
+  resolveFulfillerType,
+  statusLabelForRole,
+  customerStatusLabel,
+  workflowTypeLabel,
+  projectUnifiedOrderReadModel,
+  projectUnifiedOrdersReadModel,
+  projectCustomerOrderReadModel,
+  projectCustomerOrdersReadModel,
+} = require("./unifiedReadModel");
+const { ACTION, availableActionsForRole, actorFromAppUser } = require("./availableActions");
+const { dispatchUnifiedOrderAction } = require("./unifiedActionDispatcher");
 
 module.exports = {
   DELIVERY_STATUS,
@@ -19,4 +38,23 @@ module.exports = {
   isTerminalDeliveryStatus,
   canTransitionDeliveryStatus,
   canTransitionDeliveryStatusLegacy,
+  WORKFLOW,
+  UNIFIED_STATUS,
+  CURRENT_ACTOR_TYPE,
+  FULFILLER_TYPE,
+  resolveCustomerOrderWorkflow,
+  resolveUnifiedOrderStatus,
+  resolveCurrentActorType,
+  resolveFulfillerType,
+  statusLabelForRole,
+  customerStatusLabel,
+  workflowTypeLabel,
+  projectUnifiedOrderReadModel,
+  projectUnifiedOrdersReadModel,
+  projectCustomerOrderReadModel,
+  projectCustomerOrdersReadModel,
+  ACTION,
+  availableActionsForRole,
+  actorFromAppUser,
+  dispatchUnifiedOrderAction,
 };

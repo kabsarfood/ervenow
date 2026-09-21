@@ -198,7 +198,7 @@ app.renderStores = function () {
           method: "PATCH",
           body: { action: "approve" },
         });
-        var panel = (res && res.merchant_panel_url) || "/store-dashboard";
+        var panel = (res && res.merchant_panel_url) || "/merchant-preview";
         app.showSuccess(
           "تم قبول المتجر. لوحة التحكم للتاجر: " + panel + " (دخول كتاجر بنفس الجوال)"
         );
@@ -210,7 +210,7 @@ app.renderStores = function () {
       panelNote.className = "sub";
       panelNote.style.marginTop = "6px";
       panelNote.innerHTML =
-        'لوحة التحكم: <a href="/store-dashboard" target="_blank" rel="noopener">/store-dashboard</a> · ' +
+        'لوحة التحكم: <a href="/merchant-preview" target="_blank" rel="noopener">/merchant-preview</a> · ' +
         '<a href="/store.html?id=' + encodeURIComponent(s.id) + '" target="_blank" rel="noopener">صفحة العملاء</a>';
       item.appendChild(panelNote);
     }
@@ -319,7 +319,7 @@ app.openStoreSetup = async function (storeId) {
         '<a href="' +
         pub +
         '" target="_blank" rel="noopener">معاينة صفحة العملاء</a> · ' +
-        '<a href="/store-dashboard" target="_blank" rel="noopener">لوحة التاجر</a>';
+        '<a href="/merchant-preview" target="_blank" rel="noopener">لوحة التاجر</a>';
     }
     var prev = document.getElementById("storeSetupPreview");
     if (prev) {

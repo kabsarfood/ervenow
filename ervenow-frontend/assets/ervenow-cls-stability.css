@@ -398,25 +398,23 @@ body.lp-home-premium .lp-home-cta-card {
   height: 100%;
 }
 
-/* ─── Discover: never collapse then expand ─── */
-@media (min-width: 1025px) {
-  html:not(.erv-mobile-shell) body.lp-home-premium #ervMpDiscover.erv-mp-discover {
-    display: block !important;
-    min-height: 280px;
-  }
+/* ─── Discover: visible on all viewports once painted ─── */
+body.lp-home-premium #ervMpDiscover.erv-mp-discover,
+body.lp-home-premium #ervMpDiscover {
+  display: block !important;
+  visibility: visible !important;
+  pointer-events: auto;
+  min-height: 0;
+}
 
-  html:not(.erv-mobile-shell) body.lp-home-premium #ervMpDiscover[hidden] {
-    /* لا نخفي المحتوى — العروض وخدمات سريعة ثابتة ويجب أن تظهر */
-    display: block !important;
-    visibility: visible !important;
-    min-height: 280px;
-    pointer-events: auto;
-  }
+body.lp-home-premium #ervMpDiscover[hidden] {
+  display: block !important;
+  visibility: visible !important;
+  pointer-events: auto;
+}
 
-  html:not(.erv-mobile-shell) body.lp-home-premium #ervMpDiscover:not([hidden]) {
-    visibility: visible;
-    pointer-events: auto;
-  }
+body.lp-home-premium #ervMpDiscover .erv-mp-section[hidden] {
+  display: none !important;
 }
 
 /* ─── Bottom nav: fixed, content padding already on body ─── */

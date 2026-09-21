@@ -55,9 +55,16 @@
  * Does not apply under html.erv-mobile-shell or ≤1024px.
  */
 
-/* Mobile / tablet: hide marketplace-only chrome */
+/* Mobile / tablet: hide marketplace-only chrome — except discovery rails */
 .erv-mp-only {
   display: none !important;
+}
+
+body.lp-home-premium #ervMpDiscover,
+body.lp-home-premium #ervMpDiscover.erv-mp-discover,
+body.lp-home-premium #ervMpDiscover.erv-mp-only {
+  display: block !important;
+  visibility: visible !important;
 }
 
 .erv-mp-tiles {
@@ -2135,5 +2142,292 @@ body.lp-home-premium .lp-why-item__svg {
   html.erv-mobile-shell body.lp-home-premium .lp-why-item__mark--icon {
     width: 48px !important;
     height: 48px !important;
+  }
+}
+
+/* ═══ Discovery rails: الأعلى تقييماً / الأكثر طلباً — كل الشاشات ═══ */
+body.lp-home-premium #ervMpDiscover.erv-mp-discover {
+  display: block !important;
+  width: 100%;
+  max-width: 1500px;
+  margin: 8px auto 0;
+  padding: 0 clamp(12px, 4vw, 64px) 12px;
+  box-sizing: border-box;
+}
+
+body.lp-home-premium #ervMpDiscover .erv-mp-section {
+  margin-top: 18px;
+}
+
+body.lp-home-premium #ervMpDiscover .erv-mp-section:first-child {
+  margin-top: 4px;
+}
+
+body.lp-home-premium #ervMpDiscover .erv-mp-section[hidden] {
+  display: none !important;
+}
+
+body.lp-home-premium #ervMpDiscover .erv-mp-section__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+body.lp-home-premium #ervMpDiscover .erv-mp-section__title {
+  margin: 0;
+  font-size: clamp(1.15rem, 2.4vw, 1.45rem);
+  font-weight: 800;
+  line-height: 1.45;
+  color: #111827;
+}
+
+body.lp-home-premium #ervMpDiscover .erv-mp-section__more {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: #146c43;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+body.lp-home-premium #ervMpDiscover .erv-mp-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+body.lp-home-premium #ervMpDiscover .erv-mp-store {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+  border-radius: 18px;
+  border: 1px solid rgba(17, 24, 39, 0.08);
+  background: #fff;
+  box-shadow: 0 4px 18px rgba(15, 40, 28, 0.06);
+  text-decoration: none;
+  color: inherit;
+}
+
+body.lp-home-premium #ervMpDiscover .erv-mp-store__media {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  background: #eee6da;
+  overflow: hidden;
+}
+
+body.lp-home-premium #ervMpDiscover .erv-mp-store__cover {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+body.lp-home-premium #ervMpDiscover .erv-mp-store__logo {
+  position: absolute;
+  inset-inline-start: 12px;
+  bottom: -18px;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  border: 2px solid #fff;
+  background: #fff;
+  object-fit: cover;
+  box-shadow: 0 4px 10px rgba(15, 40, 28, 0.12);
+}
+
+body.lp-home-premium #ervMpDiscover .erv-mp-store__badge {
+  position: absolute;
+  top: 10px;
+  inset-inline-end: 10px;
+  z-index: 2;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #d8f3e4;
+  color: #0f5a37;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+body.lp-home-premium #ervMpDiscover .erv-mp-store__body {
+  padding: 24px 14px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+body.lp-home-premium #ervMpDiscover .erv-mp-store__name {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 800;
+  line-height: 1.45;
+  color: #111827;
+}
+
+body.lp-home-premium #ervMpDiscover .erv-mp-store__type {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #6b7280;
+  line-height: 1.4;
+}
+
+body.lp-home-premium #ervMpDiscover .erv-mp-store__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 6px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #6b7280;
+}
+
+body.lp-home-premium #ervMpDiscover .erv-mp-products {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(148px, 42vw);
+  gap: 12px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 6px;
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
+}
+
+body.lp-home-premium #ervMpDiscover .erv-mp-product {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  scroll-snap-align: start;
+  border-radius: 16px;
+  border: 1px solid rgba(17, 24, 39, 0.08);
+  background: #fff;
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+  box-shadow: 0 4px 18px rgba(15, 40, 28, 0.06);
+}
+
+body.lp-home-premium #ervMpDiscover .erv-mp-product__media {
+  aspect-ratio: 1;
+  background: #f3f4f6;
+  overflow: hidden;
+}
+
+body.lp-home-premium #ervMpDiscover .erv-mp-product__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+body.lp-home-premium #ervMpDiscover .erv-mp-product__body {
+  padding: 10px 12px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+body.lp-home-premium #ervMpDiscover .erv-mp-product__name {
+  margin: 0;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #111827;
+  line-height: 1.45;
+}
+
+body.lp-home-premium #ervMpDiscover .erv-mp-product__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+body.lp-home-premium #ervMpDiscover .erv-mp-product__price {
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: #0f5a37;
+}
+
+body.lp-home-premium #ervMpDiscover .erv-mp-product__add {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  min-height: 36px;
+  border-radius: 50%;
+  background: #146c43;
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+@media (hover: hover) {
+  body.lp-home-premium #ervMpDiscover .erv-mp-store,
+  body.lp-home-premium #ervMpDiscover .erv-mp-product {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  body.lp-home-premium #ervMpDiscover .erv-mp-store:hover,
+  body.lp-home-premium #ervMpDiscover .erv-mp-product:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 28px rgba(15, 40, 28, 0.1);
+  }
+
+  body.lp-home-premium #ervMpDiscover .erv-mp-section__more:hover {
+    text-decoration: underline;
+  }
+}
+
+@media (min-width: 641px) and (max-width: 1024px) {
+  body.lp-home-premium #ervMpDiscover.erv-mp-discover {
+    padding-inline: clamp(16px, 3vw, 32px);
+  }
+
+  body.lp-home-premium #ervMpDiscover .erv-mp-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  body.lp-home-premium #ervMpDiscover .erv-mp-products {
+    grid-auto-flow: unset;
+    grid-auto-columns: unset;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    overflow: visible;
+  }
+}
+
+@media (min-width: 1025px) {
+  body.lp-home-premium #ervMpDiscover.erv-mp-discover {
+    padding-inline: clamp(16px, 4vw, 64px);
+  }
+
+  body.lp-home-premium #ervMpDiscover .erv-mp-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  body.lp-home-premium #ervMpDiscover .erv-mp-products {
+    grid-auto-flow: unset;
+    grid-auto-columns: unset;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    overflow: visible;
+  }
+}
+
+@media (max-width: 360px) {
+  body.lp-home-premium #ervMpDiscover .erv-mp-store__name {
+    font-size: 0.88rem;
+  }
+
+  body.lp-home-premium #ervMpDiscover .erv-mp-products {
+    grid-auto-columns: minmax(136px, 70vw);
   }
 }

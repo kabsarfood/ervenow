@@ -473,6 +473,19 @@
     var isCpBooking = String(b.service_type || "").toLowerCase() === "car_polishing";
     var isSpBooking = isServicePhaseBooking(b) && !isGasCentralBooking(b);
     var canProviderExecute = mine && st === "accepted" && !isCpBooking && !isSpBooking;
+    if (global.ErvenowUnifiedOrderRead && ErvenowUnifiedOrderRead.observeActions) {
+      var ui = [];
+      if (canReserve) ui.push("accept");
+      if (canReserve && isCpBooking) ui.push("reject");
+      if (mine && (isCpBooking || isSpBooking) && (st === "accepted" || st === "pending")) ui.push("mark_en_route");
+      if (canProviderExecute && !isGasCentralBooking(b)) {
+        ui.push("mark_en_route");
+        ui.push("complete");
+      }
+      if (canProviderExecute && isGasCentralBooking(b)) ui.push("start_service");
+      if (mine && st === "delivering" && isGasCentralBooking(b)) ui.push("complete");
+      ErvenowUnifiedOrderRead.observeActions(b, "service", ui);
+    }
     var d = b.data && typeof b.data === "object" ? b.data : {};
     var maps =
       b.location && String(b.location).indexOf(",") !== -1
@@ -529,6 +542,9 @@
       esc(b.service_name || "خدمة") +
       "</strong> — " +
       esc(statusLabel(b.status, b)) +
+      (global.ErvenowUnifiedOrderRead && ErvenowUnifiedOrderRead.badgeHtml
+        ? ErvenowUnifiedOrderRead.badgeHtml(b, "service")
+        : "") +
       "</p>" +
       "<p>رقم: " +
       esc(b.service_order_number || b.order_number || "—") +
@@ -721,6 +737,9 @@
       "</p>" +
       "<p>الحالة: " +
       esc(statusLabel(b.status, b)) +
+      (global.ErvenowUnifiedOrderRead && ErvenowUnifiedOrderRead.badgeHtml
+        ? ErvenowUnifiedOrderRead.badgeHtml(b, "service")
+        : "") +
       "</p>" +
       "<p>رقم: " +
       esc(b.service_order_number || b.order_number || "—") +

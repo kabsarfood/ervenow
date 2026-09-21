@@ -1,27 +1,8 @@
 /**
- * توجيه «حسابي» / رقم الجوال في الهيدر — حسب دور المستخدم في المنصة
+ * توجيه «حسابي» / رقم الجوال في الهيدر.
+ * يستهلك ErvenowRoleRouting — لا خريطة وجهات مستقلة.
  */
 (function (global) {
-  var ROLE_HOME = {
-    customer: { path: "/start-now.html", label: "المنصة الرئيسية", short: "عضو ERVENOW" },
-    driver: { path: "/driver-preview", label: "بوابة شريك التوصيل", short: "شريك توصيل" },
-    store: { path: "/store-dashboard", label: "لوحة الشريك التجاري", short: "شريك تجاري" },
-    merchant: { path: "/store-dashboard", label: "لوحة الشريك التجاري", short: "شريك تجاري" },
-    restaurant: { path: "/store-dashboard", label: "لوحة الشريك التجاري", short: "شريك تجاري" },
-    service: { path: "/service-preview", label: "بوابة شريك الخدمات", short: "شريك خدمات" },
-    transport: { path: "/transport-preview", label: "بوابة شريك النقل", short: "شريك نقل" },
-    admin: { path: "/admin-dashboard", label: "لوحة الإدارة", short: "الإدارة" },
-    blocked: { path: "/blocked-complaints.html", label: "الدعم والشكاوى", short: "الدعم" },
-  };
-
-  var TRANSPORT_SERVICE_TYPES = {
-    pickup_truck: 1,
-    car_transport: 1,
-    vehicle_transfer: 1,
-    internal_delivery: 1,
-    furniture_move: 1,
-  };
-
   var SERVICE_HOME_LABELS = {
     plumber: "لوحة السباك",
     electrician: "لوحة الكهربائي",
@@ -37,66 +18,141 @@
     gas_delivery: "لوحة توصيل الغاز",
     car_polishing: "لوحة تلميع المركبات",
     service: "لوحة مزود الخدمة",
+    internal_delivery: "لوحة شريك التوصيل",
   };
 
-  var DRIVER_HOME_PATH = "/driver-preview";
+  var PORTAL_SHORT = {
+    customer: "عضو ERVENOW",
+    merchant: "شريك تجاري",
+    driver: "شريك توصيل",
+    service: "شريك خدمات",
+    transport: "شريك نقل",
+    admin: "الإدارة",
+    blocked: "الدعم",
+  };
 
-  function canonicalPath(path, role) {
-    var p = String(path || "/").split("?")[0].split("#")[0];
-    p = p.replace(/\.html$/i, "");
-    if (p === "/driver-dashboard" || p.indexOf("/driver-dashboard") === 0) {
-      return DRIVER_HOME_PATH;
-    }
-    if (String(role || "").toLowerCase() === "driver" && p !== DRIVER_HOME_PATH) {
-      var allowed = {
-        "/driver": 1,
-        "/driver-preview": 1,
-        "/driver-wallet": 1,
-        "/driver-app": 1,
-        "/orders": 1,
-        "/driver-login": 1,
-      };
-      if (!allowed[p] && p.indexOf("driver-dashboard") !== -1) return DRIVER_HOME_PATH;
-    }
-    return p || "/";
+  function routing() {
+    return global.ErvenowRoleRouting || null;
+  }
+
+  function fallbackPath(portalRole) {
+    var r = String(portalRole || "customer").toLowerCase();
+    if (r === "merchant") return "/merchant-preview";
+    if (r === "driver") return "/driver-preview";
+    if (r === "service") return "/service-preview";
+    if (r === "transport") return "/transport-preview";
+    if (r === "admin") return "/admin-dashboard";
+    if (r === "blocked") return "/blocked-complaints";
+    return "/";
   }
 
   function normalizeRole(role) {
-    var r = String(role || "customer").trim().toLowerCase();
+    var r = String(role || "customer")
+      .trim()
+      .toLowerCase();
     if (r === "user") return "customer";
     if (r === "provider") return "service";
     return r || "customer";
   }
 
-  function homeFor(role, serviceType) {
-    var r = normalizeRole(role);
-    if (r === "service" && serviceType) {
-      var st = String(serviceType).trim().toLowerCase();
-      if (TRANSPORT_SERVICE_TYPES[st]) {
-        var transport = ROLE_HOME.transport;
-        return {
-          role: "transport",
-          path: canonicalPath(transport.path, "transport"),
-          label: transport.label,
-          short: transport.short,
-        };
-      }
-    }
-    var base = ROLE_HOME[r] || ROLE_HOME.customer;
-    var out = {
-      role: r,
-      path: canonicalPath(base.path, r),
-      label: base.label,
-      short: base.short,
+  function userFrom(role, serviceType) {
+    return {
+      role: normalizeRole(role),
+      service_type: serviceType != null ? serviceType : global.__ervSessionServiceType,
     };
-    if (r === "service" && serviceType) {
-      var st = String(serviceType).trim().toLowerCase();
+  }
+
+  function canonicalPath(path, role) {
+    var RR = routing();
+    var p = String(path || "/").split("?")[0];
+    var hash = String(path || "").indexOf("#") >= 0 ? String(path).slice(String(path).indexOf("#")) : "";
+    var base = p.split("#")[0].replace(/\.html$/i, "") || "/";
+    if (base === "/index") base = "/";
+    if (base === "/driver-dashboard" || base.indexOf("/driver-dashboard") === 0) {
+      return (RR ? RR.portalPathForRole("driver") : "/driver-preview") + hash;
+    }
+    if (base === "/start-now") {
+      return (RR ? RR.CUSTOMER_PLATFORM_HOME : "/") + hash;
+    }
+    if (String(role || "").toLowerCase() === "blocked") return "/blocked-complaints";
+    return (base || "/") + hash;
+  }
+
+  function homeFor(role, serviceType) {
+    var user = userFrom(role, serviceType);
+    var RR = routing();
+    var portalRole = "customer";
+    var path = "/";
+    var label = "المنصة الرئيسية";
+
+    if (normalizeRole(role) === "blocked") {
+      return {
+        role: "blocked",
+        path: "/blocked-complaints",
+        label: "الدعم والشكاوى",
+        short: PORTAL_SHORT.blocked,
+      };
+    }
+
+    if (RR) {
+      var resolved = RR.resolvePortalRole(user);
+      portalRole = resolved.portalRole;
+      path = RR.resolvePostLoginPath(user);
+      label = RR.portalLabelAr(portalRole);
+    } else {
+      var raw = user.role;
+      if (raw === "admin") portalRole = "admin";
+      else if (raw === "driver") portalRole = "driver";
+      else if (raw === "store" || raw === "merchant" || raw === "restaurant") portalRole = "merchant";
+      else if (raw === "service") {
+        var st0 = String(user.service_type || "").toLowerCase();
+        if (st0 === "internal_delivery") portalRole = "driver";
+        else if (
+          st0 === "pickup_truck" ||
+          st0 === "car_transport" ||
+          st0 === "vehicle_transfer" ||
+          st0 === "furniture_move"
+        ) {
+          portalRole = "transport";
+        } else portalRole = "service";
+      }
+      path = fallbackPath(portalRole);
+      label = portalRole === "customer" ? "المنصة الرئيسية" : path;
+    }
+
+    var out = {
+      role: portalRole,
+      path: canonicalPath(path, portalRole),
+      label: label,
+      short: PORTAL_SHORT[portalRole] || label,
+    };
+    if (portalRole === "service" && user.service_type) {
+      var st = String(user.service_type)
+        .trim()
+        .toLowerCase();
       if (SERVICE_HOME_LABELS[st]) {
         out.label = SERVICE_HOME_LABELS[st];
         out.short = SERVICE_HOME_LABELS[st].replace(/^لوحة\s+/, "");
       }
     }
+    if (portalRole === "driver" && String(user.service_type || "").toLowerCase() === "internal_delivery") {
+      out.label = SERVICE_HOME_LABELS.internal_delivery;
+      out.short = "توصيل داخلي";
+    }
     return out;
+  }
+
+  function walletHrefFor(role, serviceType) {
+    var user = userFrom(role, serviceType);
+    var RR = routing();
+    if (normalizeRole(role) === "blocked") return "/blocked-complaints";
+    if (RR && typeof RR.walletPathForUser === "function") {
+      return RR.walletPathForUser(user);
+    }
+    var home = homeFor(role, serviceType);
+    if (home.role === "customer") return "/wallet.html";
+    if (home.role === "admin") return home.path;
+    return String(home.path || "/").split("#")[0] + "#wallet";
   }
 
   function setSessionFromMe(me) {
@@ -154,7 +210,7 @@
   function normalizeDestinations(destinations) {
     return (destinations || []).map(function (d) {
       return Object.assign({}, d, {
-        path: canonicalPath(d.path, d.role),
+        path: canonicalPath(d.path, d.role || d.portalRole),
       });
     });
   }
@@ -198,22 +254,6 @@
     var serviceType = opts.serviceType != null ? opts.serviceType : global.__ervSessionServiceType;
     var home = homeFor(role, serviceType);
 
-    if (role === "driver" && !opts.skipPicker) {
-      try {
-        var destResDriver = await fetchDestinations();
-        var destsDriver = normalizeDestinations((destResDriver && destResDriver.destinations) || []);
-        var nonDriver = destsDriver.filter(function (d) {
-          return normalizeRole(d.role) !== "driver";
-        });
-        if (nonDriver.length > 0) {
-          showPicker(destsDriver);
-          return;
-        }
-      } catch (e) {}
-      global.location.href = DRIVER_HOME_PATH;
-      return;
-    }
-
     if (!opts.skipPicker) {
       try {
         var destRes = await fetchDestinations();
@@ -223,7 +263,7 @@
           return;
         }
         if (dests.length === 1 && dests[0].path) {
-          global.location.href = canonicalPath(dests[0].path, dests[0].role);
+          global.location.href = dests[0].path;
           return;
         }
         if (destRes && destRes.default && destRes.default.path) {
@@ -263,10 +303,10 @@
   }
 
   global.ErvenowAccountDest = {
-    ROLE_HOME: ROLE_HOME,
     SERVICE_HOME_LABELS: SERVICE_HOME_LABELS,
     normalizeRole: normalizeRole,
     homeFor: homeFor,
+    walletHrefFor: walletHrefFor,
     setSessionFromMe: setSessionFromMe,
     goHome: goHome,
     showPicker: showPicker,

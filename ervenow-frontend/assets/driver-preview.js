@@ -522,21 +522,28 @@
       fmtDate(o.created_at) +
       " · " +
       esc(STATUS_AR[st] || st) +
+      (global.ErvenowUnifiedOrderRead && ErvenowUnifiedOrderRead.badgeHtml
+        ? ErvenowUnifiedOrderRead.badgeHtml(o, "driver")
+        : "") +
       "</p>";
     var actions = "";
+    var uiActions = [];
     if (mode === "ready") {
+      uiActions.push("accept_delivery");
       actions =
         '<button type="button" class="dp-btn dp-btn--primary dp-accept" data-id="' +
         esc(o.id) +
         '">استلام / قبول</button>';
     } else if (mode === "active") {
       if (st === "picked_up" || st === "accepted") {
+        uiActions.push("start_delivery");
         actions +=
           '<button type="button" class="dp-btn dp-btn--primary dp-start" data-id="' +
           esc(o.id) +
           '">بدء التوصيل</button>';
       }
       if (st === "delivering") {
+        uiActions.push("complete");
         actions +=
           '<button type="button" class="dp-btn dp-btn--primary dp-complete" data-id="' +
           esc(o.id) +
@@ -549,6 +556,9 @@
       if (global.ErvenowDriverOperational && ErvenowDriverOperational.renderNavButtons) {
         actions += ErvenowDriverOperational.renderNavButtons(o, st);
       }
+    }
+    if (global.ErvenowUnifiedOrderRead && ErvenowUnifiedOrderRead.observeActions) {
+      ErvenowUnifiedOrderRead.observeActions(o, "driver", uiActions);
     }
     return (
       '<article class="dp-order-card"><div class="dp-order-card__head"><span class="dp-order-card__num">' +

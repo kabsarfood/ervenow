@@ -94,12 +94,6 @@
     var discover = document.getElementById("ervMpDiscover");
     var main = document.querySelector("main[data-marketing-region='main'], main");
     var footer = document.querySelector(".lp-footer");
-    var isDesktop = false;
-    try {
-      isDesktop =
-        !document.documentElement.classList.contains("erv-mobile-shell") &&
-        window.matchMedia("(min-width: 1025px)").matches;
-    } catch (e) {}
 
     if (prereg) {
       if (body.firstElementChild !== prereg) body.insertBefore(prereg, body.firstElementChild);
@@ -111,15 +105,21 @@
       body.insertBefore(stage, header.nextSibling);
     }
 
-    if (isDesktop) {
-      var sequence = [prereg, header, stage, hub, discover, main, footer].filter(Boolean);
-      if (sequence.length > 1) {
-        body.insertBefore(sequence[0], body.firstChild);
-        for (var i = 1; i < sequence.length; i++) {
-          if (sequence[i - 1].nextElementSibling !== sequence[i]) {
-            body.insertBefore(sequence[i], sequence[i - 1].nextSibling);
-          }
+    var sequence = [prereg, header, stage, hub, discover, main, footer].filter(Boolean);
+    if (sequence.length > 1) {
+      body.insertBefore(sequence[0], body.firstChild);
+      for (var i = 1; i < sequence.length; i++) {
+        if (sequence[i - 1].nextElementSibling !== sequence[i]) {
+          body.insertBefore(sequence[i], sequence[i - 1].nextSibling);
         }
+      }
+    }
+
+    if (discover) {
+      discover.classList.remove("erv-mp-only");
+      discover.removeAttribute("hidden");
+      if (hub && hub.nextElementSibling !== discover) {
+        hub.insertAdjacentElement("afterend", discover);
       }
     }
 

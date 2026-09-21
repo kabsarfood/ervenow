@@ -48,16 +48,17 @@ describe("resolvePortalRole", () => {
   });
 
   test("live portal paths for operational roles", () => {
-    expect(portalPathForRole("customer")).toBe("/start-now.html");
+    expect(portalPathForRole("customer")).toBe("/");
     expect(portalPathForRole("merchant")).toBe("/merchant-preview");
     expect(portalPathForRole("driver")).toBe("/driver-preview");
     expect(portalPathForRole("service")).toBe("/service-preview");
     expect(portalPathForRole("transport")).toBe("/transport-preview");
     expect(portalPathForRole("admin")).toBe("/admin-dashboard");
-    expect(resolvePostLoginPath({ role: "customer" })).toBe("/start-now.html");
+    expect(resolvePostLoginPath({ role: "customer" })).toBe("/");
     expect(resolvePostLoginPath({ role: "service", service_type: "pickup_truck" })).toBe("/transport-preview");
     expect(resolvePostLoginPath({ role: "driver" })).toBe("/driver-preview");
     expect(resolvePostLoginPath({ role: "store" })).toBe("/merchant-preview");
+    expect(resolvePostLoginPath({ role: "service", service_type: "internal_delivery" })).toBe("/driver-preview");
   });
 
   test("type helpers", () => {

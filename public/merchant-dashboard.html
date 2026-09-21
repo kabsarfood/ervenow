@@ -25,7 +25,7 @@
             سجّل الدخول كتاجر بنفس جوال المتجر المعتمد لعرض الطلبات، الإيرادات، وسجل الإيداعات.
           </p>
           <a class="btn btn-primary" href="/login?role=store">تسجيل دخول المتجر</a>
-          <a class="btn btn-ghost" href="/store-dashboard" style="margin-inline-start: 8px">بوابة المتجر</a>
+          <a class="btn btn-ghost" href="/merchant-preview" style="margin-inline-start: 8px">بوابة المتجر</a>
         </div>
 
         <div id="main" style="display: none">
@@ -37,7 +37,7 @@
               <p class="md-hero__sub" id="storeMetaLine" style="margin-top: 4px"></p>
               <div class="md-hero__actions">
                 <a class="btn btn-primary" href="/order-board">لوحة الطلبات</a>
-                <a class="btn btn-ghost" href="/store-dashboard">لوحة تحكم المتجر</a>
+                <a class="btn btn-ghost" href="/merchant-preview">لوحة تحكم المتجر</a>
                 <a class="btn btn-ghost" id="publicStoreLink" href="#" target="_blank" rel="noopener">صفحة المتجر للعملاء</a>
                 <a class="btn btn-ghost" href="/store-dashboard#walletAnchor">المحفظة المالية</a>
               </div>
@@ -144,10 +144,10 @@
               <span>للمراسلات الرسمية والمرفقات.</span>
               <em>support@ervenow.com</em>
             </a>
-            <a class="store-support__tile" href="/store-dashboard">
+            <a class="store-support__tile" href="/merchant-preview">
               <strong>🏪 لوحة تحكم المتجر</strong>
               <span>المنتجات، المحفظة، والسحب.</span>
-              <em>store-dashboard</em>
+              <em>merchant-preview</em>
             </a>
           </div>
         </div>
@@ -160,7 +160,7 @@
     <script src="/assets/api-config.js"></script>
     <script src="/assets/api.js?erv=20260612"></script>
     <script src="/assets/auth-account-guard.js"></script>
-    <script src="/assets/store-shell.js"></script>
+    <script src="/assets/store-shell.js?erv=20260921dest1"></script>
     <script>
       void ErvenowAuthGuard.ensureApprovedAccount({ loginUrl: "/login?role=store" });
       ErvenowStoreShell.mountShell({

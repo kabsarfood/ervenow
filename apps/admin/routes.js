@@ -57,6 +57,8 @@ const {
 } = require("../../shared/restaurantCategories");
 const { normalizeProductCategory, isMarketStoreType } = require("../../shared/marketProductCategories");
 const { acceptOrder } = require("../delivery/service");
+const { projectUnifiedOrdersReadModel } = require("../../shared/domain/orders/unifiedReadModel");
+const { actorFromAppUser } = require("../../shared/domain/orders/availableActions");
 const { broadcastOrderPatch, orderPatchFromRow } = require("../../shared/lib/trackingSocket");
 const {
   collectDriverCommission,
@@ -241,7 +243,7 @@ function isStoresTableMissing(err) {
 function storeMerchantPanelPaths(store) {
   const id = store && store.id ? String(store.id) : "";
   return {
-    merchant_panel_url: "/store-dashboard",
+    merchant_panel_url: "/merchant-preview",
     public_store_url: id ? `/store.html?id=${encodeURIComponent(id)}` : "/stores",
   };
 }
@@ -253,7 +255,7 @@ async function notifyStoreApprovedWhatsApp(store) {
       /\/$/,
       ""
     );
-    const panel = base ? `${base}/store-dashboard` : "/store-dashboard";
+    const panel = base ? `${base}/merchant-preview` : "/merchant-preview";
     const extra = `\n\nصفحة التحكم الخاصة بمتجرك:\n${panel}`;
     await sendWhatsApp({
       to: store.phone,
@@ -2795,7 +2797,7 @@ router.get("/platform-treasury", requireAuth, requireRole("admin"), requireAdmin
 router.get("/orders", requireAuth, requireRole("admin"), requireAdminPermission("orders"), async (req, res) => {
   try {
     const selectFull =
-      "id, order_number, delivery_status, status, created_at, order_total, total_amount, delivery_fee, vat_amount, total_with_vat, driver_id, pickup_lat, pickup_lng, drop_lat, drop_lng, pickup_address, drop_address, platform_fee";
+      "id, order_number, delivery_status, status, created_at, order_total, total_amount, delivery_fee, vat_amount, total_with_vat, driver_id, pickup_lat, pickup_lng, drop_lat, drop_lng, pickup_address, drop_address, platform_fee, order_type, service_type, store_id, provider_id, merchant_id, data";
     let { data, error } = await req.supabase
       .from("orders")
       .select(selectFull)
@@ -2813,10 +2815,13 @@ router.get("/orders", requireAuth, requireRole("admin"), requireAdminPermission(
       error = r2.error;
     }
     if (error) return fail(res, error.message, 400);
-    const rows = (data || []).map((o) => ({
-      ...o,
-      amount_display: orderBillableAmount(o),
-    }));
+    const rows = projectUnifiedOrdersReadModel(
+      (data || []).map((o) => ({
+        ...o,
+        amount_display: orderBillableAmount(o),
+      })),
+      actorFromAppUser(req.appUser, { role: "admin" })
+    );
     return ok(res, { orders: rows });
   } catch (e) {
     return fail(res, e.message || String(e), 500);

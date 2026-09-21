@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover" />
-    <script src="/assets/viewport-fit.js?erv=20260612"></script>
+    <script src="/assets/viewport-fit.js?erv=20260905b"></script>
     <script src="/assets/pre-reg-banner.js?erv=20260905b" defer></script>
     <title>ERVENOW | دخول الأعضاء وإنشاء عضوية</title>
     <meta name="description" content="يتم تفعيل الحساب بعد المراجعة واعتماده من إدارة ERVENOW." />
@@ -11,8 +11,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/assets/styles.css" />
-    <link rel="stylesheet" href="/assets/guest-shell.css?erv=20260612" />
-    <script src="/assets/mobile-foundation.js?erv=20260612" defer></script>
+    <link rel="stylesheet" href="/assets/guest-shell.css?erv=20260905b" />
+    <script src="/assets/mobile-foundation.js?erv=20260921dest1" defer></script>
     <link rel="stylesheet" href="/assets/auth-shell.css" />
     <link rel="stylesheet" href="/assets/start-now-landing.css" />
     <style>
@@ -875,7 +875,7 @@
     <script src="/assets/phonePrivacy.js"></script>
     <script src="/assets/guestBrowse.js"></script>
     <script src="/assets/payoutRegistration.js"></script>
-    <script src="/assets/role-routing.js"></script>
+    <script src="/assets/role-routing.js?erv=20260921dest1"></script>
     <script src="/assets/admin-readiness-beacon.js"></script>
     <script src="/assets/api.js?erv=20260612"></script>
     <script src="/assets/sa-phone-input.js"></script>
@@ -1398,7 +1398,7 @@
         var user = RR ? RR.userFromRoleArg(userOrRole) : { role: String(userOrRole || roleFallback || "customer").toLowerCase() };
         if (!user.role && roleFallback) user.role = String(roleFallback).toLowerCase();
         if (next && String(user.role || "").toLowerCase() !== "blocked") return next;
-        return RR ? RR.resolvePostLoginPath(user) : "/start-now.html";
+        return RR ? RR.resolvePostLoginPath(user) : "/";
       }
 
       function trackLoginRedirect(targetPath, user, success) {
@@ -1424,7 +1424,7 @@
       }
 
       function performLoginRedirect(targetPath, user, success) {
-        var path = String(targetPath || "/start-now.html");
+        var path = String(targetPath || (window.ErvenowRoleRouting && ErvenowRoleRouting.CUSTOMER_PLATFORM_HOME) || "/");
         if (path.indexOf("driver-dashboard") !== -1) {
           path = window.ErvenowRoleRouting
             ? ErvenowRoleRouting.portalPathForRole("driver")
@@ -1439,7 +1439,7 @@
         var list = document.getElementById("rolePickerList");
         if (!overlay || !list) {
           var fb = destinations[0];
-          performLoginRedirect((fb && fb.path) || "/start-now.html", user);
+          performLoginRedirect((fb && fb.path) || "/", user);
           return;
         }
         list.innerHTML = destinations
@@ -1455,7 +1455,7 @@
           .join("");
         list.querySelectorAll(".role-picker__btn").forEach(function (btn) {
           btn.addEventListener("click", function () {
-            var p = btn.getAttribute("data-path") || "/start-now.html";
+            var p = btn.getAttribute("data-path") || "/";
             performLoginRedirect(p, user);
           });
         });

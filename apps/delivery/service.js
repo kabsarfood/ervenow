@@ -517,6 +517,11 @@ const ORDERS_LIST_COLUMNS_FULL =
   "order_type,service_type," +
   "store_id,store_name,store_address";
 
+/** قائمة العميل: نفس الأعمدة + حقول أصلية لازمة للعرض الموحّد (بدون أعمدة جديدة في DB) */
+const ORDERS_LIST_COLUMNS_CUSTOMER =
+  ORDERS_LIST_COLUMNS_FULL +
+  ",payment_status,payment_method,provider_id,merchant_id,service_name,portal_type";
+
 /** احتياط عند غياب أعمدة المتجر */
 const ORDERS_LIST_COLUMNS_MINIMAL =
   "id,customer_id,driver_id,status,delivery_status,order_number,created_at,updated_at," +
@@ -526,6 +531,7 @@ const ORDERS_LIST_COLUMNS_MINIMAL =
   "order_type,service_type";
 
 async function listOrders(sb, appUser) {
+  const preferredCols = appUser.role === "customer" ? ORDERS_LIST_COLUMNS_CUSTOMER : ORDERS_LIST_COLUMNS_FULL;
   const runSelect = (cols) => {
     if (appUser.role === "admin") {
       return sb
@@ -553,7 +559,14 @@ async function listOrders(sb, appUser) {
       .limit(120);
   };
 
-  let r = await runSelect(ORDERS_LIST_COLUMNS_FULL);
+  let r = await runSelect(preferredCols);
+  if (r.error && preferredCols === ORDERS_LIST_COLUMNS_CUSTOMER) {
+    logger.warn(
+      { err: r.error.message },
+      "[delivery] customer orders list: extra columns missing — retry without payment/provider fields"
+    );
+    r = await runSelect(ORDERS_LIST_COLUMNS_FULL);
+  }
   if (r.error && isOrdersStoreColumnMissingError(r.error)) {
     logger.warn(
       { err: r.error.message },

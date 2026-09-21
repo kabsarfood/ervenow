@@ -52,6 +52,12 @@ const DRIVER_COMPLETED_ORDER_COLUMNS = Object.freeze([
   "drop_address",
   "data",
   "breakdown",
+  "order_type",
+  "service_type",
+  "store_id",
+  "driver_id",
+  "merchant_id",
+  "provider_id",
 ]);
 
 const MERCHANT_ORDER_BOARD_COLUMNS = Object.freeze([
@@ -76,6 +82,8 @@ const MERCHANT_ORDER_BOARD_COLUMNS = Object.freeze([
   "pickup_lng",
   "store_id",
   "store_name",
+  "order_type",
+  "service_type",
   "payment_status",
   "payment_method",
   "driver_id",
@@ -96,6 +104,8 @@ const MERCHANT_DASHBOARD_ORDER_COLUMNS = Object.freeze([
   "customer_phone",
   "drop_address",
   "store_id",
+  "order_type",
+  "driver_id",
   "payment_status",
   "payment_method",
 ]);

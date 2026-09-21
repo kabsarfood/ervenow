@@ -69,10 +69,7 @@
         "settings",
         "pos",
       ],
-      sidebarFoot: [
-        { href: "/store-dashboard", label: "لوحة المتجر" },
-        { href: "/order-board", label: "Order Board" },
-      ],
+      sidebarFoot: [{ href: "/order-board", label: "لوحة الطلبات" }],
     },
     driver: {
       portal: "driver",
@@ -83,10 +80,7 @@
       loginUrl: "/driver-login",
       defaultSection: "dashboard",
       items: ["dashboard", "ready", "active", "completed", "earnings", "wallet", "rating", "notifications", "settings"],
-      sidebarFoot: [
-        { href: "/driver", label: "لوحة المندوب" },
-        { href: "/driver-app", label: "التتبع الحي" },
-      ],
+      sidebarFoot: [{ href: "/driver-app", label: "التتبع الحي" }],
     },
     service: {
       portal: "service",
@@ -97,7 +91,7 @@
       loginUrl: "/service-provider-login",
       defaultSection: "dashboard",
       items: ["dashboard", "requests", "schedule", "wallet", "rating", "notifications", "settings"],
-      sidebarFoot: [{ href: "/services-provider.html", label: "البوابة الكلاسيكية" }],
+      sidebarFoot: [],
     },
     transport: {
       portal: "transport",
@@ -108,7 +102,7 @@
       loginUrl: "/service-provider-login",
       defaultSection: "dashboard",
       items: ["dashboard", "transport-orders", "wallet", "notifications", "fleet", "pricing", "settings"],
-      sidebarFoot: [{ href: "/services-provider.html", label: "بوابة النقل الكلاسيكية" }],
+      sidebarFoot: [],
     },
   };
 

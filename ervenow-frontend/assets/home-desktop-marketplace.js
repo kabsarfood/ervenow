@@ -20,6 +20,21 @@
     }
   }
 
+  function pinDiscoverAfterHub() {
+    var hub = document.querySelector(".sn-section--hub");
+    var discover = document.getElementById("ervMpDiscover");
+    var main = document.querySelector("main[data-marketing-region='main'], main");
+    if (!discover) return;
+    discover.classList.remove("erv-mp-only");
+    if (hub && hub.parentElement && hub.nextElementSibling !== discover) {
+      hub.insertAdjacentElement("afterend", discover);
+      return;
+    }
+    if (main && main.parentElement && discover.nextElementSibling !== main) {
+      main.parentElement.insertBefore(discover, main);
+    }
+  }
+
   function esc(s) {
     return String(s || "")
       .replace(/&/g, "&amp;")
@@ -304,9 +319,32 @@
     }, typeof delay === "number" ? delay : 50);
   }
 
-  async function loadDiscovery() {
-    if (!isDesktopMp()) return;
+  function setSectionTitle(id, text) {
+    var el = document.getElementById(id);
+    if (el) el.textContent = text;
+  }
 
+  function sortByOrders(list) {
+    return list.slice().sort(function (a, b) {
+      var ob = Number(b && b.total_orders) || 0;
+      var oa = Number(a && a.total_orders) || 0;
+      if (ob !== oa) return ob - oa;
+      var rb = Number(b && b.average_rating) || 0;
+      var ra = Number(a && a.average_rating) || 0;
+      return rb - ra;
+    });
+  }
+
+  function idsHead(list, n) {
+    return list
+      .slice(0, n)
+      .map(function (s) {
+        return String(s && s.id);
+      })
+      .join("|");
+  }
+
+  async function loadDiscovery() {
     var gen = ++discoveryGen;
     var nearbySection = document.getElementById("ervMpNearbySection");
     var nearbyGrid = document.getElementById("ervMpNearbyGrid");
@@ -318,6 +356,8 @@
     var productsGrid = document.getElementById("ervMpProductsGrid");
     var discover = document.getElementById("ervMpDiscover");
 
+    revealDiscoverShell();
+    pinDiscoverAfterHub();
     if (discover) discover.hidden = false;
 
     var geo = readGeo();
@@ -333,6 +373,10 @@
     try {
       var all = await fetchStores("?sort=rating" + geoQs);
       if (gen !== discoveryGen) return;
+      if (!all.length) {
+        all = await fetchStores("?limit=200");
+        if (gen !== discoveryGen) return;
+      }
 
       var restaurants = all.filter(function (s) {
         return String(s.type || "").toLowerCase() === "restaurant";
@@ -347,30 +391,27 @@
       }
 
       var nearby = all.length ? all : restaurants.concat(stores);
+      setSectionTitle("ervMpNearbyTitle", "الأعلى تقييماً");
       showSection(nearbySection, nearbyGrid, nearby);
-      showSection(
-        restaurantsSection,
-        restaurantsGrid,
-        restaurants.length && nearby.length ? [] : restaurants
-      );
-      showSection(
-        storesSection,
-        storesGrid,
-        stores.length && nearby.length >= stores.length ? [] : stores
-      );
 
-      if (nearby.length) {
-        if (restaurantsSection) restaurantsSection.hidden = true;
-        if (storesSection) storesSection.hidden = true;
-      }
+      if (restaurantsSection) restaurantsSection.hidden = true;
+      if (restaurantsGrid) restaurantsGrid.innerHTML = "";
+
+      var hasOrders = nearby.some(function (s) {
+        return Number(s.total_orders) > 0;
+      });
+      var ordered = hasOrders ? sortByOrders(nearby) : [];
+      var showOrderedStores =
+        ordered.length > 0 && idsHead(ordered, 4) !== idsHead(nearby, 4);
 
       if (productsSection && productsGrid) {
-        var first = nearby[0] || restaurants[0];
+        var first = ordered[0] || nearby[0] || restaurants[0];
         var products = first ? await fetchProducts(first.id) : [];
-        // Products are expensive — apply even if a newer layout pin started,
-        // unless a newer discovery already painted products.
-        if (products.length && (gen === discoveryGen || !productsGrid.children.length)) {
+        if (gen !== discoveryGen && productsGrid.children.length) {
+          /* newer paint already filled products */
+        } else if (products.length) {
           productsSection.hidden = false;
+          setSectionTitle("ervMpProductsTitle", "الأكثر طلباً");
           productsGrid.innerHTML = products
             .slice(0, 10)
             .map(function (p) {
@@ -382,10 +423,19 @@
               img.src = defaultCover();
             });
           });
-        } else if (!products.length && !productsGrid.children.length && gen === discoveryGen) {
+          showOrderedStores = false;
+        } else if (!productsGrid.children.length) {
           productsSection.hidden = true;
           productsGrid.innerHTML = "";
         }
+      }
+
+      if (showOrderedStores) {
+        setSectionTitle("ervMpStoresTitle", "الأكثر طلباً");
+        showSection(storesSection, storesGrid, ordered);
+      } else if (storesSection && (!storesGrid || !storesGrid.children.length)) {
+        storesSection.hidden = true;
+        if (storesGrid) storesGrid.innerHTML = "";
       }
     } catch (e) {
       if (nearbyGrid && !nearbyGrid.children.length && nearbySection) {
@@ -449,8 +499,8 @@
     } else if (body.firstElementChild !== header) {
       body.insertBefore(header, body.firstElementChild);
     }
-    if (global.ErvenowPreRegBanner && typeof global.ErvenowPreRegBanner.measure === "function") {
-      global.ErvenowPreRegBanner.measure();
+    if (window.ErvenowPreRegBanner && typeof window.ErvenowPreRegBanner.measure === "function") {
+      window.ErvenowPreRegBanner.measure();
     }
   }
 
@@ -465,22 +515,20 @@
       body.insertBefore(stage, header.nextSibling);
     }
     ensurePreregHeaderOrder();
-    /* سطح المكتب: أعد تسلسل الأقسام كاملة (لا تترك discover بعد الفوتر) */
-    if (isDesktopMp()) {
-      var hub = document.querySelector(".sn-section--hub");
-      var discover = document.getElementById("ervMpDiscover");
-      var main = document.querySelector("main[data-marketing-region='main'], main");
-      var footer = document.querySelector(".lp-footer");
-      var sequence = [prereg, header, stage, hub, discover, main, footer].filter(Boolean);
-      if (sequence.length > 1) {
-        body.insertBefore(sequence[0], body.firstChild);
-        for (var i = 1; i < sequence.length; i++) {
-          if (sequence[i - 1].nextElementSibling !== sequence[i]) {
-            body.insertBefore(sequence[i], sequence[i - 1].nextSibling);
-          }
+    var hub = document.querySelector(".sn-section--hub");
+    var discover = document.getElementById("ervMpDiscover");
+    var main = document.querySelector("main[data-marketing-region='main'], main");
+    var footer = document.querySelector(".lp-footer");
+    var sequence = [prereg, header, stage, hub, discover, main, footer].filter(Boolean);
+    if (sequence.length > 1) {
+      body.insertBefore(sequence[0], body.firstChild);
+      for (var i = 1; i < sequence.length; i++) {
+        if (sequence[i - 1].nextElementSibling !== sequence[i]) {
+          body.insertBefore(sequence[i], sequence[i - 1].nextSibling);
         }
       }
     }
+    pinDiscoverAfterHub();
   }
 
   var topChromeMo = null;
@@ -509,10 +557,9 @@
   function revealDiscoverShell() {
     var discover = document.getElementById("ervMpDiscover");
     if (!discover) return;
-    if (isDesktopMp()) {
-      discover.hidden = false;
-      discover.removeAttribute("hidden");
-    }
+    discover.hidden = false;
+    discover.removeAttribute("hidden");
+    discover.classList.remove("erv-mp-only");
   }
 
   function pinBannerIntoVisual() {
@@ -536,13 +583,13 @@
     placeStatsStrip();
     pinTopChrome();
     pinBannerIntoVisual();
+    revealDiscoverShell();
+    pinDiscoverAfterHub();
 
     if (!isDesktopMp()) {
       watchBannerVisual();
       return;
     }
-
-    revealDiscoverShell();
 
     var prereg = document.getElementById("ervPreRegBanner");
     var header = document.getElementById("top");
@@ -568,12 +615,17 @@
   }
 
   function refreshMp() {
-    pinMarketplaceLayout();
-    if (isDesktopMp()) {
+    try {
+      pinMarketplaceLayout();
+    } catch (e) {}
+    try {
       revealDiscoverShell();
-      scheduleDiscovery(80);
-    }
-    placeStatsStrip();
+      pinDiscoverAfterHub();
+    } catch (e) {}
+    scheduleDiscovery(80);
+    try {
+      placeStatsStrip();
+    } catch (e) {}
   }
 
   function watchStatsAnchor(ms) {

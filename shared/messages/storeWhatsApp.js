@@ -17,7 +17,7 @@ function storeApprovedBody(storeName) {
   const who = safeName(storeName);
   const arWho = who ? `${who} — ` : "";
   const base = publicBaseUrl();
-  const panel = base ? `${base}/store-dashboard` : "/store-dashboard";
+  const panel = base ? `${base}/merchant-preview` : "/merchant-preview";
   const login = base ? `${base}/login?role=store` : "/login?role=store";
   return (
     `ERVENOW\n\n` +

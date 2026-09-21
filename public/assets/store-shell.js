@@ -86,13 +86,19 @@
   function buildStoreNavLinks(opts) {
     opts = opts && typeof opts === "object" ? opts : {};
     var role = normalizeRole(opts.role || _sessionRole);
+    var merchantHome =
+      (global.ErvenowRoleRouting && ErvenowRoleRouting.portalPathForRole("merchant")) ||
+      "/merchant-preview";
     var links = [
-      { key: "store", href: "/store-dashboard", label: "لوحة المتجر" },
+      { key: "store", href: merchantHome, label: "لوحة المتجر" },
       { key: "order-board", href: "/order-board", label: "لوحة الطلبات" },
-      { key: "merchant", href: "/merchant-dashboard", label: "الطلبات والإيرادات" },
     ];
     if (role === "service") {
-      links.push({ key: "services", href: "/services-provider", label: "خدماتي" });
+      var svcHome =
+        (global.ErvenowRoleRouting &&
+          ErvenowRoleRouting.resolvePostLoginPath({ role: "service", service_type: global.__ervSessionServiceType })) ||
+        "/service-preview";
+      links.push({ key: "services", href: svcHome, label: "خدماتي" });
     }
     if (_publicStoreUrl) {
       links.push({ key: "public", href: _publicStoreUrl, label: "صفحتي للعملاء" });
@@ -168,7 +174,9 @@
       '<header class="dash-site-header store-site-header">' +
       '<div class="dash-site-header__inner">' +
       '<div class="dash-site-header__brand">' +
-      '<a class="dash-site-header__logo" href="/store-dashboard">' +
+      '<a class="dash-site-header__logo" href="' +
+      ((global.ErvenowRoleRouting && ErvenowRoleRouting.portalPathForRole("merchant")) || "/merchant-preview") +
+      '">' +
       "ERVENOW" +
       '<span class="dash-site-header__logo-dot" aria-hidden="true"></span>' +
       "</a>" +
@@ -415,11 +423,11 @@
       return;
     }
     var walletHref =
-      global.location &&
-      (String(global.location.pathname || "").indexOf("merchant-dashboard") >= 0 ||
-        String(global.location.pathname || "").indexOf("order-board") >= 0)
-        ? "/store-dashboard#walletAnchor"
-        : "#walletAnchor";
+      global.ErvenowAccountDest && typeof ErvenowAccountDest.walletHrefFor === "function"
+        ? ErvenowAccountDest.walletHrefFor(role)
+        : (global.ErvenowRoleRouting && ErvenowRoleRouting.walletPathForUser
+            ? ErvenowRoleRouting.walletPathForUser({ role: role })
+            : "/merchant-preview#wallet");
     box.setAttribute("href", walletHref);
     amountEl.textContent = "…";
     try {
@@ -473,13 +481,36 @@
     }
   }
 
-  function loadAccountDestScript() {
-    if (document.querySelector("script[data-erv-account-dest]")) return;
+  function loadScriptOnce(src, dataAttr) {
+    if (document.querySelector("script[" + dataAttr + "]")) return;
+    var bare = src.split("?")[0];
+    if (document.querySelector('script[src*="' + bare + '"]')) return;
     var s = document.createElement("script");
-    s.src = "/assets/account-destinations.js";
-    s.defer = true;
-    s.setAttribute("data-erv-account-dest", "1");
+    s.src = src;
+    s.async = false;
+    s.setAttribute(dataAttr, "1");
     document.head.appendChild(s);
+  }
+
+  function loadIdentityRoutingScripts() {
+    loadScriptOnce("/assets/role-routing.js?erv=20260921dest1", "data-erv-role-routing");
+    loadScriptOnce("/assets/account-destinations.js?erv=20260921dest1", "data-erv-account-dest");
+  }
+
+  function whenRoutingReady(cb, tries) {
+    tries = tries || 0;
+    if (global.ErvenowRoleRouting) {
+      cb();
+      return;
+    }
+    loadIdentityRoutingScripts();
+    if (tries > 80) {
+      cb();
+      return;
+    }
+    setTimeout(function () {
+      whenRoutingReady(cb, tries + 1);
+    }, 40);
   }
 
   function mountShell(opts) {
@@ -509,9 +540,11 @@
       if (tag) tag.textContent = opts.pageTag;
     }
     ensureNotificationCenterAssets();
-    loadAccountDestScript();
-    whenPlatformApiReady(function () {
-      initAuthHeader();
+    loadIdentityRoutingScripts();
+    whenRoutingReady(function () {
+      whenPlatformApiReady(function () {
+        initAuthHeader();
+      });
     });
   }
 

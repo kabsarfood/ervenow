@@ -72,6 +72,7 @@
     <script src="/assets/order-draft-store.js"></script>
     <script src="/assets/order-draft-badge.js"></script>
     <script src="/assets/api-config.js"></script>
+    <script src="/assets/role-routing.js?erv=20260921dest1"></script>
     <script src="/assets/api.js?erv=20260612"></script>
     <script>
       function statusAr(s) {
@@ -90,7 +91,15 @@
           var me = await window.PlatformAPI.api("/api/core/me");
           var role = String(me && me.profile && me.profile.role || "");
           if (role !== "blocked") {
-            location.href = role === "admin" ? "/admin-dashboard" : role === "driver" ? "/driver" : "/dashboard";
+            var dest =
+              window.ErvenowRoleRouting && me.profile
+                ? ErvenowRoleRouting.resolvePostLoginPath(me.profile)
+                : role === "admin"
+                  ? "/admin-dashboard"
+                  : role === "driver"
+                    ? "/driver-preview"
+                    : "/";
+            location.href = dest;
             return false;
           }
           return true;

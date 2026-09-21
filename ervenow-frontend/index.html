@@ -16,7 +16,7 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="/assets/styles.css?erv=20260919id" />
-    <link rel="stylesheet" href="/assets/ervenow-cls-stability.css?erv=20260920hb2" />
+    <link rel="stylesheet" href="/assets/ervenow-cls-stability.css?erv=20260921disc2" />
     <link rel="stylesheet" href="/assets/ervenow-home-spacing.css?erv=20260920hb2" />
     <link rel="stylesheet" href="/assets/ervenow-home-cta-match.css?erv=20260920cta1" />
     <link rel="stylesheet" href="/assets/start-now-landing.css?erv=20260901h" />
@@ -27,14 +27,15 @@
     <link rel="stylesheet" href="/assets/home-polish-p1b.css?erv=20260920hb1" />
     <link rel="stylesheet" href="/assets/home-polish-p1c.css?erv=20260920mobrb1" />
     <link rel="stylesheet" href="/assets/home-polish-final.css?erv=20260920tf1" />
-    <script src="/assets/mobile-foundation.js?erv=20260919emoji" defer></script>
+    <script src="/assets/mobile-foundation.js?erv=20260921dest1" defer></script>
     <script src="/assets/mobile-orders-nav-badge.js?erv=20260612" defer></script>
     <script src="/assets/mobile-harmony.js?erv=20260901o" defer></script>
     <script src="/assets/api-config.js"></script>
     <script src="/assets/phonePrivacy.js"></script>
     <script src="/assets/api.js?erv=20260919id"></script>
-    <script src="/assets/account-destinations.js" defer></script>
-    <script src="/assets/platform-access.js" defer></script>
+    <script src="/assets/role-routing.js?erv=20260921dest1"></script>
+    <script src="/assets/account-destinations.js?erv=20260921dest1" defer></script>
+    <script src="/assets/platform-access.js?erv=20260921dest1" defer></script>
     <style>
       html {
         scroll-behavior: smooth;
@@ -2873,7 +2874,8 @@
     <link rel="stylesheet" href="/assets/marketing-studio/home-marketing.css?erv=20260701m1" />
     <link rel="stylesheet" href="/assets/home-stage-expand.css?erv=20260919e" />
     <link rel="stylesheet" href="/assets/home-desktop-vip.css?erv=20260920mobrb1" />
-    <link rel="stylesheet" href="/assets/home-desktop-marketplace.css?erv=20260920disc1" />
+    <link rel="stylesheet" href="/assets/home-desktop-marketplace.css?erv=20260921disc2" />
+    <link rel="stylesheet" href="/assets/ervenow-home-4gates.css?erv=20260921g4d" />
   </head>
   <body class="lp-body lp-home-premium erv-typography-pr2-home">
     <header class="lp-header lp-header--refined lp-header--menu-right" id="top" data-marketing-slot="header" data-marketing-parent="body">
@@ -3099,12 +3101,6 @@
               aria-label="عروض المنصة"
             ></section>
           </div>
-          <div class="erv-mp-tiles" id="ervMpTiles" aria-label="اختصارات سريعة">
-            <a href="/restaurants">مطاعم<span>اطلب الآن</span></a>
-            <a href="/stores">متاجر<span>سوبرماركت وصيدليات</span></a>
-            <a href="/delivery-services.html">توصيل<span>غاز وسطحات</span></a>
-            <a href="/services">خدمات<span>منزلية فورية</span></a>
-          </div>
         </div>
       </section>
     </div>
@@ -3116,95 +3112,85 @@
       data-marketing-parent="body"
     >
       <div class="erv-mp-hub-head">
-        <h2 class="sn-section__title sn-section__title--solo" id="home-cats-title">ماذا تريد اليوم؟</h2>
-        <a class="erv-mp-section__more erv-mp-only" href="/stores">عرض جميع الفئات ←</a>
+        <h2 class="sn-section__title sn-section__title--solo" id="home-cats-title">الأقسام الرئيسية</h2>
       </div>
 
-      <div class="sn-grid sn-home-hub sn-home-hub--direct" id="snHomeHub" data-marketing-slot="hub_categories" data-marketing-parent="hub_section">
-        <a class="sn-card sn-card--restaurants sn-hub-link-card" href="/restaurants">
-          <div class="sn-card__icon-wrap" aria-hidden="true">🍽️</div>
-          <div>
-            <div class="sn-card__name">مطاعم</div>
-            <div class="sn-card__desc">مشاوي وبرقر وشاورما</div>
-          </div>
-        </a>
-        <a class="sn-card sn-card--stores sn-hub-link-card" href="/stores">
-          <div class="sn-card__icon-wrap" aria-hidden="true">🏪</div>
-          <div>
-            <div class="sn-card__name">متاجر</div>
-            <div class="sn-card__desc">سوبرماركت وصيدليات</div>
-          </div>
-        </a>
-        <a class="sn-card sn-card--extra sn-hub-link-card erv-mp-only" href="/stores?type=supermarket">
-          <div class="sn-card__icon-wrap" aria-hidden="true">🛒</div>
-          <div>
-            <div class="sn-card__name">سوبرماركت</div>
-            <div class="sn-card__desc">مواد غذائية</div>
-          </div>
-        </a>
-        <a class="sn-card sn-card--extra sn-hub-link-card erv-mp-only" href="/stores?type=pharmacy">
-          <div class="sn-card__icon-wrap" aria-hidden="true">💊</div>
-          <div>
-            <div class="sn-card__name">صيدليات</div>
-            <div class="sn-card__desc">أدوية ومستلزمات</div>
-          </div>
-        </a>
-        <a class="sn-card sn-card--delivery sn-hub-link-card" href="/delivery-services.html">
-          <div class="sn-card__icon-wrap" aria-hidden="true">🚚</div>
-          <div>
-            <div class="sn-card__name">توصيل</div>
-            <div class="sn-card__desc">من نقطة لأخرى وغاز</div>
-          </div>
-        </a>
-        <a class="sn-card sn-card--extra sn-hub-link-card erv-mp-only" href="/delivery-services.html?service=gas_delivery">
-          <div class="sn-card__icon-wrap" aria-hidden="true">⛽</div>
-          <div>
-            <div class="sn-card__name">غاز</div>
-            <div class="sn-card__desc">أسطوانات لبابك</div>
-          </div>
-        </a>
-        <a class="sn-card sn-card--extra sn-hub-link-card erv-mp-only" href="/delivery-services.html?service=car_transport">
-          <div class="sn-card__icon-wrap" aria-hidden="true">🚛</div>
-          <div>
-            <div class="sn-card__name">سطحات</div>
-            <div class="sn-card__desc">نقل مركبات</div>
-          </div>
-        </a>
-        <a class="sn-card sn-card--services sn-hub-link-card" href="/services">
-          <div class="sn-card__icon-wrap" aria-hidden="true">🔧</div>
-          <div>
-            <div class="sn-card__name">خدمات</div>
-            <div class="sn-card__desc">سباكة وكهرباء وتنظيف</div>
-          </div>
-        </a>
-        <a class="sn-card sn-card--extra sn-hub-link-card erv-mp-only" href="/stores?type=beauty_care">
-          <div class="sn-card__icon-wrap" aria-hidden="true">✨</div>
-          <div>
-            <div class="sn-card__name">تجميل</div>
-            <div class="sn-card__desc">عناية وتجميل</div>
-          </div>
-        </a>
-        <a class="sn-card sn-card--extra sn-hub-link-card erv-mp-only" href="/stores?type=flowers_gifts">
-          <div class="sn-card__icon-wrap" aria-hidden="true">💐</div>
-          <div>
-            <div class="sn-card__name">ورود وهدايا</div>
-            <div class="sn-card__desc">مناسبات</div>
-          </div>
-        </a>
-        <a class="sn-card sn-card--extra sn-hub-link-card erv-mp-only" href="/stores?type=clothing">
-          <div class="sn-card__icon-wrap" aria-hidden="true">👗</div>
-          <div>
-            <div class="sn-card__name">ملابس</div>
-            <div class="sn-card__desc">أزياء</div>
-          </div>
-        </a>
-        <a class="sn-card sn-card--extra sn-hub-link-card erv-mp-only" href="/delivery-services.html?service=local_delivery">
-          <div class="sn-card__icon-wrap" aria-hidden="true">📦</div>
-          <div>
-            <div class="sn-card__name">توصيل محلي</div>
-            <div class="sn-card__desc">من نقطة لأخرى</div>
-          </div>
-        </a>
+      <div
+        class="erv-gates-wrap"
+        id="snHomeHub"
+        data-marketing-slot="hub_categories"
+        data-marketing-parent="hub_section"
+      >
+        <div class="erv-gates" role="list" aria-label="أبواب خدمات ERVENOW">
+          <article class="erv-gate erv-gate--food" role="listitem">
+            <a class="erv-gate__main" href="/restaurants">
+              <span class="erv-gate__icon" aria-hidden="true">
+                <img class="erv-icon-img" src="/assets/icons/restaurant.svg" alt="" width="28" height="28" />
+              </span>
+              <h3 class="erv-gate__title">مطاعم ومقاهي</h3>
+              <p class="erv-gate__desc">مطاعم، مقاهي ومشروبات أقرب إليك</p>
+              <p class="erv-gate__meta">3 خدمات</p>
+              <span class="erv-gate__cta">استكشف ←</span>
+            </a>
+            <ul class="erv-gate__links" aria-label="خدمات مطاعم ومقاهي">
+              <li><a href="/restaurants">مطاعم</a></li>
+              <li><a href="/restaurants?category=cafe">كافيهات ومقاهي</a></li>
+              <li><a href="/restaurants">مشروبات ومرطبات</a></li>
+            </ul>
+          </article>
+
+          <article class="erv-gate erv-gate--stores" role="listitem">
+            <a class="erv-gate__main" href="/stores">
+              <span class="erv-gate__icon" aria-hidden="true">
+                <img class="erv-icon-img" src="/assets/icons/store.svg" alt="" width="28" height="28" />
+              </span>
+              <h3 class="erv-gate__title">متاجر وتسوق</h3>
+              <p class="erv-gate__desc">كل احتياجاتك اليومية في مكان واحد</p>
+              <p class="erv-gate__meta">4 خدمات</p>
+              <span class="erv-gate__cta">استكشف ←</span>
+            </a>
+            <ul class="erv-gate__links" aria-label="خدمات متاجر وتسوق">
+              <li><a href="/stores?type=clothing">الملابس والأزياء</a></li>
+              <li><a href="/stores?type=supermarket">سوبرماركت</a></li>
+              <li><a href="/stores?type=pharmacy">صيدليات</a></li>
+              <li><a href="/stores?type=flowers_gifts">ورود وهدايا</a></li>
+            </ul>
+          </article>
+
+          <article class="erv-gate erv-gate--delivery" role="listitem">
+            <a class="erv-gate__main" href="/delivery-services.html">
+              <span class="erv-gate__icon" aria-hidden="true">
+                <img class="erv-icon-img" src="/assets/icons/delivery.svg" alt="" width="28" height="28" />
+              </span>
+              <h3 class="erv-gate__title">توصيل ونقل</h3>
+              <p class="erv-gate__desc">توصيل ونقل سريع حسب احتياجك</p>
+              <p class="erv-gate__meta">3 خدمات</p>
+              <span class="erv-gate__cta">استكشف ←</span>
+            </a>
+            <ul class="erv-gate__links" aria-label="خدمات توصيل ونقل">
+              <li><a href="/delivery-services.html?service=car_transport">سطحات / نقل مركبات</a></li>
+              <li><a href="/delivery-services.html?service=gas_delivery">توصيل غاز</a></li>
+              <li><a href="/delivery-services.html?service=local_delivery">توصيل طرود محلي</a></li>
+            </ul>
+          </article>
+
+          <article class="erv-gate erv-gate--services" role="listitem">
+            <a class="erv-gate__main" href="/services">
+              <span class="erv-gate__icon" aria-hidden="true">
+                <img class="erv-icon-img" src="/assets/icons/services.svg" alt="" width="28" height="28" />
+              </span>
+              <h3 class="erv-gate__title">خدمات منزلية ومتنقلة</h3>
+              <p class="erv-gate__desc">خدمات تصل إليك أينما كنت</p>
+              <p class="erv-gate__meta">3 خدمات</p>
+              <span class="erv-gate__cta">استكشف ←</span>
+            </a>
+            <ul class="erv-gate__links" aria-label="خدمات منزلية ومتنقلة">
+              <li><a href="/services">غسيل متنقل للسيارات</a></li>
+              <li><a href="/services">صيانة منزلية</a></li>
+              <li><a href="/services">تنظيف</a></li>
+            </ul>
+          </article>
+        </div>
       </div>
 
       <div class="sn-trust" id="trust" role="list" aria-label="مزايا المنصة" data-marketing-slot="trust_bar" data-marketing-parent="hub_section">
@@ -3265,37 +3251,13 @@
       </div>
     </section>
 
-    <div class="erv-mp-discover erv-mp-only" id="ervMpDiscover">
+    <div class="erv-mp-discover" id="ervMpDiscover" data-home-discover>
       <section class="erv-mp-section" id="ervMpNearbySection" hidden aria-labelledby="ervMpNearbyTitle">
         <div class="erv-mp-section__head">
-          <h2 class="erv-mp-section__title" id="ervMpNearbyTitle">متاجر قريبة منك</h2>
-          <a class="erv-mp-section__more" href="/restaurants">عرض الكل ←</a>
+          <h2 class="erv-mp-section__title" id="ervMpNearbyTitle">الأعلى تقييماً</h2>
+          <a class="erv-mp-section__more" href="/stores">عرض الكل ←</a>
         </div>
         <div class="erv-mp-grid" id="ervMpNearbyGrid"></div>
-      </section>
-
-      <section class="erv-mp-promos" id="ervMpPromos" aria-label="مداخل سريعة">
-        <a class="erv-mp-promo erv-mp-promo--flowers" href="/stores?type=flowers_gifts">
-          <div>
-            <strong>ورود وهدايا</strong>
-            <span>لحظات أجمل توصلك للباب</span>
-          </div>
-          <em>اطلب الآن</em>
-        </a>
-        <a class="erv-mp-promo erv-mp-promo--market" href="/stores?type=supermarket">
-          <div>
-            <strong>احتياجات المنزل</strong>
-            <span>سوبرماركت ومستلزمات يومية</span>
-          </div>
-          <em>تسوق الآن</em>
-        </a>
-        <a class="erv-mp-promo erv-mp-promo--food" href="/restaurants">
-          <div>
-            <strong>عروض المطاعم</strong>
-            <span>أشهى الأكلات أقرب إليك</span>
-          </div>
-          <em>استكشف العروض</em>
-        </a>
       </section>
 
       <section class="erv-mp-section" id="ervMpProductsSection" hidden aria-labelledby="ervMpProductsTitle">
@@ -3304,35 +3266,6 @@
           <a class="erv-mp-section__more" href="/restaurants">عرض الكل ←</a>
         </div>
         <div class="erv-mp-products" id="ervMpProductsGrid"></div>
-      </section>
-
-      <section class="erv-mp-section" id="ervMpQuickSection" aria-labelledby="ervMpQuickTitle">
-        <div class="erv-mp-section__head">
-          <h2 class="erv-mp-section__title" id="ervMpQuickTitle">خدمات سريعة</h2>
-          <a class="erv-mp-section__more" href="/delivery-services.html">عرض الكل ←</a>
-        </div>
-        <div class="erv-mp-quick">
-          <a class="erv-mp-quick__card" href="/delivery-services.html?service=car_transport">
-            <span class="erv-mp-quick__ic" aria-hidden="true">🚛</span>
-            <strong>سطحات</strong>
-            <span>نقل المركبات</span>
-          </a>
-          <a class="erv-mp-quick__card" href="/delivery-services.html?service=gas_delivery">
-            <span class="erv-mp-quick__ic" aria-hidden="true">⛽</span>
-            <strong>غاز</strong>
-            <span>توصيل أسطوانات</span>
-          </a>
-          <a class="erv-mp-quick__card" href="/services">
-            <span class="erv-mp-quick__ic" aria-hidden="true">🧹</span>
-            <strong>تنظيف</strong>
-            <span>خدمات منزلية</span>
-          </a>
-          <a class="erv-mp-quick__card" href="/services">
-            <span class="erv-mp-quick__ic" aria-hidden="true">🔧</span>
-            <strong>صيانة</strong>
-            <span>سباكة وكهرباء</span>
-          </a>
-        </div>
       </section>
 
       <section class="erv-mp-section" id="ervMpRestaurantsSection" hidden aria-labelledby="ervMpRestaurantsTitle">
@@ -3344,7 +3277,7 @@
       </section>
       <section class="erv-mp-section" id="ervMpStoresSection" hidden aria-labelledby="ervMpStoresTitle">
         <div class="erv-mp-section__head">
-          <h2 class="erv-mp-section__title" id="ervMpStoresTitle">متاجر أخرى</h2>
+          <h2 class="erv-mp-section__title" id="ervMpStoresTitle">الأكثر طلباً</h2>
           <a class="erv-mp-section__more" href="/stores">عرض الكل ←</a>
         </div>
         <div class="erv-mp-grid" id="ervMpStoresGrid"></div>
@@ -3540,28 +3473,27 @@
               </div>
             </div>
 
-            <nav class="erv-mp-footer-col" aria-label="الخدمات">
-              <p class="erv-mp-footer-col__title">الخدمات</p>
-              <a href="/restaurants">مطاعم</a>
-              <a href="/stores">متاجر</a>
-              <a href="/delivery-services.html">توصيل</a>
+            <nav class="erv-mp-footer-col" aria-label="من نحن">
+              <p class="erv-mp-footer-col__title">من نحن</p>
+              <a href="/#why">كيف تعمل ERVENOW</a>
+              <a href="/restaurants">مطاعم ومقاهي</a>
+              <a href="/stores">متاجر وتسوق</a>
+              <a href="/delivery-services.html">توصيل ونقل</a>
               <a href="/services">خدمات منزلية</a>
             </nav>
 
-            <nav class="erv-mp-footer-col" aria-label="انضم إلينا">
-              <p class="erv-mp-footer-col__title">انضم إلينا</p>
-              <a href="/register-store">سجّل متجرك</a>
-              <a href="/login?mode=register&amp;role=customer">سجّل</a>
-              <a href="/login?role=customer">دخول الحساب</a>
-              <a href="/start-now">ابدأ الآن</a>
+            <nav class="erv-mp-footer-col" aria-label="انضم كشريك">
+              <p class="erv-mp-footer-col__title">انضم كشريك</p>
+              <a href="/register-store">تسجيل متجر</a>
+              <a href="/driver-register">تسجيل مندوب</a>
             </nav>
 
-            <nav class="erv-mp-footer-col" aria-label="الدعم والسياسات">
-              <p class="erv-mp-footer-col__title">الدعم والسياسات</p>
+            <nav class="erv-mp-footer-col" aria-label="السياسات والدعم">
+              <p class="erv-mp-footer-col__title">سياسة الخصوصية والشروط</p>
               <a class="lp-footer__legal-link" href="/privacy-policy">سياسة الخصوصية</a>
-              <a class="lp-footer__legal-link" href="/payments-refund-policy">سياسة المدفوعات والإلغاء والاسترجاع</a>
               <a class="lp-footer__legal-link" href="/terms-of-use">سياسة الاستخدام</a>
-              <a href="https://wa.me/966505745650" target="_blank" rel="noopener noreferrer">واتساب الدعم</a>
+              <a class="lp-footer__legal-link" href="/payments-refund-policy">سياسة المدفوعات والإلغاء</a>
+              <a href="https://wa.me/966505745650" target="_blank" rel="noopener noreferrer">الدعم الفني والواتساب</a>
             </nav>
           </div>
 
@@ -3684,14 +3616,14 @@
         }
       })();
     </script>
-    <script src="/assets/marketing-studio/home-renderer.js?erv=20260920hb1" defer></script>
+    <script src="/assets/marketing-studio/home-renderer.js?erv=20260921disc2" defer></script>
     <script src="/assets/guest-offers-carousel.js?erv=20260920cls2" defer></script>
     <script src="/assets/guestBrowse.js"></script>
     <script src="/assets/ervenow-toggle.js"></script>
-    <script src="/assets/guest-shell.js?erv=20260905b"></script>
+    <script src="/assets/guest-shell.js?erv=20260921dest1"></script>
     <script src="/assets/pre-reg-banner.js?erv=20260920off1" defer></script>
     <script src="/assets/ervenow-home-title-fix.js?erv=20260920stats1" defer></script>
-    <script src="/assets/home-desktop-marketplace.js?erv=20260920hb1" defer></script>
+    <script src="/assets/home-desktop-marketplace.js?erv=20260921disc3" defer></script>
     <script>
       function goLogin() {
         window.location.href = "/login";
@@ -3709,7 +3641,7 @@
             localStorage.setItem("ervenow_guest_browse", "1");
           }
         } catch (e) {}
-        window.location.href = "/start-now";
+        window.location.href = "/";
       }
 
       function goDashboard() {
@@ -3717,7 +3649,14 @@
           ErvenowAccountDest.goHome();
           return;
         }
-        window.location.href = "/dashboard";
+        if (window.ErvenowRoleRouting) {
+          window.location.href = ErvenowRoleRouting.resolvePostLoginPath({
+            role: window.__ervSessionRole || "customer",
+            service_type: window.__ervSessionServiceType,
+          });
+          return;
+        }
+        window.location.href = "/";
       }
 
       function goAdminDashboard() {

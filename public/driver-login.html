@@ -30,7 +30,7 @@
             <a class="dash-site-header__link" href="/login?mode=register&amp;role=driver">طلب انضمام</a>
           </div>
         </nav>
-        <a class="dash-site-header__btn dash-site-header__btn--primary" href="/driver">لوحة المندوب</a>
+        <a class="dash-site-header__btn dash-site-header__btn--primary" href="/driver-preview">لوحة المندوب</a>
       </div>
     </header>
 
@@ -92,21 +92,36 @@
     <script src="/assets/api-config.js"></script>
     <script src="/assets/api.js?erv=20260612"></script>
     <script src="/assets/sa-phone-input.js"></script>
-    <script src="/assets/role-routing.js"></script>
+    <script src="/assets/role-routing.js?erv=20260921dest1"></script>
     <script src="/assets/admin-readiness-beacon.js"></script>
     <script src="/assets/auth-otp-flow.js"></script>
     <script>
-      function driverPostLoginPath() {
+      function driverPostLoginPath(user) {
         var qs = new URLSearchParams(location.search);
         var next = qs.get("next");
         if (next && next.startsWith("/") && !next.startsWith("//")) return next.split("#")[0];
+        var profile = user || { role: "driver" };
         return window.ErvenowRoleRouting
-          ? ErvenowRoleRouting.resolvePostLoginPath({ role: "driver" })
-          : "/driver";
+          ? ErvenowRoleRouting.resolvePostLoginPath(profile)
+          : "/driver-preview";
+      }
+
+      async function resolveLoggedInDriverPath() {
+        try {
+          var destRes = await window.PlatformAPI.api("/api/core/login-destinations");
+          var dests = (destRes && destRes.destinations) || [];
+          if (dests.length === 1 && dests[0].path) return dests[0].path;
+          if (destRes && destRes.default && destRes.default.path) return destRes.default.path;
+        } catch (e) {}
+        try {
+          var me = await window.PlatformAPI.api("/api/core/me");
+          return driverPostLoginPath((me && me.profile) || { role: "driver" });
+        } catch (e2) {}
+        return driverPostLoginPath({ role: "driver" });
       }
 
       function performDriverRedirect(targetPath, success) {
-        var path = String(targetPath || "/driver");
+        var path = String(targetPath || "/driver-preview");
         var beacon = window.ErvenowAdminReadinessBeacon;
         if (beacon && beacon.trackRedirect) {
           beacon.trackRedirect({
@@ -222,13 +237,25 @@
           } catch (e) {}
           showInlineMsg("تم الدخول — جاري التوجيه…", true);
           setTimeout(function () {
-            performDriverRedirect(driverPostLoginPath());
+            resolveLoggedInDriverPath()
+              .then(function (path) {
+                performDriverRedirect(path);
+              })
+              .catch(function () {
+                performDriverRedirect(driverPostLoginPath({ role: "driver" }));
+              });
           }, 500);
         },
       });
 
       if (window.PlatformAPI && PlatformAPI.getToken()) {
-        performDriverRedirect(driverPostLoginPath());
+        resolveLoggedInDriverPath()
+          .then(function (path) {
+            performDriverRedirect(path);
+          })
+          .catch(function () {
+            performDriverRedirect(driverPostLoginPath({ role: "driver" }));
+          });
       }
     </script>
   </body>

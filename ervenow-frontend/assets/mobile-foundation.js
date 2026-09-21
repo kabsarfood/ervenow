@@ -93,8 +93,17 @@
   }
 
   function accountHref() {
-    if (hasToken()) return "/dashboard";
-    return "/login?role=customer";
+    if (!hasToken()) return "/login?role=customer";
+    if (global.ErvenowAccountDest && typeof ErvenowAccountDest.homeFor === "function") {
+      return ErvenowAccountDest.homeFor(global.__ervSessionRole || "customer", global.__ervSessionServiceType).path || "/";
+    }
+    if (global.ErvenowRoleRouting && typeof ErvenowRoleRouting.resolvePostLoginPath === "function") {
+      return ErvenowRoleRouting.resolvePostLoginPath({
+        role: global.__ervSessionRole || "customer",
+        service_type: global.__ervSessionServiceType,
+      });
+    }
+    return "/";
   }
 
   function ordersHref() {

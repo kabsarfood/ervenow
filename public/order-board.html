@@ -26,7 +26,7 @@
             سجّل الدخول كتاجر لإدارة الطلبات فورياً — قبول، تجهيز، جاهز، وطباعة.
           </p>
           <a class="btn btn-primary" href="/login?role=store">تسجيل دخول المتجر</a>
-          <a class="btn btn-ghost" href="/store-dashboard" style="margin-inline-start: 8px">بوابة المتجر</a>
+          <a class="btn btn-ghost" href="/merchant-preview" style="margin-inline-start: 8px">بوابة المتجر</a>
         </div>
 
         <div id="obMain" style="display: none">
@@ -36,7 +36,7 @@
               <h1 id="obHeroTitle">📋 لوحة الطلبات</h1>
               <p class="ob-hero__sub" id="obStoreLine">—</p>
               <div class="ob-hero__actions">
-                <a class="btn btn-primary" href="/store-dashboard">لوحة تحكم المتجر</a>
+                <a class="btn btn-primary" href="/merchant-preview">لوحة تحكم المتجر</a>
                 <a class="btn btn-ghost" href="/merchant-dashboard">الطلبات والإيرادات</a>
                 <a class="btn btn-ghost" id="obPublicLink" href="#" target="_blank" rel="noopener">صفحة المتجر</a>
               </div>
@@ -102,7 +102,7 @@
     <script src="/assets/api-config.js"></script>
     <script src="/assets/api.js?erv=20260612"></script>
     <script src="/assets/auth-account-guard.js"></script>
-    <script src="/assets/store-shell.js"></script>
+    <script src="/assets/store-shell.js?erv=20260921dest1"></script>
     <script>
       void ErvenowAuthGuard.ensureApprovedAccount({ loginUrl: "/login?role=store" });
       ErvenowStoreShell.mountShell({

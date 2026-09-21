@@ -171,7 +171,7 @@
     var canReserve = (st === "new" || st === "pending") && !b.provider_id;
     var canProviderExecute = mine && st === "accepted";
     var d = b.data && typeof b.data === "object" ? b.data : {};
-    return (
+    var html =
       '<article class="tp-booking' +
       (mine ? " is-mine" : "") +
       '" data-booking-id="' +
@@ -184,6 +184,9 @@
       esc(b.service_name || state.serviceLabel || "نقل") +
       "</strong> — " +
       esc(statusLabel(b.status, b)) +
+      (global.ErvenowUnifiedOrderRead && ErvenowUnifiedOrderRead.badgeHtml
+        ? ErvenowUnifiedOrderRead.badgeHtml(b, "transport")
+        : "") +
       "</p>" +
       (d.distance_km || d.distance
         ? "<p><strong>المسافة:</strong> " + esc(String(d.distance_km || d.distance)) + " كم</p>"
@@ -218,8 +221,14 @@
         : st === "delivering" && mine
           ? '<span style="font-size:0.82rem;color:var(--pf-muted)">بانتظار تأكيد العضو</span>'
           : "") +
-      "</div></article>"
-    );
+      "</div></article>";
+    if (global.ErvenowUnifiedOrderRead && ErvenowUnifiedOrderRead.observeActions) {
+      var ui = [];
+      if (canReserve) ui.push("accept");
+      if (canProviderExecute) ui.push("complete");
+      ErvenowUnifiedOrderRead.observeActions(b, "transport", ui);
+    }
+    return html;
   }
 
   function locationReady() {

@@ -58,6 +58,31 @@
       .my-order-card__id {
         font-weight: 900;
         color: var(--brown, #3d2213);
+        line-height: 1.45;
+      }
+      .my-order-card__kind {
+        display: inline-block;
+        margin-top: 4px;
+        font-size: 0.8rem;
+        font-weight: 800;
+        color: var(--muted, #5c4a3d);
+        line-height: 1.45;
+      }
+      .my-order-badges {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        justify-content: flex-end;
+      }
+      .my-order-type {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-size: 0.75rem;
+        font-weight: 800;
+        background: rgba(185, 135, 47, 0.12);
+        color: var(--brown, #3d2213);
+        border: 1px solid rgba(185, 135, 47, 0.28);
       }
       .my-order-badge {
         display: inline-block;
@@ -171,6 +196,19 @@
       }
       .my-order-actions .btn {
         min-height: 44px;
+      }
+      @media (min-width: 641px) and (max-width: 1024px) {
+        .my-order-card {
+          padding: 16px;
+        }
+        .my-orders-tabs {
+          gap: 10px;
+        }
+      }
+      @media (min-width: 1025px) {
+        .my-order-card {
+          padding: 18px 20px;
+        }
       }
       .my-orders-toggle-wrap {
         margin-bottom: 12px;
@@ -337,7 +375,7 @@
       <div class="layout">
         <section class="my-orders-hero">
           <h1>طلباتي</h1>
-          <p>الطلبات النشطة في «الطلبات الجديدة». الطلبات المُسلّمة والملغاة معاً في «الطلبات المغلقة» — وتُحذف تلقائياً بعد سنة.</p>
+          <p>كل طلبات ERVENOW في مكان واحد: متجر، خدمة، نقل، وتوصيل. الحالة المعروضة للوضوح فقط — التتبع يبقى على الطلب الأصلي.</p>
         </section>
 
         <div id="myOrdersLogin" class="card my-orders-login" hidden>
@@ -389,7 +427,7 @@
               </button>
             </div>
             <p class="my-orders-tab-note" id="myOrdersTabNote">
-              الطلبات الجديدة: كل ما أنشأته وما زال بانتظار مندوب أو قيد التوصيل.
+              كل أنواع الطلبات معاً: متجر، خدمة، نقل، وتوصيل. الجديدة ما زالت قيد التنفيذ.
             </p>
             <div id="myOrdersTabPanelOpen" class="my-orders-tab-panel" role="tabpanel">
               <div id="myOrdersSectionsOpen"></div>
@@ -415,7 +453,7 @@
     <script src="/assets/auth-account-guard.js"></script>
     <script src="/assets/order-draft-store.js"></script>
     <script src="/assets/order-draft-badge.js"></script>
-    <script src="/assets/guest-shell.js?erv=20260612"></script>
+    <script src="/assets/guest-shell.js?erv=20260921dest1"></script>
     <script>
       ErvenowGuestShell.init({ activeNav: "my_orders", pageTag: "طلباتي" });
 
@@ -436,7 +474,138 @@
           .trim();
       }
 
+      var WORKFLOW_TYPE_LABEL = {
+        store: "طلب متجر",
+        service: "طلب خدمة",
+        transport: "طلب نقل",
+        internal_delivery: "طلب توصيل داخلي",
+        delivery: "طلب توصيل",
+        unknown: "طلب",
+      };
+
+      var UNIFIED_STATUS_LABEL = {
+        store: {
+          created: "تم استلام طلبك",
+          accepted: "تم قبول طلبك",
+          preparing: "جاري تجهيز طلبك",
+          ready: "طلبك جاهز للاستلام",
+          assigned: "تم تعيين مندوب لطلبك",
+          scheduled: "تم جدولة طلبك",
+          picked_up: "المندوب استلم طلبك من المتجر",
+          in_progress: "جاري تجهيز طلبك",
+          in_transit: "طلبك في الطريق إليك",
+          completed: "تم تسليم طلبك",
+          cancelled: "تم إلغاء الطلب",
+          unknown: "جاري متابعة طلبك",
+        },
+        service: {
+          created: "تم تسجيل طلب الخدمة",
+          accepted: "تم قبول طلب الخدمة",
+          preparing: "جاري التحضير للخدمة",
+          ready: "مزود الخدمة جاهز للبدء",
+          assigned: "تم تعيين مزود الخدمة",
+          scheduled: "تم جدولة موعد الخدمة",
+          picked_up: "مزود الخدمة في الطريق",
+          in_progress: "جاري تنفيذ الخدمة",
+          in_transit: "مزود الخدمة في الطريق",
+          completed: "اكتملت الخدمة",
+          cancelled: "تم إلغاء طلب الخدمة",
+          unknown: "جاري متابعة طلب الخدمة",
+        },
+        transport: {
+          created: "تم تسجيل طلب النقل",
+          accepted: "تم قبول طلب النقل",
+          preparing: "جاري التحضير للنقل",
+          ready: "مزود النقل جاهز",
+          assigned: "تم تعيين مزود النقل",
+          scheduled: "تم جدولة طلب النقل",
+          picked_up: "تم استلام الشحنة",
+          in_progress: "جاري تنفيذ النقل",
+          in_transit: "مزود النقل في الطريق",
+          completed: "اكتمل طلب النقل",
+          cancelled: "تم إلغاء طلب النقل",
+          unknown: "جاري متابعة طلب النقل",
+        },
+        internal_delivery: {
+          created: "تم تسجيل طلب التوصيل",
+          accepted: "تم قبول طلب التوصيل",
+          preparing: "جاري تجهيز التوصيل",
+          ready: "طلب التوصيل جاهز",
+          assigned: "تم تعيين مندوب",
+          scheduled: "تم جدولة التوصيل",
+          picked_up: "المندوب استلم الشحنة",
+          in_progress: "طلبك في الطريق إليك",
+          in_transit: "طلبك في الطريق إليك",
+          completed: "تم التسليم",
+          cancelled: "تم إلغاء الطلب",
+          unknown: "جاري متابعة التوصيل",
+        },
+        delivery: {
+          created: "تم تسجيل طلب التوصيل",
+          accepted: "تم قبول طلب التوصيل",
+          preparing: "جاري تجهيز التوصيل",
+          ready: "طلب التوصيل جاهز",
+          assigned: "تم تعيين مندوب",
+          scheduled: "تم جدولة التوصيل",
+          picked_up: "المندوب استلم الشحنة",
+          in_progress: "طلبك في الطريق إليك",
+          in_transit: "طلبك في الطريق إليك",
+          completed: "تم التسليم",
+          cancelled: "تم إلغاء الطلب",
+          unknown: "جاري متابعة التوصيل",
+        },
+        unknown: {
+          created: "تم تسجيل الطلب",
+          accepted: "تم قبول الطلب",
+          preparing: "جاري التنفيذ",
+          ready: "الطلب جاهز",
+          assigned: "تم تعيين منفّذ",
+          scheduled: "تم جدولة الطلب",
+          picked_up: "تم الاستلام",
+          in_progress: "جاري التنفيذ",
+          in_transit: "الطلب في الطريق",
+          completed: "اكتمل الطلب",
+          cancelled: "تم إلغاء الطلب",
+          unknown: "جاري متابعة الطلب",
+        },
+      };
+
+      function orderWorkflow(o) {
+        var w = String((o && o.workflow) || "").toLowerCase();
+        if (WORKFLOW_TYPE_LABEL[w]) return w;
+        var ot = String((o && o.order_type) || "").toLowerCase();
+        var st = String((o && o.service_type) || "").toLowerCase();
+        if (st === "internal_delivery") return "internal_delivery";
+        if (ot === "store" || ot === "restaurant" || (o && o.store_id)) return "store";
+        return "unknown";
+      }
+
+      function orderUnifiedStatus(o) {
+        var u = String((o && o.status_unified) || "").toLowerCase();
+        if (u) return u;
+        var ds = orderStatusKey(o);
+        if (/cancel/.test(ds) || /cancel/.test(orderFinanceStatus(o))) return "cancelled";
+        if (ds === "delivered" || ds === "completed") return "completed";
+        return "unknown";
+      }
+
+      function workflowTypeLabel(o) {
+        var wf = orderWorkflow(o);
+        if (wf === "store" && String((o && o.order_type) || "").toLowerCase() === "restaurant") {
+          return "طلب مطعم";
+        }
+        return WORKFLOW_TYPE_LABEL[wf] || "طلب";
+      }
+
+      function customerUnifiedLabel(o) {
+        var wf = orderWorkflow(o);
+        var st = orderUnifiedStatus(o);
+        var map = UNIFIED_STATUS_LABEL[wf] || UNIFIED_STATUS_LABEL.unknown;
+        return map[st] || map.unknown;
+      }
+
       function isCancelledOrder(o) {
+        if (orderUnifiedStatus(o) === "cancelled") return true;
         var ds = orderStatusKey(o);
         var st = orderFinanceStatus(o);
         if (/cancel/.test(ds) || /cancel/.test(st)) return true;
@@ -449,25 +618,23 @@
       }
 
       function isDeliveredOrder(o) {
+        if (orderUnifiedStatus(o) === "completed") return true;
         var ds = orderStatusKey(o);
         return ds === "delivered" || ds === "completed" || ds === "closed";
       }
 
       function orderStatusMeta(o) {
         if (isCancelledOrder(o)) {
-          return { label: "ملغى", cls: "my-order-badge--cancel", bucket: "closed" };
+          return { label: customerUnifiedLabel(o), cls: "my-order-badge--cancel", bucket: "closed" };
         }
         if (isDeliveredOrder(o)) {
-          return { label: "تم التسليم", cls: "my-order-badge--done", bucket: "closed" };
+          return { label: customerUnifiedLabel(o), cls: "my-order-badge--done", bucket: "closed" };
         }
-        var ds = orderStatusKey(o);
-        if (o.driver_id && (ds === "accepted" || ds === "picked" || ds === "delivering")) {
-          return { label: "قيد التوصيل", cls: "my-order-badge--active", bucket: "open" };
+        var unified = orderUnifiedStatus(o);
+        if (unified === "created" || unified === "accepted") {
+          return { label: customerUnifiedLabel(o), cls: "my-order-badge--wait", bucket: "open" };
         }
-        if (!o.driver_id && (ds === "new" || ds === "pending" || ds === "draft")) {
-          return { label: "بانتظار مندوب", cls: "my-order-badge--wait", bucket: "open" };
-        }
-        return { label: ds || "قيد المعالجة", cls: "my-order-badge--active", bucket: "open" };
+        return { label: customerUnifiedLabel(o), cls: "my-order-badge--active", bucket: "open" };
       }
 
       function isOrderClosed(o) {
@@ -680,6 +847,54 @@
         return amount.toFixed(2) + " ر.س";
       }
 
+      function formatOrderDate(iso) {
+        if (!iso) return "—";
+        try {
+          var d = new Date(iso);
+          if (isNaN(d.getTime())) return "—";
+          return d.toLocaleString("ar-SA", {
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+            hour: "numeric",
+            minute: "2-digit",
+          });
+        } catch (e) {
+          return "—";
+        }
+      }
+
+      function paymentStatusLabel(o) {
+        var d = orderData(o);
+        var raw = String((o && o.payment_status) || d.payment_status || "")
+          .trim()
+          .toLowerCase();
+        if (raw === "paid") return "مدفوع";
+        if (raw === "pending") return "معلق";
+        if (raw === "unpaid") return "غير مدفوع";
+        return raw ? String((o && o.payment_status) || d.payment_status) : "";
+      }
+
+      function orderPartyName(o) {
+        var d = orderData(o);
+        var wf = orderWorkflow(o);
+        if (wf === "store") {
+          return String(o.store_name || d.store_name || "").trim();
+        }
+        if (wf === "service" || wf === "transport") {
+          return String(o.service_name || d.service_name || o.seller_name || "").trim();
+        }
+        return String(o.store_name || o.service_name || "").trim();
+      }
+
+      function orderPartyFieldLabel(o) {
+        var wf = orderWorkflow(o);
+        if (wf === "store") return "المتجر";
+        if (wf === "transport") return "مزود النقل";
+        if (wf === "service") return "مزود الخدمة";
+        return "المنفّذ";
+      }
+
       function orderCustomerPhone(o) {
         var d = orderData(o);
         return String(o.customer_phone || d.customer_phone || "").trim();
@@ -743,24 +958,36 @@
       function renderOrderCard(o) {
         var st = orderStatusMeta(o);
         var num = o.order_number || String(o.id || "").slice(0, 8);
+        var kind = workflowTypeLabel(o);
+        var party = orderPartyName(o);
+        var pay = paymentStatusLabel(o);
+        var created = formatOrderDate(o.created_at);
         var from = pickAddressLabel(o, "pickup") || "…";
         var to = pickAddressLabel(o, "drop") || "…";
         var needsGeo = !pickAddressLabel(o, "pickup") || !pickAddressLabel(o, "drop");
         var km = orderDistanceKm(o);
         var price = orderPrice(o);
-        var customerPhone = formatCustomerPhone(orderCustomerPhone(o));
-        var recipientPhone = formatCustomerPhone(orderRecipientPhone(o));
         var trackId = o.order_number || o.id;
         var cardId = "my-order-" + String(o.id || num).replace(/[^a-zA-Z0-9_-]/g, "");
+        var closed = isOrderClosed(o);
+        var detailsHref = "/track?id=" + encodeURIComponent(trackId);
         return (
           '<article class="my-order-card" id="' +
           esc(cardId) +
           '" data-order-id="' +
           esc(o.id || "") +
+          '" data-workflow="' +
+          esc(orderWorkflow(o)) +
           '">' +
           '<div class="my-order-card__top">' +
+          "<div>" +
           '<span class="my-order-card__id">#' +
           esc(num) +
+          "</span>" +
+          "</div>" +
+          '<div class="my-order-badges">' +
+          '<span class="my-order-type">' +
+          esc(kind) +
           "</span>" +
           '<span class="my-order-badge ' +
           st.cls +
@@ -768,7 +995,29 @@
           esc(st.label) +
           "</span>" +
           "</div>" +
+          "</div>" +
+          '<p class="my-order-meta">' +
+          esc(st.label) +
+          "</p>" +
           '<div class="my-order-route">' +
+          (party
+            ? '<p class="my-order-route__item"><strong>' +
+              esc(orderPartyFieldLabel(o)) +
+              ":</strong> " +
+              esc(party) +
+              "</p>"
+            : "") +
+          '<p class="my-order-route__item"><strong>التاريخ:</strong> ' +
+          esc(created) +
+          "</p>" +
+          '<p class="my-order-route__item"><strong>الإجمالي:</strong> ' +
+          esc(formatPrice(price)) +
+          "</p>" +
+          (pay
+            ? '<p class="my-order-route__item"><strong>الدفع:</strong> ' +
+              esc(pay) +
+              "</p>"
+            : "") +
           '<p class="my-order-route__item' +
           (needsGeo && from === "…" ? " is-loading" : "") +
           '" data-route-part="from"><strong>من:</strong> <span data-route-value="from">' +
@@ -779,23 +1028,19 @@
           '" data-route-part="to"><strong>إلى:</strong> <span data-route-value="to">' +
           esc(to) +
           "</span></p>" +
-          '<p class="my-order-route__item"><strong>المسافة:</strong> ' +
-          esc(formatDistance(km)) +
-          "</p>" +
-          '<p class="my-order-route__item"><strong>السعر:</strong> ' +
-          esc(formatPrice(price)) +
-          "</p>" +
-          '<p class="my-order-route__item"><strong>جوال طالب الخدمة:</strong> ' +
-          esc(customerPhone) +
-          "</p>" +
-          '<p class="my-order-route__item"><strong>جوال مستلم الطلب:</strong> ' +
-          esc(recipientPhone) +
-          "</p>" +
+          (km != null
+            ? '<p class="my-order-route__item"><strong>المسافة:</strong> ' +
+              esc(formatDistance(km)) +
+              "</p>"
+            : "") +
           "</div>" +
           '<div class="my-order-actions">' +
-          '<a class="btn btn-primary" href="/track?id=' +
-          encodeURIComponent(trackId) +
-          '">تتبع الطلب</a>' +
+          '<a class="btn btn-ghost" href="' +
+          detailsHref +
+          '">التفاصيل</a>' +
+          (closed
+            ? ""
+            : '<a class="btn btn-primary" href="' + detailsHref + '">تتبع الطلب</a>') +
           (canCustomerCancel(o)
             ? '<button type="button" class="btn btn-ghost my-order-cancel" data-cancel-order="' +
               esc(o.id || "") +
@@ -870,8 +1115,8 @@
         if (note) {
           note.textContent =
             activeOrdersTab === "closed"
-              ? "كل الطلبات المُسلّمة والملغاة في قائمة واحدة — مرجع للاستفسار. تُحذف تلقائياً بعد سنة."
-              : "الطلبات الجديدة: بانتظار مندوب أو قيد التوصيل. بعد التسليم أو الإلغاء تنتقل إلى «مُسلّمة وملغاة».";
+              ? "المُسلّمة والملغاة من كل الأنواع في قائمة واحدة — مرجع للاستفسار."
+              : "كل طلبات ERVENOW النشطة معاً: متجر، خدمة، نقل، وتوصيل.";
         }
       }
 

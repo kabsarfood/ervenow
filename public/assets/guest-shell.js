@@ -10,7 +10,22 @@
     var r = String(role || "").toLowerCase();
     if (r === "user") r = "customer";
     var links = [{ key: "home", href: "/", label: "الرئيسية" }];
-    links.push({ key: "guest", href: "/dashboard", label: "منصة ERVENOW" });
+    var portalRole = "";
+    if (opts.authenticated && global.ErvenowRoleRouting) {
+      portalRole = ErvenowRoleRouting.resolvePortalRole({
+        role: r,
+        service_type: opts.serviceType,
+      }).portalRole;
+    }
+    if (opts.authenticated && portalRole && portalRole !== "customer") {
+      links.push({
+        key: "portal",
+        href: ErvenowRoleRouting.portalPathForRole(portalRole),
+        label: ErvenowRoleRouting.portalLabelAr(portalRole),
+      });
+    } else {
+      links.push({ key: "guest", href: "/dashboard", label: "منصة ERVENOW" });
+    }
     if (opts.authenticated) {
       if (r === "driver") {
         links.push({ key: "my_orders", href: "/orders", label: "طلباتي" });
@@ -174,10 +189,17 @@
     global.ErvenowNotificationCenter.mount({ mount: host, key: "guest-shell-header" });
   }
 
-  function walletHrefForRole(role) {
+  function walletHrefForRole(role, serviceType) {
+    if (global.ErvenowAccountDest && typeof ErvenowAccountDest.walletHrefFor === "function") {
+      return ErvenowAccountDest.walletHrefFor(role, serviceType);
+    }
+    if (global.ErvenowRoleRouting && typeof ErvenowRoleRouting.walletPathForUser === "function") {
+      return ErvenowRoleRouting.walletPathForUser({ role: role, service_type: serviceType });
+    }
     role = String(role || "").toLowerCase();
-    if (role === "driver") return "/driver-wallet";
-    if (role === "store" || role === "merchant" || role === "restaurant") return "/store-dashboard#wallet";
+    if (role === "driver") return "/driver-preview#wallet";
+    if (role === "store" || role === "merchant" || role === "restaurant") return "/merchant-preview#wallet";
+    if (role === "service") return "/service-preview#wallet";
     return "/wallet.html";
   }
 
@@ -218,7 +240,7 @@
       return;
     }
     box.hidden = false;
-    box.setAttribute("href", walletHrefForRole(role));
+    box.setAttribute("href", walletHrefForRole(role, global.__ervSessionServiceType));
     amountEl.textContent = "…";
     try {
       amountEl.textContent = fmtWalletMoney(await fetchWalletBalanceForRole(role));
@@ -234,7 +256,7 @@
     if (!box || !amountEl) return;
     role = String(role || "").toLowerCase();
     if (!hasToken() || role === "admin") return;
-    box.setAttribute("href", walletHrefForRole(role));
+    box.setAttribute("href", walletHrefForRole(role, global.__ervSessionServiceType));
     amountEl.textContent = "…";
     try {
       amountEl.textContent = fmtWalletMoney(await fetchWalletBalanceForRole(role));
@@ -364,13 +386,21 @@
     var links = document.querySelector(".dash-site-header__links");
     if (links) links.innerHTML = "";
     var logo = document.querySelector(".dash-site-header__logo");
-    if (logo) logo.setAttribute("href", "/store-dashboard");
+    if (logo) {
+      logo.setAttribute(
+        "href",
+        (global.ErvenowRoleRouting && ErvenowRoleRouting.portalPathForRole("merchant")) || "/merchant-preview"
+      );
+    }
     syncHeaderLayoutMetrics();
   }
 
   function navOpts(extra) {
     extra = extra && typeof extra === "object" ? extra : {};
     extra.liveMapPublicEnabled = _liveMapPublicEnabled;
+    if (extra.serviceType == null && global.__ervSessionServiceType) {
+      extra.serviceType = global.__ervSessionServiceType;
+    }
     return extra;
   }
 
@@ -422,7 +452,7 @@
       var serviceType = me.profile && me.profile.service_type;
       setAccountButtonLoggedIn(switchAccount);
       await refreshHeaderWallet(role);
-      await paintNavWithFlags(_activeNavKey, role, { authenticated: true });
+      await paintNavWithFlags(_activeNavKey, role, { authenticated: true, serviceType: serviceType });
       if (role === "driver") {
         document.querySelectorAll(".dash-header-cart").forEach(function (a) {
           a.style.display = "none";
@@ -504,7 +534,7 @@
       }
       var walletLink = {
         key: "wallet",
-        href: walletHrefForRole(role),
+        href: walletHrefForRole(role, opts && opts.serviceType),
         label: "رصيدك",
         walletChip: true,
       };
@@ -711,13 +741,36 @@
     document.head.appendChild(s);
   }
 
-  function loadAccountDestScript() {
-    if (document.querySelector("script[data-erv-account-dest]")) return;
+  function loadScriptOnce(src, dataAttr) {
+    if (document.querySelector("script[" + dataAttr + "]")) return;
+    var bare = src.split("?")[0];
+    if (document.querySelector('script[src*="' + bare + '"]')) return;
     var s = document.createElement("script");
-    s.src = "/assets/account-destinations.js";
-    s.defer = true;
-    s.setAttribute("data-erv-account-dest", "1");
+    s.src = src;
+    s.async = false;
+    s.setAttribute(dataAttr, "1");
     document.head.appendChild(s);
+  }
+
+  function loadIdentityRoutingScripts() {
+    loadScriptOnce("/assets/role-routing.js?erv=20260921dest1", "data-erv-role-routing");
+    loadScriptOnce("/assets/account-destinations.js?erv=20260921dest1", "data-erv-account-dest");
+  }
+
+  function whenRoutingReady(cb, tries) {
+    tries = tries || 0;
+    if (global.ErvenowRoleRouting) {
+      cb();
+      return;
+    }
+    loadIdentityRoutingScripts();
+    if (tries > 80) {
+      cb();
+      return;
+    }
+    setTimeout(function () {
+      whenRoutingReady(cb, tries + 1);
+    }, 40);
   }
 
   function loadToggleUi(cb) {
@@ -861,9 +914,11 @@
     loadDraftBadge();
     ensureNotificationCenterAssets();
     loadPlatformAccessScript();
-    loadAccountDestScript();
-    whenPlatformApiReady(function () {
-      initAuthHeader();
+    loadIdentityRoutingScripts();
+    whenRoutingReady(function () {
+      whenPlatformApiReady(function () {
+        initAuthHeader();
+      });
     });
     loadPreRegistrationBanner();
   }

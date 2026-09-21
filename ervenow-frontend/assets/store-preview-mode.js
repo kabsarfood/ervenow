@@ -59,7 +59,12 @@
     document.body.classList.add("store-preview-mode");
 
     var logo = document.querySelector(".dash-site-header__logo");
-    if (logo) logo.setAttribute("href", "/store-dashboard");
+    if (logo) {
+      logo.setAttribute(
+        "href",
+        (global.ErvenowRoleRouting && ErvenowRoleRouting.portalPathForRole("merchant")) || "/merchant-preview"
+      );
+    }
 
     if (!document.getElementById("storePreviewBanner")) {
       var banner = document.createElement("div");
@@ -71,7 +76,7 @@
         '<p class="store-preview-banner__text">' +
         "<strong>👁 معاينة المتجر</strong> — كما تظهر صفحتك للعملاء. عناصر المنصة للزوار مخفية في هذه المعاينة." +
         "</p>" +
-        '<a class="store-preview-banner__back btn btn-ghost" href="/store-dashboard">← العودة للوحة المتجر</a>' +
+        '<a class="store-preview-banner__back btn btn-ghost" href="/merchant-preview">← العودة للوحة المتجر</a>' +
         "</div>";
       var header = document.querySelector(".dash-site-header");
       if (header && header.parentNode) {

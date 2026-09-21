@@ -313,6 +313,7 @@
     </script>
     <script src="/assets/api.js?erv=20260612"></script>
     <script src="/assets/sa-phone-input.js"></script>
+    <script src="/assets/role-routing.js?erv=20260921dest1"></script>
     <script src="/assets/auth-otp-flow.js"></script>
     <script>
       function getAnyToken() {
@@ -337,7 +338,9 @@
           .then(function (x) {
             var role = x.d && x.d.profile && x.d.profile.role;
             if (x.ok && String(role || "").toLowerCase() === "admin") {
-              window.location.replace("/admin-dashboard");
+              window.location.replace(
+                (window.ErvenowRoleRouting && ErvenowRoleRouting.portalPathForRole("admin")) || "/admin-dashboard"
+              );
             }
           })
           .catch(function () {});
@@ -462,7 +465,8 @@
               if (location.protocol === "https:") c += "; Secure";
               document.cookie = c;
             } catch (cookieErr) {}
-            window.location.href = "/admin-dashboard";
+            window.location.href =
+              (window.ErvenowRoleRouting && ErvenowRoleRouting.portalPathForRole("admin")) || "/admin-dashboard";
           } catch (e) {
             setMsg(mapOtpError(e.message || "فشل الدخول"), "err");
             throw e;

@@ -32,6 +32,8 @@ const {
 const { countOrdersByStatus, enrichOrderForBoard } = require("../../shared/utils/storeOrderBoard");
 const { orderVisibleInPortal } = require("../../shared/utils/orderPortalRouting");
 const { enrichDriverOrderRows } = require("../../shared/utils/orderDisplayFields");
+const { projectUnifiedOrdersReadModel } = require("../../shared/domain/orders/unifiedReadModel");
+const { actorFromAppUser } = require("../../shared/domain/orders/availableActions");
 const {
   MERCHANT_ORDER_BOARD_COLUMNS,
   MERCHANT_DASHBOARD_ORDER_COLUMNS,
@@ -2126,6 +2128,10 @@ router.get("/order-board", requireAuth, requireStoreRole, async (req, res) => {
     let orders = normalizedRows.map(enrichOrderForBoard);
     orders = orders.filter((o) => orderVisibleInPortal(o, "merchant"));
     orders = await attachDriversToOrders(sb, orders);
+    orders = projectUnifiedOrdersReadModel(
+      orders,
+      actorFromAppUser(req.appUser, { role: "merchant", storeId: st.id })
+    );
     const status_counts = countOrdersByStatus(normalizedRows);
 
     const walletPayload = await getStoreWalletPayloadWithFallback(sb, req.appUser.id, st.id);
@@ -2184,7 +2190,10 @@ router.get("/merchant-dashboard", requireAuth, requireStoreRole, async (req, res
     if (oRes.error) {
       if (!isStoresTableMissing(oRes.error)) console.warn("[merchant-dashboard] orders", oRes.error.message || oRes.error);
     } else {
-      orders = enrichDriverOrderRows(oRes.data || []);
+      orders = projectUnifiedOrdersReadModel(
+        enrichDriverOrderRows(oRes.data || []),
+        actorFromAppUser(req.appUser, { role: "merchant", storeId: sid })
+      );
     }
 
     let wallet = {

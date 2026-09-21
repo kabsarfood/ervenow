@@ -507,7 +507,18 @@
           .map(function (o) {
             var st = normalizeStatus(o.board_status || o.delivery_status);
             var pill = wf && wf.pillHtml ? wf.pillHtml(st) : '<span class="mp-pill">' + esc(st) + "</span>";
+            var unifiedBadge =
+              global.ErvenowUnifiedOrderRead && ErvenowUnifiedOrderRead.badgeHtml
+                ? ErvenowUnifiedOrderRead.badgeHtml(o, "merchant")
+                : "";
             var next = wf && wf.nextActionFor ? wf.nextActionFor(st) : null;
+            var uiActions = [];
+            if (next && next.status === "accepted") uiActions.push("accept");
+            if (next && next.status === "preparing") uiActions.push("start_preparing");
+            if (next && next.status === "ready") uiActions.push("mark_ready");
+            if (global.ErvenowUnifiedOrderRead && ErvenowUnifiedOrderRead.observeActions) {
+              ErvenowUnifiedOrderRead.observeActions(o, "merchant", uiActions);
+            }
             var actionBtn = next
               ? '<button type="button" class="mp-btn mp-btn--primary mp-order-action" data-order-id="' +
                 esc(o.id) +
@@ -540,6 +551,7 @@
               esc(o.order_number || o.id) +
               "</td><td>" +
               pill +
+              unifiedBadge +
               "</td><td>" +
               esc(wf && wf.paymentLabel ? wf.paymentLabel(o.payment_status) : o.payment_status || "—") +
               "</td><td>" +
@@ -1192,7 +1204,12 @@
         var st = btn.getAttribute("data-next-status");
         btn.disabled = true;
         try {
-          if (global.ErvenowMerchantOrderWorkflow) {
+          if (st === "preparing") {
+            await api("/api/order/" + encodeURIComponent(id) + "/action", {
+              method: "POST",
+              body: { action: "start_preparing" },
+            });
+          } else if (global.ErvenowMerchantOrderWorkflow) {
             await ErvenowMerchantOrderWorkflow.patchOrderStatus(id, st);
           } else {
             await api("/api/order/" + encodeURIComponent(id) + "/status", {

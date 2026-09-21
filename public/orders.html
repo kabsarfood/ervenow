@@ -153,8 +153,9 @@
 
     <script src="/assets/api-config.js"></script>
     <script src="/assets/api.js?erv=20260612"></script>
+    <script src="/assets/role-routing.js?erv=20260921dest1"></script>
     <script src="/assets/auth-account-guard.js"></script>
-    <script src="/assets/driver-nav.js"></script>
+    <script src="/assets/driver-nav.js?erv=20260921dest1"></script>
     <script>
       void ErvenowAuthGuard.ensureApprovedAccount({ loginUrl: "/driver-login" });
     </script>
@@ -529,7 +530,11 @@
             return;
           }
           if (role !== "driver" && role !== "admin") {
-            location.replace("/dashboard");
+            var dest =
+              window.ErvenowRoleRouting && me.profile
+                ? ErvenowRoleRouting.resolvePostLoginPath(me.profile)
+                : "/";
+            location.replace(dest);
             return;
           }
           var phone = meUser.phone || (me.profile && me.profile.name) || meUser.id || "—";

@@ -1,0 +1,80 @@
+تقرير حي start_preparing + Unified Action الثانية mark_ready
+تاريخ: 21 سبتمبر 2026
+accept_delivery لم يُنفَّذ
+
+أ) الاختبار الحي لـ start_preparing
+لا يوجد طلب accepted قائم. أُنشئ طلب متجر حقيقي على متجر التاجر ثم قُبل بـ PATCH القديم ثم اختُبر Dispatcher.
+التاجر: role=store حساب حقيقي
+الطلب: ES-LIVE-15745106
+قبل: accepted / driver_id=null
+POST /api/order/:id/action { "action": "start_preparing" } → 200
+
+بعدها:
+Customer API: status_unified=preparing / current_actor_type=merchant
+Merchant API + order-board: نفس الحالة / available_actions=["mark_ready"]
+Admin API: نفس الحالة
+Driver assignment: لا
+Settlement: لا
+Wallet/ledger: 0 حركات
+إشعارات قديمة: نعم — «جاري التنفيذ» للعميل والمتجر
+البث: broadcastOrderPatch داخل المحرك الحالي
+زر بدء التجهيز في merchant-preview ما زال يستدعي هذا POST. النقر في المتصفح لم يُنفَّذ.
+
+ب) mark_ready
+نفس Dispatcher. لا محرك حالات جديد.
+POST /api/order/:id/action { "action": "mark_ready" }
+شروط: Merchant · ملكية المتجر · workflow=store · status_unified=preparing · mark_ready في available_actions
+ثم patchUnifiedOrderStatus(..., "ready") نفس PATCH /api/order/:id/status
+تنبيه المناديب عند ready هو إشعار قديم وليس إسناد مندوب.
+زر جاهز للاستلام في merchant-preview بقي على PATCH القديم.
+
+1) الملفات
+- shared/domain/orders/unifiedActionDispatcher.js
+- apps/order/routes.js
+- tests/unit/unifiedActionDispatcher.test.js
+- scripts/live-start-preparing-probe.js
+- scripts/live-mark-ready-probe.js
+
+2) الشكل
+start_preparing: accepted → preparing
+mark_ready: preparing → ready
+غير ذلك: 400 unsupported action
+
+3) المحرك
+patchUnifiedOrderStatus(sb, id, "ready", appUser)
+نفس إشعار «طلبك جاهز» ونفس تنبيه المناديب. بلا driver_id.
+
+4) الاختبارات
+وحدة: 17/17
+حي mark_ready على نفس الطلب:
+preparing → ready
+Customer/Merchant/Admin: status_unified=ready و current_actor_type=merchant
+التاجر: available_actions=[] (انتظار المندوب حسب السياسة)
+driver_id=null
+ledger 0→0
+إشعاران: «طلبك جاهز» للعميل والمتجر
+
+5) مثال
+POST /api/order/:id/action
+{ "action": "mark_ready" }
+
+{
+  "ok": true,
+  "action": "mark_ready",
+  "workflow": "store",
+  "previous_status": "preparing",
+  "previous_status_unified": "preparing",
+  "status_unified": "ready",
+  "current_actor_type": "merchant",
+  "available_actions": []
+}
+
+6) merchant-preview
+بدء التجهيز → Unified Action
+جاهز للاستلام → القديم
+accept_delivery غير منفَّذ
+
+7) المشاكل
+لا طلب accepted جاهز قبل الاختبار فأنشئ طلب حي على المتجر الحقيقي
+نقر الزر في المتصفح لم يُختبر؛ الـPOST الحي مطابق لمسار الزر
+بعد ready التاجر بلا Action تشغيلية. النقطة التالية accept_delivery متوقفة للمراجعة

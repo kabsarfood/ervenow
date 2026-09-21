@@ -15,7 +15,6 @@
     pickup_truck: 1,
     car_transport: 1,
     vehicle_transfer: 1,
-    internal_delivery: 1,
     furniture_move: 1,
   };
 
@@ -35,7 +34,6 @@
     pickup_truck: "سطحة / نقل مركبات",
     car_transport: "نقل مركبات",
     vehicle_transfer: "نقل مركبات",
-    internal_delivery: "توصيل داخلي",
     furniture_move: "نقل أثاث",
   };
 
