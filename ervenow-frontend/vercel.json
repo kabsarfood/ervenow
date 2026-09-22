@@ -42,24 +42,12 @@
     { "source": "/driver-register.html", "destination": "/login?mode=register&role=driver", "statusCode": 302 }
   ],
   "routes": [
-    {
-      "handle": "filesystem"
-    },
-    {
-      "src": "/admin/branding",
-      "dest": "/admin-branding.html"
-    },
-    {
-      "src": "/admin/categories",
-      "dest": "/admin-categories.html"
-    },
-    {
-      "src": "/admin/withdrawals",
-      "dest": "/admin-withdrawals.html"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/index.html"
-    }
+    { "handle": "filesystem" },
+    { "src": "/join", "dest": "/login.html" },
+    { "src": "/join.html", "dest": "/login.html" },
+    { "src": "/admin/branding", "dest": "/admin-branding.html" },
+    { "src": "/admin/categories", "dest": "/admin-categories.html" },
+    { "src": "/admin/withdrawals", "dest": "/admin-withdrawals.html" },
+    { "src": "/(.*)", "dest": "/index.html" }
   ]
 }

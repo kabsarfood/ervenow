@@ -150,7 +150,7 @@ test.beforeEach(async ({ page }) => {
 test.describe("ERVENOW smoke — unified cart checkout", () => {
   test("login OTP flow issues session token", async ({ page }) => {
     await installApiMocks(page);
-    await page.goto("/login?mode=register&role=customer", { waitUntil: "domcontentloaded" });
+    await page.goto("/login", { waitUntil: "domcontentloaded" });
 
     await page.locator("#phone").fill("0512345678");
     await page.locator("#authOtpBtn").click();

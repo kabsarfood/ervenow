@@ -431,6 +431,10 @@ if (servePublicUi) {
     res.redirect(302, "/login?" + qs.toString());
   });
 
+  app.get(["/join", "/join.html"], (_req, res) => {
+    res.sendFile(path.join(publicPath, "login.html"));
+  });
+
   app.get(["/admin", "/admin/", "/admin/index.html"], (_req, res) => {
     res.redirect(302, "/admin-dashboard");
   });

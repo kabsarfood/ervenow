@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>ERVENOW | إنشاء عضوية</title>
+    <meta http-equiv="refresh" content="0;url=/login?mode=register&role=customer" />
+    <script>
+      (function () {
+        var qs = new URLSearchParams(window.location.search || "");
+        qs.set("mode", "register");
+        if (!qs.get("role")) qs.set("role", "customer");
+        window.location.replace("/login?" + qs.toString());
+      })();
+    </script>
+  </head>
+  <body>
+    <p>جاري فتح إنشاء العضوية… <a href="/login?mode=register&amp;role=customer">متابعة</a></p>
+  </body>
+</html>

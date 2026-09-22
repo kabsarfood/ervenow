@@ -84,6 +84,8 @@ const vercelJson = {
     { src: "/customer-preview", status: 302, headers: { Location: "/" } },
     { src: "/customer-preview.html", status: 302, headers: { Location: "/" } },
     { handle: "filesystem" },
+    { src: "/join", dest: "/login.html" },
+    { src: "/join.html", dest: "/login.html" },
     { src: "/admin/branding", dest: "/admin-branding.html" },
     { src: "/admin/categories", dest: "/admin-categories.html" },
     { src: "/admin/withdrawals", dest: "/admin-withdrawals.html" },

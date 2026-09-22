@@ -1,15 +1,15 @@
 {
-  "updated_at": "2026-09-22T20:08:47.616Z",
+  "updated_at": "2026-09-22T21:03:16.615Z",
   "portal_visits": {
     "customer": {
-      "visits": 30,
+      "visits": 31,
       "unique_users": {},
-      "last_at": "2026-06-20T12:30:05.786Z"
+      "last_at": "2026-09-22T20:59:17.085Z"
     },
     "merchant": {
-      "visits": 259,
+      "visits": 271,
       "unique_users": {},
-      "last_at": "2026-09-22T20:00:46.318Z"
+      "last_at": "2026-09-22T21:03:02.750Z"
     },
     "driver": {
       "visits": 454,
@@ -35,9 +35,9 @@
       "active_users": {}
     },
     "merchant": {
-      "visits": 188,
+      "visits": 200,
       "unique_users": {},
-      "last_at": "2026-09-22T20:00:46.318Z",
+      "last_at": "2026-09-22T21:03:02.750Z",
       "active_users": {}
     },
     "driver": {
@@ -89,6 +89,16 @@
   "user_snapshots": {},
   "broadcast_history": [],
   "redirect_events": [
+    {
+      "at": "2026-09-22T20:59:17.085Z",
+      "portal": "customer",
+      "role": "customer",
+      "path": "/",
+      "success": true,
+      "raw_role": "customer",
+      "service_type": null,
+      "user_id": null
+    },
     {
       "at": "2026-09-22T14:55:35.104Z",
       "portal": "merchant",

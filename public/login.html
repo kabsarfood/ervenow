@@ -5,8 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover" />
     <script src="/assets/viewport-fit.js?erv=20260905b"></script>
     <script src="/assets/pre-reg-banner.js?erv=20260905b" defer></script>
-    <title>ERVENOW | دخول الأعضاء وإنشاء عضوية</title>
-    <meta name="description" content="يتم تفعيل الحساب بعد المراجعة واعتماده من إدارة ERVENOW." />
+    <title>ERVENOW | دخول الأعضاء</title>
+    <script>
+      (function () {
+        var p = String(location.pathname || "/").replace(/\.html$/i, "").replace(/\/+$/, "") || "/";
+        var join = p === "/join" || /(?:^|[?&])mode=register(?:&|$)/i.test(location.search || "");
+        if (join) {
+          document.title = "ERVENOW | إنشاء عضوية";
+          document.documentElement.classList.add("auth-join-intent");
+        }
+      })();
+    </script>
+    <meta name="description" content="دخول الأعضاء برمز واتساب، أو إنشاء عضوية من صفحة مستقلة بعد توثيق الجوال." />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet" />
@@ -359,6 +369,47 @@
       .auth-mode-tabs {
         display: none;
       }
+      .auth-intent-switch {
+        margin: 18px 0 0;
+        padding-top: 14px;
+        border-top: 1px solid rgba(61, 34, 19, 0.1);
+        text-align: center;
+        font-size: clamp(0.88rem, 2.6vw, 0.95rem);
+        line-height: 1.55;
+        font-weight: 600;
+        color: #5c4a3d;
+      }
+      .auth-intent-switch a {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 44px;
+        padding: 0 10px;
+        font-weight: 800;
+        color: var(--gold, #b9872f);
+        text-decoration: none;
+      }
+      .auth-intent-switch a:hover,
+      .auth-intent-switch a:focus-visible {
+        text-decoration: underline;
+      }
+      .auth-cross-cta {
+        display: none;
+        width: 100%;
+        margin-top: 12px;
+        min-height: 48px;
+        box-sizing: border-box;
+      }
+      .auth-cross-cta:not([hidden]) {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+      @media (max-width: 640px) {
+        .auth-intent-switch {
+          font-size: 1rem;
+        }
+      }
       .auth-join-chooser {
         gap: 10px;
         margin: 16px 0 8px;
@@ -420,6 +471,14 @@
       .auth-role-section {
         margin-bottom: 16px;
       }
+      html:not(.auth-join-intent) body:not(.auth-join-page) #authRoleSection {
+        display: none !important;
+      }
+      html.auth-join-intent #authRoleSection,
+      body.auth-join-page #authRoleSection {
+        display: block;
+        margin: 0 0 16px;
+      }
       .auth-role-section__title {
         margin: 0 0 4px;
         font-size: 0.95rem;
@@ -452,7 +511,6 @@
         letter-spacing: 0;
         color: var(--brown, #3d2213);
         cursor: default;
-        pointer-events: none;
       }
       .auth-register-role__select {
         width: 100%;
@@ -689,6 +747,13 @@
 
         <p class="auth-form-intro" id="authFormIntro">أدخل رقم الجوال ثم أرسل رمز واتساب.</p>
 
+        <section class="auth-role-section" id="authRoleSection">
+          <div class="auth-register-role">
+            <label class="auth-register-role__chip" id="registerRoleChip" for="registerRoleSelect">كيف تريد استخدام ERVENOW؟</label>
+            <select id="registerRoleSelect" class="auth-register-role__select" aria-labelledby="registerRoleChip"></select>
+          </div>
+        </section>
+
         <div id="authJoinChooser" class="auth-join-chooser" hidden>
           <p class="auth-join-chooser__title">كيف تريد استخدام ERVENOW؟</p>
           <div class="auth-join-chooser__grid">
@@ -731,13 +796,6 @@
         </div>
 
         <section class="auth-register-panel" id="authRegisterPanel" hidden aria-hidden="true">
-        <section class="auth-role-section" id="authRoleSection">
-          <div class="auth-register-role">
-            <span class="auth-register-role__chip" id="registerRoleChip">كيف تريد استخدام ERVENOW؟</span>
-            <select id="registerRoleSelect" class="auth-register-role__select" aria-labelledby="registerRoleChip"></select>
-          </div>
-        </section>
-
         <div id="roleWrap">
         <label for="role" id="roleLabel">نوع الحساب</label>
         <select id="role" aria-hidden="true" tabindex="-1">
@@ -859,6 +917,10 @@
         </section>
 
         <div class="msg" id="msg" style="display: none"></div>
+        <a class="btn btn-primary auth-cross-cta" id="authCrossCta" hidden></a>
+        <p class="auth-intent-switch" id="authIntentSwitch">
+          ليس لديك عضوية؟ <a href="/join?role=customer">إنشاء عضوية</a>
+        </p>
       </div>
     </main>
 
@@ -985,6 +1047,106 @@
         if (phoneEl) phoneEl.removeAttribute("readonly");
       }
 
+      function authPathname() {
+        return String(location.pathname || "/").replace(/\.html$/i, "").replace(/\/+$/, "") || "/";
+      }
+
+      function isJoinIntent() {
+        if (authPathname() === "/join") return true;
+        return String(new URLSearchParams(location.search).get("mode") || "").toLowerCase() === "register";
+      }
+
+      function copyAuthQuery(extra) {
+        var qs = new URLSearchParams(location.search);
+        qs.delete("mode");
+        var role = qs.get("role") || "customer";
+        qs.set("role", role);
+        if (extra && extra.role) qs.set("role", extra.role);
+        return qs;
+      }
+
+      function joinHref(extra) {
+        var qs = copyAuthQuery(extra);
+        var s = qs.toString();
+        return "/join" + (s ? "?" + s : "");
+      }
+
+      function loginHref(extra) {
+        var qs = copyAuthQuery(extra);
+        qs.delete("mode");
+        var s = qs.toString();
+        return "/login" + (s ? "?" + s : "");
+      }
+
+      function hideCrossCta() {
+        var a = document.getElementById("authCrossCta");
+        if (a) a.hidden = true;
+      }
+
+      function showCrossCta(kind) {
+        var a = document.getElementById("authCrossCta");
+        if (!a) return;
+        a.hidden = false;
+        if (kind === "join") {
+          a.href = joinHref();
+          a.textContent = "إنشاء عضوية";
+        } else {
+          a.href = loginHref();
+          a.textContent = "الدخول";
+        }
+      }
+
+      function paintIntentSwitch() {
+        var el = document.getElementById("authIntentSwitch");
+        if (!el) return;
+        if (isJoinIntent()) {
+          el.innerHTML = 'لديك عضوية؟ <a href="' + loginHref() + '">الدخول</a>';
+        } else {
+          el.innerHTML = 'ليس لديك عضوية؟ <a href="' + joinHref() + '">إنشاء عضوية</a>';
+        }
+      }
+
+      function restoreVerifiedPhone() {
+        var phoneEl = document.getElementById("phone");
+        if (!phoneEl) return;
+        var current = String(phoneEl.value || "").trim();
+        if (current) return;
+        var digits = "";
+        try {
+          digits = sessionStorage.getItem("ervenow_registration_phone") || "";
+        } catch (_e) {}
+        if (!digits) return;
+        if (window.ErvenowSaPhone && typeof ErvenowSaPhone.formatField === "function") {
+          if (/^9665\d{8}$/.test(digits)) phoneEl.value = "0" + digits.slice(3);
+          else phoneEl.value = digits;
+          ErvenowSaPhone.formatField(phoneEl);
+        } else if (/^9665\d{8}$/.test(digits)) {
+          phoneEl.value = "0" + digits.slice(3);
+        } else {
+          phoneEl.value = digits;
+        }
+      }
+
+      function canonicalizeAuthUrl() {
+        var qs = new URLSearchParams(location.search);
+        var path = String(location.pathname || "/login");
+        var base = authPathname();
+        if (base === "/join") {
+          qs.delete("mode");
+          if (!qs.get("role")) qs.set("role", "customer");
+        } else if (String(qs.get("mode") || "").toLowerCase() === "register") {
+          if (!qs.get("role")) qs.set("role", "customer");
+        }
+        var s = qs.toString();
+        var want = path + (s ? "?" + s : "");
+        var now = path + (location.search || "");
+        if (now !== want) {
+          try {
+            window.history.replaceState({}, "", want);
+          } catch (_h) {}
+        }
+      }
+
       function goStoreRegister() {
         if (!registrationToken()) {
           show("وثّق رقم الجوال برمز واتساب أولاً.", false);
@@ -994,8 +1156,10 @@
       }
 
       function openJoinChooser() {
+        if (!isJoinIntent() || !registrationToken()) return;
         var hint = String(new URLSearchParams(window.location.search).get("role") || "").toLowerCase();
         if (hint === "admin") hint = "";
+        syncJoinRoleDropdown();
         syncRegisterSubmitUi();
         if (hint === "store" || hint === "merchant" || hint === "restaurant") {
           goStoreRegister();
@@ -1003,29 +1167,43 @@
         }
         if (hint === "driver" || hint === "customer" || hint === "service" || isServiceTypeValue(hint)) {
           applyRegisterRoleValue(hint);
-          var chooser = document.getElementById("authJoinChooser");
-          if (chooser) chooser.hidden = false;
           syncRegisterSubmitUi();
           return;
         }
-        var chooserEl = document.getElementById("authJoinChooser");
-        if (chooserEl) chooserEl.hidden = false;
-        var roleSection = document.getElementById("authRoleSection");
-        if (roleSection) roleSection.hidden = true;
+        applyRegisterRoleValue("customer");
       }
 
       function isRegisterMode() {
-        return !!registrationToken();
+        return isJoinIntent() && !!registrationToken();
+      }
+
+      function syncJoinRoleDropdown() {
+        var section = document.getElementById("authRoleSection");
+        var join = isJoinIntent();
+        if (section) section.hidden = !join;
+        if (!join) return;
+        buildRegisterRoleSelect();
+        var qs = new URLSearchParams(location.search);
+        var r = String(qs.get("role") || "customer").toLowerCase();
+        if (r === "admin") r = "customer";
+        var visible = "customer";
+        if (r === "store" || r === "merchant" || r === "restaurant") visible = "store";
+        else if (r === "driver") visible = "driver";
+        else if (r === "service" || isServiceTypeValue(r)) visible = "service";
+        var dd = document.getElementById("registerRoleSelect");
+        var sel = document.getElementById("role");
+        if (dd) dd.value = visible;
+        if (sel) sel.value = visible === "store" ? "store" : visible === "service" ? "service" : visible;
       }
 
       function syncRegisterSubmitUi() {
-        var isReg = !!registrationToken();
+        var isReg = isRegisterMode();
         var chooser = document.getElementById("authJoinChooser");
         var regPanel = document.getElementById("authRegisterPanel");
         var loginOtpBlock = document.getElementById("authLoginOtpBlock");
         var registerActions = document.getElementById("authRegisterActions");
         if (chooser) {
-          chooser.hidden = !isReg;
+          chooser.hidden = true;
         }
         if (regPanel) {
           var roleChosen = isReg && document.getElementById("role") && document.getElementById("role").value;
@@ -1048,57 +1226,12 @@
       }
 
       function setAuthMode(register) {
-        if (register && !registrationToken()) {
-          register = false;
+        var target = register ? joinHref() : loginHref();
+        var here = authPathname() + (location.search || "");
+        if (here === target || (register && isJoinIntent()) || (!register && !isJoinIntent())) {
+          return;
         }
-        var qs = new URLSearchParams(window.location.search);
-        if (register) {
-          qs.set("mode", "register");
-          if (!qs.get("role")) qs.set("role", "customer");
-        } else {
-          qs.delete("mode");
-        }
-        var next = qs.get("next");
-        var role = qs.get("role") || "customer";
-        var url = "/login?role=" + encodeURIComponent(role);
-        if (next) url += "&next=" + encodeURIComponent(next);
-        if (register) url += "&mode=register";
-        window.history.replaceState({}, "", url);
-        var tabL = document.getElementById("authTabLogin");
-        var tabR = document.getElementById("authTabRegister");
-        if (tabL) {
-          tabL.classList.toggle("is-active", !register);
-          tabL.setAttribute("aria-selected", register ? "false" : "true");
-        }
-        if (tabR) {
-          tabR.classList.toggle("is-active", register);
-          tabR.setAttribute("aria-selected", register ? "true" : "false");
-        }
-        var intro = document.getElementById("authFormIntro");
-        if (intro) {
-          intro.textContent = register
-            ? "أكمل بياناتك ثم اضغط إنشاء عضوية في الأسفل. يُراجع الطلب من الإدارة، وبعد الاعتماد سجّل الدخول برمز واتساب."
-            : "";
-        }
-        if (!register && window.loginOtpFlow && loginOtpFlow.refreshLabels) loginOtpFlow.refreshLabels();
-        if (register && window.loginOtpFlow && loginOtpFlow.reset) loginOtpFlow.reset();
-        var regPanel = document.getElementById("authRegisterPanel");
-        if (regPanel) {
-          regPanel.hidden = !register;
-          regPanel.setAttribute("aria-hidden", register ? "false" : "true");
-        }
-        var body = document.getElementById("authBody");
-        if (body) body.classList.toggle("auth-register-mode", !!register);
-        var tag = document.querySelector(".dash-site-header__tag");
-        if (tag) tag.textContent = register ? "إنشاء عضوية" : "دخول الأعضاء";
-        if (register) syncRegisterRoleSelectFromPreferred(qs.get("role") || "customer");
-        else {
-          syncLoginRoleUi();
-          if (window.loginOtpFlow && loginOtpFlow.reset) loginOtpFlow.reset();
-        }
-        syncCustomerRegisterUi();
-        syncAuthHead();
-        syncRegisterSubmitUi();
+        window.location.assign(target);
       }
 
       var REGISTER_SERVICE_PARTNER_OPTIONS = [
@@ -1156,8 +1289,11 @@
         if (v === "customer" || v === "driver") {
           sel.value = v;
         } else if (v === "store" || v === "merchant" || v === "restaurant") {
-          goStoreRegister();
-          return;
+          sel.value = "store";
+          if (registrationToken()) {
+            goStoreRegister();
+            return;
+          }
         } else if (v === "service") {
           sel.value = "service";
         } else if (isServiceTypeValue(v)) {
@@ -1168,14 +1304,10 @@
           sel.value = "customer";
           v = "customer";
         }
-        if (isRegisterMode()) {
-          var qs = new URLSearchParams(window.location.search);
-          qs.set("mode", "register");
-          qs.set("role", v);
-          var next = qs.get("next");
-          var url = "/login?role=" + encodeURIComponent(v) + "&mode=register";
-          if (next) url += "&next=" + encodeURIComponent(next);
-          window.history.replaceState({}, "", url);
+        if (isJoinIntent()) {
+          try {
+            window.history.replaceState({}, "", joinHref({ role: v }));
+          } catch (_u) {}
         }
         syncCustomerRegisterUi();
         syncRegisterSubmitUi();
@@ -1480,27 +1612,43 @@
       }
 
       function syncAuthHead() {
-        var reg = isRegisterMode();
+        var join = isJoinIntent();
+        var verified = isRegisterMode();
         var bannerEmoji = document.getElementById("authBannerEmoji");
         var eyebrowText = document.getElementById("authBannerEyebrowText");
         var titleEmoji = document.getElementById("authTitleEmoji");
         var titleText = document.getElementById("authTitleText");
         var subtitleText = document.getElementById("authSubtitleText");
-        if (bannerEmoji) bannerEmoji.textContent = reg ? "⭐" : "👋";
+        if (bannerEmoji) bannerEmoji.textContent = join ? "⭐" : "👋";
         if (eyebrowText) {
-          eyebrowText.textContent = reg ? "ERVENOW — إنشاء عضوية" : "مرحباً بك ضيف ERVENOW";
+          eyebrowText.textContent = join ? "ERVENOW — إنشاء عضوية" : "مرحباً بك ضيف ERVENOW";
         }
-        if (titleEmoji) titleEmoji.textContent = reg ? "✨" : "⭐";
+        if (titleEmoji) titleEmoji.textContent = join ? "✨" : "⭐";
         if (titleText) {
-          titleText.innerHTML = reg
+          titleText.innerHTML = join
             ? 'أنشئ <strong>عضويتك</strong> للاستفادة من جميع الخدمات'
             : "أهلاً بك — <strong>دخول الأعضاء</strong>";
         }
         if (subtitleText) {
-          subtitleText.textContent = reg
-            ? "يُراجع طلبك فريق الإدارة — بعد الاعتماد استخدم دخول الأعضاء برمز واتساب."
+          subtitleText.textContent = join
+            ? verified
+              ? "أكمل بيانات العضوية. يُراجع الطلب من الإدارة — بعد الاعتماد استخدم الدخول برمز واتساب."
+              : "وثّق رقم الجوال برمز واتساب ثم أكمل بيانات العضوية."
             : "صلاحية الرمز 5 دقائق";
         }
+        document.title = join ? "ERVENOW | إنشاء عضوية" : "ERVENOW | دخول الأعضاء";
+        var tag = document.querySelector(".dash-site-header__tag");
+        if (tag) tag.textContent = join ? "إنشاء عضوية" : "دخول الأعضاء";
+        var body = document.getElementById("authBody");
+        if (body) {
+          body.classList.toggle("auth-register-mode", verified);
+          body.classList.toggle("auth-join-page", join);
+        }
+        try {
+          document.documentElement.classList.toggle("auth-join-intent", join);
+        } catch (_c) {}
+        paintIntentSwitch();
+        syncJoinRoleDropdown();
       }
 
       function syncCustomerRegisterUi() {
@@ -1630,7 +1778,9 @@
           return "هذا حساب إداري. يرجى استخدام بوابة الإدارة.";
         }
         if (m.indexOf("غير مسجّل") !== -1 || m.indexOf("not_registered") !== -1) {
-          return "رقم الجوال غير مسجّل — تأكد أنك على تبويب «دخول الأعضاء» (وليس إنشاء عضوية)، وأن الرقم مطابق لما في حسابك. إن لم يكن لديك حساب استخدم «إنشاء عضوية».";
+          return isJoinIntent()
+            ? "رقم الجوال غير مسجّل لإنشاء عضوية — أكمل التوثيق من هذه الصفحة."
+            : "رقم الجوال غير مسجّل. استخدم إنشاء عضوية بعد توثيق الجوال.";
         }
         if (m.indexOf("بانتظار موافقة") !== -1 || m.indexOf("قيد المراجعة") !== -1 || m.indexOf("pending_approval") !== -1) {
           setTimeout(function () {
@@ -1659,14 +1809,27 @@
           window.location.replace("/admin-login");
           return;
         }
+        canonicalizeAuthUrl();
+        if (!isJoinIntent()) {
+          clearRegistrationContext();
+        } else {
+          restoreVerifiedPhone();
+        }
         var intro = document.getElementById("authFormIntro");
-        if (intro) intro.textContent = "أدخل رقم الجوال ثم أرسل رمز واتساب.";
+        if (intro) {
+          intro.textContent = isJoinIntent()
+            ? "أدخل رقم الجوال ثم أرسل رمز واتساب لتوثيق إنشاء العضوية."
+            : "أدخل رقم الجوال ثم أرسل رمز واتساب للدخول.";
+        }
         if (r && r !== "store" && r !== "merchant" && r !== "restaurant") {
           var sel = document.getElementById("role");
           if (sel) sel.value = r;
         }
+        syncAuthHead();
+        syncJoinRoleDropdown();
         syncCustomerRegisterUi();
         syncRegisterSubmitUi();
+        if (isRegisterMode()) openJoinChooser();
       })();
       document.getElementById("role").addEventListener("change", function () {
         if (isRegisterMode()) {
@@ -1913,7 +2076,8 @@
           ) {
             /* رسالة معروضة */
           } else if (errMsg.indexOf("مسجّل مسبقاً") !== -1 || errMsg.indexOf("already_registered") !== -1) {
-            show("رقم الجوال مسجّل مسبقاً — استخدم تبويب دخول الأعضاء", false);
+            show("رقم الجوال مسجّل مسبقاً — استخدم الدخول.", false);
+            showCrossCta("login");
           } else if (isRegisterApiNotFoundError(e)) {
             show(
               "خدمة التسجيل غير متاحة على الخادم حالياً. أعد تشغيل خادم ERVENOW (npm start) ثم أعد المحاولة.",
@@ -1971,8 +2135,15 @@
 
           if (res.needs_registration && res.registration_token) {
             setRegistrationContext(res.registration_token, res.phone);
-            show(res.message || "تم توثيق الجوال. اختر كيف تريد استخدام ERVENOW.", true);
+            if (!isJoinIntent()) {
+              show("هذا الرقم غير مسجّل. أنشئ عضوية بعد التوثيق من صفحة إنشاء العضوية.", false);
+              showCrossCta("join");
+              return;
+            }
+            hideCrossCta();
+            show(res.message || "تم توثيق الجوال. أكمل إنشاء العضوية.", true);
             openJoinChooser();
+            syncAuthHead();
             return;
           }
 
@@ -1999,6 +2170,14 @@
             show("فشل التحقق", false);
             throw new Error("no_token");
           }
+
+          if (isJoinIntent()) {
+            show("هذا الرقم لديه عضوية بالفعل. استخدم الدخول.", false);
+            showCrossCta("login");
+            clearRegistrationContext();
+            return;
+          }
+          hideCrossCta();
 
           try {
             localStorage.setItem("token", token);
@@ -2071,7 +2250,13 @@
             return;
           }
           if (errMsg.indexOf("غير مسجّل") !== -1 || errMsg.indexOf("not_registered") !== -1) {
-            show("لا يوجد حساب لهذا الرقم. وثّق الجوال برمز واتساب ثم اختر نوع الاستخدام.", true);
+            show(
+              isJoinIntent()
+                ? "لا يوجد حساب سابق — أكمل التوثيق ثم إنشاء العضوية من هذه الصفحة."
+                : "لا توجد عضوية لهذا الرقم. استخدم إنشاء عضوية.",
+              false
+            );
+            if (!isJoinIntent()) showCrossCta("join");
             return;
           }
           if (errMsg === "invalid_phone" || errMsg === "no_phone" || errMsg === "no_code") {
@@ -2084,7 +2269,8 @@
       }
 
       async function runLoginSendOtp() {
-        clearRegistrationContext();
+        if (!isJoinIntent()) clearRegistrationContext();
+        hideCrossCta();
         syncRegisterSubmitUi();
         normalizeInputPhone();
         var raw = document.getElementById("phone").value;
@@ -2136,17 +2322,23 @@
         btnId: "authOtpBtn",
         introId: "authFormIntro",
         isActive: function () {
-          return !registrationToken();
+          return !isRegisterMode();
         },
         introSend: function () {
-          return "";
+          return isJoinIntent()
+            ? "أدخل رقم الجوال ثم أرسل رمز واتساب لتوثيق إنشاء العضوية."
+            : "أدخل رقم الجوال ثم أرسل رمز واتساب للدخول.";
         },
         introVerify: function () {
-          return "أدخل رمز واتساب ثم اضغط دخول الأعضاء.";
+          return isJoinIntent()
+            ? "أدخل رمز واتساب ثم اضغط توثيق الجوال."
+            : "أدخل رمز واتساب ثم اضغط دخول الأعضاء.";
         },
         labels: {
           send: "إرسال الرمز",
-          verify: "دخول الأعضاء",
+          verify: function () {
+            return isJoinIntent() ? "توثيق الجوال" : "دخول الأعضاء";
+          },
         },
         phoneValid: function (v) {
           return isValid05(v);
@@ -2168,6 +2360,7 @@
         onSend: runLoginSendOtp,
         onVerify: runLoginVerify,
       });
+      if (window.loginOtpFlow && loginOtpFlow.refreshLabels) loginOtpFlow.refreshLabels();
 
       var authRegisterBtn = document.getElementById("authRegisterBtn");
       if (authRegisterBtn) {

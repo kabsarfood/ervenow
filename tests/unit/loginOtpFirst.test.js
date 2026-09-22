@@ -410,4 +410,26 @@ describe("OTP-first unified login/register", () => {
     expect(login).toMatch(/login_only:\s*true/);
     expect(login).not.toMatch(/\/admin-login.*data-join/);
   });
+
+  test("login and join are separate menu entries and pages", () => {
+    const index = readPublic("index.html");
+    expect(index).toMatch(/href="\/login"[^>]*aria-label="الدخول"/);
+    expect(index).toMatch(/href="\/join\?role=customer"/);
+    expect(index).toMatch(/aria-label="إنشاء عضوية"/);
+    expect(index).not.toMatch(
+      /href="\/login\?mode=register&amp;role=customer"[\s\S]{0,180}إنشاء عضوية/
+    );
+
+    const login = readPublic("login.html");
+    expect(login).toMatch(/function isJoinIntent/);
+    expect(login).toMatch(/if \(!isJoinIntent\(\)\)/);
+    expect(login).toMatch(/توثيق الجوال/);
+    expect(login).toMatch(/ليس لديك عضوية\؟/);
+    expect(login).toMatch(/لديك عضوية\؟/);
+    expect(login).toMatch(/هذا الرقم غير مسجّل/);
+    expect(login).toMatch(/هذا الرقم لديه عضوية بالفعل/);
+
+    const server = fs.readFileSync(SERVER_JS, "utf8");
+    expect(server).toMatch(/\["\/join", "\/join\.html"\]/);
+  });
 });
