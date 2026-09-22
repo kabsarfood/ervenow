@@ -21,7 +21,6 @@ const VIEWPORT = { width: 390, height: 844 };
 
 const PAGES = [
   { id: "home", url: "/" },
-  { id: "dashboard", url: "/dashboard" },
   { id: "restaurants", url: "/restaurants" },
   { id: "stores", url: "/stores" },
   { id: "services", url: "/services" },

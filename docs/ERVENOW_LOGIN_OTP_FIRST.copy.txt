@@ -1,0 +1,63 @@
+ERVENOW — بوابة عضوية OTP-First عبر /login
+التاريخ: 2026-09-22
+لم يُمس: /admin-login · وجهات ما بعد الدخول · دورة الطلبات · Wallet
+
+الخلاصة
+/login هي بوابة الدخول وإنشاء العضوية العامة الوحيدة.
+الاستثناء: /admin-login مستقل للإدارة ولا يظهر في خيارات التسجيل.
+القاعدة: لا إنشاء عضوية عامة قبل توثيق الجوال.
+OTP → سياق تسجيل JWT (ervenow_register / 30د) → اختيار الدور → النموذج → إنشاء الحساب.
+
+1) الملفات المعدّلة
+خادم: shared/utils/registrationContext.js · apps/core/routes.js · apps/store/routes.js · apps/driver/routes.js · server/server.js · publicSiteOtpGate.js · accountApprovalWhatsApp.js
+واجهة: login.html · register-store.html · driver-register.html · partner-portal.html · index.html · portal-shell.js · role-context.js · driver-preview.js · driver-nav.js · صفحات البوابات والمندوب
+اختبارات/نشر: tests/unit/loginOtpFirst.test.js · sync-ervenow-frontend.js · vercel.json
+مرآة: الملفات نفسها نُسخت إلى ervenow-frontend/ دون frontend:sync كامل
+
+2) رحلة التسجيل لكل Role
+موجود: /login → جوال → OTP → Role من DB → بوابته الرسمية بدون سؤال الدور
+جديد: /login → OTP → شاشة «كيف تريد استخدام ERVENOW؟» عميل/متجر/مندوب/مزود خدمة
+Customer: إنشاء من /login → /
+Merchant: اختيار متجر → /register-store بنفس السياق الموثّق بدون OTP ثانٍ
+Driver: نموذج داخل /login بعد OTP — ليس /driver-register وليس /api/driver/send-otp
+Service: اختيار مزود خدمة → service_type → التسجيل. Transport = service + نوع نقل
+
+3) ماذا أصبح /register-store
+لم يعد بوابة تسجيل مستقلة. هو الخطوة التالية بعد OTP الموثّق.
+زيارة بلا توكن → /login?mode=register&role=store
+API يرفض بلا سياق. الجوال يُؤخذ من التوكن.
+
+4) ماذا حدث لـ /driver-register
+أُلغي كواجهة. الخادم 302 /login?mode=register&role=driver قبل static + HTML احتياطي.
+/api/driver/register بقي مغلفًا بالسياق الموثّق فقط.
+
+5) هل بقي Register عام بدون OTP؟
+لا كمسار إنشاء فعّال.
+/login و/register-store و/driver-register وpartner-portal وregister-account و/api/store/register و/api/driver/register وregister_without_otp كلها تتطلب OTP أو تُرفض/تُحوَّل.
+/api/driver/send-otp موجود في الخادم ولم تُحذفه أي صفحة حية.
+
+6) Partner Portal وLegacy
+partner-portal تعريفي: store/driver/service → /login?mode=register&role=…
+روابط حية /driver-login و/service-provider-login → /login?role=driver و/login?role=service
+الـ302 القديمة بقيت للتوافق.
+/admin-login لم يُمس.
+
+7) وجهات ما بعد الدخول (لم تتغير)
+Customer → /
+Merchant → /merchant-preview
+Driver → /driver-preview
+Service → /service-preview
+Transport → /transport-preview
+
+8) الاختبارات
+وحدة loginOtpFirst + unifiedLoginEntry + adminAuthIsolation + resolvePortalRole + b2cLegacyRoutes: 36 نجحت.
+حي 127.0.0.1:4000:
+1–4 موجودون: OTP يصدر جلسة والوجهة من Role المخزّن
+5 رقم جديد: needs_registration + registration_token دون إنشاء مستخدم؛ عميل بالتوكن → /
+6 register-store خطوة بعد السياق
+7 مندوب من /login بدون مسار موازٍ
+8 أربعة أدوار؛ Transport ليس Role
+9 GET /driver-register → 302 /login?mode=register&role=driver
+10 Store/Driver/register-account بلا سياق → 403 REGISTRATION_CONTEXT_REQUIRED
+OTP واتساب الحي لحسابات حقيقية لم يُنفَّذ يدويًا هنا.
+/admin-login بقي 200 مستقلًا.

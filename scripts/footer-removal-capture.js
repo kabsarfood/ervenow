@@ -20,7 +20,7 @@ const PAGES = [
   { slug: "wallet", url: "/wallet.html", needsAuth: true },
   { slug: "orders", url: "/my-orders" },
   { slug: "login", url: "/login" },
-  { slug: "dashboard", url: "/dashboard" },
+  { slug: "home", url: "/" },
   { slug: "driver", url: "/driver", needsAuth: true },
   { slug: "store", url: "/store-dashboard", needsAuth: true, authRole: "store" },
   { slug: "provider", url: "/services-provider", needsAuth: true, authRole: "service" },

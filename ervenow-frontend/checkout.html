@@ -29,7 +29,7 @@
         <nav class="dash-site-header__nav" aria-label="التنقل الرئيسي">
           <div class="dash-site-header__links">
             <a class="dash-site-header__link" href="/" data-nav="home">الرئيسية</a>
-            <a class="dash-site-header__link" href="/dashboard" data-nav="guest">منصة ERVENOW</a>
+            <a class="dash-site-header__link" href="/" data-nav="guest">منصة ERVENOW</a>
             <a class="dash-site-header__link" href="/track" data-nav="track">تتبع الحي</a>
             <a class="dash-site-header__link dash-site-header__link--cta" href="/login?role=customer" data-nav="login">دخول</a>
           </div>
@@ -49,10 +49,10 @@
       <div class="layout checkout-layout">
         <section class="checkout-hero card card--guest">
           <h1 class="checkout-hero__title">تأكيد الطلب</h1>
-          <p class="checkout-hero__sub">عدّل طلبك، حدّد التوصيل والدفع — ثم اضغط «تأكيد الطلب» مرة واحدة.</p>
+          <p class="checkout-hero__sub">راجع مجموعات طلبك، حدّد التوصيل والدفع — ثم اضغط «تأكيد الطلب والدفع» مرة واحدة.</p>
         </section>
 
-        <section class="checkout-empty card" id="checkoutEmpty" hidden>
+        <section class="checkout-empty card" id="checkoutEmpty" hidden aria-hidden="true">
           <p class="checkout-empty__title">لا توجد عناصر حالياً في الطلب</p>
           <p class="checkout-empty__text">أضف منتجات من المتجر أو الخدمات، ثم ارجع هنا لإتمام الطلب.</p>
           <div class="checkout-empty__actions">
@@ -161,7 +161,7 @@
               </dl>
               <p class="checkout-trust">🔒 الدفع عبر بوابة ERVENOW — الطلب يُنشأ عبر مسار موحّد واحد.</p>
               <button type="button" class="checkout-btn checkout-btn--primary" id="checkoutConfirmBtn" disabled>
-                تأكيد الطلب
+                تأكيد الطلب والدفع
               </button>
             </section>
           </div>
@@ -170,18 +170,59 @@
 
       </div>
 
+    <div class="checkout-otp" id="checkoutOtpGate" hidden>
+      <div class="checkout-otp__backdrop" id="checkoutOtpBackdrop"></div>
+      <div class="checkout-otp__card" role="dialog" aria-modal="true" aria-labelledby="checkoutOtpTitle">
+        <h2 class="checkout-otp__title" id="checkoutOtpTitle">توثيق الجوال لإتمام الطلب</h2>
+        <p class="checkout-otp__sub">أدخل رقم جوالك. سنرسل رمز واتساب ثم نربط الطلب بحساب العميل أو ننشئه تلقائيًا.</p>
+        <label class="checkout-field" for="checkoutOtpPhone">
+          <span class="checkout-field__label">رقم الجوال</span>
+          <input
+            type="tel"
+            id="checkoutOtpPhone"
+            class="checkout-input"
+            dir="ltr"
+            inputmode="numeric"
+            autocomplete="tel"
+            maxlength="14"
+            placeholder="05xxxxxxxx"
+          />
+        </label>
+        <div id="checkoutOtpCodeGroup" hidden>
+          <label class="checkout-field" for="checkoutOtpCode">
+            <span class="checkout-field__label">رمز واتساب</span>
+            <input
+              type="text"
+              id="checkoutOtpCode"
+              class="checkout-input"
+              dir="ltr"
+              inputmode="numeric"
+              autocomplete="one-time-code"
+              maxlength="6"
+              placeholder="•••••"
+            />
+          </label>
+        </div>
+        <p class="checkout-otp__msg" id="checkoutOtpMsg" hidden></p>
+        <div class="checkout-otp__actions">
+          <button type="button" class="checkout-btn checkout-btn--primary" id="checkoutOtpSubmit">إرسال الرمز</button>
+          <button type="button" class="checkout-btn checkout-btn--ghost" id="checkoutOtpCancel">إلغاء</button>
+        </div>
+      </div>
+    </div>
+
     <script src="/assets/guestBrowse.js"></script>
     <script src="/assets/api-config.js"></script>
     <script src="/assets/checkout-api-timeout.js"></script>
     <script src="/assets/api.js?erv=20260612"></script>
-    <script src="/assets/order-draft-store.js"></script>
-    <script src="/assets/order-draft-vertical.js"></script>
+    <script src="/assets/order-draft-store.js?erv=20260922uc1"></script>
+    <script src="/assets/order-draft-vertical.js?erv=20260922uc1"></script>
     <script src="/assets/checkout-payment-engine.js"></script>
-    <script src="/assets/checkout-engine.js"></script>
+    <script src="/assets/checkout-engine.js?erv=20260922uc1"></script>
     <script src="/assets/checkout-draft-edit.js"></script>
-    <script src="/assets/guest-shell.js?erv=20260921dest1"></script>
+    <script src="/assets/guest-shell.js?erv=20260922uc1"></script>
     <script>
-      ErvenowGuestShell.init({ activeNav: "guest", pageTag: "تأكيد الطلب" });
+      ErvenowGuestShell.init({ activeNav: "home", pageTag: "تأكيد الطلب" });
     </script>
   </body>
 </html>

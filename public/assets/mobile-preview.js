@@ -11,7 +11,6 @@
 
   var PAGES = [
     { path: "/", label: "الرئيسية" },
-    { path: "/start-now", label: "ابدأ الآن" },
     { path: "/restaurants", label: "المطاعم" },
     { path: "/stores", label: "المتاجر" },
     { path: "/services", label: "الخدمات" },

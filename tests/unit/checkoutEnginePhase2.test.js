@@ -72,6 +72,26 @@ describe("Checkout Engine Phase 2 rules", () => {
     const html = fs.readFileSync(path.join(ROOT, "public/checkout.html"), "utf8");
     const confirmMatches = html.match(/id="checkoutConfirmBtn"/g) || [];
     expect(confirmMatches.length).toBe(1);
-    expect(html).not.toMatch(/lpCart|cart-ui|cart\.js|mini-cart|dash-header-cart/i);
+    expect(html).not.toMatch(/lpCart|cart-ui|cart\.js|mini-cart/i);
+  });
+
+  test("checkout OTP stays on /checkout and does not open membership chooser", () => {
+    const js = fs.readFileSync(path.join(ROOT, "public/assets/checkout-engine.js"), "utf8");
+    expect(js).toMatch(/checkout_customer:\s*true/);
+    expect(js).toMatch(/openCheckoutOtpGate/);
+    expect(js).not.toMatch(/mode=register/);
+    const html = fs.readFileSync(path.join(ROOT, "public/checkout.html"), "utf8");
+    expect(html).toMatch(/id="checkoutOtpGate"/);
+    expect(html).toMatch(/تأكيد الطلب والدفع/);
+  });
+
+  test("guest confirm opens OTP before ERVENOW PAY validation", () => {
+    const js = fs.readFileSync(path.join(ROOT, "public/assets/checkout-engine.js"), "utf8");
+    const start = js.indexOf("async function confirmOrder");
+    const fn = js.slice(start, js.indexOf("function bindEvents"));
+    expect(fn.indexOf("openCheckoutOtpGate")).toBeGreaterThan(-1);
+    expect(fn.indexOf("getToken()")).toBeGreaterThan(-1);
+    expect(fn.indexOf("openCheckoutOtpGate")).toBeLessThan(fn.indexOf("validateEwPay"));
+    expect(fn.indexOf("getToken()")).toBeLessThan(fn.indexOf("validateEwPay"));
   });
 });

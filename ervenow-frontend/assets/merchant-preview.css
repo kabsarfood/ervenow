@@ -288,6 +288,19 @@ body.merchant-preview-page {
   color: #3d2213;
 }
 
+.mp-complete-banner h3 {
+  margin: 0 0 6px;
+}
+.mp-complete-checks {
+  margin: 8px 0 0;
+  padding: 0 18px;
+  line-height: 1.6;
+}
+.mp-complete-banner .mp-btn[disabled] {
+  opacity: 0.55;
+  pointer-events: none;
+}
+
 .mp-card {
   background: var(--mp-surface);
   border: 1px solid var(--mp-border);

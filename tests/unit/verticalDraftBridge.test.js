@@ -30,7 +30,7 @@ describe("verticalDraftBridge", () => {
     expect(mem.getItem("ervenow:order-draft")).toBeTruthy();
   });
 
-  test("mergeItemIntoItems rejects mixed stores", () => {
+  test("mergeItemIntoItems allows mixed stores for fulfillment grouping", () => {
     const items = [{ type: "store", price: 10, data: { store_id: "a", product_id: "1", qty: 1 } }];
     const next = {
       type: "store",
@@ -38,7 +38,8 @@ describe("verticalDraftBridge", () => {
       data: { store_id: "b", product_id: "2", qty: 1 },
     };
     const merge = mergeItemIntoItems(items, next);
-    expect(merge.ok).toBe(false);
+    expect(merge.ok).toBe(true);
+    expect(merge.items).toHaveLength(2);
   });
 
   test("validateSaPhone normalizes 966 format", () => {

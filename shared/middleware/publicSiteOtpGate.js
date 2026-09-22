@@ -129,7 +129,17 @@ function isBypassPath(p) {
     return true;
   }
   const lower = path.toLowerCase();
-  if (lower === "/login" || lower === "/driver-login" || lower === "/admin-login") return true;
+  if (
+    lower === "/login" ||
+    lower === "/driver-login" ||
+    lower === "/service-provider-login" ||
+    lower === "/admin-login" ||
+    lower === "/driver-register" ||
+    lower === "/register-store" ||
+    lower === "/partner-portal"
+  ) {
+    return true;
+  }
   return false;
 }
 

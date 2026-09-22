@@ -328,7 +328,7 @@
         </div>
         <nav class="dash-site-header__nav" aria-label="التنقل الرئيسي">
           <div class="dash-site-header__links">
-            <a class="dash-site-header__link" href="/dashboard" data-nav="guest">منصة ERVENOW</a>
+            <a class="dash-site-header__link" href="/" data-nav="guest">منصة ERVENOW</a>
             <a class="dash-site-header__link" href="/restaurants" data-nav="restaurants">مطاعم</a>
             <a class="dash-site-header__link" href="/stores" data-nav="stores">متاجر</a>
             <a class="dash-site-header__link" href="/delivery-services.html" data-nav="delivery">توصيل</a>
@@ -796,8 +796,8 @@
             return false;
           }
           var phone = document.getElementById("cpPhone").value.trim();
-          if (!/^05\d{8}$/.test(phone)) {
-            alert("أدخل رقم جوال سعودي صحيح (05xxxxxxxx)");
+          if (phone && !/^05\d{8}$/.test(phone)) {
+            alert("إن أدخلت جوالًا فليكن بصيغة 05xxxxxxxx — أو اتركه فارغًا وثبّته عند تأكيد الطلب");
             return false;
           }
           return true;

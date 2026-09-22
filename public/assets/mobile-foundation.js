@@ -9,9 +9,9 @@
     { key: "home", href: "/", label: "الرئيسية", match: [/^\/$/, /^\/index\.html$/] },
     {
       key: "explore",
-      href: "/start-now",
+      href: "/#snHomeHub",
       label: "استكشاف",
-      match: [/^\/start-now/, /^\/dashboard/, /^\/browse/, /^\/restaurants/, /^\/stores/, /^\/services/, /^\/delivery/],
+      match: [/^\/browse/, /^\/restaurants/, /^\/stores/, /^\/services/, /^\/delivery/],
     },
   ];
 
@@ -116,9 +116,8 @@
 
   function activeKeyForPath(path) {
     var p = path || global.location.pathname || "/";
-    if (/^\/dashboard/.test(p)) {
-      return hasToken() ? "account" : "explore";
-    }
+    var hash = String(global.location.hash || "");
+    if ((p === "/" || p === "/index.html") && hash === "#snHomeHub") return "explore";
     for (var i = 0; i < NAV_MATCH.length; i++) {
       var item = NAV_MATCH[i];
       for (var j = 0; j < item.match.length; j++) {
@@ -579,6 +578,7 @@
     global.addEventListener("resize", apply);
     global.addEventListener("resize", onDockResize);
     global.addEventListener("orientationchange", onDockResize);
+    global.addEventListener("hashchange", setActiveNav);
     global.addEventListener("ervenow:auth-changed", function () {
       setActiveNav();
       syncCartBadge();

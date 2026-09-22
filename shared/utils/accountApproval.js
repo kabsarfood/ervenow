@@ -16,6 +16,7 @@ const PENDING_AUTH_ALLOWED_PATHS = new Set([
   "/api/core/wallet-pay-settings",
   "/api/core/checkout-payment-methods",
   "/api/core/settings",
+  "/api/store/onboarding-status",
 ]);
 
 function rawStatus(status) {

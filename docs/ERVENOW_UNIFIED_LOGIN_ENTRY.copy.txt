@@ -1,0 +1,43 @@
+توحيد بوابة الدخول العامة /login
+تاريخ: 21 سبتمبر 2026
+لم يُغيَّر: WhatsApp OTP · TTL · Session · جدول users · تصنيف الأدوار · وجهات Post-login.
+لم تُمس دورة الطلبات.
+
+1) صفحات Login الحالية
+/login — البوابة العامة
+/admin-login — مستقل (إدارة)
+/driver-login — Legacy Redirect → /login?role=driver
+/service-provider-login — Legacy Redirect → /login?role=service
+/delivery/login — Legacy Redirect → /login?role=driver
+
+2) الوظيفة المختلفة سابقًا
+/login: OTP عبر /api/core/send-otp و verify-otp
+/driver-login: OTP منفصل /api/driver/send-otp (نطاق DRIVER_LOGIN + جدول drivers) — الـAPI بقي، الصفحة لم تعد تستدعيه
+/service-provider-login: نفس OTP الأساسي مع رفض غير service
+/login?role=driver|service كان يحوّل للصفحات القديمة — عُكس
+
+3) ما نُقل إلى /login
+دخول كل الأدوار العامة من بوابة واحدة
+role في الرابط تلميح UI/تسجيل فقط
+بعد النجاح: ErvenowRoleRouting بدون سؤال عن الدور
+مستخدم جديد بعد OTP غير مسجّل → أربعة خيارات تسجيل
+المتجر → /register-store
+Transport ليس Role DB؛ يبقى service + service_type
+
+4) Legacy Redirect
+/driver-login و /service-provider-login: 302 + HTML احتياطي
+/delivery/login → /login?role=driver
+/admin-login مستقل ثم Role Routing إلى /admin-dashboard
+
+5) الاختبارات
+وحدة unifiedLoginEntry: نجحت
+/driver-login → 302 /login?role=driver
+/service-provider-login → 302 /login?role=service
+/login?role=driver → 200 صفحة الدخول الموحدة
+/admin-login → 200
+وجهات: Customer=/ · Merchant=/merchant-preview · Driver=/driver-preview · Service=/service-preview · Transport=/transport-preview · Admin=/admin-dashboard
+OTP واتساب الحي لكل دور يحتاج رمز جوال ولم يُنفَّذ هنا
+
+6) رابط Role خاطئ
+مندوب على /login?role=customer بعد OTP يُحفظ كمندوب ويُرسل إلى /driver-preview
+نفس القاعدة للتاجر ومزود الخدمة

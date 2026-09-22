@@ -12,10 +12,11 @@ const BANNER_TARGETS = [
   },
   {
     id: "visitor_dashboard",
-    label_ar: "لوحة زائر المنصة",
-    page: "/dashboard",
+    label_ar: "لوحة زائر المنصة (تُعرض في الرئيسية)",
+    page: "/",
     admin_selectable: true,
     slots: ["carousel", "card"],
+    alias_of: "home",
   },
   {
     id: "services",
@@ -202,7 +203,12 @@ function bannerHasTarget(banner, targetId) {
   const tid = normalizeTargetId(targetId);
   if (!tid || !banner) return false;
   const list = banner.banner_targets || [];
-  return list.indexOf(tid) >= 0;
+  if (list.indexOf(tid) >= 0) return true;
+  /* guest_dashboard / visitor_dashboard تُعرض على الرئيسية دون حذف بياناتها */
+  if (tid === "home") {
+    return list.indexOf("visitor_dashboard") >= 0;
+  }
+  return false;
 }
 
 function getAdminSelectableTargets() {

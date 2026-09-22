@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <script src="/assets/viewport-fit.js?erv=20260920mob7"></script>
+    <script src="/assets/viewport-fit.js?erv=20260922menu"></script>
     <meta
       name="description"
       content="ERVENOW — نربط المطاعم والمتاجر والعملاء والمناديب في نظام ذكي واحد. يتم تفعيل الحساب بعد المراجعة واعتماده من إدارة ERVENOW."
@@ -29,11 +29,11 @@
     <link rel="stylesheet" href="/assets/home-polish-final.css?erv=20260920tf1" />
     <script src="/assets/mobile-foundation.js?erv=20260921dest1" defer></script>
     <script src="/assets/mobile-orders-nav-badge.js?erv=20260612" defer></script>
-    <script src="/assets/mobile-harmony.js?erv=20260901o" defer></script>
+    <script src="/assets/mobile-harmony.js?erv=20260922menu" defer></script>
     <script src="/assets/api-config.js"></script>
     <script src="/assets/phonePrivacy.js"></script>
     <script src="/assets/api.js?erv=20260919id"></script>
-    <script src="/assets/role-routing.js?erv=20260921dest1"></script>
+    <script src="/assets/role-routing.js?erv=20260922adm2"></script>
     <script src="/assets/account-destinations.js?erv=20260921dest1" defer></script>
     <script src="/assets/platform-access.js?erv=20260921dest1" defer></script>
     <style>
@@ -2714,8 +2714,15 @@
         color: var(--brown);
         cursor: pointer;
         box-shadow: 0 4px 16px rgba(15, 40, 28, 0.08);
-        transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
+        transition: border-color 0.12s, box-shadow 0.12s;
         direction: ltr;
+      }
+
+      .lp-quick-dd__btn:hover,
+      .lp-quick-dd__btn:active {
+        transform: none;
       }
 
       .lp-quick-dd__btn:hover {
@@ -2869,7 +2876,7 @@
     <link rel="stylesheet" href="/assets/order-draft-badge.css" />
     <link rel="stylesheet" href="/assets/index-header-banner.css?erv=20260920mobrb1" />
     <link rel="stylesheet" href="/assets/guest-offers-carousel.css?erv=20260920hb1" />
-    <link rel="stylesheet" href="/assets/mobile-harmony.css?erv=20260920mob1" />
+    <link rel="stylesheet" href="/assets/mobile-harmony.css?erv=20260922menu" />
     <link rel="stylesheet" href="/assets/design-system/erv-typography-pr1-tokens.css" />
     <link rel="stylesheet" href="/assets/marketing-studio/home-marketing.css?erv=20260701m1" />
     <link rel="stylesheet" href="/assets/home-stage-expand.css?erv=20260919e" />
@@ -2919,7 +2926,7 @@
               ><span class="lp-dd-ic" aria-hidden="true">📋</span><span class="lp-dd-link__text">طلباتي</span
               ><span class="lp-dd-badge" id="ordersBadge">0</span></a
             >
-            <a role="menuitem" class="lp-dd-item" href="/dashboard" aria-label="الإعدادات"
+            <a role="menuitem" class="lp-dd-item" href="/" aria-label="الإعدادات" id="lpQuickSettingsLink"
               ><span class="lp-dd-ic" aria-hidden="true">⚙️</span><span class="lp-dd-link__text">الإعدادات</span></a
             >
             <a role="menuitem" class="lp-dd-item" href="#contact" aria-label="تواصل معنا" id="lpQuickGuestBtn"
@@ -3043,7 +3050,6 @@
         <div class="lp-nav-wrap" id="lpNavWrap">
           <nav class="lp-nav" aria-label="التنقل الرئيسي">
             <a href="/" data-nav="home">الرئيسية</a>
-            <a href="/dashboard" data-nav="guest">منصة ERVENOW</a>
             <a href="/track" data-nav="track">تتبع الحي</a>
             <a href="/login?role=customer" data-nav="login" class="lp-nav__cta">دخول</a>
           </nav>
@@ -3424,7 +3430,7 @@
               <span class="lp-home-cta-card__title-line">انضم كشريك</span>
             </h2>
             <p class="lp-home-cta-card__text">وسّع مبيعات متجرك ووصل لعملاء أكثر عبر ERVENOW.</p>
-            <a class="lp-btn-solid lp-home-cta-card__btn" href="/register-store">سجّل متجرك</a>
+            <a class="lp-btn-solid lp-home-cta-card__btn" href="/login?mode=register&amp;role=store">سجّل متجرك</a>
           </div>
         </div>
       </section>
@@ -3484,8 +3490,8 @@
 
             <nav class="erv-mp-footer-col" aria-label="انضم كشريك">
               <p class="erv-mp-footer-col__title">انضم كشريك</p>
-              <a href="/register-store">تسجيل متجر</a>
-              <a href="/driver-register">تسجيل مندوب</a>
+              <a href="/login?mode=register&amp;role=store">تسجيل متجر</a>
+              <a href="/login?mode=register&amp;role=driver">تسجيل مندوب</a>
             </nav>
 
             <nav class="erv-mp-footer-col" aria-label="السياسات والدعم">
@@ -3617,10 +3623,10 @@
       })();
     </script>
     <script src="/assets/marketing-studio/home-renderer.js?erv=20260921disc2" defer></script>
-    <script src="/assets/guest-offers-carousel.js?erv=20260920cls2" defer></script>
+    <script src="/assets/guest-offers-carousel.js?erv=20260922sn" defer></script>
     <script src="/assets/guestBrowse.js"></script>
     <script src="/assets/ervenow-toggle.js"></script>
-    <script src="/assets/guest-shell.js?erv=20260921dest1"></script>
+    <script src="/assets/guest-shell.js?erv=20260922n2"></script>
     <script src="/assets/pre-reg-banner.js?erv=20260920off1" defer></script>
     <script src="/assets/ervenow-home-title-fix.js?erv=20260920stats1" defer></script>
     <script src="/assets/home-desktop-marketplace.js?erv=20260921disc3" defer></script>
@@ -3677,9 +3683,6 @@
         }
         if (window.ErvenowOrderDraft && typeof ErvenowOrderDraft.prepareLogoutDraftState === "function") {
           ErvenowOrderDraft.prepareLogoutDraftState().finally(function () {
-            if (window.ErvenowOrderDraft && typeof ErvenowOrderDraft.clearPlatformDraftState === "function") {
-              ErvenowOrderDraft.clearPlatformDraftState();
-            }
             localStorage.removeItem("token");
             localStorage.removeItem("ervenow_access_token");
             localStorage.removeItem("erwenow_access_token");
@@ -3783,6 +3786,16 @@
           var want = String(el.getAttribute("data-nav-role") || "").toLowerCase();
           el.hidden = !(isLoggedIn && want === r);
         });
+        var settingsLink = document.getElementById("lpQuickSettingsLink");
+        if (settingsLink) {
+          if (isLoggedIn && r === "admin") {
+            settingsLink.setAttribute("href", "/admin-dashboard#panelSettings");
+            settingsLink.setAttribute("aria-label", "إعدادات لوحة الإدارة");
+          } else {
+            settingsLink.setAttribute("href", "/");
+            settingsLink.setAttribute("aria-label", "الإعدادات");
+          }
+        }
       }
 
       function clearHeaderUserMid() {
@@ -3898,20 +3911,16 @@
             var home =
               window.ErvenowAccountDest && ErvenowAccountDest.homeFor
                 ? ErvenowAccountDest.homeFor(role, serviceType)
-                : { path: "/dashboard", label: "منصة ERVENOW", short: "حسابي" };
+                : { path: "/", label: "المنصة الرئيسية", short: "حسابي" };
 
             if (role === "admin") {
-              label = home.short || "الإدارة";
               authArea.style.display = "flex";
               authArea.style.flexWrap = "wrap";
               authArea.style.gap = "8px";
               authArea.style.alignItems = "center";
               setHeaderUserMidLine(phone, role, serviceType);
               authArea.innerHTML =
-                '<button class="lp-btn-solid" type="button" onclick="goAccountHome()">' +
-                label +
-                "</button>" +
-                '<button class="lp-btn-outline" type="button" onclick="goAdminDashboard()">لوحة الإدارة</button>';
+                '<button class="lp-btn-solid" type="button" onclick="goAdminDashboard()">لوحة التحكم</button>';
             } else {
               authArea.style.display = "";
               authArea.style.flexWrap = "";

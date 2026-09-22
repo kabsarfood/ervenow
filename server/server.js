@@ -22,6 +22,7 @@ const orderRoutes = require("../apps/order/routes");
 const driverRoutes = require("../apps/driver/routes");
 const walletRoutes = require("../apps/wallet/routes");
 const adminRoutes = require("../apps/admin/routes");
+const adminAuthRoutes = require("../apps/admin/auth");
 const adminSettingsRoutes = require("../apps/admin/settings");
 const categoriesRoutes = require("../apps/categories/routes");
 const invoiceRoutes = require("../apps/invoice/routes");
@@ -283,6 +284,7 @@ app.use("/api/stores", storeRoutes);
 app.use("/api/categories", categoriesRoutes);
 app.use("/api/driver", driverRoutes);
 app.use("/api/wallet", walletRoutes);
+app.use("/api/admin/auth", adminAuthRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/admin/settings", adminSettingsRoutes);
 const commissionTestRoutes = require("../apps/test/routes");
@@ -308,6 +310,7 @@ app.get("/api/health", (_req, res) => {
       "/api/delivery",
       "/api/driver",
       "/api/wallet",
+      "/api/admin/auth",
       "/api/admin",
       "/api/food",
       "/api/market",
@@ -386,6 +389,52 @@ if (servePublicUi) {
     res.sendFile(path.join(publicPath, "index.html"));
   });
 
+  app.get(["/dashboard", "/dashboard.html"], (_req, res) => {
+    res.redirect(302, "/");
+  });
+
+  app.get(["/start-now", "/start-now.html"], (_req, res) => {
+    res.redirect(302, "/");
+  });
+
+  app.get(["/customer-preview", "/customer-preview.html"], (_req, res) => {
+    res.redirect(302, "/");
+  });
+
+  function redirectPublicLoginWithRole(role) {
+    return (req, res) => {
+      const qs = new URLSearchParams();
+      const q = req.query || {};
+      Object.keys(q).forEach((k) => {
+        const v = q[k];
+        if (Array.isArray(v)) v.forEach((x) => qs.append(k, String(x)));
+        else if (v != null && v !== "") qs.set(k, String(v));
+      });
+      qs.set("role", role);
+      const s = qs.toString();
+      res.redirect(302, "/login" + (s ? "?" + s : ""));
+    };
+  }
+
+  app.get(["/driver-login", "/driver-login.html"], redirectPublicLoginWithRole("driver"));
+  app.get(["/service-provider-login", "/service-provider-login.html"], redirectPublicLoginWithRole("service"));
+  app.get(["/driver-register", "/driver-register.html"], (req, res) => {
+    const qs = new URLSearchParams();
+    const q = req.query || {};
+    Object.keys(q).forEach((k) => {
+      const v = q[k];
+      if (Array.isArray(v)) v.forEach((x) => qs.append(k, String(x)));
+      else if (v != null && v !== "") qs.set(k, String(v));
+    });
+    qs.set("mode", "register");
+    qs.set("role", "driver");
+    res.redirect(302, "/login?" + qs.toString());
+  });
+
+  app.get(["/admin", "/admin/", "/admin/index.html"], (_req, res) => {
+    res.redirect(302, "/admin-dashboard");
+  });
+
   app.get("/delivery-services.html", (req, res) => {
     if (String(req.query.service || "").trim().toLowerCase() === "gas_delivery") {
       return res.redirect(302, "/gas-delivery.html");
@@ -406,7 +455,15 @@ if (servePublicUi) {
           return;
         }
         if (
-          /\/assets\/(viewport-fit|mobile-harmony|mobile-foundation|mobile-home-conversion|mobile-fast-discovery|guest-shell|guest-offers-carousel)([^/]*)\.(js|css)$/.test(
+          /\/assets\/(order-draft-|checkout-|guest-shell|guestBrowse|pre-cart-delivery|cart|live-store-map)([^/]*)\.(js|css)$/.test(
+            fp
+          )
+        ) {
+          res.setHeader("Cache-Control", "no-cache, must-revalidate");
+          return;
+        }
+        if (
+          /\/assets\/(viewport-fit|mobile-harmony|mobile-foundation|mobile-home-conversion|mobile-fast-discovery|guest-offers-carousel)([^/]*)\.(js|css)$/.test(
             fp
           )
         ) {
@@ -441,18 +498,6 @@ if (servePublicUi) {
 
   app.get("/driver", (_req, res) => {
     res.redirect(301, "/driver-preview");
-  });
-
-  app.get("/driver-login", (_req, res) => {
-    res.sendFile(path.join(publicPath, "driver-login.html"));
-  });
-
-  app.get("/service-provider-login", (_req, res) => {
-    res.sendFile(path.join(publicPath, "service-provider-login.html"));
-  });
-
-  app.get("/driver-register", (_req, res) => {
-    res.sendFile(path.join(publicPath, "driver-register.html"));
   });
 
   app.get(["/driver-dashboard", "/driver-dashboard.html"], (_req, res) => {
@@ -533,10 +578,6 @@ if (servePublicUi) {
     res.sendFile(path.join(publicPath, "admin-login.html"));
   });
 
-  app.get("/dashboard", (_req, res) => {
-    res.sendFile(path.join(publicPath, "dashboard.html"));
-  });
-
   app.get(["/delivery-map", "/delivery-map.html"], (_req, res) => {
     res.sendFile(path.join(publicPath, "delivery-map.html"));
   });
@@ -545,9 +586,6 @@ if (servePublicUi) {
     res.redirect(301, "/delivery-map");
   });
 
-  app.get("/start-now", (_req, res) => {
-    res.sendFile(path.join(publicPath, "start-now.html"));
-  });
 
   app.get(["/privacy-policy", "/privacy-policy.html"], (_req, res) => {
     res.sendFile(path.join(publicPath, "privacy-policy.html"));
@@ -647,9 +685,6 @@ if (servePublicUi) {
   });
   app.get(["/driver-preview", "/driver-preview.html"], (_req, res) => {
     res.sendFile(path.join(publicPath, "driver-preview.html"));
-  });
-  app.get(["/customer-preview", "/customer-preview.html"], (_req, res) => {
-    res.redirect(301, "/start-now.html");
   });
   app.get(["/service-preview", "/service-preview.html"], (_req, res) => {
     res.sendFile(path.join(publicPath, "service-preview.html"));

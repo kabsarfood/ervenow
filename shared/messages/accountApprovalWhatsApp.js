@@ -14,9 +14,9 @@ function accountApprovedBody(displayName, options) {
   const greeting = who ? `${who}\n\n` : "";
   const loginUrl =
     options && options.role === "service"
-      ? "\n\nبعد الموافقة سجّل الدخول من:\n/service-provider-login"
+      ? "\n\nبعد الموافقة سجّل الدخول من:\n/login?role=service"
       : options && options.role === "driver"
-        ? "\n\nبعد الموافقة سجّل الدخول من:\n/driver-login"
+        ? "\n\nبعد الموافقة سجّل الدخول من:\n/login?role=driver"
         : "";
   return (
     `ERVENOW\n\n` +

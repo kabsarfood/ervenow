@@ -5,6 +5,10 @@ const fs = require("fs");
 const path = require("path");
 
 const dashPath = path.join(__dirname, "..", "public", "dashboard.html");
+if (!fs.existsSync(dashPath)) {
+  console.log("skip: public/dashboard.html retired");
+  process.exit(0);
+}
 let html = fs.readFileSync(dashPath, "utf8");
 
 const linkCard =

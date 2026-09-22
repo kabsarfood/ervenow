@@ -1,0 +1,65 @@
+ERVENOW — تنفيذ إلغاء /start-now
+التاريخ: 2026-09-22
+الصفحة الرئيسية الوحيدة: /
+استكشاف: /#snHomeHub
+
+لم يُغيَّر: Login destination، الطلبات، Wallet، Tracking، Notifications، Role Routing، Unified Orders، بوابات Merchant/Driver/Service.
+
+القرار
+/start-now و /start-now.html لم تعودا واجهة مستقلة. 302 إلى /.
+/customer-preview و /customer-preview.html → 302 / مباشرة (بلا سلسلة).
+
+Redirect (قبل express.static)
+GET /start-now و GET /start-now.html → 302 /
+GET /customer-preview و GET /customer-preview.html → 302 /
+Vercel redirects بنفس المسارات، statusCode 302.
+
+الروابط التي حُوّلت
+- Bottom nav استكشاف: /start-now → /#snHomeHub
+- login CTA ابدأ الآن: /start-now.html → /
+- delivery-services ابدأ الآن: /start-now.html → /
+- cart-ui empty: /start-now.html → /
+- guest-offers default: /start-now → /
+- بنرات الحيّة: button1_url /start-now يُحوَّل عند القراءة والعرض إلى /
+- Admin hero-banners templates: /start-now → /
+- customer-preview route: 301 /start-now.html → 302 /
+- customer-preview.js internal links: /start-now.html → / أو /#snHomeHub
+- apply-guest-shell footer: /start-now.html → /
+- mobile-preview lab: أُزيل /start-now من القائمة
+
+portal-launch.json
+customer_platform_home: كان /start-now.html → أصبح "/"
+الكود الحي كان أصلاً CUSTOMER_PLATFORM_HOME = "/"
+
+الملفات المحذوفة
+- public/start-now.html
+- ervenow-frontend/start-now.html
+- public/assets/start-now-page.css
+- ervenow-frontend/assets/start-now-page.css
+
+أُبقي start-now-landing.css لأنه مستخدم في / والأقسام وlogin.
+
+السكربتات الميتة
+- #offers و #headerDashBtn و .guest-only: زالت مع start-now.html
+- data-guest-only في /: حي ولم يُمسّ
+- customer-preview.js/css/html: Legacy (المسار 302 /) مع روابط محدّثة
+
+اعتماد غير حيّ متبقٍ
+- account-destinations.js يحوّل /start-now → /
+- store-preview-mode.js قائمة منع
+- admin-readiness.json سجلات تاريخية
+- لا href="/start-now" حي في واجهة العميل
+
+الاختبارات
+Jest: 101 passed, 505 tests (startNowRetired + cutover ضمنها).
+
+حي على المنفذ 4000 بعد إعادة التشغيل:
+GET / → 200
+GET /start-now → 302 Location: /
+GET /start-now.html → 302 Location: /
+GET /customer-preview → 302 Location: / (قفزة واحدة)
+GET /customer-preview.html → 302 Location: /
+Explore href = /#snHomeHub و id=snHomeHub موجود في /
+Login customer home = /
+ابدأ الآن في login = /
+الصفحة الحية: Explore=/#snHomeHub · 8 بنرات href=/ · 0 روابط start-now

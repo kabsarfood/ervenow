@@ -19,6 +19,7 @@ const crypto = require("crypto");
 
 const OTP_SCOPE = {
   CORE_LOGIN: "core_login",
+  ADMIN_LOGIN: "admin_login",
   DRIVER_LOGIN: "driver_login",
   WALLET_WITHDRAW: "wallet_withdraw",
 };

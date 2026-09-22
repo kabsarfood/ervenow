@@ -23,6 +23,7 @@ const {
   readStateAsync: readLiveMapPublicAsync,
   writeState: writeLiveMapPublicState,
 } = require("../../shared/utils/liveMapPublicStore");
+const { loadLiveMapStoresPayload, parseLiveMapBounds } = require("../../shared/utils/liveMapStoresQuery");
 const { normalizePhone } = require("../../shared/utils/phone");
 const { findUserByPhone } = require("../../shared/utils/userPhoneLookup");
 const {
@@ -49,7 +50,14 @@ const {
   PRODUCT_CATALOG_TYPE_SET,
 } = require("../../shared/categoriesDb");
 const { recordStoreCategoryUsageOnApprove } = require("../../shared/categoryUsage");
-const { uploadToStoreBucket } = require("../../shared/utils/storeFileUpload");
+const { uploadToStoreBucket, resolveStoreImageUrl } = require("../../shared/utils/storeFileUpload");
+const { storeApprovedBody, storeNeedsInfoBody } = require("../../shared/messages/storeWhatsApp");
+const {
+  approveStorePatch,
+  rejectStorePatch,
+  needsInfoStorePatch,
+  isPublicationSchemaError,
+} = require("../../shared/utils/storePublication");
 const {
   normalizeRestaurantCategory,
   restaurantCategoryLabelAr,
@@ -126,6 +134,9 @@ const {
 const ADMIN_PUBLIC_ROOT = path.join(__dirname, "../../public");
 
 const router = express.Router();
+
+/** دخول أدمن مستقل — بدون requireAuth (قبل بقية مسارات /api/admin) */
+router.use("/auth", require("./auth"));
 
 const ADMIN_PERMISSIONS = {
   full: [
@@ -243,27 +254,84 @@ function isStoresTableMissing(err) {
 function storeMerchantPanelPaths(store) {
   const id = store && store.id ? String(store.id) : "";
   return {
-    merchant_panel_url: "/merchant-preview",
+    merchant_panel_url: "/merchant-preview#complete",
     public_store_url: id ? `/store.html?id=${encodeURIComponent(id)}` : "/stores",
   };
+}
+
+async function applyStoreLifecyclePatch(sb, id, patch) {
+  const payload = { ...patch, updated_at: new Date().toISOString() };
+  let { data, error } = await updateStoreWithOptionalActive(sb, id, payload);
+  if (error && isPublicationSchemaError(error)) {
+    const fallback = { ...payload };
+    delete fallback.publication_status;
+    delete fallback.needs_info_message;
+    delete fallback.needs_info_at;
+    ({ data, error } = await updateStoreWithOptionalActive(sb, id, fallback));
+  }
+  return { data, error };
 }
 
 async function notifyStoreApprovedWhatsApp(store) {
   try {
     if (!store?.phone) return;
-    const base = String(process.env.ERVENOW_PUBLIC_URL || process.env.ERWENOW_PUBLIC_URL || "").replace(
-      /\/$/,
-      ""
-    );
-    const panel = base ? `${base}/merchant-preview` : "/merchant-preview";
-    const extra = `\n\nصفحة التحكم الخاصة بمتجرك:\n${panel}`;
     await sendWhatsApp({
       to: store.phone,
-      message: accountApprovedBody(store.name) + extra,
+      message: storeApprovedBody(store.name, { type: store.type }),
     });
   } catch (waErr) {
     console.error("[admin/approve-store] WhatsApp:", waErr && (waErr.message || String(waErr)));
   }
+}
+
+async function notifyStoreNeedsInfoWhatsApp(store, message) {
+  try {
+    if (!store?.phone) return;
+    await sendWhatsApp({
+      to: store.phone,
+      message: storeNeedsInfoBody(store.name, message, { type: store.type }),
+    });
+  } catch (waErr) {
+    console.error("[admin/needs-info] WhatsApp:", waErr && (waErr.message || String(waErr)));
+  }
+}
+
+async function notifyStoreApprovedInApp(sb, store) {
+  const storeOwnerId = await findUserIdByPhoneSafe(sb, store && store.phone);
+  if (!storeOwnerId) return;
+  const word = String(store.type || "").toLowerCase() === "restaurant" ? "مطعمك" : "متجرك";
+  await notifyAccountLifecycle(
+    sb,
+    "store",
+    storeOwnerId,
+    "تم اعتماد المنشأة",
+    `تم اعتماد ${word} في ERVENOW. أكمل صفحة منشأتك لتظهر للعملاء.`,
+    {
+      scope: "store",
+      store_id: store.id || null,
+      status: "approved",
+      publication_status: "draft",
+      complete_url: "/merchant-preview#complete",
+    }
+  );
+}
+
+async function notifyStoreNeedsInfoInApp(sb, store, message) {
+  const storeOwnerId = await findUserIdByPhoneSafe(sb, store && store.phone);
+  if (!storeOwnerId) return;
+  await notifyAccountLifecycle(
+    sb,
+    "store",
+    storeOwnerId,
+    "مطلوب استكمال بيانات",
+    String(message || "يرجى استكمال بيانات طلب الانضمام وإعادة الإرسال."),
+    {
+      scope: "store",
+      store_id: store.id || null,
+      status: "needs_info",
+      complete_url: "/register-store",
+    }
+  );
 }
 
 async function notifyAccountApprovedWhatsApp(phone, displayName, role) {
@@ -824,6 +892,27 @@ router.post("/live-map-public", requireAuth, requireRole("admin"), async (req, r
       message: saved
         ? "تم تفعيل صفحة الخريطة الحية للزوار"
         : "تم إخفاء صفحة الخريطة الحية عن الزوار",
+    });
+  } catch (e) {
+    return fail(res, e.message || String(e), 500);
+  }
+});
+
+/** كل متجر حُفظ موقعه (lat/lng) — بما فيه قيد المراجعة — لنقاط الخريطة في لوحة الإدارة */
+router.get("/live-map/stores", requireAuth, requireRole("admin"), async (req, res) => {
+  try {
+    const sb = createServiceClient();
+    if (!sb) return fail(res, "قاعدة البيانات غير جاهزة", 503);
+    const loaded = await loadLiveMapStoresPayload(sb, {
+      listedOnly: false,
+      bounds: parseLiveMapBounds(req.query),
+      limit: 800,
+    });
+    if (loaded.error) return fail(res, loaded.error.message, 400);
+    res.set("Cache-Control", "private, max-age=10");
+    return ok(res, {
+      stores: loaded.stores,
+      map_colors: loaded.map_colors,
     });
   } catch (e) {
     return fail(res, e.message || String(e), 500);
@@ -1898,9 +1987,27 @@ router.get(
       const hubOut = await fetchMerchantHubSafe(req.supabase, id);
       if (hubOut.error) return fail(res, hubOut.error, 400);
       const store = sanitizeDriverOrStoreRowForApi(row);
+      if (store.file_url) store.file_url = await resolveStoreImageUrl(req.supabase, store.file_url);
+      if (store.license_file_url) store.license_file_url = await resolveStoreImageUrl(req.supabase, store.license_file_url);
+      if (store.logo_url) store.logo_url = await resolveStoreImageUrl(req.supabase, store.logo_url);
       const cat = store.category != null ? String(store.category) : "";
+      let products = [];
+      const prodRes = await req.supabase
+        .from("store_products")
+        .select("id,name,price,image_url,image_urls,active,description")
+        .eq("store_id", id)
+        .order("sort_order", { ascending: true })
+        .limit(40);
+      if (!prodRes.error) {
+        products = [];
+        for (const p of prodRes.data || []) {
+          const image_url = p.image_url ? await resolveStoreImageUrl(req.supabase, p.image_url) : null;
+          products.push({ ...p, image_url });
+        }
+      }
       return ok(res, {
         store,
+        products,
         merchant_hub: hubOut.hub,
         category_label_ar:
           String(store.type || "").toLowerCase() === "restaurant"
@@ -2025,16 +2132,17 @@ router.put(
 
       let finalStore = storeRow;
       if (b.approve === true && String(storeRow.status || "").toLowerCase() !== "approved") {
-        const { data: approved, error: aErr } = await updateStoreWithOptionalActive(req.supabase, id, {
-          status: "approved",
-          is_active: true,
-          updated_at: new Date().toISOString(),
-        });
+        const { data: approved, error: aErr } = await applyStoreLifecyclePatch(req.supabase, id, approveStorePatch());
         if (aErr) return fail(res, aErr.message, 400);
         finalStore = approved;
         await linkStoreOwnerAfterApprove(req.supabase, approved);
         recordStoreCategoryUsageOnApprove(approved);
         await notifyStoreApprovedWhatsApp(approved);
+        try {
+          await notifyStoreApprovedInApp(req.supabase, approved);
+        } catch (notifyErr) {
+          console.warn("[admin/store-setup/put] account notify:", notifyErr && (notifyErr.message || notifyErr));
+        }
       }
 
       const hubFinal = await fetchMerchantHubSafe(req.supabase, id);
@@ -2056,13 +2164,24 @@ router.patch("/store-requests/:id", requireAuth, requireRole("admin"), requireAd
     const id = String(req.params.id || "").trim();
     if (!id) return fail(res, "id required", 400);
     const action = String(req.body?.action || "").trim().toLowerCase();
+    if (action === "needs_info") {
+      const message = String(req.body?.message || req.body?.note || "").trim();
+      if (!message) return fail(res, "اكتب ما هو الناقص لاستكمال البيانات", 400);
+      const { data, error } = await applyStoreLifecyclePatch(req.supabase, id, needsInfoStorePatch(message));
+      if (error) return fail(res, error.message || String(error), 400);
+      try {
+        await notifyStoreNeedsInfoWhatsApp(data, message);
+        await notifyStoreNeedsInfoInApp(req.supabase, data, message);
+      } catch (notifyErr) {
+        console.warn("[admin/store-requests/:id] needs_info notify:", notifyErr && (notifyErr.message || notifyErr));
+      }
+      return ok(res, { request: sanitizeDriverOrStoreRowForApi(data), status: "needs_info" });
+    }
     const status = action === "approve" ? "approved" : action === "reject" ? "rejected" : "";
-    if (!status) return fail(res, "action must be approve or reject", 400);
+    if (!status) return fail(res, "action must be approve, reject, or needs_info", 400);
 
-    const updatePayload = { status, updated_at: new Date().toISOString() };
-    if (status === "approved") updatePayload.is_active = true;
-    if (status === "rejected") updatePayload.is_active = false;
-    const { data, error } = await updateStoreWithOptionalActive(req.supabase, id, updatePayload);
+    const updatePayload = action === "approve" ? approveStorePatch() : rejectStorePatch();
+    const { data, error } = await applyStoreLifecyclePatch(req.supabase, id, updatePayload);
     if (error) {
       return fail(res, error.message || String(error), 400);
     }
@@ -2070,18 +2189,11 @@ router.patch("/store-requests/:id", requireAuth, requireRole("admin"), requireAd
     if (status === "approved") recordStoreCategoryUsageOnApprove(data);
     if (status === "approved") await notifyStoreApprovedWhatsApp(data);
     try {
-      const storeOwnerId = await findUserIdByPhoneSafe(req.supabase, data && data.phone);
-      if (storeOwnerId) {
-        if (status === "approved") {
-          await notifyAccountLifecycle(
-            req.supabase,
-            "store",
-            storeOwnerId,
-            "تم تفعيل الحساب",
-            "تم اعتماد حسابك ويمكنك الآن استخدام خدمات المنصة.",
-            { scope: "store", store_id: data.id || null, status }
-          );
-        } else if (status === "rejected") {
+      if (status === "approved") {
+        await notifyStoreApprovedInApp(req.supabase, data);
+      } else if (status === "rejected") {
+        const storeOwnerId = await findUserIdByPhoneSafe(req.supabase, data && data.phone);
+        if (storeOwnerId) {
           await notifyAccountLifecycle(
             req.supabase,
             "store",
@@ -2108,11 +2220,7 @@ router.post("/approve-store", requireAuth, requireRole("admin"), requireAdminPer
   try {
     const id = String(req.body?.id || "").trim();
     if (!id) return fail(res, "id required", 400);
-    const { data, error } = await updateStoreWithOptionalActive(req.supabase, id, {
-      status: "approved",
-      is_active: true,
-      updated_at: new Date().toISOString(),
-    });
+    const { data, error } = await applyStoreLifecyclePatch(req.supabase, id, approveStorePatch());
     if (error) {
       return fail(res, error.message || String(error), 400);
     }
@@ -2120,17 +2228,7 @@ router.post("/approve-store", requireAuth, requireRole("admin"), requireAdminPer
     recordStoreCategoryUsageOnApprove(data);
     await notifyStoreApprovedWhatsApp(data);
     try {
-      const storeOwnerId = await findUserIdByPhoneSafe(req.supabase, data && data.phone);
-      if (storeOwnerId) {
-        await notifyAccountLifecycle(
-          req.supabase,
-          "store",
-          storeOwnerId,
-          "تم تفعيل الحساب",
-          "تم اعتماد حسابك ويمكنك الآن استخدام خدمات المنصة.",
-          { scope: "store", store_id: data.id || null, status: "approved" }
-        );
-      }
+      await notifyStoreApprovedInApp(req.supabase, data);
     } catch (notifyErr) {
       console.warn("[admin/approve-store] account notify:", notifyErr && (notifyErr.message || notifyErr));
     }
@@ -2147,11 +2245,7 @@ router.post("/reject-store", requireAuth, requireRole("admin"), requireAdminPerm
   try {
     const id = String(req.body?.id || "").trim();
     if (!id) return fail(res, "id required", 400);
-    const { data, error } = await updateStoreWithOptionalActive(req.supabase, id, {
-      status: "rejected",
-      is_active: false,
-      updated_at: new Date().toISOString(),
-    });
+    const { data, error } = await applyStoreLifecyclePatch(req.supabase, id, rejectStorePatch());
     if (error) {
       return fail(res, error.message || String(error), 400);
     }
@@ -2180,11 +2274,7 @@ router.patch("/store/:id/approve", requireAuth, requireRole("admin"), requireAdm
   try {
     const id = String(req.params.id || "").trim();
     if (!id) return fail(res, "id required", 400);
-    const { data, error } = await updateStoreWithOptionalActive(req.supabase, id, {
-      status: "approved",
-      is_active: true,
-      updated_at: new Date().toISOString(),
-    });
+    const { data, error } = await applyStoreLifecyclePatch(req.supabase, id, approveStorePatch());
     if (error) {
       return fail(res, error.message || String(error), 400);
     }
@@ -2192,17 +2282,7 @@ router.patch("/store/:id/approve", requireAuth, requireRole("admin"), requireAdm
     recordStoreCategoryUsageOnApprove(data);
     await notifyStoreApprovedWhatsApp(data);
     try {
-      const storeOwnerId = await findUserIdByPhoneSafe(req.supabase, data && data.phone);
-      if (storeOwnerId) {
-        await notifyAccountLifecycle(
-          req.supabase,
-          "store",
-          storeOwnerId,
-          "تم تفعيل الحساب",
-          "تم اعتماد حسابك ويمكنك الآن استخدام خدمات المنصة.",
-          { scope: "store", store_id: data.id || null, status: "approved" }
-        );
-      }
+      await notifyStoreApprovedInApp(req.supabase, data);
     } catch (notifyErr) {
       console.warn("[admin/store/:id/approve] account notify:", notifyErr && (notifyErr.message || notifyErr));
     }

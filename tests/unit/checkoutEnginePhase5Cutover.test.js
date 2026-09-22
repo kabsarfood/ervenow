@@ -15,6 +15,21 @@ describe("Checkout Engine Phase 5 — cutover", () => {
     expect(server).toMatch(/redirect\(302,\s*["']\/checkout["']\)/);
   });
 
+  test("GET /dashboard redirects to /", () => {
+    const server = fs.readFileSync(SERVER_JS, "utf8");
+    expect(server).toMatch(/app\.get\(\["\/dashboard",\s*"\/dashboard\.html"\]/);
+    expect(server).toMatch(/redirect\(302,\s*["']\/["']\)/);
+    expect(fs.existsSync(path.join(PUBLIC_DIR, "dashboard.html"))).toBe(false);
+  });
+
+  test("GET /start-now and /customer-preview redirect to /", () => {
+    const server = fs.readFileSync(SERVER_JS, "utf8");
+    expect(server).toMatch(/app\.get\(\["\/start-now",\s*"\/start-now\.html"\]/);
+    expect(server).toMatch(/app\.get\(\["\/customer-preview",\s*"\/customer-preview\.html"\]/);
+    expect(server).not.toMatch(/redirect\(301,\s*["']\/start-now\.html["']\)/);
+    expect(fs.existsSync(path.join(PUBLIC_DIR, "start-now.html"))).toBe(false);
+  });
+
   test("index.html uses draft badge instead of legacy mini cart", () => {
     const html = readPublic("index.html");
     expect(html).not.toMatch(/<script[^>]+cart\.js/);
@@ -33,7 +48,6 @@ describe("Checkout Engine Phase 5 — cutover", () => {
   test("customer pages no longer load cart.js for badge-only shells", () => {
     const pages = [
       "browse.html",
-      "dashboard.html",
       "track.html",
       "stores.html",
       "restaurants.html",

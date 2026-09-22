@@ -1,0 +1,57 @@
+ERVENOW — مراجعة /start-now و /start-now.html (تحليل فقط — لا تنفيذ)
+التاريخ: 2026-09-22
+
+الخلاصة
+/start-now و /start-now.html نفس الملف: 4 بطاقات أقسام + شريط ثقة. هذا محتوى أضعف من أبواب /. ليست وجهة Login (CUSTOMER_PLATFORM_HOME = "/"). data/portal-launch.json متأخر.
+
+التصنيف: Duplicate + Legacy استكشاف.
+القرار: Option C — إلغاء لاحق + Redirect 302 إلى /. لا تنفيذ الآن.
+
+1) الوظيفة
+اختيار قسم: مطاعم، متاجر، توصيل، خدمات. لا طلب، لا عروض (#offers غير موجود)، لا بنرات.
+
+2) الملفات
+public/start-now.html + server GET /start-now
+CSS: start-now-page.css (خاص) + start-now-landing.css (مشترك مع / والأقسام — لا يُحذف)
+JS: guest-shell، guestBrowse، order-draft، api. لا start-now.js تشغيلي.
+سكربت .guest-only / headerDashBtn ميت (العناصر غير موجودة).
+
+3) APIs
+لا API خاص. guest-shell فقط إن وُجد توكن (me + محفظة هيدر).
+
+4) غير موجود في /؟
+لا وظيفة إضافية. / أغنى: فروع الأبواب، بنرات، سوق، كيف تعمل، تواصل.
+
+5) تشغيلية؟
+لا.
+
+6) Login / Nav / CTA / Bottom
+Login بعد الدخول: لا.
+Bottom nav: نعم — «استكشاف» → /start-now (أقوى اعتماد).
+Login هيدر: زر ابدأ الآن → /start-now.html.
+account-destinations: يطوي /start-now إلى / إن وُجد كمسار قديم.
+
+7) روابط حية
+متوسطة: شريط الجوال، login CTA، delivery-services، افتراضي زر البنر /start-now، قوالب أدمن، 301 من /customer-preview، customer-preview.js ميت (#offers).
+index.html لا يشير إليها اليوم.
+
+8) بنرات
+لا placement لصفحة start-now. فقط CTA افتراضي في بنرات الرئيسية.
+
+9) SEO
+ضعيف: عنوان «استكشاف» ووصف عام. لا canonical ولا sitemap. مكرر أضعف من /.
+
+10) أثر الحذف
+الطلبات/الأقسام/المتاجر/الخدمات/السلة/الجلسة/Login: لا.
+Navigation: نعم بلا Redirect (استكشاف + ابدأ الآن + 301 + افتراضي البنر).
+
+مقارنة مع /
+/ = المنزل الكامل. /start-now = اختصار نفس الأبواب الأربعة.
+
+Option A مرفوض.
+Option B غير لازم (المحتوى في / مسبقاً).
+Option C مختار. الوجهة: /.
+
+قبل الإلغاء لاحقاً: شريط استكشاف → /#snHomeHub (أو قبول تطابق مع الرئيسية بعد Redirect)، أزرار ابدأ الآن، cart-ui، افتراضي البنر، customer-preview 301، portal-launch.json، الإبقاء على start-now-landing.css.
+
+حتى الموافقة: لا Redirect ولا حذف.

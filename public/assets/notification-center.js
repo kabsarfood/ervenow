@@ -146,44 +146,119 @@
     });
   }
 
+  function statusHtml(n) {
+    if (n && n.is_read) {
+      return '<span class="erv-notification-status is-read">مقروء</span>';
+    }
+    return '<span class="erv-notification-status is-new">اشعار جديد</span>';
+  }
+
+  function itemCardHtml(n, expandedId) {
+    var open = String(expandedId || "") === String(n.id);
+    var href = resolveNotificationHref(n, USER_ROLE);
+    return (
+      '<article class="erv-notification-item' +
+      (n.is_read ? " is-read" : " is-unread") +
+      (open ? " is-open" : "") +
+      '" data-id="' +
+      esc(n.id) +
+      '" role="button" tabindex="0" aria-expanded="' +
+      (open ? "true" : "false") +
+      '">' +
+      '<p class="erv-notification-item-title">' +
+      esc(n.title) +
+      "</p>" +
+      '<p class="erv-notification-item-message' +
+      (open ? " is-full" : "") +
+      '">' +
+      esc(n.message || "—") +
+      "</p>" +
+      '<p class="erv-notification-item-status-row">' +
+      statusHtml(n) +
+      "</p>" +
+      '<p class="erv-notification-item-meta">' +
+      '<span class="erv-notification-item-time">' +
+      esc(fmtTime(n.created_at)) +
+      "</span>" +
+      "</p>" +
+      (open && href
+        ? '<a class="erv-notification-item-open" data-notif-open="1" href="' +
+          esc(href) +
+          '">فتح التفاصيل</a>'
+        : "") +
+      "</article>"
+    );
+  }
+
+  function panelElId(state) {
+    return state.id + "-panel";
+  }
+
+  function removePortaledPanel(state) {
+    var el = document.getElementById(panelElId(state));
+    if (el && el.parentNode) el.parentNode.removeChild(el);
+    document.documentElement.classList.remove("erv-notif-panel-open");
+  }
+
+  function positionPanel(state) {
+    var panel = document.getElementById(panelElId(state));
+    var bell = document.getElementById(state.id + "-bell");
+    if (!panel || !bell) return;
+    var r = bell.getBoundingClientRect();
+    var vw = window.innerWidth || 360;
+    var vh = window.innerHeight || 640;
+    var gap = 8;
+    var isNarrow = vw <= 640;
+    if (isNarrow) {
+      panel.style.left = "8px";
+      panel.style.right = "8px";
+      panel.style.width = "auto";
+      var top = Math.round(r.bottom + gap);
+      var maxH = Math.max(180, vh - top - 12);
+      panel.style.top = top + "px";
+      panel.style.bottom = "auto";
+      panel.style.maxHeight = Math.min(maxH, Math.round(vh * 0.7)) + "px";
+      return;
+    }
+    var width = Math.min(380, vw - 16);
+    panel.style.width = width + "px";
+    var right = Math.round(Math.max(8, vw - r.right));
+    if (right + width > vw - 8) right = 8;
+    panel.style.right = right + "px";
+    panel.style.left = "auto";
+    var topDesk = r.bottom + gap;
+    var spaceBelow = vh - topDesk - 12;
+    if (spaceBelow < 200 && r.top > spaceBelow) {
+      panel.style.top = "auto";
+      panel.style.bottom = Math.round(vh - r.top + gap) + "px";
+      panel.style.maxHeight = Math.min(520, Math.round(r.top - 16)) + "px";
+    } else {
+      panel.style.top = Math.round(topDesk) + "px";
+      panel.style.bottom = "auto";
+      panel.style.maxHeight = Math.min(520, Math.max(180, spaceBelow)) + "px";
+    }
+  }
+
   function renderDropdown(state) {
     var unread = Number(state.unreadCount) || 0;
     var listHtml = "";
     if (!state.items.length) {
       listHtml = '<p class="erv-notification-empty">لا توجد إشعارات حالياً.</p>';
     } else {
-      listHtml = state.items
-        .slice(0, 20)
-        .map(function (n) {
-          return (
-            '<button type="button" class="erv-notification-item' +
-            (n.is_read ? "" : " is-unread") +
-            '" data-id="' +
-            esc(n.id) +
-            '">' +
-            '<p class="erv-notification-item-title">' +
-            esc(n.title) +
-            "</p>" +
-            '<p class="erv-notification-item-message">' +
-            esc(n.message) +
-            "</p>" +
-            '<p class="erv-notification-item-meta"><span>' +
-            esc(fmtTime(n.created_at)) +
-            "</span><span>" +
-            (n.is_read ? "مقروء" : "غير مقروء") +
-            "</span></p>" +
-            "</button>"
-          );
-        })
-        .join("");
+      listHtml = state.items.map(function (n) {
+        return itemCardHtml(n, state.expandedId);
+      }).join("");
     }
 
+    var expanded = state.open ? "true" : "false";
     state.root.innerHTML =
       '<div class="erv-notification-center">' +
       '<button type="button" class="erv-notification-bell" id="' +
       state.id +
       '-bell" aria-label="الإشعارات" aria-expanded="' +
-      (state.open ? "true" : "false") +
+      expanded +
+      '" aria-controls="' +
+      panelElId(state) +
       '">' +
       "🔔" +
       '<span class="erv-notification-badge" id="' +
@@ -193,27 +268,42 @@
       ">" +
       esc(fmtBadge(unread)) +
       "</span>" +
-      "</button>" +
-      (state.open
-        ? '<section class="erv-notification-panel" id="' +
-          state.id +
-          '-panel" aria-label="مركز الإشعارات">' +
-          '<div class="erv-notification-head">' +
-          '<h3 class="erv-notification-title">الإشعارات</h3>' +
-          '<button type="button" class="erv-notification-read-all" ' +
-          (unread > 0 ? "" : "disabled") +
-          ' id="' +
-          state.id +
-          '-all">تحديد الكل كمقروء</button>' +
-          "</div>" +
-          '<div class="erv-notification-list">' +
-          listHtml +
-          "</div>" +
-          '<div class="erv-notification-foot">' +
-          '<a class="erv-notification-view-all" href="/notifications">عرض كل الإشعارات</a>' +
-          "</div></section>"
-        : "") +
+      "</button></div>";
+
+    removePortaledPanel(state);
+    if (!state.open) return;
+
+    var panel = document.createElement("section");
+    panel.id = panelElId(state);
+    panel.className = "erv-notification-panel";
+    panel.setAttribute("role", "dialog");
+    panel.setAttribute("aria-label", "مركز الإشعارات");
+    panel.innerHTML =
+      '<div class="erv-notification-head">' +
+      '<h3 class="erv-notification-title">الإشعارات</h3>' +
+      '<button type="button" class="erv-notification-read-all" ' +
+      (unread > 0 ? "" : "disabled") +
+      ' id="' +
+      state.id +
+      '-all">تحديد الكل كمقروء</button>' +
+      "</div>" +
+      '<div class="erv-notification-list" id="' +
+      state.id +
+      '-list">' +
+      listHtml +
+      "</div>" +
+      '<div class="erv-notification-foot">' +
+      '<a class="erv-notification-view-all" href="/notifications">عرض كل الإشعارات</a>' +
       "</div>";
+    document.body.appendChild(panel);
+    document.documentElement.classList.add("erv-notif-panel-open");
+    positionPanel(state);
+    if (state.expandedId) {
+      var openItem = panel.querySelector('.erv-notification-item[data-id="' + state.expandedId + '"]');
+      if (openItem && typeof openItem.scrollIntoView === "function") {
+        openItem.scrollIntoView({ block: "nearest" });
+      }
+    }
   }
 
   function addOrUpdateItem(state, incoming) {
@@ -316,53 +406,107 @@
     if (foundUnread) state.unreadCount = Math.max(0, (Number(state.unreadCount) || 0) - 1);
   }
 
-  async function handleItemActivate(state, id) {
+  function paintState(state) {
+    if (state.mode === "page") renderFullPage(state);
+    else renderDropdown(state);
+  }
+
+  async function openItemInCard(state, id) {
     var item = state.items.find(function (n) {
       return String(n.id) === String(id);
     });
     if (!item) return;
+    state.expandedId = id;
+    if (state.mode !== "page") state.open = true;
     if (!item.is_read) {
       markReadLocal(state, id);
+      paintState(state);
       await markReadRemote(id);
+      return;
     }
-    var href = resolveNotificationHref(item, USER_ROLE);
-    if (href) global.location.href = href;
+    paintState(state);
+  }
+
+  async function handleItemActivate(state, id) {
+    await openItemInCard(state, id);
+  }
+
+  function eventInsideNotifUi(state, target) {
+    if (!target) return false;
+    if (state.root && state.root.contains(target)) return true;
+    var panel = document.getElementById(panelElId(state));
+    return !!(panel && panel.contains(target));
   }
 
   function wireDropdownEvents(state) {
-    state.root.addEventListener("click", async function (ev) {
-      var bell = ev.target.closest("#" + state.id + "-bell");
-      if (bell) {
-        state.open = !state.open;
-        renderDropdown(state);
-        return;
-      }
-      var markAll = ev.target.closest("#" + state.id + "-all");
-      if (markAll) {
-        markAll.disabled = true;
-        await markAllReadRemote();
-        state.items = state.items.map(function (n) {
-          return Object.assign({}, n, { is_read: true, read_at: n.read_at || new Date().toISOString() });
-        });
-        state.unreadCount = 0;
-        renderDropdown(state);
-        return;
-      }
-      var item = ev.target.closest(".erv-notification-item[data-id]");
-      if (!item) return;
-      ev.preventDefault();
-      var id = item.getAttribute("data-id");
-      state.open = false;
-      renderDropdown(state);
-      await handleItemActivate(state, id);
-    });
+    if (state.wired) return;
+    state.wired = true;
 
     document.addEventListener("click", function (ev) {
+      var target = ev.target;
+      if (!target || !target.closest) return;
+      var openLink = target.closest("[data-notif-open]");
+      if (openLink && eventInsideNotifUi(state, openLink)) return;
+
+      var bell = target.closest("#" + state.id + "-bell");
+      if (bell) {
+        ev.preventDefault();
+        ev.stopPropagation();
+        state.open = !state.open;
+        if (!state.open) state.expandedId = null;
+        renderDropdown(state);
+        return;
+      }
+
+      var markAll = target.closest("#" + state.id + "-all");
+      if (markAll) {
+        ev.preventDefault();
+        ev.stopPropagation();
+        markAll.disabled = true;
+        markAllReadRemote().then(function () {
+          state.items = state.items.map(function (n) {
+            return Object.assign({}, n, { is_read: true, read_at: n.read_at || new Date().toISOString() });
+          });
+          state.unreadCount = 0;
+          renderDropdown(state);
+        });
+        return;
+      }
+
+      var item = target.closest(".erv-notification-item[data-id]");
+      if (item && eventInsideNotifUi(state, item)) {
+        ev.preventDefault();
+        ev.stopPropagation();
+        openItemInCard(state, item.getAttribute("data-id"));
+        return;
+      }
+
       if (!state.open) return;
-      if (state.root.contains(ev.target)) return;
+      if (eventInsideNotifUi(state, target)) return;
       state.open = false;
+      state.expandedId = null;
       renderDropdown(state);
     });
+
+    document.addEventListener("keydown", function (ev) {
+      if (ev.key === "Escape" && state.open) {
+        state.open = false;
+        state.expandedId = null;
+        renderDropdown(state);
+        return;
+      }
+      if (ev.key !== "Enter" && ev.key !== " ") return;
+      var item = ev.target && ev.target.closest && ev.target.closest(".erv-notification-item[data-id]");
+      if (!item || !eventInsideNotifUi(state, item)) return;
+      ev.preventDefault();
+      openItemInCard(state, item.getAttribute("data-id"));
+    });
+
+    function onViewportChange() {
+      if (state.open) positionPanel(state);
+    }
+    window.addEventListener("resize", onViewportChange);
+    window.addEventListener("scroll", onViewportChange, true);
   }
 
   async function setupSocket(state) {
@@ -441,25 +585,36 @@
                       : "نظام";
             tag = '<span class="erv-notif-page-tag">' + esc(catLabel) + "</span>";
           }
+          var open = String(state.expandedId || "") === String(n.id);
+          var href = resolveNotificationHref(n, USER_ROLE);
           return (
-            '<button type="button" class="erv-notif-page-item' +
-            (n.is_read ? "" : " is-unread") +
+            '<article class="erv-notif-page-item' +
+            (n.is_read ? " is-read" : " is-unread") +
+            (open ? " is-open" : "") +
             '" data-id="' +
             esc(n.id) +
-            '">' +
+            '" role="button" tabindex="0">' +
             '<div class="erv-notif-page-item-head">' +
             tag +
-            '<strong>' +
+            "<strong>" +
             esc(n.title) +
             "</strong></div>" +
-            '<p class="erv-notif-page-item-msg">' +
+            '<p class="erv-notif-page-item-msg' +
+            (open ? " is-full" : "") +
+            '">' +
             esc(n.message) +
             "</p>" +
             '<p class="erv-notif-page-item-meta">' +
             esc(fmtTime(n.created_at)) +
             " · " +
-            (n.is_read ? "مقروء" : "غير مقروء") +
-            "</p></button>"
+            (n.is_read ? "مقروء" : "اشعار جديد") +
+            "</p>" +
+            (open && href
+              ? '<a class="erv-notification-item-open" data-notif-open="1" href="' +
+                esc(href) +
+                '">فتح التفاصيل</a>'
+              : "") +
+            "</article>"
           );
         })
         .join("");
@@ -554,8 +709,8 @@
       }
       var item = ev.target.closest(".erv-notif-page-item[data-id]");
       if (!item) return;
+      if (ev.target.closest("[data-notif-open]")) return;
       await handleItemActivate(state, item.getAttribute("data-id"));
-      renderFullPage(state);
     });
   }
 
@@ -575,6 +730,7 @@
       items: [],
       unreadCount: 0,
       open: false,
+      expandedId: null,
       socket: null,
       mode: "dropdown",
       pageFilter: "all",
@@ -611,6 +767,7 @@
       items: [],
       unreadCount: 0,
       open: false,
+      expandedId: null,
       socket: null,
       mode: "page",
       pageFilter: "all",

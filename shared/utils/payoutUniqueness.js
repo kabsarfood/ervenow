@@ -103,13 +103,28 @@ async function resolveStorePhoneForRegister(sb, phoneDigits) {
     .from("stores")
     .select("id, status, phone")
     .in("phone", keys)
-    .in("status", ["pending", "approved"])
+    .in("status", ["pending", "needs_info", "approved"])
     .limit(20);
-  if (error) throw new Error(error.message);
+  if (error) {
+    if (/needs_info/i.test(String(error.message || ""))) {
+      const retry = await sb.from("stores").select("id, status, phone").in("phone", keys).in("status", ["pending", "approved"]).limit(20);
+      if (retry.error) throw new Error(retry.error.message);
+      const hits0 = (retry.data || []).filter((r) => phonesEquivalent(r.phone, p));
+      return {
+        approved: hits0.find((r) => String(r.status || "").toLowerCase() === "approved") || null,
+        pending: hits0.find((r) => String(r.status || "").toLowerCase() === "pending") || null,
+      };
+    }
+    throw new Error(error.message);
+  }
 
   const hits = (data || []).filter((r) => phonesEquivalent(r.phone, p));
   const approved = hits.find((r) => String(r.status || "").toLowerCase() === "approved") || null;
-  const pending = hits.find((r) => String(r.status || "").toLowerCase() === "pending") || null;
+  const pending =
+    hits.find((r) => {
+      const st = String(r.status || "").toLowerCase();
+      return st === "pending" || st === "needs_info";
+    }) || null;
   return { approved, pending };
 }
 

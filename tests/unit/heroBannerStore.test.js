@@ -45,16 +45,35 @@ describe("heroBannerStore", function () {
       id: "a",
       title: "  عنوان  ",
       description: "وصف",
-      button1_url: "start-now",
+      button1_url: "restaurants",
       sort_order: "3",
       is_active: true,
       banner_targets: ["visitor_dashboard"],
     });
     expect(row.title).toBe("عنوان");
-    expect(row.button1_url).toBe("/start-now");
+    expect(row.button1_url).toBe("/restaurants");
     expect(row.sort_order).toBe(3);
     expect(row.banner_targets).toEqual(["visitor_dashboard"]);
     expect(row.placement).toBe("guest_dashboard");
+  });
+
+  test("normalizeBannerRow retargets retired customer homes to /", function () {
+    const a = normalizeBannerRow({
+      id: "sn",
+      title: "T",
+      button1_url: "/start-now",
+      is_active: true,
+      banner_targets: ["home"],
+    });
+    const b = normalizeBannerRow({
+      id: "sn2",
+      title: "T",
+      button1_url: "start-now.html",
+      is_active: true,
+      banner_targets: ["home"],
+    });
+    expect(a.button1_url).toBe("/");
+    expect(b.button1_url).toBe("/");
   });
 
   test("normalizePlacement maps legacy kind and accepts placement ids", function () {
@@ -158,7 +177,41 @@ describe("heroBannerStore", function () {
     })).toEqual(["2"]);
     expect(grouped.home_hero.map(function (b) {
       return b.id;
-    })).toEqual(["3"]);
+    })).toEqual(["2", "3"]);
+  });
+
+  test("home target includes visitor_dashboard banners as alias", async function () {
+    const rows = [
+      {
+        id: "home-1",
+        title: "Home",
+        banner_targets: ["home"],
+        display_mode: "carousel",
+        status: "active",
+        is_active: true,
+        sort_order: 0,
+        priority: 1,
+      },
+      {
+        id: "dash-1",
+        title: "Legacy visitor",
+        banner_targets: ["visitor_dashboard"],
+        placement: "guest_dashboard",
+        display_mode: "carousel",
+        status: "active",
+        is_active: true,
+        sort_order: 1,
+        priority: 2,
+      },
+    ];
+    const home = await getPublishedBannersForTarget(mockSb(rows), "home");
+    expect(home.map(function (b) {
+      return b.id;
+    })).toEqual(["home-1", "dash-1"]);
+    const visitor = await getPublishedBannersForTarget(mockSb(rows), "visitor_dashboard");
+    expect(visitor.map(function (b) {
+      return b.id;
+    })).toEqual(["dash-1"]);
   });
 
   test("getPublishedBannersForTarget filters by target and publishability", async function () {
@@ -196,7 +249,7 @@ describe("heroBannerStore", function () {
       return o.id;
     })).toEqual(["home", "visitor_dashboard", "services", "stores", "restaurants", "delivery"]);
     expect(opts[0].label_ar).toBe("الرئيسية");
-    expect(opts[1].label_ar).toBe("لوحة زائر المنصة");
+    expect(opts[1].label_ar).toBe("لوحة زائر المنصة (تُعرض في الرئيسية)");
     expect(opts.some(function (o) {
       return o.id === "pharmacy_dashboard";
     })).toBe(false);

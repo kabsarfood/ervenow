@@ -72,6 +72,35 @@
     });
   }
 
+  function isTransportDraft(items) {
+    return (items || []).some(function (it) {
+      var t = String((it && it.type) || "").toLowerCase();
+      var wf = String((it && it.workflow) || "").toLowerCase();
+      return (
+        wf === "transport" ||
+        t === "car_transport" ||
+        t === "vehicle_transfer" ||
+        t === "pickup_truck" ||
+        t === "furniture_move"
+      );
+    });
+  }
+
+  function transportExecutionSummary(items) {
+    var it = (items || []).find(function (row) {
+      var t = String((row && row.type) || "").toLowerCase();
+      var wf = String((row && row.workflow) || "").toLowerCase();
+      return wf === "transport" || t === "car_transport" || t === "vehicle_transfer" || t === "pickup_truck";
+    });
+    var data = (it && it.data) || {};
+    var label =
+      String((it && it.type) || "").toLowerCase() === "pickup_truck" ? "خدمة سطحة" : "نقل مركبات";
+    if (Number.isFinite(Number(data.pickup_lat)) && Number.isFinite(Number(data.drop_lat))) {
+      return label + " — موقع الاستلام والتسليم محفوظ";
+    }
+    return label + " — أكمل موقع التنفيذ من صفحة الخدمة";
+  }
+
   function getFulfillmentMode(items) {
     for (var i = 0; i < (items || []).length; i += 1) {
       var d = items[i] && items[i].data;
@@ -550,26 +579,37 @@
     return global.ErvenowOrderDraft;
   }
 
+  function setCheckoutEmptyVisible(on) {
+    var empty = document.getElementById("checkoutEmpty");
+    if (!empty) return;
+    empty.hidden = !on;
+    if (on) {
+      empty.removeAttribute("aria-hidden");
+      empty.removeAttribute("inert");
+    } else {
+      empty.setAttribute("aria-hidden", "true");
+      empty.setAttribute("inert", "");
+    }
+  }
+
   function renderEmpty() {
     var root = document.getElementById("checkoutMain");
-    var empty = document.getElementById("checkoutEmpty");
     var confirmBtn = document.getElementById("checkoutConfirmBtn");
     if (root) {
       root.hidden = true;
       root.classList.remove("checkout-panel--active", "checkout-panel--compact");
     }
-    if (empty) empty.hidden = false;
+    setCheckoutEmptyVisible(true);
     if (confirmBtn) confirmBtn.disabled = true;
   }
 
   function renderActive(draft) {
     var root = document.getElementById("checkoutMain");
-    var empty = document.getElementById("checkoutEmpty");
     if (root) {
       root.hidden = false;
       root.classList.add("checkout-panel--active");
     }
-    if (empty) empty.hidden = true;
+    setCheckoutEmptyVisible(false);
 
     var items = draft.items || [];
     if (root) {
@@ -582,45 +622,69 @@
 
     var linesEl = document.getElementById("checkoutLines");
     var editApi = global.ErvenowCheckoutDraftEdit;
+    var groupFn =
+      (global.ErvenowUnifiedCart && global.ErvenowUnifiedCart.groupFulfillmentItems) ||
+      (global.ErvenowOrderDraftVertical && global.ErvenowOrderDraftVertical.groupFulfillmentItems);
+    var groups = typeof groupFn === "function" ? groupFn(items) : [{ heading_ar: "تفاصيل الطلب", items: items }];
     if (linesEl) {
-      linesEl.innerHTML = items
-        .map(function (it, idx) {
-          var display = resolveLineDisplay(it, idx);
-          var qty = (it.data && it.data.qty) || 1;
-          var editable = editApi && editApi.isProductLine && editApi.isProductLine(it);
-          var qtyBlock = editable
-            ? '<div class="checkout-line__qty" role="group" aria-label="الكمية">' +
-              '<button type="button" class="checkout-qty-btn" data-checkout-action="qty-minus" aria-label="إنقاص">−</button>' +
-              '<span class="checkout-qty-val">' +
-              qty +
-              "</span>" +
-              '<button type="button" class="checkout-qty-btn" data-checkout-action="qty-plus" aria-label="زيادة">+</button>' +
-              "</div>"
-            : '<span class="checkout-line__qty-readonly">' + (qty > 1 ? "× " + qty : "") + "</span>";
-          var storeBlock =
-            display.storeName && display.kind === "product"
-              ? '<span class="checkout-line__store">' + escHtml(display.storeName) + "</span>"
-              : "";
+      linesEl.innerHTML = groups
+        .map(function (g) {
+          var heading = escHtml(g.heading_ar || "مجموعة");
+          var rows = (g.items || [])
+            .map(function (it) {
+              var idx = it.draft_index != null ? it.draft_index : items.indexOf(it);
+              var display = resolveLineDisplay(it, idx);
+              var qty = (it.data && it.data.qty) || it.qty || 1;
+              var editable = editApi && editApi.isProductLine && editApi.isProductLine(it);
+              var qtyBlock = editable
+                ? '<div class="checkout-line__qty" role="group" aria-label="الكمية">' +
+                  '<button type="button" class="checkout-qty-btn" data-checkout-action="qty-minus" aria-label="إنقاص">−</button>' +
+                  '<span class="checkout-qty-val">' +
+                  qty +
+                  "</span>" +
+                  '<button type="button" class="checkout-qty-btn" data-checkout-action="qty-plus" aria-label="زيادة">+</button>' +
+                  "</div>"
+                : '<span class="checkout-line__qty-readonly">' + (qty > 1 ? "× " + qty : "") + "</span>";
+              var storeBlock =
+                display.storeName && display.kind === "product"
+                  ? '<span class="checkout-line__store">' + escHtml(display.storeName) + "</span>"
+                  : "";
+              var note = it.notes || (it.data && (it.data.order_notes || it.data.notes)) || "";
+              var noteBlock = note
+                ? '<span class="checkout-line__note">' + escHtml(String(note).slice(0, 120)) + "</span>"
+                : "";
+              return (
+                '<li class="checkout-line" data-line-index="' +
+                idx +
+                '">' +
+                '<div class="checkout-line__main">' +
+                '<span class="checkout-line__title">' +
+                escHtml(display.productName) +
+                "</span>" +
+                storeBlock +
+                noteBlock +
+                qtyBlock +
+                "</div>" +
+                '<div class="checkout-line__tail">' +
+                '<span class="checkout-line__price">' +
+                fmtMoney(it.price || 0) +
+                " ر.س</span>" +
+                '<button type="button" class="checkout-line__remove" data-checkout-action="remove" aria-label="حذف ' +
+                escHtml(display.productName) +
+                '">حذف</button>' +
+                "</div>" +
+                "</li>"
+              );
+            })
+            .join("");
           return (
-            '<li class="checkout-line" data-line-index="' +
-            idx +
-            '">' +
-            '<div class="checkout-line__main">' +
-            '<span class="checkout-line__title">' +
-            escHtml(display.productName) +
-            "</span>" +
-            storeBlock +
-            qtyBlock +
-            "</div>" +
-            '<div class="checkout-line__tail">' +
-            '<span class="checkout-line__price">' +
-            fmtMoney(it.price || 0) +
-            " ر.س</span>" +
-            '<button type="button" class="checkout-line__remove" data-checkout-action="remove" aria-label="حذف ' +
-            escHtml(display.productName) +
-            '">حذف</button>' +
-            "</div>" +
-            "</li>"
+            '<li class="checkout-group">' +
+            '<h3 class="checkout-group__title">' +
+            heading +
+            "</h3>" +
+            '<ul class="checkout-group__lines">' +
+            rows +
+            "</ul></li>"
           );
         })
         .join("");
@@ -651,6 +715,8 @@
         } else {
           delEl.textContent = "توصيل داخلي — أكمل موقع الاستلام والتسليم من صفحة التوصيل";
         }
+      } else if (isTransportDraft(items)) {
+        delEl.textContent = transportExecutionSummary(items);
       } else if (!hasStoreProducts(items)) {
         delEl.textContent = "لا يتطلب توصيل متجر";
       } else if (mode === "pickup") {
@@ -695,7 +761,7 @@
       } else if (breakdown.deliveryPending) {
         confirmBtn.textContent = "أكمل موقع التوصيل أولاً";
       } else {
-        confirmBtn.textContent = "تأكيد الطلب — " + fmtMoney(breakdown.grandTotal) + " ر.س";
+        confirmBtn.textContent = "تأكيد الطلب والدفع — " + fmtMoney(breakdown.grandTotal) + " ر.س";
       }
     }
 
@@ -762,6 +828,187 @@
     return api ? api.readDraft() : draft;
   }
 
+  function checkoutOtpNormalizePhone(raw) {
+    var d = String(raw || "").replace(/\D/g, "");
+    if (/^05\d{8}$/.test(d)) return d;
+    if (/^9665\d{8}$/.test(d)) return "0" + d.slice(3);
+    if (/^5\d{8}$/.test(d)) return "0" + d;
+    return "";
+  }
+
+  function setCheckoutOtpMsg(text, kind) {
+    var el = document.getElementById("checkoutOtpMsg");
+    if (!el) return;
+    el.hidden = !text;
+    el.textContent = text || "";
+    el.className = "checkout-otp__msg" + (kind ? " checkout-otp__msg--" + kind : "");
+  }
+
+  function closeCheckoutOtpGate() {
+    var gate = document.getElementById("checkoutOtpGate");
+    if (gate) gate.hidden = true;
+    document.body.classList.remove("checkout-otp-open");
+  }
+
+  function openCheckoutOtpGate() {
+    var gate = document.getElementById("checkoutOtpGate");
+    if (!gate) {
+      showToast("وثّق رقم الجوال لإتمام الطلب", "error");
+      return;
+    }
+    gate.hidden = false;
+    document.body.classList.add("checkout-otp-open");
+    var phoneEl = document.getElementById("checkoutOtpPhone");
+    if (phoneEl) {
+      try {
+        phoneEl.focus();
+      } catch (_e) {}
+    }
+    setCheckoutOtpMsg("", "");
+  }
+
+  var checkoutOtpSent = false;
+
+  async function submitCheckoutOtp() {
+    var phoneEl = document.getElementById("checkoutOtpPhone");
+    var codeEl = document.getElementById("checkoutOtpCode");
+    var codeGroup = document.getElementById("checkoutOtpCodeGroup");
+    var btn = document.getElementById("checkoutOtpSubmit");
+    var phone = checkoutOtpNormalizePhone(phoneEl && phoneEl.value);
+    if (!phone) {
+      setCheckoutOtpMsg("أدخل رقم جوال سعودي صحيح (05xxxxxxxx)", "error");
+      return;
+    }
+    if (!global.PlatformAPI || typeof global.PlatformAPI.api !== "function") {
+      setCheckoutOtpMsg("تعذّر الاتصال بالخادم", "error");
+      return;
+    }
+    if (!checkoutOtpSent) {
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = "جارٍ الإرسال…";
+      }
+      try {
+        await global.PlatformAPI.api("/api/core/send-otp", {
+          method: "POST",
+          body: { phone: phone, role: "customer" },
+        });
+        checkoutOtpSent = true;
+        if (codeGroup) codeGroup.hidden = false;
+        if (codeEl) {
+          codeEl.value = "";
+          try {
+            codeEl.focus();
+          } catch (_e2) {}
+        }
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = "توثيق الجوال";
+        }
+        setCheckoutOtpMsg("تم إرسال الرمز عبر واتساب", "ok");
+      } catch (e) {
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = "إرسال الرمز";
+        }
+        setCheckoutOtpMsg(String((e && e.message) || "تعذر إرسال الرمز"), "error");
+      }
+      return;
+    }
+    var code = String((codeEl && codeEl.value) || "").trim();
+    if (!code) {
+      setCheckoutOtpMsg("أدخل رمز واتساب", "error");
+      return;
+    }
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = "جارٍ التحقق…";
+    }
+    try {
+      var data = await global.PlatformAPI.api("/api/core/verify-otp", {
+        method: "POST",
+        body: {
+          phone: phone,
+          code: code,
+          role: "customer",
+          checkout_customer: true,
+        },
+      });
+      if (data && data.needs_registration) {
+        setCheckoutOtpMsg("تعذر إنشاء حساب العميل — أعد المحاولة", "error");
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = "توثيق الجوال";
+        }
+        return;
+      }
+      if (!data || !data.token) {
+        setCheckoutOtpMsg((data && data.message) || "تعذر توثيق الجوال", "error");
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = "توثيق الجوال";
+        }
+        return;
+      }
+      if (typeof global.PlatformAPI.setToken === "function") {
+        global.PlatformAPI.setToken(data.token);
+      }
+      try {
+        if (data.user && data.user.id) localStorage.setItem("userId", String(data.user.id));
+      } catch (_e3) {}
+      closeCheckoutOtpGate();
+      checkoutOtpSent = false;
+      showToast("تم توثيق الجوال — جاري تأكيد الطلب", "success");
+      void confirmOrder();
+    } catch (e2) {
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = "توثيق الجوال";
+      }
+      setCheckoutOtpMsg(String((e2 && e2.message) || "رمز غير صحيح"), "error");
+    }
+  }
+
+  function bindCheckoutOtp() {
+    var submit = document.getElementById("checkoutOtpSubmit");
+    var cancel = document.getElementById("checkoutOtpCancel");
+    var phoneEl = document.getElementById("checkoutOtpPhone");
+    var codeEl = document.getElementById("checkoutOtpCode");
+    if (submit && !submit.__ervBound) {
+      submit.__ervBound = true;
+      submit.addEventListener("click", function () {
+        void submitCheckoutOtp();
+      });
+    }
+    if (cancel && !cancel.__ervBound) {
+      cancel.__ervBound = true;
+      cancel.addEventListener("click", function () {
+        closeCheckoutOtpGate();
+        checkoutOtpSent = false;
+      });
+    }
+    if (phoneEl && !phoneEl.__ervBound) {
+      phoneEl.__ervBound = true;
+      phoneEl.addEventListener("input", function () {
+        if (checkoutOtpSent) {
+          checkoutOtpSent = false;
+          var codeGroup = document.getElementById("checkoutOtpCodeGroup");
+          if (codeGroup) codeGroup.hidden = true;
+          if (submit) submit.textContent = "إرسال الرمز";
+        }
+      });
+    }
+    if (codeEl && !codeEl.__ervBound) {
+      codeEl.__ervBound = true;
+      codeEl.addEventListener("keydown", function (e) {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          void submitCheckoutOtp();
+        }
+      });
+    }
+  }
+
   async function confirmOrder() {
     if (checkoutInFlight) return;
 
@@ -781,6 +1028,17 @@
     if (!draft.items || !draft.items.length) {
       resetCheckoutBtnIdle(btn);
       showToast("لا توجد تفاصيل في الطلب", "error");
+      return;
+    }
+
+    var token =
+      (global.PlatformAPI && typeof global.PlatformAPI.getToken === "function" && global.PlatformAPI.getToken()) ||
+      "";
+    if (!token) {
+      checkoutInFlight = false;
+      setCheckoutBtnState(btn, "idle");
+      refresh();
+      openCheckoutOtpGate();
       return;
     }
 
@@ -808,15 +1066,6 @@
         if (typeof pay.loadEwPayBalance === "function") void pay.loadEwPayBalance();
         return;
       }
-    }
-
-    var token =
-      (global.PlatformAPI && typeof global.PlatformAPI.getToken === "function" && global.PlatformAPI.getToken()) ||
-      "";
-    if (!token) {
-      checkoutInFlight = false;
-      global.location.href = "/login?mode=register&role=customer&next=" + encodeURIComponent("/checkout");
-      return;
     }
     if (!global.PlatformAPI || typeof global.PlatformAPI.api !== "function") {
       resetCheckoutBtnIdle(btn);
@@ -860,7 +1109,7 @@
       if (/401|غير مصرح|token/i.test(msg)) {
         clearCheckoutIdempotencyKey();
         checkoutInFlight = false;
-        global.location.href = "/login?mode=register&role=customer&next=" + encodeURIComponent("/checkout");
+        openCheckoutOtpGate();
         return;
       }
       if (/SERVICE_NOT_LAUNCHED|لم تُطلق|التسجيل مفتوح/i.test(msg)) {
@@ -894,6 +1143,7 @@
         refresh();
       });
     }
+    bindCheckoutOtp();
   }
 
   function restorePendingMapDraft() {

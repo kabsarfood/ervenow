@@ -170,6 +170,16 @@ function isMapDeliveryCartItem(item) {
 }
 
 function addToCart(item) {
+  if (
+    typeof window !== "undefined" &&
+    window.ErvenowOrderDraftVertical &&
+    typeof window.ErvenowOrderDraftVertical.commit === "function"
+  ) {
+    return window.ErvenowOrderDraftVertical.commit(item, {
+      redirect: false,
+      sourcePage: window.location && window.location.pathname,
+    });
+  }
   const cart = getCart();
   if (isMapDeliveryCartItem(item)) {
     for (var mi = cart.length - 1; mi >= 0; mi -= 1) {
@@ -177,13 +187,6 @@ function addToCart(item) {
     }
   }
   var newSid = item && item.data && item.data.store_id ? String(item.data.store_id).trim() : "";
-  if (newSid) {
-    var existingIds = getCartStoreIds();
-    if (existingIds.size > 0 && !existingIds.has(newSid)) {
-      alert("لا يمكن خلط منتجات من متجرين مختلفين. أفرغ السلة أو أتمّم الطلب أولاً.");
-      return { ok: false, message: "لا يمكن خلط منتجات من متجرين مختلفين" };
-    }
-  }
 
   var pid = item && item.data && item.data.product_id;
   if (newSid && pid != null && pid !== "") {
@@ -2382,7 +2385,7 @@ async function runExecuteCartCheckout() {
     "";
 
   if (!token || !String(token).trim()) {
-    window.location.href = "/login?mode=register&role=customer&next=" + encodeURIComponent("/checkout");
+    window.location.href = "/checkout";
     return;
   }
 
@@ -2497,7 +2500,7 @@ async function runExecuteCartCheckout() {
       return;
     }
     if (/401|غير مصرح|token/i.test(msg)) {
-      window.location.href = "/login?mode=register&role=customer&next=" + encodeURIComponent("/checkout");
+      window.location.href = "/checkout";
       return;
     }
     if (/SERVICE_NOT_LAUNCHED|لم تُطلق|التسجيل مفتوح/i.test(msg)) {

@@ -55,7 +55,7 @@
       '<span class="drv-tool-balance__val" id="drvHeaderBalanceAmount">—</span>' +
       '<span class="drv-tool-balance__cur">ر.س</span></a>' +
       "</div>" +
-      '<a class="dash-site-header__btn dash-site-header__btn--primary" href="/driver-login" id="driverLogout">خروج</a>' +
+      '<a class="dash-site-header__btn dash-site-header__btn--primary" href="/login?role=driver" id="driverLogout">خروج</a>' +
       "</div></header>"
     );
   }
@@ -64,13 +64,13 @@
     if (!document.querySelector('link[data-erv-notification-center-css="1"]')) {
       var l = document.createElement("link");
       l.rel = "stylesheet";
-      l.href = "/assets/notification-center.css";
+      l.href = "/assets/notification-center.css?erv=20260922n1";
       l.setAttribute("data-erv-notification-center-css", "1");
       document.head.appendChild(l);
     }
     if (!document.querySelector('script[data-erv-notification-center-js="1"]')) {
       var s = document.createElement("script");
-      s.src = "/assets/notification-center.js";
+      s.src = "/assets/notification-center.js?erv=20260922n1";
       s.defer = true;
       s.setAttribute("data-erv-notification-center-js", "1");
       document.head.appendChild(s);
@@ -141,10 +141,10 @@
     if (!btn || btn.getAttribute("data-wired")) return;
     btn.setAttribute("data-wired", "1");
     btn.addEventListener("click", function (e) {
-      if (btn.getAttribute("href") !== "/driver-login") return;
+      if (btn.getAttribute("href") !== "/login?role=driver") return;
       e.preventDefault();
       if (global.PlatformAPI && PlatformAPI.setToken) PlatformAPI.setToken("");
-      location.href = "/driver-login";
+      location.href = "/login?role=driver";
     });
   }
 

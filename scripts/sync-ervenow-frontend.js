@@ -57,11 +57,32 @@ const vercelJson = {
     },
     {
       source:
-        "/assets/(viewport-fit|mobile-harmony|mobile-foundation|mobile-home-conversion|mobile-fast-discovery|guest-shell|guest-offers-carousel|api|kabsar-store-polish|cart)(.*)\\.(js|css)",
+        "/assets/(order-draft-|checkout-|guest-shell|guestBrowse|pre-cart-delivery|cart)(.*)\\.(js|css)",
+      headers: [{ key: "Cache-Control", value: "no-cache, must-revalidate" }],
+    },
+    {
+      source:
+        "/assets/(viewport-fit|mobile-harmony|mobile-foundation|mobile-home-conversion|mobile-fast-discovery|guest-offers-carousel|api|kabsar-store-polish)(.*)\\.(js|css)",
       headers: [{ key: "Cache-Control", value: "public, max-age=300, must-revalidate" }],
     },
   ],
+  redirects: [
+    { source: "/dashboard", destination: "/", statusCode: 302 },
+    { source: "/dashboard.html", destination: "/", statusCode: 302 },
+    { source: "/start-now", destination: "/", statusCode: 302 },
+    { source: "/start-now.html", destination: "/", statusCode: 302 },
+    { source: "/customer-preview", destination: "/", statusCode: 302 },
+    { source: "/customer-preview.html", destination: "/", statusCode: 302 },
+    { source: "/driver-register", destination: "/login?mode=register&role=driver", statusCode: 302 },
+    { source: "/driver-register.html", destination: "/login?mode=register&role=driver", statusCode: 302 },
+  ],
   routes: [
+    { src: "/dashboard", status: 302, headers: { Location: "/" } },
+    { src: "/dashboard.html", status: 302, headers: { Location: "/" } },
+    { src: "/start-now", status: 302, headers: { Location: "/" } },
+    { src: "/start-now.html", status: 302, headers: { Location: "/" } },
+    { src: "/customer-preview", status: 302, headers: { Location: "/" } },
+    { src: "/customer-preview.html", status: 302, headers: { Location: "/" } },
     { handle: "filesystem" },
     { src: "/admin/branding", dest: "/admin-branding.html" },
     { src: "/admin/categories", dest: "/admin-categories.html" },

@@ -21,6 +21,8 @@
     board: null,
     products: [],
     categories: [],
+    facilityCategories: [],
+    publishReadiness: null,
     merchantCategories: [],
     withdrawals: [],
     withdrawalMeta: { balance: 0, available: 0, pending_reserved: 0, total_withdrawn: 0 },
@@ -198,6 +200,7 @@
     var my = await api("/api/store/my-store");
     state.store = my.store || my;
     state.hub = my.merchant_hub || null;
+    state.publishReadiness = my.publish_readiness || null;
     state.storeId = state.store && state.store.id;
     var dash = await api("/api/store/merchant-dashboard");
     state.dashboard = dash;
@@ -222,6 +225,23 @@
       }
     }
     updateHeader();
+  }
+
+  async function loadFacilityCategories() {
+    var type = String((state.store && state.store.type) || "").toLowerCase();
+    var q = "";
+    if (type === "restaurant") q = "restaurant";
+    else if (type === "supermarket" || type === "minimarket") q = "market";
+    if (!q) {
+      state.facilityCategories = type ? [{ slug: type, label: type }] : [];
+      return;
+    }
+    try {
+      var j = await api("/api/categories?type=" + encodeURIComponent(q) + "&list=canonical&sort=manual");
+      state.facilityCategories = j.categories || j.items || [];
+    } catch (_) {
+      state.facilityCategories = [];
+    }
   }
 
   async function loadMerchantCategories() {
@@ -378,13 +398,16 @@
     var st = String((state.store && state.store.status) || "active").toLowerCase();
     var active = st === "active" || st === "approved";
     var logo = (state.store && state.store.logo_url) || (state.hub && state.hub.logo_url);
+    var pub = String((state.store && state.store.publication_status) || "").toLowerCase();
+    var published = !!(state.store && state.store.is_published) || pub === "published";
+    var needs = !!(state.store && state.store.needs_completion);
     var statusHtml =
       '<span class="pf-status-pill' +
-      (active ? "" : " is-paused") +
+      (published ? "" : " is-paused") +
       '"><span aria-hidden="true">' +
-      (active ? "🟢" : "⏸") +
+      (published ? "🟢" : needs ? "📝" : "⏸") +
       "</span><span>" +
-      (active ? "نشط" : "موقوف") +
+      (published ? "منشور" : needs ? "مسودة — أكمل الصفحة" : active ? "معتمد" : "موقوف") +
       "</span></span>";
     shell.updateHeader({
       subtitle: name,
@@ -432,6 +455,37 @@
     });
   }
 
+  function completionBannerHtml() {
+    var store = state.store || {};
+    if (!store.needs_completion && store.is_published) return "";
+    var ready = state.publishReadiness || {};
+    var checks = ready.checks || [];
+    var list = checks
+      .map(function (c) {
+        return (
+          "<li>" +
+          (c.ok ? "✓ " : "○ ") +
+          esc(c.label) +
+          "</li>"
+        );
+      })
+      .join("");
+    var canPublish = !!ready.ok;
+    return (
+      '<div class="mp-card mp-complete-banner" id="mpCompleteBanner">' +
+      "<h3>أكمل صفحتك</h3>" +
+      "<p>تم اعتماد منشأتك في ERVENOW. أكمل الحد الأدنى ثم اضغط اعتماد ونشر لتظهر للعملاء.</p>" +
+      (list ? "<ul class='mp-complete-checks'>" + list + "</ul>" : "") +
+      '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px">' +
+      '<button type="button" class="mp-btn mp-btn--ghost" data-pf-section="settings">تعديل الهوية والفئة</button>' +
+      '<button type="button" class="mp-btn mp-btn--ghost" data-pf-section="products">المنتجات</button>' +
+      '<button type="button" class="mp-btn mp-btn--primary" id="mpPublishBtn"' +
+      (canPublish ? "" : " disabled") +
+      ">اعتماد ونشر المنشأة</button>" +
+      "</div></div>"
+    );
+  }
+
   function renderDashboard() {
     var agg = (state.dashboard && state.dashboard.aggregates) || {};
     var wallet = (state.dashboard && state.dashboard.wallet) || {};
@@ -445,6 +499,7 @@
 
     return (
       (W ? W.sectionHeader("لوحة التحكم", "Dashboard — نظرة سريعة على أداء منشأتك اليوم") : "") +
+      completionBannerHtml() +
       (W
         ? W.kpiGrid([
             { label: "📦 طلبات اليوم", value: String(today.length) },
@@ -971,13 +1026,26 @@
   function renderSettings() {
     var hub = state.hub || {};
     var store = state.store || {};
+    var catOpts = (state.facilityCategories || [])
+      .map(function (c) {
+        var v = c.slug || c.value || c.id || c;
+        var l = c.label || c.name_ar || c.name || v;
+        return '<option value="' + esc(v) + '">' + esc(l) + "</option>";
+      })
+      .join("");
+    var currentCat = String(store.category || "").split(",")[0];
     return (
-      '<h2 class="mp-section-title">الإعدادات</h2>' +
-      '<p class="mp-section-sub">Settings — إدارة المنشأة من البوابة</p>' +
+      '<h2 class="mp-section-title">أكمل صفحتك</h2>' +
+      '<p class="mp-section-sub">Settings — الفئة، الشعار، الغلاف، الوصف، ثم النشر</p>' +
+      completionBannerHtml() +
       '<div class="mp-card mp-form"><h3>الهوية والبروفايل</h3>' +
       "<p><strong>الاسم:</strong> " +
       esc(store.name || store.store_name) +
       "</p>" +
+      "<label for='mpHubCategory'>الفئة</label>" +
+      "<select id='mpHubCategory'><option value=''>— اختر الفئة —</option>" +
+      catOpts +
+      "</select>" +
       "<label for='mpHubBio'>الوصف</label>" +
       "<textarea id='mpHubBio' rows='3'>" +
       esc(hub.bio || store.bio || "") +
@@ -1056,6 +1124,11 @@
       section.classList.add("is-active");
     }
     section.innerHTML = renderSection(sectionId);
+    var catSel = document.getElementById("mpHubCategory");
+    if (catSel) {
+      var cur = String((state.store && state.store.category) || "").split(",")[0];
+      if (cur) catSel.value = cur;
+    }
     if (shell) shell.renderNav();
     updateHeader();
     wireSectionEvents();
@@ -1172,6 +1245,10 @@
         "/api/store/products?store_id=" + encodeURIComponent(state.storeId) + "&limit=80&offset=0"
       );
       state.products = prod.products || [];
+      try {
+        var ready = await api("/api/store/publish-readiness");
+        state.publishReadiness = ready;
+      } catch (_r) {}
       renderMain();
     } catch (e) {
       showMsg(e.message || String(e), false);
@@ -1265,11 +1342,21 @@
           if (lf && global.compressImageToDataUrl) {
             body.logo_base64 = await global.compressImageToDataUrl(lf, 0.78, 800);
           }
+          var catSel = document.getElementById("mpHubCategory");
+          var catVal = catSel ? String(catSel.value || "").trim() : "";
+          if (catVal) {
+            if (String((state.store && state.store.type) || "").toLowerCase() === "restaurant") {
+              body.restaurant_category = catVal;
+            } else {
+              body.category = catVal;
+            }
+          }
           await api("/api/store/merchant-hub", { method: "PATCH", body: body });
           showMsg("تم حفظ الإعدادات", true);
           var r = await api("/api/store/my-store");
           state.hub = r.merchant_hub || state.hub;
           state.store = r.store || state.store;
+          state.publishReadiness = r.publish_readiness || state.publishReadiness;
           renderMain();
         } catch (e) {
           showMsg(e.message || String(e), false);
@@ -1313,6 +1400,24 @@
           },
           { enableHighAccuracy: true, timeout: 12000 }
         );
+      };
+    }
+    var publishBtn = document.getElementById("mpPublishBtn");
+    if (publishBtn) {
+      publishBtn.onclick = async function () {
+        publishBtn.disabled = true;
+        try {
+          var j = await api("/api/store/publish", { method: "POST", body: {} });
+          showMsg(j.message || "تم اعتماد ونشر المنشأة", true);
+          var r = await api("/api/store/my-store");
+          state.store = r.store || state.store;
+          state.hub = r.merchant_hub || state.hub;
+          state.publishReadiness = r.publish_readiness || state.publishReadiness;
+          renderMain();
+        } catch (e) {
+          showMsg(e.message || String(e), false);
+          publishBtn.disabled = false;
+        }
       };
     }
 
@@ -1503,6 +1608,7 @@
   async function boot() {
     try {
       await loadCoreData();
+      await loadFacilityCategories();
       await loadMerchantCategories();
       renderMain();
       notifCenterApi = await shell.mountNotifications();
@@ -1513,6 +1619,11 @@
   }
 
   async function init() {
+    if ((global.location.hash || "").replace(/^#/, "") === "complete") {
+      try {
+        global.history.replaceState(null, "", "/merchant-preview#settings");
+      } catch (_) {}
+    }
     if (!global.ErvenowPortalFramework || !ErvenowPortalFramework.PortalShell) {
       showMsg("Portal Framework غير محمّل", false);
       return;

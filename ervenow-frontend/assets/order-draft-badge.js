@@ -259,9 +259,13 @@
 
   function ensureReady(cb) {
     ensureStyles();
-    loadScript("/assets/order-draft-store.js")
+    var storeP = global.ErvenowOrderDraft
+      ? Promise.resolve()
+      : loadScript("/assets/order-draft-store.js?erv=20260922uc1");
+    storeP
       .then(function () {
-        return loadScript("/assets/order-draft-vertical.js");
+        if (global.ErvenowOrderDraftVertical) return Promise.resolve();
+        return loadScript("/assets/order-draft-vertical.js?erv=20260922uc1");
       })
       .then(function () {
         if (typeof cb === "function") cb();

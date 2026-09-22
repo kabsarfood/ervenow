@@ -174,7 +174,15 @@
     line-height: 1;
     color: #3d2213;
     cursor: pointer;
+    touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
+    transform: none !important;
+    transition: background-color 0.12s ease !important;
+  }
+
+  html.erv-mobile-shell body.lp-home-premium .lp-quick-dd__btn:hover,
+  html.erv-mobile-shell body.lp-home-premium .lp-quick-dd__btn:active {
+    transform: none !important;
   }
 
   html.erv-mobile-shell body.lp-home-premium .lp-quick-dd__btn .lp-quick-dd__burger {
@@ -209,7 +217,7 @@
     overflow: visible !important;
     overscroll-behavior: contain;
     transform-origin: var(--lp-home-nav-caret-x, calc(100% - 22px)) 0;
-    animation: erv-home-nav-in 0.2s ease;
+    animation: erv-home-nav-in 0.08s ease-out;
   }
 
   html.erv-mobile-shell body.lp-home-premium .lp-quick-dd__panel--harmony .lp-quick-dd__panel-scroll {
@@ -294,12 +302,10 @@
 
   @keyframes erv-home-nav-in {
     from {
-      opacity: 0;
-      transform: translateY(-5px) scale(0.98);
+      opacity: 0.2;
     }
     to {
       opacity: 1;
-      transform: none;
     }
   }
 
@@ -414,7 +420,9 @@
     line-height: 1;
     color: #3d2213;
     cursor: pointer;
+    touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
+    transform: none !important;
   }
 
   html.erv-mobile-shell body.guest-shell-page .dash-site-header__nav {
@@ -616,7 +624,7 @@
     direction: rtl !important;
     text-align: right !important;
     transform-origin: var(--lp-home-nav-caret-x, calc(100% - 22px)) 0;
-    animation: erv-home-desktop-nav-in 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+    animation: erv-home-desktop-nav-in 0.08s ease-out;
   }
 
   html:not(.erv-mobile-shell) body.lp-home-premium .lp-quick-dd__panel--harmony.lp-quick-dd__panel--desktop-pop::before {
@@ -656,13 +664,19 @@
 
   @keyframes erv-home-desktop-nav-in {
     from {
-      opacity: 0;
-      transform: translateY(-8px) scale(0.94);
+      opacity: 0.2;
     }
     to {
       opacity: 1;
-      transform: none;
     }
+  }
+
+  html:not(.erv-mobile-shell) body.lp-home-premium .lp-quick-dd__btn,
+  html:not(.erv-mobile-shell) body.lp-home-premium .lp-quick-dd__btn:hover,
+  html:not(.erv-mobile-shell) body.lp-home-premium .lp-quick-dd__btn:active {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    transform: none !important;
   }
 
   html:not(.erv-mobile-shell) body.lp-home-premium .lp-quick-dd.is-open .lp-quick-dd__btn {
@@ -721,6 +735,13 @@
   html:not(.erv-mobile-shell) body.guest-shell-page .erv-harmony-menu,
   html:not(.erv-mobile-shell) body.guest-shell-page .erv-harmony-nav-panel {
     display: none !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.erv-mobile-shell body.lp-home-premium .lp-quick-dd__panel--harmony,
+  html:not(.erv-mobile-shell) body.lp-home-premium .lp-quick-dd__panel--harmony.lp-quick-dd__panel--desktop-pop {
+    animation: none !important;
   }
 }
 

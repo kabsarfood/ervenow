@@ -1,11 +1,52 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar" dir="rtl" class="admin-gate-pending">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover" />
     <script src="/assets/viewport-fit.js?erv=20260612"></script>
     <script src="/assets/pre-reg-banner.js?erv=20260905b" defer></script>
     <title>لوحة الإدارة | ERVENOW</title>
+    <style>
+      .admin-auth-gate {
+        position: fixed;
+        inset: 0;
+        z-index: 100000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0;
+        background: #1f1209;
+        color: #f5e6b8;
+        font-family: Cairo, system-ui, sans-serif;
+        font-size: clamp(0.95rem, 2.6vw, 1.1rem);
+        font-weight: 800;
+        line-height: 1.5;
+        text-align: center;
+        padding: 24px;
+      }
+      html.admin-gate-ready .admin-auth-gate {
+        display: none;
+      }
+      html.admin-gate-pending body > *:not(.admin-auth-gate) {
+        visibility: hidden;
+      }
+    </style>
+    <script>
+      (function adminGateTokenCheck() {
+        try {
+          var t =
+            localStorage.getItem("ervenow_access_token") ||
+            localStorage.getItem("erwenow_access_token") ||
+            localStorage.getItem("token") ||
+            "";
+          if (!t) {
+            window.location.replace("/admin-login");
+          }
+        } catch (e) {
+          window.location.replace("/admin-login");
+        }
+      })();
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -23,6 +64,7 @@
     <link rel="stylesheet" href="/assets/design-system/erv-typography-operations-pr4.css" />
   </head>
   <body class="admin-shell-page erv-typography-pr4-operations">
+    <p class="admin-auth-gate" id="adminAuthGate" role="status">جاري التحقق من صلاحية الإدارة…</p>
     <header class="dash-site-header admin-site-header">
       <div class="dash-site-header__inner">
         <div class="dash-site-header__brand">
@@ -101,7 +143,7 @@
                 <a class="admin-hero-chip" href="#" data-panel-jump="panelHeroBanners">🎨 إدارة البنرات</a>
                 <a class="admin-hero-chip" href="#" data-panel-jump="panelMarketingStudio">🚀 Home Experience</a>
                 <a class="admin-hero-chip" href="#" data-panel-jump="panelErvenowPay" id="adminHeroPayChip" style="display:none">⚡ ERVENOW PAY</a>
-                <a class="admin-hero-chip" href="/dashboard">🧭 منصة ERVENOW</a>
+                <a class="admin-hero-chip" href="/">🧭 منصة ERVENOW</a>
               </div>
             </div>
             <div class="admin-hero__art" aria-hidden="true">
@@ -283,7 +325,7 @@
             </div>
           </div>
           <p class="sub erv-live-map-admin-desc">
-            نفس خريطة الأنشطة للأعضاء — أقمار صناعية وتضاريس، بحث بالمدينة والقسم. يمكنك إظهارها أو إخفاءها عن الضيوف لقياس الإقبال.
+            كل نشاط حُفظ موقعه يظهر كنقطة نابضة — بما فيه قيد المراجعة. الخريطة للزوار تبقى للأنشطة المعتمدة فقط.
           </p>
           <div id="ervAdminLiveMapShell" class="erv-live-map-admin-shell">
             <div class="erv-live-map-toolbar" id="liveMapToolbar" aria-label="بحث الخريطة">
@@ -626,6 +668,7 @@
               <option value="all">كل الحالات</option>
               <option value="new">جديد (48 ساعة)</option>
               <option value="pending">قيد المراجعة</option>
+              <option value="needs_info">استكمال بيانات</option>
               <option value="approved">معتمد</option>
               <option value="rejected">مرفوض</option>
             </select>
@@ -1006,6 +1049,24 @@
       </div>
     </div>
 
+    <div id="storeReviewBackdrop" class="exec-modal-backdrop" hidden>
+      <div class="exec-modal store-review-modal" role="dialog" aria-labelledby="storeReviewTitle">
+        <h3 id="storeReviewTitle">مراجعة طلب المنشأة</h3>
+        <p class="exec-modal-sub" id="storeReviewSubtitle">بيانات الانضمام · الوثائق · المنتجات · الموقع</p>
+        <div id="storeReviewBody" class="store-review-body"></div>
+        <div class="store-review-needs" id="storeReviewNeedsWrap" hidden>
+          <label for="storeReviewNeedsMsg">ما الناقص لاستكمال البيانات</label>
+          <textarea id="storeReviewNeedsMsg" rows="3" placeholder="مثال: أرفق صورة الرخصة بوضوح، وصحّح سعر المنتج الأول"></textarea>
+        </div>
+        <div class="exec-modal-foot store-review-foot">
+          <button type="button" class="exec-btn exec-btn--ghost" id="storeReviewCloseBtn">إغلاق</button>
+          <button type="button" class="btn btn-ghost" id="storeReviewNeedsBtn">طلب استكمال بيانات</button>
+          <button type="button" class="btn btn-ghost" id="storeReviewRejectBtn">رفض</button>
+          <button type="button" class="btn btn-primary" id="storeReviewApproveBtn">اعتماد</button>
+        </div>
+      </div>
+    </div>
+
     <div id="storeSetupBackdrop" class="exec-modal-backdrop" hidden>
       <div class="exec-modal store-setup-modal" role="dialog" aria-labelledby="storeSetupTitle">
         <h3 id="storeSetupTitle">تجهيز صفحة المتجر</h3>
@@ -1080,8 +1141,8 @@
 
     <script src="/assets/api-config.js"></script>
     <script src="/assets/api.js?erv=20260612"></script>
-    <link rel="stylesheet" href="/assets/notification-center.css" />
-    <script src="/assets/notification-center.js"></script>
+    <link rel="stylesheet" href="/assets/notification-center.css?erv=20260922n1" />
+    <script src="/assets/notification-center.js?erv=20260922n1"></script>
     <script src="/assets/compressImage.js"></script>
     <script src="https://cdn.socket.io/4.8.1/socket.io.min.js" crossorigin="anonymous"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>

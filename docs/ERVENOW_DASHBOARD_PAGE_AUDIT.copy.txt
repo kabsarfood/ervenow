@@ -1,0 +1,82 @@
+ERVENOW — مراجعة /dashboard (تحليل فقط — لا تنفيذ)
+التاريخ: 2026-09-22
+
+الخلاصة
+/dashboard ليست لوحة تشغيلية وليست مركز حساب. هي منزل تصفّح ثالث (Legacy Duplicate) بجانب / و /start-now. الازدواجية مع / مثبتة من الكود.
+
+القرار: Option C — إلغاء الصفحة كمنزل حي، وتحويل /dashboard لاحقاً إلى Redirect 302 نحو /. لا تنفيذ الآن.
+
+1) الوظيفة الحالية
+GET /dashboard في server/server.js يقدّم public/dashboard.html.
+صفحة زائر/عضو للتصفّح: هيرو ترحيب + بطاقة ملف صغيرة بعد الجلسة + كاروسيل عروض + تبويبات روابط إلى المطاعم/المتاجر/الخدمات/العروض/التوصيل.
+لا إنشاء طلب، لا قائمة طلبات، لا محفظة داخل الصفحة، لا إشعارات كصفحة، لا تتبع.
+الضيف يفتحها بدون دخول. إن وُجد توكن تُستدعى حراسة ensureApprovedAccount. المندوب يُحوَّل إلى /driver.
+
+2) الملفات
+الصفحة: public/dashboard.html (مرآة ervenow-frontend/dashboard.html)
+التوجيه: server/server.js
+CSS: guest-shell + start-now-landing + guest-offers-carousel + styles + CSS مضمّن (بقايا نموذج توصيل ميت)
+JS: api.js, auth-account-guard.js, guest-shell.js, guest-offers-carousel.js, guestBrowse.js, ervenow-toggle.js, membership-identity.js, order-draft-*, سكربت مضمّن run()
+لا يوجد dashboard.js خاص بالعميل. admin/modules/dashboard.js يخص لوحة الإدارة فقط.
+
+3) الـ APIs
+GET /api/core/me (إن وُجد توكن)
+GET /api/wallet أو /api/driver/wallet أو /api/store/merchant-dashboard (رصيد هيدر — يكرّره guest-shell)
+GET /api/core/platform-offers (العروض)
+لا API مخصص للصفحة. /api/services/me/dashboard يخص مزود الخدمة وليس هذه الصفحة.
+
+4) الأزرار/الوظائف
+هيدر: الرئيسية، منصة ERVENOW، تتبع، دخول، محفظة، سلة.
+هيرو ضيف: ابدأ الآن /start-now، دخول، تسجيل.
+تبويبات = روابط فقط إلى /restaurants?category= و /stores?type= و /services?type= و /browse و /delivery-map و /live-map.
+لا أزرار تشغيلية (إلغاء/دفع/شحن/إعدادات/خروج داخل الصفحة).
+
+5) وظيفة غير موجودة في / و my-orders و wallet و notifications والأقسام؟
+تشغيلياً: لا.
+نفس فلاتر التصنيف موجودة في /restaurants (restaurant-cuisines.js) و /stores (section-hub-stores.js) و /services (section-hub-services.js).
+فريد شكلياً فقط: بطاقة الدور+الجوال، تنبيه أدمن، بنر guest_dashboard، تحويل المندوب إلى /driver، CSS ميت.
+
+6) روابط حية تعتمد عليها
+هيدر guest-shell: نعم — «منصة ERVENOW» → /dashboard (عشرات الصفحات: checkout، cart، stores، track، login، legal…).
+هيدر /: نعم — منصة ERVENOW + قائمة «الإعدادات».
+شريط سفلي: جزئي — المسار يُطابق استكشاف/حسابي، لكن زر «حسابي» للعميل يفتح / وليس /dashboard.
+Login بعد الدخول: لا. الوجهة الرسمية CUSTOMER_PLATFORM_HOME = "/".
+Account: لا صفحة /account.
+Notifications: لا.
+Checkout: هيدر فقط. افتراضي continueHref في cart-ui.js غير مستخدم لأن cart.html على checkoutV3.
+تتبع /track: هيدر فقط.
+my-orders: زر «ابدأ طلباً جديداً» → /dashboard.
+delivery-map: زر رجوع → /dashboard.
+wallet: أيقونة منصة → /dashboard.
+بنرات أدمن: placement guest_dashboard / visitor_dashboard.
+
+7) Backend/API مخصص؟
+لا. sendFile فقط + APIs عامة.
+
+8) هل الحذف يكسر؟
+الجلسة: لا
+الطلبات: لا
+المحفظة: لا
+الإشعارات: لا
+التتبع: لا
+Login: لا
+Navigation: نعم إن حُذفت بلا Redirect (href="/dashboard" → 404). Redirect 302 يبقي الروابط حيّة.
+
+9) UI/بيانات فريدة قبل الحذف؟
+لا بيانات تشغيلية للنقل.
+قرار لاحق: بطاقة الملف → /account مستقبلي؛ بنر guest_dashboard (تسويق)؛ أزرار my-orders و delivery-map؛ تسمية «الإعدادات» في قائمة /؛ اختبار checkoutDraftEdit يقرأ dashboard.html.
+شبكات التصنيف تبقى في صفحات الأقسام.
+
+10) التصنيف
+ليست صفحة تشغيلية مهمة.
+ليست Account Center.
+استكشاف جزئي مكرر.
+Legacy + Duplicate — هذا هو الوصف الأدق.
+
+القرار
+Option A مرفوض (يبقي ثلاثة منازل).
+Option B مرفوض كتحويل مباشر (محتوى الصفحة تصفّح لا حساب؛ /account غير موجودة ويجب أن تُبنى لاحقاً كروابط لا بتبويبات مطاعم).
+Option C مختار. الوجهة: / وليست /account.
+سبب الوجهة: منزل العميل الرسمي بعد Login هو / أصلاً؛ شريط «حسابي» يفتح /؛ /account غير موجودة (Redirect إليها = 404)؛ التصفّح مغطى بـ / والأقسام.
+
+حتى الموافقة: لا Redirect ولا حذف.

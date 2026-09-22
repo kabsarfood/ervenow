@@ -1,0 +1,62 @@
+ERVENOW — مراجعة نقاط Login وRegister
+التاريخ: 2026-09-22
+تحليل فقط — لا تنفيذ.
+
+الخلاصة
+البوابة العامة للدخول: /login (نفس الملف مع أي ?role=).
+إنشاء العضوية ليس كله داخلها: المتجر = /register-store، مندوب مكرر = /driver-register، إدارة = /admin-login.
+/driver-login و /service-provider-login و /delivery/login = Legacy Redirect إلى /login.
+
+الجدول
+/login — Login نعم / Register نعم (إلا المتجر يُحوَّل) — API core send-otp + verify-otp login_only + register-account — حية
+/admin-login — Login نعم / Register لا — admin — API admin/auth OTP — حية معزولة
+/driver-login — غلاف 302 → /login?role=driver — Legacy
+/service-provider-login — غلاف 302 → /login?role=service — Legacy
+/delivery/login — HTML replace → /login?role=driver — Legacy
+/register-store — Register متجر — POST /api/store/register — حية خارج /login
+/driver-register — Register مندوب بلا OTP — POST /api/driver/register — حية ومكررة
+/partner-portal — موزّع روابط — حية
+لا signup.html. Transport = service + service_type.
+
+OTP
+حي: /api/core/send-otp + verify-otp من /login فقط.
+حي إدارة: /api/admin/auth/* من /admin-login فقط.
+ميت في الواجهة: /api/driver/send-otp + verify-otp (API باقٍ، نطاق DRIVER_LOGIN مختلف).
+إنشاء: register-account (login) · /api/store/register · /api/driver/register.
+
+ملاحة العميل
+هيدر/شريط سفلي/رئيسية «دخول» و«حسابي» → /login أو /login?role=customer (نفس الصفحة).
+إنشاء عضوية في القائمة → /login?mode=register&role=customer.
+انضم كشريك: سجّل متجرك → /register-store · تسجيل مندوب → /driver-register.
+
+بوابات الشريك ما زالت تكتب /driver-login و /service-provider-login (تعمل بالـ302).
+portal-shell.js: driver و service ما زالا على URLs القديمة. admin عبر /login?role=admin ثم تحويل.
+
+ماذا تستطيع /login اليوم؟
+دخول Customer / Merchant / Driver / Service / Transport الموجود: نعم (الدور من DB).
+إنشاء Customer / Driver / Service: نعم عبر إنشاء عضوية بلا OTP ثم pending.
+إنشاء Merchant داخل نفس النموذج: لا → /register-store.
+دخول Admin: لا.
+
+أين الإنشاء؟
+Customer → /login register-account
+Merchant → /register-store + /api/store/register
+Driver → /login register-account أو /driver-register + /api/driver/register
+Service و Transport → /login register-account + service_type
+Admin → لا تسجيل ذاتي
+
+الازدواجية
+1) URLs دخول قديمة في البوابات
+2) تسجيل مندوب صفحتان
+3) تسجيل المتجر صفحة مستقلة
+4) partner-portal موزّع ثالث
+5) التسجيل الحالي بلا OTP ≠ الهدف (OTP ثم اختيار النوع)
+
+التوصية
+نعم اعتمد /login بوابة عامة واحدة لغير الإدارة. أبقِ /admin-login فقط.
+بعد OTP: موجود → توجيه حسب Role. غير موجود → اختيار عميل/متجر/مندوب/خدمة.
+اجعل /register-store خطوة نماذج بعد الاختيار لا بوابة دخول.
+أوقف /driver-register كواجهة (redirect إلى /login).
+صحّح روابط البوابات و portal-shell إلى /login?role=.
+لا تُدخل /api/driver/send-otp في الواجهة.
+لا تنفيذ الآن.

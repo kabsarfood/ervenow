@@ -16,12 +16,11 @@ const HEADER = (active, tag) => `    <header class="dash-site-header">
         </div>
         <nav class="dash-site-header__nav" aria-label="التنقل الرئيسي">
           <div class="dash-site-header__links">
-            <a class="dash-site-header__link${active === "guest" ? " is-active" : ""}" href="/dashboard" data-nav="guest"${active === "guest" ? ' aria-current="page"' : ""}>لوحة الزائر</a>
+            <a class="dash-site-header__link${active === "home" ? " is-active" : ""}" href="/" data-nav="home"${active === "home" ? ' aria-current="page"' : ""}>الرئيسية</a>
             <a class="dash-site-header__link${active === "restaurants" ? " is-active" : ""}" href="/restaurants" data-nav="restaurants"${active === "restaurants" ? ' aria-current="page"' : ""}>مطاعم</a>
             <a class="dash-site-header__link${active === "stores" ? " is-active" : ""}" href="/stores" data-nav="stores"${active === "stores" ? ' aria-current="page"' : ""}>متاجر</a>
             <a class="dash-site-header__link${active === "delivery" ? " is-active" : ""}" href="/delivery-services.html" data-nav="delivery"${active === "delivery" ? ' aria-current="page"' : ""}>توصيل</a>
             <a class="dash-site-header__link${active === "services" ? " is-active" : ""}" href="/services" data-nav="services"${active === "services" ? ' aria-current="page"' : ""}>خدمات</a>
-            <a class="dash-site-header__link${active === "home" ? " is-active" : ""}" href="/" data-nav="home"${active === "home" ? ' aria-current="page"' : ""}>الرئيسية</a>
           </div>
         </nav>
         <div class="dash-site-header__tools">
@@ -47,8 +46,8 @@ const FOOTER = `      <footer class="dash-site-footer">
           <a class="dash-site-footer__link" href="/stores">متاجر</a>
           <a class="dash-site-footer__link" href="/delivery-services.html">توصيل</a>
           <a class="dash-site-footer__link" href="/services">خدمات</a>
-          <a class="dash-site-footer__link" href="/dashboard#dashDeliveryTitle">طلب من الخريطة</a>
-          <a class="dash-site-footer__link" href="/start-now.html">ابدأ الآن</a>
+          <a class="dash-site-footer__link" href="/delivery-map">طلب من الخريطة</a>
+          <a class="dash-site-footer__link" href="/">ابدأ الآن</a>
           <a class="dash-site-footer__link" href="/">الرئيسية</a>
         </nav>
         <p class="dash-site-footer__copy">© 2026 ERVENOW — جميع الحقوق محفوظة</p>
@@ -186,7 +185,7 @@ function patchStartNow(file) {
   if (html.includes("dash-site-header")) {
     html = html.replace(
       '<a class="dash-site-header__link is-active" href="/" data-nav="home" aria-current="page">الرئيسية</a>',
-      '<a class="dash-site-header__link is-active" href="/start-now.html" data-nav="start" aria-current="page">ابدأ الآن</a>\n            <a class="dash-site-header__link" href="/" data-nav="home">الرئيسية</a>'
+      '<a class="dash-site-header__link is-active" href="/" data-nav="home" aria-current="page">الرئيسية</a>'
     );
     html = html.replace(
       'ErvenowGuestShell.init({ activeNav: "home", pageTag: "ابدأ الآن" });',
@@ -279,6 +278,10 @@ function patchCareers(file) {
 }
 
 function patchDashboard(file) {
+  if (!fs.existsSync(file)) {
+    console.log("skip retired dashboard.html");
+    return;
+  }
   let html = fs.readFileSync(file, "utf8");
   html = ensureHeadLinks(html);
   if (!html.includes('href="/assets/guest-shell.css"')) {
@@ -310,8 +313,8 @@ function patchDashboard(file) {
 
   html = html.replace('<body>', '<body class="guest-shell-page">');
   html = html.replace(
-    '<a class="dash-site-header__link is-active" href="/dashboard" aria-current="page">لوحة الزائر</a>',
-    '<a class="dash-site-header__link is-active" href="/dashboard" data-nav="guest" aria-current="page">لوحة الزائر</a>'
+    '<a class="dash-site-header__link is-active" href="/" aria-current="page">الرئيسية</a>',
+    '<a class="dash-site-header__link is-active" href="/" data-nav="home" aria-current="page">الرئيسية</a>'
   );
   html = html.replace(
     '<a class="dash-site-header__link" href="/restaurants">مطاعم</a>',
@@ -381,7 +384,9 @@ for (const dir of dirs) {
           <p class="guest-section-hero__sub" id="servicesHeaderSub">سباك، كهرباء، تكييف، تنظيف، وأكثر — احجز بخطوات بسيطة</p>`
   );
 
-  patchStartNow(path.join(base, "start-now.html"));
+  const startNowFile = path.join(base, "start-now.html");
+  if (fs.existsSync(startNowFile)) patchStartNow(startNowFile);
+  else console.log("skip start-now (retired)");
   patchSimplePage(path.join(base, "cart.html"), "guest", "السلة", "", true);
   patchSimplePage(path.join(base, "browse.html"), "guest", "التصفح", "", false);
   patchSimplePage(path.join(base, "order.html"), "delivery", "طلب توصيل", "", true);
@@ -389,7 +394,9 @@ for (const dir of dirs) {
   patchGasDelivery(path.join(base, "gas-delivery.html"));
   patchStore(path.join(base, "store.html"));
   patchCareers(path.join(base, "careers.html"));
-  patchDashboard(path.join(base, "dashboard.html"));
+  const dashboardFile = path.join(base, "dashboard.html");
+  if (fs.existsSync(dashboardFile)) patchDashboard(dashboardFile);
+  else console.log("skip dashboard (retired)");
 }
 
 console.log("Done.");

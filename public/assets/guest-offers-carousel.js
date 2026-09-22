@@ -32,8 +32,16 @@
     };
   }
 
+  function canonicalCustomerHref(href) {
+    var h = String(href || "").trim();
+    if (!h) return "/";
+    var path = h.split("?")[0].split("#")[0].replace(/\.html$/i, "") || "/";
+    if (path === "/start-now" || path === "/dashboard") return "/";
+    return h;
+  }
+
   function buildSlideHtml(slide) {
-    var href = slide.link_url || "/browse";
+    var href = canonicalCustomerHref(slide.link_url || "/");
     var title = slide.title || "عرض";
     var sub = slide.subtitle || "";
     var price = slide.price_label || "";
@@ -253,7 +261,7 @@
       subtitle: banner.description || "",
       price_label: parts.badge || String(banner.banner_type || "").trim() || "",
       image_url: banner.image_url || "",
-      link_url: banner.button1_url || banner.button2_url || "/start-now",
+      link_url: canonicalCustomerHref(banner.button1_url || banner.button2_url || "/"),
       link_label: banner.button1_text || banner.button2_text || "اكتشف المزيد",
       active: true,
     };
@@ -286,7 +294,7 @@
     }
     grid.innerHTML = slides
       .map(function (s) {
-        var href = s.link_url || "/browse";
+        var href = canonicalCustomerHref(s.link_url || "/");
         var title = s.title || "عرض";
         var sub = s.subtitle || s.price_label || "اضغط لعرض التفاصيل";
         var img = s.image_url || "";

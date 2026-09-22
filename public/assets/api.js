@@ -97,6 +97,9 @@
       if (j && j.pending_approval) return raw || "يتم تفعيل الحساب بعد المراجعة واعتماده من إدارة ERVENOW.";
       if (j && j.blocked) return raw || "الحساب محظور من الإدارة";
       if (j && j.not_registered) return raw || "رقم الجوال غير مسجّل — أنشئ حساباً أولاً.";
+      if (j && (j.code === "ADMIN_LOGIN_REQUIRED" || j.admin_login_required)) {
+        return raw || "هذا حساب إداري. يرجى استخدام بوابة الإدارة.";
+      }
       if (j && j.rejected) return raw || "تم رفض طلب التسجيل";
       return raw || "لا صلاحية لتنفيذ هذا الإجراء.";
     }
@@ -129,6 +132,33 @@
    * @param {string} url
    * @param {RequestInit} [options]
    */
+  function pathWithoutQuery(path) {
+    return String(path || "").split("?")[0].replace(/\/+$/, "") || "/";
+  }
+
+  /** OTP وواتساب يستغرقان أكثر من المهلة العامة 5 ثوانٍ — لا تقطع إنشاء العضوية. */
+  function timeoutForApiPath(path, explicitMs) {
+    if (Number(explicitMs) > 0) return Number(explicitMs);
+    var p = pathWithoutQuery(path);
+    if (p === "/api/store/register" || p === "/api/driver/register") return 60000;
+    if (
+      p === "/api/core/send-otp" ||
+      p === "/api/core/verify-otp" ||
+      p === "/api/core/register" ||
+      p === "/api/core/register-account" ||
+      p === "/api/admin/auth/send-otp" ||
+      p === "/api/admin/auth/verify-otp"
+    ) {
+      return 30000;
+    }
+    return Number(w.__ERVENOW_FETCH_TIMEOUT_MS) || 5000;
+  }
+
+  function skipNetworkRetry(path) {
+    var p = pathWithoutQuery(path);
+    return p === "/api/core/send-otp" || p === "/api/admin/auth/send-otp";
+  }
+
   function apiFetch(url, options, timeoutMs) {
     options = options || {};
     var ms = Number(timeoutMs) > 0 ? Number(timeoutMs) : Number(w.__ERVENOW_FETCH_TIMEOUT_MS) || 5000;
@@ -321,7 +351,7 @@
 
         var r;
         try {
-          r = await apiFetch(url, { method: method, headers: headers, body: body }, opts.timeoutMs);
+          r = await apiFetch(url, { method: method, headers: headers, body: body }, timeoutForApiPath(path, opts.timeoutMs));
         } catch (e) {
           lastErr = e;
           var offline =
@@ -347,6 +377,7 @@
           }
 
           var canRetryNet =
+            !skipNetworkRetry(path) &&
             attempt < totalAttempts - 1 &&
             ((e && e.name === "AbortError") || isLikelyNetworkError(e));
           if (canRetryNet) continue;

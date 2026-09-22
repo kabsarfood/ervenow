@@ -91,14 +91,6 @@
     }
 
     var newSid = line.data && line.data.store_id ? String(line.data.store_id).trim() : "";
-    if (newSid) {
-      var ids = getStoreIds(list);
-      var keys = Object.keys(ids);
-      if (keys.length && !ids[newSid]) {
-        return { ok: false, message: "لا يمكن خلط منتجات من متجرين مختلفين", items: list };
-      }
-    }
-
     var pid = line.data && line.data.product_id;
     if (newSid && pid != null && pid !== "") {
       var idx = findStoreLine(list, newSid, pid);
@@ -209,12 +201,15 @@
   }
 
   function validateService(item) {
-    var phone = validateSaPhone(item && item.customer_phone);
-    if (!phone && item && item.data) phone = validateSaPhone(item.data.customer_phone);
-    if (!phone) return { ok: false, message: "أدخل رقم جوال سعودي صحيح (05xxxxxxxx أو 9665xxxxxxxx)" };
     var line = normalizeLine(item);
-    line.customer_phone = phone;
-    if (line.data) line.data.customer_phone = phone;
+    if (!line) return { ok: false, message: "invalid_item" };
+    var phone =
+      validateSaPhone(item && item.customer_phone) ||
+      (item && item.data ? validateSaPhone(item.data.customer_phone) : null);
+    if (phone) {
+      line.customer_phone = phone;
+      if (line.data) line.data.customer_phone = phone;
+    }
     var zeroOk = { delivery: 1, restaurant: 1, food: 1, service: 1 };
     var price = Number(line.price);
     if ((!Number.isFinite(price) || price <= 0) && !zeroOk[line.type]) {
@@ -284,7 +279,7 @@
     for (var i = 0; i < items.length; i += 1) {
       var d = items[i] && items[i].data;
       if (!d || !d.store_id) continue;
-      if (String(d.store_id) !== sid) return { ok: false, message: "لا يمكن خلط منتجات من متجرين مختلفين" };
+      if (String(d.store_id) !== sid) continue;
       if (d.delivery_snapshot_version === 1 && snapshot.delivery_snapshot_version === 1) {
         if (d.fulfillment_mode !== snapshot.fulfillment_mode) {
           return { ok: false, message: "نوع الاستلام/التوصيل يجب أن يكون موحّداً لكل المنتجات" };
@@ -334,6 +329,133 @@
     el.setAttribute("data-empty", n ? "false" : "true");
   }
 
+  function inferWorkflow(item) {
+    var explicit = String((item && item.workflow) || "").toLowerCase();
+    if (explicit === "store" || explicit === "service" || explicit === "transport" || explicit === "delivery") {
+      return explicit;
+    }
+    var t = String((item && item.type) || "").toLowerCase();
+    var d = (item && item.data) || {};
+    if (d.store_id && d.product_id != null && String(d.product_id).trim() !== "") return "store";
+    if (t === "pickup_truck" || t === "furniture_move" || t === "vehicle_transfer" || t === "car_transport") {
+      return "transport";
+    }
+    if (t === "delivery" || t === "internal_delivery" || isMapDeliveryItem(item)) return "delivery";
+    if (d.store_id) return "store";
+    return "service";
+  }
+
+  function inferSource(item, workflow) {
+    if (item && item.source) return String(item.source);
+    var t = String((item && item.type) || "").toLowerCase();
+    var d = (item && item.data) || {};
+    if (workflow === "store") {
+      var st = String(d.store_type || t || "").toLowerCase();
+      if (st === "restaurant" || /مطعم|restaurant/i.test(String(d.store_name || ""))) return "restaurant";
+      return st || "store";
+    }
+    if (t === "gas_delivery") return "gas";
+    if (t === "pickup_truck") return "tow";
+    if (t === "furniture_move") return "furniture";
+    if (t === "internal_delivery" || t === "delivery") return "courier";
+    return t || workflow;
+  }
+
+  function stripRepeatedMerchantPrefix(name, kind) {
+    var n = String(name || "").trim();
+    if (kind === "restaurant") {
+      n = n.replace(/^مطعم(?:\s+ال)?\s+/u, "").replace(/^مطعم\s+/u, "").trim();
+    }
+    return n || String(name || "").trim();
+  }
+
+  function groupHeadingAr(group) {
+    var wf = group.workflow;
+    var first = (group.items && group.items[0]) || {};
+    var d = first.data || {};
+    if (wf === "store") {
+      var rawName = String(d.store_name || first.title || "متجر").trim();
+      if (group.source === "restaurant" || inferSource(first, wf) === "restaurant") {
+        return "طلبك من مطعم " + stripRepeatedMerchantPrefix(rawName, "restaurant");
+      }
+      return "طلبك من " + rawName;
+    }
+    if (wf === "transport") {
+      var tt = String(first.type || "").toLowerCase();
+      if (tt === "pickup_truck") return "خدمة سطحة";
+      if (tt === "furniture_move") return "نقل أثاث";
+      if (tt === "car_transport" || tt === "vehicle_transfer") return "نقل مركبات";
+      var transportTitle = String(first.title || "").trim();
+      return transportTitle || "نقل مركبات";
+    }
+    if (wf === "delivery") return "توصيل";
+    var t = String(first.type || "").toLowerCase();
+    if (t === "gas_delivery") return "خدمة غاز";
+    if (t === "car_polishing") return "تلميع المركبات";
+    var title = String(first.title || "").trim();
+    return title ? "خدمة: " + title : "خدمة";
+  }
+
+  function groupFulfillmentItems(items) {
+    var list = Array.isArray(items) ? items : [];
+    var storeMap = {};
+    var storeOrder = [];
+    var others = [];
+    list.forEach(function (raw, index) {
+      var line = Object.assign({}, raw);
+      line.workflow = inferWorkflow(raw);
+      line.source = inferSource(raw, line.workflow);
+      line.provider_id = line.provider_id || (raw.data && raw.data.store_id) || null;
+      line.item_id = line.item_id || (raw.data && raw.data.product_id) || null;
+      line.qty = Math.max(1, Number(line.qty || (raw.data && raw.data.qty) || 1));
+      line.draft_index = raw.draft_index != null ? raw.draft_index : index;
+      if (line.workflow === "store" && line.provider_id) {
+        var key = "store:" + String(line.provider_id);
+        if (!storeMap[key]) {
+          storeMap[key] = {
+            key: key,
+            workflow: "store",
+            source: line.source,
+            provider_id: line.provider_id,
+            items: [],
+          };
+          storeOrder.push(key);
+        }
+        storeMap[key].items.push(line);
+        return;
+      }
+      var type = String(line.type || line.source || "service").toLowerCase();
+      var id = line.id != null ? String(line.id) : String(index);
+      var gkey =
+        line.workflow === "transport"
+          ? "transport:" + type + ":" + id
+          : line.workflow === "delivery"
+            ? "delivery:" + id
+            : "service:" + type + ":" + id;
+      others.push({
+        key: gkey,
+        workflow: line.workflow,
+        source: line.source,
+        provider_id: line.provider_id,
+        items: [line],
+      });
+    });
+    var out = storeOrder.map(function (k) {
+      return storeMap[k];
+    }).concat(others);
+    out.forEach(function (g) {
+      g.heading_ar = groupHeadingAr(g);
+    });
+    return out;
+  }
+
+  global.ErvenowUnifiedCart = {
+    inferWorkflow: inferWorkflow,
+    inferSource: inferSource,
+    groupFulfillmentItems: groupFulfillmentItems,
+    groupHeadingAr: groupHeadingAr,
+  };
+
   global.ErvenowOrderDraftVertical = {
     CHECKOUT_PATH: CHECKOUT_PATH,
     validateSaPhone: validateSaPhone,
@@ -342,5 +464,6 @@
     assertSnapshotCompatible: assertSnapshotCompatible,
     saveCustomerLocation: saveCustomerLocation,
     syncHeaderBadge: syncHeaderBadge,
+    groupFulfillmentItems: groupFulfillmentItems,
   };
 })(typeof window !== "undefined" ? window : global);

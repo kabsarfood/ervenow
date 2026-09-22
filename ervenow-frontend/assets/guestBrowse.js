@@ -36,17 +36,9 @@
       return this.isActive() && !this.hasSessionToken();
     },
 
-    /** إنهاء جلسة الضيف — تصفير السلة والبيانات المحلية */
+    /** إنهاء علامة تصفح الضيف — لا تُمسح سلة ervenow:order-draft */
     endSession: function () {
       this.setActive(false);
-      try {
-        if (window.ErvenowOrderDraft && typeof ErvenowOrderDraft.markSessionEnded === "function") {
-          ErvenowOrderDraft.markSessionEnded();
-        }
-        if (window.ErvenowOrderDraft && typeof ErvenowOrderDraft.clearPlatformDraftState === "function") {
-          ErvenowOrderDraft.clearPlatformDraftState();
-        }
-      } catch (e) {}
     },
   };
 })();

@@ -45,13 +45,15 @@
     <div class="layout">
       <div class="card pending-wrap">
         <div class="pending-icon" aria-hidden="true">⏳</div>
-        <h1>عضويتك قيد المراجعة</h1>
-        <p>تم استلام طلب العضوية بنجاح.</p>
-        <p>عضويتك قيد المراجعة من إدارة ERVENOW، وسيتم إشعارك فور الاعتماد والتفعيل.</p>
+        <h1 id="pendingTitle">طلبك قيد المراجعة لدى ERVENOW</h1>
+        <p id="pendingLead">تم استلام طلب الانضمام بنجاح.</p>
+        <p id="pendingBody">سيظهر الطلب لإدارة ERVENOW للمراجعة، وسنُعلمك بالنتيجة.</p>
         <p class="sub" id="pendingPhone">—</p>
+        <p class="sub" id="pendingNeeds" hidden></p>
         <div class="pending-actions">
           <a class="btn btn-primary" href="/">الرئيسية</a>
           <a class="btn btn-ghost" id="pendingLoginBtn" href="/login">دخول الأعضاء</a>
+          <a class="btn btn-ghost" id="pendingResumeBtn" href="/register-store" hidden>استكمال البيانات</a>
         </div>
       </div>
     </div>
@@ -59,6 +61,12 @@
     <script src="/assets/api.js?erv=20260612"></script>
     <script>
       (function () {
+        try {
+          var headline = sessionStorage.getItem("ervenow_pending_headline") || "";
+          var subline = sessionStorage.getItem("ervenow_pending_subline") || "";
+          if (headline) document.getElementById("pendingTitle").textContent = headline;
+          if (subline) document.getElementById("pendingLead").textContent = subline;
+        } catch (h) {}
         try {
           var p = localStorage.getItem("userPhone") || "";
           if (p) document.getElementById("pendingPhone").textContent = "الجوال: " + p;
@@ -68,6 +76,25 @@
           var portal = localStorage.getItem("erv_pending_login_url") || "";
           if (loginBtn && portal && portal.indexOf("/") === 0) loginBtn.href = portal;
         } catch (portalErr) {}
+        var token = "";
+        try {
+          token = sessionStorage.getItem("ervenow_registration_token") || "";
+        } catch (_t) {}
+        if (token && window.PlatformAPI && window.PlatformAPI.api) {
+          window.PlatformAPI.api("/api/store/onboarding-status?registration_token=" + encodeURIComponent(token))
+            .then(function (j) {
+              if (!j || !j.needs_info) return;
+              var n = document.getElementById("pendingNeeds");
+              var resume = document.getElementById("pendingResumeBtn");
+              document.getElementById("pendingTitle").textContent = "مطلوب استكمال بيانات طلبك";
+              if (n) {
+                n.hidden = false;
+                n.textContent = j.needs_info_message || "يرجى استكمال البيانات وإعادة إرسال نفس الطلب.";
+              }
+              if (resume) resume.hidden = false;
+            })
+            .catch(function () {});
+        }
         try {
           localStorage.removeItem("token");
           localStorage.removeItem("userId");

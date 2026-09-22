@@ -202,6 +202,41 @@
     var img = st.logo_url
       ? '<img class="erv-live-popup__img" src="' + esc(st.logo_url) + '" alt="" loading="lazy" />'
       : '<div class="erv-live-popup__img erv-live-popup__img--ph" aria-hidden="true">🏪</div>';
+    var statusLine =
+      '<p class="erv-live-popup__meta"><span class="erv-live-popup__open' +
+      (st.listed ? " is-open" : "") +
+      '">' +
+      esc(st.status_label || st.open_label || "—") +
+      "</span>";
+    if (!runtime.adminMode) {
+      statusLine +=
+        " · ⭐ " +
+        esc(st.rating_label || "—") +
+        " · 🚚 " +
+        esc(st.delivery_eta_label || "—");
+    }
+    statusLine += "</p>";
+    var actions;
+    if (runtime.adminMode) {
+      actions =
+        '<div class="erv-live-popup__actions">' +
+        (st.maps_url
+          ? '<a class="btn btn-ghost erv-live-popup__btn" href="' +
+            esc(st.maps_url) +
+            '" target="_blank" rel="noopener noreferrer">خرائط Google</a>'
+          : "") +
+        "</div>";
+    } else {
+      actions =
+        '<div class="erv-live-popup__actions">' +
+        '<a class="btn btn-ghost erv-live-popup__btn" href="' +
+        esc(st.store_url) +
+        '">زيارة النشاط</a>' +
+        '<a class="btn btn-primary erv-live-popup__btn" href="' +
+        esc(st.order_url) +
+        '">ابدأ الطلب</a>' +
+        "</div>";
+    }
     return (
       '<div class="erv-live-popup">' +
       img +
@@ -212,25 +247,9 @@
       '<p class="erv-live-popup__cat">' +
       esc(st.category_label || "—") +
       "</p>" +
-      '<p class="erv-live-popup__meta">' +
-      '<span class="erv-live-popup__open' +
-      (st.is_open ? " is-open" : "") +
-      '">' +
-      esc(st.open_label || "—") +
-      "</span>" +
-      " · ⭐ " +
-      esc(st.rating_label || "—") +
-      " · 🚚 " +
-      esc(st.delivery_eta_label || "—") +
-      "</p>" +
-      '<div class="erv-live-popup__actions">' +
-      '<a class="btn btn-ghost erv-live-popup__btn" href="' +
-      esc(st.store_url) +
-      '">زيارة النشاط</a>' +
-      '<a class="btn btn-primary erv-live-popup__btn" href="' +
-      esc(st.order_url) +
-      '">ابدأ الطلب</a>' +
-      "</div></div></div>"
+      statusLine +
+      actions +
+      "</div></div>"
     );
   }
 
@@ -329,9 +348,9 @@
           "</span>" +
           "</span>" +
           '<span class="erv-live-map-feeder__open' +
-          (st.is_open ? " is-open" : "") +
+          (st.listed || st.is_open ? " is-open" : "") +
           '">' +
-          esc(st.open_label || "—") +
+          esc((runtime.adminMode && st.status_label) || st.open_label || "—") +
           "</span></a>"
         );
       })
@@ -398,7 +417,8 @@
   async function fetchStoresInView() {
     if (!hasToken() || !map || !clusterGroup) return;
     try {
-      var j = await api("/api/store/live-map/stores" + boundsQuery());
+      var path = runtime.adminMode ? "/api/admin/live-map/stores" : "/api/store/live-map/stores";
+      var j = await api(path + (runtime.adminMode ? "" : boundsQuery()));
       if (j && j.map_colors) {
         mapColors = Object.assign(mapColors, j.map_colors);
       }
@@ -590,7 +610,11 @@
     var el = document.getElementById("liveMap");
     if (!el || typeof L === "undefined" || map) return;
 
-    map = L.map(el, { zoomControl: true, preferCanvas: true }).setView(DEFAULT_CENTER, DEFAULT_ZOOM);
+    var startCity = runtime.adminMode ? cityById("all") : null;
+    var startLat = startCity ? startCity.lat : DEFAULT_CENTER[0];
+    var startLng = startCity ? startCity.lng : DEFAULT_CENTER[1];
+    var startZoom = startCity ? startCity.zoom : DEFAULT_ZOOM;
+    map = L.map(el, { zoomControl: true, preferCanvas: true }).setView([startLat, startLng], startZoom);
     mapBaseLayers = createMapBaseLayers();
     var savedMode = "satellite";
     try {
@@ -599,7 +623,7 @@
     applyMapBaseMode(savedMode);
     addBaseLayerControl();
 
-    if (typeof L.markerClusterGroup === "function") {
+    if (!runtime.adminMode && typeof L.markerClusterGroup === "function") {
       clusterGroup = L.markerClusterGroup({
         maxClusterRadius: 52,
         showCoverageOnHover: false,

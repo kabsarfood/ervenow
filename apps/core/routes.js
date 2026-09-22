@@ -37,9 +37,16 @@ const {
   resolveSelfServiceSignupRole,
   denyClientRolePayload,
   existingUserSessionRole,
-  canAdminOtpLogin,
   isSensitiveRole,
 } = require("../../shared/utils/roleAssignment");
+const {
+  ADMIN_LOGIN_REQUIRED_AR,
+  adminLoginRequiredExtra,
+} = require("../../shared/utils/adminAuthMessages");
+const {
+  signRegistrationToken,
+  requireVerifiedRegistration,
+} = require("../../shared/utils/registrationContext");
 
 const router = express.Router();
 const OTP_TTL_MS = 5 * 60 * 1000;
@@ -52,37 +59,6 @@ function clientIp(req) {
   return req.ip ? String(req.ip).slice(0, 128) : null;
 }
 
-const ADMIN_LOGIN_PHONE_RAW = String(
-  process.env.ERVENOW_ADMIN_LOGIN_PHONE || "0505745650"
-).trim();
-
-function toStoragePhoneDigits(input) {
-  const e = toE164(input);
-  return e ? toStorageDigits(e) : String(input || "").replace(/\D/g, "");
-}
-
-const ERVENOW_ADMIN_LOGIN_PHONE = toStoragePhoneDigits(ADMIN_LOGIN_PHONE_RAW);
-
-/** أرقام مسموح لها OTP لوحة الإدارة — LOGIN + قوائم الأدمن (نفس منطق apps/admin) */
-function adminOtpDigitsFromEnvList(rawList) {
-  const out = [];
-  for (const part of String(rawList || "").split(",")) {
-    const raw = String(part || "").trim();
-    if (!raw) continue;
-    const e = toE164(raw);
-    if (!e || !isErvnowSaudiMobileE164(e)) continue;
-    out.push(toStorageDigits(e));
-  }
-  return out;
-}
-
-const ADMIN_OTP_ALLOWED_DIGITS = new Set([
-  ERVENOW_ADMIN_LOGIN_PHONE,
-  ...adminOtpDigitsFromEnvList(process.env.ERVENOW_ADMIN_FULL_PHONES),
-  ...adminOtpDigitsFromEnvList(process.env.ERVENOW_ADMIN_LIMITED1_PHONES),
-  ...adminOtpDigitsFromEnvList(process.env.ERVENOW_ADMIN_LIMITED2_PHONES),
-]);
-
 function genOtp() {
   return String(Math.floor(10000 + Math.random() * 90000));
 }
@@ -91,9 +67,19 @@ function otpKey(role, phoneDigits) {
   return String(role || "customer").toLowerCase() + ":" + String(phoneDigits || "");
 }
 
-function isAllowedAdminPhoneDigits(phoneDigits) {
-  const d = String(phoneDigits || "").replace(/\D/g, "");
-  return ADMIN_OTP_ALLOWED_DIGITS.has(d);
+async function lookupExistingUserQuiet(digits) {
+  const sb = createServiceClient();
+  if (!sb) return null;
+  try {
+    const found = await findUserByPhoneResilient(sb, digits);
+    return found.data || null;
+  } catch (_e) {
+    return null;
+  }
+}
+
+function rejectPublicAdminLogin(res) {
+  return fail(res, ADMIN_LOGIN_REQUIRED_AR, 403, adminLoginRequiredExtra());
 }
 
 /* ======================
@@ -351,7 +337,13 @@ async function upsertDriverByPhone(
     ...(trimmedDistrict && insertRole === "service" ? { service_district: trimmedDistrict } : {}),
     ...(applyVehicle ? serviceVehicle : {}),
   };
-  const initialStatus = "pending";
+  const requestedStatus = String(options.accountStatus || "").toLowerCase();
+  const initialStatus =
+    requestedStatus === "active" || requestedStatus === "pending"
+      ? requestedStatus
+      : insertRole === "customer"
+        ? "active"
+        : "pending";
   return resilientUserInsert(sb, insertRow, initialStatus);
 }
 
@@ -613,10 +605,12 @@ router.post("/send-otp", sendOtpLimiter, async (req, res) => {
     const digits = canonicalPhoneDigits(toStorageDigits(e164));
     const loginOnly = req.body?.login_only === true || req.body?.login_only === "true";
     const role = loginOnly ? "login" : roleIn || "customer";
-    if (roleIn === "admin") {
-      if (!isAllowedAdminPhoneDigits(digits)) {
-        return fail(res, "غير مصرح لهذا الرقم بدخول لوحة الإدارة", 403);
-      }
+    if (isSensitiveRole(roleIn) || isSensitiveRole(role)) {
+      return rejectPublicAdminLogin(res);
+    }
+    const existingForSend = await lookupExistingUserQuiet(digits);
+    if (existingForSend && existingUserSessionRole(existingForSend.role) === "admin") {
+      return rejectPublicAdminLogin(res);
     }
     const code = genOtp();
     const key = otpKey(role, digits);
@@ -640,11 +634,8 @@ router.post("/send-otp", sendOtpLimiter, async (req, res) => {
     let sent = false;
     try {
       sent = await sendOTP(digits, code, {
-        message: buildAuthOtpMessage(
-          code,
-          role === "admin" ? "لوحة الإدارة" : "تسجيل الدخول"
-        ),
-        type: role === "admin" ? "otp_admin" : "otp_login",
+        message: buildAuthOtpMessage(code, "تسجيل الدخول"),
+        type: "otp_login",
       });
     } catch (waErr) {
       console.error("[ERVENOW] send-otp whatsapp error:", waErr?.code, waErr?.message || waErr);
@@ -701,12 +692,19 @@ router.post("/verify-otp", async (req, res) => {
       (req.body?.register_without_otp === true || req.body?.register_without_otp === "true") &&
       !(req.body?.login_only === true || req.body?.login_only === "true");
     if (registerWithoutOtp) {
-      return await handleRegisterAccount(req, res);
+      return fail(res, "التسجيل العام يتطلب توثيق رقم الجوال من بوابة الدخول أولاً.", 403, {
+        registration_required: true,
+        code: "REGISTRATION_CONTEXT_REQUIRED",
+      });
     }
 
     const raw = req.body?.phone;
     const codeIn = String(req.body?.code || "").trim();
     const loginOnly = req.body?.login_only === true || req.body?.login_only === "true";
+    const checkoutCustomer =
+      req.body?.checkout_customer === true ||
+      req.body?.checkout_customer === "true" ||
+      String(req.body?.purpose || "").toLowerCase() === "checkout";
     const roleIn = String(req.body?.role || "customer").trim().toLowerCase();
 
     const e164 = toE164(raw);
@@ -748,13 +746,11 @@ router.post("/verify-otp", async (req, res) => {
     }
     const existingRole = existingUser ? existingUserSessionRole(existingUser.role) : null;
 
-    if (isSensitiveRole(roleIn)) {
-      if (!canAdminOtpLogin(existingUser, isAllowedAdminPhoneDigits(digits))) {
-        return fail(res, "لا يمكن ترقية الحساب إلى مدير أو دور حسّاس", 403);
-      }
+    if (isSensitiveRole(roleIn) || existingRole === "admin") {
+      return rejectPublicAdminLogin(res);
     }
 
-    const key = otpKey(loginOnly ? "login" : (isSensitiveRole(roleIn) ? "admin" : roleIn || "customer"), digits);
+    const key = otpKey(loginOnly ? "login" : roleIn || "customer", digits);
     const checked = await verifyOtpChallenge({
       sb: sbOtp,
       mode,
@@ -769,10 +765,17 @@ router.post("/verify-otp", async (req, res) => {
       });
     }
 
-    if (loginOnly && !existingUser) {
-      return fail(res, "رقم الجوال غير مسجّل. أنشئ حساباً من صفحة التسجيل أولاً.", 403, {
-        not_registered: true,
-      });
+    if (!existingUser) {
+      if (!checkoutCustomer) {
+        const registration_token = signRegistrationToken(digits);
+        return ok(res, {
+          success: true,
+          needs_registration: true,
+          registration_token,
+          phone: digits,
+          message: "تم توثيق الجوال. اختر كيف تريد استخدام ERVENOW.",
+        });
+      }
     }
 
     const sb = sbEarly || createServiceClient();
@@ -787,6 +790,8 @@ router.post("/verify-otp", async (req, res) => {
     let roleForSession;
     if (existingUser) {
       roleForSession = existingRole || "customer";
+    } else if (checkoutCustomer) {
+      roleForSession = "customer";
     } else {
       const resolved = resolveSelfServiceSignupRole(roleIn);
       if (!resolved.ok) return fail(res, resolved.message, resolved.status);
@@ -845,7 +850,7 @@ router.post("/verify-otp", async (req, res) => {
       displayName,
       serviceDistrict,
       serviceVehicle,
-      { loginOnly: loginOnly && !!existingUser }
+      { loginOnly: loginOnly && !!existingUser, accountStatus: !existingUser && checkoutCustomer ? "active" : undefined }
     );
     if (dbErr) {
       console.error("[ERVENOW] verify-otp DB:", dbErr);
@@ -904,6 +909,10 @@ router.post("/verify-otp", async (req, res) => {
     }
 
     const sessionPhone = canonicalPhoneDigits(userRow.phone || digits) || digits;
+
+    if (existingUserSessionRole(userRow.role || roleForSession) === "admin") {
+      return rejectPublicAdminLogin(res);
+    }
 
     const attrPatch = pickPreRegistrationFields(req.body);
     attrPatch.phone_verified_at = new Date().toISOString();
@@ -971,17 +980,21 @@ router.post("/verify-otp", async (req, res) => {
 });
 
 async function handleRegisterAccount(req, res) {
-  const raw = req.body?.phone;
+  const regCtx = requireVerifiedRegistration(req, res);
+  if (!regCtx) return;
+
   const roleIn = String(req.body?.role || "customer").trim().toLowerCase();
   const resolvedRole = resolveSelfServiceSignupRole(roleIn);
   if (!resolvedRole.ok) return fail(res, resolvedRole.message, resolvedRole.status);
   const wantRole = resolvedRole.role;
-
-  const e164 = toE164(raw);
-  if (!e164) return fail(res, "رقم الجوال غير صالح", 400);
-  if (!isErvnowSaudiMobileE164(e164)) {
-    return fail(res, "رقم غير صالح — أدخل 05xxxxxxxx أو 9665xxxxxxxx", 400);
+  if (wantRole === "store" || wantRole === "merchant" || wantRole === "restaurant") {
+    return fail(res, "تسجيل المتجر يكتمل من نموذج المتجر بعد توثيق الجوال.", 400, {
+      next: "/register-store",
+    });
   }
+
+  const digits = canonicalPhoneDigits(regCtx.phone);
+  if (!digits) return fail(res, "رقم الجوال غير صالح", 400);
 
   let payoutParsed = {};
   try {
@@ -990,7 +1003,6 @@ async function handleRegisterAccount(req, res) {
     return fail(res, pe.message || "بيانات الحساب البنكي غير صالحة", 400);
   }
 
-  const digits = canonicalPhoneDigits(toStorageDigits(e164));
   const sb = createServiceClient();
   if (!sb) {
     return fail(res, `قاعدة البيانات غير جاهزة — ${getDatabaseConfigHint()}`, 503);
@@ -1064,7 +1076,7 @@ async function handleRegisterAccount(req, res) {
     displayName,
     serviceDistrict,
     serviceVehicle,
-    { loginOnly: false }
+    { loginOnly: false, accountStatus: wantRole === "customer" ? "active" : "pending" }
   );
   if (dbErr) {
     console.error("[ERVENOW] register-account DB:", dbErr);
@@ -1142,7 +1154,7 @@ async function handleRegisterAccount(req, res) {
     const { notifyAdminsInApp } = require("../../shared/services/platformNotify");
     const roleLabel =
       wantRole === "service" ? normalizeServiceType(wantServiceType) || "service" : wantRole;
-    await notifyAdminsInApp(sb, {
+    void notifyAdminsInApp(sb, {
       title: "طلب تسجيل جديد",
       message: `طلب انضمام (${roleLabel}) — ${displayName || digits}`,
       type: "registration",
@@ -1153,9 +1165,33 @@ async function handleRegisterAccount(req, res) {
         service_type: userRow.service_type || null,
         phone: digits,
       },
+    }).catch(function (notifyErr) {
+      console.warn("[ERVENOW] register-account admin notify:", notifyErr && (notifyErr.message || notifyErr));
     });
   } catch (notifyErr) {
     console.warn("[ERVENOW] register-account admin notify:", notifyErr.message || notifyErr);
+  }
+
+  if (wantRole === "customer") {
+    const sessionPhone = canonicalPhoneDigits(userRow.phone || digits) || digits;
+    const token = signPlatformToken(userRow.id, sessionPhone, userRow.role || "customer");
+    attachSiteSessionCookie(req, res, token);
+    return ok(res, {
+      success: true,
+      token,
+      approved: true,
+      pending_approval: false,
+      message: "تم إنشاء حسابك.",
+      user: {
+        id: userRow.id,
+        phone: userRow.phone,
+        role: userRow.role || "customer",
+        status: userRow.status || "active",
+        service_type: userRow.service_type || null,
+        name: userRow.name || null,
+        approved: true,
+      },
+    });
   }
 
   return ok(res, {
@@ -1175,7 +1211,7 @@ async function handleRegisterAccount(req, res) {
   });
 }
 
-/** تسجيل حساب جديد بدون OTP — يُرسل للإدارة للموافقة، ثم يدخل المستخدم برمز واتساب بعد الاعتماد */
+/** تسجيل حساب جديد بعد OTP موثّق — العميل يُفعَّل فوراً، الشركاء بانتظار الموافقة */
 async function registerAccountRoute(req, res) {
   try {
     return await handleRegisterAccount(req, res);

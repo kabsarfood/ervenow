@@ -63,7 +63,7 @@
     driver: "ERVENOW Driver",
     service: "ERVENOW Service",
     transport: "ERVENOW Transport",
-    admin: "ERVENOW Admin Console",
+    admin: "لوحة التحكم",
   };
 
   var KNOWN_DB_ROLES = {

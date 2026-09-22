@@ -267,7 +267,7 @@
     for (var i = 0; i < cart.length; i++) {
       var d = cart[i] && cart[i].data;
       if (!d || !d.store_id) continue;
-      if (String(d.store_id) !== sid) return { ok: false, message: "لا يمكن خلط منتجات من متجرين مختلفين" };
+      if (String(d.store_id) !== sid) continue;
       if (d.delivery_snapshot_version === 1 && snapshot.delivery_snapshot_version === 1) {
         if (d.fulfillment_mode !== snapshot.fulfillment_mode) {
           return { ok: false, message: "نوع الاستلام/التوصيل يجب أن يكون موحّداً لكل المنتجات" };

@@ -54,7 +54,17 @@ function mapStoreRow(s) {
     detail: {
       type: s.type,
       location_text: s.location_text || null,
+      address: s.address || null,
+      lat: s.lat,
+      lng: s.lng,
+      maps_url: s.maps_url || null,
       is_active: s.is_active,
+      publication_status: s.publication_status || null,
+      commercial_registration: s.commercial_registration || null,
+      file_url: s.file_url || null,
+      license_number: s.license_number || null,
+      license_file_url: s.license_file_url || null,
+      needs_info_message: s.needs_info_message || null,
     },
   };
 }
@@ -107,7 +117,8 @@ function matchesStatusFilter(item, statusFilter) {
   const f = String(statusFilter || "").toLowerCase();
   if (!f || f === "all") return true;
   const st = String(item.status || "").toLowerCase();
-  if (f === "pending" || f === "in_review") return st === "pending";
+  if (f === "pending" || f === "in_review") return st === "pending" || st === "needs_info";
+  if (f === "needs_info") return st === "needs_info";
   if (f === "approved") return item.approved === true || st === "approved" || st === "active";
   if (f === "rejected") return st === "rejected";
   if (f === "new") {
@@ -127,7 +138,7 @@ function buildSummary(items) {
   const now = Date.now();
   items.forEach((it) => {
     const st = String(it.status || "").toLowerCase();
-    if (st === "pending") {
+    if (st === "pending" || st === "needs_info") {
       pending += 1;
       const c = it.created_at ? new Date(it.created_at).getTime() : 0;
       if (!c || now - c < 48 * 60 * 60 * 1000) recentPending += 1;
@@ -191,12 +202,21 @@ async function loadRegistrationApprovalItems(sb, options = {}) {
   }
 
   if (wantStores) {
-    const { data: stores, error: sErr } = await sb
+    let storesQ = await sb
       .from("stores")
-      .select("id, name, phone, type, status, is_active, location_text, created_at, updated_at")
+      .select(
+        "id, name, phone, type, status, is_active, location_text, address, lat, lng, maps_url, publication_status, commercial_registration, file_url, license_number, license_file_url, needs_info_message, created_at, updated_at"
+      )
       .order("created_at", { ascending: false })
       .limit(500);
-    if (!sErr) (stores || []).forEach((s) => items.push(mapStoreRow(s)));
+    if (storesQ.error && /publication_status|license_|needs_info|column/i.test(String(storesQ.error.message || ""))) {
+      storesQ = await sb
+        .from("stores")
+        .select("id, name, phone, type, status, is_active, location_text, address, lat, lng, maps_url, commercial_registration, file_url, created_at, updated_at")
+        .order("created_at", { ascending: false })
+        .limit(500);
+    }
+    if (!storesQ.error) (storesQ.data || []).forEach((s) => items.push(mapStoreRow(s)));
   }
 
   if (wantDrivers) {

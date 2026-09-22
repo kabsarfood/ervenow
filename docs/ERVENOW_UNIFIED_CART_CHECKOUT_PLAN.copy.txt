@@ -1,0 +1,71 @@
+ERVENOW — Unified Cart / Checkout / Fulfillment Groups
+التاريخ: 2026-09-22
+تحليل فقط — لم يُغيَّر السلة أو Checkout أو الطلبات أو الدفع أو Ledger.
+
+المبدأ: كل اختيار من أي قسم → سلة واحدة → Checkout واحد. المحركات Store/Service/Transport/Delivery تبقى. لا Order هجينة.
+
+1) كيف تعمل السلة الحالية؟
+الرسمي: ErvenowOrderDraftVertical.commit → مسودة → /checkout.
+هذا مسار المتجر/المطعم/الخدمات/الغاز/السطحة/الأثاث/التلميع/الخريطة.
+القديم: cart.js + localStorage.cart. GET /cart يحوّل إلى /checkout.
+الواجهة تمنع خلط متجرين. خلط متجر+خدمة مسموح. الخدمات غالباً تطلب جوالاً قبل الإضافة.
+
+2) أين تُخزَّن؟
+المسودة: localStorage مفتاح ervenow:order-draft.
+القديمة: localStorage مفتاح cart.
+لا جدول سلة في الخادم.
+
+3) LocalStorage أم Backend Draft؟
+LocalStorage حتى التأكيد. بعد POST /api/order/create تُكتب صفوف orders فوراً.
+delivery_status=draft أحياناً بوابة دفع — هذا طلب مبكر لا سلة.
+
+4) هل تحمل Service؟
+نعم. type حر: مطعم/متجر/سباك/غاز/سطحة/توصيل… داخل items[].
+حقل المسودة الواحد service_type/provider_id لا يكفي للخلط — التقسيم من البنود.
+
+5) كيف ينشئ Checkout الطلب؟
+/checkout يقرأ المسودة ثم POST /api/order/create {items}.
+الخادم runCheckoutInsert يعيد التسعير ويقسم restaurant/store/service/delivery ويدرج orders ويستدعي المحرك.
+بدون توكن → /login?mode=register (خلط مسار العضوية).
+POST /api/checkout مهمل. API بلا items ما زال ينشئ خدمة/توصيل مباشرة.
+
+6) متى يُكتب orders؟
+عند نجاح create مع جلسة. قبلها مسودة محلية. بعدها قد يصل إشعار للتاجر/المندوب فوراً.
+قاعدة «لا جوال موثّق → لا طلب تنفيذي» غير مكتملة اليوم.
+
+7) أكثر من Cart Engine؟
+نعم: Order Draft (المعتمد) و cart.js (قديم). الشارة في الرئيسية تقرأ المسودة.
+
+8) أكثر من Checkout؟
+نعم في الكود: /checkout الرسمي، cart.html قديم، /api/checkout مهمل، إنشاء مباشر بلا سلة في API.
+تجربة العميل المستهدفة: /checkout فقط.
+
+9) Fulfillment Groups
+اليوم: متجر واحد وإلا 400. كل خدمة طلب مستقل. سطحة بإحداثيات لمحرك التوصيل.
+المقترح: store:{store_id} طلب واحد لنفس المتجر وطلب لكل متجر مختلف.
+service/transport/delivery: طلب لكل بند. جلسة Checkout واحدة. لا خلط workflows في صف واحد.
+
+10) أقل تعديل
+عقد بند فوق items الحالية.
+الإضافة كلها عبر commit (شبه منجز).
+السماح بمتجرين وتقسيمهم عند التأكيد.
+/checkout الواجهة الوحيدة.
+OTP سياق شراء عند الزر ثم Customer تلقائي.
+لا INSERT تنفيذي قبل OTP.
+وسائل الدفع تبقى شslots دون ربط STC أو Ledger الآن.
+
+Unified Cart Contract
+line: workflow, source, provider_id, item_id, title, price, qty, notes, location, scheduled_at, data.
+التخزين: المسودة الحالية. لا جدول جديد. الإضافة لا تنشئ Order.
+
+Unified Checkout Flow
+تصفح → مسودة → /checkout (مراجعة، موقع، موعد إن لزم، ملخص، دفع، تأكيد).
+غير موثّق: OTP checkout → ربط أو إنشاء Customer → نفس الصفحة.
+بعد التأكيد: مجموعات تنفيذية عبر المحركات الحالية.
+
+Fulfillment Grouping
+store:{store_id} | service:{type}:{line_id} | transport:{type}:{line_id} | delivery:{line_id}
+
+خارج النطاق: Dispatch, Settlement, Actions, STC Pay, Ledger, جدول سلة، role=transport.
+
+لا تنفيذ حتى اعتماد العقد والتجميع.

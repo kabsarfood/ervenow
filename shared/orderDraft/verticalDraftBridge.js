@@ -11,6 +11,7 @@ const {
   computeItemsSubtotal,
   roundMoney,
 } = require("./orderDraftSchema");
+const { normalizeUnifiedCartLine } = require("./unifiedCartLine");
 
 const CHECKOUT_PATH = "/checkout";
 
@@ -136,7 +137,7 @@ function normalizeIncomingItem(item) {
   };
   if (item.customer_phone) line.customer_phone = String(item.customer_phone).trim();
   if (item.payment_status) line.payment_status = item.payment_status;
-  return line;
+  return normalizeUnifiedCartLine(line) || line;
 }
 
 function mergeItemIntoItems(items, item) {
@@ -151,13 +152,6 @@ function mergeItemIntoItems(items, item) {
   }
 
   const newSid = line.data && line.data.store_id ? String(line.data.store_id).trim() : "";
-  if (newSid) {
-    const existingIds = getStoreIdsFromItems(list);
-    if (existingIds.size > 0 && !existingIds.has(newSid)) {
-      return { ok: false, message: "لا يمكن خلط منتجات من متجرين مختلفين", items: list };
-    }
-  }
-
   const pid = line.data && line.data.product_id;
   if (newSid && pid != null && pid !== "") {
     const idx = findStoreProductLineIndex(list, newSid, pid);
@@ -200,9 +194,7 @@ function assertSnapshotCompatibleWithItems(items, snapshot) {
   for (let i = 0; i < list.length; i += 1) {
     const d = list[i] && list[i].data;
     if (!d || !d.store_id) continue;
-    if (String(d.store_id) !== sid) {
-      return { ok: false, message: "لا يمكن خلط منتجات من متجرين مختلفين" };
-    }
+    if (String(d.store_id) !== sid) continue;
     if (d.delivery_snapshot_version === 1 && snapshot.delivery_snapshot_version === 1) {
       if (d.fulfillment_mode !== snapshot.fulfillment_mode) {
         return { ok: false, message: "نوع الاستلام/التوصيل يجب أن يكون موحّداً لكل المنتجات" };
@@ -254,15 +246,17 @@ function buildDraftPatch(existingDraft, mergedItems, opts) {
 }
 
 function validateServiceItem(item) {
-  const phone = validateSaPhone(item && item.customer_phone);
-  if (!phone && !(item && item.data && validateSaPhone(item.data.customer_phone))) {
-    return { ok: false, message: "أدخل رقم جوال سعودي صحيح (05xxxxxxxx أو 9665xxxxxxxx)" };
-  }
   const normalized = normalizeIncomingItem(item);
   if (!normalized) return { ok: false, message: "invalid_item" };
-  const ph = validateSaPhone(normalized.customer_phone || (normalized.data && normalized.data.customer_phone));
-  normalized.customer_phone = ph;
-  if (normalized.data) normalized.data.customer_phone = ph;
+  const ph =
+    validateSaPhone(item && item.customer_phone) ||
+    validateSaPhone(item && item.data && item.data.customer_phone) ||
+    validateSaPhone(normalized.customer_phone) ||
+    validateSaPhone(normalized.data && normalized.data.customer_phone);
+  if (ph) {
+    normalized.customer_phone = ph;
+    if (normalized.data) normalized.data.customer_phone = ph;
+  }
   const price = Number(normalized.price);
   const zeroOk = { delivery: 1, restaurant: 1, food: 1, service: 1 };
   if ((!Number.isFinite(price) || price <= 0) && !zeroOk[normalized.type]) {
@@ -356,4 +350,5 @@ module.exports = {
   saveCustomerLocationToDraft,
   customerLocationFromItems,
   getDraftItemsFromApi,
+  normalizeIncomingItem,
 };

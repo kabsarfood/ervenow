@@ -30,6 +30,11 @@ const DELIVERY_ITEM_TYPES = Object.freeze({
   gas_delivery: 1,
 });
 
+const {
+  normalizeUnifiedCartItems,
+  groupFulfillmentItems,
+} = require("./unifiedCartLine");
+
 function roundMoney(n) {
   const x = Number(n);
   if (!Number.isFinite(x)) return 0;
@@ -147,7 +152,7 @@ function normalizeOrderDraft(input) {
 
   const draft = Object.assign({}, base, input);
   draft.version = ORDER_DRAFT_VERSION;
-  draft.items = Array.isArray(input.items) ? input.items.slice() : [];
+  draft.items = normalizeUnifiedCartItems(Array.isArray(input.items) ? input.items : []);
   draft.service_type = SERVICE_TYPES.includes(input.service_type) ? input.service_type : null;
   draft.provider_id = input.provider_id != null && String(input.provider_id).trim() ? String(input.provider_id) : null;
   draft.payment_method =
@@ -181,6 +186,10 @@ function normalizeOrderDraft(input) {
     draft.provider_id = inferProviderIdFromItems(draft.items);
   }
 
+  const groups = groupFulfillmentItems(draft.items);
+  draft.meta.mixed = groups.length > 1;
+  draft.meta.fulfillment_group_count = groups.length;
+
   return draft;
 }
 
@@ -200,7 +209,19 @@ function validateOrderDraft(draft) {
   if (d.service_type && !SERVICE_TYPES.includes(d.service_type)) {
     errors.push("invalid_service_type");
   }
-  if ((d.service_type === "store" || d.service_type === "restaurant") && d.items.length && !d.provider_id) {
+  const uniqueStoreIds = new Set(
+    (d.items || [])
+      .map(function (it) {
+        return String((it && it.provider_id) || (it && it.data && it.data.store_id) || "").trim();
+      })
+      .filter(Boolean)
+  );
+  if (
+    (d.service_type === "store" || d.service_type === "restaurant") &&
+    d.items.length &&
+    !d.provider_id &&
+    uniqueStoreIds.size <= 1
+  ) {
     errors.push("provider_id_required_for_store");
   }
   if (d.payment_method != null && !String(d.payment_method).trim()) {
@@ -240,4 +261,6 @@ module.exports = {
   computeItemsSubtotal,
   hasDraftItems,
   roundMoney,
+  normalizeUnifiedCartItems,
+  groupFulfillmentItems,
 };

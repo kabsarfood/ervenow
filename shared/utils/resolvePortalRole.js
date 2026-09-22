@@ -45,7 +45,7 @@ const PORTAL_LABELS_AR = {
   driver: "ERVENOW Driver",
   service: "ERVENOW Service",
   transport: "ERVENOW Transport",
-  admin: "ERVENOW Admin Console",
+  admin: "لوحة التحكم",
 };
 
 const KNOWN_DB_ROLES = new Set([

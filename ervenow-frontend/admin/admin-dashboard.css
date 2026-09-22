@@ -1699,6 +1699,83 @@ select {
   color: inherit !important;
 }
 
+.store-review-modal {
+  max-width: min(760px, 96vw);
+  max-height: min(92vh, 960px);
+  overflow-y: auto;
+}
+.store-review-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 10px;
+}
+.store-review-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 8px 12px;
+}
+.store-review-grid div {
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+.store-review-docs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+}
+.store-review-docs img,
+.store-review-products img {
+  width: 100%;
+  max-height: 180px;
+  object-fit: contain;
+  background: #fff;
+  border-radius: 10px;
+  border: 1px solid rgba(0,0,0,.08);
+}
+.store-review-map {
+  width: 100%;
+  min-height: 180px;
+  border: 0;
+  border-radius: 12px;
+}
+.store-review-products {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+}
+.store-review-product {
+  border: 1px solid rgba(0,0,0,.08);
+  border-radius: 12px;
+  padding: 8px;
+  background: #fff;
+}
+.store-review-needs label {
+  display: block;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+.store-review-needs textarea {
+  width: 100%;
+  font: inherit;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(0,0,0,.12);
+  min-height: 72px;
+}
+.store-review-foot {
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.store-review-foot .btn,
+.store-review-foot .exec-btn {
+  min-height: 44px;
+}
+@media (max-width: 640px) {
+  .store-review-foot .btn {
+    flex: 1 1 100%;
+  }
+}
 .store-setup-modal {
   max-width: min(520px, 96vw);
   max-height: min(92vh, 900px);

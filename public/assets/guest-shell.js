@@ -17,14 +17,18 @@
         service_type: opts.serviceType,
       }).portalRole;
     }
-    if (opts.authenticated && portalRole && portalRole !== "customer") {
+    if (r === "admin" && opts.authenticated) {
+      links.push({
+        key: "control",
+        href: "/admin-dashboard",
+        label: "لوحة التحكم",
+      });
+    } else if (opts.authenticated && portalRole && portalRole !== "customer") {
       links.push({
         key: "portal",
         href: ErvenowRoleRouting.portalPathForRole(portalRole),
         label: ErvenowRoleRouting.portalLabelAr(portalRole),
       });
-    } else {
-      links.push({ key: "guest", href: "/dashboard", label: "منصة ERVENOW" });
     }
     if (opts.authenticated) {
       if (r === "driver") {
@@ -34,11 +38,7 @@
       }
     }
     if (r === "admin" && opts.authenticated) {
-      links.push({
-        key: "control",
-        href: "/admin-dashboard",
-        label: "⚙️ لوحة التحكم",
-      });
+      /* رابط واحد للوحة الإدارة — دون Admin Console مكرر ودون خريطة حية هنا */
     } else if (r === "driver" && opts.authenticated) {
       links.push({
         key: "track",
@@ -131,7 +131,7 @@
     if (!document.querySelector('link[data-erv-notification-center-css="1"]')) {
       var l = document.createElement("link");
       l.rel = "stylesheet";
-      l.href = "/assets/notification-center.css";
+      l.href = "/assets/notification-center.css?erv=20260922n2";
       l.setAttribute("data-erv-notification-center-css", "1");
       document.head.appendChild(l);
     }
@@ -144,7 +144,7 @@
     }
     if (!document.querySelector('script[data-erv-notification-center-js="1"]')) {
       var s = document.createElement("script");
-      s.src = "/assets/notification-center.js";
+      s.src = "/assets/notification-center.js?erv=20260922n2";
       s.defer = true;
       s.setAttribute("data-erv-notification-center-js", "1");
       document.head.appendChild(s);
@@ -154,26 +154,42 @@
   /** يضمن وجود حاوية الجرس في أي هيدر معروف */
   function ensureNotificationHost() {
     var existing = document.getElementById("dashHeaderNotifications");
-    if (existing) return existing;
-    var host = document.createElement("div");
+    var host = existing || document.createElement("div");
     host.id = "dashHeaderNotifications";
-    host.setAttribute("aria-hidden", "true");
-    var tools = document.querySelector(".dash-site-header__tools");
-    if (tools) {
-      tools.insertBefore(host, tools.firstChild);
+
+    var inner = document.querySelector(".dash-site-header__inner");
+    var tools = inner && inner.querySelector(".dash-site-header__tools");
+    if (inner) {
+      if (host.parentNode !== inner) {
+        inner.insertBefore(host, tools || inner.firstChild);
+      }
       return host;
     }
+
+    var topRow = document.querySelector(".lp-header__top-row");
+    if (topRow) {
+      if (host.parentNode !== topRow) {
+        topRow.appendChild(host);
+      }
+      return host;
+    }
+
     var lpActions = document.querySelector(".lp-header__actions");
     if (lpActions) {
-      lpActions.insertBefore(host, lpActions.firstChild);
+      if (host.parentNode !== lpActions) {
+        lpActions.insertBefore(host, lpActions.firstChild);
+      }
       return host;
     }
+
     var walletActions = document.querySelector(".wallet-top-actions");
     if (walletActions) {
-      walletActions.insertBefore(host, walletActions.firstChild);
+      if (host.parentNode !== walletActions) {
+        walletActions.insertBefore(host, walletActions.firstChild);
+      }
       return host;
     }
-    return null;
+    return existing || null;
   }
 
   function mountNotificationCenter() {
@@ -185,6 +201,7 @@
       setTimeout(mountNotificationCenter, 120);
       return;
     }
+    host.removeAttribute("aria-hidden");
     host.setAttribute("data-erv-notif-mounted", "1");
     global.ErvenowNotificationCenter.mount({ mount: host, key: "guest-shell-header" });
   }
@@ -266,11 +283,6 @@
   }
 
   function clearGuestSessionState() {
-    try {
-      if (global.ErvenowOrderDraft && typeof global.ErvenowOrderDraft.clearPlatformDraftState === "function") {
-        global.ErvenowOrderDraft.clearPlatformDraftState();
-      }
-    } catch (_eDraft) {}
     try {
       if (global.ErvenowAuthGuard && typeof global.ErvenowAuthGuard.clearSession === "function") {
         global.ErvenowAuthGuard.clearSession();
@@ -753,7 +765,7 @@
   }
 
   function loadIdentityRoutingScripts() {
-    loadScriptOnce("/assets/role-routing.js?erv=20260921dest1", "data-erv-role-routing");
+    loadScriptOnce("/assets/role-routing.js?erv=20260922adm2", "data-erv-role-routing");
     loadScriptOnce("/assets/account-destinations.js?erv=20260921dest1", "data-erv-account-dest");
   }
 
@@ -809,12 +821,12 @@
       if (cb) cb();
       return;
     }
-    if (document.querySelector('script[src*="order-draft-badge.js"]')) {
+    if (global.ErvenowOrderDraft || document.querySelector('script[src*="order-draft-badge.js"]')) {
       if (cb) cb();
       return;
     }
     var s1 = document.createElement("script");
-    s1.src = "/assets/order-draft-store.js";
+    s1.src = "/assets/order-draft-store.js?erv=20260922uc1";
     s1.async = true;
     s1.onload = function () {
       var s2 = document.createElement("script");

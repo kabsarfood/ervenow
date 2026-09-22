@@ -27,7 +27,7 @@
     { icon: "🏪", label: "متاجر", href: "/stores" },
     { icon: "🛠️", label: "خدمات", href: "/services" },
     { icon: "🚚", label: "توصيل", href: "/delivery-services.html" },
-    { icon: "🔥", label: "العروض", href: "/start-now.html#offers" },
+    { icon: "🔥", label: "العروض", href: "/#snHomeHub" },
   ];
 
   function esc(s) {
@@ -239,7 +239,7 @@
       "<p style=\"margin:0;font-weight:700\">" +
       esc(state.locationLabel) +
       '</p><a class="pf-btn" href="/delivery-map.html" style="margin-top:8px;font-size:0.78rem;min-height:40px">تحديث الموقع</a></div></div>' +
-      '<form class="pf-search" action="/start-now.html" method="get">' +
+      '<form class="pf-search" action="/" method="get">' +
       '<input type="search" name="q" placeholder="ابحث عن مطعم، متجر، أو خدمة…" aria-label="بحث" />' +
       '<button type="submit" class="pf-btn pf-btn--primary">🔍</button></form>' +
       '<div class="pf-hub-grid">' +
@@ -254,7 +254,7 @@
           section: "wallet",
         },
         { label: "الإشعارات", sub: state.unreadCount + " غير مقروء", href: "/notifications" },
-        { label: "العروض", sub: (state.offers || []).length + " عرض", href: "/start-now.html" },
+        { label: "العروض", sub: (state.offers || []).length + " عرض", href: "/" },
       ]) +
       W.recentActivity({
         title: "آخر الطلبات",
@@ -392,7 +392,7 @@
       "</p>" +
       '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px">' +
       '<a class="pf-btn" href="/login?role=customer">إدارة الحساب</a>' +
-      '<a class="pf-btn pf-btn--primary" href="/start-now.html">استكشاف الخدمات</a></div></div>'
+      '<a class="pf-btn pf-btn--primary" href="/">استكشاف الخدمات</a></div></div>'
     );
   }
 

@@ -1112,6 +1112,76 @@ body.guest-shell-page .reg-store-select {
   font-family: inherit;
 }
 
+#storeSubtypeWrap .reg-store-type-vip__card[data-type="restaurant"] {
+  display: none;
+}
+.reg-store-primary-type {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.reg-store-primary-type__card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-height: 72px;
+  padding: 12px 8px;
+  border-radius: 14px;
+  border: 1px solid rgba(61, 34, 19, 0.14);
+  background: #fffefb;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+}
+.reg-store-primary-type__card strong {
+  font-size: clamp(0.95rem, 2.4vw, 1.05rem);
+}
+.reg-store-primary-type__card span:last-child {
+  font-size: 0.75rem;
+  color: var(--muted, #5c4a3d);
+}
+.reg-store-primary-type__card.is-active {
+  border-color: #c49a3c;
+  box-shadow: 0 0 0 2px rgba(196, 154, 60, 0.25);
+  background: #fff8ea;
+}
+.reg-store-needs-banner {
+  margin: 0 0 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #fff4e5;
+  border: 1px solid rgba(185, 135, 47, 0.35);
+  color: #6b4a12;
+  font-weight: 700;
+  line-height: 1.55;
+}
+.reg-store-products {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.reg-store-product-row {
+  border: 1px solid rgba(61, 34, 19, 0.1);
+  border-radius: 14px;
+  padding: 12px;
+  background: #fff;
+}
+.reg-store-product-row input[type="text"],
+.reg-store-product-row input[type="number"],
+.reg-store-product-row input[type="file"] {
+  width: 100%;
+  min-height: 44px;
+  font-size: 16px;
+}
+@media (max-width: 640px) {
+  .reg-store-primary-type__card {
+    min-height: 64px;
+  }
+}
+
 /* ——— Upload ——— */
 .reg-store-upload-grid {
   display: grid;

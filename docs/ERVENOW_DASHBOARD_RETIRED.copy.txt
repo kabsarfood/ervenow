@@ -1,0 +1,72 @@
+ERVENOW — تنفيذ إلغاء /dashboard
+التاريخ: 2026-09-22
+
+القرار المنفذ
+/dashboard أُلغيت كواجهة عميل. الوجهة الرسمية الوحيدة للمنزل: /
+لم يُنشأ /account.
+لم يُغيَّر: Login destination، الطلبات، Wallet، Tracking، Notifications، Role Routing.
+
+Redirect
+server/server.js قبل static:
+GET /dashboard و GET /dashboard.html → 302 /
+Vercel: redirects statusCode 302 لنفس المسارين.
+
+الملفات المحذوفة
+public/dashboard.html
+ervenow-frontend/dashboard.html
+
+الملفات المعدلة (أبرزها)
+server/server.js
+public/assets/guest-shell.js
+public/assets/cart-ui.js
+public/assets/mobile-foundation.js
+public/assets/account-destinations.js
+public/index.html
+public/admin/admin-dashboard.html
+public/admin/modules/hero-banners.js
+صفحات HTML العميلة (هيدر/CTA): my-orders, checkout, cart, track, wallet, delivery-map, stores, restaurants, services, browse, login (هيدر فقط), وغيرها
+shared/utils/bannerTargets.js
+shared/utils/bannerPlacements.js
+shared/utils/adminRoleTaxonomy.js
+scripts/sync-ervenow-frontend.js
+ervenow-frontend/vercel.json + مرآة الملفات أعلاه
+tests/unit/dashboardRetired.test.js
+tests/unit/checkoutEnginePhase5Cutover.test.js
+tests/unit/checkoutDraftEdit.test.js
+tests/unit/heroBannerStore.test.js
+
+المراجع التي أزيلت
+هيدر guest-shell «منصة ERVENOW» → /dashboard (حُذف العنصر حتى لا يتكرر مع الرئيسية)
+قائمة / «الإعدادات» كانت /dashboard → /
+زر my-orders «ابدأ طلباً جديداً» → /
+رجوع delivery-map → /
+أيقونة wallet «منصة ERVENOW» → /
+cart-ui continueHref الافتراضي → /
+شريط الجوال لم يعد يطابق /dashboard كحساب/استكشاف
+عنصر Navigation المكرر في index
+
+نتيجة Redirect
+/dashboard → 302 /
+/dashboard.html → 302 /
+مسجّل قبل express.static حتى لا تُخدم صفحة ثابتة.
+
+ماذا حدث للبنرات
+لم تُحذف أي بيانات.
+visitor_dashboard و guest_dashboard صارا Alias للرئيسية /:
+- page أصبحت /
+- GET /api/core/banners?target=home يشمل بنرات visitor_dashboard
+- مفتاح guest_dashboard_banners ما زال يُرجع البيانات القديمة
+الأدمن ما زال يرى القسم مع تلميح أنها تُعرض في الرئيسية.
+
+نتيجة الاختبارات
+npx jest --ci --no-coverage
+100 suite ناجحة، 497 اختبار ناجح، 1 skipped سابق.
+dashboardRetired.test.js: الملف غير موجود ولا href="/dashboard" حي.
+resolvePortalRole: العميل بعد الدخول ما زال /.
+
+تأكيد لا اعتماد حي على /dashboard كصفحة
+لا dashboard.html في public ولا ervenow-frontend.
+لا href="/dashboard" في واجهة العميل.
+guest-shell لا يضيف رابط dashboard.
+أي رابط قديم خارجي يصل عبر 302 إلى /.
+ما بقي: /api/services/me/dashboard (مزود خدمة)، لوحات admin/store/driver، وقوائم حظر مسار قديم في store-preview.

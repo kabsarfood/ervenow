@@ -1,0 +1,85 @@
+ERVENOW — مراجعة دخول الأدمن (تحليل فقط — لا تنفيذ)
+التاريخ: 2026-09-21
+
+الخلاصة
+/admin-login صفحة مستقلة شكلاً، لكن المصادقة ليست نظاماً مستقلاً.
+يستخدم نفس /api/core/send-otp و /api/core/verify-otp ونفس JWT المنصة.
+الفجوة الأهم: حساب Admin يستطيع الدخول من /login العامة ويصل إلى /admin-dashboard.
+
+1) Authentication الحالي
+/admin-login → send-otp {phone, role:admin} → verify-otp {phone, code, role:admin}
+→ JWT 7 أيام في localStorage/cookie → /admin-dashboard
+لا Password. لا API أدمن للدخول. الواجهة بلا تسجيل وبلا اختيار Role.
+
+2) نفس OTP أم API إداري؟
+نفس API العام. لا /api/admin/send-otp.
+العزل الوحيد: مفتاح OTP
+  /login        → login:<digits>
+  /admin-login  → admin:<digits>
+نفس OTP_SCOPE.CORE_LOGIN ونفس واتساب.
+
+3) كيف نتأكد أنه Admin؟
+- الرقم في allowlist (ERVENOW_ADMIN_*_PHONES)
+- صف موجود و users.role=admin (canAdminOtpLogin) — لا ترقية من الواجهة
+- بعد الجلسة: requireAuth يقرأ الدور من DB + requireRole("admin") على /api/admin/*
+زرع أول أدمن: سكربت بيئة فقط (seed-first-admin.js)
+
+4) هل يدخل Admin من /login؟
+نعم. login_only يصدر جلسة بالدور المخزّن. إن كان admin → RoleRouting → /admin-dashboard.
+/login?role=admin فقط يحوّل للواجهة /admin-login. الدخول بدون ?role=admin غير ممنوع.
+
+5) مستخدم عادي على /admin-login
+خارج القائمة → 403 عند الإرسال.
+في القائمة وليس admin → قد يُرسل OTP ثم 403 عند التحقق (رسالة «ترقية» مضللة).
+جلسة عميل موجودة → الصفحة لا تطرده بوضوح.
+
+6) صفحات/مسارات قديمة
+الرسمي: /admin-login
+قديمة: /admin/ (iframe بدون حراسة) · /dashboard تنبيه أدمن · صفحات إعدادات HTML ليست دخولاً
+لا /admin/login ولا صفحة كلمة مرور.
+
+7) Password / Emergency / Dev OTP
+لا كلمة مرور. OTP واتساب 5 دقائق فقط.
+رمز التطوير 1977 معطّل في الكود (isDevOtpBypassCode = false دائماً).
+لا Emergency login.
+
+8) الجلسة
+نفس signPlatformToken ونفس مفاتيح العميل. ليست جلسة إدارية منفصلة.
+
+9) حماية /admin-dashboard
+HTML غير محمي على السيرفر.
+JS ensureAdminAccess → /api/core/me يجب أن يكون admin وإلا /admin-login.
+البيانات محمية: /api/admin/* تتطلب admin من قاعدة البيانات.
+
+10) ErvenowRoleRouting
+نعم — admin-login يعتمد عليه بعد النجاح (اليوم يوصل /admin-dashboard).
+/login العامة تستخدمه أيضاً فتوصل الأدمن للكونسول دون /admin-login.
+
+الازدواجية
+- OTP API واحد + JWT واحد
+- Admin من /login العام
+- RoleRouting العام بعد دخول الأدمن
+- /admin/index.html قديم
+- send-otp يفحص الرقم لا الدور
+
+التوصية
+لا نحتاج مزوّد OTP جديداً.
+نحتاج مسار تحقق أدمن مستقل (يغلف نفس خدمة OTP) حتى لا يصدر login_only جلسة admin.
+
+المفضّل:
+  Public → /login → /api/core/send-otp + verify-otp
+  Admin  → /admin-login → /api/admin/send-otp + verify-otp (نفس الخدمة داخلياً)
+
+بديل أخف: الإبقاء على /api/core/* مع:
+  رفض أدمن على /login (رسالة: استخدم /admin-login)
+  فحص الدور+القائمة قبل إرسال OTP الأدمن
+  تحويل ثابت /admin-dashboard بدون RoleRouting
+  رسالة رفض واضحة لغير الأدمن
+
+المخاطر إن لم نغيّر
+مسار الأدمن غير مستقل · توكن واحد لكل الأدوار · غلاف اللوحة مرئي قبل الطرد · توجيه مستقبلي خاطئ · OTP قد يُرسل لغير أدمن في القائمة.
+
+قرار مطلوب
+أ) Endpoint أدمن منفصل (موصى به)
+ب) نفس OTP مع رفض أدمن على /login + تحقق أصرم
+ثم التنفيذ دون المساس بنظام المستخدمين العام أو دورة الطلبات.

@@ -31,6 +31,16 @@
       ]
     }
   ],
+  "redirects": [
+    { "source": "/dashboard", "destination": "/", "statusCode": 302 },
+    { "source": "/dashboard.html", "destination": "/", "statusCode": 302 },
+    { "source": "/start-now", "destination": "/", "statusCode": 302 },
+    { "source": "/start-now.html", "destination": "/", "statusCode": 302 },
+    { "source": "/customer-preview", "destination": "/", "statusCode": 302 },
+    { "source": "/customer-preview.html", "destination": "/", "statusCode": 302 },
+    { "source": "/driver-register", "destination": "/login?mode=register&role=driver", "statusCode": 302 },
+    { "source": "/driver-register.html", "destination": "/login?mode=register&role=driver", "statusCode": 302 }
+  ],
   "routes": [
     {
       "handle": "filesystem"

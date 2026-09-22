@@ -645,11 +645,13 @@
   }
 
   /**
-   * بعد الخروج: صفر كامل. أثناء تصفح زائر بدون حساب: يُبقي المسودة. بعد الدخول: الاسترجاع مرة واحدة فقط.
+   * Guest/logged_out لا يمسح السلة. المسودة تُمسح فقط عند إتمام الدفع أو «حذف الكل»
+   * أو خروج حساب موثّق (prepareLogoutDraftState يخزّن ثم يصفّر الظاهر).
    */
   function applySessionDraftPolicy() {
     if (consumeSessionEndedMarker()) {
-      clearPlatformDraftState();
+      purgeLegacyCartStorage();
+      store.invalidateCache();
       return { allowMigrate: false, mode: "session_ended" };
     }
     if (hasAuthSession()) {
@@ -659,12 +661,11 @@
       return { allowMigrate: true, mode: "guest_browse" };
     }
     if (hasDraftItems(store.readDraft())) {
-      clearPlatformDraftState();
-    } else {
-      purgeLegacyCartStorage();
-      store.invalidateCache();
+      return { allowMigrate: true, mode: "guest_draft" };
     }
-    return { allowMigrate: false, mode: "logged_out" };
+    purgeLegacyCartStorage();
+    store.invalidateCache();
+    return { allowMigrate: true, mode: "logged_out" };
   }
 
   function resolveLogoutUserId() {

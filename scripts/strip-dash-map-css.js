@@ -1,5 +1,9 @@
 const fs = require("fs");
 const p = require("path").join(__dirname, "..", "public", "dashboard.html");
+if (!require("fs").existsSync(p)) {
+  console.log("skip: public/dashboard.html retired");
+  process.exit(0);
+}
 let h = fs.readFileSync(p, "utf8");
 h = h.replace(/<style>([\s\S]*?)<\/style>/, (m, style) => {
   const lines = style.split("\n");

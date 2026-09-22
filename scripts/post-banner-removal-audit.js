@@ -19,14 +19,6 @@ const PAGES = [
     beforeBannerSel: "#homeHeroBanner",
   },
   {
-    id: "dashboard",
-    url: "/dashboard",
-    label: "لوحة الزائر",
-    mainSel: "#platformHeroSection",
-    headerSel: ".dash-site-header",
-    beforeBannerSel: "#ervVisitorBanner",
-  },
-  {
     id: "restaurants",
     url: "/restaurants",
     label: "المطاعم",

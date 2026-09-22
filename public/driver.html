@@ -104,7 +104,7 @@
         document.body.innerHTML =
           '<div style="text-align:center;margin-top:50px;">' +
           "<h2>🔒 الرجاء الدخول كشريك توصيل</h2>" +
-          '<a href="/driver-login">دخول الأعضاء</a>' +
+          '<a href="/login?role=driver">دخول الأعضاء</a>' +
           "</div>";
         throw new Error("auth");
       }
@@ -1055,7 +1055,7 @@
         stopLocationLoop();
         stopProximityLoop();
         window.PlatformAPI.setToken("");
-        location.href = "/driver-login";
+        location.href = "/login?role=driver";
       };
 
       (async function () {

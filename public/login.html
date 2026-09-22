@@ -357,14 +357,44 @@
         box-shadow: 0 10px 40px rgba(45, 26, 14, 0.08);
       }
       .auth-mode-tabs {
+        display: none;
+      }
+      .auth-join-chooser {
+        gap: 10px;
+        margin: 16px 0 8px;
+      }
+      .auth-join-chooser:not([hidden]) {
+        display: grid;
+      }
+      .auth-join-chooser__title {
+        margin: 0 0 4px;
+        font-size: 1.05rem;
+        font-weight: 800;
+        color: var(--brown, #3d2213);
+      }
+      .auth-join-chooser__grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 8px;
-        margin-bottom: 18px;
-        padding: 4px;
-        border-radius: 14px;
-        background: rgba(61, 34, 19, 0.05);
-        border: 1px solid rgba(61, 34, 19, 0.08);
+      }
+      @media (max-width: 640px) {
+        .auth-join-chooser__grid {
+          grid-template-columns: 1fr;
+        }
+      }
+      .auth-join-chooser__btn {
+        min-height: 48px;
+        border-radius: 12px;
+        border: 1px solid rgba(91, 55, 29, 0.16);
+        background: #fff;
+        font-family: inherit;
+        font-weight: 800;
+        cursor: pointer;
+      }
+      .auth-join-chooser__btn:hover,
+      .auth-join-chooser__btn.is-active {
+        border-color: var(--gold, #b9872f);
+        background: #fff9ef;
       }
       .auth-mode-tabs__btn {
         min-height: 48px;
@@ -605,11 +635,11 @@
         </div>
         <nav class="dash-site-header__nav" aria-label="التنقل">
           <div class="dash-site-header__links">
-            <a class="dash-site-header__link" href="/dashboard">منصة ERVENOW</a>
+            <a class="dash-site-header__link" href="/">منصة ERVENOW</a>
             <a class="dash-site-header__link" href="/">الرئيسية</a>
           </div>
         </nav>
-        <a class="dash-site-header__btn dash-site-header__btn--primary" href="/start-now.html">ابدأ الآن</a>
+        <a class="dash-site-header__btn dash-site-header__btn--primary" href="/">ابدأ الآن</a>
       </div>
     </header>
 
@@ -648,7 +678,7 @@
       </div>
 
       <div class="auth-card">
-        <div class="auth-mode-tabs" role="tablist" aria-label="دخول أو تسجيل">
+        <div class="auth-mode-tabs" role="tablist" aria-label="دخول أو تسجيل" hidden>
           <button type="button" class="auth-mode-tabs__btn is-active" id="authTabLogin" role="tab" aria-selected="true">
             دخول الأعضاء
           </button>
@@ -657,7 +687,17 @@
           </button>
         </div>
 
-        <p class="auth-form-intro" id="authFormIntro"></p>
+        <p class="auth-form-intro" id="authFormIntro">أدخل رقم الجوال ثم أرسل رمز واتساب.</p>
+
+        <div id="authJoinChooser" class="auth-join-chooser" hidden>
+          <p class="auth-join-chooser__title">كيف تريد استخدام ERVENOW؟</p>
+          <div class="auth-join-chooser__grid">
+            <button type="button" class="auth-join-chooser__btn" data-join="customer">عميل</button>
+            <button type="button" class="auth-join-chooser__btn" data-join="store">متجر</button>
+            <button type="button" class="auth-join-chooser__btn" data-join="driver">مندوب</button>
+            <button type="button" class="auth-join-chooser__btn" data-join="service">مزود خدمة</button>
+          </div>
+        </div>
 
         <div class="auth-login-core">
           <label for="phone">رقم الجوال</label>
@@ -693,7 +733,7 @@
         <section class="auth-register-panel" id="authRegisterPanel" hidden aria-hidden="true">
         <section class="auth-role-section" id="authRoleSection">
           <div class="auth-register-role">
-            <span class="auth-register-role__chip" id="registerRoleChip">صفة التسجيل</span>
+            <span class="auth-register-role__chip" id="registerRoleChip">كيف تريد استخدام ERVENOW؟</span>
             <select id="registerRoleSelect" class="auth-register-role__select" aria-labelledby="registerRoleChip"></select>
           </div>
         </section>
@@ -763,7 +803,7 @@
         <div id="driverRegisterFields" class="driver-register-fields">
           <p class="sub" style="margin-top: 0">
             بيانات الطلب للمراجعة. بعد موافقة الإدارة سجّل الدخول من
-            <a href="/driver-login">بوابة المندوب</a>.
+            <a href="/login?role=driver">بوابة الدخول</a>.
           </p>
           <label for="driverRegName">الاسم الكامل</label>
           <input id="driverRegName" type="text" maxlength="120" placeholder="اسم المندوب" autocomplete="name" />
@@ -877,7 +917,11 @@
     <script src="/assets/payoutRegistration.js"></script>
     <script src="/assets/role-routing.js?erv=20260921dest1"></script>
     <script src="/assets/admin-readiness-beacon.js"></script>
-    <script src="/assets/api.js?erv=20260612"></script>
+    <script src="/assets/api-config.js"></script>
+    <script>
+      window.__ERVENOW_FETCH_TIMEOUT_MS = 30000;
+    </script>
+    <script src="/assets/api.js?erv=20260922otp30"></script>
     <script src="/assets/sa-phone-input.js"></script>
     <script src="/assets/auth-otp-flow.js"></script>
     <script>
@@ -896,33 +940,117 @@
         el.textContent = text;
       }
 
+      function isAdminLoginRequiredError(msg) {
+        var m = String(msg || "");
+        return (
+          m.indexOf("ADMIN_LOGIN_REQUIRED") !== -1 ||
+          m.indexOf("حساب إداري") !== -1 ||
+          m.indexOf("بوابة الإدارة") !== -1
+        );
+      }
+
+      function showAdminLoginRequired() {
+        var el = document.getElementById("msg");
+        el.style.display = "block";
+        el.className = "msg err";
+        el.innerHTML =
+          'هذا حساب إداري. يرجى استخدام <a href="/admin-login" style="color:inherit;font-weight:800;text-decoration:underline">بوابة الإدارة</a>.';
+      }
+
+      function registrationToken() {
+        try {
+          return window.__ervRegToken || sessionStorage.getItem("ervenow_registration_token") || "";
+        } catch (_e) {
+          return window.__ervRegToken || "";
+        }
+      }
+
+      function setRegistrationContext(token, phoneDigits) {
+        window.__ervRegToken = String(token || "");
+        try {
+          sessionStorage.setItem("ervenow_registration_token", window.__ervRegToken);
+          if (phoneDigits) sessionStorage.setItem("ervenow_registration_phone", String(phoneDigits));
+        } catch (_s) {}
+        var phoneEl = document.getElementById("phone");
+        if (phoneEl) phoneEl.setAttribute("readonly", "readonly");
+      }
+
+      function clearRegistrationContext() {
+        window.__ervRegToken = "";
+        try {
+          sessionStorage.removeItem("ervenow_registration_token");
+          sessionStorage.removeItem("ervenow_registration_phone");
+        } catch (_e) {}
+        var phoneEl = document.getElementById("phone");
+        if (phoneEl) phoneEl.removeAttribute("readonly");
+      }
+
+      function goStoreRegister() {
+        if (!registrationToken()) {
+          show("وثّق رقم الجوال برمز واتساب أولاً.", false);
+          return;
+        }
+        window.location.assign("/register-store");
+      }
+
+      function openJoinChooser() {
+        var hint = String(new URLSearchParams(window.location.search).get("role") || "").toLowerCase();
+        if (hint === "admin") hint = "";
+        syncRegisterSubmitUi();
+        if (hint === "store" || hint === "merchant" || hint === "restaurant") {
+          goStoreRegister();
+          return;
+        }
+        if (hint === "driver" || hint === "customer" || hint === "service" || isServiceTypeValue(hint)) {
+          applyRegisterRoleValue(hint);
+          var chooser = document.getElementById("authJoinChooser");
+          if (chooser) chooser.hidden = false;
+          syncRegisterSubmitUi();
+          return;
+        }
+        var chooserEl = document.getElementById("authJoinChooser");
+        if (chooserEl) chooserEl.hidden = false;
+        var roleSection = document.getElementById("authRoleSection");
+        if (roleSection) roleSection.hidden = true;
+      }
+
       function isRegisterMode() {
-        return new URLSearchParams(window.location.search).get("mode") === "register";
+        return !!registrationToken();
       }
 
       function syncRegisterSubmitUi() {
-        var isReg = isRegisterMode();
+        var isReg = !!registrationToken();
+        var chooser = document.getElementById("authJoinChooser");
         var regPanel = document.getElementById("authRegisterPanel");
         var loginOtpBlock = document.getElementById("authLoginOtpBlock");
         var registerActions = document.getElementById("authRegisterActions");
+        if (chooser) {
+          chooser.hidden = !isReg;
+        }
         if (regPanel) {
-          regPanel.hidden = !isReg;
-          regPanel.setAttribute("aria-hidden", isReg ? "false" : "true");
+          var roleChosen = isReg && document.getElementById("role") && document.getElementById("role").value;
+          var showPanel = isReg && roleChosen;
+          regPanel.hidden = !showPanel;
+          regPanel.setAttribute("aria-hidden", showPanel ? "false" : "true");
         }
         if (loginOtpBlock) {
           loginOtpBlock.hidden = isReg;
           loginOtpBlock.setAttribute("aria-hidden", isReg ? "true" : "false");
         }
         if (registerActions) {
-          registerActions.hidden = !isReg;
-          registerActions.setAttribute("aria-hidden", isReg ? "false" : "true");
+          var roleVal = document.getElementById("role") ? document.getElementById("role").value : "";
+          var hideSubmit = !isReg || roleVal === "store" || roleVal === "merchant" || roleVal === "restaurant";
+          registerActions.hidden = hideSubmit;
+          registerActions.setAttribute("aria-hidden", hideSubmit ? "true" : "false");
         }
         var otpInput = document.getElementById("otp");
         if (otpInput) otpInput.disabled = isReg;
-        if (isReg && window.loginOtpFlow && loginOtpFlow.reset) loginOtpFlow.reset();
       }
 
       function setAuthMode(register) {
+        if (register && !registrationToken()) {
+          register = false;
+        }
         var qs = new URLSearchParams(window.location.search);
         if (register) {
           qs.set("mode", "register");
@@ -1003,10 +1131,11 @@
       ];
 
       var REGISTER_ROLE_OPTIONS = [
-        { value: "customer", label: "⭐ عضو ERVENOW" },
-        { value: "driver", label: "🚚 شريك توصيل" },
-        { value: "service", label: "🔧 شريك خدمات" },
-      ].concat(REGISTER_TRANSPORT_PARTNER_OPTIONS);
+        { value: "customer", label: "أريد الطلب من ERVENOW" },
+        { value: "store", label: "أريد التسجيل كمتجر" },
+        { value: "driver", label: "أريد العمل كمندوب" },
+        { value: "service", label: "أريد تقديم خدمة" },
+      ];
 
       var REGISTER_SERVICE_TYPES = REGISTER_SERVICE_PARTNER_OPTIONS.concat(REGISTER_TRANSPORT_PARTNER_OPTIONS);
 
@@ -1026,6 +1155,9 @@
         initServiceTypeSubSelect();
         if (v === "customer" || v === "driver") {
           sel.value = v;
+        } else if (v === "store" || v === "merchant" || v === "restaurant") {
+          goStoreRegister();
+          return;
         } else if (v === "service") {
           sel.value = "service";
         } else if (isServiceTypeValue(v)) {
@@ -1046,6 +1178,7 @@
           window.history.replaceState({}, "", url);
         }
         syncCustomerRegisterUi();
+        syncRegisterSubmitUi();
       }
 
       function isServicePartnerType(v) {
@@ -1060,7 +1193,7 @@
         buildRegisterRoleSelect();
         populateRegisterAccountTypes(preferred);
         var want = String(preferred || "customer").trim();
-        if (want !== "driver" && want !== "customer" && want !== "service" && !isServiceTypeValue(want)) want = "customer";
+        if (want !== "driver" && want !== "customer" && want !== "store" && want !== "service" && !isServiceTypeValue(want)) want = "customer";
         var dd = document.getElementById("registerRoleSelect");
         if (dd) {
           if (want === "service" || isServicePartnerType(want)) dd.value = "service";
@@ -1100,6 +1233,10 @@
           '<option value="">اختر نوع الخدمة</option>' +
           REGISTER_SERVICE_PARTNER_OPTIONS.map(function (o) {
             return '<option value="' + o.value + '">' + o.label + "</option>";
+          }).join("") +
+          '<option disabled>── نقل ──</option>' +
+          REGISTER_TRANSPORT_PARTNER_OPTIONS.map(function (o) {
+            return '<option value="' + o.value + '">' + o.label + "</option>";
           }).join("");
         sub.addEventListener("change", updateServiceTypeDescription);
       }
@@ -1110,9 +1247,10 @@
         if (!desc) return;
         var v = sub ? String(sub.value || "").trim() : "";
         var row = null;
-        for (var i = 0; i < REGISTER_SERVICE_PARTNER_OPTIONS.length; i++) {
-          if (REGISTER_SERVICE_PARTNER_OPTIONS[i].value === v) {
-            row = REGISTER_SERVICE_PARTNER_OPTIONS[i];
+        var typeRows = REGISTER_SERVICE_PARTNER_OPTIONS.concat(REGISTER_TRANSPORT_PARTNER_OPTIONS);
+        for (var i = 0; i < typeRows.length; i++) {
+          if (typeRows[i].value === v) {
+            row = typeRows[i];
             break;
           }
         }
@@ -1173,16 +1311,20 @@
         var sel = document.getElementById("role");
         if (!sel || !isRegisterMode()) return;
         sel.innerHTML =
-          '<option value="customer">⭐ عضو ERVENOW</option>' +
-          '<option value="driver">🚚 شريك توصيل</option>' +
-          '<option value="service">🔧 شريك خدمات</option>';
+          '<option value="customer">أريد الطلب من ERVENOW</option>' +
+          '<option value="store">أريد التسجيل كمتجر</option>' +
+          '<option value="driver">أريد العمل كمندوب</option>' +
+          '<option value="service">أريد تقديم خدمة</option>';
         var want = String(preferred || "customer").trim();
         if (isServiceTypeValue(want)) {
           sel.value = "service";
           initServiceTypeSubSelect();
           var sub = document.getElementById("serviceTypeSub");
           if (sub) sub.value = want;
-        } else if (want === "customer" || want === "driver") {
+        } else if (want === "store" || want === "merchant" || want === "restaurant") {
+          goStoreRegister();
+          return;
+        } else if (want === "customer" || want === "driver" || want === "service") {
           sel.value = want;
         } else {
           sel.value = "customer";
@@ -1191,13 +1333,7 @@
       }
 
       function assertDriverOnlyInRegisterMode() {
-        if (document.getElementById("role").value !== "driver") return true;
-        if (isRegisterMode()) return true;
-        show(
-          "دخول المندوبين المعتمدين من صفحة «دخول المندوب». لتقديم طلب انضمام جديد استخدم رابط إنشاء الحساب واختر «مندوب توصيل».",
-          false
-        );
-        return false;
+        return true;
       }
 
       function isMerchantRestaurantRegisterMode() {
@@ -1471,23 +1607,28 @@
           performLoginRedirect(next, user);
           return;
         }
+        var routed = RR ? RR.resolvePostLoginPath(user) : "/";
         try {
           var destRes = await window.PlatformAPI.api("/api/core/login-destinations");
-          var dests = destRes.destinations || [];
-          if (dests.length > 1) {
-            showRolePicker(dests, user);
-            return;
-          }
-          var pick = dests[0] || destRes.default;
-          var targetPath = (pick && pick.path) || resolvePostLoginTarget(user);
+          var pick =
+            destRes && destRes.default
+              ? destRes.default
+              : ((destRes && destRes.destinations) || []).find(function (d) {
+                  return d && d.primary;
+                }) ||
+                ((destRes && destRes.destinations) || [])[0];
+          var targetPath = (pick && pick.path) || routed;
           performLoginRedirect(targetPath, user);
         } catch (navErr) {
-          performLoginRedirect(resolvePostLoginTarget(user), user, false);
+          performLoginRedirect(routed, user, false);
         }
       }
 
       function mapOtpError(msg) {
         var m = String(msg || "");
+        if (isAdminLoginRequiredError(m)) {
+          return "هذا حساب إداري. يرجى استخدام بوابة الإدارة.";
+        }
         if (m.indexOf("غير مسجّل") !== -1 || m.indexOf("not_registered") !== -1) {
           return "رقم الجوال غير مسجّل — تأكد أنك على تبويب «دخول الأعضاء» (وليس إنشاء عضوية)، وأن الرقم مطابق لما في حسابك. إن لم يكن لديك حساب استخدم «إنشاء عضوية».";
         }
@@ -1513,37 +1654,19 @@
 
       (function preselectRole() {
         var qs = new URLSearchParams(window.location.search);
-        var mode = qs.get("mode");
         var r = qs.get("role");
         if (r && String(r).toLowerCase() === "admin") {
           window.location.replace("/admin-login");
           return;
         }
-        if (r && String(r).toLowerCase() === "driver" && mode !== "register") {
-          window.location.replace("/driver-login");
-          return;
-        }
-        if (
-          mode !== "register" &&
-          r &&
-          (String(r).toLowerCase() === "service" || isServiceTypeValue(r))
-        ) {
-          window.location.replace("/service-provider-login");
-          return;
-        }
-        if (mode === "register") {
-          setAuthMode(true);
-        } else {
-          setAuthMode(false);
-        }
-        if (r && mode !== "register") {
+        var intro = document.getElementById("authFormIntro");
+        if (intro) intro.textContent = "أدخل رقم الجوال ثم أرسل رمز واتساب.";
+        if (r && r !== "store" && r !== "merchant" && r !== "restaurant") {
           var sel = document.getElementById("role");
           if (sel) sel.value = r;
-        } else if (!r || r === "customer") {
-          var selCust = document.getElementById("role");
-          if (selCust) selCust.value = "customer";
         }
         syncCustomerRegisterUi();
+        syncRegisterSubmitUi();
       })();
       document.getElementById("role").addEventListener("change", function () {
         if (isRegisterMode()) {
@@ -1621,7 +1744,7 @@
 
         var roleSel = document.getElementById("role").value;
         var role = apiRoleFromSelection();
-        var body = { phone: phone, role: role };
+        var body = { phone: phone, role: role, registration_token: registrationToken() };
         var driverRegPayload = null;
 
         if (isCustomerRegisterMode()) {
@@ -1749,12 +1872,27 @@
             var disp = String(document.getElementById("phone").value || "").trim();
             if (disp) localStorage.setItem("userPhone", disp);
             if (isServiceRegisterMode()) {
-              localStorage.setItem("erv_pending_login_url", "/service-provider-login");
+              localStorage.setItem("erv_pending_login_url", "/login?role=service");
             }
           } catch (phStore) {}
+          if (res.token) {
+            try {
+              localStorage.setItem("token", res.token);
+              if (res.user && res.user.id) localStorage.setItem("userId", res.user.id);
+            } catch (_ls) {}
+            window.PlatformAPI.setToken(res.token);
+            show("تم إنشاء حسابك. تحويل…", true);
+            var loginUser = res.user || { role: "customer" };
+            try {
+              sessionStorage.removeItem("ervenow_registration_token");
+            } catch (_c) {}
+            window.__ervRegToken = "";
+            await navigateAfterLogin(loginUser);
+            return;
+          }
           show(
             res.message ||
-              "تم استلام طلب التسجيل بنجاح. حسابك قيد المراجعة من إدارة ERVENOW، وسيتم إشعارك فور اعتماد الحساب وتفعيله. بعد الاعتماد سجّل الدخول من بوابة مزوّد الخدمة.",
+              "تم استلام طلب التسجيل بنجاح. حسابك قيد المراجعة من إدارة ERVENOW، وسيتم إشعارك فور اعتماد الحساب وتفعيله. بعد الاعتماد سجّل الدخول من بوابة الدخول.",
             true
           );
           setTimeout(function () {
@@ -1782,10 +1920,7 @@
               false
             );
           } else if (/رمز الدخول|رمز واتساب/i.test(errMsg)) {
-            show(
-              "إنشاء الحساب لا يحتاج رمزاً — اضغط «إنشاء عضوية» في أسفل النموذج فقط. إن تكرّر الخطأ أعد تشغيل الخادم.",
-              false
-            );
+            show("وثّق رقم الجوال برمز واتساب أولاً ثم أكمل إنشاء العضوية.", false);
           } else {
             show(mapOtpError(errMsg), false);
           }
@@ -1796,10 +1931,6 @@
       }
 
       async function runLoginVerify() {
-        if (isRegisterMode()) {
-          show("لإنشاء عضوية جديدة استخدم زر «إنشاء عضوية» في أسفل النموذج — لا حاجة لرمز واتساب.", false);
-          throw new Error("use_register_btn");
-        }
         try {
           normalizeInputPhone();
           var raw = document.getElementById("phone").value;
@@ -1819,78 +1950,7 @@
             throw new Error("no_code");
           }
 
-          var roleSel = document.getElementById("role").value;
-          var role = apiRoleFromSelection();
-          var extra = {};
-          if (isCustomerRegisterMode()) {
-            var custName = String(document.getElementById("customerName").value || "").trim();
-            if (custName) extra.name = custName;
-          }
-          var driverRegPayload = null;
-          if (isDriverRegisterMode()) {
-            var dName = String(document.getElementById("driverRegName").value || "").trim();
-            var iqama = String(document.getElementById("driverRegIqama").value || "").trim();
-            var carType = String(document.getElementById("driverRegCarType").value || "").trim();
-            var plate = String(document.getElementById("driverRegPlate").value || "").trim();
-            if (!dName || !iqama || !carType || !plate) {
-              show("أكمل بيانات المندوب: الاسم، الهوية/الإقامة، نوع المركبة، ورقم اللوحة", false);
-              throw new Error("driver_fields");
-            }
-            driverRegPayload = { name: dName, iqama: iqama, car_type: carType, plate_number: plate };
-          }
-
-          var payoutPayload = null;
-          try {
-            payoutPayload = collectRegisterPayoutPayload();
-          } catch (pe) {
-            show(String(pe.message || pe), false);
-            throw pe;
-          }
-          if (driverRegPayload && payoutPayload) {
-            driverRegPayload.payout = payoutPayload;
-          }
-
-          if (isServiceRegisterMode()) {
-            var sName = String(document.getElementById("serviceRegName").value || "").trim();
-            var sType = selectedServiceType();
-            var sArea = readServiceAreaValue();
-            if (!sName) {
-              show("أدخل الاسم", false);
-              throw new Error("service_name");
-            }
-            if (!sType) {
-              show("اختر نوع الخدمة من القائمة", false);
-              throw new Error("service_type");
-            }
-            if (!sArea) {
-              show(isPickupTruckRegister() ? "اختر المدينة" : "أدخل الحي الذي تخدمه", false);
-              throw new Error("service_area");
-            }
-            extra.name = sName;
-            extra.service_type = sType;
-            extra.service_district = sArea;
-            extra.district = sArea;
-            if (isPickupTruckRegister()) extra.service_city = sArea;
-            if (isPickupTruckRegister()) {
-              var vType = String(document.getElementById("pickupTruckVehicleType").value || "").trim();
-              var vPlate = String(document.getElementById("pickupTruckPlate").value || "").trim();
-              var vModel = String(document.getElementById("pickupTruckModel").value || "").trim();
-              if (!vType || !vPlate || !vModel) {
-                show("أكمل بيانات المركبة: النوع، رقم اللوحة، وسنة الموديل", false);
-                throw new Error("vehicle_fields");
-              }
-              extra.service_vehicle_type = vType;
-              extra.service_plate_number = vPlate;
-              extra.service_vehicle_model = vModel;
-            }
-            if (payoutPayload && !payoutPayload.iban) {
-              show("أدخل رقم الآيبان لاستلام المستحقات", false);
-              throw new Error("iban");
-            }
-          }
-
-          var loginOnly = !isRegisterMode();
-          var verifyBody = Object.assign({ phone: phone, code: code }, extra);
+          var verifyBody = { phone: phone, code: code, login_only: true };
           try {
             var qsTrack = new URLSearchParams(window.location.search);
             ["utm_source", "utm_medium", "utm_campaign", "utm_content", "gclid", "city", "district"].forEach(function (k) {
@@ -1898,34 +1958,6 @@
               if (v) verifyBody[k] = v;
             });
           } catch (_utm) {}
-          if (loginOnly) {
-            verifyBody.login_only = true;
-            var qsRole = String(
-              new URLSearchParams(window.location.search).get("role") || "customer"
-            )
-              .trim()
-              .toLowerCase();
-            verifyBody.role =
-              qsRole === "store" ||
-              qsRole === "merchant" ||
-              qsRole === "restaurant" ||
-              qsRole === "service" ||
-              qsRole === "customer"
-                ? qsRole
-                : "customer";
-          } else {
-            verifyBody.role = role;
-          }
-          if (
-            payoutPayload &&
-            isRegisterMode() &&
-            (roleSel === "store" ||
-              roleSel === "merchant" ||
-              roleSel === "restaurant" ||
-              isServiceRegisterMode())
-          ) {
-            verifyBody.payout = payoutPayload;
-          }
 
           var res = await window.PlatformAPI.api("/api/core/verify-otp", {
             method: "POST",
@@ -1935,6 +1967,13 @@
           if (res.ok === false || res.success === false) {
             show("فشل التحقق", false);
             throw new Error("verify_failed");
+          }
+
+          if (res.needs_registration && res.registration_token) {
+            setRegistrationContext(res.registration_token, res.phone);
+            show(res.message || "تم توثيق الجوال. اختر كيف تريد استخدام ERVENOW.", true);
+            openJoinChooser();
+            return;
           }
 
           if (res.pending_approval || (res.user && String(res.user.status || "").toLowerCase() === "pending")) {
@@ -1999,37 +2038,6 @@
             console.warn("auth_token cookie:", cookieErr);
           }
 
-          if (driverRegPayload) {
-            try {
-              await window.PlatformAPI.api("/api/driver/register", {
-                method: "POST",
-                body: Object.assign({ phone: phone }, driverRegPayload),
-              });
-            } catch (regErr) {
-              show(
-                String(regErr.message || regErr || "تم التحقق لكن تعذّر حفظ طلب المندوب — أعد المحاولة أو تواصل مع الدعم"),
-                false
-              );
-              return;
-            }
-            try {
-              localStorage.removeItem("token");
-              localStorage.removeItem("userId");
-              localStorage.removeItem("userPhone");
-            } catch (lsErr) {
-              console.warn("localStorage:", lsErr);
-            }
-            window.PlatformAPI.setToken("");
-            show(
-              "تم استلام طلب التسجيل بنجاح. حسابك قيد المراجعة من إدارة ERVENOW، وسيتم إشعارك فور اعتماد الحساب وتفعيله. بعد الاعتماد سجّل الدخول من «دخول المندوب».",
-              true
-            );
-            setTimeout(function () {
-              window.location.href = "/driver-login";
-            }, 1400);
-            return;
-          }
-
           if (res.pre_registration) {
             show(
               res.message ||
@@ -2042,7 +2050,7 @@
             return;
           }
 
-          var loginUser = res.user || { role: role || "customer" };
+          var loginUser = res.user || { role: "customer" };
           if (String(loginUser.role || "").toLowerCase() === "user") loginUser.role = "customer";
           show("تم الدخول بنجاح. تحويل…", true);
           var goTo = resolvePostLoginTarget(loginUser);
@@ -2058,6 +2066,14 @@
           }
         } catch (e) {
           var errMsg = String(e.message || e);
+          if (isAdminLoginRequiredError(errMsg)) {
+            showAdminLoginRequired();
+            return;
+          }
+          if (errMsg.indexOf("غير مسجّل") !== -1 || errMsg.indexOf("not_registered") !== -1) {
+            show("لا يوجد حساب لهذا الرقم. وثّق الجوال برمز واتساب ثم اختر نوع الاستخدام.", true);
+            return;
+          }
           if (errMsg === "invalid_phone" || errMsg === "no_phone" || errMsg === "no_code") {
             /* رسالة معروضة مسبقاً */
           } else {
@@ -2068,48 +2084,40 @@
       }
 
       async function runLoginSendOtp() {
-        if (isRegisterMode()) {
-          show("في إنشاء الحساب استخدم زر «إنشاء عضوية» في أسفل النموذج — لا حاجة لإرسال الرمز.", false);
-          throw new Error("register_no_otp");
-        }
+        clearRegistrationContext();
+        syncRegisterSubmitUi();
         normalizeInputPhone();
         var raw = document.getElementById("phone").value;
         if (!isValid05(raw)) {
           show(ErvenowSaPhone ? ErvenowSaPhone.invalidMessage() : "أدخل رقم سعودي صحيح", false);
           throw new Error("invalid_phone");
         }
-        var loginOnly = !isRegisterMode();
-        if (!loginOnly && !assertDriverOnlyInRegisterMode()) throw new Error("driver_register");
         var phone = toE164(raw);
-        var role = apiRoleFromSelection();
-        var otpBody = { phone: phone };
-        if (loginOnly) {
-          otpBody.login_only = true;
-          var qsRoleSend = String(
-            new URLSearchParams(window.location.search).get("role") || "customer"
-          )
-            .trim()
-            .toLowerCase();
-          otpBody.role =
-            qsRoleSend === "store" ||
-            qsRoleSend === "merchant" ||
-            qsRoleSend === "restaurant" ||
-            qsRoleSend === "service" ||
-            qsRoleSend === "customer"
-              ? qsRoleSend
-              : "customer";
-        } else {
-          otpBody.role = role;
+        var otpBody = { phone: phone, login_only: true };
+        try {
+          var sent = await window.PlatformAPI.api("/api/core/send-otp", {
+            method: "POST",
+            body: otpBody,
+          });
+          if (sent.ok === false) {
+            var sendErr = (sent && sent.error) || "تعذر إرسال رمز واتساب";
+            if (isAdminLoginRequiredError(sendErr) || (sent && sent.admin_login_required)) {
+              showAdminLoginRequired();
+              throw new Error("ADMIN_LOGIN_REQUIRED");
+            }
+            show("تعذر إرسال رمز واتساب", false);
+            throw new Error("send_failed");
+          }
+          show("تم إرسال الرمز عبر واتساب. صلاحية الرمز 5 دقائق.", true);
+        } catch (sendEx) {
+          var sendMsg = String(sendEx.message || sendEx);
+          if (isAdminLoginRequiredError(sendMsg)) {
+            showAdminLoginRequired();
+          } else if (sendMsg !== "send_failed") {
+            show(mapOtpError(sendMsg), false);
+          }
+          throw sendEx;
         }
-        var sent = await window.PlatformAPI.api("/api/core/send-otp", {
-          method: "POST",
-          body: otpBody,
-        });
-        if (sent.ok === false) {
-          show("تعذر إرسال رمز واتساب", false);
-          throw new Error("send_failed");
-        }
-        show("تم إرسال الرمز عبر واتساب. صلاحية الرمز 5 دقائق.", true);
       }
 
       document.getElementById("phone").addEventListener("keydown", function (e) {
@@ -2128,7 +2136,7 @@
         btnId: "authOtpBtn",
         introId: "authFormIntro",
         isActive: function () {
-          return !isRegisterMode();
+          return !registrationToken();
         },
         introSend: function () {
           return "";
@@ -2164,10 +2172,23 @@
       var authRegisterBtn = document.getElementById("authRegisterBtn");
       if (authRegisterBtn) {
         authRegisterBtn.addEventListener("click", function () {
-          if (!isRegisterMode()) return;
+          if (!registrationToken()) {
+            show("وثّق رقم الجوال برمز واتساب أولاً.", false);
+            return;
+          }
           runRegisterAccount();
         });
       }
+
+      document.querySelectorAll("[data-join]").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          var v = btn.getAttribute("data-join");
+          document.querySelectorAll("[data-join]").forEach(function (b) {
+            b.classList.toggle("is-active", b === btn);
+          });
+          applyRegisterRoleValue(v);
+        });
+      });
 
       syncRegisterSubmitUi();
     </script>

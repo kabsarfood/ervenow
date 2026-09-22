@@ -50,8 +50,11 @@ function normalizeBannerKind(value) {
 function normalizeUrl(url) {
   const link = String(url || "").trim();
   if (!link) return "";
-  if (link.startsWith("/") || /^https?:\/\//i.test(link)) return link.slice(0, 2048);
-  return ("/" + link).slice(0, 2048);
+  const out = (link.startsWith("/") || /^https?:\/\//i.test(link) ? link : "/" + link).slice(0, 2048);
+  if (/^https?:\/\//i.test(out)) return out;
+  const path = out.split("?")[0].split("#")[0].replace(/\.html$/i, "") || "/";
+  if (path === "/start-now" || path === "/dashboard") return "/";
+  return out;
 }
 
 function parseOptionalDate(v) {

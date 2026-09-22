@@ -35,6 +35,7 @@ const {
   useCartDeliverySnapshot,
   resolveStoreCheckoutFromCartSnapshot,
 } = require("../../shared/utils/checkoutDeliveryEngine");
+const { splitFulfillmentBatches } = require("../../shared/orderDraft/unifiedCartLine");
 
 function normalizedGroup(typeRaw) {
   const type = String(typeRaw || "")
@@ -155,17 +156,18 @@ async function runCheckoutInsert(sb, appUser, body, options) {
   };
 
   items.forEach((i) => {
-    const g = normalizedGroup(i && i.type);
-    if (g && grouped[g]) grouped[g].push(i);
+    const g = normalizedGroup(i && i.type) || "service";
+    if (grouped[g]) grouped[g].push(i);
+    else grouped.service.push(i);
   });
 
   const results = [];
 
   for (const type of Object.keys(grouped)) {
-    const groupItems = grouped[type];
-    if (!groupItems.length) continue;
+    if (!grouped[type].length) continue;
 
     if (type === "service") {
+      const groupItems = grouped[type];
       const { runUnifiedDeliveryOnlyCreate } = require("../order/deliveryOrderCreateShared");
       for (let svcIdx = 0; svcIdx < groupItems.length; svcIdx += 1) {
         const it = groupItems[svcIdx];
@@ -252,6 +254,9 @@ async function runCheckoutInsert(sb, appUser, body, options) {
       continue;
     }
 
+    const batches = splitFulfillmentBatches(type, grouped[type]);
+    for (let batchIdx = 0; batchIdx < batches.length; batchIdx += 1) {
+    const groupItems = batches[batchIdx];
     let groupItemsPriced = groupItems;
     let total = 0;
 
@@ -310,7 +315,8 @@ async function runCheckoutInsert(sb, appUser, body, options) {
     };
 
     if (checkoutIdempotencyKey) {
-      row.idempotency_key = `${checkoutIdempotencyKey}:${type}`;
+      const batchTag = singleStoreId || `b${batchIdx}`;
+      row.idempotency_key = `${checkoutIdempotencyKey}:${type}:${batchTag}`;
     }
 
     let storeDispatchOverride = null;
@@ -582,6 +588,7 @@ async function runCheckoutInsert(sb, appUser, body, options) {
           "[checkout/service] enqueue checkout-dispatch"
         );
       }
+    }
     }
   }
 

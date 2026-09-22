@@ -13,7 +13,6 @@ const VIEWPORT = { width: 390, height: 844 };
 const PAGES = [
   { id: "home", url: "/" },
   { id: "checkout", url: "/checkout" },
-  { id: "dashboard", url: "/dashboard" },
 ];
 
 async function measureWebVitals(page) {

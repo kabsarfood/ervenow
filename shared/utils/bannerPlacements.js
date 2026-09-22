@@ -23,12 +23,12 @@ const BANNER_PLACEMENTS = [
   },
   {
     id: "guest_dashboard",
-    label_ar: "لوحة الزائر",
-    page: "/dashboard",
+    label_ar: "لوحة الزائر (تُعرض في الرئيسية)",
+    page: "/",
     render_mode: "card",
     admin_selectable: true,
     image_required: false,
-    hint_ar: "بنر مستقل في /dashboard — لا يتأثر ببنرات الرئيسية.",
+    hint_ar: "Alias لبنرات الرئيسية / — البيانات محفوظة وتُعرض مع بنرات home.",
   },
   {
     id: "delivery",

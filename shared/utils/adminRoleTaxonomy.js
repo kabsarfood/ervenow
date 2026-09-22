@@ -84,10 +84,6 @@ const PLATFORM_CUSTOMER_PATHS = [
 
   "/",
 
-  "/start-now",
-
-  "/dashboard",
-
   "/my-orders",
 
   "/wallet",

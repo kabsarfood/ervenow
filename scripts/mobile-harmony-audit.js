@@ -20,7 +20,6 @@ const VIEWPORT = { width: 390, height: 844 };
 
 const PAGES = [
   { id: "home", url: "/", label: "الرئيسية" },
-  { id: "start-now", url: "/start-now", label: "ابدأ الآن" },
   { id: "restaurants", url: "/restaurants", label: "المطاعم" },
 ];
 

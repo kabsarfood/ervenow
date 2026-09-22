@@ -10,13 +10,13 @@
   };
 
   var PORTAL_LOGIN_URLS = {
-    driver: "/driver-login",
+    driver: "/login?role=driver",
     merchant: "/login?role=store",
     store: "/login?role=store",
-    service: "/service-provider-login",
-    transport: "/service-provider-login",
+    service: "/login?role=service",
+    transport: "/login?role=service",
     customer: "/login?role=customer",
-    admin: "/login?role=admin",
+    admin: "/admin-login",
   };
 
   function loginUrlForRole(role, config) {

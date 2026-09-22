@@ -1,0 +1,90 @@
+ERVENOW — Admin Authentication Isolation
+التاريخ: 2026-09-22
+
+الخلاصة
+فصل دخول الإدارة عن /login العام.
+نفس خدمة WhatsApp OTP داخلياً، ونقاط دخول مستقلة.
+
+المسار العام (لم يُغيَّر للعملاء/الشركاء)
+/login → POST /api/core/send-otp → POST /api/core/verify-otp
+
+مسار الأدمن
+/admin-login
+  → POST /api/admin/auth/send-otp
+  → POST /api/admin/auth/verify-otp
+  → /admin-dashboard مباشرة (بدون RoleRouting)
+
+الملف: apps/admin/auth.js
+التركيب: /api/admin/auth قبل /api/admin
+/api/admin/* ما زالت requireAuth + requireRole("admin")
+
+نفس OTP service؟
+نعم: otpChallengeService + sendOTP + TTL 5 دقائق + تطبيع الجوال + sendOtpLimiter.
+النطاق الجديد فقط: OTP_SCOPE.ADMIN_LOGIN = admin_login ومفتاح admin:<digits>
+حتى لا يختلط برمز الدخول العام (core_login / login:<digits>).
+
+كيف مُنع Admin من /login
+send-otp و verify-otp العامّان:
+إذا role=admin في الطلب أو users.role=admin للموجود
+→ 403 code=ADMIN_LOGIN_REQUIRED
+→ لا OTP
+→ لا جلسة
+الواجهة تعرض: «هذا حساب إداري. يرجى استخدام بوابة الإدارة.» مع رابط /admin-login
+
+كيف يُرفض غير الأدمن قبل إرسال OTP
+قبل أي واتساب يتحقق:
+1) الرقم في Admin allowlist
+2) حساب موجود
+3) users.role = admin
+وإلا: «هذا الرقم غير مصرح له بالدخول إلى لوحة الإدارة.»
+لا ترقية، لا جلسة، لا تحويل إلى /login.
+verify يعيد نفس الفحص بعد صحة الرمز ثم يصدر الجلسة فقط.
+
+الجلسة
+نفس JWT (sub, phone, role, 7 أيام).
+claim اختياري غير إلزامي: auth_context=admin (يصدر من Admin Auth فقط).
+requireRole("admin") ما زال من قاعدة البيانات. يمكن تشديد الـ claim لاحقاً.
+
+الواجهة
+admin-login: بلا تسجيل وبلا اختيار Role وبلا بوابات مستخدمين.
+جلسة Admin صحيحة → /admin-dashboard
+جلسة عميل/تاجر/مندوب/خدمة → لا تدخل الداشبورد
+admin-dashboard: يخفي الكونسول حتى تأكيد /api/core/me = admin
+خروج الأدمن يمسح التوكن والكوكي ويعود /admin-login
+
+المسارات القديمة
+public/admin/index.html لم يُحذف.
+GET /admin و /admin/ و /admin/index.html → 302 إلى /admin-dashboard (نفس الحارس).
+
+الاختبارات (11 ناجحة في tests/unit/adminAuthIsolation.test.js)
+1 Admin صحيح: send+verify → JWT admin + dashboard
+2 Customer على admin-login API → رفض قبل واتساب
+3 Merchant على admin-login API → رفض
+4 Admin على /login send-otp → ADMIN_LOGIN_REQUIRED بلا جلسة
+5 Admin على /login verify-otp → بلا توكن
+6 role=admin على Core → رفض
+7 Customer على Core send-otp → يعمل
+8 HTML admin-login يستخدم /api/admin/auth/* فقط
+9 /login يعرض رابط بوابة الإدارة
+10 الداشبورد مخفي حتى التحقق
+11 /admin/index.html محفوظ + تحويل 302
+
+لم يُغيَّر: دورة الطلبات، Unified Orders، Wallet، دخول الشركاء، Role Routing للشركاء، جداول المستخدمين.
+
+الملفات الجديدة
+apps/admin/auth.js
+shared/utils/adminOtpAllowlist.js
+shared/utils/adminAuthMessages.js
+tests/unit/adminAuthIsolation.test.js
+docs/ERVENOW_ADMIN_AUTH_ISOLATION.md
+
+الملفات المعدّلة
+apps/core/routes.js
+server/server.js
+shared/services/otpChallengeService.js
+public/admin-login.html
+public/login.html
+public/assets/api.js
+public/admin/admin-dashboard.html
+public/admin/modules/settings.js
+public/admin/modules/shared.js

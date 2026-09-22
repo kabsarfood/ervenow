@@ -42,6 +42,29 @@
     return /Android/i.test(navigator.userAgent || "");
   }
 
+  /** Leaflet 1.x Marker لا يملك setInteractive — نبدّل الخيار واللمس يدوياً. */
+  function setMarkerInteractive(marker, interactive) {
+    if (!marker) return;
+    interactive = !!interactive;
+    if (typeof marker.setInteractive === "function") {
+      marker.setInteractive(interactive);
+      return;
+    }
+    marker.options.interactive = interactive;
+    var el = marker._icon || (typeof marker.getElement === "function" ? marker.getElement() : null);
+    if (el && typeof L !== "undefined" && L.DomUtil) {
+      if (interactive) L.DomUtil.addClass(el, "leaflet-interactive");
+      else L.DomUtil.removeClass(el, "leaflet-interactive");
+      el.style.pointerEvents = interactive ? "" : "none";
+    } else if (el) {
+      el.style.pointerEvents = interactive ? "" : "none";
+    }
+    if (marker.dragging) {
+      if (interactive && typeof marker.dragging.enable === "function") marker.dragging.enable();
+      else if (!interactive && typeof marker.dragging.disable === "function") marker.dragging.disable();
+    }
+  }
+
   function ErvenowStoreMap(options) {
     this.opts = options || {};
     this.map = null;
@@ -228,7 +251,7 @@
       if (!self.marker) return;
       var passThrough = wrap.classList.contains("is-scroll-pass-through");
       if (self.hasLocation) {
-        self.marker.setInteractive(!passThrough);
+        setMarkerInteractive(self.marker, !passThrough);
       }
     }
 
@@ -327,13 +350,13 @@
     if (this.lngInput) this.lngInput.value = String(lng);
     this.marker.setLatLng([lat, lng]);
     this.marker.setOpacity(1);
-    this.marker.setInteractive(true);
+    setMarkerInteractive(this.marker, true);
     if (window.matchMedia && window.matchMedia("(max-width: 640px)").matches) {
       var wrap = this.map.getContainer && this.map.getContainer().closest
         ? this.map.getContainer().closest(".reg-store-map-wrap")
         : null;
       if (wrap && wrap.classList.contains("is-scroll-pass-through")) {
-        this.marker.setInteractive(false);
+        setMarkerInteractive(this.marker, false);
       }
     }
     this._syncStorePinLabel();

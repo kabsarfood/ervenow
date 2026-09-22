@@ -1,6 +1,6 @@
 const { chromium } = require("playwright");
 
-const PAGES = ["/", "/start-now", "/restaurants", "/stores"];
+const PAGES = ["/", "/restaurants", "/stores"];
 
 (async () => {
   const b = await chromium.launch({ headless: true });

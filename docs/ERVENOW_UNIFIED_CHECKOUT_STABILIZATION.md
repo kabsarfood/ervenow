@@ -1,0 +1,55 @@
+# Unified Checkout Stabilization — تقرير E2E
+
+التاريخ: 2026-09-22  
+النطاق: تثبيت فقط. بدون Features جديدة. بدون STC Pay / Ledger / Wallet rules. بدون Dispatch / Settlement / Unified Actions.  
+`PUBLIC_ORDERING` في ملف `.env` ما زال `false`. الإنتاج لم يُفتح.  
+الاختبار المحلي شغّل العملية فقط بـ `PUBLIC_ORDERING_ENABLED=true` (لا يُكتب في `.env`).
+
+## ما الذي أُصلح
+
+1. سلة الضيف: `applySessionDraftPolicy` لم تعد تستدعي `clearPlatformDraftState` لمجرد Guest/`logged_out`. المسودة تُمسح عند إتمام Checkout أو «حذف الكل» أو خروج حساب موثّق (`prepareLogoutDraftState`). أُزيل المسح من `guestBrowse.endSession` و`auth-account-guard.clearSession` و`guest-shell.clearGuestSessionState`.
+2. الكاش: ملفات المسودة/الدفع تُرسل `Cache-Control: no-cache, must-revalidate` من الخادم (بدون الاعتماد على query string كاستراتيجية). كاش قديم من `max-age` السابق قد يبقى في المتصفح حتى إعادة التحقق — حدّث بـ Empty Cache / DevTools Disable cache.
+3. OTP قبل ERVENOW PAY: الضيف عند «تأكيد الطلب والدفع» يفتح بوابة OTP قبل أي `validateEwPay`. بعد التوثيق يُفحص الدفع ثم تُنشأ الطلبات.
+4. UI: الحالة الفارغة `hidden` + `aria-hidden` + `inert` + CSS `[hidden]{display:none!important}`. عنوان المطعم بدون تكرار «مطعم مطعم». `car_transport` = «نقل مركبات». السلة المختلطة لا تقول «لا توصيل» إذا وُجد نقل بموقع تنفيذ.
+
+## نتائج التحقق الحي (محلي)
+
+البيئة: `public_ordering_enabled=true`، `pre_registration=false`، `dev_otp_enabled=false`، Twilio=sandbox.
+
+- مسودة مختلطة 3 عناصر بقيت بعد `/my-orders` (`guest_draft`، n=3).
+- `/checkout` بعد تحميل السكربت الجديد: مجموعات «طلبك من مطعم كبسار للاكلات السعودية» + «طلبك من مطعم النخبة للاسماك» + «نقل مركبات». ملخص: «نقل مركبات — موقع الاستلام والتسليم محفوظ». الحالة الفارغة `aria-hidden=true`.
+- تأكيد مع ERVENOW PAY مضغوط (ضيف، بدون توكن): بوابة OTP فُتحت، السلة لم تُمسح، لا توست محفظة.
+- `POST /api/order/create` بدون توكن ما زال 401 — لا INSERT قبل OTP.
+
+### A — عميل جديد
+لم يكتمل. Twilio Sandbox لا يسلّم OTP لأرقام غير مضافة للـ sandbox. لا رمز واتساب حقيقي في هذه الجلسة. لا إنشاء Customer ولا Orders.
+
+### B — عميل موجود
+لم يكتمل. نفس قيد OTP.
+
+### C — Mixed Cart بعد OTP
+العرض والتقسيم: نجح (3 مجموعات). إنشاء Orders المنفصلة بعد OTP: لم يصل.
+
+لا إثبات بعد الإنشاء لـ order id / customer_id / المنفّذ / `/my-orders` / Notification / Ledger لأن الطلبات لم تُنشأ.
+
+## pre_registration
+
+`pre_registration` في `/api/core/public-config` = عكس `PUBLIC_ORDERING_ENABLED`. ليسا قفلين مستقلين.
+
+- `PUBLIC_ORDERING=false` → `pre_registration=true` و`POST /api/order/create` بعد التوثيق = 403 `SERVICE_NOT_LAUNCHED`. هذا يمنع الطلب العام حتى لو اكتملت واجهة Checkout.
+- `PUBLIC_ORDERING=true` (هذه العملية المحلية فقط) → `pre_registration=false` والقتل سويتش يُرفع.
+
+لم يُغيَّر في الإنتاج ولا في `.env`.
+
+## هل Unified Checkout جاهزة؟
+
+لا. معيار الرحلة الكاملة (Guest → Cart → Checkout → OTP → Customer → Payment → Orders → My Orders → Executor) لم يكتمل بسبب عدم إتمام OTP واتساب حقيقي.
+
+جاهز من جهة التثبيت: بقاء المسودة للضيف، OTP قبل المحفظة، نصوص المجموعات، عدم INSERT قبل التوثيق.
+
+## ما يبقى قبل الموافقة على PUBLIC_ORDERING في الإنتاج
+
+1. إكمال A/B/C برقم داخل Twilio Sandbox (أو مرسل إنتاج) وإدخال رمز واتساب يدوياً.
+2. إثبات Orders غير هجينة + نفس `customer_id` + الظهور في `/my-orders` والمنفّذ + هل Notification/Ledger بعد الإنشاء فقط.
+3. Hard refresh للمتصفحات التي خزّنت `order-draft-store.js` بالسياسة القديمة.
+4. كتالوج صيدلية/متجر حي ما زال غائباً (السيناريو المختلط استُبدل بمطعمن + نقل مركبات).

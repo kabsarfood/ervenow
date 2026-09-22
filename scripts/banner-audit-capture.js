@@ -10,8 +10,6 @@ const OUT = path.join(__dirname, "..", "docs", "review-screenshots", "banner-aud
 
 const PAGES = [
   { id: "home", url: "/", bannerSel: "#homeHeroBanner", label: "الرئيسية" },
-  { id: "dashboard-hero", url: "/dashboard", bannerSel: "#ervVisitorBanner", label: "لوحة الزائر — بنر hero" },
-  { id: "dashboard-offers", url: "/dashboard", bannerSel: "#guestOffersCarousel", label: "لوحة الزائر — عروض", scrollTo: "#guestOffersCarousel" },
   { id: "restaurants", url: "/restaurants", bannerSel: "#ervRestaurantsBanner", label: "المطاعm" },
   { id: "stores", url: "/stores", bannerSel: "#ervStoresBanner", label: "المتاجر" },
   { id: "services", url: "/services", bannerSel: "#ervServicesBanner", label: "الخدمات" },

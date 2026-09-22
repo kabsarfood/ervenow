@@ -48,7 +48,7 @@
         <nav class="dash-site-header__nav" aria-label="التنقل الرئيسي">
           <div class="dash-site-header__links">
             <a class="dash-site-header__link" href="/" data-nav="home">الرئيسية</a>
-            <a class="dash-site-header__link" href="/dashboard" data-nav="guest">منصة ERVENOW</a>
+            <a class="dash-site-header__link" href="/" data-nav="guest">منصة ERVENOW</a>
             <a class="dash-site-header__link" href="/login?role=store" data-nav="login" class="dash-site-header__link--cta">دخول المتجر</a>
           </div>
         </nav>
@@ -102,7 +102,8 @@
             <li class="reg-store-progress__step"><span>3</span> التوصيل</li>
             <li class="reg-store-progress__step"><span>4</span> الهوية</li>
             <li class="reg-store-progress__step"><span>5</span> السجل</li>
-            <li class="reg-store-progress__step"><span>6</span> الدفع</li>
+            <li class="reg-store-progress__step"><span>6</span> المنتجات</li>
+            <li class="reg-store-progress__step"><span>7</span> الدفع</li>
           </ol>
         </nav>
 
@@ -119,13 +120,31 @@
               </div>
             </summary>
             <div class="reg-store-section__body reg-store-step1-body">
+            <p class="reg-store-needs-banner" id="needsInfoBanner" hidden></p>
             <div class="reg-store-step1-name">
-              <label for="name">اسم المتجر</label>
+              <label for="name">اسم المطعم / المتجر</label>
               <input id="name" type="text" autocomplete="organization" placeholder="مثال: مطعم النخبة" />
             </div>
 
-            <div class="field-gap reg-store-step1-type">
-              <label class="reg-store-field-label" for="type" id="storeTypeLabel">فئة النشاط</label>
+            <div class="field-gap">
+              <label class="reg-store-field-label" id="primaryTypeLabel">النوع الأساسي</label>
+              <input type="hidden" id="primary_type" value="restaurant" />
+              <div class="reg-store-primary-type" id="primaryTypePicker" role="radiogroup" aria-labelledby="primaryTypeLabel">
+                <button type="button" class="reg-store-primary-type__card is-active" data-primary="restaurant" role="radio" aria-checked="true">
+                  <span aria-hidden="true">🍽️</span>
+                  <strong>مطعم</strong>
+                  <span>Restaurant</span>
+                </button>
+                <button type="button" class="reg-store-primary-type__card" data-primary="store" role="radio" aria-checked="false">
+                  <span aria-hidden="true">🏪</span>
+                  <strong>متجر</strong>
+                  <span>Store</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="field-gap reg-store-step1-type" id="storeSubtypeWrap">
+              <label class="reg-store-field-label" for="type" id="storeTypeLabel">تصنيف المتجر</label>
               <div class="reg-store-type-vip" id="storeTypePicker" role="radiogroup" aria-labelledby="storeTypeLabel">
                 <button type="button" class="reg-store-type-vip__card is-active" data-type="restaurant" role="radio" aria-checked="true">
                   <span class="reg-store-type-vip__check" aria-hidden="true">✓</span>
@@ -388,13 +407,41 @@
               <div class="field-gap">
                 <label for="cr_file">صورة السجل التجاري <span aria-hidden="true">*</span></label>
                 <input id="cr_file" type="file" accept="image/*" required />
+                <p class="sub" id="crFileHint" hidden>صورة السجل محفوظة سابقاً — ارفع صورة جديدة فقط إذا أردت استبدالها.</p>
               </div>
+              <div class="reg-store-field-row">
+                <div class="field-gap">
+                  <label for="license_number">رقم الرخصة <span class="reg-store-opt-note">(إن وجد)</span></label>
+                  <input id="license_number" type="text" name="license_number" inputmode="text" placeholder="اختياري" dir="ltr" />
+                </div>
+                <div class="field-gap">
+                  <label for="license_file">صورة الرخصة <span class="reg-store-opt-note">(إن وجدت)</span></label>
+                  <input id="license_file" type="file" accept="image/*" />
+                </div>
+              </div>
+            </div>
+          </details>
+
+          <details class="reg-store-section reg-store-acc" id="regStepProducts">
+            <summary class="reg-store-section__head">
+              <span class="reg-store-section__num" aria-hidden="true">6</span>
+              <div>
+                <div class="reg-store-section__meta">
+                  <h2 class="reg-store-section__title" id="h-products">منتجات أولية</h2>
+                  <span class="reg-store-badge reg-store-badge--req">مطلوب</span>
+                </div>
+                <p class="reg-store-section__hint">منتج واحد على الأقل مع السعر والصورة — يصل مع الطلب لمراجعة الأدمن.</p>
+              </div>
+            </summary>
+            <div class="reg-store-section__body">
+              <div id="onboardingProducts" class="reg-store-products"></div>
+              <button type="button" class="btn btn-ghost" id="btnAddOnboardingProduct">إضافة منتج آخر</button>
             </div>
           </details>
 
           <details class="reg-store-section reg-store-acc" id="regStep6">
             <summary class="reg-store-section__head">
-              <span class="reg-store-section__num" aria-hidden="true">6</span>
+              <span class="reg-store-section__num" aria-hidden="true">7</span>
               <div>
                 <div class="reg-store-section__meta">
                   <h2 class="reg-store-section__title" id="h-payout">الحساب البنكي ووسائل الدفع</h2>
@@ -484,12 +531,12 @@
       </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="/assets/ervenow-store-map.js?erv=20260905s"></script>
+    <script src="/assets/ervenow-store-map.js?erv=20260922pin1"></script>
     <script src="/assets/compressImage.js"></script>
     <script src="/assets/payoutRegistration.js"></script>
     <script src="/assets/api-config.js"></script>
     <script src="/assets/sa-phone-input.js"></script>
-    <script src="/assets/api.js?erv=20260612"></script>
+    <script src="/assets/api.js?erv=20260922otp30"></script>
     <script src="/assets/restaurant-cuisines.js"></script>
     <script src="/assets/ervenow-toggle.js"></script>
     <script src="/assets/guest-shell.js?erv=20260921dest1"></script>
@@ -500,6 +547,34 @@
       (function initRegStoreUi() {
         var typeSel = document.getElementById("type");
         var typePicker = document.getElementById("storeTypePicker");
+        var primaryEl = document.getElementById("primary_type");
+        var primaryPicker = document.getElementById("primaryTypePicker");
+        var subtypeWrap = document.getElementById("storeSubtypeWrap");
+        function applyPrimaryType(primary, subtype) {
+          var p = primary === "store" ? "store" : "restaurant";
+          if (primaryEl) primaryEl.value = p;
+          if (primaryPicker) {
+            primaryPicker.querySelectorAll(".reg-store-primary-type__card").forEach(function (btn) {
+              var on = btn.getAttribute("data-primary") === p;
+              btn.classList.toggle("is-active", on);
+              btn.setAttribute("aria-checked", on ? "true" : "false");
+            });
+          }
+          if (subtypeWrap) subtypeWrap.style.display = p === "store" ? "" : "none";
+          if (typeSel) {
+            if (p === "restaurant") typeSel.value = "restaurant";
+            else if (subtype && subtype !== "restaurant") typeSel.value = subtype;
+            else if (typeSel.value === "restaurant") typeSel.value = "supermarket";
+            typeSel.dispatchEvent(new Event("change", { bubbles: true }));
+          }
+        }
+        if (primaryPicker) {
+          primaryPicker.addEventListener("click", function (e) {
+            var btn = e.target.closest(".reg-store-primary-type__card");
+            if (!btn) return;
+            applyPrimaryType(btn.getAttribute("data-primary") || "restaurant");
+          });
+        }
         if (typePicker && typeSel) {
           function syncTypeCards() {
             var v = typeSel.value;
@@ -521,6 +596,8 @@
           typeSel.addEventListener("change", syncTypeCards);
           syncTypeCards();
         }
+        applyPrimaryType((primaryEl && primaryEl.value) || "restaurant");
+        window.applyRegStorePrimaryType = applyPrimaryType;
 
         function wireUpload(inputId, previewId, placeholderId) {
           var input = document.getElementById(inputId);
@@ -558,6 +635,7 @@
           document.getElementById("regStep3"),
           document.getElementById("regStep4"),
           document.getElementById("regStep5"),
+          document.getElementById("regStepProducts"),
           document.getElementById("regStep6"),
         ].filter(Boolean);
 
@@ -635,7 +713,93 @@
       var mapHint = document.getElementById("mapHint");
       var crDataUrl = null;
       var crFileName = null;
+      var crAlreadyUploaded = false;
+      var licenseDataUrl = null;
+      var licenseFileName = null;
+      var existingOnboardingProducts = [];
       var storeMap = null;
+      var REG_TOKEN = "";
+      try {
+        REG_TOKEN = sessionStorage.getItem("ervenow_registration_token") || "";
+      } catch (_e) {
+        REG_TOKEN = "";
+      }
+      if (!REG_TOKEN) {
+        window.location.replace("/login?mode=register&role=store");
+      } else {
+        var savedPhone = "";
+        try {
+          savedPhone = sessionStorage.getItem("ervenow_registration_phone") || "";
+        } catch (_p) {}
+        var phoneEl0 = document.getElementById("phone");
+        var applicantEl0 = document.getElementById("applicant_phone");
+        if (phoneEl0 && savedPhone) {
+          phoneEl0.value =
+            savedPhone.length === 12 && savedPhone.indexOf("966") === 0 ? "0" + savedPhone.slice(3) : savedPhone;
+          phoneEl0.readOnly = true;
+        }
+        if (applicantEl0 && savedPhone && !applicantEl0.value) {
+          applicantEl0.value = phoneEl0 ? phoneEl0.value : savedPhone;
+        }
+        (function loadExistingOnboarding() {
+          if (!REG_TOKEN || !window.PlatformAPI || !window.PlatformAPI.api) return;
+          window.PlatformAPI.api(
+            "/api/store/onboarding-status?registration_token=" + encodeURIComponent(REG_TOKEN)
+          )
+            .then(function (j) {
+              if (!j || !j.exists || !j.reopenable) return;
+              var banner = document.getElementById("needsInfoBanner");
+              if (j.needs_info && banner) {
+                banner.hidden = false;
+                banner.textContent =
+                  (j.needs_info_message
+                    ? "مطلوب استكمال بيانات: " + j.needs_info_message
+                    : "طلب الأدمن استكمال بيانات هذا الطلب. عدّل ثم أعد الإرسال.") +
+                  " — لا يُنشأ طلب جديد.";
+              }
+              var st = j.store || {};
+              if (st.name) document.getElementById("name").value = st.name;
+              if (st.address) document.getElementById("address").value = st.address;
+              if (st.commercial_registration) {
+                document.getElementById("commercial_registration").value = st.commercial_registration;
+              }
+              if (st.license_number) {
+                var lic = document.getElementById("license_number");
+                if (lic) lic.value = st.license_number;
+              }
+              if (st.lat) latEl.value = st.lat;
+              if (st.lng) lngEl.value = st.lng;
+              if (st.maps_url) {
+                var mu = document.getElementById("regStoreMapsUrl");
+                var mh = document.getElementById("maps_url");
+                if (mu) mu.value = st.maps_url;
+                if (mh) mh.value = st.maps_url;
+              }
+              var isRest = String(st.type || "").toLowerCase() === "restaurant";
+              if (window.applyRegStorePrimaryType) {
+                window.applyRegStorePrimaryType(isRest ? "restaurant" : "store", st.type);
+              } else {
+                var typeSel2 = document.getElementById("type");
+                if (typeSel2 && st.type) typeSel2.value = st.type;
+              }
+              if (j.has_cr_file) {
+                crAlreadyUploaded = true;
+                var crHint = document.getElementById("crFileHint");
+                if (crHint) crHint.hidden = false;
+                var crReq = document.getElementById("cr_file");
+                if (crReq) crReq.required = false;
+              }
+              var host = document.getElementById("onboardingProducts");
+              if (host && j.products && j.products.length) {
+                host.innerHTML = "";
+                j.products.forEach(function (p) {
+                  addOnboardingProductRow(p);
+                });
+              }
+            })
+            .catch(function () {});
+        })();
+      }
 
       function show(text, isOk) {
         var el = document.getElementById("msg");
@@ -691,6 +855,103 @@
         };
         r.readAsDataURL(f);
       };
+
+      var licenseInput = document.getElementById("license_file");
+      if (licenseInput) {
+        licenseInput.onchange = function (ev) {
+          var f = ev.target.files && ev.target.files[0];
+          licenseDataUrl = null;
+          licenseFileName = null;
+          if (!f) return;
+          licenseFileName = f.name || "license.jpg";
+          if (window.compressImageToDataUrl) {
+            window.compressImageToDataUrl(f, 0.72, 1280).then(function (url) {
+              licenseDataUrl = url;
+            }).catch(function () {
+              var r = new FileReader();
+              r.onload = function () {
+                licenseDataUrl = r.result;
+              };
+              r.readAsDataURL(f);
+            });
+          } else {
+            var r2 = new FileReader();
+            r2.onload = function () {
+              licenseDataUrl = r2.result;
+            };
+            r2.readAsDataURL(f);
+          }
+        };
+      }
+
+      function addOnboardingProductRow(pref) {
+        var host = document.getElementById("onboardingProducts");
+        if (!host) return;
+        pref = pref || {};
+        var row = document.createElement("div");
+        row.className = "reg-store-product-row";
+        row.innerHTML =
+          "<div class='reg-store-field-row'>" +
+          "<div class='field-gap'><label>اسم المنتج</label><input class='ob-p-name' type='text' placeholder='مثال: كبسة دجاج' value='' /></div>" +
+          "<div class='field-gap'><label>السعر (ريال)</label><input class='ob-p-price' type='number' min='0.01' step='0.01' inputmode='decimal' placeholder='0.00' /></div>" +
+          "</div>" +
+          "<div class='field-gap'><label>صورة المنتج</label><input class='ob-p-image' type='file' accept='image/*' /></div>" +
+          "<input type='hidden' class='ob-p-existing-img' />" +
+          "<p class='sub ob-p-img-hint' hidden></p>" +
+          "<button type='button' class='btn btn-ghost ob-p-remove'>حذف المنتج</button>";
+        host.appendChild(row);
+        var nameEl = row.querySelector(".ob-p-name");
+        var priceEl = row.querySelector(".ob-p-price");
+        var existEl = row.querySelector(".ob-p-existing-img");
+        var hint = row.querySelector(".ob-p-img-hint");
+        if (nameEl) nameEl.value = pref.name || "";
+        if (priceEl && pref.price != null) priceEl.value = pref.price;
+        if (existEl) existEl.value = pref.image_url || "";
+        if (hint && pref.image_url) {
+          hint.hidden = false;
+          hint.textContent = "صورة محفوظة — ارفع صورة جديدة فقط للاستبدال.";
+        }
+        row.querySelector(".ob-p-remove").onclick = function () {
+          if (host.children.length <= 1) return;
+          row.remove();
+        };
+      }
+      function ensureOnboardingProductRows() {
+        var host = document.getElementById("onboardingProducts");
+        if (!host) return;
+        if (!host.children.length) addOnboardingProductRow();
+      }
+      var addProdBtn = document.getElementById("btnAddOnboardingProduct");
+      if (addProdBtn) {
+        addProdBtn.onclick = function () {
+          addOnboardingProductRow();
+        };
+      }
+      ensureOnboardingProductRows();
+
+      async function collectOnboardingProducts() {
+        var host = document.getElementById("onboardingProducts");
+        var rows = host ? Array.prototype.slice.call(host.querySelectorAll(".reg-store-product-row")) : [];
+        var out = [];
+        for (var i = 0; i < rows.length; i += 1) {
+          var row = rows[i];
+          var name = String((row.querySelector(".ob-p-name") || {}).value || "").trim();
+          var price = Number((row.querySelector(".ob-p-price") || {}).value);
+          var fileEl = row.querySelector(".ob-p-image");
+          var existing = String((row.querySelector(".ob-p-existing-img") || {}).value || "").trim();
+          if (!name && !Number.isFinite(price)) continue;
+          var item = { name: name, price: price };
+          var file = fileEl && fileEl.files && fileEl.files[0];
+          if (file && window.compressImageToDataUrl) {
+            item.image_base64 = await window.compressImageToDataUrl(file, 0.78, 1200);
+            item.image_file_name = file.name || "product.jpg";
+          } else if (existing) {
+            item.image_url = existing;
+          }
+          out.push(item);
+        }
+        return out;
+      }
 
       document.getElementById("phone").addEventListener("input", normalizePhoneInput);
       document.getElementById("phone").addEventListener("blur", normalizePhoneInput);
@@ -1201,6 +1462,7 @@
           var name = document.getElementById("name").value.trim();
           var phone = document.getElementById("phone").value.trim();
           var type = document.getElementById("type").value;
+          var primary_type = (document.getElementById("primary_type") || {}).value || (type === "restaurant" ? "restaurant" : "store");
           var restaurantSlugs = getSelectedSlugs(document.getElementById("restaurant_category"));
           var marketSlugs = getSelectedSlugs(document.getElementById("store_category"));
           var clothingSlugs = getSelectedSlugs(document.getElementById("clothing_category"));
@@ -1250,13 +1512,6 @@
             show("أدخل عنواناً واضحاً للمتجر (أو انتظر اقتراح الخريطة).", false);
             return;
           }
-          if (type === "restaurant") {
-            if (!restaurantSlugs.length) {
-              if (window.openRegStoreStep) openRegStoreStep(0);
-              show("اختر تصنيفاً واحداً على الأقل للمطعم.", false);
-              return;
-            }
-          }
           if (type === "supermarket") {
             if (!marketSlugs.length) {
               if (window.openRegStoreStep) openRegStoreStep(0);
@@ -1302,12 +1557,12 @@
           }
 
           var crInput = document.getElementById("cr_file");
-          if (!crInput || !crInput.files || !crInput.files[0]) {
+          if ((!crInput || !crInput.files || !crInput.files[0]) && !crAlreadyUploaded) {
             if (window.openRegStoreStep) openRegStoreStep(4);
             show("ارفع صورة السجل التجاري.", false);
             return;
           }
-          if (!crDataUrl) {
+          if (!crDataUrl && !crAlreadyUploaded) {
             if (window.openRegStoreStep) openRegStoreStep(4);
             show("انتظر حتى تُحمّل صورة السجل", false);
             return;
@@ -1334,11 +1589,38 @@
             return;
           }
 
+          var products;
+          try {
+            products = await collectOnboardingProducts();
+          } catch (prodErr) {
+            if (window.openRegStoreStep) openRegStoreStep(5);
+            show(String(prodErr.message || "تعذر معالجة صور المنتجات"), false);
+            return;
+          }
+          var validProducts = (products || []).filter(function (p) {
+            return p && p.name && Number.isFinite(p.price) && p.price > 0;
+          });
+          if (!validProducts.length) {
+            if (window.openRegStoreStep) openRegStoreStep(5);
+            show("أضف منتجاً أولياً واحداً على الأقل مع سعر صحيح.", false);
+            return;
+          }
+          var missingImg = validProducts.some(function (p) {
+            return !p.image_base64 && !p.image_url;
+          });
+          if (missingImg) {
+            if (window.openRegStoreStep) openRegStoreStep(5);
+            show("أرفق صورة لكل منتج أولي.", false);
+            return;
+          }
+
           var body = {
             name: name,
             phone: phone,
+            registration_token: REG_TOKEN,
             applicant_name: applicantName,
             applicant_phone: applicantPhone,
+            primary_type: primary_type,
             type: type,
             lat: Number(lat),
             lng: Number(lng),
@@ -1347,10 +1629,12 @@
             delivery_radius_km: Number.isFinite(radius) ? radius : 5,
             email: email || undefined,
             commercial_registration: commercial_registration,
+            license_number: String((document.getElementById("license_number") || {}).value || "").trim() || undefined,
             logoFileBase64: logoDataUrl || undefined,
             logoFileName: logoFile ? logoFile.name : undefined,
             bannerFileBase64: coverDataUrl || undefined,
             bannerFileName: coverFile ? coverFile.name : undefined,
+            products: validProducts,
           };
           if (type === "restaurant" && restaurantSlugs.length) {
             body.restaurant_category = restaurantSlugs[0];
@@ -1368,6 +1652,10 @@
           if (crDataUrl) {
             body.commercialRegistrationFileBase64 = crDataUrl;
             body.commercialRegistrationFileName = crFileName;
+          }
+          if (licenseDataUrl) {
+            body.licenseFileBase64 = licenseDataUrl;
+            body.licenseFileName = licenseFileName;
           }
 
           if (window.ERVENOW_PAYOUT_UI) {
@@ -1391,18 +1679,14 @@
             method: "POST",
             body: body,
           });
-          var okMsg =
-            j.message ||
-            (j.headline && j.subline ? j.headline + "\n" + j.subline : "") ||
-            "✅ تم تسجيل المتجر\n⏳ حسابك قيد المراجعة من إدارة ERVENOW";
-          if (j.id) okMsg += "\n\nمعرّف الطلب: " + j.id;
-          if (logoDataUrl && j.logo_uploaded === false) {
-            okMsg += "\n⚠️ لم يُحفظ الشعار — تحقق من دلو Storage (erwenow-store-registrations).";
-          }
-          if (coverDataUrl && j.banner_uploaded === false) {
-            okMsg += "\n⚠️ لم تُحفظ صورة الغلاف — تحقق من دلو Storage.";
-          }
+          var okMsg = j.headline || j.message || "طلبك قيد المراجعة لدى ERVENOW";
+          try {
+            sessionStorage.setItem("ervenow_pending_headline", okMsg);
+            if (j.subline) sessionStorage.setItem("ervenow_pending_subline", j.subline);
+          } catch (_s) {}
           show(okMsg, true);
+          window.location.replace(j.redirect || "/pending-approval.html");
+          return;
         } catch (e) {
           show(String(e.message || e), false);
         } finally {

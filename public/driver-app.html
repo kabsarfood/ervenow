@@ -98,7 +98,7 @@
       var token = window.PlatformAPI.getToken();
       if (!token) {
         document.body.innerHTML =
-          '<div class="driver-auth-gate"><h2>🔒 ادخل كشريك توصيل</h2><a class="drv-btn drv-btn--gold" href="/driver-login">دخول الأعضاء</a></div>';
+          '<div class="driver-auth-gate"><h2>🔒 ادخل كشريك توصيل</h2><a class="drv-btn drv-btn--gold" href="/login?role=driver">دخول الأعضاء</a></div>';
         throw new Error("auth");
       }
 

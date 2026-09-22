@@ -9,9 +9,7 @@ const { isDeliveryEnginePolicyEnabled } = require("../../shared/utils/deliveryEn
 const { publicDeliveryPolicyLabels, storePolicyRowToConfig } = require("../../shared/services/deliveryPolicyEngine");
 const { deliveryEngineRouter } = require("./deliveryEngineRoutes");
 const { applyMapsUrlToStorePatch, storeHasOfficialLocation } = require("../../shared/utils/storeMapsLocation");
-const platformBranding = require("../../shared/utils/platformBrandingStore");
-const { mergeMapColorsIntoBranding } = require("../../shared/utils/mapCategoryColors");
-const { liveMapStorePayload } = require("../../shared/utils/liveMapStorePayload");
+const { loadLiveMapStoresPayload, parseLiveMapBounds } = require("../../shared/utils/liveMapStoresQuery");
 const { cacheGetJson, cacheSetJson } = require("../../shared/utils/redisCache");
 const { parseOptionalPayoutPayload, payoutRowForDriversOrStores } = require("../../shared/utils/payoutFields");
 const { sanitizeDriverOrStoreRowForApi } = require("../../shared/utils/bankApiSafe");
@@ -22,6 +20,19 @@ const {
   ibanFingerprintFromPlain,
 } = require("../../shared/utils/payoutUniqueness");
 const { decrypt } = require("../../server/utils/crypto");
+const { requireVerifiedRegistration, readRegistrationTokenRaw, verifyRegistrationToken } = require("../../shared/utils/registrationContext");
+const { isStoreAccountRole } = require("../../shared/middleware/storeRole");
+const {
+  storeRowIsListedActive,
+  storeRowIsMerchantManageable,
+  storeRowNeedsCompletion,
+  storeRowIsReopenableOnboarding,
+  appendSelectCols,
+  isPublicationSchemaError,
+  resubmitOnboardingPatch,
+  publishStorePatch,
+  validatePublishReadiness,
+} = require("../../shared/utils/storePublication");
 const {
   restaurantCategoryLabelAr,
   restaurantCategoryDisplayAr,
@@ -258,12 +269,67 @@ function isStoreReviewsMissing(err) {
   return /store_reviews|schema cache|relation .*store_reviews/i.test(msg);
 }
 
-/** يظهر في قوائم المتاجر العامة: معتمد وغير معطّل صراحةً */
-function storeRowIsListedActive(r) {
-  if (!r) return false;
-  if (String(r.status || "").toLowerCase() !== "approved") return false;
-  if (Object.prototype.hasOwnProperty.call(r, "is_active") && r.is_active === false) return false;
-  return true;
+function selectWithPublication(sel) {
+  return appendSelectCols(sel, ["publication_status"]);
+}
+
+function normalizeOnboardingType(b) {
+  const primary = String(b.primary_type || b.kind || b.facility_kind || "")
+    .trim()
+    .toLowerCase();
+  const type = String(b.type || "")
+    .trim()
+    .toLowerCase();
+  if (primary === "restaurant" || type === "restaurant") return "restaurant";
+  if (type === "store") return "supermarket";
+  if (type && STORE_TYPES.has(type) && type !== "restaurant") return type;
+  if (primary === "store") return "supermarket";
+  return type;
+}
+
+async function insertOnboardingProducts(sb, storeId, products) {
+  const list = Array.isArray(products) ? products : [];
+  const inserted = [];
+  for (let i = 0; i < list.length && inserted.length < 20; i += 1) {
+    const p = list[i] || {};
+    const name = String(p.name || "").trim();
+    const price = Number(p.price);
+    if (!name || !Number.isFinite(price) || price < 0) continue;
+    let imageUrl = null;
+    const b64 = p.image_base64 || p.imageBase64;
+    if (b64) {
+      imageUrl = await uploadToStoreBucket(
+        sb,
+        storeId,
+        "products",
+        b64,
+        p.image_file_name || p.imageFileName || "product.jpg"
+      );
+    } else if (p.image_url || p.existing_image_url) {
+      imageUrl = String(p.image_url || p.existing_image_url).trim() || null;
+    }
+    const row = {
+      store_id: storeId,
+      name,
+      price,
+      image_url: imageUrl,
+      active: true,
+      sort_order: inserted.length,
+      updated_at: new Date().toISOString(),
+    };
+    const { data, error } = await sb
+      .from("store_products")
+      .insert(row)
+      .select("id,name,price,image_url,active")
+      .single();
+    if (error && isStoreProductsMissing(error)) break;
+    if (error) {
+      console.warn("[store/register] onboarding product:", error.message || error);
+      continue;
+    }
+    if (data) inserted.push(data);
+  }
+  return inserted;
 }
 
 function simpleHash(s) {
@@ -493,6 +559,9 @@ function publicStoreRow(row, labelOpts) {
     profile_views: Number(row.profile_views) || 0,
   };
   if (row.is_active != null) o.is_active = !!row.is_active;
+  if (row.publication_status != null) o.publication_status = String(row.publication_status);
+  o.needs_completion = storeRowNeedsCompletion(row);
+  o.is_published = storeRowIsListedActive(row);
   if (row.distance_km != null && Number.isFinite(Number(row.distance_km))) {
     o.distance_km = Number(row.distance_km);
   }
@@ -517,19 +586,30 @@ async function resolveMerchantStoreByPhone(sb, appUser) {
   return { store: row };
 }
 
-async function loadApprovedStore(sb, storeId) {
+async function loadStoreRowById(sb, storeId) {
   const { data, error } = await sb.from("stores").select("*").eq("id", storeId).maybeSingle();
   if (error) return { error: error.message || "خطأ قاعدة البيانات" };
   if (!data) return { error: "المتجر غير موجود" };
-  if (String(data.status || "").toLowerCase() !== "approved") return { error: "المتجر غير معتمد" };
-  if (Object.prototype.hasOwnProperty.call(data, "is_active") && data.is_active === false) {
-    return { error: "المتجر غير نشط حالياً" };
-  }
   return { store: data };
 }
 
+/** مسار عام للعملاء: معتمد ومنشور (مع إرث بلا publication_status). */
+async function loadApprovedStore(sb, storeId) {
+  const got = await loadStoreRowById(sb, storeId);
+  if (got.error) return got;
+  if (!storeRowIsListedActive(got.store)) return { error: "المتجر غير متاح" };
+  return got;
+}
+
+async function loadMerchantApprovedStore(sb, storeId) {
+  const got = await loadStoreRowById(sb, storeId);
+  if (got.error) return got;
+  if (!storeRowIsMerchantManageable(got.store)) return { error: "المتجر غير معتمد" };
+  return got;
+}
+
 async function assertMerchantOwnsStore(sb, storeId, appUser) {
-  const got = await loadApprovedStore(sb, storeId);
+  const got = await loadMerchantApprovedStore(sb, storeId);
   if (got.error) return { error: got.error };
   const store = got.store;
   const userDigits = normalizePhone(appUser.phone);
@@ -577,8 +657,9 @@ router.get("/my-store", requireAuth, requireStoreRole, async (req, res) => {
     const sb = createServiceClient();
     if (!sb) return fail(res, "الخادم غير مهيأ لقاعدة البيانات", 503);
     const digits = normalizePhone(req.appUser.phone);
-    const extendedSel =
-      "id,name,phone,type,category,status,is_active,logo_url,lat,lng,location_text,address,delivery_radius_km,average_rating,rating_count,total_orders,profile_views,bank_name,bank_country_code,bank_last4,bank_verified,stc_pay_phone,payout_crypto_interest";
+    const extendedSel = selectWithPublication(
+      "id,name,phone,type,category,status,is_active,logo_url,lat,lng,location_text,address,delivery_radius_km,average_rating,rating_count,total_orders,profile_views,bank_name,bank_country_code,bank_last4,bank_verified,stc_pay_phone,payout_crypto_interest"
+    );
     let row = null;
     let err = null;
     ({ data: row, error: err } = await sb.from("stores").select(extendedSel).eq("phone", digits).eq("status", "approved").maybeSingle());
@@ -592,9 +673,6 @@ router.get("/my-store", requireAuth, requireStoreRole, async (req, res) => {
     }
     if (err) return fail(res, err.message, 400);
     if (!row) return fail(res, "لا يوجد متجر معتمد مرتبط بجوالك. سجّل الدخول كتاجر (تاجر/متجر) بنفس رقم التسجيل.", 404);
-    if (Object.prototype.hasOwnProperty.call(row, "is_active") && row.is_active === false) {
-      return fail(res, "المتجر معتمد لكن غير مفعّل للظهور — تواصل مع الإدارة.", 403);
-    }
     const base = publicStoreRow(row);
     const bankSafe = sanitizeDriverOrStoreRowForApi(row);
 
@@ -618,9 +696,26 @@ router.get("/my-store", requireAuth, requireStoreRole, async (req, res) => {
 
     if (base.logo_url) base.logo_url = await resolveStoreImageUrl(sb, base.logo_url);
 
+    let products = [];
+    try {
+      const { data: prodRows, error: pErr } = await sb
+        .from("store_products")
+        .select("*")
+        .eq("store_id", row.id)
+        .order("sort_order", { ascending: true })
+        .limit(80);
+      if (!pErr) products = await mapProductsForApiResolved(sb, prodRows || []);
+    } catch (prodErr) {
+      console.warn("[store/my-store] products", prodErr && prodErr.message);
+    }
+    const readiness = validatePublishReadiness(row, merchant_hub, products);
+
     return ok(res, {
       store: {
         ...base,
+        publication_status: row.publication_status || null,
+        needs_completion: storeRowNeedsCompletion(row),
+        is_published: storeRowIsListedActive(row),
         payout_bank: {
           bank_name: bankSafe.bank_name || null,
           bank_last4: bankSafe.bank_last4 || null,
@@ -632,6 +727,7 @@ router.get("/my-store", requireAuth, requireStoreRole, async (req, res) => {
         },
       },
       merchant_hub,
+      publish_readiness: readiness,
     });
   } catch (e) {
     console.error("[store/my-store]", e);
@@ -686,8 +782,9 @@ router.get("/", optionalAuth, async (req, res) => {
         "flowers_gifts",
         "beauty_care",
       ];
-      const extendedSelAll =
-        "id,name,phone,type,category,lat,lng,status,is_active,logo_url,location_text,address,delivery_radius_km,average_rating,rating_count,total_orders,created_at";
+      const extendedSelAll = selectWithPublication(
+        "id,name,phone,type,category,lat,lng,status,is_active,logo_url,location_text,address,delivery_radius_km,average_rating,rating_count,total_orders,created_at"
+      );
       const baseSelAll = "id,name,phone,type,lat,lng,status,created_at";
       let rowsAll = [];
       let errAll = null;
@@ -809,8 +906,9 @@ router.get("/", optionalAuth, async (req, res) => {
       return ok(res, listCache.payload);
     }
 
-    const extendedSel =
-      "id,name,phone,type,category,lat,lng,status,is_active,logo_url,location_text,address,delivery_radius_km,average_rating,rating_count,total_orders,created_at";
+    const extendedSel = selectWithPublication(
+      "id,name,phone,type,category,lat,lng,status,is_active,logo_url,location_text,address,delivery_radius_km,average_rating,rating_count,total_orders,created_at"
+    );
     const baseSel = "id,name,phone,type,lat,lng,status,created_at";
 
     let rows = [];
@@ -959,8 +1057,9 @@ async function getPublicStoreById(req, res) {
       console.warn("[store/public] checkout_payment_methods", pe && (pe.message || String(pe)));
     }
 
-    const extendedSel =
-      "id,name,phone,type,category,lat,lng,status,is_active,logo_url,location_text,address,delivery_radius_km,average_rating,rating_count,total_orders,profile_views";
+    const extendedSel = selectWithPublication(
+      "id,name,phone,type,category,lat,lng,status,is_active,logo_url,location_text,address,delivery_radius_km,average_rating,rating_count,total_orders,profile_views"
+    );
     let row = null;
     let err = null;
     ({ data: row, error: err } = await sb.from("stores").select(extendedSel).eq("id", id).maybeSingle());
@@ -968,7 +1067,7 @@ async function getPublicStoreById(req, res) {
       ({ data: row, error: err } = await sb.from("stores").select("id,name,phone,type,lat,lng,status").eq("id", id).maybeSingle());
     }
     if (err && !isStoresTableMissing(err)) return fail(res, err.message, 400);
-    if (!row || String(row.status || "").toLowerCase() !== "approved") {
+    if (!row || !storeRowIsListedActive(row)) {
       return fail(res, "المتجر غير متاح", 404);
     }
     void sb
@@ -977,9 +1076,6 @@ async function getPublicStoreById(req, res) {
       .eq("id", id)
       .then(() => {})
       .catch(() => {});
-    if (Object.prototype.hasOwnProperty.call(row, "is_active") && row.is_active === false) {
-      return fail(res, "المتجر غير متاح", 404);
-    }
 
     const restMap =
       String(row.type || "").toLowerCase() === "restaurant"
@@ -1156,10 +1252,21 @@ router.get("/products", optionalAuth, async (req, res) => {
     const storeId = String(req.query.store_id || "").trim();
     if (!storeId) return fail(res, "store_id مطلوب", 400);
 
-    const got = await loadApprovedStore(sb, storeId);
-    if (got.error) return fail(res, got.error, 404);
+    let got;
+    let manage = false;
+    if (req.appUser && isStoreAccountRole(req.appUser.role)) {
+      const own = await assertMerchantOwnsStore(sb, storeId, req.appUser);
+      if (!own.error) {
+        got = own;
+        manage = true;
+      }
+    }
+    if (!got) {
+      got = await loadApprovedStore(sb, storeId);
+      if (got.error) return fail(res, got.error, 404);
+    }
 
-    const limit = Math.min(60, Math.max(1, Number(req.query.limit) || 24));
+    const limit = Math.min(80, Math.max(1, Number(req.query.limit) || 24));
     const offset = Math.max(0, Number(req.query.offset) || 0);
     const catalogType = productCatalogTypeForStoreType(got.store.type);
     const catFilter = req.query.category
@@ -1169,14 +1276,16 @@ router.get("/products", optionalAuth, async (req, res) => {
       return fail(res, "قسم المنتج غير صالح لهذا النوع من المتاجر", 400);
     }
 
-    const base = () =>
-      sb
+    const base = () => {
+      let q = sb
         .from("store_products")
         .select("*", { count: "exact" })
         .eq("store_id", storeId)
-        .eq("active", true)
         .order("sort_order", { ascending: true })
         .order("created_at", { ascending: false });
+      if (!manage) q = q.eq("active", true);
+      return q;
+    };
 
     let q = base();
     if (catFilter) q = q.eq("category", catFilter);
@@ -1549,55 +1658,17 @@ router.get("/live-map/stores", requireAuth, async (req, res) => {
     const sb = createServiceClient();
     if (!sb) return fail(res, "الخادم غير مهيأ لقاعدة البيانات", 503);
 
-    const north = Number(req.query.north);
-    const south = Number(req.query.south);
-    const east = Number(req.query.east);
-    const west = Number(req.query.west);
-    const hasBounds =
-      Number.isFinite(north) &&
-      Number.isFinite(south) &&
-      Number.isFinite(east) &&
-      Number.isFinite(west);
-
-    let query = sb
-      .from("stores")
-      .select(
-        "id,name,type,category,lat,lng,maps_url,logo_url,address,location_text,is_active,status,average_rating,rating_count,delivery_radius_km"
-      )
-      .eq("status", "approved")
-      .eq("is_active", true)
-      .not("lat", "is", null)
-      .not("lng", "is", null)
-      .limit(400);
-
-    if (hasBounds) {
-      const minLat = Math.min(north, south);
-      const maxLat = Math.max(north, south);
-      const minLng = Math.min(east, west);
-      const maxLng = Math.max(east, west);
-      query = query.gte("lat", minLat).lte("lat", maxLat).gte("lng", minLng).lte("lng", maxLng);
-    }
-
-    const { data, error } = await query;
-    if (error) return fail(res, error.message, 400);
-
-    const branding = mergeMapColorsIntoBranding(await platformBranding.loadBranding(sb));
-    const stores = (data || [])
-      .filter(storeRowIsListedActive)
-      .map(function (row) {
-        return liveMapStorePayload(row, { branding: branding });
-      })
-      .filter(Boolean);
+    const loaded = await loadLiveMapStoresPayload(sb, {
+      listedOnly: true,
+      bounds: parseLiveMapBounds(req.query),
+      limit: 400,
+    });
+    if (loaded.error) return fail(res, loaded.error.message, 400);
 
     res.set("Cache-Control", "private, max-age=15");
     return ok(res, {
-      stores: stores,
-      map_colors: {
-        restaurant: branding.map_color_restaurant,
-        store: branding.map_color_store,
-        pharmacy: branding.map_color_pharmacy,
-        service: branding.map_color_service,
-      },
+      stores: loaded.stores,
+      map_colors: loaded.map_colors,
     });
   } catch (e) {
     console.error("[store/live-map/stores]", e);
@@ -1635,7 +1706,11 @@ router.patch("/location", requireAuth, requireStoreRole, async (req, res) => {
       return fail(res, "أدخل رابط الموقع أو استخدم «تحديد الموقع الحالي»", 400);
     }
 
-    const { data, error } = await sb.from("stores").update(patch).eq("id", store.id).select("*").single();
+    let { data, error } = await sb.from("stores").update(patch).eq("id", store.id).select("*").single();
+    if (error && /maps_url|column|does not exist|schema cache/i.test(String(error.message || ""))) {
+      delete patch.maps_url;
+      ({ data, error } = await sb.from("stores").update(patch).eq("id", store.id).select("*").single());
+    }
     if (error) return fail(res, error.message, 400);
     return ok(res, { store: sanitizeDriverOrStoreRowForApi(data), message: "تم تحديث موقع النشاط على الخريطة" });
   } catch (e) {
@@ -1684,12 +1759,17 @@ router.get("/register-map-context", async (req, res) => {
 
 router.post("/register", async (req, res) => {
   try {
+    const regCtx = requireVerifiedRegistration(req, res);
+    if (!regCtx) return;
+
     const sb = createServiceClient();
     if (!sb) {
       return fail(res, "الخادم غير مهيأ لقاعدة البيانات (SUPABASE_SERVICE_ROLE_KEY)", 503);
     }
 
     const b = req.body || {};
+    b.phone = regCtx.phone;
+    if (!b.applicant_phone && !b.applicantPhone) b.applicant_phone = regCtx.phone;
     const name = String(b.name || "").trim();
     const phoneRaw = String(b.phone || "").trim();
     const email = String(b.email || "").trim() || null;
@@ -1697,7 +1777,8 @@ router.post("/register", async (req, res) => {
     const location_text = String(b.location_text || "").trim() || null;
     const address = String(b.address || "").trim();
     const mapsUrlInput = String(b.maps_url || b.mapsUrl || "").trim();
-    const type = String(b.type || "").trim().toLowerCase();
+    const type = normalizeOnboardingType(b);
+    const license_number = String(b.license_number || b.licenseNumber || "").trim() || null;
     const restaurantCategoryRaw = String(b.restaurant_category || b.restaurantCategory || "").trim().toLowerCase();
     const storeCategorySlug = String(b.category || b.store_category || "").trim().toLowerCase();
     const restaurantSlugs = collectCategoryInputs(b, [
@@ -1741,6 +1822,12 @@ router.post("/register", async (req, res) => {
 
     const phoneDigits = normalizePhone(phoneRaw);
     if (!phoneDigits || phoneDigits.length < 10) return fail(res, "رقم الجوال غير صالح", 400);
+    if (String(phoneDigits).replace(/\D/g, "") !== String(regCtx.phone).replace(/\D/g, "")) {
+      return fail(res, "رقم الجوال لا يطابق الرقم الموثَّق.", 403, {
+        registration_required: true,
+        code: "REGISTRATION_PHONE_MISMATCH",
+      });
+    }
     const applicantName = String(b.applicant_name || b.applicantName || "").trim();
     const applicantPhoneDigits = normalizePhone(b.applicant_phone || b.applicantPhone || "");
     if (!applicantName || applicantName.length < 2) {
@@ -1750,6 +1837,17 @@ router.post("/register", async (req, res) => {
       return fail(res, "أدخل جوالاً صحيحاً لمن عبّأ البيانات", 400);
     }
     if (!STORE_TYPES.has(type)) return fail(res, "نوع النشاط غير صالح", 400);
+    if (!commercial_registration) return fail(res, "رقم السجل التجاري مطلوب", 400);
+
+    const onboardingProducts = Array.isArray(b.products) ? b.products : [];
+    const validOnboardingProducts = onboardingProducts.filter((p) => {
+      const n = String((p && p.name) || "").trim();
+      const price = Number(p && p.price);
+      return n && Number.isFinite(price) && price > 0;
+    });
+    if (!validOnboardingProducts.length) {
+      return fail(res, "أضف منتجاً أولياً واحداً على الأقل مع السعر", 400);
+    }
 
     let categoryValue = type;
     if (type === "restaurant") {
@@ -1761,10 +1859,7 @@ router.post("/register", async (req, res) => {
         const got = await resolvePublicCategorySlug(sb, "restaurant", sources[i]);
         if (got && resolved.indexOf(got) === -1) resolved.push(got);
       }
-      if (!resolved.length) {
-        return fail(res, "اختر تصنيف مطعم واحداً على الأقل من القائمة المعتمدة", 400);
-      }
-      categoryValue = joinStoreCategorySlugs(resolved);
+      if (resolved.length) categoryValue = joinStoreCategorySlugs(resolved);
     } else if (type === "supermarket") {
       const sources = storeSlugs.length ? storeSlugs : parseStoreCategorySlugs(storeCategorySlug);
       const resolved = [];
@@ -1772,10 +1867,7 @@ router.post("/register", async (req, res) => {
         const got = await resolvePublicCategorySlug(sb, "market", sources[i]);
         if (got && resolved.indexOf(got) === -1) resolved.push(got);
       }
-      if (!resolved.length) {
-        return fail(res, "اختر صنفاً واحداً على الأقل للسوبرماركت", 400);
-      }
-      categoryValue = joinStoreCategorySlugs(resolved);
+      if (resolved.length) categoryValue = joinStoreCategorySlugs(resolved);
     } else if (type === "clothing") {
       const sources = storeSlugs.length ? storeSlugs : parseStoreCategorySlugs(storeCategorySlug);
       const resolved = [];
@@ -1783,10 +1875,7 @@ router.post("/register", async (req, res) => {
         const got = normalizeProductSlugForCatalog("clothing", s);
         if (got && resolved.indexOf(got) === -1) resolved.push(got);
       });
-      if (!resolved.length) {
-        return fail(res, "اختر تصنيفاً واحداً على الأقل للملابس", 400);
-      }
-      categoryValue = joinStoreCategorySlugs(resolved);
+      if (resolved.length) categoryValue = joinStoreCategorySlugs(resolved);
     }
 
     const phoneDisplay = phoneRaw || phoneDigits;
@@ -1829,7 +1918,10 @@ router.post("/register", async (req, res) => {
       category: categoryValue,
       is_active: false,
       status: "pending",
+      publication_status: "draft",
+      license_number,
       ...payoutCols,
+      ...resubmitOnboardingPatch(),
     };
 
     if (mapsUrlInput) {
@@ -1850,7 +1942,7 @@ router.post("/register", async (req, res) => {
           .from("stores")
           .update(payload)
           .eq("id", pendingStoreId)
-          .eq("status", "pending")
+          .in("status", ["pending", "needs_info"])
           .select("id")
           .single();
       }
@@ -1859,7 +1951,7 @@ router.post("/register", async (req, res) => {
     ({ data: insertedRow, error: insErr } = await saveStoreRow(row));
     if (
       insErr &&
-      /location_text|address|delivery_radius_km|is_active|category|commercial_registration|\bemail\b|file_url|\blat\b|\blng\b|maps_url|bank_country|bank_name|bank_iban|bank_account|bank_swift|bank_last4|bank_verified|bank_added|bank_account_name|\biban\b|stc_pay|payout_crypto|column .* does not exist|schema cache/i.test(
+      /location_text|address|delivery_radius_km|is_active|category|commercial_registration|\bemail\b|file_url|\blat\b|\blng\b|maps_url|bank_country|bank_name|bank_iban|bank_account|bank_swift|bank_last4|bank_verified|bank_added|bank_account_name|\biban\b|stc_pay|payout_crypto|publication_status|license_number|needs_info|column .* does not exist|schema cache/i.test(
         String(insErr.message || "")
       )
     ) {
@@ -1889,6 +1981,10 @@ router.post("/register", async (req, res) => {
       delete row.payout_crypto_interest;
       delete row.applicant_name;
       delete row.applicant_phone;
+      delete row.publication_status;
+      delete row.license_number;
+      delete row.needs_info_message;
+      delete row.needs_info_at;
       ({ data: insertedRow, error: insErr } = await saveStoreRow(row));
     }
     if (
@@ -1940,6 +2036,30 @@ router.post("/register", async (req, res) => {
         b.commercialRegistrationFileName
       );
       if (fileUrl) await sb.from("stores").update({ file_url: fileUrl }).eq("id", requestId);
+    }
+
+    if (b.licenseFileBase64 || b.license_file_base64) {
+      const licUrl = await uploadToStoreBucket(
+        sb,
+        requestId,
+        "license",
+        b.licenseFileBase64 || b.license_file_base64,
+        b.licenseFileName || b.license_file_name || "license.jpg"
+      );
+      if (licUrl) {
+        const upLic = await sb.from("stores").update({ license_file_url: licUrl }).eq("id", requestId);
+        if (upLic.error && isPublicationSchemaError(upLic.error)) {
+          console.warn("[store/register] license_file_url column missing — migration_store_onboarding_publish.sql");
+        }
+      }
+    }
+
+    let productsInserted = [];
+    try {
+      await sb.from("store_products").delete().eq("store_id", requestId);
+      productsInserted = await insertOnboardingProducts(sb, requestId, validOnboardingProducts);
+    } catch (prodInsErr) {
+      console.warn("[store/register] products:", prodInsErr && prodInsErr.message);
     }
 
     let logoUploaded = false;
@@ -2043,11 +2163,14 @@ router.post("/register", async (req, res) => {
       id: requestId,
       status: "pending",
       is_active: false,
+      publication_status: "draft",
       logo_uploaded: logoUploaded,
       banner_uploaded: bannerUploaded,
-      headline: "تم تسجيل المتجر",
-      subline: "بانتظار الموافقة",
-      message: "✅ تم تسجيل المتجر\n⏳ بانتظار الموافقة",
+      products_count: productsInserted.length,
+      headline: "طلبك قيد المراجعة لدى ERVENOW",
+      subline: "تم استلام طلب الانضمام وسيظهر للأدمن للمراجعة.",
+      message: "طلبك قيد المراجعة لدى ERVENOW",
+      redirect: "/pending-approval.html",
     });
   } catch (e) {
     console.error("[store/register]", e);
@@ -2283,6 +2406,23 @@ router.patch("/merchant-hub", requireAuth, requireStoreRole, async (req, res) =>
       }
     }
 
+    if (b.category !== undefined || b.restaurant_category !== undefined) {
+      const { data: storeRow } = await sb.from("stores").select("id,type,category").eq("id", st.id).maybeSingle();
+      const storeType = String((storeRow && storeRow.type) || "").toLowerCase();
+      const rawCat = b.restaurant_category != null ? b.restaurant_category : b.category;
+      let categoryValue = null;
+      if (rawCat != null && String(rawCat).trim()) {
+        if (storeType === "restaurant") {
+          categoryValue = await resolvePublicCategorySlug(sb, "restaurant", rawCat);
+          if (!categoryValue) return fail(res, "تصنيف المطعم غير صالح", 400);
+        } else {
+          categoryValue = String(rawCat).trim().toLowerCase().slice(0, 64);
+        }
+      }
+      await sb.from("stores").update({ category: categoryValue, updated_at: new Date().toISOString() }).eq("id", st.id);
+      listCache = { key: "", at: 0, payload: null };
+    }
+
     let ex = null;
     let exErr = null;
     ({ data: ex, error: exErr } = await sb
@@ -2363,7 +2503,7 @@ router.patch("/merchant-hub", requireAuth, requireStoreRole, async (req, res) =>
 });
 
 async function loadMerchantCategoryRows(sb, storeId) {
-  const got = await loadApprovedStore(sb, storeId);
+  const got = await loadMerchantApprovedStore(sb, storeId);
   if (got.error) return { error: got.error, status: 404 };
   const store = got.store;
   const catalogType = productCatalogTypeForStoreType(store.type);
@@ -2829,6 +2969,124 @@ router.post("/withdrawals", requireAuth, requireStoreRole, async (req, res) => {
   }
 });
 
+router.get("/onboarding-status", async (req, res) => {
+  try {
+    const raw = readRegistrationTokenRaw(req);
+    const reg = raw ? verifyRegistrationToken(raw) : { ok: false };
+    let phone = reg.ok ? reg.phone : null;
+    if (!phone && req.appUser && req.appUser.phone) phone = req.appUser.phone;
+    if (!phone) {
+      return fail(res, "وثّق رقم الجوال من بوابة الدخول أولاً.", 403, {
+        registration_required: true,
+        code: "REGISTRATION_CONTEXT_REQUIRED",
+      });
+    }
+    const sb = createServiceClient();
+    if (!sb) return fail(res, "الخادم غير مهيأ لقاعدة البيانات", 503);
+    const digits = normalizePhone(phone);
+    const { data: row, error } = await sb.from("stores").select("*").eq("phone", digits).maybeSingle();
+    if (error) return fail(res, error.message, 400);
+    if (!row) return ok(res, { ok: true, exists: false, status: null });
+    let products = [];
+    const { data: prodRows, error: pErr } = await sb
+      .from("store_products")
+      .select("id,name,price,image_url,active")
+      .eq("store_id", row.id)
+      .limit(40);
+    if (!pErr) products = await mapProductsForApiResolved(sb, prodRows || []);
+    return ok(res, {
+      ok: true,
+      exists: true,
+      id: row.id,
+      status: row.status,
+      publication_status: row.publication_status || null,
+      needs_info: String(row.status || "").toLowerCase() === "needs_info",
+      needs_info_message: row.needs_info_message || null,
+      reopenable: storeRowIsReopenableOnboarding(row),
+      store: {
+        name: row.name,
+        type: row.type,
+        phone: row.phone,
+        address: row.address,
+        lat: row.lat,
+        lng: row.lng,
+        maps_url: row.maps_url,
+        commercial_registration: row.commercial_registration,
+        license_number: row.license_number || null,
+      },
+      has_cr_file: !!row.file_url,
+      has_license_file: !!row.license_file_url,
+      products,
+    });
+  } catch (e) {
+    console.error("[store/onboarding-status]", e);
+    return fail(res, e.message || "خطأ في الخادم", 500);
+  }
+});
+
+router.get("/publish-readiness", requireAuth, requireStoreRole, async (req, res) => {
+  try {
+    const sb = createServiceClient();
+    if (!sb) return fail(res, "الخادم غير مهيأ لقاعدة البيانات", 503);
+    const got = await resolveMerchantStoreByPhone(sb, req.appUser);
+    if (got.error) return fail(res, got.error, 403);
+    const hub = await fetchMerchantHubPublic(sb, got.store.id);
+    const { data: prodRows } = await sb.from("store_products").select("*").eq("store_id", got.store.id).limit(80);
+    const products = await mapProductsForApiResolved(sb, prodRows || []);
+    const readiness = validatePublishReadiness(got.store, hub, products);
+    return ok(res, {
+      store_id: got.store.id,
+      publication_status: got.store.publication_status || null,
+      needs_completion: storeRowNeedsCompletion(got.store),
+      is_published: storeRowIsListedActive(got.store),
+      ...readiness,
+    });
+  } catch (e) {
+    console.error("[store/publish-readiness]", e);
+    return fail(res, e.message || "خطأ في الخادم", 500);
+  }
+});
+
+router.post("/publish", requireAuth, requireStoreRole, async (req, res) => {
+  try {
+    const sb = createServiceClient();
+    if (!sb) return fail(res, "الخادم غير مهيأ لقاعدة البيانات", 503);
+    const got = await resolveMerchantStoreByPhone(sb, req.appUser);
+    if (got.error) return fail(res, got.error, 403);
+    const store = got.store;
+    if (!storeRowIsMerchantManageable(store)) return fail(res, "يجب اعتماد المنشأة أولاً", 403);
+    const hub = await fetchMerchantHubPublic(sb, store.id);
+    const { data: prodRows } = await sb.from("store_products").select("*").eq("store_id", store.id).limit(80);
+    const products = await mapProductsForApiResolved(sb, prodRows || []);
+    const readiness = validatePublishReadiness(store, hub, products);
+    if (!readiness.ok) {
+      return fail(res, "أكمل الحد الأدنى قبل النشر: " + readiness.missing.join("، "), 400, {
+        code: "PUBLISH_VALIDATION",
+        publish_readiness: readiness,
+      });
+    }
+    const patch = { ...publishStorePatch(), updated_at: new Date().toISOString() };
+    let { data, error } = await sb.from("stores").update(patch).eq("id", store.id).select("*").single();
+    if (error && isPublicationSchemaError(error)) {
+      delete patch.publication_status;
+      ({ data, error } = await sb.from("stores").update(patch).eq("id", store.id).select("*").single());
+    }
+    if (error) return fail(res, error.message, 400);
+    listCache = { key: "", at: 0, payload: null };
+    storePublicCache.clear();
+    return ok(res, {
+      ok: true,
+      store: publicStoreRow(data),
+      publication_status: data.publication_status || "published",
+      is_published: storeRowIsListedActive(data),
+      message: "تم اعتماد ونشر المنشأة — تظهر الآن للعملاء.",
+    });
+  } catch (e) {
+    console.error("[store/publish]", e);
+    return fail(res, e.message || "خطأ في الخادم", 500);
+  }
+});
+
 /** GET /api/store/:id — نفس استجابة /public/:id (يُسجّل آخراً حتى لا يتعارض مع /products وغيره) */
 const STORE_GET_BY_ID_RESERVED = new Set([
   "products",
@@ -2845,6 +3103,9 @@ const STORE_GET_BY_ID_RESERVED = new Set([
   "order-board",
   "merchant-hub",
   "withdrawals",
+  "onboarding-status",
+  "publish-readiness",
+  "publish",
   "delivery-policy",
   "resolve-maps-link",
   "delivery-engine",

@@ -182,6 +182,15 @@ app.clearSessionTokens = function () {
   localStorage.removeItem("ervenow_access_token");
   localStorage.removeItem("erwenow_access_token");
   localStorage.removeItem("token");
+  try {
+    var expire = "; path=/; max-age=0; SameSite=Lax";
+    document.cookie = "auth_token=" + expire;
+    document.cookie = "ervenow_site=" + expire;
+    if (location.protocol === "https:") {
+      document.cookie = "auth_token=" + expire + "; Secure";
+      document.cookie = "ervenow_site=" + expire + "; Secure";
+    }
+  } catch (_c) {}
 }
 
 app.teardownAdminRealtime = function () {

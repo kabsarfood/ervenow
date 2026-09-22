@@ -46,7 +46,7 @@ const body = `# ERVENOW — تقرير اعتماد هوية العضوية
 | ------ | --------- |
 | \`login.html\` | عنوان ضيف/عضو، تبويب دخول الأعضاء، ⭐ إنشاء عضوية جديدة، أدوار الشركاء |
 | \`pending-approval.html\` | نصوص «عضويتك قيد المراجعة» |
-| \`dashboard.html\` | منصة ERVENOW، ترحيب ضيف/عضو ديناميكي |
+| \`index.html\` | الرئيسية — منزل العميل الرسمي |
 | \`wallet.html\` | روابط منصة ERVENOW |
 | \`my-orders.html\` | دخول الأعضاء، منصة ERVENOW |
 | \`notifications.html\` | عبر guest-shell الموحّد |
@@ -57,7 +57,7 @@ const body = `# ERVENOW — تقرير اعتماد هوية العضوية
 
 تم تحديث **55+ ملفاً** في \`public/\` عبر \`scripts/apply-membership-identity.js\`، منها:
 
-- \`start-now.html\`, \`browse.html\`, \`stores.html\`, \`restaurants.html\`, \`services.html\`
+- \`browse.html\`, \`stores.html\`, \`restaurants.html\`, \`services.html\`
 - \`cart.html\`, \`track.html\`, \`live-map.html\`, \`delivery-map.html\`
 - \`driver-login.html\`, \`driver-app.html\`, \`store-dashboard.html\`
 - \`assets/auth-otp-flow.js\`, \`assets/service-preview.js\`, \`assets/transport-preview.js\`

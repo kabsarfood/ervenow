@@ -22,4 +22,11 @@ describe("storeMapsLocation", () => {
     const got = await applyMapsUrlToStorePatch(patch, "not-a-maps-link");
     expect(got.ok).toBe(false);
   });
+
+  test("PATCH /api/store/location retries without maps_url on schema cache", () => {
+    const src = require("fs").readFileSync(require("path").join(__dirname, "../../apps/store/routes.js"), "utf8");
+    const loc = src.split('router.patch("/location"')[1] || "";
+    expect(loc).toMatch(/delete patch\.maps_url/);
+    expect(loc).toMatch(/schema cache/);
+  });
 });

@@ -1,6 +1,7 @@
 /**
  * تحويل صف متجر إلى عنصر خريطة حية (بدون بيانات حساسة).
  */
+const { storeRowIsListedActive } = require("./storePublication");
 const { resolveMapColorForStoreType, mapCategoryFromStoreType } = require("./mapCategoryColors");
 const { restaurantCategoryLabelAr } = require("../restaurantCategories");
 const { parseStoreCategorySlugs } = require("./storeCategorySlugs");
@@ -49,6 +50,23 @@ function deliveryEtaLabel(row) {
   return "—";
 }
 
+function liveMapStatusLabel(row) {
+  const s = String(row && row.status ? row.status : "").toLowerCase();
+  if (s === "approved") {
+    const pub = String(row && row.publication_status ? row.publication_status : "")
+      .trim()
+      .toLowerCase();
+    if (pub === "draft") return "معتمد · مسودة";
+    if (pub === "paused") return "معتمد · متوقف";
+    return row && row.is_active === false ? "معتمد · مغلق" : "معتمد";
+  }
+  if (s === "pending") return "قيد المراجعة";
+  if (s === "needs_info") return "استكمال بيانات";
+  if (s === "rejected") return "مرفوض";
+  if (s === "suspended") return "موقوف";
+  return s || "—";
+}
+
 function liveMapStorePayload(row, opts) {
   opts = opts && typeof opts === "object" ? opts : {};
   const settings = opts.branding || opts.settings || {};
@@ -59,11 +77,16 @@ function liveMapStorePayload(row, opts) {
   const type = String(row.type || "").toLowerCase();
   const rating = Number(row.average_rating) || 0;
   const ratingCount = Number(row.rating_count) || 0;
+  const status = String(row.status || "").toLowerCase() || null;
+  const listed = storeRowIsListedActive(row);
 
   return {
     id: row.id,
     name: row.name,
     type: type,
+    status: status,
+    status_label: liveMapStatusLabel(row),
+    listed: listed,
     map_category: mapCategoryFromStoreType(type),
     category_label: categoryLabelForLiveMap(row),
     lat: lat,
@@ -86,4 +109,5 @@ function liveMapStorePayload(row, opts) {
 module.exports = {
   liveMapStorePayload,
   categoryLabelForLiveMap,
+  liveMapStatusLabel,
 };

@@ -12,7 +12,6 @@ const PUBLIC = path.join(ROOT, "public");
 const PRIORITY = [
   "index.html",
   "browse.html",
-  "dashboard.html",
   "store-dashboard.html",
   "driver.html",
   "track.html",

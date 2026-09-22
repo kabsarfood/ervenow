@@ -15,7 +15,7 @@ function heroBannersPanelHintText() {
 
 var FALLBACK_SECTION_TARGETS = [
   { id: "home", label_ar: "الرئيسية", page: "/" },
-  { id: "visitor_dashboard", label_ar: "منصة ERVENOW", page: "/dashboard" },
+  { id: "visitor_dashboard", label_ar: "منصة ERVENOW (تُعرض في الرئيسية)", page: "/" },
   { id: "services", label_ar: "خدمات", page: "/services" },
   { id: "stores", label_ar: "متاجر", page: "/stores" },
   { id: "restaurants", label_ar: "مطاعم", page: "/restaurants" },
@@ -32,7 +32,7 @@ var TARGET_DEFAULTS = {
     title: "اطلب أي خدمة|الآن وبسهولة",
     description: "كل ما تحتاجه — في مكان واحد.",
     button1_text: "اطلب الآن",
-    button1_url: "/start-now",
+    button1_url: "/",
     display_mode: "carousel",
     banner_type: "promotional",
     status: "active",
@@ -42,7 +42,7 @@ var TARGET_DEFAULTS = {
     title: "مرحباً بك في ERVENOW",
     description: "استكشف المطاعم والمتاجر والخدمات — سجّل دخولك لإتمام الطلب.",
     button1_text: "ابدأ الآن",
-    button1_url: "/start-now",
+    button1_url: "/",
     button2_text: "دخول الأعضاء",
     button2_url: "/login?role=customer",
     display_mode: "carousel",
@@ -154,7 +154,7 @@ var SECTION_ICONS = {
 
 var SECTION_PLACEMENT_HINTS = {
   home: "البنر المتحرك يظهر في / تحت الهيدر مباشرة (مكان بطاقة الترحيب) — صورة 1920×730 بكسل.",
-  visitor_dashboard: "الشرائح المتحركة في /dashboard — صورة 1920×730 بكسل.",
+  visitor_dashboard: "تُعرض مع بنرات الرئيسية في / — صورة 1920×730 بكسل. (Alias — البيانات محفوظة).",
   services: "بنر متحرك في /services — صورة 1920×730 بكسل.",
   stores: "بنر متحرك في /stores — صورة 1920×730 بكسل.",
   restaurants: "بنر متحرك في /restaurants — صورة 1920×730 بكسل.",

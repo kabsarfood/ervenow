@@ -90,7 +90,7 @@
       window.__ERVENOW_FETCH_TIMEOUT_MS = 30000;
 
       if (!window.PlatformAPI || !window.PlatformAPI.getToken()) {
-        location.href = "/driver-login";
+        location.href = "/login?role=driver";
       }
 
       function fmtMoney(n) {

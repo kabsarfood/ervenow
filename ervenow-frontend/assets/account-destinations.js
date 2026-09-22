@@ -71,7 +71,7 @@
     if (base === "/driver-dashboard" || base.indexOf("/driver-dashboard") === 0) {
       return (RR ? RR.portalPathForRole("driver") : "/driver-preview") + hash;
     }
-    if (base === "/start-now") {
+    if (base === "/start-now" || base === "/dashboard") {
       return (RR ? RR.CUSTOMER_PLATFORM_HOME : "/") + hash;
     }
     if (String(role || "").toLowerCase() === "blocked") return "/blocked-complaints";

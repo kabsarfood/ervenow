@@ -7,7 +7,8 @@ const path = require("path");
 const root = path.join(__dirname, "..");
 const dashPath = path.join(root, "ervenow-frontend", "dashboard.html");
 if (!fs.existsSync(dashPath)) {
-  throw new Error("Source dashboard not found at " + dashPath);
+  console.log("skip: dashboard.html retired");
+  process.exit(0);
 }
 const html = fs.readFileSync(dashPath, "utf8");
 
@@ -26,7 +27,7 @@ formBlock = formBlock.replace(
 formBlock = formBlock.replace(/<\/details>\s*$/, "");
 formBlock = formBlock.replace(
   /<button type="button" class="delivery-panel__close" id="dashMapCloseBtn" aria-label="إغلاق">×<\/button>/,
-  '<a class="delivery-panel__back" href="/dashboard" aria-label="العودة إلى لوحة الزائر">← رجوع</a>'
+  '<a class="delivery-panel__back" href="/" aria-label="العودة إلى الرئيسية">← رجوع</a>'
 );
 
 const scriptStart = html.indexOf("      var km = 0;");
@@ -291,7 +292,7 @@ const pageHtml = `<!DOCTYPE html>
         <nav class="dash-site-header__nav" aria-label="التنقل الرئيسي">
           <div class="dash-site-header__links">
             <a class="dash-site-header__link" href="/" data-nav="home">الرئيسية</a>
-            <a class="dash-site-header__link" href="/dashboard" data-nav="guest">لوحة الزائر</a>
+            <a class="dash-site-header__link" href="/" data-nav="home">الرئيسية</a>
             <a class="dash-site-header__link" href="/track" data-nav="track">تتبع الحي</a>
             <a class="dash-site-header__link dash-site-header__link--cta" href="/login?role=customer" data-nav="login">دخول</a>
           </div>

@@ -16,7 +16,6 @@ const FILES = [
   "store.html",
   "gas-delivery.html",
   "careers.html",
-  "start-now.html",
 ];
 
 function fixFooter(html) {

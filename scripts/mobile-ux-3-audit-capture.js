@@ -17,7 +17,6 @@ const VIEWPORTS = [
 
 const PAGES = [
   { id: "home", url: "/", label: "الرئيسية" },
-  { id: "dashboard", url: "/dashboard", label: "لوحة الزائر" },
   { id: "restaurants", url: "/restaurants", label: "المطاعم" },
   { id: "stores", url: "/stores", label: "المتاجر" },
   { id: "services", url: "/services", label: "الخدمات" },

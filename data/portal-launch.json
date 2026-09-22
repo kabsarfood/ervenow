@@ -1,8 +1,8 @@
 {
-  "updated_at": "2026-06-17T12:00:00.000Z",
+  "updated_at": "2026-09-22T00:00:00.000Z",
   "notes": "البوابات التشغيلية الرسمية: merchant · driver · service · transport. العميل → المنصة الرئيسية. الإدارة → Admin Console.",
   "operational_portals": ["merchant", "driver", "service", "transport"],
-  "customer_platform_home": "/start-now.html",
+  "customer_platform_home": "/",
   "admin_console": "/admin-dashboard",
   "live": {
     "service": true,

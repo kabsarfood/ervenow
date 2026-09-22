@@ -104,9 +104,7 @@ function assertCompatibleDeliverySnapshot(existingCart, newSnapshot) {
   for (var i = 0; i < existingCart.length; i++) {
     var d = existingCart[i] && existingCart[i].data;
     if (!d || !d.store_id) continue;
-    if (String(d.store_id) !== sid) {
-      return { ok: false, message: "لا يمكن خلط منتجات من متجرين مختلفين" };
-    }
+    if (String(d.store_id) !== sid) continue;
     if (d.delivery_snapshot_version === 1 && snap.delivery_snapshot_version === 1) {
       if (d.fulfillment_mode !== snap.fulfillment_mode) {
         return { ok: false, message: "نوع الاستلام/التوصيل يجب أن يكون موحّداً لكل المنتجات" };

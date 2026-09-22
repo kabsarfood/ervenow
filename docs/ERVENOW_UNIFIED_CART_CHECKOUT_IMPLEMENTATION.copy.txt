@@ -1,0 +1,40 @@
+ERVENOW — تنفيذ Unified Cart / Checkout / Fulfillment Groups
+التاريخ: 2026-09-22
+لم يُغيَّر Dispatch أو Settlement أو Actions أو Ledger أو STC Pay أو PUBLIC_ORDERING.
+
+1) الملفات المعدلة
+عقد: shared/orderDraft/unifiedCartLine.js (جديد) + orderDraftSchema + verticalDraftBridge + cartDeliverySnapshot
+واجهة: order-draft-store.js (لا تمسح مسودة الضيف) · order-draft-vertical.js · pre-cart-delivery.js · cart.js (يكتب للمسودة إن وُجدت) · checkout-engine.js · checkout-page.css · checkout.html · service-book/gas-delivery/car-polishing
+خادم: apps/checkout/service.js (تقسيم مجموعات) · apps/core/routes.js (checkout_customer)
+اختبارات: unifiedCartFulfillment.test.js + تحديث verticalDraftBridge و loginOtpFirst و checkoutEnginePhase2
+نسخ الواجهة إلى ervenow-frontend
+
+2) شكل Unified Cart
+التخزين: localStorage ervenow:order-draft
+البند: type/title/price/data (قديم) + workflow, source, provider_id, item_id, qty, notes, location, scheduled_at, group_key
+لا جدول Cart في DB
+
+3–4) مثال سلة: مطعم أ + صيدلية ب + سطحة
+store:a → Order متجر/مطعم
+store:b → Order متجر آخر
+transport:pickup_truck:{line} → Order نقل مستقلة
+لا Order هجينة
+
+5) السلة أثناء OTP
+تبقى في ervenow:order-draft. OTP نافذة على /checkout بلا /login.
+سياسة الجلسة لم تعد تمسح مسودة الزائر. بعد التوكن يُستأنف التأكيد.
+
+6) أول سجل orders
+بعد OTP موثّق + «تأكيد الطلب والدفع» + نجاح POST /api/order/create فقط.
+
+7) Guest غير موثّق
+requireAuth على الإنشاء. الواجهة تعرض OTP Checkout. بدون توكن لا INSERT ولا إشعار للجهات.
+
+8) cart.js
+باقٍ للتوافق. /cart → 302 /checkout. الواجهة الحية تكتب المسودة الرسمية.
+
+9) الاختبارات
+79 اختبار وحدة ناجح في المجموعات ذات الصلة.
+
+10) PUBLIC_ORDERING
+غير جاهز للتفعيل هنا. لم يُفتح. السلة وCheckout جاهزة خلف البوابة الحالية حتى المراجعة.

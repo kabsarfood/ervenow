@@ -38,6 +38,7 @@ const {
   orderPatchFromRow,
 } = require("../../shared/lib/trackingSocket");
 const { attachSiteSessionCookie } = require("../../shared/middleware/publicSiteOtpGate");
+const { requireVerifiedRegistration } = require("../../shared/utils/registrationContext");
 const { parseOptionalPayoutPayload, payoutRowForDriversOrStores } = require("../../shared/utils/payoutFields");
 const { sanitizeDriverOrStoreRowForApi } = require("../../shared/utils/bankApiSafe");
 const { filterDriverDispatchOrders } = require("../../shared/utils/driverDispatchOrders");
@@ -361,7 +362,10 @@ router.post("/verify-otp", async (req, res) => {
 
 router.post("/register", async (req, res) => {
   try {
+    const regCtx = requireVerifiedRegistration(req, res);
+    if (!regCtx) return;
     const b = req.body || {};
+    b.phone = regCtx.phone;
     const name = String(b.name || "").trim();
     const iqama = String(b.iqama || "").trim();
     const carType = String(b.car_type || "").trim();

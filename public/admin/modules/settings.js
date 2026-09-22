@@ -24,6 +24,8 @@ app.ensureAdminAccess = async function () {
       window.location.href = "/admin-login";
       return false;
     }
+    document.documentElement.classList.remove("admin-gate-pending");
+    document.documentElement.classList.add("admin-gate-ready");
     return true;
   } catch (e) {
     window.location.href = "/admin-login";

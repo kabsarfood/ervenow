@@ -90,9 +90,25 @@
         '<button type="button" class="erv-harmony-menu__btn" aria-expanded="false" aria-controls="ervHarmonyNavPanel" aria-label="فتح القائمة">☰</button>';
       inner.appendChild(menu);
 
-      menu.querySelector(".erv-harmony-menu__btn").addEventListener("click", function () {
+      var guestMenuBtn = menu.querySelector(".erv-harmony-menu__btn");
+      var skipGuestClick = false;
+      function toggleGuestNav(e) {
+        if (e && e.cancelable) e.preventDefault();
         if (document.body.classList.contains("erv-harmony-nav-open")) closeHarmonyNav();
         else openGuestNav();
+      }
+      guestMenuBtn.addEventListener("pointerdown", function (e) {
+        if (e.pointerType === "mouse" && e.button !== 0) return;
+        skipGuestClick = true;
+        toggleGuestNav(e);
+      });
+      guestMenuBtn.addEventListener("click", function (e) {
+        if (skipGuestClick) {
+          skipGuestClick = false;
+          e.preventDefault();
+          return;
+        }
+        toggleGuestNav(e);
       });
     }
 
@@ -183,21 +199,49 @@
 
     function openHomeNav() {
       syncHomePanelAnchor(btn, panel, root);
-      document.body.classList.add("erv-harmony-nav-open");
-      btn.setAttribute("aria-expanded", "true");
       panel.hidden = false;
+      btn.setAttribute("aria-expanded", "true");
       root.classList.add("is-open");
-      if (isMobile()) lockPageScroll();
+      document.body.classList.add("erv-harmony-nav-open");
+      if (isMobile()) {
+        global.requestAnimationFrame(function () {
+          if (!panel.hidden) lockPageScroll();
+        });
+      }
     }
 
     function toggleHomeNav(e) {
-      e.preventDefault();
-      e.stopPropagation();
+      if (e) {
+        if (e.cancelable) e.preventDefault();
+        e.stopPropagation();
+      }
       if (panel.hidden) openHomeNav();
       else closeHarmonyNav();
     }
 
-    btn.addEventListener("click", toggleHomeNav, true);
+    var skipClick = false;
+    btn.addEventListener(
+      "pointerdown",
+      function (e) {
+        if (e.pointerType === "mouse" && e.button !== 0) return;
+        skipClick = true;
+        toggleHomeNav(e);
+      },
+      true
+    );
+    btn.addEventListener(
+      "click",
+      function (e) {
+        if (skipClick) {
+          skipClick = false;
+          e.preventDefault();
+          e.stopPropagation();
+          return;
+        }
+        toggleHomeNav(e);
+      },
+      true
+    );
 
     panel.querySelectorAll('[role="menuitem"]').forEach(function (el) {
       el.addEventListener("click", closeHarmonyNav);

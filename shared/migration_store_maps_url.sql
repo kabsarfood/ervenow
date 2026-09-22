@@ -12,3 +12,5 @@ SET maps_url = 'https://www.google.com/maps?q=' || lat::text || ',' || lng::text
 WHERE maps_url IS NULL
   AND lat IS NOT NULL
   AND lng IS NOT NULL;
+
+NOTIFY pgrst, 'reload schema';

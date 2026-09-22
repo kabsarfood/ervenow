@@ -21,7 +21,7 @@ async function main() {
   const browser = await playwright.chromium.launch({ headless: true });
 
   async function openMapModal(page) {
-    await page.goto(`${baseUrl}/dashboard`, { waitUntil: "networkidle", timeout: 60000 });
+    await page.goto(`${baseUrl}/delivery-map`, { waitUntil: "networkidle", timeout: 60000 });
     await page.evaluate(() => {
       var tab = document.getElementById("tab-delivery");
       if (tab) tab.click();

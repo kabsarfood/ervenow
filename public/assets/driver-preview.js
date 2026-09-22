@@ -761,7 +761,7 @@
       esc(p.status || "—") +
       "</p></div>" +
       '<div class="dp-classic-links">' +
-      '<a class="dp-btn dp-btn--ghost" href="/driver-login">تبديل الحساب</a>' +
+      '<a class="dp-btn dp-btn--ghost" href="/login?role=driver">تبديل الحساب</a>' +
       "</div>"
     );
   }
@@ -1009,7 +1009,7 @@
     }
     if (global.ErvenowAuthGuard) {
       var me = await ErvenowAuthGuard.ensureApprovedAccount({
-        loginUrl: "/driver-login",
+        loginUrl: "/login?role=driver",
         pendingUrl: "/pending-approval.html",
       });
       if (!me) {

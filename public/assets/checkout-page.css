@@ -481,6 +481,11 @@
   padding: clamp(24px, 5vw, 40px);
 }
 
+.checkout-empty[hidden],
+#checkoutEmpty[hidden] {
+  display: none !important;
+}
+
 .checkout-empty__title {
   margin: 0 0 8px;
   font-size: clamp(1.1rem, 3vw, 1.35rem);
@@ -529,7 +534,114 @@
   color: #fff;
 }
 
-@media (max-width: 640px) {
+.checkout-group {
+  list-style: none;
+  margin: 0 0 14px;
+  padding: 0;
+}
+
+.checkout-group__title {
+  margin: 0 0 8px;
+  font-size: clamp(1rem, 2.6vw, 1.15rem);
+  font-weight: 800;
+  color: var(--checkout-ink);
+  line-height: 1.45;
+}
+
+.checkout-group__lines {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.checkout-line__note {
+  display: block;
+  color: var(--checkout-muted);
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+
+.checkout-otp {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: max(12px, env(safe-area-inset-bottom, 12px)) 12px 12px;
+}
+
+.checkout-otp[hidden] {
+  display: none !important;
+}
+
+.checkout-otp__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(24, 16, 10, 0.45);
+}
+
+.checkout-otp__card {
+  position: relative;
+  width: min(440px, 100%);
+  background: var(--checkout-surface);
+  border: 1px solid var(--checkout-border);
+  border-radius: 18px;
+  padding: 18px 16px max(16px, env(safe-area-inset-bottom, 16px));
+  box-shadow: 0 12px 40px rgba(42, 24, 16, 0.18);
+}
+
+.checkout-otp__title {
+  margin: 0 0 6px;
+  font-size: clamp(1.1rem, 3vw, 1.3rem);
+  font-weight: 800;
+  color: var(--checkout-ink);
+  line-height: 1.45;
+}
+
+.checkout-otp__sub {
+  margin: 0 0 14px;
+  color: var(--checkout-muted);
+  font-size: 0.95rem;
+  line-height: 1.55;
+}
+
+.checkout-otp__actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.checkout-otp__actions .checkout-btn {
+  min-height: 48px;
+}
+
+.checkout-otp__msg {
+  margin: 8px 0 0;
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.checkout-otp__msg--error {
+  color: #b42318;
+}
+
+.checkout-otp__msg--ok {
+  color: #067647;
+}
+
+body.checkout-otp-open {
+  overflow: hidden;
+}
+
+@media (min-width: 641px) {
+  .checkout-otp {
+    align-items: center;
+  }
+}
   .checkout-panel {
     max-width: 100%;
     border-radius: 16px;

@@ -34,7 +34,7 @@
       '<a class="lp-cart-panel__empty-btn" href="/stores">متاجر</a>' +
       '<a class="lp-cart-panel__empty-btn" href="/services">خدمات</a>' +
       '<a class="lp-cart-panel__empty-btn" href="/delivery-services.html">توصيل</a>' +
-      '<a class="lp-cart-panel__empty-btn lp-cart-panel__empty-btn--primary" href="/start-now.html">ابدأ طلباً</a>' +
+      '<a class="lp-cart-panel__empty-btn lp-cart-panel__empty-btn--primary" href="/">ابدأ طلباً</a>' +
       "</div>" +
       "</div>" +
       "</div>" +
@@ -84,7 +84,7 @@
   function cartPanelInnerHtml(opts) {
     opts = opts || {};
     if (opts.checkoutV3 === true) return cartPageCheckoutV3Html(opts);
-    var continueHref = opts.continueHref || "/dashboard";
+    var continueHref = opts.continueHref || "/";
     var checkoutId = opts.checkoutId || "lpCartCheckoutBtn";
     var showFullFin = opts.showFullFin !== false;
     var hidePanelHead = opts.hidePanelHead === true;
@@ -121,7 +121,7 @@
       '<a class="lp-cart-panel__empty-btn" href="/stores">متاجر</a>' +
       '<a class="lp-cart-panel__empty-btn" href="/services">خدمات</a>' +
       '<a class="lp-cart-panel__empty-btn" href="/delivery-services.html">توصيل</a>' +
-      '<a class="lp-cart-panel__empty-btn lp-cart-panel__empty-btn--primary" href="/start-now.html">ابدأ طلباً</a>' +
+      '<a class="lp-cart-panel__empty-btn lp-cart-panel__empty-btn--primary" href="/">ابدأ طلباً</a>' +
       "</div>" +
       "</div>" +
       "</details>" +
