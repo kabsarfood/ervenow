@@ -2217,7 +2217,27 @@
             console.warn("auth_token cookie:", cookieErr);
           }
 
-          if (res.pre_registration) {
+          var sessionRole = String((res.user && res.user.role) || "").toLowerCase();
+          if (sessionRole === "user") sessionRole = "customer";
+          var intentRole = "";
+          try {
+            intentRole = String(new URLSearchParams(window.location.search).get("role") || "").toLowerCase();
+          } catch (_intentRole) {}
+          var storeLoginIntent =
+            intentRole === "store" || intentRole === "merchant" || intentRole === "restaurant";
+          var operationalRole =
+            sessionRole === "store" ||
+            sessionRole === "merchant" ||
+            sessionRole === "restaurant" ||
+            sessionRole === "driver" ||
+            sessionRole === "service" ||
+            sessionRole === "admin";
+
+          if (res.pre_registration && !operationalRole) {
+            if (storeLoginIntent) {
+              show("هذا الرقم ليس حساب متجر معتمد. استخدم إنشاء عضوية واختر متجر.", false);
+              return;
+            }
             show(
               res.message ||
                 "تم تسجيلك بنجاح ضمن المستخدمين الأوائل في ERVENOW. سنبلغك عند بدء الخدمة.",

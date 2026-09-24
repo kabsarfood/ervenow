@@ -26,6 +26,7 @@ const {
 const { loadLiveMapStoresPayload, parseLiveMapBounds } = require("../../shared/utils/liveMapStoresQuery");
 const { normalizePhone } = require("../../shared/utils/phone");
 const { findUserByPhone } = require("../../shared/utils/userPhoneLookup");
+const { bindStoreOwnerAccount } = require("../../shared/services/storeOwnerAccount");
 const {
   fetchUserByIdResilient,
   patchUserByIdForAdmin,
@@ -348,26 +349,8 @@ async function notifyAccountApprovedWhatsApp(phone, displayName, role) {
 
 async function linkStoreOwnerAfterApprove(sb, store) {
   try {
-    const phoneDigits = String(store.phone || "").replace(/\D/g, "");
-    if (!phoneDigits || !store?.id) return;
-    const { data: u, error } = await sb.from("users").select("id, role").eq("phone", phoneDigits).maybeSingle();
-    if (error || !u?.id) return;
-    const patch = { updated_at: new Date().toISOString() };
-    patch.owner_user_id = u.id;
-    const up = await sb.from("stores").update(patch).eq("id", store.id);
-    if (up.error && /owner_user_id|column/i.test(String(up.error.message || ""))) {
-      console.warn("[admin/linkStoreOwner] owner_user_id missing — migration_store_marketplace.sql");
-      return;
-    }
-    const r = String(u.role || "").toLowerCase();
-    if (!["store", "merchant", "restaurant", "admin"].includes(r)) {
-      await sb.from("users").update({ role: "store", updated_at: new Date().toISOString() }).eq("id", u.id);
-    }
-    try {
-      await syncUserStatusByPhone(sb, phoneDigits, "active");
-    } catch (syncErr) {
-      console.warn("[admin/linkStoreOwner] user status:", syncErr && (syncErr.message || syncErr));
-    }
+    if (!store?.id) return;
+    await bindStoreOwnerAccount(sb, store);
   } catch (e) {
     console.warn("[admin/linkStoreOwner]", e && (e.message || e));
   }

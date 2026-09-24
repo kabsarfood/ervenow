@@ -75,7 +75,9 @@
             esc(item.icon) +
             "</span><span>" +
             esc(item.label) +
-            "</span></button>"
+            "</span>" +
+            (item.badge ? '<span class="pf-nav__badge">' + esc(item.badge) + "</span>" : "") +
+            "</button>"
           );
         })
         .join("") +

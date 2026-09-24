@@ -86,6 +86,7 @@ const MERCHANT_ORDER_BOARD_COLUMNS = Object.freeze([
   "service_type",
   "payment_status",
   "payment_method",
+  "series_source",
   "driver_id",
 ]);
 
@@ -108,6 +109,7 @@ const MERCHANT_DASHBOARD_ORDER_COLUMNS = Object.freeze([
   "driver_id",
   "payment_status",
   "payment_method",
+  "series_source",
 ]);
 
 function isOrdersColumnError(error, column) {

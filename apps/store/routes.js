@@ -21,6 +21,9 @@ const {
 } = require("../../shared/utils/payoutUniqueness");
 const { decrypt } = require("../../server/utils/crypto");
 const { requireVerifiedRegistration, readRegistrationTokenRaw, verifyRegistrationToken } = require("../../shared/utils/registrationContext");
+const { bindStoreOwnerAccount } = require("../../shared/services/storeOwnerAccount");
+const { isPosEnabled, setPosEnabled } = require("../../shared/utils/merchantPosSettings");
+const { preparePosTicket, insertPosOrder } = require("../../shared/services/merchantPosOrder");
 const { isStoreAccountRole } = require("../../shared/middleware/storeRole");
 const {
   storeRowIsListedActive,
@@ -658,11 +661,15 @@ router.get("/my-store", requireAuth, requireStoreRole, async (req, res) => {
     if (!sb) return fail(res, "الخادم غير مهيأ لقاعدة البيانات", 503);
     const digits = normalizePhone(req.appUser.phone);
     const extendedSel = selectWithPublication(
-      "id,name,phone,type,category,status,is_active,logo_url,lat,lng,location_text,address,delivery_radius_km,average_rating,rating_count,total_orders,profile_views,bank_name,bank_country_code,bank_last4,bank_verified,stc_pay_phone,payout_crypto_interest"
+      "id,name,phone,type,category,status,is_active,logo_url,lat,lng,maps_url,location_text,address,delivery_radius_km,average_rating,rating_count,total_orders,profile_views,bank_name,bank_country_code,bank_last4,bank_verified,stc_pay_phone,payout_crypto_interest"
     );
     let row = null;
     let err = null;
     ({ data: row, error: err } = await sb.from("stores").select(extendedSel).eq("phone", digits).eq("status", "approved").maybeSingle());
+    if (err && /maps_url|column|does not exist|schema cache/i.test(String(err.message || ""))) {
+      const withoutMaps = extendedSel.replace(",maps_url", "");
+      ({ data: row, error: err } = await sb.from("stores").select(withoutMaps).eq("phone", digits).eq("status", "approved").maybeSingle());
+    }
     if (err && /column|does not exist|schema cache/i.test(String(err.message || ""))) {
       ({ data: row, error: err } = await sb
         .from("stores")
@@ -2027,6 +2034,20 @@ router.post("/register", async (req, res) => {
 
     const requestId = insertedRow.id;
 
+    try {
+      const bound = await bindStoreOwnerAccount(sb, {
+        id: requestId,
+        phone: phoneDigits,
+        name,
+        status: "pending",
+      });
+      if (!bound.user) {
+        console.error("[store/register] owner account was not linked", bound.error && (bound.error.message || bound.error));
+      }
+    } catch (bindErr) {
+      console.error("[store/register] owner account:", bindErr && (bindErr.message || bindErr));
+    }
+
     if (b.commercialRegistrationFileBase64) {
       const fileUrl = await uploadToStoreBucket(
         sb,
@@ -3079,11 +3100,92 @@ router.post("/publish", requireAuth, requireStoreRole, async (req, res) => {
       store: publicStoreRow(data),
       publication_status: data.publication_status || "published",
       is_published: storeRowIsListedActive(data),
-      message: "تم اعتماد ونشر المنشأة — تظهر الآن للعملاء.",
+      message: "تم اعتماد ونشر المتجر — يظهر الآن للعملاء.",
     });
   } catch (e) {
     console.error("[store/publish]", e);
     return fail(res, e.message || "خطأ في الخادم", 500);
+  }
+});
+
+async function merchantApprovedStore(sb, appUser) {
+  const digits = normalizePhone(appUser && appUser.phone);
+  if (!digits) return { error: "جوال الحساب غير معروف", status: 400 };
+  const { data, error } = await sb
+    .from("stores")
+    .select("id,name,phone,status,type,address,location_text")
+    .eq("phone", digits)
+    .eq("status", "approved")
+    .maybeSingle();
+  if (error) return { error: error.message, status: 400 };
+  if (!data) return { error: "لا يوجد متجر معتمد لجوالك.", status: 404 };
+  return { store: data };
+}
+
+router.get("/pos-settings", requireAuth, requireStoreRole, async (req, res) => {
+  try {
+    const sb = createServiceClient();
+    if (!sb) return fail(res, "الخادم غير مهيأ لقاعدة البيانات", 503);
+    const got = await merchantApprovedStore(sb, req.appUser);
+    if (got.error) return fail(res, got.error, got.status || 400);
+    return ok(res, { enabled: isPosEnabled(got.store.id), platform_orders_open: true });
+  } catch (e) {
+    console.error("[store/pos-settings]", e);
+    return fail(res, e.message || "خطأ في الخادم", 500);
+  }
+});
+
+router.patch("/pos-settings", requireAuth, requireStoreRole, async (req, res) => {
+  try {
+    const sb = createServiceClient();
+    if (!sb) return fail(res, "الخادم غير مهيأ لقاعدة البيانات", 503);
+    const got = await merchantApprovedStore(sb, req.appUser);
+    if (got.error) return fail(res, got.error, got.status || 400);
+    const body = req.body && typeof req.body === "object" ? req.body : {};
+    if (!Object.prototype.hasOwnProperty.call(body, "enabled")) return fail(res, "enabled مطلوب", 400);
+    const enabled = setPosEnabled(got.store.id, !!body.enabled);
+    return ok(res, { enabled, platform_orders_open: true });
+  } catch (e) {
+    console.error("[store/pos-settings]", e);
+    return fail(res, e.message || "خطأ في الخادم", 500);
+  }
+});
+
+router.post("/pos-orders", requireAuth, requireStoreRole, async (req, res) => {
+  try {
+    const sb = createServiceClient();
+    if (!sb) return fail(res, "الخادم غير مهيأ لقاعدة البيانات", 503);
+    const got = await merchantApprovedStore(sb, req.appUser);
+    if (got.error) return fail(res, got.error, got.status || 400);
+    if (!isPosEnabled(got.store.id)) return fail(res, "كاشير ERVENOW غير مفعّل لهذا المتجر", 403);
+    const body = req.body && typeof req.body === "object" ? req.body : {};
+    const lines = Array.isArray(body.items) ? body.items : [];
+    const ids = [
+      ...new Set(
+        lines
+          .map((line) => String((line && (line.product_id || line.id)) || "").trim())
+          .filter(Boolean)
+      ),
+    ];
+    if (!ids.length) return fail(res, "الطلب فارغ", 400);
+    const { data: products, error: pErr } = await sb
+      .from("store_products")
+      .select("id,name,price,offer_price,active,store_id")
+      .eq("store_id", got.store.id)
+      .in("id", ids);
+    if (pErr) return fail(res, pErr.message, 400);
+    const ticket = preparePosTicket({
+      products: products || [],
+      lines,
+      fulfillment: body.fulfillment,
+      payment: body.payment,
+    });
+    if (!ticket.ok) return fail(res, ticket.message, ticket.status || 400);
+    const order = await insertPosOrder(sb, req.appUser, got.store, ticket);
+    return ok(res, { order, source: "pos" });
+  } catch (e) {
+    console.error("[store/pos-orders]", e);
+    return fail(res, e.message || "تعذر حفظ طلب الكاشير", 500);
   }
 });
 
@@ -3110,6 +3212,8 @@ const STORE_GET_BY_ID_RESERVED = new Set([
   "resolve-maps-link",
   "delivery-engine",
   "orders",
+  "pos-settings",
+  "pos-orders",
 ]);
 
 function isStoreWithdrawalsMissing(err) {

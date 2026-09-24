@@ -1,6 +1,6 @@
 /**
- * ERVENOW — Merchant Portal Preview (experimental unified portal)
- * Uses existing APIs only — no backend changes.
+ * ERVENOW — بوابة التاجر.
+ * الكاشير اختياري داخل نفس المساحة. طلبات المنصة تبقى على دورة الطلب الحالية.
  */
 (function (global) {
   "use strict";
@@ -30,6 +30,9 @@
     activeSection: "dashboard",
     orderFilter: "new",
     reportRange: "today",
+    posEnabled: true,
+    seenOrderIds: null,
+    incoming: [],
   };
 
   var ORDER_GROUPS = {
@@ -52,6 +55,8 @@
   ];
 
   var checkoutPlatform = {};
+  var checkoutPlatformLoaded = false;
+  var sectionCacheAt = {};
 
   function esc(s) {
     return String(s || "")
@@ -131,7 +136,9 @@
 
   async function refreshOrderBoardLive() {
     await loadOrderBoard();
+    noteFreshPlatformOrders();
     if (orderSectionsNeedRefresh()) renderMain();
+    else paintIncomingChrome();
   }
 
   function disconnectOrderBoardSocket() {
@@ -143,9 +150,36 @@
     }
   }
 
+  function ensureSocketIo() {
+    if (typeof global.io === "function") return Promise.resolve();
+    if (ensureSocketIo.promise) return ensureSocketIo.promise;
+    ensureSocketIo.promise = new Promise(function (resolve) {
+      var s = document.createElement("script");
+      s.src = "https://cdn.socket.io/4.8.1/socket.io.min.js";
+      s.async = true;
+      s.crossOrigin = "anonymous";
+      s.onload = function () {
+        resolve();
+      };
+      s.onerror = function () {
+        resolve();
+      };
+      document.head.appendChild(s);
+    });
+    return ensureSocketIo.promise;
+  }
+
   function connectOrderBoardSocket() {
-    if (boardSocket || typeof global.io === "undefined") return;
-    if (!state.storeId) return;
+    if (boardSocket || !state.storeId) return;
+    if (typeof global.io !== "function") {
+      if (connectOrderBoardSocket.waiting) return;
+      connectOrderBoardSocket.waiting = true;
+      ensureSocketIo().then(function () {
+        connectOrderBoardSocket.waiting = false;
+        if (typeof global.io === "function") connectOrderBoardSocket();
+      });
+      return;
+    }
     try {
       boardSocket = global.io({
         path: "/socket.io/",
@@ -202,29 +236,51 @@
     state.hub = my.merchant_hub || null;
     state.publishReadiness = my.publish_readiness || null;
     state.storeId = state.store && state.store.id;
-    var dash = await api("/api/store/merchant-dashboard");
-    state.dashboard = dash;
-    try {
-      state.board = await api("/api/store/order-board");
-    } catch (_) {
-      state.board = { orders: dash.orders || [], status_counts: {} };
-    }
-    if (state.storeId) connectOrderBoardSocket();
-    if (state.storeId) {
-      var prod = await api(
-        "/api/store/products?store_id=" + encodeURIComponent(state.storeId) + "&limit=80&offset=0"
-      );
-      state.products = prod.products || [];
-      try {
-        var cats = await api(
-          "/api/store/product-category-options?store_id=" + encodeURIComponent(state.storeId)
-        );
-        state.categories = cats.options || cats.categories || [];
-      } catch (_c) {
-        state.categories = [];
-      }
-    }
     updateHeader();
+    var sid = state.storeId ? encodeURIComponent(state.storeId) : "";
+    var jobs = [
+      api("/api/store/merchant-dashboard").then(function (dash) {
+        state.dashboard = dash;
+      }),
+    ];
+    if (sid) {
+      jobs.push(
+        api("/api/store/order-board")
+          .then(function (board) {
+            state.board = board;
+          })
+          .catch(function () {}),
+        api("/api/store/products?store_id=" + sid + "&limit=80&offset=0")
+          .then(function (prod) {
+            state.products = prod.products || [];
+          })
+          .catch(function () {}),
+        api("/api/store/product-category-options?store_id=" + sid)
+          .then(function (cats) {
+            state.categories = cats.options || cats.categories || [];
+          })
+          .catch(function () {
+            state.categories = [];
+          }),
+        api("/api/core/checkout-payment-methods")
+          .then(function (j) {
+            checkoutPlatform = (j && j.methods) || j || {};
+            checkoutPlatformLoaded = true;
+          })
+          .catch(function () {}),
+        api("/api/store/pos-settings")
+          .then(function (j) {
+            state.posEnabled = !(j && j.enabled === false);
+          })
+          .catch(function () {
+            state.posEnabled = true;
+          })
+      );
+    }
+    await Promise.all(jobs);
+    if (!state.board) {
+      state.board = { orders: (state.dashboard && state.dashboard.orders) || [], status_counts: {} };
+    }
   }
 
   async function loadFacilityCategories() {
@@ -419,9 +475,200 @@
     }
   }
 
+  function allBoardOrders() {
+    return (state.board && state.board.orders) || (state.dashboard && state.dashboard.orders) || [];
+  }
+
+  function orderSourceKey(o) {
+    var data = o && o.data && typeof o.data === "object" ? o.data : {};
+    var raw = String(data.order_source || o.series_source || "").toLowerCase();
+    return raw === "pos" ? "pos" : "ervenow";
+  }
+
+  function orderSourceLabel(o) {
+    return orderSourceKey(o) === "pos" ? "كاشير" : "ERVENOW";
+  }
+
+  function isIncomingPlatformOrder(o) {
+    var st = String((o && (o.delivery_status || o.board_status)) || "").toLowerCase();
+    if (st !== "pending" && st !== "draft" && st !== "new") return false;
+    return orderSourceKey(o) !== "pos";
+  }
+
+  function incomingPlatformCount() {
+    return allBoardOrders().filter(isIncomingPlatformOrder).length;
+  }
+
+  function fulfillmentLabel(o) {
+    var data = o && o.data && typeof o.data === "object" ? o.data : {};
+    var f = String(data.fulfillment || "").toLowerCase();
+    if (f === "local") return "محلي";
+    if (f === "pickup") return "استلام";
+    if (f === "delivery") return "توصيل";
+    if (o && o.drop_address) return "توصيل";
+    return "طلب";
+  }
+
+  function seedSeenOrders() {
+    state.seenOrderIds = {};
+    allBoardOrders().forEach(function (o) {
+      if (o && o.id) state.seenOrderIds[String(o.id)] = true;
+    });
+  }
+
+  function noteFreshPlatformOrders() {
+    var list = allBoardOrders();
+    if (!state.seenOrderIds) {
+      seedSeenOrders();
+      paintIncomingChrome();
+      return;
+    }
+    var fresh = [];
+    list.forEach(function (o) {
+      if (!o || !o.id) return;
+      var id = String(o.id);
+      if (state.seenOrderIds[id]) return;
+      state.seenOrderIds[id] = true;
+      if (isIncomingPlatformOrder(o)) fresh.push(o);
+    });
+    if (fresh.length) {
+      state.incoming = fresh.concat(state.incoming).slice(0, 3);
+      if (global.ErvenowNotificationSounds && ErvenowNotificationSounds.play) {
+        ErvenowNotificationSounds.play("alert");
+      }
+      var bell = document.querySelector(".erv-notification-bell");
+      if (bell) {
+        bell.classList.remove("is-pulse");
+        void bell.offsetWidth;
+        bell.classList.add("is-pulse");
+      }
+    }
+    paintIncomingChrome();
+  }
+
+  function renderIncomingBanner() {
+    var host = document.getElementById("mpIncomingHost");
+    if (!host) return;
+    var order = state.incoming[0];
+    if (!order) {
+      host.innerHTML = "";
+      return;
+    }
+    var value = order.order_value != null ? order.order_value : order.total_with_vat || order.order_total || order.total;
+    host.innerHTML =
+      '<div class="mp-incoming" role="status">' +
+      '<span class="mp-incoming__bell" aria-hidden="true">🔔</span>' +
+      '<div class="mp-incoming__body"><strong>#' +
+      esc(order.order_number || order.id) +
+      ' طلب جديد</strong><span class="mp-incoming__meta">' +
+      esc(fulfillmentLabel(order)) +
+      " · " +
+      fmtMoney(value) +
+      " ر.س</span></div>" +
+      '<div class="mp-incoming__actions">' +
+      '<button type="button" class="mp-btn mp-btn--ghost" data-incoming-view="' +
+      esc(order.id) +
+      '">عرض الطلب</button>' +
+      '<button type="button" class="mp-btn mp-btn--primary" data-incoming-accept="' +
+      esc(order.id) +
+      '">قبول الطلب</button>' +
+      '<button type="button" class="mp-btn mp-btn--ghost" data-incoming-dismiss="' +
+      esc(order.id) +
+      '" aria-label="إغلاق">×</button></div></div>';
+  }
+
+  function ensureIncomingHost() {
+    if (document.getElementById("mpIncomingHost")) return;
+    var main = shell && shell.getEls ? shell.getEls().main : null;
+    var content = main && main.parentElement;
+    if (!content) return;
+    var host = document.createElement("div");
+    host.id = "mpIncomingHost";
+    host.className = "mp-incoming-host";
+    content.insertBefore(host, content.firstChild);
+    host.addEventListener("click", function (ev) {
+      var view = ev.target.closest("[data-incoming-view]");
+      var accept = ev.target.closest("[data-incoming-accept]");
+      var dismiss = ev.target.closest("[data-incoming-dismiss]");
+      if (view) {
+        state.orderFilter = "new";
+        navigate("orders");
+        return;
+      }
+      if (dismiss) {
+        var dismissId = dismiss.getAttribute("data-incoming-dismiss");
+        state.incoming = state.incoming.filter(function (o) {
+          return String(o.id) !== String(dismissId);
+        });
+        renderIncomingBanner();
+        return;
+      }
+      if (!accept) return;
+      var acceptId = accept.getAttribute("data-incoming-accept");
+      accept.disabled = true;
+      acceptPlatformOrder(acceptId)
+        .then(function () {
+          state.incoming = state.incoming.filter(function (o) {
+            return String(o.id) !== String(acceptId);
+          });
+          showMsg("تم قبول الطلب", true);
+          return refreshOrderBoardLive();
+        })
+        .catch(function (e) {
+          accept.disabled = false;
+          showMsg(e.message || String(e), false);
+        });
+    });
+  }
+
+  function acceptPlatformOrder(orderId) {
+    if (global.ErvenowMerchantOrderWorkflow && ErvenowMerchantOrderWorkflow.patchOrderStatus) {
+      return ErvenowMerchantOrderWorkflow.patchOrderStatus(orderId, "accepted");
+    }
+    return api("/api/order/" + encodeURIComponent(orderId) + "/status", {
+      method: "PATCH",
+      body: { delivery_status: "accepted" },
+    });
+  }
+
+  function applyPosNav() {
+    if (!shell || !shell.getConfig) return;
+    var cfg = shell.getConfig();
+    if (!cfg._merchantNavFull) cfg._merchantNavFull = (cfg.nav || []).slice();
+    var show = state.posEnabled !== false;
+    cfg.nav = cfg._merchantNavFull.filter(function (item) {
+      if (!item) return false;
+      if (item.id === "pos" && !show) return false;
+      return true;
+    });
+    cfg.items = cfg.nav.map(function (item) {
+      return item.id;
+    });
+    var count = incomingPlatformCount();
+    cfg.nav.forEach(function (item) {
+      if (item && item.id === "orders") item.badge = count > 0 ? (count > 9 ? "9+" : String(count)) : 0;
+    });
+    if (!show && shell.getActiveSection() === "pos") {
+      shell.navigate("dashboard");
+      return;
+    }
+    shell.renderNav();
+  }
+
+  function paintIncomingChrome() {
+    applyPosNav();
+    var count = incomingPlatformCount();
+    var badge = document.querySelector("[data-pf-notifications] .erv-notification-badge");
+    if (badge && count > 0) {
+      badge.hidden = false;
+      var shown = parseInt(String(badge.textContent).replace("+", ""), 10);
+      if (!Number.isFinite(shown) || count > shown) badge.textContent = count > 9 ? "9+" : String(count);
+    }
+    renderIncomingBanner();
+  }
+
   function ordersList() {
-    var orders = (state.board && state.board.orders) || (state.dashboard && state.dashboard.orders) || [];
-    return orders.filter(function (o) {
+    return allBoardOrders().filter(function (o) {
       var st = o.board_status || o.delivery_status;
       return inOrderGroup(st, state.orderFilter);
     });
@@ -470,7 +717,6 @@
         );
       })
       .join("");
-    var canPublish = !!ready.ok;
     return (
       '<div class="mp-card mp-complete-banner" id="mpCompleteBanner">' +
       "<h3>أكمل صفحتك</h3>" +
@@ -479,9 +725,7 @@
       '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px">' +
       '<button type="button" class="mp-btn mp-btn--ghost" data-pf-section="settings">تعديل الهوية والفئة</button>' +
       '<button type="button" class="mp-btn mp-btn--ghost" data-pf-section="products">المنتجات</button>' +
-      '<button type="button" class="mp-btn mp-btn--primary" id="mpPublishBtn"' +
-      (canPublish ? "" : " disabled") +
-      ">اعتماد ونشر المنشأة</button>" +
+      '<button type="button" class="mp-btn mp-btn--primary" id="mpPublishBtn">اعتماد ونشر المتجر</button>' +
       "</div></div>"
     );
   }
@@ -604,7 +848,9 @@
               fmtDate(o.created_at) +
               "</td><td>" +
               esc(o.order_number || o.id) +
-              "</td><td>" +
+              ' <span class="mp-order-source">' +
+              esc(orderSourceLabel(o)) +
+              "</span></td><td>" +
               pill +
               unifiedBadge +
               "</td><td>" +
@@ -751,7 +997,7 @@
 
   function renderVisitorPreview() {
     var store = state.store || {};
-    var href = state.storeId ? "/store.html?store_id=" + encodeURIComponent(state.storeId) + "&preview=1" : "#";
+    var href = state.storeId ? "/store.html?id=" + encodeURIComponent(state.storeId) + "&preview=1" : "#";
     var grid = state.products.length
       ? '<div class="mp-product-grid">' +
         state.products
@@ -857,13 +1103,15 @@
   }
 
   function renderPos() {
+    return '<div id="mpPosMount"></div>';
+  }
+
+  function posSettingCardHtml() {
     return (
-      '<h2 class="mp-section-title">الكاشير</h2>' +
-      '<p class="mp-section-sub">POS</p>' +
-      '<div class="mp-pos-placeholder">' +
-      "<h2>ERVENOW POS Core</h2>" +
-      "<p>Coming Soon</p>" +
-      "</div>"
+      '<div class="mp-card mp-form"><h3>استخدام كاشير ERVENOW</h3>' +
+      '<label class="mp-pay-row" for="mpPosEnabled"><input id="mpPosEnabled" type="checkbox"' +
+      (state.posEnabled !== false ? " checked" : "") +
+      " /> يظهر «الكاشير POS» في القائمة. إيقافه لا يوقف استقبال طلبات المنصة.</label></div>"
     );
   }
 
@@ -931,26 +1179,59 @@
     return true;
   }
 
-  function hubPayCheckboxesHtml() {
+  function storeCategorySlug() {
+    var store = state.store || {};
+    var raw = String(store.category || "").split(",")[0].trim();
+    var type = String(store.type || "").toLowerCase();
+    if (!raw || raw.toLowerCase() === type) return "";
+    return raw;
+  }
+
+  function savedLocationValue(store) {
+    store = store || {};
+    var url = String(store.maps_url || "").trim();
+    if (url) return url;
+    if (store.lat != null && store.lng != null && String(store.lat) !== "" && String(store.lng) !== "") {
+      return String(store.lat) + "," + String(store.lng);
+    }
+    return "";
+  }
+
+  function mediaPreviewHtml(url, alt) {
+    var src = String(url || "").trim();
+    if (!src) return '<p class="mp-media-empty">لم يُرفع بعد — سيبقى هنا بعد الحفظ</p>';
+    return '<img class="mp-media-preview" src="' + esc(src) + '" alt="' + esc(alt) + '" />';
+  }
+
+  function hubPaySelectHtml() {
     var hm =
       state.hub && state.hub.checkout_payment_methods && typeof state.hub.checkout_payment_methods === "object"
         ? state.hub.checkout_payment_methods
         : {};
-    return HUB_PAY_ROWS.map(function (row) {
-      var allowed = platformCheckoutAllows(row.key);
-      var checked = hm[row.key] !== false;
-      return (
-        '<label class="mp-pay-row">' +
-        '<input type="checkbox" id="mpHubPay_' +
-        row.key +
-        '"' +
-        (checked ? " checked" : "") +
-        (allowed ? "" : " disabled") +
-        " /> " +
-        esc(row.label) +
-        "</label>"
-      );
-    }).join("");
+    var hasSaved = Object.keys(hm).length > 0;
+    var opts = HUB_PAY_ROWS.filter(function (row) {
+      return platformCheckoutAllows(row.key);
+    })
+      .map(function (row) {
+        var selected = hasSaved && hm[row.key] !== false;
+        return (
+          '<option value="' +
+          esc(row.key) +
+          '"' +
+          (selected ? " selected" : "") +
+          ">" +
+          esc(row.label) +
+          "</option>"
+        );
+      })
+      .join("");
+    return (
+      '<label for="mpHubPay">وسائل الدفع</label>' +
+      '<select id="mpHubPay" multiple size="6">' +
+      opts +
+      "</select>" +
+      '<p class="mp-section-sub">اختر من القائمة ما يناسب المتجر. يمكن تحديد أكثر من وسيلة.</p>'
+    );
   }
 
   function findBoardOrder(id) {
@@ -1026,17 +1307,46 @@
   function renderSettings() {
     var hub = state.hub || {};
     var store = state.store || {};
+    var currentCat = storeCategorySlug();
+    var seenCat = {};
     var catOpts = (state.facilityCategories || [])
       .map(function (c) {
-        var v = c.slug || c.value || c.id || c;
+        var v = String(c.slug || c.value || c.id || c || "").trim();
+        if (!v || seenCat[v]) return "";
+        seenCat[v] = true;
         var l = c.label || c.name_ar || c.name || v;
-        return '<option value="' + esc(v) + '">' + esc(l) + "</option>";
+        return (
+          '<option value="' +
+          esc(v) +
+          '"' +
+          (v === currentCat ? " selected" : "") +
+          ">" +
+          esc(l) +
+          "</option>"
+        );
       })
       .join("");
-    var currentCat = String(store.category || "").split(",")[0];
+    if (currentCat && !seenCat[currentCat]) {
+      catOpts =
+        '<option value="' +
+        esc(currentCat) +
+        '" selected>' +
+        esc(store.category_label_ar || currentCat) +
+        "</option>" +
+        catOpts;
+    }
+    var locVal = savedLocationValue(store);
+    var locLocked = !!locVal;
+    var locHref = /^https?:\/\//i.test(locVal)
+      ? locVal
+      : locVal
+        ? "https://www.google.com/maps?q=" + encodeURIComponent(locVal)
+        : "";
+    var addressLine = store.address || store.location_text || locVal || "—";
     return (
       '<h2 class="mp-section-title">أكمل صفحتك</h2>' +
-      '<p class="mp-section-sub">Settings — الفئة، الشعار، الغلاف، الوصف، ثم النشر</p>' +
+      '<p class="mp-section-sub">الفئة، الشعار، الغلاف، الوصف، ثم النشر</p>' +
+      posSettingCardHtml() +
       completionBannerHtml() +
       '<div class="mp-card mp-form"><h3>الهوية والبروفايل</h3>' +
       "<p><strong>الاسم:</strong> " +
@@ -1050,26 +1360,40 @@
       "<textarea id='mpHubBio' rows='3'>" +
       esc(hub.bio || store.bio || "") +
       "</textarea>" +
-      "<label for='mpHubLogo'>الشعار (صورة)</label>" +
+      "<label for='mpHubLogo'>الشعار</label>" +
+      mediaPreviewHtml(store.logo_url, "شعار المتجر") +
       "<input id='mpHubLogo' type='file' accept='image/*' />" +
-      "<label for='mpHubBanner'>الغلاف (صورة)</label>" +
+      "<label for='mpHubBanner'>الغلاف</label>" +
+      mediaPreviewHtml(hub.banner_url, "غلاف المتجر") +
       "<input id='mpHubBanner' type='file' accept='image/*' />" +
-      '<button type="button" class="mp-btn mp-btn--primary" id="mpSaveHub">حفظ الهوية</button></div>' +
-      '<div class="mp-card mp-form"><h3>الموقع</h3>' +
+      hubPaySelectHtml() +
+      '<div class="mp-form-actions"><button type="button" class="mp-btn mp-btn--primary" id="mpSaveHub">حفظ</button></div></div>' +
+      '<div class="mp-card mp-form" id="mpLocCard"><h3>الموقع</h3>' +
       "<p><strong>العنوان الحالي:</strong> " +
-      esc(store.address || store.location_text || store.location || "—") +
+      esc(addressLine) +
       "</p>" +
+      (locVal
+        ? '<p class="mp-loc-saved" id="mpLocSaved"><a href="' +
+          esc(locHref) +
+          '" target="_blank" rel="noopener">' +
+          esc(locVal) +
+          "</a></p>"
+        : "") +
+      '<div id="mpLocEditor"' +
+      (locLocked ? " hidden" : "") +
+      ">" +
       "<label for='mpStoreLoc'>رابط Google Maps أو lat,lng</label>" +
-      "<input id='mpStoreLoc' type='text' placeholder='https://maps.google.com/... أو 24.7,46.6' />" +
-      '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">' +
-      '<button type="button" class="mp-btn mp-btn--ghost" id="mpStoreLocGps">موقعي الحالي (GPS)</button>' +
-      '<button type="button" class="mp-btn mp-btn--primary" id="mpSaveStoreLoc">حفظ الموقع</button>' +
+      "<input id='mpStoreLoc' type='text' inputmode='text' value='" +
+      esc(locVal) +
+      "' placeholder='الصق رابط Google Maps أو 24.7,46.6' />" +
+      '<div class="mp-form-actions">' +
+      '<button type="button" class="mp-btn mp-btn--ghost" id="mpStoreLocGps">حدد مكانك</button>' +
+      '<button type="button" class="mp-btn mp-btn--primary" id="mpSaveStoreLoc">حفظ</button>' +
       "</div></div>" +
-      '<div class="mp-card mp-form"><h3>وسائل الدفع (ERVENOW PAY)</h3>' +
-      '<div id="mpHubPayGrid">' +
-      hubPayCheckboxesHtml() +
-      "</div>" +
-      '<p class="mp-section-sub">يُحفظ مع الهوية أعلاه.</p></div>'
+      (locLocked
+        ? '<div class="mp-form-actions"><button type="button" class="mp-btn mp-btn--ghost" id="mpLocEdit">تعديل</button></div>'
+        : "") +
+      "</div>"
     );
   }
 
@@ -1129,49 +1453,64 @@
       var cur = String((state.store && state.store.category) || "").split(",")[0];
       if (cur) catSel.value = cur;
     }
-    if (shell) shell.renderNav();
     updateHeader();
     wireSectionEvents();
+    if (sectionId === "pos" && global.ErvenowMerchantPos) {
+      var posHost = document.getElementById("mpPosMount");
+      if (posHost) {
+        ErvenowMerchantPos.mount(posHost, {
+          products: state.products || [],
+          categories: state.categories || [],
+          store: state.store || {},
+          storeId: state.storeId,
+        });
+      }
+    }
+    paintIncomingChrome();
     if (sectionId === "notifications" && global.ErvenowPortalInlineNotifications) {
       var host = document.getElementById("mpNotifHost");
       if (host) ErvenowPortalInlineNotifications.mountIn(host, "merchant-notif", { enableTypeFilters: true });
     }
-    if (sectionId === "categories") {
+    if (sectionId === "categories" && !sectionFresh("categories", 20000)) {
       loadMerchantCategories().then(function () {
+        sectionCacheAt.categories = Date.now();
         var sec = document.getElementById("mpSection-categories");
-        if (sec) {
+        if (sec && state.activeSection === "categories") {
           sec.innerHTML = renderCategories();
           wireSectionEvents();
         }
       });
     }
-    if (sectionId === "withdrawals") {
+    if (sectionId === "withdrawals" && !sectionFresh("withdrawals", 20000)) {
       loadWithdrawals().then(function () {
+        sectionCacheAt.withdrawals = Date.now();
         var sec = document.getElementById("mpSection-withdrawals");
-        if (sec) {
+        if (sec && state.activeSection === "withdrawals") {
           sec.innerHTML = renderWithdrawals();
           wireSectionEvents();
         }
       });
     }
-    if (sectionId === "settings") {
+    if (sectionId === "settings" && !checkoutPlatformLoaded) {
       api("/api/core/checkout-payment-methods")
         .then(function (j) {
           checkoutPlatform = (j && j.methods) || j || {};
+          checkoutPlatformLoaded = true;
           var sec = document.getElementById("mpSection-settings");
-          if (sec) {
+          if (sec && state.activeSection === "settings") {
             sec.innerHTML = renderSettings();
             wireSectionEvents();
           }
         })
         .catch(function () {});
     }
-    if (sectionId === "reviews" && state.storeId) {
+    if (sectionId === "reviews" && state.storeId && !sectionFresh("reviews", 20000)) {
       api("/api/store/reviews?store_id=" + encodeURIComponent(state.storeId) + "&limit=20")
         .then(function (j) {
           state.reviews = (j && j.reviews) || [];
+          sectionCacheAt.reviews = Date.now();
           var sec = document.getElementById("mpSection-reviews");
-          if (sec) {
+          if (sec && state.activeSection === "reviews") {
             sec.innerHTML = renderReviews();
             wireSectionEvents();
           }
@@ -1301,6 +1640,7 @@
           }
           showMsg("تم تحديث الطلب", true);
           state.board = await api("/api/store/order-board");
+          noteFreshPlatformOrders();
           state.dashboard = await api("/api/store/merchant-dashboard");
           renderMain();
         } catch (e) {
@@ -1321,17 +1661,37 @@
         if (o && wf && wf.printThermal80) wf.printThermal80(o, state.store || {});
       };
     });
+    var posToggle = document.getElementById("mpPosEnabled");
+    if (posToggle) {
+      posToggle.onchange = async function () {
+        var enabled = !!posToggle.checked;
+        posToggle.disabled = true;
+        try {
+          await api("/api/store/pos-settings", { method: "PATCH", body: { enabled: enabled } });
+          state.posEnabled = enabled;
+          showMsg(enabled ? "تم تفعيل كاشير ERVENOW" : "تم إخفاء الكاشير. طلبات المنصة مستمرة.", true);
+          applyPosNav();
+        } catch (e) {
+          posToggle.checked = !enabled;
+          state.posEnabled = !enabled;
+          showMsg(e.message || String(e), false);
+        } finally {
+          posToggle.disabled = false;
+        }
+      };
+    }
     var saveHub = document.getElementById("mpSaveHub");
     if (saveHub) {
       saveHub.onclick = async function () {
         if (!state.storeId) return;
         var body = { bio: String(document.getElementById("mpHubBio").value || "").trim() };
+        var paySel = document.getElementById("mpHubPay");
         var payBody = {};
-        HUB_PAY_ROWS.forEach(function (row) {
-          var cb = document.getElementById("mpHubPay_" + row.key);
-          if (!cb) return;
-          payBody[row.key] = cb.disabled ? false : !!cb.checked;
-        });
+        if (paySel) {
+          Array.prototype.forEach.call(paySel.options, function (opt) {
+            payBody[opt.value] = !!opt.selected;
+          });
+        }
         body.checkout_payment_methods = payBody;
         var bf = document.getElementById("mpHubBanner").files && document.getElementById("mpHubBanner").files[0];
         var lf = document.getElementById("mpHubLogo").files && document.getElementById("mpHubLogo").files[0];
@@ -1351,7 +1711,7 @@
               body.category = catVal;
             }
           }
-          await api("/api/store/merchant-hub", { method: "PATCH", body: body });
+          await api("/api/store/merchant-hub", { method: "PATCH", body: body, timeoutMs: 60000 });
           showMsg("تم حفظ الإعدادات", true);
           var r = await api("/api/store/my-store");
           state.hub = r.merchant_hub || state.hub;
@@ -1377,10 +1737,11 @@
           body.lng = Number(parts[1].trim());
         } else body.maps_url = raw;
         try {
-          await api("/api/store/location", { method: "PATCH", body: body });
+          await api("/api/store/location", { method: "PATCH", body: body, timeoutMs: 30000 });
           showMsg("تم حفظ الموقع", true);
           var r = await api("/api/store/my-store");
           state.store = r.store || state.store;
+          state.publishReadiness = r.publish_readiness || state.publishReadiness;
           renderMain();
         } catch (e) {
           showMsg(e.message || String(e), false);
@@ -1402,13 +1763,34 @@
         );
       };
     }
+    var locEdit = document.getElementById("mpLocEdit");
+    if (locEdit) {
+      locEdit.onclick = function () {
+        var editor = document.getElementById("mpLocEditor");
+        if (editor) editor.hidden = false;
+        var input = document.getElementById("mpStoreLoc");
+        if (input) input.focus();
+      };
+    }
     var publishBtn = document.getElementById("mpPublishBtn");
     if (publishBtn) {
       publishBtn.onclick = async function () {
+        var ready = state.publishReadiness || {};
+        if (!ready.ok) {
+          var missing = (ready.checks || [])
+            .filter(function (c) {
+              return !c.ok;
+            })
+            .map(function (c) {
+              return c.label;
+            });
+          showMsg(missing.length ? "أكمل قبل النشر: " + missing.join("، ") : "أكمل بيانات المتجر ثم أعد المحاولة", false);
+          return;
+        }
         publishBtn.disabled = true;
         try {
-          var j = await api("/api/store/publish", { method: "POST", body: {} });
-          showMsg(j.message || "تم اعتماد ونشر المنشأة", true);
+          var j = await api("/api/store/publish", { method: "POST", body: {}, timeoutMs: 30000 });
+          showMsg(j.message || "تم اعتماد ونشر المتجر", true);
           var r = await api("/api/store/my-store");
           state.store = r.store || state.store;
           state.hub = r.merchant_hub || state.hub;
@@ -1601,17 +1983,43 @@
     }
   }
 
+  function sectionFresh(key, ttl) {
+    var at = sectionCacheAt[key] || 0;
+    return at > 0 && Date.now() - at < ttl;
+  }
+
   function navigate(section) {
     if (shell) shell.navigate(section);
   }
 
+  function paintBootStatus(text) {
+    var main = shell && shell.getMainEl ? shell.getMainEl() : null;
+    if (!main || state.store) return;
+    main.innerHTML = '<p class="mp-section-sub" style="padding:16px">' + esc(text) + "</p>";
+  }
+
   async function boot() {
+    paintBootStatus("جارٍ فتح لوحة المتجر…");
     try {
       await loadCoreData();
-      await loadFacilityCategories();
-      await loadMerchantCategories();
-      renderMain();
-      notifCenterApi = await shell.mountNotifications();
+      seedSeenOrders();
+      ensureIncomingHost();
+      if (state.posEnabled === false && shell && shell.getActiveSection() === "pos") {
+        shell.navigate("dashboard");
+      } else {
+        renderMain();
+      }
+      loadFacilityCategories()
+        .then(function () {
+          if (state.activeSection === "settings") renderMain();
+        })
+        .catch(function () {});
+      if (shell) {
+        shell.mountNotifications().then(function (apiNotif) {
+          notifCenterApi = apiNotif;
+          paintIncomingChrome();
+        }).catch(function () {});
+      }
       startOrderBoardLive();
     } catch (e) {
       showMsg(e.message || "تعذّر تحميل البيانات", false);
@@ -1628,10 +2036,15 @@
       showMsg("Portal Framework غير محمّل", false);
       return;
     }
-    var portalCfg = ErvenowPortalFramework.RoleContext.getConfig("merchant");
-    if (ErvenowPortalFramework.PortalPlatformModules) {
-      portalCfg = await ErvenowPortalFramework.PortalPlatformModules.filterConfig(portalCfg);
-    }
+    var baseCfg = ErvenowPortalFramework.RoleContext.getConfig("merchant");
+    var cfgPromise =
+      ErvenowPortalFramework.PortalPlatformModules
+        ? ErvenowPortalFramework.PortalPlatformModules.filterConfig(baseCfg)
+        : Promise.resolve(baseCfg);
+    var mePromise = global.ErvenowAuthGuard
+      ? ErvenowAuthGuard.ensureApprovedAccount({ loginUrl: "/login?role=store" })
+      : Promise.resolve(null);
+    var portalCfg = await cfgPromise;
     if (!shell) {
       shell = ErvenowPortalFramework.PortalShell.create({
         role: "merchant",
@@ -1663,7 +2076,7 @@
       shell.showLogin();
       return;
     }
-    var me = await ErvenowAuthGuard.ensureApprovedAccount({ loginUrl: "/login?role=store" });
+    var me = await mePromise;
     if (!me) {
       shell.showLogin();
       return;
@@ -1683,5 +2096,6 @@
     navigate: navigate,
     stop: stopOrderBoardLive,
     refreshOrders: refreshOrderBoardLive,
+    showMsg: showMsg,
   };
 })(typeof window !== "undefined" ? window : global);

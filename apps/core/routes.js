@@ -28,6 +28,7 @@ const {
 } = require("../../shared/utils/loginDestinations");
 const { accessFlagsForRole } = require("../../shared/utils/platformAccessPolicy");
 const { canonicalPhoneDigits, findUserByPhone, findUserByPhoneResilient } = require("../../shared/utils/userPhoneLookup");
+const { findStoreByOwnerPhone, bindStoreOwnerAccount } = require("../../shared/services/storeOwnerAccount");
 const {
   isUserAccountApproved,
   isUserAccountPending,
@@ -744,7 +745,7 @@ router.post("/verify-otp", async (req, res) => {
         console.error("[ERVENOW] verify-otp user lookup:", exFound.error.message || exFound.error);
       }
     }
-    const existingRole = existingUser ? existingUserSessionRole(existingUser.role) : null;
+    let existingRole = existingUser ? existingUserSessionRole(existingUser.role) : null;
 
     if (isSensitiveRole(roleIn) || existingRole === "admin") {
       return rejectPublicAdminLogin(res);
@@ -763,6 +764,44 @@ router.post("/verify-otp", async (req, res) => {
       return fail(res, checked.error || "رمز واتساب غير صحيح أو منتهي", lockCase ? 429 : 400, {
         attempts_remaining: checked.attemptsRemaining,
       });
+    }
+
+    if (sbEarly) {
+      const linkedStore = await findStoreByOwnerPhone(sbEarly, digits);
+      if (linkedStore) {
+        const bound = await bindStoreOwnerAccount(sbEarly, linkedStore);
+        const boundUser = bound && bound.user;
+        const boundRole = String((boundUser && boundUser.role) || "").toLowerCase();
+        const storeStatus = String(linkedStore.status || "").toLowerCase();
+        if (
+          boundUser &&
+          (boundRole === "store" || boundRole === "merchant" || boundRole === "restaurant") &&
+          (storeStatus === "pending" || storeStatus === "needs_info")
+        ) {
+          const storeName = String(linkedStore.name || boundUser.name || "").trim();
+          return ok(res, {
+            success: true,
+            pending_approval: true,
+            approved: false,
+            pre_registration: false,
+            message:
+              storeStatus === "needs_info"
+                ? `طلب متجر «${storeName}» بانتظار استكمال البيانات. أكمل التسجيل ثم أعد الإرسال.`
+                : `حساب متجر «${storeName}» قيد المراجعة من إدارة ERVENOW، وسيتم إشعارك فور اعتماد الحساب وتفعيله.`,
+            user: {
+              id: boundUser.id,
+              phone: boundUser.phone,
+              role: boundRole,
+              status: storeStatus,
+              name: storeName || null,
+            },
+          });
+        }
+        if (boundUser && !bound.blocked) {
+          existingUser = boundUser;
+          existingRole = existingUserSessionRole(boundUser.role);
+        }
+      }
     }
 
     if (!existingUser) {
@@ -1006,6 +1045,19 @@ async function handleRegisterAccount(req, res) {
   const sb = createServiceClient();
   if (!sb) {
     return fail(res, `قاعدة البيانات غير جاهزة — ${getDatabaseConfigHint()}`, 503);
+  }
+
+  const linkedStoreAccount = await findStoreByOwnerPhone(sb, digits);
+  if (linkedStoreAccount) {
+    const storeName = String(linkedStoreAccount.name || "").trim();
+    return fail(
+      res,
+      storeName
+        ? `هذا الرقم حساب متجر مرتبط بـ«${storeName}». استخدم دخول المتجر.`
+        : "هذا الرقم حساب متجر. استخدم دخول المتجر.",
+      409,
+      { store_account: true }
+    );
   }
 
   const exFound = await findUserByPhoneResilient(sb, digits);

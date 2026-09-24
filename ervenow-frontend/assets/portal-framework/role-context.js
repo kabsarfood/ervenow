@@ -15,7 +15,7 @@
     offers: { id: "offers", icon: "🏷", label: "العروض", en: "Offers" },
     wallet: { id: "wallet", icon: "💳", label: "المحفظة", en: "Wallet" },
     withdrawals: { id: "withdrawals", icon: "🏧", label: "السحوبات", en: "Withdrawals" },
-    pos: { id: "pos", icon: "🧾", label: "الكاشير", en: "POS" },
+    pos: { id: "pos", icon: "🧾", label: "الكاشير POS", en: "POS" },
     reports: { id: "reports", icon: "📈", label: "التقارير", en: "Reports" },
     notifications: {
       id: "notifications",
@@ -57,6 +57,7 @@
       items: [
         "dashboard",
         "orders",
+        "pos",
         "products",
         "categories",
         "offers",
@@ -67,7 +68,6 @@
         "reports",
         "notifications",
         "settings",
-        "pos",
       ],
       sidebarFoot: [{ href: "/order-board", label: "لوحة الطلبات" }],
     },

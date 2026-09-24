@@ -805,7 +805,7 @@
     </script>
     <script>
       var params = new URLSearchParams(window.location.search);
-      var storeId = params.get("id");
+      var storeId = params.get("id") || params.get("store_id");
       var offset = 0;
       var limit = 12;
       var total = 0;

@@ -140,7 +140,15 @@
   function timeoutForApiPath(path, explicitMs) {
     if (Number(explicitMs) > 0) return Number(explicitMs);
     var p = pathWithoutQuery(path);
-    if (p === "/api/store/register" || p === "/api/driver/register") return 60000;
+    if (
+      p === "/api/store/register" ||
+      p === "/api/driver/register" ||
+      p === "/api/store/merchant-hub" ||
+      p === "/api/store/location" ||
+      p === "/api/store/publish"
+    ) {
+      return 60000;
+    }
     if (
       p === "/api/core/send-otp" ||
       p === "/api/core/verify-otp" ||

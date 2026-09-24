@@ -1,12 +1,12 @@
 /**
  * ERVENOW — Platform Modules × Portal Navigation
- * يخفي عناصر القائمة المرتبطة بوحدات معطّلة (POS · Fleet · Pricing · Schedule · Meshwar).
+ * يخفي عناصر القائمة المرتبطة بوحدات معطّلة (Fleet · Pricing · Schedule · Meshwar).
+ * كاشير التاجر يُدار بإعداد المتجر «استخدام كاشير ERVENOW» وليس بوحدة ervenow_pos.
  */
 (function (global) {
   "use strict";
 
   var SECTION_MODULE_MAP = {
-    pos: "ervenow_pos",
     fleet: "transport_fleet",
     pricing: "transport_pricing",
     schedule: "service_schedule",
