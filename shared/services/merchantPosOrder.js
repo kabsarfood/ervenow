@@ -109,7 +109,7 @@ function buildPosInsertRow(appUser, store, ticket, snapshot) {
     String(snap.store_address || store.address || store.location_text || store.name || "داخل المتجر").trim() ||
     "داخل المتجر";
   const orderType = String(store.type || "").toLowerCase() === "restaurant" ? "restaurant" : "store";
-  return {
+  const row = {
     customer_id: appUser.id,
     customer_phone: appUser.phone || store.phone || "",
     pickup_address: address,
@@ -137,13 +137,35 @@ function buildPosInsertRow(appUser, store, ticket, snapshot) {
       payment_channel: ticket.payment_channel,
       items: ticket.items,
       breakdown: { items: ticket.items },
+      client_order_id: ticket.client_order_id || null,
+      cashier_id: ticket.cashier_id || null,
+      branch_id: ticket.branch_id || null,
+      local_created_at: ticket.local_created_at || null,
+      sync_state: "synced",
     },
   };
+  if (ticket.client_order_id) row.idempotency_key = ticket.client_order_id;
+  return row;
 }
 
 async function insertPosOrder(sb, appUser, store, ticket) {
   const { buildNextDeliveryOrderNumber, resolveStoreSnapshotForOrder } = require("../../apps/delivery/service");
   const { broadcastStoreOrderEvent, orderPatchFromRow } = require("../lib/trackingSocket");
+  const clientId = String(ticket.client_order_id || "").trim().slice(0, 80);
+  if (clientId) {
+    ticket.client_order_id = clientId;
+    try {
+      const prev = await sb
+        .from("orders")
+        .select("*")
+        .eq("store_id", store.id)
+        .eq("idempotency_key", clientId)
+        .maybeSingle();
+      if (prev && prev.data) return prev.data;
+    } catch (_) {
+      /* العمود اختياري؛ الإدراج يعيد المحاولة بدونه */
+    }
+  }
   const snapshot = await resolveStoreSnapshotForOrder(sb, store.id);
   const base = buildPosInsertRow(appUser, store, ticket, snapshot);
   let row = Object.assign({}, base);

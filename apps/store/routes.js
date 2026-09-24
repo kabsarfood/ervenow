@@ -3122,6 +3122,44 @@ async function merchantApprovedStore(sb, appUser) {
   return { store: data };
 }
 
+router.get("/cashiers", requireAuth, requireStoreRole, async (req, res) => {
+  try {
+    const sb = createServiceClient();
+    const got = await merchantApprovedStore(sb, req.appUser);
+    if (got.error) return fail(res, got.error, got.status || 400);
+    const { listCashiers } = require("../../shared/utils/merchantCashiers");
+    return ok(res, { cashiers: listCashiers(got.store.id) });
+  } catch (e) {
+    return fail(res, e.message || "تعذر تحميل الموظفين", e.status || 500);
+  }
+});
+
+router.post("/cashiers", requireAuth, requireStoreRole, async (req, res) => {
+  try {
+    const sb = createServiceClient();
+    const got = await merchantApprovedStore(sb, req.appUser);
+    if (got.error) return fail(res, got.error, got.status || 400);
+    const { addCashier } = require("../../shared/utils/merchantCashiers");
+    const cashier = addCashier(got.store.id, req.body || {}, got.store.phone || req.appUser.phone);
+    return ok(res, { cashier });
+  } catch (e) {
+    return fail(res, e.message || "تعذر حفظ الموظف", e.status || 500);
+  }
+});
+
+router.patch("/cashiers/:id", requireAuth, requireStoreRole, async (req, res) => {
+  try {
+    const sb = createServiceClient();
+    const got = await merchantApprovedStore(sb, req.appUser);
+    if (got.error) return fail(res, got.error, got.status || 400);
+    const { setCashierActive } = require("../../shared/utils/merchantCashiers");
+    const cashier = setCashierActive(got.store.id, req.params.id, req.body && req.body.active);
+    return ok(res, { cashier });
+  } catch (e) {
+    return fail(res, e.message || "تعذر تحديث الموظف", e.status || 500);
+  }
+});
+
 router.get("/pos-settings", requireAuth, requireStoreRole, async (req, res) => {
   try {
     const sb = createServiceClient();
@@ -3181,6 +3219,11 @@ router.post("/pos-orders", requireAuth, requireStoreRole, async (req, res) => {
       payment: body.payment,
     });
     if (!ticket.ok) return fail(res, ticket.message, ticket.status || 400);
+    const clientOrderId = String(body.client_order_id || "").trim().slice(0, 80);
+    if (clientOrderId) ticket.client_order_id = clientOrderId;
+    ticket.cashier_id = body.cashier_id ? String(body.cashier_id).slice(0, 80) : null;
+    ticket.branch_id = body.branch_id ? String(body.branch_id).slice(0, 80) : null;
+    ticket.local_created_at = body.local_created_at ? String(body.local_created_at).slice(0, 40) : null;
     const order = await insertPosOrder(sb, req.appUser, got.store, ticket);
     return ok(res, { order, source: "pos" });
   } catch (e) {
@@ -3214,6 +3257,7 @@ const STORE_GET_BY_ID_RESERVED = new Set([
   "orders",
   "pos-settings",
   "pos-orders",
+  "cashiers",
 ]);
 
 function isStoreWithdrawalsMissing(err) {

@@ -1,0 +1,14 @@
+{
+  "name": "كاشير ERVENOW",
+  "short_name": "كاشير",
+  "start_url": "/merchant-preview#pos",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f4efe8",
+  "theme_color": "#3d2615",
+  "lang": "ar",
+  "dir": "rtl",
+  "icons": [
+    { "src": "/favicon.ico", "sizes": "48x48", "type": "image/x-icon" }
+  ]
+}

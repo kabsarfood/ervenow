@@ -31,6 +31,7 @@
     orderFilter: "new",
     reportRange: "today",
     posEnabled: true,
+    cashiers: [],
     seenOrderIds: null,
     incoming: [],
   };
@@ -309,6 +310,16 @@
       state.merchantCategories = res.categories || [];
     } catch (_) {
       state.merchantCategories = [];
+    }
+  }
+
+  async function loadCashiers() {
+    if (!state.storeId) return;
+    try {
+      var j = await api("/api/store/cashiers?store_id=" + encodeURIComponent(state.storeId));
+      state.cashiers = (j && j.cashiers) || [];
+    } catch (_) {
+      state.cashiers = state.cashiers || [];
     }
   }
 
@@ -636,9 +647,11 @@
     var cfg = shell.getConfig();
     if (!cfg._merchantNavFull) cfg._merchantNavFull = (cfg.nav || []).slice();
     var show = state.posEnabled !== false;
+    var hiddenHub = { products: 1, categories: 1, offers: 1 };
     cfg.nav = cfg._merchantNavFull.filter(function (item) {
       if (!item) return false;
       if (item.id === "pos" && !show) return false;
+      if (hiddenHub[item.id]) return false;
       return true;
     });
     cfg.items = cfg.nav.map(function (item) {
@@ -1026,6 +1039,93 @@
     );
   }
 
+  function storeAdminTab() {
+    try {
+      return sessionStorage.getItem("ervenow_store_admin_tab") || "categories";
+    } catch (_) {
+      return "categories";
+    }
+  }
+
+  function renderCashiers() {
+    var rows = (state.cashiers || [])
+      .map(function (c) {
+        return (
+          "<tr><td>" +
+          esc(c.name) +
+          "</td><td>" +
+          esc(c.phone) +
+          "</td><td>" +
+          esc(c.branch_id || "—") +
+          "</td><td>" +
+          (c.active === false ? "موقوف" : "نشط") +
+          "</td><td>cashier</td><td>" +
+          '<button type="button" class="mp-btn mp-btn--ghost" data-cashier-toggle="' +
+          esc(c.id) +
+          '" data-cashier-active="' +
+          (c.active === false ? "1" : "0") +
+          '">' +
+          (c.active === false ? "تفعيل" : "إيقاف") +
+          "</button></td></tr>"
+        );
+      })
+      .join("");
+    return (
+      '<div class="mp-card mp-form">' +
+      "<h3>إضافة كاشير</h3>" +
+      "<p class=\"mp-section-sub\">الدور دائمًا cashier. لا يُستخدم رقم صاحب المتجر.</p>" +
+      "<label>الاسم</label><input id='mpCashierName' type='text' />" +
+      "<label>رقم الجوال</label><input id='mpCashierPhone' type='tel' inputmode='tel' />" +
+      "<label>الفرع (اختياري)</label><input id='mpCashierBranch' type='text' />" +
+      '<div class="mp-form-actions"><button type="button" class="mp-btn mp-btn--primary" id="mpSaveCashier">حفظ الموظف</button></div></div>' +
+      '<div class="mp-card mp-table-wrap"><table class="mp-table"><thead><tr><th>الاسم</th><th>الجوال</th><th>الفرع</th><th>الحالة</th><th>الدور</th><th></th></tr></thead><tbody>' +
+      (rows || '<tr><td colspan="6" class="mp-empty">لا موظفين بعد</td></tr>') +
+      "</tbody></table></div>"
+    );
+  }
+
+  function renderStoreAdmin(tab) {
+    var current = tab || "categories";
+    if (current !== "products" && current !== "offers" && current !== "cashiers") current = "categories";
+    try {
+      sessionStorage.setItem("ervenow_store_admin_tab", current);
+    } catch (_) {}
+    var tabs = [
+      ["categories", "الأقسام"],
+      ["products", "المنتجات"],
+      ["offers", "الخصومات"],
+      ["cashiers", "موظفو الكاشير"],
+    ];
+    var bar = tabs
+      .map(function (pair) {
+        return (
+          '<button type="button" class="mp-btn' +
+          (pair[0] === current ? " mp-btn--primary" : " mp-btn--ghost") +
+          '" data-store-tab="' +
+          pair[0] +
+          '">' +
+          pair[1] +
+          "</button>"
+        );
+      })
+      .join("");
+    var body =
+      current === "products"
+        ? renderProducts()
+        : current === "offers"
+          ? renderOffers()
+          : current === "cashiers"
+            ? renderCashiers()
+            : renderCategories();
+    return (
+      '<h2 class="mp-section-title">إدارة المتجر</h2>' +
+      '<div class="mp-store-tabs" role="tablist">' +
+      bar +
+      "</div>" +
+      body
+    );
+  }
+
   function renderOffers() {
     var withOffer = state.products.filter(function (p) {
       return p.offer_price != null && Number(p.offer_price) > 0;
@@ -1404,11 +1504,10 @@
       case "orders":
         return renderOrders();
       case "products":
-        return renderProducts();
       case "categories":
-        return renderCategories();
       case "offers":
-        return renderOffers();
+      case "store-admin":
+        return renderStoreAdmin(id === "store-admin" ? storeAdminTab() : id);
       case "reviews":
         return renderReviews();
       case "visitor-preview":
@@ -1460,9 +1559,12 @@
       if (posHost) {
         ErvenowMerchantPos.mount(posHost, {
           products: state.products || [],
-          categories: state.categories || [],
+          categories: (state.merchantCategories && state.merchantCategories.length
+            ? state.merchantCategories.filter(function (c) { return c.is_active !== false; })
+            : state.categories) || [],
           store: state.store || {},
           storeId: state.storeId,
+          canManage: true,
         });
       }
     }
@@ -1471,14 +1573,16 @@
       var host = document.getElementById("mpNotifHost");
       if (host) ErvenowPortalInlineNotifications.mountIn(host, "merchant-notif", { enableTypeFilters: true });
     }
-    if (sectionId === "categories" && !sectionFresh("categories", 20000)) {
+    if ((sectionId === "categories" || sectionId === "store-admin") && !sectionFresh("categories", 20000)) {
       loadMerchantCategories().then(function () {
         sectionCacheAt.categories = Date.now();
-        var sec = document.getElementById("mpSection-categories");
-        if (sec && state.activeSection === "categories") {
-          sec.innerHTML = renderCategories();
-          wireSectionEvents();
-        }
+        if (state.activeSection === "store-admin" || state.activeSection === "categories") renderMain();
+      });
+    }
+    if (sectionId === "store-admin" && storeAdminTab() === "cashiers" && !sectionFresh("cashiers", 20000)) {
+      sectionCacheAt.cashiers = Date.now();
+      loadCashiers().then(function () {
+        if (state.activeSection === "store-admin") renderMain();
       });
     }
     if (sectionId === "withdrawals" && !sectionFresh("withdrawals", 20000)) {
@@ -1953,6 +2057,50 @@
       };
     });
 
+    document.querySelectorAll("[data-store-tab]").forEach(function (btn) {
+      btn.onclick = function () {
+        var tab = btn.getAttribute("data-store-tab") || "categories";
+        try { sessionStorage.setItem("ervenow_store_admin_tab", tab); } catch (_) {}
+        if (shell && shell.navigate) shell.navigate("store-admin");
+        else renderMain();
+      };
+    });
+    var saveCashier = document.getElementById("mpSaveCashier");
+    if (saveCashier) {
+      saveCashier.onclick = async function () {
+        try {
+          await api("/api/store/cashiers", {
+            method: "POST",
+            body: {
+              store_id: state.storeId,
+              name: document.getElementById("mpCashierName").value,
+              phone: document.getElementById("mpCashierPhone").value,
+              branch_id: document.getElementById("mpCashierBranch").value,
+            },
+          });
+          showMsg("تم حفظ الكاشير", true);
+          await loadCashiers();
+          renderMain();
+        } catch (e) {
+          showMsg(e.message || String(e), false);
+        }
+      };
+    }
+    document.querySelectorAll("[data-cashier-toggle]").forEach(function (btn) {
+      btn.onclick = async function () {
+        try {
+          await api("/api/store/cashiers/" + encodeURIComponent(btn.getAttribute("data-cashier-toggle")), {
+            method: "PATCH",
+            body: { store_id: state.storeId, active: btn.getAttribute("data-cashier-active") !== "1" },
+          });
+          await loadCashiers();
+          renderMain();
+        } catch (e) {
+          showMsg(e.message || String(e), false);
+        }
+      };
+    });
+
     var submitWd = document.getElementById("mpSubmitWithdraw");
     if (submitWd) {
       submitWd.onclick = async function () {
@@ -2009,6 +2157,11 @@
       } else {
         renderMain();
       }
+      loadMerchantCategories()
+        .then(function () {
+          if (state.activeSection === "pos" || state.activeSection === "store-admin") renderMain();
+        })
+        .catch(function () {});
       loadFacilityCategories()
         .then(function () {
           if (state.activeSection === "settings") renderMain();

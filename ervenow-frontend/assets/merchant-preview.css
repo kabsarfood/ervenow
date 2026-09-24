@@ -864,11 +864,77 @@ body.pf-page:has(#mpSection-pos.is-active) [data-pf-main] {
   min-width: 0;
 }
 
+.mp-store-tabs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  margin: 0 0 12px;
+  padding-bottom: 4px;
+}
+
+.mp-store-tabs .mp-btn {
+  min-height: 44px;
+  white-space: nowrap;
+  flex: 0 0 auto;
+}
+
+.mp-pos-card__price s {
+  color: #9a7b68;
+  font-weight: 600;
+  margin-inline-end: 4px;
+}
+
+.mp-pos-brand {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
 .mp-pos-toolbar h2 {
   margin: 0;
-  font-size: 1.15rem;
+  font-size: 1.05rem;
   line-height: 1.2;
   white-space: nowrap;
+}
+
+.mp-pos-shift {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 800;
+  line-height: 1.3;
+  color: #1f6b3a;
+  white-space: nowrap;
+}
+
+.mp-pos-shift__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #1f8a45;
+  flex: 0 0 auto;
+}
+
+.mp-pos-shift__name {
+  color: var(--mp-muted);
+  font-weight: 700;
+}
+
+.mp-pos-net {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 800;
+  line-height: 1.45;
+  color: #1f6b3a;
+  white-space: normal;
+  max-width: 28rem;
+}
+
+.mp-pos-net.is-offline {
+  color: #9b1c1c;
 }
 
 .mp-pos-layout {
@@ -1009,7 +1075,7 @@ body.pf-page:has(#mpSection-pos.is-active) [data-pf-main] {
   flex-direction: column;
   min-width: 0;
   max-width: 100%;
-  height: 168px;
+  height: 148px;
   padding: 0;
   border: 1px solid var(--mp-border);
   border-radius: 14px;
@@ -1020,18 +1086,31 @@ body.pf-page:has(#mpSection-pos.is-active) [data-pf-main] {
   cursor: pointer;
 }
 
-.mp-pos-card img,
+.mp-pos-card__thumb {
+  display: block;
+  width: 100%;
+  height: 72px;
+  flex: 0 0 72px;
+  overflow: hidden;
+  background: #f3ebe3;
+}
+
+.mp-pos-card__thumb img,
 .mp-pos-card__ph {
   width: 100%;
-  height: 84px;
-  flex: 0 0 84px;
+  height: 72px;
   object-fit: cover;
-  background: #f3ebe3;
+  object-position: center;
+  display: block;
+}
+
+.mp-pos-card__ph {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.5rem;
+  font-size: 1.35rem;
   color: #8a6a52;
+  background: #f3ebe3;
 }
 
 .mp-pos-card--slot {
@@ -1376,17 +1455,18 @@ body.pf-page:has(#mpSection-pos.is-active) [data-pf-main] {
   }
 
   .mp-pos-card {
-    height: 156px;
+    height: 140px;
   }
 
   .mp-pos-toolbar .mp-pos-types {
     flex-wrap: wrap;
   }
 
-  .mp-pos-card img,
+  .mp-pos-card__thumb,
+  .mp-pos-card__thumb img,
   .mp-pos-card__ph {
-    height: 72px;
-    flex-basis: 72px;
+    height: 64px;
+    flex-basis: 64px;
   }
 
   .mp-pos-type,

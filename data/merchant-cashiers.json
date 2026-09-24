@@ -1,0 +1,14 @@
+{
+  "stores": {
+    "a9d08cb4-3eff-4e1b-a6e4-f11ed09f436c": [
+      {
+        "id": "181de95c-766a-4b5d-888a-140e94101964",
+        "name": "عبدالهادي",
+        "phone": "0531282106",
+        "branch_id": null,
+        "active": true,
+        "role": "cashier"
+      }
+    ]
+  }
+}

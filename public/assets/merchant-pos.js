@@ -18,6 +18,8 @@
   var slotCols = 4;
   var mountedRoot = null;
   var mountedCtx = null;
+  var offline = typeof navigator !== "undefined" && navigator.onLine === false;
+  var pendingSync = 0;
 
   var TYPES = [
     { id: "local", label: "محلي" },
@@ -29,6 +31,81 @@
     { id: "network", label: "شبكة" },
     { id: "electronic", label: "دفع إلكتروني" },
   ];
+
+  function uuid() {
+    if (global.crypto && crypto.randomUUID) return crypto.randomUUID();
+    return "pos-" + Date.now() + "-" + Math.random().toString(16).slice(2);
+  }
+
+  function posDb() {
+    return new Promise(function (resolve, reject) {
+      if (!global.indexedDB) return reject(new Error("IndexedDB غير متاح"));
+      var req = indexedDB.open("ervenow-pos", 1);
+      req.onupgradeneeded = function () {
+        var db = req.result;
+        if (!db.objectStoreNames.contains("catalog")) db.createObjectStore("catalog");
+        if (!db.objectStoreNames.contains("queue")) db.createObjectStore("queue", { keyPath: "local_id" });
+      };
+      req.onsuccess = function () { resolve(req.result); };
+      req.onerror = function () { reject(req.error); };
+    });
+  }
+
+  function idbPut(store, value, key) {
+    return posDb().then(function (db) {
+      return new Promise(function (resolve, reject) {
+        var tx = db.transaction(store, "readwrite");
+        var os = tx.objectStore(store);
+        var req = key == null ? os.put(value) : os.put(value, key);
+        req.onsuccess = function () { resolve(); };
+        req.onerror = function () { reject(req.error); };
+      });
+    });
+  }
+
+  function idbGet(store, key) {
+    return posDb().then(function (db) {
+      return new Promise(function (resolve, reject) {
+        var tx = db.transaction(store, "readonly");
+        var req = tx.objectStore(store).get(key);
+        req.onsuccess = function () { resolve(req.result || null); };
+        req.onerror = function () { reject(req.error); };
+      });
+    });
+  }
+
+  function queueAll() {
+    return posDb().then(function (db) {
+      return new Promise(function (resolve, reject) {
+        var req = db.transaction("queue", "readonly").objectStore("queue").getAll();
+        req.onsuccess = function () { resolve(req.result || []); };
+        req.onerror = function () { reject(req.error); };
+      });
+    });
+  }
+
+  function rememberCatalog(ctx) {
+    if (!ctx || !ctx.storeId || !ctx.products) return;
+    idbPut("catalog", {
+      storeId: ctx.storeId,
+      products: ctx.products,
+      categories: ctx.categories || [],
+      savedAt: new Date().toISOString(),
+    }, String(ctx.storeId)).catch(function () {});
+    try {
+      global.localStorage.setItem("ervenow_pos_device", JSON.stringify({
+        storeId: String(ctx.storeId),
+        activatedAt: new Date().toISOString(),
+      }));
+    } catch (_) {}
+  }
+
+  function refreshPending() {
+    queueAll().then(function (rows) {
+      pendingSync = rows.filter(function (row) { return row.status !== "synced"; }).length;
+      if (mountedRoot && mountedCtx) paint(mountedRoot, mountedCtx);
+    }).catch(function () {});
+  }
 
   function esc(s) {
     return String(s == null ? "" : s)
@@ -42,6 +119,16 @@
     var x = Number(n);
     if (!Number.isFinite(x)) return "0.00";
     return x.toFixed(2);
+  }
+
+  function priceHtml(p) {
+    var price = Number(p && p.price);
+    var offer = Number(p && p.offer_price);
+    var sale = unitPrice(p);
+    if (Number.isFinite(offer) && offer > 0 && offer < price) {
+      return '<s>' + money(price) + "</s> " + money(sale) + " ر.س";
+    }
+    return money(sale) + " ر.س";
   }
 
   function unitPrice(p) {
@@ -202,13 +289,19 @@
     return 3;
   }
 
+  function visibleSlotTarget(cols) {
+    if (cols >= 4) return 12;
+    if (cols === 3) return 9;
+    return 8;
+  }
+
   function gridHtml(ctx) {
     var list = visibleProducts(ctx);
     var cols = slotColumns();
     slotCols = cols;
-    var usable = Math.max(280, (global.innerHeight || 800) - 240);
-    var rows = Math.max(2, Math.min(6, Math.round(usable / 178)));
-    var slots = Math.max(cols * rows, Math.ceil(Math.max(list.length, 1) / cols) * cols);
+    var target = visibleSlotTarget(cols);
+    var slots =
+      list.length > target ? Math.ceil(list.length / cols) * cols : target;
     var cards = list
       .map(function (p) {
         var img = p.image_url || p.thumbnail_url || "";
@@ -217,28 +310,32 @@
           '<button type="button" class="mp-pos-card" data-pos-add="' +
           esc(p.id) +
           '">' +
+          '<span class="mp-pos-card__thumb">' +
           (img
             ? '<img src="' + esc(img) + '" alt="" />'
             : '<span class="mp-pos-card__ph" aria-hidden="true"></span>') +
+          "</span>" +
           '<span class="mp-pos-card__name">' +
           esc(p.name) +
           "</span>" +
           '<span class="mp-pos-card__price">' +
-          money(unitPrice(p)) +
-          " ر.س</span>" +
+          priceHtml(p) +
+          "</span>" +
           (qty ? '<span class="mp-pos-card__qty">' + qty + "</span>" : "") +
           "</button>"
         );
       })
       .join("");
-    var empty = slots - list.length;
-    var i;
-    for (i = 0; i < empty; i += 1) {
-      cards +=
-        '<button type="button" class="mp-pos-card mp-pos-card--slot" data-pos-slot="1">' +
-        '<span class="mp-pos-card__ph" aria-hidden="true">＋</span>' +
-        '<span class="mp-pos-card__name">إضافة منتج</span>' +
-        '<span class="mp-pos-card__price" aria-hidden="true">&nbsp;</span></button>';
+    if (ctx && ctx.canManage !== false) {
+      var empty = slots - list.length;
+      var i;
+      for (i = 0; i < empty; i += 1) {
+        cards +=
+          '<button type="button" class="mp-pos-card mp-pos-card--slot" data-pos-slot="1">' +
+          '<span class="mp-pos-card__ph" aria-hidden="true">＋</span>' +
+          '<span class="mp-pos-card__name">إضافة منتج</span>' +
+          '<span class="mp-pos-card__price" aria-hidden="true">&nbsp;</span></button>';
+      }
     }
     return cards;
   }
@@ -378,7 +475,16 @@
       slotColumns() +
       '">' +
       '<div class="mp-pos-toolbar">' +
-      "<h2>الكاشير POS</h2>" +
+      '<div class="mp-pos-brand"><h2>الكاشير POS</h2>' +
+      '<p class="mp-pos-shift"><span class="mp-pos-shift__dot" aria-hidden="true"></span><span>الوردية مفتوحة</span><span class="mp-pos-shift__name">الكاشير</span></p>' +
+      (offline
+        ? '<p class="mp-pos-net is-offline">بدون اتصال — البيع المحلي يعمل، وطلبات ERVENOW ستصل عند عودة الاتصال' +
+          (pendingSync ? " · بانتظار المزامنة " + pendingSync : "") +
+          "</p>"
+        : pendingSync
+          ? '<p class="mp-pos-net">متصل — تجري مزامنة ' + pendingSync + "</p>"
+          : "") +
+      "</div>" +
       '<div class="mp-pos-types" role="tablist">' +
       typesHtml() +
       "</div>" +
@@ -441,20 +547,94 @@
     return PlatformAPI.api(path, opts);
   }
 
+  function saleBody(ctx, localId, createdAt) {
+    return {
+      store_id: ctx.storeId,
+      fulfillment: ticket.fulfillment,
+      payment: ticket.payment,
+      client_order_id: localId,
+      cashier_id: null,
+      branch_id: null,
+      local_created_at: createdAt,
+      items: ticket.lines.map(function (line) {
+        return { product_id: line.product_id, qty: line.qty };
+      }),
+    };
+  }
+
+  async function postSale(body) {
+    return api("/api/store/pos-orders", { method: "POST", body: body });
+  }
+
+  async function flushQueue() {
+    if (offline || !mountedCtx) return;
+    var rows = await queueAll().catch(function () { return []; });
+    var i;
+    for (i = 0; i < rows.length; i += 1) {
+      if (rows[i].status === "synced") continue;
+      try {
+        await postSale(rows[i].body);
+        rows[i].status = "synced";
+        rows[i].error = "";
+        await idbPut("queue", rows[i]);
+      } catch (e) {
+        rows[i].status = "sync_error";
+        rows[i].error = e.message || String(e);
+        await idbPut("queue", rows[i]);
+        if (global.ErvenowMerchantPreview && ErvenowMerchantPreview.showMsg) {
+          ErvenowMerchantPreview.showMsg("تعذرت مزامنة طلب محلي: " + rows[i].error, false);
+        }
+      }
+    }
+    refreshPending();
+  }
+
   async function complete(ctx) {
     if (!ticket.lines.length) throw new Error("أضف منتجًا قبل إتمام الطلب");
     var sum = totals();
-    var res = await api("/api/store/pos-orders", {
-      method: "POST",
-      body: {
+    var localId = uuid();
+    var createdAt = new Date().toISOString();
+    var body = saleBody(ctx, localId, createdAt);
+    if (offline) {
+      await idbPut("queue", {
+        local_id: localId,
         store_id: ctx.storeId,
+        cashier_id: null,
+        branch_id: null,
+        created_at: createdAt,
+        status: "pending_sync",
+        body: body,
+      });
+      receipt = {
+        order_number: "محلي",
         fulfillment: ticket.fulfillment,
-        payment: ticket.payment,
-        items: ticket.lines.map(function (line) {
-          return { product_id: line.product_id, qty: line.qty };
-        }),
-      },
-    });
+        items: ticket.lines.slice(),
+        total: sum.total,
+      };
+      ticket.lines = [];
+      refreshPending();
+      global.setTimeout(function () {
+        try { global.print(); } catch (_) {}
+      }, 60);
+      return;
+    }
+    var res;
+    try {
+      res = await postSale(body);
+    } catch (e) {
+      await idbPut("queue", {
+        local_id: localId,
+        store_id: ctx.storeId,
+        cashier_id: null,
+        branch_id: null,
+        created_at: createdAt,
+        status: "sync_error",
+        error: e.message || String(e),
+        body: body,
+      });
+      refreshPending();
+      throw e;
+    }
     var order = (res && res.order) || {};
     var data = order.data && typeof order.data === "object" ? order.data : {};
     receipt = {
@@ -589,7 +769,25 @@
       root.dataset.posBound = "1";
       root.addEventListener("click", onClick);
       global.addEventListener("resize", onPosResize);
+      global.addEventListener("online", function () {
+        offline = false;
+        flushQueue();
+      });
+      global.addEventListener("offline", function () {
+        offline = true;
+        if (mountedRoot && mountedCtx) paint(mountedRoot, mountedCtx);
+      });
     }
+    rememberCatalog(mountedCtx);
+    if (mountedCtx.storeId && (!mountedCtx.products || !mountedCtx.products.length)) {
+      idbGet("catalog", String(mountedCtx.storeId)).then(function (cached) {
+        if (!cached || !mountedCtx || (mountedCtx.products && mountedCtx.products.length)) return;
+        mountedCtx.products = cached.products || [];
+        mountedCtx.categories = cached.categories || mountedCtx.categories || [];
+        paint(mountedRoot, mountedCtx);
+      }).catch(function () {});
+    }
+    refreshPending();
     paint(root, mountedCtx);
     onPosResize.stamp = layoutStamp();
   }

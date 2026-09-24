@@ -16,6 +16,7 @@
     wallet: { id: "wallet", icon: "💳", label: "المحفظة", en: "Wallet" },
     withdrawals: { id: "withdrawals", icon: "🏧", label: "السحوبات", en: "Withdrawals" },
     pos: { id: "pos", icon: "🧾", label: "الكاشير POS", en: "POS" },
+    "store-admin": { id: "store-admin", icon: "🏪", label: "إدارة المتجر", en: "Store admin" },
     reports: { id: "reports", icon: "📈", label: "التقارير", en: "Reports" },
     notifications: {
       id: "notifications",
@@ -58,6 +59,7 @@
         "dashboard",
         "orders",
         "pos",
+        "store-admin",
         "products",
         "categories",
         "offers",
