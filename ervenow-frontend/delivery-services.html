@@ -23,7 +23,7 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="/assets/styles.css" />
-    <link rel="stylesheet" href="/assets/guest-shell.css?erv=20260612" />
+    <link rel="stylesheet" href="/assets/guest-shell.css?erv=20260925svc" />
     <link rel="stylesheet" href="/assets/start-now-landing.css" />
     <link rel="stylesheet" href="/assets/index-header-banner.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -185,7 +185,7 @@
 
       .ds-services {
         display: grid;
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 10px;
         min-width: 0;
         width: 100%;
@@ -194,26 +194,37 @@
       .ds-svc {
         position: relative;
         width: 100%;
-        min-height: 72px;
-        padding: 14px 16px 14px 44px;
-        border: 1.5px solid var(--ds-border);
-        border-radius: var(--ds-radius-sm);
-        background: var(--ds-white);
-        box-shadow: var(--ds-shadow);
+        min-height: 128px;
+        padding: 14px 14px 12px;
+        border: 1px solid rgba(15, 90, 55, 0.14);
+        border-radius: 16px;
+        background: #fffefb;
+        box-shadow: 0 4px 14px rgba(15, 90, 55, 0.06);
         cursor: pointer;
         font-family: inherit;
         text-align: right;
         display: flex;
-        flex-direction: row;
-        align-items: center;
-        gap: 12px;
-        color: var(--ds-black);
-        transition: transform 0.15s, border-color 0.2s, background 0.2s;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: flex-start;
+        gap: 8px;
+        color: #0f5a37;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
+      }
+
+      .ds-svc:hover {
+        border-color: #b9872f;
+        box-shadow: 0 8px 20px rgba(15, 90, 55, 0.1);
+      }
+
+      .ds-svc:active {
+        transform: scale(0.98);
       }
 
       .ds-svc__body {
         flex: 1 1 auto;
         min-width: 0;
+        width: 100%;
         display: flex;
         flex-direction: column;
         gap: 4px;
@@ -222,37 +233,44 @@
 
       .ds-svc__check {
         position: absolute;
-        top: 8px;
-        left: 8px;
+        top: 10px;
+        left: 10px;
         width: 22px;
         height: 22px;
         border-radius: 50%;
-        background: var(--ds-gold);
-        color: var(--ds-white);
-        font-size: 0.7rem;
+        background: #b9872f;
+        color: #fffefb;
+        font-size: 0.72rem;
         line-height: 22px;
+        text-align: center;
         opacity: 0;
-        transform: scale(0.8);
-        transition: opacity 0.2s, transform 0.2s;
       }
 
       .ds-svc__ic {
-        font-size: 2rem;
+        width: 44px;
+        height: 44px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 12px;
+        background: rgba(15, 90, 55, 0.1);
+        font-size: 1.35rem;
         line-height: 1;
-        filter: grayscale(0.2);
+        flex: 0 0 44px;
       }
 
       .ds-svc__lbl {
-        font-size: clamp(0.9rem, 2.4vw, 1rem);
+        font-size: clamp(0.95rem, 2.4vw, 1.05rem);
         font-weight: 800;
-        line-height: 1.35;
+        line-height: 1.45;
         width: 100%;
+        color: #0f5a37;
       }
 
       .ds-svc__desc {
-        font-size: clamp(0.72rem, 2vw, 0.8rem);
+        font-size: 0.8rem;
         font-weight: 600;
-        color: var(--ds-muted);
+        color: #4a6358;
         line-height: 1.45;
         width: 100%;
         display: -webkit-box;
@@ -273,7 +291,11 @@
       }
 
       .ds-svc.is-active .ds-svc__ic {
-        filter: none;
+        background: rgba(248, 244, 238, 0.16);
+      }
+
+      .ds-svc.is-active .ds-svc__lbl {
+        color: #fffefb;
       }
 
       .ds-svc.is-active .ds-svc__desc {
@@ -1006,7 +1028,8 @@
 
       /* ——— شاشات صغيرة جداً ——— */
       @media (max-width: 359px) {
-        .ds-notes-phone__grid {
+        .ds-notes-phone__grid,
+        .ds-services {
           grid-template-columns: 1fr;
         }
       }
@@ -1022,9 +1045,8 @@
           margin-inline: auto;
         }
 
-        .ds-svc {
-          min-height: 76px;
-          padding: 16px 18px 16px 48px;
+        .ds-services {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
         }
 
         .ds-map-preview {
@@ -1061,11 +1083,8 @@
         }
 
         .ds-services {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
           gap: 12px;
-        }
-
-        .ds-svc {
-          min-height: 80px;
         }
 
         .ds-card {
@@ -1156,6 +1175,17 @@
         .ds-main > .ds-err,
         .ds-main > .ds-ok {
           margin-top: 16px;
+        }
+      }
+
+      @media (min-width: 1025px) {
+        .ds-main {
+          max-width: min(1040px, 100%);
+        }
+
+        .ds-services {
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+          gap: 14px;
         }
       }
 
@@ -1281,7 +1311,7 @@
           car_transport: "🚗",
           local_delivery: "📦",
           furniture: "🛋️",
-          gas_delivery: "🚚",
+          gas_delivery: "⛽",
         };
 
         var SERVICE_DESC = {
@@ -2083,11 +2113,6 @@
             b.setAttribute("role", "tab");
             b.setAttribute("aria-selected", state.service && s.id === state.service ? "true" : "false");
             b.innerHTML =
-              '<span class="ds-svc__badge' +
-              (s.ready ? "" : " ds-svc__badge--soon") +
-              '">' +
-              (s.ready ? "متاح" : "قريباً") +
-              "</span>" +
               '<span class="ds-svc__check" aria-hidden="true">✓</span>' +
               '<span class="ds-svc__ic" aria-hidden="true">' +
               (SERVICE_ICONS[s.id] || "📦") +

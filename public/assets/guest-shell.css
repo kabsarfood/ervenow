@@ -984,8 +984,8 @@ body.guest-shell-page.stores-page {
   }
 
   html.erv-mobile-shell body.guest-shell-page .ds-svc {
-    min-height: 64px;
-    padding: 10px 12px;
+    min-height: 128px;
+    padding: 14px 14px 12px;
   }
 
   html.erv-mobile-shell body.guest-shell-page .ds-form-zone[hidden] {
