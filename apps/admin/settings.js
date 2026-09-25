@@ -4,6 +4,7 @@
 const express = require("express");
 const { createServiceClient } = require("../../shared/config/supabase");
 const { requireAuth } = require("../../shared/middleware/auth");
+const { requireRole } = require("../../shared/middleware/roles");
 const { readPlatformSettings, invalidatePlatformSettings } = require("../../shared/utils/platformSettingsCache");
 
 const router = express.Router();

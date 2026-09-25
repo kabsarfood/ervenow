@@ -99,7 +99,6 @@
           </select>
           <a href="/admin/branding" class="dash-site-header__link admin-header-tool-link" title="الهوية البصرية">🎨 <span class="hide-mobile">الهوية</span></a>
           <a href="/admin/categories" class="dash-site-header__link admin-header-tool-link" title="الأقسام">📂 <span class="hide-mobile">الأقسام</span></a>
-          <a href="#" class="dash-site-header__link admin-header-tool-link" id="adminHeaderOffers" title="عروض منصة ERVENOW">🎁 <span class="hide-mobile">العروض</span></a>
           <a href="/admin/withdrawals" class="dash-site-header__link admin-header-tool-link" title="السحب">💸 <span class="hide-mobile">السحب</span></a>
           <button type="button" class="dash-site-header__link admin-header-tool-link" id="siteMaintenanceBtn" title="تعطيل ervenow.com للزوار — localhost للتطوير">
             ⏸ <span class="hide-mobile">الموقع</span>
@@ -111,9 +110,6 @@
         <a class="admin-mobile-nav-panel__link" href="/">الرئيسية</a>
         <a class="admin-mobile-nav-panel__link is-current" href="/admin-dashboard" aria-current="page">⚙️ لوحة التحكم</a>
         <a class="admin-mobile-nav-panel__link" href="/admin/categories">📂 الأقسام</a>
-        <button type="button" class="admin-mobile-nav-panel__link admin-mobile-nav-panel__btn" data-proxy-click="adminHeaderOffers">
-          🎁 العروض
-        </button>
         <a class="admin-mobile-nav-panel__link" href="/admin/withdrawals">💸 السحب</a>
         <button type="button" class="admin-mobile-nav-panel__link admin-mobile-nav-panel__btn" data-proxy-click="siteMaintenanceBtn">
           ⏸ الموقع
@@ -133,17 +129,13 @@
               <p class="admin-hero__eyebrow">مركز القيادة · ERVENOW</p>
               <h1 class="admin-hero__title" id="adminHeroTitle">لوحة إدارة المنصة</h1>
               <p class="admin-hero__lead">
-                راقب الطلبات والخريطة الحية، وافق على المتاجر والمناديب، وتابع المالية — بنفس روح تجربة ضيف ERVENOW، بلمسة تنفيذية أوضح.
+                ابدأ بالتشغيل اليومي: الطلبات، الموافقات، المتاجر والمندوبون، ثم المالية والشكاوى.
               </p>
               <div class="admin-hero__chips">
-                <a class="admin-hero-chip" href="#liveDashboard">📊 التشغيل الحي</a>
-                <a class="admin-hero-chip" href="#" data-panel-jump="panelOrders">📦 الطلبات</a>
-                <a class="admin-hero-chip" href="#" data-panel-jump="panelStores">🏪 المتاجر</a>
-                <a class="admin-hero-chip" href="#" data-panel-jump="panelOffers">🎁 العروض</a>
-                <a class="admin-hero-chip" href="#" data-panel-jump="panelHeroBanners">🎨 إدارة البنرات</a>
-                <a class="admin-hero-chip" href="#" data-panel-jump="panelMarketingStudio">🚀 Home Experience</a>
-                <a class="admin-hero-chip" href="#" data-panel-jump="panelErvenowPay" id="adminHeroPayChip" style="display:none">⚡ ERVENOW PAY</a>
-                <a class="admin-hero-chip" href="/">🧭 منصة ERVENOW</a>
+                <a class="admin-hero-chip" href="#liveDashboard">التشغيل الحي</a>
+                <a class="admin-hero-chip" href="#" data-panel-jump="panelOrders">الطلبات</a>
+                <a class="admin-hero-chip" href="#" data-panel-jump="panelApprovals">الموافقات</a>
+                <a class="admin-hero-chip" href="#" data-panel-jump="panelComplaints">الشكاوى</a>
               </div>
             </div>
             <div class="admin-hero__art" aria-hidden="true">
@@ -476,87 +468,62 @@
       </div>
 
       <section class="admin-sections-card dash-nav" aria-label="أقسام اللوحة">
-        <h2 class="dash-zone-title">اختر القسم</h2>
-        <p class="sub" style="margin: 0 0 4px">اضغط على بطاقة لفتح إدارة الطلبات، المتاجر، المندوبين، والمالية.</p>
-        <div class="panel-switcher">
-          <button type="button" class="panel-btn" data-panel="panelLaunchReadiness" id="panelLaunchReadinessBtn">
-            إطلاق المنصة
-            <span class="panel-badge zero" id="badgeLaunchReadiness">0</span>
-          </button>
-          <button type="button" class="panel-btn" data-panel="panelOrders">
-            📦 الطلبات
-            <span class="panel-badge zero" id="badgeOrders">0</span>
-          </button>
-          <button type="button" class="panel-btn" data-panel="financePanel" id="financePanelBtn" style="display:none">
-            💰 تحصيل COD
-            <span class="panel-badge zero" id="badgeFinanceBlocked">0</span>
-          </button>
-          <button type="button" class="panel-btn" data-panel="panelDrivers">
-            🚚 المندوبون
-            <span class="panel-badge zero" id="badgePendingDrivers">0</span>
-          </button>
-          <button type="button" class="panel-btn" data-panel="panelStores">
-            🏪 المتاجر
-            <span class="panel-badge zero" id="badgeStores">0</span>
-          </button>
-          <button type="button" class="panel-btn" data-panel="panelApprovals" id="panelApprovalsBtn">
-            ✅ موافقات التسجيل
-            <span class="panel-badge zero" id="badgeApprovals">0</span>
-          </button>
-          <button type="button" class="panel-btn" data-panel="panelServices" id="panelServicesBtn" style="display:none">
-            🧑‍🔧 الخدمات
-          </button>
-          <button type="button" class="panel-btn" data-panel="panelTransport" id="panelTransportBtn" style="display:none">
-            🚚 النقل
-          </button>
-          <button type="button" class="panel-btn" data-panel="panelRoleSeparation" id="panelRoleSeparationBtn">
-            📡 فصل الأدوار
-          </button>
-          <button type="button" class="panel-btn" data-panel="panelPreviewMonitor" id="panelPreviewMonitorBtn">
-            👁️ معاينة البوابات
-          </button>
-          <button type="button" class="panel-btn" data-panel="panelRoleRegistry" id="panelRoleRegistryBtn">
-            📋 سجل الأدوار
-          </button>
-          <button type="button" class="panel-btn" data-panel="panelOffers" id="panelOffersBtn">
-            🎁 العروض
-          </button>
-          <button type="button" class="panel-btn" data-panel="panelHeroBanners" id="panelHeroBannersBtn">
-            🎨 إدارة البنرات
-          </button>
-          <button type="button" class="panel-btn" data-panel="panelMarketingStudio" id="panelMarketingStudioBtn">
-            🚀 Marketing Studio
-          </button>
-          <button type="button" class="panel-btn" data-panel="panelBroadcast" id="panelBroadcastBtn">
-            📢 مركز الإعلانات
-          </button>
-          <button type="button" class="panel-btn" data-panel="panelNotifications">
-            🔔 الإشعارات
-            <span class="panel-badge zero" id="badgeNotifications">0</span>
-          </button>
-          <button type="button" class="panel-btn" data-panel="panelComplaints">
-            الشكاوى
-            <span class="panel-badge zero" id="badgeComplaints">0</span>
-          </button>
-          <button type="button" class="panel-btn" data-panel="panelCustomers">
-            👥 الأعضاء
-            <span class="panel-badge zero" id="badgeCustomers">0</span>
-          </button>
-          <button type="button" class="panel-btn" data-panel="panelJobs">
-            التوظيف
-            <span class="panel-badge zero" id="badgeJobs">0</span>
-          </button>
-          <button type="button" class="panel-btn" data-panel="panelSettings" id="panelSettingsBtn">
-            ⚙️ الإعدادات
-          </button>
-          <button type="button" class="panel-btn" data-panel="panelPlatformModules" id="panelPlatformModulesBtn">
-            🧩 وحدات المنصة
-          </button>
-          <button type="button" class="panel-btn" data-panel="panelErvenowPay" id="panelErvenowPayBtn" style="display:none">
-            ⚡ ERVENOW PAY
-            <span class="panel-badge zero" id="badgeTopupPending">0</span>
-          </button>
-          <button type="button" class="panel-btn panel-btn-close" id="closePanelsBtn">✕ إغلاق</button>
+        <h2 class="dash-zone-title">أقسام العمل</h2>
+        <p class="sub" style="margin: 0 0 4px">مرتبة حسب أولوية التشغيل. كل خدمة تظهر مرة واحدة.</p>
+        <div class="admin-section-groups">
+          <div class="admin-section-group">
+            <h3 class="admin-section-group__title">التشغيل اليومي</h3>
+            <div class="panel-switcher">
+              <button type="button" class="panel-btn" data-panel="panelOrders">الطلبات<span class="panel-badge zero" id="badgeOrders">0</span></button>
+              <button type="button" class="panel-btn" data-panel="panelApprovals" id="panelApprovalsBtn">موافقات التسجيل<span class="panel-badge zero" id="badgeApprovals">0</span></button>
+              <button type="button" class="panel-btn" data-panel="panelStores">المتاجر<span class="panel-badge zero" id="badgeStores">0</span></button>
+              <button type="button" class="panel-btn" data-panel="panelDrivers">المندوبون<span class="panel-badge zero" id="badgePendingDrivers">0</span></button>
+              <button type="button" class="panel-btn" data-panel="panelServices" id="panelServicesBtn" style="display:none">الخدمات</button>
+              <button type="button" class="panel-btn" data-panel="panelTransport" id="panelTransportBtn" style="display:none">النقل</button>
+              <button type="button" class="panel-btn" data-panel="panelComplaints">الشكاوى<span class="panel-badge zero" id="badgeComplaints">0</span></button>
+            </div>
+          </div>
+          <div class="admin-section-group">
+            <h3 class="admin-section-group__title">المالية</h3>
+            <div class="panel-switcher">
+              <button type="button" class="panel-btn" data-panel="financePanel" id="financePanelBtn" style="display:none">تحصيل COD<span class="panel-badge zero" id="badgeFinanceBlocked">0</span></button>
+              <button type="button" class="panel-btn" data-panel="panelErvenowPay" id="panelErvenowPayBtn" style="display:none">ERVENOW PAY<span class="panel-badge zero" id="badgeTopupPending">0</span></button>
+            </div>
+          </div>
+          <div class="admin-section-group">
+            <h3 class="admin-section-group__title">الأعضاء</h3>
+            <div class="panel-switcher">
+              <button type="button" class="panel-btn" data-panel="panelCustomers">الأعضاء<span class="panel-badge zero" id="badgeCustomers">0</span></button>
+              <button type="button" class="panel-btn" data-panel="panelJobs">التوظيف<span class="panel-badge zero" id="badgeJobs">0</span></button>
+              <button type="button" class="panel-btn" data-panel="panelNotifications">الإشعارات<span class="panel-badge zero" id="badgeNotifications">0</span></button>
+            </div>
+          </div>
+          <div class="admin-section-group">
+            <h3 class="admin-section-group__title">النمو</h3>
+            <div class="panel-switcher">
+              <button type="button" class="panel-btn" data-panel="panelOffers" id="panelOffersBtn">العروض</button>
+              <button type="button" class="panel-btn" data-panel="panelHeroBanners" id="panelHeroBannersBtn">البنرات</button>
+              <button type="button" class="panel-btn" data-panel="panelMarketingStudio" id="panelMarketingStudioBtn">تجربة الرئيسية</button>
+              <button type="button" class="panel-btn" data-panel="panelBroadcast" id="panelBroadcastBtn">الإعلانات</button>
+            </div>
+          </div>
+          <div class="admin-section-group">
+            <h3 class="admin-section-group__title">المنصة</h3>
+            <div class="panel-switcher">
+              <button type="button" class="panel-btn" data-panel="panelLaunchReadiness" id="panelLaunchReadinessBtn">إطلاق المنصة<span class="panel-badge zero" id="badgeLaunchReadiness">0</span></button>
+              <button type="button" class="panel-btn" data-panel="panelSettings" id="panelSettingsBtn">الإعدادات</button>
+              <button type="button" class="panel-btn" data-panel="panelPlatformModules" id="panelPlatformModulesBtn">وحدات المنصة</button>
+            </div>
+          </div>
+          <div class="admin-section-group">
+            <h3 class="admin-section-group__title">أدوات داخلية</h3>
+            <div class="panel-switcher">
+              <button type="button" class="panel-btn" data-panel="panelRoleSeparation" id="panelRoleSeparationBtn">فصل الأدوار</button>
+              <button type="button" class="panel-btn" data-panel="panelPreviewMonitor" id="panelPreviewMonitorBtn">معاينة البوابات</button>
+              <button type="button" class="panel-btn" data-panel="panelRoleRegistry" id="panelRoleRegistryBtn">سجل الأدوار</button>
+              <button type="button" class="panel-btn panel-btn-close" id="closePanelsBtn">إغلاق القسم</button>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -1141,8 +1108,8 @@
 
     <script src="/assets/api-config.js"></script>
     <script src="/assets/api.js?erv=20260612"></script>
-    <link rel="stylesheet" href="/assets/notification-center.css?erv=20260922n1" />
-    <script src="/assets/notification-center.js?erv=20260922n1"></script>
+    <link rel="stylesheet" href="/assets/notification-center.css?erv=20260925n2" />
+    <script src="/assets/notification-center.js?erv=20260925n2"></script>
     <script src="/assets/compressImage.js"></script>
     <script src="https://cdn.socket.io/4.8.1/socket.io.min.js" crossorigin="anonymous"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>

@@ -679,6 +679,312 @@
           flex-direction: row;
         }
       }
+
+      /* بطاقة دخول واحدة — جوال وتابلت وكمبيوتر */
+      body.auth-login-page {
+        background:
+          radial-gradient(ellipse 80% 40% at 50% 0%, rgba(15, 90, 55, 0.12), transparent 70%),
+          #f8f4ee;
+      }
+      body.auth-login-page .auth-banner,
+      body.auth-login-page .auth-page__main {
+        width: min(440px, calc(100% - 28px));
+        max-width: 440px;
+        margin-inline: auto;
+        box-sizing: border-box;
+      }
+      body.auth-login-page .auth-banner {
+        margin-top: clamp(16px, 4vw, 40px);
+        background: #0f5a37;
+        border: 1px solid #0c4a2d;
+        border-bottom: none;
+        border-radius: 22px 22px 0 0;
+        overflow: hidden;
+        box-shadow: none;
+      }
+      body.auth-login-page .auth-sn-hero {
+        width: 100%;
+        max-width: none;
+        margin: 0;
+        padding: clamp(22px, 5vw, 32px) clamp(16px, 4vw, 24px) clamp(18px, 4vw, 22px);
+        background: linear-gradient(165deg, #146b42 0%, #0f5a37 55%, #0c4a2d 100%);
+      }
+      body.auth-login-page .auth-hero__stack {
+        max-width: none;
+        gap: 10px;
+      }
+      body.auth-login-page .auth-hero__eyebrow {
+        background: rgba(255, 254, 251, 0.12);
+        border-color: rgba(243, 212, 138, 0.35);
+        box-shadow: none;
+      }
+      body.auth-login-page .auth-hero__eyebrow-text,
+      body.auth-login-page .auth-hero__title {
+        color: #fffefb;
+      }
+      body.auth-login-page .auth-hero__title {
+        font-size: clamp(1.25rem, 4.2vw, 1.7rem);
+      }
+      body.auth-login-page .auth-hero__title strong {
+        color: #f3d48a;
+      }
+      body.auth-login-page .auth-hero__badge {
+        background: rgba(255, 254, 251, 0.1);
+        border-color: rgba(255, 254, 251, 0.16);
+        color: #fffefb;
+      }
+      body.auth-login-page .auth-banner .sn-wave {
+        display: none;
+      }
+      body.auth-login-page .auth-page__main {
+        flex: 0 0 auto;
+        justify-content: flex-start;
+        margin-top: 0;
+        margin-bottom: clamp(20px, 5vw, 48px);
+        padding: clamp(16px, 4vw, 22px) clamp(16px, 4vw, 22px) clamp(14px, 3vw, 18px);
+        background: #fffefb;
+        border: 1px solid rgba(15, 90, 55, 0.22);
+        border-top: none;
+        border-radius: 0 0 22px 22px;
+        box-shadow: 0 18px 40px rgba(15, 90, 55, 0.12);
+      }
+      body.auth-login-page .auth-card {
+        background: transparent;
+        border: none;
+        border-radius: 0;
+        box-shadow: none;
+        padding: 0;
+      }
+      body.auth-login-page .auth-form-intro {
+        margin: 0 0 14px;
+        text-align: center;
+        color: #5c4a3d;
+        font-weight: 700;
+        line-height: 1.5;
+      }
+      body.auth-login-page .auth-login-core label {
+        display: block;
+        margin: 0 0 6px;
+        color: #0f5a37;
+        font-weight: 800;
+      }
+      body.auth-login-page #phone,
+      body.auth-login-page #otp {
+        width: 100%;
+        box-sizing: border-box;
+        min-height: 48px;
+        font-size: 16px;
+        font-family: Cairo, sans-serif;
+        border-radius: 14px;
+        border: 1px solid rgba(15, 90, 55, 0.28);
+        background: #fff;
+        padding: 10px 14px;
+      }
+      body.auth-login-page #authOtpBtn {
+        width: 100%;
+        min-height: 48px;
+        margin-top: 12px;
+        border: none;
+        border-radius: 14px;
+        background: #0f5a37;
+        color: #fffefb;
+        font-family: Cairo, sans-serif;
+        font-weight: 800;
+      }
+      body.auth-login-page #authOtpBtn:hover,
+      body.auth-login-page #authOtpBtn:focus-visible {
+        background: #0c4a2d;
+      }
+      body.auth-login-page .auth-intent-switch {
+        border-top-color: rgba(15, 90, 55, 0.12);
+      }
+      @media (min-width: 641px) and (max-width: 1024px) {
+        body.auth-login-page .auth-banner,
+        body.auth-login-page .auth-page__main {
+          width: min(480px, calc(100% - 48px));
+          max-width: 480px;
+        }
+      }
+      @media (min-width: 1025px) {
+        body.auth-login-page .dash-site-header {
+          background: linear-gradient(180deg, rgba(248, 244, 238, 0.97), rgba(255, 254, 251, 0.94));
+          border-bottom: 1px solid rgba(15, 90, 55, 0.12);
+          box-shadow: 0 4px 24px rgba(15, 40, 28, 0.06);
+          padding-inline: 20px;
+        }
+        body.auth-login-page .dash-site-header__inner {
+          max-width: 1440px;
+          min-height: 72px;
+          padding: 14px 0;
+          gap: 16px;
+        }
+        body.auth-login-page .dash-site-header__logo,
+        body.auth-login-page .dash-site-header__tag,
+        body.auth-login-page .dash-site-header__link,
+        body.auth-login-page .dash-site-header__btn {
+          font-family: Cairo, system-ui, sans-serif;
+        }
+        body.auth-login-page .dash-site-header__logo {
+          color: #0f5a37;
+          font-size: clamp(1.15rem, 1.4vw, 1.35rem);
+          font-weight: 800;
+          letter-spacing: 0.04em;
+        }
+        body.auth-login-page .dash-site-header__logo-dot {
+          background: #b9872f;
+        }
+        body.auth-login-page .dash-site-header__tag {
+          color: #b9872f;
+          font-size: 0.82rem;
+          font-weight: 700;
+          line-height: 1.45;
+        }
+        body.auth-login-page .dash-site-header__links {
+          gap: 6px;
+          padding: 4px;
+          border-radius: 12px;
+          background: rgba(185, 135, 47, 0.08);
+          border: 1px solid rgba(185, 135, 47, 0.28);
+        }
+        body.auth-login-page .dash-site-header__link {
+          padding: 8px 14px;
+          border-radius: 10px;
+          font-size: 0.88rem;
+          font-weight: 700;
+          color: #5c4a3d;
+          min-height: 44px;
+          display: inline-flex;
+          align-items: center;
+        }
+        body.auth-login-page .dash-site-header__link:hover,
+        body.auth-login-page .dash-site-header__link:focus-visible {
+          color: #0f5a37;
+          background: rgba(185, 135, 47, 0.14);
+        }
+        body.auth-login-page .dash-site-header__btn--primary {
+          min-height: 44px;
+          padding: 8px 18px;
+          border-radius: 10px;
+          background: #0f5a37;
+          color: #fffefb;
+          font-size: 0.88rem;
+          font-weight: 800;
+        }
+        body.auth-login-page .dash-site-header__btn--primary:hover,
+        body.auth-login-page .dash-site-header__btn--primary:focus-visible {
+          background: #b9872f;
+          color: #fffefb;
+          opacity: 1;
+        }
+        body.auth-login-page .auth-banner,
+        body.auth-login-page .auth-page__main {
+          width: min(560px, calc(100% - 48px));
+          max-width: 560px;
+        }
+        body.auth-login-page .auth-banner {
+          margin-top: 36px;
+        }
+        body.auth-login-page .auth-page__main {
+          margin-bottom: 48px;
+        }
+        body.auth-login-page .auth-hero__title,
+        body.auth-login-page .auth-hero__eyebrow-text,
+        body.auth-login-page .auth-form-intro,
+        body.auth-login-page .auth-login-core label {
+          font-family: Cairo, system-ui, sans-serif;
+        }
+      }
+      .membership-flow {
+        display: none;
+        margin-top: 8px;
+      }
+      .membership-flow.is-open { display: block; }
+      .membership-flow h2 {
+        margin: 0 0 6px;
+        text-align: center;
+        color: #0f5a37;
+        font-family: Cairo, system-ui, sans-serif;
+        font-size: clamp(1.15rem, 3vw, 1.4rem);
+        line-height: 1.45;
+      }
+      .membership-flow .membership-lead {
+        margin: 0 0 14px;
+        text-align: center;
+        color: #5c4a3d;
+        font-weight: 700;
+        line-height: 1.5;
+      }
+      .membership-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+      @media (min-width: 641px) {
+        .membership-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      }
+      @media (min-width: 1025px) {
+        .membership-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      }
+      .membership-card {
+        min-height: 88px;
+        padding: 12px;
+        border-radius: 16px;
+        border: 1px solid rgba(15, 90, 55, 0.22);
+        background: #fffefb;
+        color: #0f5a37;
+        font-family: Cairo, system-ui, sans-serif;
+        font-weight: 800;
+        font-size: 1rem;
+        line-height: 1.45;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        cursor: pointer;
+      }
+      .membership-card.is-active {
+        border-color: #b9872f;
+        box-shadow: 0 0 0 2px rgba(185, 135, 47, 0.35);
+      }
+      .membership-card__icon {
+        font-size: 1.6rem;
+        line-height: 1;
+      }
+      .membership-card__ph {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        background: #f8f4ee;
+        color: #b9872f;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.85rem;
+      }
+      .membership-actions {
+        display: flex;
+        gap: 8px;
+        margin-top: 14px;
+      }
+      .membership-actions button {
+        flex: 1;
+        min-height: 48px;
+        border-radius: 14px;
+        font-family: Cairo, system-ui, sans-serif;
+        font-weight: 800;
+        font-size: 1rem;
+      }
+      .membership-back {
+        background: #fffefb;
+        color: #0f5a37;
+        border: 1px solid rgba(15, 90, 55, 0.28);
+      }
+      .membership-next {
+        background: #0f5a37;
+        color: #fffefb;
+        border: none;
+      }
     </style>
   </head>
   <body class="guest-shell-page auth-page auth-login-page" id="authBody">
@@ -691,12 +997,6 @@
           </a>
           <p class="dash-site-header__tag">دخول الأعضاء</p>
         </div>
-        <nav class="dash-site-header__nav" aria-label="التنقل">
-          <div class="dash-site-header__links">
-            <a class="dash-site-header__link" href="/">منصة ERVENOW</a>
-            <a class="dash-site-header__link" href="/">الرئيسية</a>
-          </div>
-        </nav>
         <a class="dash-site-header__btn dash-site-header__btn--primary" href="/">ابدأ الآن</a>
       </div>
     </header>
@@ -753,6 +1053,16 @@
             <select id="registerRoleSelect" class="auth-register-role__select" aria-labelledby="registerRoleChip"></select>
           </div>
         </section>
+
+        <div id="membershipFlow" class="membership-flow" hidden>
+          <h2>مرحباً بك في ERVENOW</h2>
+          <p class="membership-lead" id="membershipLead">اختر نوع العضوية</p>
+          <div class="membership-grid" id="membershipGrid"></div>
+          <div class="membership-actions">
+            <button type="button" class="membership-back" id="membershipBack">رجوع</button>
+            <button type="button" class="membership-next" id="membershipNext">استمرار</button>
+          </div>
+        </div>
 
         <div id="authJoinChooser" class="auth-join-chooser" hidden>
           <p class="auth-join-chooser__title">كيف تريد استخدام ERVENOW؟</p>
@@ -919,7 +1229,7 @@
         <div class="msg" id="msg" style="display: none"></div>
         <a class="btn btn-primary auth-cross-cta" id="authCrossCta" hidden></a>
         <p class="auth-intent-switch" id="authIntentSwitch">
-          ليس لديك عضوية؟ <a href="/join?role=customer">إنشاء عضوية</a>
+          ليس لديك عضوية؟ <a href="/login">أدخل جوالك وسننشئ حساب عميل بعد الرمز</a>
         </p>
       </div>
     </main>
@@ -961,8 +1271,8 @@
 
     <div class="role-picker-overlay" id="rolePickerOverlay" hidden role="dialog" aria-modal="true" aria-labelledby="rolePickerTitle">
       <div class="role-picker">
-        <h2 id="rolePickerTitle">اختر نوع الدخول</h2>
-        <p class="sub" style="margin: 0">حسابك مرتبط بأكثر من لوحة — اختر الوجهة المناسبة.</p>
+        <h2 id="rolePickerTitle">أين تريد الدخول؟</h2>
+        <p class="sub" style="margin: 0">هذه العلاقات المثبتة على رقمك. لا يمكن إضافة دور من هنا.</p>
         <div class="role-picker__list" id="rolePickerList"></div>
       </div>
     </div>
@@ -1052,6 +1362,9 @@
       }
 
       function isJoinIntent() {
+        try {
+          if (sessionStorage.getItem("ervenow_membership_register") === "1") return true;
+        } catch (_m) {}
         if (authPathname() === "/join") return true;
         return String(new URLSearchParams(location.search).get("mode") || "").toLowerCase() === "register";
       }
@@ -1667,8 +1980,31 @@
 
       function safeInternalNext(raw) {
         var s = String(raw || "").trim();
-        if (!s.startsWith("/") || s.startsWith("//")) return null;
-        return s.split("#")[0];
+        if (!s.startsWith("/") || s.startsWith("//") || s.indexOf("\\") !== -1 || s.indexOf("://") !== -1) return null;
+        return s;
+      }
+
+      function returnTargetFromQuery() {
+        try {
+          var qs = new URLSearchParams(window.location.search);
+          return safeInternalNext(qs.get("returnTo") || qs.get("next"));
+        } catch (_e) {
+          return null;
+        }
+      }
+
+      function returnAllowed(next, destinations) {
+        if (!next) return false;
+        var path = String(next).split("?")[0].split("#")[0];
+        var guarded = ["/merchant-preview", "/driver-preview", "/service-preview", "/transport-preview", "/admin", "/admin-dashboard", "/store-dashboard"];
+        var needsRole = guarded.some(function (p) {
+          return path === p || path.indexOf(p + "/") === 0;
+        });
+        if (!needsRole) return true;
+        return (destinations || []).some(function (d) {
+          var dp = String((d && d.path) || "").split("?")[0].split("#")[0];
+          return dp && (path === dp || path.indexOf(dp) === 0);
+        });
       }
 
       function resolvePostLoginTarget(userOrRole, roleFallback) {
@@ -1676,12 +2012,11 @@
           if (window.ErvenowGuestBrowse) ErvenowGuestBrowse.setActive(false);
           else localStorage.removeItem("ervenow_guest_browse");
         } catch (e) {}
-        var qs = new URLSearchParams(window.location.search);
-        var next = safeInternalNext(qs.get("next"));
+        var next = returnTargetFromQuery();
         var RR = window.ErvenowRoleRouting;
         var user = RR ? RR.userFromRoleArg(userOrRole) : { role: String(userOrRole || roleFallback || "customer").toLowerCase() };
         if (!user.role && roleFallback) user.role = String(roleFallback).toLowerCase();
-        if (next && String(user.role || "").toLowerCase() !== "blocked") return next;
+        if (next && String(user.role || "").toLowerCase() !== "blocked" && returnAllowed(next, [])) return next;
         return RR ? RR.resolvePostLoginPath(user) : "/";
       }
 
@@ -1749,22 +2084,26 @@
       async function navigateAfterLogin(userOrRole) {
         var RR = window.ErvenowRoleRouting;
         var user = RR ? RR.userFromRoleArg(userOrRole) : { role: String(userOrRole || "customer").toLowerCase() };
-        var qs = new URLSearchParams(window.location.search);
-        var next = safeInternalNext(qs.get("next"));
-        if (next && String(user.role || "").toLowerCase() !== "blocked") {
-          performLoginRedirect(next, user);
-          return;
-        }
+        var next = returnTargetFromQuery();
         var routed = RR ? RR.resolvePostLoginPath(user) : "/";
         try {
           var destRes = await window.PlatformAPI.api("/api/core/login-destinations");
+          var destinations = (destRes && destRes.destinations) || [];
+          if (returnAllowed(next, destinations)) {
+            performLoginRedirect(next, user);
+            return;
+          }
+          if (destinations.length > 1) {
+            show("تم التحقق. اختر أين تريد الدخول.", true);
+            showRolePicker(destinations, user);
+            return;
+          }
           var pick =
             destRes && destRes.default
               ? destRes.default
-              : ((destRes && destRes.destinations) || []).find(function (d) {
+              : destinations.find(function (d) {
                   return d && d.primary;
-                }) ||
-                ((destRes && destRes.destinations) || [])[0];
+                }) || destinations[0];
           var targetPath = (pick && pick.path) || routed;
           performLoginRedirect(targetPath, user);
         } catch (navErr) {
@@ -2094,6 +2433,131 @@
         }
       }
 
+      var membershipState = { types: [], step: "root", picked: null, activity: null };
+
+      function membershipIconHtml(item) {
+        if (item && item.image_url) {
+          return '<img alt="" src="' + String(item.image_url).replace(/"/g, "") + '" style="width:36px;height:36px;object-fit:contain" />';
+        }
+        if (item && item.icon) return '<span class="membership-card__icon">' + item.icon + "</span>";
+        return '<span class="membership-card__ph">ER</span>';
+      }
+
+      function renderMembershipCards(items, keyName) {
+        var grid = document.getElementById("membershipGrid");
+        if (!grid) return;
+        grid.innerHTML = (items || []).map(function (item) {
+          var code = item[keyName] || item.option_code || item.membership_type;
+          var active = membershipState.step === "root"
+            ? membershipState.picked && membershipState.picked.membership_type === code
+            : membershipState.activity && membershipState.activity.option_code === code;
+          return '<button type="button" class="membership-card' + (active ? " is-active" : "") + '" data-code="' + String(code).replace(/"/g, "") + '">' +
+            membershipIconHtml(item) + "<span>" + (item.label_ar || code) + "</span></button>";
+        }).join("");
+        grid.querySelectorAll(".membership-card").forEach(function (btn) {
+          btn.addEventListener("click", function () {
+            var code = btn.getAttribute("data-code");
+            if (membershipState.step === "root") {
+              membershipState.picked = membershipState.types.find(function (t) { return t.membership_type === code; }) || null;
+              membershipState.activity = null;
+            } else if (membershipState.picked) {
+              membershipState.activity = (membershipState.picked.children || []).find(function (c) { return c.option_code === code; }) || null;
+            }
+            try {
+              sessionStorage.setItem("ervenow_membership_draft", JSON.stringify({
+                type: membershipState.picked && membershipState.picked.membership_type,
+                activity: membershipState.activity && membershipState.activity.option_code,
+                step: membershipState.step,
+              }));
+            } catch (_d) {}
+            renderMembershipCards(membershipState.step === "root" ? membershipState.types : (membershipState.picked.children || []), membershipState.step === "root" ? "membership_type" : "option_code");
+          });
+        });
+      }
+
+      async function openMembershipFlow() {
+        var flow = document.getElementById("membershipFlow");
+        var core = document.querySelector(".auth-login-core");
+        if (core) core.hidden = true;
+        if (flow) {
+          flow.hidden = false;
+          flow.classList.add("is-open");
+        }
+        var catalog = await window.PlatformAPI.api("/api/core/membership-catalog");
+        membershipState.types = (catalog && catalog.types) || [];
+        membershipState.step = "root";
+        try {
+          var draft = JSON.parse(sessionStorage.getItem("ervenow_membership_draft") || "null");
+          if (draft && draft.type) {
+            membershipState.picked = membershipState.types.find(function (t) { return t.membership_type === draft.type; }) || null;
+            if (membershipState.picked && draft.activity) {
+              membershipState.activity = (membershipState.picked.children || []).find(function (c) { return c.option_code === draft.activity; }) || null;
+            }
+          }
+        } catch (_draft) {}
+        renderMembershipCards(membershipState.types, "membership_type");
+      }
+
+      async function continueMembership() {
+        var picked = membershipState.picked;
+        if (!picked) {
+          show("اختر نوع العضوية أولاً.", false);
+          return;
+        }
+        var children = picked.children || [];
+        if (membershipState.step === "root" && children.length) {
+          membershipState.step = "activity";
+          var lead = document.getElementById("membershipLead");
+          if (lead) {
+            lead.textContent = picked.membership_type === "restaurant" ? "اختر نوع المطعم" : picked.membership_type === "store" ? "اختر نشاط متجرك" : "اختر النشاط";
+          }
+          renderMembershipCards(children, "option_code");
+          return;
+        }
+        if (children.length && !membershipState.activity) {
+          show("اختر النشاط ثم اضغط استمرار.", false);
+          return;
+        }
+        var activity = membershipState.activity && membershipState.activity.option_code;
+        try {
+          sessionStorage.setItem("ervenow_membership_activity", activity || "");
+          sessionStorage.setItem("ervenow_membership_primary", picked.membership_type);
+        } catch (_s) {}
+        if (picked.kind === "customer") {
+          var created = await window.PlatformAPI.api("/api/core/register-account", {
+            method: "POST",
+            body: { registration_token: registrationToken(), role: "customer" },
+          });
+          if (!created || !created.token) {
+            show("تعذر إنشاء حساب المتسوق.", false);
+            return;
+          }
+          window.PlatformAPI.setToken(created.token);
+          try { localStorage.setItem("token", created.token); } catch (_t) {}
+          window.location.href = "/";
+          return;
+        }
+        if (picked.kind === "store_application") {
+          window.location.assign("/register-store?membership=" + encodeURIComponent(picked.membership_type) + (activity ? "&activity=" + encodeURIComponent(activity) : ""));
+          return;
+        }
+        try { sessionStorage.setItem("ervenow_membership_register", "1"); } catch (_r) {}
+        var flow = document.getElementById("membershipFlow");
+        if (flow) flow.hidden = true;
+        var core = document.querySelector(".auth-login-core");
+        if (core) core.hidden = false;
+        if (picked.kind === "driver_application") applyRegisterRoleValue("driver");
+        else applyRegisterRoleValue("service");
+        syncRegisterSubmitUi();
+        initServiceTypeSubSelect();
+        var sub = document.getElementById("serviceTypeSub");
+        if (sub && activity) {
+          sub.value = activity;
+          sub.dispatchEvent(new Event("change", { bubbles: true }));
+        }
+        show("أكمل بيانات طلب الانضمام. التفعيل بعد اعتماد الإدارة.", true);
+      }
+
       async function runLoginVerify() {
         try {
           normalizeInputPhone();
@@ -2135,15 +2599,8 @@
 
           if (res.needs_registration && res.registration_token) {
             setRegistrationContext(res.registration_token, res.phone);
-            if (!isJoinIntent()) {
-              show("هذا الرقم غير مسجّل. أنشئ عضوية بعد التوثيق من صفحة إنشاء العضوية.", false);
-              showCrossCta("join");
-              return;
-            }
-            hideCrossCta();
-            show(res.message || "تم توثيق الجوال. أكمل إنشاء العضوية.", true);
-            openJoinChooser();
-            syncAuthHead();
+            show("تم توثيق الجوال. اختر نوع العضوية.", true);
+            await openMembershipFlow();
             return;
           }
 
@@ -2392,6 +2849,25 @@
           runRegisterAccount();
         });
       }
+
+      var membershipBack = document.getElementById("membershipBack");
+      var membershipNext = document.getElementById("membershipNext");
+      if (membershipBack) {
+        membershipBack.addEventListener("click", function () {
+          if (membershipState.step === "activity") {
+            membershipState.step = "root";
+            var lead = document.getElementById("membershipLead");
+            if (lead) lead.textContent = "اختر نوع العضوية";
+            renderMembershipCards(membershipState.types, "membership_type");
+            return;
+          }
+          var flow = document.getElementById("membershipFlow");
+          var core = document.querySelector(".auth-login-core");
+          if (flow) flow.hidden = true;
+          if (core) core.hidden = false;
+        });
+      }
+      if (membershipNext) membershipNext.addEventListener("click", function () { continueMembership(); });
 
       document.querySelectorAll("[data-join]").forEach(function (btn) {
         btn.addEventListener("click", function () {

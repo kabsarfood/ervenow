@@ -146,6 +146,97 @@
     });
   }
 
+  function statusLabel(raw) {
+    var s = String(raw || "").toLowerCase();
+    var map = {
+      new: "جديد",
+      pending: "بانتظار القبول",
+      preparing: "تحت التجهيز",
+      ready: "جاهز",
+      accepted: "استلمه المندوب",
+      picked_up: "جاري التوصيل",
+      delivering: "جاري التوصيل",
+      delivered: "تم التسليم",
+      cancelled: "ملغى",
+      canceled: "ملغى",
+    };
+    return map[s] || (raw ? String(raw) : "");
+  }
+
+  function pushRow(rows, label, value) {
+    if (value == null || String(value).trim() === "") return;
+    rows.push({ label: label, value: String(value) });
+  }
+
+  function numberFromText(text) {
+    var m = String(text || "").match(/[A-Z]{1,3}-\d{2}-\d{2,}/);
+    return m ? m[0] : "";
+  }
+
+  function detailRows(n) {
+    var p = (n && n.payload) || {};
+    var order = n && n.orderDetail;
+    var rows = [];
+    pushRow(rows, "رقم الطلب", (order && (order.order_number || order.id)) || p.order_number || numberFromText(n && n.message));
+    pushRow(rows, "الحالة", statusLabel((order && (order.delivery_status || order.status)) || p.delivery_status || p.status));
+    pushRow(rows, "المتجر", (order && (order.store_name || order.merchant_name)) || p.store_name);
+    pushRow(rows, "نوع النشاط", p.store_type);
+    pushRow(rows, "مقدم الطلب", p.applicant_name);
+    pushRow(rows, "الجوال", (order && (order.customer_phone || order.phone)) || p.phone || p.applicant_phone);
+    pushRow(rows, "العنوان", order && (order.drop_address || order.address));
+    if (order && order.order_total != null) pushRow(rows, "الإجمالي", String(order.order_total) + " ر.س");
+    else if (order && order.total_with_vat != null) pushRow(rows, "الإجمالي", String(order.total_with_vat) + " ر.س");
+    var items = order && order.breakdown && order.breakdown.items;
+    if (Array.isArray(items) && items.length) {
+      pushRow(
+        rows,
+        "الأصناف",
+        items
+          .slice(0, 6)
+          .map(function (it) {
+            return (it.name || it.title || "صنف") + (it.qty || it.quantity ? " × " + (it.qty || it.quantity) : "");
+          })
+          .join("، ")
+      );
+    }
+    return rows;
+  }
+
+  function detailBlockHtml(n) {
+    var rows = detailRows(n);
+    var loading = n && n.orderLoading ? '<p class="erv-notif-detail-note">جاري جلب تفاصيل الطلب…</p>' : "";
+    var fail = n && n.orderDetailError ? '<p class="erv-notif-detail-note">' + esc(n.orderDetailError) + "</p>" : "";
+    if (!rows.length && !loading && !fail) return "";
+    return (
+      '<div class="erv-notif-detail">' +
+      loading +
+      fail +
+      rows
+        .map(function (r) {
+          return '<div class="erv-notif-detail-row"><span>' + esc(r.label) + "</span><strong>" + esc(r.value) + "</strong></div>";
+        })
+        .join("") +
+      "</div>"
+    );
+  }
+
+  async function loadOrderDetail(item) {
+    var p = (item && item.payload) || {};
+    if (!p.order_id || item.orderDetail || item.orderLoading) return;
+    if (!global.PlatformAPI || !PlatformAPI.api) return;
+    item.orderLoading = true;
+    try {
+      var res = await PlatformAPI.api("/api/order/" + encodeURIComponent(String(p.order_id)));
+      var order = (res && (res.order || (res.data && res.data.order) || res.data)) || null;
+      if (order && order.id) item.orderDetail = order;
+      else item.orderDetailError = "تعذر عرض تفاصيل الطلب";
+    } catch (e) {
+      item.orderDetailError = "تعذر عرض تفاصيل الطلب";
+    } finally {
+      item.orderLoading = false;
+    }
+  }
+
   function statusHtml(n) {
     if (n && n.is_read) {
       return '<span class="erv-notification-status is-read">مقروء</span>';
@@ -181,11 +272,7 @@
       esc(fmtTime(n.created_at)) +
       "</span>" +
       "</p>" +
-      (open && href
-        ? '<a class="erv-notification-item-open" data-notif-open="1" href="' +
-          esc(href) +
-          '">فتح التفاصيل</a>'
-        : "") +
+      (open ? detailBlockHtml(n) : "") +
       "</article>"
     );
   }
@@ -416,15 +503,25 @@
       return String(n.id) === String(id);
     });
     if (!item) return;
-    state.expandedId = id;
-    if (state.mode !== "page") state.open = true;
-    if (!item.is_read) {
-      markReadLocal(state, id);
+    if (String(state.expandedId || "") === String(id)) {
+      state.expandedId = null;
       paintState(state);
-      await markReadRemote(id);
       return;
     }
+    state.expandedId = id;
+    if (state.mode !== "page") state.open = true;
+    if (!item.is_read) markReadLocal(state, id);
     paintState(state);
+    var tasks = [];
+    if (!item.is_read) tasks.push(markReadRemote(id));
+    if (item.payload && item.payload.order_id && !item.orderDetail) {
+      tasks.push(
+        loadOrderDetail(item).then(function () {
+          if (String(state.expandedId || "") === String(id)) paintState(state);
+        })
+      );
+    }
+    await Promise.all(tasks);
   }
 
   async function handleItemActivate(state, id) {
@@ -609,11 +706,7 @@
             " · " +
             (n.is_read ? "مقروء" : "اشعار جديد") +
             "</p>" +
-            (open && href
-              ? '<a class="erv-notification-item-open" data-notif-open="1" href="' +
-                esc(href) +
-                '">فتح التفاصيل</a>'
-              : "") +
+            (open ? detailBlockHtml(n) : "") +
             "</article>"
           );
         })

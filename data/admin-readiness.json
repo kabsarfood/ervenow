@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-09-24T21:26:14.594Z",
+  "updated_at": "2026-09-25T16:19:17.250Z",
   "portal_visits": {
     "customer": {
       "visits": 31,
@@ -7,14 +7,14 @@
       "last_at": "2026-09-22T20:59:17.085Z"
     },
     "merchant": {
-      "visits": 469,
+      "visits": 490,
       "unique_users": {},
-      "last_at": "2026-09-24T21:26:14.211Z"
+      "last_at": "2026-09-25T16:08:41.306Z"
     },
     "driver": {
-      "visits": 486,
+      "visits": 492,
       "unique_users": {},
-      "last_at": "2026-09-24T21:15:53.994Z"
+      "last_at": "2026-09-25T13:34:13.607Z"
     },
     "service": {
       "visits": 164,
@@ -35,15 +35,15 @@
       "active_users": {}
     },
     "merchant": {
-      "visits": 396,
+      "visits": 417,
       "unique_users": {},
-      "last_at": "2026-09-24T21:26:14.211Z",
+      "last_at": "2026-09-25T16:08:41.306Z",
       "active_users": {}
     },
     "driver": {
-      "visits": 399,
+      "visits": 405,
       "unique_users": {},
-      "last_at": "2026-09-24T21:15:53.994Z",
+      "last_at": "2026-09-25T13:34:13.607Z",
       "active_users": {}
     },
     "service": {
@@ -71,9 +71,9 @@
       "last_at": "2026-09-24T21:00:14.744Z"
     },
     "order-board": {
-      "visits": 15,
+      "visits": 21,
       "unique_users": {},
-      "last_at": "2026-09-22T19:22:20.599Z"
+      "last_at": "2026-09-25T14:21:57.934Z"
     },
     "services-provider": {
       "visits": 29,
@@ -89,6 +89,16 @@
   "user_snapshots": {},
   "broadcast_history": [],
   "redirect_events": [
+    {
+      "at": "2026-09-25T16:08:41.160Z",
+      "portal": "merchant",
+      "role": "store",
+      "path": "/merchant-preview",
+      "success": true,
+      "raw_role": "store",
+      "service_type": null,
+      "user_id": null
+    },
     {
       "at": "2026-09-24T21:26:14.211Z",
       "portal": "merchant",

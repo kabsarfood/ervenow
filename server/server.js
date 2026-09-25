@@ -431,8 +431,17 @@ if (servePublicUi) {
     res.redirect(302, "/login?" + qs.toString());
   });
 
-  app.get(["/join", "/join.html"], (_req, res) => {
-    res.sendFile(path.join(publicPath, "login.html"));
+  app.get(["/join", "/join.html"], (req, res) => {
+    const qs = new URLSearchParams();
+    const q = req.query || {};
+    Object.keys(q).forEach((k) => {
+      const v = q[k];
+      if (k === "role") return;
+      if (Array.isArray(v)) v.forEach((x) => qs.append(k, String(x)));
+      else if (v != null && v !== "") qs.set(k, String(v));
+    });
+    const tail = qs.toString();
+    res.redirect(302, tail ? "/login?" + tail : "/login");
   });
 
   app.get(["/admin", "/admin/", "/admin/index.html"], (_req, res) => {

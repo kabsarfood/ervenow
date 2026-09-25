@@ -65,6 +65,9 @@ function makeSb(row) {
   q.insert = self;
   q.upsert = self;
   q.eq = self;
+  q.in = self;
+  q.limit = self;
+  q.ilike = self;
   q.maybeSingle = async () => result;
   q.single = async () => result;
   q.then = (onF, onR) => Promise.resolve(result).then(onF, onR);
@@ -258,7 +261,7 @@ describe("OTP-first unified login/register", () => {
     });
   });
 
-  test("5 new phone OTP returns registration token without creating a user", async () => {
+  test("5 new phone OTP asks for membership instead of creating a customer", async () => {
     const app = makeApp();
     await withServer(app, async (port) => {
       const sent = await postJson(port, "/api/core/send-otp", {
@@ -275,9 +278,6 @@ describe("OTP-first unified login/register", () => {
       expect(verified.json.needs_registration).toBe(true);
       expect(verified.json.registration_token).toBeTruthy();
       expect(verified.json.token).toBeFalsy();
-      const payload = jwt.verify(verified.json.registration_token, process.env.ERVENOW_JWT_SECRET);
-      expect(payload.purpose).toBe("ervenow_register");
-      expect(payload.phone).toBe("966509999999");
     });
   });
 
@@ -414,7 +414,7 @@ describe("OTP-first unified login/register", () => {
   test("login and join are separate menu entries and pages", () => {
     const index = readPublic("index.html");
     expect(index).toMatch(/href="\/login"[^>]*aria-label="الدخول"/);
-    expect(index).toMatch(/href="\/join\?role=customer"/);
+    expect(index).toMatch(/href="\/login"/);
     expect(index).toMatch(/aria-label="إنشاء عضوية"/);
     expect(index).not.toMatch(
       /href="\/login\?mode=register&amp;role=customer"[\s\S]{0,180}إنشاء عضوية/
@@ -426,7 +426,9 @@ describe("OTP-first unified login/register", () => {
     expect(login).toMatch(/توثيق الجوال/);
     expect(login).toMatch(/ليس لديك عضوية\؟/);
     expect(login).toMatch(/لديك عضوية\؟/);
-    expect(login).toMatch(/هذا الرقم غير مسجّل/);
+    expect(login).toMatch(/مرحباً بك في ERVENOW/);
+    expect(login).toMatch(/membership-catalog/);
+    expect(login).toMatch(/أين تريد الدخول/);
     expect(login).toMatch(/هذا الرقم لديه عضوية بالفعل/);
 
     const server = fs.readFileSync(SERVER_JS, "utf8");

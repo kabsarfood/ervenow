@@ -26,6 +26,7 @@ const {
   resolveLoginDestinations,
   pickDefaultDestination,
 } = require("../../shared/utils/loginDestinations");
+const { buildMembershipCatalog } = require("../../shared/membershipCatalog");
 const { accessFlagsForRole } = require("../../shared/utils/platformAccessPolicy");
 const { canonicalPhoneDigits, findUserByPhone, findUserByPhoneResilient } = require("../../shared/utils/userPhoneLookup");
 const { findStoreByOwnerPhone, bindStoreOwnerAccount } = require("../../shared/services/storeOwnerAccount");
@@ -804,17 +805,15 @@ router.post("/verify-otp", async (req, res) => {
       }
     }
 
-    if (!existingUser) {
-      if (!checkoutCustomer) {
-        const registration_token = signRegistrationToken(digits);
-        return ok(res, {
-          success: true,
-          needs_registration: true,
-          registration_token,
-          phone: digits,
-          message: "تم توثيق الجوال. اختر كيف تريد استخدام ERVENOW.",
-        });
-      }
+    if (!existingUser && !checkoutCustomer) {
+      const registration_token = signRegistrationToken(digits);
+      return ok(res, {
+        success: true,
+        needs_registration: true,
+        registration_token,
+        phone: digits,
+        message: "تم توثيق الجوال. اختر كيف تريد استخدام ERVENOW.",
+      });
     }
 
     const sb = sbEarly || createServiceClient();
@@ -829,7 +828,7 @@ router.post("/verify-otp", async (req, res) => {
     let roleForSession;
     if (existingUser) {
       roleForSession = existingRole || "customer";
-    } else if (checkoutCustomer) {
+    } else if (checkoutCustomer || loginOnly) {
       roleForSession = "customer";
     } else {
       const resolved = resolveSelfServiceSignupRole(roleIn);
@@ -1289,6 +1288,17 @@ router.get("/me", requireAuth, (req, res) => {
     pending_approval: isUserAccountPending(req.appUser.status),
     access: approved ? accessFlagsForRole(req.appUser.role) : { ...accessFlagsForRole(req.appUser.role), can_place_orders: false },
   });
+});
+
+router.get("/membership-catalog", async (req, res) => {
+  try {
+    const sb = createServiceClient();
+    const types = await buildMembershipCatalog(sb);
+    return ok(res, { success: true, types });
+  } catch (e) {
+    console.error("[ERVENOW] membership-catalog:", e);
+    return fail(res, "تعذر تحميل أنواع العضوية", 500);
+  }
 });
 
 router.get("/login-destinations", requireAuth, async (req, res) => {

@@ -186,6 +186,7 @@ module.exports = {
   normalizeCategoryScope,
   isStoreScopeCategory,
   isProductScopeCategory,
+  fetchCategoriesFromDb,
   fetchMergedRestaurantCategorySlugs,
   fetchMergedMarketCategorySlugs,
   fetchProductCategoryCatalog,

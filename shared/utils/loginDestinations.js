@@ -105,14 +105,22 @@ async function resolveLoginDestinations(sb, userRow) {
     try {
       const { data: stores } = await sb
         .from("stores")
-        .select("id, type, status")
+        .select("id, name, type, status")
         .eq("phone", phone)
         .eq("status", "approved");
-      const hasApprovedStore = (stores || []).length > 0;
-      if (hasApprovedStore && !MERCHANT_DB_ROLES.has(rawRole) && primary.portalRole !== "merchant") {
+      const approved = stores || [];
+      const names = approved.map((s) => String(s.name || "").trim()).filter(Boolean);
+      const merchantLabel = names.length
+        ? names.map((n) => n + " — إدارة المتجر").join(" · ")
+        : portalLabelAr("merchant");
+      if (primary.portalRole === "merchant") {
+        const hit = destinations.find((d) => d.portalRole === "merchant");
+        if (hit && names.length) hit.label = merchantLabel;
+      } else if (approved.length) {
         addDestination(destinations, seen, {
           portalRole: "merchant",
-          ...destinationForPortalRole("merchant"),
+          path: portalPathForRole("merchant"),
+          label: merchantLabel,
           rawRole: "store",
           extra: true,
         });
@@ -201,5 +209,6 @@ module.exports = {
   destinationForRole,
   destinationForPortalRole,
   resolveLoginDestinations,
+  resolveAccountDestination: resolveLoginDestinations,
   pickDefaultDestination,
 };

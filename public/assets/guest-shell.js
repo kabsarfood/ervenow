@@ -55,7 +55,7 @@
     if (!opts.authenticated) {
       links.push({
         key: "login",
-        href: "/login?role=customer",
+        href: "/login",
         label: "دخول",
         cta: true,
       });
@@ -248,7 +248,7 @@
     role = String(role || "").toLowerCase();
     if (!hasToken()) {
       box.hidden = false;
-      box.setAttribute("href", "/login?role=customer");
+      box.setAttribute("href", "/login");
       amountEl.textContent = "—";
       return;
     }
@@ -368,7 +368,7 @@
     switchAccount.className =
       "dash-site-header__btn dash-site-header__btn--primary switch-account--nav-only";
     switchAccount.setAttribute("data-erv-switch-mode", "login");
-    switchAccount.setAttribute("href", "/login?role=customer");
+    switchAccount.setAttribute("href", "/login");
     switchAccount.removeAttribute("aria-label");
     switchAccount.removeAttribute("title");
     wireSwitchAccountButton(switchAccount);
@@ -724,7 +724,7 @@
       links +
       "</div>" +
       "</nav>" +
-      '<a class="dash-site-header__btn dash-site-header__btn--primary switch-account--nav-only" href="/login?role=customer" id="switchAccount">دخول الأعضاء</a>' +
+      '<a class="dash-site-header__btn dash-site-header__btn--primary switch-account--nav-only" href="/login" id="switchAccount">دخول الأعضاء</a>' +
       "</div>" +
       "</header>"
     );

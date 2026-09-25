@@ -1,0 +1,16 @@
+{
+  "stores": {
+    "8849db5f-bd87-4b5a-b19d-db051c082c8f": [
+      {
+        "id": "27a46939-fbd8-4cb8-9648-a296177c35e6",
+        "amount": 25,
+        "item": "اصلاح المكيف",
+        "note": "",
+        "cashier_name": "نسايم الشاورما",
+        "cashier_id": "a2124a1d-8d23-40ab-9c95-903dcd9f8bf3",
+        "spent_at": "2026-09-25",
+        "created_at": "2026-09-25T12:57:05.446Z"
+      }
+    ]
+  }
+}

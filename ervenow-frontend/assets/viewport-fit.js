@@ -457,4 +457,68 @@
 
   checkSiteMaintenance();
   global.addEventListener("DOMContentLoaded", checkSiteMaintenance);
+
+  var TICKER_TEXT =
+    "اهلا بكم في منصة ERVENOW - الموقع تحت التطوير - نرحب بالجميع ونرحب بالاستفسارات على جوال المنصة في الاسفل.";
+
+  function mountTopTicker() {
+    if (document.getElementById("ervTopTicker")) return;
+    if (!document.body) return;
+    var style = document.getElementById("ervTopTickerStyle");
+    if (!style) {
+      style = document.createElement("style");
+      style.id = "ervTopTickerStyle";
+      style.textContent =
+        ":root{--erv-ticker-h:calc(36px + env(safe-area-inset-top,0px))}" +
+        "#ervTopTicker{position:fixed;top:0;left:0;right:0;z-index:260;height:var(--erv-ticker-h);" +
+        "padding-top:env(safe-area-inset-top,0px);display:flex;align-items:center;justify-content:flex-start;overflow:hidden;direction:ltr;" +
+        "background-color:#006C35;color:#fff;font-family:Cairo,sans-serif;" +
+        "background-image:linear-gradient(105deg,#004e27 0%,#006C35 38%,#1f9a52 50%,#006C35 62%,#004e27 100%);" +
+        "background-size:240% 100%;animation:ervTickerWave 3s linear infinite}" +
+        "#ervTopTicker .erv-top-ticker__track{display:flex;width:max-content;direction:ltr;animation:ervTickerMove 42s linear infinite}" +
+        "#ervTopTicker span{white-space:nowrap;padding-inline:2.75rem;font-family:Cairo,sans-serif;font-weight:600;direction:rtl;" +
+        "font-size:clamp(14px,3.5vw,16px);line-height:1.45;color:#fff}" +
+        "body.erv-has-ticker{padding-top:var(--erv-ticker-h)}" +
+        "html.erv-mobile-shell body.guest-shell-page.erv-has-ticker{padding-top:var(--erv-ticker-h)!important}" +
+        "html.erv-mobile-shell body.guest-shell-page.erv-has-ticker .dash-site-header{top:var(--erv-ticker-h)!important;padding-top:0!important;z-index:240}" +
+        "html.erv-mobile-shell body.guest-shell-page.erv-has-ticker .erv-harmony-nav-panel{top:calc(var(--erv-ticker-h) + var(--erv-mobile-header-h,62px))}" +
+        "body.pf-page.erv-has-ticker{padding-top:0;--pf-banner-h:var(--erv-ticker-h);" +
+        "--pf-top-chrome-h:calc(var(--pf-header-h) + var(--erv-ticker-h))}" +
+        "body.pf-page.erv-has-ticker .pf-header{top:var(--erv-ticker-h);padding-top:8px;height:var(--pf-header-h)}" +
+        "body.erv-has-ticker .lp-header.lp-header--refined,body.erv-has-ticker .dash-site-header{top:var(--erv-ticker-h)}" +
+        "body.erv-has-ticker .pf-sidebar{top:var(--erv-ticker-h);height:calc(100dvh - var(--erv-ticker-h))}" +
+        "@keyframes ervTickerMove{from{transform:translateX(-50%)}to{transform:translateX(0)}}" +
+        "@keyframes ervTickerWave{0%{background-position:100% 0;filter:brightness(1)}50%{filter:brightness(1.22)}100%{background-position:-40% 0;filter:brightness(1)}}" +
+        "@media (prefers-reduced-motion:reduce){#ervTopTicker{animation:none}#ervTopTicker .erv-top-ticker__track{animation:none;width:100%;justify-content:center}}";
+      document.head.appendChild(style);
+    }
+    if (!document.getElementById("ervTickerFont")) {
+      var font = document.createElement("link");
+      font.id = "ervTickerFont";
+      font.rel = "stylesheet";
+      font.href = "https://fonts.googleapis.com/css2?family=Cairo:wght@600;700&display=swap";
+      document.head.appendChild(font);
+    }
+    var bar = document.createElement("div");
+    bar.id = "ervTopTicker";
+    bar.setAttribute("role", "status");
+    bar.dir = "ltr";
+    var track = document.createElement("div");
+    track.className = "erv-top-ticker__track";
+    var a = document.createElement("span");
+    a.dir = "rtl";
+    a.textContent = TICKER_TEXT;
+    var b = document.createElement("span");
+    b.dir = "rtl";
+    b.textContent = TICKER_TEXT;
+    b.setAttribute("aria-hidden", "true");
+    track.appendChild(a);
+    track.appendChild(b);
+    bar.appendChild(track);
+    document.body.classList.add("erv-has-ticker");
+    document.body.insertBefore(bar, document.body.firstChild);
+  }
+
+  if (document.body) mountTopTicker();
+  else document.addEventListener("DOMContentLoaded", mountTopTicker);
 })(window);

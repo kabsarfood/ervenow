@@ -568,6 +568,13 @@
             typeSel.dispatchEvent(new Event("change", { bubbles: true }));
           }
         }
+        try {
+          var memPrimary = sessionStorage.getItem("ervenow_membership_primary") || "";
+          var memActivity = sessionStorage.getItem("ervenow_membership_activity") || "";
+          if (memPrimary === "restaurant" || memPrimary === "store") {
+            applyPrimaryType(memPrimary === "restaurant" ? "restaurant" : "store", memActivity);
+          }
+        } catch (_mem) {}
         if (primaryPicker) {
           primaryPicker.addEventListener("click", function (e) {
             var btn = e.target.closest(".reg-store-primary-type__card");

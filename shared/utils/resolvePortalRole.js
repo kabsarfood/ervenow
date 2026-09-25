@@ -40,12 +40,12 @@ const {
 } = require("./portalLaunch");
 
 const PORTAL_LABELS_AR = {
-  customer: "المنصة الرئيسية",
-  merchant: "ERVENOW Merchant",
-  driver: "ERVENOW Driver",
-  service: "ERVENOW Service",
-  transport: "ERVENOW Transport",
-  admin: "لوحة التحكم",
+  customer: "حسابي كعميل",
+  merchant: "إدارة المتجر",
+  driver: "بوابة المندوب",
+  service: "بوابة مقدم الخدمة",
+  transport: "بوابة النقل",
+  admin: "لوحة الإدارة",
 };
 
 const KNOWN_DB_ROLES = new Set([

@@ -30,6 +30,15 @@ function storeFilesBucket() {
   ).trim();
 }
 
+function storePrivateDocsBucket() {
+  return "store-registration-documents";
+}
+
+function isPrivateStoreFolder(subfolder) {
+  const s = String(subfolder || "").toLowerCase();
+  return s === "cr" || s === "license";
+}
+
 /** استخراج مسار الكائن داخل الدلو من رابط Supabase Storage */
 function storageObjectPathFromUrl(url, bucket) {
   const s = String(url || "").trim();
@@ -61,8 +70,11 @@ const SIGNED_TTL_SEC = Math.min(
 async function resolveStoreImageUrl(sb, url) {
   const raw = String(url || "").trim();
   if (!raw || !sb) return raw || null;
-  const bucket = storeFilesBucket();
-  const objectPath = storageObjectPathFromUrl(raw, bucket);
+  const privateBucket = storePrivateDocsBucket();
+  const publicBucket = storeFilesBucket();
+  const bucket = raw.includes(privateBucket) || /\/(cr|license)\//i.test(raw) ? privateBucket : publicBucket;
+  let objectPath = storageObjectPathFromUrl(raw, bucket);
+  if (!objectPath && bucket === privateBucket) objectPath = storageObjectPathFromUrl(raw, publicBucket);
   if (!objectPath) return raw;
   try {
     const { data, error } = await sb.storage.from(bucket).createSignedUrl(objectPath, SIGNED_TTL_SEC);
@@ -82,7 +94,7 @@ async function resolveStoreImageUrls(sb, urls) {
 }
 
 async function uploadToStoreBucket(sb, storeId, subfolder, base64, originalName) {
-  const bucket = storeFilesBucket();
+  const bucket = isPrivateStoreFolder(subfolder) ? storePrivateDocsBucket() : storeFilesBucket();
   const parsed = parseBase64File(base64);
   if (!parsed || !parsed.buffer.length) return null;
   const ext = parsed.mime.includes("png") ? "png" : parsed.mime.includes("webp") ? "webp" : "jpg";
@@ -97,6 +109,7 @@ async function uploadToStoreBucket(sb, storeId, subfolder, base64, originalName)
   }
   const { data: signed, error: signErr } = await sb.storage.from(bucket).createSignedUrl(objectPath, SIGNED_TTL_SEC);
   if (!signErr && signed && signed.signedUrl) return signed.signedUrl;
+  if (isPrivateStoreFolder(subfolder)) return null;
   const { data: pub } = sb.storage.from(bucket).getPublicUrl(objectPath);
   return pub && pub.publicUrl ? pub.publicUrl : null;
 }
