@@ -572,7 +572,8 @@
     var discover = document.getElementById("ervMpDiscover");
     var main = document.querySelector("main[data-marketing-region='main'], main");
     var footer = document.querySelector(".lp-footer");
-    var sequence = [prereg, header, stage, hub, discover, main, footer].filter(Boolean);
+    var phone = document.getElementById("lpHeaderUserMid");
+    var sequence = [prereg, header, phone, stage, hub, discover, main, footer].filter(Boolean);
     if (sequence.length > 1) {
       body.insertBefore(sequence[0], body.firstChild);
       for (var i = 1; i < sequence.length; i++) {
@@ -652,7 +653,8 @@
     var main = document.querySelector("main[data-marketing-region='main'], main");
     var footer = document.querySelector(".lp-footer");
 
-    var sequence = [prereg, header, stage, hub, discover, main, footer].filter(Boolean);
+    var phone = document.getElementById("lpHeaderUserMid");
+    var sequence = [prereg, header, phone, stage, hub, discover, main, footer].filter(Boolean);
     if (sequence.length) {
       body.insertBefore(sequence[0], body.firstChild);
       for (var i = 1; i < sequence.length; i++) {

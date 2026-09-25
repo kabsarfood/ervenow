@@ -78,8 +78,7 @@
       identity.href = "/";
       identity.setAttribute("aria-label", "ERVENOW — المنصة الذكية");
       identity.innerHTML =
-        '<img class="erv-harmony-identity__logo" src="/assets/ervenow-logo.png?erv=20260925logo" alt="ERVENOW" width="176" height="40" decoding="async" />' +
-        '<span class="erv-harmony-identity__phone" dir="ltr" hidden></span>';
+        '<img class="erv-harmony-identity__logo" src="/assets/ervenow-logo.png?erv=20260925logo" alt="ERVENOW" width="176" height="40" decoding="async" />';
       inner.insertBefore(identity, nav);
     }
 

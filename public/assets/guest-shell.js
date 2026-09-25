@@ -458,21 +458,24 @@
     };
     syncShopperHeader.last = { loggedIn: !!loggedIn, role: role || "", phone: phone || "" };
     document.documentElement.classList.toggle("erv-show-shopper-cart", !loggedIn || !staff[r]);
-    var phoneEl = document.querySelector(".erv-harmony-identity__phone");
-    if (!phoneEl) {
-      var idn = document.querySelector(".erv-harmony-identity");
-      if (idn) {
-        phoneEl = document.createElement("span");
-        phoneEl.className = "erv-harmony-identity__phone";
-        phoneEl.setAttribute("dir", "ltr");
-        phoneEl.hidden = true;
-        idn.appendChild(phoneEl);
+    var legacy = document.querySelector(".erv-harmony-identity__phone");
+    if (legacy) legacy.hidden = true;
+    var card = document.getElementById("ervAccountPhoneCard");
+    if (!card) {
+      var header = document.querySelector(".dash-site-header");
+      if (header && header.parentNode) {
+        card = document.createElement("p");
+        card.id = "ervAccountPhoneCard";
+        card.className = "erv-account-phone";
+        card.setAttribute("dir", "ltr");
+        card.hidden = true;
+        header.insertAdjacentElement("afterend", card);
       }
     }
-    if (!phoneEl) return;
+    if (!card) return;
     var shown = loggedIn ? formatOwnPhone(phone) : "";
-    phoneEl.textContent = shown;
-    phoneEl.hidden = !shown;
+    card.textContent = shown;
+    card.hidden = !shown;
   }
 
   async function initAuthHeader() {

@@ -573,34 +573,35 @@ body.lp-home-premium .lp-home-cta-card__text {
   html.erv-mobile-shell.erv-show-shopper-cart body.lp-home-premium #indexDraftBadge .lp-draft-checkout-badge__count[data-empty="true"] {
     display: none !important;
   }
+}
 
-  html.erv-mobile-shell body.lp-home-premium .lp-header.lp-header--refined .lp-header__inner--user-mid .lp-header__top-row {
-    grid-template-areas:
-      "cart logo menu"
-      "cart phone menu" !important;
-    row-gap: 2px !important;
-  }
+html body.lp-home-premium .erv-account-phone[hidden] {
+  display: none !important;
+}
 
-  html.erv-mobile-shell body.lp-home-premium .lp-header__user-mid,
-  html.erv-mobile-shell body.lp-home-premium .lp-header__user-mid[hidden] {
-    display: none !important;
-  }
+html body.lp-home-premium .erv-account-phone:not([hidden]) {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  max-width: calc(100% - 28px);
+  min-height: 44px;
+  margin: 10px auto 4px;
+  padding: 8px 16px;
+  border: 1px solid rgba(15, 90, 55, 0.16);
+  border-radius: 14px;
+  background: #fffefb;
+  color: #0f5a37;
+  box-shadow: 0 6px 16px rgba(15, 40, 28, 0.06);
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 800;
+  line-height: 1.45;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+}
 
-  html.erv-mobile-shell body.lp-home-premium .lp-header.lp-header--refined .lp-header__inner--user-mid .lp-header__top-row > #lpHeaderUserMid:not([hidden]) {
-    display: inline-flex !important;
-    grid-area: phone !important;
-    justify-self: center !important;
-    align-items: center !important;
-    min-height: 28px !important;
-    margin: 0 0 2px !important;
-    padding: 2px 10px !important;
-    border: 0 !important;
-    border-radius: 999px !important;
-    background: rgba(15, 90, 55, 0.08) !important;
-    color: #0f5a37 !important;
-    font-size: 0.78rem !important;
-    font-weight: 800 !important;
-    line-height: 1.2 !important;
-    box-shadow: none !important;
-  }
+html body.lp-home-premium .erv-account-phone__num {
+  direction: ltr;
+  unicode-bidi: isolate;
 }

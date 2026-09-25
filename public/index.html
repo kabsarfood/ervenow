@@ -29,7 +29,7 @@
     <link rel="stylesheet" href="/assets/home-polish-final.css?erv=20260920tf1" />
     <script src="/assets/mobile-foundation.js?erv=20260921dest1" defer></script>
     <script src="/assets/mobile-orders-nav-badge.js?erv=20260612" defer></script>
-    <script src="/assets/mobile-harmony.js?erv=20260925hdr1" defer></script>
+    <script src="/assets/mobile-harmony.js?erv=20260926ph1" defer></script>
     <script src="/assets/api-config.js"></script>
     <script src="/assets/phonePrivacy.js"></script>
     <script src="/assets/api.js?erv=20260919id"></script>
@@ -2883,7 +2883,7 @@
     <link rel="stylesheet" href="/assets/home-desktop-vip.css?erv=20260920mobrb1" />
     <link rel="stylesheet" href="/assets/home-desktop-marketplace.css?erv=20260921disc2" />
     <link rel="stylesheet" href="/assets/ervenow-home-4gates.css?erv=20260921g4d" />
-    <link rel="stylesheet" href="/assets/home-why-cta.css?erv=20260925bn4" />
+    <link rel="stylesheet" href="/assets/home-why-cta.css?erv=20260926ph1" />
   </head>
   <body class="lp-body lp-home-premium erv-typography-pr2-home">
     <header class="lp-header lp-header--refined lp-header--menu-right" id="top" data-marketing-slot="header" data-marketing-parent="body">
@@ -3023,9 +3023,6 @@
             />
           </form>
         </div>
-        <button type="button" class="lp-header__user-mid" id="lpHeaderUserMid" hidden aria-label="فتح لوحة حسابك">
-          <span class="lp-header__user-mid__num" id="lpHeaderUserMidText" dir="ltr"></span>
-        </button>
         <div class="lp-header__actions">
           <a class="lp-header-wallet" id="lpHeaderWallet" href="/wallet.html" hidden>
             <span class="lp-header-wallet__inner">
@@ -3057,6 +3054,10 @@
         </div>
       </div>
     </header>
+
+    <button type="button" class="erv-account-phone" id="lpHeaderUserMid" hidden aria-label="فتح لوحة حسابك">
+      <span class="erv-account-phone__num" id="lpHeaderUserMidText" dir="ltr"></span>
+    </button>
 
     <div
       class="marketing-slot-placeholder"
@@ -3627,10 +3628,10 @@
     <script src="/assets/guest-offers-carousel.js?erv=20260925bn4" defer></script>
     <script src="/assets/guestBrowse.js"></script>
     <script src="/assets/ervenow-toggle.js"></script>
-    <script src="/assets/guest-shell.js?erv=20260922n2"></script>
+    <script src="/assets/guest-shell.js?erv=20260926ph1"></script>
     <script src="/assets/pre-reg-banner.js?erv=20260920off1" defer></script>
     <script src="/assets/ervenow-home-title-fix.js?erv=20260920stats1" defer></script>
-    <script src="/assets/home-desktop-marketplace.js?erv=20260925rail9" defer></script>
+    <script src="/assets/home-desktop-marketplace.js?erv=20260926ph1" defer></script>
     <script>
       function goLogin() {
         window.location.href = "/login";
@@ -3848,7 +3849,7 @@
         midText.textContent = shown;
         mid.setAttribute("aria-label", "حسابك " + shown);
         mid.hidden = false;
-        inner.classList.add("lp-header__inner--user-mid");
+        if (inner) inner.classList.remove("lp-header__inner--user-mid");
         if (window.ErvenowAccountDest && ErvenowAccountDest.wirePhoneMidButton) {
           ErvenowAccountDest.wirePhoneMidButton(mid);
         }

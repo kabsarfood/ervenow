@@ -789,16 +789,9 @@ body.guest-shell-page.stores-page {
     background: transparent;
   }
   html.erv-mobile-shell body.guest-shell-page .erv-harmony-identity__name,
-  html.erv-mobile-shell body.guest-shell-page .erv-harmony-identity__tag {
+  html.erv-mobile-shell body.guest-shell-page .erv-harmony-identity__tag,
+  html.erv-mobile-shell body.guest-shell-page .erv-harmony-identity__phone {
     display: none !important;
-  }
-  html.erv-mobile-shell body.guest-shell-page .erv-harmony-identity__phone:not([hidden]) {
-    display: block;
-    font-size: 0.75rem;
-    font-weight: 800;
-    line-height: 1.2;
-    color: #0f5a37;
-    letter-spacing: 0.02em;
   }
   html.erv-mobile-shell.erv-show-shopper-cart:not(.erv-mobile-no-nav) body.guest-shell-page .dash-site-header__tools {
     display: flex !important;
@@ -1165,6 +1158,30 @@ body.guest-shell-page.stores-page {
   margin: 0 !important;
   padding: 0 !important;
   border: 0 !important;
+}
+
+body.guest-shell-page .erv-account-phone[hidden] {
+  display: none !important;
+}
+
+body.guest-shell-page .erv-account-phone:not([hidden]) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  max-width: calc(100% - 28px);
+  min-height: 44px;
+  margin: 10px auto 0;
+  padding: 8px 16px;
+  border: 1px solid rgba(15, 90, 55, 0.16);
+  border-radius: 14px;
+  background: #fffefb;
+  color: #0f5a37;
+  box-shadow: 0 6px 16px rgba(15, 40, 28, 0.06);
+  font-size: 0.95rem;
+  font-weight: 800;
+  line-height: 1.45;
+  letter-spacing: 0.02em;
 }
 
 @import url("/assets/erv-interactive-surfaces.css");
