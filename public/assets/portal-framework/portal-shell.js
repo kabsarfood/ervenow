@@ -172,10 +172,14 @@
     function mountFooter() {
       var host = els.app && els.app.querySelector("[data-pf-footer]");
       if (!host || !PF().PortalFooter) return;
-      host.innerHTML = PF().PortalFooter.renderHtml({
+      var footerOpts = {
         roleLabel: state.config && state.config.roleLabel,
         portalTitle: options.portalTitle,
-      });
+        compact: state.role === "merchant",
+        store: options.store || null,
+      };
+      if (PF().PortalFooter.mount) PF().PortalFooter.mount(host, footerOpts);
+      else host.innerHTML = PF().PortalFooter.renderHtml(footerOpts);
     }
 
     function mountBottomNav() {

@@ -473,10 +473,6 @@ router.patch("/orders/:id/status", requireAuth, async (req, res) => {
       const msg = out.error.message || String(out.error);
       return fail(res, msg, msg === "Forbidden" ? 403 : msg === "Not found" ? 404 : 400);
     }
-    if (out.data?.customer_phone) {
-      if (nextStatus === "delivering") await sendCustomerDeliveringNotice(out.data);
-      else if (nextStatus === "delivered") await sendDriverArrived(out.data);
-    }
     ok(res, { order: out.data, unified_redirect: UNIFIED_ORDER_STATUS });
   } catch (e) {
     fail(res, e.message, 500);

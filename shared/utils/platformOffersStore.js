@@ -1,3 +1,4 @@
+const { readPlatformSetting, invalidatePlatformSettings } = require("./platformSettingsCache");
 const {
   saveUploadImageBase64,
   platformSettingsHelpMessage,
@@ -111,21 +112,14 @@ async function upsertSetting(sb, value) {
     throw new Error(platformSettingsHelpMessage(error));
   }
   if (error) throw error;
+  invalidatePlatformSettings(SETTINGS_KEY);
 }
 
 async function loadOffers(sb, { includeInactive = false } = {}) {
   if (!sb) return { ...DEFAULT_OFFERS, slides: DEFAULT_OFFERS.slides.slice() };
   try {
-    const { data, error } = await sb
-      .from("platform_settings")
-      .select("value")
-      .eq("key", SETTINGS_KEY)
-      .maybeSingle();
-    if (error) {
-      if (isMissingPlatformSettingsTable(error)) return { ...DEFAULT_OFFERS, slides: DEFAULT_OFFERS.slides.slice() };
-      throw error;
-    }
-    const parsed = parseStoredJson(data && data.value);
+    const value = await readPlatformSetting(sb, SETTINGS_KEY);
+    const parsed = parseStoredJson(value);
     if (!parsed || !Array.isArray(parsed.slides) || !parsed.slides.length) {
       return { ...DEFAULT_OFFERS, slides: DEFAULT_OFFERS.slides.slice() };
     }

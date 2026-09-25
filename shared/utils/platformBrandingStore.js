@@ -1,5 +1,6 @@
 const fs = require("fs");
 const path = require("path");
+const { readPlatformSettings, invalidatePlatformSettings } = require("./platformSettingsCache");
 
 const BRANDING_KEYS = [
   "logo_url",
@@ -140,11 +141,7 @@ async function loadBranding(sb) {
   const out = { ...DEFAULT_BRANDING };
   if (!sb) return out;
   try {
-    const { data, error } = await sb.from("platform_settings").select("key,value").in("key", BRANDING_KEYS);
-    if (error) {
-      if (isMissingPlatformSettingsTable(error)) return out;
-      throw error;
-    }
+    const data = await readPlatformSettings(sb, BRANDING_KEYS);
     for (const row of data || []) {
       const k = row && row.key;
       if (k && Object.prototype.hasOwnProperty.call(out, k) && row.value != null) {
@@ -183,6 +180,7 @@ async function upsertSetting(sb, key, value) {
     throw new Error(platformSettingsHelpMessage(error));
   }
   if (error) throw error;
+  invalidatePlatformSettings(key);
 }
 
 async function applyBrandingPatch(sb, patch, { publicRoot } = {}) {

@@ -6,6 +6,9 @@ const { sendWhatsApp } = require("../utils/whatsapp");
 const { normalizePhone } = require("../utils/phone");
 const { buildAuthOtpMessage } = require("../messages/authWhatsApp");
 const {
+  buildCustomerMessageOrderPreparing,
+  buildCustomerMessageOrderReady,
+  buildCustomerMessageOrderDriverReceived,
   buildCustomerMessageOrderAccepted,
   buildCustomerMessageOrderPickedUp,
   buildCustomerMessageDriverArrived,
@@ -163,6 +166,30 @@ async function sendNewOrderToDriver(driver, order) {
 /**
  * قبول الطلب للعميل — نفس النص المتفق عليه سابقاً (منصة + رقم + مندوب + تتبع + تم قبول الطلب)
  */
+async function sendCustomerPreparingNotice(order) {
+  if (!order?.customer_phone) return false;
+  const body = buildCustomerMessageOrderPreparing(order);
+  const ok = await sendDeliveryCustomerWhatsApp(order.customer_phone, body, null);
+  if (ok) logWaSent(order.customer_phone, "customer_preparing");
+  return ok;
+}
+
+async function sendCustomerReadyNotice(order) {
+  if (!order?.customer_phone) return false;
+  const body = buildCustomerMessageOrderReady(order);
+  const ok = await sendDeliveryCustomerWhatsApp(order.customer_phone, body, null);
+  if (ok) logWaSent(order.customer_phone, "customer_ready");
+  return ok;
+}
+
+async function sendCustomerDriverReceivedNotice(order) {
+  if (!order?.customer_phone) return false;
+  const body = buildCustomerMessageOrderDriverReceived(order);
+  const ok = await sendDeliveryCustomerWhatsApp(order.customer_phone, body, null);
+  if (ok) logWaSent(order.customer_phone, "customer_driver_received");
+  return ok;
+}
+
 async function sendOrderAcceptedToCustomer(order, driverPhone) {
   if (!order?.customer_phone) return false;
   const body = buildCustomerMessageOrderAccepted(order, driverPhone);
@@ -243,6 +270,9 @@ module.exports = {
   sendOTP,
   sendNewOrderToDriver,
   sendOrderAcceptedToCustomer,
+  sendCustomerPreparingNotice,
+  sendCustomerReadyNotice,
+  sendCustomerDriverReceivedNotice,
   sendCustomerDeliveringNotice,
   sendDriverArrived,
   sendCustomerOrderPaidWhatsApp,

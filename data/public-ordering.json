@@ -1,5 +1,6 @@
 {
-  "enabled": false,
-  "updated_at": "2026-09-02T00:00:00.000Z",
-  "note": "Pre-registration default. Admin toggle requires confirmation. Env PUBLIC_ORDERING_ENABLED=false is a kill switch."
+  "enabled": true,
+  "updated_at": "2026-09-24T20:00:00.000Z",
+  "updated_by": "local-test",
+  "note": "Opened for local testing. Set PUBLIC_ORDERING_ENABLED=false to close again."
 }

@@ -1,7 +1,7 @@
 const fs = require("fs");
 const os = require("os");
 const path = require("path");
-const { isPosEnabled, setPosEnabled, platformOrderIntakeOpen } = require("../../shared/utils/merchantPosSettings");
+const { isPosEnabled, setPosEnabled, setPosMode, posMode, platformOrderIntakeOpen } = require("../../shared/utils/merchantPosSettings");
 const { preparePosTicket, unitPrice } = require("../../shared/services/merchantPosOrder");
 
 describe("merchant POS setting", () => {
@@ -14,6 +14,19 @@ describe("merchant POS setting", () => {
     expect(platformOrderIntakeOpen()).toBe(true);
     setPosEnabled(storeId, true, file);
     expect(isPosEnabled(storeId, file)).toBe(true);
+    fs.unlinkSync(file);
+  });
+
+  test("pos mode stays A or B and does not enable C", () => {
+    const file = path.join(os.tmpdir(), "ervenow-pos-mode-" + Date.now() + ".json");
+    const storeId = "store-1";
+    expect(posMode(storeId, file)).toBe("A");
+    expect(setPosMode(storeId, "B", file)).toBe("B");
+    setPosEnabled(storeId, false, file);
+    expect(isPosEnabled(storeId, file)).toBe(false);
+    expect(posMode(storeId, file)).toBe("B");
+    expect(function () { setPosMode(storeId, "C", file); }).toThrow(/C/);
+    expect(posMode(storeId, file)).toBe("B");
     fs.unlinkSync(file);
   });
 });

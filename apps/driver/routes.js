@@ -493,26 +493,29 @@ router.get("/orders", requireAuth, async (req, res) => {
     const driverId = req.appUser.id;
     const { data: assignedOrders, error: asErr } = await req.supabase
       .from("orders")
-      .select("*")
+      .select(DRIVER_COMPLETED_ORDER_COLUMNS.join(","))
       .eq("driver_id", driverId)
       .in("delivery_status", ["accepted", "picked", "picked_up", "delivering"])
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+      .limit(40);
     if (asErr) return fail(res, asErr.message, 400);
 
     const { data: openLegacy, error: opErr } = await req.supabase
       .from("orders")
-      .select("*")
+      .select(DRIVER_COMPLETED_ORDER_COLUMNS.join(","))
       .is("driver_id", null)
       .in("delivery_status", ["new", "pending"])
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+      .limit(40);
     if (opErr) return fail(res, opErr.message, 400);
 
     const { data: openReady, error: rdErr } = await req.supabase
       .from("orders")
-      .select("*")
+      .select(DRIVER_COMPLETED_ORDER_COLUMNS.join(","))
       .is("driver_id", null)
       .eq("delivery_status", "ready")
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+      .limit(40);
     if (rdErr) return fail(res, rdErr.message, 400);
 
     const { data: completedRecent, error: doneErr } = await fetchDriverCompletedOrders(req.supabase, driverId);
@@ -876,7 +879,6 @@ router.post("/start-delivery/:id", requireAuth, async (req, res) => {
     if (out.error) return fail(res, out.error.message || "order not available", 400);
     const data = out.data;
     if (!data) return fail(res, "order not available", 400);
-    if (data.customer_phone) await sendCustomerDeliveringNotice(data);
     return ok(res, { order: data, unified_redirect: UNIFIED_ORDER_STATUS });
   } catch (e) {
     return fail(res, e.message, 500);
@@ -891,7 +893,7 @@ router.post("/ping-arrival/:id", requireAuth, async (req, res) => {
     if (!oid) return fail(res, "order id required", 400);
     const { data: row, error } = await req.supabase
       .from("orders")
-      .select("id, driver_id, delivery_status")
+      .select("id, driver_id, delivery_status, customer_phone, order_number, store_name, store_id")
       .eq("id", oid)
       .maybeSingle();
     if (error || !row) return fail(res, error?.message || "Not found", 404);
@@ -923,9 +925,6 @@ router.post("/complete-order/:id", requireAuth, async (req, res) => {
     if (out.error) return fail(res, out.error.message || "order not available", 400);
     const data = out.data;
     if (!data) return fail(res, "order not available", 400);
-    if (data.customer_phone) {
-      await sendDriverArrived(data);
-    }
     if (data.store_id) {
       try {
         const { error: rpcErr } = await req.supabase.rpc("increment_store_orders", { store_id: data.store_id });

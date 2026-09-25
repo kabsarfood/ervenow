@@ -11,7 +11,7 @@
   var boardRefreshTimer = null;
   var boardPollTimer = null;
   var notifCenterApi = null;
-  var BOARD_POLL_MS = 8000;
+  var BOARD_POLL_MS = 45000;
 
   var state = {
     storeId: null,
@@ -29,9 +29,13 @@
     reviews: [],
     activeSection: "dashboard",
     orderFilter: "new",
+    orderQuery: "",
+    orderDate: "",
     reportRange: "today",
     posEnabled: true,
+    posMode: "A",
     cashiers: [],
+    expenses: [],
     seenOrderIds: null,
     incoming: [],
   };
@@ -73,10 +77,22 @@
   function fmtDate(iso) {
     if (!iso) return "—";
     try {
-      return new Date(iso).toLocaleString("ar-SA", { dateStyle: "short", timeStyle: "short" });
+      var d = new Date(iso);
+      var day = d.toLocaleDateString("ar-SA", { year: "numeric", month: "2-digit", day: "2-digit" });
+      var time = d.toLocaleTimeString("ar-SA", { hour: "2-digit", minute: "2-digit" });
+      return day + " · " + time;
     } catch (_) {
       return iso;
     }
+  }
+
+  function orderDayKey(iso) {
+    if (!iso) return "";
+    var d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return "";
+    var m = String(d.getMonth() + 1).padStart(2, "0");
+    var day = String(d.getDate()).padStart(2, "0");
+    return d.getFullYear() + "-" + m + "-" + day;
   }
 
   function showMsg(text, ok) {
@@ -107,9 +123,15 @@
     return PlatformAPI.api(path, opts);
   }
 
+  function orderBoardPath() {
+    var day = String(state.orderDate || "");
+    if (/^\d{4}-\d{2}-\d{2}$/.test(day)) return "/api/store/order-board?date=" + day;
+    return "/api/store/order-board";
+  }
+
   async function loadOrderBoard() {
     try {
-      state.board = await api("/api/store/order-board");
+      state.board = await api(orderBoardPath());
     } catch (_) {
       state.board = state.board || { orders: [], status_counts: {} };
     }
@@ -246,7 +268,7 @@
     ];
     if (sid) {
       jobs.push(
-        api("/api/store/order-board")
+        api(orderBoardPath())
           .then(function (board) {
             state.board = board;
           })
@@ -269,9 +291,15 @@
             checkoutPlatformLoaded = true;
           })
           .catch(function () {}),
+        api("/api/store/expenses")
+          .then(function (j) {
+            state.expenses = (j && j.expenses) || [];
+          })
+          .catch(function () {}),
         api("/api/store/pos-settings")
           .then(function (j) {
             state.posEnabled = !(j && j.enabled === false);
+            state.posMode = j && j.pos_mode === "B" ? "B" : "A";
           })
           .catch(function () {
             state.posEnabled = true;
@@ -310,6 +338,16 @@
       state.merchantCategories = res.categories || [];
     } catch (_) {
       state.merchantCategories = [];
+    }
+  }
+
+  async function loadExpenses() {
+    if (!state.storeId) return;
+    try {
+      var j = await api("/api/store/expenses");
+      state.expenses = (j && j.expenses) || [];
+    } catch (_) {
+      state.expenses = state.expenses || [];
     }
   }
 
@@ -483,6 +521,14 @@
     });
     if (global.ErvenowPortalProviderLocation) {
       ErvenowPortalProviderLocation.syncButtonLabel(state.store);
+    }
+    var footerHost = shell.getEls && shell.getEls().app && shell.getEls().app.querySelector("[data-pf-footer]");
+    if (footerHost && global.ErvenowPortalFramework && ErvenowPortalFramework.PortalFooter && ErvenowPortalFramework.PortalFooter.mount) {
+      ErvenowPortalFramework.PortalFooter.mount(footerHost, {
+        portalTitle: "بوابة المتجر",
+        compact: true,
+        store: state.store || {},
+      });
     }
   }
 
@@ -681,10 +727,19 @@
   }
 
   function ordersList() {
-    return allBoardOrders().filter(function (o) {
-      var st = o.board_status || o.delivery_status;
-      return inOrderGroup(st, state.orderFilter);
-    });
+    var q = String(state.orderQuery || "").trim().toLowerCase();
+    return allBoardOrders()
+      .filter(function (o) {
+        var st = o.board_status || o.delivery_status;
+        if (!inOrderGroup(st, state.orderFilter)) return false;
+        if (state.orderDate && orderDayKey(o.created_at) !== state.orderDate) return false;
+        if (!q) return true;
+        var blob = [o.order_number, o.id, o.customer_phone, orderSourceLabel(o)].join(" ").toLowerCase();
+        return blob.indexOf(q) !== -1;
+      })
+      .sort(function (a, b) {
+        return new Date(b.created_at || 0) - new Date(a.created_at || 0);
+      });
   }
 
   function countOrdersInGroup(group) {
@@ -773,6 +828,7 @@
       '<div class="mp-card"><h3>اختصارات</h3><div class="mp-classic-links">' +
       '<button type="button" class="mp-btn mp-btn--primary" data-pf-section="orders">الطلبات</button>' +
       '<button type="button" class="mp-btn mp-btn--ghost" data-pf-section="products">المنتجات</button>' +
+      '<button type="button" class="mp-btn mp-btn--ghost" data-pf-section="expenses">المصروفات</button>' +
       '<button type="button" class="mp-btn mp-btn--ghost" data-pf-section="withdrawals">السحب</button>' +
       '<button type="button" class="mp-btn mp-btn--ghost" data-pf-section="settings">الإعدادات</button>' +
       "</div></div>"
@@ -857,7 +913,9 @@
                 '" target="_blank" rel="noopener">تتبع</a>';
             }
             return (
-              "<tr><td>" +
+              '<tr><td class="mp-orders__when" data-order-date="' +
+              esc(orderDayKey(o.created_at)) +
+              '">' +
               fmtDate(o.created_at) +
               "</td><td>" +
               esc(o.order_number || o.id) +
@@ -881,16 +939,27 @@
       : '<tr><td colspan="7" class="mp-empty">لا طلبات في هذا القسم</td></tr>';
 
     return (
+      '<div class="mp-orders">' +
+      '<div class="mp-orders__bar">' +
       '<h2 class="mp-section-title">الطلبات</h2>' +
-      '<p class="mp-section-sub">Orders — إدارة دورة الطلب من البوابة</p>' +
-      '<div class="mp-tabs" role="tablist">' +
+      '<label class="mp-orders__date">تاريخ<input id="mpOrderDate" type="date" value="' +
+      esc(state.orderDate || "") +
+      '" /></label>' +
+      (state.orderDate
+        ? '<button type="button" class="mp-btn mp-btn--ghost" id="mpOrderDateClear">كل الأيام</button>'
+        : "") +
+      '<input id="mpOrderSearch" class="mp-orders__search" type="search" placeholder="بحث برقم الطلب أو الجوال" value="' +
+      esc(state.orderQuery || "") +
+      '" />' +
+      "</div>" +
+      '<div class="mp-tabs mp-orders__tabs" role="tablist">' +
       tabsHtml +
       "</div>" +
-      '<div class="mp-card mp-table-wrap"><table class="mp-table"><thead><tr>' +
+      '<div class="mp-card mp-table-wrap mp-orders__table"><table class="mp-table"><thead><tr>' +
       "<th>التاريخ</th><th>الطلب</th><th>الحالة</th><th>الدفع</th><th>الإجمالي</th><th>إجراء</th><th>أدوات</th>" +
       "</tr></thead><tbody>" +
       tableRows +
-      "</tbody></table></div>"
+      "</tbody></table></div></div>"
     );
   }
 
@@ -1117,8 +1186,19 @@
           : current === "cashiers"
             ? renderCashiers()
             : renderCategories();
+    var mode = state.posMode === "B" ? "B" : "A";
     return (
       '<h2 class="mp-section-title">إدارة المتجر</h2>' +
+      '<div class="mp-card mp-form"><h3>نوع الكاشير</h3>' +
+      '<div class="mp-store-tabs" role="radiogroup" aria-label="نوع الكاشير">' +
+      '<label class="mp-pay-row"><input type="radio" name="mpPosMode" value="A"' +
+      (mode === "A" ? " checked" : "") +
+      " /> A — مرئي</label>" +
+      '<label class="mp-pay-row"><input type="radio" name="mpPosMode" value="B"' +
+      (mode === "B" ? " checked" : "") +
+      " /> B — تجاري</label>" +
+      '<label class="mp-pay-row"><input type="radio" name="mpPosMode" value="C" disabled /> C — متقدم / قريبًا</label>' +
+      "</div></div>" +
       '<div class="mp-store-tabs" role="tablist">' +
       bar +
       "</div>" +
@@ -1215,6 +1295,74 @@
     );
   }
 
+  function rangeStart(range) {
+    var start = new Date();
+    if (range === "today") start.setHours(0, 0, 0, 0);
+    else if (range === "week") start.setDate(start.getDate() - 7);
+    else if (range === "month") start.setMonth(start.getMonth() - 1);
+    else start.setHours(0, 0, 0, 0);
+    return start;
+  }
+
+  function expensesInRange(range) {
+    var start = rangeStart(range);
+    return (state.expenses || []).filter(function (row) {
+      var raw = row.spent_at || row.created_at;
+      if (!raw) return false;
+      var d = /^\d{4}-\d{2}-\d{2}$/.test(String(raw)) ? new Date(String(raw) + "T12:00:00") : new Date(raw);
+      return !Number.isNaN(d.getTime()) && d >= start;
+    });
+  }
+
+  function expenseSum(rows) {
+    return rows.reduce(function (s, row) {
+      return s + (Number(row.amount) || 0);
+    }, 0);
+  }
+
+  function renderExpenses() {
+    var rows = state.expenses || [];
+    var total = expenseSum(rows);
+    var body = rows.length
+      ? rows
+          .map(function (row) {
+            return (
+              "<tr><td>" +
+              esc(row.spent_at || "—") +
+              "</td><td>" +
+              esc(row.item || row.note || "—") +
+              "</td><td>" +
+              esc(row.note || "—") +
+              "</td><td>" +
+              fmtMoney(row.amount) +
+              " ر.س</td><td>" +
+              esc(row.cashier_name || "—") +
+              '</td><td><button type="button" class="mp-btn mp-btn--ghost mp-expense-del" data-expense-id="' +
+              esc(row.id) +
+              '">حذف</button></td></tr>'
+            );
+          })
+          .join("")
+      : '<tr><td colspan="6" class="mp-empty">لا مصروفات محفوظة بعد</td></tr>';
+    return (
+      '<h2 class="mp-section-title">المصروفات</h2>' +
+      '<p class="mp-section-sub">فاتورة المصروف تُحفظ باسم الكاشير وتُخصم من صافي الربح. لا تمس المحفظة.</p>' +
+      '<div class="mp-kpi-grid">' +
+      kpiCard("إجمالي المصروفات", fmtMoney(total) + " ر.س") +
+      "</div>" +
+      '<form class="mp-card mp-form mp-expense-form" id="mpExpenseForm">' +
+      "<label>فاتورة السعر<input id=\"mpExpenseAmount\" type=\"number\" min=\"0.01\" step=\"0.01\" inputmode=\"decimal\" required /></label>" +
+      "<label>الصنف<input id=\"mpExpenseItem\" type=\"text\" maxlength=\"80\" required placeholder=\"مثل: إيجار، مشتريات\" /></label>" +
+      "<label>الملاحظات<textarea id=\"mpExpenseNote\" maxlength=\"400\" rows=\"3\" placeholder=\"ملاحظة اختيارية\"></textarea></label>" +
+      '<div class="mp-form-actions"><button type="submit" class="mp-btn mp-btn--primary">حفظ</button></div>' +
+      "</form>" +
+      '<div class="mp-card"><h3>السجل</h3><div class="mp-table-wrap"><table class="mp-table"><thead><tr>' +
+      "<th>التاريخ</th><th>الصنف</th><th>الملاحظات</th><th>السعر</th><th>الكاشير</th><th></th></tr></thead><tbody>" +
+      body +
+      "</tbody></table></div></div>"
+    );
+  }
+
   function renderReports() {
     var ranges = [
       { key: "today", label: "اليوم" },
@@ -1238,17 +1386,20 @@
     var sales = filtered.reduce(function (s, o) {
       return s + (Number(o.total) || Number(o.order_total) || 0);
     }, 0);
+    var spent = expenseSum(expensesInRange(state.reportRange));
+    var net = sales - spent;
 
     return (
       '<h2 class="mp-section-title">التقارير</h2>' +
-      '<p class="mp-section-sub">Reports — من بيانات الطلبات المتاحة</p>' +
+      '<p class="mp-section-sub">صافي الربح = إجمالي المبيعات − المصروفات</p>' +
       '<div class="mp-tabs">' +
       tabs +
       "</div>" +
       '<div class="mp-kpi-grid">' +
       kpiCard("عدد الطلبات", String(filtered.length)) +
       kpiCard("إجمالي المبيعات", fmtMoney(sales) + " ر.س") +
-      kpiCard("متوسط السلة", filtered.length ? fmtMoney(sales / filtered.length) + " ر.س" : "—") +
+      kpiCard("المصروفات", fmtMoney(spent) + " ر.س") +
+      kpiCard("صافي الربح", fmtMoney(net) + " ر.س") +
       "</div>" +
       '<div class="mp-card"><h3>تفاصيل الطلبات</h3><div class="mp-table-wrap"><table class="mp-table"><thead><tr>' +
       "<th>التاريخ</th><th>الطلب</th><th>الحالة</th><th>الإجمالي</th></tr></thead><tbody>" +
@@ -1520,6 +1671,8 @@
         return renderPos();
       case "reports":
         return renderReports();
+      case "expenses":
+        return renderExpenses();
       case "notifications":
         return renderNotifications();
       case "settings":
@@ -1565,6 +1718,7 @@
           store: state.store || {},
           storeId: state.storeId,
           canManage: true,
+          posMode: state.posMode === "B" ? "B" : "A",
         });
       }
     }
@@ -1583,6 +1737,12 @@
       sectionCacheAt.cashiers = Date.now();
       loadCashiers().then(function () {
         if (state.activeSection === "store-admin") renderMain();
+      });
+    }
+    if ((sectionId === "expenses" || sectionId === "reports" || sectionId === "dashboard") && !sectionFresh("expenses", 20000)) {
+      sectionCacheAt.expenses = Date.now();
+      loadExpenses().then(function () {
+        if (state.activeSection === sectionId) renderMain();
       });
     }
     if (sectionId === "withdrawals" && !sectionFresh("withdrawals", 20000)) {
@@ -1699,10 +1859,87 @@
   }
 
   function wireSectionEvents() {
+    var orderSearch = document.getElementById("mpOrderSearch");
+    if (orderSearch) {
+      orderSearch.oninput = function () {
+        state.orderQuery = orderSearch.value || "";
+        renderMain();
+        var again = document.getElementById("mpOrderSearch");
+        if (again) {
+          again.focus();
+          var end = again.value.length;
+          try { again.setSelectionRange(end, end); } catch (_) {}
+        }
+      };
+    }
+    var orderDate = document.getElementById("mpOrderDate");
+    if (orderDate) {
+      orderDate.onchange = function () {
+        state.orderDate = orderDate.value || "";
+        loadOrderBoard().then(function () {
+          renderMain();
+        });
+      };
+    }
+    var orderDateClear = document.getElementById("mpOrderDateClear");
+    if (orderDateClear) {
+      orderDateClear.onclick = function () {
+        state.orderDate = "";
+        loadOrderBoard().then(function () {
+          renderMain();
+        });
+      };
+    }
     document.querySelectorAll("[data-order-filter]").forEach(function (btn) {
       btn.onclick = function () {
         state.orderFilter = btn.getAttribute("data-order-filter");
         renderMain();
+      };
+    });
+    var expenseForm = document.getElementById("mpExpenseForm");
+    if (expenseForm) {
+      expenseForm.onsubmit = function (ev) {
+        ev.preventDefault();
+        var amountEl = document.getElementById("mpExpenseAmount");
+        var itemEl = document.getElementById("mpExpenseItem");
+        var noteEl = document.getElementById("mpExpenseNote");
+        api("/api/store/expenses", {
+          method: "POST",
+          body: {
+            amount: amountEl ? amountEl.value : "",
+            item: itemEl ? itemEl.value : "",
+            note: noteEl ? noteEl.value : "",
+          },
+        })
+          .then(function () {
+            showMsg("تم حفظ المصروف", true);
+            return loadExpenses();
+          })
+          .then(function () {
+            sectionCacheAt.expenses = Date.now();
+            renderMain();
+          })
+          .catch(function (e) {
+            showMsg((e && e.message) || "تعذر حفظ المصروف", false);
+          });
+      };
+    }
+    document.querySelectorAll(".mp-expense-del").forEach(function (btn) {
+      btn.onclick = function () {
+        var id = btn.getAttribute("data-expense-id");
+        if (!id || !global.confirm("حذف هذا المصروف؟")) return;
+        api("/api/store/expenses/" + encodeURIComponent(id), { method: "DELETE" })
+          .then(function () {
+            showMsg("تم حذف المصروف", true);
+            return loadExpenses();
+          })
+          .then(function () {
+            sectionCacheAt.expenses = Date.now();
+            renderMain();
+          })
+          .catch(function (e) {
+            showMsg((e && e.message) || "تعذر حذف المصروف", false);
+          });
       };
     });
     document.querySelectorAll("[data-report-range]").forEach(function (btn) {
@@ -1743,7 +1980,7 @@
             });
           }
           showMsg("تم تحديث الطلب", true);
-          state.board = await api("/api/store/order-board");
+          state.board = await api(orderBoardPath());
           noteFreshPlatformOrders();
           state.dashboard = await api("/api/store/merchant-dashboard");
           renderMain();
@@ -1763,6 +2000,19 @@
         var o = findBoardOrder(btn.getAttribute("data-order-id"));
         var wf = global.ErvenowMerchantOrderWorkflow;
         if (o && wf && wf.printThermal80) wf.printThermal80(o, state.store || {});
+      };
+    });
+    document.querySelectorAll('input[name="mpPosMode"]').forEach(function (input) {
+      input.onchange = async function () {
+        if (!input.checked || input.value === "C") return;
+        try {
+          var saved = await api("/api/store/pos-settings", { method: "PATCH", body: { pos_mode: input.value } });
+          state.posMode = saved && saved.pos_mode === "B" ? "B" : "A";
+          showMsg(state.posMode === "B" ? "الكاشير التجاري B" : "الكاشير المرئي A", true);
+        } catch (e) {
+          showMsg(e.message || String(e), false);
+          renderMain();
+        }
       };
     });
     var posToggle = document.getElementById("mpPosEnabled");

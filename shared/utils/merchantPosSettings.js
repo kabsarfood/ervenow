@@ -23,23 +23,70 @@ function readStores(file) {
   return {};
 }
 
-function isPosEnabled(storeId, file) {
-  const id = String(storeId || "").trim();
-  if (!id) return false;
-  const value = readStores(file)[id];
-  if (value === false) return false;
-  return true;
+function normalizePosSetting(value) {
+  if (value === false) return { enabled: false, pos_mode: "A" };
+  if (!value || value === true) return { enabled: true, pos_mode: "A" };
+  if (typeof value === "object") {
+    return {
+      enabled: value.enabled !== false,
+      pos_mode: String(value.pos_mode || "A").toUpperCase() === "B" ? "B" : "A",
+    };
+  }
+  return { enabled: true, pos_mode: "A" };
 }
 
-function setPosEnabled(storeId, enabled, file) {
+function readPosSetting(storeId, file) {
+  const id = String(storeId || "").trim();
+  if (!id) return { enabled: false, pos_mode: "A" };
+  return normalizePosSetting(readStores(file)[id]);
+}
+
+function writePosSetting(storeId, next, file) {
   const id = String(storeId || "").trim();
   if (!id) throw new Error("store id required");
   const stores = readStores(file);
-  stores[id] = !!enabled;
+  const current = normalizePosSetting(stores[id]);
+  const merged = {
+    enabled: next.enabled == null ? current.enabled : !!next.enabled,
+    pos_mode: next.pos_mode == null ? current.pos_mode : next.pos_mode,
+  };
+  if (merged.pos_mode !== "A" && merged.pos_mode !== "B") {
+    const err = new Error("نوع الكاشير C غير متاح الآن");
+    err.status = 400;
+    throw err;
+  }
+  stores[id] = merged;
   const target = flagsPath(file);
   fs.mkdirSync(path.dirname(target), { recursive: true });
   fs.writeFileSync(target, JSON.stringify({ stores }, null, 2));
-  return stores[id];
+  return merged;
+}
+
+function isPosEnabled(storeId, file) {
+  return readPosSetting(storeId, file).enabled;
+}
+
+function posMode(storeId, file) {
+  return readPosSetting(storeId, file).pos_mode;
+}
+
+function setPosEnabled(storeId, enabled, file) {
+  return writePosSetting(storeId, { enabled: !!enabled }, file).enabled;
+}
+
+function setPosMode(storeId, mode, file) {
+  const next = String(mode || "").toUpperCase();
+  if (next === "C") {
+    const err = new Error("نوع الكاشير C غير متاح الآن");
+    err.status = 400;
+    throw err;
+  }
+  if (next !== "A" && next !== "B") {
+    const err = new Error("نوع الكاشير يجب أن يكون A أو B");
+    err.status = 400;
+    throw err;
+  }
+  return writePosSetting(storeId, { pos_mode: next }, file).pos_mode;
 }
 
 function platformOrderIntakeOpen() {
@@ -48,7 +95,9 @@ function platformOrderIntakeOpen() {
 
 module.exports = {
   isPosEnabled,
+  posMode,
   setPosEnabled,
+  setPosMode,
   platformOrderIntakeOpen,
   flagsPath,
 };

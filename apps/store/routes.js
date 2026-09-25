@@ -2262,9 +2262,21 @@ router.get("/order-board", requireAuth, requireStoreRole, async (req, res) => {
     if (sErr) return fail(res, sErr.message, 400);
     if (!st) return fail(res, "لا يوجد متجر معتمد لجوالك.", 404);
 
-    const { data: rows, error: oErr } = await selectOrdersResilient(sb, MERCHANT_ORDER_BOARD_COLUMNS, (q) =>
-      q.eq("store_id", st.id).order("created_at", { ascending: false }).limit(150)
-    );
+    const day = String(req.query.date || "").slice(0, 10);
+    const dayOk = /^\d{4}-\d{2}-\d{2}$/.test(day);
+    const { data: rows, error: oErr } = await selectOrdersResilient(sb, MERCHANT_ORDER_BOARD_COLUMNS, (q) => {
+      let next = q.eq("store_id", st.id).order("created_at", { ascending: false });
+      if (dayOk) {
+        const start = new Date(day + "T00:00:00+03:00");
+        const end = new Date(start.getTime() + 24 * 60 * 60 * 1000);
+        if (!Number.isNaN(start.getTime())) {
+          next = next.gte("created_at", start.toISOString()).lt("created_at", end.toISOString()).limit(200);
+        }
+      } else {
+        next = next.limit(40);
+      }
+      return next;
+    });
 
     if (oErr) return fail(res, oErr.message, 400);
 
@@ -3122,6 +3134,52 @@ async function merchantApprovedStore(sb, appUser) {
   return { store: data };
 }
 
+router.get("/expenses", requireAuth, requireStoreRole, async (req, res) => {
+  try {
+    const sb = createServiceClient();
+    const got = await merchantApprovedStore(sb, req.appUser);
+    if (got.error) return fail(res, got.error, got.status || 400);
+    const { listExpenses } = require("../../shared/utils/merchantExpenses");
+    return ok(res, { expenses: listExpenses(got.store.id) });
+  } catch (e) {
+    return fail(res, e.message || "تعذر تحميل المصروفات", e.status || 500);
+  }
+});
+
+router.post("/expenses", requireAuth, requireStoreRole, async (req, res) => {
+  try {
+    const sb = createServiceClient();
+    const got = await merchantApprovedStore(sb, req.appUser);
+    if (got.error) return fail(res, got.error, got.status || 400);
+    const { addExpense } = require("../../shared/utils/merchantExpenses");
+    const actorName = String((req.appUser && req.appUser.name) || "").trim() || "صاحب المتجر";
+    const expense = addExpense(got.store.id, {
+      amount: req.body && req.body.amount,
+      item: req.body && (req.body.item || req.body.category),
+      note: req.body && (req.body.note || req.body.notes),
+      spent_at: req.body && req.body.spent_at,
+      cashier_name: actorName,
+      cashier_id: req.appUser && req.appUser.id,
+    });
+    return ok(res, { expense });
+  } catch (e) {
+    return fail(res, e.message || "تعذر حفظ المصروف", e.status || 500);
+  }
+});
+
+router.delete("/expenses/:id", requireAuth, requireStoreRole, async (req, res) => {
+  try {
+    const sb = createServiceClient();
+    const got = await merchantApprovedStore(sb, req.appUser);
+    if (got.error) return fail(res, got.error, got.status || 400);
+    const { removeExpense } = require("../../shared/utils/merchantExpenses");
+    const removed = removeExpense(got.store.id, req.params.id);
+    return ok(res, { removed });
+  } catch (e) {
+    return fail(res, e.message || "تعذر حذف المصروف", e.status || 500);
+  }
+});
+
 router.get("/cashiers", requireAuth, requireStoreRole, async (req, res) => {
   try {
     const sb = createServiceClient();
@@ -3166,7 +3224,12 @@ router.get("/pos-settings", requireAuth, requireStoreRole, async (req, res) => {
     if (!sb) return fail(res, "الخادم غير مهيأ لقاعدة البيانات", 503);
     const got = await merchantApprovedStore(sb, req.appUser);
     if (got.error) return fail(res, got.error, got.status || 400);
-    return ok(res, { enabled: isPosEnabled(got.store.id), platform_orders_open: true });
+    const { posMode } = require("../../shared/utils/merchantPosSettings");
+    return ok(res, {
+      enabled: isPosEnabled(got.store.id),
+      pos_mode: posMode(got.store.id),
+      platform_orders_open: true,
+    });
   } catch (e) {
     console.error("[store/pos-settings]", e);
     return fail(res, e.message || "خطأ في الخادم", 500);
@@ -3180,12 +3243,18 @@ router.patch("/pos-settings", requireAuth, requireStoreRole, async (req, res) =>
     const got = await merchantApprovedStore(sb, req.appUser);
     if (got.error) return fail(res, got.error, got.status || 400);
     const body = req.body && typeof req.body === "object" ? req.body : {};
-    if (!Object.prototype.hasOwnProperty.call(body, "enabled")) return fail(res, "enabled مطلوب", 400);
-    const enabled = setPosEnabled(got.store.id, !!body.enabled);
-    return ok(res, { enabled, platform_orders_open: true });
+    const { setPosMode, posMode } = require("../../shared/utils/merchantPosSettings");
+    if (!Object.prototype.hasOwnProperty.call(body, "enabled") && !Object.prototype.hasOwnProperty.call(body, "pos_mode")) {
+      return fail(res, "enabled أو pos_mode مطلوب", 400);
+    }
+    let enabled = isPosEnabled(got.store.id);
+    if (Object.prototype.hasOwnProperty.call(body, "enabled")) enabled = setPosEnabled(got.store.id, !!body.enabled);
+    let mode = posMode(got.store.id);
+    if (Object.prototype.hasOwnProperty.call(body, "pos_mode")) mode = setPosMode(got.store.id, body.pos_mode);
+    return ok(res, { enabled, pos_mode: mode, platform_orders_open: true });
   } catch (e) {
     console.error("[store/pos-settings]", e);
-    return fail(res, e.message || "خطأ في الخادم", 500);
+    return fail(res, e.message || "خطأ في الخادم", e.status || 500);
   }
 });
 
@@ -3258,6 +3327,7 @@ const STORE_GET_BY_ID_RESERVED = new Set([
   "pos-settings",
   "pos-orders",
   "cashiers",
+  "expenses",
 ]);
 
 function isStoreWithdrawalsMissing(err) {

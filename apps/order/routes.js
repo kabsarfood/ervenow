@@ -258,14 +258,7 @@ router.patch("/:id/status", requireAuth, async (req, res) => {
     }
 
     const data = out.data;
-    if (data && !out.service_booking) {
-      const ds = nextStatus;
-      if (data.customer_phone) {
-        if (ds === "delivering") await sendCustomerDeliveringNotice(data);
-        else if (ds === "delivered") await sendDriverArrived(data);
-      }
-      if (data.id) broadcastOrderPatch(String(data.id), orderPatchFromRow(data));
-    }
+    if (data && data.id) broadcastOrderPatch(String(data.id), orderPatchFromRow(data));
 
     return ok(res, {
       order: data,
@@ -413,7 +406,10 @@ router.post("/:id/rate", requireAuth, requireRole("customer", "admin"), async (r
     if (!sb) return fail(res, "database not configured", 503);
     const orderId = String(req.params.id || "").trim();
     const b = req.body || {};
-    const { data, error } = await rateOrder(sb, orderId, req.appUser, b.rating, b.review);
+    const { data, error } = await rateOrder(sb, orderId, req.appUser, b.driver_rating || b.rating, b.review, {
+      driver_rating: b.driver_rating || b.rating,
+      platform_rating: b.platform_rating,
+    });
     if (error) return fail(res, error.message, 400);
     if (data) await bumpDeliveryOrdersListEpoch();
     ok(res, { order: data });

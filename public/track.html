@@ -12,10 +12,33 @@
     <link rel="stylesheet" href="/assets/guest-shell.css?erv=20260612" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
-      #rateStars.disabled {
+      #rateStars.disabled,
+      .erv-rate-stars.disabled {
         pointer-events: none;
         opacity: 0.75;
         cursor: default;
+      }
+
+      .erv-rate-stars {
+        display: flex;
+        gap: 6px;
+        font-size: 1.8rem;
+        line-height: 1;
+      }
+
+      .erv-rate-stars button {
+        min-width: 44px;
+        min-height: 44px;
+        border: 0;
+        background: transparent;
+        color: #c5b089;
+        font-size: 1.8rem;
+        cursor: pointer;
+        padding: 0;
+      }
+
+      .erv-rate-stars button.is-on {
+        color: #b9872f;
       }
 
       .ervenow-driver-marker {
@@ -326,21 +349,25 @@
       </div>
 
       <div class="card" id="rateCard" style="display: none">
-        <strong>تقييم التوصيل</strong>
-        <p class="sub" style="margin-top: 8px">يظهر بعد اكتمال التسليم. كيف كانت تجربتك؟</p>
-        <div
-          id="rateStars"
-          style="margin: 10px 0; font-size: 1.4rem; letter-spacing: 0.2em; cursor: pointer; user-select: none"
-          role="group"
-        >
-          <span data-n="1">📊</span>
-          <span data-n="2">📊</span>
-          <span data-n="3">📊</span>
-          <span data-n="4">📊</span>
-          <span data-n="5">📊</span>
+        <strong>تم التسليم</strong>
+        <p class="sub" style="margin-top: 8px">شكرا لكم على تعاملكم معنا</p>
+        <p class="sub" style="margin: 12px 0 6px; font-weight: 700">تقييم المنصة</p>
+        <div id="rateStarsPlatform" class="erv-rate-stars" role="group" aria-label="تقييم المنصة">
+          <button type="button" data-n="1">★</button>
+          <button type="button" data-n="2">★</button>
+          <button type="button" data-n="3">★</button>
+          <button type="button" data-n="4">★</button>
+          <button type="button" data-n="5">★</button>
         </div>
-        <textarea id="rateReview" rows="3" placeholder="اكتب رأيك"></textarea>
-        <div class="btn-row" style="margin-top: 10px">
+        <p class="sub" style="margin: 12px 0 6px; font-weight: 700">تقييم المندوب</p>
+        <div id="rateStarsDriver" class="erv-rate-stars" role="group" aria-label="تقييم المندوب">
+          <button type="button" data-n="1">★</button>
+          <button type="button" data-n="2">★</button>
+          <button type="button" data-n="3">★</button>
+          <button type="button" data-n="4">★</button>
+          <button type="button" data-n="5">★</button>
+        </div>
+        <div class="btn-row" style="margin-top: 14px">
           <button type="button" class="btn btn-primary" id="btnRate">إرسال</button>
         </div>
         <p class="sub" id="rateMsg" style="margin-top: 8px"></p>
@@ -419,6 +446,7 @@
       var etaRequestId = 0;
       var dropGeocodeCache = Object.create(null);
       var selectedRate = 0;
+      var selectedPlatform = 0;
       var meRole = null;
       var meRoleFetched = false;
       var speechState = {
@@ -538,30 +566,33 @@
 
       function applyRateFormSubmitted(submitted) {
         var submitBtn = document.getElementById("btnRate");
-        var textarea = document.getElementById("rateReview");
-        var starsEl = document.getElementById("rateStars");
+        var platform = document.getElementById("rateStarsPlatform");
+        var driver = document.getElementById("rateStarsDriver");
         var thanksEl = document.getElementById("thanksEl");
         if (submitted) {
           if (submitBtn) submitBtn.disabled = true;
-          if (textarea) textarea.disabled = true;
-          if (starsEl) starsEl.classList.add("disabled");
-          if (thanksEl) thanksEl.innerText = "شكراً لتقييمك ❤️";
+          if (platform) platform.classList.add("disabled");
+          if (driver) driver.classList.add("disabled");
+          if (thanksEl) thanksEl.innerText = "شكراً لتقييمك";
         } else {
           if (submitBtn) submitBtn.disabled = false;
-          if (textarea) textarea.disabled = false;
-          if (starsEl) starsEl.classList.remove("disabled");
+          if (platform) platform.classList.remove("disabled");
+          if (driver) driver.classList.remove("disabled");
           if (thanksEl) thanksEl.innerText = "";
         }
       }
 
-      function paintStars(n) {
-        var row = document.getElementById("rateStars");
+      function paintStarRow(row, n) {
         if (!row) return;
-        var spans = row.querySelectorAll("[data-n]");
-        for (var i = 0; i < spans.length; i++) {
-          var sn = parseInt(spans[i].getAttribute("data-n"), 10);
-          spans[i].style.opacity = n > 0 && sn <= n ? "1" : "0.35";
+        var buttons = row.querySelectorAll("[data-n]");
+        for (var i = 0; i < buttons.length; i++) {
+          var sn = parseInt(buttons[i].getAttribute("data-n"), 10);
+          buttons[i].classList.toggle("is-on", n > 0 && sn <= n);
         }
+      }
+
+      function paintStars(n) {
+        paintStarRow(document.getElementById("rateStarsDriver"), n);
       }
 
       function syncRateForm(order) {
@@ -577,21 +608,24 @@
           return;
         }
         card.style.display = "block";
-        var serverR = order.rating != null && order.rating >= 1 && order.rating <= 5 ? Number(order.rating) : null;
-        if (serverR != null) {
-          selectedRate = serverR;
+        var dataObj = order.data && typeof order.data === "object" ? order.data : {};
+        var serverDriver = order.rating != null && order.rating >= 1 && order.rating <= 5 ? Number(order.rating) : null;
+        var serverPlatform =
+          dataObj.platform_rating != null && dataObj.platform_rating >= 1 && dataObj.platform_rating <= 5
+            ? Number(dataObj.platform_rating)
+            : null;
+        if (serverDriver != null) {
+          selectedRate = serverDriver;
           localPendingRating = 0;
         } else if (localPendingRating >= 1 && localPendingRating <= 5) {
           selectedRate = localPendingRating;
         } else {
           selectedRate = 0;
         }
+        selectedPlatform = serverPlatform != null ? serverPlatform : selectedPlatform || 0;
         paintStars(selectedRate);
-        var ta = document.getElementById("rateReview");
-        if (ta && order.review != null && String(order.review).trim() !== "") {
-          ta.value = String(order.review);
-        }
-        if (serverR != null) {
+        paintStarRow(document.getElementById("rateStarsPlatform"), selectedPlatform);
+        if (serverDriver != null && serverPlatform != null) {
           applyRateFormSubmitted(true);
         } else {
           applyRateFormSubmitted(false);
@@ -3069,34 +3103,41 @@
       })();
 
       (function () {
-        var row = document.getElementById("rateStars");
-        if (row) {
+        function bindStarRow(id, onPick) {
+          var row = document.getElementById(id);
+          if (!row) return;
           row.addEventListener("click", function (e) {
             if (row.classList.contains("disabled")) return;
-            var t = e.target;
+            var t = e.target.closest ? e.target.closest("[data-n]") : e.target;
             if (!t || !t.getAttribute) return;
             var n = parseInt(t.getAttribute("data-n"), 10);
             if (Number.isNaN(n) || n < 1) return;
-            localPendingRating = n;
-            selectedRate = n;
-            paintStars(n);
+            onPick(n);
+            paintStarRow(row, n);
           });
         }
+        bindStarRow("rateStarsPlatform", function (n) {
+          selectedPlatform = n;
+        });
+        bindStarRow("rateStarsDriver", function (n) {
+          localPendingRating = n;
+          selectedRate = n;
+        });
         var btnR = document.getElementById("btnRate");
         if (btnR) {
           btnR.onclick = async function () {
             var oid = lastOrder && lastOrder.id ? String(lastOrder.id) : document.getElementById("oid").value.trim();
             if (!oid) return;
             var mEl = document.getElementById("rateMsg");
-            if (selectedRate < 1) {
-              if (mEl) mEl.textContent = "اختر من 📊 لتقييم واحد حتى 5 تقييمات.";
+            if (selectedPlatform < 1 || selectedRate < 1) {
+              if (mEl) mEl.textContent = "اختر تقييم المنصة وتقييم المندوب.";
               return;
             }
             if (mEl) mEl.textContent = "جارٍ الإرسال…";
             try {
               var j = await window.PlatformAPI.api("/api/order/" + encodeURIComponent(oid) + "/rate", {
                 method: "POST",
-                body: { rating: selectedRate, review: document.getElementById("rateReview").value.trim() },
+                body: { rating: selectedRate, driver_rating: selectedRate, platform_rating: selectedPlatform },
               });
               if (j.order) {
                 if (mEl) mEl.textContent = "";

@@ -31,6 +31,11 @@ const { notifyProvidersForBooking } = require("./serviceBookingNotify");
 const { isDriverDispatchOrder, isInternalDeliveryOrder } = require("../utils/driverDispatchOrders");
 const { notifyInternalDeliveryOrder } = require("./internalDeliveryNotify");
 const { normalizePhone } = require("../utils/phone");
+const {
+  buildCustomerMessageOrderPaid,
+  sendDeliveryCustomerWhatsApp,
+} = require("../messages/deliveryCustomerWhatsApp");
+const { sendCustomerPreparingNotice, sendCustomerReadyNotice, sendCustomerDriverReceivedNotice, sendDriverArrived } = require("./whatsappService");
 
 const MERCHANT_WORKFLOW_STATUSES = [
   DELIVERY_STATUS.ACCEPTED,
@@ -188,6 +193,16 @@ async function afterStatusSideEffects(sb, order, previousStatus, nextStatus, fin
         "[unifiedOrderStatus] admin draft→pending notification"
       );
     }
+    if (order.customer_phone) {
+      try {
+        await sendDeliveryCustomerWhatsApp(order.customer_phone, buildCustomerMessageOrderPaid(order), logger);
+      } catch (waErr) {
+        logger.warn(
+          { err: waErr.message || String(waErr), orderId: order.id },
+          "[unifiedOrderStatus] customer created WhatsApp"
+        );
+      }
+    }
   }
 
   const merchantCustomerNotify = {
@@ -227,6 +242,26 @@ async function afterStatusSideEffects(sb, order, previousStatus, nextStatus, fin
         );
       }
     }
+    if (ds === DELIVERY_STATUS.PREPARING && order.customer_phone) {
+      try {
+        await sendCustomerPreparingNotice(order);
+      } catch (waErr) {
+        logger.warn(
+          { err: waErr.message || String(waErr), orderId: order.id },
+          "[unifiedOrderStatus] customer preparing WhatsApp"
+        );
+      }
+    }
+    if (ds === DELIVERY_STATUS.READY && order.customer_phone) {
+      try {
+        await sendCustomerReadyNotice(order);
+      } catch (waErr) {
+        logger.warn(
+          { err: waErr.message || String(waErr), orderId: order.id },
+          "[unifiedOrderStatus] customer ready WhatsApp"
+        );
+      }
+    }
   }
 
   const driverCustomerNotify = {
@@ -263,6 +298,30 @@ async function afterStatusSideEffects(sb, order, previousStatus, nextStatus, fin
         logger.warn(
           { err: storeNotifyErr.message || String(storeNotifyErr), orderId: order.id },
           "[unifiedOrderStatus] driver workflow store notification"
+        );
+      }
+    }
+    if (
+      order.customer_phone &&
+      (ds === DELIVERY_STATUS.PICKED_UP ||
+        (ds === DELIVERY_STATUS.DELIVERING && prevDs !== DELIVERY_STATUS.PICKED_UP))
+    ) {
+      try {
+        await sendCustomerDriverReceivedNotice(order);
+      } catch (waErr) {
+        logger.warn(
+          { err: waErr.message || String(waErr), orderId: order.id },
+          "[unifiedOrderStatus] customer delivering WhatsApp"
+        );
+      }
+    }
+    if (ds === DELIVERY_STATUS.DELIVERED && order.customer_phone) {
+      try {
+        await sendDriverArrived(order);
+      } catch (waErr) {
+        logger.warn(
+          { err: waErr.message || String(waErr), orderId: order.id },
+          "[unifiedOrderStatus] customer delivered WhatsApp"
         );
       }
     }

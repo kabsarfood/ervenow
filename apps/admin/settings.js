@@ -4,7 +4,7 @@
 const express = require("express");
 const { createServiceClient } = require("../../shared/config/supabase");
 const { requireAuth } = require("../../shared/middleware/auth");
-const { requireRole } = require("../../shared/middleware/roles");
+const { readPlatformSettings, invalidatePlatformSettings } = require("../../shared/utils/platformSettingsCache");
 
 const router = express.Router();
 
@@ -19,10 +19,8 @@ router.get("/", async (_req, res) => {
   if (!sb) {
     return res.status(503).json({ success: false, error: { message: "قاعدة البيانات غير جاهزة" } });
   }
-  const { data, error } = await sb.from("platform_settings").select("*");
-  if (error) {
-    return res.json({ success: false, error });
-  }
+  const { data, error } = await sb.from("platform_settings").select("key,value,updated_at");
+  if (error) return res.json({ success: false, error });
   res.json({ success: true, data });
 });
 
@@ -48,10 +46,8 @@ router.post("/update", async (req, res) => {
     .update({ value, updated_at: new Date() })
     .eq("key", key);
 
-  if (error) {
-    return res.json({ success: false, error });
-  }
-
+  if (error) return res.json({ success: false, error });
+  invalidatePlatformSettings(key);
   res.json({ success: true });
 });
 

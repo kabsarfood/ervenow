@@ -1493,16 +1493,127 @@ body.pf-page [id$="App"] .pf-home-block__head .pf-btn {
   line-height: 1.45;
 }
 
+.pf-portal-footer--slim {
+  padding: 6px 12px;
+  padding-bottom: max(6px, env(safe-area-inset-bottom));
+}
+
+.pf-portal-footer--slim .pf-portal-footer__inner {
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  max-width: none;
+  overflow-x: auto;
+}
+
+.pf-portal-footer--slim .pf-portal-footer__brand {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.pf-portal-footer--slim .pf-portal-footer__motto,
+.pf-portal-footer--slim .pf-portal-footer__tag,
+.pf-portal-footer--slim .pf-portal-footer__portal,
+.pf-portal-footer--slim .pf-portal-footer__copy {
+  margin: 0;
+  white-space: nowrap;
+}
+
+.pf-portal-footer--slim .pf-portal-footer__contacts {
+  flex-wrap: nowrap;
+  justify-content: flex-end;
+  width: auto;
+  gap: 6px;
+}
+
+.pf-portal-footer--slim .pf-portal-footer__link {
+  min-height: 36px;
+  padding: 0 10px;
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+.pf-portal-footer__support {
+  background: #b9872f;
+  color: #fff;
+  border-color: #b9872f;
+  cursor: pointer;
+  font: inherit;
+}
+
+.pf-support {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 12px;
+  background: rgba(15, 40, 28, 0.45);
+}
+
+.pf-support[hidden] {
+  display: none;
+}
+
+.pf-support__card {
+  width: min(420px, 100%);
+  margin-bottom: max(8px, env(safe-area-inset-bottom));
+  padding: 14px;
+  border-radius: 16px;
+  background: #fffefb;
+  color: #163226;
+}
+
+.pf-support__card h3,
+.pf-support__meta,
+.pf-support__card label {
+  margin: 0 0 8px;
+}
+
+.pf-support__card textarea {
+  width: 100%;
+  min-height: 88px;
+  font: inherit;
+  font-size: 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(15, 90, 55, 0.2);
+  padding: 8px;
+}
+
+.pf-support__actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.pf-support__actions .pf-portal-footer__link {
+  flex: 1;
+  justify-content: center;
+  min-height: 44px;
+  color: #163226;
+}
+
 @media (max-width: 640px) {
-  .pf-portal-footer__contacts {
+  .pf-portal-footer:not(.pf-portal-footer--slim) .pf-portal-footer__contacts {
     flex-direction: column;
   }
 
-  .pf-portal-footer__link {
+  .pf-portal-footer:not(.pf-portal-footer--slim) .pf-portal-footer__link {
     width: 100%;
     max-width: 300px;
     justify-content: center;
     min-height: 44px;
     font-size: 16px;
+  }
+
+  .pf-portal-footer--slim .pf-portal-footer__link {
+    min-height: 40px;
+    font-size: 0.78rem;
   }
 }

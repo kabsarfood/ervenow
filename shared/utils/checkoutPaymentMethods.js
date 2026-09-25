@@ -3,6 +3,7 @@
  * المفاتيح: ew_pay, mada, visa, mastercard, apple_pay, stc_pay, cash_on_delivery, tabby, tamara
  */
 
+const { readPlatformSettings, invalidatePlatformSettings } = require("./platformSettingsCache");
 const {
   isMissingPlatformSettingsTable,
   platformSettingsHelpMessage,
@@ -65,7 +66,7 @@ function methodsToJsonString(obj) {
 }
 
 let platformPaymentMethodsCache = { at: 0, value: null };
-const PLATFORM_PAYMENT_METHODS_CACHE_MS = 60 * 1000;
+const PLATFORM_PAYMENT_METHODS_CACHE_MS = 45 * 1000;
 
 async function loadPlatformPaymentMethodsFromDb(sb) {
   const def = cloneDefaults();
@@ -77,11 +78,14 @@ async function loadPlatformPaymentMethodsFromDb(sb) {
     return platformPaymentMethodsCache.value;
   }
   if (!sb) return normalizeMethodsPartial(def);
-  const { data, error } = await sb
-    .from("platform_settings")
-    .select("value")
-    .eq("key", "checkout_payment_methods")
-    .maybeSingle();
+  const { data, error } = await (async function () {
+    try {
+      const value = (await readPlatformSettings(sb, ["checkout_payment_methods"]))[0];
+      return { data: value && value.value != null ? { value: value.value } : null, error: null };
+    } catch (e) {
+      return { data: null, error: e };
+    }
+  })();
   const out =
     error || !data || data.value == null || String(data.value).trim() === ""
       ? normalizeMethodsPartial(def)
@@ -102,6 +106,7 @@ async function savePlatformPaymentMethodsToDb(sb, obj) {
     throw new Error(platformSettingsHelpMessage(error));
   }
   if (error) throw error;
+  invalidatePlatformSettings("checkout_payment_methods");
   platformPaymentMethodsCache = { at: 0, value: null };
 }
 

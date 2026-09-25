@@ -1400,14 +1400,6 @@ router.patch("/bookings/:id/status", requireAuth, requireServiceProviderOrAdmin(
       const out = await patchUnifiedOrderStatus(req.supabase, req.params.id, nextStatus, req.appUser);
       if (out.error) return fail(res, out.error.message, 400);
       const view = orderToBookingView(out.data);
-      if (view.customer_phone) {
-        try {
-          if (nextStatus === "delivering") await sendCustomerDeliveringNotice(out.data);
-          else if (nextStatus === "delivered") await sendDriverArrived(out.data);
-        } catch (waErr) {
-          console.error("[services] status customer WA:", waErr && (waErr.message || waErr));
-        }
-      }
       if (out.data && out.data.customer_id) {
         try {
           if (nextStatus === "delivering") {

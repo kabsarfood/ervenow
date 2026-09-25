@@ -204,26 +204,33 @@ function buildCustomerMessageOrderAccepted(order, providerPhoneRaw) {
   ).trim();
 }
 
-/** المندوب في الطريق */
-function buildCustomerMessageOrderPickedUp(order) {
+/** المتجر يجهّز الطلب */
+function buildCustomerMessageOrderPreparing(order) {
   const no = orderNumber(order);
-  return (
-    `${MSG_PLATFORM_WELCOME}\n\n` +
-    `عزيزنا صاحب الطلب رقم (${no})\n` +
-    `المندوب في الطريق إليك.\n\n` +
-    trackBlock(order)
-  ).trim();
+  return `طلبكم تحت التجهيز\nرقم الطلب: ${no}\n\n${trackBlock(order)}`.trim();
 }
 
-/** وصول المندوب إلى وجهة العميل */
+/** الطلب جاهز وبانتظار المندوب */
+function buildCustomerMessageOrderReady(order) {
+  const no = orderNumber(order);
+  return `طلبكم جاهز بانتظار استلام المندوب\nرقم الطلب: ${no}\n\n${trackBlock(order)}`.trim();
+}
+
+/** المندوب استلم الطلب وبدأ التوصيل */
+function buildCustomerMessageOrderDriverReceived(order) {
+  const no = orderNumber(order);
+  return `طلبكم جاري التوصيل\nرقم الطلب: ${no}\n\n${trackBlock(order)}`.trim();
+}
+
+/** المندوب في الطريق */
+function buildCustomerMessageOrderPickedUp(order) {
+  return buildCustomerMessageOrderDriverReceived(order);
+}
+
+/** تم التسليم — رابط التتبع يفتح التقييم */
 function buildCustomerMessageDriverArrived(order) {
   const no = orderNumber(order);
-  return (
-    `${MSG_PLATFORM_WELCOME}\n\n` +
-    `عزيزنا صاحب الطلب رقم (${no})\n` +
-    `لقد وصل المندوب إلى وجهتك.\n\n` +
-    trackBlock(order)
-  ).trim();
+  return `تم التسليم\nشكرا لكم على تعاملكم معنا\nرقم الطلب: ${no}\n\n${trackBlock(order)}`.trim();
 }
 
 async function sendDeliveryCustomerWhatsApp(to, messageBody, logger) {
@@ -258,6 +265,9 @@ module.exports = {
   formatDriverPhoneLine,
   buildOrderDetailsLines,
   buildCustomerMessageOrderPaid,
+  buildCustomerMessageOrderPreparing,
+  buildCustomerMessageOrderReady,
+  buildCustomerMessageOrderDriverReceived,
   buildCustomerMessageOrderAccepted,
   buildCustomerMessageOrderPickedUp,
   buildCustomerMessageDriverArrived,

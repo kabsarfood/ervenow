@@ -1,10 +1,11 @@
 const fs = require("fs");
 const path = require("path");
 const { createServiceClient } = require("../config/supabase");
+const { readPlatformSetting, invalidatePlatformSettings } = require("./platformSettingsCache");
 
 const filePath = path.join(__dirname, "..", "..", "data", "site-maintenance.json");
 const MAINTENANCE_KEY = "site_maintenance_enabled";
-const DB_REFRESH_MS = 4000;
+const DB_REFRESH_MS = 45 * 1000;
 
 let memLoaded = false;
 let memEnabled = false;
@@ -58,6 +59,7 @@ async function upsertDatabase(enabled) {
     }
     throw error;
   }
+  invalidatePlatformSettings(MAINTENANCE_KEY);
   return true;
 }
 
@@ -66,20 +68,15 @@ async function refreshFromDatabase() {
   dbRefreshBusy = true;
   try {
     const sb = createServiceClient();
-    if (!sb) return;
-    const { data, error } = await sb
-      .from("platform_settings")
-      .select("value")
-      .eq("key", MAINTENANCE_KEY)
-      .maybeSingle();
-    if (error) {
-      if (/platform_settings|42P01|schema cache|PGRST205/i.test(String(error.message || ""))) return;
-      throw error;
-    }
-    if (data && data.value != null) {
-      memEnabled = parseEnabledValue(data.value);
-      memLoaded = true;
+    if (!sb) {
       memLoadedAt = Date.now();
+      return;
+    }
+    const value = await readPlatformSetting(sb, MAINTENANCE_KEY);
+    memLoadedAt = Date.now();
+    if (value != null) {
+      memEnabled = parseEnabledValue(value);
+      memLoaded = true;
       writeFileSync(memEnabled);
     }
   } catch (e) {

@@ -42,7 +42,7 @@
     } else if (r === "driver" && opts.authenticated) {
       links.push({
         key: "track",
-        href: "/driver-app",
+        href: "/driver-preview#live-track",
         label: "تتبع الحي",
       });
     } else if (opts.liveMapPublicEnabled !== false) {

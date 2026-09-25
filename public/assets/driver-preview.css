@@ -592,10 +592,27 @@ body.driver-preview-page {
   }
 }
 
-.dp-live-frame {
+.dp-track-map {
   width: 100%;
-  min-height: min(70vh, 560px);
-  border: 0;
+  height: clamp(240px, 48vh, 520px);
   border-radius: 14px;
-  background: #0f172a;
+  margin: 10px 0;
+  background: #e7efe9;
+}
+
+.dp-track-actions {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+.dp-track-actions .dp-btn {
+  width: 100%;
+  min-height: 48px;
+}
+
+@media (min-width: 768px) {
+  .dp-track-actions {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }

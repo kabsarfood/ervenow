@@ -688,11 +688,15 @@ async function reportGpsError(sb, orderId, appUser) {
   return { data, error };
 }
 
-async function rateOrder(sb, orderId, appUser, rating, review) {
-  const r = Number(rating);
+async function rateOrder(sb, orderId, appUser, rating, review, extra) {
+  const extraObj = extra && typeof extra === "object" ? extra : {};
+  const driverRaw = extraObj.driver_rating != null ? extraObj.driver_rating : rating;
+  const r = Number(driverRaw);
   if (!Number.isInteger(r) || r < 1 || r > 5) {
     return { data: null, error: new Error("rating must be 1–5") };
   }
+  const platformRaw = extraObj.platform_rating != null ? Number(extraObj.platform_rating) : null;
+  const platformOk = Number.isInteger(platformRaw) && platformRaw >= 1 && platformRaw <= 5;
 
   const { data: order, error: gErr } = await sb
     .from("orders")
@@ -713,17 +717,36 @@ async function rateOrder(sb, orderId, appUser, rating, review) {
   }
 
   const reviewText = review == null || review === "" ? null : String(review).trim().slice(0, 4000);
+  const prevData = order.data && typeof order.data === "object" ? order.data : {};
+  const nextData = Object.assign({}, prevData, { driver_rating: r });
+  if (platformOk) nextData.platform_rating = platformRaw;
 
-  const { data, error } = await sb
+  let { data, error } = await sb
     .from("orders")
     .update({
       rating: r,
       review: reviewText,
+      data: nextData,
       updated_at: new Date().toISOString(),
     })
     .eq("id", orderId)
     .select()
     .single();
+
+  if (error) {
+    const retry = await sb
+      .from("orders")
+      .update({
+        rating: r,
+        review: reviewText,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", orderId)
+      .select()
+      .single();
+    data = retry.data;
+    error = retry.error;
+  }
 
   return { data, error };
 }

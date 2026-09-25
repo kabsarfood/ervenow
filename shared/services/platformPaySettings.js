@@ -2,6 +2,8 @@
  * إعدادات ERVENOW PAY — platform_settings
  */
 
+const { readPlatformSettings, invalidatePlatformSettings } = require("../utils/platformSettingsCache");
+
 const PAY_SETTING_KEYS = Object.freeze([
   "wallet_topup_enabled",
   "wallet_withdraw_enabled",
@@ -82,11 +84,7 @@ function toPublicPaySettings(map) {
 async function loadPlatformPaySettings(sb) {
   if (!sb) return toPublicPaySettings(DEFAULT_PAY_SETTINGS);
   try {
-    const { data, error } = await sb.from("platform_settings").select("key, value").in("key", [...PAY_SETTING_KEYS]);
-    if (error) {
-      if (isMissingSettingsTable(error)) return toPublicPaySettings(DEFAULT_PAY_SETTINGS);
-      throw error;
-    }
+    const data = await readPlatformSettings(sb, PAY_SETTING_KEYS);
     return toPublicPaySettings(normalizePaySettingsMap(data));
   } catch (e) {
     if (isMissingSettingsTable(e)) return toPublicPaySettings(DEFAULT_PAY_SETTINGS);
@@ -153,6 +151,7 @@ async function savePlatformPaySettings(sb, patch) {
       }
       throw error;
     }
+    invalidatePlatformSettings(row.key);
   }
 
   return loadPlatformPaySettings(sb);

@@ -373,12 +373,17 @@
           { enableHighAccuracy: true, maximumAge: 4000, timeout: 20000 }
         );
         daSendTimer = setInterval(function () {
+          if (document.hidden) return;
+          try {
+            var owner = Number(localStorage.getItem("ervenowDriverLocAt") || 0);
+            if (Date.now() - owner < 20000) return;
+          } catch (_e) {}
           if (!daActiveOrder || !daActiveOrder.id) return;
           var st = String(daActiveOrder.delivery_status || daActiveOrder.status || "").toLowerCase();
           if (!["accepted", "picked", "delivering"].includes(st)) return;
           void pushLocationRest(daActiveOrder.id);
           pushLocationSocket(daActiveOrder.id);
-        }, 2500);
+        }, 8000);
       }
 
       function refreshActionButtons() {

@@ -944,7 +944,7 @@
             onGeoError,
             { enableHighAccuracy: false, maximumAge: 5000, timeout: 10000 }
           );
-        }, 5000);
+        }, 8000);
         navigator.geolocation.getCurrentPosition(
           async function (pos) {
             var lat = pos.coords.latitude;
@@ -960,6 +960,11 @@
       function startPresenceLocationLoop() {
         if (presenceTimer != null) return;
         presenceTimer = setInterval(function () {
+          if (document.hidden) return;
+          try {
+            var owner = Number(localStorage.getItem("ervenowDriverLocAt") || 0);
+            if (Date.now() - owner < 20000) return;
+          } catch (_e) {}
           navigator.geolocation.getCurrentPosition(
             async function (pos) {
               var lat = pos.coords.latitude;
@@ -1062,7 +1067,7 @@
         initDriverMap();
         await loadMe();
         await loadOrders();
-        pollTimer = setInterval(loadOrders, 8000);
+        pollTimer = setInterval(loadOrders, 45000);
         startPresenceLocationLoop();
         setInterval(refreshDriverWallet, 60000);
       })();

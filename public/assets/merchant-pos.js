@@ -190,7 +190,11 @@
       var cat = String(p.category || p.category_slug || "");
       if (category && cat !== category) return false;
       if (!q) return true;
-      return String(p.name || "").toLowerCase().indexOf(q) !== -1;
+      var hay = [p.name, p.sku, p.barcode].join(" ");
+      if (ctx && ctx.posMode === "B" && Array.isArray(p.variants)) {
+        hay += " " + p.variants.map(function (v) { return v && v.label ? v.label : v; }).join(" ");
+      }
+      return hay.toLowerCase().indexOf(q) !== -1;
     });
   }
 
@@ -210,13 +214,18 @@
     return { subtotal: subtotal, vat: vat, total: Math.round((subtotal + vat) * 100) / 100 };
   }
 
-  function addProduct(ctx, id) {
+  function lineKey(line) {
+    return String(line.product_id) + (line.variant ? "::" + line.variant : "");
+  }
+
+  function addProduct(ctx, id, variant) {
     var product = activeProducts(ctx.products).find(function (p) {
       return String(p.id) === String(id);
     });
     if (!product) return;
+    var variantLabel = variant ? String(variant).slice(0, 40) : "";
     var existing = ticket.lines.find(function (line) {
-      return line.product_id === String(product.id);
+      return line.product_id === String(product.id) && String(line.variant || "") === variantLabel;
     });
     if (existing) {
       if (existing.qty < 99) existing.qty += 1;
@@ -224,7 +233,8 @@
     }
     ticket.lines.push({
       product_id: String(product.id),
-      name: product.name || "منتج",
+      name: (product.name || "منتج") + (variantLabel ? " — " + variantLabel : ""),
+      variant: variantLabel,
       unit_price: unitPrice(product),
       qty: 1,
       image_url: product.image_url || "",
@@ -234,7 +244,7 @@
   function setQty(id, qty) {
     ticket.lines = ticket.lines
       .map(function (line) {
-        if (line.product_id !== id) return line;
+        if (lineKey(line) !== id) return line;
         var next = line.qty + qty;
         if (next < 1) return null;
         line.qty = Math.min(99, next);
@@ -295,6 +305,25 @@
     return 8;
   }
 
+  function commercialMeta(p) {
+    var bits = [];
+    if (p.sku) bits.push("SKU " + p.sku);
+    if (p.barcode) bits.push(String(p.barcode));
+    if (p.stock != null && p.stock !== "") bits.push("المخزون " + p.stock);
+    var variants = Array.isArray(p.variants) ? p.variants : [];
+    var chips = variants
+      .map(function (v) {
+        var label = v && v.label ? v.label : v;
+        if (!label) return "";
+        return '<span class="mp-pos-variant" data-pos-variant="' + esc(p.id) + '" data-pos-variant-label="' + esc(label) + '">' + esc(label) + "</span>";
+      })
+      .join("");
+    return (
+      (bits.length ? '<span class="mp-pos-card__sku">' + esc(bits.join(" · ")) + "</span>" : "") +
+      (chips ? '<span class="mp-pos-variants">' + chips + "</span>" : "")
+    );
+  }
+
   function gridHtml(ctx) {
     var list = visibleProducts(ctx);
     var cols = slotColumns();
@@ -321,6 +350,7 @@
           '<span class="mp-pos-card__price">' +
           priceHtml(p) +
           "</span>" +
+          (ctx && ctx.posMode === "B" ? commercialMeta(p) : "") +
           (qty ? '<span class="mp-pos-card__qty">' + qty + "</span>" : "") +
           "</button>"
         );
@@ -348,17 +378,17 @@
             return (
               '<div class="mp-pos-line">' +
               '<button type="button" class="mp-pos-line__del" data-pos-del="' +
-              esc(line.product_id) +
+              esc(lineKey(line)) +
               '" aria-label="حذف">×</button>' +
               '<div class="mp-pos-line__qty">' +
               '<button type="button" data-pos-qty="' +
-              esc(line.product_id) +
+              esc(lineKey(line)) +
               '" data-pos-dir="-1" aria-label="نقص">−</button>' +
               "<span>" +
               line.qty +
               "</span>" +
               '<button type="button" data-pos-qty="' +
-              esc(line.product_id) +
+              esc(lineKey(line)) +
               '" data-pos-dir="1" aria-label="زيادة">+</button>' +
               "</div>" +
               '<div class="mp-pos-line__meta"><strong>' +
@@ -396,29 +426,31 @@
       .join("");
     return (
       '<div class="mp-pos-ticket__head"><h3>الطلب الحالي</h3>' +
+      '<div class="mp-pos-ticket__tools">' +
       '<button type="button" class="mp-pos-clear" data-pos-clear>مسح</button>' +
-      '<button type="button" class="mp-pos-cart-close" data-pos-cart-close>إغلاق</button></div>' +
+      '<button type="button" class="mp-pos-cart-close" data-pos-cart-close>إغلاق</button></div></div>' +
       '<div class="mp-pos-lines">' +
       lines +
       "</div>" +
       '<div class="mp-pos-ticket__foot">' +
       (receipt ? receiptHtml(receipt) : "") +
+      '<section class="mp-pos-block">' +
       '<div class="mp-pos-sums"><div><span>المجموع الفرعي</span><strong>' +
       money(sum.subtotal) +
       ' ر.س</strong></div><div><span>الضريبة (15%)</span><strong>' +
       money(sum.vat) +
       ' ر.س</strong></div><div class="is-total"><span>المجموع الكلي</span><strong>' +
       money(sum.total) +
-      " ر.س</strong></div></div>" +
-      '<p class="mp-pos-pay-label">طريقة الدفع</p><div class="mp-pos-pays">' +
+      " ر.س</strong></div></div></section>" +
+      '<section class="mp-pos-block"><p class="mp-pos-pay-label">طريقة الدفع</p><div class="mp-pos-pays">' +
       pays +
-      "</div>" +
+      "</div></section>" +
       (holdBtns ? '<div class="mp-pos-holds">' + holdBtns + "</div>" : "") +
-      '<div class="mp-pos-actions">' +
+      '<section class="mp-pos-block"><div class="mp-pos-actions">' +
       '<button type="button" class="mp-btn mp-btn--ghost" data-pos-hold>تعليق الطلب</button>' +
       '<button type="button" class="mp-btn mp-btn--ghost" data-pos-cancel>إلغاء</button>' +
       '<button type="button" class="mp-btn mp-btn--primary mp-pos-complete" data-pos-complete>إتمام الطلب وطباعة الفاتورة</button>' +
-      "</div></div>"
+      "</div></section></div>"
     );
   }
 
@@ -471,12 +503,15 @@
     root.innerHTML =
       '<div class="mp-pos' +
       (cartOpen ? " is-cart-open" : "") +
+      (ctx && ctx.posMode === "B" ? " is-mode-b" : "") +
       '" data-pos-cols="' +
       slotColumns() +
       '">' +
       '<div class="mp-pos-toolbar">' +
       '<div class="mp-pos-brand"><h2>الكاشير POS</h2>' +
-      '<p class="mp-pos-shift"><span class="mp-pos-shift__dot" aria-hidden="true"></span><span>الوردية مفتوحة</span><span class="mp-pos-shift__name">الكاشير</span></p>' +
+      '<p class="mp-pos-shift"><span class="mp-pos-shift__dot" aria-hidden="true"></span><span>' +
+      (ctx && ctx.posMode === "B" ? "تجاري B" : "مرئي A") +
+      '</span><span class="mp-pos-shift__name">الوردية مفتوحة</span></p>' +
       (offline
         ? '<p class="mp-pos-net is-offline">بدون اتصال — البيع المحلي يعمل، وطلبات ERVENOW ستصل عند عودة الاتصال' +
           (pendingSync ? " · بانتظار المزامنة " + pendingSync : "") +
@@ -488,10 +523,16 @@
       '<div class="mp-pos-types" role="tablist">' +
       typesHtml() +
       "</div>" +
-      '<label class="mp-pos-search-label" for="mpPosSearch">بحث المنتجات</label>' +
-      '<input id="mpPosSearch" class="mp-pos-search" type="search" placeholder="بحث عن منتج" value="' +
+      '<div class="mp-pos-find"><label class="mp-pos-search-label" for="mpPosSearch">بحث المنتجات</label>' +
+      '<input id="mpPosSearch" class="mp-pos-search" type="search" placeholder="' +
+      (ctx && ctx.posMode === "B" ? "بحث بالاسم أو SKU أو الباركود" : "بحث عن منتج") +
+      '" value="' +
       esc(query) +
-      '" /></div>' +
+      '" />' +
+      (ctx && ctx.posMode === "B"
+        ? '<input id="mpPosBarcode" class="mp-pos-barcode" type="text" inputmode="text" placeholder="باركود أو SKU" autocomplete="off" />'
+        : "") +
+      "</div></div>" +
       '<div class="mp-pos-layout">' +
       '<aside class="mp-pos-cats" aria-label="الفئات"><h3>الفئات</h3><div class="mp-pos-cat-list">' +
       catsHtml(ctx) +
@@ -527,6 +568,23 @@
           note.remove();
         }
       };
+    }
+    var barcode = root.querySelector("#mpPosBarcode");
+    if (barcode) {
+      barcode.addEventListener("keydown", function (ev) {
+        if (ev.key !== "Enter") return;
+        ev.preventDefault();
+        var code = String(barcode.value || "").trim().toLowerCase();
+        if (!code) return;
+        var hit = activeProducts(ctx.products).filter(function (p) {
+          return String(p.barcode || "").toLowerCase() === code || String(p.sku || "").toLowerCase() === code || String(p.name || "").toLowerCase() === code;
+        });
+        if (hit.length === 1) {
+          addProduct(ctx, hit[0].id);
+          barcode.value = "";
+          paint(root, ctx);
+        }
+      });
     }
     var nextCats = root.querySelector(".mp-pos-cat-list");
     var nextGrid = root.querySelector(".mp-pos-grid");
@@ -683,6 +741,12 @@
       paint(mountedRoot, mountedCtx);
       return;
     }
+    var variant = ev.target.closest("[data-pos-variant]");
+    if (variant) {
+      addProduct(mountedCtx, variant.getAttribute("data-pos-variant"), variant.getAttribute("data-pos-variant-label"));
+      paint(mountedRoot, mountedCtx);
+      return;
+    }
     var add = ev.target.closest("[data-pos-add]");
     if (add) {
       addProduct(mountedCtx, add.getAttribute("data-pos-add"));
@@ -698,7 +762,7 @@
     var del = ev.target.closest("[data-pos-del]");
     if (del) {
       ticket.lines = ticket.lines.filter(function (line) {
-        return line.product_id !== del.getAttribute("data-pos-del");
+        return lineKey(line) !== del.getAttribute("data-pos-del");
       });
       paint(mountedRoot, mountedCtx);
       return;

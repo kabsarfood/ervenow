@@ -16,6 +16,7 @@
     "visitor-preview",
     "wallet",
     "withdrawals",
+    "expenses",
     "reports",
     "notifications",
     "settings"

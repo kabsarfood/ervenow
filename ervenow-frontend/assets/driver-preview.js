@@ -10,12 +10,15 @@
   var notifOpsApi = null;
   var pollTimer = null;
   var presenceTimer = null;
+  var locationHideBound = false;
+  var locationHideBound = false;
   var knownOrderIds = [];
   var lastLat = NaN;
   var lastLng = NaN;
   var lastSentAt = 0;
   var sendingLocation = false;
-  var POLL_MS = 8000;
+  var POLL_MS = 45000;
+  var PRESENCE_MS = 8000;
 
   var TRANSPORT_PROVIDER_TYPES = {
     pickup_truck: 1,
@@ -244,12 +247,19 @@
     };
   }
 
+  function hasActiveDelivery() {
+    return (state.orders.active || []).some(function (o) {
+      var s = normStatus(o);
+      return s === "accepted" || s === "picked_up" || s === "delivering";
+    });
+  }
+
   function shouldSendLocation(lat, lng) {
     var now = Date.now();
     if (!Number.isFinite(lastLat) || !Number.isFinite(lastLng)) return true;
-    var moved = Math.abs(lat - lastLat) + Math.abs(lng - lastLng) > 0.00005;
-    var timePassed = now - lastSentAt > 5000;
-    return moved || timePassed;
+    var moved = Math.abs(lat - lastLat) + Math.abs(lng - lastLng) > 0.0004;
+    if (!hasActiveDelivery()) return moved && now - lastSentAt > 60000;
+    return moved || now - lastSentAt > 8000;
   }
 
   async function sendLocation(lat, lng) {
@@ -268,6 +278,7 @@
       lastLat = lat;
       lastLng = lng;
       lastSentAt = Date.now();
+      try { localStorage.setItem("ervenowDriverLocAt", String(lastSentAt)); } catch (_ls) {}
       state.gpsActive = true;
       state.lastLocationSentAt = new Date().toISOString();
       updateOnlineUi();
@@ -285,7 +296,7 @@
   function startPresenceLocationLoop() {
     if (presenceTimer != null || !navigator.geolocation) return;
     presenceTimer = setInterval(function () {
-      if (!navigator.onLine) return;
+      if (!navigator.onLine || document.hidden || trackWatchId != null) return;
       navigator.geolocation.getCurrentPosition(
         function (pos) {
           sendLocation(pos.coords.latitude, pos.coords.longitude);
@@ -323,6 +334,12 @@
       pollTick().catch(function () {});
     }, POLL_MS);
     startPresenceLocationLoop();
+    if (!locationHideBound) {
+      locationHideBound = true;
+      document.addEventListener("visibilitychange", function () {
+        if (document.hidden) stopTrackWatch();
+      });
+    }
   }
 
   async function pollTick() {
@@ -703,20 +720,78 @@
     );
   }
 
+  function findTrackOrder() {
+    var id = String(state.liveTrackOrderId || "");
+    var pools = []
+      .concat(state.orders.active || [])
+      .concat(state.orders.orders || [])
+      .concat(state.orders.ready_queue || []);
+    var found = id
+      ? pools.find(function (o) {
+          return String(o.id || "") === id;
+        })
+      : null;
+    if (found) return found;
+    var active = (state.orders.active || []).filter(function (o) {
+      var s = normStatus(o);
+      return s === "picked_up" || s === "delivering" || s === "accepted";
+    });
+    return active[0] || null;
+  }
+
   function renderLiveTrack() {
-    var oid = state.liveTrackOrderId || "";
-    if (!oid) {
-      var active = state.orders.active || [];
-      if (active.length) oid = active[0].id;
+    var order = findTrackOrder();
+    if (order && order.id) state.liveTrackOrderId = order.id;
+    if (!order) {
+      return (
+        '<h2 class="dp-section-title">التتبع الحي</h2>' +
+        '<p class="dp-section-sub">من الطلب النشط: الخريطة، موقعك، والوصول</p>' +
+        '<div class="dp-card"><p class="dp-empty" style="margin:0">لا يوجد طلب نشط. اقبل طلباً من الجاهزة ثم ارجع هنا.</p>' +
+        '<button type="button" class="dp-btn dp-btn--primary" data-pf-section="ready">الطلبات الجاهزة</button></div>'
+      );
     }
+    var st = normStatus(order);
+    var num = order.order_number || String(order.id || "").slice(0, 8);
+    var canStart = st === "accepted" || st === "picked" || st === "picked_up";
+    var onRoad = st === "delivering";
     return (
       '<h2 class="dp-section-title">التتبع الحي</h2>' +
-      '<p class="dp-section-sub">Live Track — خريطة ومسار التوصيل</p>' +
-      (oid
-        ? '<iframe class="dp-live-frame" title="التتبع الحي" src="/driver-app?order=' +
-          encodeURIComponent(oid) +
-          '#track"></iframe>'
-        : '<div class="dp-card"><p class="dp-empty" style="margin:0">لا يوجد طلب نشط للتتبع — ابدأ توصيلاً من الطلبات النشطة.</p></div>')
+      '<p class="dp-section-sub">طلب #' +
+      esc(num) +
+      " · " +
+      esc(STATUS_AR[st] || st) +
+      "</p>" +
+      '<div class="dp-card dp-track-card">' +
+      "<p><strong>الاستلام:</strong> " +
+      esc(order.pickup_address || "—") +
+      "</p>" +
+      "<p><strong>التسليم:</strong> " +
+      esc(order.drop_address || "—") +
+      "</p>" +
+      '<p id="dpTrackStatus">الحالة: ' +
+      esc(STATUS_AR[st] || st) +
+      "</p>" +
+      '<p id="dpTrackGps">الموقع: بانتظار GPS</p>' +
+      '<div id="dpTrackMap" class="dp-track-map" data-order="' +
+      esc(order.id) +
+      '"></div>' +
+      '<div class="dp-track-actions">' +
+      '<button type="button" class="dp-btn dp-btn--primary dp-track-start"' +
+      (canStart ? "" : " disabled") +
+      ' data-id="' +
+      esc(order.id) +
+      '">بدء التوصيل</button>' +
+      '<button type="button" class="dp-btn dp-btn--ghost dp-track-arrived"' +
+      (onRoad ? "" : " disabled") +
+      ' data-id="' +
+      esc(order.id) +
+      '">وصلت للعنوان</button>' +
+      '<button type="button" class="dp-btn dp-btn--primary dp-track-complete"' +
+      (onRoad ? "" : " disabled") +
+      ' data-id="' +
+      esc(order.id) +
+      '">تم التسليم</button>' +
+      "</div></div>"
     );
   }
 
@@ -793,13 +868,187 @@
     }
   }
 
+  var trackMap = null;
+  var trackDriverMarker = null;
+  var trackPickupMarker = null;
+  var trackDropMarker = null;
+  var trackLine = null;
+  var trackSocket = null;
+  var trackWatchId = null;
+
+  function stopTrackWatch() {
+    if (trackWatchId != null && navigator.geolocation) {
+      try {
+        navigator.geolocation.clearWatch(trackWatchId);
+      } catch (_) {}
+      trackWatchId = null;
+    }
+  }
+
+  function destroyTrackMap() {
+    stopTrackWatch();
+    if (trackMap) {
+      try {
+        trackMap.remove();
+      } catch (_) {}
+    }
+    trackMap = null;
+    trackDriverMarker = null;
+    trackPickupMarker = null;
+    trackDropMarker = null;
+    trackLine = null;
+  }
+
+  function paintDriverMarker(lat, lng) {
+    if (!trackMap || !Number.isFinite(lat) || !Number.isFinite(lng) || typeof L === "undefined") return;
+    if (!trackDriverMarker) {
+      trackDriverMarker = L.circleMarker([lat, lng], {
+        radius: 10,
+        color: "#0f5a37",
+        fillColor: "#b9872f",
+        fillOpacity: 0.95,
+      })
+        .addTo(trackMap)
+        .bindPopup("موقعك");
+    } else {
+      trackDriverMarker.setLatLng([lat, lng]);
+    }
+  }
+
+  function ensureTrackSocket(orderId) {
+    if (typeof io === "undefined" || !orderId) return;
+    var token = global.PlatformAPI && PlatformAPI.getToken ? PlatformAPI.getToken() : "";
+    if (!trackSocket) {
+      trackSocket = io({ path: "/socket.io/", transports: ["websocket", "polling"], auth: { token: token } });
+    }
+    try {
+      trackSocket.emit("join:order", String(orderId));
+    } catch (_) {}
+  }
+
+  function pushTrackSocket(orderId) {
+    if (!trackSocket || !orderId || !Number.isFinite(lastLat) || !Number.isFinite(lastLng)) return;
+    try {
+      trackSocket.emit("driver:location", { orderId: String(orderId), lat: lastLat, lng: lastLng });
+    } catch (_) {}
+  }
+
+  async function drawTrackRoute(order) {
+    if (!trackMap || !order || typeof L === "undefined") return;
+    if (trackPickupMarker) trackMap.removeLayer(trackPickupMarker);
+    if (trackDropMarker) trackMap.removeLayer(trackDropMarker);
+    if (trackLine) trackMap.removeLayer(trackLine);
+    trackPickupMarker = null;
+    trackDropMarker = null;
+    trackLine = null;
+    var pLat = Number(order.pickup_lat);
+    var pLng = Number(order.pickup_lng);
+    var dLat = Number(order.drop_lat);
+    var dLng = Number(order.drop_lng);
+    var hasPickup = Number.isFinite(pLat) && Number.isFinite(pLng);
+    var hasDrop = Number.isFinite(dLat) && Number.isFinite(dLng);
+    if (hasPickup) trackPickupMarker = L.marker([pLat, pLng]).addTo(trackMap).bindPopup("استلام");
+    if (hasDrop) trackDropMarker = L.marker([dLat, dLng]).addTo(trackMap).bindPopup("تسليم");
+    if (hasPickup && hasDrop && global.ErvenowOsrmRoute && ErvenowOsrmRoute.drawOnMap) {
+      try {
+        var res = await ErvenowOsrmRoute.drawOnMap(
+          trackMap,
+          { lat: pLat, lng: pLng },
+          { lat: dLat, lng: dLng },
+          { style: { color: "#b9872f", weight: 5 }, padding: [28, 28], maxZoom: 15 }
+        );
+        trackLine = res.layer;
+      } catch (_) {
+        trackMap.fitBounds([[pLat, pLng], [dLat, dLng]], { padding: [28, 28] });
+      }
+    } else if (hasDrop) {
+      trackMap.setView([dLat, dLng], 14);
+    } else if (hasPickup) {
+      trackMap.setView([pLat, pLng], 14);
+    }
+    paintDriverMarker(lastLat, lastLng);
+    try {
+      trackMap.invalidateSize();
+    } catch (_) {}
+  }
+
+  function startTrackWatch(orderId) {
+    stopTrackWatch();
+    var gps = document.getElementById("dpTrackGps");
+    if (!navigator.geolocation) {
+      if (gps) gps.textContent = "المتصفح لا يدعم تحديد الموقع.";
+      return;
+    }
+    if (gps) gps.textContent = "جاري تفعيل GPS…";
+    ensureTrackSocket(orderId);
+    trackWatchId = navigator.geolocation.watchPosition(
+      function (pos) {
+        var lat = pos.coords.latitude;
+        var lng = pos.coords.longitude;
+        state.gpsActive = true;
+        paintDriverMarker(lat, lng);
+        if (gps) gps.textContent = "موقعك ظاهر على الخريطة";
+        if (!document.hidden) {
+          sendLocation(lat, lng);
+          pushTrackSocket(orderId);
+        }
+        updateOnlineUi();
+      },
+      function () {
+        if (gps) gps.textContent = "تعذّر قراءة GPS — اسمح بالموقع.";
+      },
+      { enableHighAccuracy: true, maximumAge: 4000, timeout: 20000 }
+    );
+  }
+
+  function mountLiveTrack() {
+    var host = document.getElementById("dpTrackMap");
+    if (!host || typeof L === "undefined") return;
+    var order = findTrackOrder();
+    if (!order) return;
+    destroyTrackMap();
+    trackMap = L.map(host).setView([24.7136, 46.6753], 12);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, attribution: "&copy; OpenStreetMap" }).addTo(trackMap);
+    drawTrackRoute(order);
+    startTrackWatch(order.id);
+  }
+
+  function syncTrackChrome() {
+    var order = findTrackOrder();
+    if (!order) return;
+    var st = normStatus(order);
+    var statusEl = document.getElementById("dpTrackStatus");
+    if (statusEl) statusEl.textContent = "الحالة: " + (STATUS_AR[st] || st);
+    var canStart = st === "accepted" || st === "picked" || st === "picked_up";
+    var onRoad = st === "delivering";
+    document.querySelectorAll(".dp-track-start").forEach(function (btn) {
+      btn.disabled = !canStart;
+    });
+    document.querySelectorAll(".dp-track-arrived, .dp-track-complete").forEach(function (btn) {
+      btn.disabled = !onRoad;
+    });
+    paintDriverMarker(lastLat, lastLng);
+  }
+
   function renderMain() {
     var sectionId = shell ? shell.getActiveSection() : state.activeSection;
     state.activeSection = sectionId;
+    var mapHost = document.getElementById("dpTrackMap");
+    if (
+      sectionId === "live-track" &&
+      trackMap &&
+      mapHost &&
+      mapHost.getAttribute("data-order") === String(state.liveTrackOrderId || "")
+    ) {
+      syncTrackChrome();
+      return;
+    }
+    if (sectionId !== "live-track") destroyTrackMap();
     if (shell) shell.setContent(renderSection(sectionId));
     if (shell) shell.renderNav();
     updateHeader();
     wireSectionEvents();
+    if (sectionId === "live-track") mountLiveTrack();
     if (sectionId === "notifications" && global.ErvenowPortalInlineNotifications) {
       var host = document.getElementById("dpNotifHost");
       if (host) ErvenowPortalInlineNotifications.mountIn(host, "driver-notif");
@@ -848,6 +1097,51 @@
         });
       };
     }
+    document.querySelectorAll(".dp-track-start").forEach(function (btn) {
+      btn.onclick = async function () {
+        btn.disabled = true;
+        try {
+          var j = await api("/api/driver/start-delivery/" + encodeURIComponent(btn.getAttribute("data-id")), { method: "POST" });
+          if (j && j.order) state.liveTrackOrderId = j.order.id;
+          showMsg("بدأ التوصيل", true);
+          await refreshOrders();
+          destroyTrackMap();
+          renderMain();
+        } catch (e) {
+          showMsg(e.message || String(e), false);
+          btn.disabled = false;
+        }
+      };
+    });
+    document.querySelectorAll(".dp-track-arrived").forEach(function (btn) {
+      btn.onclick = async function () {
+        try {
+          await api("/api/driver/ping-arrival/" + encodeURIComponent(btn.getAttribute("data-id")), { method: "POST" });
+          var gps = document.getElementById("dpTrackGps");
+          if (gps) gps.textContent = "تم إبلاغ العميل بالوصول";
+          showMsg("تم إبلاغ العميل بالوصول", true);
+        } catch (e) {
+          showMsg(e.message || String(e), false);
+        }
+      };
+    });
+    document.querySelectorAll(".dp-track-complete").forEach(function (btn) {
+      btn.onclick = async function () {
+        if (!global.confirm("تأكيد تسليم الطلب؟")) return;
+        btn.disabled = true;
+        try {
+          await api("/api/driver/complete-order/" + encodeURIComponent(btn.getAttribute("data-id")), { method: "POST" });
+          showMsg("تم التسليم", true);
+          state.liveTrackOrderId = null;
+          destroyTrackMap();
+          await refreshOrders();
+          if (shell) shell.navigate("completed");
+        } catch (e) {
+          showMsg(e.message || String(e), false);
+          btn.disabled = false;
+        }
+      };
+    });
     document.querySelectorAll(".dp-live-track").forEach(function (btn) {
       btn.onclick = function () {
         state.liveTrackOrderId = btn.getAttribute("data-order-id");
@@ -933,6 +1227,14 @@
 
   async function boot() {
     await loadCoreData();
+    var qOrder = "";
+    try {
+      qOrder = new URLSearchParams(global.location.search).get("order") || "";
+    } catch (_) {}
+    if (qOrder) {
+      state.liveTrackOrderId = qOrder;
+      if (shell) shell.navigate("live-track");
+    }
     await ensureDriverLocationForOrders();
     renderMain();
     startOperationalLoops();

@@ -6,7 +6,7 @@
     { key: "driver", href: DRIVER_HOME, label: "لوحة المندوب" },
     { key: "orders", href: "/orders", label: "طلبات المنصة" },
     { key: "home", href: "/", label: "الرئيسية" },
-    { key: "track", href: "/driver-app", label: "تتبع الحي" },
+    { key: "track", href: "/driver-preview#live-track", label: "تتبع الحي" },
   ];
 
   function navLink(link, active) {

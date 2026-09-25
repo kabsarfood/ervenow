@@ -1,7 +1,7 @@
 const { createServiceClient } = require("../../shared/config/supabase");
 const { sendWhatsApp } = require("./notify");
 
-const RETRY_INTERVAL_MS = 30 * 1000;
+const RETRY_INTERVAL_MS = 60 * 1000;
 const RETRY_LIMIT = 10;
 const MAX_ATTEMPTS = 3;
 let workerTimer = null;
@@ -10,7 +10,7 @@ let running = false;
 async function retryFailedNotifications(sb) {
   const { data: failed, error } = await sb
     .from("driver_notifications")
-    .select("*")
+    .select("id,driver_id,phone,message,attempts,status,created_at")
     .eq("status", "failed")
     .lt("attempts", MAX_ATTEMPTS)
     .order("created_at", { ascending: true })

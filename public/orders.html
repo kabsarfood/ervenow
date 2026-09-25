@@ -298,28 +298,30 @@
 
       async function sendLocationToActiveOrders() {
         if (!activeOrderIds.length) return;
+        if (document.hidden) return;
+        try {
+          var owner = Number(localStorage.getItem("ervenowDriverLocAt") || 0);
+          if (Date.now() - owner < 20000) return;
+        } catch (_e) {}
         if (!navigator.geolocation) return;
         navigator.geolocation.getCurrentPosition(
           function (pos) {
-            var lat = pos.coords.latitude;
-            var lng = pos.coords.longitude;
-            activeOrderIds.forEach(function (id) {
-              window.PlatformAPI.api("/api/driver/update-location", {
-                method: "POST",
-                body: { order_id: id, lat: lat, lng: lng },
-              }).catch(function () {});
-            });
+            window.PlatformAPI.api("/api/driver/update-location", {
+              method: "POST",
+              body: { lat: pos.coords.latitude, lng: pos.coords.longitude },
+            }).catch(function () {});
           },
           function () {},
           { enableHighAccuracy: false, maximumAge: 8000, timeout: 10000 }
         );
+      }
       }
 
       function startLocationLoop() {
         if (locationTimer) clearInterval(locationTimer);
         locationTimer = setInterval(function () {
           sendLocationToActiveOrders();
-        }, 5000);
+        }, 8000);
       }
 
       function stopLocationLoop() {
@@ -541,7 +543,7 @@
           document.getElementById("phoneLine").textContent = phone;
 
           await loadOrders();
-          pollTimer = setInterval(loadOrders, 6000);
+          pollTimer = setInterval(loadOrders, 45000);
           startLocationLoop();
           sendLocationToActiveOrders();
         } catch (e) {
