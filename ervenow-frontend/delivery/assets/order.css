@@ -3,7 +3,7 @@
 .order-page .order-hero {
   padding: 18px 18px 16px;
   border-radius: 22px;
-  border: 1px solid rgba(61, 34, 19, 0.14);
+  border: 1px solid rgba(15, 90, 55, 0.14);
   background:
     linear-gradient(145deg, rgba(255, 255, 255, 0.95), rgba(248, 241, 229, 0.88)),
     linear-gradient(135deg, rgba(74, 41, 23, 0.06), transparent 55%);
@@ -30,7 +30,7 @@
   min-width: 140px;
   padding: 14px 12px;
   border-radius: 16px;
-  border: 2px solid rgba(61, 34, 19, 0.14);
+  border: 2px solid rgba(15, 90, 55, 0.14);
   background: rgba(255, 253, 248, 0.95);
   font-family: inherit;
   font-weight: 800;
@@ -48,7 +48,7 @@
 .order-type-btn.is-active {
   border-color: rgba(74, 41, 23, 0.55);
   background: linear-gradient(135deg, rgba(74, 41, 23, 0.12), rgba(248, 241, 229, 0.9));
-  box-shadow: 0 8px 22px rgba(43, 23, 13, 0.1);
+  box-shadow: 0 8px 22px rgba(15, 90, 55, 0.1);
 }
 
 .loc-row {
@@ -130,7 +130,7 @@
   flex-direction: column;
   border-radius: 20px;
   background: var(--card-bg, #fffdf9);
-  border: 1px solid rgba(61, 34, 19, 0.18);
+  border: 1px solid rgba(15, 90, 55, 0.18);
   box-shadow: 0 24px 48px rgba(0, 0, 0, 0.2);
   padding: 14px 16px 16px;
 }
@@ -152,7 +152,7 @@
   width: 100%;
   border-radius: 14px;
   overflow: hidden;
-  border: 1px solid rgba(61, 34, 19, 0.12);
+  border: 1px solid rgba(15, 90, 55, 0.12);
 }
 
 .map-modal__actions {
@@ -258,7 +258,7 @@ textarea.input {
   gap: 10px;
   padding: 12px 14px;
   border-radius: 14px;
-  border: 2px solid rgba(61, 34, 19, 0.12);
+  border: 2px solid rgba(15, 90, 55, 0.12);
   background: rgba(255, 253, 248, 0.95);
   cursor: pointer;
   font-weight: 600;

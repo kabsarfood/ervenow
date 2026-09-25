@@ -20,7 +20,7 @@ body.lp-home-premium #snHomeHub .sn-card__desc {
   font-size: 0.82rem;
   line-height: 1.45;
   text-align: center;
-  color: var(--sn-muted, #5c4a3d);
+  color: var(--sn-muted, #4a6358);
 }
 
 /* ——— شريط الثقة: بعد البطاقات · أخف ——— */
@@ -42,7 +42,7 @@ body.lp-home-premium .sn-stats {
   max-width: 640px;
   font-size: 0.78rem;
   font-weight: 600;
-  color: var(--sn-muted, #5c4a3d);
+  color: var(--sn-muted, #4a6358);
   line-height: 1.5;
   text-align: center;
 }

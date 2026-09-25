@@ -82,7 +82,7 @@ svg {
 @media (max-width: 767px) {
   .card {
     margin-bottom: 12px;
-    box-shadow: 0 6px 20px rgba(45, 26, 14, 0.06);
+    box-shadow: 0 6px 20px rgba(15, 40, 28, 0.06);
   }
 
   .auth-form-intro {

@@ -2,16 +2,16 @@
  * ERVENOW — مواصفات التفاعل الموحّدة
  * المرجع: بطاقات الأقسام .sn-card (start-now-landing.css)
  *
- *  • الحافة: 1.5px solid rgba(61, 34, 19, 0.12)
+ *  • الحافة: 1.5px solid rgba(15, 90, 55, 0.12)
  *  • عند التفاعل: حافة #b9872f + ظل 0 12px 34px + رفع translateY(-5px)
  *  • الانتقال: transform · box-shadow · border-color — 0.22s cubic-bezier(0.4, 0, 0.2, 1)
  *  • طبقة ::before شفافة opacity 0.045
  */
 :root {
-  --erv-sn-border: var(--sn-border, rgba(61, 34, 19, 0.12));
+  --erv-sn-border: var(--sn-border, rgba(15, 90, 55, 0.12));
   --erv-sn-gold: var(--sn-gold, #b9872f);
-  --erv-sn-shadow: var(--sn-shadow-sm, 0 2px 8px rgba(45, 26, 14, 0.06));
-  --erv-sn-shadow-hover: var(--sn-shadow-hover, 0 12px 34px rgba(45, 26, 14, 0.14));
+  --erv-sn-shadow: var(--sn-shadow-sm, 0 2px 8px rgba(15, 40, 28, 0.06));
+  --erv-sn-shadow-hover: var(--sn-shadow-hover, 0 12px 34px rgba(15, 40, 28, 0.14));
   --erv-sn-motion: var(--sn-transition, 0.22s cubic-bezier(0.4, 0, 0.2, 1));
   --erv-sn-lift: -5px;
   --erv-sn-overlay: 0.045;

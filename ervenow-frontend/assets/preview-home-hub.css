@@ -15,10 +15,10 @@
   position: sticky;
   top: 0;
   z-index: 40;
-  background: linear-gradient(135deg, #3d2213 0%, #5c3820 55%, #6b4423 100%);
+  background: linear-gradient(135deg, #0f5a37 0%, #5c3820 55%, #6b4423 100%);
   color: #fffefb;
   padding: max(12px, env(safe-area-inset-top, 0px)) clamp(14px, 3vw, 24px) clamp(14px, 2.5vw, 18px);
-  box-shadow: 0 8px 28px rgba(45, 26, 14, 0.22);
+  box-shadow: 0 8px 28px rgba(15, 40, 28, 0.22);
 }
 
 .preview-hub-banner__inner {
@@ -132,15 +132,15 @@
 .preview-section-demos {
   margin-top: clamp(28px, 5vw, 40px);
   padding-top: clamp(20px, 3vw, 28px);
-  border-top: 2px dashed rgba(61, 34, 19, 0.15);
+  border-top: 2px dashed rgba(15, 90, 55, 0.15);
 }
 
 .preview-section-demo {
   margin-bottom: clamp(20px, 3.5vw, 28px);
   border-radius: clamp(16px, 2.5vw, 20px);
-  border: 1px solid rgba(61, 34, 19, 0.1);
+  border: 1px solid rgba(15, 90, 55, 0.1);
   background: #fffefb;
-  box-shadow: 0 10px 32px rgba(45, 26, 14, 0.08);
+  box-shadow: 0 10px 32px rgba(15, 40, 28, 0.08);
   overflow: hidden;
   scroll-margin-top: clamp(120px, 22vw, 160px);
   transition: box-shadow 0.35s ease, border-color 0.35s ease;
@@ -148,7 +148,7 @@
 
 .preview-section-demo.is-highlight {
   border-color: rgba(201, 162, 39, 0.65);
-  box-shadow: 0 0 0 3px rgba(201, 162, 39, 0.25), 0 14px 40px rgba(45, 26, 14, 0.12);
+  box-shadow: 0 0 0 3px rgba(201, 162, 39, 0.25), 0 14px 40px rgba(15, 40, 28, 0.12);
 }
 
 .preview-section-demo__head {
@@ -209,9 +209,9 @@
   min-height: 88px;
   padding: 12px 10px;
   border-radius: 14px;
-  border: 1px solid rgba(61, 34, 19, 0.1);
+  border: 1px solid rgba(15, 90, 55, 0.1);
   background: #fdfbf7;
-  color: #3d2213;
+  color: #0f5a37;
   font-size: clamp(0.82rem, 2.2vw, 0.88rem);
   font-weight: 800;
   text-align: center;
@@ -229,7 +229,7 @@
 .preview-cat-tile:focus-visible {
   transform: translateY(-2px);
   border-color: rgba(185, 135, 47, 0.45);
-  box-shadow: 0 8px 20px rgba(45, 26, 14, 0.1);
+  box-shadow: 0 8px 20px rgba(15, 40, 28, 0.1);
 }
 
 .preview-cat-tile--all {
@@ -263,7 +263,7 @@
   padding: clamp(16px, 3vw, 24px);
   font-size: 0.85rem;
   color: rgba(43, 31, 22, 0.65);
-  border-top: 1px solid rgba(61, 34, 19, 0.08);
+  border-top: 1px solid rgba(15, 90, 55, 0.08);
 }
 
 .preview-hub-footer a {

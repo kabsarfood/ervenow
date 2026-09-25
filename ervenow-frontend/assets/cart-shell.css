@@ -30,9 +30,9 @@
   font-weight: 800;
   font-family: inherit;
   font-size: 0.9rem;
-  color: var(--brown, #3d2213);
+  color: var(--brown, #0f5a37);
   cursor: pointer;
-  box-shadow: 0 4px 14px rgba(45, 26, 14, 0.08);
+  box-shadow: 0 4px 14px rgba(15, 40, 28, 0.08);
   transition: transform 0.2s, box-shadow 0.25s, border-color 0.2s;
 }
 
@@ -142,7 +142,7 @@ body.lp-cart-no-scroll {
     rgba(185, 135, 47, 0.55) 38%,
     rgba(122, 90, 31, 0.75) 100%
   );
-  box-shadow: 0 22px 48px rgba(45, 26, 14, 0.18);
+  box-shadow: 0 22px 48px rgba(15, 40, 28, 0.18);
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
@@ -219,7 +219,7 @@ body.lp-cart-no-scroll {
   -webkit-overflow-scrolling: touch;
   scrollbar-gutter: stable;
   scrollbar-width: thin;
-  scrollbar-color: rgba(91, 55, 29, 0.35) transparent;
+  scrollbar-color: rgba(15, 90, 55, 0.35) transparent;
 }
 
 .lp-cart-panel:not(.lp-cart-panel--page) .lp-cart-accordion--items[open] .lp-cart-card__body--items::-webkit-scrollbar {
@@ -227,7 +227,7 @@ body.lp-cart-no-scroll {
 }
 
 .lp-cart-panel:not(.lp-cart-panel--page) .lp-cart-accordion--items[open] .lp-cart-card__body--items::-webkit-scrollbar-thumb {
-  background: rgba(91, 55, 29, 0.28);
+  background: rgba(15, 90, 55, 0.28);
   border-radius: 999px;
 }
 
@@ -277,7 +277,7 @@ body.lp-cart-no-scroll {
 .lp-cart-panel__fin-details summary {
   font-size: 0.72rem;
   font-weight: 700;
-  color: var(--muted, #5c4a3d);
+  color: var(--muted, #4a6358);
   cursor: pointer;
   list-style: none;
   padding: 6px 0;
@@ -291,7 +291,7 @@ body.lp-cart-no-scroll {
   font-size: 0.72rem;
   margin: 0 0 6px;
   line-height: 1.45;
-  color: var(--muted, #5c4a3d);
+  color: var(--muted, #4a6358);
 }
 
 .lp-cart-panel__fin-note[hidden] {

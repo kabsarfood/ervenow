@@ -64,16 +64,16 @@ body.store-shell-page .dash-main {
 .store-shell-page .store-header-wallet .dash-header-wallet__val {
   font-size: 0.95rem;
   font-weight: 900;
-  color: #3d2213;
+  color: #0f5a37;
 }
 
 .store-header-support-btn {
   min-height: 40px;
   padding: 6px 12px;
   border-radius: 10px;
-  border: 1px solid rgba(61, 34, 19, 0.14);
+  border: 1px solid rgba(15, 90, 55, 0.14);
   background: rgba(255, 255, 255, 0.9);
-  color: #3d2213;
+  color: #0f5a37;
   font-family: inherit;
   font-size: 0.78rem;
   font-weight: 800;
@@ -94,11 +94,11 @@ body.store-shell-page .dash-main {
   min-width: 40px;
   min-height: 40px;
   border-radius: 10px;
-  border: 1px solid rgba(61, 34, 19, 0.14);
+  border: 1px solid rgba(15, 90, 55, 0.14);
   background: rgba(255, 255, 255, 0.92);
   font-size: 1.1rem;
   cursor: pointer;
-  color: #3d2213;
+  color: #0f5a37;
 }
 
 .store-mobile-nav-panel {
@@ -121,8 +121,8 @@ body.store-shell-page .dash-main {
   padding: 10px 14px;
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.92);
-  border: 1px solid rgba(61, 34, 19, 0.08);
-  color: #3d2213;
+  border: 1px solid rgba(15, 90, 55, 0.08);
+  color: #0f5a37;
   text-decoration: none;
   font-size: 0.88rem;
   font-weight: 800;
@@ -261,7 +261,7 @@ body.store-shell-page .dash-main {
 .store-support__card {
   border-radius: 18px;
   background: rgba(255, 252, 248, 0.96);
-  border: 1px solid rgba(61, 34, 19, 0.08);
+  border: 1px solid rgba(15, 90, 55, 0.08);
   box-shadow: 0 10px 36px rgba(42, 24, 16, 0.08);
   padding: 20px 18px;
 }
@@ -270,7 +270,7 @@ body.store-shell-page .dash-main {
   margin: 0 0 6px;
   font-size: 1.15rem;
   font-weight: 900;
-  color: #3d2213;
+  color: #0f5a37;
 }
 
 .store-support__sub {
@@ -301,12 +301,12 @@ body.store-shell-page .dash-main {
 
 .store-support__tile:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(45, 26, 14, 0.1);
+  box-shadow: 0 8px 24px rgba(15, 40, 28, 0.1);
 }
 
 .store-support__tile strong {
   font-size: 0.95rem;
-  color: #3d2213;
+  color: #0f5a37;
 }
 
 .store-support__tile span {

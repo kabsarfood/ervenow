@@ -31,7 +31,7 @@
   padding: 10px 12px 12px;
   margin: 0;
   background: linear-gradient(180deg, #fffefb 0%, #faf6f0 100%);
-  border-top: 1px solid rgba(61, 34, 19, 0.06);
+  border-top: 1px solid rgba(15, 90, 55, 0.06);
 }
 .store-quick-info__chip {
   flex: 0 0 auto;
@@ -39,11 +39,11 @@
   padding: 8px 12px;
   border-radius: 14px;
   background: #fffefb;
-  border: 1px solid rgba(61, 34, 19, 0.1);
+  border: 1px solid rgba(15, 90, 55, 0.1);
   box-shadow: 0 4px 14px rgba(42, 24, 16, 0.05);
   font-size: 0.8rem;
   font-weight: 800;
-  color: #3d2213;
+  color: #0f5a37;
   white-space: nowrap;
   line-height: 1.35;
 }
@@ -69,12 +69,12 @@
   min-height: 48px;
   padding: 10px 16px;
   border-radius: 16px;
-  border: 1px solid rgba(61, 34, 19, 0.1);
+  border: 1px solid rgba(15, 90, 55, 0.1);
   background: linear-gradient(145deg, #fffefb, #f8f2ea);
   font-family: inherit;
   font-size: 0.88rem;
   font-weight: 800;
-  color: #3d2213;
+  color: #0f5a37;
   cursor: pointer;
   white-space: nowrap;
   transition: transform 0.15s, box-shadow 0.2s;
@@ -104,7 +104,7 @@
   border: 1px solid rgba(185, 135, 47, 0.28);
   font-size: 0.9rem;
   font-weight: 800;
-  color: #5b371d;
+  color: #0f5a37;
   line-height: 1.5;
 }
 .store-free-nudge.is-visible {

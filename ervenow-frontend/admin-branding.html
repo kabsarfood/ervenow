@@ -71,11 +71,11 @@
       }
       .crumbs {
         font-size: 0.82rem;
-        color: #6e5a4a;
+        color: #4a6358;
         margin-bottom: 8px;
       }
       .crumbs a {
-        color: #5b371d;
+        color: #0f5a37;
         font-weight: 700;
         text-decoration: none;
       }
@@ -83,25 +83,25 @@
         margin: 0 0 18px;
         font-size: 1.45rem;
         font-weight: 800;
-        color: #3d2213;
+        color: #0f5a37;
       }
       .card {
         background: #fff;
         border-radius: 16px;
-        border: 1px solid rgba(61, 34, 19, 0.1);
+        border: 1px solid rgba(15, 90, 55, 0.1);
         padding: 20px 22px;
         margin-bottom: 18px;
-        box-shadow: 0 8px 28px rgba(45, 26, 14, 0.06);
+        box-shadow: 0 8px 28px rgba(15, 40, 28, 0.06);
       }
       .card h3 {
         margin: 0 0 12px;
         font-size: 1.05rem;
         font-weight: 800;
-        color: #5b371d;
+        color: #0f5a37;
       }
       .card .hint {
         font-size: 0.85rem;
-        color: #6e5a4a;
+        color: #4a6358;
         margin: 0 0 14px;
         line-height: 1.6;
       }
@@ -140,7 +140,7 @@
         }
       }
       .dropzone {
-        border: 2px dashed rgba(91, 55, 29, 0.35);
+        border: 2px dashed rgba(15, 90, 55, 0.35);
         border-radius: 14px;
         padding: 28px 16px;
         text-align: center;
@@ -149,16 +149,16 @@
         transition: border-color 0.2s, background 0.2s;
       }
       .dropzone.drag {
-        border-color: #5b371d;
+        border-color: #0f5a37;
         background: #fff4e6;
       }
       .dropzone p {
         margin: 8px 0 0;
         font-size: 0.88rem;
-        color: #6e5a4a;
+        color: #4a6358;
       }
       .logo-preview {
-        border: 1px solid rgba(61, 34, 19, 0.12);
+        border: 1px solid rgba(15, 90, 55, 0.12);
         border-radius: 12px;
         padding: 16px;
         text-align: center;
@@ -178,13 +178,13 @@
         font-weight: 700;
         font-size: 0.85rem;
         margin: 10px 0 4px;
-        color: #3d2213;
+        color: #0f5a37;
       }
       input[type="color"] {
         width: 52px;
         height: 40px;
         padding: 0;
-        border: 1px solid rgba(61, 34, 19, 0.2);
+        border: 1px solid rgba(15, 90, 55, 0.2);
         border-radius: 8px;
         cursor: pointer;
         vertical-align: middle;
@@ -235,7 +235,7 @@
         border-radius: 8px;
         background: #fff;
         padding: 5px 10px;
-        box-shadow: 0 2px 8px rgba(45, 26, 14, 0.1);
+        box-shadow: 0 2px 8px rgba(15, 40, 28, 0.1);
       }
       .btn {
         border: 0;
@@ -247,13 +247,13 @@
         font-size: 0.9rem;
       }
       .btn-primary {
-        background: #5b371d;
+        background: #0f5a37;
         color: #fff;
       }
       .btn-outline {
         background: #fff;
-        color: #5b371d;
-        border: 1px solid #5b371d;
+        color: #0f5a37;
+        border: 1px solid #0f5a37;
       }
       .btn-row {
         display: flex;
@@ -264,7 +264,7 @@
       .preview-wrap {
         border-radius: 14px;
         overflow: hidden;
-        border: 1px solid rgba(61, 34, 19, 0.12);
+        border: 1px solid rgba(15, 90, 55, 0.12);
         background: var(--pv-bg, #f8f5f0);
         color: var(--pv-text, #2b1f16);
       }
@@ -299,7 +299,7 @@
         margin: 0 0 8px;
         font-size: 1.15rem;
         font-weight: 800;
-        color: var(--pv-primary, #5b371d);
+        color: var(--pv-primary, #0f5a37);
       }
       .pv-hero p {
         margin: 0 0 14px;
@@ -310,7 +310,7 @@
         display: inline-block;
         padding: 10px 22px;
         border-radius: 12px;
-        background: var(--pv-primary, #5b371d);
+        background: var(--pv-primary, #0f5a37);
         color: #fff;
         font-weight: 800;
         font-size: 0.88rem;
@@ -324,7 +324,7 @@
         text-align: right;
       }
       .pv-card strong {
-        color: var(--pv-primary, #5b371d);
+        color: var(--pv-primary, #0f5a37);
       }
       .info-tip {
         display: flex;
@@ -335,7 +335,7 @@
         background: #fff8ee;
         border: 1px solid #e8d4bc;
         font-size: 0.86rem;
-        color: #5c4a3d;
+        color: #4a6358;
         line-height: 1.55;
       }
       .msg {
@@ -416,7 +416,7 @@
           <div class="color-row">
             <label style="margin: 0; flex: 1 1 140px">اللون الأساسي</label>
             <input type="color" id="cPrimaryPick" />
-            <input type="text" id="cPrimary" maxlength="7" placeholder="#5b371d" dir="ltr" />
+            <input type="text" id="cPrimary" maxlength="7" placeholder="#0f5a37" dir="ltr" />
           </div>
           <div class="color-row">
             <label style="margin: 0; flex: 1 1 140px">اللون الثانوي</label>
@@ -581,7 +581,7 @@
         function updateLivePreview() {
           var root = document.getElementById("livePreview");
           if (!root) return;
-          var p = document.getElementById("cPrimary").value.trim() || "#5b371d";
+          var p = document.getElementById("cPrimary").value.trim() || "#0f5a37";
           var s = document.getElementById("cSecondary").value.trim() || "#8b5e34";
           var a = document.getElementById("cAccent").value.trim() || "#d4a76a";
           var b = document.getElementById("cBg").value.trim() || "#f8f5f0";
@@ -717,7 +717,7 @@
         async function loadSettings() {
           var j = await window.PlatformAPI.api("/api/admin/platform-settings");
           settings = j.settings || {};
-          document.getElementById("cPrimary").value = settings.primary_color || "#5b371d";
+          document.getElementById("cPrimary").value = settings.primary_color || "#0f5a37";
           document.getElementById("cSecondary").value = settings.secondary_color || "#8b5e34";
           document.getElementById("cAccent").value = settings.accent_color || "#d4a76a";
           document.getElementById("cBg").value = settings.background_color || "#f8f5f0";
@@ -886,7 +886,7 @@
               body: { resetColors: true },
             });
             settings = j.settings || settings;
-            document.getElementById("cPrimary").value = settings.primary_color || "#5b371d";
+            document.getElementById("cPrimary").value = settings.primary_color || "#0f5a37";
             document.getElementById("cSecondary").value = settings.secondary_color || "#8b5e34";
             document.getElementById("cAccent").value = settings.accent_color || "#d4a76a";
             document.getElementById("cBg").value = settings.background_color || "#f8f5f0";

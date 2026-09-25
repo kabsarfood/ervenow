@@ -68,7 +68,7 @@
   border-radius: 10px;
   border: 1px solid rgba(248, 244, 238, 0.2);
   background: #fffefb;
-  color: #3d2213;
+  color: #0f5a37;
   min-width: min(220px, 100%);
 }
 
@@ -216,7 +216,7 @@
   padding: 8px 14px;
   font-size: 0.82rem;
   font-weight: 700;
-  color: #3d2213;
+  color: #0f5a37;
   background: linear-gradient(135deg, #e8c878, #b9872f);
   border-radius: 10px;
   text-decoration: none;

@@ -13,21 +13,21 @@
   border-radius: 12px;
   border: 1px solid rgba(185, 135, 47, 0.32);
   background: linear-gradient(145deg, #fffefb, #f8f0e6);
-  color: #3d2213;
+  color: #0f5a37;
   font-size: 1.2rem;
   font-family: inherit;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 8px rgba(45, 26, 14, 0.06);
+  box-shadow: 0 2px 8px rgba(15, 40, 28, 0.06);
   transition: transform 0.16s, box-shadow 0.16s, border-color 0.16s;
 }
 
 .erv-notification-bell:hover {
   transform: translateY(-1px);
   border-color: rgba(185, 135, 47, 0.52);
-  box-shadow: 0 6px 16px rgba(45, 26, 14, 0.11);
+  box-shadow: 0 6px 16px rgba(15, 40, 28, 0.11);
 }
 
 .erv-notification-bell.is-pulse {
@@ -69,8 +69,8 @@
   max-height: min(70vh, 520px);
   background: #fffefb;
   border-radius: 14px;
-  border: 1px solid rgba(61, 34, 19, 0.12);
-  box-shadow: 0 16px 42px rgba(45, 26, 14, 0.16);
+  border: 1px solid rgba(15, 90, 55, 0.12);
+  box-shadow: 0 16px 42px rgba(15, 40, 28, 0.16);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -83,13 +83,13 @@
   justify-content: space-between;
   gap: 10px;
   padding: 10px 12px;
-  border-bottom: 1px solid rgba(61, 34, 19, 0.09);
+  border-bottom: 1px solid rgba(15, 90, 55, 0.09);
 }
 
 .erv-notification-title {
   margin: 0;
   font-size: 0.92rem;
-  color: #3d2213;
+  color: #0f5a37;
   font-weight: 900;
 }
 
@@ -124,7 +124,7 @@
 .erv-notification-item {
   width: 100%;
   border: none;
-  border-bottom: 1px solid rgba(61, 34, 19, 0.08);
+  border-bottom: 1px solid rgba(15, 90, 55, 0.08);
   background: #fffefb;
   color: inherit;
   text-align: start;
@@ -154,13 +154,13 @@
   margin: 0;
   font-size: 0.86rem;
   font-weight: 900;
-  color: #3d2213;
+  color: #0f5a37;
 }
 
 .erv-notification-item-message {
   margin: 0;
   font-size: 0.8rem;
-  color: #5c4a3d;
+  color: #4a6358;
   line-height: 1.5;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -277,7 +277,7 @@
 
 .erv-notification-foot {
   padding: 8px 12px 10px;
-  border-top: 1px solid rgba(61, 34, 19, 0.09);
+  border-top: 1px solid rgba(15, 90, 55, 0.09);
   text-align: center;
 }
 
@@ -316,7 +316,7 @@
   margin: 0 0 4px;
   font-size: clamp(1.15rem, 4vw, 1.45rem);
   font-weight: 900;
-  color: #3d2213;
+  color: #0f5a37;
 }
 
 .erv-notif-page-sub {
@@ -355,9 +355,9 @@
   min-height: 44px;
   padding: 0 14px;
   border-radius: 999px;
-  border: 1px solid rgba(61, 34, 19, 0.12);
+  border: 1px solid rgba(15, 90, 55, 0.12);
   background: #fffefb;
-  color: #5c4a3d;
+  color: #4a6358;
   font-family: inherit;
   font-size: 0.84rem;
   font-weight: 800;
@@ -367,7 +367,7 @@
 .erv-notif-page-tab.is-active {
   background: #f5ebe0;
   border-color: rgba(185, 135, 47, 0.45);
-  color: #3d2213;
+  color: #0f5a37;
 }
 
 .erv-notif-page-tab-count {
@@ -415,7 +415,7 @@
 .erv-notif-page-item {
   width: 100%;
   text-align: start;
-  border: 1px solid rgba(61, 34, 19, 0.1);
+  border: 1px solid rgba(15, 90, 55, 0.1);
   border-radius: 14px;
   background: #fffefb;
   padding: 14px;
@@ -434,7 +434,7 @@
 .erv-notif-page-item-msg {
   margin: 0 0 6px;
   font-size: 0.84rem;
-  color: #5c4a3d;
+  color: #4a6358;
   line-height: 1.5;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -464,7 +464,7 @@
 
 .erv-notif-page-item-head strong {
   font-size: 0.92rem;
-  color: #3d2213;
+  color: #0f5a37;
 }
 
 .erv-notif-page-tag {

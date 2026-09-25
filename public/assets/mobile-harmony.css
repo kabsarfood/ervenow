@@ -116,7 +116,7 @@
   html.erv-mobile-shell body.lp-home-premium .lp-header.lp-header--refined {
     background: #f8f4ee !important;
     border-bottom: 0 !important;
-    box-shadow: 0 1px 0 rgba(61, 34, 19, 0.08) !important;
+    box-shadow: 0 1px 0 rgba(15, 90, 55, 0.08) !important;
     position: sticky;
     top: 0;
     z-index: 200;
@@ -151,7 +151,7 @@
   }
 
   html.erv-mobile-shell body.lp-home-premium .lp-header__brand-mid .lp-brand__name {
-    color: #3d2213;
+    color: #0f5a37;
   }
 
   html.erv-mobile-shell body.lp-home-premium .lp-header__menu-slot {
@@ -167,12 +167,12 @@
     padding: 0 !important;
     border: 0 !important;
     border-radius: 15px !important;
-    background: rgba(61, 34, 19, 0.06) !important;
+    background: rgba(15, 90, 55, 0.06) !important;
     box-shadow: none !important;
     font-family: inherit;
     font-size: var(--erv-home-header-menu-icon, 1.69rem);
     line-height: 1;
-    color: #3d2213;
+    color: #0f5a37;
     cursor: pointer;
     touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
@@ -193,7 +193,7 @@
     content: "☰";
     font-size: var(--erv-home-header-menu-icon, 1.69rem);
     line-height: 1;
-    color: #3d2213;
+    color: #0f5a37;
   }
 
   /* ——— قائمة الرئيسية: يمين الأيقونة + تعتيم + بدون شريط تمرير ظاهر ——— */
@@ -210,9 +210,9 @@
     margin: 0 !important;
     padding: 8px !important;
     border-radius: 16px !important;
-    border: 1px solid rgba(61, 34, 19, 0.1) !important;
+    border: 1px solid rgba(15, 90, 55, 0.1) !important;
     background: #fffefb !important;
-    box-shadow: 0 16px 48px rgba(45, 26, 14, 0.18) !important;
+    box-shadow: 0 16px 48px rgba(15, 40, 28, 0.18) !important;
     z-index: 260 !important;
     overflow: visible !important;
     overscroll-behavior: contain;
@@ -249,12 +249,12 @@
     width: 13px;
     height: 13px;
     background: #fffefb;
-    border: 1px solid rgba(61, 34, 19, 0.1);
+    border: 1px solid rgba(15, 90, 55, 0.1);
     border-bottom: none;
     border-right: none;
     border-radius: 4px 0 0 0;
     transform: translateX(-50%) rotate(45deg);
-    box-shadow: -2px -2px 5px rgba(45, 26, 14, 0.04);
+    box-shadow: -2px -2px 5px rgba(15, 40, 28, 0.04);
     pointer-events: none;
     z-index: 2;
   }
@@ -270,7 +270,7 @@
     padding: 6px 10px 4px;
     font-size: 0.72rem;
     font-weight: 800;
-    color: rgba(61, 34, 19, 0.55);
+    color: rgba(15, 90, 55, 0.55);
     text-align: center;
   }
 
@@ -327,7 +327,7 @@
     padding-inline: 0 !important;
     background: #f8f4ee !important;
     border-bottom: 0 !important;
-    box-shadow: 0 1px 0 rgba(61, 34, 19, 0.08) !important;
+    box-shadow: 0 1px 0 rgba(15, 90, 55, 0.08) !important;
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
     transform: none !important;
@@ -391,7 +391,7 @@
     font-size: 0.92rem;
     font-weight: 900;
     letter-spacing: 0.05em;
-    color: #3d2213;
+    color: #0f5a37;
   }
 
   html.erv-mobile-shell body.guest-shell-page .erv-harmony-identity__tag {
@@ -414,11 +414,11 @@
     padding: 0;
     border: 0;
     border-radius: 12px;
-    background: rgba(61, 34, 19, 0.06);
+    background: rgba(15, 90, 55, 0.06);
     font-family: inherit;
     font-size: 1.35rem;
     line-height: 1;
-    color: #3d2213;
+    color: #0f5a37;
     cursor: pointer;
     touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
@@ -445,9 +445,9 @@
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     background: #fffefb;
-    border: 1px solid rgba(61, 34, 19, 0.1);
+    border: 1px solid rgba(15, 90, 55, 0.1);
     border-radius: 16px;
-    box-shadow: 0 16px 48px rgba(45, 26, 14, 0.16);
+    box-shadow: 0 16px 48px rgba(15, 40, 28, 0.16);
     padding: 10px;
   }
 
@@ -512,8 +512,8 @@
     min-height: 0 !important;
     padding-top: 0 !important;
     background: linear-gradient(180deg, rgba(248, 244, 238, 0.97), rgba(255, 254, 251, 0.94)) !important;
-    box-shadow: 0 4px 24px rgba(45, 26, 14, 0.06) !important;
-    border-bottom: 1px solid rgba(61, 34, 19, 0.12) !important;
+    box-shadow: 0 4px 24px rgba(15, 40, 28, 0.06) !important;
+    border-bottom: 1px solid rgba(15, 90, 55, 0.12) !important;
   }
 
   html:not(.erv-mobile-shell) body.lp-home-premium .lp-header.lp-header--refined .lp-header__inner {
@@ -613,11 +613,11 @@
     margin: 0 !important;
     padding: 14px 12px 12px !important;
     border-radius: 22px !important;
-    border: 1px solid rgba(61, 34, 19, 0.12) !important;
+    border: 1px solid rgba(15, 90, 55, 0.12) !important;
     background: #fffefb !important;
     box-shadow:
       0 4px 0 rgba(185, 135, 47, 0.08),
-      0 22px 52px rgba(45, 26, 14, 0.18) !important;
+      0 22px 52px rgba(15, 40, 28, 0.18) !important;
     z-index: 1400 !important;
     overflow: visible !important;
     overscroll-behavior: contain;
@@ -636,12 +636,12 @@
     width: 14px;
     height: 14px;
     background: #fffefb;
-    border: 1px solid rgba(61, 34, 19, 0.12);
+    border: 1px solid rgba(15, 90, 55, 0.12);
     border-bottom: none;
     border-right: none;
     border-radius: 4px 0 0 0;
     transform: translateX(-50%) rotate(45deg);
-    box-shadow: -2px -2px 6px rgba(45, 26, 14, 0.05);
+    box-shadow: -2px -2px 6px rgba(15, 40, 28, 0.05);
     pointer-events: none;
     z-index: 2;
   }
@@ -683,7 +683,7 @@
     border-color: rgba(185, 135, 47, 0.55) !important;
     box-shadow:
       0 0 0 3px rgba(185, 135, 47, 0.12),
-      0 8px 22px rgba(45, 26, 14, 0.1) !important;
+      0 8px 22px rgba(15, 40, 28, 0.1) !important;
   }
 
   html:not(.erv-mobile-shell) body.lp-home-premium .lp-quick-dd__panel--harmony::-webkit-scrollbar {
@@ -697,7 +697,7 @@
     padding: 8px 12px 6px;
     font-size: 0.74rem;
     font-weight: 800;
-    color: rgba(61, 34, 19, 0.55);
+    color: rgba(15, 90, 55, 0.55);
     text-align: right;
   }
 

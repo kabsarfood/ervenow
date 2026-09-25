@@ -5,18 +5,18 @@
  */
 
 html:not(.erv-mobile-shell) body.lp-home-premium {
-  --erv-vip-ink: #3d2213;
-  --erv-vip-ink-soft: #5c4a3d;
+  --erv-vip-ink: #0f5a37;
+  --erv-vip-ink-soft: #4a6358;
   --erv-vip-gold: #b9872f;
   --erv-vip-gold-deep: #9a7024;
   --erv-vip-cream: #f6f1e9;
   --erv-vip-card: #fffefb;
-  --erv-vip-line: rgba(61, 34, 19, 0.1);
+  --erv-vip-line: rgba(15, 90, 55, 0.1);
   --erv-vip-line-strong: rgba(185, 135, 47, 0.28);
   --erv-vip-radius: 16px;
   --erv-vip-radius-sm: 12px;
-  --erv-vip-shadow: 0 4px 16px rgba(45, 26, 14, 0.055);
-  --erv-vip-shadow-hover: 0 12px 28px rgba(45, 26, 14, 0.1);
+  --erv-vip-shadow: 0 4px 16px rgba(15, 40, 28, 0.055);
+  --erv-vip-shadow-hover: 0 12px 28px rgba(15, 40, 28, 0.1);
   --erv-vip-max: 1280px;
   --erv-vip-stage: 1360px;
   --erv-vip-gutter: clamp(24px, 3vw, 40px);
@@ -35,7 +35,7 @@ html:not(.erv-mobile-shell) body.lp-home-premium {
   html:not(.erv-mobile-shell) body.lp-home-premium .lp-header.lp-header--refined {
     background: rgba(255, 254, 251, 0.96) !important;
     border-bottom: 1px solid var(--erv-vip-line) !important;
-    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.7), 0 8px 24px rgba(45, 26, 14, 0.045) !important;
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.7), 0 8px 24px rgba(15, 40, 28, 0.045) !important;
   }
 
   html:not(.erv-mobile-shell) body.lp-home-premium .lp-header.lp-header--refined::before {
@@ -106,7 +106,7 @@ html:not(.erv-mobile-shell) body.lp-home-premium {
     gap: 2px;
     padding: 3px;
     border-radius: 12px;
-    background: rgba(61, 34, 19, 0.04);
+    background: rgba(15, 90, 55, 0.04);
     border: 1px solid transparent;
   }
 
@@ -197,7 +197,7 @@ html:not(.erv-mobile-shell) body.lp-home-premium {
     background: rgba(255, 254, 251, 0.92);
     color: var(--erv-vip-ink);
     border: 1px solid rgba(255, 255, 255, 0.4);
-    box-shadow: 0 4px 14px rgba(45, 26, 14, 0.16);
+    box-shadow: 0 4px 14px rgba(15, 40, 28, 0.16);
   }
 
   html:not(.erv-mobile-shell) body.lp-home-premium .guest-offers-nav__btn:hover,
@@ -468,7 +468,7 @@ html:not(.erv-mobile-shell) body.lp-home-premium {
     background: #2a160d !important;
     filter: none !important;
     transform: translateY(-1px);
-    box-shadow: 0 8px 18px rgba(45, 26, 14, 0.16) !important;
+    box-shadow: 0 8px 18px rgba(15, 40, 28, 0.16) !important;
   }
 
   html:not(.erv-mobile-shell) body.lp-home-premium .lp-btn-solid:focus-visible,

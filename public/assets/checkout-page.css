@@ -453,7 +453,7 @@
 
 .checkout-btn--primary {
   width: 100%;
-  background: linear-gradient(135deg, #3d2213, #2a1810);
+  background: linear-gradient(135deg, #0f5a37, #2a1810);
   color: #fff;
   border-color: var(--checkout-gold);
   box-shadow: 0 8px 24px rgba(42, 24, 16, 0.18);

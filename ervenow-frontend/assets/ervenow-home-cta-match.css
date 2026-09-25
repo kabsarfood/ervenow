@@ -42,9 +42,9 @@ body.lp-home-premium .lp-home-cta-card--partner {
   gap: 14px !important;
   padding: 18px 16px !important;
   border-radius: 18px !important;
-  border: 1px solid rgba(61, 34, 19, 0.12) !important;
+  border: 1px solid rgba(15, 90, 55, 0.12) !important;
   background: #fffefb !important;
-  box-shadow: 0 8px 28px rgba(45, 26, 14, 0.06) !important;
+  box-shadow: 0 8px 28px rgba(15, 40, 28, 0.06) !important;
   text-align: right !important;
 }
 
@@ -69,13 +69,13 @@ body.lp-home-premium .lp-home-cta-card__mark {
   background: linear-gradient(135deg, rgba(185, 135, 47, 0.18), rgba(185, 135, 47, 0.06)) !important;
   font-size: 1.35rem !important;
   line-height: 1 !important;
-  color: #3d2213 !important;
+  color: #0f5a37 !important;
 }
 
 body.lp-home-premium .lp-home-cta-card--partner .lp-home-cta-card__mark {
   background: linear-gradient(135deg, rgba(185, 135, 47, 0.18), rgba(185, 135, 47, 0.06)) !important;
   border-color: rgba(185, 135, 47, 0.28) !important;
-  color: #3d2213 !important;
+  color: #0f5a37 !important;
 }
 
 body.lp-home-premium .lp-home-cta-card__body {
@@ -101,7 +101,7 @@ body.lp-home-premium .lp-home-cta-card__title {
   font-weight: 800 !important;
   line-height: 1.35 !important;
   letter-spacing: 0.01em !important;
-  color: #3d2213 !important;
+  color: #0f5a37 !important;
   text-align: right !important;
 }
 
@@ -117,7 +117,7 @@ body.lp-home-premium .lp-home-cta-card__text {
   font-size: clamp(0.88rem, 2.1vw, 0.95rem) !important;
   font-weight: 500 !important;
   line-height: 1.55 !important;
-  color: rgba(61, 34, 19, 0.78) !important;
+  color: rgba(15, 90, 55, 0.78) !important;
   text-align: right !important;
 }
 
@@ -195,8 +195,8 @@ body.lp-home-premium .lp-home-cta-card .lp-btn-solid.lp-home-cta-card__btn {
     gap: 16px !important;
     border-radius: 20px !important;
     background: #fffefb !important;
-    border: 1px solid rgba(61, 34, 19, 0.12) !important;
-    box-shadow: 0 8px 28px rgba(45, 26, 14, 0.06) !important;
+    border: 1px solid rgba(15, 90, 55, 0.12) !important;
+    box-shadow: 0 8px 28px rgba(15, 40, 28, 0.06) !important;
   }
 
   html:not(.erv-mobile-shell) body.lp-home-premium .lp-home-cta-card--partner {
@@ -213,20 +213,20 @@ body.lp-home-premium .lp-home-cta-card .lp-btn-solid.lp-home-cta-card__btn {
     font-size: 1.35rem !important;
     background: linear-gradient(135deg, rgba(185, 135, 47, 0.18), rgba(185, 135, 47, 0.06)) !important;
     border: 1px solid rgba(185, 135, 47, 0.28) !important;
-    color: #3d2213 !important;
+    color: #0f5a37 !important;
   }
 
   html:not(.erv-mobile-shell) body.lp-home-premium .lp-home-cta-card__title {
     font-size: 1.2rem !important;
     font-weight: 800 !important;
-    color: #3d2213 !important;
+    color: #0f5a37 !important;
   }
 
   html:not(.erv-mobile-shell) body.lp-home-premium .lp-home-cta-card__text {
     font-size: 0.95rem !important;
     font-weight: 500 !important;
     line-height: 1.55 !important;
-    color: rgba(61, 34, 19, 0.78) !important;
+    color: rgba(15, 90, 55, 0.78) !important;
     min-height: 3em !important;
   }
 

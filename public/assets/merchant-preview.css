@@ -270,7 +270,7 @@ body.merchant-preview-page {
   border: 1px solid var(--mp-border);
   border-radius: var(--mp-radius);
   padding: 14px;
-  box-shadow: 0 4px 16px rgba(45, 26, 14, 0.05);
+  box-shadow: 0 4px 16px rgba(15, 40, 28, 0.05);
 }
 
 .mp-kpi__lbl {
@@ -334,7 +334,7 @@ body.merchant-preview-page {
   word-break: break-word;
 }
 .mp-loc-saved a {
-  color: #5b371d;
+  color: #0f5a37;
   font-weight: 800;
 }
 @media (max-width: 640px) {
@@ -349,7 +349,7 @@ body.merchant-preview-page {
   border-radius: var(--mp-radius);
   padding: clamp(14px, 3vw, 18px);
   margin-bottom: 14px;
-  box-shadow: 0 6px 20px rgba(45, 26, 14, 0.06);
+  box-shadow: 0 6px 20px rgba(15, 40, 28, 0.06);
 }
 
 .mp-card h3 {
@@ -915,7 +915,7 @@ body.pf-page:has(#mpSection-orders.is-active) [data-pf-main] {
   border-radius: 16px;
   background: #fff8ec;
   border: 1px solid rgba(196, 154, 60, 0.45);
-  box-shadow: 0 8px 24px rgba(61, 34, 19, 0.06);
+  box-shadow: 0 8px 24px rgba(15, 90, 55, 0.06);
 }
 
 .mp-incoming__bell {

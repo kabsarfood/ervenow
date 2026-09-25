@@ -5,13 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover" />
     <script src="/assets/viewport-fit.js?erv=20260612"></script>
     <script src="/assets/pre-reg-banner.js?erv=20260905b" defer></script>
-    <meta name="theme-color" content="#5b371d" />
+    <meta name="theme-color" content="#0f5a37" />
     <title>ERVENOW | المحفظة</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet" />
     <style>
       :root {
-        --w-primary: var(--brown, #5b371d);
+        --w-primary: var(--brown, #0f5a37);
         --w-primary-deep: #3d2615;
         --w-gold: var(--gold, #d4a76a);
         --w-gold-soft: #e8c992;
@@ -109,7 +109,7 @@
         min-height: var(--w-touch);
         padding: 0 0.85rem;
         border-radius: var(--w-radius-sm);
-        border: 1px solid rgba(91, 55, 29, 0.18);
+        border: 1px solid rgba(15, 90, 55, 0.18);
         background: var(--w-surface);
         color: var(--w-primary);
         font-family: inherit;
@@ -359,7 +359,7 @@
         border-radius: var(--w-radius-card);
         padding: clamp(1rem, 3vw, 1.25rem);
         box-shadow: var(--w-shadow);
-        border: 1px solid rgba(91, 55, 29, 0.1);
+        border: 1px solid rgba(15, 90, 55, 0.1);
         display: flex;
         flex-direction: column;
         gap: 0.85rem;
@@ -379,7 +379,7 @@
         gap: 0.75rem;
         min-height: 52px;
         padding: 0.35rem 0;
-        border-bottom: 1px solid rgba(91, 55, 29, 0.08);
+        border-bottom: 1px solid rgba(15, 90, 55, 0.08);
       }
 
       .wallet-metric:last-of-type {
@@ -399,7 +399,7 @@
         width: 36px;
         height: 36px;
         border-radius: 10px;
-        background: rgba(91, 55, 29, 0.1);
+        background: rgba(15, 90, 55, 0.1);
         color: var(--w-primary);
         display: flex;
         align-items: center;
@@ -430,12 +430,12 @@
         width: 100%;
         background: transparent;
         color: var(--w-primary);
-        border: 2px solid rgba(91, 55, 29, 0.22);
+        border: 2px solid rgba(15, 90, 55, 0.22);
       }
 
       @media (hover: hover) and (pointer: fine) {
         .wallet-btn--ghost:hover {
-          background: rgba(91, 55, 29, 0.06);
+          background: rgba(15, 90, 55, 0.06);
         }
       }
 
@@ -446,7 +446,7 @@
         padding: clamp(1rem, 3vw, 1.35rem);
         margin-bottom: 1.15rem;
         box-shadow: var(--w-shadow);
-        border: 1px solid rgba(91, 55, 29, 0.1);
+        border: 1px solid rgba(15, 90, 55, 0.1);
       }
 
       .wallet-panel h2 {
@@ -481,7 +481,7 @@
         min-height: var(--w-touch);
         padding: 0.65rem 0.85rem;
         border-radius: var(--w-radius-sm);
-        border: 1px solid rgba(91, 55, 29, 0.2);
+        border: 1px solid rgba(15, 90, 55, 0.2);
         background: #fff;
         color: var(--w-text);
         font-family: inherit;
@@ -520,7 +520,7 @@
       .otp-block {
         margin-top: 1rem;
         padding-top: 1rem;
-        border-top: 1px solid rgba(91, 55, 29, 0.12);
+        border-top: 1px solid rgba(15, 90, 55, 0.12);
         display: none;
       }
 
@@ -596,7 +596,7 @@
 
       .wallet-tx-list {
         border-radius: var(--w-radius-sm);
-        border: 1px solid rgba(91, 55, 29, 0.12);
+        border: 1px solid rgba(15, 90, 55, 0.12);
         background: #fff;
         overflow-y: visible;
       }
@@ -608,7 +608,7 @@
         align-items: center;
         padding: 0.85rem max(0.85rem, env(safe-area-inset-right)) 0.85rem max(0.85rem, env(safe-area-inset-left));
         min-height: 56px;
-        border-bottom: 1px solid rgba(91, 55, 29, 0.08);
+        border-bottom: 1px solid rgba(15, 90, 55, 0.08);
       }
 
       .wallet-tx-row:last-child {
@@ -617,7 +617,7 @@
 
       @media (hover: hover) and (pointer: fine) {
         .wallet-tx-row:hover {
-          background: rgba(91, 55, 29, 0.03);
+          background: rgba(15, 90, 55, 0.03);
         }
       }
 
@@ -630,7 +630,7 @@
         justify-content: center;
         font-size: 1.15rem;
         flex-shrink: 0;
-        background: rgba(91, 55, 29, 0.08);
+        background: rgba(15, 90, 55, 0.08);
       }
 
       .wallet-tx-icon--in {
@@ -691,7 +691,7 @@
         display: none;
         overflow-x: auto;
         border-radius: var(--w-radius-sm);
-        border: 1px solid rgba(91, 55, 29, 0.12);
+        border: 1px solid rgba(15, 90, 55, 0.12);
       }
 
       @media (min-width: 900px) {
@@ -713,16 +713,16 @@
       thead th {
         text-align: right;
         padding: 0.75rem 0.85rem;
-        background: rgba(91, 55, 29, 0.06);
+        background: rgba(15, 90, 55, 0.06);
         color: var(--w-primary);
         font-weight: 800;
-        border-bottom: 1px solid rgba(91, 55, 29, 0.12);
+        border-bottom: 1px solid rgba(15, 90, 55, 0.12);
         white-space: nowrap;
       }
 
       tbody td {
         padding: 0.75rem 0.85rem;
-        border-bottom: 1px solid rgba(91, 55, 29, 0.08);
+        border-bottom: 1px solid rgba(15, 90, 55, 0.08);
       }
 
       tbody tr:last-child td {
@@ -769,7 +769,7 @@
 
       .wallet-feature {
         background: var(--w-surface);
-        border: 1px solid rgba(91, 55, 29, 0.1);
+        border: 1px solid rgba(15, 90, 55, 0.1);
         border-radius: var(--w-radius-sm);
         padding: 0.85rem 1rem;
         display: flex;
@@ -860,7 +860,7 @@
         border-radius: var(--w-radius-card);
         padding: clamp(1rem, 4vw, 1.35rem);
         box-shadow: var(--w-shadow-card);
-        border: 1px solid rgba(91, 55, 29, 0.12);
+        border: 1px solid rgba(15, 90, 55, 0.12);
         max-height: min(90dvh, 640px);
         overflow-y: auto;
       }
@@ -885,15 +885,15 @@
         min-height: var(--w-touch);
         border: none;
         border-radius: 12px;
-        background: rgba(91, 55, 29, 0.08);
+        background: rgba(15, 90, 55, 0.08);
         color: var(--w-primary);
         font-size: 1.25rem;
         cursor: pointer;
       }
 
       .wallet-stc-box {
-        background: linear-gradient(135deg, rgba(91, 55, 29, 0.08), rgba(212, 167, 106, 0.15));
-        border: 1px dashed rgba(91, 55, 29, 0.25);
+        background: linear-gradient(135deg, rgba(15, 90, 55, 0.08), rgba(212, 167, 106, 0.15));
+        border: 1px dashed rgba(15, 90, 55, 0.25);
         border-radius: var(--w-radius-sm);
         padding: 0.85rem 1rem;
         margin: 0.75rem 0 1rem;
@@ -927,7 +927,7 @@
         min-height: 40px;
         padding: 0 0.85rem;
         border-radius: 999px;
-        border: 1px solid rgba(91, 55, 29, 0.2);
+        border: 1px solid rgba(15, 90, 55, 0.2);
         background: #fff;
         font-family: inherit;
         font-weight: 800;

@@ -287,7 +287,7 @@
   padding: 10px 16px;
   border-radius: 999px;
   background: rgba(255, 252, 248, 0.95);
-  border: 1px solid rgba(61, 34, 19, 0.12);
+  border: 1px solid rgba(15, 90, 55, 0.12);
   font-size: clamp(0.82rem, 2.4vw, 0.92rem);
   line-height: 1.45;
   box-shadow: 0 8px 24px rgba(42, 24, 16, 0.12);
@@ -333,7 +333,7 @@
   border: none;
   border-bottom: 1px solid rgba(201, 162, 39, 0.25);
   background: transparent;
-  color: #3d2213;
+  color: #0f5a37;
   font-family: inherit;
   font-size: clamp(0.78rem, 2.2vw, 0.88rem);
   font-weight: 800;

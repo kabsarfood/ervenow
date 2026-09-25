@@ -230,7 +230,7 @@
           : null;
     var img = product.image_url || product.photo_url || product.image || defaultCover();
     var href = storeId
-      ? "/store.html?id=" + encodeURIComponent(String(storeId))
+      ? "/store.html?id=" + encodeURIComponent(String(storeId)) + (product.id ? "&product=" + encodeURIComponent(String(product.id)) : "")
       : "/restaurants";
 
     return (
@@ -253,8 +253,58 @@
     );
   }
 
+  function resetRail(el) {
+    if (!el) return;
+    delete el.dataset.rail;
+    el.classList.remove("erv-mp-rail");
+    var view = el.parentElement;
+    if (view && view.classList.contains("erv-mp-rail-view") && view.parentNode) {
+      view.parentNode.insertBefore(el, view);
+      view.remove();
+    }
+  }
+
+  function mountImageRail(el) {
+    if (!el || el.dataset.rail === "1" || !el.children.length) return;
+    el.dataset.rail = "1";
+    el.classList.add("erv-mp-rail");
+    var unit = Array.prototype.slice.call(el.children);
+    var repeats = Math.max(2, Math.ceil(8 / unit.length));
+    var extra = repeats - 1;
+    while (extra > 0) {
+      unit.forEach(function (node) {
+        el.appendChild(node.cloneNode(true));
+      });
+      extra -= 1;
+    }
+    Array.prototype.slice.call(el.children).forEach(function (node) {
+      el.appendChild(node.cloneNode(true));
+    });
+    var view = document.createElement("div");
+    view.className = "erv-mp-rail-view";
+    el.parentNode.insertBefore(view, el);
+    view.appendChild(el);
+    function hold() {
+      view.classList.add("is-held");
+    }
+    function release(ev) {
+      if (ev && ev.pointerType === "mouse" && view.matches(":hover")) return;
+      view.classList.remove("is-held");
+    }
+    view.addEventListener("pointerenter", function (ev) {
+      if (ev.pointerType === "mouse") hold();
+    });
+    view.addEventListener("pointerleave", function () {
+      view.classList.remove("is-held");
+    });
+    view.addEventListener("pointerdown", hold);
+    view.addEventListener("pointerup", release);
+    view.addEventListener("pointercancel", release);
+  }
+
   function renderGrid(el, list) {
     if (!el) return;
+    resetRail(el);
     el.innerHTML = list.map(storeCardHtml).join("");
     el.querySelectorAll("img").forEach(function (img) {
       img.addEventListener("error", function () {
@@ -272,6 +322,7 @@
     }
     sectionEl.hidden = false;
     renderGrid(gridEl, list.slice(0, 8));
+    mountImageRail(gridEl);
   }
 
   async function fetchStores(query) {
@@ -412,6 +463,7 @@
         } else if (products.length) {
           productsSection.hidden = false;
           setSectionTitle("ervMpProductsTitle", "الأكثر طلباً");
+          resetRail(productsGrid);
           productsGrid.innerHTML = products
             .slice(0, 10)
             .map(function (p) {
@@ -423,6 +475,7 @@
               img.src = defaultCover();
             });
           });
+          mountImageRail(productsGrid);
           showOrderedStores = false;
         } else if (!productsGrid.children.length) {
           productsSection.hidden = true;
