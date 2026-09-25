@@ -632,7 +632,7 @@
             ? window.PlatformAPI.getToken()
             : "";
         if (!token) {
-          location.href = "/login?mode=register&role=customer";
+          location.href = "/login";
           return;
         }
         if (window.ErvenowNotificationCenter && ErvenowNotificationCenter.mount) {

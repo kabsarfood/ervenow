@@ -15,7 +15,7 @@
     store: "/login?role=store",
     service: "/login?role=service",
     transport: "/login?role=service",
-    customer: "/login?role=customer",
+    customer: "/login",
     admin: "/admin-login",
   };
 

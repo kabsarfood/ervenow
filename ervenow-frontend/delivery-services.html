@@ -313,6 +313,49 @@
         transform: scale(1);
       }
 
+      .ds-service-picker.is-open .ds-services {
+        grid-template-columns: 1fr;
+      }
+
+      .ds-service-picker.is-open .ds-svc.is-active {
+        flex-direction: row;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 12px;
+        width: 100%;
+        min-height: 88px;
+        padding: 14px 16px;
+        border-radius: 18px;
+      }
+
+      .ds-service-picker.is-open .ds-svc.is-active .ds-svc__ic {
+        order: 1;
+      }
+
+      .ds-service-picker.is-open .ds-svc.is-active .ds-svc__body {
+        order: 2;
+        flex: 1 1 auto;
+        gap: 2px;
+      }
+
+      .ds-service-picker.is-open .ds-svc.is-active .ds-svc__check {
+        order: 3;
+        position: static;
+        flex: 0 0 28px;
+        width: 28px;
+        height: 28px;
+        line-height: 28px;
+        margin-inline-start: auto;
+      }
+
+      .ds-service-picker.is-open .ds-svc.is-active .ds-svc__lbl {
+        font-size: clamp(1rem, 2.4vw, 1.15rem);
+      }
+
+      .ds-service-picker.is-open .ds-svc.is-active .ds-svc__desc {
+        -webkit-line-clamp: 2;
+      }
+
       /* Form */
       .ds-form {
         display: flex;
@@ -1178,6 +1221,14 @@
         }
       }
 
+      @media (min-width: 641px) and (max-width: 1024px) {
+        .ds-service-picker.is-open .ds-svc.is-active {
+          min-height: 96px;
+          padding: 16px 20px;
+          gap: 16px;
+        }
+      }
+
       @media (min-width: 1025px) {
         .ds-main {
           max-width: min(1040px, 100%);
@@ -1186,6 +1237,23 @@
         .ds-services {
           grid-template-columns: repeat(4, minmax(0, 1fr));
           gap: 14px;
+        }
+
+        .ds-service-picker.is-open .ds-services {
+          grid-template-columns: 1fr;
+        }
+
+        .ds-service-picker.is-open .ds-svc.is-active {
+          min-height: 104px;
+          padding: 18px 22px;
+          gap: 18px;
+        }
+
+        .ds-service-picker.is-open .ds-svc.is-active .ds-svc__ic {
+          width: 52px;
+          height: 52px;
+          flex-basis: 52px;
+          font-size: 1.5rem;
         }
       }
 
@@ -1233,7 +1301,7 @@
             <span class="dash-header-cart__badge" id="cartCount" data-empty="true">0</span>
           </a>
         </div>
-        <a class="dash-site-header__btn dash-site-header__btn--primary" href="/login?role=customer" id="switchAccount">دخول الأعضاء</a>
+        <a class="dash-site-header__btn dash-site-header__btn--primary" href="/login" id="switchAccount">دخول الأعضاء</a>
       </div>
     </header>
 

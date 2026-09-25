@@ -43,19 +43,8 @@
     var nameEl = document.querySelector(".lp-brand__name");
     var tagEl = document.querySelector(".lp-brand__tag");
     var logoSlot = document.querySelector(".lp-header__logo-slot");
-    var isMobileOrTablet =
-      (typeof window.matchMedia === "function" && window.matchMedia("(max-width: 1024px)").matches) ||
-      document.documentElement.classList.contains("erv-mobile-shell");
 
-    // الجوال/التابلت: لا نعرض الشعار الجديد (صورة) — النص يكفي
-    if (isMobileOrTablet && img) {
-      img.removeAttribute("src");
-      img.style.display = "none";
-      if (logoSlot) {
-        logoSlot.classList.remove("lp-header__logo-slot--has-img");
-        logoSlot.style.display = "none";
-      }
-    } else if (img && d.logo_url && String(d.logo_url).trim()) {
+    if (img && d.logo_url && String(d.logo_url).trim()) {
       var u = String(d.logo_url).trim();
       if (u.startsWith("http://") || u.startsWith("https://") || u.startsWith("data:")) img.src = u;
       else img.src = u;

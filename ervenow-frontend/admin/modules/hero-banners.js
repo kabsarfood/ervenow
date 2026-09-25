@@ -44,7 +44,7 @@ var TARGET_DEFAULTS = {
     button1_text: "ابدأ الآن",
     button1_url: "/",
     button2_text: "دخول الأعضاء",
-    button2_url: "/login?role=customer",
+    button2_url: "/login",
     display_mode: "carousel",
     banner_type: "awareness",
     status: "active",

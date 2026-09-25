@@ -225,15 +225,11 @@
     if (!isProductLine(item)) return { ok: false, message: "لا يمكن تعديل كمية هذا البند" };
 
     var d = Object.assign({}, item.data || {});
-    var qty = Math.max(0, Math.min(99, (Number(d.qty) || 1) + Number(delta || 0)));
-    if (qty <= 0) {
-      items.splice(idx, 1);
-    } else {
-      var unit = unitPrice(item);
-      d.qty = qty;
-      d.unit_price = unit;
-      items[idx] = Object.assign({}, item, { price: roundMoney(unit * qty), data: d });
-    }
+    var qty = Math.max(1, Math.min(99, (Number(d.qty) || 1) + Number(delta || 0)));
+    var unit = unitPrice(item);
+    d.qty = qty;
+    d.unit_price = unit;
+    items[idx] = Object.assign({}, item, { price: roundMoney(unit * qty), data: d });
 
     draft.items = items;
     if (!draft.items.length) {
@@ -270,6 +266,35 @@
     syncBadgeAfterDraftChange();
     if (engine() && typeof engine().refresh === "function") engine().refresh();
     return { ok: true };
+  }
+
+  function setFulfillmentMode(mode) {
+    var api = draftApi();
+    if (!api) return { ok: false, message: "مسودة الطلب غير متاحة" };
+    var draft = api.readDraft();
+    var next = mode === "pickup" ? "pickup" : "ervenow_delivery";
+    draft.items = (draft.items || []).map(function (it) {
+      var d = it && it.data;
+      if (!d || !d.store_id) return it;
+      var data = Object.assign({}, d, { fulfillment_mode: next });
+      if (next === "pickup") {
+        data.delivery_fee = 0;
+        data.delivery_free = true;
+      }
+      return Object.assign({}, it, { data: data });
+    });
+    if (draft.customer_location) {
+      draft.customer_location = Object.assign({}, draft.customer_location, { fulfillment_mode: next });
+    }
+    return persist(draft);
+  }
+
+  function setDiscountCode(code) {
+    var api = draftApi();
+    if (!api) return { ok: false, message: "مسودة الطلب غير متاحة" };
+    var draft = api.readDraft();
+    draft.discount_code = String(code || "").trim().slice(0, 40);
+    return persist(draft);
   }
 
   function setOrderNotes(notes) {
@@ -358,6 +383,13 @@
       clearBtn.__checkoutEditBound = true;
       clearBtn.addEventListener("click", function () {
         if (checkoutInFlightGuard()) return;
+        var all = document.getElementById("checkoutSelectAll");
+        if (!all || !all.checked) {
+          if (engine() && typeof engine().showToast === "function") {
+            engine().showToast("حدّد الكل أولاً لحذف المنتجات", "error");
+          }
+          return;
+        }
         clearAll();
       });
     }
@@ -371,10 +403,55 @@
         setOrderNotes(notesEl.value);
       }
       notesEl.addEventListener("input", function () {
+        var noteCount = document.getElementById("checkoutNoteCount");
+        if (noteCount) noteCount.textContent = String(notesEl.value.length);
         clearTimeout(notesTimer);
         notesTimer = setTimeout(saveNotes, 400);
       });
       notesEl.addEventListener("blur", saveNotes);
+    }
+
+    var receive = document.getElementById("checkoutReceiveOptions");
+    if (receive && !receive.__checkoutEditBound) {
+      receive.__checkoutEditBound = true;
+      receive.addEventListener("click", function (ev) {
+        var btn = ev.target.closest("[data-receive]");
+        if (!btn || checkoutInFlightGuard()) return;
+        setFulfillmentMode(btn.getAttribute("data-receive"));
+      });
+    }
+
+    var changeAddress = document.getElementById("checkoutChangeAddressBtn");
+    if (changeAddress && !changeAddress.__checkoutEditBound) {
+      changeAddress.__checkoutEditBound = true;
+      changeAddress.addEventListener("click", function () {
+        var edit = document.getElementById("checkoutDeliveryEdit");
+        if (!edit) return;
+        edit.hidden = !edit.hidden;
+      });
+    }
+
+    var applyCode = document.getElementById("checkoutApplyCodeBtn");
+    if (applyCode && !applyCode.__checkoutEditBound) {
+      applyCode.__checkoutEditBound = true;
+      applyCode.addEventListener("click", function () {
+        if (checkoutInFlightGuard()) return;
+        var input = document.getElementById("checkoutDiscountCode");
+        var msg = document.getElementById("checkoutDiscountMsg");
+        var code = input ? String(input.value || "").trim() : "";
+        if (!code) {
+          if (msg) {
+            msg.hidden = false;
+            msg.textContent = "الصق كود الخصم ثم اضغط تطبيق.";
+          }
+          return;
+        }
+        var res = setDiscountCode(code);
+        if (msg) {
+          msg.hidden = false;
+          msg.textContent = res && res.ok ? "تم حفظ الكود. لا يوجد خصم مفعّل عليه حالياً." : "تعذّر حفظ الكود.";
+        }
+      });
     }
 
     var saveLocBtn = document.getElementById("checkoutSaveLocationBtn");
@@ -411,6 +488,8 @@
     changeQty: changeQty,
     removeItem: removeItem,
     clearAll: clearAll,
+    setFulfillmentMode: setFulfillmentMode,
+    setDiscountCode: setDiscountCode,
     setOrderNotes: setOrderNotes,
     setDeliveryLocation: setDeliveryLocation,
     refreshDeliveryQuoteIfPending: refreshDeliveryQuoteIfPending,

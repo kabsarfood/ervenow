@@ -3263,8 +3263,9 @@ router.post(
       const catScope = normalizeCategoryScope(body.scope, type);
       if (!type || !slug || !name_ar) return fail(res, "type و slug و name_ar (أو label_ar) مطلوبة", 400);
       if (!catScope) return fail(res, "scope غير صالح — استخدم store أو product", 400);
-      if (type === "restaurant" && catScope === CATEGORY_SCOPE_STORE) {
-        /* تصنيف مطبخ المتجر (تسجيل/تصفح) */
+      const membershipStoreTypes = new Set(["restaurant", "market", "services", "transport"]);
+      if (catScope === CATEGORY_SCOPE_STORE && membershipStoreTypes.has(type)) {
+        /* نشاط تسجيل العضوية: مطبخ / متجر / نقل / خدمة */
       } else if (catScope === CATEGORY_SCOPE_PRODUCT && PRODUCT_CATALOG_TYPE_SET.has(type)) {
         /* قسم منتج / قائمة — كل الأنواع بما فيها مطاعم */
       } else {

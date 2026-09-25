@@ -471,13 +471,10 @@
       .auth-role-section {
         margin-bottom: 16px;
       }
-      html:not(.auth-join-intent) body:not(.auth-join-page) #authRoleSection {
-        display: none !important;
-      }
+      #authRoleSection,
       html.auth-join-intent #authRoleSection,
       body.auth-join-page #authRoleSection {
-        display: block;
-        margin: 0 0 16px;
+        display: none !important;
       }
       .auth-role-section__title {
         margin: 0 0 4px;
@@ -914,10 +911,25 @@
         font-weight: 700;
         line-height: 1.5;
       }
-      .membership-grid {
-        display: grid;
-        grid-template-columns: 1fr;
-        gap: 10px;
+      .membership-select-label {
+        display: block;
+        margin: 12px 0 6px;
+        color: #0f5a37;
+        font-weight: 800;
+        line-height: 1.45;
+      }
+      .membership-select {
+        width: 100%;
+        min-height: 48px;
+        padding: 0 12px;
+        border-radius: 14px;
+        border: 1px solid rgba(15, 90, 55, 0.28);
+        background: #fffefb;
+        color: #0f5a37;
+        font-family: Cairo, system-ui, sans-serif;
+        font-size: 16px;
+        font-weight: 700;
+        line-height: 1.45;
       }
       @media (min-width: 641px) {
         .membership-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -1057,7 +1069,16 @@
         <div id="membershipFlow" class="membership-flow" hidden>
           <h2>مرحباً بك في ERVENOW</h2>
           <p class="membership-lead" id="membershipLead">اختر نوع العضوية</p>
-          <div class="membership-grid" id="membershipGrid"></div>
+          <label class="membership-select-label" for="membershipTypeSelect">نوع العضوية</label>
+          <select id="membershipTypeSelect" class="membership-select">
+            <option value="">اختر نوع العضوية</option>
+          </select>
+          <div id="membershipActivityWrap" hidden>
+            <label class="membership-select-label" for="membershipActivitySelect" id="membershipActivityLabel">النشاط</label>
+            <select id="membershipActivitySelect" class="membership-select">
+              <option value="">اختر النشاط</option>
+            </select>
+          </div>
           <div class="membership-actions">
             <button type="button" class="membership-back" id="membershipBack">رجوع</button>
             <button type="button" class="membership-next" id="membershipNext">استمرار</button>
@@ -1229,7 +1250,7 @@
         <div class="msg" id="msg" style="display: none"></div>
         <a class="btn btn-primary auth-cross-cta" id="authCrossCta" hidden></a>
         <p class="auth-intent-switch" id="authIntentSwitch">
-          ليس لديك عضوية؟ <a href="/login">أدخل جوالك وسننشئ حساب عميل بعد الرمز</a>
+          ليس لديك عضوية؟ <a href="#" id="authCreateAccount">إنشاء حساب</a>
         </p>
       </div>
     </main>
@@ -1409,14 +1430,59 @@
         }
       }
 
+      function showCreateAccountCard() {
+        var intro = document.getElementById("authFormIntro");
+        if (intro) intro.hidden = true;
+        var role = document.getElementById("authRoleSection");
+        if (role) role.hidden = true;
+        var titleText = document.getElementById("authTitleText");
+        if (titleText) titleText.innerHTML = "أنشئ <strong>حسابك</strong>";
+        var eyebrow = document.getElementById("authBannerEyebrowText");
+        if (eyebrow) eyebrow.textContent = "ERVENOW — إنشاء حساب";
+        var tag = document.querySelector(".dash-site-header__tag");
+        if (tag) tag.textContent = "إنشاء حساب";
+        openMembershipFlow();
+        paintIntentSwitch();
+      }
+
+      function showLoginCard() {
+        var flow = document.getElementById("membershipFlow");
+        if (flow) {
+          flow.hidden = true;
+          flow.classList.remove("is-open");
+        }
+        var core = document.querySelector(".auth-login-core");
+        if (core) core.hidden = false;
+        var intro = document.getElementById("authFormIntro");
+        if (intro) intro.hidden = false;
+        syncAuthHead();
+      }
+
       function paintIntentSwitch() {
         var el = document.getElementById("authIntentSwitch");
         if (!el) return;
-        if (isJoinIntent()) {
-          el.innerHTML = 'لديك عضوية؟ <a href="' + loginHref() + '">الدخول</a>';
-        } else {
-          el.innerHTML = 'ليس لديك عضوية؟ <a href="' + joinHref() + '">إنشاء عضوية</a>';
+        var flow = document.getElementById("membershipFlow");
+        var creating = flow && !flow.hidden;
+        if (creating) {
+          el.innerHTML = 'لديك عضوية؟ <a href="#" id="authBackToLogin">الدخول</a>';
+          return;
         }
+        el.innerHTML = 'ليس لديك عضوية؟ <a href="#" id="authCreateAccount">إنشاء حساب</a>';
+      }
+
+      var intentSwitch = document.getElementById("authIntentSwitch");
+      if (intentSwitch) {
+        intentSwitch.addEventListener("click", function (ev) {
+          if (ev.target.closest("#authCreateAccount")) {
+            ev.preventDefault();
+            showCreateAccountCard();
+            return;
+          }
+          if (ev.target.closest("#authBackToLogin")) {
+            ev.preventDefault();
+            showLoginCard();
+          }
+        });
       }
 
       function restoreVerifiedPhone() {
@@ -1478,12 +1544,12 @@
           goStoreRegister();
           return;
         }
-        if (hint === "driver" || hint === "customer" || hint === "service" || isServiceTypeValue(hint)) {
+        if (hint === "driver" || hint === "service" || isServiceTypeValue(hint)) {
           applyRegisterRoleValue(hint);
           syncRegisterSubmitUi();
           return;
         }
-        applyRegisterRoleValue("customer");
+        openMembershipFlow();
       }
 
       function isRegisterMode() {
@@ -1493,7 +1559,7 @@
       function syncJoinRoleDropdown() {
         var section = document.getElementById("authRoleSection");
         var join = isJoinIntent();
-        if (section) section.hidden = !join;
+        if (section) section.hidden = true;
         if (!join) return;
         buildRegisterRoleSelect();
         var qs = new URLSearchParams(location.search);
@@ -2443,36 +2509,57 @@
         return '<span class="membership-card__ph">ER</span>';
       }
 
-      function renderMembershipCards(items, keyName) {
-        var grid = document.getElementById("membershipGrid");
-        if (!grid) return;
-        grid.innerHTML = (items || []).map(function (item) {
+      function fillMembershipSelect(sel, items, keyName, placeholder, selected) {
+        if (!sel) return;
+        sel.innerHTML = '<option value="">' + placeholder + "</option>" + (items || []).map(function (item) {
           var code = item[keyName] || item.option_code || item.membership_type;
-          var active = membershipState.step === "root"
-            ? membershipState.picked && membershipState.picked.membership_type === code
-            : membershipState.activity && membershipState.activity.option_code === code;
-          return '<button type="button" class="membership-card' + (active ? " is-active" : "") + '" data-code="' + String(code).replace(/"/g, "") + '">' +
-            membershipIconHtml(item) + "<span>" + (item.label_ar || code) + "</span></button>";
+          var label = (item.icon ? item.icon + " " : "") + (item.label_ar || code);
+          return '<option value="' + String(code).replace(/"/g, "") + '">' + label + "</option>";
         }).join("");
-        grid.querySelectorAll(".membership-card").forEach(function (btn) {
-          btn.addEventListener("click", function () {
-            var code = btn.getAttribute("data-code");
-            if (membershipState.step === "root") {
-              membershipState.picked = membershipState.types.find(function (t) { return t.membership_type === code; }) || null;
-              membershipState.activity = null;
-            } else if (membershipState.picked) {
-              membershipState.activity = (membershipState.picked.children || []).find(function (c) { return c.option_code === code; }) || null;
-            }
-            try {
-              sessionStorage.setItem("ervenow_membership_draft", JSON.stringify({
-                type: membershipState.picked && membershipState.picked.membership_type,
-                activity: membershipState.activity && membershipState.activity.option_code,
-                step: membershipState.step,
-              }));
-            } catch (_d) {}
-            renderMembershipCards(membershipState.step === "root" ? membershipState.types : (membershipState.picked.children || []), membershipState.step === "root" ? "membership_type" : "option_code");
-          });
-        });
+        sel.value = selected || "";
+      }
+
+      function saveMembershipDraft() {
+        try {
+          sessionStorage.setItem("ervenow_membership_draft", JSON.stringify({
+            type: membershipState.picked && membershipState.picked.membership_type,
+            activity: membershipState.activity && membershipState.activity.option_code,
+            step: "root",
+          }));
+        } catch (_d) {}
+      }
+
+      function renderMembershipCards() {
+        var typeSel = document.getElementById("membershipTypeSelect");
+        var actWrap = document.getElementById("membershipActivityWrap");
+        var actSel = document.getElementById("membershipActivitySelect");
+        var actLabel = document.getElementById("membershipActivityLabel");
+        fillMembershipSelect(
+          typeSel,
+          membershipState.types,
+          "membership_type",
+          "اختر نوع العضوية",
+          membershipState.picked && membershipState.picked.membership_type
+        );
+        var children = (membershipState.picked && membershipState.picked.children) || [];
+        if (actWrap) actWrap.hidden = !children.length;
+        if (!children.length) {
+          membershipState.activity = null;
+          return;
+        }
+        var prompt = membershipState.picked.membership_type === "restaurant"
+          ? "اختر نوع المطعم"
+          : membershipState.picked.membership_type === "store"
+            ? "اختر نشاط المتجر"
+            : "اختر النشاط";
+        if (actLabel) actLabel.textContent = prompt;
+        fillMembershipSelect(
+          actSel,
+          children,
+          "option_code",
+          prompt,
+          membershipState.activity && membershipState.activity.option_code
+        );
       }
 
       async function openMembershipFlow() {
@@ -2495,7 +2582,7 @@
             }
           }
         } catch (_draft) {}
-        renderMembershipCards(membershipState.types, "membership_type");
+        renderMembershipCards();
       }
 
       async function continueMembership() {
@@ -2505,17 +2592,8 @@
           return;
         }
         var children = picked.children || [];
-        if (membershipState.step === "root" && children.length) {
-          membershipState.step = "activity";
-          var lead = document.getElementById("membershipLead");
-          if (lead) {
-            lead.textContent = picked.membership_type === "restaurant" ? "اختر نوع المطعم" : picked.membership_type === "store" ? "اختر نشاط متجرك" : "اختر النشاط";
-          }
-          renderMembershipCards(children, "option_code");
-          return;
-        }
         if (children.length && !membershipState.activity) {
-          show("اختر النشاط ثم اضغط استمرار.", false);
+          show("اختر النشاط من القائمة ثم اضغط استمرار.", false);
           return;
         }
         var activity = membershipState.activity && membershipState.activity.option_code;
@@ -2854,17 +2932,27 @@
       var membershipNext = document.getElementById("membershipNext");
       if (membershipBack) {
         membershipBack.addEventListener("click", function () {
-          if (membershipState.step === "activity") {
-            membershipState.step = "root";
-            var lead = document.getElementById("membershipLead");
-            if (lead) lead.textContent = "اختر نوع العضوية";
-            renderMembershipCards(membershipState.types, "membership_type");
-            return;
-          }
-          var flow = document.getElementById("membershipFlow");
-          var core = document.querySelector(".auth-login-core");
-          if (flow) flow.hidden = true;
-          if (core) core.hidden = false;
+          showLoginCard();
+        });
+      }
+      var membershipTypeSelect = document.getElementById("membershipTypeSelect");
+      var membershipActivitySelect = document.getElementById("membershipActivitySelect");
+      if (membershipTypeSelect) {
+        membershipTypeSelect.addEventListener("change", function () {
+          var code = membershipTypeSelect.value;
+          membershipState.picked = membershipState.types.find(function (t) { return t.membership_type === code; }) || null;
+          membershipState.activity = null;
+          membershipState.step = "root";
+          saveMembershipDraft();
+          renderMembershipCards();
+        });
+      }
+      if (membershipActivitySelect) {
+        membershipActivitySelect.addEventListener("change", function () {
+          var code = membershipActivitySelect.value;
+          var children = (membershipState.picked && membershipState.picked.children) || [];
+          membershipState.activity = children.find(function (c) { return c.option_code === code; }) || null;
+          saveMembershipDraft();
         });
       }
       if (membershipNext) membershipNext.addEventListener("click", function () { continueMembership(); });
@@ -2880,6 +2968,9 @@
       });
 
       syncRegisterSubmitUi();
+      if (new URLSearchParams(location.search).get("create") === "1") {
+        showCreateAccountCard();
+      }
     </script>
   </body>
 </html>

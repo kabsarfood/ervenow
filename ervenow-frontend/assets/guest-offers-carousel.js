@@ -47,7 +47,7 @@
     var price = slide.price_label || "";
     var cta = slide.link_label || "عرض التفاصيل";
     var img = slide.image_url || "";
-    var noImgClass = img ? "" : " guest-offers-slide--noimg";
+    var noImgClass = img ? " guest-offers-slide--photo" : " guest-offers-slide--noimg";
     return (
       '<a class="guest-offers-slide' +
       noImgClass +
@@ -176,17 +176,42 @@
       var nextBtn = root.querySelector(".guest-offers-nav__btn--next");
       var idx = 0;
 
+      function slideFailed(i) {
+        var slideEl = track && track.children[i];
+        var img = slideEl && slideEl.querySelector("img");
+        return !!(img && img.dataset.failed === "1");
+      }
+
       function goTo(i) {
         idx = ((i % n) + n) % n;
+        var guard = 0;
+        while (slideFailed(idx) && guard < n) {
+          idx = (idx + 1) % n;
+          guard += 1;
+        }
         if (track) track.style.transform = "translateX(-" + idx * 100 + "%)";
         for (var d = 0; d < dots.length; d++) {
           dots[d].classList.toggle("is-active", d === idx);
+          dots[d].hidden = slideFailed(d);
         }
+      }
+
+      var slideImgs = root.querySelectorAll(".guest-offers-slide__img");
+      for (var ii = 0; ii < slideImgs.length; ii++) {
+        (function (img) {
+          function markFailed() {
+            if (img.dataset.failed === "1") return;
+            img.dataset.failed = "1";
+            goTo(idx);
+          }
+          img.addEventListener("error", markFailed);
+          if (img.complete && img.naturalWidth === 0) markFailed();
+        })(slideImgs[ii]);
       }
 
       function resetAuto() {
         if (global[timerKey]) clearInterval(global[timerKey]);
-        if (!prefersReducedMotion()) {
+        if (!prefersReducedMotion() && !isMobileHomeFocus()) {
           global[timerKey] = setInterval(function () {
             goTo(idx + 1);
           }, opts.intervalMs || AUTO_MS);
@@ -220,6 +245,41 @@
           goTo(idx + 1);
           resetAuto();
         };
+      }
+
+      if (isMobileHomeFocus()) {
+        var shell = root.querySelector(".guest-offers-shell");
+        var startX = 0;
+        var startY = 0;
+        var swiped = false;
+        if (shell) {
+          shell.addEventListener("pointerdown", function (ev) {
+            startX = ev.clientX;
+            startY = ev.clientY;
+            swiped = false;
+            if (global[timerKey]) clearInterval(global[timerKey]);
+          });
+          shell.addEventListener(
+            "click",
+            function (ev) {
+              if (!swiped) return;
+              ev.preventDefault();
+              ev.stopPropagation();
+              swiped = false;
+            },
+            true
+          );
+          shell.addEventListener("pointerup", function (ev) {
+            var dx = ev.clientX - startX;
+            var dy = ev.clientY - startY;
+            if (Math.abs(dx) > 36 && Math.abs(dx) > Math.abs(dy)) {
+              swiped = true;
+              goTo(dx < 0 ? idx + 1 : idx - 1);
+            }
+            resetAuto();
+          });
+          shell.addEventListener("pointercancel", resetAuto);
+        }
       }
 
       resetAuto();
@@ -365,6 +425,7 @@
     var visible = mountCarousel(root, payload, {
       timerKey: "__homeMainBannerTimer",
       ariaLabel: "بنرات المنصة الرئيسية",
+      intervalMs: isMobileHomeFocus() ? 9000 : AUTO_MS,
     });
     try {
       global.dispatchEvent(

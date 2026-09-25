@@ -391,7 +391,7 @@
       (access.can_place_orders ? "مفعّلة" : "معلّقة") +
       "</p>" +
       '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px">' +
-      '<a class="pf-btn" href="/login?role=customer">إدارة الحساب</a>' +
+      '<a class="pf-btn" href="/login">إدارة الحساب</a>' +
       '<a class="pf-btn pf-btn--primary" href="/">استكشاف الخدمات</a></div></div>'
     );
   }
@@ -506,7 +506,7 @@
 
     try {
       if (global.ErvenowAuthGuard) {
-        var me = await ErvenowAuthGuard.ensureApprovedAccount({ loginUrl: "/login?role=customer" });
+        var me = await ErvenowAuthGuard.ensureApprovedAccount({ loginUrl: "/login" });
         var role = String((me.profile && me.profile.role) || "").toLowerCase();
         if (role !== "customer" && role !== "admin") {
           shell.showLogin();

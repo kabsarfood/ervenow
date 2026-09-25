@@ -15,7 +15,7 @@
     <link rel="stylesheet" href="/assets/ervenow-responsive.css" />
     <link rel="stylesheet" href="/assets/responsive-audit-base.css" />
     <link rel="stylesheet" href="/assets/guest-shell.css?erv=20260612" />
-    <link rel="stylesheet" href="/assets/notification-center.css?erv=20260925n2" />
+    <link rel="stylesheet" href="/assets/notification-center.css?erv=20260925nt1" />
     <style>
       body.notifications-page {
         margin: 0;
@@ -43,9 +43,9 @@
             localStorage.getItem("ervenow_access_token") ||
             localStorage.getItem("token") ||
             localStorage.getItem("erwenow_access_token");
-          if (!t || !String(t).trim()) window.location.replace("/login?role=customer");
+          if (!t || !String(t).trim()) window.location.replace("/login");
         } catch (e) {
-          window.location.replace("/login?role=customer");
+          window.location.replace("/login");
         }
       })();
     </script>
@@ -59,7 +59,7 @@
     <script src="/assets/api.js?erv=20260612"></script>
     <script src="/assets/guest-shell.js?erv=20260921dest1"></script>
     <script src="/assets/notification-sounds.js"></script>
-    <script src="/assets/notification-center.js?erv=20260925n2"></script>
+    <script src="/assets/notification-center.js?erv=20260925nt1"></script>
     <script>
       ErvenowGuestShell.mountShell({ activeNav: "guest", pageTag: "مركز الإشعارات" });
       ErvenowNotificationCenter.initPage({ mount: "#notificationsPageRoot" });

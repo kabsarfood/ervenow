@@ -104,6 +104,7 @@
       })
       .then(function (j) {
         var plat = normalizeMethods(j && j.methods);
+        plat.cash_on_delivery = true;
         var sid = inferStoreIdFromDraft(draft);
         if (!sid) {
           state.methods = plat;
@@ -116,6 +117,7 @@
           .then(function (j2) {
             var sm = j2 && j2.store && j2.store.checkout_payment_methods;
             state.methods = sm && typeof sm === "object" ? intersectMethods(plat, sm) : plat;
+            state.methods.cash_on_delivery = true;
             return state.methods;
           });
       })
@@ -204,7 +206,13 @@
 
   function renderOptions(container, methods, selected, onSelect) {
     if (!container) return;
-    var keys = orderedKeys(methods || state.methods || defaultMethods());
+    var resolved = normalizeMethods(methods || state.methods || defaultMethods());
+    resolved.cash_on_delivery = true;
+    if (container.getAttribute("data-pay-simple") === "1") {
+      renderSimplePay(container, selected, onSelect);
+      return;
+    }
+    var keys = orderedKeys(resolved);
     container.innerHTML = "";
     keys.forEach(function (key) {
       var btn = document.createElement("button");
@@ -223,6 +231,45 @@
       btn.addEventListener("click", function () {
         setSelected(key, onSelect);
         renderOptions(container, methods || state.methods, state.selected, onSelect);
+        syncEwPayPanel();
+      });
+      container.appendChild(btn);
+    });
+    syncEwPayPanel();
+  }
+
+  function renderSimplePay(container, selected, onSelect) {
+    var options = [
+      {
+        key: "mada",
+        title: "مدى / بطاقة",
+        sub: "mada • VISA • Mastercard",
+      },
+      {
+        key: "cash_on_delivery",
+        title: "الدفع عند الاستلام",
+        sub: "ادفع عند استلام طلبك",
+      },
+    ];
+    var cardSelected = selected === "mada" || selected === "visa" || selected === "mastercard";
+    var visual = cardSelected ? "mada" : selected;
+    container.innerHTML = "";
+    options.forEach(function (opt) {
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "checkout-option" + (visual === opt.key ? " is-selected" : "");
+      btn.setAttribute("data-pay-method", opt.key);
+      btn.setAttribute("aria-pressed", visual === opt.key ? "true" : "false");
+      btn.innerHTML =
+        '<span class="checkout-option__radio" aria-hidden="true"></span>' +
+        '<span class="checkout-option__text"><strong>' +
+        opt.title +
+        "</strong><small>" +
+        opt.sub +
+        "</small></span>";
+      btn.addEventListener("click", function () {
+        setSelected(opt.key, onSelect);
+        renderSimplePay(container, state.selected, onSelect);
         syncEwPayPanel();
       });
       container.appendChild(btn);

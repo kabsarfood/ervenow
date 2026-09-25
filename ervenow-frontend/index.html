@@ -29,7 +29,7 @@
     <link rel="stylesheet" href="/assets/home-polish-final.css?erv=20260920tf1" />
     <script src="/assets/mobile-foundation.js?erv=20260921dest1" defer></script>
     <script src="/assets/mobile-orders-nav-badge.js?erv=20260612" defer></script>
-    <script src="/assets/mobile-harmony.js?erv=20260922menu" defer></script>
+    <script src="/assets/mobile-harmony.js?erv=20260925hdr1" defer></script>
     <script src="/assets/api-config.js"></script>
     <script src="/assets/phonePrivacy.js"></script>
     <script src="/assets/api.js?erv=20260919id"></script>
@@ -2875,7 +2875,7 @@
     </style>
     <link rel="stylesheet" href="/assets/order-draft-badge.css" />
     <link rel="stylesheet" href="/assets/index-header-banner.css?erv=20260920mobrb1" />
-    <link rel="stylesheet" href="/assets/guest-offers-carousel.css?erv=20260920hb1" />
+    <link rel="stylesheet" href="/assets/guest-offers-carousel.css?erv=20260925bn1" />
     <link rel="stylesheet" href="/assets/mobile-harmony.css?erv=20260922menu" />
     <link rel="stylesheet" href="/assets/design-system/erv-typography-pr1-tokens.css" />
     <link rel="stylesheet" href="/assets/marketing-studio/home-marketing.css?erv=20260701m1" />
@@ -2883,7 +2883,7 @@
     <link rel="stylesheet" href="/assets/home-desktop-vip.css?erv=20260920mobrb1" />
     <link rel="stylesheet" href="/assets/home-desktop-marketplace.css?erv=20260921disc2" />
     <link rel="stylesheet" href="/assets/ervenow-home-4gates.css?erv=20260921g4d" />
-    <link rel="stylesheet" href="/assets/home-why-cta.css?erv=20260925rail9" />
+    <link rel="stylesheet" href="/assets/home-why-cta.css?erv=20260925bn4" />
   </head>
   <body class="lp-body lp-home-premium erv-typography-pr2-home">
     <header class="lp-header lp-header--refined lp-header--menu-right" id="top" data-marketing-slot="header" data-marketing-parent="body">
@@ -2913,10 +2913,10 @@
             <a
               role="menuitem"
               class="lp-dd-item"
-              href="/login"
-              aria-label="إنشاء عضوية"
+              href="/login?create=1"
+              aria-label="إنشاء حساب"
               data-guest-only="true"
-              ><span class="lp-dd-ic" aria-hidden="true">➕</span><span class="lp-dd-link__text">إنشاء عضوية</span></a
+              ><span class="lp-dd-ic" aria-hidden="true">➕</span><span class="lp-dd-link__text">إنشاء حساب</span></a
             >
             <a
               role="menuitem"
@@ -3052,7 +3052,7 @@
           <nav class="lp-nav" aria-label="التنقل الرئيسي">
             <a href="/" data-nav="home">الرئيسية</a>
             <a href="/track" data-nav="track">تتبع الحي</a>
-            <a href="/login?role=customer" data-nav="login" class="lp-nav__cta">دخول</a>
+            <a href="/login" data-nav="login" class="lp-nav__cta">دخول</a>
           </nav>
         </div>
       </div>
@@ -3431,7 +3431,7 @@
               <span class="lp-home-cta-card__title-line">انضم كشريك</span>
             </h2>
             <p class="lp-home-cta-card__text">وسّع مبيعات متجرك ووصل لعملاء أكثر عبر ERVENOW.</p>
-            <a class="lp-btn-solid lp-home-cta-card__btn" href="/login?mode=register&amp;role=store">سجّل متجرك</a>
+            <a class="lp-btn-solid lp-home-cta-card__btn" href="/login?create=1">سجّل متجرك</a>
           </div>
         </div>
       </section>
@@ -3491,8 +3491,8 @@
 
             <nav class="erv-mp-footer-col" aria-label="انضم كشريك">
               <p class="erv-mp-footer-col__title">انضم كشريك</p>
-              <a href="/login?mode=register&amp;role=store">تسجيل متجر</a>
-              <a href="/login?mode=register&amp;role=driver">تسجيل مندوب</a>
+              <a href="/login?create=1">تسجيل متجر</a>
+              <a href="/login?create=1">تسجيل مندوب</a>
             </nav>
 
             <nav class="erv-mp-footer-col" aria-label="السياسات والدعم">
@@ -3624,7 +3624,7 @@
       })();
     </script>
     <script src="/assets/marketing-studio/home-renderer.js?erv=20260921disc2" defer></script>
-    <script src="/assets/guest-offers-carousel.js?erv=20260922sn" defer></script>
+    <script src="/assets/guest-offers-carousel.js?erv=20260925bn4" defer></script>
     <script src="/assets/guestBrowse.js"></script>
     <script src="/assets/ervenow-toggle.js"></script>
     <script src="/assets/guest-shell.js?erv=20260922n2"></script>
@@ -3808,13 +3808,30 @@
         if (inner) inner.classList.remove("lp-header__inner--user-mid");
       }
 
-      function maskHeaderPhone(phone) {
-        if (window.ErvenowPhonePrivacy && typeof window.ErvenowPhonePrivacy.maskPhoneForDisplay === "function") {
-          return window.ErvenowPhonePrivacy.maskPhoneForDisplay(phone);
-        }
+      function formatOwnPhone(phone) {
         var d = String(phone || "").replace(/\D/g, "");
-        if (d.length < 4) return "••••";
-        return "••••" + d.slice(-4);
+        if (d.indexOf("966") === 0 && d.length >= 12) d = "0" + d.slice(3);
+        if (d.charAt(0) === "5" && d.length === 9) d = "0" + d;
+        if (d.length === 10 && d.indexOf("05") === 0) {
+          return d.slice(0, 4) + " " + d.slice(4, 7) + " " + d.slice(7);
+        }
+        return String(phone || "").trim();
+      }
+
+      function syncShopperCart(loggedIn, role) {
+        var r = String(role || "").toLowerCase();
+        if (r === "user") r = "customer";
+        var staff = {
+          driver: 1,
+          store: 1,
+          merchant: 1,
+          restaurant: 1,
+          service: 1,
+          admin: 1,
+          provider: 1,
+          transport: 1,
+        };
+        document.documentElement.classList.toggle("erv-show-shopper-cart", !loggedIn || !staff[r]);
       }
 
       function setHeaderUserMidLine(phone) {
@@ -3827,7 +3844,9 @@
           clearHeaderUserMid();
           return;
         }
-        midText.textContent = maskHeaderPhone(p);
+        var shown = formatOwnPhone(p);
+        midText.textContent = shown;
+        mid.setAttribute("aria-label", "حسابك " + shown);
         mid.hidden = false;
         inner.classList.add("lp-header__inner--user-mid");
         if (window.ErvenowAccountDest && ErvenowAccountDest.wirePhoneMidButton) {
@@ -3851,16 +3870,17 @@
         if (!token) {
           applyStartMenuAuthState(false);
           if (quickOrders) {
-            quickOrders.setAttribute("href", "/login?role=customer&next=" + encodeURIComponent("/my-orders"));
+            quickOrders.setAttribute("href", "/login?next=" + encodeURIComponent("/my-orders"));
             quickOrders.hidden = false;
           }
           await refreshHeaderWallet("", "");
           clearHeaderUserMid();
+          syncShopperCart(false, "");
           setQuickLogoutVisible(false);
           var guestAuth = document.getElementById("authArea");
           if (guestAuth && !guestAuth.querySelector("button, a")) {
             guestAuth.innerHTML =
-              '<a class="erv-mp-header-account-link" href="/login?role=customer" aria-label="حسابي">' +
+              '<a class="erv-mp-header-account-link" href="/login" aria-label="حسابي">' +
               '<span class="erv-mp-header-account-link__ic" aria-hidden="true">👤</span>' +
               "<span>حسابي</span></a>";
           }
@@ -3920,6 +3940,7 @@
               authArea.style.gap = "8px";
               authArea.style.alignItems = "center";
               setHeaderUserMidLine(phone, role, serviceType);
+              syncShopperCart(true, role);
               authArea.innerHTML =
                 '<button class="lp-btn-solid" type="button" onclick="goAdminDashboard()">لوحة التحكم</button>';
             } else {
@@ -3929,6 +3950,7 @@
               authArea.style.alignItems = "";
               var phoneTrim = String(phone || "").trim();
               setHeaderUserMidLine(phoneTrim);
+              syncShopperCart(true, role);
               var dashLabel = home.short || home.label || "حسابي";
               authArea.innerHTML =
                 '<button class="lp-btn-solid" type="button" onclick="goAccountHome()" title="' +

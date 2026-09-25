@@ -984,7 +984,7 @@
               sessionStorage.setItem("ervenow:pending-map-draft", JSON.stringify(draft));
             } catch (e1) {}
             window.location.href =
-              "/login?mode=register&role=customer&next=" + encodeURIComponent("/checkout");
+              "/login?next=" + encodeURIComponent("/checkout");
             return;
           }
 

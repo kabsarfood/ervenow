@@ -276,6 +276,23 @@
     return "—";
   }
 
+  function sourceKindLabel(it) {
+    var d = (it && it.data) || {};
+    var t = String(d.store_type || d.merchant_type || it.type || "").toLowerCase();
+    if (t === "restaurant" || t.indexOf("restaurant") >= 0 || t.indexOf("cafe") >= 0) return "مطعم";
+    if (t === "pharmacy" || t.indexOf("pharm") >= 0) return "صيدلية";
+    if (lineKind(it) === "product" || t === "store" || t === "supermarket") return "متجر";
+    return "خدمة";
+  }
+
+  function sourceChip(it) {
+    var kind = sourceKindLabel(it);
+    if (kind === "مطعم") return { cls: "food", text: "مطاعم" };
+    if (kind === "صيدلية") return { cls: "pharmacy", text: "صيدليات" };
+    if (kind === "متجر") return { cls: "market", text: "متاجر" };
+    return { cls: "service", text: "خدمات" };
+  }
+
   function escHtml(s) {
     return String(s || "")
       .replace(/&/g, "&amp;")
@@ -594,21 +611,27 @@
 
   function renderEmpty() {
     var root = document.getElementById("checkoutMain");
+    var basket = document.getElementById("checkoutBasket");
     var confirmBtn = document.getElementById("checkoutConfirmBtn");
     if (root) {
       root.hidden = true;
       root.classList.remove("checkout-panel--active", "checkout-panel--compact");
     }
+    if (basket) basket.hidden = true;
     setCheckoutEmptyVisible(true);
+    var countEl = document.getElementById("checkoutItemCount");
+    if (countEl) countEl.hidden = true;
     if (confirmBtn) confirmBtn.disabled = true;
   }
 
   function renderActive(draft) {
     var root = document.getElementById("checkoutMain");
+    var basket = document.getElementById("checkoutBasket");
     if (root) {
       root.hidden = false;
       root.classList.add("checkout-panel--active");
     }
+    if (basket) basket.hidden = false;
     setCheckoutEmptyVisible(false);
 
     var items = draft.items || [];
@@ -622,69 +645,67 @@
 
     var linesEl = document.getElementById("checkoutLines");
     var editApi = global.ErvenowCheckoutDraftEdit;
-    var groupFn =
-      (global.ErvenowUnifiedCart && global.ErvenowUnifiedCart.groupFulfillmentItems) ||
-      (global.ErvenowOrderDraftVertical && global.ErvenowOrderDraftVertical.groupFulfillmentItems);
-    var groups = typeof groupFn === "function" ? groupFn(items) : [{ heading_ar: "تفاصيل الطلب", items: items }];
+    var countEl = document.getElementById("checkoutItemCount");
+    if (countEl) {
+      countEl.hidden = false;
+      countEl.textContent = items.length + " منتجات في سلة المشتريات";
+    }
+    var summaryCount = document.getElementById("checkoutSummaryCount");
+    if (summaryCount) summaryCount.textContent = String(items.length);
+    var selectCount = document.getElementById("checkoutSelectCount");
+    if (selectCount) selectCount.textContent = String(items.length);
     if (linesEl) {
-      linesEl.innerHTML = groups
-        .map(function (g) {
-          var heading = escHtml(g.heading_ar || "مجموعة");
-          var rows = (g.items || [])
-            .map(function (it) {
-              var idx = it.draft_index != null ? it.draft_index : items.indexOf(it);
-              var display = resolveLineDisplay(it, idx);
-              var qty = (it.data && it.data.qty) || it.qty || 1;
-              var editable = editApi && editApi.isProductLine && editApi.isProductLine(it);
-              var qtyBlock = editable
-                ? '<div class="checkout-line__qty" role="group" aria-label="الكمية">' +
-                  '<button type="button" class="checkout-qty-btn" data-checkout-action="qty-minus" aria-label="إنقاص">−</button>' +
-                  '<span class="checkout-qty-val">' +
-                  qty +
-                  "</span>" +
-                  '<button type="button" class="checkout-qty-btn" data-checkout-action="qty-plus" aria-label="زيادة">+</button>' +
-                  "</div>"
-                : '<span class="checkout-line__qty-readonly">' + (qty > 1 ? "× " + qty : "") + "</span>";
-              var storeBlock =
-                display.storeName && display.kind === "product"
-                  ? '<span class="checkout-line__store">' + escHtml(display.storeName) + "</span>"
-                  : "";
-              var note = it.notes || (it.data && (it.data.order_notes || it.data.notes)) || "";
-              var noteBlock = note
-                ? '<span class="checkout-line__note">' + escHtml(String(note).slice(0, 120)) + "</span>"
-                : "";
-              return (
-                '<li class="checkout-line" data-line-index="' +
-                idx +
-                '">' +
-                '<div class="checkout-line__main">' +
-                '<span class="checkout-line__title">' +
-                escHtml(display.productName) +
-                "</span>" +
-                storeBlock +
-                noteBlock +
-                qtyBlock +
-                "</div>" +
-                '<div class="checkout-line__tail">' +
-                '<span class="checkout-line__price">' +
-                fmtMoney(it.price || 0) +
-                " ر.س</span>" +
-                '<button type="button" class="checkout-line__remove" data-checkout-action="remove" aria-label="حذف ' +
-                escHtml(display.productName) +
-                '">حذف</button>' +
-                "</div>" +
-                "</li>"
-              );
-            })
-            .join("");
+      linesEl.innerHTML = items
+        .map(function (it, idx) {
+          var display = resolveLineDisplay(it, idx);
+          var d = (it && it.data) || {};
+          var qty = Number(d.qty || it.qty || 1);
+          if (!Number.isFinite(qty) || qty < 1) qty = 1;
+          var editable = editApi && editApi.isProductLine && editApi.isProductLine(it);
+          var chip = sourceChip(it);
+          var food = sourceKindLabel(it) === "مطعم";
+          var kcal = Number(d.calories != null ? d.calories : d.kcal);
+          var note = it.notes || d.order_notes || d.notes || d.variant_name || "";
+          var extra = "";
+          if (food && Number.isFinite(kcal) && kcal > 0) extra = Math.round(kcal * qty) + " سعرة حرارية";
+          else if (note) extra = String(note).slice(0, 80);
+          var img = String(d.image_url || d.photo_url || "").trim();
+          var media = img
+            ? '<img class="checkout-item__img" src="' + escHtml(img) + '" alt="' + escHtml(display.productName) + '" />'
+            : '<span class="checkout-item__img checkout-item__img--empty" aria-hidden="true"></span>';
+          var qtyBox = editable
+            ? '<div class="checkout-qty"><button type="button" data-checkout-action="qty-minus" aria-label="إنقاص الكمية">−</button><span>' +
+              qty +
+              '</span><button type="button" data-checkout-action="qty-plus" aria-label="إضافة واحدة">+</button></div>'
+            : '<div class="checkout-qty checkout-qty--static"><span>× ' + qty + "</span></div>";
+          var remove = editable
+            ? '<button type="button" class="checkout-item__remove" data-checkout-action="remove" aria-label="حذف">🗑</button>'
+            : '<span class="checkout-item__remove" aria-hidden="true"></span>';
+          var fromLine = display.storeName ? "من " + display.storeName : "";
           return (
-            '<li class="checkout-group">' +
-            '<h3 class="checkout-group__title">' +
-            heading +
+            '<li class="checkout-item" data-line-index="' +
+            idx +
+            '">' +
+            media +
+            '<div class="checkout-item__info">' +
+            '<span class="checkout-chip checkout-chip--' +
+            chip.cls +
+            '">' +
+            escHtml(chip.text) +
+            "</span>" +
+            "<h3>" +
+            escHtml(display.productName) +
             "</h3>" +
-            '<ul class="checkout-group__lines">' +
-            rows +
-            "</ul></li>"
+            (fromLine ? "<p>" + escHtml(fromLine) + "</p>" : "") +
+            (extra ? '<p class="checkout-item__extra">' + escHtml(extra) + "</p>" : "") +
+            "</div>" +
+            '<div class="checkout-item__qtybox">' +
+            qtyBox +
+            '<div class="checkout-item__price">' +
+            fmtMoney(it.price || 0) +
+            " ر.س</div></div>" +
+            remove +
+            "</li>"
           );
         })
         .join("");
@@ -694,13 +715,24 @@
     if (notesEl && document.activeElement !== notesEl) {
       notesEl.value = draft.order_notes || "";
     }
+    var noteCount = document.getElementById("checkoutNoteCount");
+    if (noteCount && notesEl && document.activeElement !== notesEl) {
+      noteCount.textContent = String(notesEl.value.length);
+    }
 
     var delEl = document.getElementById("checkoutDeliverySummary");
     var delEdit = document.getElementById("checkoutDeliveryEdit");
     var locInput = document.getElementById("checkoutLocationInput");
     var addrInput = document.getElementById("checkoutAddressInput");
     var showLocEdit = hasStoreProducts(items) && mode !== "pickup";
-    if (delEdit) delEdit.hidden = !showLocEdit;
+    if (delEdit) {
+      var editingAddress =
+        document.activeElement === locInput || document.activeElement === addrInput;
+      if (!editingAddress) {
+        if (!showLocEdit || (loc && (loc.address || loc.lat))) delEdit.hidden = true;
+        else delEdit.hidden = false;
+      }
+    }
     if (delEl) {
       if (isInternalDeliveryDraft(items)) {
         var idItem = items.find(function (it) {
@@ -746,27 +778,29 @@
     setMoney("checkoutSubtotal", breakdown.subtotal, false);
     setMoney("checkoutDelivery", breakdown.delivery, breakdown.deliveryPending);
     setMoney("checkoutVat", breakdown.vat, breakdown.deliveryPending);
-    setMoney("checkoutGrand", breakdown.grandTotal, breakdown.deliveryPending);
+    var discount = Number(draft.discount_amount);
+    var discountRow = document.getElementById("checkoutDiscountRow");
+    var hasDiscount = Number.isFinite(discount) && discount > 0;
+    if (discountRow) discountRow.hidden = !hasDiscount;
+    if (hasDiscount) {
+      var discEl = document.getElementById("checkoutDiscount");
+      if (discEl) discEl.textContent = "- " + fmtMoney(discount) + " ر.س";
+    }
+    var payable = hasDiscount ? Math.max(0, roundMoney(breakdown.grandTotal - discount)) : breakdown.grandTotal;
+    setMoney("checkoutGrand", payable, breakdown.deliveryPending);
 
-    var confirmBtn = document.getElementById("checkoutConfirmBtn");
-    var paySelected =
-      global.ErvenowCheckoutPayment && typeof global.ErvenowCheckoutPayment.getSelected === "function"
-        ? global.ErvenowCheckoutPayment.getSelected()
-        : draft.payment_method;
-    var canConfirm = !!paySelected && !breakdown.deliveryPending;
-    if (confirmBtn && !checkoutInFlight) {
-      confirmBtn.disabled = !canConfirm;
-      if (!paySelected) {
-        confirmBtn.textContent = "اختر وسيلة الدفع";
-      } else if (breakdown.deliveryPending) {
-        confirmBtn.textContent = "أكمل موقع التوصيل أولاً";
-      } else {
-        confirmBtn.textContent = "تأكيد الطلب والدفع — " + fmtMoney(breakdown.grandTotal) + " ر.س";
-      }
+    var codeInput = document.getElementById("checkoutDiscountCode");
+    if (codeInput && document.activeElement !== codeInput) {
+      codeInput.value = draft.discount_code || "";
     }
 
-    if (global.ErvenowCheckoutPayment && typeof global.ErvenowCheckoutPayment.setGrandTotalForEwPay === "function") {
-      global.ErvenowCheckoutPayment.setGrandTotalForEwPay(breakdown.deliveryPending ? null : breakdown.grandTotal);
+    var receive = document.getElementById("checkoutReceiveOptions");
+    if (receive) {
+      var currentMode = mode === "pickup" ? "pickup" : "delivery";
+      var receiveBtns = receive.querySelectorAll("[data-receive]");
+      for (var ri = 0; ri < receiveBtns.length; ri++) {
+        receiveBtns[ri].classList.toggle("is-selected", receiveBtns[ri].getAttribute("data-receive") === currentMode);
+      }
     }
 
     var pay = global.ErvenowCheckoutPayment;
@@ -776,8 +810,33 @@
         if (typeof pay.ensureDefaultSelected === "function") {
           pay.ensureDefaultSelected(draft, onPaymentChanged);
         }
+        var chosen = pay.getSelected();
+        var simpleOk =
+          chosen === "cash_on_delivery" || chosen === "mada" || chosen === "visa" || chosen === "mastercard";
+        if (!simpleOk && typeof pay.setSelected === "function") {
+          pay.setSelected("cash_on_delivery", onPaymentChanged);
+        }
         pay.renderOptions(payRoot, null, pay.getSelected(), onPaymentChanged);
       }
+    }
+
+    var confirmBtn = document.getElementById("checkoutConfirmBtn");
+    var paySelected =
+      pay && typeof pay.getSelected === "function" ? pay.getSelected() : draft.payment_method;
+    var canConfirm = !!paySelected && !breakdown.deliveryPending;
+    if (confirmBtn && !checkoutInFlight) {
+      confirmBtn.disabled = !canConfirm;
+      if (!paySelected) {
+        confirmBtn.textContent = "اختر وسيلة الدفع";
+      } else if (breakdown.deliveryPending) {
+        confirmBtn.textContent = "أكمل موقع التوصيل أولاً";
+      } else {
+        confirmBtn.textContent = "إتمام الطلب";
+      }
+    }
+
+    if (pay && typeof pay.setGrandTotalForEwPay === "function") {
+      pay.setGrandTotalForEwPay(breakdown.deliveryPending ? null : payable);
     }
 
     void enrichDraftLineLabels(draft);

@@ -696,9 +696,7 @@
             "<strong>" +
             esc(n.title) +
             "</strong></div>" +
-            '<p class="erv-notif-page-item-msg' +
-            (open ? " is-full" : "") +
-            '">' +
+            '<p class="erv-notif-page-item-msg">' +
             esc(n.message) +
             "</p>" +
             '<p class="erv-notif-page-item-meta">' +
@@ -706,7 +704,7 @@
             " · " +
             (n.is_read ? "مقروء" : "اشعار جديد") +
             "</p>" +
-            (open ? detailBlockHtml(n) : "") +
+            detailBlockHtml(n) +
             "</article>"
           );
         })

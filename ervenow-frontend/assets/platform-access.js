@@ -132,7 +132,7 @@
     }
 
     if (!access.can_access_driver_dispatch && (path === "/orders" || path.indexOf("/orders/") === 0)) {
-      location.replace(hasToken() ? "/my-orders" : "/login?role=customer&next=" + encodeURIComponent("/my-orders"));
+      location.replace(hasToken() ? "/my-orders" : "/login?next=" + encodeURIComponent("/my-orders"));
       return true;
     }
 
@@ -159,7 +159,7 @@
       if (txtD) txtD.textContent = role === "driver" ? "طلباتي" : "الطلبات";
       return;
     }
-    link.setAttribute("href", hasToken() ? "/my-orders" : "/login?role=customer&next=" + encodeURIComponent("/my-orders"));
+    link.setAttribute("href", hasToken() ? "/my-orders" : "/login?next=" + encodeURIComponent("/my-orders"));
     link.hidden = false;
     if (badge) badge.style.display = "none";
     var txt = link.querySelector(".lp-dd-link__text");

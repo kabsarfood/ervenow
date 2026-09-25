@@ -1,4 +1,4 @@
-const { fetchCategoriesFromDb, CATEGORY_SCOPE_STORE } = require("./categoriesDb");
+const { CATEGORY_SCOPE_STORE } = require("./categoriesDb");
 const {
   RESTAURANT_CATEGORY_KEYS,
   RESTAURANT_CATEGORY_LABEL_AR,
@@ -62,6 +62,10 @@ function mergeDbChildren(base, rows) {
   (rows || []).forEach(function (row) {
     const code = String(row.slug || "").trim().toLowerCase();
     if (!code) return;
+    if (row.is_active === false) {
+      byCode.delete(code);
+      return;
+    }
     const prev = byCode.get(code);
     byCode.set(code, {
       option_code: code,
@@ -77,23 +81,42 @@ function mergeDbChildren(base, rows) {
   });
 }
 
+async function fetchStoreScopeRows(sb, type) {
+  if (!sb) return null;
+  const { data, error } = await sb
+    .from("categories")
+    .select("slug,name_ar,icon,image_url,sort_order,is_active")
+    .eq("type", type)
+    .eq("scope", CATEGORY_SCOPE_STORE)
+    .order("sort_order", { ascending: true })
+    .order("name_ar", { ascending: true });
+  if (error) return null;
+  return data || [];
+}
+
+async function childrenFor(sb, type, pairs) {
+  const base = fromPairs(pairs);
+  const rows = await fetchStoreScopeRows(sb, type);
+  if (!rows) return base;
+  return mergeDbChildren(base, rows);
+}
+
 async function buildMembershipCatalog(sb) {
   const restaurantBase = RESTAURANT_CATEGORY_KEYS.map(function (slug, i) {
     return option(slug, RESTAURANT_CATEGORY_LABEL_AR[slug] || slug, RESTAURANT_CATEGORY_ICONS[slug] || "", (i + 1) * 10);
   });
-  let restaurantChildren = restaurantBase;
-  let storeChildren = fromPairs(STORE_ACTIVITIES);
-  if (sb) {
-    const cuisine = await fetchCategoriesFromDb(sb, "restaurant", CATEGORY_SCOPE_STORE);
-    restaurantChildren = mergeDbChildren(restaurantBase, cuisine);
-  }
+  const restaurantRows = await fetchStoreScopeRows(sb, "restaurant");
+  const restaurantChildren = restaurantRows ? mergeDbChildren(restaurantBase, restaurantRows) : restaurantBase;
+  const storeChildren = await childrenFor(sb, "market", STORE_ACTIVITIES);
+  const transportChildren = await childrenFor(sb, "transport", TRANSPORT_ACTIVITIES);
+  const serviceChildren = await childrenFor(sb, "services", SERVICE_ACTIVITIES);
   return [
     { membership_type: "shopper", label_ar: "متسوق", icon: "🛍️", image_url: "", sort_order: 10, kind: "customer", children: [] },
     { membership_type: "store", label_ar: "متجر", icon: "🏪", image_url: "", sort_order: 20, kind: "store_application", children: storeChildren },
     { membership_type: "restaurant", label_ar: "مطعم", icon: "🍽️", image_url: "", sort_order: 30, kind: "store_application", children: restaurantChildren },
     { membership_type: "driver", label_ar: "مندوب توصيل", icon: "🛵", image_url: "", sort_order: 40, kind: "driver_application", children: [] },
-    { membership_type: "transport", label_ar: "نقل", icon: "🚛", image_url: "", sort_order: 50, kind: "service_application", children: fromPairs(TRANSPORT_ACTIVITIES) },
-    { membership_type: "services", label_ar: "خدمات", icon: "🔧", image_url: "", sort_order: 60, kind: "service_application", children: fromPairs(SERVICE_ACTIVITIES) },
+    { membership_type: "transport", label_ar: "نقل", icon: "🚚", image_url: "", sort_order: 50, kind: "service_application", children: transportChildren },
+    { membership_type: "services", label_ar: "خدمات", icon: "🛠️", image_url: "", sort_order: 60, kind: "service_application", children: serviceChildren },
   ];
 }
 

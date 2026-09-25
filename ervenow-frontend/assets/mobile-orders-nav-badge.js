@@ -224,7 +224,7 @@
     ordersHref: function () {
       if (cachedRole === "driver") return "/orders";
       if (hasToken()) return "/my-orders";
-      return "/login?role=customer&next=" + encodeURIComponent("/my-orders");
+      return "/login?next=" + encodeURIComponent("/my-orders");
     },
   };
 

@@ -78,8 +78,8 @@
       identity.href = "/";
       identity.setAttribute("aria-label", "ERVENOW — المنصة الذكية");
       identity.innerHTML =
-        '<span class="erv-harmony-identity__name">ERVENOW</span>' +
-        '<span class="erv-harmony-identity__tag">المنصة الذكية</span>';
+        '<img class="erv-harmony-identity__logo" src="/assets/ervenow-logo.png?erv=20260925logo" alt="ERVENOW" width="176" height="40" decoding="async" />' +
+        '<span class="erv-harmony-identity__phone" dir="ltr" hidden></span>';
       inner.insertBefore(identity, nav);
     }
 
@@ -128,6 +128,10 @@
     }
 
     inner.dataset.ervHarmonyReady = "1";
+    if (global.ErvenowGuestShell && typeof global.ErvenowGuestShell.syncShopperHeader === "function") {
+      var last = global.ErvenowGuestShell.syncShopperHeader.last;
+      if (last) global.ErvenowGuestShell.syncShopperHeader(last.loggedIn, last.role, last.phone);
+    }
   }
 
   function getHomeNavWidth() {

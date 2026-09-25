@@ -433,6 +433,48 @@
     paintIndexNav(role, navOpts(opts));
   }
 
+  function formatOwnPhone(phone) {
+    var d = String(phone || "").replace(/\D/g, "");
+    if (d.indexOf("966") === 0 && d.length >= 12) d = "0" + d.slice(3);
+    if (d.charAt(0) === "5" && d.length === 9) d = "0" + d;
+    if (d.length === 10 && d.indexOf("05") === 0) {
+      return d.slice(0, 4) + " " + d.slice(4, 7) + " " + d.slice(7);
+    }
+    return String(phone || "").trim();
+  }
+
+  function syncShopperHeader(loggedIn, role, phone) {
+    var r = String(role || "").toLowerCase();
+    if (r === "user") r = "customer";
+    var staff = {
+      driver: 1,
+      store: 1,
+      merchant: 1,
+      restaurant: 1,
+      service: 1,
+      admin: 1,
+      provider: 1,
+      transport: 1,
+    };
+    syncShopperHeader.last = { loggedIn: !!loggedIn, role: role || "", phone: phone || "" };
+    document.documentElement.classList.toggle("erv-show-shopper-cart", !loggedIn || !staff[r]);
+    var phoneEl = document.querySelector(".erv-harmony-identity__phone");
+    if (!phoneEl) {
+      var idn = document.querySelector(".erv-harmony-identity");
+      if (idn) {
+        phoneEl = document.createElement("span");
+        phoneEl.className = "erv-harmony-identity__phone";
+        phoneEl.setAttribute("dir", "ltr");
+        phoneEl.hidden = true;
+        idn.appendChild(phoneEl);
+      }
+    }
+    if (!phoneEl) return;
+    var shown = loggedIn ? formatOwnPhone(phone) : "";
+    phoneEl.textContent = shown;
+    phoneEl.hidden = !shown;
+  }
+
   async function initAuthHeader() {
     if (_storePreviewMode) {
       paintStorePreviewHeader();
@@ -441,6 +483,7 @@
     var switchAccount = document.getElementById("switchAccount");
     if (!hasToken()) {
       setAccountButtonLoggedOut(switchAccount);
+      syncShopperHeader(false, "", "");
       await refreshHeaderWallet("");
       await paintNavWithFlags(_activeNavKey, "", { authenticated: false });
       return;
@@ -462,6 +505,8 @@
       var role = (me.profile && me.profile.role) || "customer";
       role = String(role).toLowerCase();
       var serviceType = me.profile && me.profile.service_type;
+      var phone = (me.user && me.user.phone) || (me.profile && me.profile.phone) || "";
+      syncShopperHeader(true, role, phone);
       setAccountButtonLoggedIn(switchAccount);
       await refreshHeaderWallet(role);
       await paintNavWithFlags(_activeNavKey, role, { authenticated: true, serviceType: serviceType });
@@ -952,6 +997,7 @@
 
   global.ErvenowGuestShell = {
     init: init,
+    syncShopperHeader: syncShopperHeader,
     mountShell: mountShell,
     renderHeader: renderHeader,
     renderFooter: renderFooter,

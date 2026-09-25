@@ -777,6 +777,55 @@ body.guest-shell-page.stores-page {
     text-decoration: none;
     color: inherit;
     min-width: 0;
+    gap: 2px;
+  }
+  html.erv-mobile-shell body.guest-shell-page .erv-harmony-identity__logo {
+    display: block;
+    width: auto;
+    height: auto;
+    max-width: min(168px, 50vw);
+    max-height: 38px;
+    object-fit: contain;
+    background: transparent;
+  }
+  html.erv-mobile-shell body.guest-shell-page .erv-harmony-identity__name,
+  html.erv-mobile-shell body.guest-shell-page .erv-harmony-identity__tag {
+    display: none !important;
+  }
+  html.erv-mobile-shell body.guest-shell-page .erv-harmony-identity__phone:not([hidden]) {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 800;
+    line-height: 1.2;
+    color: #0f5a37;
+    letter-spacing: 0.02em;
+  }
+  html.erv-mobile-shell.erv-show-shopper-cart:not(.erv-mobile-no-nav) body.guest-shell-page .dash-site-header__tools {
+    display: flex !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+    grid-area: logo !important;
+    justify-self: start !important;
+    align-items: center !important;
+  }
+  html.erv-mobile-shell.erv-show-shopper-cart:not(.erv-mobile-no-nav) body.guest-shell-page .dash-header-cart {
+    display: inline-flex !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
+    border-radius: 14px;
+    border: 1px solid rgba(15, 90, 55, 0.16);
+    background: #fffefb;
+    color: #0f5a37;
+    text-decoration: none;
+  }
+  html.erv-mobile-shell.erv-show-shopper-cart body.guest-shell-page .dash-header-cart__label {
+    display: none !important;
   }
   html.erv-mobile-shell body.guest-shell-page .erv-harmony-menu {
     grid-area: menu !important;

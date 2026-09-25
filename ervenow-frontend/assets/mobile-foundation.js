@@ -19,7 +19,7 @@
     { key: "orders", href: "/my-orders", label: "طلباتي", match: [/^\/my-orders/, /^\/order/, /^\/track/], badgeId: "ervMobileNavOrdersBadge" },
     {
       key: "account",
-      href: "/login?role=customer",
+      href: "/login",
       label: "حسابي",
       match: [/^\/login/, /^\/wallet/],
       id: "ervMobileNavAccount",
@@ -93,7 +93,7 @@
   }
 
   function accountHref() {
-    if (!hasToken()) return "/login?role=customer";
+    if (!hasToken()) return "/login";
     if (global.ErvenowAccountDest && typeof ErvenowAccountDest.homeFor === "function") {
       return ErvenowAccountDest.homeFor(global.__ervSessionRole || "customer", global.__ervSessionServiceType).path || "/";
     }
@@ -111,7 +111,7 @@
       return global.ErvenowMobileOrdersNavBadge.ordersHref();
     }
     if (hasToken()) return "/my-orders";
-    return "/login?role=customer&next=" + encodeURIComponent("/my-orders");
+    return "/login?next=" + encodeURIComponent("/my-orders");
   }
 
   function activeKeyForPath(path) {
