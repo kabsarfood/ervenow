@@ -4,8 +4,8 @@
   var FALLBACK_TOKEN_KEY = "token";
   var OFFLINE_QUEUE_KEY = "ervenow_offline_api_queue_v1";
   var MAX_OFFLINE_ITEMS = 40;
-  /** بعد أول فشل: 3 إعادات محاولة = 4 محاولات إجمالاً */
-  var MAX_FAILURE_RETRIES = 3;
+  /** لا إعادة من المتصفح. أخطاء الاتصال تُعاد داخل الخادم مرتين كحد أقصى حتى لا تتضاعف 4×5. */
+  var MAX_IDEMPOTENT_HTTP_RETRIES = 0;
   var IDEM_MAX = 256;
 
   function readApiBase() {
@@ -40,6 +40,37 @@
     var base = 350 * Math.pow(2, attemptIndex);
     var jitter = Math.floor(Math.random() * 220);
     return Math.min(base + jitter, 8000);
+  }
+
+  function stormProbeEnabled() {
+    try {
+      var h = String((w.location && w.location.hostname) || "");
+      return h === "localhost" || h === "127.0.0.1" || h === "::1";
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function noteStormProbe(path) {
+    if (!stormProbeEnabled()) return;
+    var p = String(path || "");
+    var bucket = null;
+    if (p.indexOf("/api/services/me/dashboard") === 0) bucket = "dashboard";
+    else if (p.indexOf("/api/wallet/transactions") === 0) bucket = "wallet_transactions";
+    else if (p.indexOf("/api/notifications") === 0) bucket = "notifications";
+    if (!bucket) return;
+    var probe = w.__ERVENOW_STORM_PROBE__;
+    if (!probe) {
+      probe = { dashboard: 0, wallet_transactions: 0, notifications: 0 };
+      w.__ERVENOW_STORM_PROBE__ = probe;
+    }
+    probe[bucket] += 1;
+  }
+
+  function requestIsIdempotent(method, headers) {
+    var m = String(method || "GET").toUpperCase();
+    if (m === "GET" || m === "HEAD" || m === "OPTIONS") return true;
+    return !!(headers && (headers["Idempotency-Key"] || headers["idempotency-key"]));
   }
 
   function isMutationMethod(method) {
@@ -160,11 +191,6 @@
       return 30000;
     }
     return Number(w.__ERVENOW_FETCH_TIMEOUT_MS) || 5000;
-  }
-
-  function skipNetworkRetry(path) {
-    var p = pathWithoutQuery(path);
-    return p === "/api/core/send-otp" || p === "/api/admin/auth/send-otp";
   }
 
   function apiFetch(url, options, timeoutMs) {
@@ -340,7 +366,8 @@
       if (idem) headers["Idempotency-Key"] = idem;
 
       var url = w.PlatformAPI.apiUrl(path);
-      var totalAttempts = 1 + MAX_FAILURE_RETRIES;
+      var idempotent = requestIsIdempotent(method, headers);
+      var totalAttempts = idempotent ? 1 + MAX_IDEMPOTENT_HTTP_RETRIES : 1;
       var skipOffline = !!opts.skipOfflineQueue;
       var lastErr = null;
       var lastStatus = 0;
@@ -359,6 +386,7 @@
 
         var r;
         try {
+          noteStormProbe(path);
           r = await apiFetch(url, { method: method, headers: headers, body: body }, timeoutForApiPath(path, opts.timeoutMs));
         } catch (e) {
           lastErr = e;
@@ -383,12 +411,6 @@
               "لا يوجد اتصال بالإنترنت. حُفظ الطلب محلياً وسيُرسل تلقائياً عند عودة الشبكة."
             );
           }
-
-          var canRetryNet =
-            !skipNetworkRetry(path) &&
-            attempt < totalAttempts - 1 &&
-            ((e && e.name === "AbortError") || isLikelyNetworkError(e));
-          if (canRetryNet) continue;
 
           if (e && e.name === "AbortError") {
             throw new Error("انتهت مهلة الاتصال بالخادم — أعد المحاولة أو تحقّق أن الخادم يعمل.");
@@ -427,7 +449,7 @@
         }
 
         var msg = humanizeHttpError(r.status, j);
-        if (attempt < totalAttempts - 1 && shouldRetryHttpStatus(r.status, j)) {
+        if (idempotent && attempt < totalAttempts - 1 && shouldRetryHttpStatus(r.status, j)) {
           lastErr = new Error(msg);
           continue;
         }

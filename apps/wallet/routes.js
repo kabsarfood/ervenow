@@ -3,6 +3,7 @@
  */
 const express = require("express");
 const { requireAuth } = require("../../shared/middleware/auth");
+const { noteHttp } = require("../../shared/utils/stormProbe");
 const { requireRole } = require("../../shared/middleware/roles");
 const { denyUnlessPublicOrdering } = require("../../shared/middleware/publicOrderingGate");
 const { ok, fail } = require("../../shared/utils/helpers");
@@ -177,6 +178,7 @@ router.get("/", requireAuth, requireRole(...WALLET_READ_ROLES), async (req, res)
 
 router.get("/transactions", requireAuth, requireRole(...WALLET_READ_ROLES), async (req, res) => {
   try {
+    noteHttp("wallet_transactions");
     const transactions = await listLedgerWalletTransactions(
       req.supabase,
       req.appUser.id,

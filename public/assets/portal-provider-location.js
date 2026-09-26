@@ -11,6 +11,9 @@
   var presenceWatchId = null;
   var presenceIntervalId = null;
   var activeRole = null;
+  var visibilityBound = false;
+  var PRESENCE_HEARTBEAT_MS = 75000;
+  var LOCATION_MOVE_METERS = 40;
 
   function hasCoords(obj) {
     if (!obj) return false;
@@ -178,12 +181,25 @@
     return null;
   }
 
+  function distanceMeters(lat1, lng1, lat2, lng2) {
+    var dLat = Number(lat2) - Number(lat1);
+    var dLng = Number(lng2) - Number(lng1);
+    if (![dLat, dLng].every(function (n) { return Number.isFinite(n); })) return NaN;
+    return Math.sqrt(dLat * dLat + dLng * dLng) * 111 * 1000;
+  }
+
   function shouldSaveCoords(lat, lng) {
-    var now = Date.now();
     if (!lastCoords || !Number.isFinite(lastCoords.lat)) return true;
-    if (now - lastSavedAt > 12000) return true;
-    var moved = Math.abs(lat - lastCoords.lat) + Math.abs(lng - lastCoords.lng) > 0.00008;
-    return moved;
+    var meters = distanceMeters(lastCoords.lat, lastCoords.lng, lat, lng);
+    return Number.isFinite(meters) && meters >= LOCATION_MOVE_METERS;
+  }
+
+  function presenceEndpointForRole(role) {
+    var r = String(role || "").toLowerCase();
+    if (r === "service" || r === "transport") {
+      return { method: "POST", path: "/api/services/me/presence" };
+    }
+    return null;
   }
 
   function rememberCoords(coords, profile) {
@@ -293,7 +309,7 @@
       } else {
         coords = await readGeolocation();
       }
-      if (!shouldSaveCoords(coords.lat, coords.lng) && hasCoords(lastCoords)) {
+      if (opts.silent && !shouldSaveCoords(coords.lat, coords.lng) && hasCoords(lastCoords)) {
         return lastCoords;
       }
       return persistCoords(role, coords, opts);
@@ -302,50 +318,110 @@
     }
   }
 
-  function stopPresenceLoop() {
+  function clearLocationWatch() {
     if (presenceWatchId != null && navigator.geolocation) {
       navigator.geolocation.clearWatch(presenceWatchId);
       presenceWatchId = null;
     }
+  }
+
+  function clearPresenceTimer() {
     if (presenceIntervalId != null) {
       clearInterval(presenceIntervalId);
       presenceIntervalId = null;
     }
+  }
+
+  function sendPresence(role) {
+    var ep = presenceEndpointForRole(role);
+    if (!ep || !global.PlatformAPI || typeof global.PlatformAPI.api !== "function") return Promise.resolve();
+    if (typeof document !== "undefined" && document.hidden) return Promise.resolve();
+    return global.PlatformAPI.api(ep.path, { method: ep.method, body: {} }).catch(function () {});
+  }
+
+  function persistIfMoved(role, lat, lng) {
+    if (typeof document !== "undefined" && document.hidden) return;
+    if (!shouldSaveCoords(lat, lng)) return;
+    if (busy) return;
+    busy = true;
+    persistCoords(role, { lat: lat, lng: lng }, { silent: true })
+      .catch(function () {})
+      .finally(function () {
+        busy = false;
+      });
+  }
+
+  function startLocationWatch(role) {
+    clearLocationWatch();
+    if (!navigator.geolocation || !isSecureContext()) return;
+    presenceWatchId = navigator.geolocation.watchPosition(
+      function (pos) {
+        persistIfMoved(role, pos.coords.latitude, pos.coords.longitude);
+      },
+      function () {},
+      { enableHighAccuracy: false, maximumAge: 60000, timeout: 20000 }
+    );
+  }
+
+  function pausePresenceAndLocation() {
+    clearPresenceTimer();
+    clearLocationWatch();
+  }
+
+  function resumePresenceAndLocation() {
+    var role = activeRole;
+    if (!role || (typeof document !== "undefined" && document.hidden)) return;
+    clearPresenceTimer();
+    sendPresence(role);
+    presenceIntervalId = setInterval(function () {
+      if (typeof document !== "undefined" && document.hidden) return;
+      sendPresence(activeRole);
+    }, PRESENCE_HEARTBEAT_MS);
+    startLocationWatch(role);
+    if (navigator.geolocation && isSecureContext()) {
+      navigator.geolocation.getCurrentPosition(
+        function (pos) {
+          persistIfMoved(role, pos.coords.latitude, pos.coords.longitude);
+        },
+        function () {},
+        { enableHighAccuracy: false, maximumAge: 60000, timeout: 15000 }
+      );
+    }
+  }
+
+  function onPresenceVisibility() {
+    if (typeof document !== "undefined" && document.hidden) {
+      pausePresenceAndLocation();
+      return;
+    }
+    resumePresenceAndLocation();
+  }
+
+  function bindPresenceVisibility() {
+    if (visibilityBound || typeof document === "undefined") return;
+    visibilityBound = true;
+    document.addEventListener("visibilitychange", onPresenceVisibility);
+  }
+
+  function unbindPresenceVisibility() {
+    if (!visibilityBound || typeof document === "undefined") return;
+    document.removeEventListener("visibilitychange", onPresenceVisibility);
+    visibilityBound = false;
+  }
+
+  function stopPresenceLoop() {
+    pausePresenceAndLocation();
+    unbindPresenceVisibility();
     activeRole = null;
   }
 
-  function startPresenceLoop(role, intervalMs) {
+  function startPresenceLoop(role) {
     if (!isOrderReceivingRole(role)) return;
     if (!isReady()) return;
     stopPresenceLoop();
     activeRole = role;
-    intervalMs = intervalMs || 15000;
-
-    function tick() {
-      captureAndSave(role, { silent: true }).catch(function () {});
-    }
-
-    if (navigator.geolocation && isSecureContext()) {
-      presenceWatchId = navigator.geolocation.watchPosition(
-        function (pos) {
-          var lat = pos.coords.latitude;
-          var lng = pos.coords.longitude;
-          if (!shouldSaveCoords(lat, lng)) return;
-          if (busy) return;
-          busy = true;
-          persistCoords(role, { lat: lat, lng: lng }, { silent: true })
-            .catch(function () {})
-            .finally(function () {
-              busy = false;
-            });
-        },
-        function () {},
-        { enableHighAccuracy: false, maximumAge: 60000, timeout: 20000 }
-      );
-    }
-
-    presenceIntervalId = setInterval(tick, intervalMs);
-    tick();
+    bindPresenceVisibility();
+    resumePresenceAndLocation();
   }
 
   async function ensureForOrders(role, profile, opts) {

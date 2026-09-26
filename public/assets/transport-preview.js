@@ -22,7 +22,9 @@
   var W = null;
   var notifOpsApi = null;
   var pollTimer = null;
-  var POLL_MS = 8000;
+  var PORTAL_POLL_MS = 30000;
+  var visibilityBound = false;
+  var pollBusy = false;
 
   var state = {
     dashboard: null,
@@ -259,7 +261,7 @@
       }
       if (Loc.isReady && (Loc.isReady(state.profile) || Loc.isReady())) {
         if (typeof Loc.startPresenceLoop === "function") {
-          Loc.startPresenceLoop("transport", 15000);
+          Loc.startPresenceLoop("transport");
         }
       }
     } catch (e) {
@@ -774,19 +776,27 @@
   }
 
   async function pollTick() {
-    if (!shell) return;
-    var section = shell.getActiveSection();
-    await loadData();
-    paintHeader();
-    if (sectionsWithLiveBookings(section)) renderMain(section);
-    if (notifOpsApi && notifOpsApi.refresh) await notifOpsApi.refresh();
+    if (pollBusy || !shell || (typeof document !== "undefined" && document.hidden)) return;
+    pollBusy = true;
+    try {
+      var section = shell.getActiveSection();
+      await loadData();
+      if (typeof document !== "undefined" && document.hidden) return;
+      paintHeader();
+      if (sectionsWithLiveBookings(section)) renderMain(section);
+      if (notifOpsApi && notifOpsApi.refreshUnread) await notifOpsApi.refreshUnread();
+      else if (notifOpsApi && notifOpsApi.refresh) await notifOpsApi.refresh();
+    } finally {
+      pollBusy = false;
+    }
   }
 
   function startPolling() {
     stopPolling();
+    if (typeof document !== "undefined" && document.hidden) return;
     pollTimer = setInterval(function () {
       pollTick().catch(function () {});
-    }, POLL_MS);
+    }, PORTAL_POLL_MS);
   }
 
   function stopPolling() {
@@ -796,8 +806,36 @@
     }
   }
 
+  function onPortalVisibility() {
+    if (typeof document !== "undefined" && document.hidden) {
+      stopPolling();
+      return;
+    }
+    pollTick()
+      .catch(function () {})
+      .then(function () {
+        startPolling();
+      });
+  }
+
+  function onPageHide() {
+    stopPolling();
+  }
+
+  function bindPortalLifecycle() {
+    if (visibilityBound || typeof document === "undefined") return;
+    visibilityBound = true;
+    document.addEventListener("visibilitychange", onPortalVisibility);
+    global.addEventListener("pagehide", onPageHide);
+  }
+
   function stopAll() {
     stopPolling();
+    if (typeof document !== "undefined") {
+      document.removeEventListener("visibilitychange", onPortalVisibility);
+    }
+    global.removeEventListener("pagehide", onPageHide);
+    visibilityBound = false;
     if (global.ErvenowPortalProviderLocation && ErvenowPortalProviderLocation.stopPresenceLoop) {
       ErvenowPortalProviderLocation.stopPresenceLoop();
     }
@@ -903,6 +941,7 @@
       shell.showApp();
       renderMain(shell.getActiveSection());
       notifOpsApi = await shell.mountNotifications();
+      bindPortalLifecycle();
       startPolling();
     } catch (e) {
       shell.showLogin();

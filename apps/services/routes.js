@@ -4,6 +4,7 @@ const { denyUnlessCanPlaceOrders } = require("../../shared/middleware/platformAc
 const { denyUnlessPublicOrdering } = require("../../shared/middleware/publicOrderingGate");
 const { requireRole, requireServiceProviderRole, requireServiceProviderOrAdmin } = require("../../shared/middleware/roles");
 const { createServiceClient } = require("../../shared/config/supabase");
+const { noteHttp, wrapSb, logDashboard } = require("../../shared/utils/stormProbe");
 const { ok, fail } = require("../../shared/utils/helpers");
 const { sendWhatsApp } = require("../../shared/utils/whatsapp");
 const checkoutPaymentMethods = require("../../shared/utils/checkoutPaymentMethods");
@@ -539,7 +540,9 @@ router.get("/providers", async (req, res) => {
 
 router.get("/me/dashboard", requireAuth, requireServiceProviderRole(), async (req, res) => {
   try {
-    const sb = req.supabase || createServiceClient();
+    noteHttp("dashboard");
+    const probed = wrapSb(req.supabase || createServiceClient());
+    const sb = probed.client;
     const uid = req.appUser.id;
     let profile = null;
     const profileSelectFull =
@@ -622,24 +625,12 @@ router.get("/me/dashboard", requireAuth, requireServiceProviderRole(), async (re
       if (walletSource === "ervenow_ledger" && walletCommission > 0) {
         commissionPending = walletCommission;
       }
-      try {
-        const { listLedgerWalletTransactions } = require("../../shared/utils/ledgerWallet");
-        const txs = await listLedgerWalletTransactions(sb, uid, "service", 200);
-        const todayStart = new Date();
-        todayStart.setHours(0, 0, 0, 0);
-        walletEarnedToday = (txs || [])
-          .filter((t) => {
-            if (!t || !t.created_at || new Date(t.created_at) < todayStart) return false;
-            return String(t.direction || "").toLowerCase() === "credit";
-          })
-          .reduce((s, t) => s + Math.abs(Number(t.amount) || 0), 0);
-      } catch (_todayErr) {
-        walletEarnedToday = 0;
-      }
+      walletEarnedToday = Number(wallet.earned_today) || 0;
     } catch (_) {
       /* optional */
     }
 
+    logDashboard(probed.count());
     return ok(res, {
       panel_title: panelTitleForType(providerType),
       service_label: labelForType(providerType),
@@ -1505,6 +1496,35 @@ router.get("/me/checkout-payment-methods", requireAuth, requireServiceProviderRo
     return ok(res, { methods: checkoutPaymentMethods.intersectMethods(platform, userPart) });
   } catch (e) {
     return fail(res, e.message || String(e), 500);
+  }
+});
+
+router.post("/me/presence", requireAuth, requireServiceProviderRole(), async (req, res) => {
+  try {
+    const sb = req.supabase || createServiceClient();
+    if (!sb) return fail(res, "قاعدة البيانات غير جاهزة", 503);
+    const uid = req.appUser.id;
+    const now = new Date().toISOString();
+    const seen = await sb
+      .from("users")
+      .update({ last_seen_at: now })
+      .eq("id", uid)
+      .select("id")
+      .maybeSingle();
+    if (seen.error && /last_seen_at/i.test(String(seen.error.message || seen.error.details || ""))) {
+      const touch = await sb.from("users").update({ updated_at: now }).eq("id", uid).select("id").maybeSingle();
+      if (touch.error) return fail(res, touch.error.message, 400);
+      return ok(res, {
+        presence: true,
+        persisted: "updated_at",
+        last_seen_at: now,
+        message: "نفّذ shared/migration_users_last_seen_at.sql لفصل الحضور عن وقت تعديل الحساب",
+      });
+    }
+    if (seen.error) return fail(res, seen.error.message, 400);
+    return ok(res, { presence: true, persisted: "last_seen_at", last_seen_at: now });
+  } catch (e) {
+    return fail(res, e.message, 500);
   }
 });
 

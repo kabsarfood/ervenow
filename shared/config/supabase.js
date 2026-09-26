@@ -40,9 +40,32 @@ function isSupabaseNetworkError(err) {
   return !!getSupabaseFetchErrorHint(err);
 }
 
+function requestMethod(input, init) {
+  if (init && init.method) return String(init.method).toUpperCase();
+  if (input && typeof input === "object" && input.method) return String(input.method).toUpperCase();
+  return "GET";
+}
+
+function headerHasIdempotency(headers) {
+  if (!headers) return false;
+  if (typeof headers.get === "function") {
+    return !!(headers.get("Idempotency-Key") || headers.get("idempotency-key"));
+  }
+  const key = headers["Idempotency-Key"] || headers["idempotency-key"];
+  return !!(key && String(key).trim());
+}
+
+function requestIsIdempotent(input, init) {
+  const method = requestMethod(input, init);
+  if (method === "GET" || method === "HEAD" || method === "OPTIONS") return true;
+  return headerHasIdempotency((init && init.headers) || (input && input.headers));
+}
+
 function wrapFetchWithRetry(baseFetch) {
-  const attempts = Math.max(1, Math.min(6, Number(process.env.SUPABASE_FETCH_RETRIES) || 5));
+  const envCap = Number(process.env.SUPABASE_FETCH_RETRIES);
+  const configured = Number.isFinite(envCap) && envCap >= 1 ? Math.min(2, Math.floor(envCap)) : 2;
   return async function supabaseFetch(input, init) {
+    const attempts = requestIsIdempotent(input, init) ? configured : 1;
     let lastErr;
     for (let i = 0; i < attempts; i += 1) {
       try {
@@ -57,8 +80,7 @@ function wrapFetchWithRetry(baseFetch) {
           code === "UND_ERR_CONNECT_TIMEOUT" ||
           (err.message && /fetch failed/i.test(String(err.message)));
         if (retryable && i < attempts - 1) {
-          const delay = code === "ENOTFOUND" ? 500 * (i + 1) : 250 * (i + 1);
-          await new Promise((r) => setTimeout(r, delay));
+          await new Promise((r) => setTimeout(r, 400 * (i + 1)));
           continue;
         }
         throw err;

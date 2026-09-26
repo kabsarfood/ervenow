@@ -1,5 +1,6 @@
 const { roleLabelAr, normalizeAccountStatus } = require("../utils/accountApproval");
 const { isTransportServiceType } = require("../utils/adminRoleTaxonomy");
+const { lastActivityAt } = require("../utils/lastActivityAt");
 
 function normalizeDigits(v) {
   return String(v || "").replace(/\D/g, "");
@@ -29,7 +30,7 @@ function mapUserRow(u) {
     service_type: u.service_type || null,
     status,
     approved: status === "active",
-    last_activity_at: u.updated_at || u.created_at || null,
+    last_activity_at: lastActivityAt(u),
     detail: {
       role: u.role,
       service_type: u.service_type,
@@ -50,7 +51,7 @@ function mapStoreRow(s) {
     role: "store",
     status,
     approved: status === "approved",
-    last_activity_at: s.updated_at || s.created_at || null,
+    last_activity_at: lastActivityAt(s),
     detail: {
       type: s.type,
       location_text: s.location_text || null,
@@ -81,7 +82,7 @@ function mapDriverRow(d) {
     role: "driver",
     status,
     approved: status === "approved" && d.active === true,
-    last_activity_at: d.updated_at || d.created_at || null,
+    last_activity_at: lastActivityAt(d),
     detail: {
       car_type: d.car_type,
       plate_number: d.plate_number,
@@ -175,19 +176,15 @@ async function loadRegistrationApprovalItems(sb, options = {}) {
         : typeFilter === "customer"
           ? ["customer", "user"]
           : ["customer", "user", "service", "store", "merchant", "restaurant"];
-    let q = await sb
-      .from("users")
-      .select("id, phone, role, status, name, service_type, service_district, created_at, updated_at")
-      .in("role", roles)
-      .order("created_at", { ascending: false })
-      .limit(500);
-    if (q.error && /name|service_district|column/i.test(String(q.error.message || ""))) {
-      q = await sb
-        .from("users")
-        .select("id, phone, role, status, service_type, created_at, updated_at")
-        .in("role", roles)
-        .order("created_at", { ascending: false })
-        .limit(500);
+    const userSelects = [
+      "id, phone, role, status, name, service_type, service_district, created_at, updated_at, last_seen_at",
+      "id, phone, role, status, name, service_type, service_district, created_at, updated_at",
+      "id, phone, role, status, service_type, created_at, updated_at",
+    ];
+    let q = { data: null, error: new Error("users select failed") };
+    for (const sel of userSelects) {
+      q = await sb.from("users").select(sel).in("role", roles).order("created_at", { ascending: false }).limit(500);
+      if (!q.error) break;
     }
     if (!q.error) {
       (q.data || []).forEach((u) => {

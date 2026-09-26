@@ -51,7 +51,7 @@ app.renderDrivers = function () {
       "<div>تاريخ التسجيل: " + app.fmtWhen(d.created_at) + "</div>" +
       "<div>نوع الحساب: مندوب</div>" +
       "<div>حالة الحساب: " + (d.status || "pending") + "</div>" +
-      "<div>آخر نشاط: " + app.fmtWhen(d.updated_at || d.created_at) + "</div>" +
+      "<div>آخر نشاط: " + app.fmtWhen(d.last_seen_at || d.updated_at || d.created_at) + "</div>" +
       "<div>المركبة: " + (d.car_type || "—") + " | اللوحة: " + (d.plate_number || "—") + "</div>";
     var row = document.createElement("div");
     row.className = "row";

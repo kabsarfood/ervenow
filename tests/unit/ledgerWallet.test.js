@@ -99,9 +99,30 @@ describe("ledgerWallet", () => {
       ],
     });
 
+    sb.rpc = jest.fn().mockResolvedValue({
+      data: {
+        ok: true,
+        balance: 85,
+        available_balance: 85,
+        pending_balance: 0,
+        total_credits: 100,
+        total_debits: 15,
+        total_earned: 100,
+        total_commission: 15,
+        earned_today: 0,
+        transaction_count: 2,
+        wallet_id: "wallet-1",
+        has_data: true,
+      },
+      error: null,
+    });
+
     const payload = await getWalletMePayload(sb, "user-1", "driver");
     expect(payload.source).toBe("ervenow_ledger");
     expect(payload.balance).toBe(85);
+    expect(payload.available_balance).toBe(85);
+    expect(payload.total_credits).toBe(100);
+    expect(payload.total_debits).toBe(15);
     expect(payload.last_transactions).toHaveLength(1);
   });
 

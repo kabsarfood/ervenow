@@ -175,6 +175,18 @@
       panelParent().appendChild(wrap);
     }
 
+    async function refreshUnread() {
+      if (!global.PlatformAPI || !PlatformAPI.api) return;
+      try {
+        var countRes = await PlatformAPI.api("/api/notifications/unread-count");
+        var next = Number((countRes && countRes.unread_count) || 0);
+        var changed = next !== state.unread;
+        state.unread = next;
+        renderBell();
+        if (changed && state.open) await loadItems();
+      } catch (_) {}
+    }
+
     async function loadItems() {
       if (!global.PlatformAPI || !PlatformAPI.api) return;
       state.loading = true;
@@ -286,6 +298,7 @@
         toggle(false);
       },
       refresh: loadItems,
+      refreshUnread: refreshUnread,
       getUnread: function () {
         return state.unread;
       },

@@ -17,8 +17,8 @@ const { processDebtNotifyFromFinanceSummary } = require("../services/financialDe
 
 function isMissingLedgerSchemaError(err) {
   if (!err) return false;
-  const msg = String(err.message || err.details || err);
-  return /ervenow_ledger|does not exist|schema cache|PGRST205|42P01|function.*not found/i.test(msg);
+  const msg = String(err.code || err.message || err.details || err);
+  return /ervenow_ledger|does not exist|schema cache|PGRST202|PGRST205|42P01|42883|function.*not found|could not find the function/i.test(msg);
 }
 
 function parseSummaryRow(data) {
@@ -100,6 +100,132 @@ function aggregateLedgerTransactions(transactions) {
   };
 }
 
+function startOfLocalDayIso() {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return d.toISOString();
+}
+
+function emptyAggregate(walletId) {
+  return {
+    ok: true,
+    has_data: false,
+    wallet_id: walletId || null,
+    balance: 0,
+    available_balance: 0,
+    pending_balance: 0,
+    total_credits: 0,
+    total_debits: 0,
+    total_earned: 0,
+    total_commission: 0,
+    earned_today: 0,
+    transaction_count: 0,
+    wallet_mode: "ledger",
+    layer: "ervenow_ledger_transactions",
+  };
+}
+
+function mapAggregatePayload(row) {
+  const src = row && typeof row === "object" ? row : {};
+  const balance = round2(
+    Number(src.available_balance != null ? src.available_balance : src.balance) || 0
+  );
+  const totalEarned = round2(Number(src.total_earned) || 0);
+  const totalCommission = round2(Number(src.total_commission) || 0);
+  const totalCredits = round2(Number(src.total_credits) || 0);
+  const totalDebits = round2(Number(src.total_debits) || 0);
+  const pending = round2(Number(src.pending_balance) || 0);
+  const earnedToday = round2(Number(src.earned_today) || 0);
+  const txCount = Number(src.transaction_count) || 0;
+  const hasData =
+    src.has_data === true ||
+    src.has_data === "true" ||
+    txCount > 0 ||
+    balance !== 0 ||
+    totalEarned > 0 ||
+    totalCommission > 0 ||
+    totalCredits > 0 ||
+    totalDebits > 0;
+  return {
+    ok: true,
+    has_data: !!hasData,
+    wallet_id: src.wallet_id || null,
+    balance,
+    available_balance: balance,
+    pending_balance: pending,
+    total_credits: totalCredits,
+    total_debits: totalDebits,
+    total_earned: totalEarned,
+    total_commission: totalCommission,
+    earned_today: earnedToday,
+    transaction_count: txCount,
+    wallet_mode: "ledger",
+    layer: "ervenow_ledger_transactions",
+  };
+}
+
+function parseSumValue(data) {
+  const row = Array.isArray(data) ? data[0] : data;
+  if (row == null || row === "") return 0;
+  if (typeof row === "number") return round2(row);
+  if (typeof row !== "object") return round2(Number(row) || 0);
+  if (row.sum != null) return round2(Number(row.sum) || 0);
+  const key = Object.keys(row).find((k) => /sum/i.test(k));
+  if (key) return round2(Number(row[key]) || 0);
+  return 0;
+}
+
+async function sumFiltered(sb, walletId, apply) {
+  let q = sb.from("ervenow_ledger_transactions").select("amount.sum()").eq("wallet_id", walletId);
+  if (typeof apply === "function") q = apply(q);
+  const { data, error } = await q;
+  if (error) throw error;
+  return parseSumValue(data);
+}
+
+/**
+ * مجاميع SQL بدل سحب كل صفوف ervenow_ledger_transactions.
+ * الرصيد = مجموع الإتمام الدائن − مجموع الإتمام المدين، كما في aggregateLedgerTransactions.
+ */
+async function aggregateWalletWithoutRowDump(sb, walletId, todayIso) {
+  const completed = (q) => q.eq("status", "completed");
+  const [totalCredits, totalDebits, totalEarned, totalCommission, pendingCredits, pendingDebits, earnedToday, countRes] =
+    await Promise.all([
+      sumFiltered(sb, walletId, (q) => completed(q).eq("direction", "credit")),
+      sumFiltered(sb, walletId, (q) => completed(q).eq("direction", "debit")),
+      sumFiltered(sb, walletId, (q) =>
+        completed(q).eq("direction", "credit").in("type", ["earning", "deposit"])
+      ),
+      sumFiltered(sb, walletId, (q) => completed(q).eq("direction", "debit").eq("type", "commission")),
+      sumFiltered(sb, walletId, (q) => q.eq("status", "pending").eq("direction", "credit")),
+      sumFiltered(sb, walletId, (q) => q.eq("status", "pending").eq("direction", "debit")),
+      sumFiltered(sb, walletId, (q) =>
+        completed(q).eq("direction", "credit").gte("created_at", todayIso)
+      ),
+      sb
+        .from("ervenow_ledger_transactions")
+        .select("id", { count: "exact", head: true })
+        .eq("wallet_id", walletId)
+        .eq("status", "completed"),
+    ]);
+  if (countRes.error) throw countRes.error;
+  const balance = round2(totalCredits - totalDebits);
+  const txCount = Number(countRes.count) || 0;
+  return mapAggregatePayload({
+    wallet_id: walletId,
+    available_balance: balance,
+    balance,
+    pending_balance: round2(pendingCredits - pendingDebits),
+    total_credits: totalCredits,
+    total_debits: totalDebits,
+    total_earned: totalEarned,
+    total_commission: totalCommission,
+    earned_today: earnedToday,
+    transaction_count: txCount,
+    has_data: txCount > 0 || balance !== 0 || totalEarned > 0 || totalCommission > 0,
+  });
+}
+
 /**
  * @param {import("@supabase/supabase-js").SupabaseClient} sb
  * @param {string} userId
@@ -110,8 +236,27 @@ async function computeLedgerWalletFromAllTransactions(sb, userId, appRole) {
   if (!uid || !sb) return { ok: false, has_data: false };
 
   const ledgerRole = mapAppRoleToLedgerWalletRole(appRole);
+  const todayIso = startOfLocalDayIso();
 
   try {
+    if (typeof sb.rpc === "function") {
+      let rpcRes = null;
+      try {
+        rpcRes = await sb.rpc("ervenow_ledger_wallet_aggregate", {
+          p_user_id: uid,
+          p_role: ledgerRole,
+          p_today_start: todayIso,
+        });
+      } catch (e) {
+        if (!isMissingLedgerSchemaError(e)) throw e;
+      }
+      const rpcRow = Array.isArray(rpcRes && rpcRes.data) ? rpcRes.data[0] : rpcRes && rpcRes.data;
+      if (rpcRes && !rpcRes.error && rpcRow && (rpcRow.ok === true || rpcRow.ok === "true")) {
+        return mapAggregatePayload(rpcRow);
+      }
+      if (rpcRes && rpcRes.error && !isMissingLedgerSchemaError(rpcRes.error)) throw rpcRes.error;
+    }
+
     const { data: wallet, error: wErr } = await sb
       .from("ervenow_ledger_wallets")
       .select("id")
@@ -123,43 +268,9 @@ async function computeLedgerWalletFromAllTransactions(sb, userId, appRole) {
       if (isMissingLedgerSchemaError(wErr)) return { ok: false, reason: "migration_missing", has_data: false };
       throw wErr;
     }
-    if (!wallet?.id) {
-      return {
-        ok: true,
-        has_data: false,
-        wallet_id: null,
-        balance: 0,
-        total_earned: 0,
-        total_commission: 0,
-        transaction_count: 0,
-        wallet_mode: "ledger",
-        layer: "ervenow_ledger_transactions",
-      };
-    }
+    if (!wallet?.id) return emptyAggregate(null);
 
-    const { data: txs, error: txErr } = await sb
-      .from("ervenow_ledger_transactions")
-      .select("type, direction, amount")
-      .eq("wallet_id", wallet.id)
-      .eq("status", "completed");
-
-    if (txErr) {
-      if (isMissingLedgerSchemaError(txErr)) return { ok: false, reason: "migration_missing", has_data: false };
-      throw txErr;
-    }
-
-    const agg = aggregateLedgerTransactions(txs || []);
-    const hasData =
-      agg.transaction_count > 0 || agg.balance > 0 || agg.total_earned > 0 || agg.total_commission > 0;
-
-    return {
-      ok: true,
-      has_data: hasData,
-      wallet_id: wallet.id,
-      ...agg,
-      wallet_mode: "ledger",
-      layer: "ervenow_ledger_transactions",
-    };
+    return await aggregateWalletWithoutRowDump(sb, wallet.id, todayIso);
   } catch (e) {
     if (isMissingLedgerSchemaError(e)) return { ok: false, reason: "migration_missing", has_data: false };
     throw e;
@@ -203,8 +314,13 @@ async function getWalletMePayload(sb, userId, appRole) {
   const last_transactions = await listLedgerWalletTransactions(sb, userId, appRole, 10);
   return {
     balance: ledger.balance,
+    available_balance: ledger.available_balance != null ? ledger.available_balance : ledger.balance,
+    pending_balance: ledger.pending_balance || 0,
+    total_credits: ledger.total_credits || 0,
+    total_debits: ledger.total_debits || 0,
     total_earned: ledger.total_earned,
     total_commission: ledger.total_commission,
+    earned_today: ledger.earned_today != null ? ledger.earned_today : null,
     total_withdrawn: 0,
     last_transactions,
     wallet_mode: "ledger",
@@ -290,8 +406,13 @@ async function getWalletPayloadWithLedgerFallback(sb, userId, appRole) {
 
   return {
     balance: ledger.balance,
+    available_balance: ledger.available_balance != null ? ledger.available_balance : ledger.balance,
+    pending_balance: ledger.pending_balance || 0,
+    total_credits: ledger.total_credits || 0,
+    total_debits: ledger.total_debits || 0,
     total_earned: ledger.total_earned,
     total_commission: ledger.total_commission,
+    earned_today: ledger.earned_today != null ? ledger.earned_today : null,
     wallet_mode: "ledger",
     layer: ledger.layer || "ervenow_ledger_transactions",
     wallet_id: ledger.wallet_id || null,

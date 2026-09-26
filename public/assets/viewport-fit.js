@@ -114,7 +114,7 @@
     if (document.body && document.body.classList.contains("erv-preview-lab")) return;
     if (document.querySelector('script[src*="mobile-orders-nav-badge.js"]')) return;
     var s = document.createElement("script");
-    s.src = shellAssetUrl("/assets/mobile-orders-nav-badge.js");
+    s.src = "/assets/mobile-orders-nav-badge.js?erv=20260926badge1";
     s.defer = true;
     document.head.appendChild(s);
   }

@@ -2284,17 +2284,24 @@ async function attachUserIdsToDrivers(sb, drivers) {
   if (!phones.length) {
     return list.map((d) => ({ ...d, user_id: d.user_id || null }));
   }
-  const { data: users, error } = await sb.from("users").select("id, phone").in("phone", phones);
-  if (error) return list;
-  const map = new Map();
-  for (const u of users || []) {
-    const p = normalizeDigits(u.phone);
-    if (p) map.set(p, u.id);
+  let usersRes = await sb.from("users").select("id, phone, last_seen_at").in("phone", phones);
+  if (usersRes.error && /last_seen_at/i.test(String(usersRes.error.message || usersRes.error.details || ""))) {
+    usersRes = await sb.from("users").select("id, phone").in("phone", phones);
   }
-  return list.map((d) => ({
-    ...d,
-    user_id: map.get(normalizeDigits(d.phone)) || d.user_id || null,
-  }));
+  if (usersRes.error) return list;
+  const map = new Map();
+  for (const u of usersRes.data || []) {
+    const p = normalizeDigits(u.phone);
+    if (p) map.set(p, u);
+  }
+  return list.map((d) => {
+    const u = map.get(normalizeDigits(d.phone));
+    return {
+      ...d,
+      user_id: (u && u.id) || d.user_id || null,
+      last_seen_at: (u && u.last_seen_at) || d.last_seen_at || null,
+    };
+  });
 }
 
 async function resolveDriverUserIdForAssign(sb, body) {
@@ -2587,12 +2594,22 @@ const USER_ADMIN_ROW_SELECT = SELECT_CORE;
 
 router.get("/customers", requireAuth, requireRole("admin"), requireAdminPermission("customers"), async (req, res) => {
   try {
-    const first = await req.supabase
-      .from("users")
-      .select(USER_ADMIN_ROW_SELECT)
-      .in("role", ["customer", "user", "blocked"])
-      .order("created_at", { ascending: false })
-      .limit(500);
+    const customerSelects = [
+      "id, phone, role, status, created_at, updated_at, last_seen_at",
+      "id, phone, role, status, created_at, updated_at",
+      USER_ADMIN_ROW_SELECT,
+    ];
+    let first = { data: null, error: new Error("customers select failed") };
+    for (const sel of customerSelects) {
+      first = await req.supabase
+        .from("users")
+        .select(sel)
+        .in("role", ["customer", "user", "blocked"])
+        .order("created_at", { ascending: false })
+        .limit(500);
+      if (!first.error) break;
+      if (!/last_seen_at|updated_at|created_at|column|schema cache/i.test(String(first.error.message || ""))) break;
+    }
     if (!first.error) {
       const customers = (first.data || []).map((u) => {
         const st = String(u.status || "").toLowerCase();
@@ -3076,6 +3093,7 @@ router.get("/providers", requireAuth, requireRole("admin"), requireAdminPermissi
     const { labelForType } = require("../../shared/utils/serviceProviderTypes");
 
     const selectExprs = [
+      "id, phone, role, service_type, status, name, created_at, updated_at, last_seen_at",
       "id, phone, role, service_type, status, name, created_at, updated_at",
       "id, phone, role, service_type, status, created_at, updated_at",
     ];

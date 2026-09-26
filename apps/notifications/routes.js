@@ -2,9 +2,11 @@ const express = require("express");
 const { requireAuth } = require("../../shared/middleware/auth");
 const {
   getNotifications,
+  getUnreadCount,
   markNotificationRead,
   markAllNotificationsRead,
 } = require("../../shared/services/notificationService");
+const { noteHttp } = require("../../shared/utils/stormProbe");
 const {
   resolveAppUserPortal,
   mapAppRoleToRecipientType,
@@ -68,6 +70,17 @@ function recipientTypesForPortalContext(portalCtx, appUser) {
   return [...types];
 }
 
+async function countUnreadMerged(req) {
+  const portalCtx = await portalContextFromRequest(req);
+  const recipientId = req.appUser && req.appUser.id;
+  const types = recipientTypesForPortalContext(portalCtx, req.appUser);
+  let unread = 0;
+  for (const recipientType of types) {
+    unread += await getUnreadCount(req.supabase, recipientType, recipientId);
+  }
+  return { unread_count: unread, portalCtx };
+}
+
 async function fetchNotificationsMerged(req, opts) {
   const portalCtx = await portalContextFromRequest(req);
   const recipientId = req.appUser && req.appUser.id;
@@ -92,6 +105,7 @@ async function fetchNotificationsMerged(req, opts) {
 
 router.get("/", requireAuth, async (req, res) => {
   try {
+    noteHttp("notifications");
     const limit = Number(req.query && req.query.limit);
     const unreadOnly = String(req.query && req.query.unread_only || "").toLowerCase() === "1";
     const { items, portalCtx } = await fetchNotificationsMerged(req, { limit, unreadOnly });
@@ -103,8 +117,9 @@ router.get("/", requireAuth, async (req, res) => {
 
 router.get("/unread-count", requireAuth, async (req, res) => {
   try {
-    const { items, portalCtx } = await fetchNotificationsMerged(req, { limit: 100, unreadOnly: true });
-    return ok(res, { unread_count: items.length, portal: portalCtx.portalRole });
+    noteHttp("notifications");
+    const { unread_count, portalCtx } = await countUnreadMerged(req);
+    return ok(res, { unread_count, portal: portalCtx.portalRole });
   } catch (e) {
     return fail(res, e.message || String(e), 500);
   }
@@ -125,12 +140,12 @@ router.post("/read/:id", requireAuth, async (req, res) => {
     }
     if (!notif) return fail(res, "notification not found", 404);
 
-    const { items, portalCtx } = await fetchNotificationsMerged(req, { limit: 100, unreadOnly: true });
+    const { unread_count, portalCtx } = await countUnreadMerged(req);
     broadcastNotificationRead(roomForAppUser(req.appUser), {
       id: notif.id,
-      unread_count: items.length,
+      unread_count,
     });
-    return ok(res, { notification: notif, unread_count: items.length, portal: portalCtx.portalRole });
+    return ok(res, { notification: notif, unread_count, portal: portalCtx.portalRole });
   } catch (e) {
     return fail(res, e.message || String(e), 500);
   }

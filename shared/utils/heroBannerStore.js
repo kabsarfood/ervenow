@@ -282,12 +282,46 @@ async function listBanners(sb, { includeInactive = false, placement = null, kind
   }
 }
 
-async function getPublishedBannersForTarget(sb, targetId, { now } = {}) {
-  const rows = await listBanners(sb, { includeInactive: true, target: targetId });
+const PUBLIC_BANNER_CACHE_MS = 60 * 1000;
+let publicBannerCache = { at: 0, rows: null, pending: null };
+
+function clearPublicBannerCache() {
+  publicBannerCache = { at: 0, rows: null, pending: null };
+}
+
+/** قراءة عامة واحدة لكل الصفوف، ثم التقسيم في الذاكرة. قائمة الأدمن تبقى بلا هذا الكاش. */
+async function loadPublicBannerRows(sb) {
+  const now = Date.now();
+  if (publicBannerCache.rows && now - publicBannerCache.at < PUBLIC_BANNER_CACHE_MS) {
+    return publicBannerCache.rows;
+  }
+  if (publicBannerCache.pending) return publicBannerCache.pending;
+  if (!sb) return [];
+  const pending = listBanners(sb, { includeInactive: true })
+    .then(function (rows) {
+      publicBannerCache = { at: Date.now(), rows: rows || [], pending: null };
+      return publicBannerCache.rows;
+    })
+    .catch(function (err) {
+      publicBannerCache.pending = null;
+      throw err;
+    });
+  publicBannerCache.pending = pending;
+  return pending;
+}
+
+function publishedForTargetFromRows(rows, targetId, now) {
   const when = now || new Date();
-  return sortBannersForDisplay(rows.filter(function (b) {
-    return isBannerPublishable(b, when);
-  }));
+  return sortBannersForDisplay(
+    (rows || []).filter(function (b) {
+      return bannerHasTarget(b, targetId) && isBannerPublishable(b, when);
+    })
+  );
+}
+
+async function getPublishedBannersForTarget(sb, targetId, { now } = {}) {
+  const rows = await loadPublicBannerRows(sb);
+  return publishedForTargetFromRows(rows, targetId, now);
 }
 
 async function getActiveBanners(sb, opts) {
@@ -304,10 +338,12 @@ async function getActiveBanner(sb, opts) {
 }
 
 async function getActiveBannersByTarget(sb) {
+  const rows = await loadPublicBannerRows(sb);
+  const when = new Date();
   const out = {};
   for (let i = 0; i < BANNER_TARGETS.length; i += 1) {
     const tid = BANNER_TARGETS[i].id;
-    out[tid] = await getPublishedBannersForTarget(sb, tid);
+    out[tid] = publishedForTargetFromRows(rows, tid, when);
   }
   return out;
 }
@@ -400,6 +436,7 @@ async function createBanner(sb, body, { publicRoot } = {}) {
     }
     throw error;
   }
+  clearPublicBannerCache();
   return normalizeBannerRow(data);
 }
 
@@ -440,6 +477,7 @@ async function updateBanner(sb, id, body, { publicRoot } = {}) {
     ({ data, error } = await sb.from("hero_banners").update(patch).eq("id", bannerId).select(LEGACY_COLS).maybeSingle());
   }
   if (error) throw error;
+  clearPublicBannerCache();
   return normalizeBannerRow(data);
 }
 
@@ -448,6 +486,7 @@ async function deleteBanner(sb, id) {
   if (!bannerId) throw new Error("معرّف البنر مطلوب");
   const { error } = await sb.from("hero_banners").delete().eq("id", bannerId);
   if (error) throw error;
+  clearPublicBannerCache();
   return { ok: true, id: bannerId };
 }
 
@@ -500,6 +539,8 @@ module.exports = {
   listBanners,
   getActiveBanner,
   getActiveBanners,
+  PUBLIC_BANNER_CACHE_MS,
+  clearPublicBannerCache,
   getPublishedBannersForTarget,
   getActiveBannersByTarget,
   getActiveBannersByPlacement,

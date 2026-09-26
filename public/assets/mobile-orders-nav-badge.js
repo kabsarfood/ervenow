@@ -4,8 +4,9 @@
 (function (global) {
   "use strict";
 
-  var POLL_MS = 5000;
+  var POLL_MS = 45000;
   var pollTimer = null;
+  var refreshBusy = false;
   var cachedRole = "";
 
   function hasToken() {
@@ -28,48 +29,8 @@
     }, 40);
   }
 
-  function orderStatusKey(o) {
-    return String((o && o.delivery_status) || (o && o.status) || "")
-      .toLowerCase()
-      .trim();
-  }
-
-  function orderFinanceStatus(o) {
-    return String((o && o.status) || "")
-      .toLowerCase()
-      .trim();
-  }
-
-  function isCancelledOrder(o) {
-    var ds = orderStatusKey(o);
-    var st = orderFinanceStatus(o);
-    if (/cancel/.test(ds) || /cancel/.test(st)) return true;
-    return (
-      ds === "cancelled_by_customer" ||
-      ds === "canceled_by_customer" ||
-      st === "cancelled" ||
-      st === "canceled"
-    );
-  }
-
-  function isDeliveredOrder(o) {
-    var ds = orderStatusKey(o);
-    return ds === "delivered" || ds === "completed" || ds === "closed";
-  }
-
-  function isOpenCustomerOrder(o) {
-    return !isCancelledOrder(o) && !isDeliveredOrder(o);
-  }
-
-  function countOpenCustomerOrders(orders) {
-    return (orders || []).filter(isOpenCustomerOrder).length;
-  }
-
-  function countDriverOrders(orders) {
-    return (orders || []).filter(function (o) {
-      var ds = orderStatusKey(o);
-      return ds === "pending" || ds === "accepted" || ds === "new";
-    }).length;
+  function tabHidden() {
+    return typeof document !== "undefined" && document.hidden;
   }
 
   function fmtBadge(n) {
@@ -113,28 +74,18 @@
       return 0;
     }
     try {
-      var me = await global.PlatformAPI.api("/api/core/me");
-      var role = String((me.access && me.access.role) || (me.profile && me.profile.role) || "").toLowerCase();
+      var j = await global.PlatformAPI.api("/api/order/orders?badge=1");
+      var role = String((j && j.role) || "").toLowerCase();
       if (role === "user") role = "customer";
       cachedRole = role;
-
-      var j = await global.PlatformAPI.api("/api/order/orders");
-      var orders = Array.isArray(j.orders) ? j.orders : [];
-
-      if (role === "driver" || role === "admin") {
-        if (typeof j.count === "number") return j.count;
-        return countDriverOrders(orders);
-      }
-      if (role === "customer") {
-        return countOpenCustomerOrders(orders);
-      }
-      return 0;
+      return Math.max(0, Number(j && j.count) || 0);
     } catch (e) {
       return 0;
     }
   }
 
   async function refresh() {
+    if (refreshBusy || tabHidden()) return 0;
     if (!hasToken()) {
       applyBadgeCount(0);
       return 0;
@@ -144,9 +95,14 @@
       applyBadgeCount(fromDom);
       return fromDom;
     }
-    var n = await fetchCount();
-    applyBadgeCount(n);
-    return n;
+    refreshBusy = true;
+    try {
+      var n = await fetchCount();
+      applyBadgeCount(n);
+      return n;
+    } finally {
+      refreshBusy = false;
+    }
   }
 
   function observeDomBadges() {
@@ -162,17 +118,24 @@
     });
   }
 
-  function startPoll() {
-    if (pollTimer) return;
-    refresh();
-    pollTimer = global.setInterval(refresh, POLL_MS);
-  }
-
-  function stopPoll() {
+  function pausePoll() {
     if (pollTimer) {
       global.clearInterval(pollTimer);
       pollTimer = null;
     }
+  }
+
+  function startPoll() {
+    if (pollTimer || tabHidden()) return;
+    refresh();
+    pollTimer = global.setInterval(function () {
+      if (tabHidden()) return;
+      refresh();
+    }, POLL_MS);
+  }
+
+  function stopPoll() {
+    pausePoll();
     cachedRole = "";
     applyBadgeCount(0);
   }
@@ -203,6 +166,13 @@
     global.addEventListener("ervenow:auth-changed", function () {
       if (hasToken()) startPoll();
       else stopPoll();
+    });
+    document.addEventListener("visibilitychange", function () {
+      if (document.hidden) {
+        pausePoll();
+        return;
+      }
+      if (hasToken()) startPoll();
     });
     global.addEventListener("ervenow:orders-count-changed", function (ev) {
       var n = ev && ev.detail ? ev.detail.count : 0;

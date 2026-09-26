@@ -260,6 +260,16 @@ app.get("/api/core/test", (_req, res) => {
   res.json({ ok: true, route: "core-test-working" });
 });
 
+if (process.env.NODE_ENV !== "production" || String(process.env.ERVENOW_STORM_PROBE || "").trim() === "1") {
+  if (String(process.env.ERVENOW_STORM_PROBE || "").trim() !== "0") {
+    const stormProbe = require("../shared/utils/stormProbe");
+    app.get("/api/internal/storm-probe", (_req, res) => {
+      if (!stormProbe.enabled()) return res.status(404).json({ ok: false });
+      res.json({ ok: true, ...stormProbe.snapshot() });
+    });
+  }
+}
+
 if (String(process.env.METRICS_ENABLED || "").trim() === "1") {
   app.get("/api/internal/metrics", async (_req, res) => {
     try {
@@ -483,7 +493,7 @@ if (servePublicUi) {
           res.setHeader("Cache-Control", "public, max-age=300, must-revalidate");
           return;
         }
-        if (/\/assets\/portal-framework\//.test(fp) || /-preview\.(js|css)$/.test(fp) || /viewport-fit\.js/.test(fp)) {
+        if (/\/assets\/api\.js$/.test(fp) || /\/assets\/portal-framework\//.test(fp) || /-preview\.(js|css)$/.test(fp) || /viewport-fit\.js/.test(fp)) {
           res.setHeader("Cache-Control", "no-cache, must-revalidate");
           return;
         }

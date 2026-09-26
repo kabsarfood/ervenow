@@ -3,7 +3,9 @@ const {
   normalizeBannerRow,
   normalizePlacement,
   getActiveBannersByPlacement,
+  getActiveBannersByTarget,
   getPublishedBannersForTarget,
+  clearPublicBannerCache,
   sortBannersForDisplay,
   computeCtr,
   getAdminSelectableTargets,
@@ -40,6 +42,10 @@ function mockSb(rows) {
 }
 
 describe("heroBannerStore", function () {
+  beforeEach(function () {
+    clearPublicBannerCache();
+  });
+
   test("normalizeBannerRow trims and normalizes urls", function () {
     const row = normalizeBannerRow({
       id: "a",
@@ -253,5 +259,37 @@ describe("heroBannerStore", function () {
     expect(opts.some(function (o) {
       return o.id === "pharmacy_dashboard";
     })).toBe(false);
+  });
+
+  test("public banner reads use one supabase query then memory for 60s", async function () {
+    let queries = 0;
+    const rows = [
+      {
+        id: "1",
+        title: "Home",
+        banner_targets: ["home"],
+        display_mode: "carousel",
+        status: "active",
+        is_active: true,
+        sort_order: 0,
+        priority: 1,
+      },
+    ];
+    const sb = {
+      from: function () {
+        queries += 1;
+        return mockSb(rows).from();
+      },
+    };
+    const first = await getActiveBannersByTarget(sb);
+    const second = await getActiveBannersByPlacement(sb);
+    const third = await getPublishedBannersForTarget(sb, "home");
+    expect(queries).toBe(1);
+    expect(first.home.map(function (b) { return b.id; })).toEqual(["1"]);
+    expect(second.home_promo.map(function (b) { return b.id; })).toEqual(["1"]);
+    expect(third.map(function (b) { return b.id; })).toEqual(["1"]);
+    clearPublicBannerCache();
+    await getActiveBannersByTarget(sb);
+    expect(queries).toBe(2);
   });
 });

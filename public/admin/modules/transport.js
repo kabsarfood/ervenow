@@ -43,6 +43,9 @@ app.loadTransportPanel = async function () {
           " · " +
           esc(st) +
           "</div>" +
+          "<div>آخر نشاط: " +
+          esc(app.fmtWhen(p.last_seen_at || p.updated_at || p.created_at)) +
+          "</div>" +
           "</div>"
         );
       })

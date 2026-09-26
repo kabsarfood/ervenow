@@ -640,7 +640,31 @@
         }
         loadDashboard();
         loadSvcPaySettings();
-        setInterval(loadDashboard, 8000);
+        var dashTimer = null;
+        function stopDashPoll() {
+          if (dashTimer) {
+            clearInterval(dashTimer);
+            dashTimer = null;
+          }
+        }
+        function startDashPoll() {
+          stopDashPoll();
+          if (document.hidden) return;
+          dashTimer = setInterval(function () {
+            if (document.hidden) return;
+            loadDashboard();
+          }, 30000);
+        }
+        document.addEventListener("visibilitychange", function () {
+          if (document.hidden) {
+            stopDashPoll();
+            return;
+          }
+          loadDashboard();
+          startDashPoll();
+        });
+        window.addEventListener("pagehide", stopDashPoll);
+        startDashPoll();
       })();
     </script>
     <script src="/assets/admin-readiness-beacon.js" defer></script>

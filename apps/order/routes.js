@@ -17,6 +17,7 @@ const {
 } = require("../../shared/utils/deliveryOrdersListCache");
 const { cacheGetJson, cacheSetJson } = require("../../shared/utils/redisCache");
 const { listOrders, rateOrder, cancelOrderByCustomer } = require("../delivery/service");
+const { badgeRole, countNavBadge } = require("../../shared/utils/orderNavBadgeCount");
 const { sendWhatsApp } = require("../../shared/utils/whatsapp");
 const { logger } = require("../../shared/utils/logger");
 const { handleUnifiedCartCheckoutHttp } = require("./cartCheckoutHttp");
@@ -99,6 +100,12 @@ router.get("/orders", optionalAuth, async (req, res) => {
   try {
     const sb = req.supabase || createServiceClient();
     if (!sb) return fail(res, getDatabaseConfigHint(), 503);
+
+    if (String(req.query.badge || "") === "1") {
+      if (!req.appUser) return res.json({ ok: true, count: 0, role: "" });
+      const count = await countNavBadge(sb, req.appUser);
+      return res.json({ ok: true, count, role: badgeRole(req.appUser) });
+    }
 
     const epoch = await readListEpoch();
     const cacheKey = buildOrdersListCacheKey(req, epoch);
