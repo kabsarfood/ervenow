@@ -200,20 +200,72 @@ if (closeBtn) {
   setTimeout(function () {
     void app.loadCommandCenter();
   }, 2500);
-  setInterval(function () {
-    if (app.hasPermission("dashboard")) {
-      app.loadStats();
-      void app.refreshLiveDashboard();
+  var adminStatsTimer = null;
+  var adminLedgerTimer = null;
+  var adminStatsBusy = false;
+  var adminLedgerBusy = false;
+
+  function runAdminStatsPoll() {
+    if (adminStatsBusy || document.hidden) return;
+    adminStatsBusy = true;
+    Promise.resolve()
+      .then(function () {
+        if (app.hasPermission("dashboard")) {
+          app.loadStats();
+          return app.refreshLiveDashboard();
+        }
+      })
+      .then(function () {
+        return app.loadCommandCenter();
+      })
+      .finally(function () {
+        adminStatsBusy = false;
+      });
+  }
+
+  function runAdminLedgerPoll() {
+    if (adminLedgerBusy || document.hidden) return;
+    if (!app.hasPermission("finance")) return;
+    adminLedgerBusy = true;
+    Promise.resolve()
+      .then(function () {
+        app.loadFinancialFeatureFlags();
+        app.loadLedgerFinanceSummary();
+        if (typeof app.refreshTopupPendingBadgeOnly === "function") return app.refreshTopupPendingBadgeOnly();
+      })
+      .finally(function () {
+        adminLedgerBusy = false;
+      });
+  }
+
+  function stopAdminDataPolls() {
+    if (adminStatsTimer) {
+      clearInterval(adminStatsTimer);
+      adminStatsTimer = null;
     }
-    void app.loadCommandCenter();
-  }, app.STATS_POLL_MS);
-  setInterval(function () {
-    if (app.hasPermission("finance")) {
-      app.loadFinancialFeatureFlags();
-      app.loadLedgerFinanceSummary();
-      if (typeof app.refreshTopupPendingBadgeOnly === "function") void app.refreshTopupPendingBadgeOnly();
+    if (adminLedgerTimer) {
+      clearInterval(adminLedgerTimer);
+      adminLedgerTimer = null;
     }
-  }, app.LEDGER_TX_POLL_MS);
+  }
+
+  function startAdminDataPolls(runNow) {
+    if (document.hidden) return;
+    if (!adminStatsTimer) {
+      if (runNow) runAdminStatsPoll();
+      adminStatsTimer = setInterval(runAdminStatsPoll, app.STATS_POLL_MS);
+    }
+    if (!adminLedgerTimer) {
+      if (runNow) runAdminLedgerPoll();
+      adminLedgerTimer = setInterval(runAdminLedgerPoll, app.LEDGER_TX_POLL_MS);
+    }
+  }
+
+  document.addEventListener("visibilitychange", function () {
+    if (document.hidden) stopAdminDataPolls();
+    else startAdminDataPolls(true);
+  });
+  startAdminDataPolls(false);
 })();
 
 bindToWindow();

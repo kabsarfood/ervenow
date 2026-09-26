@@ -4076,9 +4076,14 @@
           }).length;
         }
 
+        var ordersCountBusy = false;
+        var ordersCountTimer = null;
+
         async function loadOrdersCount() {
+          if (ordersCountBusy) return;
           var badge = document.getElementById("ordersBadge");
           if (!badge) return;
+          ordersCountBusy = true;
           try {
             var token = getToken();
             if (!token) {
@@ -4149,12 +4154,36 @@
             lastCount = count;
           } catch (e) {
             console.log("Orders count error");
+          } finally {
+            ordersCountBusy = false;
           }
         }
 
+        function stopOrdersCountPoll() {
+          if (ordersCountTimer) {
+            clearInterval(ordersCountTimer);
+            ordersCountTimer = null;
+          }
+        }
+
+        function startOrdersCountPoll() {
+          if (document.hidden) return;
+          if (!ordersCountTimer) {
+            ordersCountTimer = setInterval(function () {
+              if (document.hidden) return;
+              loadOrdersCount();
+            }, 45000);
+          }
+          loadOrdersCount();
+        }
+
+        document.addEventListener("visibilitychange", function () {
+          if (document.hidden) stopOrdersCountPoll();
+          else startOrdersCountPoll();
+        });
+
         checkAuth();
-        setInterval(loadOrdersCount, 45000);
-        loadOrdersCount();
+        startOrdersCountPoll();
       })();
     </script>
     <script>

@@ -1,5 +1,6 @@
-const { createServiceClient } = require("../../shared/config/supabase");
+const { createServiceClient, isSupabaseTimeoutError } = require("../../shared/config/supabase");
 const { sendWhatsApp } = require("./notify");
+const { createBackgroundPause, STAGGER_MS } = require("../../shared/utils/backgroundPause");
 
 const RETRY_INTERVAL_MS = 60 * 1000;
 const RETRY_LIMIT = 10;
@@ -17,6 +18,11 @@ async function retryFailedNotifications(sb) {
     .limit(RETRY_LIMIT);
   if (error) {
     console.error("[retryFailedNotifications] fetch failed:", error.message || error);
+    if (isSupabaseTimeoutError(error)) {
+      const timeoutErr = new Error(error.message || "timeout");
+      timeoutErr.name = "TimeoutError";
+      throw timeoutErr;
+    }
     return;
   }
   for (const n of failed || []) {
@@ -50,12 +56,15 @@ function startRetryNotificationsWorker() {
     console.warn("[retryNotifications] skipped: service supabase is not configured");
     return;
   }
+  const gate = createBackgroundPause({ staggerMs: STAGGER_MS.retryNotifications });
   workerTimer = setInterval(async () => {
-    if (running) return;
+    if (running || gate.shouldSkip()) return;
     running = true;
     try {
       await retryFailedNotifications(sb);
+      gate.noteSuccess();
     } catch (e) {
+      if (isSupabaseTimeoutError(e)) gate.noteTimeout();
       console.error("[retryNotifications] worker tick failed:", e && (e.message || e));
     } finally {
       running = false;

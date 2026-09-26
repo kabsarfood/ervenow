@@ -328,16 +328,51 @@
     }
   }
 
+  var ordersPollBusy = false;
+
+  function pauseOrdersPoll() {
+    if (pollTimer != null) {
+      clearInterval(pollTimer);
+      pollTimer = null;
+    }
+  }
+
+  function startOrdersPoll(runNow) {
+    if (typeof document !== "undefined" && document.hidden) return;
+    if (pollTimer == null) {
+      pollTimer = setInterval(function () {
+        if ((typeof document !== "undefined" && document.hidden) || ordersPollBusy) return;
+        ordersPollBusy = true;
+        pollTick()
+          .catch(function () {})
+          .finally(function () {
+            ordersPollBusy = false;
+          });
+      }, POLL_MS);
+    }
+    if (runNow && !ordersPollBusy) {
+      ordersPollBusy = true;
+      pollTick()
+        .catch(function () {})
+        .finally(function () {
+          ordersPollBusy = false;
+        });
+    }
+  }
+
   function startOperationalLoops() {
     stopOperationalLoops();
-    pollTimer = setInterval(function () {
-      pollTick().catch(function () {});
-    }, POLL_MS);
+    startOrdersPoll(false);
     startPresenceLocationLoop();
     if (!locationHideBound) {
       locationHideBound = true;
       document.addEventListener("visibilitychange", function () {
-        if (document.hidden) stopTrackWatch();
+        if (document.hidden) {
+          stopTrackWatch();
+          pauseOrdersPoll();
+          return;
+        }
+        startOrdersPoll(true);
       });
     }
   }

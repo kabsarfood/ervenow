@@ -513,6 +513,42 @@
         }
       }
 
+      var ordersListBusy = false;
+
+      function stopOrdersListPoll() {
+        if (pollTimer) {
+          clearInterval(pollTimer);
+          pollTimer = null;
+        }
+      }
+
+      function startOrdersListPoll(runNow) {
+        if (document.hidden) return;
+        if (!pollTimer) {
+          pollTimer = setInterval(function () {
+            if (document.hidden || ordersListBusy) return;
+            ordersListBusy = true;
+            Promise.resolve(loadOrders()).finally(function () {
+              ordersListBusy = false;
+            });
+          }, 45000);
+        }
+        if (runNow && !ordersListBusy) {
+          ordersListBusy = true;
+          Promise.resolve(loadOrders()).finally(function () {
+            ordersListBusy = false;
+          });
+        }
+      }
+
+      document.addEventListener("visibilitychange", function () {
+        if (document.hidden) {
+          stopOrdersListPoll();
+          return;
+        }
+        if (token) startOrdersListPoll(true);
+      });
+
       async function init() {
         if (!token) {
           document.body.innerHTML =
@@ -543,7 +579,7 @@
           document.getElementById("phoneLine").textContent = phone;
 
           await loadOrders();
-          pollTimer = setInterval(loadOrders, 45000);
+          startOrdersListPoll(false);
           startLocationLoop();
           sendLocationToActiveOrders();
         } catch (e) {

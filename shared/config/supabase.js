@@ -40,6 +40,44 @@ function isSupabaseNetworkError(err) {
   return !!getSupabaseFetchErrorHint(err);
 }
 
+const SUPABASE_READ_TIMEOUT_MS = Math.max(
+  1000,
+  Math.min(20000, Number(process.env.SUPABASE_READ_TIMEOUT_MS) || 8000)
+);
+
+function isSupabaseTimeoutError(err) {
+  if (!err) return false;
+  const name = String(err.name || (err.cause && err.cause.name) || "");
+  if (name === "TimeoutError" || name === "AbortError") return true;
+  const code = supabaseFetchErrorCode(err);
+  if (
+    code === "UND_ERR_HEADERS_TIMEOUT" ||
+    code === "UND_ERR_BODY_TIMEOUT" ||
+    code === "UND_ERR_CONNECT_TIMEOUT" ||
+    code === "ETIMEDOUT"
+  ) {
+    return true;
+  }
+  const msg = String(err.message || err.details || err || "");
+  return /timeout|aborted|upstream request timeout/i.test(msg);
+}
+
+/** مهلة على GET/HEAD فقط. الكتابة، ومنها الحركة المالية حتى لو حملت Idempotency-Key، بلا هذه المهلة. */
+function applyReadTimeout(input, init) {
+  const method = requestMethod(input, init);
+  if (method !== "GET" && method !== "HEAD" && method !== "OPTIONS") return init;
+  if (typeof AbortSignal === "undefined" || typeof AbortSignal.timeout !== "function") return init;
+  const timeoutSignal = AbortSignal.timeout(SUPABASE_READ_TIMEOUT_MS);
+  const existing = init && init.signal;
+  let signal = timeoutSignal;
+  if (existing && typeof AbortSignal.any === "function") {
+    signal = AbortSignal.any([existing, timeoutSignal]);
+  } else if (existing) {
+    signal = existing;
+  }
+  return Object.assign({}, init || {}, { signal });
+}
+
 function requestMethod(input, init) {
   if (init && init.method) return String(init.method).toUpperCase();
   if (input && typeof input === "object" && input.method) return String(input.method).toUpperCase();
@@ -68,10 +106,12 @@ function wrapFetchWithRetry(baseFetch) {
     const attempts = requestIsIdempotent(input, init) ? configured : 1;
     let lastErr;
     for (let i = 0; i < attempts; i += 1) {
+      const nextInit = applyReadTimeout(input, init);
       try {
-        return await baseFetch(input, init);
+        return await baseFetch(input, nextInit);
       } catch (err) {
         lastErr = err;
+        if (isSupabaseTimeoutError(err)) throw err;
         const code = supabaseFetchErrorCode(err);
         const retryable =
           code === "ECONNRESET" ||
@@ -173,5 +213,8 @@ module.exports = {
   getServiceRoleKey,
   getSupabaseFetchErrorHint,
   isSupabaseNetworkError,
+  isSupabaseTimeoutError,
+  applyReadTimeout,
+  SUPABASE_READ_TIMEOUT_MS,
   supabaseFetchErrorCode,
 };

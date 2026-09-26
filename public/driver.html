@@ -1054,9 +1054,76 @@
         loadOrders();
       };
 
+      var driverListBusy = false;
+      var driverWalletBusy = false;
+      var driverWalletTimer = null;
+
+      function stopDriverListPoll() {
+        if (pollTimer) {
+          clearInterval(pollTimer);
+          pollTimer = null;
+        }
+      }
+
+      function startDriverListPoll(runNow) {
+        if (document.hidden) return;
+        if (!pollTimer) {
+          pollTimer = setInterval(function () {
+            if (document.hidden || driverListBusy) return;
+            driverListBusy = true;
+            Promise.resolve(loadOrders()).finally(function () {
+              driverListBusy = false;
+            });
+          }, 45000);
+        }
+        if (runNow && !driverListBusy) {
+          driverListBusy = true;
+          Promise.resolve(loadOrders()).finally(function () {
+            driverListBusy = false;
+          });
+        }
+      }
+
+      function stopDriverWalletPoll() {
+        if (driverWalletTimer) {
+          clearInterval(driverWalletTimer);
+          driverWalletTimer = null;
+        }
+      }
+
+      function startDriverWalletPoll(runNow) {
+        if (document.hidden) return;
+        if (!driverWalletTimer) {
+          driverWalletTimer = setInterval(function () {
+            if (document.hidden || driverWalletBusy) return;
+            driverWalletBusy = true;
+            Promise.resolve(refreshDriverWallet()).finally(function () {
+              driverWalletBusy = false;
+            });
+          }, 60000);
+        }
+        if (runNow && !driverWalletBusy) {
+          driverWalletBusy = true;
+          Promise.resolve(refreshDriverWallet()).finally(function () {
+            driverWalletBusy = false;
+          });
+        }
+      }
+
+      document.addEventListener("visibilitychange", function () {
+        if (document.hidden) {
+          stopDriverListPoll();
+          stopDriverWalletPoll();
+          return;
+        }
+        startDriverListPoll(true);
+        startDriverWalletPoll(true);
+      });
+
       document.getElementById("driverLogout").onclick = function (e) {
         e.preventDefault();
         if (pollTimer) clearInterval(pollTimer);
+        if (driverWalletTimer) clearInterval(driverWalletTimer);
         stopLocationLoop();
         stopProximityLoop();
         window.PlatformAPI.setToken("");
@@ -1067,9 +1134,9 @@
         initDriverMap();
         await loadMe();
         await loadOrders();
-        pollTimer = setInterval(loadOrders, 45000);
+        startDriverListPoll(false);
         startPresenceLocationLoop();
-        setInterval(refreshDriverWallet, 60000);
+        startDriverWalletPoll(false);
       })();
     </script>
   </body>

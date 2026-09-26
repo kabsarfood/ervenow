@@ -225,10 +225,27 @@
     } catch (_) {}
   }
 
-  function startOrderBoardPolling() {
+  var boardPollBusy = false;
+
+  function startOrderBoardPolling(runNow) {
     stopOrderBoardPolling();
+    if (typeof document !== "undefined" && document.hidden) return;
+    if (runNow && !boardPollBusy) {
+      boardPollBusy = true;
+      refreshOrderBoardLive()
+        .catch(function () {})
+        .finally(function () {
+          boardPollBusy = false;
+        });
+    }
     boardPollTimer = setInterval(function () {
-      refreshOrderBoardLive().catch(function () {});
+      if ((typeof document !== "undefined" && document.hidden) || boardPollBusy) return;
+      boardPollBusy = true;
+      refreshOrderBoardLive()
+        .catch(function () {})
+        .finally(function () {
+          boardPollBusy = false;
+        });
     }, BOARD_POLL_MS);
   }
 
@@ -239,18 +256,34 @@
     }
   }
 
+  var boardLiveWanted = false;
+
   function startOrderBoardLive() {
+    boardLiveWanted = true;
     connectOrderBoardSocket();
     startOrderBoardPolling();
   }
 
   function stopOrderBoardLive() {
+    boardLiveWanted = false;
     if (boardRefreshTimer) {
       clearTimeout(boardRefreshTimer);
       boardRefreshTimer = null;
     }
     stopOrderBoardPolling();
     disconnectOrderBoardSocket();
+  }
+
+  if (typeof document !== "undefined" && !startOrderBoardLive.visibilityBound) {
+    startOrderBoardLive.visibilityBound = true;
+    document.addEventListener("visibilitychange", function () {
+      if (!boardLiveWanted) return;
+      if (document.hidden) {
+        stopOrderBoardPolling();
+        return;
+      }
+      startOrderBoardPolling(true);
+    });
   }
 
   async function loadCoreData() {

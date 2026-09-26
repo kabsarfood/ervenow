@@ -641,6 +641,7 @@
         loadDashboard();
         loadSvcPaySettings();
         var dashTimer = null;
+        var dashBusy = false;
         function stopDashPoll() {
           if (dashTimer) {
             clearInterval(dashTimer);
@@ -651,8 +652,11 @@
           stopDashPoll();
           if (document.hidden) return;
           dashTimer = setInterval(function () {
-            if (document.hidden) return;
-            loadDashboard();
+            if (document.hidden || dashBusy) return;
+            dashBusy = true;
+            Promise.resolve(loadDashboard()).finally(function () {
+              dashBusy = false;
+            });
           }, 30000);
         }
         document.addEventListener("visibilitychange", function () {
@@ -660,7 +664,12 @@
             stopDashPoll();
             return;
           }
-          loadDashboard();
+          if (!dashBusy) {
+            dashBusy = true;
+            Promise.resolve(loadDashboard()).finally(function () {
+              dashBusy = false;
+            });
+          }
           startDashPoll();
         });
         window.addEventListener("pagehide", stopDashPoll);

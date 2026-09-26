@@ -1,5 +1,6 @@
-const { createServiceClient } = require("../../shared/config/supabase");
+const { createServiceClient, isSupabaseTimeoutError } = require("../../shared/config/supabase");
 const { logger } = require("../../shared/utils/logger");
+const { createBackgroundPause, STAGGER_MS } = require("../../shared/utils/backgroundPause");
 
 const PURGE_INTERVAL_MS = 24 * 60 * 60 * 1000;
 const RETENTION_YEARS = 1;
@@ -65,12 +66,15 @@ function startClosedOrdersPurgeWorker() {
     return;
   }
 
+  const gate = createBackgroundPause({ staggerMs: STAGGER_MS.purgeClosedOrders });
   const tick = async () => {
-    if (running) return;
+    if (running || gate.shouldSkip()) return;
     running = true;
     try {
       await purgeClosedOrdersOlderThanOneYear(sb);
+      gate.noteSuccess();
     } catch (e) {
+      if (isSupabaseTimeoutError(e)) gate.noteTimeout();
       logger.error({ err: e && (e.message || String(e)) }, "[purgeClosedOrders] worker tick failed");
     } finally {
       running = false;

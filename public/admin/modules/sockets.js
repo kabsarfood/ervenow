@@ -15,19 +15,46 @@ app.getAdminSocketOrigin = function () {
   return window.location.origin;
 }
 
-app.startAdminSocketFallbackPolling = function () {
-  if (app.adminSocketFallbackTimer) return;
-  app.adminSocketFallbackTimer = setInterval(function () {
-    if (app.adminDashboardSocketConnected()) {
+app.runAdminSocketFallbackTick = function () {
+  if (document.hidden || app.adminFallbackBusy) return;
+  if (app.adminDashboardSocketConnected()) {
+    if (app.adminSocketFallbackTimer) {
       clearInterval(app.adminSocketFallbackTimer);
       app.adminSocketFallbackTimer = null;
+    }
+    return;
+  }
+  app.adminFallbackBusy = true;
+  var pending = [];
+  if (app.hasPermission("orders")) {
+    pending.push(Promise.resolve(app.silentLoadRecentOrdersForRealtime()));
+  }
+  pending.push(Promise.resolve(app.refreshLiveDriversAndMap()));
+  Promise.all(pending).finally(function () {
+    app.adminFallbackBusy = false;
+  });
+}
+
+app.startAdminSocketFallbackPolling = function () {
+  if (app.adminSocketFallbackTimer || document.hidden) return;
+  app.adminSocketFallbackTimer = setInterval(app.runAdminSocketFallbackTick, 10000);
+}
+
+if (!app.adminFallbackVisibilityBound) {
+  app.adminFallbackVisibilityBound = true;
+  document.addEventListener("visibilitychange", function () {
+    if (document.hidden) {
+      if (app.adminSocketFallbackTimer) {
+        clearInterval(app.adminSocketFallbackTimer);
+        app.adminSocketFallbackTimer = null;
+      }
       return;
     }
-    if (app.hasPermission("orders") && !app.adminDashboardSocketConnected()) {
-      void app.silentLoadRecentOrdersForRealtime();
+    if (!app.adminDashboardSocketConnected()) {
+      app.runAdminSocketFallbackTick();
+      app.startAdminSocketFallbackPolling();
     }
-    void app.refreshLiveDriversAndMap();
-  }, 10000);
+  });
 }
 
 app.initAdminDashboardSocket = function () {

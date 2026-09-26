@@ -1,5 +1,6 @@
-const { createServiceClient } = require("../../shared/config/supabase");
+const { createServiceClient, isSupabaseTimeoutError } = require("../../shared/config/supabase");
 const { logger } = require("../../shared/utils/logger");
+const { createBackgroundPause, STAGGER_MS } = require("../../shared/utils/backgroundPause");
 const { notifyGasDeliveryProviders } = require("../../shared/services/gasDeliveryNotify");
 const {
   GAS_RADIUS_EXPANDED_KM,
@@ -69,6 +70,11 @@ async function runGasRadiusExpansionTick(sb) {
     .limit(BATCH_LIMIT);
   if (error) {
     logger.error({ err: error.message }, "[gasRadiusExpand] fetch orders");
+    if (isSupabaseTimeoutError(error)) {
+      const timeoutErr = new Error(error.message || "timeout");
+      timeoutErr.name = "TimeoutError";
+      throw timeoutErr;
+    }
     return;
   }
   for (const order of orders || []) {
@@ -87,12 +93,15 @@ function startGasRadiusExpandWorker() {
     console.warn("[gasRadiusExpand] skipped: service supabase is not configured");
     return;
   }
+  const gate = createBackgroundPause({ staggerMs: STAGGER_MS.gasRadius });
   workerTimer = setInterval(async () => {
-    if (running) return;
+    if (running || gate.shouldSkip()) return;
     running = true;
     try {
       await runGasRadiusExpansionTick(sb);
+      gate.noteSuccess();
     } catch (e) {
+      if (isSupabaseTimeoutError(e)) gate.noteTimeout();
       logger.error({ err: e && (e.message || String(e)) }, "[gasRadiusExpand] worker tick failed");
     } finally {
       running = false;

@@ -1,7 +1,8 @@
 const fs = require("fs");
 const path = require("path");
-const { createServiceClient } = require("../config/supabase");
+const { createServiceClient, isSupabaseTimeoutError } = require("../config/supabase");
 const { readPlatformSetting, invalidatePlatformSettings } = require("./platformSettingsCache");
+const { createBackgroundPause, STAGGER_MS } = require("./backgroundPause");
 
 const filePath = path.join(__dirname, "..", "..", "data", "live-map-public.json");
 const PUBLIC_KEY = "live_map_public_enabled";
@@ -11,6 +12,7 @@ let memLoaded = false;
 let memEnabled = true;
 let memLoadedAt = 0;
 let dbRefreshBusy = false;
+const refreshGate = createBackgroundPause({ staggerMs: STAGGER_MS.liveMapPublic });
 
 function parseEnabledValue(raw) {
   if (raw === false || raw === 0) return false;
@@ -66,7 +68,7 @@ async function upsertDatabase(enabled) {
 }
 
 async function refreshFromDatabase() {
-  if (dbRefreshBusy) return;
+  if (dbRefreshBusy || refreshGate.shouldSkip()) return;
   dbRefreshBusy = true;
   try {
     const sb = createServiceClient();
@@ -75,6 +77,7 @@ async function refreshFromDatabase() {
       return;
     }
     const value = await readPlatformSetting(sb, PUBLIC_KEY);
+    refreshGate.noteSuccess();
     memLoadedAt = Date.now();
     if (value != null) {
       memEnabled = parseEnabledValue(value);
@@ -82,6 +85,7 @@ async function refreshFromDatabase() {
       writeFileSync(memEnabled);
     }
   } catch (e) {
+    if (isSupabaseTimeoutError(e)) refreshGate.noteTimeout();
     console.warn("[liveMapPublic] db refresh:", e && (e.message || e));
   } finally {
     dbRefreshBusy = false;
