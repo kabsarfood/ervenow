@@ -9,9 +9,11 @@ const {
 } = require("../../shared/utils/gasDeliveryRadius");
 
 const POLL_INTERVAL_MS = 60 * 1000;
+const EMPTY_BACKOFF_MS = 3 * 60 * 1000;
 const BATCH_LIMIT = 40;
 let workerTimer = null;
 let running = false;
+let emptyUntil = 0;
 
 async function expandGasRadiusForOrder(sb, order) {
   if (!sb || !order || !order.id) return false;
@@ -60,9 +62,10 @@ async function expandGasRadiusForOrder(sb, order) {
 }
 
 async function runGasRadiusExpansionTick(sb) {
+  if (Date.now() < emptyUntil) return;
   const { data: orders, error } = await sb
     .from("orders")
-    .select("*")
+    .select("id, data, created_at, delivery_status, provider_id, service_type, drop_lat, drop_lng, pickup_lat, pickup_lng")
     .eq("service_type", "gas_delivery")
     .in("delivery_status", ["new", "pending"])
     .is("provider_id", null)
@@ -77,6 +80,11 @@ async function runGasRadiusExpansionTick(sb) {
     }
     return;
   }
+  if (!orders || !orders.length) {
+    emptyUntil = Date.now() + EMPTY_BACKOFF_MS;
+    return;
+  }
+  emptyUntil = 0;
   for (const order of orders || []) {
     try {
       await expandGasRadiusForOrder(sb, order);

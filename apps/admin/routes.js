@@ -2797,10 +2797,17 @@ router.post("/activate-customer", requireAuth, requireRole("admin"), requireAdmi
   }
 });
 
+const adminStatsCache = new Map();
+const ADMIN_STATS_CACHE_MS = 90 * 1000;
+
 router.get("/stats", requireAuth, requireRole("admin"), requireAdminPermission("dashboard"), async (req, res) => {
   try {
     const rangeMeta = resolveRangeWindow(req.query.range);
+    const cacheKey = String(rangeMeta.range || "default");
+    const hit = adminStatsCache.get(cacheKey);
+    if (hit && Date.now() - hit.at < ADMIN_STATS_CACHE_MS) return ok(res, hit.value);
     const stats = await computeAdminDashboardStats(req.supabase, rangeMeta);
+    adminStatsCache.set(cacheKey, { at: Date.now(), value: stats });
     return ok(res, stats);
   } catch (e) {
     return fail(res, e.message || String(e), 500);

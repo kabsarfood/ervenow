@@ -707,9 +707,15 @@ async function getLedgerTreasuryPanelPayload(sb) {
   };
 }
 
+const financeSummaryCache = { at: 0, value: null };
+const FINANCE_SUMMARY_CACHE_MS = 90 * 1000;
+
 async function getAdminFinanceSummaryFromLedger(sb) {
   if (!sb) {
     return { ok: false, reason: "missing_client" };
+  }
+  if (financeSummaryCache.value && Date.now() - financeSummaryCache.at < FINANCE_SUMMARY_CACHE_MS) {
+    return financeSummaryCache.value;
   }
 
   try {
@@ -747,7 +753,7 @@ async function getAdminFinanceSummaryFromLedger(sb) {
       });
     }
 
-    return {
+    const summary = {
       ok: true,
       source: "ervenow_ledger",
       platform_commission_total: round2(Number(row.platform_commission_total) || 0),
@@ -758,6 +764,9 @@ async function getAdminFinanceSummaryFromLedger(sb) {
       financial_alerts,
       feature_flags: flags,
     };
+    financeSummaryCache.at = Date.now();
+    financeSummaryCache.value = summary;
+    return summary;
   } catch (e) {
     if (isMissingLedgerSchemaError(e)) {
       return { ok: false, reason: "migration_missing", detail: String(e.message || e) };

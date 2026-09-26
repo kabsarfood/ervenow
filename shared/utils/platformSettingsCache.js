@@ -3,7 +3,7 @@
  * أول طلب يقرأ القاعدة، ثم تُخدم النسخة حتى 45 ثانية أو حتى invalidate بعد الحفظ.
  */
 
-const TTL_MS = 45 * 1000;
+const TTL_MS = 180 * 1000;
 const rows = new Map();
 
 function fresh(entry) {
