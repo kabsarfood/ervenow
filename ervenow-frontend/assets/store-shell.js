@@ -174,11 +174,10 @@
       '<header class="dash-site-header store-site-header">' +
       '<div class="dash-site-header__inner">' +
       '<div class="dash-site-header__brand">' +
-      '<a class="dash-site-header__logo" href="' +
+      '<a class="dash-site-header__logo erv-wordmark-host" href="' +
       ((global.ErvenowRoleRouting && ErvenowRoleRouting.portalPathForRole("merchant")) || "/merchant-preview") +
       '">' +
-      "ERVENOW" +
-      '<span class="dash-site-header__logo-dot" aria-hidden="true"></span>' +
+      '<span class="erv-wordmark" dir="ltr"><span class="erv-wordmark__name"><span class="erv-wordmark__erve">ERVE</span><span class="erv-wordmark__now">NOW</span></span><span class="erv-wordmark__tag">PLATFORM</span></span>' +
       "</a>" +
       '<p class="dash-site-header__tag" id="storeShellPageTag">' +
       pageTag +
@@ -223,13 +222,13 @@
     if (!document.querySelector('link[data-erv-notification-center-css="1"]')) {
       var l = document.createElement("link");
       l.rel = "stylesheet";
-      l.href = "/assets/notification-center.css";
+      l.href = "/assets/notification-center.css?erv=20260922n1";
       l.setAttribute("data-erv-notification-center-css", "1");
       document.head.appendChild(l);
     }
     if (!document.querySelector('script[data-erv-notification-center-js="1"]')) {
       var s = document.createElement("script");
-      s.src = "/assets/notification-center.js";
+      s.src = "/assets/notification-center.js?erv=20260922n1";
       s.defer = true;
       s.setAttribute("data-erv-notification-center-js", "1");
       document.head.appendChild(s);

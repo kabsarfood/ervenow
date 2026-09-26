@@ -297,7 +297,25 @@
     (document.head || document.documentElement).appendChild(s);
   }
 
+  function ensureWordmark() {
+    if (global.__ervWordmarkInjected) return;
+    global.__ervWordmarkInjected = true;
+    if (!document.querySelector('link[href*="erv-wordmark.css"]')) {
+      var link = document.createElement("link");
+      link.rel = "stylesheet";
+      link.href = "/assets/erv-wordmark.css?erv=20260926desk";
+      (document.head || document.documentElement).appendChild(link);
+    }
+    if (!document.querySelector('script[src*="erv-wordmark.js"]')) {
+      var s = document.createElement("script");
+      s.src = "/assets/erv-wordmark.js?erv=20260926wm";
+      s.defer = true;
+      (document.head || document.documentElement).appendChild(s);
+    }
+  }
+
   enforceViewportMeta();
+  ensureWordmark();
   bootMobileShell();
   setViewportVars();
   clampHorizontalScroll();

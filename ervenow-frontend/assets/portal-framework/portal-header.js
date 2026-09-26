@@ -29,9 +29,9 @@
       '<a class="pf-header__logo pf-header__logo--portal" href="' +
       esc(homeHref) +
       '">' +
-      '<span class="pf-header__platform-dot" aria-hidden="true"></span>ERVENOW</a></div>' +
+      '<span class="erv-wordmark" dir="ltr"><span class="erv-wordmark__name"><span class="erv-wordmark__erve">ERVE</span><span class="erv-wordmark__now">NOW</span></span><span class="erv-wordmark__tag">PLATFORM</span></span></a></div>' +
       '<div class="pf-header__center" aria-label="البوابة">' +
-      '<span class="pf-header__center-brand">ERVENOW</span>' +
+      '<span class="pf-header__center-brand erv-wordmark-host"><span class="erv-wordmark" dir="ltr"><span class="erv-wordmark__name"><span class="erv-wordmark__erve">ERVE</span><span class="erv-wordmark__now">NOW</span></span><span class="erv-wordmark__tag">PLATFORM</span></span></span>' +
       '<span class="pf-header__center-title" data-pf-field="portal-title">' +
       esc(portalTitle) +
       "</span></div>" +
@@ -52,7 +52,7 @@
     return (
       '<div class="pf-header__left">' +
       '<button type="button" class="pf-menu-btn" data-pf-action="open-sidebar" aria-label="فتح القائمة">☰</button>' +
-      '<a class="pf-header__logo" href="/">ERVENOW</a>' +
+      '<a class="pf-header__logo erv-wordmark-host" href="/" aria-label="ERVENOW PLATFORM"><span class="erv-wordmark" dir="ltr"><span class="erv-wordmark__name"><span class="erv-wordmark__erve">ERVE</span><span class="erv-wordmark__now">NOW</span></span><span class="erv-wordmark__tag">PLATFORM</span></span></a>' +
       '<div class="pf-header__meta">' +
       '<span class="pf-header__name" data-pf-field="name">' +
       esc(opts.name || "—") +

@@ -114,7 +114,7 @@
     if (document.body && document.body.classList.contains("erv-preview-lab")) return;
     if (document.querySelector('script[src*="mobile-orders-nav-badge.js"]')) return;
     var s = document.createElement("script");
-    s.src = shellAssetUrl("/assets/mobile-orders-nav-badge.js");
+    s.src = "/assets/mobile-orders-nav-badge.js?erv=20260926badge1";
     s.defer = true;
     document.head.appendChild(s);
   }
@@ -297,7 +297,25 @@
     (document.head || document.documentElement).appendChild(s);
   }
 
+  function ensureWordmark() {
+    if (global.__ervWordmarkInjected) return;
+    global.__ervWordmarkInjected = true;
+    if (!document.querySelector('link[href*="erv-wordmark.css"]')) {
+      var link = document.createElement("link");
+      link.rel = "stylesheet";
+      link.href = "/assets/erv-wordmark.css?erv=20260926desk";
+      (document.head || document.documentElement).appendChild(link);
+    }
+    if (!document.querySelector('script[src*="erv-wordmark.js"]')) {
+      var s = document.createElement("script");
+      s.src = "/assets/erv-wordmark.js?erv=20260926wm";
+      s.defer = true;
+      (document.head || document.documentElement).appendChild(s);
+    }
+  }
+
   enforceViewportMeta();
+  ensureWordmark();
   bootMobileShell();
   setViewportVars();
   clampHorizontalScroll();

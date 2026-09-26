@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-09-26T17:36:36.736Z",
+  "updated_at": "2026-09-26T21:01:16.327Z",
   "portal_visits": {
     "customer": {
       "visits": 31,
@@ -7,9 +7,9 @@
       "last_at": "2026-09-22T20:59:17.085Z"
     },
     "merchant": {
-      "visits": 502,
+      "visits": 508,
       "unique_users": {},
-      "last_at": "2026-09-26T17:36:36.736Z"
+      "last_at": "2026-09-26T20:39:35.400Z"
     },
     "driver": {
       "visits": 499,
@@ -35,9 +35,9 @@
       "active_users": {}
     },
     "merchant": {
-      "visits": 429,
+      "visits": 435,
       "unique_users": {},
-      "last_at": "2026-09-26T17:36:36.736Z",
+      "last_at": "2026-09-26T20:39:35.400Z",
       "active_users": {}
     },
     "driver": {

@@ -1,0 +1,161 @@
+/**
+ * ERVENOW wordmark — ERVE برتقالي · NOW أخضر · PLATFORM صغيرة بالأسود
+ */
+@import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800&display=swap");
+
+.erv-wordmark {
+  --erv-wm-size: clamp(0.92rem, 3.6vw, 1.2rem);
+  --erv-wm-orange: #ff7a00;
+  --erv-wm-green: #146c43;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  direction: ltr;
+  unicode-bidi: isolate;
+  line-height: 1;
+  white-space: nowrap;
+  text-decoration: none;
+  max-width: 100%;
+}
+
+.erv-wordmark__name {
+  display: inline-flex;
+  align-items: baseline;
+  font-family: "Montserrat", "Arial Black", "Segoe UI", sans-serif;
+  font-weight: 800;
+  font-size: var(--erv-wm-size);
+  letter-spacing: -0.035em;
+  line-height: 1;
+}
+
+.erv-wordmark__erve {
+  color: var(--erv-wm-orange);
+}
+
+.erv-wordmark__now {
+  color: var(--erv-wm-green);
+}
+
+.erv-wordmark__tag {
+  font-family: "Montserrat", "Segoe UI", sans-serif;
+  font-weight: 700;
+  font-size: calc(var(--erv-wm-size) * 0.36);
+  letter-spacing: 0.14em;
+  line-height: 1;
+  color: #111111;
+  transform: translateY(1px);
+}
+
+.erv-wordmark-host {
+  gap: 0 !important;
+  color: inherit;
+}
+
+.dash-site-header__logo:has(.erv-wordmark),
+.pf-header__logo:has(.erv-wordmark),
+.lp-header__logo-slot:has(.erv-wordmark) {
+  overflow: visible !important;
+  gap: 0 !important;
+  text-overflow: clip !important;
+}
+
+.lp-header__logo-slot .erv-wordmark,
+.lp-header__brand-mid .erv-wordmark {
+  --erv-wm-size: clamp(0.95rem, 3.4vw, 1.28rem);
+}
+
+html.erv-mobile-shell body.lp-home-premium .lp-header__brand-mid .erv-wordmark,
+html.erv-mobile-shell body.lp-home-premium .lp-header__logo-slot .erv-wordmark {
+  --erv-wm-size: clamp(1.05rem, 4.6vw, 1.28rem);
+}
+
+@media (min-width: 1025px) {
+  html:not(.erv-mobile-shell) body.lp-home-premium .lp-header__logo-slot:has(.erv-wordmark) {
+    display: inline-flex !important;
+    align-items: center !important;
+    width: auto !important;
+    max-width: 320px !important;
+    min-width: 0 !important;
+    height: auto !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+    overflow: visible !important;
+  }
+
+  html:not(.erv-mobile-shell) .lp-header__logo-slot .erv-wordmark,
+  html:not(.erv-mobile-shell) .dash-site-header__logo .erv-wordmark,
+  html:not(.erv-mobile-shell) .pf-header__logo .erv-wordmark,
+  html:not(.erv-mobile-shell) .lp-footer__brand .erv-wordmark {
+    --erv-wm-size: 1.7rem;
+  }
+
+  html:not(.erv-mobile-shell) .lp-footer__brand .erv-wordmark,
+  html:not(.erv-mobile-shell) .pf-sidebar__brand .erv-wordmark {
+    --erv-wm-size: 1.35rem;
+  }
+
+  html:not(.erv-mobile-shell) .erv-wordmark__erve {
+    color: #ff7a00 !important;
+  }
+
+  html:not(.erv-mobile-shell) .erv-wordmark__now {
+    color: #146c43 !important;
+  }
+
+  html:not(.erv-mobile-shell) .erv-wordmark__tag {
+    color: #111111 !important;
+  }
+}
+
+.lp-footer__brand .erv-wordmark,
+.pf-sidebar__brand .erv-wordmark {
+  --erv-wm-size: 1.02rem;
+}
+
+.erv-harmony-identity .erv-wordmark {
+  --erv-wm-size: clamp(0.82rem, 3.6vw, 1.05rem);
+}
+
+.pf-header__center-brand:has(.erv-wordmark) {
+  display: none !important;
+}
+
+.pf-header__logo--portal:has(.erv-wordmark),
+.pf-header__logo:has(.erv-wordmark) {
+  max-width: none !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+}
+
+.pf-header__logo .erv-wordmark,
+.pf-sidebar__brand .erv-wordmark {
+  --erv-wm-size: clamp(0.72rem, 2.8vw, 0.98rem);
+}
+
+@media (max-width: 360px) {
+  .erv-wordmark {
+    --erv-wm-size: 0.92rem;
+    gap: 4px;
+  }
+
+  html.erv-mobile-shell body.lp-home-premium .lp-header__logo-slot .erv-wordmark {
+    --erv-wm-size: 0.98rem;
+  }
+
+  .erv-wordmark__tag {
+    letter-spacing: 0.08em;
+  }
+}
+
+html.erv-mobile-shell body.lp-home-premium .lp-header__brand-mid:has(.erv-wordmark) .lp-brand__tag,
+body.lp-home-premium .lp-header__brand-mid:has(.erv-wordmark) .lp-brand__tag {
+  display: none !important;
+}
+
+img[src*="ervenow-logo"],
+#ervBrandLogo,
+.lp-header__logo-img,
+.erv-harmony-identity__logo {
+  display: none !important;
+}

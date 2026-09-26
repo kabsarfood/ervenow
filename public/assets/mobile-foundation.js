@@ -31,7 +31,6 @@
     { key: "stores", href: "/stores", label: "متاجر" },
     { key: "services", href: "/services", label: "خدمات" },
     { key: "delivery", href: "/delivery-services.html", label: "توصيل" },
-    { key: "gas", href: "/gas-delivery.html", label: "غاز" },
   ];
 
   var NAV_ICON_PATHS = {
@@ -39,18 +38,19 @@
     explore: '<circle cx="11" cy="11" r="7"/><path d="m20 20-4.3-4.3"/>',
     orders: '<path d="M9 5H7a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/>',
     account: '<circle cx="12" cy="8" r="3.5"/><path d="M5 20a7 7 0 0 1 14 0"/>',
-    restaurants: '<path d="M8 3v8M12 3v8M8 7h4"/><path d="M6 11h8l-1 10H7L6 11z"/>',
-    stores: '<path d="M6 7h12l-1.2 12H7.2L6 7z"/><path d="M9 7V5a3 3 0 0 1 6 0v2"/>',
-    services: '<path d="M14.7 6.3a1 1 0 0 0-1.4 0l-7 7a1 1 0 0 0 0 1.4l2.6 2.6a1 1 0 0 0 1.4 0l7-7a1 1 0 0 0 0-1.4z"/><path d="m16 4 4 4"/>',
-    delivery: '<path d="M3 7h11v8H3z"/><path d="M14 10h4l2 3v2h-6V10z"/><circle cx="7.5" cy="17.5" r="1.5"/><circle cx="17.5" cy="17.5" r="1.5"/>',
-    gas: '<path d="M8 21h8"/><path d="M12 17V8"/><path d="M9.5 10.5 12 8l2.5 2.5"/><rect x="8" y="4" width="8" height="4" rx="1"/>',
+    restaurants: '<path d="M6 3v6a2 2 0 0 0 4 0V3"/><path d="M8 9v12"/><path d="M18 3v8a3 3 0 0 1-3 3v7"/><path d="M18 3c1.8 1.6 2.4 3.4 1.4 5"/>',
+    stores: '<path d="M6 8h12l-1.1 12H7.1L6 8z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/><path d="M9 12h6"/>',
+    services: '<path d="M4 11.2 12 4l8 7.2"/><path d="M6.5 10.2V20h11V10.2"/><path d="M12 13.5v4.2M10 15.6h4"/>',
+    delivery: '<path d="M3 7h11v9H3z"/><path d="M14 11h4.2L21 14.5V16h-7"/><circle cx="7" cy="18.2" r="1.7"/><circle cx="17.2" cy="18.2" r="1.7"/>',
     cart: '<circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M2 3h2l2.4 12.4a1 1 0 0 0 1 .8h9.8a1 1 0 0 0 1-.8L21 7H6"/>',
   };
 
-  function navIconSvg(name) {
+  function navIconSvg(name, strokeWidth) {
     var paths = NAV_ICON_PATHS[name] || NAV_ICON_PATHS.home;
     return (
-      '<svg class="erv-nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">' +
+      '<svg class="erv-nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="' +
+      (strokeWidth || "1.85") +
+      '" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">' +
       paths +
       "</svg>"
     );
@@ -340,7 +340,7 @@
         opt.href +
         '">' +
         '<span class="erv-plus-nav-sheet__option-icon" aria-hidden="true">' +
-        navIconSvg(opt.key) +
+        navIconSvg(opt.key, "2.15") +
         "</span>" +
         "<span>" +
         opt.label +

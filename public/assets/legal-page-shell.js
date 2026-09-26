@@ -73,13 +73,13 @@
       '<footer class="lp-footer" aria-label="فوتر الصفحة">' +
       '<div class="lp-footer__inner">' +
       '<div class="lp-footer__desktop-only lp-footer__desktop-panel" aria-label="فوتر الدسكتوب">' +
-      '<p class="lp-footer__brand">ERVENOW</p>' +
+      '<p class="lp-footer__brand erv-wordmark-host"><span class="erv-wordmark" dir="ltr"><span class="erv-wordmark__name"><span class="erv-wordmark__erve">ERVE</span><span class="erv-wordmark__now">NOW</span></span><span class="erv-wordmark__tag">PLATFORM</span></span></p>' +
       legalLinks +
       channels +
       rights +
       "</div>" +
       '<div class="lp-footer__mobile-only" aria-label="فوتر الجوال">' +
-      '<p class="lp-footer__brand">ERVENOW</p>' +
+      '<p class="lp-footer__brand erv-wordmark-host"><span class="erv-wordmark" dir="ltr"><span class="erv-wordmark__name"><span class="erv-wordmark__erve">ERVE</span><span class="erv-wordmark__now">NOW</span></span><span class="erv-wordmark__tag">PLATFORM</span></span></p>' +
       legalLinks +
       channels +
       rights +

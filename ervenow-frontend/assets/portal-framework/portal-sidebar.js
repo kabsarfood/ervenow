@@ -92,8 +92,10 @@
     sidebarEl.className = "pf-sidebar";
     sidebarEl.setAttribute("aria-label", opts.ariaLabel || "قائمة البوابة");
     sidebarEl.innerHTML =
-      '<p class="pf-sidebar__brand">' +
-      esc(config.brand || "ERVENOW") +
+      '<p class="pf-sidebar__brand erv-wordmark-host">' +
+      ((config.brand && config.brand !== "ERVENOW")
+        ? esc(config.brand)
+        : '<span class="erv-wordmark" dir="ltr"><span class="erv-wordmark__name"><span class="erv-wordmark__erve">ERVE</span><span class="erv-wordmark__now">NOW</span></span><span class="erv-wordmark__tag">PLATFORM</span></span>') +
       '</p><p class="pf-sidebar__name" data-pf-field="sidebar-name">' +
       esc(opts.sidebarName || "—") +
       '</p><nav class="pf-nav" data-pf-nav></nav>' +

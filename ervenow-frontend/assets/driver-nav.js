@@ -37,9 +37,9 @@
       '<header class="dash-site-header">' +
       '<div class="dash-site-header__inner">' +
       '<div class="dash-site-header__brand">' +
-      '<a class="dash-site-header__logo" href="' +
+      '<a class="dash-site-header__logo erv-wordmark-host" href="' +
       DRIVER_HOME +
-      '">ERVENOW<span class="dash-site-header__logo-dot" aria-hidden="true"></span></a>' +
+      '" aria-label="ERVENOW PLATFORM"><span class="erv-wordmark" dir="ltr"><span class="erv-wordmark__name"><span class="erv-wordmark__erve">ERVE</span><span class="erv-wordmark__now">NOW</span></span><span class="erv-wordmark__tag">PLATFORM</span></span></a>' +
       tagHtml +
       "</div>" +
       '<nav class="dash-site-header__nav" aria-label="تنقل المندوب">' +
