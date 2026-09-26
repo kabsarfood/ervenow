@@ -11,6 +11,8 @@
     { slug: "pizza", icon: "🍕", label: "مطاعم بيتزا" },
     { slug: "cafe", icon: "☕", label: "مقاهي" },
     { slug: "sweets", icon: "🍰", label: "حلويات" },
+    { slug: "shaabiyat_foul", icon: "🫘", label: "شعبيات فوال" },
+    { slug: "shaabiyat_falafel", icon: "🧆", label: "شعبيات فلافل" },
     { slug: "home_producers", icon: "🏠", label: "أسر منتجة" },
   ];
 
@@ -37,6 +39,8 @@
     pizza: 1,
     cafe: 1,
     sweets: 1,
+    shaabiyat_foul: 1,
+    shaabiyat_falafel: 1,
     home_producers: 1,
     burger_broasted: 1,
     breakfast_bakery: 1,
@@ -55,6 +59,8 @@
     if (/pizza|بيتza|بيتزا/i.test(n)) return "pizza";
     if (/cafe|café|قهو|مقه/i.test(n)) return "cafe";
     if (/sweet|حلو/i.test(n)) return "sweets";
+    if (/فوال|foul|فول/i.test(n)) return "shaabiyat_foul";
+    if (/فلافل|falafel/i.test(n)) return "shaabiyat_falafel";
     return null;
   }
 

@@ -27,6 +27,8 @@ const RESTAURANT_CATEGORY_KEYS = [
   "pizza",
   "cafe",
   "sweets",
+  "shaabiyat_foul",
+  "shaabiyat_falafel",
   "home_producers",
 ];
 
@@ -39,6 +41,8 @@ const RESTAURANT_CATEGORY_LABEL_AR = {
   pizza: "مطاعم بيتزا",
   cafe: "مقاهي",
   sweets: "حلويات",
+  shaabiyat_foul: "شعبيات فوال",
+  shaabiyat_falafel: "شعبيات فلافل",
   home_producers: "أسر منتجة",
   /* قيم قديمة — تبقى معترفاً بها */
   bukhari_mandi: "بخاري ومندي (تصنيف سابق)",
@@ -58,6 +62,8 @@ const RESTAURANT_CATEGORY_ICONS = {
   pizza: "🍕",
   cafe: "☕",
   sweets: "🍰",
+  shaabiyat_foul: "🫘",
+  shaabiyat_falafel: "🧆",
   home_producers: "🏠",
   bukhari_mandi: "🍚",
   burger_broasted: "🍔",
@@ -78,6 +84,8 @@ const RESTAURANT_NAME_CUISINE_HINTS = [
   { pattern: /pizza|بيتza|بيتزا/i, slug: "pizza" },
   { pattern: /cafe|café|قهو|مقه/i, slug: "cafe" },
   { pattern: /sweet|حلو/i, slug: "sweets" },
+  { pattern: /فوال|foul|فول/i, slug: "shaabiyat_foul" },
+  { pattern: /فلافل|falafel/i, slug: "shaabiyat_falafel" },
 ];
 
 function inferRestaurantCuisineFromName(name) {
