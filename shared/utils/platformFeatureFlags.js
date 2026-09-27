@@ -152,7 +152,7 @@ async function loadFinancialFeatureFlags(sb) {
   try {
     const { data, error } = await sb
       .from("platform_feature_flags")
-      .select("key, mode, config, updated_at")
+      .select("key, mode, updated_at")
       .in("key", [...FINANCIAL_FEATURE_KEYS]);
 
     if (error) {

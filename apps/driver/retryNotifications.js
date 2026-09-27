@@ -11,7 +11,7 @@ let running = false;
 async function retryFailedNotifications(sb) {
   const { data: failed, error } = await sb
     .from("driver_notifications")
-    .select("id,driver_id,phone,message,attempts,status,created_at")
+    .select("id,driver_id,phone,attempts,status,created_at")
     .eq("status", "failed")
     .lt("attempts", MAX_ATTEMPTS)
     .order("created_at", { ascending: true })
