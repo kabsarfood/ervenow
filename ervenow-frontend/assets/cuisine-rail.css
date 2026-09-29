@@ -1,0 +1,35 @@
+/* شريط تصنيفات: تمرير أصلي سلس بالإصبع، بلا شريط ظاهر */
+.stores-cuisine-scroll,
+.store-prod-cat__scroll {
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  touch-action: pan-x pan-y !important;
+  scroll-snap-type: none !important;
+  scrollbar-width: none !important;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.stores-cuisine-scroll::-webkit-scrollbar,
+.store-prod-cat__scroll::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+.stores-cuisine-scroll.is-dragging,
+.store-prod-cat__scroll.is-dragging {
+  cursor: grabbing;
+  user-select: none;
+}
+
+@media (pointer: fine) {
+  .stores-cuisine-scroll,
+  .store-prod-cat__scroll {
+    cursor: grab;
+  }
+}

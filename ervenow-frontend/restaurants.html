@@ -495,7 +495,8 @@
     <link rel="stylesheet" href="/assets/erv-interactive-surfaces.css?erv=20260612" />
     <link rel="stylesheet" href="/assets/design-system/erv-typography-pr1-tokens.css" />
     <link rel="stylesheet" href="/assets/design-system/erv-typography-guest-hub-pr1.css" />
-    <link rel="stylesheet" href="/assets/restaurants-polish.css?erv=20260930rst6" />
+    <link rel="stylesheet" href="/assets/restaurants-polish.css?erv=20260930rst7" />
+    <link rel="stylesheet" href="/assets/cuisine-rail.css?erv=20260930rail1" />
   </head>
   <body class="guest-shell-page stores-page restaurants-page erv-typography-pr1-guest-hub">
     <header class="dash-site-header">
@@ -612,73 +613,6 @@
     </script>
     <script src="/assets/section-hub.js"></script>
     <script src="/assets/section-hub-restaurants.js"></script>
-    <script>
-      (function () {
-        var bar = document.getElementById("storesCuisineBar");
-        if (!bar) return;
-        var drag = null;
-        var suppressClick = false;
-
-        bar.addEventListener("pointerdown", function (e) {
-          if (e.pointerType === "mouse" && e.button !== 0) return;
-          if (bar.scrollWidth <= bar.clientWidth + 2) return;
-          drag = {
-            id: e.pointerId,
-            type: e.pointerType,
-            x: e.clientX,
-            y: e.clientY,
-            left: bar.scrollLeft,
-            moved: false,
-            axis: ""
-          };
-        });
-
-        bar.addEventListener("pointermove", function (e) {
-          if (!drag || e.pointerId !== drag.id) return;
-          var dx = e.clientX - drag.x;
-          var dy = e.clientY - drag.y;
-          if (!drag.axis) {
-            if (Math.abs(dx) < 6 && Math.abs(dy) < 6) return;
-            drag.axis = Math.abs(dx) >= Math.abs(dy) ? "x" : "y";
-            if (drag.axis === "y") {
-              drag = null;
-              return;
-            }
-            bar.classList.add("is-dragging");
-            try { bar.setPointerCapture(e.pointerId); } catch (_err) {}
-          }
-          if (!drag || drag.axis !== "x") return;
-          drag.moved = true;
-          bar.scrollLeft = drag.left - dx;
-          e.preventDefault();
-        }, { passive: false });
-
-        function endDrag(e) {
-          if (!drag || (e && e.pointerId !== drag.id)) return;
-          if (drag.moved) suppressClick = true;
-          drag = null;
-          bar.classList.remove("is-dragging");
-        }
-
-        bar.addEventListener("pointerup", endDrag);
-        bar.addEventListener("pointercancel", endDrag);
-        bar.addEventListener("click", function (e) {
-          if (!suppressClick) return;
-          suppressClick = false;
-          e.preventDefault();
-          e.stopPropagation();
-        }, true);
-
-        bar.addEventListener("wheel", function (e) {
-          if (bar.scrollWidth <= bar.clientWidth + 2) return;
-          var useX = Math.abs(e.deltaX) > Math.abs(e.deltaY);
-          var delta = useX ? e.deltaX : e.deltaY;
-          if (!delta) return;
-          var before = bar.scrollLeft;
-          bar.scrollLeft = before - delta;
-          if (bar.scrollLeft !== before) e.preventDefault();
-        }, { passive: false });
-      })();
-    </script>
+    <script src="/assets/cuisine-rail.js?erv=20260930rail1"></script>
   </body>
 </html>
