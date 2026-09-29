@@ -12,6 +12,26 @@
   var boardPollTimer = null;
   var notifCenterApi = null;
   var BOARD_POLL_MS = 45000;
+  var OFFICIAL_PORTAL_PATH = "/merchant-dashboard";
+
+  function currentPortalPath() {
+    var p = String((global.location && global.location.pathname) || "").replace(/\/+$/, "") || "/";
+    if (p === "/merchant-dashboard" || p === "/merchant-dashboard.html") return OFFICIAL_PORTAL_PATH;
+    return "/merchant-preview";
+  }
+
+  function canonicalSection(id) {
+    var rc = global.ErvenowPortalFramework && ErvenowPortalFramework.RoleContext;
+    var raw = String(id || "").replace(/^#/, "");
+    if (rc && typeof rc.normalizeSection === "function") return rc.normalizeSection("merchant", raw) || raw;
+    return raw || "home";
+  }
+
+  function activeCanonical() {
+    return canonicalSection(shell ? shell.getActiveSection() : state.activeSection);
+  }
+
+  var sectionCacheAt = {};
 
   var state = {
     storeId: null,
@@ -27,8 +47,8 @@
     withdrawals: [],
     withdrawalMeta: { balance: 0, available: 0, pending_reserved: 0, total_withdrawn: 0 },
     reviews: [],
-    activeSection: "dashboard",
-    orderFilter: "new",
+    activeSection: "home",
+    orderFilter: "active",
     orderQuery: "",
     orderDate: "",
     reportRange: "today",
@@ -61,7 +81,6 @@
 
   var checkoutPlatform = {};
   var checkoutPlatformLoaded = false;
-  var sectionCacheAt = {};
 
   function esc(s) {
     return String(s || "")
@@ -132,9 +151,28 @@
   async function loadOrderBoard() {
     try {
       state.board = await api(orderBoardPath());
+      sectionCacheAt.orders = Date.now();
     } catch (_) {
       state.board = state.board || { orders: [], status_counts: {} };
     }
+  }
+
+  async function loadProductsCatalog() {
+    if (!state.storeId) return;
+    var sid = encodeURIComponent(state.storeId);
+    try {
+      var prod = await api("/api/store/products?store_id=" + sid + "&limit=80&offset=0");
+      state.products = prod.products || [];
+    } catch (_) {
+      state.products = state.products || [];
+    }
+    try {
+      var cats = await api("/api/store/product-category-options?store_id=" + sid);
+      state.categories = cats.options || cats.categories || [];
+    } catch (_) {
+      state.categories = state.categories || [];
+    }
+    sectionCacheAt.products = Date.now();
   }
 
   function storeIdFromSocketMsg(msg) {
@@ -145,8 +183,12 @@
   }
 
   function orderSectionsNeedRefresh() {
-    var section = shell ? shell.getActiveSection() : state.activeSection;
-    return section === "dashboard" || section === "orders";
+    var section = activeCanonical();
+    return section === "home" || section === "orders";
+  }
+
+  function sectionWantsOrderLive() {
+    return orderSectionsNeedRefresh();
   }
 
   function scheduleBoardRefresh() {
@@ -225,10 +267,27 @@
     } catch (_) {}
   }
 
-  function startOrderBoardPolling() {
-    stopOrderBoardPolling();
+  var boardPollBusy = false;
+
+  function startOrderBoardPolling(runNow) {
+    if (typeof document !== "undefined" && document.hidden) return;
+    if (runNow && !boardPollBusy) {
+      boardPollBusy = true;
+      refreshOrderBoardLive()
+        .catch(function () {})
+        .finally(function () {
+          boardPollBusy = false;
+        });
+    }
+    if (boardPollTimer) return;
     boardPollTimer = setInterval(function () {
-      refreshOrderBoardLive().catch(function () {});
+      if ((typeof document !== "undefined" && document.hidden) || boardPollBusy) return;
+      boardPollBusy = true;
+      refreshOrderBoardLive()
+        .catch(function () {})
+        .finally(function () {
+          boardPollBusy = false;
+        });
     }, BOARD_POLL_MS);
   }
 
@@ -239,18 +298,39 @@
     }
   }
 
+  var boardLiveWanted = false;
+
   function startOrderBoardLive() {
+    boardLiveWanted = true;
     connectOrderBoardSocket();
-    startOrderBoardPolling();
+    startOrderBoardPolling(false);
+  }
+
+  function syncOrderLiveForSection() {
+    if (sectionWantsOrderLive()) startOrderBoardLive();
+    else stopOrderBoardPolling();
   }
 
   function stopOrderBoardLive() {
+    boardLiveWanted = false;
     if (boardRefreshTimer) {
       clearTimeout(boardRefreshTimer);
       boardRefreshTimer = null;
     }
     stopOrderBoardPolling();
     disconnectOrderBoardSocket();
+  }
+
+  if (typeof document !== "undefined" && !startOrderBoardLive.visibilityBound) {
+    startOrderBoardLive.visibilityBound = true;
+    document.addEventListener("visibilitychange", function () {
+      if (!boardLiveWanted) return;
+      if (document.hidden) {
+        stopOrderBoardPolling();
+        return;
+      }
+      startOrderBoardPolling(true);
+    });
   }
 
   async function loadCoreData() {
@@ -260,42 +340,13 @@
     state.publishReadiness = my.publish_readiness || null;
     state.storeId = state.store && state.store.id;
     updateHeader();
-    var sid = state.storeId ? encodeURIComponent(state.storeId) : "";
     var jobs = [
       api("/api/store/merchant-dashboard").then(function (dash) {
         state.dashboard = dash;
       }),
     ];
-    if (sid) {
+    if (state.storeId) {
       jobs.push(
-        api(orderBoardPath())
-          .then(function (board) {
-            state.board = board;
-          })
-          .catch(function () {}),
-        api("/api/store/products?store_id=" + sid + "&limit=80&offset=0")
-          .then(function (prod) {
-            state.products = prod.products || [];
-          })
-          .catch(function () {}),
-        api("/api/store/product-category-options?store_id=" + sid)
-          .then(function (cats) {
-            state.categories = cats.options || cats.categories || [];
-          })
-          .catch(function () {
-            state.categories = [];
-          }),
-        api("/api/core/checkout-payment-methods")
-          .then(function (j) {
-            checkoutPlatform = (j && j.methods) || j || {};
-            checkoutPlatformLoaded = true;
-          })
-          .catch(function () {}),
-        api("/api/store/expenses")
-          .then(function (j) {
-            state.expenses = (j && j.expenses) || [];
-          })
-          .catch(function () {}),
         api("/api/store/pos-settings")
           .then(function (j) {
             state.posEnabled = !(j && j.enabled === false);
@@ -693,11 +744,9 @@
     var cfg = shell.getConfig();
     if (!cfg._merchantNavFull) cfg._merchantNavFull = (cfg.nav || []).slice();
     var show = state.posEnabled !== false;
-    var hiddenHub = { products: 1, categories: 1, offers: 1 };
     cfg.nav = cfg._merchantNavFull.filter(function (item) {
       if (!item) return false;
       if (item.id === "pos" && !show) return false;
-      if (hiddenHub[item.id]) return false;
       return true;
     });
     cfg.items = cfg.nav.map(function (item) {
@@ -707,8 +756,8 @@
     cfg.nav.forEach(function (item) {
       if (item && item.id === "orders") item.badge = count > 0 ? (count > 9 ? "9+" : String(count)) : 0;
     });
-    if (!show && shell.getActiveSection() === "pos") {
-      shell.navigate("dashboard");
+    if (!show && activeCanonical() === "pos") {
+      shell.navigate("home");
       return;
     }
     shell.renderNav();
@@ -727,14 +776,19 @@
   }
 
   function ordersList() {
+    var ops = global.ErvenowMerchantOrderOps;
     var q = String(state.orderQuery || "").trim().toLowerCase();
+    var filter = state.orderFilter || "active";
     return allBoardOrders()
       .filter(function (o) {
-        var st = o.board_status || o.delivery_status;
-        if (!inOrderGroup(st, state.orderFilter)) return false;
+        var st = ops && ops.boardStatus ? ops.boardStatus(o) : normalizeStatus(o.board_status || o.delivery_status);
+        if (!st) return false;
+        if (filter === "active") {
+          if (st === "delivered") return false;
+        } else if (st !== filter) return false;
         if (state.orderDate && orderDayKey(o.created_at) !== state.orderDate) return false;
         if (!q) return true;
-        var blob = [o.order_number, o.id, o.customer_phone, orderSourceLabel(o)].join(" ").toLowerCase();
+        var blob = [o.order_number, o.id, o.customer_phone, o.customer_name, orderSourceLabel(o)].join(" ").toLowerCase();
         return blob.indexOf(q) !== -1;
       })
       .sort(function (a, b) {
@@ -750,7 +804,7 @@
   }
 
   function todayOrders() {
-    var orders = (state.dashboard && state.dashboard.orders) || [];
+    var orders = allBoardOrders();
     var start = new Date();
     start.setHours(0, 0, 0, 0);
     return orders.filter(function (o) {
@@ -791,7 +845,7 @@
       "<p>تم اعتماد منشأتك في ERVENOW. أكمل الحد الأدنى ثم اضغط اعتماد ونشر لتظهر للعملاء.</p>" +
       (list ? "<ul class='mp-complete-checks'>" + list + "</ul>" : "") +
       '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px">' +
-      '<button type="button" class="mp-btn mp-btn--ghost" data-pf-section="settings">تعديل الهوية والفئة</button>' +
+      '<button type="button" class="mp-btn mp-btn--ghost" data-pf-section="store">تعديل الهوية والفئة</button>' +
       '<button type="button" class="mp-btn mp-btn--ghost" data-pf-section="products">المنتجات</button>' +
       '<button type="button" class="mp-btn mp-btn--primary" id="mpPublishBtn">اعتماد ونشر المتجر</button>' +
       "</div></div>"
@@ -810,27 +864,27 @@
       countOrdersInGroup("new") + countOrdersInGroup("preparing") + countOrdersInGroup("ready");
 
     return (
-      (W ? W.sectionHeader("لوحة التحكم", "Dashboard — نظرة سريعة على أداء منشأتك اليوم") : "") +
+      (W ? W.sectionHeader("الرئيسية", "ملخص تشغيل المتجر") : "") +
       completionBannerHtml() +
       (W
         ? W.kpiGrid([
-            { label: "📦 طلبات اليوم", value: String(today.length) },
-            { label: "💰 مبيعات اليوم", value: fmtMoney(todaySales), suffix: "ر.س" },
+            { label: "🆕 طلبات جديدة", value: String(countOrdersInGroup("new")) },
+            { label: "🔥 طلبات نشطة", value: String(active) },
+            { label: "✅ مكتملة", value: String(countOrdersInGroup("done")) },
+            { label: "💰 المبيعات", value: fmtMoney(todaySales), suffix: "ر.س" },
             { label: "💳 الرصيد", value: fmtMoney(wallet.balance), suffix: "ر.س" },
             {
-              label: "⭐ التقييم",
-              value: store.average_rating != null ? Number(store.average_rating).toFixed(1) : "—",
+              label: "🏪 حالة المتجر",
+              value: store.status === "approved" ? (store.is_published === false ? "معتمد — غير منشور" : "منشور") : esc(store.status || "—"),
             },
-            { label: "🛍 المنتجات", value: String(agg.products_active_count || state.products.length || 0) },
-            { label: "🔥 الطلبات النشطة", value: String(active) },
           ])
         : "") +
-      '<div class="mp-card"><h3>اختصارات</h3><div class="mp-classic-links">' +
+      '<div class="mp-card"><h3>اختصارات التشغيل</h3><div class="mp-classic-links">' +
       '<button type="button" class="mp-btn mp-btn--primary" data-pf-section="orders">الطلبات</button>' +
+      '<button type="button" class="mp-btn mp-btn--ghost" data-pf-section="pos">الكاشير</button>' +
       '<button type="button" class="mp-btn mp-btn--ghost" data-pf-section="products">المنتجات</button>' +
-      '<button type="button" class="mp-btn mp-btn--ghost" data-pf-section="expenses">المصروفات</button>' +
-      '<button type="button" class="mp-btn mp-btn--ghost" data-pf-section="withdrawals">السحب</button>' +
-      '<button type="button" class="mp-btn mp-btn--ghost" data-pf-section="settings">الإعدادات</button>' +
+      '<button type="button" class="mp-btn mp-btn--ghost" data-pf-section="wallet">المحفظة</button>' +
+      '<button type="button" class="mp-btn mp-btn--ghost" data-pf-section="store">المتجر</button>' +
       "</div></div>"
     );
   }
@@ -845,98 +899,159 @@
     );
   }
 
+  function orderActionButtonsHtml(order) {
+    var wf = global.ErvenowMerchantOrderWorkflow;
+    var ops = global.ErvenowMerchantOrderOps;
+    var st = ops && ops.boardStatus ? ops.boardStatus(order) : normalizeStatus(order.board_status || order.delivery_status);
+    var id = esc(order.id);
+    var parts = [];
+    var next = wf && wf.nextActionFor ? wf.nextActionFor(st) : null;
+    if (next) {
+      parts.push(
+        '<button type="button" class="mp-btn mp-btn--primary mp-order-action" data-order-id="' +
+          id +
+          '" data-next-status="' +
+          esc(next.status) +
+          '">' +
+          esc(next.label) +
+          "</button>"
+      );
+    }
+    if (st && st !== "cancelled") {
+      parts.push(
+        '<button type="button" class="mp-btn mp-btn--ghost mp-order-print" data-order-id="' +
+          id +
+          '">طباعة الفاتورة</button>'
+      );
+    }
+    if (st === "ready" || st === "picked_up") {
+      parts.push(
+        '<button type="button" class="mp-btn mp-btn--ghost mp-order-driver" data-order-id="' +
+          id +
+          '">بيانات المندوب</button>'
+      );
+    }
+    if (st === "picked_up" || st === "delivering" || st === "ready") {
+      var track = wf && wf.trackUrlForOrder ? wf.trackUrlForOrder(order.id) : "/track?id=" + encodeURIComponent(order.id);
+      parts.push(
+        '<a class="mp-btn mp-btn--ghost" href="' +
+          esc(track) +
+          '" target="_blank" rel="noopener">تتبع</a>'
+      );
+    }
+    parts.push(
+      '<button type="button" class="mp-btn mp-btn--ghost mp-order-detail" data-order-id="' +
+        id +
+        '">التفاصيل</button>'
+    );
+    return parts.join(" ");
+  }
+
   function renderOrders() {
     var wf = global.ErvenowMerchantOrderWorkflow;
+    var ops = global.ErvenowMerchantOrderOps;
     var rows = ordersList();
-    var tabs = [
-      { key: "new", label: "جديدة" },
-      { key: "preparing", label: "قيد التجهيز" },
-      { key: "ready", label: "الجاهزة" },
-      { key: "done", label: "المكتملة" },
-    ];
-    var tabsHtml = tabs
-      .map(function (t) {
+    var counts = ops
+      ? ops.countsFromBoard(state.board, allBoardOrders())
+      : { pending: 0, accepted: 0, preparing: 0, ready: 0, picked_up: 0, delivered: 0 };
+    var filter = state.orderFilter || "active";
+    var counters = (ops && ops.COUNTERS ? ops.COUNTERS : [])
+      .map(function (c) {
+        var on = filter === c.key;
         return (
-          '<button type="button" class="mp-tab' +
-          (state.orderFilter === t.key ? " is-active" : "") +
+          '<button type="button" class="mp-ob-counter' +
+          (on ? " is-active" : "") +
           '" data-order-filter="' +
-          t.key +
-          '">' +
-          esc(t.label) +
-          '<span class="mp-tab__count">(' +
-          countOrdersInGroup(t.key) +
-          ")</span></button>"
+          c.key +
+          '" aria-pressed="' +
+          (on ? "true" : "false") +
+          '"><span class="mp-ob-counter__emoji">' +
+          c.emoji +
+          '</span><span class="mp-ob-counter__lbl">' +
+          esc(c.ar) +
+          '</span><span class="mp-ob-counter__val">' +
+          (counts[c.key] || 0) +
+          "</span></button>"
         );
       })
       .join("");
+    var filterLabel =
+      filter === "active"
+        ? "الطلبات النشطة (بدون المُسلّمة)"
+        : "عرض: " +
+          (((ops && ops.COUNTERS) || []).find(function (c) {
+            return c.key === filter;
+          }) || { ar: filter }).ar;
+
+    function cardHtml(o) {
+      var st = ops && ops.boardStatus ? ops.boardStatus(o) : normalizeStatus(o.board_status || o.delivery_status);
+      var pill = wf && wf.pillHtml ? wf.pillHtml(st) : "";
+      var fulfill = ops && ops.fulfillmentOf ? ops.fulfillmentOf(o) : "";
+      return (
+        '<article class="mp-ob-card">' +
+        '<div class="mp-ob-card__head"><h3>' +
+        esc(o.order_number || o.id) +
+        "</h3>" +
+        pill +
+        "</div>" +
+        '<p><strong>العضو:</strong> ' +
+        esc(o.customer_name || "عضو ERVENOW") +
+        "</p>" +
+        '<p><strong>عدد الأصناف:</strong> ' +
+        (Number(o.item_count) || 0) +
+        "</p>" +
+        (fulfill ? "<p><strong>الاستلام:</strong> " + esc(fulfill) + "</p>" : "") +
+        '<p><strong>الإجمالي:</strong> ' +
+        fmtMoney(o.order_value != null ? o.order_value : o.total || o.order_total) +
+        " ر.س</p>" +
+        '<p><strong>الدفع:</strong> ' +
+        esc(wf && wf.paymentLabel ? wf.paymentLabel(o.payment_status) : o.payment_status || "—") +
+        " · " +
+        esc(o.financial_status_label || "") +
+        "</p>" +
+        '<div class="mp-ob-fin">' +
+        "<span>عمولة " +
+        fmtMoney(o.commission) +
+        '</span><span>صافي ' +
+        fmtMoney(o.store_net) +
+        "</span></div>" +
+        '<div class="mp-ob-card__actions">' +
+        orderActionButtonsHtml(o) +
+        "</div></article>"
+      );
+    }
 
     var tableRows = rows.length
       ? rows
           .map(function (o) {
-            var st = normalizeStatus(o.board_status || o.delivery_status);
-            var pill = wf && wf.pillHtml ? wf.pillHtml(st) : '<span class="mp-pill">' + esc(st) + "</span>";
-            var unifiedBadge =
-              global.ErvenowUnifiedOrderRead && ErvenowUnifiedOrderRead.badgeHtml
-                ? ErvenowUnifiedOrderRead.badgeHtml(o, "merchant")
-                : "";
-            var next = wf && wf.nextActionFor ? wf.nextActionFor(st) : null;
-            var uiActions = [];
-            if (next && next.status === "accepted") uiActions.push("accept");
-            if (next && next.status === "preparing") uiActions.push("start_preparing");
-            if (next && next.status === "ready") uiActions.push("mark_ready");
-            if (global.ErvenowUnifiedOrderRead && ErvenowUnifiedOrderRead.observeActions) {
-              ErvenowUnifiedOrderRead.observeActions(o, "merchant", uiActions);
-            }
-            var actionBtn = next
-              ? '<button type="button" class="mp-btn mp-btn--primary mp-order-action" data-order-id="' +
-                esc(o.id) +
-                '" data-next-status="' +
-                esc(next.status) +
-                '">' +
-                esc(next.label) +
-                "</button>"
-              : "—";
-            var tools =
-              '<button type="button" class="mp-btn mp-btn--ghost mp-order-detail" data-order-id="' +
-              esc(o.id) +
-              '">تفاصيل</button>';
-            if (st === "ready" || st === "preparing" || st === "accepted") {
-              tools +=
-                ' <button type="button" class="mp-btn mp-btn--ghost mp-order-print" data-order-id="' +
-                esc(o.id) +
-                '">طباعة</button>';
-            }
-            if (st === "picked_up" || st === "delivering") {
-              tools +=
-                ' <a class="mp-btn mp-btn--ghost" href="/track?id=' +
-                encodeURIComponent(o.id) +
-                '" target="_blank" rel="noopener">تتبع</a>';
-            }
+            var st = ops && ops.boardStatus ? ops.boardStatus(o) : normalizeStatus(o.board_status || o.delivery_status);
+            var pill = wf && wf.pillHtml ? wf.pillHtml(st) : "";
             return (
-              '<tr><td class="mp-orders__when" data-order-date="' +
-              esc(orderDayKey(o.created_at)) +
-              '">' +
+              "<tr><td>" +
               fmtDate(o.created_at) +
               "</td><td>" +
               esc(o.order_number || o.id) +
               ' <span class="mp-order-source">' +
               esc(orderSourceLabel(o)) +
               "</span></td><td>" +
+              esc(o.customer_name || "—") +
+              "</td><td>" +
               pill +
-              unifiedBadge +
               "</td><td>" +
-              esc(wf && wf.paymentLabel ? wf.paymentLabel(o.payment_status) : o.payment_status || "—") +
+              esc(wf && wf.paymentLabel ? wf.paymentLabel(o.payment_status) : "—") +
               "</td><td>" +
-              fmtMoney(o.total || o.order_total) +
-              "</td><td>" +
-              actionBtn +
-              "</td><td>" +
-              tools +
+              fmtMoney(o.order_value != null ? o.order_value : o.total || o.order_total) +
+              '</td><td class="mp-orders__tools">' +
+              orderActionButtonsHtml(o) +
               "</td></tr>"
             );
           })
           .join("")
       : '<tr><td colspan="7" class="mp-empty">لا طلبات في هذا القسم</td></tr>';
+
+    var cards = rows.length
+      ? '<div class="mp-ob-cards">' + rows.map(cardHtml).join("") + "</div>"
+      : '<p class="mp-empty mp-ob-empty">لا طلبات في هذا القسم</p>';
 
     return (
       '<div class="mp-orders">' +
@@ -952,15 +1067,189 @@
       esc(state.orderQuery || "") +
       '" />' +
       "</div>" +
-      '<div class="mp-tabs mp-orders__tabs" role="tablist">' +
-      tabsHtml +
+      '<div class="mp-ob-counters" role="tablist" aria-label="عدادات الحالات">' +
+      counters +
       "</div>" +
-      '<div class="mp-card mp-table-wrap mp-orders__table"><table class="mp-table"><thead><tr>' +
-      "<th>التاريخ</th><th>الطلب</th><th>الحالة</th><th>الدفع</th><th>الإجمالي</th><th>إجراء</th><th>أدوات</th>" +
+      '<p class="mp-section-sub" id="mpOrderFilterLabel">' +
+      esc(filterLabel) +
+      "</p>" +
+      '<div class="mp-card mp-table-wrap mp-orders__table mp-orders__table--desktop"><table class="mp-table"><thead><tr>' +
+      "<th>التاريخ</th><th>الطلب</th><th>العضو</th><th>الحالة</th><th>الدفع</th><th>الإجمالي</th><th>إجراءات</th>" +
       "</tr></thead><tbody>" +
       tableRows +
-      "</tbody></table></div></div>"
+      "</tbody></table></div>" +
+      '<div class="mp-orders__cards-mobile">' +
+      cards +
+      "</div></div>"
     );
+  }
+
+  var MAX_PRODUCT_IMAGES = 6;
+  var productGallery = { slots: [], dirty: false };
+  var productEditorSnap = null;
+
+  function productImageUrlList(p) {
+    if (!p) return [];
+    var urls = [];
+    if (Array.isArray(p.image_urls) && p.image_urls.length) {
+      p.image_urls.forEach(function (u) {
+        var s = String(u || "").trim();
+        if (s && urls.indexOf(s) < 0) urls.push(s);
+      });
+      return urls.slice(0, MAX_PRODUCT_IMAGES);
+    }
+    var primary = String(p.image_url || p.thumbnail_url || "").trim();
+    return primary ? [primary] : [];
+  }
+
+  function productCategoryLabel(p) {
+    var slug = String((p && p.category) || "").trim();
+    if (!slug) return "بدون قسم";
+    var cats = state.categories || [];
+    for (var i = 0; i < cats.length; i++) {
+      var c = cats[i];
+      var v = String(c.value || c.slug || c.id || c || "").trim();
+      if (v === slug) return c.label || c.name_ar || c.name || v;
+    }
+    return slug;
+  }
+
+  function revokeGalleryPreview(slot) {
+    if (slot && slot.preview && String(slot.preview).indexOf("blob:") === 0) {
+      try {
+        URL.revokeObjectURL(slot.preview);
+      } catch (_e) {}
+    }
+  }
+
+  function resetProductGallery() {
+    (productGallery.slots || []).forEach(revokeGalleryPreview);
+    productGallery = { slots: [], dirty: false };
+  }
+
+  function blobToDataUrlLocal(blob) {
+    return new Promise(function (resolve, reject) {
+      var r = new FileReader();
+      r.onload = function () {
+        resolve(r.result);
+      };
+      r.onerror = reject;
+      r.readAsDataURL(blob);
+    });
+  }
+
+  async function gallerySlotToDataUrl(slot) {
+    if (!slot) return null;
+    if (slot.kind === "file" && slot.file) {
+      if (!global.compressImageToDataUrl) throw new Error("تعذر ضغط الصورة");
+      return global.compressImageToDataUrl(slot.file, 0.72, 1280);
+    }
+    if (slot.kind === "dataUrl" && slot.dataUrl) return slot.dataUrl;
+    var url = slot.url;
+    if (!url) return null;
+    var res = await fetch(url, { mode: "cors", credentials: "omit" });
+    if (!res.ok) throw new Error("تعذر قراءة صورة موجودة — أعد رفع الصور المتبقية");
+    var blob = await res.blob();
+    return blobToDataUrlLocal(blob);
+  }
+
+  function paintProductGallery() {
+    var box = document.getElementById("mpPGallery");
+    if (!box) return;
+    var slots = productGallery.slots || [];
+    if (!slots.length) {
+      box.innerHTML = '<p class="mp-gallery__empty">لا صور بعد — الصورة الأولى هي الرئيسية</p>';
+      return;
+    }
+    box.innerHTML = slots
+      .map(function (slot, idx) {
+        var src = slot.preview || slot.url || slot.dataUrl || "";
+        var label = idx === 0 ? "رئيسية" : "إضافية " + idx;
+        return (
+          '<div class="mp-gallery__item">' +
+          (src
+            ? '<img src="' + esc(src) + '" alt="" />'
+            : '<div class="mp-gallery__ph" aria-hidden="true">🖼</div>') +
+          '<span class="mp-gallery__badge">' +
+          esc(label) +
+          "</span>" +
+          '<button type="button" class="mp-btn mp-btn--ghost mp-gallery__rm" data-gallery-rm="' +
+          idx +
+          '">إزالة</button></div>'
+        );
+      })
+      .join("");
+    box.querySelectorAll("[data-gallery-rm]").forEach(function (btn) {
+      btn.onclick = function () {
+        var i = Number(btn.getAttribute("data-gallery-rm"));
+        if (!Number.isFinite(i) || i < 0 || i >= productGallery.slots.length) return;
+        revokeGalleryPreview(productGallery.slots[i]);
+        productGallery.slots.splice(i, 1);
+        productGallery.dirty = true;
+        paintProductGallery();
+      };
+    });
+  }
+
+  function addGalleryFiles(fileList, replaceMain) {
+    if (!fileList || !fileList.length) return;
+    productGallery.dirty = true;
+    var files = [];
+    for (var i = 0; i < fileList.length; i++) files.push(fileList[i]);
+    var start = 0;
+    if (replaceMain && files[0]) {
+      var mainSlot = { kind: "file", file: files[0], preview: URL.createObjectURL(files[0]) };
+      if (productGallery.slots.length) {
+        revokeGalleryPreview(productGallery.slots[0]);
+        productGallery.slots[0] = mainSlot;
+      } else {
+        productGallery.slots.push(mainSlot);
+      }
+      start = 1;
+    }
+    for (var j = start; j < files.length && productGallery.slots.length < MAX_PRODUCT_IMAGES; j++) {
+      productGallery.slots.push({
+        kind: "file",
+        file: files[j],
+        preview: URL.createObjectURL(files[j]),
+      });
+    }
+    paintProductGallery();
+  }
+
+  function snapshotProductEditorIfOpen() {
+    var nameEl = document.getElementById("mpPName");
+    if (!nameEl) return;
+    productEditorSnap = {
+      editId: document.getElementById("mpEditId") ? document.getElementById("mpEditId").value : "",
+      name: nameEl.value,
+      desc: document.getElementById("mpPDesc") ? document.getElementById("mpPDesc").value : "",
+      price: document.getElementById("mpPPrice") ? document.getElementById("mpPPrice").value : "",
+      offer: document.getElementById("mpPOffer") ? document.getElementById("mpPOffer").value : "",
+      category: document.getElementById("mpPCategory") ? document.getElementById("mpPCategory").value : "",
+      stock: document.getElementById("mpPStock") ? document.getElementById("mpPStock").value : "",
+      sort: document.getElementById("mpPSort") ? document.getElementById("mpPSort").value : "0",
+      active: document.getElementById("mpPActive") ? !!document.getElementById("mpPActive").checked : true,
+      gallerySlots: productGallery.slots,
+      galleryDirty: productGallery.dirty,
+    };
+  }
+
+  function restoreProductEditorIfOpen() {
+    if (!productEditorSnap || !document.getElementById("mpPName")) return;
+    var s = productEditorSnap;
+    document.getElementById("mpEditId").value = s.editId || "";
+    document.getElementById("mpPName").value = s.name || "";
+    if (document.getElementById("mpPDesc")) document.getElementById("mpPDesc").value = s.desc || "";
+    if (document.getElementById("mpPPrice")) document.getElementById("mpPPrice").value = s.price || "";
+    if (document.getElementById("mpPOffer")) document.getElementById("mpPOffer").value = s.offer || "";
+    if (document.getElementById("mpPCategory")) document.getElementById("mpPCategory").value = s.category || "";
+    if (document.getElementById("mpPStock")) document.getElementById("mpPStock").value = s.stock || "";
+    if (document.getElementById("mpPSort")) document.getElementById("mpPSort").value = s.sort != null && s.sort !== "" ? s.sort : "0";
+    if (document.getElementById("mpPActive")) document.getElementById("mpPActive").checked = s.active !== false;
+    productGallery.slots = s.gallerySlots || [];
+    productGallery.dirty = !!s.galleryDirty;
+    paintProductGallery();
   }
 
   function productCardHtml(p, opts) {
@@ -974,14 +1263,31 @@
         fmtMoney(p.price) +
         "</s>"
       : fmtMoney(p.price) + " ر.س";
+    var extraCount = Array.isArray(p.image_urls) && p.image_urls.length > 1 ? p.image_urls.length - 1 : 0;
+    var ratingN = p.rating != null && Number(p.rating) > 0 ? Number(p.rating) : null;
+    var sortN = p.sort_order != null && p.sort_order !== "" ? Number(p.sort_order) : 0;
+    var status = p.active === false ? "مخفي" : "ظاهر";
+    var extraHint = extraCount > 0 ? '<span class="mp-product-card__extra">+' + extraCount + " صور</span>" : "";
     return (
       '<article class="mp-product-card">' +
-      (img ? '<img src="' + esc(img) + '" alt="" loading="lazy" />' : '<div style="aspect-ratio:1;background:#f5ebe0"></div>') +
+      (img
+        ? '<img src="' + esc(img) + '" alt="" loading="lazy" />'
+        : '<div style="aspect-ratio:1;background:#f5ebe0"></div>') +
+      extraHint +
       '<div class="mp-product-card__body"><p class="mp-product-card__name">' +
       esc(p.name) +
-      '</p><p class="mp-product-card__price">' +
+      '</p><p class="mp-product-card__meta">' +
+      esc(productCategoryLabel(p)) +
+      " · " +
+      esc(status) +
+      " · ترتيب " +
+      (Number.isFinite(sortN) ? String(sortN) : "0") +
+      "</p><p class=\"mp-product-card__price\">" +
       priceHtml +
       "</p>" +
+      (ratingN != null
+        ? '<p class="mp-product-card__rating">📊 ' + ratingN.toFixed(1) + "</p>"
+        : "") +
       (opts.manage
         ? '<div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap">' +
           '<button type="button" class="mp-btn mp-btn--ghost mp-prod-edit" data-id="' +
@@ -1027,12 +1333,16 @@
       "<label>الوصف</label><textarea id='mpPDesc' rows='2'></textarea>" +
       "<label>السعر (ريال)</label><input id='mpPPrice' type='number' min='0' step='0.01' />" +
       "<label>سعر العرض (اختياري)</label><input id='mpPOffer' type='number' min='0' step='0.01' />" +
+      "<label>ترتيب العرض</label><input id='mpPSort' type='number' step='1' value='0' />" +
       "<label>القسم</label><select id='mpPCategory'><option value=''>— بدون —</option>" +
       catOpts +
       "</select>" +
       "<label>المخزون (اختياري)</label><input id='mpPStock' type='number' min='0' step='1' />" +
       "<label><input id='mpPActive' type='checkbox' checked /> متاح للبيع</label>" +
-      "<label>صورة المنتج</label><input id='mpPImage' type='file' accept='image/*' />" +
+      "<label>صورة رئيسية</label><input id='mpPImage' type='file' accept='image/*' />" +
+      "<label>صور إضافية (حتى 5)</label><input id='mpPImages' type='file' accept='image/*' multiple />" +
+      '<p class="mp-section-sub">المجموع حتى 6 صور مع الرئيسية — المعرض يُحمَّل عند التحرير فقط.</p>' +
+      '<div id="mpPGallery" class="mp-gallery"></div>' +
       '<div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">' +
       '<button type="button" class="mp-btn mp-btn--primary" id="mpSaveProduct">حفظ المنتج</button>' +
       '<button type="button" class="mp-btn mp-btn--ghost" id="mpResetProduct">مسح</button>' +
@@ -1110,9 +1420,12 @@
 
   function storeAdminTab() {
     try {
-      return sessionStorage.getItem("ervenow_store_admin_tab") || "categories";
+      var t = sessionStorage.getItem("ervenow_store_admin_tab") || "products";
+      if (t === "cashiers") return "products";
+      if (t !== "categories" && t !== "offers") return "products";
+      return t;
     } catch (_) {
-      return "categories";
+      return "products";
     }
   }
 
@@ -1140,6 +1453,8 @@
       })
       .join("");
     return (
+      '<h2 class="mp-section-title">الموظفون</h2>' +
+      '<p class="mp-section-sub">نظام الكاشير الحالي — الدور دائماً cashier</p>' +
       '<div class="mp-card mp-form">' +
       "<h3>إضافة كاشير</h3>" +
       "<p class=\"mp-section-sub\">الدور دائمًا cashier. لا يُستخدم رقم صاحب المتجر.</p>" +
@@ -1154,16 +1469,15 @@
   }
 
   function renderStoreAdmin(tab) {
-    var current = tab || "categories";
-    if (current !== "products" && current !== "offers" && current !== "cashiers") current = "categories";
+    var current = tab || "products";
+    if (current !== "categories" && current !== "offers") current = "products";
     try {
       sessionStorage.setItem("ervenow_store_admin_tab", current);
     } catch (_) {}
     var tabs = [
-      ["categories", "الأقسام"],
       ["products", "المنتجات"],
-      ["offers", "الخصومات"],
-      ["cashiers", "موظفو الكاشير"],
+      ["categories", "الأقسام"],
+      ["offers", "العروض"],
     ];
     var bar = tabs
       .map(function (pair) {
@@ -1179,26 +1493,9 @@
       })
       .join("");
     var body =
-      current === "products"
-        ? renderProducts()
-        : current === "offers"
-          ? renderOffers()
-          : current === "cashiers"
-            ? renderCashiers()
-            : renderCategories();
-    var mode = state.posMode === "B" ? "B" : "A";
+      current === "categories" ? renderCategories() : current === "offers" ? renderOffers() : renderProducts();
     return (
-      '<h2 class="mp-section-title">إدارة المتجر</h2>' +
-      '<div class="mp-card mp-form"><h3>نوع الكاشير</h3>' +
-      '<div class="mp-store-tabs" role="radiogroup" aria-label="نوع الكاشير">' +
-      '<label class="mp-pay-row"><input type="radio" name="mpPosMode" value="A"' +
-      (mode === "A" ? " checked" : "") +
-      " /> A — مرئي</label>" +
-      '<label class="mp-pay-row"><input type="radio" name="mpPosMode" value="B"' +
-      (mode === "B" ? " checked" : "") +
-      " /> B — تجاري</label>" +
-      '<label class="mp-pay-row"><input type="radio" name="mpPosMode" value="C" disabled /> C — متقدم / قريبًا</label>' +
-      "</div></div>" +
+      '<h2 class="mp-section-title">المنتجات</h2>' +
       '<div class="mp-store-tabs" role="tablist">' +
       bar +
       "</div>" +
@@ -1276,9 +1573,7 @@
       "<th>التاريخ</th><th>الوصف</th><th>المبلغ</th></tr></thead><tbody>" +
       txRows +
       "</tbody></table></div>" +
-      '<div class="mp-classic-links">' +
-      '<button type="button" class="mp-btn mp-btn--primary" data-pf-section="withdrawals">طلب سحب</button>' +
-      "</div>"
+      renderWithdrawals()
     );
   }
 
@@ -1420,7 +1715,8 @@
             })
             .join("")
         : '<tr><td colspan="4" class="mp-empty">لا بيانات في هذه الفترة</td></tr>') +
-      "</tbody></table></div></div>"
+      "</tbody></table></div></div>" +
+      renderExpenses()
     );
   }
 
@@ -1496,66 +1792,43 @@
     });
   }
 
-  function showOrderDetailModal(order) {
-    if (!order) return;
-    var wf = global.ErvenowMerchantOrderWorkflow;
-    var items = wf && wf.itemsFromBreakdown ? wf.itemsFromBreakdown(order) : [];
-    var itemsHtml = items.length
-      ? "<ul>" +
-        items
-          .map(function (it) {
-            return (
-              "<li>" +
-              esc(it.name || it.title || it.product_name || "صنف") +
-              " × " +
-              (Number(it.qty || it.quantity) || 1) +
-              "</li>"
-            );
-          })
-          .join("") +
-        "</ul>"
-      : "";
-    var driver = order.driver;
+  function closeOrderDetailModal() {
+    var ops = global.ErvenowMerchantOrderOps;
+    if (ops && ops.destroyMap) ops.destroyMap();
     var existing = document.getElementById("mpOrderModal");
     if (existing) existing.remove();
+  }
+
+  function showOrderDetailModal(order, extraHtml) {
+    if (!order) return;
+    var ops = global.ErvenowMerchantOrderOps;
+    closeOrderDetailModal();
     var el = document.createElement("div");
     el.id = "mpOrderModal";
     el.className = "mp-modal";
     el.innerHTML =
-      '<div class="mp-modal__backdrop"></div><div class="mp-modal__box" role="dialog">' +
+      '<div class="mp-modal__backdrop" id="mpOrderModalBackdrop"></div>' +
+      '<div class="mp-modal__box" role="dialog" aria-modal="true">' +
       '<button type="button" class="mp-modal__close" id="mpOrderModalClose" aria-label="إغلاق">×</button>' +
       "<h3>طلب " +
       esc(order.order_number || order.id) +
       "</h3>" +
-      "<p><strong>العضو:</strong> " +
-      esc(order.customer_name || "—") +
-      "</p>" +
-      "<p><strong>الجوال:</strong> " +
-      esc(order.customer_phone || "—") +
-      "</p>" +
-      "<p><strong>العنوان:</strong> " +
-      esc(order.drop_address || order.delivery_address || "—") +
-      "</p>" +
-      itemsHtml +
-      (driver
-        ? "<p><strong>المندوب:</strong> " + esc(driver.name || "—") + " · " + esc(driver.phone || "—") + "</p>"
-        : "<p><strong>المندوب:</strong> لم يُعيَّن بعد</p>") +
-      "<p><strong>قيمة الطلب:</strong> " +
-      fmtMoney(order.order_value != null ? order.order_value : order.total || order.order_total) +
-      " ر.س</p>" +
-      "<p><strong>صافي المتجر:</strong> " +
-      fmtMoney(order.store_net != null ? order.store_net : order.total || order.order_total) +
-      " ر.س</p>" +
-      "</div>";
+      (extraHtml || "") +
+      (ops && ops.detailBodyHtml ? ops.detailBodyHtml(order) : "") +
+      '<div class="mp-modal__actions" id="mpOrderModalActions">' +
+      orderActionButtonsHtml(order) +
+      "</div></div>";
     document.body.appendChild(el);
     function close() {
-      el.remove();
+      closeOrderDetailModal();
     }
-    el.querySelector(".mp-modal__backdrop").onclick = close;
+    document.getElementById("mpOrderModalBackdrop").onclick = close;
     document.getElementById("mpOrderModalClose").onclick = close;
+    bindOrderActionButtons(el);
+    if (ops && ops.mountDropMap) ops.mountDropMap("mpOrderMap", order);
   }
 
-  function renderSettings() {
+  function renderStore() {
     var hub = state.hub || {};
     var store = state.store || {};
     var currentCat = storeCategorySlug();
@@ -1594,14 +1867,30 @@
         ? "https://www.google.com/maps?q=" + encodeURIComponent(locVal)
         : "";
     var addressLine = store.address || store.location_text || locVal || "—";
+    var previewHref = state.storeId
+      ? "/store.html?id=" + encodeURIComponent(state.storeId) + "&preview=1"
+      : "#";
     return (
-      '<h2 class="mp-section-title">أكمل صفحتك</h2>' +
-      '<p class="mp-section-sub">الفئة، الشعار، الغلاف، الوصف، ثم النشر</p>' +
-      posSettingCardHtml() +
+      '<h2 class="mp-section-title">المتجر</h2>' +
+      '<p class="mp-section-sub">هوية المتجر والموقع والنشر</p>' +
       completionBannerHtml() +
+      '<div class="mp-classic-links" style="margin-bottom:12px">' +
+      '<a class="mp-btn mp-btn--primary" href="' +
+      esc(previewHref) +
+      '" target="_blank" rel="noopener">معاينة المتجر</a>' +
+      "</div>" +
       '<div class="mp-card mp-form"><h3>الهوية والبروفايل</h3>' +
       "<p><strong>الاسم:</strong> " +
       esc(store.name || store.store_name) +
+      "</p>" +
+      "<p><strong>حالة النشر:</strong> " +
+      esc(
+        store.is_published === false
+          ? "غير منشور"
+          : store.status === "approved"
+            ? "معتمد"
+            : store.status || "—"
+      ) +
       "</p>" +
       "<label for='mpHubCategory'>الفئة</label>" +
       "<select id='mpHubCategory'><option value=''>— اختر الفئة —</option>" +
@@ -1617,7 +1906,6 @@
       "<label for='mpHubBanner'>الغلاف</label>" +
       mediaPreviewHtml(hub.banner_url, "غلاف المتجر") +
       "<input id='mpHubBanner' type='file' accept='image/*' />" +
-      hubPaySelectHtml() +
       '<div class="mp-form-actions"><button type="button" class="mp-btn mp-btn--primary" id="mpSaveHub">حفظ</button></div></div>' +
       '<div class="mp-card mp-form" id="mpLocCard"><h3>الموقع</h3>' +
       "<p><strong>العنوان الحالي:</strong> " +
@@ -1648,31 +1936,57 @@
     );
   }
 
+  function renderSettings() {
+    var mode = state.posMode === "B" ? "B" : "A";
+    return (
+      '<h2 class="mp-section-title">الإعدادات</h2>' +
+      '<p class="mp-section-sub">تشغيل الكاشير ووسائل الدفع</p>' +
+      posSettingCardHtml() +
+      '<div class="mp-card mp-form"><h3>نوع الكاشير</h3>' +
+      '<div class="mp-store-tabs" role="radiogroup" aria-label="نوع الكاشير">' +
+      '<label class="mp-pay-row"><input type="radio" name="mpPosMode" value="A"' +
+      (mode === "A" ? " checked" : "") +
+      " /> A — مرئي</label>" +
+      '<label class="mp-pay-row"><input type="radio" name="mpPosMode" value="B"' +
+      (mode === "B" ? " checked" : "") +
+      " /> B — تجاري</label>" +
+      '<label class="mp-pay-row"><input type="radio" name="mpPosMode" value="C" disabled /> C — متقدم / قريبًا</label>' +
+      "</div></div>" +
+      '<div class="mp-card mp-form">' +
+      hubPaySelectHtml() +
+      '<div class="mp-form-actions"><button type="button" class="mp-btn mp-btn--primary" id="mpSaveHub">حفظ وسائل الدفع</button></div></div>'
+    );
+  }
+
   function renderSection(id) {
-    switch (id) {
+    var section = canonicalSection(id);
+    switch (section) {
+      case "home":
       case "dashboard":
         return renderDashboard();
       case "orders":
         return renderOrders();
+      case "store":
+        return renderStore();
       case "products":
       case "categories":
       case "offers":
       case "store-admin":
-        return renderStoreAdmin(id === "store-admin" ? storeAdminTab() : id);
+        return renderStoreAdmin(storeAdminTab());
+      case "employees":
+        return renderCashiers();
       case "reviews":
         return renderReviews();
       case "visitor-preview":
-        return renderVisitorPreview();
+        return renderStore();
       case "wallet":
-        return renderWallet();
       case "withdrawals":
-        return renderWithdrawals();
+        return renderWallet();
       case "pos":
         return renderPos();
       case "reports":
-        return renderReports();
       case "expenses":
-        return renderExpenses();
+        return renderReports();
       case "notifications":
         return renderNotifications();
       case "settings":
@@ -1683,10 +1997,13 @@
   }
 
   function renderMain() {
+    snapshotProductEditorIfOpen();
     var main = shell ? shell.getMainEl() : null;
     if (!main) return;
-    var sectionId = shell ? shell.getActiveSection() : state.activeSection;
+    var sectionId = canonicalSection(shell ? shell.getActiveSection() : state.activeSection);
     state.activeSection = sectionId;
+    if (sectionId !== "orders") closeOrderDetailModal();
+    syncOrderLiveForSection();
     document.querySelectorAll(".mp-section").forEach(function (el) {
       el.classList.remove("is-active");
     });
@@ -1700,6 +2017,7 @@
       section.classList.add("is-active");
     }
     section.innerHTML = renderSection(sectionId);
+    restoreProductEditorIfOpen();
     var catSel = document.getElementById("mpHubCategory");
     if (catSel) {
       var cur = String((state.store && state.store.category) || "").split(",")[0];
@@ -1727,57 +2045,66 @@
       var host = document.getElementById("mpNotifHost");
       if (host) ErvenowPortalInlineNotifications.mountIn(host, "merchant-notif", { enableTypeFilters: true });
     }
-    if ((sectionId === "categories" || sectionId === "store-admin") && !sectionFresh("categories", 20000)) {
+    lazyLoadSection(sectionId);
+  }
+
+  function lazyLoadSection(sectionId) {
+    var sid = canonicalSection(sectionId);
+    if ((sid === "orders" || sid === "home") && !sectionFresh("orders", 15000)) {
+      loadOrderBoard().then(function () {
+        if (activeCanonical() === sid) renderMain();
+      });
+    }
+    if ((sid === "products" || sid === "pos") && !sectionFresh("products", 20000)) {
+      loadProductsCatalog().then(function () {
+        if (activeCanonical() === sid) renderMain();
+      });
+    }
+    if ((sid === "products" || sid === "pos") && !sectionFresh("categories", 20000)) {
       loadMerchantCategories().then(function () {
         sectionCacheAt.categories = Date.now();
-        if (state.activeSection === "store-admin" || state.activeSection === "categories") renderMain();
+        if (activeCanonical() === sid) renderMain();
       });
     }
-    if (sectionId === "store-admin" && storeAdminTab() === "cashiers" && !sectionFresh("cashiers", 20000)) {
-      sectionCacheAt.cashiers = Date.now();
+    if (sid === "employees" && !sectionFresh("cashiers", 20000)) {
       loadCashiers().then(function () {
-        if (state.activeSection === "store-admin") renderMain();
+        sectionCacheAt.cashiers = Date.now();
+        if (activeCanonical() === "employees") renderMain();
       });
     }
-    if ((sectionId === "expenses" || sectionId === "reports" || sectionId === "dashboard") && !sectionFresh("expenses", 20000)) {
-      sectionCacheAt.expenses = Date.now();
+    if (sid === "reports" && !sectionFresh("expenses", 20000)) {
       loadExpenses().then(function () {
-        if (state.activeSection === sectionId) renderMain();
+        sectionCacheAt.expenses = Date.now();
+        if (activeCanonical() === "reports") renderMain();
       });
     }
-    if (sectionId === "withdrawals" && !sectionFresh("withdrawals", 20000)) {
+    if ((sid === "wallet" || sid === "withdrawals") && !sectionFresh("withdrawals", 20000)) {
       loadWithdrawals().then(function () {
         sectionCacheAt.withdrawals = Date.now();
-        var sec = document.getElementById("mpSection-withdrawals");
-        if (sec && state.activeSection === "withdrawals") {
-          sec.innerHTML = renderWithdrawals();
-          wireSectionEvents();
-        }
+        if (activeCanonical() === "wallet") renderMain();
       });
     }
-    if (sectionId === "settings" && !checkoutPlatformLoaded) {
+    if ((sid === "store" || sid === "settings") && !sectionFresh("facilityCats", 60000)) {
+      loadFacilityCategories().then(function () {
+        sectionCacheAt.facilityCats = Date.now();
+        if (activeCanonical() === sid) renderMain();
+      });
+    }
+    if (sid === "settings" && !checkoutPlatformLoaded) {
       api("/api/core/checkout-payment-methods")
         .then(function (j) {
           checkoutPlatform = (j && j.methods) || j || {};
           checkoutPlatformLoaded = true;
-          var sec = document.getElementById("mpSection-settings");
-          if (sec && state.activeSection === "settings") {
-            sec.innerHTML = renderSettings();
-            wireSectionEvents();
-          }
+          if (activeCanonical() === "settings") renderMain();
         })
         .catch(function () {});
     }
-    if (sectionId === "reviews" && state.storeId && !sectionFresh("reviews", 20000)) {
+    if (sid === "reviews" && state.storeId && !sectionFresh("reviews", 20000)) {
       api("/api/store/reviews?store_id=" + encodeURIComponent(state.storeId) + "&limit=20")
         .then(function (j) {
           state.reviews = (j && j.reviews) || [];
           sectionCacheAt.reviews = Date.now();
-          var sec = document.getElementById("mpSection-reviews");
-          if (sec && state.activeSection === "reviews") {
-            sec.innerHTML = renderReviews();
-            wireSectionEvents();
-          }
+          if (activeCanonical() === "reviews") renderMain();
         })
         .catch(function () {});
     }
@@ -1790,10 +2117,17 @@
       if (el.tagName === "SELECT") el.value = "";
       else el.value = id === "mpEditId" ? "" : el.type === "number" ? "" : "";
     });
+    var sortEl = document.getElementById("mpPSort");
+    if (sortEl) sortEl.value = "0";
     var img = document.getElementById("mpPImage");
     if (img) img.value = "";
+    var imgs = document.getElementById("mpPImages");
+    if (imgs) imgs.value = "";
     var active = document.getElementById("mpPActive");
     if (active) active.checked = true;
+    resetProductGallery();
+    paintProductGallery();
+    productEditorSnap = null;
   }
 
   function fillProductForm(p) {
@@ -1806,8 +2140,20 @@
     document.getElementById("mpPCategory").value = p.category ? String(p.category) : "";
     var stockEl = document.getElementById("mpPStock");
     if (stockEl) stockEl.value = p.stock != null ? p.stock : "";
+    var sortEl = document.getElementById("mpPSort");
+    if (sortEl) sortEl.value = p.sort_order != null && p.sort_order !== "" ? String(p.sort_order) : "0";
     var activeEl = document.getElementById("mpPActive");
     if (activeEl) activeEl.checked = p.active !== false;
+    var img = document.getElementById("mpPImage");
+    if (img) img.value = "";
+    var imgs = document.getElementById("mpPImages");
+    if (imgs) imgs.value = "";
+    resetProductGallery();
+    productGallery.slots = productImageUrlList(p).map(function (url) {
+      return { kind: "url", url: url };
+    });
+    productGallery.dirty = false;
+    paintProductGallery();
   }
 
   async function saveProduct() {
@@ -1819,21 +2165,46 @@
       description: String(document.getElementById("mpPDesc").value || "").trim(),
       price: Number(document.getElementById("mpPPrice").value),
       category: String(document.getElementById("mpPCategory").value || "").trim() || null,
+      sort_order: Number(document.getElementById("mpPSort") && document.getElementById("mpPSort").value) || 0,
     };
     var offer = document.getElementById("mpPOffer").value;
-    if (offer !== "" && Number(offer) > 0) body.offer_price = Number(offer);
-    else body.offer_price = null;
+    if (offer !== "" && Number(offer) > 0) {
+      var op = Number(offer);
+      if (op >= body.price) {
+        showMsg("سعر العرض يجب أن يكون أقل من السعر الأساسي", false);
+        return;
+      }
+      body.offer_price = op;
+    } else if (editId) {
+      body.offer_price = null;
+    }
     var stockEl = document.getElementById("mpPStock");
     if (stockEl && stockEl.value !== "") body.stock = Number(stockEl.value);
+    else if (editId) body.stock = null;
     var activeEl = document.getElementById("mpPActive");
     if (activeEl) body.active = !!activeEl.checked;
-    var imgInput = document.getElementById("mpPImage");
-    if (imgInput && imgInput.files && imgInput.files[0] && global.compressImageToDataUrl) {
-      body.image_base64 = await global.compressImageToDataUrl(imgInput.files[0], 0.78, 1200);
-      body.image_file_name = imgInput.files[0].name || "product.jpg";
-    }
     if (!body.name || !Number.isFinite(body.price)) {
       showMsg("اسم المنتج والسعر مطلوبان", false);
+      return;
+    }
+    try {
+      if (productGallery.dirty && productGallery.slots.length) {
+        var b64s = [];
+        var names = [];
+        for (var gi = 0; gi < productGallery.slots.length; gi++) {
+          var dataUrl = await gallerySlotToDataUrl(productGallery.slots[gi]);
+          if (!dataUrl) continue;
+          b64s.push(dataUrl);
+          var slot = productGallery.slots[gi];
+          names.push((slot.file && slot.file.name) || "product-" + (gi + 1) + ".jpg");
+        }
+        if (b64s.length) {
+          body.images_base64 = b64s;
+          body.images_file_names = names;
+        }
+      }
+    } catch (ce) {
+      showMsg(String(ce.message || ce), false);
       return;
     }
     try {
@@ -1856,6 +2227,63 @@
     } catch (e) {
       showMsg(e.message || String(e), false);
     }
+  }
+
+  function bindOrderActionButtons(root) {
+    var scope = root && root.querySelectorAll ? root : document;
+    scope.querySelectorAll(".mp-order-action").forEach(function (btn) {
+      btn.onclick = async function () {
+        var id = btn.getAttribute("data-order-id");
+        var st = btn.getAttribute("data-next-status");
+        btn.disabled = true;
+        try {
+          if (st === "preparing") {
+            await api("/api/order/" + encodeURIComponent(id) + "/action", {
+              method: "POST",
+              body: { action: "start_preparing" },
+            });
+          } else if (st === "ready") {
+            await api("/api/order/" + encodeURIComponent(id) + "/action", {
+              method: "POST",
+              body: { action: "mark_ready" },
+            });
+          } else if (global.ErvenowMerchantOrderWorkflow) {
+            await ErvenowMerchantOrderWorkflow.patchOrderStatus(id, st);
+          } else {
+            await api("/api/order/" + encodeURIComponent(id) + "/status", {
+              method: "PATCH",
+              body: { delivery_status: st },
+            });
+          }
+          showMsg("تم تحديث الطلب", true);
+          closeOrderDetailModal();
+          await loadOrderBoard();
+          noteFreshPlatformOrders();
+          renderMain();
+        } catch (e) {
+          showMsg(e.message || String(e), false);
+          btn.disabled = false;
+        }
+      };
+    });
+    scope.querySelectorAll(".mp-order-detail").forEach(function (btn) {
+      btn.onclick = function () {
+        showOrderDetailModal(findBoardOrder(btn.getAttribute("data-order-id")));
+      };
+    });
+    scope.querySelectorAll(".mp-order-print").forEach(function (btn) {
+      btn.onclick = function () {
+        var o = findBoardOrder(btn.getAttribute("data-order-id"));
+        var wf = global.ErvenowMerchantOrderWorkflow;
+        if (o && wf && wf.printThermal80) wf.printThermal80(o, state.store || {});
+      };
+    });
+    scope.querySelectorAll(".mp-order-driver").forEach(function (btn) {
+      btn.onclick = function () {
+        var o = findBoardOrder(btn.getAttribute("data-order-id"));
+        showOrderDetailModal(o);
+      };
+    });
   }
 
   function wireSectionEvents() {
@@ -1892,10 +2320,12 @@
     }
     document.querySelectorAll("[data-order-filter]").forEach(function (btn) {
       btn.onclick = function () {
-        state.orderFilter = btn.getAttribute("data-order-filter");
+        var next = btn.getAttribute("data-order-filter");
+        state.orderFilter = state.orderFilter === next ? "active" : next;
         renderMain();
       };
     });
+    bindOrderActionButtons(document);
     var expenseForm = document.getElementById("mpExpenseForm");
     if (expenseForm) {
       expenseForm.onsubmit = function (ev) {
@@ -1955,53 +2385,6 @@
         };
       }
     });
-    document.querySelectorAll(".mp-order-action").forEach(function (btn) {
-      btn.onclick = async function () {
-        var id = btn.getAttribute("data-order-id");
-        var st = btn.getAttribute("data-next-status");
-        btn.disabled = true;
-        try {
-          if (st === "preparing") {
-            await api("/api/order/" + encodeURIComponent(id) + "/action", {
-              method: "POST",
-              body: { action: "start_preparing" },
-            });
-          } else if (st === "ready") {
-            await api("/api/order/" + encodeURIComponent(id) + "/action", {
-              method: "POST",
-              body: { action: "mark_ready" },
-            });
-          } else if (global.ErvenowMerchantOrderWorkflow) {
-            await ErvenowMerchantOrderWorkflow.patchOrderStatus(id, st);
-          } else {
-            await api("/api/order/" + encodeURIComponent(id) + "/status", {
-              method: "PATCH",
-              body: { delivery_status: st },
-            });
-          }
-          showMsg("تم تحديث الطلب", true);
-          state.board = await api(orderBoardPath());
-          noteFreshPlatformOrders();
-          state.dashboard = await api("/api/store/merchant-dashboard");
-          renderMain();
-        } catch (e) {
-          showMsg(e.message || String(e), false);
-          btn.disabled = false;
-        }
-      };
-    });
-    document.querySelectorAll(".mp-order-detail").forEach(function (btn) {
-      btn.onclick = function () {
-        showOrderDetailModal(findBoardOrder(btn.getAttribute("data-order-id")));
-      };
-    });
-    document.querySelectorAll(".mp-order-print").forEach(function (btn) {
-      btn.onclick = function () {
-        var o = findBoardOrder(btn.getAttribute("data-order-id"));
-        var wf = global.ErvenowMerchantOrderWorkflow;
-        if (o && wf && wf.printThermal80) wf.printThermal80(o, state.store || {});
-      };
-    });
     document.querySelectorAll('input[name="mpPosMode"]').forEach(function (input) {
       input.onchange = async function () {
         if (!input.checked || input.value === "C") return;
@@ -2038,17 +2421,21 @@
     if (saveHub) {
       saveHub.onclick = async function () {
         if (!state.storeId) return;
-        var body = { bio: String(document.getElementById("mpHubBio").value || "").trim() };
+        var bioEl = document.getElementById("mpHubBio");
+        var body = {};
+        if (bioEl) body.bio = String(bioEl.value || "").trim();
         var paySel = document.getElementById("mpHubPay");
-        var payBody = {};
         if (paySel) {
+          var payBody = {};
           Array.prototype.forEach.call(paySel.options, function (opt) {
             payBody[opt.value] = !!opt.selected;
           });
+          body.checkout_payment_methods = payBody;
         }
-        body.checkout_payment_methods = payBody;
-        var bf = document.getElementById("mpHubBanner").files && document.getElementById("mpHubBanner").files[0];
-        var lf = document.getElementById("mpHubLogo").files && document.getElementById("mpHubLogo").files[0];
+        var bannerEl = document.getElementById("mpHubBanner");
+        var logoEl = document.getElementById("mpHubLogo");
+        var bf = bannerEl && bannerEl.files && bannerEl.files[0];
+        var lf = logoEl && logoEl.files && logoEl.files[0];
         try {
           if (bf && global.compressImageToDataUrl) {
             body.banner_base64 = await global.compressImageToDataUrl(bf, 0.72, 1600);
@@ -2161,6 +2548,21 @@
     if (saveBtn) saveBtn.onclick = saveProduct;
     var resetBtn = document.getElementById("mpResetProduct");
     if (resetBtn) resetBtn.onclick = resetProductForm;
+    var mainImg = document.getElementById("mpPImage");
+    if (mainImg) {
+      mainImg.onchange = function () {
+        addGalleryFiles(mainImg.files, true);
+        mainImg.value = "";
+      };
+    }
+    var extraImgs = document.getElementById("mpPImages");
+    if (extraImgs) {
+      extraImgs.onchange = function () {
+        addGalleryFiles(extraImgs.files, false);
+        extraImgs.value = "";
+      };
+    }
+    if (document.getElementById("mpPGallery") && !productEditorSnap) paintProductGallery();
     document.querySelectorAll(".mp-prod-edit").forEach(function (btn) {
       btn.onclick = function () {
         var id = btn.getAttribute("data-id");
@@ -2309,9 +2711,14 @@
 
     document.querySelectorAll("[data-store-tab]").forEach(function (btn) {
       btn.onclick = function () {
-        var tab = btn.getAttribute("data-store-tab") || "categories";
+        var tab = btn.getAttribute("data-store-tab") || "products";
+        if (tab === "cashiers") {
+          if (shell && shell.navigate) shell.navigate("employees");
+          else renderMain();
+          return;
+        }
         try { sessionStorage.setItem("ervenow_store_admin_tab", tab); } catch (_) {}
-        if (shell && shell.navigate) shell.navigate("store-admin");
+        if (shell && shell.navigate) shell.navigate("products");
         else renderMain();
       };
     });
@@ -2402,37 +2809,27 @@
       await loadCoreData();
       seedSeenOrders();
       ensureIncomingHost();
-      if (state.posEnabled === false && shell && shell.getActiveSection() === "pos") {
-        shell.navigate("dashboard");
+      if (state.posEnabled === false && canonicalSection(shell && shell.getActiveSection()) === "pos") {
+        shell.navigate("home");
       } else {
         renderMain();
       }
-      loadMerchantCategories()
-        .then(function () {
-          if (state.activeSection === "pos" || state.activeSection === "store-admin") renderMain();
-        })
-        .catch(function () {});
-      loadFacilityCategories()
-        .then(function () {
-          if (state.activeSection === "settings") renderMain();
-        })
-        .catch(function () {});
       if (shell) {
         shell.mountNotifications().then(function (apiNotif) {
           notifCenterApi = apiNotif;
           paintIncomingChrome();
         }).catch(function () {});
       }
-      startOrderBoardLive();
     } catch (e) {
       showMsg(e.message || "تعذّر تحميل البيانات", false);
     }
   }
 
   async function init() {
-    if ((global.location.hash || "").replace(/^#/, "") === "complete") {
+    var bootHash = (global.location.hash || "").replace(/^#/, "");
+    if (bootHash === "complete") {
       try {
-        global.history.replaceState(null, "", "/merchant-preview#settings");
+        global.history.replaceState(null, "", currentPortalPath() + "#settings");
       } catch (_) {}
     }
     if (!global.ErvenowPortalFramework || !ErvenowPortalFramework.PortalShell) {
@@ -2454,8 +2851,10 @@
         config: portalCfg,
         app: "#mpApp",
         loginEl: "#mpLogin",
-        hashBase: "/merchant-preview",
-        notifKey: "merchant-preview-header",
+        hashBase: currentPortalPath(),
+        homeHref: OFFICIAL_PORTAL_PATH + "#home",
+        walletHref: OFFICIAL_PORTAL_PATH + "#wallet",
+        notifKey: "merchant-portal-header",
         operationalV2: true,
         portalTitle: "بوابة المتجر",
         showBottomNav: false,

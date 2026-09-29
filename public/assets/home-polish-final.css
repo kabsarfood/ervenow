@@ -316,12 +316,15 @@ body.lp-home-premium .lp-home-cta-card__body {
     padding: 24px 22px;
     border-radius: 20px;
     border: 1px solid rgba(15, 90, 55, 0.12);
-    background: #fffefb;
     box-shadow: 0 8px 28px rgba(15, 40, 28, 0.05);
     text-align: right;
   }
 
-  body.lp-home-premium .lp-home-cta-card::before {
+  body.lp-home-premium .lp-home-cta-card:not(.lp-home-cta-card--support):not(.lp-home-cta-card--partner) {
+    background: #fffefb;
+  }
+
+  body.lp-home-premium .lp-home-cta-card:not(.lp-home-cta-card--support):not(.lp-home-cta-card--partner)::before {
     display: none;
   }
 

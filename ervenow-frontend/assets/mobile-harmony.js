@@ -4,6 +4,24 @@
 (function (global) {
   var MQ =
     "(max-width: 640px), ((max-width: 932px) and (max-height: 500px) and (pointer: coarse))";
+  var closeGuardUntil = 0;
+  var backdropPeTimer = null;
+
+  function armNavCloseGuard() {
+    closeGuardUntil = Date.now() + 550;
+    var backdrop = document.getElementById("ervHarmonyNavBackdrop");
+    if (!backdrop) return;
+    backdrop.style.pointerEvents = "none";
+    if (backdropPeTimer) clearTimeout(backdropPeTimer);
+    backdropPeTimer = setTimeout(function () {
+      backdropPeTimer = null;
+      if (backdrop) backdrop.style.pointerEvents = "";
+    }, 550);
+  }
+
+  function isNavCloseGuarded() {
+    return Date.now() < closeGuardUntil;
+  }
 
   function isMobile() {
     try {
@@ -31,7 +49,14 @@
     backdrop.id = "ervHarmonyNavBackdrop";
     backdrop.className = "erv-harmony-nav-backdrop";
     backdrop.setAttribute("aria-hidden", "true");
-    backdrop.addEventListener("click", closeHarmonyNav);
+    backdrop.addEventListener("click", function (e) {
+      if (isNavCloseGuarded()) {
+        if (e.cancelable) e.preventDefault();
+        e.stopPropagation();
+        return;
+      }
+      closeHarmonyNav();
+    });
     document.body.appendChild(backdrop);
   }
 
@@ -55,6 +80,7 @@
   }
 
   function openGuestNav() {
+    armNavCloseGuard();
     document.body.classList.add("erv-harmony-nav-open");
     var btn = document.querySelector(".erv-harmony-menu__btn");
     if (btn) btn.setAttribute("aria-expanded", "true");
@@ -78,7 +104,7 @@
       identity.href = "/";
       identity.setAttribute("aria-label", "ERVENOW — المنصة الذكية");
       identity.innerHTML =
-        '<span class="erv-wordmark" dir="ltr"><span class="erv-wordmark__name"><span class="erv-wordmark__erve">ERVE</span><span class="erv-wordmark__now">NOW</span></span><span class="erv-wordmark__tag">PLATFORM</span></span>';
+        '<span class="erv-wordmark" dir="ltr" role="img" aria-label="ERVENOW PLATFORM"><span class="erv-wordmark__name" aria-hidden="true"><span class="erv-wordmark__erve"><span class="erv-wordmark__e"><i></i><i></i><i></i></span>RVE</span><span class="erv-wordmark__now">N<svg class="erv-wordmark__pin" viewBox="0 0 24 32" aria-hidden="true" focusable="false"><path fill="currentColor" fill-rule="evenodd" d="M12 1.5C7.1 1.5 3.2 5.5 3.2 10.5 3.2 16.6 12 30.4 12 30.4S20.8 16.6 20.8 10.5C20.8 5.5 16.9 1.5 12 1.5zm0 12.8a3.4 3.4 0 1 1 0-6.8 3.4 3.4 0 0 1 0 6.8z"/></svg>W</span></span><span class="erv-wordmark__tag" aria-hidden="true">PLATFORM</span></span>';
       inner.insertBefore(identity, nav);
     }
 
@@ -201,6 +227,7 @@
     ensurePanelParent(panel, document.body);
 
     function openHomeNav() {
+      armNavCloseGuard();
       syncHomePanelAnchor(btn, panel, root);
       panel.hidden = false;
       btn.setAttribute("aria-expanded", "true");
@@ -256,6 +283,7 @@
 
     document.addEventListener("click", function (e) {
       if (panel.hidden) return;
+      if (isNavCloseGuarded()) return;
       if (panel.contains(e.target) || btn.contains(e.target)) return;
       closeHarmonyNav();
     });

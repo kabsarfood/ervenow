@@ -35,7 +35,7 @@ describe("unified public login entry", () => {
   test("existing account destination follows stored role, not a URL hint", () => {
     expect(resolvePortalRole({ role: "driver" }).portalRole).toBe("driver");
     expect(resolvePostLoginPath({ role: "driver" })).toBe("/driver-preview");
-    expect(resolvePostLoginPath({ role: "store" })).toBe("/merchant-preview");
+    expect(resolvePostLoginPath({ role: "store" })).toBe("/merchant-dashboard#home");
     expect(resolvePostLoginPath({ role: "customer" })).toBe("/");
     expect(resolvePostLoginPath({ role: "service", service_type: "plumber" })).toBe("/service-preview");
     expect(resolvePostLoginPath({ role: "service", service_type: "pickup_truck" })).toBe("/transport-preview");

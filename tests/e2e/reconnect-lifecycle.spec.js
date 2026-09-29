@@ -74,21 +74,21 @@ test.describe("G1-R reconnect lifecycle (mocked)", () => {
       };
     });
 
-    await page.goto(BASE + "/merchant-preview#orders");
+    await page.goto(BASE + "/merchant-dashboard#orders");
     await page.waitForSelector(".mp-order-action", { timeout: 15000 });
     await page.click(".mp-order-action");
     await page.waitForTimeout(500);
     expect(patches).toContain("PATCH");
   });
 
-  test("role-routing sends merchant to merchant-preview when live", async ({ page }) => {
+  test("role-routing sends merchant to merchant-dashboard when live", async ({ page }) => {
     await page.goto(BASE + "/assets/role-routing.js");
     const live = await page.evaluate(() => window.ErvenowRoleRouting.PORTAL_LIVE.merchant);
     const path = await page.evaluate(() =>
       window.ErvenowRoleRouting.portalPathForRole("merchant")
     );
     expect(live).toBe(true);
-    expect(path).toBe("/merchant-preview");
+    expect(path).toBe("/merchant-dashboard");
   });
 
   test("unified destinations match canonical portals", async ({ page }) => {
@@ -107,12 +107,12 @@ test.describe("G1-R reconnect lifecycle (mocked)", () => {
       };
     });
     expect(map.customer).toBe("/");
-    expect(map.merchant).toBe("/merchant-preview");
+    expect(map.merchant).toBe("/merchant-dashboard#home");
     expect(map.driver).toBe("/driver-preview");
     expect(map.service).toBe("/service-preview");
     expect(map.transport).toBe("/transport-preview");
     expect(map.internalDelivery).toBe("/driver-preview");
     expect(map.admin).toBe("/admin-dashboard");
-    expect(map.merchantWallet).toBe("/merchant-preview#wallet");
+    expect(map.merchantWallet).toBe("/merchant-dashboard#wallet");
   });
 });

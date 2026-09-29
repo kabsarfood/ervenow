@@ -1,0 +1,2 @@
+          <article class="erv-gate erv-gate--stores" role="listitem">
+            <a class="erv-gate__main" href="/stores">

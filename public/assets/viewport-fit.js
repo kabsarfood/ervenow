@@ -303,12 +303,12 @@
     if (!document.querySelector('link[href*="erv-wordmark.css"]')) {
       var link = document.createElement("link");
       link.rel = "stylesheet";
-      link.href = "/assets/erv-wordmark.css?erv=20260926desk";
+      link.href = "/assets/erv-wordmark.css?erv=20260928logo3d";
       (document.head || document.documentElement).appendChild(link);
     }
     if (!document.querySelector('script[src*="erv-wordmark.js"]')) {
       var s = document.createElement("script");
-      s.src = "/assets/erv-wordmark.js?erv=20260926wm";
+      s.src = "/assets/erv-wordmark.js?erv=20260928logo3d";
       s.defer = true;
       (document.head || document.documentElement).appendChild(s);
     }

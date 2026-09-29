@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-09-26T21:33:06.590Z",
+  "updated_at": "2026-09-29T18:44:51.828Z",
   "portal_visits": {
     "customer": {
       "visits": 31,
@@ -7,9 +7,9 @@
       "last_at": "2026-09-22T20:59:17.085Z"
     },
     "merchant": {
-      "visits": 509,
+      "visits": 579,
       "unique_users": {},
-      "last_at": "2026-09-26T21:26:39.574Z"
+      "last_at": "2026-09-29T17:29:59.504Z"
     },
     "driver": {
       "visits": 499,
@@ -35,9 +35,9 @@
       "active_users": {}
     },
     "merchant": {
-      "visits": 436,
+      "visits": 496,
       "unique_users": {},
-      "last_at": "2026-09-26T21:26:39.574Z",
+      "last_at": "2026-09-29T17:29:59.487Z",
       "active_users": {}
     },
     "driver": {
@@ -61,9 +61,9 @@
   },
   "legacy_access": {
     "store-dashboard": {
-      "visits": 73,
+      "visits": 81,
       "unique_users": {},
-      "last_at": "2026-09-23T12:25:34.034Z"
+      "last_at": "2026-09-29T05:21:07.318Z"
     },
     "driver-app": {
       "visits": 24,
@@ -71,9 +71,9 @@
       "last_at": "2026-09-24T21:00:14.744Z"
     },
     "order-board": {
-      "visits": 21,
+      "visits": 29,
       "unique_users": {},
-      "last_at": "2026-09-25T14:21:57.934Z"
+      "last_at": "2026-09-29T05:54:15.627Z"
     },
     "services-provider": {
       "visits": 29,
@@ -89,6 +89,56 @@
   "user_snapshots": {},
   "broadcast_history": [],
   "redirect_events": [
+    {
+      "at": "2026-09-29T06:24:50.656Z",
+      "portal": "merchant",
+      "role": "store",
+      "path": "/merchant-preview",
+      "success": true,
+      "raw_role": "store",
+      "service_type": null,
+      "user_id": null
+    },
+    {
+      "at": "2026-09-29T06:24:32.857Z",
+      "portal": "merchant",
+      "role": "store",
+      "path": "/merchant-preview",
+      "success": true,
+      "raw_role": "store",
+      "service_type": null,
+      "user_id": null
+    },
+    {
+      "at": "2026-09-29T05:56:07.543Z",
+      "portal": "merchant",
+      "role": "store",
+      "path": "/merchant-preview",
+      "success": true,
+      "raw_role": "store",
+      "service_type": null,
+      "user_id": null
+    },
+    {
+      "at": "2026-09-29T05:55:49.280Z",
+      "portal": "merchant",
+      "role": "store",
+      "path": "/merchant-preview",
+      "success": true,
+      "raw_role": "store",
+      "service_type": null,
+      "user_id": null
+    },
+    {
+      "at": "2026-09-29T04:59:22.141Z",
+      "portal": "merchant",
+      "role": "store",
+      "path": "/merchant-preview",
+      "success": true,
+      "raw_role": "store",
+      "service_type": null,
+      "user_id": null
+    },
     {
       "at": "2026-09-26T17:26:40.388Z",
       "portal": "merchant",

@@ -1,0 +1,1 @@
+    <script src="/assets/home-desktop-marketplace.js?erv=20260929sec1" defer></script>

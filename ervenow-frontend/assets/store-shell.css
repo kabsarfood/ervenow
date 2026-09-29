@@ -282,14 +282,27 @@ body.store-shell-page .dash-main {
 
 .store-support__grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: minmax(0, 1fr);
   gap: 12px;
+}
+
+@media (min-width: 641px) {
+  .store-support__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1025px) {
+  .store-support__grid {
+    grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+  }
 }
 
 .store-support__tile {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  min-width: 0;
   padding: 14px;
   border-radius: 14px;
   background: linear-gradient(145deg, #fffefb, #f8f0e6);
@@ -320,6 +333,8 @@ body.store-shell-page .dash-main {
   font-size: 0.78rem;
   font-weight: 800;
   color: #b9872f;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 @media (max-width: 900px) {

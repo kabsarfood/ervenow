@@ -255,7 +255,7 @@ function isStoresTableMissing(err) {
 function storeMerchantPanelPaths(store) {
   const id = store && store.id ? String(store.id) : "";
   return {
-    merchant_panel_url: "/merchant-preview#complete",
+    merchant_panel_url: "/merchant-dashboard#settings",
     public_store_url: id ? `/store.html?id=${encodeURIComponent(id)}` : "/stores",
   };
 }
@@ -312,7 +312,7 @@ async function notifyStoreApprovedInApp(sb, store) {
       store_id: store.id || null,
       status: "approved",
       publication_status: "draft",
-      complete_url: "/merchant-preview#complete",
+      complete_url: "/merchant-dashboard#settings",
     }
   );
 }

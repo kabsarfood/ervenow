@@ -1,0 +1,3 @@
+          <article class="erv-gate erv-gate--food" role="listitem" data-home-gate="restaurants">
+            <img class="erv-gate__photo" src="/assets/cat-restaurants.jpg" alt="" width="800" height="450" decoding="async" />
+            <a class="erv-gate__main" href="/restaurants">

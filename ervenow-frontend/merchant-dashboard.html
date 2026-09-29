@@ -2,414 +2,66 @@
 <html lang="ar" dir="rtl">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover" />
-    <script src="/assets/viewport-fit.js?erv=20260926desk"></script>
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover"
+    />
+    <script src="/assets/viewport-fit.js?erv=20260928logo3d"></script>
     <script src="/assets/pre-reg-banner.js?erv=20260905b" defer></script>
-    <title>ERVENOW | الطلبات والإيرادات</title>
+    <meta name="theme-color" content="#0f5a37" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>ERVENOW | بوابة المتجر</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="/assets/styles.css" />
-    <link rel="stylesheet" href="/assets/guest-shell.css?erv=20260612" />
-    <link rel="stylesheet" href="/assets/store-shell.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
     <link rel="stylesheet" href="/assets/ervenow-responsive.css" />
-    <link rel="stylesheet" href="/assets/merchant-dashboard.css" />
+    <link rel="stylesheet" href="/assets/responsive-audit-base.css" />
+    <link rel="stylesheet" href="/assets/notification-center.css?erv=20260929unify1" />
+    <link rel="stylesheet" href="/assets/portal-framework/portal-framework.css?pfv=20260924foot1" />
+    <link rel="manifest" href="/merchant-pos.webmanifest" />
+    <link rel="stylesheet" href="/assets/merchant-preview.css?pfv=20260929prod1" />
   </head>
-  <body class="guest-shell-page store-shell-page">
-    <div id="storeShellHeader"></div>
+  <body class="pf-page pf-page--ops">
+    <div class="pf-preview-banner" role="status">ERVENOW Merchant — Portal 2.0</div>
 
-    <div class="dash-main">
-      <div class="store-shell-layout">
-        <div class="md-login-card" id="hint">
-          <h1>📊 الطلبات والإيرادات</h1>
-          <p class="sub" style="margin: 0">
-            سجّل الدخول كتاجر بنفس جوال المتجر المعتمد لعرض الطلبات، الإيرادات، وسجل الإيداعات.
-          </p>
-          <a class="btn btn-primary" href="/login?role=store">تسجيل دخول المتجر</a>
-          <a class="btn btn-ghost" href="/merchant-preview" style="margin-inline-start: 8px">بوابة المتجر</a>
-        </div>
-
-        <div id="main" style="display: none">
-          <header class="md-hero" aria-labelledby="mdHeroTitle">
-            <div class="md-hero__shade" aria-hidden="true"></div>
-            <div class="md-hero__inner">
-              <h1 id="mdHeroTitle">📊 الطلبات والإيرادات</h1>
-              <p class="md-hero__sub" id="storePhone">—</p>
-              <p class="md-hero__sub" id="storeMetaLine" style="margin-top: 4px"></p>
-              <div class="md-hero__actions">
-                <a class="btn btn-primary" href="/order-board">لوحة الطلبات</a>
-                <a class="btn btn-ghost" href="/merchant-preview">لوحة تحكم المتجر</a>
-                <a class="btn btn-ghost" id="publicStoreLink" href="#" target="_blank" rel="noopener">صفحة المتجر للعملاء</a>
-                <a class="btn btn-ghost" href="/store-dashboard#walletAnchor">المحفظة المالية</a>
-              </div>
-            </div>
-          </header>
-
-          <nav class="portal-nav erw-chip-scroll" aria-label="أقسام التقارير">
-            <a href="#mdStats">الإحصائيات</a>
-            <a href="#mdOrders">آخر الطلبات</a>
-            <a href="#mdTx">سجل الإيداعات</a>
-            <a href="/store-dashboard#productsAnchor">المنتجات</a>
-            <a href="#storeSupport">الدعم</a>
-          </nav>
-
-          <div class="portal-kpi-row" id="mdStats" aria-label="ملخص سريع">
-            <div class="portal-kpi">
-              <span class="portal-kpi__lbl">📦 طلبات في القائمة</span>
-              <span class="portal-kpi__val" id="statOrders">0</span>
-              <span class="portal-kpi__sub">من جدول الطلبات</span>
-            </div>
-            <div class="portal-kpi">
-              <span class="portal-kpi__lbl">🛍 منتجات نشطة</span>
-              <span class="portal-kpi__val" id="statProducts">0</span>
-              <span class="portal-kpi__sub">ظاهرة للزوار</span>
-            </div>
-            <div class="portal-kpi">
-              <span class="portal-kpi__lbl">💰 مجموع سلال الطلبات</span>
-              <span class="portal-kpi__val" id="statRevenue">0.00</span>
-              <span class="portal-kpi__sub">ريال — مرجع من الطلبات</span>
-            </div>
-            <div class="portal-kpi">
-              <span class="portal-kpi__lbl">💳 رصيد المحفظة</span>
-              <span class="portal-kpi__val" id="statWallet">—</span>
-              <span class="portal-kpi__sub">من محفظة المتجر</span>
-            </div>
-          </div>
-
-          <section class="portal-card" id="mdOrders">
-            <h2>آخر الطلبات</h2>
-            <p class="sub" style="margin: 0 0 12px">حالة الدفع والتوصيل كما في المنصة — للتفاصيل الكاملة راجع بوابة المتجر.</p>
-            <div class="md-table-wrap">
-              <table class="md-table" id="ordersTable">
-                <thead>
-                  <tr>
-                    <th>التاريخ</th>
-                    <th>رقم الطلب</th>
-                    <th>الحالة</th>
-                    <th>الدفع</th>
-                    <th>التوصيل</th>
-                    <th>إجراء</th>
-                    <th>السلة</th>
-                    <th>الإجمالي</th>
-                  </tr>
-                </thead>
-                <tbody></tbody>
-              </table>
-            </div>
-            <p class="sub" id="ordersEmpty" style="display: none; margin-top: 10px">لا طلبات بعد.</p>
-          </section>
-
-          <section class="portal-card" id="mdTx">
-            <h2>سجل الإيداعات</h2>
-            <p class="sub" style="margin: 0 0 12px">حركات محفظة المتجر بعد تسوية الطلبات.</p>
-            <div class="md-table-wrap">
-              <table class="md-table" id="txTable">
-                <thead>
-                  <tr>
-                    <th>التاريخ</th>
-                    <th>المبلغ</th>
-                    <th>الوصف</th>
-                  </tr>
-                </thead>
-                <tbody></tbody>
-              </table>
-            </div>
-            <p class="sub" id="txEmpty" style="display: none; margin-top: 10px">
-              لا حركات بعد — نفّذ migration_store_wallet.sql ثم أول طلب مدفوع.
-            </p>
-          </section>
-        </div>
-
-        <div class="msg" id="msg" style="display: none"></div>
-      </div>
-
-      <section class="store-support" id="storeSupport" aria-labelledby="storeSupportTitle">
-        <div class="store-support__card">
-          <h2 class="store-support__head" id="storeSupportTitle">تواصل مع منصة ERVENOW</h2>
-          <p class="store-support__sub">
-            للاستفسار عن الطلبات، الإيرادات، العمولات، أو السحب — فريق المنصة بجانبك.
-          </p>
-          <div class="store-support__grid">
-            <a
-              class="store-support__tile"
-              href="https://wa.me/966505745650?text=%D9%85%D8%B1%D8%AD%D8%A8%D8%A7%20ERVENOW%20%E2%80%94%20%D8%A7%D8%B3%D8%AA%D9%81%D8%B3%D8%A7%D8%B1%20%D9%85%D9%86%20%D8%A7%D9%84%D8%B7%D9%84%D8%A8%D8%A7%D8%AA%20%D9%88%D8%A7%D9%84%D8%A5%D9%8A%D8%B1%D8%A7%D8%AF%D8%A7%D8%AA"
-              target="_blank"
-              rel="noopener"
-            >
-              <strong>💬 واتساب الدعم</strong>
-              <span>استفسار عن الطلبات والإيرادات.</span>
-              <em>0505745650</em>
-            </a>
-            <a class="store-support__tile" href="mailto:support@ervenow.com">
-              <strong>✉️ البريد الإلكتروني</strong>
-              <span>للمراسلات الرسمية والمرفقات.</span>
-              <em>support@ervenow.com</em>
-            </a>
-            <a class="store-support__tile" href="/merchant-preview">
-              <strong>🏪 لوحة تحكم المتجر</strong>
-              <span>المنتجات، المحفظة، والسحب.</span>
-              <em>merchant-preview</em>
-            </a>
-          </div>
-        </div>
-      </section>
-
-      <div id="storeShellFooter"></div>
+    <div class="pf-login" id="mpLogin" hidden>
+      <h1 style="margin: 0 0 8px; font-size: 1.25rem">بوابة المتجر</h1>
+      <p style="margin: 0 0 16px; color: var(--pf-muted); font-weight: 600">
+        سجّل الدخول كتاجر معتمد للوصول إلى لوحة التشغيل.
+      </p>
+      <a class="pf-btn pf-btn--primary" href="/login?role=store">تسجيل دخول المتجر</a>
     </div>
 
-    <script src="https://cdn.socket.io/4.8.1/socket.io.min.js" crossorigin="anonymous"></script>
+    <div id="mpApp"></div>
+
     <script src="/assets/api-config.js"></script>
-    <script src="/assets/api.js?erv=20260612"></script>
+    <script src="/assets/api.js?erv=20260923store1"></script>
     <script src="/assets/auth-account-guard.js"></script>
-    <script src="/assets/store-shell.js?erv=20260921dest1"></script>
-    <script>
-      void ErvenowAuthGuard.ensureApprovedAccount({ loginUrl: "/login?role=store" });
-      ErvenowStoreShell.mountShell({
-        activeNav: "merchant",
-        pageTag: "الطلبات والإيرادات — لوحة المتجر",
-      });
-    </script>
+    <script src="/assets/compressImage.js"></script>
     <script src="/assets/merchant-order-workflow.js"></script>
+    <script src="/assets/merchant-order-ops.js?erv=20260929ord2"></script>
+    <script src="/assets/notification-sounds.js"></script>
+    <script src="/assets/notification-center.js?erv=20260929unify1"></script>
+    <script src="/assets/portal-framework/theme-engine.js?pfv=20260924fit1"></script>
+    <script src="/assets/portal-framework/role-context.js?erv=20260929unify1"></script>
+    <script src="/assets/portal-framework/portal-widgets.js?pfv=20260617"></script>
+    <script src="/assets/portal-framework/portal-header.js?pfv=20260617"></script>
+    <script src="/assets/portal-framework/portal-sidebar.js?pfv=20260617"></script>
+    <script src="/assets/portal-framework/portal-operational.js?erv=20260921dest1"></script>
+    <script src="/assets/portal-framework/portal-platform-modules.js?pfv=20260617"></script>
+    <script src="/assets/portal-framework/portal-inline-notifications.js?pfv=20260617"></script>
+    <script src="/assets/portal-framework/portal-notifications-ops.js?pfv=20260617"></script>
+    <script src="/assets/portal-framework/portal-footer.js?pfv=20260924foot1"></script>
+    <script src="/assets/portal-provider-location.js?pfv=20260622"></script>
+    <script src="/assets/portal-framework/portal-shell.js?pfv=20260929unify1"></script>
+    <script src="/assets/unified-order-read.js?erv=20260921u3"></script>
+    <script src="/assets/merchant-pos.js?pfv=20260924posup1"></script>
+    <script src="/assets/merchant-preview.js?pfv=20260929prod1"></script>
+    <script src="/assets/admin-readiness-beacon.js" defer></script>
     <script>
-      var DELIVERY_LABELS = {
-        draft: "مسودة",
-        pending: "قيد الانتظار",
-        new: "جديد",
-        accepted: "مقبول",
-        preparing: "قيد التجهيز",
-        ready: "جاهز للاستلام",
-        picked: "تم الاستلام",
-        picked_up: "استلم المندوب",
-        delivering: "قيد التوصيل",
-        delivered: "تم التسليم",
-        cancelled: "ملغى",
-        cancelled_by_customer: "ملغى من العضو",
-      };
-
-      var merchantStoreId = null;
-      var merchantSocket = null;
-      var refreshTimer = null;
-
-      function show(text, ok) {
-        var el = document.getElementById("msg");
-        el.style.display = "block";
-        el.className = "msg " + (ok ? "ok" : "err");
-        el.textContent = text;
+      ErvenowMerchantPreview.init();
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.register("/merchant-pos-sw.js", { scope: "/" }).catch(function () {});
       }
-
-      function esc(s) {
-        return String(s || "")
-          .replace(/&/g, "&amp;")
-          .replace(/</g, "&lt;")
-          .replace(/"/g, "&quot;");
-      }
-
-      function fmtDate(iso) {
-        if (!iso) return "—";
-        try {
-          var d = new Date(iso);
-          return isNaN(d.getTime()) ? "—" : d.toLocaleString("ar-SA", { dateStyle: "short", timeStyle: "short" });
-        } catch (e) {
-          return "—";
-        }
-      }
-
-      function pill(text, kind) {
-        var cls = "md-pill md-pill--" + (kind || "muted");
-        return '<span class="' + cls + '">' + esc(text) + "</span>";
-      }
-
-      function deliveryPill(status) {
-        if (window.ErvenowMerchantOrderWorkflow) return ErvenowMerchantOrderWorkflow.pillHtml(status);
-        var s = String(status || "").toLowerCase();
-        var label = DELIVERY_LABELS[s] || status || "—";
-        var kind = s === "delivered" ? "ok" : s === "delivering" || s === "accepted" ? "warn" : "muted";
-        return pill(label, kind);
-      }
-
-      function scheduleRefresh() {
-        if (refreshTimer) clearTimeout(refreshTimer);
-        refreshTimer = setTimeout(function () {
-          refreshTimer = null;
-          boot();
-        }, 400);
-      }
-
-      function renderOrderAction(o) {
-        var wf = window.ErvenowMerchantOrderWorkflow;
-        if (!wf) return "—";
-        var act = wf.nextActionFor(o.delivery_status);
-        if (!act) return '<span class="sub">—</span>';
-        return (
-          '<button type="button" class="btn btn-primary md-order-action" data-order-id="' +
-          esc(o.id) +
-          '" data-next-status="' +
-          esc(act.status) +
-          '" style="min-height:44px;font-size:0.85rem;padding:8px 12px">' +
-          esc(act.label) +
-          "</button>"
-        );
-      }
-
-      function bindOrderActions() {
-        document.querySelectorAll(".md-order-action").forEach(function (btn) {
-          btn.onclick = async function () {
-            var id = btn.getAttribute("data-order-id");
-            var next = btn.getAttribute("data-next-status");
-            if (!id || !next || !window.ErvenowMerchantOrderWorkflow) return;
-            btn.disabled = true;
-            try {
-              await ErvenowMerchantOrderWorkflow.patchOrderStatus(id, next);
-              show("تم تحديث حالة الطلب", true);
-              scheduleRefresh();
-            } catch (e) {
-              show(String((e && e.message) || e || "تعذر التحديث"), false);
-              btn.disabled = false;
-            }
-          };
-        });
-      }
-
-      function connectMerchantSocket() {
-        if (merchantSocket || typeof io === "undefined") return;
-        try {
-          merchantSocket = io({
-            path: "/socket.io/",
-            transports: ["websocket", "polling"],
-            auth: {
-              token:
-                (window.PlatformAPI && PlatformAPI.getToken && PlatformAPI.getToken()) ||
-                localStorage.getItem("ervenow_access_token") ||
-                "",
-            },
-          });
-          merchantSocket.on("order:patch", function (msg) {
-            if (!msg || !merchantStoreId) return;
-            var sid =
-              msg.store_id != null
-                ? msg.store_id
-                : msg.patch && msg.patch.store_id != null
-                  ? msg.patch.store_id
-                  : null;
-            if (String(sid || "") === String(merchantStoreId)) scheduleRefresh();
-          });
-        } catch (_e) {}
-      }
-
-      function paymentPill(status) {
-        var s = String(status || "").toLowerCase();
-        var label = s === "paid" ? "مدفوع" : s === "pending" ? "معلق" : status || "—";
-        var kind = s === "paid" ? "ok" : "warn";
-        return pill(label, kind);
-      }
-
-      async function boot() {
-        if (!window.PlatformAPI || !window.PlatformAPI.getToken || !window.PlatformAPI.getToken()) {
-          return;
-        }
-        try {
-          var data = await window.PlatformAPI.api("/api/store/merchant-dashboard");
-          document.getElementById("hint").style.display = "none";
-          document.getElementById("main").style.display = "block";
-
-          var s = data.store || {};
-          merchantStoreId = s.id || null;
-          document.getElementById("mdHeroTitle").textContent = "📊 " + (s.name || "متجري");
-          document.getElementById("storePhone").textContent = s.phone ? "الجوال: " + s.phone : "";
-          var metaBits = [];
-          if (s.type) metaBits.push(s.type);
-          if (s.category_label_ar || s.category) metaBits.push(s.category_label_ar || s.category);
-          document.getElementById("storeMetaLine").textContent = metaBits.length ? metaBits.join(" · ") : "";
-
-          var pub = document.getElementById("publicStoreLink");
-          if (s.id) {
-            var storeUrl =
-              window.ErvenowStoreShell && ErvenowStoreShell.buildPublicStoreUrl
-                ? ErvenowStoreShell.buildPublicStoreUrl(s.id)
-                : "/store.html?id=" + encodeURIComponent(s.id) + "&preview=1";
-            pub.href = storeUrl;
-            if (window.ErvenowStoreShell && ErvenowStoreShell.setPublicStoreUrl) {
-              ErvenowStoreShell.setPublicStoreUrl(storeUrl);
-            }
-          }
-
-          var agg = data.aggregates || {};
-          document.getElementById("statOrders").textContent = String(agg.orders_count || 0);
-          document.getElementById("statProducts").textContent = String(agg.products_active_count || 0);
-          document.getElementById("statRevenue").textContent = (Number(agg.revenue_orders_sum) || 0).toFixed(2);
-
-          var wal = Number((data.wallet && data.wallet.balance) || 0);
-          document.getElementById("statWallet").textContent = wal.toLocaleString("ar-SA", {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-          });
-          if (window.ErvenowStoreShell && ErvenowStoreShell.refreshWallet) {
-            ErvenowStoreShell.refreshWallet(wal);
-          }
-
-          var orders = data.orders || [];
-          var ob = document.querySelector("#ordersTable tbody");
-          ob.innerHTML = "";
-          if (!orders.length) {
-            document.getElementById("ordersEmpty").style.display = "block";
-          } else {
-            document.getElementById("ordersEmpty").style.display = "none";
-            orders.forEach(function (o) {
-              var tr = document.createElement("tr");
-              tr.innerHTML =
-                "<td>" +
-                esc(fmtDate(o.created_at)) +
-                "</td><td>" +
-                esc(o.order_number || o.id) +
-                "</td><td>" +
-                pill(o.status || "—", "muted") +
-                "</td><td>" +
-                paymentPill(o.payment_status) +
-                (o.payment_method
-                  ? ' <span class="sub">(' + esc(o.payment_method) + ")</span>"
-                  : "") +
-                "</td><td>" +
-                deliveryPill(o.delivery_status) +
-                "</td><td>" +
-                renderOrderAction(o) +
-                "</td><td>" +
-                (Number(o.order_total) || 0).toFixed(2) +
-                "</td><td><strong>" +
-                (Number(o.total_with_vat != null ? o.total_with_vat : o.total_amount) || 0).toFixed(2) +
-                "</strong></td>";
-              ob.appendChild(tr);
-            });
-            bindOrderActions();
-          }
-
-          connectMerchantSocket();
-
-          var txs = data.transactions || [];
-          var tb = document.querySelector("#txTable tbody");
-          tb.innerHTML = "";
-          if (!txs.length) {
-            document.getElementById("txEmpty").style.display = "block";
-          } else {
-            document.getElementById("txEmpty").style.display = "none";
-            txs.forEach(function (t) {
-              var tr = document.createElement("tr");
-              var amt = Number(t.amount) || 0;
-              tr.innerHTML =
-                "<td>" +
-                esc(fmtDate(t.created_at)) +
-                "</td><td><strong>" +
-                amt.toFixed(2) +
-                '</strong> <span class="sub">ريال</span></td><td>' +
-                esc(t.description || "—") +
-                "</td>";
-              tb.appendChild(tr);
-            });
-          }
-        } catch (e) {
-          show(String((e && e.message) || e || "تعذر التحميل"), false);
-        }
-      }
-
-      boot();
     </script>
   </body>
 </html>

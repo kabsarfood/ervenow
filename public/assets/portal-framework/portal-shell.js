@@ -326,14 +326,29 @@
       global.addEventListener("hashchange", onHashChange);
     }
 
+    function canonicalSectionId(raw) {
+      var rc = PF().RoleContext;
+      var hash = String(raw || "").replace(/^#/, "");
+      if (rc && typeof rc.normalizeSection === "function") {
+        return rc.normalizeSection(state.role, hash) || hash;
+      }
+      return hash;
+    }
+
     function onHashChange() {
       var hash = (global.location.hash || "").replace(/^#/, "");
       var rc = PF().RoleContext;
-      if (hash && rc && rc.isValidSection(state.role, hash) && hash !== state.activeSection) {
-        state.activeSection = hash;
-        if (state.onNavigate) state.onNavigate(hash, api);
-        else renderNav();
+      if (!hash || !rc || !rc.isValidSection(state.role, hash)) return;
+      var section = canonicalSectionId(hash);
+      if (section === state.activeSection) return;
+      state.activeSection = section;
+      if (state.hashBase && section !== hash) {
+        try {
+          global.history.replaceState(null, "", state.hashBase + "#" + section);
+        } catch (_) {}
       }
+      if (state.onNavigate) state.onNavigate(section, api);
+      else renderNav();
     }
 
     function updateMenuBtn(open) {
@@ -381,16 +396,17 @@
         global.location.href = item.href;
         return;
       }
-      state.activeSection = section;
+      var next = canonicalSectionId(section) || section;
+      state.activeSection = next;
       closeSidebar();
       renderNav();
-      syncBottomNav(section);
+      syncBottomNav(next);
       if (state.hashBase) {
         try {
-          global.history.replaceState(null, "", state.hashBase + "#" + section);
+          global.history.replaceState(null, "", state.hashBase + "#" + next);
         } catch (_) {}
       }
-      if (state.onNavigate) state.onNavigate(section, api);
+      if (state.onNavigate) state.onNavigate(next, api);
     }
 
     function renderNav() {
@@ -484,7 +500,14 @@
     function parseInitialHash() {
       var hash = (global.location.hash || "").replace(/^#/, "");
       var rc = PF().RoleContext;
-      if (hash && rc && rc.isValidSection(state.role, hash)) state.activeSection = hash;
+      if (hash && rc && rc.isValidSection(state.role, hash)) {
+        state.activeSection = canonicalSectionId(hash);
+        if (state.hashBase && state.activeSection && state.activeSection !== hash) {
+          try {
+            global.history.replaceState(null, "", state.hashBase + "#" + state.activeSection);
+          } catch (_) {}
+        }
+      }
     }
 
     var api = {

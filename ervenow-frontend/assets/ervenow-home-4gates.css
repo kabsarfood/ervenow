@@ -418,9 +418,47 @@ html.erv-mobile-shell body.lp-home-premium .erv-gate__meta {
   display: block !important;
 }
 
+body.lp-home-premium .erv-gate__cta,
+body.lp-home-premium .erv-gate--stores .erv-gate__cta,
+body.lp-home-premium .erv-gate--delivery .erv-gate__cta,
+body.lp-home-premium .erv-gate--services .erv-gate__cta,
 html.erv-mobile-shell body.lp-home-premium .erv-gate__cta,
 html.erv-mobile-shell body.lp-home-premium .erv-gate--stores .erv-gate__cta,
 html.erv-mobile-shell body.lp-home-premium .erv-gate--delivery .erv-gate__cta,
 html.erv-mobile-shell body.lp-home-premium .erv-gate--services .erv-gate__cta {
-  color: #146c43 !important;
+  align-self: flex-start;
+  min-height: 44px;
+  margin-top: 8px;
+  padding: 0 14px;
+  border-radius: 12px;
+  color: #fff !important;
+  line-height: 44px;
+}
+
+body.lp-home-premium .erv-gate--food .erv-gate__cta {
+  background: #ff7a00;
+}
+
+body.lp-home-premium .erv-gate--stores .erv-gate__cta {
+  background: #087bc1;
+}
+
+body.lp-home-premium .erv-gate--delivery .erv-gate__cta {
+  background: #008a48;
+}
+
+body.lp-home-premium .erv-gate--services .erv-gate__cta {
+  background: #6c20c7;
+}
+
+@media (min-width: 1025px) {
+  html:not(.erv-mobile-shell) body.lp-home-premium .erv-gate {
+    height: auto;
+    min-height: 286px;
+  }
+
+  html:not(.erv-mobile-shell) body.lp-home-premium .erv-gate__cta {
+    min-height: 40px;
+    line-height: 40px;
+  }
 }

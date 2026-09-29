@@ -9,13 +9,15 @@
   var NAV_REGISTRY = {
     home: { id: "home", icon: "🏠", label: "الرئيسية", en: "Home" },
     dashboard: { id: "dashboard", icon: "📊", label: "لوحة التحكم", en: "Dashboard" },
+    store: { id: "store", icon: "🏪", label: "المتجر", en: "Store" },
+    employees: { id: "employees", icon: "👤", label: "الموظفون", en: "Employees" },
     orders: { id: "orders", icon: "📦", label: "الطلبات", en: "Orders" },
     products: { id: "products", icon: "🛍", label: "المنتجات", en: "Products" },
     categories: { id: "categories", icon: "📂", label: "الفئات", en: "Categories" },
     offers: { id: "offers", icon: "🏷", label: "العروض", en: "Offers" },
     wallet: { id: "wallet", icon: "💳", label: "المحفظة", en: "Wallet" },
     withdrawals: { id: "withdrawals", icon: "🏧", label: "السحوبات", en: "Withdrawals" },
-    pos: { id: "pos", icon: "🧾", label: "الكاشير POS", en: "POS" },
+    pos: { id: "pos", icon: "🧾", label: "الكاشير", en: "POS" },
     "store-admin": { id: "store-admin", icon: "🏪", label: "إدارة المتجر", en: "Store admin" },
     reports: { id: "reports", icon: "📈", label: "التقارير", en: "Reports" },
     expenses: { id: "expenses", icon: "💸", label: "المصروفات", en: "Expenses" },
@@ -56,25 +58,20 @@
       theme: "merchant",
       sidebarLocation: true,
       loginUrl: "/login?role=store",
-      defaultSection: "dashboard",
+      defaultSection: "home",
       items: [
-        "dashboard",
+        "home",
         "orders",
-        "pos",
-        "store-admin",
+        "store",
         "products",
-        "categories",
-        "offers",
-        "reviews",
-        "visitor-preview",
+        "pos",
         "wallet",
-        "withdrawals",
-        "expenses",
+        "employees",
         "reports",
-        "notifications",
         "settings",
       ],
-      sidebarFoot: [{ href: "/order-board", label: "لوحة الطلبات" }],
+      extraSections: ["reviews", "notifications"],
+      sidebarFoot: [],
     },
     driver: {
       portal: "driver",
@@ -146,10 +143,41 @@
     return cfg ? cfg.nav : [];
   }
 
+  var MERCHANT_HASH_ALIASES = {
+    dashboard: "home",
+    home: "home",
+    walletAnchor: "wallet",
+    withdrawals: "wallet",
+    "store-admin": "store",
+    "visitor-preview": "store",
+    categories: "products",
+    offers: "products",
+    cashiers: "employees",
+    employees: "employees",
+    complete: "settings",
+    expenses: "reports",
+  };
+
+  function normalizeSection(role, sectionId) {
+    var raw = String(sectionId || "").replace(/^#/, "").trim();
+    if (!raw) return "";
+    if (String(role || "").toLowerCase() !== "merchant") return raw;
+    if (Object.prototype.hasOwnProperty.call(MERCHANT_HASH_ALIASES, raw)) {
+      return MERCHANT_HASH_ALIASES[raw];
+    }
+    return raw;
+  }
+
   function isValidSection(role, sectionId) {
     var cfg = getConfig(role);
     if (!cfg) return false;
-    return (cfg.items || []).indexOf(sectionId) >= 0;
+    var raw = String(sectionId || "").replace(/^#/, "").trim();
+    if (!raw) return false;
+    var canonical = normalizeSection(role, raw);
+    if ((cfg.items || []).indexOf(canonical) >= 0) return true;
+    if ((cfg.extraSections || []).indexOf(raw) >= 0) return true;
+    if ((cfg.extraSections || []).indexOf(canonical) >= 0) return true;
+    return false;
   }
 
   async function loadFromUrl(role) {
@@ -173,6 +201,8 @@
     getNavItems: getNavItems,
     resolveNavItem: resolveNavItem,
     isValidSection: isValidSection,
+    normalizeSection: normalizeSection,
+    MERCHANT_HASH_ALIASES: MERCHANT_HASH_ALIASES,
     loadFromUrl: loadFromUrl,
     registry: NAV_REGISTRY,
     esc: esc,

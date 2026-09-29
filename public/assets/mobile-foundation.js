@@ -477,7 +477,39 @@
       el.classList.toggle("is-active", k === key);
     });
     var acc = document.getElementById("ervMobileNavAccount");
-    if (acc) acc.setAttribute("href", accountHref());
+    if (acc) {
+      var dest = global.ErvenowAccountDest;
+      var phone =
+        (dest && dest.formatOwnPhone
+          ? dest.formatOwnPhone((global.__ervSessionMe && global.__ervSessionMe.user && global.__ervSessionMe.user.phone) ||
+              (global.__ervSessionMe && global.__ervSessionMe.profile && global.__ervSessionMe.profile.phone) ||
+              "")
+          : "") || "";
+      var labelEl = acc.querySelector(".erv-mobile-bottom-nav__label");
+      if (hasToken() && phone) {
+        acc.setAttribute("href", "#");
+        acc.classList.add("is-session");
+        acc.setAttribute("aria-haspopup", "true");
+        acc.setAttribute("aria-controls", "ervAccountSessionMenu");
+        if (labelEl) labelEl.textContent = dest && dest.compactOwnPhone ? dest.compactOwnPhone(phone) : phone.replace(/\s+/g, "");
+        if (acc.getAttribute("data-erv-session-wired") !== "1") {
+          acc.setAttribute("data-erv-session-wired", "1");
+          acc.addEventListener("click", function (e) {
+            if (!hasToken()) return;
+            e.preventDefault();
+            e.stopPropagation();
+            if (global.ErvenowAccountDest && ErvenowAccountDest.toggleSessionMenu) {
+              ErvenowAccountDest.toggleSessionMenu(acc);
+            }
+          });
+        }
+      } else {
+        acc.classList.remove("is-session");
+        acc.setAttribute("href", accountHref());
+        acc.removeAttribute("aria-haspopup");
+        if (labelEl) labelEl.textContent = "حسابي";
+      }
+    }
     var ordersLink = nav.querySelector('.erv-mobile-bottom-nav__item[data-erv-nav="orders"]');
     if (ordersLink) ordersLink.setAttribute("href", ordersHref());
   }

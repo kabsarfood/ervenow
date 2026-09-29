@@ -111,7 +111,7 @@ app.renderCustomers = function () {
       "<div>تاريخ التسجيل: " + app.fmtWhen(u.created_at) + "</div>" +
       "<div>نوع الحساب: عضو ERVENOW</div>" +
       '<div>حالة الحساب: <span class="finance-status-badge ' + meta.badgeCls + '">' + meta.stLabel + "</span></div>" +
-      "<div>آخر نشاط: " + app.fmtWhen(u.updated_at || u.created_at) + "</div>";
+      "<div>آخر نشاط: " + app.fmtWhen(u.last_seen_at || u.updated_at || u.created_at) + "</div>";
     var row = document.createElement("div");
     row.className = "row";
     if (meta.pending) {
@@ -186,7 +186,7 @@ app.renderStores = function () {
       "<div>تاريخ التسجيل: " + app.fmtWhen(s.created_at) + "</div>" +
       "<div>نوع الحساب: " + (s.type || "متجر") + "</div>" +
       "<div>حالة الحساب: " + (s.status || "pending") + "</div>" +
-      "<div>آخر نشاط: " + app.fmtWhen(s.updated_at || s.created_at) + "</div>";
+      "<div>آخر نشاط: " + app.fmtWhen(s.last_seen_at || s.updated_at || s.created_at) + "</div>";
     var row = document.createElement("div");
     row.className = "row";
     row.appendChild(app.mkAction("تعديل", "btn-ghost", app.safeClick(function () {
@@ -198,7 +198,7 @@ app.renderStores = function () {
           method: "PATCH",
           body: { action: "approve" },
         });
-        var panel = (res && res.merchant_panel_url) || "/merchant-preview";
+        var panel = (res && res.merchant_panel_url) || "/merchant-dashboard#home";
         app.showSuccess(
           "تم قبول المتجر. لوحة التحكم للتاجر: " + panel + " (دخول كتاجر بنفس الجوال)"
         );
@@ -210,7 +210,7 @@ app.renderStores = function () {
       panelNote.className = "sub";
       panelNote.style.marginTop = "6px";
       panelNote.innerHTML =
-        'لوحة التحكم: <a href="/merchant-preview" target="_blank" rel="noopener">/merchant-preview</a> · ' +
+        'لوحة التحكم: <a href="/merchant-dashboard#home" target="_blank" rel="noopener">/merchant-dashboard</a> · ' +
         '<a href="/store.html?id=' + encodeURIComponent(s.id) + '" target="_blank" rel="noopener">صفحة العملاء</a>';
       item.appendChild(panelNote);
     }
@@ -319,7 +319,7 @@ app.openStoreSetup = async function (storeId) {
         '<a href="' +
         pub +
         '" target="_blank" rel="noopener">معاينة صفحة العملاء</a> · ' +
-        '<a href="/merchant-preview" target="_blank" rel="noopener">لوحة التاجر</a>';
+        '<a href="/merchant-dashboard#home" target="_blank" rel="noopener">لوحة التاجر</a>';
     }
     var prev = document.getElementById("storeSetupPreview");
     if (prev) {

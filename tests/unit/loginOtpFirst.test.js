@@ -201,13 +201,13 @@ describe("OTP-first unified login/register", () => {
     });
   });
 
-  test("2 existing merchant OTP lands on /merchant-preview", async () => {
+  test("2 existing merchant OTP lands on /merchant-dashboard#home", async () => {
     const app = makeApp();
     await withServer(app, async (port) => {
       const verified = await loginExisting(port, "+966502222222", rows.merchant);
       expect(verified.status).toBe(200);
       expect(verified.json.user.role).toBe("store");
-      expect(resolvePostLoginPath(verified.json.user)).toBe("/merchant-preview");
+      expect(resolvePostLoginPath(verified.json.user)).toBe("/merchant-dashboard#home");
     });
   });
 

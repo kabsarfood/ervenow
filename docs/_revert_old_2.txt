@@ -1,0 +1,3 @@
+      <div class="erv-mp-hub-head">
+        <h2 class="sn-section__title sn-section__title--solo" id="home-cats-title">الأقسام الرئيسية</h2>
+      </div>

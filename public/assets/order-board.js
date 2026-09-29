@@ -106,8 +106,6 @@
         c.emoji +
         "</span>" +
         '<span class="ob-counter__lbl">' +
-        esc(c.label) +
-        " · " +
         esc(c.ar) +
         "</span>" +
         '<span class="ob-counter__val">' +
@@ -194,10 +192,24 @@
     grid.innerHTML = "";
 
     if (!list.length) {
-      if (empty) empty.style.display = "block";
+      if (empty) {
+        var title = document.getElementById("obEmptyTitle");
+        var hint = document.getElementById("obEmptyHint");
+        if (activeFilter) {
+          var def = COUNTER_DEFS.find(function (c) {
+            return c.key === activeFilter;
+          });
+          if (title) title.textContent = "لا طلبات في قسم «" + (def ? def.ar : "هذا الفلتر") + "»";
+          if (hint) hint.textContent = "لا يوجد طلب بهذه الحالة الآن. جرّب قسماً آخر أو حدّث اللوحة.";
+        } else {
+          if (title) title.textContent = "لا طلبات نشطة حالياً";
+          if (hint) hint.textContent = "عندما يصل طلب جديد سيظهر هنا مباشرة. حدّث اللوحة أو راجع التقارير.";
+        }
+        empty.hidden = false;
+      }
       return;
     }
-    if (empty) empty.style.display = "none";
+    if (empty) empty.hidden = true;
 
     list.forEach(function (o) {
       var card = document.createElement("article");
@@ -306,6 +318,10 @@
   }
 
   function destroyDetailMap() {
+    if (window.ErvenowMerchantOrderOps && ErvenowMerchantOrderOps.destroyMap) {
+      ErvenowMerchantOrderOps.destroyMap();
+      return;
+    }
     if (detailMap) {
       try {
         detailMap.remove();
@@ -406,7 +422,13 @@
 
     backdrop.classList.add("is-open");
     backdrop.setAttribute("aria-hidden", "false");
-    if (hasMap) initDetailMap(lat, lng);
+    if (hasMap) {
+      if (window.ErvenowMerchantOrderOps && ErvenowMerchantOrderOps.mountDropMap) {
+        ErvenowMerchantOrderOps.mountDropMap("obDetailMap", order);
+      } else {
+        initDetailMap(lat, lng);
+      }
+    }
   }
 
   function closeDetail() {
@@ -494,9 +516,14 @@
     }
   }
 
-  document.getElementById("obRefreshBtn").addEventListener("click", function () {
+  function requestRefresh() {
     loadBoard();
-  });
+  }
+
+  var refreshBtn = document.getElementById("obRefreshBtn");
+  if (refreshBtn) refreshBtn.addEventListener("click", requestRefresh);
+  var emptyRefresh = document.getElementById("obEmptyRefresh");
+  if (emptyRefresh) emptyRefresh.addEventListener("click", requestRefresh);
   document.getElementById("obModalClose").addEventListener("click", closeDetail);
   document.getElementById("obModalBackdrop").addEventListener("click", function (ev) {
     if (ev.target === document.getElementById("obModalBackdrop")) closeDetail();

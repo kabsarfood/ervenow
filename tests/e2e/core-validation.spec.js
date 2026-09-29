@@ -316,26 +316,26 @@ test.describe("ERVENOW Core Validation — Merchant", () => {
     await installPortalMocks(page, MOCK_STORE_USER);
     await stubAuthGuard(page);
     await seedToken(page, MOCK_STORE_USER);
-    await page.goto("/merchant-preview", { waitUntil: "domcontentloaded" });
+    await page.goto("/merchant-dashboard", { waitUntil: "domcontentloaded" });
     await waitPortalReady(page, "#mpApp");
     await shot(page, "merchant-dashboard.png");
 
-    await page.goto("/merchant-preview#orders", { waitUntil: "domcontentloaded" });
+    await page.goto("/merchant-dashboard#orders", { waitUntil: "domcontentloaded" });
     await waitPortalReady(page, "#mpApp");
     await expect(page.locator("text=الطلبات").first()).toBeVisible();
     await shot(page, "merchant-orders.png");
 
-    await page.goto("/merchant-preview#categories", { waitUntil: "domcontentloaded" });
+    await page.goto("/merchant-dashboard#products", { waitUntil: "domcontentloaded" });
     await waitPortalReady(page, "#mpApp");
     await expect(page.locator("text=جميع الفئات").first()).toBeVisible();
     await shot(page, "merchant-categories.png");
 
-    await page.goto("/merchant-preview#withdrawals", { waitUntil: "domcontentloaded" });
+    await page.goto("/merchant-dashboard#wallet", { waitUntil: "domcontentloaded" });
     await waitPortalReady(page, "#mpApp");
     await expect(page.locator("text=آخر عمليات السحب").first()).toBeVisible();
     await shot(page, "merchant-withdrawals.png");
 
-    await page.goto("/merchant-preview#notifications", { waitUntil: "domcontentloaded" });
+    await page.goto("/merchant-dashboard#notifications", { waitUntil: "domcontentloaded" });
     await waitPortalReady(page, "#mpApp");
     await expect(page.locator(".erv-notif-page, .mp-notif-host").first()).toBeVisible({ timeout: 15000 });
     await shot(page, "merchant-notifications.png");

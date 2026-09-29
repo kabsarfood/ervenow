@@ -37,7 +37,7 @@
   };
 
   var OPERATIONAL_PORTAL_PATHS = {
-    merchant: "/merchant-preview",
+    merchant: "/merchant-dashboard",
     driver: "/driver-preview",
     service: "/service-preview",
     transport: "/transport-preview",
@@ -52,6 +52,7 @@
     merchant: true,
   };
 
+  /* توافق فقط — ليس وجهة تشغيل للتاجر */
   var PORTAL_LEGACY_PATHS = {
     driver: "/driver",
     merchant: "/store-dashboard",
@@ -63,7 +64,7 @@
     driver: "ERVENOW Driver",
     service: "ERVENOW Service",
     transport: "ERVENOW Transport",
-    admin: "ERVENOW Admin Console",
+    admin: "لوحة التحكم",
   };
 
   var KNOWN_DB_ROLES = {
@@ -167,6 +168,7 @@
     if (PORTAL_LIVE[r] !== false) {
       return portalPreviewPathForRole(r);
     }
+    if (r === "merchant") return portalPreviewPathForRole(r);
     return PORTAL_LEGACY_PATHS[r] || portalPreviewPathForRole(r);
   }
 
@@ -185,7 +187,10 @@
     if (String((user && user.role) || "").toLowerCase() === "blocked") {
       return "/blocked-complaints";
     }
-    return portalPathForRole(resolvePortalRole(user).portalRole);
+    var portal = resolvePortalRole(user).portalRole;
+    var path = portalPathForRole(portal);
+    if (portal === "merchant") return path + "#home";
+    return path;
   }
 
   function walletPathForUser(user) {

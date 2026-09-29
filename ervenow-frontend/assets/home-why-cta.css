@@ -605,3 +605,143 @@ html body.lp-home-premium .erv-account-phone__num {
   direction: ltr;
   unicode-bidi: isolate;
 }
+
+html:not(.erv-mobile-shell) body.lp-home-premium #lpHeaderUserMid {
+  display: none !important;
+}
+
+/* بطاقة تواصل معنا — خلفية مكتب استقبال مكالمات */
+body.lp-home-premium .lp-home-cta-card--support,
+html.erv-mobile-shell body.lp-home-premium .lp-home-cta-card--support {
+  position: relative !important;
+  isolation: isolate;
+  overflow: hidden !important;
+  min-height: 200px !important;
+  border-color: rgba(15, 90, 55, 0.18) !important;
+  background: #0c3d2c !important;
+}
+
+body.lp-home-premium .lp-home-cta-card--support::before,
+html.erv-mobile-shell body.lp-home-premium .lp-home-cta-card--support::before,
+html:not(.erv-mobile-shell) body.lp-home-premium .lp-home-cta-card--support::before {
+  content: "" !important;
+  display: block !important;
+  position: absolute !important;
+  inset: 0 !important;
+  z-index: 0 !important;
+  background: url("/assets/ervenow-cta-contact.jpg") center center / cover no-repeat !important;
+}
+
+body.lp-home-premium .lp-home-cta-card--support::after,
+html.erv-mobile-shell body.lp-home-premium .lp-home-cta-card--support::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(
+    to left,
+    rgba(12, 48, 36, 0.92) 0%,
+    rgba(12, 48, 36, 0.78) 38%,
+    rgba(12, 48, 36, 0.35) 68%,
+    rgba(12, 48, 36, 0.12) 100%
+  );
+  pointer-events: none;
+}
+
+body.lp-home-premium .lp-home-cta-card--support > *,
+html.erv-mobile-shell body.lp-home-premium .lp-home-cta-card--support > * {
+  position: relative;
+  z-index: 2;
+}
+
+body.lp-home-premium .lp-home-cta-card--support .lp-home-cta-card__title,
+body.lp-home-premium .lp-home-cta-card--support .lp-home-cta-card__title-line,
+html.erv-mobile-shell body.lp-home-premium .lp-home-cta-card--support .lp-home-cta-card__title {
+  color: #fffefb !important;
+}
+
+body.lp-home-premium .lp-home-cta-card--support .lp-home-cta-card__text,
+html.erv-mobile-shell body.lp-home-premium .lp-home-cta-card--support .lp-home-cta-card__text {
+  color: rgba(255, 254, 251, 0.92) !important;
+}
+
+body.lp-home-premium .lp-home-cta-card--support .lp-home-cta-card__mark,
+html.erv-mobile-shell body.lp-home-premium .lp-home-cta-card--support .lp-home-cta-card__mark {
+  background: rgba(255, 254, 251, 0.16) !important;
+  border-color: rgba(255, 254, 251, 0.28) !important;
+  color: #fffefb !important;
+}
+
+body.lp-home-premium .lp-home-cta-card--support .lp-home-cta-card__btn,
+html.erv-mobile-shell body.lp-home-premium .lp-home-cta-card--support .lp-home-cta-card__btn {
+  background: #fffefb !important;
+  color: #0f5a37 !important;
+}
+
+/* بطاقة انضم كشريك — متجر في شارع تجاري */
+body.lp-home-premium .lp-home-cta-card--partner,
+html.erv-mobile-shell body.lp-home-premium .lp-home-cta-card--partner {
+  position: relative !important;
+  isolation: isolate;
+  overflow: hidden !important;
+  min-height: 200px !important;
+  border-color: rgba(15, 90, 55, 0.18) !important;
+  background: #0c3d2c !important;
+}
+
+body.lp-home-premium .lp-home-cta-card--partner::before,
+html.erv-mobile-shell body.lp-home-premium .lp-home-cta-card--partner::before,
+html:not(.erv-mobile-shell) body.lp-home-premium .lp-home-cta-card--partner::before {
+  content: "" !important;
+  display: block !important;
+  position: absolute !important;
+  inset: 0 !important;
+  z-index: 0 !important;
+  background: url("/assets/ervenow-cta-partner.jpg") center center / cover no-repeat !important;
+}
+
+body.lp-home-premium .lp-home-cta-card--partner::after,
+html.erv-mobile-shell body.lp-home-premium .lp-home-cta-card--partner::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(
+    to left,
+    rgba(12, 48, 36, 0.92) 0%,
+    rgba(12, 48, 36, 0.78) 38%,
+    rgba(12, 48, 36, 0.35) 68%,
+    rgba(12, 48, 36, 0.12) 100%
+  );
+  pointer-events: none;
+}
+
+body.lp-home-premium .lp-home-cta-card--partner > *,
+html.erv-mobile-shell body.lp-home-premium .lp-home-cta-card--partner > * {
+  position: relative;
+  z-index: 2;
+}
+
+body.lp-home-premium .lp-home-cta-card--partner .lp-home-cta-card__title,
+body.lp-home-premium .lp-home-cta-card--partner .lp-home-cta-card__title-line,
+html.erv-mobile-shell body.lp-home-premium .lp-home-cta-card--partner .lp-home-cta-card__title {
+  color: #fffefb !important;
+}
+
+body.lp-home-premium .lp-home-cta-card--partner .lp-home-cta-card__text,
+html.erv-mobile-shell body.lp-home-premium .lp-home-cta-card--partner .lp-home-cta-card__text {
+  color: rgba(255, 254, 251, 0.92) !important;
+}
+
+body.lp-home-premium .lp-home-cta-card--partner .lp-home-cta-card__mark,
+html.erv-mobile-shell body.lp-home-premium .lp-home-cta-card--partner .lp-home-cta-card__mark {
+  background: rgba(255, 254, 251, 0.16) !important;
+  border-color: rgba(255, 254, 251, 0.28) !important;
+  color: #fffefb !important;
+}
+
+body.lp-home-premium .lp-home-cta-card--partner .lp-home-cta-card__btn,
+html.erv-mobile-shell body.lp-home-premium .lp-home-cta-card--partner .lp-home-cta-card__btn {
+  background: #fffefb !important;
+  color: #0f5a37 !important;
+}

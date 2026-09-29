@@ -1,0 +1,37 @@
+      <div
+        class="erv-mp-stats sn-stats"
+        id="stats"
+        role="list"
+        aria-label="أرقام المنصة"
+        data-marketing-slot="platform_stats"
+        data-marketing-parent="hub_section"
+      >
+        <div class="erv-mp-stats__item" role="listitem">
+          <span class="erv-mp-stats__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 2 4 14h7l-1 8 10-14h-7l0-6z"/></svg>
+          </span>
+          <strong class="erv-mp-stats__value">30 دقيقة</strong>
+          <span class="erv-mp-stats__label">توصيل سريع</span>
+        </div>
+        <div class="erv-mp-stats__item" role="listitem">
+          <span class="erv-mp-stats__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.1 2 5 5.1 5 9c0 5.2 7 13 7 13s7-7.8 7-13c0-3.9-3.1-7-7-7zm0 9.5A2.5 2.5 0 1 1 12 6a2.5 2.5 0 0 1 0 5.5z"/></svg>
+          </span>
+          <strong class="erv-mp-stats__value"><span class="js-count" data-target="12" data-suffix="+">12+</span></strong>
+          <span class="erv-mp-stats__label">المدن المخدومة</span>
+        </div>
+        <div class="erv-mp-stats__item" role="listitem">
+          <span class="erv-mp-stats__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 9.5 12 3l9 6.5V20a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1V9.5z"/></svg>
+          </span>
+          <strong class="erv-mp-stats__value"><span class="js-count" data-erv-mp-stat="stores" data-target="120" data-suffix="+">120+</span></strong>
+          <span class="erv-mp-stats__label">متجر نشط</span>
+        </div>
+        <div class="erv-mp-stats__item" role="listitem">
+          <span class="erv-mp-stats__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12a4.5 4.5 0 1 0-4.5-4.5A4.5 4.5 0 0 0 12 12zm0 2c-4 0-8 2-8 5v1h16v-1c0-3-4-5-8-5z"/></svg>
+          </span>
+          <strong class="erv-mp-stats__value"><span class="js-count" data-target="5000" data-suffix="+">5000+</span></strong>
+          <span class="erv-mp-stats__label">عدد العملاء</span>
+        </div>
+      </div>

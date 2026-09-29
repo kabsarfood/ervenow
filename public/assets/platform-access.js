@@ -106,7 +106,7 @@
     var r = user.role;
     if (r === "admin") return "/admin-dashboard";
     if (r === "driver") return "/driver-preview";
-    if (r === "store" || r === "merchant" || r === "restaurant") return "/merchant-preview";
+    if (r === "store" || r === "merchant" || r === "restaurant") return "/merchant-dashboard#home";
     if (r === "service") return "/service-preview";
     return "/";
   }

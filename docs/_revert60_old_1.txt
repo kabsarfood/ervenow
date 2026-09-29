@@ -1,0 +1,16 @@
+    <div class="erv-mp-discover" id="ervMpDiscover" data-home-discover>
+      <section class="erv-mp-section" id="ervMpNearbySection" hidden aria-labelledby="ervMpNearbyTitle">
+        <div class="erv-mp-section__head">
+          <h2 class="erv-mp-section__title" id="ervMpNearbyTitle">الأعلى تقييماً</h2>
+          <a class="erv-mp-section__more" href="/stores">عرض الكل ←</a>
+        </div>
+        <div class="erv-mp-grid" id="ervMpNearbyGrid"></div>
+      </section>
+
+      <section class="erv-mp-section" id="ervMpProductsSection" hidden aria-labelledby="ervMpProductsTitle">
+        <div class="erv-mp-section__head">
+          <h2 class="erv-mp-section__title" id="ervMpProductsTitle">الأكثر طلباً</h2>
+          <a class="erv-mp-section__more" href="/restaurants">عرض الكل ←</a>
+        </div>
+        <div class="erv-mp-products" id="ervMpProductsGrid"></div>
+      </section>

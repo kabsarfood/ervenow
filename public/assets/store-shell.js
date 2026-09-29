@@ -88,10 +88,10 @@
     var role = normalizeRole(opts.role || _sessionRole);
     var merchantHome =
       (global.ErvenowRoleRouting && ErvenowRoleRouting.portalPathForRole("merchant")) ||
-      "/merchant-preview";
+      "/merchant-dashboard";
     var links = [
-      { key: "store", href: merchantHome, label: "لوحة المتجر" },
-      { key: "order-board", href: "/order-board", label: "لوحة الطلبات" },
+      { key: "store", href: merchantHome + "#home", label: "لوحة المتجر" },
+      { key: "order-board", href: merchantHome + "#orders", label: "لوحة الطلبات" },
     ];
     if (role === "service") {
       var svcHome =
@@ -175,9 +175,9 @@
       '<div class="dash-site-header__inner">' +
       '<div class="dash-site-header__brand">' +
       '<a class="dash-site-header__logo erv-wordmark-host" href="' +
-      ((global.ErvenowRoleRouting && ErvenowRoleRouting.portalPathForRole("merchant")) || "/merchant-preview") +
+      ((global.ErvenowRoleRouting && ErvenowRoleRouting.portalPathForRole("merchant")) || "/merchant-dashboard") +
       '">' +
-      '<span class="erv-wordmark" dir="ltr"><span class="erv-wordmark__name"><span class="erv-wordmark__erve">ERVE</span><span class="erv-wordmark__now">NOW</span></span><span class="erv-wordmark__tag">PLATFORM</span></span>' +
+      '<span class="erv-wordmark" dir="ltr" role="img" aria-label="ERVENOW PLATFORM"><span class="erv-wordmark__name" aria-hidden="true"><span class="erv-wordmark__erve"><span class="erv-wordmark__e"><i></i><i></i><i></i></span>RVE</span><span class="erv-wordmark__now">N<svg class="erv-wordmark__pin" viewBox="0 0 24 32" aria-hidden="true" focusable="false"><path fill="currentColor" fill-rule="evenodd" d="M12 1.5C7.1 1.5 3.2 5.5 3.2 10.5 3.2 16.6 12 30.4 12 30.4S20.8 16.6 20.8 10.5C20.8 5.5 16.9 1.5 12 1.5zm0 12.8a3.4 3.4 0 1 1 0-6.8 3.4 3.4 0 0 1 0 6.8z"/></svg>W</span></span><span class="erv-wordmark__tag" aria-hidden="true">PLATFORM</span></span>' +
       "</a>" +
       '<p class="dash-site-header__tag" id="storeShellPageTag">' +
       pageTag +
@@ -190,7 +190,7 @@
       "</nav>" +
       '<div class="dash-site-header__tools store-site-header__tools">' +
       '<div id="storeHeaderNotifications"></div>' +
-      '<a class="dash-header-wallet store-header-wallet" id="storeHeaderWallet" href="#walletAnchor" aria-label="المحفظة المالية">' +
+      '<a class="dash-header-wallet store-header-wallet" id="storeHeaderWallet" href="/merchant-dashboard#wallet" aria-label="المحفظة المالية">' +
       '<span class="dash-header-wallet__icon" aria-hidden="true">💰</span>' +
       '<span class="dash-header-wallet__meta">' +
       '<span class="dash-header-wallet__label">المحفظة</span>' +
@@ -426,7 +426,7 @@
         ? ErvenowAccountDest.walletHrefFor(role)
         : (global.ErvenowRoleRouting && ErvenowRoleRouting.walletPathForUser
             ? ErvenowRoleRouting.walletPathForUser({ role: role })
-            : "/merchant-preview#wallet");
+            : "/merchant-dashboard#wallet");
     box.setAttribute("href", walletHref);
     amountEl.textContent = "…";
     try {
@@ -493,7 +493,7 @@
 
   function loadIdentityRoutingScripts() {
     loadScriptOnce("/assets/role-routing.js?erv=20260921dest1", "data-erv-role-routing");
-    loadScriptOnce("/assets/account-destinations.js?erv=20260921dest1", "data-erv-account-dest");
+    loadScriptOnce("/assets/account-destinations.js?erv=20260929acct1", "data-erv-account-dest");
   }
 
   function whenRoutingReady(cb, tries) {

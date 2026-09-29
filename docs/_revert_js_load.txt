@@ -1,0 +1,104 @@
+  async function loadDiscovery() {
+    var gen = ++discoveryGen;
+    var nearbySection = document.getElementById("ervMpNearbySection");
+    var nearbyGrid = document.getElementById("ervMpNearbyGrid");
+    var restaurantsSection = document.getElementById("ervMpRestaurantsSection");
+    var restaurantsGrid = document.getElementById("ervMpRestaurantsGrid");
+    var storesSection = document.getElementById("ervMpStoresSection");
+    var storesGrid = document.getElementById("ervMpStoresGrid");
+    var productsSection = document.getElementById("ervMpProductsSection");
+    var productsGrid = document.getElementById("ervMpProductsGrid");
+    var discover = document.getElementById("ervMpDiscover");
+
+    revealDiscoverShell();
+    pinDiscoverAfterHub();
+    if (discover) discover.hidden = false;
+
+    var geo = readGeo();
+    var geoQs = "";
+    if (geo) {
+      geoQs =
+        "&user_lat=" +
+        encodeURIComponent(geo.lat) +
+        "&user_lng=" +
+        encodeURIComponent(geo.lng);
+    }
+
+    try {
+      var all = await fetchStores("?sort=rating" + geoQs);
+      if (gen !== discoveryGen) return;
+      if (!all.length) {
+        all = await fetchStores("?limit=200");
+        if (gen !== discoveryGen) return;
+      }
+
+      var restaurants = all.filter(function (s) {
+        return String(s.type || "").toLowerCase() === "restaurant";
+      });
+      var stores = all.filter(function (s) {
+        return String(s.type || "").toLowerCase() !== "restaurant";
+      });
+
+      if (!restaurants.length) {
+        restaurants = await fetchStores("?type=restaurant&sort=rating" + geoQs);
+        if (gen !== discoveryGen) return;
+      }
+
+      var nearby = all.length ? all : restaurants.concat(stores);
+      setSectionTitle("ervMpNearbyTitle", "الأعلى تقييماً");
+      showSection(nearbySection, nearbyGrid, nearby);
+
+      if (restaurantsSection) restaurantsSection.hidden = true;
+      if (restaurantsGrid) restaurantsGrid.innerHTML = "";
+
+      var hasOrders = nearby.some(function (s) {
+        return Number(s.total_orders) > 0;
+      });
+      var ordered = hasOrders ? sortByOrders(nearby) : [];
+      var showOrderedStores =
+        ordered.length > 0 && idsHead(ordered, 4) !== idsHead(nearby, 4);
+
+      if (productsSection && productsGrid) {
+        var first = ordered[0] || nearby[0] || restaurants[0];
+        var products = first ? await fetchProducts(first.id) : [];
+        if (gen !== discoveryGen && productsGrid.children.length) {
+          /* newer paint already filled products */
+        } else if (products.length) {
+          productsSection.hidden = false;
+          setSectionTitle("ervMpProductsTitle", "الأكثر طلباً");
+          resetRail(productsGrid);
+          productsGrid.innerHTML = products
+            .slice(0, 10)
+            .map(function (p) {
+              return productCardHtml(p, first && first.id);
+            })
+            .join("");
+          productsGrid.querySelectorAll("img").forEach(function (img) {
+            img.addEventListener("error", function () {
+              img.src = defaultCover();
+            });
+          });
+          mountImageRail(productsGrid);
+          showOrderedStores = false;
+        } else if (!productsGrid.children.length) {
+          productsSection.hidden = true;
+          productsGrid.innerHTML = "";
+        }
+      }
+
+      if (showOrderedStores) {
+        setSectionTitle("ervMpStoresTitle", "الأكثر طلباً");
+        showSection(storesSection, storesGrid, ordered);
+      } else if (storesSection && (!storesGrid || !storesGrid.children.length)) {
+        storesSection.hidden = true;
+        if (storesGrid) storesGrid.innerHTML = "";
+      }
+    } catch (e) {
+      if (nearbyGrid && !nearbyGrid.children.length && nearbySection) {
+        nearbySection.hidden = true;
+      }
+      if (productsGrid && !productsGrid.children.length && productsSection) {
+        productsSection.hidden = true;
+      }
+    }
+  }

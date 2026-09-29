@@ -485,7 +485,22 @@
   }
 
   .erv-mobile-bottom-nav__item.is-active .erv-mobile-bottom-nav__label {
-    color: #b9872f;
+    color: inherit;
+  }
+
+  .erv-mobile-bottom-nav__item.is-session .erv-mobile-bottom-nav__icon-wrap {
+    display: none;
+  }
+
+  .erv-mobile-bottom-nav__item.is-session .erv-mobile-bottom-nav__label {
+    direction: ltr;
+    unicode-bidi: isolate;
+    font-size: 0.62rem;
+    font-weight: 800;
+    line-height: 1.2;
+    max-width: 4.8rem;
+    white-space: normal;
+    text-align: center;
   }
 
   .erv-mobile-bottom-nav .erv-mobile-bottom-nav__item:hover,

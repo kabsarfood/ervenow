@@ -62,7 +62,7 @@
     if (logo) {
       logo.setAttribute(
         "href",
-        (global.ErvenowRoleRouting && ErvenowRoleRouting.portalPathForRole("merchant")) || "/merchant-preview"
+        (global.ErvenowRoleRouting && ErvenowRoleRouting.portalPathForRole("merchant")) || "/merchant-dashboard"
       );
     }
 
@@ -76,7 +76,7 @@
         '<p class="store-preview-banner__text">' +
         "<strong>👁 معاينة المتجر</strong> — كما تظهر صفحتك للعملاء. عناصر المنصة للزوار مخفية في هذه المعاينة." +
         "</p>" +
-        '<a class="store-preview-banner__back btn btn-ghost" href="/merchant-preview">← العودة للوحة المتجر</a>' +
+        '<a class="store-preview-banner__back btn btn-ghost" href="/merchant-dashboard#store">← العودة للوحة المتجر</a>' +
         "</div>";
       var header = document.querySelector(".dash-site-header");
       if (header && header.parentNode) {

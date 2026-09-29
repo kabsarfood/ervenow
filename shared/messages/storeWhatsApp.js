@@ -22,7 +22,7 @@ function storeApprovedBody(storeName, options) {
   const arWho = who ? `${who} — ` : "";
   const base = publicBaseUrl();
   const word = facilityWord(options && options.type);
-  const panel = base ? `${base}/merchant-preview#complete` : "/merchant-preview#complete";
+  const panel = base ? `${base}/merchant-dashboard#settings` : "/merchant-dashboard#settings";
   const login = base ? `${base}/login?role=store` : "/login?role=store";
   return (
     `ERVENOW\n\n` +

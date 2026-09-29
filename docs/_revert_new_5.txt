@@ -1,0 +1,3 @@
+          <article class="erv-gate erv-gate--stores" role="listitem" data-home-gate="stores">
+            <img class="erv-gate__photo" src="/assets/cat-stores.jpg" alt="" width="800" height="450" decoding="async" />
+            <a class="erv-gate__main" href="/stores">

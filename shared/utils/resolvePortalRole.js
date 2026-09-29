@@ -157,7 +157,9 @@ function resolvePostLoginPath(user) {
     return "/blocked-complaints";
   }
   const resolved = resolvePortalRole(user);
-  return portalPathForRole(resolved.portalRole);
+  const path = portalPathForRole(resolved.portalRole);
+  if (resolved.portalRole === "merchant") return path + "#home";
+  return path;
 }
 
 /**

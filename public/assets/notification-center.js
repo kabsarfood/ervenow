@@ -99,7 +99,7 @@
     if (p.order_id) {
       var oid = encodeURIComponent(String(p.order_id));
       if (role === "driver") return "/orders?id=" + oid;
-      if (role === "store") return "/merchant-preview#orders";
+      if (role === "store") return "/merchant-dashboard#orders";
       if (role === "provider") return "/services-provider.html?order=" + oid;
       if (role === "admin") return "/track?order=" + oid;
       return "/track?order=" + oid;
@@ -107,7 +107,7 @@
 
     if (type === "wallet" || type === "payment" || source === "wallet") {
       if (role === "driver") return "/driver-wallet";
-      if (role === "store") return "/merchant-preview#wallet";
+      if (role === "store") return "/merchant-dashboard#wallet";
       if (role === "provider") return "/services-provider.html#wallet";
       return "/wallet.html";
     }

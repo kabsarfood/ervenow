@@ -465,6 +465,11 @@ if (servePublicUi) {
     res.sendFile(path.join(publicPath, "delivery-services.html"));
   });
 
+  app.get(["/order-board", "/order-board.html"], (req, res) => {
+    const q = req.url.includes("?") ? "?" + String(req.url.split("?")[1] || "").split("#")[0] : "";
+    res.redirect(302, "/merchant-dashboard" + q + "#orders");
+  });
+
   const staticMaxAgeMs = isProd ? 7 * 24 * 60 * 60 * 1000 : 60 * 60 * 1000;
   app.use(
     express.static(publicPath, {
@@ -663,10 +668,6 @@ if (servePublicUi) {
 
   app.get("/merchant-dashboard", (_req, res) => {
     res.sendFile(path.join(publicPath, "merchant-dashboard.html"));
-  });
-
-  app.get("/order-board", (_req, res) => {
-    res.sendFile(path.join(publicPath, "order-board.html"));
   });
 
   app.get("/partner-portal", (_req, res) => {

@@ -38,7 +38,7 @@ const PORTAL_DEFINITIONS = {
 
     labelAr: "ERVENOW Merchant",
 
-    paths: ["/store-dashboard", "/merchant-preview"],
+    paths: ["/merchant-dashboard", "/merchant-preview", "/store-dashboard"],
 
   },
 

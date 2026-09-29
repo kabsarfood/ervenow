@@ -1,0 +1,104 @@
+  async function hydrateStatsStrip() {
+    var el = document.querySelector('[data-erv-mp-stat="stores"]');
+    if (!el) return;
+    try {
+      var stores = await fetchStores("?limit=200");
+      var n = Array.isArray(stores) ? stores.length : 0;
+      if (n > 0) {
+        var shown = Math.max(n, Number(el.getAttribute("data-target")) || n);
+        // Prefer live count when real data exceeds placeholder floor
+        if (n >= 3) {
+          el.setAttribute("data-target", String(n));
+          if (!el.classList.contains("js-count-ran")) {
+            el.textContent = n + "+";
+          }
+        } else if (shown) {
+          el.textContent = shown + "+";
+        }
+      }
+    } catch (e) {}
+  }
+
+  /**
+   * Hero cover slideshow — static assets only (no API, no DB).
+   * Two layers + preload-next; pauses when tab is hidden.
+   */
+  function initHeroCovers() {
+    var hero = document.querySelector(".erv-mp-hero");
+    if (!hero || hero.querySelector(".erv-mp-hero__covers")) return;
+
+    var COVERS = [
+      "/assets/ervenow-cover-food.jpg",
+      "/assets/ervenow-cover-stores.jpg",
+      "/assets/ervenow-cover-flowers.jpg",
+      "/assets/ervenow-cover-delivery.jpg",
+      "/assets/ervenow-cover-services.jpg"
+    ];
+    var INTERVAL = 7000;
+    var reduceMotion = false;
+    try {
+      reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    } catch (e) {}
+
+    var wrap = document.createElement("div");
+    wrap.className = "erv-mp-hero__covers";
+    wrap.setAttribute("aria-hidden", "true");
+
+    var layerA = document.createElement("div");
+    layerA.className = "erv-mp-hero__cover is-on";
+    layerA.style.backgroundImage = 'url("' + COVERS[0] + '")';
+
+    var layerB = document.createElement("div");
+    layerB.className = "erv-mp-hero__cover";
+
+    wrap.appendChild(layerA);
+    wrap.appendChild(layerB);
+    hero.insertBefore(wrap, hero.firstChild);
+
+    if (reduceMotion || COVERS.length < 2) return;
+
+    var idx = 0;
+    var front = layerA;
+    var back = layerB;
+    var timer = null;
+
+    function preload(i) {
+      var img = new Image();
+      img.decoding = "async";
+      img.src = COVERS[i % COVERS.length];
+    }
+
+    function tick() {
+      if (document.hidden) return;
+      var next = (idx + 1) % COVERS.length;
+      back.style.backgroundImage = 'url("' + COVERS[next] + '")';
+      back.classList.add("is-on");
+      front.classList.remove("is-on");
+      var tmp = front;
+      front = back;
+      back = tmp;
+      idx = next;
+      preload(idx + 1);
+    }
+
+    function start() {
+      if (timer || document.hidden) return;
+      timer = setInterval(tick, INTERVAL);
+    }
+
+    function stop() {
+      if (!timer) return;
+      clearInterval(timer);
+      timer = null;
+    }
+
+    preload(1);
+    document.addEventListener("visibilitychange", function () {
+      if (document.hidden) stop();
+      else start();
+    });
+    window.addEventListener("resize", function () {
+      start();
+    });
+    start();
+  }

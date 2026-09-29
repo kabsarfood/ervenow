@@ -11,7 +11,7 @@ const CUSTOMER_PLATFORM_HOME = "/";
 const ADMIN_CONSOLE_PATH = "/admin-dashboard";
 
 const OPERATIONAL_PORTAL_PATHS = {
-  merchant: "/merchant-preview",
+  merchant: "/merchant-dashboard",
   driver: "/driver-preview",
   service: "/service-preview",
   transport: "/transport-preview",
@@ -28,6 +28,7 @@ const PORTAL_LIVE = {
   merchant: true,
 };
 
+/** مراجع توافق فقط — ليست وجهة تشغيل للتاجر (الرسمي: /merchant-dashboard) */
 const PORTAL_LEGACY_PATHS = {
   driver: "/driver",
   merchant: "/store-dashboard",
@@ -55,6 +56,7 @@ function portalPathForRole(portalRole) {
   if (PORTAL_LIVE[r] !== false) {
     return portalPreviewPathForRole(r);
   }
+  if (r === "merchant") return portalPreviewPathForRole(r);
   return PORTAL_LEGACY_PATHS[r] || portalPreviewPathForRole(r);
 }
 

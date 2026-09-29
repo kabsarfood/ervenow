@@ -187,9 +187,7 @@ body.lp-home-premium .lp-home-cta-card .lp-btn-solid.lp-home-cta-card__btn {
     padding: 12px clamp(20px, 3vw, 28px) 36px !important;
   }
 
-  html:not(.erv-mobile-shell) body.lp-home-premium .lp-home-cta-card,
-  html:not(.erv-mobile-shell) body.lp-home-premium .lp-home-cta-card--support,
-  html:not(.erv-mobile-shell) body.lp-home-premium .lp-home-cta-card--partner {
+  html:not(.erv-mobile-shell) body.lp-home-premium .lp-home-cta-card:not(.lp-home-cta-card--support):not(.lp-home-cta-card--partner) {
     min-height: 180px !important;
     padding: 22px 20px !important;
     gap: 16px !important;
@@ -199,8 +197,14 @@ body.lp-home-premium .lp-home-cta-card .lp-btn-solid.lp-home-cta-card__btn {
     box-shadow: 0 8px 28px rgba(15, 40, 28, 0.06) !important;
   }
 
+  html:not(.erv-mobile-shell) body.lp-home-premium .lp-home-cta-card--support,
   html:not(.erv-mobile-shell) body.lp-home-premium .lp-home-cta-card--partner {
-    background: linear-gradient(155deg, #fffefb 0%, #f7f3ea 100%) !important;
+    min-height: 180px !important;
+    padding: 22px 20px !important;
+    gap: 16px !important;
+    border-radius: 20px !important;
+    border: 1px solid rgba(15, 90, 55, 0.12) !important;
+    box-shadow: 0 8px 28px rgba(15, 40, 28, 0.06) !important;
   }
 
   html:not(.erv-mobile-shell) body.lp-home-premium .lp-home-cta-card__mark,

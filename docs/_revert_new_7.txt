@@ -1,0 +1,3 @@
+          <article class="erv-gate erv-gate--delivery" role="listitem" data-home-gate="delivery">
+            <img class="erv-gate__photo" src="/assets/cat-delivery.jpg" alt="" width="800" height="450" decoding="async" />
+            <a class="erv-gate__main" href="/delivery-services.html">

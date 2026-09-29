@@ -1,0 +1,2 @@
+          <article class="erv-gate erv-gate--food" role="listitem">
+            <a class="erv-gate__main" href="/restaurants">

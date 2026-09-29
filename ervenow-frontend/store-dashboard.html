@@ -3,7 +3,19 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover" />
-    <script src="/assets/viewport-fit.js?erv=20260926desk"></script>
+    <script src="/assets/viewport-fit.js?erv=20260928logo3d"></script>
+    <script>
+      (function () {
+        function goWalletIfHash() {
+          var h = String(location.hash || "").replace(/^#/, "").split("?")[0];
+          if (h === "wallet" || h === "walletAnchor") {
+            location.replace("/merchant-dashboard" + (location.search || "") + "#wallet");
+          }
+        }
+        goWalletIfHash();
+        window.addEventListener("hashchange", goWalletIfHash);
+      })();
+    </script>
     <script src="/assets/pre-reg-banner.js?erv=20260905b" defer></script>
     <title>ERVENOW | لوحة تحكم المتجر</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -800,7 +812,7 @@
     <script src="/assets/api-config.js"></script>
     <script src="/assets/api.js?erv=20260612"></script>
     <script src="/assets/auth-account-guard.js"></script>
-    <script src="/assets/store-shell.js?erv=20260921dest1"></script>
+    <script src="/assets/store-shell.js?erv=20260929p3"></script>
     <script>
       void ErvenowAuthGuard.ensureApprovedAccount({ loginUrl: "/login?role=store" });
     </script>

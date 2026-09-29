@@ -1,0 +1,409 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="theme-color" content="#00594F" />
+  <title>ERVENOW — المنصة الذكية للتوصيل والخدمات</title>
+  <style>
+    :root{
+      --green:#00594F;
+      --green-2:#008A48;
+      --orange:#FF7A00;
+      --ink:#111827;
+      --muted:#6B7280;
+      --line:#E5E7EB;
+      --bg:#F7F8FA;
+      --card:#FFFFFF;
+      --radius:22px;
+      --shadow:0 14px 34px rgba(16,24,40,.08);
+      --max:1180px;
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{
+      margin:0;
+      font-family:Tahoma, Arial, "Segoe UI", sans-serif;
+      background:#fff;
+      color:var(--ink);
+    }
+    a{text-decoration:none;color:inherit}
+    button,input{font:inherit}
+    img{display:block;width:100%}
+    .container{width:min(var(--max),calc(100% - 32px));margin:auto}
+    .section{padding:56px 0}
+    .section-head{text-align:center;margin-bottom:28px}
+    .section-head h2{font-size:34px;margin:0 0 8px;font-weight:900}
+    .section-head p{color:var(--muted);margin:0;font-size:17px}
+
+    /* HEADER */
+    .topbar{
+      height:74px;background:#fff;display:flex;align-items:center;
+      position:sticky;top:0;z-index:50;border-bottom:1px solid rgba(0,0,0,.05)
+    }
+    .nav{display:flex;align-items:center;justify-content:space-between;gap:20px}
+    .brand{display:flex;align-items:center;gap:10px;direction:ltr}
+    .brand-mark{font-weight:1000;font-size:31px;letter-spacing:-1px;color:var(--green)}
+    .brand-mark span{color:#111}
+    .brand small{display:block;font-size:10px;letter-spacing:3px;color:#111;margin-top:-5px}
+    .location-btn,.nav-link{
+      display:flex;align-items:center;gap:8px;border:1px solid var(--line);
+      background:#fff;border-radius:999px;padding:11px 16px;font-weight:700
+    }
+    .nav-actions{display:flex;align-items:center;gap:12px}
+    .nav-link{border:0;border-radius:12px;padding:10px 12px}
+    .badge{display:inline-grid;place-items:center;min-width:20px;height:20px;padding:0 5px;background:#ef233c;color:#fff;border-radius:999px;font-size:11px}
+
+    /* HERO */
+    .hero{
+      min-height:430px;
+      background:
+        linear-gradient(90deg,rgba(255,248,238,.96) 0%,rgba(255,248,238,.76) 38%,rgba(255,255,255,.06) 68%),
+        url("assets/hero-cover.jpg") center/cover no-repeat;
+      display:flex;align-items:center;border-bottom:1px solid #eee
+    }
+    .hero-content{padding:50px 0;max-width:650px}
+    .hero h1{font-size:64px;line-height:1.05;margin:0 0 14px;font-weight:1000;letter-spacing:-2px}
+    .hero h1 .green{color:var(--green-2)}
+    .hero p{font-size:21px;margin:0 0 28px}
+    .search-box{
+      display:grid;grid-template-columns:auto 1fr auto;gap:0;
+      background:#fff;border:1px solid #eee;border-radius:18px;
+      padding:8px;box-shadow:var(--shadow);overflow:hidden
+    }
+    .search-box input{border:0;outline:0;padding:0 16px;font-size:16px;min-width:0}
+    .search-box .loc{border-right:1px solid #eee;padding:11px 16px;color:#333;white-space:nowrap}
+    .search-box button{
+      border:0;background:var(--green-2);color:#fff;padding:13px 22px;
+      border-radius:12px;font-weight:900;cursor:pointer
+    }
+    .hero-points{display:flex;gap:24px;flex-wrap:wrap;margin-top:28px;font-weight:800}
+    .hero-points span{display:flex;align-items:center;gap:8px}
+    .hero-points i{font-style:normal;font-size:22px}
+
+    /* CATEGORY GRID */
+    .category-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+    .category-card{
+      border-radius:18px;overflow:hidden;border:1px solid #eee;background:#fff;
+      box-shadow:0 7px 18px rgba(0,0,0,.04);transition:.25s transform,.25s box-shadow
+    }
+    .category-card:hover{transform:translateY(-4px);box-shadow:var(--shadow)}
+    .category-card img{height:150px;object-fit:cover}
+    .category-body{padding:18px}
+    .category-body h3{margin:0 0 8px;font-size:24px}
+    .category-body p{margin:0 0 16px;color:#555;min-height:44px}
+    .chips{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:16px}
+    .chip{font-size:12px;padding:9px 6px;border-radius:12px;text-align:center;background:#f5f5f5}
+    .btn{
+      display:inline-flex;align-items:center;justify-content:center;gap:8px;
+      border:0;border-radius:12px;padding:12px 18px;font-weight:900;cursor:pointer
+    }
+    .btn-orange{background:var(--orange);color:#fff}
+    .btn-green{background:var(--green-2);color:#fff}
+    .btn-blue{background:#087bc1;color:#fff}
+    .btn-purple{background:#6c20c7;color:#fff}
+
+    /* STATS */
+    .stats{
+      display:grid;grid-template-columns:repeat(4,1fr);gap:0;
+      background:linear-gradient(90deg,#ecfff2,#f3fff4);border:1px solid #d9f3df;
+      border-radius:18px;padding:22px 14px
+    }
+    .stat{text-align:center;border-left:1px solid #c7dccd}
+    .stat:last-child{border-left:0}
+    .stat b{display:block;font-size:28px}
+    .stat span{color:#4B5563}
+
+    /* RANKINGS */
+    .ranking-tabs{display:flex;justify-content:center;gap:10px;margin-bottom:24px}
+    .tab{
+      border:1px solid var(--line);background:#fff;border-radius:999px;padding:11px 18px;
+      font-weight:900;cursor:pointer
+    }
+    .tab.active{background:var(--green);color:#fff;border-color:var(--green)}
+    .ranking-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+    .item-card{border:1px solid #eee;border-radius:18px;overflow:hidden;background:#fff;box-shadow:0 8px 22px rgba(0,0,0,.04)}
+    .item-img{height:145px;background:#eef3f0;position:relative;overflow:hidden}
+    .item-img img{height:100%;object-fit:cover}
+    .tag{position:absolute;top:10px;right:10px;background:#fff;border-radius:999px;padding:7px 10px;font-weight:900;font-size:12px;box-shadow:0 4px 10px rgba(0,0,0,.09)}
+    .item-body{padding:14px}
+    .item-body h3{font-size:17px;margin:0 0 8px}
+    .meta{display:flex;justify-content:space-between;gap:10px;color:#6B7280;font-size:13px}
+    .stars{color:#f59e0b;font-weight:900}
+
+    /* STEPS */
+    .steps{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+    .step{background:#fffaf5;border:1px solid #f7eadf;border-radius:18px;padding:24px 18px;text-align:center;position:relative}
+    .num{position:absolute;top:10px;left:10px;width:32px;height:32px;border-radius:50%;background:var(--orange);color:#fff;display:grid;place-items:center;font-weight:900}
+    .step-icon{font-size:36px;margin-bottom:12px}
+    .step h3{margin:0 0 6px}
+    .step p{margin:0;color:#555}
+
+    /* CTAs */
+    .cta-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+    .cta{
+      min-height:170px;border-radius:18px;overflow:hidden;display:flex;align-items:center;
+      padding:28px;background-size:cover;background-position:center;position:relative
+    }
+    .cta:before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(255,255,255,.97),rgba(255,255,255,.63))}
+    .cta > div{position:relative;z-index:1;max-width:55%}
+    .cta h3{font-size:27px;margin:0 0 8px}
+    .cta p{margin:0 0 16px;color:#374151}
+    .cta.support{background-image:url("assets/contact-support.jpg")}
+    .cta.merchant{background-image:url("assets/merchant-cta.jpg")}
+
+    /* FOOTER */
+    footer{background:#063c35;color:#fff;padding:42px 0 24px}
+    .footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1.3fr;gap:28px}
+    footer h4{margin:0 0 14px}
+    footer a{display:block;color:#d8ebe7;margin:8px 0}
+    .copyright{border-top:1px solid rgba(255,255,255,.14);margin-top:28px;padding-top:20px;color:#c6dcda;display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
+
+    @media(max-width:980px){
+      .category-grid,.ranking-grid,.steps{grid-template-columns:repeat(2,1fr)}
+      .hero h1{font-size:52px}
+      .nav-actions .nav-link span.label{display:none}
+      .footer-grid{grid-template-columns:repeat(2,1fr)}
+    }
+    @media(max-width:700px){
+      .container{width:min(100% - 22px,var(--max))}
+      .topbar{height:66px}
+      .brand-mark{font-size:24px}
+      .location-btn{padding:9px 11px;font-size:13px}
+      .hero{min-height:540px;background-position:63% center;align-items:flex-end}
+      .hero-content{padding:34px 0}
+      .hero h1{font-size:44px;max-width:390px}
+      .hero p{font-size:17px;max-width:390px}
+      .search-box{grid-template-columns:1fr auto}
+      .search-box .loc{grid-column:1/-1;border-right:0;border-bottom:1px solid #eee}
+      .section{padding:40px 0}
+      .section-head h2{font-size:28px}
+      .category-grid,.ranking-grid,.steps,.cta-grid,.footer-grid{grid-template-columns:1fr}
+      .stats{grid-template-columns:repeat(2,1fr);row-gap:18px}
+      .stat:nth-child(2){border-left:0}
+      .cta > div{max-width:76%}
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="container nav">
+      <a class="brand" href="#">
+        <div>
+          <div class="brand-mark">ERVE<span>NOW</span></div>
+          <small>PLATFORM</small>
+        </div>
+      </a>
+
+      <button class="location-btn" type="button">⌖ <span>حدد موقعك</span>⌄</button>
+
+      <nav class="nav-actions">
+        <a class="nav-link" href="#account">♙ <span class="label">حسابي</span></a>
+        <a class="nav-link" href="#orders">▣ <span class="label">طلباتي</span> <span class="badge">0</span></a>
+        <a class="nav-link" href="#cart">🛒 <span class="label">السلة</span> <span class="badge">0</span></a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="container">
+        <div class="hero-content">
+          <h1>ماذا تحتاج <span class="green">اليوم؟</span></h1>
+          <p>اطلب من مطعم، متجر، صيدلية أو أي خدمة حولك.</p>
+
+          <form class="search-box" onsubmit="event.preventDefault()">
+            <div class="loc">⌖ حدد موقعك الحالي</div>
+            <input placeholder="إبحث عن مطعم، متجر، خدمة ..." />
+            <button>⌕ إبحث</button>
+          </form>
+
+          <div class="hero-points">
+            <span><i>⚡</i> توصيل سريع</span>
+            <span><i>🛡</i> متاجر موثوقة</span>
+            <span><i>⭐</i> خدمة مميزة</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <div class="section-head">
+          <h2>الأقسام الرئيسية</h2>
+          <p>كل ما تحتاجه في مكان واحد</p>
+        </div>
+
+        <div class="category-grid">
+          <article class="category-card">
+            <img src="assets/cat-restaurants.jpg" alt="مطاعم ومقاهي">
+            <div class="category-body">
+              <h3>مطاعم ومقاهي</h3>
+              <p>مطاعم، مقاهي ومشروبات أقرب إليك.</p>
+              <a class="btn btn-orange" href="/restaurants">استكشف ←</a>
+              <div class="chips"><div class="chip">مطاعم</div><div class="chip">كافيهات</div><div class="chip">مشروبات</div></div>
+            </div>
+          </article>
+
+          <article class="category-card">
+            <img src="assets/cat-stores.jpg" alt="متاجر وتسوق">
+            <div class="category-body">
+              <h3>متاجر وتسوق</h3>
+              <p>كل احتياجاتك اليومية في مكان واحد.</p>
+              <a class="btn btn-blue" href="/stores">استكشف ←</a>
+              <div class="chips"><div class="chip">ملابس</div><div class="chip">سوبرماركت</div><div class="chip">صيدليات</div></div>
+            </div>
+          </article>
+
+          <article class="category-card">
+            <img src="assets/cat-delivery.jpg" alt="توصيل ونقل">
+            <div class="category-body">
+              <h3>توصيل ونقل</h3>
+              <p>توصيل ونقل سريع حسب احتياجك.</p>
+              <a class="btn btn-green" href="/delivery">استكشف ←</a>
+              <div class="chips"><div class="chip">سطحات</div><div class="chip">غاز</div><div class="chip">طرود</div></div>
+            </div>
+          </article>
+
+          <article class="category-card">
+            <img src="assets/cat-services.jpg" alt="خدمات منزلية ومتنقلة">
+            <div class="category-body">
+              <h3>خدمات منزلية ومتنقلة</h3>
+              <p>خدمات تصل إليك أينما كنت.</p>
+              <a class="btn btn-purple" href="/services">استكشف ←</a>
+              <div class="chips"><div class="chip">غسيل سيارات</div><div class="chip">صيانة</div><div class="chip">تنظيف</div></div>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" style="padding-top:0">
+      <div class="container">
+        <div class="stats">
+          <div class="stat"><b>5000+</b><span>عدد العملاء</span></div>
+          <div class="stat"><b>120+</b><span>متجر نشط</span></div>
+          <div class="stat"><b>12+</b><span>المدن المخدومة</span></div>
+          <div class="stat"><b>30 دقيقة</b><span>توصيل سريع</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- NEW: TOP RATED -->
+    <section class="section" style="background:#fafafa">
+      <div class="container">
+        <div class="section-head">
+          <h2>الأعلى تقييماً ⭐</h2>
+          <p>أفضل الخيارات بحسب تقييم وتجربة العملاء</p>
+        </div>
+
+        <div class="ranking-grid">
+          <article class="item-card">
+            <div class="item-img"><img src="assets/cat-restaurants.jpg" alt=""><span class="tag">مطاعم</span></div>
+            <div class="item-body"><h3>مطعم مميز قريب منك</h3><div class="meta"><span class="stars">★ 4.9</span><span>25–35 دقيقة</span></div></div>
+          </article>
+          <article class="item-card">
+            <div class="item-img"><img src="assets/cat-stores.jpg" alt=""><span class="tag">متجر</span></div>
+            <div class="item-body"><h3>سوبرماركت موثوق</h3><div class="meta"><span class="stars">★ 4.8</span><span>20–30 دقيقة</span></div></div>
+          </article>
+          <article class="item-card">
+            <div class="item-img"><img src="assets/cat-delivery.jpg" alt=""><span class="tag">توصيل</span></div>
+            <div class="item-body"><h3>نقل وتوصيل سريع</h3><div class="meta"><span class="stars">★ 4.9</span><span>متاح الآن</span></div></div>
+          </article>
+          <article class="item-card">
+            <div class="item-img"><img src="assets/cat-services.jpg" alt=""><span class="tag">خدمة</span></div>
+            <div class="item-body"><h3>خدمة متنقلة مميزة</h3><div class="meta"><span class="stars">★ 4.7</span><span>حجز فوري</span></div></div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- NEW: MOST ORDERED -->
+    <section class="section">
+      <div class="container">
+        <div class="section-head">
+          <h2>الأكثر طلباً 🔥</h2>
+          <p>خيارات رائجة الآن حول موقعك</p>
+        </div>
+
+        <div class="ranking-tabs">
+          <button class="tab active">الكل</button>
+          <button class="tab">مطاعم</button>
+          <button class="tab">متاجر</button>
+          <button class="tab">خدمات</button>
+        </div>
+
+        <div class="ranking-grid">
+          <article class="item-card">
+            <div class="item-img"><img src="assets/cat-restaurants.jpg" alt=""><span class="tag">#1 الأكثر طلباً</span></div>
+            <div class="item-body"><h3>وجبات سريعة</h3><div class="meta"><span>طلبات مرتفعة اليوم</span><span class="stars">★ 4.8</span></div></div>
+          </article>
+          <article class="item-card">
+            <div class="item-img"><img src="assets/cat-stores.jpg" alt=""><span class="tag">#2</span></div>
+            <div class="item-body"><h3>مقاضي وسوبرماركت</h3><div class="meta"><span>توصيل سريع</span><span class="stars">★ 4.7</span></div></div>
+          </article>
+          <article class="item-card">
+            <div class="item-img"><img src="assets/cat-delivery.jpg" alt=""><span class="tag">#3</span></div>
+            <div class="item-body"><h3>توصيل طرود</h3><div class="meta"><span>حسب المسافة</span><span class="stars">★ 4.9</span></div></div>
+          </article>
+          <article class="item-card">
+            <div class="item-img"><img src="assets/cat-services.jpg" alt=""><span class="tag">#4</span></div>
+            <div class="item-body"><h3>غسيل سيارات متنقل</h3><div class="meta"><span>حجز اليوم</span><span class="stars">★ 4.8</span></div></div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" style="background:#fafafa">
+      <div class="container">
+        <div class="section-head">
+          <h2>كيف تعمل ERVENOW؟</h2>
+          <p>أربع خطوات بسيطة من الطلب حتى باب بيتك</p>
+        </div>
+        <div class="steps">
+          <div class="step"><span class="num">1</span><div class="step-icon">🛒</div><h3>اختر ما تريد</h3><p>من مطاعم ومتاجر وخدمات قريبة منك.</p></div>
+          <div class="step"><span class="num">2</span><div class="step-icon">📍</div><h3>حدد موقعك</h3><p>ثبّت عنوان التوصيل بدقة.</p></div>
+          <div class="step"><span class="num">3</span><div class="step-icon">🚚</div><h3>تابع طلبك</h3><p>تتبع حالة الطلب حتى يصل.</p></div>
+          <div class="step"><span class="num">4</span><div class="step-icon">📦</div><h3>استلم بسرعة</h3><p>استلم طلبك بأفضل تجربة ممكنة.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container cta-grid">
+        <div class="cta support">
+          <div><h3>تواصل معنا</h3><p>فريق الدعم جاهز لمساعدتك عبر واتساب.</p><a href="#" class="btn btn-green">واتساب الدعم</a></div>
+        </div>
+        <div class="cta merchant">
+          <div><h3>انضم كشريك</h3><p>وسّع مبيعات متجرك ووصل لعملاء أكثر عبر ERVENOW.</p><a href="#" class="btn btn-orange">سجل متجرك ←</a></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <div class="brand-mark" style="color:#fff">ERVE<span style="color:#fff">NOW</span></div>
+          <small>PLATFORM</small>
+          <p style="color:#d8ebe7;max-width:320px">المنصة الذكية للتوصيل والخدمات حولك.</p>
+        </div>
+        <div><h4>من نحن</h4><a href="#">كيف تعمل ERVENOW</a><a href="#">مطاعم ومقاهي</a><a href="#">متاجر وتسوق</a><a href="#">توصيل ونقل</a><a href="#">خدمات منزلية</a></div>
+        <div><h4>انضم كشريك</h4><a href="#">تسجيل متجر</a><a href="#">تسجيل مندوب</a></div>
+        <div><h4>سياسة الخصوصية والشروط</h4><a href="#">سياسة الخصوصية</a><a href="#">سياسة الاستخدام</a><a href="#">سياسة المدفوعات والإلغاء</a><a href="#">الدعم الفني والواتساب</a></div>
+      </div>
+      <div class="copyright"><span>جميع الحقوق محفوظة © 2026 ERVENOW</span><span>صنع بكل حب في المملكة العربية السعودية 🇸🇦</span></div>
+    </div>
+  </footer>
+
+  <script>
+    document.querySelectorAll('.tab').forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+        btn.classList.add('active');
+      });
+    });
+  </script>
+</body>
+</html>
