@@ -267,9 +267,7 @@
       return { ok: true, draft: write.draft };
     }
 
-    notifyStayInPlace(
-      "تمت الإضافة للسلة. تابع التسوق، ثم افتح أيقونة السلة لمراجعة الطلب أو تعديله قبل الدفع."
-    );
+    notifyStayInPlace("تمت الاضافة للسلة");
 
     return { ok: true, draft: write.draft };
   }
@@ -289,7 +287,7 @@
         "max-width:min(440px, calc(100% - 24px))",
         "padding:12px 16px",
         "border-radius:14px",
-        "background:#00594f",
+        "background:#ff7a00",
         "color:#fff",
         "font-weight:800",
         "font-size:14px",

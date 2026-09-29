@@ -465,48 +465,6 @@ body.guest-shell-page.stores-page.restaurants-page {
     padding: 14px 16px 16px;
   }
 
-  .restaurants-page .stores-cuisine-scroll {
-    display: flex;
-    flex-wrap: wrap;
-    overflow: visible;
-    gap: 8px;
-    padding-bottom: 0;
-  }
-
-  .restaurants-page .stores-cuisine-chip {
-    flex-direction: row;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    width: auto;
-    min-width: 0;
-    max-width: none;
-    min-height: 44px;
-    padding: 8px 14px;
-    border-radius: 999px;
-    font-size: 0.92rem;
-    line-height: 1.45;
-    white-space: nowrap;
-    color: #0f5a37;
-  }
-
-  .restaurants-page .stores-cuisine-chip__icon {
-    width: auto;
-    height: auto;
-    font-size: 1.05rem;
-    line-height: 1;
-  }
-
-  .restaurants-page .stores-cuisine-chip__icon::before {
-    display: none;
-  }
-
-  .restaurants-page .stores-cuisine-chip.is-active {
-    background: #0f5a37;
-    color: #fffefb;
-    border-color: transparent;
-  }
-
   .restaurants-page .stores-main {
     padding-top: 8px;
     padding-bottom: 48px;
@@ -635,13 +593,6 @@ body.guest-shell-page.stores-page.restaurants-page {
     box-sizing: border-box;
   }
 
-  html.erv-mobile-shell body.guest-shell-page.stores-page.restaurants-page .stores-cuisine-chip {
-    min-width: 72px;
-    min-height: 56px;
-    padding-block: 7px 8px;
-    font-size: 0.68rem;
-  }
-
   html.erv-mobile-shell body.guest-shell-page.stores-page.restaurants-page .stores-grid {
     gap: 10px;
   }
@@ -662,6 +613,92 @@ body.guest-shell-page.stores-page.restaurants-page {
   .restaurants-page .store-meta {
     font-size: 0.72rem;
   }
+}
+
+/* شريط تصنيفات موحّد: نفس الحجم على كل الشاشات، تمرير بالإصبع أو سحب بالماوس */
+body.guest-shell-page.stores-page.restaurants-page .stores-toolbar,
+body.guest-shell-page.stores-page.restaurants-page .stores-restaurant-cuisine-block {
+  min-width: 0;
+}
+
+body.erv-typography-pr1-guest-hub.guest-shell-page.stores-page.restaurants-page .stores-cuisine-scroll {
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  align-items: stretch;
+  gap: 6px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 2px 2px 8px;
+  overflow-x: auto !important;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  touch-action: pan-y;
+  scroll-snap-type: x proximity;
+  scroll-padding-inline: 2px;
+  scrollbar-width: none;
+  cursor: grab;
+}
+
+body.erv-typography-pr1-guest-hub.guest-shell-page.stores-page.restaurants-page .stores-cuisine-scroll.is-dragging {
+  cursor: grabbing;
+  scroll-snap-type: none;
+  user-select: none;
+}
+
+body.erv-typography-pr1-guest-hub.guest-shell-page.stores-page.restaurants-page .stores-cuisine-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+body.erv-typography-pr1-guest-hub.guest-shell-page.stores-page.restaurants-page .stores-cuisine-chip {
+  flex: 0 0 84px !important;
+  width: 84px;
+  min-width: 84px !important;
+  max-width: 84px !important;
+  min-height: 72px;
+  padding: 8px 6px 9px;
+  border-radius: 12px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 4px;
+  font-size: 0.59rem !important;
+  font-weight: 800;
+  line-height: 1.35;
+  text-align: center;
+  white-space: normal;
+  scroll-snap-align: start;
+  color: #0f5a37;
+  background: #fffefb;
+  border: 1px solid rgba(15, 90, 55, 0.12);
+  box-shadow: 0 4px 14px rgba(15, 40, 28, 0.06);
+}
+
+body.erv-typography-pr1-guest-hub.guest-shell-page.stores-page.restaurants-page .stores-cuisine-chip > span:last-child {
+  display: block;
+  max-width: 100%;
+}
+
+body.erv-typography-pr1-guest-hub.guest-shell-page.stores-page.restaurants-page .stores-cuisine-chip__icon {
+  width: auto !important;
+  height: auto !important;
+  font-size: 1.16rem !important;
+  line-height: 1;
+  color: inherit;
+}
+
+body.erv-typography-pr1-guest-hub.guest-shell-page.stores-page.restaurants-page .stores-cuisine-chip__icon::before {
+  display: none !important;
+  content: none !important;
+}
+
+body.erv-typography-pr1-guest-hub.guest-shell-page.stores-page.restaurants-page .stores-cuisine-chip.is-active {
+  background: #ff7a00;
+  color: #fff;
+  border-color: transparent;
+  box-shadow: 0 8px 18px rgba(255, 122, 0, 0.28);
 }
 
 @media (prefers-reduced-motion: reduce) {

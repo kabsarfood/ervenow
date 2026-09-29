@@ -551,7 +551,7 @@
     <script src="/assets/compressImage.js"></script>
     <script src="/assets/service-book-page.js"></script>
     <script src="/assets/order-draft-store.js"></script>
-    <script src="/assets/order-draft-vertical.js?erv=20260929stay1"></script>
+    <script src="/assets/order-draft-vertical.js?erv=20260929stay2"></script>
     <script src="/assets/api-config.js"></script>
     <script src="/assets/api.js?erv=20260612"></script>
     <script src="/assets/guestBrowse.js"></script>
@@ -934,7 +934,7 @@
         function showMsg(text, ok) {
           var el = document.getElementById("sbMsg");
           el.textContent = text;
-          el.style.color = ok ? "#1b5e20" : "#b71c1c";
+          el.style.color = ok ? "#ff7a00" : "#b71c1c";
           el.style.fontWeight = "700";
         }
 
@@ -955,7 +955,7 @@
             message: "تمت إضافة طلب " + ((e && e.label) || "الخدمة") + " — أكمل تأكيد الطلب",
           });
           if (!res.ok) showMsg(res.message || "تعذر الإضافة للمسودة", false);
-          else showMsg("تمت الإضافة للسلة. تابع التصفح، ثم افتح السلة من الأعلى عندما تنتهي.", true);
+          else showMsg("تمت الاضافة للسلة", true);
         }
 
         function openMap() {
