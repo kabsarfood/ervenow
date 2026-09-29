@@ -257,14 +257,60 @@
       return { ok: false, message: (write.errors && write.errors[0]) || "تعذر حفظ المسودة" };
     }
 
-    if (opts.redirect !== false) {
+    syncHeaderBadge();
+
+    if (opts.redirect === true) {
       try {
         if (opts.message) sessionStorage.setItem("ervenow:checkout-flash", opts.message);
       } catch (_e) {}
       global.location.href = CHECKOUT_PATH;
+      return { ok: true, draft: write.draft };
     }
 
+    notifyStayInPlace(
+      "تمت الإضافة للسلة. تابع التسوق، ثم افتح أيقونة السلة لمراجعة الطلب أو تعديله قبل الدفع."
+    );
+
     return { ok: true, draft: write.draft };
+  }
+
+  function notifyStayInPlace(text) {
+    var el = document.getElementById("ervCartStayToast");
+    if (!el) {
+      el = document.createElement("div");
+      el.id = "ervCartStayToast";
+      el.setAttribute("role", "status");
+      el.style.cssText = [
+        "position:fixed",
+        "z-index:420",
+        "left:50%",
+        "bottom:calc(108px + env(safe-area-inset-bottom, 0px))",
+        "transform:translateX(-50%) translateY(8px)",
+        "max-width:min(440px, calc(100% - 24px))",
+        "padding:12px 16px",
+        "border-radius:14px",
+        "background:#00594f",
+        "color:#fff",
+        "font-weight:800",
+        "font-size:14px",
+        "line-height:1.5",
+        "text-align:center",
+        "box-shadow:0 10px 28px rgba(0,0,0,.16)",
+        "opacity:0",
+        "transition:opacity .2s ease, transform .2s ease",
+        "pointer-events:none",
+      ].join(";");
+      document.body.appendChild(el);
+    }
+    el.textContent = text;
+    global.requestAnimationFrame(function () {
+      el.style.opacity = "1";
+      el.style.transform = "translateX(-50%) translateY(0)";
+    });
+    clearTimeout(el._ervTimer);
+    el._ervTimer = setTimeout(function () {
+      el.style.opacity = "0";
+    }, 3200);
   }
 
   function getItems() {

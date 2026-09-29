@@ -11,8 +11,8 @@
     <meta name="description" content="إتمام الطلب — ERVENOW Checkout Engine" />
     <title>ERVENOW | سلة المشتريات</title>
     <link rel="stylesheet" href="/assets/styles.css" />
-    <link rel="stylesheet" href="/assets/guest-shell.css?erv=20260926ph1" />
-    <link rel="stylesheet" href="/assets/checkout-page.css?erv=20260926bag4" />
+    <link rel="stylesheet" href="/assets/guest-shell.css?erv=20260929cart7" />
+    <link rel="stylesheet" href="/assets/checkout-page.css?erv=20260929bag6" />
     <link rel="stylesheet" href="/assets/design-system/erv-typography-pr1-tokens.css" />
     <link rel="stylesheet" href="/assets/design-system/erv-typography-commerce-pr3-tokens.css" />
     <link rel="stylesheet" href="/assets/design-system/erv-typography-commerce-pr3.css" />
@@ -63,7 +63,15 @@
               </div>
             </section>
 
-            <div id="checkoutBasket" hidden>
+            <div class="checkout-bag" id="checkoutBasket" hidden>
+              <div class="checkout-bag-head">
+                <a class="checkout-bag-back" href="/">← العودة للتسوق</a>
+                <div class="checkout-bag-title">
+                  <span aria-hidden="true">🛒</span>
+                  <h2>سلة المشتريات</h2>
+                  <span class="checkout-bag-count" id="checkoutBagCount">0 منتجات</span>
+                </div>
+              </div>
               <div class="checkout-card checkout-toolbar">
                 <label class="checkout-checkline" for="checkoutSelectAll">
                   <input id="checkoutSelectAll" type="checkbox" />
@@ -193,10 +201,25 @@
               <button type="button" class="checkout-btn checkout-btn--primary" id="checkoutConfirmBtn" disabled>
                 إتمام الطلب
               </button>
-              <a class="checkout-continue" href="/">متابعة التسوق</a>
+              <a class="checkout-continue" href="/">← متابعة التسوق</a>
+              <div class="checkout-trust" aria-label="ضمانات الطلب">
+                <span>🚚 توصيل سريع</span>
+                <span>🛡️ خدمة موثوقة</span>
+                <span>🔒 دفع آمن</span>
+              </div>
             </section>
           </aside>
         </div>
+      </div>
+    </div>
+
+    <div class="checkout-mobile-bar" id="checkoutMobileBar" hidden>
+      <div class="checkout-mobile-bar__inner">
+        <div class="checkout-mobile-bar__sum">
+          <span>المجموع الكلي</span>
+          <strong id="checkoutMobileGrand">—</strong>
+        </div>
+        <button type="button" class="checkout-mobile-bar__btn" id="checkoutMobileConfirmBtn">إتمام الطلب</button>
       </div>
     </div>
 
@@ -246,9 +269,9 @@
     <script src="/assets/checkout-api-timeout.js"></script>
     <script src="/assets/api.js?erv=20260612"></script>
     <script src="/assets/order-draft-store.js?erv=20260922uc1"></script>
-    <script src="/assets/order-draft-vertical.js?erv=20260922uc1"></script>
+    <script src="/assets/order-draft-vertical.js?erv=20260929stay1"></script>
     <script src="/assets/checkout-payment-engine.js?erv=20260926bag3"></script>
-    <script src="/assets/checkout-engine.js?erv=20260926bag3"></script>
+    <script src="/assets/checkout-engine.js?erv=20260929bag5"></script>
     <script src="/assets/checkout-draft-edit.js?erv=20260926bag3"></script>
     <script src="/assets/guest-shell.js?erv=20260926ph1"></script>
     <script>

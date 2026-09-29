@@ -23,7 +23,7 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="/assets/styles.css" />
-    <link rel="stylesheet" href="/assets/guest-shell.css?erv=20260925svc" />
+    <link rel="stylesheet" href="/assets/guest-shell.css?erv=20260929cart7" />
     <link rel="stylesheet" href="/assets/start-now-landing.css" />
     <link rel="stylesheet" href="/assets/index-header-banner.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -1365,7 +1365,7 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="/assets/delivery-map-order.js"></script>
     <script src="/assets/order-draft-store.js?erv=20260922uc1"></script>
-    <script src="/assets/order-draft-vertical.js?erv=20260922uc1"></script>
+    <script src="/assets/order-draft-vertical.js?erv=20260929stay1"></script>
     <script src="/assets/api-config.js"></script>
     <script src="/assets/api.js?erv=20260612"></script>
     <script src="/assets/guestBrowse.js"></script>
@@ -2719,9 +2719,8 @@
             err.style.display = "block";
             return;
           }
-          ok.textContent = "تمت الإضافة — جاري التوجيه لتأكيد الطلب…";
+          ok.textContent = "تمت الإضافة للسلة. يمكنك إضافة طلب آخر، ثم فتح السلة من الأعلى للمراجعة والدفع.";
           ok.style.display = "block";
-          window.location.href = "/checkout";
         }
 
         function buildLocalCartItem() {
@@ -2817,9 +2816,8 @@
             err.style.display = "block";
             return;
           }
-          ok.textContent = "تمت الإضافة — جاري التوجيه لتأكيد الطلب…";
+          ok.textContent = "تمت الإضافة للسلة. يمكنك إضافة طلب آخر، ثم فتح السلة من الأعلى للمراجعة والدفع.";
           ok.style.display = "block";
-          window.location.href = "/checkout";
         }
 
         function buildGasCartItem() {
@@ -2885,9 +2883,8 @@
             err.style.display = "block";
             return;
           }
-          ok.textContent = "تمت الإضافة — جاري التوجيه لتأكيد الطلب…";
+          ok.textContent = "تمت الإضافة للسلة. يمكنك إضافة طلب آخر، ثم فتح السلة من الأعلى للمراجعة والدفع.";
           ok.style.display = "block";
-          window.location.href = "/checkout";
         }
 
         function buildFurnitureCartItem() {
@@ -2978,9 +2975,8 @@
             err.style.display = "block";
             return;
           }
-          ok.textContent = "تمت الإضافة — جاري التوجيه لتأكيد الطلب…";
+          ok.textContent = "تمت الإضافة للسلة. يمكنك إضافة طلب آخر، ثم فتح السلة من الأعلى للمراجعة والدفع.";
           ok.style.display = "block";
-          window.location.href = "/checkout";
         }
 
         document.getElementById("dsMapConfirm").onclick = confirmMap;

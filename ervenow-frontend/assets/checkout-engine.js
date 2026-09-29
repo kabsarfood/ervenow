@@ -519,6 +519,19 @@
     return "تعذّر إتمام الطلب — تحقّق من البيانات وأعد المحاولة.";
   }
 
+  function syncMobileCheckout(label, disabled) {
+    var bar = document.getElementById("checkoutMobileBar");
+    var mobileBtn = document.getElementById("checkoutMobileConfirmBtn");
+    var grand = document.getElementById("checkoutGrand");
+    var mobileGrand = document.getElementById("checkoutMobileGrand");
+    var basket = document.getElementById("checkoutBasket");
+    if (bar) bar.hidden = !(basket && !basket.hidden);
+    if (mobileGrand && grand) mobileGrand.textContent = grand.textContent;
+    if (!mobileBtn) return;
+    if (label) mobileBtn.textContent = label;
+    if (typeof disabled === "boolean") mobileBtn.disabled = disabled;
+  }
+
   function setCheckoutBtnState(btn, state, labelText) {
     if (!btn) return;
     if (state === "processing") {
@@ -526,6 +539,7 @@
       btn.setAttribute("aria-busy", "true");
       btn.classList.add("checkout-btn--processing");
       btn.textContent = labelText || CHECKOUT_BTN_PROCESSING;
+      syncMobileCheckout(labelText || CHECKOUT_BTN_PROCESSING, true);
       return;
     }
     if (state === "success") {
@@ -622,6 +636,9 @@
     var countEl = document.getElementById("checkoutItemCount");
     if (countEl) countEl.hidden = true;
     if (confirmBtn) confirmBtn.disabled = true;
+    var bagCount = document.getElementById("checkoutBagCount");
+    if (bagCount) bagCount.textContent = "0 منتجات";
+    syncMobileCheckout("إتمام الطلب", true);
   }
 
   function renderActive(draft) {
@@ -654,6 +671,8 @@
     if (summaryCount) summaryCount.textContent = String(items.length);
     var selectCount = document.getElementById("checkoutSelectCount");
     if (selectCount) selectCount.textContent = String(items.length);
+    var bagCount = document.getElementById("checkoutBagCount");
+    if (bagCount) bagCount.textContent = items.length + " منتجات";
     if (linesEl) {
       linesEl.innerHTML = items
         .map(function (it, idx) {
@@ -833,6 +852,7 @@
       } else {
         confirmBtn.textContent = "إتمام الطلب";
       }
+      syncMobileCheckout(confirmBtn.textContent, confirmBtn.disabled);
     }
 
     if (pay && typeof pay.setGrandTotalForEwPay === "function") {
@@ -1186,6 +1206,13 @@
   }
 
   function bindEvents() {
+    var mobileBtn = document.getElementById("checkoutMobileConfirmBtn");
+    if (mobileBtn) {
+      mobileBtn.addEventListener("click", function () {
+        var mainBtn = document.getElementById("checkoutConfirmBtn");
+        if (mainBtn && !mainBtn.disabled) mainBtn.click();
+      });
+    }
     var btn = document.getElementById("checkoutConfirmBtn");
     if (btn) {
       btn.addEventListener("click", function (ev) {

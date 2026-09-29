@@ -531,16 +531,18 @@ body.lp-home-premium .lp-home-cta-card__text {
     align-items: center !important;
     justify-content: center !important;
     position: relative !important;
+    gap: 0 !important;
     width: 44px !important;
     height: 44px !important;
     min-width: 44px !important;
     min-height: 44px !important;
     padding: 0 !important;
+    overflow: visible !important;
     border-radius: 14px !important;
     border: 1px solid rgba(15, 90, 55, 0.16) !important;
     background: #fffefb !important;
     color: #0f5a37 !important;
-    box-shadow: 0 1px 0 rgba(15, 90, 55, 0.06) !important;
+    box-shadow: none !important;
     text-decoration: none !important;
   }
 
@@ -550,27 +552,45 @@ body.lp-home-premium .lp-home-cta-card__text {
   }
 
   html.erv-mobile-shell.erv-show-shopper-cart body.lp-home-premium #indexDraftBadge .erv-mp-header-cart__ic {
-    font-size: 1.15rem;
-    line-height: 1;
+    display: block !important;
+    width: auto !important;
+    height: auto !important;
+    flex: none !important;
+    font-size: 18px !important;
+    line-height: 1 !important;
+    background: none !important;
+    transform: translateY(1px);
   }
 
   html.erv-mobile-shell.erv-show-shopper-cart body.lp-home-premium #indexDraftBadge .lp-draft-checkout-badge__count {
     position: absolute !important;
-    top: -4px !important;
-    inset-inline-start: -4px !important;
-    min-width: 18px !important;
-    height: 18px !important;
-    padding: 0 4px !important;
+    top: 2px !important;
+    right: 2px !important;
+    left: auto !important;
+    inset-inline-start: auto !important;
+    inset-inline-end: auto !important;
+    min-width: 15px !important;
+    width: auto !important;
+    height: 15px !important;
+    margin: 0 !important;
+    padding: 0 3px !important;
     border-radius: 999px !important;
-    background: #b9872f !important;
-    color: #fffefb !important;
-    font-size: 0.68rem !important;
+    background: #b42318 !important;
+    color: #fff !important;
+    font-size: 9px !important;
     font-weight: 800 !important;
-    line-height: 18px !important;
+    line-height: 15px !important;
     text-align: center !important;
+    box-sizing: border-box !important;
+    box-shadow: 0 0 0 2px #fffefb !important;
+    opacity: 1 !important;
   }
 
   html.erv-mobile-shell.erv-show-shopper-cart body.lp-home-premium #indexDraftBadge .lp-draft-checkout-badge__count[data-empty="true"] {
+    display: none !important;
+  }
+
+  html.erv-mobile-shell.erv-show-shopper-cart body.lp-home-premium .erv-plus-nav-cart-float {
     display: none !important;
   }
 }
@@ -744,4 +764,67 @@ body.lp-home-premium .lp-home-cta-card--partner .lp-home-cta-card__btn,
 html.erv-mobile-shell body.lp-home-premium .lp-home-cta-card--partner .lp-home-cta-card__btn {
   background: #fffefb !important;
   color: #0f5a37 !important;
+}
+
+/* سلة الرئيسية على الشاشات الأعرض = نفس أيقونة هيدر الجوال */
+html:not(.erv-mobile-shell) body.lp-home-premium #indexDraftBadge.erv-mp-header-cart {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  position: relative !important;
+  gap: 0 !important;
+  width: 44px !important;
+  height: 44px !important;
+  min-width: 44px !important;
+  min-height: 44px !important;
+  padding: 0 !important;
+  overflow: visible !important;
+  border-radius: 14px !important;
+  border: 1px solid rgba(15, 90, 55, 0.16) !important;
+  background: #fffefb !important;
+  color: #0f5a37 !important;
+  box-shadow: none !important;
+  text-decoration: none !important;
+}
+
+html:not(.erv-mobile-shell) body.lp-home-premium #indexDraftBadge .erv-mp-header-cart__label,
+html:not(.erv-mobile-shell) body.lp-home-premium #indexDraftBadge .lp-draft-checkout-badge__total {
+  display: none !important;
+}
+
+html:not(.erv-mobile-shell) body.lp-home-premium #indexDraftBadge .erv-mp-header-cart__ic {
+  display: block !important;
+  flex: none !important;
+  width: auto !important;
+  height: auto !important;
+  font-size: 18px !important;
+  line-height: 1 !important;
+  background: none !important;
+  transform: translateY(1px);
+}
+
+html:not(.erv-mobile-shell) body.lp-home-premium #indexDraftBadge .lp-draft-checkout-badge__count {
+  position: absolute !important;
+  top: 2px !important;
+  right: 2px !important;
+  left: auto !important;
+  min-width: 15px !important;
+  width: auto !important;
+  height: 15px !important;
+  margin: 0 !important;
+  padding: 0 3px !important;
+  border-radius: 999px !important;
+  background: #b42318 !important;
+  color: #fff !important;
+  font-size: 9px !important;
+  font-weight: 800 !important;
+  line-height: 15px !important;
+  text-align: center !important;
+  box-sizing: border-box !important;
+  box-shadow: 0 0 0 2px #fffefb !important;
+  opacity: 1 !important;
+}
+
+html:not(.erv-mobile-shell) body.lp-home-premium #indexDraftBadge .lp-draft-checkout-badge__count[data-empty="true"] {
+  display: none !important;
 }

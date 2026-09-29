@@ -1010,6 +1010,7 @@
             result.innerText = "❌ " + (draftRes.message || "تعذر الإضافة للمسودة");
             return;
           }
+          result.innerText = "تمت الإضافة للسلة. افتح أيقونة السلة عندما تنتهي من الطلب.";
         } catch (e) {
           result.innerText = "❌ " + (e.message || "تعذّر إضافة الطلب للمسودة");
         } finally {

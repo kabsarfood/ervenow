@@ -49,7 +49,7 @@
         message: (addResult && addResult.message) || "تعذر الإضافة للسلة",
       };
     }
-    if (opts.redirect !== false) {
+    if (opts.redirect === true) {
       var msg = opts.message || "تمت الإضافة — أكمل الدفع من /checkout";
       try {
         sessionStorage.setItem("ervenow:cart-flash", msg);
