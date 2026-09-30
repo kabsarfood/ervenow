@@ -394,6 +394,7 @@
 
   /** وضع الصيانة — يغطي صفحات HTML المنشورة على CDN حتى لو تجاوزت بوابة الخادم */
   var ADMIN_PANEL_PATHS = [
+    "/admin-login",
     "/admin-dashboard",
     "/admin-finance",
     "/admin-debts",
@@ -427,7 +428,7 @@
       var prefix = ADMIN_PANEL_PATHS[i];
       if (prefix.endsWith("/")) {
         if (lower.indexOf(prefix) === 0) return true;
-      } else if (lower === prefix || lower.indexOf(prefix + "/") === 0) {
+      } else if (lower === prefix || lower === prefix + ".html" || lower.indexOf(prefix + "/") === 0) {
         return true;
       }
     }

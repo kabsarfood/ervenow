@@ -84,7 +84,7 @@ describe("siteMaintenanceGate", () => {
           hostname: "ervenow.com",
           headers: { host: "ervenow.com" },
         })
-      ).toBe(true);
+      ).toBe(false);
       expect(
         shouldBlockPublicPage({
           method: "GET",

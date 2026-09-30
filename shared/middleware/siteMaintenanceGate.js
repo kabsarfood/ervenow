@@ -1,7 +1,8 @@
 const siteMaintenanceStore = require("../utils/siteMaintenanceStore");
 
-/** لوحات الإدارة المتبقية أثناء الصيانة — بدون صفحة تسجيل الدخول */
+/** لوحات الإدارة ودخول الأدمن تبقى متاحة أثناء إقفال المنصة */
 const ADMIN_PANEL_PREFIXES = [
+  "/admin-login",
   "/admin-dashboard",
   "/admin-finance",
   "/admin-debts",
@@ -128,7 +129,7 @@ function isAdminPanelPath(p) {
   for (const prefix of ADMIN_PANEL_PREFIXES) {
     if (prefix.endsWith("/")) {
       if (lower.startsWith(prefix)) return true;
-    } else if (lower === prefix || lower.startsWith(prefix + "/")) {
+    } else if (lower === prefix || lower === prefix + ".html" || lower.startsWith(prefix + "/")) {
       return true;
     }
   }
